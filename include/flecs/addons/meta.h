@@ -275,11 +275,11 @@ typedef struct ecs_enum_constant_t {
     /** May be set when used with ecs_enum_desc_t */
     int64_t value;
 
-    /** Should not be set by ecs_enum_desc_t */
-    ecs_entity_t constant;
-
     /** For when the underlying type is unsigned */
     uint64_t value_unsigned;
+
+    /** Should not be set by ecs_enum_desc_t */
+    ecs_entity_t constant;
 } ecs_enum_constant_t;
 
 /** Component added to enum type entities */
@@ -296,7 +296,10 @@ typedef struct ecs_bitmask_constant_t {
     const char *name;
 
     /** May be set when used with ecs_bitmask_desc_t */
-    ecs_flags32_t value;
+    ecs_flags64_t value;
+
+    /** Keep layout the same with ecs_enum_constant_t */
+    int64_t _unused;
 
     /** Should not be set by ecs_bitmask_desc_t */
     ecs_entity_t constant;

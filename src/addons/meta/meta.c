@@ -578,6 +578,19 @@ int flecs_add_constant_to_enum(
 {
     EcsEnum *ptr = ecs_ensure(world, type, EcsEnum);
     ecs_entity_t ut = ptr->underlying_type;
+
+    /* It's possible that a constant is added to an entity that didn't have an
+     * Enum component yet. In that case derive the underlying type from the
+     * first constant. */
+    if (!ut) {
+        if (ecs_id_is_pair(constant_id)) {
+            ut = ptr->underlying_type = ecs_pair_second(world, constant_id);
+        } else {
+            /* Default to i32 */
+            ut = ecs_id(ecs_i32_t);
+        }
+    }
+
     ecs_assert(ut != 0, ECS_INVALID_OPERATION, 
         "missing underlying type for enum");
 
@@ -607,12 +620,24 @@ int flecs_add_constant_to_enum(
 
     /* Check if constant sets explicit value */
     int64_t value = 0;
-    uint64_t value_unsigned;
+    uint64_t value_unsigned = 0;
     bool value_set = false;
     if (ecs_id_is_pair(constant_id)) {
         ecs_value_t v = { .type = ut };
         v.ptr = ecs_get_mut_id(world, e, ecs_pair(EcsConstant, ut));
-        ecs_assert(v.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!v.ptr) {
+            char *has_pair = ecs_id_str(world, constant_id);
+            char *expect_pair = ecs_id_str(world, ecs_pair(EcsConstant, ut));
+            char *path = ecs_get_path(world, e);
+            ecs_err(
+                "enum constant '%s' has incorrect value pair (expected %s, got %s)",
+                    path, expect_pair, has_pair);
+            ecs_os_free(path);
+            ecs_os_free(has_pair);
+            ecs_os_free(expect_pair);
+            return -1;
+        }
 
         ecs_meta_cursor_t c;
         if (ut_is_unsigned) {
@@ -640,9 +665,11 @@ int flecs_add_constant_to_enum(
             if (value_set) {
                 if (c->value_unsigned == value_unsigned) {
                     char *path = ecs_get_path(world, e);
-                    ecs_err("conflicting constant value %u for '%s' (other is '%s')",
+                    ecs_abort(ECS_INTERNAL_ERROR, 
+                        "conflicting constant value %u for '%s' (other is '%s')",
                         value_unsigned, path, c->name);
                     ecs_os_free(path);
+                    
                     return -1;
                 }
             } else {
@@ -657,6 +684,7 @@ int flecs_add_constant_to_enum(
                     ecs_err("conflicting constant value %d for '%s' (other is '%s')",
                         value, path, c->name);
                     ecs_os_free(path);
+                    flecs_dump_backtrace(stdout);
                     return -1;
                 }
             } else {

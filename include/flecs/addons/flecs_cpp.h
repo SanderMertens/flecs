@@ -92,7 +92,8 @@ ecs_entity_t ecs_cpp_component_register(
 FLECS_API
 void ecs_cpp_enum_init(
     ecs_world_t *world,
-    ecs_entity_t id);
+    ecs_entity_t id,
+    ecs_entity_t underlying_type);
 
 FLECS_API
 ecs_entity_t ecs_cpp_enum_constant_register(
@@ -100,7 +101,9 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_entity_t parent,
     ecs_entity_t id,
     const char *name,
-    int value);
+    void *value,
+    ecs_entity_t value_type,
+    size_t value_size);
 
 #ifdef FLECS_META
 FLECS_API

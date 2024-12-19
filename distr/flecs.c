@@ -22507,14 +22507,16 @@ ecs_entity_t ecs_cpp_component_register(
 
 void ecs_cpp_enum_init(
     ecs_world_t *world,
-    ecs_entity_t id)
+    ecs_entity_t id,
+    ecs_entity_t underlying_type)
 {
     (void)world;
     (void)id;
+    (void)underlying_type;
 #ifdef FLECS_META
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
-    ecs_set(world, id, EcsEnum, {0});
+    ecs_set(world, id, EcsEnum, { .underlying_type = underlying_type });
     flecs_resume_readonly(world, &readonly_state);
 #endif
 }
@@ -22524,8 +22526,11 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_entity_t parent,
     ecs_entity_t id,
     const char *name,
-    int value)
+    void *value,
+    ecs_entity_t value_type,
+    size_t value_size)
 {
+#ifdef FLECS_META
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
 
@@ -22546,24 +22551,38 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_assert(id != 0, ECS_INVALID_OPERATION, name);
     ecs_set_scope(world, prev);
 
-    #ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG
     const EcsComponent *cptr = ecs_get(world, parent, EcsComponent);
     ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, "enum is not a component");
-    ecs_assert(cptr->size == ECS_SIZEOF(int32_t), ECS_UNSUPPORTED,
-        "enum component must have 32bit size");
-    #endif
-
-#ifdef FLECS_META
-    ecs_set_id(world, id, ecs_pair(EcsConstant, ecs_id(ecs_i32_t)), 
-        sizeof(ecs_i32_t), &value);
 #endif
+
+    ecs_set_id(world, id, ecs_pair(EcsConstant, value_type), value_size, value);
 
     flecs_resume_readonly(world, &readonly_state);
 
-    ecs_trace("#[green]constant#[reset] %s.%s created with value %d", 
-        ecs_get_name(world, parent), name, value);
+    if (ecs_should_log(0)) {
+        ecs_value_t v = { .type = value_type, .ptr = value };
+        char *str;
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, 
+            ecs_id(ecs_string_t), &str);
+        ecs_meta_set_value(&cur, &v);
+        ecs_trace("#[green]constant#[reset] %s.%s created with value %s", 
+            ecs_get_name(world, parent), name, str);
+        ecs_os_free(str);
+    }
 
     return id;
+#else
+    (void)world;
+    (void)parent;
+    (void)id;
+    (void)name;
+    (void)value;
+    (void)value_type;
+    (void)value_size;
+    ecs_err("enum reflection not supported without FLECS_META addon");
+    return 0;
+#endif
 }
 
 #ifdef FLECS_META
@@ -47101,7 +47120,7 @@ ecs_entity_t ecs_bitmask_init(
             ecs_add_id(world, c, EcsConstant);
         } else {
             ecs_set_pair_second(world, c, EcsConstant, ecs_u32_t, 
-                {m_desc->value});
+                { flecs_uto(uint32_t, m_desc->value) });
         }
     }
 
@@ -50703,6 +50722,13 @@ void flecs_meta_import_meta_definitions(
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(EcsEnum),
+        .members = {
+            { .name = "underlying_type", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsArray),
         .members = {
             { .name = "type", .type = ecs_id(ecs_entity_t) },
@@ -51375,6 +51401,19 @@ int flecs_add_constant_to_enum(
 {
     EcsEnum *ptr = ecs_ensure(world, type, EcsEnum);
     ecs_entity_t ut = ptr->underlying_type;
+
+    /* It's possible that a constant is added to an entity that didn't have an
+     * Enum component yet. In that case derive the underlying type from the
+     * first constant. */
+    if (!ut) {
+        if (ecs_id_is_pair(constant_id)) {
+            ut = ptr->underlying_type = ecs_pair_second(world, constant_id);
+        } else {
+            /* Default to i32 */
+            ut = ecs_id(ecs_i32_t);
+        }
+    }
+
     ecs_assert(ut != 0, ECS_INVALID_OPERATION, 
         "missing underlying type for enum");
 
@@ -51404,12 +51443,24 @@ int flecs_add_constant_to_enum(
 
     /* Check if constant sets explicit value */
     int64_t value = 0;
-    uint64_t value_unsigned;
+    uint64_t value_unsigned = 0;
     bool value_set = false;
     if (ecs_id_is_pair(constant_id)) {
         ecs_value_t v = { .type = ut };
         v.ptr = ecs_get_mut_id(world, e, ecs_pair(EcsConstant, ut));
-        ecs_assert(v.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!v.ptr) {
+            char *has_pair = ecs_id_str(world, constant_id);
+            char *expect_pair = ecs_id_str(world, ecs_pair(EcsConstant, ut));
+            char *path = ecs_get_path(world, e);
+            ecs_err(
+                "enum constant '%s' has incorrect value pair (expected %s, got %s)",
+                    path, expect_pair, has_pair);
+            ecs_os_free(path);
+            ecs_os_free(has_pair);
+            ecs_os_free(expect_pair);
+            return -1;
+        }
 
         ecs_meta_cursor_t c;
         if (ut_is_unsigned) {
@@ -51437,9 +51488,11 @@ int flecs_add_constant_to_enum(
             if (value_set) {
                 if (c->value_unsigned == value_unsigned) {
                     char *path = ecs_get_path(world, e);
-                    ecs_err("conflicting constant value %u for '%s' (other is '%s')",
+                    ecs_abort(ECS_INTERNAL_ERROR, 
+                        "conflicting constant value %u for '%s' (other is '%s')",
                         value_unsigned, path, c->name);
                     ecs_os_free(path);
+                    
                     return -1;
                 }
             } else {
@@ -51454,6 +51507,7 @@ int flecs_add_constant_to_enum(
                     ecs_err("conflicting constant value %d for '%s' (other is '%s')",
                         value, path, c->name);
                     ecs_os_free(path);
+                    flecs_dump_backtrace(stdout);
                     return -1;
                 }
             } else {

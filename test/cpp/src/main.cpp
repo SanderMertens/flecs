@@ -391,7 +391,6 @@ void Enum_enum_w_2_worlds(void);
 void Enum_add_enum_constant_w_tag(void);
 void Enum_remove_enum_constant_w_tag(void);
 void Enum_set_enum_constant_w_tag(void);
-void Enum_enum_w_incorrect_size(void);
 void Enum_add_union_enum(void);
 void Enum_add_2_union_enums(void);
 void Enum_add_2_union_enums_reverse(void);
@@ -406,6 +405,14 @@ void Enum_enum_class_mixed_auto_manual_constants(void);
 void Enum_enum_child_count(void);
 void Enum_multi_world_constant_ids(void);
 void Enum_empty_enum(void);
+void Enum_enum_i8(void);
+void Enum_enum_i16(void);
+void Enum_enum_i32(void);
+void Enum_enum_i64(void);
+void Enum_enum_u8(void);
+void Enum_enum_u16(void);
+void Enum_enum_u32(void);
+void Enum_enum_u64(void);
 
 // Testsuite 'Union'
 void Union_add_case(void);
@@ -2927,10 +2934,6 @@ bake_test_case Enum_testcases[] = {
         Enum_set_enum_constant_w_tag
     },
     {
-        "enum_w_incorrect_size",
-        Enum_enum_w_incorrect_size
-    },
-    {
         "add_union_enum",
         Enum_add_union_enum
     },
@@ -2985,6 +2988,38 @@ bake_test_case Enum_testcases[] = {
     {
         "empty_enum",
         Enum_empty_enum
+    },
+    {
+        "enum_i8",
+        Enum_enum_i8
+    },
+    {
+        "enum_i16",
+        Enum_enum_i16
+    },
+    {
+        "enum_i32",
+        Enum_enum_i32
+    },
+    {
+        "enum_i64",
+        Enum_enum_i64
+    },
+    {
+        "enum_u8",
+        Enum_enum_u8
+    },
+    {
+        "enum_u16",
+        Enum_enum_u16
+    },
+    {
+        "enum_u32",
+        Enum_enum_u32
+    },
+    {
+        "enum_u64",
+        Enum_enum_u64
     }
 };
 
@@ -6931,7 +6966,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        41,
+        48,
         Enum_testcases
     },
     {

@@ -15661,11 +15661,11 @@ typedef struct ecs_enum_constant_t {
     /** May be set when used with ecs_enum_desc_t */
     int64_t value;
 
-    /** Should not be set by ecs_enum_desc_t */
-    ecs_entity_t constant;
-
     /** For when the underlying type is unsigned */
     uint64_t value_unsigned;
+
+    /** Should not be set by ecs_enum_desc_t */
+    ecs_entity_t constant;
 } ecs_enum_constant_t;
 
 /** Component added to enum type entities */
@@ -15682,7 +15682,10 @@ typedef struct ecs_bitmask_constant_t {
     const char *name;
 
     /** May be set when used with ecs_bitmask_desc_t */
-    ecs_flags32_t value;
+    ecs_flags64_t value;
+
+    /** Keep layout the same with ecs_enum_constant_t */
+    int64_t _unused;
 
     /** Should not be set by ecs_bitmask_desc_t */
     ecs_entity_t constant;
@@ -17044,7 +17047,8 @@ ecs_entity_t ecs_cpp_component_register(
 FLECS_API
 void ecs_cpp_enum_init(
     ecs_world_t *world,
-    ecs_entity_t id);
+    ecs_entity_t id,
+    ecs_entity_t underlying_type);
 
 FLECS_API
 ecs_entity_t ecs_cpp_enum_constant_register(
@@ -17052,7 +17056,9 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_entity_t parent,
     ecs_entity_t id,
     const char *name,
-    int value);
+    void *value,
+    ecs_entity_t value_type,
+    size_t value_size);
 
 #ifdef FLECS_META
 FLECS_API
@@ -17714,7 +17720,9 @@ struct string_view : string {
 #include <string.h>
 #include <limits>
 
-#define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
+// 126, so that FLECS_ENUM_MAX_COUNT is 127 which is the largest value 
+// representable by an int8_t.
+#define FLECS_ENUM_MAX(T) _::to_constant<T, 126>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
 
 #ifndef FLECS_CPP_ENUM_REFLECTION_SUPPORT
@@ -18024,7 +18032,7 @@ private:
             // Constant is valid, so fill reflection data.
             auto v = Value;
             const char *name = enum_constant_to_name<E, flecs_enum_cast(E, Value)>();
-            
+
             ++enum_type<E>::data.max; // Increment cursor as we build constants array.
 
             // If the enum was previously contiguous, and continues to be through the current value...
@@ -18046,7 +18054,7 @@ private:
             }
             
             flecs::entity_t constant = ecs_cpp_enum_constant_register(
-                world, type<E>::id(world), 0, name, static_cast<int32_t>(v));
+                world, type<E>::id(world), 0, name, &v, type<U>::id(world), sizeof(U));
             flecs_component_ids_set(world, 
                 enum_type<E>::data.constants[enum_type<E>::data.max].index, 
                 constant);
@@ -18082,7 +18090,7 @@ public:
         data.contiguous_until = 0;
 
         ecs_log_push();
-        ecs_cpp_enum_init(world, id);
+        ecs_cpp_enum_init(world, id, type<U>::id(world));
         // data.id = id;
 
         // Generate reflection data
@@ -27929,8 +27937,21 @@ flecs::opaque<T, ElemType> opaque(flecs::id_t as_type) {
 
 /** Add constant. */
 component<T>& constant(const char *name, T value) {
-    int32_t v = static_cast<int32_t>(value);
-    untyped_component::constant(name, v);
+    using U = typename std::underlying_type<T>::type;
+
+    ecs_add_id(world_, id_, _::type<flecs::Enum>::id(world_));
+
+    ecs_entity_desc_t desc = {};
+    desc.name = name;
+    desc.parent = id_;
+    ecs_entity_t eid = ecs_entity_init(world_, &desc);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+
+    flecs::id_t pair = ecs_pair(flecs::Constant, _::type<U>::id(world_));
+    U *ptr = static_cast<U*>(ecs_ensure_id(world_, eid, pair));
+    *ptr = static_cast<U>(value);
+    ecs_modified_id(world_, eid, pair);
+
     return *this;
 }
 
@@ -28999,11 +29020,16 @@ const T* entity_view::get() const {
     entity_t c = ecs_get_target(world_, id_, r, 0);
 
     if (c) {
-        // Get constant value from constant entity
-        const T* v = static_cast<const T*>(ecs_get_id(world_, c, r));
-        ecs_assert(v != NULL, ECS_INTERNAL_ERROR, 
-            "missing enum constant value");
+#ifdef FLECS_META
+        using U = typename std::underlying_type<T>::type;
+        const T* v = static_cast<const T*>(
+            ecs_get_id(world_, c, ecs_pair(flecs::Constant, _::type<U>::id(world_))));
+        ecs_assert(v != NULL, ECS_INTERNAL_ERROR, "missing enum constant value");
         return v;
+#else
+        // Fallback if we don't have the reflection addon
+        return static_cast<const T*>(ecs_get_id(world_, id_, r));
+#endif
     } else {
         // If there is no matching pair for (r, *), try just r
         return static_cast<const T*>(ecs_get_id(world_, id_, r));
@@ -31054,9 +31080,17 @@ namespace flecs {
 
 template <typename E>
 inline E entity_view::to_constant() const {
-    const E* ptr = this->get<E>();
+#ifdef FLECS_META
+    using U = typename std::underlying_type<E>::type;
+    const E* ptr = static_cast<const E*>(ecs_get_id(world_, id_, 
+        ecs_pair(flecs::Constant, _::type<U>::id(world_))));
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, "entity is not a constant");
     return ptr[0];
+#else
+    ecs_assert(false, ECS_UNSUPPORTED,
+        "operation not supported without FLECS_META addon");
+    return E();
+#endif
 }
 
 template <typename E, if_t< is_enum<E>::value >>

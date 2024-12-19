@@ -318,7 +318,7 @@ ecs_entity_t ecs_bitmask_init(
             ecs_add_id(world, c, EcsConstant);
         } else {
             ecs_set_pair_second(world, c, EcsConstant, ecs_u32_t, 
-                {m_desc->value});
+                { flecs_uto(uint32_t, m_desc->value) });
         }
     }
 
