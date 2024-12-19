@@ -15843,6 +15843,43 @@ typedef struct EcsOpaque {
     void (*resize)(
         void *dst,
         size_t count);
+
+    /* Getter interface */
+
+    /** Get bool value */
+    bool (*get_bool)(
+        const void *src);
+
+    /** Get char value */
+    char (*get_char)(
+        const void *src);
+
+    /** Get int value */
+    int64_t (*get_int)(
+        const void *src);
+
+    /** Get unsigned int value */
+    uint64_t (*get_uint)(
+        const void *src);
+
+    /** Get float value */
+    double (*get_float)(
+        const void *src);
+
+    /** Get string value */
+    const char* (*get_string)(
+        const void *src);
+
+    /** Get entity value */
+    ecs_entity_t (*get_entity)(
+        const void *src,
+        const ecs_world_t *world);
+
+    /** Get (component) id value */
+    ecs_id_t (*get_id)(
+        const void *src,
+        const ecs_world_t *world);
+
 } EcsOpaque;
 
 
@@ -16308,6 +16345,7 @@ ecs_entity_t ecs_meta_get_entity(
  * @param cursor The cursor.
  * @return The value of the current field.
  */
+FLECS_API
 ecs_id_t ecs_meta_get_id(
     const ecs_meta_cursor_t *cursor);
 
@@ -19466,6 +19504,72 @@ struct opaque {
         this->desc.type.resize =
             reinterpret_cast<decltype(
                 this->desc.type.resize)>(func);
+        return *this;
+    }
+
+    /* Getter interface */
+
+    /** Get bool value */
+    opaque& get_bool(bool (*func)(const T *src)) {
+        this->desc.type.get_bool =
+            reinterpret_cast<decltype(
+                this->desc.type.get_bool)>(func);
+        return *this;
+    }
+
+    /** Get char value */
+    opaque& get_char(char (*func)(const T *src)) {
+        this->desc.type.get_char =
+            reinterpret_cast<decltype(
+                this->desc.type.get_char)>(func);
+        return *this;
+    }
+
+    /** Get int value */
+    opaque& get_int(int64_t (*func)(const T *src)) {
+        this->desc.type.get_int =
+            reinterpret_cast<decltype(
+                this->desc.type.get_int)>(func);
+        return *this;
+    }
+
+    /** Get unsigned int value */
+    opaque& get_uint(uint64_t (*func)(const T *src)) {
+        this->desc.type.get_uint =
+            reinterpret_cast<decltype(
+                this->desc.type.get_uint)>(func);
+        return *this;
+    }
+
+    /** Get float value */
+    opaque& get_float(double (*func)(const T *src)) {
+        this->desc.type.get_float =
+            reinterpret_cast<decltype(
+                this->desc.type.get_float)>(func);
+        return *this;
+    }
+
+    /** Get string value */
+    opaque& get_string(const char* (*func)(const T *src)) {
+        this->desc.type.get_string =
+            reinterpret_cast<decltype(
+                this->desc.type.get_string)>(func);
+        return *this;
+    }
+
+    /** Get entity value */
+    opaque& get_entity(ecs_entity_t (*func)(const T *src, const flecs::world_t *world)) {
+        this->desc.type.get_entity =
+            reinterpret_cast<decltype(
+                this->desc.type.get_entity)>(func);
+        return *this;
+    }
+
+    /** Get (component) id value */
+    opaque& get_id(ecs_id_t (*func)(const T *src, const flecs::world_t *world)) {
+        this->desc.type.get_id =
+            reinterpret_cast<decltype(
+                this->desc.type.get_id)>(func);
         return *this;
     }
 
