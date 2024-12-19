@@ -194,7 +194,30 @@ ecs_entity_t ecs_enum_init(
         t = ecs_new_low_id(world);
     }
 
-    ecs_add(world, t, EcsEnum);
+    ecs_entity_t underlying = desc->underlying_type;
+
+    if (!underlying) {
+        underlying = ecs_id(ecs_i32_t);
+    }
+
+    ecs_assert(ecs_is_valid(world, underlying), ECS_INVALID_PARAMETER, 
+        "invalid underlying type for enum");
+
+    const EcsPrimitive *p = ecs_get(world, underlying, EcsPrimitive);
+    if (!p) {
+        char *path = ecs_get_path(world, underlying);
+        ecs_err("underlying type '%s' must be a primitive type", path);
+        ecs_os_free(path);
+        return 0;
+    }
+
+    bool ut_is_unsigned = false;
+    ecs_primitive_kind_t kind = p->kind;
+    if (kind == EcsU8 || kind == EcsU16 || kind == EcsU32 || kind == EcsU64) {
+        ut_is_unsigned = true;
+    }
+
+    ecs_set(world, t, EcsEnum, { .underlying_type = underlying });
 
     ecs_entity_t old_scope = ecs_set_scope(world, t);
 
@@ -209,11 +232,46 @@ ecs_entity_t ecs_enum_init(
             .name = m_desc->name
         });
 
-        if (!m_desc->value) {
+        if (!m_desc->value && !m_desc->value_unsigned) {
             ecs_add_id(world, c, EcsConstant);
         } else {
-            ecs_set_pair_second(world, c, EcsConstant, ecs_i32_t, 
-                {m_desc->value});
+            void *ptr = ecs_ensure_id(world, c, 
+                ecs_pair(EcsConstant, underlying));
+            ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_meta_cursor_t cur = ecs_meta_cursor(world, underlying, ptr);
+
+            int ret;
+            if (m_desc->value) {
+                if (ut_is_unsigned) {
+                    char *path = ecs_get_path(world, c);
+                    ecs_err("use desc::value_unsigned for constant '%s' which"
+                        "has an unsigned underlying type", path);
+                    ecs_os_free(path);
+                    return 0;
+                }
+                ret = ecs_meta_set_int(&cur, m_desc->value);
+            } else {
+                if (!ut_is_unsigned) {
+                    char *path = ecs_get_path(world, c);
+                    ecs_err("use desc::value for constant '%s' which"
+                        "has a signed underlying type", path);
+                    ecs_os_free(path);
+                    return 0;
+                }
+                ret = ecs_meta_set_uint(&cur, m_desc->value_unsigned);
+            }
+
+            if (ret) {
+                char *type_str = ecs_get_path(world, t);
+                char *utype_str = ecs_get_path(world, underlying);
+                ecs_err("value for constant '%s' for enum '%s' is not valid "
+                    "for underlying type '%s'", type_str, utype_str);
+                ecs_os_free(utype_str);
+                ecs_os_free(type_str);
+                continue;
+            }
+
+            ecs_modified_id(world, c, ecs_pair(EcsConstant, underlying));
         }
     }
 
@@ -260,7 +318,7 @@ ecs_entity_t ecs_bitmask_init(
             ecs_add_id(world, c, EcsConstant);
         } else {
             ecs_set_pair_second(world, c, EcsConstant, ecs_u32_t, 
-                {m_desc->value});
+                { flecs_uto(uint32_t, m_desc->value) });
         }
     }
 

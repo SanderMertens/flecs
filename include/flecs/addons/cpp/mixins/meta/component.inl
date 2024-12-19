@@ -29,7 +29,20 @@ flecs::opaque<T, ElemType> opaque(flecs::id_t as_type) {
 
 /** Add constant. */
 component<T>& constant(const char *name, T value) {
-    int32_t v = static_cast<int32_t>(value);
-    untyped_component::constant(name, v);
+    using U = typename std::underlying_type<T>::type;
+
+    ecs_add_id(world_, id_, _::type<flecs::Enum>::id(world_));
+
+    ecs_entity_desc_t desc = {};
+    desc.name = name;
+    desc.parent = id_;
+    ecs_entity_t eid = ecs_entity_init(world_, &desc);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+
+    flecs::id_t pair = ecs_pair(flecs::Constant, _::type<U>::id(world_));
+    U *ptr = static_cast<U*>(ecs_ensure_id(world_, eid, pair));
+    *ptr = static_cast<U>(value);
+    ecs_modified_id(world_, eid, pair);
+
     return *this;
 }

@@ -78,10 +78,6 @@ enum ConstantsWithNum {
     Num3,
 };
 
-enum class EnumIncorrectType : uint8_t {
-    A, B
-};
-
 enum EnumWithLargeConstant {
     X, Y, Z = 1000
 };
@@ -119,23 +115,25 @@ void Enum_standard_enum_reflection(void) {
     auto e_green = enum_type.entity(Green);
     auto e_blue = enum_type.entity(Blue);
 
+    using U = std::underlying_type<StandardEnum>::type;
+
     test_assert(e_red != 0);
     test_str(e_red.path().c_str(), "::StandardEnum::Red");
     test_bool(enum_type.is_valid(Red), true);
-    test_assert(e_red.get<StandardEnum>() != nullptr);
-    test_assert(e_red.get<StandardEnum>()[0] == Red);
+    test_assert(e_red.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_red.get_second<U>(flecs::Constant)[0] == Red);
 
     test_assert(e_green != 0);
     test_str(e_green.path().c_str(), "::StandardEnum::Green");
     test_bool(enum_type.is_valid(Green), true);
-    test_assert(e_green.get<StandardEnum>() != nullptr);
-    test_assert(e_green.get<StandardEnum>()[0] == Green);
+    test_assert(e_green.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_green.get_second<U>(flecs::Constant)[0] == Green);
 
     test_assert(e_blue != 0);
     test_str(e_blue.path().c_str(), "::StandardEnum::Blue");
     test_bool(enum_type.is_valid(Blue), true);
-    test_assert(e_blue.get<StandardEnum>() != nullptr);
-    test_assert(e_blue.get<StandardEnum>()[0] == Blue);
+    test_assert(e_blue.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_blue.get_second<U>(flecs::Constant)[0] == Blue);
 
     test_bool(enum_type.is_valid(Blue + 1), false);
 }
@@ -162,23 +160,25 @@ void Enum_sparse_enum_reflection(void) {
     auto e_white = enum_type.entity(White);
     auto e_grey = enum_type.entity(Grey);
 
+    using U = std::underlying_type<SparseEnum>::type;
+
     test_assert(e_black != 0);
     test_str(e_black.path().c_str(), "::SparseEnum::Black");
     test_bool(enum_type.is_valid(Black), true);
-    test_assert(e_black.get<SparseEnum>() != nullptr);
-    test_assert(e_black.get<SparseEnum>()[0] == Black);
+    test_assert(e_black.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_black.get_second<U>(flecs::Constant)[0] == Black);
 
     test_assert(e_white != 0);
     test_str(e_white.path().c_str(), "::SparseEnum::White");
     test_bool(enum_type.is_valid(White), true);
-    test_assert(e_white.get<SparseEnum>() != nullptr);
-    test_assert(e_white.get<SparseEnum>()[0] == White);
+    test_assert(e_white.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_white.get_second<U>(flecs::Constant)[0] == White);
 
     test_assert(e_grey != 0);
     test_str(e_grey.path().c_str(), "::SparseEnum::Grey");
     test_bool(enum_type.is_valid(Grey), true);
-    test_assert(e_grey.get<SparseEnum>() != nullptr);
-    test_assert(e_grey.get<SparseEnum>()[0] == Grey);
+    test_assert(e_grey.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_grey.get_second<U>(flecs::Constant)[0] == Grey);
 
     test_bool(enum_type.is_valid(0), false);
     test_bool(enum_type.is_valid(2), false);
@@ -212,29 +212,31 @@ void Enum_bitmask_enum_reflection(void) {
     auto e_32 = enum_type.entity(0x20);
     auto e_ls_30 = enum_type.entity(bit_LS_30);
 
+    using U = std::underlying_type<BitMaskEnum>::type;
+
     test_assert(e_8 != 0);
     test_str(e_8.path().c_str(), "::BitMaskEnum::bit_LS_3");
     test_bool(enum_type.is_valid(bit_LS_3), true);
-    test_assert(e_8.get<BitMaskEnum>() != nullptr);
-    test_assert(e_8.get<BitMaskEnum>()[0] == bit_LS_3);
+    test_assert(e_8.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_8.get_second<U>(flecs::Constant)[0] == bit_LS_3);
 
     test_assert(e_16 != 0);
     test_str(e_16.path().c_str(), "::BitMaskEnum::bit_LS_4");
     test_bool(enum_type.is_valid(bit_LS_4), true);
-    test_assert(e_16.get<BitMaskEnum>() != nullptr);
-    test_assert(e_16.get<BitMaskEnum>()[0] == bit_LS_4);
+    test_assert(e_16.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_16.get_second<U>(flecs::Constant)[0] == bit_LS_4);
 
     test_assert(e_32 != 0);
     test_str(e_32.path().c_str(), "::BitMaskEnum::bit_LS_5");
     test_bool(enum_type.is_valid(bit_LS_5), true);
-    test_assert(e_32.get<BitMaskEnum>() != nullptr);
-    test_assert(e_32.get<BitMaskEnum>()[0] == bit_LS_5);
+    test_assert(e_32.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_32.get_second<U>(flecs::Constant)[0] == bit_LS_5);
 
     test_assert(e_ls_30 != 0);
     test_str(e_ls_30.path().c_str(), "::BitMaskEnum::bit_LS_30");
     test_bool(enum_type.is_valid(bit_LS_30), true);
-    test_assert(e_ls_30.get<BitMaskEnum>() != nullptr);
-    test_assert(e_ls_30.get<BitMaskEnum>()[0] == bit_LS_30);
+    test_assert(e_ls_30.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_ls_30.get_second<U>(flecs::Constant)[0] == bit_LS_30);
 
     test_bool(enum_type.is_valid(3), false);
     test_bool(enum_type.is_valid(5), false);
@@ -267,35 +269,37 @@ void Enum_bitmask_enum_with_type_reflection(void) {
     auto e_ls_15 = enum_type.entity(TypedBitMaskEnum::bit_LS_15);
     auto e_ls_31 = enum_type.entity(TypedBitMaskEnum::bit_LS_31);
 
+    using U = std::underlying_type<TypedBitMaskEnum>::type;
+
     test_assert(e_8 != 0);
     test_str(e_8.path().c_str(), "::TypedBitMaskEnum::bit_LS_3");
     test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_3), true);
-    test_assert(e_8.get<TypedBitMaskEnum>() != nullptr);
-    test_assert(e_8.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_3);
+    test_assert(e_8.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_8.get_second<U>(flecs::Constant)[0] == static_cast<uint32_t>(TypedBitMaskEnum::bit_LS_3));
 
     test_assert(e_16 != 0);
     test_str(e_16.path().c_str(), "::TypedBitMaskEnum::bit_LS_4");
     test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_4), true);
-    test_assert(e_16.get<TypedBitMaskEnum>() != nullptr);
-    test_assert(e_16.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_4);
+    test_assert(e_16.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_16.get_second<U>(flecs::Constant)[0] == static_cast<uint32_t>(TypedBitMaskEnum::bit_LS_4));
 
     test_assert(e_32 != 0);
     test_str(e_32.path().c_str(), "::TypedBitMaskEnum::bit_LS_5");
     test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_5), true);
-    test_assert(e_32.get<TypedBitMaskEnum>() != nullptr);
-    test_assert(e_32.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_5);
+    test_assert(e_32.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_32.get_second<U>(flecs::Constant)[0] == static_cast<uint32_t>(TypedBitMaskEnum::bit_LS_5));
 
     test_assert(e_ls_15 != 0);
     test_str(e_ls_15.path().c_str(), "::TypedBitMaskEnum::bit_LS_15");
     test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_15), true);
-    test_assert(e_ls_15.get<TypedBitMaskEnum>() != nullptr);
-    test_assert(e_ls_15.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_15);
+    test_assert(e_ls_15.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_ls_15.get_second<U>(flecs::Constant)[0] == static_cast<uint32_t>(TypedBitMaskEnum::bit_LS_15));
 
     test_assert(e_ls_31 != 0);
     test_str(e_ls_31.path().c_str(), "::TypedBitMaskEnum::bit_LS_31");
     test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_31), true);
-    test_assert(e_ls_31.get<TypedBitMaskEnum>() != nullptr);
-    test_assert(e_ls_31.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_31);
+    test_assert(e_ls_31.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_ls_31.get_second<U>(flecs::Constant)[0] == static_cast<uint32_t>(TypedBitMaskEnum::bit_LS_31));
 
     test_bool(enum_type.is_valid(3), false);
     test_bool(enum_type.is_valid(5), false);
@@ -358,20 +362,20 @@ void Enum_enum_class_reflection(void) {
     test_assert(e_grass != 0);
     test_str(e_grass.path().c_str(), "::EnumClass::Grass");
     test_bool(enum_type.is_valid((int)EnumClass::Grass), true);
-    test_assert(e_grass.get<EnumClass>() != nullptr);
-    test_assert(e_grass.get<EnumClass>()[0] == EnumClass::Grass);
+    test_assert(e_grass.get_second<int32_t>(flecs::Constant) != nullptr);
+    test_assert(e_grass.get_second<int32_t>(flecs::Constant)[0] == static_cast<int32_t>(EnumClass::Grass));
 
     test_assert(e_sand != 0);
     test_str(e_sand.path().c_str(), "::EnumClass::Sand");
     test_bool(enum_type.is_valid((int)EnumClass::Sand), true);
-    test_assert(e_sand.get<EnumClass>() != nullptr);
-    test_assert(e_sand.get<EnumClass>()[0] == EnumClass::Sand);
+    test_assert(e_sand.get_second<int32_t>(flecs::Constant) != nullptr);
+    test_assert(e_sand.get_second<int32_t>(flecs::Constant)[0] == static_cast<int32_t>(EnumClass::Sand));
 
     test_assert(e_stone != 0);
     test_str(e_stone.path().c_str(), "::EnumClass::Stone");
     test_bool(enum_type.is_valid((int)EnumClass::Stone), true);
-    test_assert(e_stone.get<EnumClass>() != nullptr);
-    test_assert(e_stone.get<EnumClass>()[0] == EnumClass::Stone);
+    test_assert(e_stone.get_second<int32_t>(flecs::Constant) != nullptr);
+    test_assert(e_stone.get_second<int32_t>(flecs::Constant)[0] == static_cast<int32_t>(EnumClass::Stone));
 
     test_bool(enum_type.is_valid(3), false);
 }
@@ -395,17 +399,19 @@ void Enum_prefixed_enum_reflection(void) {
     auto e_foo = enum_type.entity(PrefixEnum::PrefixEnumFoo);
     auto e_bar = enum_type.entity(PrefixEnum::PrefixEnumBar);
 
+    using U = std::underlying_type<PrefixEnum>::type;
+
     test_assert(e_foo != 0);
     test_str(e_foo.path().c_str(), "::PrefixEnum::Foo");
     test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumFoo), true);
-    test_assert(e_foo.get<PrefixEnum>() != nullptr);
-    test_assert(e_foo.get<PrefixEnum>()[0] == PrefixEnum::PrefixEnumFoo);
+    test_assert(e_foo.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_foo.get_second<U>(flecs::Constant)[0] == PrefixEnum::PrefixEnumFoo);
 
     test_assert(e_bar != 0);
     test_str(e_bar.path().c_str(), "::PrefixEnum::Bar");
     test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumBar), true);
-    test_assert(e_bar.get<PrefixEnum>() != nullptr);
-    test_assert(e_bar.get<PrefixEnum>()[0] == PrefixEnum::PrefixEnumBar);
+    test_assert(e_bar.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(e_bar.get_second<U>(flecs::Constant)[0] == PrefixEnum::PrefixEnumBar);
 
     test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumBar + 1), false);
 }
@@ -431,23 +437,25 @@ void Enum_constant_with_num_reflection(void) {
     auto num_2 = enum_type.entity(ConstantsWithNum::Num2);
     auto num_3 = enum_type.entity(ConstantsWithNum::Num3);
 
+    using U = std::underlying_type<ConstantsWithNum>::type;
+
     test_assert(num_1 != 0);
     test_str(num_1.path().c_str(), "::ConstantsWithNum::Num1");
     test_bool(enum_type.is_valid(ConstantsWithNum::Num1), true);
-    test_assert(num_1.get<ConstantsWithNum>() != nullptr);
-    test_assert(num_1.get<ConstantsWithNum>()[0] == ConstantsWithNum::Num1);
+    test_assert(num_1.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(num_1.get_second<U>(flecs::Constant)[0] == ConstantsWithNum::Num1);
 
     test_assert(num_2 != 0);
     test_str(num_2.path().c_str(), "::ConstantsWithNum::Num2");
     test_bool(enum_type.is_valid(ConstantsWithNum::Num1), true);
-    test_assert(num_2.get<ConstantsWithNum>() != nullptr);
-    test_assert(num_2.get<ConstantsWithNum>()[0] == ConstantsWithNum::Num2);
+    test_assert(num_2.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(num_2.get_second<U>(flecs::Constant)[0] == ConstantsWithNum::Num2);
 
     test_assert(num_3 != 0);
     test_str(num_3.path().c_str(), "::ConstantsWithNum::Num3");
     test_bool(enum_type.is_valid(ConstantsWithNum::Num1), true);
-    test_assert(num_3.get<ConstantsWithNum>() != nullptr);
-    test_assert(num_3.get<ConstantsWithNum>()[0] == ConstantsWithNum::Num3);
+    test_assert(num_3.get_second<U>(flecs::Constant) != nullptr);
+    test_assert(num_3.get_second<U>(flecs::Constant)[0] == ConstantsWithNum::Num3);
 
     test_bool(enum_type.is_valid(ConstantsWithNum::Num3 + 1), false);
 }
@@ -455,8 +463,10 @@ void Enum_constant_with_num_reflection(void) {
 void Enum_get_constant_id(void) {
     flecs::world ecs;
 
+    using U = std::underlying_type<StandardEnum>::type;
+
     flecs::entity red = ecs.component<StandardEnum>().lookup("Red");
-    const StandardEnum *v = red.get<StandardEnum>();
+    const U *v = red.get_second<U>(flecs::Constant);
     test_assert(v != NULL);
     test_assert(v[0] == StandardEnum::Red);
     test_assert(red == ecs.id(StandardEnum::Red));
@@ -705,23 +715,25 @@ void Enum_enum_w_2_worlds(void) {
         auto e_green = enum_type.entity(Green);
         auto e_blue = enum_type.entity(Blue);
 
+        using U = std::underlying_type<StandardEnum>::type;
+
         test_assert(e_red != 0);
         test_str(e_red.path().c_str(), "::StandardEnum::Red");
         test_bool(enum_type.is_valid(Red), true);
-        test_assert(e_red.get<StandardEnum>() != nullptr);
-        test_assert(e_red.get<StandardEnum>()[0] == Red);
+        test_assert(e_red.get_second<U>(flecs::Constant) != nullptr);
+        test_assert(e_red.get_second<U>(flecs::Constant)[0] == Red);
 
         test_assert(e_green != 0);
         test_str(e_green.path().c_str(), "::StandardEnum::Green");
         test_bool(enum_type.is_valid(Green), true);
-        test_assert(e_green.get<StandardEnum>() != nullptr);
-        test_assert(e_green.get<StandardEnum>()[0] == Green);
+        test_assert(e_green.get_second<U>(flecs::Constant) != nullptr);
+        test_assert(e_green.get_second<U>(flecs::Constant)[0] == Green);
 
         test_assert(e_blue != 0);
         test_str(e_blue.path().c_str(), "::StandardEnum::Blue");
         test_bool(enum_type.is_valid(Blue), true);
-        test_assert(e_blue.get<StandardEnum>() != nullptr);
-        test_assert(e_blue.get<StandardEnum>()[0] == Blue);
+        test_assert(e_blue.get_second<U>(flecs::Constant) != nullptr);
+        test_assert(e_blue.get_second<U>(flecs::Constant)[0] == Blue);
 
         test_bool(enum_type.is_valid(Blue + 1), false);
     }
@@ -741,23 +753,25 @@ void Enum_enum_w_2_worlds(void) {
         auto e_green = enum_type.entity(Green);
         auto e_blue = enum_type.entity(Blue);
 
+        using U = std::underlying_type<StandardEnum>::type;
+
         test_assert(e_red != 0);
         test_str(e_red.path().c_str(), "::StandardEnum::Red");
         test_bool(enum_type.is_valid(Red), true);
-        test_assert(e_red.get<StandardEnum>() != nullptr);
-        test_assert(e_red.get<StandardEnum>()[0] == Red);
+        test_assert(e_red.get_second<U>(flecs::Constant) != nullptr);
+        test_assert(e_red.get_second<U>(flecs::Constant)[0] == Red);
 
         test_assert(e_green != 0);
         test_str(e_green.path().c_str(), "::StandardEnum::Green");
         test_bool(enum_type.is_valid(Green), true);
-        test_assert(e_green.get<StandardEnum>() != nullptr);
-        test_assert(e_green.get<StandardEnum>()[0] == Green);
+        test_assert(e_green.get_second<U>(flecs::Constant) != nullptr);
+        test_assert(e_green.get_second<U>(flecs::Constant)[0] == Green);
 
         test_assert(e_blue != 0);
         test_str(e_blue.path().c_str(), "::StandardEnum::Blue");
         test_bool(enum_type.is_valid(Blue), true);
-        test_assert(e_blue.get<StandardEnum>() != nullptr);
-        test_assert(e_blue.get<StandardEnum>()[0] == Blue);
+        test_assert(e_blue.get_second<U>(flecs::Constant) != nullptr);
+        test_assert(e_blue.get_second<U>(flecs::Constant)[0] == Blue);
 
         test_bool(enum_type.is_valid(Blue + 1), false);
     }
@@ -852,18 +866,6 @@ void Enum_set_enum_constant_w_tag(void) {
     test_assert(p != NULL);
     test_int(p->x, 3);
     test_int(p->y, 4);
-}
-
-void Enum_enum_w_incorrect_size(void) {
-    /* Quaratined as test can cause compilation of test suite to fail due to new
-     * error messages introduced in clang. */
-    test_quarantine("6 Aug 2023");
-    // install_test_abort();
-
-    // flecs::world ecs;
-
-    // test_expect_abort();
-    // ecs.component<EnumIncorrectType>();
 }
 
 void Enum_add_union_enum(void) {
@@ -1052,43 +1054,33 @@ void Enum_component_registered_as_enum(void) {
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::EnumType);
 
+    using U = std::underlying_type<StandardEnum>::type;
+
     {
         auto c = e.lookup("Red");
         test_assert(c != 0);
 
-        const StandardEnum *v = c.get<StandardEnum>();
-        test_assert(v != nullptr);
-        test_assert(*v == StandardEnum::Red);
-
-        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        const U *vi = c.get_second<U>(flecs::Constant);
         test_assert(vi != nullptr);
-        test_int(*vi, StandardEnum::Red);
+        test_uint(*vi, StandardEnum::Red);
     }
 
     {
         auto c = e.lookup("Green");
         test_assert(c != 0);
 
-        const StandardEnum *v = c.get<StandardEnum>();
-        test_assert(v != nullptr);
-        test_assert(*v == StandardEnum::Green);
-
-        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        const U *vi = c.get_second<U>(flecs::Constant);
         test_assert(vi != nullptr);
-        test_int(*vi, StandardEnum::Green);
+        test_uint(*vi, StandardEnum::Green);
     }
 
     {
         auto c = e.lookup("Blue");
         test_assert(c != 0);
 
-        const StandardEnum *v = c.get<StandardEnum>();
-        test_assert(v != nullptr);
-        test_assert(*v == StandardEnum::Blue);
-
-        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        const U *vi = c.get_second<U>(flecs::Constant);
         test_assert(vi != nullptr);
-        test_int(*vi, StandardEnum::Blue);
+        test_uint(*vi, StandardEnum::Blue);
     }
 }
 
@@ -1104,43 +1096,33 @@ void Enum_mixed_auto_manual_constants(void) {
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::EnumType);
 
+    using U = std::underlying_type<EnumWithLargeConstant>::type;
+
     {
         auto c = e.lookup("X");
         test_assert(c != 0);
 
-        const EnumWithLargeConstant *v = c.get<EnumWithLargeConstant>();
-        test_assert(v != nullptr);
-        test_assert(*v == EnumWithLargeConstant::X);
-
-        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        const U *vi = c.get_second<U>(flecs::Constant);
         test_assert(vi != nullptr);
-        test_int(*vi, EnumWithLargeConstant::X);
+        test_uint(*vi, EnumWithLargeConstant::X);
     }
 
     {
         auto c = e.lookup("Y");
         test_assert(c != 0);
 
-        const EnumWithLargeConstant *v = c.get<EnumWithLargeConstant>();
-        test_assert(v != nullptr);
-        test_assert(*v == EnumWithLargeConstant::Y);
-
-        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        const U *vi = c.get_second<U>(flecs::Constant);
         test_assert(vi != nullptr);
-        test_int(*vi, EnumWithLargeConstant::Y);
+        test_uint(*vi, EnumWithLargeConstant::Y);
     }
 
     {
         auto c = e.lookup("Z");
         test_assert(c != 0);
 
-        const EnumWithLargeConstant *v = c.get<EnumWithLargeConstant>();
-        test_assert(v != nullptr);
-        test_assert(*v == EnumWithLargeConstant::Z);
-
-        const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
+        const U *vi = c.get_second<U>(flecs::Constant);
         test_assert(vi != nullptr);
-        test_int(*vi, EnumWithLargeConstant::Z);
+        test_uint(*vi, EnumWithLargeConstant::Z);
     }
 }
 
@@ -1159,10 +1141,6 @@ void Enum_enum_class_mixed_auto_manual_constants(void) {
     {
         auto c = e.lookup("X");
         test_assert(c != 0);
-
-        const EnumClassWithLargeConstant *v = c.get<EnumClassWithLargeConstant>();
-        test_assert(v != nullptr);
-        test_assert(*v == EnumClassWithLargeConstant::X);
 
         const int32_t *vi = c.get_second<int32_t>(flecs::Constant);
         test_assert(vi != nullptr);
@@ -1214,4 +1192,380 @@ void Enum_empty_enum(void) {
     auto enum_type = flecs::enum_type<EmptyEnum>(ecs);
     
     test_int(enum_type.index_by_value(0), -1);
+}
+
+enum class Ei8 : int8_t {
+    Red, Green, Blue
+};
+
+enum class Ei16 : int16_t {
+    Red, Green, Blue
+};
+
+enum class Ei32 : int32_t {
+    Red, Green, Blue
+};
+
+enum class Ei64 : int64_t {
+    Red, Green, Blue
+};
+
+enum class Eu8 : uint8_t {
+    Red, Green, Blue
+};
+
+enum class Eu16 : uint16_t {
+    Red, Green, Blue
+};
+
+enum class Eu32 : uint32_t {
+    Red, Green, Blue
+};
+
+enum class Eu64 : uint64_t {
+    Red, Green, Blue
+};
+
+void Enum_enum_i8(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<Ei8>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<Ei8>());
+    test_str(e.path().c_str(), "::Ei8");
+    test_assert(enum_type.first() == static_cast<int8_t>(Ei8::Red));
+    test_assert(enum_type.last() == static_cast<int8_t>(Ei8::Blue));
+
+    test_int(enum_type.index_by_value(Red), 0);
+    test_int(enum_type.index_by_value(Green), 1);
+    test_int(enum_type.index_by_value(Blue), 2);
+    test_int(enum_type.index_by_value(Blue+1), -1);
+
+    auto e_red = enum_type.entity(Red);
+    auto e_green = enum_type.entity(Green);
+    auto e_blue = enum_type.entity(Blue);
+
+    test_assert(e_red != 0);
+    test_str(e_red.path().c_str(), "::Ei8::Red");
+    test_bool(enum_type.is_valid(Red), true);
+    test_assert(e_red.get_second<int8_t>(flecs::Constant) != nullptr);
+    test_assert(e_red.get_second<int8_t>(flecs::Constant)[0] == static_cast<int8_t>(Red));
+
+    test_assert(e_green != 0);
+    test_str(e_green.path().c_str(), "::Ei8::Green");
+    test_bool(enum_type.is_valid(Green), true);
+    test_assert(e_green.get_second<int8_t>(flecs::Constant) != nullptr);
+    test_assert(e_green.get_second<int8_t>(flecs::Constant)[0] == static_cast<int8_t>(Green));
+
+    test_assert(e_blue != 0);
+    test_str(e_blue.path().c_str(), "::Ei8::Blue");
+    test_bool(enum_type.is_valid(Blue), true);
+    test_assert(e_blue.get_second<int8_t>(flecs::Constant) != nullptr);
+    test_assert(e_blue.get_second<int8_t>(flecs::Constant)[0] == static_cast<int8_t>(Blue));
+
+    test_bool(enum_type.is_valid(Blue + 1), false);
+}
+
+void Enum_enum_i16(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<Ei16>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<Ei16>());
+    test_str(e.path().c_str(), "::Ei16");
+    test_assert(enum_type.first() == static_cast<int16_t>(Ei16::Red));
+    test_assert(enum_type.last() == static_cast<int16_t>(Ei16::Blue));
+
+    test_int(enum_type.index_by_value(Red), 0);
+    test_int(enum_type.index_by_value(Green), 1);
+    test_int(enum_type.index_by_value(Blue), 2);
+    test_int(enum_type.index_by_value(Blue+1), -1);
+
+    auto e_red = enum_type.entity(Red);
+    auto e_green = enum_type.entity(Green);
+    auto e_blue = enum_type.entity(Blue);
+
+    test_assert(e_red != 0);
+    test_str(e_red.path().c_str(), "::Ei16::Red");
+    test_bool(enum_type.is_valid(Red), true);
+    test_assert(e_red.get_second<int16_t>(flecs::Constant) != nullptr);
+    test_assert(e_red.get_second<int16_t>(flecs::Constant)[0] == static_cast<int16_t>(Red));
+
+    test_assert(e_green != 0);
+    test_str(e_green.path().c_str(), "::Ei16::Green");
+    test_bool(enum_type.is_valid(Green), true);
+    test_assert(e_green.get_second<int16_t>(flecs::Constant) != nullptr);
+    test_assert(e_green.get_second<int16_t>(flecs::Constant)[0] == static_cast<int16_t>(Green));
+
+    test_assert(e_blue != 0);
+    test_str(e_blue.path().c_str(), "::Ei16::Blue");
+    test_bool(enum_type.is_valid(Blue), true);
+    test_assert(e_blue.get_second<int16_t>(flecs::Constant) != nullptr);
+    test_assert(e_blue.get_second<int16_t>(flecs::Constant)[0] == static_cast<int16_t>(Blue));
+
+    test_bool(enum_type.is_valid(Blue + 1), false);
+}
+
+void Enum_enum_i32(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<Ei32>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<Ei32>());
+    test_str(e.path().c_str(), "::Ei32");
+    test_assert(enum_type.first() == static_cast<int32_t>(Ei32::Red));
+    test_assert(enum_type.last() == static_cast<int32_t>(Ei32::Blue));
+
+    test_int(enum_type.index_by_value(Red), 0);
+    test_int(enum_type.index_by_value(Green), 1);
+    test_int(enum_type.index_by_value(Blue), 2);
+    test_int(enum_type.index_by_value(Blue+1), -1);
+
+    auto e_red = enum_type.entity(Red);
+    auto e_green = enum_type.entity(Green);
+    auto e_blue = enum_type.entity(Blue);
+
+    test_assert(e_red != 0);
+    test_str(e_red.path().c_str(), "::Ei32::Red");
+    test_bool(enum_type.is_valid(Red), true);
+    test_assert(e_red.get_second<int32_t>(flecs::Constant) != nullptr);
+    test_assert(e_red.get_second<int32_t>(flecs::Constant)[0] == static_cast<int32_t>(Red));
+
+    test_assert(e_green != 0);
+    test_str(e_green.path().c_str(), "::Ei32::Green");
+    test_bool(enum_type.is_valid(Green), true);
+    test_assert(e_green.get_second<int32_t>(flecs::Constant) != nullptr);
+    test_assert(e_green.get_second<int32_t>(flecs::Constant)[0] == static_cast<int32_t>(Green));
+
+    test_assert(e_blue != 0);
+    test_str(e_blue.path().c_str(), "::Ei32::Blue");
+    test_bool(enum_type.is_valid(Blue), true);
+    test_assert(e_blue.get_second<int32_t>(flecs::Constant) != nullptr);
+    test_assert(e_blue.get_second<int32_t>(flecs::Constant)[0] == static_cast<int32_t>(Blue));
+
+    test_bool(enum_type.is_valid(Blue + 1), false);
+}
+
+void Enum_enum_i64(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<Ei64>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<Ei64>());
+    test_str(e.path().c_str(), "::Ei64");
+    test_assert(enum_type.first() == static_cast<int64_t>(Ei64::Red));
+    test_assert(enum_type.last() == static_cast<int64_t>(Ei64::Blue));
+
+    test_int(enum_type.index_by_value(Red), 0);
+    test_int(enum_type.index_by_value(Green), 1);
+    test_int(enum_type.index_by_value(Blue), 2);
+    test_int(enum_type.index_by_value(Blue+1), -1);
+
+    auto e_red = enum_type.entity(Red);
+    auto e_green = enum_type.entity(Green);
+    auto e_blue = enum_type.entity(Blue);
+
+    test_assert(e_red != 0);
+    test_str(e_red.path().c_str(), "::Ei64::Red");
+    test_bool(enum_type.is_valid(Red), true);
+    test_assert(e_red.get_second<int64_t>(flecs::Constant) != nullptr);
+    test_assert(e_red.get_second<int64_t>(flecs::Constant)[0] == static_cast<int64_t>(Red));
+
+    test_assert(e_green != 0);
+    test_str(e_green.path().c_str(), "::Ei64::Green");
+    test_bool(enum_type.is_valid(Green), true);
+    test_assert(e_green.get_second<int64_t>(flecs::Constant) != nullptr);
+    test_assert(e_green.get_second<int64_t>(flecs::Constant)[0] == static_cast<int64_t>(Green));
+
+    test_assert(e_blue != 0);
+    test_str(e_blue.path().c_str(), "::Ei64::Blue");
+    test_bool(enum_type.is_valid(Blue), true);
+    test_assert(e_blue.get_second<int64_t>(flecs::Constant) != nullptr);
+    test_assert(e_blue.get_second<int64_t>(flecs::Constant)[0] == static_cast<int64_t>(Blue));
+
+    test_bool(enum_type.is_valid(Blue + 1), false);
+}
+
+void Enum_enum_u8(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<Eu8>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<Eu8>());
+    test_str(e.path().c_str(), "::Eu8");
+    test_assert(enum_type.first() == static_cast<uint8_t>(Eu8::Red));
+    test_assert(enum_type.last() == static_cast<uint8_t>(Eu8::Blue));
+
+    test_int(enum_type.index_by_value(Red), 0);
+    test_int(enum_type.index_by_value(Green), 1);
+    test_int(enum_type.index_by_value(Blue), 2);
+    test_int(enum_type.index_by_value(Blue+1), -1);
+
+    auto e_red = enum_type.entity(Red);
+    auto e_green = enum_type.entity(Green);
+    auto e_blue = enum_type.entity(Blue);
+
+    test_assert(e_red != 0);
+    test_str(e_red.path().c_str(), "::Eu8::Red");
+    test_bool(enum_type.is_valid(Red), true);
+    test_assert(e_red.get_second<uint8_t>(flecs::Constant) != nullptr);
+    test_assert(e_red.get_second<uint8_t>(flecs::Constant)[0] == static_cast<uint8_t>(Red));
+
+    test_assert(e_green != 0);
+    test_str(e_green.path().c_str(), "::Eu8::Green");
+    test_bool(enum_type.is_valid(Green), true);
+    test_assert(e_green.get_second<uint8_t>(flecs::Constant) != nullptr);
+    test_assert(e_green.get_second<uint8_t>(flecs::Constant)[0] == static_cast<uint8_t>(Green));
+
+    test_assert(e_blue != 0);
+    test_str(e_blue.path().c_str(), "::Eu8::Blue");
+    test_bool(enum_type.is_valid(Blue), true);
+    test_assert(e_blue.get_second<uint8_t>(flecs::Constant) != nullptr);
+    test_assert(e_blue.get_second<uint8_t>(flecs::Constant)[0] == static_cast<uint8_t>(Blue));
+
+    test_bool(enum_type.is_valid(Blue + 1), false);
+}
+
+void Enum_enum_u16(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<Eu16>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<Eu16>());
+    test_str(e.path().c_str(), "::Eu16");
+    test_assert(enum_type.first() == static_cast<uint16_t>(Eu16::Red));
+    test_assert(enum_type.last() == static_cast<uint16_t>(Eu16::Blue));
+
+    test_int(enum_type.index_by_value(Red), 0);
+    test_int(enum_type.index_by_value(Green), 1);
+    test_int(enum_type.index_by_value(Blue), 2);
+    test_int(enum_type.index_by_value(Blue+1), -1);
+
+    auto e_red = enum_type.entity(Red);
+    auto e_green = enum_type.entity(Green);
+    auto e_blue = enum_type.entity(Blue);
+
+    test_assert(e_red != 0);
+    test_str(e_red.path().c_str(), "::Eu16::Red");
+    test_bool(enum_type.is_valid(Red), true);
+    test_assert(e_red.get_second<uint16_t>(flecs::Constant) != nullptr);
+    test_assert(e_red.get_second<uint16_t>(flecs::Constant)[0] == static_cast<uint16_t>(Red));
+
+    test_assert(e_green != 0);
+    test_str(e_green.path().c_str(), "::Eu16::Green");
+    test_bool(enum_type.is_valid(Green), true);
+    test_assert(e_green.get_second<uint16_t>(flecs::Constant) != nullptr);
+    test_assert(e_green.get_second<uint16_t>(flecs::Constant)[0] == static_cast<uint16_t>(Green));
+
+    test_assert(e_blue != 0);
+    test_str(e_blue.path().c_str(), "::Eu16::Blue");
+    test_bool(enum_type.is_valid(Blue), true);
+    test_assert(e_blue.get_second<uint16_t>(flecs::Constant) != nullptr);
+    test_assert(e_blue.get_second<uint16_t>(flecs::Constant)[0] == static_cast<uint16_t>(Blue));
+
+    test_bool(enum_type.is_valid(Blue + 1), false);
+}
+
+void Enum_enum_u32(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<Eu32>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<Eu32>());
+    test_str(e.path().c_str(), "::Eu32");
+    test_assert(enum_type.first() == static_cast<uint32_t>(Eu32::Red));
+    test_assert(enum_type.last() == static_cast<uint32_t>(Eu32::Blue));
+
+    test_int(enum_type.index_by_value(Red), 0);
+    test_int(enum_type.index_by_value(Green), 1);
+    test_int(enum_type.index_by_value(Blue), 2);
+    test_int(enum_type.index_by_value(Blue+1), -1);
+
+    auto e_red = enum_type.entity(Red);
+    auto e_green = enum_type.entity(Green);
+    auto e_blue = enum_type.entity(Blue);
+
+    test_assert(e_red != 0);
+    test_str(e_red.path().c_str(), "::Eu32::Red");
+    test_bool(enum_type.is_valid(Red), true);
+    test_assert(e_red.get_second<uint32_t>(flecs::Constant) != nullptr);
+    test_assert(e_red.get_second<uint32_t>(flecs::Constant)[0] == static_cast<uint32_t>(Red));
+
+    test_assert(e_green != 0);
+    test_str(e_green.path().c_str(), "::Eu32::Green");
+    test_bool(enum_type.is_valid(Green), true);
+    test_assert(e_green.get_second<uint32_t>(flecs::Constant) != nullptr);
+    test_assert(e_green.get_second<uint32_t>(flecs::Constant)[0] == static_cast<uint32_t>(Green));
+
+    test_assert(e_blue != 0);
+    test_str(e_blue.path().c_str(), "::Eu32::Blue");
+    test_bool(enum_type.is_valid(Blue), true);
+    test_assert(e_blue.get_second<uint32_t>(flecs::Constant) != nullptr);
+    test_assert(e_blue.get_second<uint32_t>(flecs::Constant)[0] == static_cast<uint32_t>(Blue));
+
+    test_bool(enum_type.is_valid(Blue + 1), false);
+}
+
+void Enum_enum_u64(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<Eu64>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<Eu64>());
+    test_str(e.path().c_str(), "::Eu64");
+    test_assert(enum_type.first() == static_cast<uint64_t>(Eu64::Red));
+    test_assert(enum_type.last() == static_cast<uint64_t>(Eu64::Blue));
+
+    test_int(enum_type.index_by_value(Red), 0);
+    test_int(enum_type.index_by_value(Green), 1);
+    test_int(enum_type.index_by_value(Blue), 2);
+    test_int(enum_type.index_by_value(Blue+1), -1);
+
+    auto e_red = enum_type.entity(Red);
+    auto e_green = enum_type.entity(Green);
+    auto e_blue = enum_type.entity(Blue);
+
+    test_assert(e_red != 0);
+    test_str(e_red.path().c_str(), "::Eu64::Red");
+    test_bool(enum_type.is_valid(Red), true);
+    test_assert(e_red.get_second<uint64_t>(flecs::Constant) != nullptr);
+    test_assert(e_red.get_second<uint64_t>(flecs::Constant)[0] == static_cast<uint64_t>(Red));
+
+    test_assert(e_green != 0);
+    test_str(e_green.path().c_str(), "::Eu64::Green");
+    test_bool(enum_type.is_valid(Green), true);
+    test_assert(e_green.get_second<uint64_t>(flecs::Constant) != nullptr);
+    test_assert(e_green.get_second<uint64_t>(flecs::Constant)[0] == static_cast<uint64_t>(Green));
+
+    test_assert(e_blue != 0);
+    test_str(e_blue.path().c_str(), "::Eu64::Blue");
+    test_bool(enum_type.is_valid(Blue), true);
+    test_assert(e_blue.get_second<uint64_t>(flecs::Constant) != nullptr);
+    test_assert(e_blue.get_second<uint64_t>(flecs::Constant)[0] == static_cast<uint64_t>(Blue));
+
+    test_bool(enum_type.is_valid(Blue + 1), false);
 }
