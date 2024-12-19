@@ -122,7 +122,7 @@ void register_lifecycle_actions(
     }
 }
 
-FLECS_API struct type_impl_struct_event_info {
+struct FLECS_API type_impl_struct_event_info {
     UScriptStruct* scriptStruct;
 };
 

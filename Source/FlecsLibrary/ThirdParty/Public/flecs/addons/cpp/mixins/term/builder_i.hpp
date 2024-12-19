@@ -79,7 +79,7 @@ struct term_ref_builder_i {
 protected:
     virtual flecs::world_t* world_v() = 0;
 
-    void assert_term_ref() {
+    void assert_term_ref() const {
         ecs_assert(term_ref_ != NULL, ECS_INVALID_PARAMETER, 
             "no active term (call .with() first)");
     }

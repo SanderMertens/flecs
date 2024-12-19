@@ -10,3 +10,6 @@
 // Gets the closest Entity with FGlobalTransform
 DEFINE_DEFAULT_ENTITY_OPTION(FlecsLocalTrait);
 DEFINE_DEFAULT_ENTITY_OPTION(FlecsGlobalTrait);
+
+// Doesn't have own Transform, but is relative to another Entity
+DEFINE_DEFAULT_ENTITY_OPTION(FlecsRelativeTrait);
