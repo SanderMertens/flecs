@@ -82,7 +82,15 @@
                 "zero_initialized",
                 "enum_relation",
                 "enum_w_short_notation",
-                "enum_modified_event"
+                "enum_modified_event",
+                "enum_w_underlying_i8",
+                "enum_w_underlying_i16",
+                "enum_w_underlying_i32",
+                "enum_w_underlying_i64",
+                "enum_w_underlying_u8",
+                "enum_w_underlying_u16",
+                "enum_w_underlying_u32",
+                "enum_w_underlying_u64"
             ]
         }, {
             "id": "BitmaskTypes",

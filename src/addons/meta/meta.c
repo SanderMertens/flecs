@@ -140,11 +140,13 @@ static void flecs_constants_copy(
 static ECS_COPY(EcsEnum, dst, src, {
     flecs_constants_dtor(&dst->constants);
     flecs_constants_copy(&dst->constants, &src->constants);
+    dst->underlying_type = src->underlying_type;
 })
 
 static ECS_MOVE(EcsEnum, dst, src, {
     flecs_constants_dtor(&dst->constants);
     dst->constants = src->constants;
+    dst->underlying_type = src->underlying_type;
     ecs_os_zeromem(&src->constants);
 })
 
@@ -575,6 +577,23 @@ int flecs_add_constant_to_enum(
     ecs_id_t constant_id)
 {
     EcsEnum *ptr = ecs_ensure(world, type, EcsEnum);
+    ecs_entity_t ut = ptr->underlying_type;
+    ecs_assert(ut != 0, ECS_INVALID_OPERATION, 
+        "missing underlying type for enum");
+
+    const EcsPrimitive *p = ecs_get(world, ut, EcsPrimitive);
+    if (!p) {
+        char *path = ecs_get_path(world, ut);
+        ecs_err("underlying type '%s' must be a primitive type", path);
+        ecs_os_free(path);
+        return -1;
+    }
+
+    bool ut_is_unsigned = false;
+    ecs_primitive_kind_t kind = p->kind;
+    if (kind == EcsU8 || kind == EcsU16 || kind == EcsU32 || kind == EcsU64) {
+        ut_is_unsigned = true;
+    }
 
     /* Remove constant from map if it was already added */
     ecs_map_iter_t it = ecs_map_iter(&ptr->constants);
@@ -587,20 +606,29 @@ int flecs_add_constant_to_enum(
     }
 
     /* Check if constant sets explicit value */
-    int32_t value = 0;
+    int64_t value = 0;
+    uint64_t value_unsigned;
     bool value_set = false;
     if (ecs_id_is_pair(constant_id)) {
-        if (ecs_pair_second(world, constant_id) != ecs_id(ecs_i32_t)) {
+        ecs_value_t v = { .type = ut };
+        v.ptr = ecs_get_mut_id(world, e, ecs_pair(EcsConstant, ut));
+        ecs_assert(v.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_meta_cursor_t c;
+        if (ut_is_unsigned) {
+            /* It doesn't matter that the underlying value is an i64*/
+            c = ecs_meta_cursor(world, ecs_id(ecs_u64_t), &value_unsigned);
+        } else {
+            c = ecs_meta_cursor(world, ecs_id(ecs_i64_t), &value);
+        }
+
+        if (ecs_meta_set_value(&c, &v)) {
             char *path = ecs_get_path(world, e);
-            ecs_err("expected i32 type for enum constant '%s'", path);
+            ecs_err("failed to get constant value for '%s'", path);
             ecs_os_free(path);
             return -1;
         }
 
-        const int32_t *value_ptr = ecs_get_pair_second(
-            world, e, EcsConstant, ecs_i32_t);
-        ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        value = *value_ptr;
         value_set = true;
     }
 
@@ -608,35 +636,74 @@ int flecs_add_constant_to_enum(
     it = ecs_map_iter(&ptr->constants);
     while (ecs_map_next(&it)) {
         ecs_enum_constant_t *c = ecs_map_ptr(&it);
-        if (value_set) {
-            if (c->value == value) {
-                char *path = ecs_get_path(world, e);
-                ecs_err("conflicting constant value %d for '%s' (other is '%s')",
-                    value, path, c->name);
-                ecs_os_free(path);
-                return -1;
+        if (ut_is_unsigned) {
+            if (value_set) {
+                if (c->value_unsigned == value_unsigned) {
+                    char *path = ecs_get_path(world, e);
+                    ecs_err("conflicting constant value %u for '%s' (other is '%s')",
+                        value_unsigned, path, c->name);
+                    ecs_os_free(path);
+                    return -1;
+                }
+            } else {
+                if (c->value_unsigned >= value_unsigned) {
+                    value_unsigned = c->value_unsigned + 1;
+                }
             }
         } else {
-            if (c->value >= value) {
-                value = c->value + 1;
+            if (value_set) {
+                if (c->value == value) {
+                    char *path = ecs_get_path(world, e);
+                    ecs_err("conflicting constant value %d for '%s' (other is '%s')",
+                        value, path, c->name);
+                    ecs_os_free(path);
+                    return -1;
+                }
+            } else {
+                if (c->value >= value) {
+                    value = c->value + 1;
+                }
             }
         }
     }
 
     ecs_map_init_if(&ptr->constants, &world->allocator);
-    ecs_enum_constant_t *c = ecs_map_insert_alloc_t(&ptr->constants, 
-        ecs_enum_constant_t, (ecs_map_key_t)value);
+    ecs_enum_constant_t *c;
+    if (ut_is_unsigned) {
+        c = ecs_map_insert_alloc_t(&ptr->constants, 
+            ecs_enum_constant_t, value_unsigned);
+        c->value_unsigned = value_unsigned;
+        c->value = 0;
+    } else {
+        c = ecs_map_insert_alloc_t(&ptr->constants, 
+            ecs_enum_constant_t, (ecs_map_key_t)value);
+        c->value_unsigned = 0;
+        c->value = value;
+
+    }
     c->name = ecs_os_strdup(ecs_get_name(world, e));
-    c->value = value;
     c->constant = e;
 
-    ecs_i32_t *cptr = ecs_ensure_pair_second(
-        world, e, EcsConstant, ecs_i32_t);
-    ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    cptr[0] = value;
-
-    cptr = ecs_ensure_id(world, e, type);
-    cptr[0] = value;
+    if (!value_set) {
+        void *cptr = ecs_ensure_id(world, e, ecs_pair(EcsConstant, ut));
+        ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, ut, cptr);
+        if (ut_is_unsigned) {
+            if (ecs_meta_set_uint(&cur, value_unsigned)) {
+                char *path = ecs_get_path(world, e);
+                ecs_err("failed to assign value to constant '%s'", path);
+                ecs_os_free(path);
+                return -1;
+            }
+        } else {
+            if (ecs_meta_set_int(&cur, value)) {
+                char *path = ecs_get_path(world, e);
+                ecs_err("failed to assign value to constant '%s'", path);
+                ecs_os_free(path);
+                return -1;
+            }
+        }
+    }
 
     ecs_modified(world, type, EcsEnum);
     return 0;
@@ -827,11 +894,26 @@ static
 void flecs_add_enum(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
+    EcsEnum *data = ecs_field(it, EcsEnum, 0);
+
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
+        ecs_entity_t underlying_type = data[i].underlying_type;
 
-        if (init_type_t(world, e, EcsEnumType, ecs_i32_t)) {
+        if (!underlying_type) {
+            underlying_type = data[i].underlying_type = ecs_id(ecs_i32_t);
+        }
+
+        const EcsComponent *uc = ecs_get(world, underlying_type, EcsComponent);
+        if (!uc) {
+            char *str = ecs_get_path(world, underlying_type);
+            ecs_err("uderlying_type entity for enum '%s' is not a type", str);
+            ecs_os_free(str);
+            continue;
+        }
+
+        if (flecs_init_type(world, e, EcsEnumType, uc->size, uc->alignment)) {
             continue;
         }
 
@@ -1327,7 +1409,7 @@ void FlecsMetaImport(
 
     ecs_observer(world, {
         .query.terms[0] = { .id = ecs_id(EcsEnum) },
-        .events = {EcsOnAdd},
+        .events = {EcsOnSet},
         .callback = flecs_add_enum
     });
 
@@ -1433,7 +1515,7 @@ void FlecsMetaImport(
         .dtor = ecs_dtor(ecs_string_t)
     });
 
-    /* Set default child components */
+    /* Set default child components. Can be used as hint by deserializers */
     ecs_set(world, ecs_id(EcsStruct),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
     ecs_set(world, ecs_id(EcsMember),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
     ecs_set(world, ecs_id(EcsEnum),    EcsDefaultChildComponent, {EcsConstant});

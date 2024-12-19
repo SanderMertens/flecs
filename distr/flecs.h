@@ -15659,14 +15659,19 @@ typedef struct ecs_enum_constant_t {
     const char *name;
 
     /** May be set when used with ecs_enum_desc_t */
-    int32_t value;
+    int64_t value;
 
     /** Should not be set by ecs_enum_desc_t */
     ecs_entity_t constant;
+
+    /** For when the underlying type is unsigned */
+    uint64_t value_unsigned;
 } ecs_enum_constant_t;
 
 /** Component added to enum type entities */
 typedef struct EcsEnum {
+    ecs_entity_t underlying_type;
+
     /** Populated from child entities with Constant component */
     ecs_map_t constants; /**< map<i32_t, ecs_enum_constant_t> */
 } EcsEnum;
@@ -16346,6 +16351,7 @@ ecs_entity_t ecs_primitive_init(
 typedef struct ecs_enum_desc_t {
     ecs_entity_t entity;       /**< Existing entity to use for type (optional). */
     ecs_enum_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE]; /**< Enum constants. */
+    ecs_entity_t underlying_type;
 } ecs_enum_desc_t;
 
 /** Create a new enum type. 

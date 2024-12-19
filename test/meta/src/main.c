@@ -76,6 +76,14 @@ void EnumTypes_zero_initialized(void);
 void EnumTypes_enum_relation(void);
 void EnumTypes_enum_w_short_notation(void);
 void EnumTypes_enum_modified_event(void);
+void EnumTypes_enum_w_underlying_i8(void);
+void EnumTypes_enum_w_underlying_i16(void);
+void EnumTypes_enum_w_underlying_i32(void);
+void EnumTypes_enum_w_underlying_i64(void);
+void EnumTypes_enum_w_underlying_u8(void);
+void EnumTypes_enum_w_underlying_u16(void);
+void EnumTypes_enum_w_underlying_u32(void);
+void EnumTypes_enum_w_underlying_u64(void);
 
 // Testsuite 'BitmaskTypes'
 void BitmaskTypes_bitmask_1_constant(void);
@@ -1284,6 +1292,38 @@ bake_test_case EnumTypes_testcases[] = {
     {
         "enum_modified_event",
         EnumTypes_enum_modified_event
+    },
+    {
+        "enum_w_underlying_i8",
+        EnumTypes_enum_w_underlying_i8
+    },
+    {
+        "enum_w_underlying_i16",
+        EnumTypes_enum_w_underlying_i16
+    },
+    {
+        "enum_w_underlying_i32",
+        EnumTypes_enum_w_underlying_i32
+    },
+    {
+        "enum_w_underlying_i64",
+        EnumTypes_enum_w_underlying_i64
+    },
+    {
+        "enum_w_underlying_u8",
+        EnumTypes_enum_w_underlying_u8
+    },
+    {
+        "enum_w_underlying_u16",
+        EnumTypes_enum_w_underlying_u16
+    },
+    {
+        "enum_w_underlying_u32",
+        EnumTypes_enum_w_underlying_u32
+    },
+    {
+        "enum_w_underlying_u64",
+        EnumTypes_enum_w_underlying_u64
     }
 };
 
@@ -4981,7 +5021,7 @@ static bake_test_suite suites[] = {
         "EnumTypes",
         NULL,
         NULL,
-        9,
+        17,
         EnumTypes_testcases
     },
     {
