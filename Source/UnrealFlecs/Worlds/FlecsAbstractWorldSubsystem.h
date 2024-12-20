@@ -21,7 +21,7 @@ public:
 		Collection.InitializeDependency<UFlecsWorldSubsystem>();
 	}
 	
-	FORCEINLINE virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
+	FORCEINLINE virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override final
 	{
 		return WorldType == EWorldType::Game
 			|| WorldType == EWorldType::PIE
