@@ -9760,3 +9760,57 @@ void Observer_mask_propagated_component_after_reparent(void) {
 
     ecs_fini(world);
 }
+
+static ECS_DECLARE(Bar);
+
+static
+void add_bar(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    ecs_add(it->world, it->entities[0], Bar);
+}
+
+void Observer_2_up_terms_w_batched_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, RelA, Traversable);
+    ECS_ENTITY(world, RelB, Traversable);
+    ECS_TAG(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+
+    Probe ctx = {0};
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnAdd },
+        .callback = add_bar
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { Bar, .src.id = EcsUp, .trav = RelA },
+            { Bar, .src.id = EcsUp, .trav = RelB }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    
+    ecs_defer_begin(world);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Foo);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelA, e1);
+    ecs_add_pair(world, e2, RelB, e1);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_defer_end(world);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e2);
+
+    ecs_fini(world);
+}
