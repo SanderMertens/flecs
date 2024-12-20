@@ -762,6 +762,8 @@ static
 void flecs_query_compile_pop(
     ecs_query_compile_ctx_t *ctx)
 {
+    /* Should've been caught by query validator */
+    ecs_assert(ctx->scope > 0, ECS_INTERNAL_ERROR, NULL);
     ctx->cur = &ctx->ctrlflow[-- ctx->scope];
 }
 
