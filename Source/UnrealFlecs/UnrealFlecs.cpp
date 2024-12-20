@@ -3,8 +3,11 @@
 #include "UnrealFlecs.h"
 
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
+#include "Worlds/FlecsOSAPI.h"
 
 #define LOCTEXT_NAMESPACE "FUnrealFlecsModule"
+
+static FOSApiInitializer OSApiInitializer;
 
 void FUnrealFlecsModule::StartupModule()
 {

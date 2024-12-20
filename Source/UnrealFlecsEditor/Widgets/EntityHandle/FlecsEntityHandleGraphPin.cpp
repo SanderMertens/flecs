@@ -26,11 +26,9 @@ void FFlecsEntityHandleGraphPin::PopulateEntityOptions()
 {
     Options.Empty();
 
-    
-
     // Set the initial selected item based on the current pin value
-    FString DefaultValue = GraphPinObj->GetDefaultAsString();
-    FName DefaultEntityName = *DefaultValue;
+    const FString DefaultValue = GraphPinObj->GetDefaultAsString();
+    const FName DefaultEntityName = *DefaultValue;
 
     for (const TSharedPtr<FName>& Option : Options)
     {
@@ -72,7 +70,7 @@ void FFlecsEntityHandleGraphPin::OnEntitySelected(TSharedPtr<FName> NewValue, MA
     {
         SelectedItem = NewValue;
 
-        FString NewDefaultValue = NewValue->ToString();
+        const FString NewDefaultValue = NewValue->ToString();
 
         if (GraphPinObj->GetDefaultAsString() != NewDefaultValue)
         {

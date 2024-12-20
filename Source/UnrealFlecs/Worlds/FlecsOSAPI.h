@@ -329,5 +329,3 @@ struct FOSApiInitializer
 	}
 	
 }; // struct FOSApiInitializer
-
-static FOSApiInitializer OSApiInitializer;
