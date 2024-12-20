@@ -34272,7 +34272,11 @@ void flecs_term_to_buf(
         {
             ecs_strbuf_appendlit(buf, "this");
         } else if (term->src.id & EcsIsVariable) {
-            ecs_strbuf_appendstr(buf, term->src.name);
+            if (term->src.name) {
+                ecs_strbuf_appendstr(buf, term->src.name);
+            } else {
+                ecs_strbuf_appendstr(buf, "<<invalid variable name>>");
+            }
         } else {
             /* Shouldn't happen */
         }
@@ -35843,6 +35847,7 @@ int flecs_query_finalize_terms(
 
         if (scope_nesting < 0) {
             flecs_query_validator_error(&ctx, "'}' without matching '{'");
+            return -1;
         }
     }
 
@@ -65559,7 +65564,12 @@ int flecs_query_discover_vars(
             table_this = true;
         }
 
-        if (ECS_TERM_REF_ID(first) == EcsThis || ECS_TERM_REF_ID(second) == EcsThis) {
+        bool first_is_this = 
+            (ECS_TERM_REF_ID(first) == EcsThis) && (first->id & EcsIsVariable);
+        bool second_is_this = 
+            (ECS_TERM_REF_ID(first) == EcsThis) && (first->id & EcsIsVariable);
+
+        if (first_is_this || second_is_this) {
             if (!table_this) {
                 entity_before_table_this = true;
             }
@@ -65761,6 +65771,7 @@ bool flecs_query_term_is_unknown(
     ecs_query_compile_ctx_t *ctx) 
 {
     ecs_query_op_t dummy = {0};
+
     flecs_query_compile_term_ref(NULL, query, &dummy, &term->first, 
         &dummy.first, EcsQueryFirst, EcsVarEntity, ctx, false);
     flecs_query_compile_term_ref(NULL, query, &dummy, &term->second, 
@@ -66177,6 +66188,7 @@ int flecs_query_compile(
     int32_t i, term_count = q->term_count;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
+
         if (term->src.id & EcsIsEntity) {
             ecs_query_op_t set_fixed = {0};
             set_fixed.kind = EcsQuerySetFixed;
@@ -66421,6 +66433,8 @@ ecs_var_id_t flecs_query_find_var_id(
             if (query->pub.flags & EcsQueryHasTableThisVar) {
                 return 0;
             } else {
+                printf("VARNONE\n");
+                flecs_dump_backtrace(stdout);
                 return EcsVarNone;
             }
         }
@@ -67164,6 +67178,8 @@ static
 void flecs_query_compile_pop(
     ecs_query_compile_ctx_t *ctx)
 {
+    /* Should've been caught by query validator */
+    ecs_assert(ctx->scope > 0, ECS_INTERNAL_ERROR, NULL);
     ctx->cur = &ctx->ctrlflow[-- ctx->scope];
 }
 

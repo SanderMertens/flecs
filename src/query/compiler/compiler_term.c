@@ -19,6 +19,8 @@ ecs_var_id_t flecs_query_find_var_id(
             if (query->pub.flags & EcsQueryHasTableThisVar) {
                 return 0;
             } else {
+                printf("VARNONE\n");
+                flecs_dump_backtrace(stdout);
                 return EcsVarNone;
             }
         }

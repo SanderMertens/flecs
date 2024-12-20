@@ -19,9 +19,7 @@ static
 void fuzz(const char *expr) {
     ecs_world_t *world = ecs_mini();
 
-    printf("%s\n", expr);
-
-    // ecs_log_set_level(-4);
+    ecs_log_set_level(-4);
 
     ecs_query_t *q = ecs_query(world, { 
         .expr = expr,
