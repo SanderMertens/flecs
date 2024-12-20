@@ -120,7 +120,7 @@ public:
 		TArray<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
 		TMap<FString, flecs::entity_t> DefaultEntityIds = FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;
 
-		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this);
+		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this, static_cast<FName>(Name));
 		
 		DefaultWorld = NewFlecsWorld;
 		
