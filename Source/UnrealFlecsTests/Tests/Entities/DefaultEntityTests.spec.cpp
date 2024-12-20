@@ -6,7 +6,7 @@
 #include "Transforms/FlecsTransformDefaultEntities.h"
 
 BEGIN_DEFINE_SPEC(FDefaultEntityTestsSpec,
-                  "UnrealFlecs.Entity.DefaultEntity",
+                  "UnrealFlecs.Entity.Default",
                   EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter);
 
 FFlecsTestFixture Fixture;
@@ -19,15 +19,15 @@ void FDefaultEntityTestsSpec::Define()
 {
 	FLECS_FIXTURE_LIFECYCLE(Fixture);
 
-	Describe("Default Entity Validity", [&]()
+	Describe("Default Entity Validity", [this]()
 	{
-		It("Should be valid from the same module", [&]()
+		It("Should be valid from the same module", [this]()
 		{
 			TestTrue("Default entity should be valid",
 				Fixture.FlecsWorld->GetEntity(TestEntityOption).IsValid());
 		});
 		
-		It("Should be valid from another module", [&]()
+		It("Should be valid from another module", [this]()
 		{
 			TestTrue("Default entity should be valid",
 				Fixture.FlecsWorld->GetEntity(FlecsLocalTrait).IsValid());

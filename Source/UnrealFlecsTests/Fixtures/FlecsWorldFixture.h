@@ -68,4 +68,4 @@ public:
 	AfterEach([this]() \
 	{ \
 		FixtureName.TearDown(); \
-	});
+	})

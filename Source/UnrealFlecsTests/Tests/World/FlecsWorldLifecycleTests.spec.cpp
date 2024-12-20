@@ -17,7 +17,7 @@ void FFlecsWorldLifecycleTestsSpec::Define()
 	
 	Describe("World Creation", [this]()
 	{
-		It("should create a valid Flecs world", [this]()
+		It("Should create a valid Flecs world", [this]()
 		{
 			TestTrue("Flecs world is valid", Fixture.FlecsWorld.IsValid());
 		});
