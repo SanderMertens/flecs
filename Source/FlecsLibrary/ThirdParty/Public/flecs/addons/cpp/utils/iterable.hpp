@@ -60,6 +60,28 @@ struct iterable {
 
         return result;
     }
+    
+    bool contains(flecs::entity e) const {
+        ecs_iter_t it = this->get_iter(nullptr);
+        ecs_iter_next_action_t next = this->next_action();
+
+        const flecs::table entity_table = e.table();
+
+        // Iterate over matching tables
+        while (next(&it)) {
+            if (it.table == e.table()) {
+                ecs_iter_fini(&it);
+                return true; // Table matches
+            }
+            else
+            {
+                ecs_iter_skip(&it);
+            }
+        }
+
+        ecs_iter_fini(&it);
+        return false; // No matching table found
+    }
 
     /** Create iterator.
      * Create an iterator object that can be modified before iterating.

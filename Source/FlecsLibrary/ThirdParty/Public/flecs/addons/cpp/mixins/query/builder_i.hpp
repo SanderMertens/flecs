@@ -234,7 +234,8 @@ struct query_builder_i : term_builder_i<Base> {
     {
         this->assert_term();
         return this->begin_scope_traits(desc_->terms[term_index_ - 1].id == 0 
-            ? desc_->terms[term_index_ - 1].first.id : desc_->terms[term_index_ - 1].id);
+            ? desc_->terms[term_index_ - 1].first.id
+            : desc_->terms[term_index_ - 1].id);
     }
 
     Base& begin_scope_traits_index(const int32_t term_index) 
