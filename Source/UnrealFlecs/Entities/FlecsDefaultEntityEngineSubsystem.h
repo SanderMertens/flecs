@@ -36,7 +36,7 @@ public:
 }; // struct FFlecsDefaultEntityEngine
 
 #define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
-	INLINE __declspec(dllexport) ECS_ENTITY_DECLARE(EntityName); \
+	INLINE DLLEXPORT ECS_ENTITY_DECLARE(EntityName); \
 	namespace \
 	{                                                             \
 		static void Register##EntityName()                        \
