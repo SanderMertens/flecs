@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Entities/FlecsEntityHandle.h"
+#include "GameFramework/Actor/FlecsEntityActorComponent.h"
+#include "Interfaces/FlecsEntityInterface.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "EntityFunctionLibrary.generated.h"
 
@@ -13,6 +15,28 @@ class UNREALFLECS_API UEntityFunctionLibrary final : public UBlueprintFunctionLi
     GENERATED_BODY()
 
 public:
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
+    static FORCEINLINE FFlecsEntityHandle GetEntityFromObject(UObject* Object)
+    {
+        solid_check(IsValid(Object));
+
+        if (Object->Implements<UFlecsEntityInterface>())
+        {
+            return CastChecked<IFlecsEntityInterface>(Object)->GetEntityHandle();
+        }
+
+        if (const AActor* Actor = Cast<AActor>(Object))
+        {
+            if LIKELY_IF(const UFlecsEntityActorComponent* EntityActorComponent
+                = Actor->FindComponentByClass<UFlecsEntityActorComponent>())
+            {
+                return EntityActorComponent->GetEntityHandle();
+            }
+        }
+
+        return FFlecsEntityHandle::GetNullHandle();
+    }
 
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
     static FORCEINLINE void DestroyEntity(const FFlecsEntityHandle& Entity)
@@ -69,7 +93,7 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE bool IsValid(const FFlecsEntityHandle& Entity)
+    static FORCEINLINE bool IsValidEntity(const FFlecsEntityHandle& Entity)
     {
         return Entity.IsValid();
     }
