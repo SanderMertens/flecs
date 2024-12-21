@@ -11664,6 +11664,7 @@ ecs_entity_t ecs_add_path_w_sep(
         world, parent, &path, sep, prefix, !entity, &error);
     if (error) {
         /* Invalid id */
+        ecs_err("invalid identifier: '%s'", path);
         return 0;
     }
 

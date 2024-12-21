@@ -618,6 +618,7 @@ void Hierarchies_path_only_escaped_two_sep_w_parent(void);
 void Hierarchies_fullpath_for_core(void);
 void Hierarchies_path_w_number(void);
 void Hierarchies_path_w_entity_id(void);
+void Hierarchies_recreated_parent_w_named_children(void);
 void Hierarchies_lookup_depth_0(void);
 void Hierarchies_lookup_depth_1(void);
 void Hierarchies_lookup_depth_2(void);
@@ -4708,6 +4709,10 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "path_w_entity_id",
         Hierarchies_path_w_entity_id
+    },
+    {
+        "recreated_parent_w_named_children",
+        Hierarchies_recreated_parent_w_named_children
     },
     {
         "lookup_depth_0",
@@ -11500,7 +11505,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        105,
+        106,
         Hierarchies_testcases
     },
     {
