@@ -1918,3 +1918,28 @@ void Hierarchies_defer_batch_remove_childof_w_add_name(void) {
 
     ecs_fini(world);
 }
+
+void Hierarchies_recreated_parent_w_named_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    char child_name[128] = { '\0' };
+
+    ecs_entity_t parent = ecs_set_name(world, 0, "e1");
+    sprintf(&child_name, "#%lu.e2", parent);
+    ecs_entity_t child = ecs_set_name(world, 0, child_name);
+    test_assert(parent != 0);
+    test_assert(child != 0);
+
+    // Recreate the parent and children.
+    ecs_delete(world, parent);
+    child_name[0] = '\0';
+
+    ecs_entity_t parent_new = ecs_set_name(world, 0, "e1");
+    sprintf(&child_name, "#%lu.e2", parent_new);
+    ecs_entity_t child_new = ecs_set_name(world, 0, child_name);
+    test_assert(parent_new != parent);
+    test_assert(parent_new != 0);
+    test_assert(child_new != 0);
+
+    ecs_fini(world);
+}
