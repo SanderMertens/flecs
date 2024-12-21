@@ -1,4 +1,5 @@
 #include <core.h>
+#include <inttypes.h>
 
 void Hierarchies_setup(void) {
     ecs_log_set_level(-2);
@@ -1915,6 +1916,23 @@ void Hierarchies_defer_batch_remove_childof_w_add_name(void) {
     test_assert(ecs_get_name(world, e) != NULL);
     test_assert(ecs_lookup(world, "e") == e);
     test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Hierarchies_recreated_parent_w_named_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    char child_name[128] = { '\0' };
+
+    ecs_entity_t parent = ecs_set_name(world, 0, "e1");
+    ecs_delete(world, parent);
+
+    ecs_log_set_level(-4);
+    parent = ecs_set_name(world, 0, "e1");
+    ecs_os_snprintf(child_name, 128, "#%" PRIu64 ".e2", parent);
+    ecs_entity_t child = ecs_set_name(world, 0, child_name);
+    test_assert(child == 0);
 
     ecs_fini(world);
 }
