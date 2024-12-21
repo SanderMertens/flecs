@@ -151,6 +151,7 @@ void Validator_validate_simple_w_transitive_pair(void);
 void Validator_validate_simple_w_reflexive(void);
 void Validator_validate_simple_w_reflexive_pair(void);
 void Validator_validate_simple_w_inherited_component(void);
+void Validator_validate_eq_this_not_a_var_w_wildcard(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -453,6 +454,18 @@ void Parser_escaped_identifier(void);
 void Parser_escaped_identifier_first(void);
 void Parser_escaped_identifier_second(void);
 void Parser_n_tokens_test(void);
+void Parser_this_not_a_var(void);
+void Parser_eq_this_not_a_var(void);
+void Parser_eq_this_not_a_var_w_wildcard(void);
+
+// Testsuite 'Fuzzing'
+void Fuzzing_setup(void);
+void Fuzzing_1(void);
+void Fuzzing_2(void);
+void Fuzzing_3(void);
+void Fuzzing_4(void);
+void Fuzzing_5(void);
+void Fuzzing_6(void);
 
 // Testsuite 'Basic'
 void Basic_setup(void);
@@ -2694,6 +2707,10 @@ bake_test_case Validator_testcases[] = {
     {
         "validate_simple_w_inherited_component",
         Validator_validate_simple_w_inherited_component
+    },
+    {
+        "validate_eq_this_not_a_var_w_wildcard",
+        Validator_validate_eq_this_not_a_var_w_wildcard
     }
 };
 
@@ -3897,6 +3914,45 @@ bake_test_case Parser_testcases[] = {
     {
         "n_tokens_test",
         Parser_n_tokens_test
+    },
+    {
+        "this_not_a_var",
+        Parser_this_not_a_var
+    },
+    {
+        "eq_this_not_a_var",
+        Parser_eq_this_not_a_var
+    },
+    {
+        "eq_this_not_a_var_w_wildcard",
+        Parser_eq_this_not_a_var_w_wildcard
+    }
+};
+
+bake_test_case Fuzzing_testcases[] = {
+    {
+        "1",
+        Fuzzing_1
+    },
+    {
+        "2",
+        Fuzzing_2
+    },
+    {
+        "3",
+        Fuzzing_3
+    },
+    {
+        "4",
+        Fuzzing_4
+    },
+    {
+        "5",
+        Fuzzing_5
+    },
+    {
+        "6",
+        Fuzzing_6
     }
 };
 
@@ -10430,6 +10486,10 @@ bake_test_case QueryStr_testcases[] = {
     }
 };
 
+const char* Fuzzing_cache_kind_param[] = {"default", "auto"};
+bake_test_param Fuzzing_params[] = {
+    {"cache_kind", (char**)Fuzzing_cache_kind_param, 2}
+};
 const char* Basic_cache_kind_param[] = {"default", "auto"};
 bake_test_param Basic_params[] = {
     {"cache_kind", (char**)Basic_cache_kind_param, 2}
@@ -10488,15 +10548,24 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        142,
+        143,
         Validator_testcases
     },
     {
         "Parser",
         NULL,
         NULL,
-        300,
+        303,
         Parser_testcases
+    },
+    {
+        "Fuzzing",
+        Fuzzing_setup,
+        NULL,
+        6,
+        Fuzzing_testcases,
+        1,
+        Fuzzing_params
     },
     {
         "Basic",
@@ -10679,5 +10748,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("query", argc, argv, suites, 24);
+    return bake_test_run("query", argc, argv, suites, 25);
 }

@@ -268,7 +268,12 @@ int flecs_query_discover_vars(
             table_this = true;
         }
 
-        if (ECS_TERM_REF_ID(first) == EcsThis || ECS_TERM_REF_ID(second) == EcsThis) {
+        bool first_is_this = 
+            (ECS_TERM_REF_ID(first) == EcsThis) && (first->id & EcsIsVariable);
+        bool second_is_this = 
+            (ECS_TERM_REF_ID(first) == EcsThis) && (first->id & EcsIsVariable);
+
+        if (first_is_this || second_is_this) {
             if (!table_this) {
                 entity_before_table_this = true;
             }
@@ -470,6 +475,7 @@ bool flecs_query_term_is_unknown(
     ecs_query_compile_ctx_t *ctx) 
 {
     ecs_query_op_t dummy = {0};
+
     flecs_query_compile_term_ref(NULL, query, &dummy, &term->first, 
         &dummy.first, EcsQueryFirst, EcsVarEntity, ctx, false);
     flecs_query_compile_term_ref(NULL, query, &dummy, &term->second, 
@@ -886,6 +892,7 @@ int flecs_query_compile(
     int32_t i, term_count = q->term_count;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
+
         if (term->src.id & EcsIsEntity) {
             ecs_query_op_t set_fixed = {0};
             set_fixed.kind = EcsQuerySetFixed;

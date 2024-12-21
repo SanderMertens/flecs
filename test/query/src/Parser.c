@@ -7073,3 +7073,65 @@ void Parser_n_tokens_test(void) {
 
     ecs_fini(world);
 }
+
+void Parser_this_not_a_var(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "this"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], EcsThis, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_eq_this_not_a_var(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$foo == this"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], EcsPredEq, EcsSelf|EcsIsEntity);
+    test_src_var(terms[0], 0, EcsSelf|EcsIsVariable, "foo");
+    test_second(terms[0], EcsThis, EcsSelf|EcsIsEntity);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_eq_this_not_a_var_w_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$foo == this, *"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 2);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], EcsPredEq, EcsSelf|EcsIsEntity);
+    test_src_var(terms[0], 0, EcsSelf|EcsIsVariable, "foo");
+    test_second(terms[0], EcsThis, EcsSelf|EcsIsEntity);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

@@ -155,7 +155,8 @@
                 "validate_simple_w_transitive_pair",
                 "validate_simple_w_reflexive",
                 "validate_simple_w_reflexive_pair",
-                "validate_simple_w_inherited_component"
+                "validate_simple_w_inherited_component",
+                "validate_eq_this_not_a_var_w_wildcard"
             ]
         }, {
             "id": "Parser",
@@ -459,7 +460,24 @@
                 "escaped_identifier",
                 "escaped_identifier_first",
                 "escaped_identifier_second",
-                "n_tokens_test"
+                "n_tokens_test",
+                "this_not_a_var",
+                "eq_this_not_a_var",
+                "eq_this_not_a_var_w_wildcard"
+            ]
+        }, {
+            "id": "Fuzzing",
+            "setup": true,
+            "params": {
+                "cache_kind": ["default", "auto"]
+            },
+            "testcases": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6"
             ]
         }, {
             "id": "Basic",
