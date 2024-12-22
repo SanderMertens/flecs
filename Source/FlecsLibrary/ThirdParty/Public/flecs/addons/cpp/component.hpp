@@ -205,6 +205,18 @@ struct type_impl {
                 register_lifecycle_actions<T>(world, c);
             }
 
+            if constexpr (Solid::IsStaticStruct<T>() && !std::is_same_v<T, FFlecsScriptStructComponent>)
+            {
+                flecs::world P_world = flecs::world(world);
+                
+                UScriptStruct* scriptStruct = TBaseStructure<T>::Get();
+                ecs_assert(scriptStruct != nullptr, ECS_INTERNAL_ERROR, "script struct is null");
+
+                flecs::entity entity_id = flecs::entity(world, c);
+
+                entity_id.set<FFlecsScriptStructComponent>({ scriptStruct });
+            }
+
             // Set world local component id
             flecs_component_ids_set(world, s_index, c);
 
@@ -214,23 +226,6 @@ struct type_impl {
             #if FLECS_CPP_ENUM_REFLECTION_SUPPORT
             _::init_enum<T>(world, c);
             #endif
-            
-            if constexpr (Solid::IsStaticStruct<T>()) {
-                flecs::world P_world = flecs::world(world);
-                
-                UScriptStruct* scriptStruct = TBaseStructure<T>::Get();
-                ecs_assert(scriptStruct != nullptr, ECS_INTERNAL_ERROR, "script struct is null");
-
-                flecs::entity entity_id = flecs::entity(world, s_id);
-
-                entity_id.set<FFlecsScriptStructComponent>({ scriptStruct });
-            }
-
-            if (prev_with) {
-                ecs_set_with(world, prev_with);
-            }
-            if (prev_scope) {
-                ecs_set_scope(world, prev_scope);
         }
 
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
@@ -265,13 +260,13 @@ struct type_impl {
     // Return the size of a component.
     static size_t size() {
         ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
-        return sizeof(T);
+        return s_size;
     }
 
     // Return the alignment of a component.
     static size_t alignment() {
         ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
-        return alignof(T);
+        return s_alignment;
     }
 
     // Was the component already registered.
@@ -283,8 +278,8 @@ struct type_impl {
         }
 
         if (!flecs_component_ids_get(world, s_index)) {
-        return false;
-    }
+            return false;
+        }
 
         return true;
     }
@@ -332,20 +327,20 @@ struct type<T, if_t< is_pair<T>::value >>
 
 } // namespace _
 
-    /** Untyped component class.
-* Generic base class for flecs::component.
-*
-* @ingroup cpp_components
-*/
-    struct untyped_component : entity {
+/** Untyped component class.
+ * Generic base class for flecs::component.
+ *
+ * @ingroup cpp_components
+ */
+struct untyped_component : entity {
     using entity::entity;
 
-    #   ifdef FLECS_META
-    #   include "mixins/meta/untyped_component.inl"
-    #   endif
-    #   ifdef FLECS_METRICS
-    #   include "mixins/metrics/untyped_component.inl"
-    #   endif
+#   ifdef FLECS_META
+#   include "mixins/meta/untyped_component.inl"
+#   endif
+#   ifdef FLECS_METRICS
+#   include "mixins/metrics/untyped_component.inl"
+#   endif
 };
 
 /** Component class.
@@ -411,17 +406,6 @@ struct component : untyped_component {
         world_ = world;
         id_ = _::type<T>::register_id(
             world, name, allow_tag, id, true, implicit_name, n, module);
-            
-        if constexpr (Solid::IsStaticStruct<T>()) {
-            flecs::world P_world = flecs::world(world);
-                
-            UScriptStruct* scriptStruct = TBaseStructure<T>::Get();
-            ecs_assert(scriptStruct != nullptr, ECS_INTERNAL_ERROR, "script struct is null");
-
-            flecs::entity entity_id = flecs::entity(world, id);
-
-            entity_id.set<FFlecsScriptStructComponent>({ scriptStruct });
-        }
     }
 
     /** Register on_add hook. */

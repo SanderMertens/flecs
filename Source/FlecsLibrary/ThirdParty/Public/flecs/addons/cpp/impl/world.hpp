@@ -28,6 +28,9 @@ inline void world::init_builtin_components() {
 #   ifdef FLECS_META
     meta::_::init(*this);
 #   endif
+
+    component<FFlecsScriptStructComponent>()
+        .set<FFlecsScriptStructComponent>({ TBaseStructure<FFlecsScriptStructComponent>::Get() });
 }
 
 template <typename T>
