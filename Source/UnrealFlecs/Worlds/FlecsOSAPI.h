@@ -27,7 +27,7 @@ public:
 
 	virtual uint32 Run() override
 	{
-		while (!bStopped.Load())
+		while (!bStopped.load())
 		{
 			Callback(Data);
 			break;
@@ -38,13 +38,13 @@ public:
 
 	virtual void Stop() override
 	{
-		bStopped.Store(true);
+		bStopped.store(true);
 	}
 
 private:
 	ecs_os_thread_callback_t Callback;
 	void* Data;
-	TAtomic<bool> bStopped;
+	std::atomic<bool> bStopped;
 }; // class FFlecsRunnable
 
 struct FFlecsThreadWrapper
