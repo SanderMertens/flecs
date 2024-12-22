@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 #include "Concepts/SolidConcepts.h"
+#include "flecs/Unreal/FlecsScriptStructComponent.h"
 
 /**
  * @defgroup cpp_components Components
@@ -121,10 +122,6 @@ void register_lifecycle_actions(
         ecs_add_id(world, component, flecs::Sparse);
     }
 }
-
-struct FLECS_API type_impl_struct_event_info {
-    UScriptStruct* scriptStruct;
-};
 
 // Class that manages component ids across worlds & binaries.
 // The type class stores the component id for a C++ type in a static global
@@ -262,8 +259,9 @@ struct type_impl {
                 UScriptStruct* scriptStruct = TBaseStructure<T>::Get();
                 ecs_assert(scriptStruct != nullptr, ECS_INTERNAL_ERROR, "script struct is null");
 
-                const entity NewScriptStructEntity(world, s_id);
-                NewScriptStructEntity.set<type_impl_struct_event_info>({ scriptStruct });
+                flecs::entity entity_id = flecs::entity(world, s_id);
+
+                entity_id.set<FFlecsScriptStructComponent>({ scriptStruct });
             }
 
             if (prev_with) {
@@ -472,6 +470,17 @@ struct component : untyped_component {
             /* Initialize lifecycle actions (ctor, dtor, copy, move) */
             if (_::type<T>::size() && !existing) {
                 _::register_lifecycle_actions<T>(world, id);
+            }
+
+            if constexpr (Solid::IsStaticStruct<T>()) {
+                flecs::world P_world = flecs::world(world);
+                
+                UScriptStruct* scriptStruct = TBaseStructure<T>::Get();
+                ecs_assert(scriptStruct != nullptr, ECS_INTERNAL_ERROR, "script struct is null");
+
+                flecs::entity entity_id = flecs::entity(world, id);
+
+                entity_id.set<FFlecsScriptStructComponent>({ scriptStruct });
             }
         }
 

@@ -38,7 +38,7 @@ static FORCEINLINE NO_DISCARD int flecs_priority_compare(
 	}
 	else // lower value has higher priority
 	{
-		return InPtrA->value < InPtrB->value ? -1 : 1;
+		return InPtrA->value >= InPtrB->value ? 1 : -1;
 	}
 }
 
@@ -107,7 +107,7 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 		
 		TickerAccumulator -= TickerInterval;
 
-		solid_checkf(TickerComponentPtr, TEXT("TickerComponentRef is not valid!"));
+		solid_check(TickerComponentPtr);
 		++TickerComponentPtr->TickId;
 		SET_DWORD_STAT(STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, TickerComponentPtr->TickId);
 		

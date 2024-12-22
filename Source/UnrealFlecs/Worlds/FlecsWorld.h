@@ -9,7 +9,6 @@
 #include "flecs.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
-#include "Components/FlecsGameplayTagEntityComponent.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsTypeMapComponent.h"
@@ -31,6 +30,12 @@ DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"),
 	STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
+
+#ifdef FORCEINLINE_DEBUGGABLE
+#undef FORCEINLINE_DEBUGGABLE
+#endif
+
+#define FORCEINLINE_DEBUGGABLE inline
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorld final : public UObject
@@ -104,12 +109,12 @@ public:
 				*Data = FText::FromString(String);
 			});
 
-		World.component<FFlecsGameplayTagEntityComponent>()
+		World.component<FGameplayTag>()
 			.opaque(flecs::Entity)
-			.serialize([](const flecs::serializer* Serializer, const FFlecsGameplayTagEntityComponent* Data)
+			.serialize([](const flecs::serializer* Serializer, const FGameplayTag* Data)
 			{
 				const flecs::entity_t TagEntity = ecs_lookup(Serializer->world,
-					StringCast<char>(*Data->Tag.ToString()).Get());
+					StringCast<char>(*Data->ToString()).Get());
 				return Serializer->value(flecs::Entity, &TagEntity);
 			});
 
@@ -130,19 +135,19 @@ public:
 			.serialize([](const flecs::serializer* Serializer, const FObjectPtr* Data)
 			{
 				const UObject* Object = Data->Get();
-				return Serializer->value(flecs::Uptr, Object);
+				return Serializer->value(flecs::Uptr, std::addressof(Object));
 			})
 			.assign_null([](FObjectPtr* Data)
 			{
 				
 			});
-
+		
 		World.component<FWeakObjectPtr>()
 			.opaque(flecs::Uptr)
 			.serialize([](const flecs::serializer* Serializer, const FWeakObjectPtr* Data)
 			{
 				const UObject* Object = Data->Get();
-				return Serializer->value(flecs::Uptr, Object);
+				return Serializer->value(flecs::Uptr, std::addressof(Object));
 			})
 			.assign_null([](FWeakObjectPtr* Data)
 			{
@@ -154,7 +159,7 @@ public:
 			.serialize([](const flecs::serializer* Serializer, const FSoftObjectPtr* Data)
 			{
 				const UObject* Object = Data->Get();
-				return Serializer->value(flecs::Uptr, Object);
+				return Serializer->value(flecs::Uptr, std::addressof(Object));
 			})
 			.assign_null([](FSoftObjectPtr* Data)
 			{
@@ -166,7 +171,7 @@ public:
 			.serialize([](const flecs::serializer* Serializer, const TSubclassOf<UObject>* Data)
 			{
 				const UClass* Class = Data->Get();
-				return Serializer->value(flecs::Uptr, Class);
+				return Serializer->value(flecs::Uptr, std::addressof(Class));
 			})
 			.assign_null([](TSubclassOf<UObject>* Data)
 			{
@@ -177,73 +182,50 @@ public:
 	void InitializeSystems()
 	{
 		ObtainComponentTypeStruct(FFlecsScriptStructComponent::StaticStruct());
-		
-		CreateObserver<flecs::_::type_impl_struct_event_info>(TEXT("StructComponentObserver"))
-				.with_symbol_component()
-				.event(flecs::OnSet)
-				.yield_existing()
-				.each([&](flecs::entity InEntity, flecs::_::type_impl_struct_event_info InEventInfo)
+
+		CreateObserver<FFlecsScriptStructComponent>("ScriptStructComponentObserver")
+			.with_symbol_component()
+			.event(flecs::OnSet)
+			.yield_existing()
+			.each([&](flecs::entity InEntity, FFlecsScriptStructComponent& InScriptStructComponent)
+			{
+				FFlecsEntityHandle EntityHandle = InEntity;
+
+				const FString StructSymbol = EntityHandle.GetSymbol();
+				
+				if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(
+					StringCast<char>(*StructSymbol).Get()))
 				{
-					FFlecsEntityHandle EntityHandle = InEntity;
+					const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get().
+						GetComponentProperties(StringCast<char>(*StructSymbol).Get());
 					
-					solid_checkf(InEventInfo.scriptStruct, TEXT("Script struct is nullptr"));
-					solid_checkf(EntityHandle.IsComponent(), TEXT("Entity is not a component"));
-
-					if UNLIKELY_IF(InEventInfo.scriptStruct == FFlecsScriptStructComponent::StaticStruct())
+					for (const flecs::entity_t Entity : Properties->Entities)
 					{
-						return;
+						EntityHandle.Add(Entity);
 					}
 
-					if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(
-						std::string(InEntity.symbol())))
+					for (const FInstancedStruct& InstancedStruct : Properties->ComponentPropertyStructs)
 					{
-						const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get().
-							GetComponentProperties(std::string(InEntity.symbol()));
-					
-						for (const flecs::entity_t& Entity : Properties->Entities)
-						{
-							EntityHandle.Add(Entity);
-						}
-
-						for (const FInstancedStruct& InstancedStruct : Properties->ComponentPropertyStructs)
-						{
-							EntityHandle.Set(InstancedStruct);
-						}
-
-						UN_LOGF(LogFlecsWorld, Log,
-							"Component properties %s found with %d entities and %d component properties",
-							*EntityHandle.GetSymbol(), Properties->Entities.size(),
-							Properties->ComponentPropertyStructs.Num());
+						EntityHandle.Set(InstancedStruct);
 					}
-					#if WITH_EDITOR
-					else
-					{
-						UN_LOGF(LogFlecsWorld, Log,
-							"Component properties %s not found", *EntityHandle.GetSymbol());
-					}
-					#endif // WITH_EDITOR
-
-					if UNLIKELY_IF(EntityHandle.Has<FFlecsScriptStructComponent>())
-					{
-						UN_LOGF(LogFlecsWorld, Warning, "Struct component %s already registered",
-							*EntityHandle.GetSymbol());
-						EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
-						return;
-					}
-
-					EntityHandle.Set<FFlecsScriptStructComponent>({ InEventInfo.scriptStruct });
 
 					UN_LOGF(LogFlecsWorld, Log,
-						"Struct component %s registered", *EntityHandle.GetSymbol());
+						"Component properties %s found with %d entities and %d component properties",
+						*StructSymbol, Properties->Entities.size(),
+						Properties->ComponentPropertyStructs.Num());
+				}
+				#if WITH_EDITOR
+				else
+				{
+					UN_LOGF(LogFlecsWorld, Log,
+						"Component properties %s not found", *StructSymbol);
+				}
+				#endif // WITH_EDITOR
 
-					//#if WITH_EDITOR
+				TypeMapComponent->ScriptStructMap.emplace(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
 
-					RegisterMemberProperties(InEventInfo.scriptStruct, EntityHandle);
-					
-					//#endif // WITH_EDITOR
-
-					EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
-				});
+				RegisterMemberProperties(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
+			});
 
 		ObjectDestructionComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectDestructionComponentQuery")
 			.without<FFlecsUObjectComponent>(DontDeleteUObjectEntity)
@@ -260,7 +242,7 @@ public:
 			{
 				if (InUObjectComponent.IsStale(true, true))
 				{
-					UN_LOGF(LogFlecsWorld, Log, "Garbage  collected %s",
+					UN_LOGF(LogFlecsWorld, Log, "Entity Garbage Collected: %s",
 						StringCast<TCHAR>(InEntity.name().c_str()).Get());
 					InEntity.destruct();
 				}
@@ -332,8 +314,7 @@ public:
 						break;
 					}
 					
-					if (Module
-						== Iter.entity(IterIndex).get<FFlecsUObjectComponent>()->GetObjectChecked())
+					if (Module == Iter.entity(IterIndex).get<FFlecsUObjectComponent>()->GetObjectChecked())
 					{
 						ProgressModules.RemoveAt(Index - 1);
 						break;
@@ -1181,29 +1162,27 @@ public:
 
 		FFlecsEntityHandle OldScope = ClearScope();
 
-		if (const FFlecsEntityHandle Handle = LookupEntity(ScriptStruct->GetName()))
+		if (TypeMapComponent->ScriptStructMap.contains(ScriptStruct))
 		{
-			RegisterScriptStruct(ScriptStruct, Handle);
 			SetScope(OldScope);
-			return Handle;
+			return TypeMapComponent->ScriptStructMap.at(ScriptStruct);
 		}
 		
 		FFlecsEntityHandle ScriptStructComponent = World.component(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())
+			.set_symbol(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())
 			.set<flecs::Component>({ ScriptStruct->GetStructureSize(), ScriptStruct->GetMinAlignment() })
 			.set<FFlecsScriptStructComponent>({ ScriptStruct });
-		
-		TypeMapComponent->ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
 
 		//#if WITH_EDITOR
 
-		RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
+		//RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
 
 		//#endif // WITH_EDITOR
 
 		if (ScriptStruct->GetSuperStruct())
 		{
 			const FFlecsEntityHandle ParentEntity = ObtainComponentTypeStruct(
-				static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct()));
+				CastChecked<UScriptStruct>(ScriptStruct->GetSuperStruct()));
 			
 			ScriptStructComponent.SetParent(ParentEntity);
 		}
@@ -1219,9 +1198,15 @@ public:
 
 		//#if WITH_EDITOR
 
-		RegisterMemberProperties(ScriptStruct, InComponentEntity);
+		//RegisterMemberProperties(ScriptStruct, InComponentEntity);
 
 		//#endif // WITH_EDITOR
+	}
+
+	template <typename T>
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsEntityHandle ObtainComponentType() const
+	{
+		return World.component<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
@@ -1485,3 +1470,9 @@ public:
 	FFlecsTypeMapComponent* TypeMapComponent;
 	
 }; // class UFlecsWorld
+
+#ifdef FORCEINLINE_DEBUGGABLE
+#undef FORCEINLINE_DEBUGGABLE
+#endif // FORCEINLINE_DEBUGGABLE
+
+#define FORCEINLINE_DEBUGGABLE FORCEINLINE

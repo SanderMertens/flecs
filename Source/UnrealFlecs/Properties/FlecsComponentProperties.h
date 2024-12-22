@@ -25,10 +25,10 @@ DECLARE_DELEGATE_OneParam(FOnComponentPropertiesRegistered, FFlecsComponentPrope
 
 struct UNREALFLECS_API FFlecsComponentPropertiesRegistry final
 {
+	static FFlecsComponentPropertiesRegistry Instance;
 public:
 	static FFlecsComponentPropertiesRegistry& Get()
 	{
-		static FFlecsComponentPropertiesRegistry Instance;
 		return Instance;
 	}
 
@@ -91,6 +91,23 @@ public:
 		checkf(ComponentProperties.contains(Name), TEXT("Component properties not found!"));
 		return &ComponentProperties.at(Name);
 	}
+
+	FORCEINLINE static void RegisterStructMetaData(UScriptStruct* ScriptStruct, const FString& Tags = FString())
+	{
+		solid_check(ScriptStruct != nullptr);
+
+		const FName MetaDataKey = "FlecsTags";
+
+		if (ScriptStruct->HasMetaData(MetaDataKey))
+		{
+			const FString ExistingTags = ScriptStruct->GetMetaData(MetaDataKey);
+			ScriptStruct->SetMetaData(MetaDataKey, *FString::Printf(TEXT("%s %s"), *ExistingTags, *Tags));
+		}
+		else
+		{
+			ScriptStruct->SetMetaData(MetaDataKey, *Tags);
+		}
+	}
 	
 	robin_hood::unordered_flat_map<std::string, FFlecsComponentProperties> ComponentProperties;
 
@@ -100,33 +117,41 @@ public:
 /**
  * Do not use this macro directly, use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES
  */
-// Private macro that should never be called directly by users
 #define _REGISTER_FLECS_PROPERTIES_TAGS_IMPL(ComponentType, ...) \
 	namespace \
 	{ \
-		struct FAutoRegister##ComponentType \
+		struct FAutoRegister##ComponentType##_Tags \
 		{ \
-			FAutoRegister##ComponentType() \
+			FAutoRegister##ComponentType##_Tags() \
 			{ \
-			std::vector<flecs::entity_t> Entities = { __VA_ARGS__ } ; \
-			FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, Entities, {}); \
+				std::vector<flecs::entity_t> Entities = { __VA_ARGS__ } ; \
+				FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, Entities, {}); \
+				if constexpr (Solid::IsStaticStruct<ComponentType>()) \
+				{ \
+					FCoreDelegates::OnPostEngineInit.AddLambda([&]() \
+					{ \
+						UScriptStruct* ScriptStruct = TBaseStructure<ComponentType>::Get(); \
+						const FString Tags = TEXT(#__VA_ARGS__); \
+						FFlecsComponentPropertiesRegistry::Get().RegisterStructMetaData(ScriptStruct, Tags); \
+					}); \
+				} \
 			} \
 		}; \
-		static FAutoRegister##ComponentType AutoRegister##ComponentType##_Instance; \
+		inline FAutoRegister##ComponentType##_Tags AutoRegister##ComponentType##_Instance_Tags; \
 	}
 
 #define _REGISTER_FLECS_PROPERTIES_TRAITS_IMPL(ComponentType, ...) \
 	namespace \
 	{ \
-		struct FAutoRegister##ComponentType \
+		struct FAutoRegister##ComponentType##_Traits \
 		{ \
-			FAutoRegister##ComponentType() \
+			FAutoRegister##ComponentType##_Traits() \
 			{ \
 			TArray<FInstancedStruct> ComponentPropertyStructs = { __VA_ARGS__ }; \
 			FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, {}, ComponentPropertyStructs); \
 			} \
 		}; \
-		static FAutoRegister##ComponentType AutoRegister##ComponentType##_Instance; \
+		inline FAutoRegister##ComponentType##_Traits AutoRegister##ComponentType##_Instance_Traits; \
 	}
 
 // @Deprecated

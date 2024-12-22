@@ -25,3 +25,10 @@ void UFlecsComponentPropertiesAsset::BeginDestroy()
 {
 	Super::BeginDestroy();
 }
+
+void UFlecsComponentPropertiesAsset::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	std::vector<flecs::entity_t> ComponentPropertiesEntities;
+}

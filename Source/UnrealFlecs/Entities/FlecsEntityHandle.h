@@ -353,7 +353,7 @@ public:
 	SOLID_INLINE NO_DISCARD FString GetName() const { return FString(GetEntity().name()); }
 	SOLID_INLINE NO_DISCARD bool HasName() const { return HasPair<flecs::Identifier>(flecs::Name); }
 
-	SOLID_INLINE NO_DISCARD FString GetSymbol() const { return FString(GetEntity().symbol()); }
+	SOLID_INLINE NO_DISCARD FString GetSymbol() const { return FString(GetEntity().symbol().c_str()); }
 	SOLID_INLINE NO_DISCARD bool HasSymbol() const { return HasPair<flecs::Identifier>(flecs::Symbol); }
 
 	SOLID_INLINE void SetDocBrief(const FString& InDocBrief) const { GetEntity().set_doc_brief(StringCast<char>(*InDocBrief).Get()); }

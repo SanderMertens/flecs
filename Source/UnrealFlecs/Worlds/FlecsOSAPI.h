@@ -252,8 +252,7 @@ struct FOSApiInitializer
             {
                 case -4: // Fatal
                     UN_LOGF(LogFlecsCore, Fatal, "Flecs - File: %s, Line: %d, Message: %s",
-						StringCast<TCHAR>(File).Get(), Line,
-						StringCast<TCHAR>(Message).Get());
+						StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
                     break;
                 case -3: // Error
                 	UN_LOGF(LogFlecsCore, Warning, "Error Flecs - File: %s, Line: %d, Message: %s",

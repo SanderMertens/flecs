@@ -26,7 +26,7 @@ struct UNREALFLECS_API FUnrealToFlecs
 	GENERATED_BODY()
 }; // struct FUnrealToFlecs
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FUnrealToFlecs, flecs::PairIsTag)
+REGISTER_COMPONENT_TAG_PROPERTIES(FUnrealToFlecs, flecs::PairIsTag, flecs::Trait)
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsToBoth
@@ -34,4 +34,4 @@ struct UNREALFLECS_API FFlecsToBoth
 	GENERATED_BODY()
 }; // struct FFlecsToBoth
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsToBoth, flecs::PairIsTag)
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsToBoth, flecs::PairIsTag, flecs::Trait)

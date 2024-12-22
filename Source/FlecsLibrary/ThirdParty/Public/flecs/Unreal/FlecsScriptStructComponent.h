@@ -3,12 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Properties/FlecsComponentProperties.h"
 #include "Standard/Hashing.h"
 #include "FlecsScriptStructComponent.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFlecsScriptStructComponent
+struct FLECSLIBRARY_API FFlecsScriptStructComponent
 {
     GENERATED_BODY()
 

@@ -15,7 +15,6 @@
 #include "FlecsWorldStartComponent.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagsManager.h"
-#include "Components/FlecsGameplayTagEntityComponent.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Components/UWorldPtrComponent.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
@@ -280,7 +279,7 @@ protected:
 
 		const FFlecsEntityHandle TagEntity = NewFlecsWorld->CreateEntity(LastPartOfTagName);
 		
-		TagEntity.Set<FFlecsGameplayTagEntityComponent>({ Tag });
+		TagEntity.Set<FGameplayTag>(Tag);
 		
 		if (const TArray<FGameplayTag>* Children = TagHierarchy.Find(Tag))
 		{

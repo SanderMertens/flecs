@@ -35,4 +35,10 @@ public:
 
 	virtual void BeginDestroy() override;
 
+	#if WITH_EDITOR
+	
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	
+	#endif
+
 }; // class UFlecsComponentPropertiesAsset

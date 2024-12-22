@@ -8,6 +8,8 @@ public class FlecsLibrary : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         
+        Type = ModuleType.CPlusPlus;
+        
         CppStandard = CppStandardVersion.Cpp20;
         CStandard = CStandardVersion.Latest;
         

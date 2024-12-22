@@ -56,6 +56,6 @@ public:
 				FCoreDelegates::OnPostEngineInit.AddStatic(&Register##EntityName); \
 			}                                                     \
 		};                                                        \
-		static FRegisterInvoker##EntityName Invoker##EntityName;  \
+		inline FRegisterInvoker##EntityName Invoker##EntityName;  \
 	}
 

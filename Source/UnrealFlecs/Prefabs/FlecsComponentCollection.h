@@ -3,10 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsNetworkMessage.generated.h"
+#include "FlecsComponentCollection.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsNetworkMessage
+struct FComponentCollection
 {
 	GENERATED_BODY()
-}; // struct FFlecsNetworkMessage
+
+public:
+	
+}; // struct FComponentCollection
+
