@@ -226,6 +226,13 @@ void flecs_meta_import_meta_definitions(
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(EcsEnum),
+        .members = {
+            { .name = "underlying_type", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsArray),
         .members = {
             { .name = "type", .type = ecs_id(ecs_entity_t) },

@@ -286,11 +286,8 @@ void flecs_emit_propagate_id(
             it->entities = ecs_table_entities(table);
         }
 
-        /* Treat as new event as this could invoke observers again for
-         * different tables. */
-        it->event_cur = ++ world->event_id;
-
-        for (int32_t ider_i = 0; ider_i < ider_count; ider_i ++) {
+        int32_t ider_i;
+        for (ider_i = 0; ider_i < ider_count; ider_i ++) {
             ecs_event_id_record_t *ider = iders[ider_i];
             flecs_observers_invoke(world, &ider->up, it, table, trav);
 

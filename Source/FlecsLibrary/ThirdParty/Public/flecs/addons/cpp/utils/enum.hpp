@@ -9,7 +9,9 @@
 #include <string.h>
 #include <limits>
 
-#define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
+// 126, so that FLECS_ENUM_MAX_COUNT is 127 which is the largest value 
+// representable by an int8_t.
+#define FLECS_ENUM_MAX(T) _::to_constant<T, 126>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
 
 #ifndef FLECS_CPP_ENUM_REFLECTION_SUPPORT
@@ -173,7 +175,7 @@ static const char* enum_constant_to_name() {
 /** Enumeration constant data */
 template<typename T>
 struct enum_constant_data {
-    flecs::entity_t id;
+    int32_t index; // Global index used to obtain world local entity id
     T offset;
 };
 
@@ -284,7 +286,6 @@ private:
     };
 
 public:
-    flecs::entity_t id;
     int min;
     int max;
     bool has_contiguous;
@@ -320,7 +321,7 @@ private:
             // Constant is valid, so fill reflection data.
             auto v = Value;
             const char *name = enum_constant_to_name<E, flecs_enum_cast(E, Value)>();
-            
+
             ++enum_type<E>::data.max; // Increment cursor as we build constants array.
 
             // If the enum was previously contiguous, and continues to be through the current value...
@@ -336,8 +337,17 @@ private:
                 "Signed integer enums causes integer overflow when recording offset from high positive to"
                 " low negative. Consider using unsigned integers as underlying type.");
             enum_type<E>::data.constants[enum_type<E>::data.max].offset = v - last_value;
-            enum_type<E>::data.constants[enum_type<E>::data.max].id = ecs_cpp_enum_constant_register(
-                world, enum_type<E>::data.id, 0, name, static_cast<int32_t>(v));
+            if (!enum_type<E>::data.constants[enum_type<E>::data.max].index) {
+                enum_type<E>::data.constants[enum_type<E>::data.max].index = 
+                    flecs_component_ids_index_get();
+            }
+            
+            flecs::entity_t constant = ecs_cpp_enum_constant_register(
+                world, type<E>::id(world), 0, name, &v, type<U>::id(world), sizeof(U));
+            flecs_component_ids_set(world, 
+                enum_type<E>::data.constants[enum_type<E>::data.max].index, 
+                constant);
+
             return v;
         }
     };
@@ -369,8 +379,8 @@ public:
         data.contiguous_until = 0;
 
         ecs_log_push();
-        ecs_cpp_enum_init(world, id);
-        data.id = id;
+        ecs_cpp_enum_init(world, id, type<U>::id(world));
+        // data.id = id;
 
         // Generate reflection data
         enum_reflection<E, reflection_init>::template each_enum< static_cast<U>(enum_last<E>::value) >(world);
@@ -412,7 +422,7 @@ struct enum_data {
         if (index < 0) {
             return false;
         }
-        return impl_.constants[index].id != 0;
+        return impl_.constants[index].index != 0;
     }
 
     /**

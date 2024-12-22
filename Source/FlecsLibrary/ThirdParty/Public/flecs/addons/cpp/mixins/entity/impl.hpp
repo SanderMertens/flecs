@@ -26,11 +26,16 @@ const T* entity_view::get() const {
     entity_t c = ecs_get_target(world_, id_, r, 0);
 
     if (c) {
-        // Get constant value from constant entity
-        const T* v = static_cast<const T*>(ecs_get_id(world_, c, r));
-        ecs_assert(v != NULL, ECS_INTERNAL_ERROR, 
-            "missing enum constant value");
+#ifdef FLECS_META
+        using U = typename std::underlying_type<T>::type;
+        const T* v = static_cast<const T*>(
+            ecs_get_id(world_, c, ecs_pair(flecs::Constant, _::type<U>::id(world_))));
+        ecs_assert(v != NULL, ECS_INTERNAL_ERROR, "missing enum constant value");
         return v;
+#else
+        // Fallback if we don't have the reflection addon
+        return static_cast<const T*>(ecs_get_id(world_, id_, r));
+#endif
     } else {
         // If there is no matching pair for (r, *), try just r
         return static_cast<const T*>(ecs_get_id(world_, id_, r));
@@ -210,8 +215,7 @@ inline flecs::entity world::entity(E value) const {
 
 template <typename T>
 inline flecs::entity world::entity(const char *name) const {
-    return flecs::entity(world_, 
-        _::type<T>::id_explicit(world_, name, true, 0, false) );
+    return flecs::entity(world_, _::type<T>::register_id(world_, name, true) );
 }
 
 template <typename... Args>

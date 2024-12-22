@@ -66,28 +66,18 @@ const char* ecs_cpp_trim_module(
     const char *type_name);
 
 FLECS_API
-void ecs_cpp_component_validate(
+ecs_entity_t ecs_cpp_component_find(
     ecs_world_t *world,
     ecs_entity_t id,
     const char *name,
     const char *symbol,
     size_t size,
     size_t alignment,
-    bool implicit_name);
-
-FLECS_API
-ecs_entity_t ecs_cpp_component_register(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    const char *name,
-    const char *symbol,
-    ecs_size_t size,
-    ecs_size_t alignment,
     bool implicit_name,
     bool *existing_out);
 
 FLECS_API
-ecs_entity_t ecs_cpp_component_register_explicit(
+ecs_entity_t ecs_cpp_component_register(
     ecs_world_t *world,
     ecs_entity_t s_id,
     ecs_entity_t id,
@@ -102,7 +92,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
 FLECS_API
 void ecs_cpp_enum_init(
     ecs_world_t *world,
-    ecs_entity_t id);
+    ecs_entity_t id,
+    ecs_entity_t underlying_type);
 
 FLECS_API
 ecs_entity_t ecs_cpp_enum_constant_register(
@@ -110,13 +101,9 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_entity_t parent,
     ecs_entity_t id,
     const char *name,
-    int value);
-
-FLECS_API 
-int32_t ecs_cpp_reset_count_get(void);
-
-FLECS_API
-int32_t ecs_cpp_reset_count_inc(void);
+    void *value,
+    ecs_entity_t value_type,
+    size_t value_size);
 
 #ifdef FLECS_META
 FLECS_API
