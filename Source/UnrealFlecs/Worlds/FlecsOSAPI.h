@@ -10,45 +10,93 @@
 #include "SolidMacros/Macros.h"
 #include "Unlog/Unlog.h"
 
+LLM_DEFINE_TAG(FlecsMemoryTag, "Flecs Memory");
+
+DECLARE_STATS_GROUP(TEXT("FlecsOS"), STATGROUP_FlecsOS, STATCAT_Advanced);
+DECLARE_CYCLE_STAT(TEXT("FlecsOS::TaskThread"), STAT_FlecsOS, STATGROUP_FlecsOS);
+
+class FFlecsRunnable : public FRunnable
+{
+public:
+	FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InData)
+		: Callback(InCallback)
+		, Data(InData)
+		, bStopped(false)
+	{
+	}
+
+	virtual uint32 Run() override
+	{
+		while (!bStopped.Load())
+		{
+			Callback(Data);
+			break;
+		}
+		
+		return 0;
+	}
+
+	virtual void Stop() override
+	{
+		bStopped.Store(true);
+	}
+
+private:
+	ecs_os_thread_callback_t Callback;
+	void* Data;
+	TAtomic<bool> bStopped;
+}; // class FFlecsRunnable
+
 struct FFlecsThreadWrapper
 {
-	std::thread Thread;
-	std::atomic<bool> bStopped{false};
-	std::atomic<bool> bJoined{false};
-    
+	static constexpr EThreadPriority TaskThread = TPri_Highest;
+	
+	FRunnable* Runnable = nullptr;
+	FRunnableThread* RunnableThread = nullptr;
+	std::atomic<bool> bJoined { false };
+
 	FFlecsThreadWrapper(ecs_os_thread_callback_t Callback, void* Data)
 	{
-		Thread = std::thread([this, Callback, Data]()
-		{
-			while (!bStopped)
-			{
-				Callback(Data);
-				break;
-			}
-		});
+		Runnable = new FFlecsRunnable(Callback, Data);
+		RunnableThread = FRunnableThread::Create(Runnable, TEXT("FlecsThreadWrapper"), 0,
+			TaskThread);
 	}
-    
+
 	~FFlecsThreadWrapper()
 	{
-		if (!bJoined && Thread.joinable())
+		if (!bJoined.load() && RunnableThread)
 		{
 			Stop();
-			Thread.join();
+			Join();
+
+			delete RunnableThread;
 		}
 	}
-    
-	void Stop()
+
+	void Stop() const
 	{
-		bStopped = true;
+		if (Runnable)
+		{
+			Runnable->Stop();
+		}
 	}
-    
+
 	void Join()
 	{
-		if (!bJoined && Thread.joinable())
+		if (!bJoined.exchange(true))
 		{
-			bStopped = true;
-			Thread.join();
-			bJoined = true;
+			if (RunnableThread)
+			{
+				RunnableThread->WaitForCompletion();
+				delete RunnableThread;
+				RunnableThread = nullptr;
+			}
+			
+			if (Runnable)
+			{
+				delete Runnable;
+				Runnable = nullptr;
+			}
 		}
 	}
 	
@@ -67,7 +115,7 @@ struct FFlecsTask
 			{
 				Callback(Data);
 			},
-			TStatId(), nullptr, TaskThread);
+			GET_STATID(STAT_FlecsOS), nullptr, TaskThread);
 	}
 
 	FORCEINLINE ~FFlecsTask()
@@ -306,21 +354,25 @@ struct FOSApiInitializer
 
 		os_api.malloc_ = [](int Size) -> void*
 		{
+			LLM_SCOPE_BYTAG(FlecsMemoryTag);
 			return FMemory::Malloc(Size);
 		};
 
 		os_api.realloc_ = [](void* Ptr, int Size) -> void*
 		{
+			LLM_SCOPE_BYTAG(FlecsMemoryTag);
 			return FMemory::Realloc(Ptr, Size);
 		};
 
 		os_api.calloc_ = [](int Size) -> void*
 		{
+			LLM_SCOPE_BYTAG(FlecsMemoryTag);
 			return FMemory::MallocZeroed(Size);
 		};
 
 		os_api.free_ = [](void* Ptr)
 		{
+			LLM_SCOPE_BYTAG(FlecsMemoryTag);
 			FMemory::Free(Ptr);
 		};
 		

@@ -17,4 +17,10 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
 	bool bEnableFlecs = true;
 
+	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
+	bool bUseTaskThreads = true;
+
+	UPROPERTY(EditAnywhere, Config, Category = "Flecs", meta = (EditCondition = "bUseTaskThreads"))
+	int32 TaskThreadCount = 4;
+
 }; // class UFlecsDeveloperSettings

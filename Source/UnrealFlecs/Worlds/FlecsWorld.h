@@ -175,8 +175,6 @@ public:
 
 	void InitializeSystems()
 	{
-		ObtainComponentTypeStruct(FFlecsScriptStructComponent::StaticStruct());
-
 		CreateObserver<FFlecsScriptStructComponent>("ScriptStructComponentObserver")
 			.with_symbol_component()
 			.event(flecs::OnSet)
@@ -1198,7 +1196,7 @@ public:
 	}
 
 	template <typename T>
-	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsEntityHandle ObtainComponentType() const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentType() const
 	{
 		return World.component<T>();
 	}

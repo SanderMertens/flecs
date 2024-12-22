@@ -5,6 +5,7 @@
 // ReSharper disable CppUnusedIncludeDirective
 #pragma once
 
+#include <thread>
 #include <unordered_map>
 
 #include "CoreMinimal.h"
@@ -124,10 +125,12 @@ public:
 		DefaultWorld = NewFlecsWorld;
 		
 		NewFlecsWorld->SetContext(this);
-		
+
 		GetDefaultWorld()->AddSingleton<FFlecsTypeMapComponent>();
 		GetDefaultWorld()->TypeMapComponent = GetDefaultWorld()->GetSingletonPtr<FFlecsTypeMapComponent>();
 		solid_check(GetDefaultWorld()->TypeMapComponent);
+		
+		NewFlecsWorld->ObtainComponentType<FFlecsScriptStructComponent>();
 
 		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ NewFlecsWorld });
 
@@ -157,13 +160,13 @@ public:
 
 		NewFlecsWorld->SetWorldName(Name);
 
-		if (Settings.bUseTaskThreads)
+		if (DeveloperSettings->bUseTaskThreads)
 		{
-			NewFlecsWorld->SetTaskThreads(Settings.DefaultWorkerThreads);
+			NewFlecsWorld->SetTaskThreads(DeveloperSettings->TaskThreadCount);
 		}
 		else
 		{
-			NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
+			NewFlecsWorld->SetThreads(std::thread::hardware_concurrency());
 		}
 
 		NewFlecsWorld->WorldBeginPlay();

@@ -37,8 +37,6 @@ public:
 		// Create world settings
 		FFlecsWorldSettings WorldSettings;
 		WorldSettings.WorldName = TEXT("TestWorld");
-		WorldSettings.DefaultWorkerThreads = 4;
-		WorldSettings.bUseTaskThreads = true;
 		WorldSettings.Modules = InModules;
 		
 		FlecsWorld = WorldSubsystem->CreateWorld(TEXT("TestWorld"), WorldSettings);
