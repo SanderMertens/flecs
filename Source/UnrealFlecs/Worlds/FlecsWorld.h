@@ -31,12 +31,6 @@ DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGR
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"),
 	STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
 
-#ifdef FORCEINLINE_DEBUGGABLE
-#undef FORCEINLINE_DEBUGGABLE
-#endif
-
-#define FORCEINLINE_DEBUGGABLE inline
-
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorld final : public UObject
 {
@@ -1470,9 +1464,3 @@ public:
 	FFlecsTypeMapComponent* TypeMapComponent;
 	
 }; // class UFlecsWorld
-
-#ifdef FORCEINLINE_DEBUGGABLE
-#undef FORCEINLINE_DEBUGGABLE
-#endif // FORCEINLINE_DEBUGGABLE
-
-#define FORCEINLINE_DEBUGGABLE FORCEINLINE
