@@ -58,8 +58,8 @@ struct FFlecsThreadWrapper
 	FFlecsThreadWrapper(ecs_os_thread_callback_t Callback, void* Data)
 	{
 		Runnable = new FFlecsRunnable(Callback, Data);
-		RunnableThread = FRunnableThread::Create(Runnable, TEXT("FlecsThreadWrapper"), 0,
-			TaskThread);
+		RunnableThread = FRunnableThread::Create(
+			Runnable, TEXT("FlecsThreadWrapper"), 0, TaskThread);
 	}
 
 	~FFlecsThreadWrapper()
