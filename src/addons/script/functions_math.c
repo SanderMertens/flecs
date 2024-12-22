@@ -9,6 +9,113 @@
 #include "script.h"
 #include <math.h>
 
+typedef struct ecs_script_rng_t {
+    uint64_t x; /* Current state (initialize with seed) */
+    uint64_t w; /* Weyl sequence increment */
+    uint64_t s; /* Constant for Weyl sequence */
+    int32_t refcount; /* Necessary as flecs script doesn't have ref types */
+} ecs_script_rng_t;
+
+static
+ecs_script_rng_t* flecs_script_rng_new(uint64_t seed) {
+    ecs_script_rng_t *result = ecs_os_calloc_t(ecs_script_rng_t);
+    result->x = seed;
+    result->w = 0;
+    result->s = 0xb5ad4eceda1ce2a9; /* Constant for the Weyl sequence */
+    result->refcount = 1;
+    return result;
+}
+
+static
+void flecs_script_rng_keep(ecs_script_rng_t *rng) {
+    if (!rng) {
+        return;
+    }
+    rng->refcount ++;
+}
+
+static
+void flecs_script_rng_free(ecs_script_rng_t *rng) {
+    if (!rng) {
+        return;
+    }
+    ecs_assert(rng->refcount > 0, ECS_INTERNAL_ERROR, NULL);
+    if (!--rng->refcount) {
+        ecs_os_free(rng);
+    }
+}
+
+static
+uint64_t flecs_script_rng_next(ecs_script_rng_t *rng) {
+    rng->x *= rng->x;
+    rng->x += (rng->w += rng->s);
+    rng->x = (rng->x >> 32) | (rng->x << 32);
+    return rng->x;
+}
+
+ECS_COMPONENT_DECLARE(EcsScriptRng);
+
+static
+ECS_CTOR(EcsScriptRng, ptr, {
+    ptr->seed = 0;
+    ptr->impl = NULL;
+})
+
+static
+ECS_COPY(EcsScriptRng, dst, src, {
+    flecs_script_rng_keep(src->impl);
+    if (dst->impl != src->impl) {
+        flecs_script_rng_free(dst->impl);
+    }
+    dst->seed = src->seed;
+    dst->impl = src->impl;
+})
+
+static
+ECS_MOVE(EcsScriptRng, dst, src, {
+    flecs_script_rng_free(dst->impl);
+    dst->seed = src->seed;
+    dst->impl = src->impl;
+    src->impl = NULL;
+})
+
+static
+ECS_DTOR(EcsScriptRng, ptr, {
+    flecs_script_rng_free(ptr->impl);
+})
+
+void flecs_script_rng_get_float(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    EcsScriptRng *rng = argv[0].ptr;
+    if (!rng->impl) rng->impl = flecs_script_rng_new(rng->seed);
+    uint64_t x = flecs_script_rng_next(rng->impl);
+    double max = *(double*)argv[1].ptr;
+    double *r = result->ptr;
+    *r = (double)x / ((double)UINT64_MAX / max);
+}
+
+void flecs_script_rng_get_uint(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    EcsScriptRng *rng = argv[0].ptr;
+    if (!rng->impl) rng->impl = flecs_script_rng_new(rng->seed);
+    uint64_t x = flecs_script_rng_next(rng->impl);
+    uint64_t max = *(uint64_t*)argv[1].ptr;
+    uint64_t *r = result->ptr;
+    *r = x % max;
+}
+
 #define FLECS_MATH_FUNC_F64(name, ...)\
     static\
     void flecs_math_##name(\
@@ -196,6 +303,44 @@ void FlecsScriptMathImport(
     FLECS_MATH_FUNC_DEF_F64(round, "Round to nearest");
 
     FLECS_MATH_FUNC_DEF_F64(abs, "Compute absolute value");
+
+    ecs_set_name_prefix(world, "EcsScript");
+
+    ECS_COMPONENT_DEFINE(world, EcsScriptRng);
+
+    ecs_set_hooks(world, EcsScriptRng, {
+        .ctor = ecs_ctor(EcsScriptRng),
+        .move = ecs_move(EcsScriptRng),
+        .copy = ecs_copy(EcsScriptRng),
+        .dtor = ecs_dtor(EcsScriptRng),
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsScriptRng),
+        .members = {
+            { .name = "seed", .type = ecs_id(ecs_u64_t) }
+        }
+    });
+
+    ecs_method(world, {
+        .parent = ecs_id(EcsScriptRng),
+        .name = "f",
+        .return_type = ecs_id(ecs_f64_t),
+        .params = {
+            { .name = "max", .type = ecs_id(ecs_f64_t) }
+        },
+        .callback = flecs_script_rng_get_float
+    });
+
+    ecs_method(world, {
+        .parent = ecs_id(EcsScriptRng),
+        .name = "u",
+        .return_type = ecs_id(ecs_u64_t),
+        .params = {
+            { .name = "max", .type = ecs_id(ecs_u64_t) }
+        },
+        .callback = flecs_script_rng_get_uint
+    });
 }
 
 #endif

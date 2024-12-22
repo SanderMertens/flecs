@@ -14275,6 +14275,15 @@ void FlecsUnitsImport(
 extern "C" {
 #endif
 
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptRng);
+
+/* Randon number generator */
+typedef struct {
+    uint64_t seed;
+    void *impl;
+} EcsScriptRng;
+
 /** Script math import function.
  * Usage:
  * @code

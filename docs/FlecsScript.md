@@ -648,6 +648,20 @@ The following table lists the constants in the `flecs.script.math` namespace:
 | `E`               | Euler's number                            | `f64`    | `2.71828182845904523536028747135266250` |
 | `PI`              | Ratio of circle circumference to diameter | `f64`    | `3.14159265358979323846264338327950288` |
 
+The following table lists methods of the `flecs.script.math.Rng` type:
+
+| **Method Name**   | **Description**                                    | **Return Type** | **Arguments**       |
+|-------------------|----------------------------------------------------|-----------------|---------------------|
+| `u`               | Returns random unsigned integer between 0 and max  | `u64`           | `(u64 max)`         |
+| `f`               | Returns random floating point between 0 and max    | `f64`           | `(f64 max)`         |
+
+The random number generator can be used like this:
+
+```cpp
+const rng = flecs.script.math.Rng: {}
+const x = $rng.f(1.0)
+```
+
 To use the math functions, make sure to use a Flecs build compiled with the `FLECS_SCRIPT_MATH` addon (disabled by default) and that the module is imported:
 
 ```c
