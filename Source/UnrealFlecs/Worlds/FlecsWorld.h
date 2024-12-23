@@ -130,10 +130,6 @@ public:
 			{
 				const UObject* Object = Data->Get();
 				return Serializer->value(flecs::Uptr, std::addressof(Object));
-			})
-			.assign_null([](FObjectPtr* Data)
-			{
-				
 			});
 		
 		World.component<FWeakObjectPtr>()

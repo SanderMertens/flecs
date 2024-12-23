@@ -5,6 +5,7 @@
 #include <condition_variable>
 
 #include "CoreMinimal.h"
+#include "Experimental/Async/ConditionVariable.h"
 #include "flecs/os_api.h"
 #include "Logs/FlecsCategories.h"
 #include "SolidMacros/Macros.h"
@@ -15,7 +16,7 @@ LLM_DEFINE_TAG(FlecsMemoryTag, "Flecs Memory");
 DECLARE_STATS_GROUP(TEXT("FlecsOS"), STATGROUP_FlecsOS, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("FlecsOS::TaskThread"), STAT_FlecsOS, STATGROUP_FlecsOS);
 
-class FFlecsRunnable : public FRunnable
+class FFlecsRunnable final : public FRunnable
 {
 public:
 	FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InData)
@@ -51,7 +52,7 @@ struct FFlecsThreadWrapper
 {
 	static constexpr EThreadPriority TaskThread = TPri_Highest;
 	
-	FRunnable* Runnable = nullptr;
+	FFlecsRunnable* Runnable = nullptr;
 	FRunnableThread* RunnableThread = nullptr;
 	std::atomic<bool> bJoined { false };
 
@@ -138,8 +139,8 @@ struct FFlecsTask
 
 struct FFlecsConditionWrapper
 {
-	std::condition_variable ConditionalVariable;
-	std::mutex* Mutex;
+	UE::FConditionVariable ConditionalVariable;
+	FCriticalSection* Mutex;
 }; // struct ConditionWrapper
 
 struct FOSApiInitializer
@@ -159,32 +160,32 @@ struct FOSApiInitializer
 
 	    os_api.mutex_new_ = []() -> ecs_os_mutex_t
 	    {
-	    	std::mutex* Mutex = new std::mutex();
+	    	FCriticalSection* Mutex = new FCriticalSection();
 	        return reinterpret_cast<ecs_os_mutex_t>(Mutex);
 	    };
 
 		os_api.mutex_free_ = [](ecs_os_mutex_t Mutex)
 		{
-			std::mutex* MutexPtr = reinterpret_cast<std::mutex*>(Mutex);
+			FCriticalSection* MutexPtr = reinterpret_cast<FCriticalSection*>(Mutex);
 			delete MutexPtr;
 		};
 
 		os_api.mutex_lock_ = [](ecs_os_mutex_t Mutex)
 		{
-			std::mutex* MutexPtr = reinterpret_cast<std::mutex*>(Mutex);
-			MutexPtr->lock();
+			FCriticalSection* MutexPtr = reinterpret_cast<FCriticalSection*>(Mutex);
+			MutexPtr->Lock();
 		};
 
 		os_api.mutex_unlock_ = [](ecs_os_mutex_t Mutex)
 		{
-			std::mutex* MutexPtr = reinterpret_cast<std::mutex*>(Mutex);
-			MutexPtr->unlock();
+			FCriticalSection* MutexPtr = reinterpret_cast<FCriticalSection*>(Mutex);
+			MutexPtr->Unlock();
 		};
 
 		os_api.cond_new_ = []() -> ecs_os_cond_t
 		{
 			FFlecsConditionWrapper* Wrapper = new FFlecsConditionWrapper();
-			Wrapper->Mutex = new std::mutex();
+			Wrapper->Mutex = new FCriticalSection();
 			return reinterpret_cast<ecs_os_cond_t>(Wrapper);
 		};
 
@@ -203,7 +204,7 @@ struct FOSApiInitializer
 			if (Cond)
 			{
 				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
-				Wrapper->ConditionalVariable.notify_one();
+				Wrapper->ConditionalVariable.NotifyOne();
 			}
 		};
 
@@ -212,7 +213,7 @@ struct FOSApiInitializer
 			if (Cond)
 			{
 				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
-				Wrapper->ConditionalVariable.notify_all();
+				Wrapper->ConditionalVariable.NotifyAll();
 			}
 		};
 
@@ -221,10 +222,9 @@ struct FOSApiInitializer
 			if (Cond && Mutex)
 			{
 				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
-				std::mutex* std_mutex = reinterpret_cast<std::mutex*>(Mutex);
-				std::unique_lock<std::mutex> Lock(*std_mutex, std::adopt_lock);
-				Wrapper->ConditionalVariable.wait(Lock);
-				Lock.release(); // Don't unlock on destruction since Flecs manages the lock
+				FCriticalSection* CritSection = reinterpret_cast<FCriticalSection*>(Mutex);
+
+				Wrapper->ConditionalVariable.Wait(*CritSection);
 			}
 		};
 
