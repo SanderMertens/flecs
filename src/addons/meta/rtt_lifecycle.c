@@ -641,7 +641,7 @@ void flecs_rtt_init_default_hooks_array(
     bool move_hook_required = element_ti->hooks.move != NULL;
     bool copy_hook_required = element_ti->hooks.copy != NULL;
     bool valid_cmp = element_ti->hooks.cmp != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
-    bool valid_equals = element_ti->hooks.equals != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+    bool valid_equals = element_ti->hooks.equals != NULL && !(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
     
 
     ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
