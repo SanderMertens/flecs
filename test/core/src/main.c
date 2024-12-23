@@ -1170,6 +1170,8 @@ void ComponentLifecycle_move_flags(void);
 void ComponentLifecycle_copy_flags(void);
 void ComponentLifecycle_ctor_move_dtor_flags(void);
 void ComponentLifecycle_move_dtor_flags(void);
+void ComponentLifecycle_cmp_flags(void);
+void ComponentLifecycle_equals_flags(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -6837,6 +6839,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "move_dtor_flags",
         ComponentLifecycle_move_dtor_flags
+    },
+    {
+        "cmp_flags",
+        ComponentLifecycle_cmp_flags
+    },
+    {
+        "equals_flags",
+        ComponentLifecycle_equals_flags
     }
 };
 
@@ -11589,7 +11599,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        120,
+        122,
         ComponentLifecycle_testcases
     },
     {
