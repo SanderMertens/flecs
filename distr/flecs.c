@@ -61576,6 +61576,11 @@ int flecs_script_eval_id(
 {
     ecs_entity_t second_from = 0;
 
+    if (id->eval) {
+        /* Already resolved */
+        return 0;
+    }
+
     if (!id->first) {
         flecs_script_eval_error(v, node, 
             "invalid component/tag identifier");
@@ -62334,8 +62339,15 @@ int flecs_script_eval_const(
         return -1;
     }
 
-    if (node->type) {
-        ecs_entity_t type = flecs_script_find_entity(v, 0, node->type);
+    ecs_entity_t type = 0;
+    const ecs_type_info_t *ti = NULL;
+    if (node->expr) {
+        type = node->expr->type;
+        ti = node->expr->type_info;
+    }
+
+    if (!type && node->type) {
+        type = flecs_script_find_entity(v, 0, node->type);
         if (!type) {
             flecs_script_eval_error(v, node,
                 "unresolved type '%s' for const variable '%s'", 
@@ -62343,15 +62355,21 @@ int flecs_script_eval_const(
             return -1;
         }
 
-        const ecs_type_info_t *ti = flecs_script_get_type_info(v, node, type);
+        ti = flecs_script_get_type_info(v, node, type);
         if (!ti) {
             flecs_script_eval_error(v, node,
                 "failed to retrieve type info for '%s' for const variable '%s'", 
                     node->type, node->name);
             return -1;
         }
+    }
 
-        var->value.ptr = flecs_stack_calloc(&v->r->stack, ti->size, ti->alignment);
+    if (type && ti) {
+        ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        var->value.ptr = flecs_stack_calloc(
+            &v->r->stack, ti->size, ti->alignment);
         var->value.type = type;
         var->type_info = ti;
 
@@ -62380,7 +62398,8 @@ int flecs_script_eval_const(
         const ecs_type_info_t *ti = ecs_get_type_info(v->world, value.type);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        var->value.ptr = flecs_stack_calloc(&v->r->stack, ti->size, ti->alignment);
+        var->value.ptr = flecs_stack_calloc(
+            &v->r->stack, ti->size, ti->alignment);
         var->value.type = value.type;
         var->type_info = ti;
 
