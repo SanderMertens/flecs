@@ -193,7 +193,7 @@ compute_block:
             it, table, block_index, and_fields, not_fields, op_ctx);
 
         /* If table doesn't have bitset columns, all columns match */
-        if (!(op_ctx->has_bitset = row_mask.has_bitset)) {
+        if (!((op_ctx->has_bitset = row_mask.has_bitset))) {
             if (!not_fields) {
                 return true;
             } else {
