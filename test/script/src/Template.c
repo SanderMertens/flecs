@@ -1649,7 +1649,6 @@ void Template_template_w_pair_w_this_var(void) {
 
     const char *expr =
     LINE "template Foo {\n"
-    LINE "  prop x = flecs.meta.f32: 10\n" // dummy prop
     LINE "  (Rel, $this)\n"
     LINE "}\n"
     LINE "ent { Foo: {} }\n"
@@ -1662,6 +1661,226 @@ void Template_template_w_pair_w_this_var(void) {
 
     test_assert(ecs_has_id(world, ent, foo));
     test_assert(ecs_has_pair(world, ent, Rel, ent));
+
+    ecs_fini(world);
+}
+
+void Template_template_w_pair_w_prop_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    LINE "template Foo {\n"
+    LINE "  prop x = flecs.meta.entity: flecs\n"
+    LINE "  (Rel, $x)\n"
+    LINE "}\n"
+    LINE "ent { Foo: {flecs.core} }\n"
+    LINE "\n";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+
+    test_assert(ecs_has_id(world, ent, foo));
+    test_assert(ecs_has_pair(world, ent, Rel, EcsFlecsCore));
+
+    ecs_fini(world);
+}
+
+void Template_template_w_pair_w_const_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    LINE "template Foo {\n"
+    LINE "  const x = flecs.meta.entity: flecs\n"
+    LINE "  (Rel, $x)\n"
+    LINE "}\n"
+    LINE "ent { Foo: {} }\n"
+    LINE "\n";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+
+    test_assert(ecs_has_id(world, ent, foo));
+    test_assert(ecs_has_pair(world, ent, Rel, EcsFlecs));
+
+    ecs_fini(world);
+}
+
+void Template_template_w_pair_scope_w_this_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, PairIsTag);
+
+    const char *expr =
+    LINE "template Foo {\n"
+    LINE "  (Rel, $this) {\n"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "}\n"
+    LINE "ent { Foo: {} }\n"
+    LINE "\n";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    ecs_entity_t child = ecs_lookup(world, "ent.child");
+
+    test_assert(foo != 0);
+    test_assert(ent != 0);
+    test_assert(child != 0);
+
+    test_assert(ecs_has_id(world, ent, foo));
+    test_assert(ecs_has_pair(world, child, Rel, ent));
+
+    ecs_fini(world);
+}
+
+void Template_template_w_pair_scope_w_prop_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    LINE "template Foo {\n"
+    LINE "  prop x = flecs.meta.entity: flecs\n"
+    LINE "  (Rel, $x) {\n"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "}\n"
+    LINE "ent { Foo: {flecs.core} }\n"
+    LINE "\n";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    ecs_entity_t child = ecs_lookup(world, "ent.child");
+
+    test_assert(foo != 0);
+    test_assert(ent != 0);
+    test_assert(child != 0);
+
+    test_assert(ecs_has_id(world, ent, foo));
+    test_assert(ecs_has_pair(world, child, Rel, EcsFlecsCore));
+
+    ecs_fini(world);
+}
+
+void Template_template_w_pair_scope_w_const_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    LINE "template Foo {\n"
+    LINE "  prop x = flecs.meta.entity: flecs\n"
+    LINE "  (Rel, $x) {\n"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "}\n"
+    LINE "ent { Foo: {} }\n"
+    LINE "\n";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    ecs_entity_t child = ecs_lookup(world, "ent.child");
+
+    test_assert(foo != 0);
+    test_assert(ent != 0);
+    test_assert(child != 0);
+
+    test_assert(ecs_has_id(world, ent, foo));
+    test_assert(ecs_has_pair(world, child, Rel, EcsFlecs));
+
+    ecs_fini(world);
+}
+
+void Template_template_w_pair_w_unresolved_var_first(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    LINE "template Foo {\n"
+    LINE "  ($x, Tgt)\n"
+    LINE "}\n"
+    LINE "ent { Foo: {} }\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_pair_w_unresolved_var_second(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    LINE "template Foo {\n"
+    LINE "  (Rel, $x)\n"
+    LINE "}\n"
+    LINE "ent { Foo: {} }\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_pair_scope_w_unresolved_var_first(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    LINE "template Foo {\n"
+    LINE "  (Rel, $x) {\n"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "}\n"
+    LINE "ent { Foo: {} }\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_pair_scope_w_unresolved_var_second(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    LINE "template Foo {\n"
+    LINE "  ($x, Tgt) {\n"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "}\n"
+    LINE "ent { Foo: {} }\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
@@ -2308,6 +2527,94 @@ void Template_template_w_with_prop(void) {
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_child_w_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  const pos = Position: {10, 20}"
+    LINE "  child {"
+    LINE "    $pos"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e = Foo: {}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, foo));
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_child_w_prop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop pos = Position: {0, 0}"
+    LINE "  child {"
+    LINE "    $pos"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e = Foo: {{10, 20}}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, foo));
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }
