@@ -10,18 +10,20 @@
 int flecs_value_copy_to(
     ecs_world_t *world,
     ecs_value_t *dst,
-    const ecs_value_t *src)
+    const ecs_expr_value_t *src)
 {
     ecs_assert(dst->type != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(src->type != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(src->ptr != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(src->value.type != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(src->value.ptr != 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (src->type == dst->type) {
-        ecs_value_copy(world, src->type, dst->ptr, src->ptr);
+    if (src->value.type == dst->type) {
+        ecs_assert(src->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_value_copy_w_type_info(
+            world, src->type_info, dst->ptr, src->value.ptr);
     } else {
         /* Cast value to desired output type */
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
-        if (ecs_meta_set_value(&cur, src)) {
+        if (ecs_meta_set_value(&cur, &src->value)) {
             goto error;
         }
     }

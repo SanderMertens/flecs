@@ -342,6 +342,7 @@ int flecs_expr_node_to_str(
         }
         break;
     case EcsExprCast:
+    case EcsExprCastNumber:
         if (flecs_expr_cast_to_str(v, 
             (const ecs_expr_cast_t*)node)) 
         {

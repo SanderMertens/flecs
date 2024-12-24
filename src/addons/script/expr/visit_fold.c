@@ -572,6 +572,7 @@ int flecs_expr_visit_fold(
         }
         break;
     case EcsExprCast:
+    case EcsExprCastNumber:
         if (flecs_expr_cast_visit_fold(script, node_ptr, desc)) {
             goto error;
         }

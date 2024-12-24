@@ -283,11 +283,6 @@ bool flecs_expr_explicit_cast_allowed(
         return true;
     }
 
-    // const EcsPrimitive *from_ptype = ecs_get(world, from, EcsPrimitive);
-    // const EcsPrimitive *to_ptype = ecs_get(world, to, EcsPrimitive);
-    // ecs_assert(from_ptype != NULL, ECS_INTERNAL_ERROR, NULL);
-    // ecs_assert(to_ptype != NULL, ECS_INTERNAL_ERROR, NULL);
-
     return true;
 }
 
@@ -309,6 +304,12 @@ ecs_expr_cast_t* flecs_expr_cast(
     ecs_allocator_t *a = &((ecs_script_impl_t*)script)->allocator;
     ecs_expr_cast_t *result = flecs_calloc_t(a, ecs_expr_cast_t);
     result->node.kind = EcsExprCast;
+    if (flecs_expr_is_type_number(expr->type) && 
+        flecs_expr_is_type_number(type)) 
+    {
+        result->node.kind = EcsExprCastNumber;
+    }
+
     result->node.pos = expr->pos;
     result->node.type = type;
     result->node.type_info = ecs_get_type_info(script->world, type);
