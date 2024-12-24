@@ -73,6 +73,10 @@ int flecs_script_check_node(
     ecs_script_eval_visitor_t *v,
     ecs_script_node_t *node);
 
+int flecs_script_check_scope(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_scope_t *node);
+
 /* Functions shared between check and eval visitor */
 
 int flecs_script_eval_scope(

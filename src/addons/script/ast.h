@@ -38,6 +38,10 @@ struct ecs_script_scope_t {
     ecs_vec_t stmts;
     ecs_script_scope_t *parent;
     ecs_id_t default_component_eval;
+
+    /* Array with component ids that are added in scope. Used to limit
+     * archetype moves. */
+    ecs_vec_t components; /* vec<ecs_id_t> */
 };
 
 typedef struct ecs_script_id_t {
@@ -86,7 +90,7 @@ struct ecs_script_entity_t {
     ecs_script_scope_t *scope;
     ecs_expr_node_t *name_expr;
 
-    // Populated during eval
+    /* Populated during eval */
     ecs_script_entity_t *parent;
     ecs_entity_t eval;
     ecs_entity_t eval_kind;

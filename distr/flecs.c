@@ -3134,6 +3134,12 @@ void flecs_invoke_hook(
     ecs_entity_t event,
     ecs_iter_action_t hook);
 
+void flecs_add_ids(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t *ids,
+    int32_t count);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
@@ -4699,6 +4705,10 @@ struct ecs_script_scope_t {
     ecs_vec_t stmts;
     ecs_script_scope_t *parent;
     ecs_id_t default_component_eval;
+
+    /* Array with component ids that are added in scope. Used to limit
+     * archetype moves. */
+    ecs_vec_t components; /* vec<ecs_id_t> */
 };
 
 typedef struct ecs_script_id_t {
@@ -4747,7 +4757,7 @@ struct ecs_script_entity_t {
     ecs_script_scope_t *scope;
     ecs_expr_node_t *name_expr;
 
-    // Populated during eval
+    /* Populated during eval */
     ecs_script_entity_t *parent;
     ecs_entity_t eval;
     ecs_entity_t eval_kind;
@@ -5514,6 +5524,10 @@ int flecs_script_eval_node(
 int flecs_script_check_node(
     ecs_script_eval_visitor_t *v,
     ecs_script_node_t *node);
+
+int flecs_script_check_scope(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_scope_t *node);
 
 /* Functions shared between check and eval visitor */
 
@@ -6853,6 +6867,29 @@ void flecs_remove_id(
     flecs_commit(world, entity, r, dst_table, &diff, true, 0);
 
     flecs_defer_end(world, stage);
+}
+
+void flecs_add_ids(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t *ids,
+    int32_t count)
+{
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
+    flecs_table_diff_builder_init(world, &diff);
+
+    ecs_table_t *table = ecs_get_table(world, entity);
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        table = flecs_find_table_add(world, table, id, &diff);
+    }
+
+    ecs_table_diff_t table_diff;
+    flecs_table_diff_build_noalloc(&diff, &table_diff);
+    flecs_commit(world, entity, r, table, &table_diff, true, 0);
+    flecs_table_diff_builder_fini(world, &diff);
 }
 
 static
@@ -55320,6 +55357,7 @@ ecs_script_scope_t* flecs_script_scope_new(
     ecs_script_scope_t *result = flecs_ast_new(
         parser, ecs_script_scope_t, EcsAstScope);
     flecs_ast_vec(parser, result->stmts, ecs_script_node_t);
+    ecs_vec_init_t(NULL, &result->components, ecs_id_t, 0);
     return result;
 }
 
@@ -55336,6 +55374,7 @@ ecs_script_scope_t* flecs_script_insert_scope(
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_script_scope_t *result = flecs_script_scope_new(parser);
     flecs_ast_append(parser, scope->stmts, ecs_script_scope_t, result);
+    ecs_vec_init_t(NULL, &result->components, ecs_id_t, 0);
     return result;
 }
 
@@ -59461,7 +59500,7 @@ void flecs_script_template_instantiate(
         /* Run template code */
         v.vars = vars;
 
-        ecs_script_visit_scope(&v, scope);
+        flecs_script_eval_scope(&v, scope);
 
         /* Pop variable scope */
         ecs_script_vars_pop(vars);
@@ -59650,7 +59689,7 @@ int flecs_script_template_preprocess(
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, "this");
     var->value.type = ecs_id(ecs_entity_t);
-    int result = ecs_script_visit_scope(v, template->node->scope);
+    int result = flecs_script_check_scope(v, template->node->scope);
     v->vars = ecs_script_vars_pop(v->vars);
     v->base.visit = prev_visit;
     v->template = NULL;
@@ -60965,12 +61004,37 @@ error:
     return -1;
 }
 
-static
 int flecs_script_check_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_scope_t *node)
 {
-    return flecs_script_eval_scope(v, node);
+    int ret =  flecs_script_eval_scope(v, node);
+    if (ret) {
+        return -1;
+    }
+
+    /* Gather all resolved components in scope so we can add them in one bulk
+     * operation to entities. */
+    ecs_allocator_t *a = &v->base.script->allocator;
+    int32_t i, count = ecs_vec_count(&node->stmts);
+    ecs_script_node_t **stmts = ecs_vec_first(&node->stmts);
+    for (i = 0; i < count; i ++) {
+        ecs_script_node_t *stmt = stmts[i];
+        ecs_id_t id = 0;
+        if (stmt->kind == EcsAstComponent) {
+            ecs_script_component_t *cmp = (ecs_script_component_t*)stmt;
+            id = cmp->id.eval;
+        } else if (stmt->kind == EcsAstTag) {
+            ecs_script_tag_t *cmp = (ecs_script_tag_t*)stmt;
+            id = cmp->id.eval;
+        }
+
+        if (id) {
+            ecs_vec_append_t(a, &node->components, ecs_id_t)[0] = id;
+        }
+    }
+
+    return 0;
 }
 
 static
@@ -61883,6 +61947,15 @@ int flecs_script_eval_scope(
     if (scope_parent && (scope_parent->kind == EcsAstEntity)) {
         if (!v->template) {
             v->parent = ecs_script_node(entity, scope_parent)->eval;
+        }
+    }
+
+    if (v->entity) {
+        ecs_entity_t src = v->entity->eval;
+        int32_t count = ecs_vec_count(&node->components);
+        if (src != EcsSingleton && count) {
+            flecs_add_ids(
+                v->world, src, ecs_vec_first(&node->components), count);
         }
     }
 

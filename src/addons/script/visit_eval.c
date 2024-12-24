@@ -459,6 +459,15 @@ int flecs_script_eval_scope(
         }
     }
 
+    if (v->entity) {
+        ecs_entity_t src = v->entity->eval;
+        int32_t count = ecs_vec_count(&node->components);
+        if (src != EcsSingleton && count) {
+            flecs_add_ids(
+                v->world, src, ecs_vec_first(&node->components), count);
+        }
+    }
+
     int result = ecs_script_visit_scope(v, node);
 
     ecs_vec_set_count_t(a, &v->r->using, ecs_entity_t, prev_using_count);
