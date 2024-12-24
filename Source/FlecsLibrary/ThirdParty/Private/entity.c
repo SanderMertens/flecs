@@ -4752,7 +4752,7 @@ ecs_table_t* flecs_cmd_batch_add_diff(
     const ecs_id_t *p_ids = prev->type.array;
     const ecs_id_t *c_ids = cur->type.array;
 
-    for (; c < c_count;) {
+    while (c < c_count) {
         const ecs_id_t c_id = c_ids[c];
         const ecs_id_t p_id = p_ids[p];
 
