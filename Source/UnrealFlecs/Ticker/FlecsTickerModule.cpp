@@ -81,7 +81,7 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 
 	InWorld->SetPipeline(MainPipeline);
 
-	TickerInterval = 1.0 / TickerRate;
+	TickerInterval = 1.0 / static_cast<double>(TickerRate);
 }
 
 void UFlecsTickerModule::DeinitializeModule(UFlecsWorld* InWorld)
