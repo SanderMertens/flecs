@@ -221,7 +221,7 @@ void flecs_script_template_instantiate(
         /* Run template code */
         v.vars = vars;
 
-        ecs_script_visit_scope(&v, scope);
+        flecs_script_eval_scope(&v, scope);
 
         /* Pop variable scope */
         ecs_script_vars_pop(vars);
@@ -410,7 +410,7 @@ int flecs_script_template_preprocess(
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, "this");
     var->value.type = ecs_id(ecs_entity_t);
-    int result = ecs_script_visit_scope(v, template->node->scope);
+    int result = flecs_script_check_scope(v, template->node->scope);
     v->vars = ecs_script_vars_pop(v->vars);
     v->base.visit = prev_visit;
     v->template = NULL;
