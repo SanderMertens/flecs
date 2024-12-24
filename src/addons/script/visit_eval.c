@@ -180,14 +180,14 @@ int flecs_script_find_entity(
             goto error;
         }
 
-        if (var->value.ptr == NULL) {
-            if (!v->template) {
-                flecs_script_eval_error(v, NULL, 
-                    "variable '%s' is not initialized", path);
-                goto error;
-            } else {
-                return 0;
-            }
+        if (v->template) {
+            return 0;
+        }
+
+        if (var->value.ptr == NULL) {            
+            flecs_script_eval_error(v, NULL, 
+                "variable '%s' is not initialized", path);
+            goto error;
         }
 
         ecs_entity_t result = *(ecs_entity_t*)var->value.ptr;
