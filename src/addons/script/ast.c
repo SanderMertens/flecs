@@ -36,6 +36,7 @@ ecs_script_scope_t* flecs_script_scope_new(
     ecs_script_scope_t *result = flecs_ast_new(
         parser, ecs_script_scope_t, EcsAstScope);
     flecs_ast_vec(parser, result->stmts, ecs_script_node_t);
+    ecs_vec_init_t(NULL, &result->components, ecs_id_t, 0);
     return result;
 }
 
@@ -52,6 +53,7 @@ ecs_script_scope_t* flecs_script_insert_scope(
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_script_scope_t *result = flecs_script_scope_new(parser);
     flecs_ast_append(parser, scope->stmts, ecs_script_scope_t, result);
+    ecs_vec_init_t(NULL, &result->components, ecs_id_t, 0);
     return result;
 }
 
