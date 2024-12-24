@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "flecs/Unreal/FlecsTypeMapComponent.h"
+
 namespace flecs 
 {
 
@@ -12,6 +14,18 @@ inline void world::init_builtin_components() {
     this->component<Component>();
     this->component<Identifier>();
     this->component<Poly>();
+
+    this->component<FFlecsTypeMapComponent>()
+        .add<FFlecsTypeMapComponent>()
+        .add(flecs::Sparse);
+
+    FFlecsTypeMapComponent* type_map = this->get_mut<FFlecsTypeMapComponent>();
+
+    flecs::entity ScriptStructEntity = this->component<FFlecsScriptStructComponent>()
+        .set<FFlecsScriptStructComponent>({ TBaseStructure<FFlecsScriptStructComponent>::Get() });
+
+    type_map->ScriptStructMap.emplace(FFlecsScriptStructComponent::StaticStruct(), ScriptStructEntity);
+    
 
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);
@@ -28,9 +42,6 @@ inline void world::init_builtin_components() {
 #   ifdef FLECS_META
     meta::_::init(*this);
 #   endif
-
-    component<FFlecsScriptStructComponent>()
-        .set<FFlecsScriptStructComponent>({ TBaseStructure<FFlecsScriptStructComponent>::Get() });
 }
 
 template <typename T>
