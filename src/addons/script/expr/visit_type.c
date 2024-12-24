@@ -949,6 +949,7 @@ int flecs_expr_variable_visit_type(
         desc->vars, node->name);
     if (var) {
         node->node.type = var->value.type;
+        node->frame_offset = var->frame_offset;
     } else {
         if (flecs_expr_global_variable_resolve(script, node, desc)) {
             goto error;

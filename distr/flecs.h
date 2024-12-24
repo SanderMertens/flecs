@@ -14370,12 +14370,15 @@ typedef struct ecs_script_var_t {
     const char *name;
     ecs_value_t value;
     const ecs_type_info_t *type_info;
+    int32_t frame_offset;
     bool is_const;
 } ecs_script_var_t;
 
 /** Script variable scope. */
 typedef struct ecs_script_vars_t {
     struct ecs_script_vars_t *parent;
+    int32_t frame_offset;
+
     ecs_hashmap_t var_index;
     ecs_vec_t vars;
 
@@ -14765,6 +14768,27 @@ FLECS_API
 ecs_script_var_t* ecs_script_vars_lookup(
     const ecs_script_vars_t *vars,
     const char *name);
+
+/** Lookup a variable by frame offset.
+ * This operation provides a faster way to lookup variables that are always 
+ * declared in the same order in a ecs_script_vars_t scope.
+ * 
+ * The frame offset of a variable can be obtained from the ecs_script_var_t
+ * type. The provided frame offset must be valid for the provided variable 
+ * stack. If the frame offset is not valid, this operation will panic.
+ * 
+ * @param vars The variable scope.
+ * @param name The variable frame offset.asm
+ * @return The variable.
+ */
+FLECS_API
+ecs_script_var_t* ecs_script_vars_from_frame_offset(
+    const ecs_script_vars_t *vars,
+    int32_t frame_offset);
+
+FLECS_API
+void ecs_script_vars_print(
+    const ecs_script_vars_t *vars);
 
 /** Convert iterator to vars
  * This operation converts an iterator to a variable array. This allows for

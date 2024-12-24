@@ -49,6 +49,7 @@ ecs_expr_variable_t* flecs_expr_variable_from(
     ecs_expr_variable_t *result = flecs_calloc_t(
         &((ecs_script_impl_t*)script)->allocator, ecs_expr_variable_t);
     result->name = name;
+    result->frame_offset = -1;
     result->node.kind = EcsExprVariable;
     result->node.pos = node ? node->pos : NULL;
     return result;
@@ -176,6 +177,7 @@ ecs_expr_variable_t* flecs_expr_variable(
     ecs_expr_variable_t *result = flecs_expr_ast_new(
         parser, ecs_expr_variable_t, EcsExprVariable);
     result->name = value;
+    result->frame_offset = -1;
     return result;
 }
 

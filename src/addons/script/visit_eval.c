@@ -343,6 +343,7 @@ int flecs_script_eval_expr(
     ecs_value_t *value)
 {
     ecs_expr_node_t *expr = *expr_ptr;
+    ecs_assert(expr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_script_impl_t *impl = v->base.script;
     ecs_script_t *script = &impl->pub;
 
@@ -1321,6 +1322,7 @@ void flecs_script_eval_visit_init(
         ecs_allocator_t *a = &v->r->allocator;
         v->vars = flecs_script_vars_push(v->vars, &v->r->stack, a);
         v->vars->parent = desc->vars;
+        v->vars->frame_offset = ecs_vec_count(&desc->vars->vars);
     }
 
     /* Always include flecs.meta */

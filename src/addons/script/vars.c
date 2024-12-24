@@ -37,6 +37,10 @@ ecs_script_vars_t* flecs_script_vars_push(
     result->parent = parent;
     if (parent) {
         result->world = parent->world;
+        result->frame_offset =
+            parent->frame_offset + ecs_vec_count(&parent->vars);
+    } else {
+        result->frame_offset = 0;
     }
     result->stack = stack;
     result->allocator = allocator;
@@ -126,6 +130,7 @@ ecs_script_var_t* ecs_script_vars_declare(
     var->value.ptr = NULL;
     var->value.type = 0;
     var->type_info = NULL;
+    var->frame_offset = ecs_vec_count(&vars->vars) + vars->frame_offset - 1;
     var->is_const = false;
 
     flecs_name_index_ensure(&vars->var_index,
@@ -188,6 +193,47 @@ ecs_script_var_t* ecs_script_vars_lookup(
 
     return ecs_vec_get_t(&vars->vars, ecs_script_var_t, 
         flecs_uto(int32_t, var_id - 1));
+}
+
+ecs_script_var_t* ecs_script_vars_from_frame_offset(
+    const ecs_script_vars_t *vars,
+    int32_t frame_offset)
+{
+    ecs_check(frame_offset >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (frame_offset < vars->frame_offset) {
+        ecs_assert(vars->parent != NULL, ECS_INTERNAL_ERROR, NULL);
+        return ecs_script_vars_from_frame_offset(vars->parent, frame_offset);
+    }
+
+    frame_offset -= vars->frame_offset;
+    ecs_check(frame_offset < ecs_vec_count(&vars->vars), 
+        ECS_INVALID_PARAMETER, NULL);
+
+    return ecs_vec_get_t(&vars->vars, ecs_script_var_t, frame_offset);
+error:
+    return NULL;
+}
+
+void ecs_script_vars_print(
+    const ecs_script_vars_t *vars)
+{
+    if (vars->parent) {
+        ecs_script_vars_print(vars->parent);
+    }
+
+    int32_t i, count = ecs_vec_count(&vars->vars);
+    ecs_script_var_t *array = ecs_vec_first(&vars->vars);
+    for (i = 0; i < count; i ++) {
+        ecs_script_var_t *var = &array[i];
+        if (!i) {
+            printf("FRAME ");
+        } else {
+            printf("      ");
+        }
+
+        printf("%2d: %s\n", var->frame_offset, var->name);
+    }
 }
 
 /* Static names for iterator fields */
