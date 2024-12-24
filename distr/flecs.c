@@ -5043,6 +5043,7 @@ typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
     const char *name;
     ecs_value_t global_value; /* Only set for global variables */
+    int32_t frame_offset; /* For fast variable lookups */
 } ecs_expr_variable_t;
 
 typedef struct ecs_expr_unary_t {
@@ -59412,6 +59413,13 @@ void flecs_script_template_instantiate(
         ecs_script_vars_t *vars = flecs_script_vars_push(
             NULL, &v.r->stack, &v.r->allocator);
         vars->parent = template->vars; /* Include hoisted variables */
+        vars->frame_offset = ecs_vec_count(&template->vars->vars);
+
+        /* Populate $this variable with instance entity */
+        ecs_entity_t instance = entities[i];
+        ecs_script_var_t *var = ecs_script_vars_declare(vars, "this");
+        var->value.type = ecs_id(ecs_entity_t);
+        var->value.ptr = &instance;
 
         /* Populate properties from template members */
         if (st) {
@@ -59427,16 +59435,11 @@ void flecs_script_template_instantiate(
             }
         }
 
-        /* Populate $this variable with instance entity */
-        ecs_entity_t instance = entities[i];
-        ecs_script_var_t *var = ecs_script_vars_declare(vars, "this");
-        var->value.type = ecs_id(ecs_entity_t);
-        var->value.ptr = &instance;
-
         ecs_script_clear(world, template_entity, instance);
 
         /* Run template code */
         v.vars = vars;
+
         ecs_script_visit_scope(&v, scope);
 
         /* Pop variable scope */
@@ -59624,6 +59627,8 @@ int flecs_script_template_preprocess(
 
     v->base.visit = (ecs_visit_action_t)flecs_script_template_eval;
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
+    ecs_script_vars_declare(v->vars, "this");
+
     int result = ecs_script_visit_scope(v, template->node->scope);
     v->vars = ecs_script_vars_pop(v->vars);
     v->base.visit = prev_visit;
@@ -60441,6 +60446,10 @@ ecs_script_vars_t* flecs_script_vars_push(
     result->parent = parent;
     if (parent) {
         result->world = parent->world;
+        result->frame_offset =
+            parent->frame_offset + ecs_vec_count(&parent->vars);
+    } else {
+        result->frame_offset = 0;
     }
     result->stack = stack;
     result->allocator = allocator;
@@ -60530,6 +60539,7 @@ ecs_script_var_t* ecs_script_vars_declare(
     var->value.ptr = NULL;
     var->value.type = 0;
     var->type_info = NULL;
+    var->frame_offset = ecs_vec_count(&vars->vars) + vars->frame_offset - 1;
     var->is_const = false;
 
     flecs_name_index_ensure(&vars->var_index,
@@ -60592,6 +60602,47 @@ ecs_script_var_t* ecs_script_vars_lookup(
 
     return ecs_vec_get_t(&vars->vars, ecs_script_var_t, 
         flecs_uto(int32_t, var_id - 1));
+}
+
+ecs_script_var_t* ecs_script_vars_from_frame_offset(
+    const ecs_script_vars_t *vars,
+    int32_t frame_offset)
+{
+    ecs_check(frame_offset >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (frame_offset < vars->frame_offset) {
+        ecs_assert(vars->parent != NULL, ECS_INTERNAL_ERROR, NULL);
+        return ecs_script_vars_from_frame_offset(vars->parent, frame_offset);
+    }
+
+    frame_offset -= vars->frame_offset;
+    ecs_check(frame_offset < ecs_vec_count(&vars->vars), 
+        ECS_INVALID_PARAMETER, NULL);
+
+    return ecs_vec_get_t(&vars->vars, ecs_script_var_t, frame_offset);
+error:
+    return NULL;
+}
+
+void ecs_script_vars_print(
+    const ecs_script_vars_t *vars)
+{
+    if (vars->parent) {
+        ecs_script_vars_print(vars->parent);
+    }
+
+    int32_t i, count = ecs_vec_count(&vars->vars);
+    ecs_script_var_t *array = ecs_vec_first(&vars->vars);
+    for (i = 0; i < count; i ++) {
+        ecs_script_var_t *var = &array[i];
+        if (!i) {
+            printf("FRAME ");
+        } else {
+            printf("      ");
+        }
+
+        printf("%2d: %s\n", var->frame_offset, var->name);
+    }
 }
 
 /* Static names for iterator fields */
@@ -61673,6 +61724,7 @@ int flecs_script_eval_expr(
     ecs_value_t *value)
 {
     ecs_expr_node_t *expr = *expr_ptr;
+    ecs_assert(expr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_script_impl_t *impl = v->base.script;
     ecs_script_t *script = &impl->pub;
 
@@ -62651,6 +62703,7 @@ void flecs_script_eval_visit_init(
         ecs_allocator_t *a = &v->r->allocator;
         v->vars = flecs_script_vars_push(v->vars, &v->r->stack, a);
         v->vars->parent = desc->vars;
+        v->vars->frame_offset = ecs_vec_count(&desc->vars->vars);
     }
 
     /* Always include flecs.meta */
@@ -75567,6 +75620,7 @@ ecs_expr_variable_t* flecs_expr_variable_from(
     ecs_expr_variable_t *result = flecs_calloc_t(
         &((ecs_script_impl_t*)script)->allocator, ecs_expr_variable_t);
     result->name = name;
+    result->frame_offset = -1;
     result->node.kind = EcsExprVariable;
     result->node.pos = node ? node->pos : NULL;
     return result;
@@ -75694,6 +75748,7 @@ ecs_expr_variable_t* flecs_expr_variable(
     ecs_expr_variable_t *result = flecs_expr_ast_new(
         parser, ecs_expr_variable_t, EcsExprVariable);
     result->name = value;
+    result->frame_offset = -1;
     return result;
 }
 
@@ -77290,8 +77345,19 @@ int flecs_expr_variable_visit_eval(
     ecs_assert(ctx->desc->vars != NULL, ECS_INVALID_OPERATION,
         "variables available at parse time are not provided");
 
-    const ecs_script_var_t *var = ecs_script_vars_lookup(
-        ctx->desc->vars, node->name);
+    const ecs_script_var_t *var;
+    if (node->frame_offset != -1) {
+        var = ecs_script_vars_from_frame_offset(
+            ctx->desc->vars, node->frame_offset);
+        ecs_assert(!ecs_os_strcmp(var->name, node->name), 
+            ECS_INVALID_PARAMETER,
+                "variable '%s' is not at expected frame offset (got '%s')",
+                    node->name, var->name);
+    } else {
+        var = ecs_script_vars_lookup(
+            ctx->desc->vars, node->name);
+    }
+
     if (!var) {
         flecs_expr_visit_error(ctx->script, node, "unresolved variable '%s'",
             node->name);
@@ -79990,6 +80056,7 @@ int flecs_expr_variable_visit_type(
         desc->vars, node->name);
     if (var) {
         node->node.type = var->value.type;
+        node->frame_offset = var->frame_offset;
     } else {
         if (flecs_expr_global_variable_resolve(script, node, desc)) {
             goto error;
