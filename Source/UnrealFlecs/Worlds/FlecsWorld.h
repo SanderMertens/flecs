@@ -11,7 +11,6 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
-#include "Components/FlecsTypeMapComponent.h"
 #include "Components/FlecsUObjectComponent.h"
 #include "Components/FlecsWorldNameComponent.h"
 #include "Entities/FlecsEntityRecord.h"
@@ -37,9 +36,11 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 	GENERATED_BODY()
 
 public:
-	UFlecsWorld() : TypeMapComponent(nullptr)
+	UFlecsWorld()
 	{
 		World = flecs::world();
+		TypeMapComponent = GetSingletonPtr<FFlecsTypeMapComponent>();
+		solid_checkf(TypeMapComponent, TEXT("Type map component is null"));
 	}
 	
 	virtual ~UFlecsWorld() override
@@ -55,6 +56,8 @@ public:
 			AssetRegistry.OnAssetAdded().RemoveAll(this);
 			AssetRegistry.OnAssetRemoved().RemoveAll(this);
 		}
+
+		TypeMapComponent = nullptr;
 	}
 
 	void WorldBeginPlay()
@@ -210,7 +213,8 @@ public:
 				}
 				#endif // WITH_EDITOR
 
-				TypeMapComponent->ScriptStructMap.emplace(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
+				TypeMapComponent->ScriptStructMap.emplace(InScriptStructComponent.ScriptStruct.Get(),
+					EntityHandle.GetEntity());
 
 				RegisterMemberProperties(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
 			});
@@ -1131,7 +1135,7 @@ public:
 			.set<flecs::Component>({ sizeof(int32), alignof(int32) })
 			.set<FFlecsScriptEnumComponent>({ Enum });
 		
-		TypeMapComponent->ScriptEnumMap.emplace(Enum, EnumComponent);
+		TypeMapComponent->ScriptEnumMap.emplace(Enum, EnumComponent.GetEntity());
 
 		//#if WITH_EDITOR
 
@@ -1182,7 +1186,7 @@ public:
 	FORCEINLINE_DEBUGGABLE void RegisterScriptStruct(UScriptStruct* ScriptStruct, FFlecsEntityHandle InComponentEntity) const
 	{
 		TypeMapComponent->ScriptStructMap
-			.emplace(ScriptStruct, InComponentEntity);
+			.emplace(ScriptStruct, InComponentEntity.GetEntity());
 
 		//#if WITH_EDITOR
 
