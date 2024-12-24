@@ -176,6 +176,7 @@ void flecs_expr_visit_free(
         flecs_free_t(a, ecs_expr_element_t, node);
         break;
     case EcsExprCast:
+    case EcsExprCastNumber:
         flecs_expr_cast_visit_free(
             script, (ecs_expr_cast_t*)node);
         flecs_free_t(a, ecs_expr_cast_t, node);

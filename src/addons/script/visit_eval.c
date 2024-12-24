@@ -1066,7 +1066,7 @@ int flecs_script_eval_const(
         }
 
         ecs_assert(value.type != 0, ECS_INTERNAL_ERROR, NULL);
-        const ecs_type_info_t *ti = ecs_get_type_info(v->world, value.type);
+        ti = ecs_get_type_info(v->world, value.type);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
         var->value.ptr = flecs_stack_calloc(
