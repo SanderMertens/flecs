@@ -945,11 +945,10 @@ int flecs_expr_variable_visit_type(
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
-    ecs_script_var_t *var = ecs_script_vars_lookup(
-        desc->vars, node->name);
+    ecs_script_var_t *var = flecs_script_find_var(
+        desc->vars, node->name, &node->sp);
     if (var) {
         node->node.type = var->value.type;
-        node->sp = var->sp;
     } else {
         if (flecs_expr_global_variable_resolve(script, node, desc)) {
             goto error;

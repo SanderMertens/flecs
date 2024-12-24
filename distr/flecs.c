@@ -62509,7 +62509,11 @@ int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node)
 {
-    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->name);
+    /* Declare variable. If this variable is declared while instantiating a
+     * template, the variable sp has already been resolved in all expressions
+     * that used it, so we don't need to create the variable with a name. */
+    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, 
+        v->template_entity ? NULL : node->name);
     if (!var) {
         flecs_script_eval_error(v, node, 
             "variable '%s' redeclared", node->name);
@@ -77483,19 +77487,8 @@ int flecs_expr_variable_visit_eval(
     ecs_assert(ctx->desc->vars != NULL, ECS_INVALID_OPERATION,
         "variables available at parse time are not provided");
 
-    const ecs_script_var_t *var;
-    if (node->sp != -1) {
-        var = ecs_script_vars_from_sp(
-            ctx->desc->vars, node->sp);
-        ecs_assert(!var->name || !ecs_os_strcmp(var->name, node->name), 
-            ECS_INVALID_PARAMETER,
-                "variable '%s' is not at expected frame offset (got '%s')",
-                    node->name, var->name);
-    } else {
-        var = ecs_script_vars_lookup(
-            ctx->desc->vars, node->name);
-    }
-
+    const ecs_script_var_t *var = flecs_script_find_var(
+        ctx->desc->vars, node->name, &node->sp);
     if (!var) {
         flecs_expr_visit_error(ctx->script, node, "unresolved variable '%s'",
             node->name);
@@ -78484,8 +78477,8 @@ int flecs_expr_variable_visit_fold(
 
     ecs_expr_variable_t *node = (ecs_expr_variable_t*)*node_ptr;
 
-    ecs_script_var_t *var = ecs_script_vars_lookup(
-        desc->vars, node->name);
+    ecs_script_var_t *var = flecs_script_find_var(
+        desc->vars, node->name, &node->sp);
     /* Should've been caught by type visitor */
     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(var->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
@@ -80190,11 +80183,10 @@ int flecs_expr_variable_visit_type(
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
-    ecs_script_var_t *var = ecs_script_vars_lookup(
-        desc->vars, node->name);
+    ecs_script_var_t *var = flecs_script_find_var(
+        desc->vars, node->name, &node->sp);
     if (var) {
         node->node.type = var->value.type;
-        node->sp = var->sp;
     } else {
         if (flecs_expr_global_variable_resolve(script, node, desc)) {
             goto error;
