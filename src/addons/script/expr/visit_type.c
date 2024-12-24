@@ -1386,6 +1386,7 @@ int flecs_expr_visit_type_priv(
         }
         break;
     case EcsExprCast:
+    case EcsExprCastNumber:
         break;
     case EcsExprMethod:
     case EcsExprComponent:

@@ -23,7 +23,8 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprMember,
     EcsExprElement,
     EcsExprComponent,
-    EcsExprCast
+    EcsExprCast,
+    EcsExprCastNumber
 } ecs_expr_node_kind_t;
 
 struct ecs_expr_node_t {
