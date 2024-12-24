@@ -4,11 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Standard/Hashing.h"
-#include "flecs.h"
 #include "FlecsScriptEnumComponent.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFlecsScriptEnumComponent
+struct FLECSLIBRARY_API FFlecsScriptEnumComponent
 {
 	GENERATED_BODY()
 
