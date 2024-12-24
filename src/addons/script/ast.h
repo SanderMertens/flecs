@@ -45,6 +45,11 @@ typedef struct ecs_script_id_t {
     const char *second;
     ecs_id_t flag;
     ecs_id_t eval;
+
+    /* If first or second refer to a variable, these are the cached variable 
+     * stack pointers so we don't have to lookup variables by name. */
+    int32_t first_sp; 
+    int32_t second_sp;
 } ecs_script_id_t;
 
 typedef struct ecs_script_tag_t {
@@ -69,6 +74,7 @@ typedef struct ecs_script_default_component_t {
 typedef struct ecs_script_var_component_t {
     ecs_script_node_t node;
     const char *name;
+    int32_t sp;
 } ecs_script_var_component_t;
 
 struct ecs_script_entity_t {

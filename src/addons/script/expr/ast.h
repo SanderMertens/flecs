@@ -73,7 +73,7 @@ typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
     const char *name;
     ecs_value_t global_value; /* Only set for global variables */
-    int32_t frame_offset; /* For fast variable lookups */
+    int32_t sp; /* For fast variable lookups */
 } ecs_expr_variable_t;
 
 typedef struct ecs_expr_unary_t {

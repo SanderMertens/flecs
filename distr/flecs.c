@@ -4706,6 +4706,11 @@ typedef struct ecs_script_id_t {
     const char *second;
     ecs_id_t flag;
     ecs_id_t eval;
+
+    /* If first or second refer to a variable, these are the cached variable 
+     * stack pointers so we don't have to lookup variables by name. */
+    int32_t first_sp; 
+    int32_t second_sp;
 } ecs_script_id_t;
 
 typedef struct ecs_script_tag_t {
@@ -4730,6 +4735,7 @@ typedef struct ecs_script_default_component_t {
 typedef struct ecs_script_var_component_t {
     ecs_script_node_t node;
     const char *name;
+    int32_t sp;
 } ecs_script_var_component_t;
 
 struct ecs_script_entity_t {
@@ -5043,7 +5049,7 @@ typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
     const char *name;
     ecs_value_t global_value; /* Only set for global variables */
-    int32_t frame_offset; /* For fast variable lookups */
+    int32_t sp; /* For fast variable lookups */
 } ecs_expr_variable_t;
 
 typedef struct ecs_expr_unary_t {
@@ -5466,10 +5472,17 @@ void flecs_script_eval_error_(
 #define flecs_script_eval_error(v, node, ...)\
     flecs_script_eval_error_(v, (ecs_script_node_t*)node, __VA_ARGS__)
 
-ecs_entity_t flecs_script_find_entity(
+int flecs_script_find_entity(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t from,
-    const char *path);
+    const char *path,
+    int32_t *frame_offset,
+    ecs_entity_t *out);
+
+ecs_script_var_t* flecs_script_find_var(
+    const ecs_script_vars_t *vars,
+    const char *name,
+    int32_t *frame_offset);
 
 ecs_entity_t flecs_script_create_entity(
     ecs_script_eval_visitor_t *v,
@@ -55372,6 +55385,8 @@ void flecs_script_set_id(
     ecs_assert(first != NULL, ECS_INTERNAL_ERROR, NULL);
     id->first = first;
     id->second = second;
+    id->first_sp = -1;
+    id->second_sp = -1;
 }
 
 ecs_script_pair_scope_t* flecs_script_insert_pair_scope(
@@ -55463,6 +55478,7 @@ ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_script_var_component_t *result = flecs_ast_new(
             parser, ecs_script_var_component_t, EcsAstVarComponent);
     result->name = var_name;
+    result->sp = -1;
 
     flecs_ast_append(parser, scope->stmts, 
         ecs_script_var_component_t, result);
@@ -59413,13 +59429,17 @@ void flecs_script_template_instantiate(
         ecs_script_vars_t *vars = flecs_script_vars_push(
             NULL, &v.r->stack, &v.r->allocator);
         vars->parent = template->vars; /* Include hoisted variables */
-        vars->frame_offset = ecs_vec_count(&template->vars->vars);
+        vars->sp = ecs_vec_count(&template->vars->vars);
+
+        /* Allocate enough space for variables */
+        ecs_script_vars_set_size(vars, (st ? st->members.count : 0) + 1);
 
         /* Populate $this variable with instance entity */
         ecs_entity_t instance = entities[i];
-        ecs_script_var_t *var = ecs_script_vars_declare(vars, "this");
-        var->value.type = ecs_id(ecs_entity_t);
-        var->value.ptr = &instance;
+        ecs_script_var_t *this_var = ecs_script_vars_declare(
+            vars, NULL /* $this */);
+        this_var->value.type = ecs_id(ecs_entity_t);
+        this_var->value.ptr = &instance;
 
         /* Populate properties from template members */
         if (st) {
@@ -59427,9 +59447,10 @@ void flecs_script_template_instantiate(
             for (m = 0; m < st->members.count; m ++) {
                 const ecs_member_t *member = &members[m];
 
-                /* Assign template property from template instance */
+                /* Assign template property from template instance. Don't 
+                 * set name as variables will be resolved by frame offset. */
                 ecs_script_var_t *var = ecs_script_vars_declare(
-                    vars, member->name);
+                    vars, NULL /* member->name */);
                 var->value.type = member->type;
                 var->value.ptr = ECS_OFFSET(data, member->offset);
             }
@@ -59531,8 +59552,8 @@ int flecs_script_template_eval_prop(
     }
 
     if (node->type) {
-        ecs_entity_t type = flecs_script_find_entity(v, 0, node->type);
-        if (!type) {
+        ecs_entity_t type;
+        if (flecs_script_find_entity(v, 0, node->type, NULL, &type) || !type) {
             flecs_script_eval_error(v, node,
                 "unresolved type '%s' for const variable '%s'", 
                     node->type, node->name);
@@ -59627,8 +59648,8 @@ int flecs_script_template_preprocess(
 
     v->base.visit = (ecs_visit_action_t)flecs_script_template_eval;
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
-    ecs_script_vars_declare(v->vars, "this");
-
+    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, "this");
+    var->value.type = ecs_id(ecs_entity_t);
     int result = ecs_script_visit_scope(v, template->node->scope);
     v->vars = ecs_script_vars_pop(v->vars);
     v->base.visit = prev_visit;
@@ -60446,10 +60467,10 @@ ecs_script_vars_t* flecs_script_vars_push(
     result->parent = parent;
     if (parent) {
         result->world = parent->world;
-        result->frame_offset =
-            parent->frame_offset + ecs_vec_count(&parent->vars);
+        result->sp =
+            parent->sp + ecs_vec_count(&parent->vars);
     } else {
-        result->frame_offset = 0;
+        result->sp = 0;
     }
     result->stack = stack;
     result->allocator = allocator;
@@ -60525,11 +60546,13 @@ ecs_script_var_t* ecs_script_vars_declare(
     ecs_script_vars_t *vars,
     const char *name)
 {
-    if (!ecs_vec_count(&vars->vars)) {
-        flecs_name_index_init(&vars->var_index, vars->allocator);
-    } else {
-        if (flecs_name_index_find(&vars->var_index, name, 0, 0) != 0) {
-            goto error;
+    if (name) {
+        if (flecs_name_index_is_init(&vars->var_index)) {
+            if (flecs_name_index_find(&vars->var_index, name, 0, 0) != 0) {
+                goto error;
+            }
+        } else {
+            flecs_name_index_init(&vars->var_index, vars->allocator);
         }
     }
 
@@ -60539,15 +60562,26 @@ ecs_script_var_t* ecs_script_vars_declare(
     var->value.ptr = NULL;
     var->value.type = 0;
     var->type_info = NULL;
-    var->frame_offset = ecs_vec_count(&vars->vars) + vars->frame_offset - 1;
+    var->sp = ecs_vec_count(&vars->vars) + vars->sp - 1;
     var->is_const = false;
 
-    flecs_name_index_ensure(&vars->var_index,
-        flecs_ito(uint64_t, ecs_vec_count(&vars->vars)), name, 0, 0);
+    if (name) {
+        flecs_name_index_ensure(&vars->var_index,
+            flecs_ito(uint64_t, ecs_vec_count(&vars->vars)), name, 0, 0);
+    }
 
     return var;
 error:
     return NULL;
+}
+
+void ecs_script_vars_set_size(
+    ecs_script_vars_t *vars,
+    int32_t count)
+{
+    ecs_assert(!ecs_vec_count(&vars->vars), ECS_INVALID_OPERATION, 
+        "variable scope must be empty for resize operation");
+    ecs_vec_set_size_t(vars->allocator, &vars->vars, ecs_script_var_t, count);
 }
 
 ecs_script_var_t* ecs_script_vars_define_id(
@@ -60590,7 +60624,9 @@ ecs_script_var_t* ecs_script_vars_lookup(
 
     uint64_t var_id = 0;
     if (ecs_vec_count(&vars->vars)) {
-        var_id = flecs_name_index_find(&vars->var_index, name, 0, 0);
+        if (flecs_name_index_is_init(&vars->var_index)) {
+            var_id = flecs_name_index_find(&vars->var_index, name, 0, 0);
+        }
     }
 
     if (!var_id) {
@@ -60604,22 +60640,22 @@ ecs_script_var_t* ecs_script_vars_lookup(
         flecs_uto(int32_t, var_id - 1));
 }
 
-ecs_script_var_t* ecs_script_vars_from_frame_offset(
+ecs_script_var_t* ecs_script_vars_from_sp(
     const ecs_script_vars_t *vars,
-    int32_t frame_offset)
+    int32_t sp)
 {
-    ecs_check(frame_offset >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(sp >= 0, ECS_INVALID_PARAMETER, NULL);
 
-    if (frame_offset < vars->frame_offset) {
+    if (sp < vars->sp) {
         ecs_assert(vars->parent != NULL, ECS_INTERNAL_ERROR, NULL);
-        return ecs_script_vars_from_frame_offset(vars->parent, frame_offset);
+        return ecs_script_vars_from_sp(vars->parent, sp);
     }
 
-    frame_offset -= vars->frame_offset;
-    ecs_check(frame_offset < ecs_vec_count(&vars->vars), 
+    sp -= vars->sp;
+    ecs_check(sp < ecs_vec_count(&vars->vars), 
         ECS_INVALID_PARAMETER, NULL);
 
-    return ecs_vec_get_t(&vars->vars, ecs_script_var_t, frame_offset);
+    return ecs_vec_get_t(&vars->vars, ecs_script_var_t, sp);
 error:
     return NULL;
 }
@@ -60641,7 +60677,7 @@ void ecs_script_vars_print(
             printf("      ");
         }
 
-        printf("%2d: %s\n", var->frame_offset, var->name);
+        printf("%2d: %s\n", var->sp, var->name);
     }
 }
 
@@ -61093,6 +61129,8 @@ int flecs_script_check_var_component(
         return -1;
     }
 
+    node->sp = var->sp;
+
     return 0;
 }
 
@@ -61113,7 +61151,7 @@ int flecs_script_check_default_component(
 static
 int flecs_script_check_with_var(
     ecs_script_eval_visitor_t *v,
-    ecs_script_var_node_t *node)
+    ecs_script_var_component_t *node)
 {
     ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
     if (!var) {
@@ -61121,6 +61159,8 @@ int flecs_script_check_with_var(
             "unresolved variable '%s'", node->name);
         return -1;
     }
+
+    node->sp = var->sp;
 
     return 0;
 }
@@ -61199,11 +61239,17 @@ int flecs_script_check_pair_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_pair_scope_t *node)
 {
-    if (!flecs_script_find_entity(v, 0, node->id.first)) {
+    ecs_entity_t dummy;
+
+    if (flecs_script_find_entity(
+        v, 0, node->id.first, &node->id.first_sp, &dummy))
+    {
         return -1;
     }
 
-    if (!flecs_script_find_entity(v, 0, node->id.second)) {
+    if (flecs_script_find_entity(
+        v, 0, node->id.second, &node->id.second_sp, &dummy))
+    {
         return -1;
     }
 
@@ -61312,7 +61358,7 @@ int flecs_script_check_node(
             v, (ecs_script_default_component_t*)node);
     case EcsAstWithVar:
         return flecs_script_check_with_var(
-            v, (ecs_script_var_node_t*)node);
+            v, (ecs_script_var_component_t*)node);
     case EcsAstWithTag:
         return flecs_script_check_with_tag(
             v, (ecs_script_tag_t*)node);
@@ -61510,19 +61556,46 @@ error:
     return NULL;
 }
 
-ecs_entity_t flecs_script_find_entity(
+ecs_script_var_t* flecs_script_find_var(
+    const ecs_script_vars_t *vars,
+    const char *name,
+    int32_t *sp)
+{
+    ecs_assert(sp != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (sp[0] != -1) {
+        return ecs_script_vars_from_sp(vars, sp[0]);
+    } else {
+        ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
+        if (var) {
+            sp[0] = var->sp;
+        }
+        return var;
+    }
+}
+
+int flecs_script_find_entity(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t from,
-    const char *path)
+    const char *path,
+    int32_t *sp,
+    ecs_entity_t *out)
 {
     if (!path) {
-        return 0;
+        goto error;
     }
 
     if (path[0] == '$') {
-        const ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, &path[1]);
+        if (!sp) {
+            flecs_script_eval_error(v, NULL, 
+                "variable identifier '%s' not allowed here", path);
+            goto error;
+        }
+
+        const ecs_script_var_t *var = flecs_script_find_var(
+            v->vars, &path[1], sp);
         if (!var) {
-            return 0;
+            goto error;
         }
 
         if (var->value.type != ecs_id(ecs_entity_t)) {
@@ -61531,27 +61604,33 @@ ecs_entity_t flecs_script_find_entity(
                 "variable '%s' must be of type entity, got '%s'", 
                     path, type_str);
             ecs_os_free(type_str);
-            return 0;
+            goto error;
         }
 
         if (var->value.ptr == NULL) {
-            flecs_script_eval_error(v, NULL, 
-                "variable '%s' is not initialized", path);
-            return 0;
+            if (!v->template) {
+                flecs_script_eval_error(v, NULL, 
+                    "variable '%s' is not initialized", path);
+                goto error;
+            } else {
+                return 0;
+            }
         }
 
         ecs_entity_t result = *(ecs_entity_t*)var->value.ptr;
         if (!result) {
             flecs_script_eval_error(v, NULL, 
                 "variable '%s' contains invalid entity id (0)", path);
-            return 0;
+            goto error;
         }
 
-        return result;
+        *out = result;
+
+        return 0;
     }
 
     if (from) {
-        return ecs_lookup_path_w_sep(v->world, from, path, NULL, NULL, false);
+        *out = ecs_lookup_path_w_sep(v->world, from, path, NULL, NULL, false);
     } else {
         int32_t i, using_count = ecs_vec_count(&v->r->using);
         if (using_count) {
@@ -61560,14 +61639,19 @@ ecs_entity_t flecs_script_find_entity(
                 ecs_entity_t e = ecs_lookup_path_w_sep(
                     v->world, using[i], path, NULL, NULL, false);
                 if (e) {
-                    return e;
+                    *out = e;
+                    return 0;
                 }
             }
         }
 
-        return ecs_lookup_path_w_sep(
+        *out = ecs_lookup_path_w_sep(
             v->world, v->parent, path, NULL, NULL, true);
     }
+
+    return 0;
+error:
+    return -1;
 }
 
 ecs_entity_t flecs_script_create_entity(
@@ -61593,7 +61677,11 @@ ecs_entity_t flecs_script_find_entity_action(
 {
     (void)world;
     ecs_script_eval_visitor_t *v = ctx;
-    return flecs_script_find_entity(v, 0, path);
+    ecs_entity_t result;
+    if (!flecs_script_find_entity(v, 0, path, NULL, &result)) {
+        return result;
+    }
+    return 0;
 }
 
 static
@@ -61642,15 +61730,31 @@ int flecs_script_eval_id(
     if (v->template) {
         /* Can't resolve variables while preprocessing template scope */
         if (id->first[0] == '$') {
-            return 0;
+            if (flecs_script_find_var(v->vars, &id->first[1], &id->first_sp)) {
+                return 0;
+            } else {
+                flecs_script_eval_error(v, node, 
+                    "unresolved variable '%s'", &id->first[1]);
+                return -1;
+            }
         }
         if (id->second && id->second[0] == '$') {
-            return 0;
+            if (flecs_script_find_var(
+                v->vars, &id->second[1], &id->second_sp))
+            {
+                return 0;
+            } else {
+                flecs_script_eval_error(v, node, 
+                    "unresolved variable '%s'", &id->second[1]);
+                return -1;
+            }
         }
     }
 
-    ecs_entity_t first = flecs_script_find_entity(v, 0, id->first);
-    if (!first) {
+    ecs_entity_t first = 0;
+    if (flecs_script_find_entity(
+        v, 0, id->first, &id->first_sp, &first) || !first)
+    {
         if (id->first[0] == '$') {
             flecs_script_eval_error(v, node, 
                 "unresolved variable '%s'", id->first);
@@ -61666,9 +61770,11 @@ int flecs_script_eval_id(
     }
 
     if (id->second) {
-        ecs_entity_t second = flecs_script_find_entity(
-            v, second_from, id->second);
-        if (!second) {
+        ecs_entity_t second = 0;
+        if (flecs_script_find_entity(
+            v, second_from, id->second, &id->second_sp, &second) || 
+            !second) 
+        {
             if (id->second[0] == '$') {
                 flecs_script_eval_error(v, node, 
                     "unresolved variable '%s'", id->second);
@@ -62110,11 +62216,17 @@ int flecs_script_eval_var_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_component_t *node)
 {
-    ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
-    if (!var) {
-        flecs_script_eval_error(v, node, 
-            "unresolved variable '%s'", node->name);
-        return -1;
+    ecs_script_var_t *var;
+
+    if (node->sp != -1) {
+        var = ecs_script_vars_from_sp(v->vars, node->sp);
+    } else {
+        var = ecs_script_vars_lookup(v->vars, node->name);
+        if (!var) {
+            flecs_script_eval_error(v, node, 
+                "unresolved variable '%s'", node->name);
+            return -1;
+        }
     }
 
     if (v->is_with_scope) {
@@ -62203,9 +62315,21 @@ int flecs_script_eval_default_component(
 static
 int flecs_script_eval_with_var(
     ecs_script_eval_visitor_t *v,
-    ecs_script_var_node_t *node)
+    ecs_script_var_component_t *node)
 {
-    ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
+    ecs_script_var_t *var;
+
+    if (node->sp != -1) {
+        var = ecs_script_vars_from_sp(v->vars, node->sp);
+    } else {
+        var = ecs_script_vars_lookup(v->vars, node->name);
+        if (!var) {
+            flecs_script_eval_error(v, node, 
+                "unresolved variable '%s'", node->name);
+            return -1;
+        }
+    }
+
     if (!var) {
         flecs_script_eval_error(v, node, 
             "unresolved variable '%s'", node->name);
@@ -62400,8 +62524,7 @@ int flecs_script_eval_const(
     }
 
     if (!type && node->type) {
-        type = flecs_script_find_entity(v, 0, node->type);
-        if (!type) {
+        if (flecs_script_find_entity(v, 0, node->type, NULL, &type) || !type) {
             flecs_script_eval_error(v, node,
                 "unresolved type '%s' for const variable '%s'", 
                     node->type, node->name);
@@ -62479,15 +62602,30 @@ int flecs_script_eval_pair_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_pair_scope_t *node)
 {
-    ecs_entity_t first = flecs_script_find_entity(v, 0, node->id.first);
-    if (!first) {
+    ecs_entity_t first;
+    if (flecs_script_find_entity(
+        v, 0, node->id.first, &node->id.first_sp, &first) || !first)
+    {
         first = flecs_script_create_entity(v, node->id.first);
         if (!first) {
             return -1;
         }
     }
 
-    ecs_entity_t second = flecs_script_create_entity(v, node->id.second);
+    ecs_entity_t second = 0;
+    if (node->id.second) {
+        if (node->id.second[0] == '$') {
+            if (flecs_script_find_entity(
+                v, 0, node->id.second, &node->id.second_sp, &second)) 
+            {
+                return -1;
+            }
+        } else {
+            second = flecs_script_create_entity(v, node->id.second);
+        }
+        
+    }
+     
     if (!second) {
         return -1;
     }
@@ -62637,7 +62775,7 @@ int flecs_script_eval_node(
             v, (ecs_script_default_component_t*)node);
     case EcsAstWithVar:
         return flecs_script_eval_with_var(
-            v, (ecs_script_var_node_t*)node);
+            v, (ecs_script_var_component_t*)node);
     case EcsAstWithTag:
         return flecs_script_eval_with_tag(
             v, (ecs_script_tag_t*)node);
@@ -62703,7 +62841,7 @@ void flecs_script_eval_visit_init(
         ecs_allocator_t *a = &v->r->allocator;
         v->vars = flecs_script_vars_push(v->vars, &v->r->stack, a);
         v->vars->parent = desc->vars;
-        v->vars->frame_offset = ecs_vec_count(&desc->vars->vars);
+        v->vars->sp = ecs_vec_count(&desc->vars->vars);
     }
 
     /* Always include flecs.meta */
@@ -75620,7 +75758,7 @@ ecs_expr_variable_t* flecs_expr_variable_from(
     ecs_expr_variable_t *result = flecs_calloc_t(
         &((ecs_script_impl_t*)script)->allocator, ecs_expr_variable_t);
     result->name = name;
-    result->frame_offset = -1;
+    result->sp = -1;
     result->node.kind = EcsExprVariable;
     result->node.pos = node ? node->pos : NULL;
     return result;
@@ -75748,7 +75886,7 @@ ecs_expr_variable_t* flecs_expr_variable(
     ecs_expr_variable_t *result = flecs_expr_ast_new(
         parser, ecs_expr_variable_t, EcsExprVariable);
     result->name = value;
-    result->frame_offset = -1;
+    result->sp = -1;
     return result;
 }
 
@@ -77346,10 +77484,10 @@ int flecs_expr_variable_visit_eval(
         "variables available at parse time are not provided");
 
     const ecs_script_var_t *var;
-    if (node->frame_offset != -1) {
-        var = ecs_script_vars_from_frame_offset(
-            ctx->desc->vars, node->frame_offset);
-        ecs_assert(!ecs_os_strcmp(var->name, node->name), 
+    if (node->sp != -1) {
+        var = ecs_script_vars_from_sp(
+            ctx->desc->vars, node->sp);
+        ecs_assert(!var->name || !ecs_os_strcmp(var->name, node->name), 
             ECS_INVALID_PARAMETER,
                 "variable '%s' is not at expected frame offset (got '%s')",
                     node->name, var->name);
@@ -80056,7 +80194,7 @@ int flecs_expr_variable_visit_type(
         desc->vars, node->name);
     if (var) {
         node->node.type = var->value.type;
-        node->frame_offset = var->frame_offset;
+        node->sp = var->sp;
     } else {
         if (flecs_expr_global_variable_resolve(script, node, desc)) {
             goto error;

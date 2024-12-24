@@ -211,6 +211,8 @@ int flecs_script_check_var_component(
         return -1;
     }
 
+    node->sp = var->sp;
+
     return 0;
 }
 
@@ -231,7 +233,7 @@ int flecs_script_check_default_component(
 static
 int flecs_script_check_with_var(
     ecs_script_eval_visitor_t *v,
-    ecs_script_var_node_t *node)
+    ecs_script_var_component_t *node)
 {
     ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
     if (!var) {
@@ -239,6 +241,8 @@ int flecs_script_check_with_var(
             "unresolved variable '%s'", node->name);
         return -1;
     }
+
+    node->sp = var->sp;
 
     return 0;
 }
@@ -317,11 +321,17 @@ int flecs_script_check_pair_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_pair_scope_t *node)
 {
-    if (!flecs_script_find_entity(v, 0, node->id.first)) {
+    ecs_entity_t dummy;
+
+    if (flecs_script_find_entity(
+        v, 0, node->id.first, &node->id.first_sp, &dummy))
+    {
         return -1;
     }
 
-    if (!flecs_script_find_entity(v, 0, node->id.second)) {
+    if (flecs_script_find_entity(
+        v, 0, node->id.second, &node->id.second_sp, &dummy))
+    {
         return -1;
     }
 
@@ -430,7 +440,7 @@ int flecs_script_check_node(
             v, (ecs_script_default_component_t*)node);
     case EcsAstWithVar:
         return flecs_script_check_with_var(
-            v, (ecs_script_var_node_t*)node);
+            v, (ecs_script_var_component_t*)node);
     case EcsAstWithTag:
         return flecs_script_check_with_tag(
             v, (ecs_script_tag_t*)node);
