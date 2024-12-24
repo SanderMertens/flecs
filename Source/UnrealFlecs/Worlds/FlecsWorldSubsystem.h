@@ -126,14 +126,7 @@ public:
 		
 		NewFlecsWorld->SetContext(this);
 
-		GetDefaultWorld()->AddSingleton<FFlecsTypeMapComponent>();
-		GetDefaultWorld()->TypeMapComponent = GetDefaultWorld()->GetSingletonPtr<FFlecsTypeMapComponent>();
-		solid_check(GetDefaultWorld()->TypeMapComponent);
-		
-		NewFlecsWorld->ObtainComponentType<FFlecsScriptStructComponent>();
-
 		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ NewFlecsWorld });
-
 		NewFlecsWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
 		
 		DefaultWorld->InitializeDefaultComponents();
