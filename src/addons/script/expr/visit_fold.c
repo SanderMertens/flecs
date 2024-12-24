@@ -383,8 +383,8 @@ int flecs_expr_variable_visit_fold(
 
     ecs_expr_variable_t *node = (ecs_expr_variable_t*)*node_ptr;
 
-    ecs_script_var_t *var = ecs_script_vars_lookup(
-        desc->vars, node->name);
+    ecs_script_var_t *var = flecs_script_find_var(
+        desc->vars, node->name, &node->sp);
     /* Should've been caught by type visitor */
     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(var->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);

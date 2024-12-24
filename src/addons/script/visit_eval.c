@@ -1082,7 +1082,11 @@ int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node)
 {
-    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->name);
+    /* Declare variable. If this variable is declared while instantiating a
+     * template, the variable sp has already been resolved in all expressions
+     * that used it, so we don't need to create the variable with a name. */
+    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, 
+        v->template_entity ? NULL : node->name);
     if (!var) {
         flecs_script_eval_error(v, node, 
             "variable '%s' redeclared", node->name);
