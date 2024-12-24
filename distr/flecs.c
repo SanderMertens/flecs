@@ -5595,6 +5595,7 @@ typedef struct EcsScriptTemplateSetEvent {
     int32_t count;
 
     /* Storage for small template types */
+    int64_t _align; /* Align data storage to 8 bytes */
     char data_storage[ECS_TEMPLATE_SMALL_SIZE];
     ecs_entity_t entity_storage;
 } EcsScriptTemplateSetEvent;
@@ -61671,14 +61672,14 @@ int flecs_script_find_entity(
             goto error;
         }
 
-        if (var->value.ptr == NULL) {
-            if (!v->template) {
-                flecs_script_eval_error(v, NULL, 
-                    "variable '%s' is not initialized", path);
-                goto error;
-            } else {
-                return 0;
-            }
+        if (v->template) {
+            return 0;
+        }
+
+        if (var->value.ptr == NULL) {            
+            flecs_script_eval_error(v, NULL, 
+                "variable '%s' is not initialized", path);
+            goto error;
         }
 
         ecs_entity_t result = *(ecs_entity_t*)var->value.ptr;
@@ -62980,6 +62981,7 @@ void flecs_script_scope_free(
 {
     ecs_script_visit_scope(v, node);
     ecs_vec_fini_t(&v->script->allocator, &node->stmts, ecs_script_node_t*);
+    ecs_vec_fini_t(&v->script->allocator, &node->components, ecs_id_t);
     flecs_free_t(&v->script->allocator, ecs_script_scope_t, node);
 }
 

@@ -38,6 +38,7 @@ typedef struct EcsScriptTemplateSetEvent {
     int32_t count;
 
     /* Storage for small template types */
+    int64_t _align; /* Align data storage to 8 bytes */
     char data_storage[ECS_TEMPLATE_SMALL_SIZE];
     ecs_entity_t entity_storage;
 } EcsScriptTemplateSetEvent;
