@@ -325,10 +325,10 @@ int flecs_expr_variable_visit_eval(
         "variables available at parse time are not provided");
 
     const ecs_script_var_t *var;
-    if (node->frame_offset != -1) {
-        var = ecs_script_vars_from_frame_offset(
-            ctx->desc->vars, node->frame_offset);
-        ecs_assert(!ecs_os_strcmp(var->name, node->name), 
+    if (node->sp != -1) {
+        var = ecs_script_vars_from_sp(
+            ctx->desc->vars, node->sp);
+        ecs_assert(!var->name || !ecs_os_strcmp(var->name, node->name), 
             ECS_INVALID_PARAMETER,
                 "variable '%s' is not at expected frame offset (got '%s')",
                     node->name, var->name);

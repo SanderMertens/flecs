@@ -318,6 +318,15 @@ void Template_template_with_with(void);
 void Template_module_w_template(void);
 void Template_module_w_nested_template(void);
 void Template_template_w_pair_w_this_var(void);
+void Template_template_w_pair_w_prop_var(void);
+void Template_template_w_pair_w_const_var(void);
+void Template_template_w_pair_scope_w_this_var(void);
+void Template_template_w_pair_scope_w_prop_var(void);
+void Template_template_w_pair_scope_w_const_var(void);
+void Template_template_w_pair_w_unresolved_var_first(void);
+void Template_template_w_pair_w_unresolved_var_second(void);
+void Template_template_w_pair_scope_w_unresolved_var_first(void);
+void Template_template_w_pair_scope_w_unresolved_var_second(void);
 void Template_prop_without_using_meta(void);
 void Template_hoist_var(void);
 void Template_hoist_vars_nested(void);
@@ -335,6 +344,8 @@ void Template_entity_w_2_template_instances(void);
 void Template_template_w_prefab_and_instance(void);
 void Template_template_w_with_var(void);
 void Template_template_w_with_prop(void);
+void Template_template_w_child_w_var(void);
+void Template_template_w_child_w_prop(void);
 void Template_fold_const(void);
 void Template_bulk_create_template(void);
 void Template_template_w_expr_w_self_ref(void);
@@ -2085,6 +2096,42 @@ bake_test_case Template_testcases[] = {
         Template_template_w_pair_w_this_var
     },
     {
+        "template_w_pair_w_prop_var",
+        Template_template_w_pair_w_prop_var
+    },
+    {
+        "template_w_pair_w_const_var",
+        Template_template_w_pair_w_const_var
+    },
+    {
+        "template_w_pair_scope_w_this_var",
+        Template_template_w_pair_scope_w_this_var
+    },
+    {
+        "template_w_pair_scope_w_prop_var",
+        Template_template_w_pair_scope_w_prop_var
+    },
+    {
+        "template_w_pair_scope_w_const_var",
+        Template_template_w_pair_scope_w_const_var
+    },
+    {
+        "template_w_pair_w_unresolved_var_first",
+        Template_template_w_pair_w_unresolved_var_first
+    },
+    {
+        "template_w_pair_w_unresolved_var_second",
+        Template_template_w_pair_w_unresolved_var_second
+    },
+    {
+        "template_w_pair_scope_w_unresolved_var_first",
+        Template_template_w_pair_scope_w_unresolved_var_first
+    },
+    {
+        "template_w_pair_scope_w_unresolved_var_second",
+        Template_template_w_pair_scope_w_unresolved_var_second
+    },
+    {
         "prop_without_using_meta",
         Template_prop_without_using_meta
     },
@@ -2151,6 +2198,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_with_prop",
         Template_template_w_with_prop
+    },
+    {
+        "template_w_child_w_var",
+        Template_template_w_child_w_var
+    },
+    {
+        "template_w_child_w_prop",
+        Template_template_w_child_w_prop
     },
     {
         "fold_const",
@@ -4196,7 +4251,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        50,
+        61,
         Template_testcases
     },
     {
