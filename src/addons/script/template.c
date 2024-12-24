@@ -189,6 +189,13 @@ void flecs_script_template_instantiate(
         ecs_script_vars_t *vars = flecs_script_vars_push(
             NULL, &v.r->stack, &v.r->allocator);
         vars->parent = template->vars; /* Include hoisted variables */
+        vars->frame_offset = ecs_vec_count(&template->vars->vars);
+
+        /* Populate $this variable with instance entity */
+        ecs_entity_t instance = entities[i];
+        ecs_script_var_t *var = ecs_script_vars_declare(vars, "this");
+        var->value.type = ecs_id(ecs_entity_t);
+        var->value.ptr = &instance;
 
         /* Populate properties from template members */
         if (st) {
@@ -204,16 +211,11 @@ void flecs_script_template_instantiate(
             }
         }
 
-        /* Populate $this variable with instance entity */
-        ecs_entity_t instance = entities[i];
-        ecs_script_var_t *var = ecs_script_vars_declare(vars, "this");
-        var->value.type = ecs_id(ecs_entity_t);
-        var->value.ptr = &instance;
-
         ecs_script_clear(world, template_entity, instance);
 
         /* Run template code */
         v.vars = vars;
+
         ecs_script_visit_scope(&v, scope);
 
         /* Pop variable scope */
@@ -401,6 +403,8 @@ int flecs_script_template_preprocess(
 
     v->base.visit = (ecs_visit_action_t)flecs_script_template_eval;
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
+    ecs_script_vars_declare(v->vars, "this");
+
     int result = ecs_script_visit_scope(v, template->node->scope);
     v->vars = ecs_script_vars_pop(v->vars);
     v->base.visit = prev_visit;
