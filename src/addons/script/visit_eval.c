@@ -134,13 +134,11 @@ ecs_script_var_t* flecs_script_find_var(
     const char *name,
     int32_t *sp)
 {
-    ecs_assert(sp != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (sp[0] != -1) {
+    if (sp && sp[0] != -1) {
         return ecs_script_vars_from_sp(vars, sp[0]);
     } else {
         ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
-        if (var) {
+        if (var && sp) {
             sp[0] = var->sp;
         }
         return var;
@@ -166,7 +164,7 @@ int flecs_script_find_entity(
         }
 
         const ecs_script_var_t *var = flecs_script_find_var(
-            v->vars, &path[1], sp);
+            v->vars, &path[1], v->dynamic_variable_binding ? NULL : sp);
         if (!var) {
             goto error;
         }
@@ -303,7 +301,9 @@ int flecs_script_eval_id(
     if (v->template) {
         /* Can't resolve variables while preprocessing template scope */
         if (id->first[0] == '$') {
-            if (flecs_script_find_var(v->vars, &id->first[1], &id->first_sp)) {
+            if (flecs_script_find_var(v->vars, &id->first[1], 
+                v->dynamic_variable_binding ? NULL : &id->first_sp)) 
+            {
                 return 0;
             } else {
                 flecs_script_eval_error(v, node, 
@@ -312,8 +312,8 @@ int flecs_script_eval_id(
             }
         }
         if (id->second && id->second[0] == '$') {
-            if (flecs_script_find_var(
-                v->vars, &id->second[1], &id->second_sp))
+            if (flecs_script_find_var(v->vars, &id->second[1], 
+                v->dynamic_variable_binding ? NULL : &id->second_sp))
             {
                 return 0;
             } else {
@@ -413,7 +413,8 @@ int flecs_script_eval_expr(
         .lookup_ctx = v,
         .vars = v->vars,
         .type = value->type,
-        .runtime = v->r
+        .runtime = v->r,
+        .disable_dynamic_variable_binding = !v->dynamic_variable_binding
     };
 
     if (expr->type_info == NULL) {
@@ -798,17 +799,13 @@ int flecs_script_eval_var_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_component_t *node)
 {
-    ecs_script_var_t *var;
-
-    if (node->sp != -1) {
-        var = ecs_script_vars_from_sp(v->vars, node->sp);
-    } else {
-        var = ecs_script_vars_lookup(v->vars, node->name);
-        if (!var) {
-            flecs_script_eval_error(v, node, 
-                "unresolved variable '%s'", node->name);
-            return -1;
-        }
+    
+    ecs_script_var_t *var = flecs_script_find_var(
+        v->vars, node->name, v->dynamic_variable_binding ? NULL : &node->sp);
+    if (!var) {
+        flecs_script_eval_error(v, node, 
+            "unresolved variable '%s'", node->name);
+        return -1;
     }
 
     if (v->is_with_scope) {
@@ -899,19 +896,8 @@ int flecs_script_eval_with_var(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_component_t *node)
 {
-    ecs_script_var_t *var;
-
-    if (node->sp != -1) {
-        var = ecs_script_vars_from_sp(v->vars, node->sp);
-    } else {
-        var = ecs_script_vars_lookup(v->vars, node->name);
-        if (!var) {
-            flecs_script_eval_error(v, node, 
-                "unresolved variable '%s'", node->name);
-            return -1;
-        }
-    }
-
+    ecs_script_var_t *var = flecs_script_find_var(
+        v->vars, node->name, v->dynamic_variable_binding ? NULL : &node->sp);
     if (!var) {
         flecs_script_eval_error(v, node, 
             "unresolved variable '%s'", node->name);
@@ -1428,6 +1414,11 @@ void flecs_script_eval_visit_init(
         v->vars = flecs_script_vars_push(v->vars, &v->r->stack, a);
         v->vars->parent = desc->vars;
         v->vars->sp = ecs_vec_count(&desc->vars->vars);
+
+        /* When variables are provided to script, don't use cached variable
+         * stack pointers, as the order in which the application provides 
+         * variables may not be the same across evaluations. */
+        v->dynamic_variable_binding = true;
     }
 
     /* Always include flecs.meta */
