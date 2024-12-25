@@ -362,7 +362,10 @@
                 "bulk_create_template",
                 "template_w_expr_w_self_ref",
                 "entity_w_assign_with_nested_template",
-                "template_w_for"
+                "template_w_for",
+                "template_w_component_w_undefined_identifier",
+                "template_w_child_component_w_undefined_identifier",
+                "template_w_anonymous_child_component_w_undefined_identifier"
             ]
         }, {
             "id": "Error",

@@ -357,6 +357,9 @@ void Template_bulk_create_template(void);
 void Template_template_w_expr_w_self_ref(void);
 void Template_entity_w_assign_with_nested_template(void);
 void Template_template_w_for(void);
+void Template_template_w_component_w_undefined_identifier(void);
+void Template_template_w_child_component_w_undefined_identifier(void);
+void Template_template_w_anonymous_child_component_w_undefined_identifier(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -2256,6 +2259,18 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_for",
         Template_template_w_for
+    },
+    {
+        "template_w_component_w_undefined_identifier",
+        Template_template_w_component_w_undefined_identifier
+    },
+    {
+        "template_w_child_component_w_undefined_identifier",
+        Template_template_w_child_component_w_undefined_identifier
+    },
+    {
+        "template_w_anonymous_child_component_w_undefined_identifier",
+        Template_template_w_anonymous_child_component_w_undefined_identifier
     }
 };
 
@@ -4281,7 +4296,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        61,
+        64,
         Template_testcases
     },
     {

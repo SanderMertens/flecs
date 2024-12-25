@@ -258,10 +258,16 @@ ecs_entity_t flecs_script_find_entity_action(
 static
 int flecs_script_find_template_entity(
     ecs_script_eval_visitor_t *v,
+    void *node,
     const char *name)
 {
+    ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
+
     /* Loop template scope to see if it declares an entity with requested name */
     ecs_script_template_t *t = v->template;
+    ecs_assert(t != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(t->node != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_script_scope_t *scope = t->node->scope;
     ecs_script_node_t **nodes = ecs_vec_first_t(
         &scope->stmts, ecs_script_node_t*);
@@ -271,11 +277,17 @@ int flecs_script_find_template_entity(
         ecs_script_node_t *node = nodes[i];
         if (node->kind == EcsAstEntity) {
             ecs_script_entity_t *entity_node = (ecs_script_entity_t*)node;
+            if (!entity_node->name) {
+                continue;
+            }
+
             if (!ecs_os_strcmp(entity_node->name, name)) {
                 return 0;
             }
         }
     }
+
+    flecs_script_eval_error(v, node, "unresolved reference to '%s'", name);
 
     return -1;
 }
@@ -356,7 +368,7 @@ int flecs_script_eval_id(
 
             /* Targets may be defined by the template */
             if (v->template) {
-                if (!flecs_script_find_template_entity(v, id->second)) {
+                if (!flecs_script_find_template_entity(v, node, id->second)) {
                     return 0;
                 } else {
                     return -1;
