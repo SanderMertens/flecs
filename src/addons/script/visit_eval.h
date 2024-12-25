@@ -18,6 +18,7 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_entity_t with_relationship;
     int32_t with_relationship_sp;
     bool is_with_scope;
+    bool dynamic_variable_binding;
     ecs_script_vars_t *vars;
 } ecs_script_eval_visitor_t;
 

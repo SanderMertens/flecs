@@ -516,6 +516,11 @@ int flecs_script_eval_template(
     template->entity = template_entity;
     template->node = node;
 
+    /* Variables are always presented to a template in a well defined order, so
+     * we don't need dynamic variable binding. */
+    bool old_dynamic_variable_binding = v->dynamic_variable_binding;
+    v->dynamic_variable_binding = false;
+
     if (flecs_script_template_preprocess(v, template)) {
         goto error;
     }
@@ -527,6 +532,8 @@ int flecs_script_eval_template(
     if (flecs_script_template_hoist_vars(v, template, v->vars)) {
         goto error;
     }
+
+    v->dynamic_variable_binding = old_dynamic_variable_binding;
 
     /* If template has no props, give template dummy size so we can register
      * hooks for it. */
