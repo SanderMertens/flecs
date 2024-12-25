@@ -539,18 +539,23 @@ void ecs_script_vars_from_iter(
 typedef struct ecs_expr_eval_desc_t {
     const char *name;                /**< Script name */
     const char *expr;                /**< Full expression string */
+    const ecs_script_vars_t *vars;   /**< Variables accessible in expression */
+    ecs_entity_t type;               /**< Type of parsed value (optional) */
     ecs_entity_t (*lookup_action)(   /**< Function for resolving entity identifiers */
         const ecs_world_t*,
         const char *value,
         void *ctx);
     void *lookup_ctx;                /**< Context passed to lookup function */
-    const ecs_script_vars_t *vars;   /**< Variables accessible in expression */
-    ecs_entity_t type;               /**< Type of parsed value (optional) */
-    
-    /* Disable constant folding (slower evaluation, faster parsing) */
+
+    /** Disable constant folding (slower evaluation, faster parsing) */
     bool disable_folding;
-    
-    /* Allow for unresolved identifiers when parsing. Useful when entities can
+
+    /** This option instructs the expression runtime to lookup variables by 
+     * stack pointer instead of by name, which improves performance. Only enable 
+     * when provided variables are always declared in the same order. */
+    bool disable_dynamic_variable_binding;
+
+    /** Allow for unresolved identifiers when parsing. Useful when entities can
      * be created in between parsing & evaluating. */
     bool allow_unresolved_identifiers;
 

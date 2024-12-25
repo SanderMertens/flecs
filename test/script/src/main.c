@@ -273,6 +273,12 @@ void Eval_assign_call_scoped_func(void);
 void Eval_assign_call_scoped_func_w_using(void);
 void Eval_eval_w_vars(void);
 void Eval_eval_w_runtime(void);
+void Eval_eval_w_other_vars(void);
+void Eval_eval_w_vars_different_order(void);
+void Eval_eval_w_vars_different_order_var_component(void);
+void Eval_eval_w_vars_different_order_with_var(void);
+void Eval_eval_w_vars_different_order_pair_w_var(void);
+void Eval_eval_w_vars_different_order_pair_scope_w_var(void);
 void Eval_component_in_entity_in_with_scope(void);
 void Eval_entity_w_string_name(void);
 void Eval_entity_w_interpolated_name(void);
@@ -1919,6 +1925,30 @@ bake_test_case Eval_testcases[] = {
     {
         "eval_w_runtime",
         Eval_eval_w_runtime
+    },
+    {
+        "eval_w_other_vars",
+        Eval_eval_w_other_vars
+    },
+    {
+        "eval_w_vars_different_order",
+        Eval_eval_w_vars_different_order
+    },
+    {
+        "eval_w_vars_different_order_var_component",
+        Eval_eval_w_vars_different_order_var_component
+    },
+    {
+        "eval_w_vars_different_order_with_var",
+        Eval_eval_w_vars_different_order_with_var
+    },
+    {
+        "eval_w_vars_different_order_pair_w_var",
+        Eval_eval_w_vars_different_order_pair_w_var
+    },
+    {
+        "eval_w_vars_different_order_pair_scope_w_var",
+        Eval_eval_w_vars_different_order_pair_scope_w_var
     },
     {
         "component_in_entity_in_with_scope",
@@ -4244,7 +4274,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        279,
+        285,
         Eval_testcases
     },
     {

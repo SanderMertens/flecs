@@ -325,7 +325,8 @@ int flecs_expr_variable_visit_eval(
         "variables available at parse time are not provided");
 
     const ecs_script_var_t *var = flecs_script_find_var(
-        ctx->desc->vars, node->name, &node->sp);
+        ctx->desc->vars, node->name, 
+            ctx->desc->disable_dynamic_variable_binding ? &node->sp : NULL);
     if (!var) {
         flecs_expr_visit_error(ctx->script, node, "unresolved variable '%s'",
             node->name);
