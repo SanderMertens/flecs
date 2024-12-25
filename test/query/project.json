@@ -107,6 +107,8 @@
                 "validate_w_pair_any_not_same_vars",
                 "validate_w_no_pair_not_same_vars",
                 "validate_not_childof_any",
+                "validate_not_childof_any_non_trivial",
+                "validate_not_childof_any_expr",
                 "validate_w_inherited_id",
                 "validate_w_inherited_pair",
                 "validate_w_non_inherited_id",

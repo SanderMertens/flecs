@@ -2295,6 +2295,77 @@ void Validator_validate_not_childof_any(void) {
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, EcsSelf|EcsIsEntity);
 
+    test_query_flags(EcsQueryMatchThis|EcsQueryMatchOnlyThis|
+        EcsQueryMatchOnlySelf|EcsQueryIsTrivial|EcsQueryHasTableThisVar,
+        q->flags);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world); 
+}
+
+void Validator_validate_not_childof_any_non_trivial(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            {
+                .first.id = EcsChildOf, 
+                .second.id = EcsAny,
+                .oper = EcsNot
+            },
+            {
+                .first.id = Foo, 
+                .oper = EcsOptional
+            },
+        }
+    });
+
+    test_int(q->term_count, 2);
+    test_int(q->field_count, 2);
+    test_uint(q->terms[0].id, ecs_pair(EcsChildOf, 0));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].inout, EcsInOutDefault);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, EcsChildOf|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].second.id, EcsSelf|EcsIsEntity);
+
+    test_query_flags(EcsQueryMatchThis|EcsQueryMatchOnlyThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasCondSet|EcsQueryHasCacheable|
+        EcsQueryHasTableThisVar,
+        q->flags);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world); 
+}
+
+void Validator_validate_not_childof_any_expr(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!(ChildOf, _)"
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, ecs_pair(EcsChildOf, 0));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].inout, EcsInOutDefault);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, EcsChildOf|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].second.id, EcsSelf|EcsIsEntity);
+
+    test_query_flags(EcsQueryMatchThis|EcsQueryMatchOnlyThis|
+        EcsQueryMatchOnlySelf|EcsQueryIsTrivial|EcsQueryHasTableThisVar,
+        q->flags);
+
     ecs_query_fini(q);
 
     ecs_fini(world); 

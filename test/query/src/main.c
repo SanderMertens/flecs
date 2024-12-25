@@ -102,6 +102,8 @@ void Validator_validate_w_pair_wildcard_not_same_vars(void);
 void Validator_validate_w_pair_any_not_same_vars(void);
 void Validator_validate_w_no_pair_not_same_vars(void);
 void Validator_validate_not_childof_any(void);
+void Validator_validate_not_childof_any_non_trivial(void);
+void Validator_validate_not_childof_any_expr(void);
 void Validator_validate_w_inherited_id(void);
 void Validator_validate_w_inherited_pair(void);
 void Validator_validate_w_non_inherited_id(void);
@@ -2511,6 +2513,14 @@ bake_test_case Validator_testcases[] = {
     {
         "validate_not_childof_any",
         Validator_validate_not_childof_any
+    },
+    {
+        "validate_not_childof_any_non_trivial",
+        Validator_validate_not_childof_any_non_trivial
+    },
+    {
+        "validate_not_childof_any_expr",
+        Validator_validate_not_childof_any_expr
     },
     {
         "validate_w_inherited_id",
@@ -10548,7 +10558,7 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        143,
+        145,
         Validator_testcases
     },
     {
