@@ -14,7 +14,7 @@ ecs_iter_t ecs_each_id(
 
     const ecs_world_t *world = ecs_get_world(stage);
 
-    flecs_process_pending_tables(world);
+    // flecs_process_pending_tables(world);
 
     ecs_iter_t it = {
         .real_world = ECS_CONST_CAST(ecs_world_t*, world),

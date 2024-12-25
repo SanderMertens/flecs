@@ -2988,3 +2988,121 @@ void Template_template_w_anonymous_child_component_w_undefined_identifier(void) 
 
     ecs_fini(world);
 }
+
+static int on_foo_invoked = 0;
+
+static
+void on_foo(ecs_iter_t *it) {
+    on_foo_invoked ++;
+}
+
+void Template_clear_script_w_template_w_on_remove_observer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = on_foo
+    });
+
+    const char *expr =
+    HEAD "e { Position: {10, 20} }"
+    LINE ""
+    LINE "parent {"
+    LINE "  template Bar { }"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = expr
+    });
+
+    test_assert(s != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t parent = ecs_lookup(world, "parent");
+    test_assert(parent != 0);
+    ecs_entity_t bar = ecs_lookup(world, "parent.Bar");
+    test_assert(bar != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    test_int(on_foo_invoked, 0);
+
+    ecs_script_clear(world, s, 0);
+
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, bar));
+
+    test_int(on_foo_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Template_clear_script_w_template_w_on_remove_observer_added_after(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = on_foo
+    });
+
+    const char *expr =
+    HEAD "e { }"
+    LINE ""
+    LINE "parent {"
+    LINE "  template Bar { }"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = expr
+    });
+
+    test_assert(s != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t parent = ecs_lookup(world, "parent");
+    test_assert(parent != 0);
+    ecs_entity_t bar = ecs_lookup(world, "parent.Bar");
+    test_assert(bar != 0);
+
+    ecs_add(world, e, Position);
+
+    test_int(on_foo_invoked, 0);
+
+    ecs_log_set_level(4);
+
+    ecs_script_clear(world, s, 0);
+
+    ecs_log_set_level(-1);
+
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, bar));
+
+    test_int(on_foo_invoked, 1);
+
+    ecs_fini(world);
+}

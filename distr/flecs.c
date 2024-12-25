@@ -4423,7 +4423,7 @@ ecs_iter_t ecs_each_id(
 
     const ecs_world_t *world = ecs_get_world(stage);
 
-    flecs_process_pending_tables(world);
+    // flecs_process_pending_tables(world);
 
     ecs_iter_t it = {
         .real_world = ECS_CONST_CAST(ecs_world_t*, world),
@@ -8369,11 +8369,20 @@ bool flecs_on_delete_clear_tables(
 
             /* Empty all tables for id */
             {
+                ecs_dbg_2("CLEAR ALL FOR '%s'", ecs_id_str(world, idr->id));
+                ecs_iter_t eit = ecs_each_id(world, idr->id);
+                while (ecs_each_next(&eit)) {
+                    printf(" - DELETE [%s]\n", ecs_table_str(world, eit.table));
+                }
+                printf("---\n");
+
                 ecs_table_cache_iter_t it;
                 if (flecs_table_cache_iter(&idr->cache, &it)) {
                     ecs_table_record_t *tr;
                     while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
                         ecs_table_t *table = tr->hdr.table;
+
+                        ecs_dbg_2("- CLEAR [%s]", ecs_table_str(world, table));
 
                         if ((action == EcsRemove) || 
                             !(table->flags & EcsTableMarkedForDelete))
@@ -8385,6 +8394,8 @@ bool flecs_on_delete_clear_tables(
                                 (uint32_t)table->id);
                             flecs_table_delete_entities(world, table);
                         }
+
+                        ecs_dbg_2("\n");
                     }
                 }
             }
@@ -8532,6 +8543,8 @@ void ecs_delete_with(
     ecs_id_t id)
 {
     flecs_journal_begin(world, EcsJournalDeleteWith, id, NULL, NULL);
+
+    printf("ecs_delete_with(%s)\n", ecs_id_str(world, id));
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_on_delete_action(stage, id, EcsDelete)) {
@@ -58533,6 +58546,11 @@ void ecs_script_clear(
     ecs_entity_t instance)
 {
     if (!instance) {
+        ecs_iter_t it = ecs_each_id(world, ecs_pair_t(EcsScript, script));
+        while (ecs_each_next(&it)) {
+            printf(" - DELETE [%s]\n", ecs_table_str(world, it.table));
+        }
+        printf("---\n");
         ecs_delete_with(world, ecs_pair_t(EcsScript, script));
     } else {
         ecs_defer_begin(world);

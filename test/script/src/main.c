@@ -294,6 +294,7 @@ void Eval_for_range(void);
 void Eval_for_range_vars(void);
 void Eval_for_range_1_4(void);
 void Eval_for_range_min_1_2(void);
+void Eval_variable_assign_self(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -360,6 +361,8 @@ void Template_template_w_for(void);
 void Template_template_w_component_w_undefined_identifier(void);
 void Template_template_w_child_component_w_undefined_identifier(void);
 void Template_template_w_anonymous_child_component_w_undefined_identifier(void);
+void Template_clear_script_w_template_w_on_remove_observer(void);
+void Template_clear_script_w_template_w_on_remove_observer_added_after(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -2012,6 +2015,10 @@ bake_test_case Eval_testcases[] = {
     {
         "for_range_min_1_2",
         Eval_for_range_min_1_2
+    },
+    {
+        "variable_assign_self",
+        Eval_variable_assign_self
     }
 };
 
@@ -2271,6 +2278,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_anonymous_child_component_w_undefined_identifier",
         Template_template_w_anonymous_child_component_w_undefined_identifier
+    },
+    {
+        "clear_script_w_template_w_on_remove_observer",
+        Template_clear_script_w_template_w_on_remove_observer
+    },
+    {
+        "clear_script_w_template_w_on_remove_observer_added_after",
+        Template_clear_script_w_template_w_on_remove_observer_added_after
     }
 };
 
@@ -4289,14 +4304,14 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        285,
+        286,
         Eval_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        64,
+        66,
         Template_testcases
     },
     {

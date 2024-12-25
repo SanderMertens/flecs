@@ -69,6 +69,11 @@ void ecs_script_clear(
     ecs_entity_t instance)
 {
     if (!instance) {
+        ecs_iter_t it = ecs_each_id(world, ecs_pair_t(EcsScript, script));
+        while (ecs_each_next(&it)) {
+            printf(" - DELETE [%s]\n", ecs_table_str(world, it.table));
+        }
+        printf("---\n");
         ecs_delete_with(world, ecs_pair_t(EcsScript, script));
     } else {
         ecs_defer_begin(world);
