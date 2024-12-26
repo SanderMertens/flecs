@@ -202,6 +202,7 @@ void SystemPeriodic_match_2_systems_w_populated_table(void);
 void SystemPeriodic_on_period(void);
 void SystemPeriodic_on_period_long_delta(void);
 void SystemPeriodic_disabled(void);
+void SystemPeriodic_2_disabled(void);
 void SystemPeriodic_disabled_feature(void);
 void SystemPeriodic_disabled_nested_feature(void);
 void SystemPeriodic_two_refs(void);
@@ -1295,6 +1296,10 @@ bake_test_case SystemPeriodic_testcases[] = {
     {
         "disabled",
         SystemPeriodic_disabled
+    },
+    {
+        "2_disabled",
+        SystemPeriodic_2_disabled
     },
     {
         "disabled_feature",
@@ -2559,7 +2564,7 @@ static bake_test_suite suites[] = {
         "SystemPeriodic",
         NULL,
         NULL,
-        47,
+        48,
         SystemPeriodic_testcases
     },
     {
