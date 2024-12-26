@@ -275,7 +275,7 @@ void flecs_query_cache_sort_tables(
     ecs_id_record_t *idr = flecs_id_record_get(world, order_by);
     ecs_table_cache_iter_t it;
     ecs_query_cache_table_t *qt;
-    flecs_table_cache_iter(&cache->cache, &it);
+    flecs_table_cache_all_iter(&cache->cache, &it);
 
     while ((qt = flecs_table_cache_next(&it, ecs_query_cache_table_t))) {
         ecs_table_t *table = qt->hdr.table;
@@ -284,6 +284,16 @@ void flecs_query_cache_sort_tables(
         if (flecs_query_check_table_monitor(impl, qt, 0)) {
             tables_sorted = true;
             dirty = true;
+
+            if (!ecs_table_count(table)) {
+                /* If table is empty, there's a chance the query won't iterate it
+                * so update the match monitor here. */
+                ecs_query_cache_table_match_t *cur, *next;
+                for (cur = qt->first; cur != NULL; cur = next) {
+                    flecs_query_sync_match_monitor(impl, cur);
+                    next = cur->next_match;
+                }
+            }
         }
 
         int32_t column = -1;

@@ -8943,9 +8943,6 @@ void Eval_eval_w_vars_different_order_var_component(void) {
         ((Position*)foo->value.ptr)->y = 20;
         ecs_script_eval_desc_t desc = { .vars = vars };
 
-        s = ecs_script_parse(world, NULL, expr, &desc);
-        test_assert(s != NULL);
-
         test_int(0, ecs_script_eval(s, &desc));
         ecs_entity_t e = ecs_lookup(world, "e");
         test_assert(e != 0);
@@ -9032,9 +9029,6 @@ void Eval_eval_w_vars_different_order_with_var(void) {
         ((Position*)foo->value.ptr)->y = 20;
         ecs_script_eval_desc_t desc = { .vars = vars };
 
-        s = ecs_script_parse(world, NULL, expr, &desc);
-        test_assert(s != NULL);
-
         test_int(0, ecs_script_eval(s, &desc));
         ecs_entity_t e = ecs_lookup(world, "e");
         test_assert(e != 0);
@@ -9095,9 +9089,6 @@ void Eval_eval_w_vars_different_order_pair_w_var(void) {
         *((ecs_entity_t*)foo->value.ptr) = Rel;
         ecs_script_eval_desc_t desc = { .vars = vars };
 
-        s = ecs_script_parse(world, NULL, expr, &desc);
-        test_assert(s != NULL);
-
         test_int(0, ecs_script_eval(s, &desc));
         ecs_entity_t e = ecs_lookup(world, "e");
         test_assert(e != 0);
@@ -9149,9 +9140,6 @@ void Eval_eval_w_vars_different_order_pair_scope_w_var(void) {
         ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_entity_t);
         *((ecs_entity_t*)foo->value.ptr) = Rel;
         ecs_script_eval_desc_t desc = { .vars = vars };
-
-        s = ecs_script_parse(world, NULL, expr, &desc);
-        test_assert(s != NULL);
 
         test_int(0, ecs_script_eval(s, &desc));
         ecs_entity_t e = ecs_lookup(world, "e");
@@ -9670,13 +9658,12 @@ void Eval_for_range_min_1_2(void) {
 void Eval_variable_assign_self(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_script_t *s;
-
     const char *expr =
     LINE "const v = $v"
     LINE ""
     ;
 
+    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr) != 0);
 
     ecs_fini(world);

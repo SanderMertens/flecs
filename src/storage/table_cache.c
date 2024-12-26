@@ -174,14 +174,6 @@ void* ecs_table_cache_remove(
     return elem;
 }
 
-bool ecs_table_cache_set_empty(
-    ecs_table_cache_t *cache,
-    const ecs_table_t *table,
-    bool empty)
-{
-    return false;
-}
-
 bool flecs_table_cache_iter(
     ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out)

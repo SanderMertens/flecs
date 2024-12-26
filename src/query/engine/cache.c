@@ -574,8 +574,7 @@ void flecs_query_cache_match_tables(
             /* New table matched, add record to cache */
             table = it.table;
             qt = flecs_query_cache_table_insert(world, cache, table);
-            ecs_dbg_3("query cache matched existing table [%s]", 
-                ecs_table_str(world, table));
+            ecs_dbg_3("query cache matched existing table [%s]", NULL);
         }
 
         ecs_query_cache_table_match_t *qm = 
@@ -733,7 +732,6 @@ error:
 static
 void flecs_query_cache_table_match_free(
     ecs_query_cache_t *cache,
-    ecs_query_cache_table_t *elem,
     ecs_query_cache_table_match_t *first)
 {
     ecs_query_cache_table_match_t *cur, *next;
@@ -767,7 +765,7 @@ void flecs_query_cache_table_free(
     ecs_query_cache_t *cache,
     ecs_query_cache_table_t *elem)
 {
-    flecs_query_cache_table_match_free(cache, elem, elem->first);
+    flecs_query_cache_table_match_free(cache, elem->first);
     flecs_bfree(&cache->query->world->allocators.query_table, elem);
 }
 
@@ -822,7 +820,7 @@ void flecs_query_cache_rematch_tables(
     while (ecs_query_next(&it)) {
         if ((table != it.table) || (!it.table && !qt)) {
             if (qm && qm->next_match) {
-                flecs_query_cache_table_match_free(cache, qt, qm->next_match);
+                flecs_query_cache_table_match_free(cache, qm->next_match);
                 qm->next_match = NULL;
             }
 
@@ -858,7 +856,7 @@ void flecs_query_cache_rematch_tables(
     }
 
     if (qm && qm->next_match) {
-        flecs_query_cache_table_match_free(cache, qt, qm->next_match);
+        flecs_query_cache_table_match_free(cache, qm->next_match);
         qm->next_match = NULL;
     }
 
