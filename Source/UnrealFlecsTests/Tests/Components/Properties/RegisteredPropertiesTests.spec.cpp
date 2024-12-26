@@ -7,7 +7,7 @@
 #include "Components/FlecsActorTag.h"
 
 BEGIN_DEFINE_SPEC(FRegisteredPropertiesTestsSpec,
-                  "UnrealFlecs.Components.RegisteredProperties",
+                  "Flecs.Components.RegisteredProperties",
                   EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter);
 
 FFlecsTestFixture Fixture;
@@ -86,6 +86,22 @@ void FRegisteredPropertiesTestsSpec::Define()
 				TestType.Has<FTestRegisteredTraitProperty>());
 			TestTrue("Component properties should be registered",
 				TestType.Has(FTestRegisteredTraitProperty::StaticStruct()));
+			TestTrue("Component property trait should be of value 1",
+				TestType.Get<FTestRegisteredTraitProperty>().MyInt32 == 1);
+		});
+
+		It("Should contain Registered Trait Properties using StaticStruct",
+			[this]()
+		{
+			const FFlecsEntityHandle TestType
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FTestRegisteredPropertyStruct2::StaticStruct());
+			
+			TestTrue("Component properties should be registered",
+				TestType.Has<FTestRegisteredTraitProperty>());
+			TestTrue("Component properties should be registered",
+				TestType.Has(FTestRegisteredTraitProperty::StaticStruct()));
+			TestTrue("Component property trait should be of value 1",
+				TestType.Get<FTestRegisteredTraitProperty>().MyInt32 == 1);
 		});
 	});
 }

@@ -6,7 +6,7 @@
 #include "Transforms/FlecsTransformDefaultEntities.h"
 
 BEGIN_DEFINE_SPEC(FDefaultEntityTestsSpec,
-                  "UnrealFlecs.Entity.Default",
+                  "Flecs.Entity.Default",
                   EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter);
 
 FFlecsTestFixture Fixture;

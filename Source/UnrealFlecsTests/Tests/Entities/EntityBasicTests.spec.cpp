@@ -5,7 +5,7 @@
 #include "Fixtures/FlecsWorldFixture.h"
 
 BEGIN_DEFINE_SPEC(FEntityBasicTestsSpec,
-                  "UnrealFlecs.Entity.Basic",
+                  "Flecs.Entity.Basic",
                   EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter);
 
 FFlecsTestFixture Fixture;

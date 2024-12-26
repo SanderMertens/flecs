@@ -4,7 +4,7 @@
 #include "Fixtures/FlecsWorldFixture.h"
 
 BEGIN_DEFINE_SPEC(FTraitQueryTestsSpec,
-                  "UnrealFlecs.Traits.Query",
+                  "Flecs.Traits.Query",
                   EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter);
 
 FFlecsTestFixture Fixture;

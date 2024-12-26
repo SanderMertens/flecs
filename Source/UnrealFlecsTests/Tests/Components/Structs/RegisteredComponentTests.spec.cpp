@@ -6,7 +6,7 @@
 #include "ComponentTestStructs.h"
 
 BEGIN_DEFINE_SPEC(FRegisteredComponentTestsSpec,
-                  "UnrealFlecs.Components.Registration",
+                  "Flecs.Components.Registration",
                   EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter);
 
 FFlecsTestFixture Fixture;

@@ -4,7 +4,7 @@
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
 
-BEGIN_DEFINE_SPEC(FFlecsWorldLifecycleTestsSpec, "UnrealFlecs.World.LifecycleTests",
+BEGIN_DEFINE_SPEC(FFlecsWorldLifecycleTestsSpec, "Flecs.World.LifecycleTests",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 	FFlecsTestFixture Fixture;
