@@ -241,7 +241,7 @@ void FTraitQueryTestsSpec::Define()
 
 			const bool bFound = query.is_true();
 			
-			TestFalse("Trait should be found", bFound);
+			TestFalse("Trait should not be found", bFound);
 		});
 
 		It("Should be able to query for a trait exclusion with a component and 2 traits",
@@ -262,7 +262,7 @@ void FTraitQueryTestsSpec::Define()
 
 			const bool bFound = query.contains(Entity);
 			
-			TestTrue("Trait should be found", bFound);
+			TestTrue("Trait should not be found", bFound);
 		});
 		
 	});

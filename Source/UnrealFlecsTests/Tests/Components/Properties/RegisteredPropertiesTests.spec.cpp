@@ -18,7 +18,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 {
 	FLECS_FIXTURE_LIFECYCLE(Fixture);
 
-	Describe("Registered Types", [this]()
+	Describe("Registered Tag Properties", [this]()
 	{
 		It("Should contain Registered Properties from Struct in the Flecs Module",
 			[this]()
@@ -30,7 +30,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 				TestType.Has(flecs::PairIsTag));
 		});
 		
-		It("Should contain Registered Properties(Tags) using type directly",
+		It("Should contain Registered Properties using type directly",
 			[this]()
 		{
 			const FFlecsEntityHandle TestType
@@ -40,7 +40,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 				TestType.Has(flecs::PairIsTag));
 		});
 		
-		It("Should contain Registered Properties(Tags) using StaticStruct",
+		It("Should contain Registered Properties using StaticStruct",
 			[this]()
 		{
 			const FFlecsEntityHandle TestType
@@ -50,7 +50,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 				TestType.Has(flecs::PairIsTag));
 		});
 
-		It("Should contain Registered Properties(Tags) using Auto Component Registration",
+		It("Should contain Registered Properties using Auto Component Registration",
 			[this]()
 		{
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
@@ -63,7 +63,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct>().Has(flecs::PairIsTag));
 		});
 
-		It("Should contain Meta-Data with Registered Properties(Tags)", [this]()
+		It("Should contain Meta-Data with Registered Properties", [this]()
 		{
 			UScriptStruct* TestStruct = FTestRegisteredPropertyStruct::StaticStruct();
 			MAYBE_UNUSED const FFlecsEntityHandle TestType = Fixture.FlecsWorld->ObtainComponentTypeStruct(TestStruct);

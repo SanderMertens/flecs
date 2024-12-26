@@ -1198,34 +1198,15 @@ public:
 
 		ScriptStructComponent.set<FFlecsScriptStructComponent>({ ScriptStruct });
 
-		// if (ScriptStruct->GetSuperStruct())
-		// {
-		// 	const FFlecsEntityHandle ParentEntity = ObtainComponentTypeStruct(
-		// 		CastChecked<UScriptStruct>(ScriptStruct->GetSuperStruct()));
-		// 	
-		// 	ScriptStructComponent.child_of(ParentEntity);
-		// }
-
-		//#if WITH_EDITOR
-
-		//RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
-
-		//#endif // WITH_EDITOR
-
 		SetScope(OldScope);
 		return ScriptStructComponent;
 	}
 
+	// @TODO: May be deprecated in the future
 	void RegisterScriptStruct(UScriptStruct* ScriptStruct, const FFlecsEntityHandle& InComponentEntity) const
 	{
 		TypeMapComponent->ScriptStructMap
 			.emplace(ScriptStruct, InComponentEntity.GetEntity());
-
-		//#if WITH_EDITOR
-
-		//RegisterMemberProperties(ScriptStruct, InComponentEntity);
-
-		//#endif // WITH_EDITOR
 	}
 
 	template <typename T>
