@@ -90,8 +90,7 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
 FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptStruct* StructType) const
 {
     solid_checkf(StructType, TEXT("Struct Type is not valid"));
-    return GetFlecsWorld()
-        ->ObtainComponentTypeStruct(StructType);
+    return GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
 }
 
 FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) const

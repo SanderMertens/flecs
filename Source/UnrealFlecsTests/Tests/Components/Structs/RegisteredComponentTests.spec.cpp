@@ -44,9 +44,8 @@ void FRegisteredComponentTestsSpec::Define()
 
 		It("Should set USTRUCT Component using FInstancedStruct", [this]()
 		{
-			FInstancedStruct TestComponent
-				= FInstancedStruct(FUStructTestComponent::StaticStruct());
-				TestComponent.InitializeAs<FUStructTestComponent>(FUStructTestComponent{ 1 });
+			FInstancedStruct TestComponent = FInstancedStruct(FUStructTestComponent::StaticStruct());
+			TestComponent.InitializeAs<FUStructTestComponent>(FUStructTestComponent{ 1 });
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Set(TestComponent);
 
