@@ -8,6 +8,7 @@
 - [Unreal-Flecs (Unreal Engine Flecs plugin)](https://github.com/Reddy-dev/Unreal-Flecs)
 - [Getting Started with Godot](https://github.com/paulfigiel/godot-flecs-sample)
 - [Getting Started with Raylib](https://github.com/kranzky/raylib-flecs-starter-kit)
+- [Flecs an Raylib template](https://github.com/aog05/Raylib-and-Flecs-Template)
 
 ## Manuals
 - [Manual](Manual.md)
@@ -32,7 +33,19 @@
 - [C++ examples](https://github.com/SanderMertens/flecs/tree/master/examples/cpp)
 - [C# examples](https://github.com/BeanCheeseBurrito/Flecs.NET/tree/main/src/Flecs.NET.Examples)
 - [Rust examples](https://github.com/Indra-db/Flecs-Rust/tree/main/flecs_ecs/examples/flecs)
- 
+
+## Videos
+- [Setting Up The Project (E1)](https://www.youtube.com/watch?v=O632xG7ItL8)
+- [Creating Your First World (E2)](https://www.youtube.com/watch?v=ph2FjgNvlO4)
+- [Components In Flecs (E3)](https://www.youtube.com/watch?v=4qtdgAN82uo)
+- [Tagging Your Creations (E4)](https://www.youtube.com/watch?v=u71cuiyQk-8)
+- [Beaty Of Pairs In Flecs (E5)](https://www.youtube.com/watch?v=fJuHMzVC_bE)
+- [What is a Prefab? (E6)](https://www.youtube.com/watch?v=qz5eblX8yoc)
+- [Some Pointers for C (E7)](https://www.youtube.com/watch?v=0LscDsVy-28)
+- [Demistifying Queries Part 1 (E8)](https://www.youtube.com/watch?v=PKvCpUO55yw&t=216s)
+
+(Shoutout to [jellycake222](https://www.youtube.com/@jellycake222) for making the awesome tutorial series <3!)
+
 ## Demos
 - [Playground (Flecs Script)](https://www.flecs.dev/explorer/?host=flecs_explorer.wasm)
 - [Tower Defense (C++)](https://github.com/SanderMertens/tower_defense)
