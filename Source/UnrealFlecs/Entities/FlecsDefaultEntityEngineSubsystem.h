@@ -27,7 +27,7 @@ public:
 	TArray<FFlecsDefaultMetaEntity> AddedDefaultEntities;
 	TArray<FFlecsDefaultMetaEntity> CodeAddedDefaultEntities;
 	
-	flecs::world DefaultEntityWorld;
+	flecs::world* DefaultEntityWorld;
 	flecs::entity NoneEntity;
 
 	bool bIsInitialized = false;
@@ -36,7 +36,7 @@ public:
 }; // struct FFlecsDefaultEntityEngine
 
 #define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
-	INLINE DLLEXPORT ECS_ENTITY_DECLARE(EntityName); \
+	DLLEXPORT INLINE ECS_ENTITY_DECLARE(EntityName); \
 	namespace \
 	{                                                             \
 		static void Register##EntityName()                        \

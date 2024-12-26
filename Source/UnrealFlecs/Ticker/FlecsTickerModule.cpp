@@ -52,7 +52,6 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 	FFlecsTickerComponent TickerComponent;
 	TickerComponent.TickId = 0;
 	InWorld->SetSingleton<FFlecsTickerComponent>(TickerComponent);
-	InWorld->ModifiedSingleton<FFlecsTickerComponent>();
 
 	TickerComponentPtr = InWorld->GetSingletonPtr<FFlecsTickerComponent>();
 	solid_checkf(TickerComponentPtr, TEXT("TickerComponentRef is not valid!"));
@@ -110,6 +109,8 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 		solid_check(TickerComponentPtr);
 		++TickerComponentPtr->TickId;
 		SET_DWORD_STAT(STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, TickerComponentPtr->TickId);
+
+		GetFlecsWorld()->ModifiedSingleton<FFlecsTickerComponent>();
 		
 		GetFlecsWorld()->RunPipeline(TickerPipeline, TickerInterval);
 	}

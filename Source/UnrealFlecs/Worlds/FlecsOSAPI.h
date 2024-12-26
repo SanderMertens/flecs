@@ -19,14 +19,14 @@ DECLARE_CYCLE_STAT(TEXT("FlecsOS::TaskThread"), STAT_FlecsOS, STATGROUP_FlecsOS)
 class FFlecsRunnable final : public FRunnable
 {
 public:
-	FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InData)
+	FORCEINLINE FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InData)
 		: Callback(InCallback)
 		, Data(InData)
 		, bStopped(false)
 	{
 	}
 
-	virtual uint32 Run() override
+	FORCEINLINE virtual uint32 Run() override
 	{
 		while (!bStopped.load())
 		{
@@ -37,7 +37,7 @@ public:
 		return 0;
 	}
 
-	virtual void Stop() override
+	FORCEINLINE virtual void Stop() override
 	{
 		bStopped.store(true);
 	}
@@ -145,7 +145,6 @@ struct FFlecsConditionWrapper
 
 struct FOSApiInitializer
 {
-	
 	FOSApiInitializer()
 	{
 		UN_LOG(LogFlecsCore, Log, "Initializing Flecs OS API");

@@ -28,7 +28,12 @@ struct FLECSLIBRARY_API FFlecsScriptStructComponent
 
     FORCEINLINE operator UScriptStruct*() const { return ScriptStruct.Get(); }
     
-    FORCEINLINE FFlecsScriptStructComponent(UScriptStruct* InScriptStruct = nullptr) : ScriptStruct(InScriptStruct) {}
+    FORCEINLINE FFlecsScriptStructComponent(UScriptStruct* InScriptStruct = nullptr)
+        : ScriptStruct(InScriptStruct) {}
+    FORCEINLINE FFlecsScriptStructComponent(const UScriptStruct* InScriptStruct)
+        : ScriptStruct(const_cast<UScriptStruct*>(InScriptStruct)) {}
+    FORCEINLINE FFlecsScriptStructComponent(const FFlecsScriptStructComponent& InScriptStructComponent)
+        : ScriptStruct(InScriptStructComponent.ScriptStruct) {}
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
     TWeakObjectPtr<UScriptStruct> ScriptStruct;

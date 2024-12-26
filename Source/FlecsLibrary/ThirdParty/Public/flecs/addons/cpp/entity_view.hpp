@@ -649,7 +649,7 @@ struct entity_view : public id {
             return result;
         }
 
-        if (is_enum<T>::value) {
+        if constexpr (is_enum<T>::value) {
             return ecs_has_pair(world_, id_, cid, flecs::Wildcard);
         }
 

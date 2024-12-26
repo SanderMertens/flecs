@@ -6,11 +6,11 @@
 #include "FlecsComponentCollection.generated.h"
 
 USTRUCT(BlueprintType)
-struct FComponentCollection
+struct FFlecsComponentCollection
 {
 	GENERATED_BODY()
 
 public:
 	
-}; // struct FComponentCollection
+}; // struct FFlecsComponentCollection
 

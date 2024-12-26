@@ -14,7 +14,7 @@ FFlecsEntityHandle::FFlecsEntityHandle()
 {
 }
 
-FFlecsEntityHandle::FFlecsEntityHandle(UFlecsWorld* InWorld, const flecs::entity_t InEntity)
+FFlecsEntityHandle::FFlecsEntityHandle(const UFlecsWorld* InWorld, const flecs::entity_t InEntity)
 {
     SetEntity(flecs::entity(InWorld->World, InEntity));
 }
@@ -89,8 +89,9 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
 
 FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptStruct* StructType) const
 {
+    solid_checkf(StructType, TEXT("Struct Type is not valid"));
     return GetFlecsWorld()
-        ->ObtainComponentTypeStruct(const_cast<UScriptStruct*>(StructType));
+        ->ObtainComponentTypeStruct(StructType);
 }
 
 FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) const

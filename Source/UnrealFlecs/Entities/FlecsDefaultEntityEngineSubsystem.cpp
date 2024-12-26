@@ -39,14 +39,14 @@ void FFlecsDefaultEntityEngine::Initialize()
 
 void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 {
-	DefaultEntityWorld = flecs::world();
+	DefaultEntityWorld = new flecs::world();
 
 	while (DefaultEntityOptions.IsEmpty())
 	{
-		NoneEntity = DefaultEntityWorld.entity("NoneEntity");
-		DefaultEntityWorld.progress();
+		NoneEntity = DefaultEntityWorld->entity("NoneEntity");
+		DefaultEntityWorld->progress();
 
-		DefaultEntityWorld.query_builder<>()
+		DefaultEntityWorld->query_builder<>()
 			.without(NoneEntity)
 			.with(flecs::Trait).or_()
 			.with(flecs::PairIsTag).or_()
@@ -84,18 +84,18 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 		AddedDefaultEntities.Add(FFlecsDefaultMetaEntity(MetaEntity.EntityRecord));
 	}
 
-	DefaultEntityWorld.progress();
-	DefaultEntityWorld.set_entity_range(DefaultEntityRangeStart, 0);
+	DefaultEntityWorld->progress();
+	DefaultEntityWorld->set_entity_range(DefaultEntityRangeStart, 0);
 
 	for (const auto& [EntityRecord] : AddedDefaultEntities)
 	{
 		UN_LOGF(LogFlecsEntity, Log, "Added default entity: %s", *EntityRecord.Name);
 
-		flecs::entity Entity = DefaultEntityWorld.entity(StringCast<ANSICHAR>(*EntityRecord.Name).Get());
+		flecs::entity Entity = DefaultEntityWorld->entity(StringCast<ANSICHAR>(*EntityRecord.Name).Get());
 		DefaultEntityOptions.Add(*EntityRecord.Name, Entity);
 	}
 
-	DefaultEntityWorld.release();
+	delete DefaultEntityWorld;
 }
 
 flecs::entity_t FFlecsDefaultEntityEngine::AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity)

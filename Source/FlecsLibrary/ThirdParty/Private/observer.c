@@ -560,8 +560,6 @@ void flecs_multi_observer_invoke(
         o->query->eval_count --;
     }
 
-    ecs_os_perf_trace_pop("flecs.multi_observer.invoke");
-
 done:
     ecs_os_perf_trace_pop("flecs.multi_observer.invoke");
     return;

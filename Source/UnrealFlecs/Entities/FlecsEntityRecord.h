@@ -323,13 +323,13 @@ struct UNREALFLECS_API FFlecsEntityRecord
 					switch (TraitNodeType)
 					{
 					case EFlecsComponentNodeType::ScriptStruct:
-						InEntityHandle.SetTrait(ScriptStruct.GetScriptStruct(), TraitScriptStruct);
+						InEntityHandle.SetTrait(const_cast<UScriptStruct*>(ScriptStruct.GetScriptStruct()), TraitScriptStruct);
 						break;
 					case EFlecsComponentNodeType::EntityHandle:
-						InEntityHandle.AddTrait(ScriptStruct.GetScriptStruct(), TraitEntityHandle);
+						InEntityHandle.AddTrait(const_cast<UScriptStruct*>(ScriptStruct.GetScriptStruct()), TraitEntityHandle);
 						break;
 					case EFlecsComponentNodeType::FGameplayTag:
-						InEntityHandle.AddTrait(ScriptStruct.GetScriptStruct(), TraitGameplayTag);
+						InEntityHandle.AddTrait(const_cast<UScriptStruct*>(ScriptStruct.GetScriptStruct()), TraitGameplayTag);
 						break;
 					case EFlecsComponentNodeType::Pair:
 						TraitPair.AddToEntity(InEntityHandle);

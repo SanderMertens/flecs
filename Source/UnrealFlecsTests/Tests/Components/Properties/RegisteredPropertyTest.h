@@ -24,3 +24,30 @@ public:
 }; // struct FTestRegisteredPropertyStruct
 
 REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct, flecs::PairIsTag);
+
+USTRUCT()
+struct FTestRegisteredTraitProperty
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 MyInt32;
+}; // struct FTestRegisteredTraitProperty
+
+USTRUCT()
+struct FTestRegisteredPropertyStruct2
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 MyInt32;
+
+	UPROPERTY()
+	float MyFloat;
+
+	UPROPERTY()
+	FString MyString;
+}; // struct FTestRegisteredPropertyStruct2
+
+REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct2,
+FInstancedStruct::Make<FTestRegisteredTraitProperty>(FTestRegisteredTraitProperty{ 1 }));

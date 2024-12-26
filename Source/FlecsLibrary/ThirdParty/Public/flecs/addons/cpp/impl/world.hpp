@@ -15,14 +15,17 @@ inline void world::init_builtin_components() {
     this->component<Identifier>();
     this->component<Poly>();
 
-    this->component<FFlecsTypeMapComponent>()
-        .add<FFlecsTypeMapComponent>()
-        .add(flecs::Sparse);
-
+    this->component<FFlecsTypeMapComponent>();
+    this->add<FFlecsTypeMapComponent>();
+    
     FFlecsTypeMapComponent* type_map = this->get_mut<FFlecsTypeMapComponent>();
+    ecs_assert(type_map != nullptr, ECS_INTERNAL_ERROR, NULL);
 
     flecs::entity ScriptStructEntity = this->component<FFlecsScriptStructComponent>()
+        .add(flecs::Trait)
         .set<FFlecsScriptStructComponent>({ TBaseStructure<FFlecsScriptStructComponent>::Get() });
+
+    ecs_assert(ScriptStructEntity.is_valid(), ECS_INTERNAL_ERROR, NULL);
 
     type_map->ScriptStructMap.emplace(FFlecsScriptStructComponent::StaticStruct(), ScriptStructEntity);
     

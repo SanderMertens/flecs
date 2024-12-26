@@ -63,7 +63,7 @@ public:
 		Entity = flecs::entity(InWorld, InEntity);
 	}
 
-	SOLID_INLINE FFlecsEntityHandle(UFlecsWorld* InWorld, const flecs::entity_t InEntity);
+	SOLID_INLINE FFlecsEntityHandle(const UFlecsWorld* InWorld, const flecs::entity_t InEntity);
 
 	SOLID_INLINE FFlecsEntityHandle(const flecs::world_t* InWorld, const flecs::entity_t InEntity);
 	
@@ -403,7 +403,7 @@ public:
 
 	SOLID_INLINE NO_DISCARD bool IsComponent() const
 	{
-		return Has<flecs::Component>() || Has<flecs::untyped_component>();
+		return Has<flecs::Component>();
 	}
 	
 	SOLID_INLINE NO_DISCARD flecs::untyped_component GetUntypedComponent() const

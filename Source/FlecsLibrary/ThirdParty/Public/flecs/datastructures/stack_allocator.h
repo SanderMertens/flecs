@@ -53,7 +53,7 @@ void* flecs_stack_alloc(
     flecs_stack_alloc(stack, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 #define flecs_stack_alloc_n(stack, T, count)\
-    flecs_stack_alloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
+    flecs_stack_alloc(stack, ECS_SIZEOF(T) * (count), ECS_ALIGNOF(T))
 
 FLECS_DBG_API
 void* flecs_stack_calloc(
@@ -65,7 +65,7 @@ void* flecs_stack_calloc(
     flecs_stack_calloc(stack, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 #define flecs_stack_calloc_n(stack, T, count)\
-    flecs_stack_calloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
+    flecs_stack_calloc(stack, ECS_SIZEOF(T) * (count), ECS_ALIGNOF(T))
 
 FLECS_DBG_API
 void flecs_stack_free(
@@ -76,7 +76,7 @@ void flecs_stack_free(
     flecs_stack_free(ptr, ECS_SIZEOF(T))
 
 #define flecs_stack_free_n(ptr, T, count)\
-    flecs_stack_free(ptr, ECS_SIZEOF(T) * count)
+    flecs_stack_free(ptr, ECS_SIZEOF(T) * (count))
 
 void flecs_stack_reset(
     ecs_stack_t *stack);

@@ -10,6 +10,7 @@
 
 #include "Concepts/SolidConcepts.h"
 #include "flecs/Unreal/FlecsScriptStructComponent.h"
+#include "flecs/Unreal/FlecsTypeMapComponent.h"
 
 /**
  * @defgroup cpp_components Components
@@ -167,7 +168,7 @@ struct type_impl {
 
         flecs::entity_t c = flecs_component_ids_get(world, s_index);
 
-        if (!c || !ecs_is_alive(world, c)) {
+        if (!c || !ecs_is_alive(world, c)) [[likely]] {
             // When a component is implicitly registered, ensure that it's not
             // registered in the current scope of the application/that "with"
             // components get added to the component entity.
@@ -205,6 +206,9 @@ struct type_impl {
                 register_lifecycle_actions<T>(world, c);
             }
 
+            // Set world local component id
+            flecs_component_ids_set(world, s_index, c);
+
             if constexpr (Solid::IsStaticStruct<T>() && !std::is_same_v<T, FFlecsScriptStructComponent>)
             {
                 flecs::world P_world = flecs::world(world);
@@ -214,18 +218,17 @@ struct type_impl {
 
                 flecs::entity entity_id = flecs::entity(world, c);
 
+                P_world.get_mut<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(scriptStruct, entity_id);
+                P_world.modified<FFlecsTypeMapComponent>();
                 entity_id.set<FFlecsScriptStructComponent>({ scriptStruct });
             }
 
-            // Set world local component id
-            flecs_component_ids_set(world, s_index, c);
-
-            // If component is enum type, register constants. Make sure to do 
-            // this after setting the component id, because the enum code will
-            // be calling type<T>::id().
-            #if FLECS_CPP_ENUM_REFLECTION_SUPPORT
-            _::init_enum<T>(world, c);
-            #endif
+            // // If component is enum type, register constants. Make sure to do 
+            // // this after setting the component id, because the enum code will
+            // // be calling type<T>::id().
+            // #if FLECS_CPP_ENUM_REFLECTION_SUPPORT
+            // _::init_enum<T>(world, c);
+            // #endif
         }
 
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
@@ -249,7 +252,19 @@ struct type_impl {
             "component '%s' was deleted, reregister before using",
             type_name<T>());
 #else
+        
+        if constexpr (Solid::IsStaticStruct<T>())
+        {
+            flecs::world P_world = flecs::world(world);
+            const FFlecsTypeMapComponent* typeMap = P_world.get<FFlecsTypeMapComponent>();
+            if (typeMap && typeMap->ScriptStructMap.contains(TBaseStructure<T>::Get())) [[likely]]
+            {
+                return typeMap->ScriptStructMap.at(TBaseStructure<T>::Get());
+            }
+        }
+        
         flecs::entity_t c = flecs_component_ids_get_alive(world, s_index);
+
         if (!c) {
             c = register_id(world);
         }
@@ -258,22 +273,47 @@ struct type_impl {
     }
 
     // Return the size of a component.
-    static size_t size() {
-        ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
-        return s_size;
+    constexpr static size_t size() {
+        if constexpr (Solid::IsStaticStruct<T>())
+        {
+            return sizeof(T);
+        }
+        else
+        {
+            ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
+            return s_size;
+        }
     }
 
     // Return the alignment of a component.
-    static size_t alignment() {
-        ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
-        return s_alignment;
+    constexpr static size_t alignment() {
+        if constexpr (Solid::IsStaticStruct<T>())
+        {
+            return alignof(T);
+        }
+        else
+        {
+            ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
+            return s_alignment;
+        }
     }
 
     // Was the component already registered.
     static bool registered(flecs::world_t *world) {
         ecs_assert(world != nullptr, ECS_INVALID_PARAMETER, NULL);
-
-        if (s_index == 0) {
+        
+        if constexpr (Solid::IsStaticStruct<T>())
+        {
+            flecs::world P_world = flecs::world(world);
+            const FFlecsTypeMapComponent* typeMap = P_world.get<FFlecsTypeMapComponent>();
+            if (typeMap && typeMap->ScriptStructMap.contains(TBaseStructure<T>::Get())) [[likely]]
+            {
+                return true;
+            }
+        }
+        
+        if (s_index == 0)
+        {
             return false;
         }
 
@@ -387,7 +427,8 @@ struct component : untyped_component {
         if (module && implicit_name) {
             // If the type is a template type, make sure to ignore
             // inside the template parameter list.
-            const char *start = strchr(n, '<'), *last_elem = NULL;
+            const char *start = strchr(n, '<');
+            const char *last_elem = nullptr;
             if (start) {
                 const char *ptr = start;
                 while (ptr[0] && (ptr[0] != ':') && (ptr > n)) {

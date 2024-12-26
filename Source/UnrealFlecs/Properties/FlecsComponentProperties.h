@@ -147,8 +147,11 @@ public:
 		{ \
 			FAutoRegister##ComponentType##_Traits() \
 			{ \
-			TArray<FInstancedStruct> ComponentPropertyStructs = { __VA_ARGS__ }; \
-			FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, {}, ComponentPropertyStructs); \
+				FCoreDelegates::OnPostEngineInit.AddLambda([&]() \
+				{ \
+					TArray<FInstancedStruct> ComponentPropertyStructs = { __VA_ARGS__ }; \
+					FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, {}, ComponentPropertyStructs); \
+				}); \
 			} \
 		}; \
 		inline FAutoRegister##ComponentType##_Traits AutoRegister##ComponentType##_Instance_Traits; \
@@ -162,5 +165,6 @@ public:
 #define REGISTER_COMPONENT_TAG_PROPERTIES(ComponentType, ...) \
 	_REGISTER_FLECS_PROPERTIES_TAGS_IMPL(ComponentType, __VA_ARGS__ )
 
+// @TODO: Only Support ScriptStructs for now
 #define REGISTER_COMPONENT_TRAIT_PROPERTIES(ComponentType, ...) \
 	_REGISTER_FLECS_PROPERTIES_TRAITS_IMPL(ComponentType, __VA_ARGS__ )
