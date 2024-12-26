@@ -949,6 +949,11 @@ int flecs_expr_variable_visit_type(
         desc->vars, node->name, &node->sp);
     if (var) {
         node->node.type = var->value.type;
+        if (!node->node.type) {
+            flecs_expr_visit_error(script, node, 
+                "variable '%s' is not initialized", node->name);
+            goto error;
+        }
     } else {
         if (flecs_expr_global_variable_resolve(script, node, desc)) {
             goto error;

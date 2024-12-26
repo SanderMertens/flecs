@@ -274,9 +274,9 @@ int flecs_script_find_template_entity(
 
     int32_t i, count = ecs_vec_count(&scope->stmts);
     for (i = 0; i < count; i ++) {
-        ecs_script_node_t *node = nodes[i];
-        if (node->kind == EcsAstEntity) {
-            ecs_script_entity_t *entity_node = (ecs_script_entity_t*)node;
+        ecs_script_node_t *elem = nodes[i];
+        if (elem->kind == EcsAstEntity) {
+            ecs_script_entity_t *entity_node = (ecs_script_entity_t*)elem;
             if (!entity_node->name) {
                 continue;
             }

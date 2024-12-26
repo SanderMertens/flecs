@@ -18,7 +18,7 @@ typedef struct ecs_script_rng_t {
 } ecs_script_rng_t;
 
 static
-ecs_script_rng_t* flecs_script_rng_new() {
+ecs_script_rng_t* flecs_script_rng_new(void) {
     ecs_script_rng_t *result = ecs_os_calloc_t(ecs_script_rng_t);
     result->x = 0;
     result->w = 0;
@@ -104,7 +104,12 @@ void flecs_script_rng_get_float(
     uint64_t x = flecs_script_rng_next(rng->impl);
     double max = *(double*)argv[1].ptr;
     double *r = result->ptr;
-    *r = (double)x / ((double)UINT64_MAX / max);
+
+    if (ECS_EQZERO(max)) {
+        ecs_err("flecs.script.math.Rng.f(): invalid division by zero");
+    } else {
+        *r = (double)x / ((double)UINT64_MAX / max);
+    }
 }
 
 void flecs_script_rng_get_uint(
@@ -125,7 +130,11 @@ void flecs_script_rng_get_uint(
     uint64_t x = flecs_script_rng_next(rng->impl);
     uint64_t max = *(uint64_t*)argv[1].ptr;
     uint64_t *r = result->ptr;
-    *r = x % max;
+    if (!max) {
+        ecs_err("flecs.script.math.Rng.u(): invalid division by zero");
+    } else {
+        *r = x % max;
+    }
 }
 
 #define FLECS_MATH_FUNC_F64(name, ...)\

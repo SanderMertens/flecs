@@ -568,10 +568,6 @@ void flecs_table_delete(
     int32_t index,
     bool destruct);
 
-/* Make sure table records are in correct table cache list */
-bool flecs_table_records_update_empty(
-    ecs_table_t *table);
-
 /* Move a row from one table to another */
 void flecs_table_move(
     ecs_world_t *world,
@@ -1072,11 +1068,6 @@ void* ecs_table_cache_remove(
 void* ecs_table_cache_get(
     const ecs_table_cache_t *cache,
     const ecs_table_t *table);
-
-bool ecs_table_cache_set_empty(
-    ecs_table_cache_t *cache,
-    const ecs_table_t *table,
-    bool empty);
 
 #define flecs_table_cache_count(cache) (cache)->tables.count
 
@@ -21616,10 +21607,13 @@ static ecs_app_desc_t ecs_app_desc;
 #ifdef ECS_TARGET_EM
 #include <emscripten.h>
 
-ecs_http_server_t *flecs_wasm_rest_server;
+ecs_http_server_t *flecs_wasm_rest_server = NULL;
 
 EMSCRIPTEN_KEEPALIVE
 char* flecs_explorer_request(const char *method, char *request) {
+    ecs_assert(flecs_wasm_rest_server != NULL, ECS_INVALID_OPERATION,
+        "wasm REST server is not initialized yet");
+
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
     ecs_http_server_request(flecs_wasm_rest_server, method, request, &reply);
     if (reply.code == 200) {
@@ -21642,11 +21636,12 @@ int ecs_app_run(
 {
     ecs_app_desc = *desc;
 
-    /* Don't set FPS & threads if using emscripten */
-#ifndef ECS_TARGET_EM
     if (ECS_NEQZERO(ecs_app_desc.target_fps)) {
         ecs_set_target_fps(world, ecs_app_desc.target_fps);
     }
+
+    /* Don't set threads if using emscripten */
+#ifndef ECS_TARGET_EM
     if (ecs_app_desc.threads) {
         ecs_set_threads(world, ecs_app_desc.threads);
     }
@@ -21657,6 +21652,8 @@ int ecs_app_run(
 #ifdef FLECS_REST
 #ifdef ECS_TARGET_EM
         flecs_wasm_rest_server = ecs_rest_server_init(world, NULL);
+        ecs_assert(flecs_wasm_rest_server != NULL, ECS_INTERNAL_ERROR, 
+            "failed to create wasm REST server (unexpected error)");
 #else
         ECS_IMPORT(world, FlecsRest);
         ecs_set(world, EcsWorld, EcsRest, {.port = desc->port });
@@ -38121,7 +38118,6 @@ void flecs_table_fini_data(
     ecs_table_t *table,
     bool do_on_remove,
     bool is_delete,
-    bool deactivate,
     bool deallocate)
 {
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
@@ -38195,7 +38191,7 @@ void ecs_table_clear_entities(
     ecs_world_t* world,
     ecs_table_t* table)
 {
-    flecs_table_fini_data(world, table, true, true, true, false);
+    flecs_table_fini_data(world, table, true, true, false);
 }
 
 /* Cleanup, no OnRemove, clear entity index, deactivate table, free allocations */
@@ -38203,7 +38199,7 @@ void flecs_table_clear_entities_silent(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    flecs_table_fini_data(world, table, false, false, true, true);
+    flecs_table_fini_data(world, table, false, false, true);
 }
 
 /* Cleanup, run OnRemove, clear entity index, deactivate table, free allocations */
@@ -38211,7 +38207,7 @@ void flecs_table_clear_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    flecs_table_fini_data(world, table, true, false, true, true);
+    flecs_table_fini_data(world, table, true, false, true);
 }
 
 /* Cleanup, run OnRemove, delete from entity index, deactivate table, free allocations */
@@ -38219,7 +38215,7 @@ void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    flecs_table_fini_data(world, table, true, true, true, true);
+    flecs_table_fini_data(world, table, true, true, true);
 }
 
 /* Unset all components in table. This function is called before a table is 
@@ -38264,7 +38260,7 @@ void flecs_table_fini(
     }
 
     /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
-    flecs_table_fini_data(world, table, false, true, false, true);
+    flecs_table_fini_data(world, table, false, true, true);
     flecs_table_clear_edges(world, table);
 
     if (!is_root) {
@@ -39914,14 +39910,6 @@ void* ecs_table_cache_remove(
     return elem;
 }
 
-bool ecs_table_cache_set_empty(
-    ecs_table_cache_t *cache,
-    const ecs_table_t *table,
-    bool empty)
-{
-    return false;
-}
-
 bool flecs_table_cache_iter(
     ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out)
@@ -40492,22 +40480,6 @@ void flecs_table_init_node(
 {
     flecs_table_init_edges(&node->add);
     flecs_table_init_edges(&node->remove);
-}
-
-bool flecs_table_records_update_empty(
-    ecs_table_t *table)
-{
-    bool result = false;
-    bool is_empty = ecs_table_count(table) == 0;
-
-    int32_t i, count = table->_->record_count;
-    for (i = 0; i < count; i ++) {
-        ecs_table_record_t *tr = &table->_->records[i];
-        ecs_table_cache_t *cache = tr->hdr.cache;
-        result |= ecs_table_cache_set_empty(cache, table, is_empty);
-    }
-
-    return result;
 }
 
 static
@@ -55875,7 +55847,7 @@ typedef struct ecs_script_rng_t {
 } ecs_script_rng_t;
 
 static
-ecs_script_rng_t* flecs_script_rng_new() {
+ecs_script_rng_t* flecs_script_rng_new(void) {
     ecs_script_rng_t *result = ecs_os_calloc_t(ecs_script_rng_t);
     result->x = 0;
     result->w = 0;
@@ -55961,7 +55933,12 @@ void flecs_script_rng_get_float(
     uint64_t x = flecs_script_rng_next(rng->impl);
     double max = *(double*)argv[1].ptr;
     double *r = result->ptr;
-    *r = (double)x / ((double)UINT64_MAX / max);
+
+    if (ECS_EQZERO(max)) {
+        ecs_err("flecs.script.math.Rng.f(): invalid division by zero");
+    } else {
+        *r = (double)x / ((double)UINT64_MAX / max);
+    }
 }
 
 void flecs_script_rng_get_uint(
@@ -55982,7 +55959,11 @@ void flecs_script_rng_get_uint(
     uint64_t x = flecs_script_rng_next(rng->impl);
     uint64_t max = *(uint64_t*)argv[1].ptr;
     uint64_t *r = result->ptr;
-    *r = x % max;
+    if (!max) {
+        ecs_err("flecs.script.math.Rng.u(): invalid division by zero");
+    } else {
+        *r = x % max;
+    }
 }
 
 #define FLECS_MATH_FUNC_F64(name, ...)\
@@ -61496,9 +61477,9 @@ int flecs_script_find_template_entity(
 
     int32_t i, count = ecs_vec_count(&scope->stmts);
     for (i = 0; i < count; i ++) {
-        ecs_script_node_t *node = nodes[i];
-        if (node->kind == EcsAstEntity) {
-            ecs_script_entity_t *entity_node = (ecs_script_entity_t*)node;
+        ecs_script_node_t *elem = nodes[i];
+        if (elem->kind == EcsAstEntity) {
+            ecs_script_entity_t *entity_node = (ecs_script_entity_t*)elem;
             if (!entity_node->name) {
                 continue;
             }
@@ -68648,8 +68629,7 @@ void flecs_query_cache_match_tables(
             /* New table matched, add record to cache */
             table = it.table;
             qt = flecs_query_cache_table_insert(world, cache, table);
-            ecs_dbg_3("query cache matched existing table [%s]", 
-                ecs_table_str(world, table));
+            ecs_dbg_3("query cache matched existing table [%s]", NULL);
         }
 
         ecs_query_cache_table_match_t *qm = 
@@ -68807,7 +68787,6 @@ error:
 static
 void flecs_query_cache_table_match_free(
     ecs_query_cache_t *cache,
-    ecs_query_cache_table_t *elem,
     ecs_query_cache_table_match_t *first)
 {
     ecs_query_cache_table_match_t *cur, *next;
@@ -68841,7 +68820,7 @@ void flecs_query_cache_table_free(
     ecs_query_cache_t *cache,
     ecs_query_cache_table_t *elem)
 {
-    flecs_query_cache_table_match_free(cache, elem, elem->first);
+    flecs_query_cache_table_match_free(cache, elem->first);
     flecs_bfree(&cache->query->world->allocators.query_table, elem);
 }
 
@@ -68896,7 +68875,7 @@ void flecs_query_cache_rematch_tables(
     while (ecs_query_next(&it)) {
         if ((table != it.table) || (!it.table && !qt)) {
             if (qm && qm->next_match) {
-                flecs_query_cache_table_match_free(cache, qt, qm->next_match);
+                flecs_query_cache_table_match_free(cache, qm->next_match);
                 qm->next_match = NULL;
             }
 
@@ -68932,7 +68911,7 @@ void flecs_query_cache_rematch_tables(
     }
 
     if (qm && qm->next_match) {
-        flecs_query_cache_table_match_free(cache, qt, qm->next_match);
+        flecs_query_cache_table_match_free(cache, qm->next_match);
         qm->next_match = NULL;
     }
 
@@ -69923,7 +69902,7 @@ void flecs_query_cache_sort_tables(
     ecs_id_record_t *idr = flecs_id_record_get(world, order_by);
     ecs_table_cache_iter_t it;
     ecs_query_cache_table_t *qt;
-    flecs_table_cache_iter(&cache->cache, &it);
+    flecs_table_cache_all_iter(&cache->cache, &it);
 
     while ((qt = flecs_table_cache_next(&it, ecs_query_cache_table_t))) {
         ecs_table_t *table = qt->hdr.table;
@@ -69932,6 +69911,16 @@ void flecs_query_cache_sort_tables(
         if (flecs_query_check_table_monitor(impl, qt, 0)) {
             tables_sorted = true;
             dirty = true;
+
+            if (!ecs_table_count(table)) {
+                /* If table is empty, there's a chance the query won't iterate it
+                * so update the match monitor here. */
+                ecs_query_cache_table_match_t *cur, *next;
+                for (cur = qt->first; cur != NULL; cur = next) {
+                    flecs_query_sync_match_monitor(impl, cur);
+                    next = cur->next_match;
+                }
+            }
         }
 
         int32_t column = -1;
@@ -79944,6 +79933,11 @@ int flecs_expr_variable_visit_type(
         desc->vars, node->name, &node->sp);
     if (var) {
         node->node.type = var->value.type;
+        if (!node->node.type) {
+            flecs_expr_visit_error(script, node, 
+                "variable '%s' is not initialized", node->name);
+            goto error;
+        }
     } else {
         if (flecs_expr_global_variable_resolve(script, node, desc)) {
             goto error;

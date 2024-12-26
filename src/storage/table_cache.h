@@ -32,11 +32,6 @@ void* ecs_table_cache_get(
     const ecs_table_cache_t *cache,
     const ecs_table_t *table);
 
-bool ecs_table_cache_set_empty(
-    ecs_table_cache_t *cache,
-    const ecs_table_t *table,
-    bool empty);
-
 #define flecs_table_cache_count(cache) (cache)->tables.count
 
 bool flecs_table_cache_iter(

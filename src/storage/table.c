@@ -886,7 +886,6 @@ void flecs_table_fini_data(
     ecs_table_t *table,
     bool do_on_remove,
     bool is_delete,
-    bool deactivate,
     bool deallocate)
 {
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
@@ -960,7 +959,7 @@ void ecs_table_clear_entities(
     ecs_world_t* world,
     ecs_table_t* table)
 {
-    flecs_table_fini_data(world, table, true, true, true, false);
+    flecs_table_fini_data(world, table, true, true, false);
 }
 
 /* Cleanup, no OnRemove, clear entity index, deactivate table, free allocations */
@@ -968,7 +967,7 @@ void flecs_table_clear_entities_silent(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    flecs_table_fini_data(world, table, false, false, true, true);
+    flecs_table_fini_data(world, table, false, false, true);
 }
 
 /* Cleanup, run OnRemove, clear entity index, deactivate table, free allocations */
@@ -976,7 +975,7 @@ void flecs_table_clear_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    flecs_table_fini_data(world, table, true, false, true, true);
+    flecs_table_fini_data(world, table, true, false, true);
 }
 
 /* Cleanup, run OnRemove, delete from entity index, deactivate table, free allocations */
@@ -984,7 +983,7 @@ void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    flecs_table_fini_data(world, table, true, true, true, true);
+    flecs_table_fini_data(world, table, true, true, true);
 }
 
 /* Unset all components in table. This function is called before a table is 
@@ -1029,7 +1028,7 @@ void flecs_table_fini(
     }
 
     /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
-    flecs_table_fini_data(world, table, false, true, false, true);
+    flecs_table_fini_data(world, table, false, true, true);
     flecs_table_clear_edges(world, table);
 
     if (!is_root) {
