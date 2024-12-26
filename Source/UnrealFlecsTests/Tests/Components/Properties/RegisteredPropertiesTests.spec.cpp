@@ -103,6 +103,26 @@ void FRegisteredPropertiesTestsSpec::Define()
 			TestTrue("Component property trait should be of value 1",
 				TestType.Get<FTestRegisteredTraitProperty>().MyInt32 == 1);
 		});
+
+		It("Should contain Registered Trait Properties when Auto Registered",
+			[this]()
+		{
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add<FTestRegisteredPropertyStruct2>();
+			TestTrue("Component should exist on entity",
+				TestEntity.Has<FTestRegisteredPropertyStruct2>());
+			TestTrue("Component Entity should exist in world",
+				Fixture.FlecsWorld->HasScriptStruct<FTestRegisteredPropertyStruct2>());
+			TestTrue("Component properties should be registered",
+				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct2>()
+				.Has<FTestRegisteredTraitProperty>());
+			TestTrue("Component properties should be registered",
+				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct2>()
+				.Has(FTestRegisteredTraitProperty::StaticStruct()));
+			TestTrue("Component property trait should be of value 1",
+				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct2>()
+				.Get<FTestRegisteredTraitProperty>().MyInt32 == 1);
+		});
 	});
 }
 
