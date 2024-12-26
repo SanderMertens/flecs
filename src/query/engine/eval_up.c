@@ -135,7 +135,7 @@ bool flecs_query_up_select(
     /* If id record is not found, or if it doesn't have any tables, revert to
      * iterating owned components (no traversal) */
     if (!op_ctx->idr_trav || 
-        !flecs_table_cache_all_count(&op_ctx->idr_trav->cache))
+        !flecs_table_cache_count(&op_ctx->idr_trav->cache))
     {
         if (!self) {
             /* If operation does not match owned components, return false */
@@ -266,7 +266,7 @@ bool flecs_query_up_with(
     }
 
     if (!op_ctx->idr_trav || 
-        !flecs_table_cache_all_count(&op_ctx->idr_trav->cache))
+        !flecs_table_cache_count(&op_ctx->idr_trav->cache))
     {
         /* If there are no tables with traversable relationship, there are no
          * matches. */

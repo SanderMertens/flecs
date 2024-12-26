@@ -2229,6 +2229,8 @@ void OrderBy_order_empty_table_only(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 0);
     test_assert(!ecs_query_next(&it));
 
     ecs_query_fini(q);

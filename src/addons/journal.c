@@ -118,9 +118,6 @@ void flecs_journal_begin(
     } else if (kind == EcsJournalRemoveAll) {
         ecs_print(4, "#[cyan]ecs_remove_all#[reset](world, %s); "
             "#[grey] // remove_all(%s)", var_id, path);
-    } else if (kind == EcsJournalTableEvents) {
-        ecs_print(4, "#[cyan]ecs_run_aperiodic#[reset](world, "
-            "EcsAperiodicEmptyTables);");
     }
     ecs_os_free(var_id);
     ecs_os_free(path);

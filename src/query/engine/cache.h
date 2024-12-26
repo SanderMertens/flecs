@@ -37,10 +37,6 @@ void flecs_query_cache_build_sorted_tables(
 int32_t flecs_query_cache_table_count(
     ecs_query_cache_t *cache);
 
-/* Return number of empty tables in cache */
-int32_t flecs_query_cache_empty_table_count(
-    ecs_query_cache_t *cache);
-
 /* Return number of entities in cache (requires iterating tables) */
 int32_t flecs_query_cache_entity_count(
     const ecs_query_cache_t *cache);

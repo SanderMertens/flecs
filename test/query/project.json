@@ -623,6 +623,7 @@
                 "match_empty_tables_w_wildcard",
                 "match_empty_tables_w_no_empty_tables",
                 "match_empty_tables_trivial",
+                "match_empty_tables_w_wildcard_delete_tables",
                 "oneof_wildcard",
                 "oneof_any",
                 "instanced_w_singleton",

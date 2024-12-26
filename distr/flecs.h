@@ -561,7 +561,6 @@ extern "C" {
 //// Aperiodic action flags (used by ecs_run_aperiodic)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsAperiodicEmptyTables        (1u << 1u)  /* Process pending empty table events */
 #define EcsAperiodicComponentMonitors  (1u << 2u)  /* Process component monitors */
 #define EcsAperiodicEmptyQueries       (1u << 4u)  /* Process empty queries */
 
@@ -3208,7 +3207,6 @@ typedef struct ecs_table_cache_hdr_t {
     struct ecs_table_cache_t *cache;  /**< Table cache of element. Of type ecs_id_record_t* for component index elements. */
     ecs_table_t *table;               /**< Table associated with element. */
     struct ecs_table_cache_hdr_t *prev, *next; /**< Next/previous elements for id in table cache. */
-    bool empty;                       /**< Whether element is in empty list. */
 } ecs_table_cache_hdr_t;
 
 /** Metadata describing where a component id is stored in a table.
@@ -3758,7 +3756,8 @@ typedef struct ecs_worker_iter_t {
 /* Convenience struct to iterate table array for id */
 typedef struct ecs_table_cache_iter_t {
     struct ecs_table_cache_hdr_t *cur, *next;
-    struct ecs_table_cache_hdr_t *next_list;
+    bool iter_fill;
+    bool iter_empty;
 } ecs_table_cache_iter_t;
 
 /** Each iterator */
@@ -4674,7 +4673,6 @@ typedef struct ecs_world_info_t {
     int32_t pair_id_count;            /**< Number of pair ids in the world */
 
     int32_t table_count;              /**< Number of tables */
-    int32_t empty_table_count;        /**< Number of tables without entities */
 
     /* -- Command counts -- */
     struct {
@@ -5050,12 +5048,6 @@ FLECS_API extern const ecs_entity_t EcsOnTableCreate;
 
 /** Event that triggers when a table is deleted. */
 FLECS_API extern const ecs_entity_t EcsOnTableDelete;
-
-/** Event that triggers when a table becomes empty (doesn't emit on creation). */
-FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
-
-/** Event that triggers when a table becomes non-empty. */
-FLECS_API extern const ecs_entity_t EcsOnTableFill;
 
 /** Relationship used for specifying cleanup behavior. */
 FLECS_API extern const ecs_entity_t EcsOnDelete;

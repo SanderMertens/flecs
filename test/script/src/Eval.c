@@ -9666,3 +9666,18 @@ void Eval_for_range_min_1_2(void) {
 
     ecs_fini(world);
 }
+
+void Eval_variable_assign_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_t *s;
+
+    const char *expr =
+    LINE "const v = $v"
+    LINE ""
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}

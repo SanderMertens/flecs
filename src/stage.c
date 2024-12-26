@@ -811,8 +811,6 @@ bool ecs_readonly_begin(
 {
     flecs_poly_assert(world, ecs_world_t);
 
-    flecs_process_pending_tables(world);
-
     ecs_dbg_3("#[bold]readonly");
     ecs_log_push_3();
 

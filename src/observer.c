@@ -41,12 +41,6 @@ ecs_flags32_t flecs_id_flag_for_event(
     if (e == EcsOnSet) {
         return EcsIdHasOnSet;
     }
-    if (e == EcsOnTableFill) {
-        return EcsIdHasOnTableFill;
-    }
-    if (e == EcsOnTableEmpty) {
-        return EcsIdHasOnTableEmpty;
-    }
     if (e == EcsOnTableCreate) {
         return EcsIdHasOnTableCreate;
     }
@@ -638,8 +632,6 @@ void flecs_observer_yield_existing(
         run = flecs_multi_observer_invoke_no_query;
     }
 
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
-
     ecs_defer_begin(world);
 
     /* If yield existing is enabled, invoke for each thing that matches
@@ -808,9 +800,7 @@ int flecs_multi_observer_init(
     bool only_table_events = true;
     for (i = 0; i < o->event_count; i ++) {
         ecs_entity_t e = o->events[i];
-        if (e != EcsOnTableCreate && e != EcsOnTableDelete && 
-            e != EcsOnTableEmpty && e != EcsOnTableFill)
-        {
+        if (e != EcsOnTableCreate && e != EcsOnTableDelete) {
             only_table_events = false;
             break;
         }

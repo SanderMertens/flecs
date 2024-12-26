@@ -42,20 +42,35 @@ void flecs_query_update_node_up_trs(
 
 static
 ecs_query_cache_table_match_t* flecs_query_cache_next(
-    const ecs_query_run_ctx_t *ctx)
+    const ecs_query_run_ctx_t *ctx,
+    bool match_empty)
 {
     ecs_iter_t *it = ctx->it;
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_query_cache_table_match_t *node = qit->node;
-    ecs_query_cache_table_match_t *prev = qit->prev;
 
-    if (prev != qit->last) {
-        ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
-        ctx->vars[0].range.table = node->table;
-        it->group_id = node->group_id;
-        qit->node = node->next;
-        qit->prev = node;
-        return node;
+    repeat: {
+        ecs_query_cache_table_match_t *node = qit->node;
+        ecs_query_cache_table_match_t *prev = qit->prev;
+
+        if (prev != qit->last) {
+            ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
+            ctx->vars[0].range.table = node->table;
+            it->group_id = node->group_id;
+            qit->node = node->next;
+            qit->prev = node;
+            if (node) {
+                if (!ecs_table_count(node->table)) {
+                    if (!match_empty) {
+                        if (ctx->query->pub.flags & EcsQueryHasMonitor) {
+                            flecs_query_sync_match_monitor(
+                                flecs_query_impl(qit->query), node);
+                        }
+                        goto repeat;
+                    }
+                }
+            }
+            return node;
+        }
     }
 
     return NULL;
@@ -85,7 +100,7 @@ ecs_query_cache_table_match_t* flecs_query_test(
         qit->last = qt->last;
     }
 
-    return flecs_query_cache_next(ctx);
+    return flecs_query_cache_next(ctx, true);
 }
 
 static
@@ -118,7 +133,8 @@ void flecs_query_cache_init_mapped_fields(
 bool flecs_query_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_cache_table_match_t *node = flecs_query_cache_next(ctx);
+    ecs_query_cache_table_match_t *node = flecs_query_cache_next(ctx,
+        ctx->query->pub.flags & EcsQueryMatchEmptyTables);
     if (!node) {
         return false;
     }
@@ -136,7 +152,8 @@ bool flecs_query_cache_search(
 bool flecs_query_is_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_cache_table_match_t *node = flecs_query_cache_next(ctx);
+    ecs_query_cache_table_match_t *node = flecs_query_cache_next(ctx,
+        ctx->query->pub.flags & EcsQueryMatchEmptyTables);
     if (!node) {
         return false;
     }
