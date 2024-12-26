@@ -3109,6 +3109,7 @@ void Entity_entity_w_existing_id_and_double_dot(void) {
 void Entity_entity_w_large_id_name(void) {
     ecs_world_t *world = ecs_mini();
 
+    ecs_log_set_level(-4);
     ecs_entity_t e = ecs_entity(world, {
         .name = "#44444444444444444444a"
     });

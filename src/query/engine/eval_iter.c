@@ -324,9 +324,11 @@ ecs_iter_t flecs_query_iter(
 
         if (cache->order_by_callback && cache->list.info.table_count) {
             flecs_query_cache_sort_tables(it.real_world, impl);
-            qit->node = ecs_vec_first(&cache->table_slices);
-            qit->last = ecs_vec_last_t(
-                &cache->table_slices, ecs_query_cache_table_match_t);
+            if (ecs_vec_count(&cache->table_slices)) {
+                qit->node = ecs_vec_first(&cache->table_slices);
+                qit->last = ecs_vec_last_t(
+                    &cache->table_slices, ecs_query_cache_table_match_t);
+            }
         }
 
         cache->prev_match_count = cache->match_count;
@@ -366,10 +368,6 @@ ecs_iter_t ecs_query_iter(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
-    
-    if (!(q->flags & EcsQueryCacheYieldEmptyTables)) {
-        ecs_run_aperiodic(q->real_world, EcsAperiodicEmptyTables);
-    }
 
     /* Ok, only for stats */
     ecs_os_linc(&ECS_CONST_CAST(ecs_query_t*, q)->eval_count);

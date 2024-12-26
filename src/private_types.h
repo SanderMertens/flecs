@@ -84,7 +84,6 @@ typedef struct ecs_table_cache_list_t {
 typedef struct ecs_table_cache_t {
     ecs_map_t index; /* <table_id, T*> */
     ecs_table_cache_list_t tables;
-    ecs_table_cache_list_t empty_tables;
 } ecs_table_cache_t;
 
 /* World level allocators are for operations that are not multithreaded */
@@ -321,10 +320,6 @@ struct ecs_world_t {
 
     /* --  Data storage -- */
     ecs_store_t store;
-
-    /* --  Pending table event buffers -- */
-    ecs_sparse_t *pending_buffer;    /* sparse<table_id, ecs_table_t*> */
-    ecs_sparse_t *pending_tables;    /* sparse<table_id, ecs_table_t*> */
 
     /* Used to track when cache needs to be updated */
     ecs_monitor_set_t monitors;      /* map<id, ecs_monitor_t> */

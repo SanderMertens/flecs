@@ -606,6 +606,7 @@ void Basic_match_empty_tables_w_not(void);
 void Basic_match_empty_tables_w_wildcard(void);
 void Basic_match_empty_tables_w_no_empty_tables(void);
 void Basic_match_empty_tables_trivial(void);
+void Basic_match_empty_tables_w_wildcard_delete_tables(void);
 void Basic_oneof_wildcard(void);
 void Basic_oneof_any(void);
 void Basic_instanced_w_singleton(void);
@@ -4506,6 +4507,10 @@ bake_test_case Basic_testcases[] = {
     {
         "match_empty_tables_trivial",
         Basic_match_empty_tables_trivial
+    },
+    {
+        "match_empty_tables_w_wildcard_delete_tables",
+        Basic_match_empty_tables_w_wildcard_delete_tables
     },
     {
         "oneof_wildcard",
@@ -10581,7 +10586,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        232,
+        233,
         Basic_testcases,
         1,
         Basic_params

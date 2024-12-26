@@ -594,7 +594,6 @@ ecs_table_t *flecs_table_new(
 
     /* Update counters */
     world->info.table_count ++;
-    world->info.empty_table_count ++;
     world->info.table_create_total ++;
 
     ecs_log_pop_2();

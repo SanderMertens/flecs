@@ -642,13 +642,12 @@ void flecs_table_add_trigger_flags(
         flags = EcsTableHasOnRemove;
     } else if (event == EcsOnSet) {
         flags = EcsTableHasOnSet;
-    } else if (event == EcsOnTableFill) {
-        flags = EcsTableHasOnTableFill;
-    } else if (event == EcsOnTableEmpty) {
-        flags = EcsTableHasOnTableEmpty;
+    } else if (event == EcsOnTableCreate) {
+        flags = EcsTableHasOnTableCreate;
+    } else if (event == EcsOnTableDelete) {
+        flags = EcsTableHasOnTableDelete;
     } else if (event == EcsWildcard) {
         flags = EcsTableHasOnAdd|EcsTableHasOnRemove|EcsTableHasOnSet|
-            EcsTableHasOnTableFill|EcsTableHasOnTableEmpty|
             EcsTableHasOnTableCreate|EcsTableHasOnTableDelete;
     }
 
@@ -946,11 +945,6 @@ void flecs_table_fini_data(
     }
 
     table->data.count = 0;
-
-    if (deactivate && count) {
-        flecs_table_set_empty(world, table);
-    }
-
     table->_->traversable_count = 0;
     table->flags &= ~EcsTableHasTraversable;
 }
@@ -1033,8 +1027,6 @@ void flecs_table_fini(
         ecs_os_free(expr);
         ecs_log_push_2();
     }
-
-    world->info.empty_table_count -= (ecs_table_count(table) == 0);
 
     /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
     flecs_table_fini_data(world, table, false, true, false, true);
@@ -1391,10 +1383,6 @@ int32_t flecs_table_grow_data(
     /* If the table is monitored indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);
 
-    if (!(world->flags & EcsWorldReadonly) && !count) {
-        flecs_table_set_empty(world, table);
-    }
-
     /* Return index of first added entity */
     return count;
 }
@@ -1454,9 +1442,6 @@ int32_t flecs_table_append(
         flecs_table_fast_append(world, table);
         table->data.count = v_entities.count;
         table->data.size = v_entities.size;
-        if (!count) {
-            flecs_table_set_empty(world, table); /* See below */
-        }
         return count;
     }
 
@@ -1467,12 +1452,6 @@ int32_t flecs_table_append(
         ECS_INTERNAL_ERROR, NULL);
     table->data.count = v_entities.count;
     table->data.size = v_entities.size;
-
-    /* If this is the first entity in this table, signal queries so that the
-     * table moves from an inactive table to an active table. */
-    if (!count) {
-        flecs_table_set_empty(world, table);
-    }
 
     /* Reobtain size to ensure that the columns have the same size as the 
      * entities and record vectors. This keeps reasoning about when allocations
@@ -1583,9 +1562,6 @@ void flecs_table_delete(
         }
 
         table->data.count --;
-        if (!count) {
-            flecs_table_set_empty(world, table);
-        }
 
         flecs_table_check_sanity(world, table);
         return;
@@ -1649,9 +1625,6 @@ void flecs_table_delete(
     }
 
     table->data.count --;
-    if (!count) {
-        flecs_table_set_empty(world, table);
-    }
 
     flecs_table_check_sanity(world, table);
 }
@@ -2175,11 +2148,6 @@ void flecs_table_merge(
     flecs_table_merge_data(world, dst_table, src_table, dst_count, src_count);
 
     if (src_count) {
-        if (!dst_count) {
-            flecs_table_set_empty(world, dst_table);
-        }
-        flecs_table_set_empty(world, src_table);
-
         flecs_table_traversable_add(dst_table, src_table->_->traversable_count);
         flecs_table_traversable_add(src_table, -src_table->_->traversable_count);
         ecs_assert(src_table->_->traversable_count == 0, ECS_INTERNAL_ERROR, NULL);

@@ -8824,37 +8824,6 @@ void Observer_notify_after_defer_batched_2_entities_in_table_w_tgt(void) {
     ecs_fini(world);
 }
 
-void Observer_multi_observer_table_fill_w_singleton(void) {
-    ecs_world_t* world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    Probe ctx = {0};
-
-    ecs_observer(world, {
-        .query.terms = {
-            { .id = ecs_id(Position), .src.id = ecs_id(Position)|EcsIsEntity },
-            { .id = ecs_id(Velocity) },
-        },
-        .callback = Observer,
-        .events = { EcsOnTableFill },
-        .ctx = &ctx
-    });
-
-    ecs_singleton_add(world, Position);
-    test_int(ctx.invoked, 0);
-
-    ecs_entity_t e = ecs_new(world);
-    ecs_add(world, e, Velocity);
-    test_int(ctx.invoked, 0);
-
-    ecs_run_aperiodic(world, 0);
-    test_int(ctx.invoked, 1);
-
-    ecs_fini(world);
-}
-
 ECS_COMPONENT_DECLARE(Velocity);
 
 static

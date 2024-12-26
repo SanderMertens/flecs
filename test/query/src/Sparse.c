@@ -865,8 +865,8 @@ void Sparse_1_sparse_up(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(2, it.count);
-    test_uint(e1, it.entities[0]);
-    test_uint(e2, it.entities[1]);
+    test_uint(e3, it.entities[0]);
+    test_uint(e4, it.entities[1]);
     {
         Position *p = ecs_field_at(&it, Position, 0, 0);
         test_assert(p != NULL);
@@ -875,8 +875,8 @@ void Sparse_1_sparse_up(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(2, it.count);
-    test_uint(e3, it.entities[0]);
-    test_uint(e4, it.entities[1]);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
     {
         Position *p = ecs_field_at(&it, Position, 0, 0);
         test_assert(p != NULL);
@@ -1027,8 +1027,8 @@ void Sparse_1_sparse_written_up(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(2, it.count);
-    test_uint(e1, it.entities[0]);
-    test_uint(e2, it.entities[1]);
+    test_uint(e3, it.entities[0]);
+    test_uint(e4, it.entities[1]);
     {
         Position *p = ecs_field_at(&it, Position, 1, 0);
         test_assert(p != NULL);
@@ -1037,8 +1037,8 @@ void Sparse_1_sparse_written_up(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(2, it.count);
-    test_uint(e3, it.entities[0]);
-    test_uint(e4, it.entities[1]);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
     {
         Position *p = ecs_field_at(&it, Position, 1, 0);
         test_assert(p != NULL);
@@ -1079,22 +1079,6 @@ void Sparse_1_sparse_written_self_up(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(2, it.count);
-    test_uint(e1, it.entities[0]);
-    {
-        Position *p = ecs_field_at(&it, Position, 1, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 10); test_int(p->y, 20);
-    }
-
-    test_uint(e2, it.entities[1]);
-    {
-        Position *p = ecs_field_at(&it, Position, 1, 1);
-        test_assert(p != NULL);
-        test_int(p->x, 30); test_int(p->y, 40);
-    }
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(2, it.count);
     test_uint(e3, it.entities[0]);
     {
         Position *p = ecs_field_at(&it, Position, 1, 0);
@@ -1107,6 +1091,22 @@ void Sparse_1_sparse_written_self_up(void) {
         Position *p = ecs_field_at(&it, Position, 1, 1);
         test_assert(p != NULL);
         test_int(p->x, 1); test_int(p->y, 2);
+    }
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(2, it.count);
+    test_uint(e1, it.entities[0]);
+    {
+        Position *p = ecs_field_at(&it, Position, 1, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    test_uint(e2, it.entities[1]);
+    {
+        Position *p = ecs_field_at(&it, Position, 1, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 30); test_int(p->y, 40);
     }
 
     test_bool(false, ecs_query_next(&it));

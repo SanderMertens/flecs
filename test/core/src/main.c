@@ -1579,7 +1579,6 @@ void Observer_filter_observer_after_observer(void);
 void Observer_notify_after_defer_batched(void);
 void Observer_notify_after_defer_batched_2_entities_in_table(void);
 void Observer_notify_after_defer_batched_2_entities_in_table_w_tgt(void);
-void Observer_multi_observer_table_fill_w_singleton(void);
 void Observer_wildcard_propagate_w_other_table(void);
 void Observer_add_in_on_add_yield_existing(void);
 void Observer_add_in_on_add_yield_existing_multi(void);
@@ -1998,7 +1997,6 @@ void World_exclusive_on_instantiate(void);
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
 void WorldInfo_table_count(void);
-void WorldInfo_empty_table_count(void);
 void WorldInfo_table_create_count(void);
 void WorldInfo_table_delete_count(void);
 void WorldInfo_id_tag_component_count(void);
@@ -8460,10 +8458,6 @@ bake_test_case Observer_testcases[] = {
         Observer_notify_after_defer_batched_2_entities_in_table_w_tgt
     },
     {
-        "multi_observer_table_fill_w_singleton",
-        Observer_multi_observer_table_fill_w_singleton
-    },
-    {
         "wildcard_propagate_w_other_table",
         Observer_wildcard_propagate_w_other_table
     },
@@ -10084,10 +10078,6 @@ bake_test_case WorldInfo_testcases[] = {
         WorldInfo_table_count
     },
     {
-        "empty_table_count",
-        WorldInfo_empty_table_count
-    },
-    {
         "table_create_count",
         WorldInfo_table_create_count
     },
@@ -11610,7 +11600,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        233,
+        232,
         Observer_testcases
     },
     {
@@ -11666,7 +11656,7 @@ static bake_test_suite suites[] = {
         "WorldInfo",
         NULL,
         NULL,
-        7,
+        6,
         WorldInfo_testcases
     },
     {

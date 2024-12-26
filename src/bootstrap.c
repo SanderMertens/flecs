@@ -877,8 +877,6 @@ void flecs_bootstrap(
     flecs_bootstrap_entity(world, EcsMonitor, "EcsMonitor", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsOnTableCreate, "OnTableCreate", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsOnTableDelete, "OnTableDelete", EcsFlecsCore);
-    flecs_bootstrap_entity(world, EcsOnTableEmpty, "OnTableEmpty", EcsFlecsCore);
-    flecs_bootstrap_entity(world, EcsOnTableFill, "OnTableFilled", EcsFlecsCore);
 
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);

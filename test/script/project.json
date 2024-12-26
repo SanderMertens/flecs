@@ -297,7 +297,8 @@
                 "for_range",
                 "for_range_vars",
                 "for_range_1_4",
-                "for_range_min_1_2"
+                "for_range_min_1_2",
+                "variable_assign_self"
             ]
         }, {
             "id": "Template",
@@ -365,7 +366,9 @@
                 "template_w_for",
                 "template_w_component_w_undefined_identifier",
                 "template_w_child_component_w_undefined_identifier",
-                "template_w_anonymous_child_component_w_undefined_identifier"
+                "template_w_anonymous_child_component_w_undefined_identifier",
+                "clear_script_w_template_w_on_remove_observer",
+                "clear_script_w_template_w_on_remove_observer_added_after"
             ]
         }, {
             "id": "Error",

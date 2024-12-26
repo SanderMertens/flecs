@@ -155,7 +155,9 @@ void flecs_query_cache_build_sorted_table_range(
         to_sort ++;      
     }
 
-    ecs_assert(to_sort != 0, ECS_INTERNAL_ERROR, NULL);
+    if (!to_sort) {
+        goto done;
+    }
 
     bool proceed;
     do {
@@ -213,9 +215,12 @@ void flecs_query_cache_build_sorted_table_range(
         nodes[i].next = &nodes[i + 1];
     }
 
-    nodes[0].prev = NULL;
-    nodes[i - 1].next = NULL;
+    if (nodes) {
+        nodes[0].prev = NULL;
+        nodes[i - 1].next = NULL;
+    }
 
+done:
     flecs_free_n(&world->allocator, sort_helper_t, table_count, helper);
 }
 

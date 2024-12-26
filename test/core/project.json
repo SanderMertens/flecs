@@ -1640,7 +1640,6 @@
                 "notify_after_defer_batched",
                 "notify_after_defer_batched_2_entities_in_table",
                 "notify_after_defer_batched_2_entities_in_table_w_tgt",
-                "multi_observer_table_fill_w_singleton",
                 "wildcard_propagate_w_other_table",
                 "add_in_on_add_yield_existing",
                 "add_in_on_add_yield_existing_multi",
@@ -2075,7 +2074,6 @@
             "testcases": [
                 "get_tick",
                 "table_count",
-                "empty_table_count",
                 "table_create_count",
                 "table_delete_count",
                 "id_tag_component_count",

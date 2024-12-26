@@ -72,16 +72,9 @@ void flecs_unregister_table(
     ecs_world_t *world,
     ecs_table_t *table);
 
-void flecs_table_set_empty(
-    ecs_world_t *world,
-    ecs_table_t *table);
-
 void flecs_delete_table(
     ecs_world_t *world,
     ecs_table_t *table);
-
-void flecs_process_pending_tables(
-    const ecs_world_t *world);
 
 /* Suspend/resume readonly state. To fully support implicit registration of
  * components, it should be possible to register components while the world is
