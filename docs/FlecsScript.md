@@ -60,12 +60,27 @@ my_parent {
 
 Note how a scope is also added to the child entity.
 
-To create anonymous entities, use the `_` identifier:
+To create anonymous entities, leave out the entity name:
+
+```c
+{
+  my_child {} // named child with anonymous parent
+}
+```
+
+Alternatively, the `_` placeholder can be used to indicate an anomyous entity:
 
 ```c
 _ {
   my_child {} // named child with anonymous parent
 }
+```
+
+The `_` placeholder can be useful in combination with syntax constructs that require an identifier token, such as inheritance:
+
+```c
+// anonymous entity that inherits from SpaceShip
+_ : SpaceShip { }
 ```
 
 Entity names can be specified using a string. This allows for entities with names that contain special characters, like spaces:
@@ -966,6 +981,22 @@ lantern {
     Emissive: { value: 0 }
   } else {
     Emissive: { value: 1 }
+  }
+}
+```
+
+If statements can be chained with `else if`:
+
+```c
+const state = 0
+
+traffic_light {
+  if $state == 0 {
+    Color: {0, 1, 0}
+  } else if $state == 1 {
+    Color: {0.5, 0.5, 0}
+  } else if $state == 1 {
+    Color: {1, 0, 0}
   }
 }
 ```
