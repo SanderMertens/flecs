@@ -507,6 +507,37 @@ error:
     return -1;
 }
 
+static
+int flecs_expr_match_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_expr_match_t *node = (ecs_expr_match_t*)*node_ptr;
+
+    if (flecs_expr_visit_fold(script, &node->expr, desc)) {
+        goto error;
+    }
+
+    int32_t i, count = ecs_vec_count(&node->elements);
+    ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_match_element_t *elem = &elems[i];
+        if (flecs_expr_visit_fold(script, &elem->compare, desc)) {
+            goto error;
+        }
+
+        if (flecs_expr_visit_fold(script, &elem->expr, desc)) {
+            goto error;
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 int flecs_expr_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -568,6 +599,11 @@ int flecs_expr_visit_fold(
     case EcsExprElement:
     case EcsExprComponent:
         if (flecs_expr_element_visit_fold(script, node_ptr, desc)) {
+            goto error;
+        }
+        break;
+    case EcsExprMatch:
+        if (flecs_expr_match_visit_fold(script, node_ptr, desc)) {
             goto error;
         }
         break;

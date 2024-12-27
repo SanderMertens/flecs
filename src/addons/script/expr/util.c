@@ -123,6 +123,7 @@ int flecs_value_unary(
     case EcsTokKeywordElse:
     case EcsTokKeywordFor:
     case EcsTokKeywordIn:
+    case EcsTokKeywordMatch:
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
@@ -232,6 +233,7 @@ int flecs_value_binary(
     case EcsTokKeywordFor:
     case EcsTokKeywordIn:
     case EcsTokKeywordTemplate:
+    case EcsTokKeywordMatch:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
     default:

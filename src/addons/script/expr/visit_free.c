@@ -105,6 +105,23 @@ void flecs_expr_element_visit_free(
 }
 
 static
+void flecs_expr_match_visit_free(
+    ecs_script_t *script,
+    ecs_expr_match_t *node)
+{
+    flecs_expr_visit_free(script, node->expr);
+
+    int32_t i, count = ecs_vec_count(&node->elements);
+    ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_match_element_t *elem = &elems[i];
+        flecs_expr_visit_free(script, elem->compare);
+        flecs_expr_visit_free(script, elem->expr);
+    }
+}
+
+static
 void flecs_expr_cast_visit_free(
     ecs_script_t *script,
     ecs_expr_cast_t *node)
@@ -174,6 +191,11 @@ void flecs_expr_visit_free(
         flecs_expr_element_visit_free(
             script, (ecs_expr_element_t*)node);
         flecs_free_t(a, ecs_expr_element_t, node);
+        break;
+    case EcsExprMatch:
+        flecs_expr_match_visit_free(
+            script, (ecs_expr_match_t*)node);
+        flecs_free_t(a, ecs_expr_match_t, node);
         break;
     case EcsExprCast:
     case EcsExprCastNumber:
