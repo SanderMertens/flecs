@@ -72,6 +72,66 @@ ecs_entity_t flecs_script_default_lookup(
     return ecs_lookup(world, name);
 }
 
+static
+const char* flecs_script_parse_match_elems(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_expr_match_t *node)
+{
+    ecs_allocator_t *a = &parser->script->allocator;
+    bool old_significant_newline = parser->significant_newline;
+    parser->significant_newline = true;
+
+    printf("parse match elems: %s\n", pos);
+
+    do {
+        ParserBegin;
+
+        LookAhead(
+            case '\n': {
+                pos = lookahead;
+                continue;
+            }
+
+            case '}': {
+                /* Return last character of initializer */
+                pos = lookahead - 1;
+                printf("return '%s'\n", pos);
+                parser->significant_newline = old_significant_newline;
+                EndOfRule;
+            }
+        )
+
+        ecs_expr_match_element_t *elem = ecs_vec_append_t(
+            a, &node->elements, ecs_expr_match_element_t);
+        ecs_os_zeromem(elem);
+
+        pos = flecs_script_parse_expr(parser, pos, 0, &elem->compare);
+        if (!pos) {
+            goto error;
+        }
+
+        Parse_1(':', {
+            pos = flecs_script_parse_expr(parser, pos, 0, &elem->expr);
+            if (!pos) {
+                goto error;
+            }
+
+            Parse(
+                case ';':
+                case '\n': {
+                    break;
+                }
+            )
+
+            break;
+        })
+
+    } while (true);
+
+    ParserEnd;
+}
+
 const char* flecs_script_parse_initializer(
     ecs_script_parser_t *parser,
     const char *pos,
@@ -425,6 +485,35 @@ const char* flecs_script_parse_lhs(
             node->left = (ecs_expr_node_t*)flecs_expr_int(parser, -1);
             node->operator = EcsTokMul;
             *out = (ecs_expr_node_t*)node;
+            break;
+        }
+
+        case EcsTokKeywordMatch: {
+            ecs_expr_match_t *node = flecs_expr_match(parser);
+            pos = flecs_script_parse_expr(parser, pos, 0, &node->expr);
+            if (!pos) {
+                flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
+                goto error;
+            }
+
+            Parse_1('{', {
+                pos = flecs_script_parse_match_elems(parser, pos, node);
+                if (!pos) {
+                    flecs_script_parser_expr_free(
+                        parser, (ecs_expr_node_t*)node);
+                    goto error;
+                }
+
+                Parse_1('}', {
+                    *out = (ecs_expr_node_t*)node;
+                    break;
+                })
+
+                break;
+            })
+
+            can_have_rhs = false;
+
             break;
         }
 

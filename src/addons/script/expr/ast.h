@@ -24,7 +24,8 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprElement,
     EcsExprComponent,
     EcsExprCast,
-    EcsExprCastNumber
+    EcsExprCastNumber,
+    EcsExprMatch
 } ecs_expr_node_kind_t;
 
 struct ecs_expr_node_t {
@@ -122,6 +123,17 @@ typedef struct ecs_expr_cast_t {
     ecs_expr_node_t *expr;
 } ecs_expr_cast_t;
 
+typedef struct ecs_expr_match_element_t {
+    ecs_expr_node_t *compare;
+    ecs_expr_node_t *expr;
+} ecs_expr_match_element_t;
+
+typedef struct ecs_expr_match_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *expr;
+    ecs_vec_t elements;
+} ecs_expr_match_t;
+
 ecs_expr_value_node_t* flecs_expr_value_from(
     ecs_script_t *script,
     ecs_expr_node_t *node,
@@ -184,6 +196,9 @@ ecs_expr_function_t* flecs_expr_function(
     ecs_script_parser_t *parser);
 
 ecs_expr_element_t* flecs_expr_element(
+    ecs_script_parser_t *parser);
+
+ecs_expr_match_t* flecs_expr_match(
     ecs_script_parser_t *parser);
 
 ecs_expr_cast_t* flecs_expr_cast(

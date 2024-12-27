@@ -221,6 +221,14 @@ ecs_expr_element_t* flecs_expr_element(
     return result;
 }
 
+ecs_expr_match_t* flecs_expr_match(
+    ecs_script_parser_t *parser)
+{
+    ecs_expr_match_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_match_t, EcsExprMatch);
+    return result;
+}
+
 static
 bool flecs_expr_explicit_cast_allowed(
     ecs_world_t *world,

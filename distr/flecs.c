@@ -4557,6 +4557,7 @@ typedef enum ecs_script_token_kind_t {
     EcsTokKeywordTemplate = 122,
     EcsTokKeywordProp = 130,
     EcsTokKeywordConst = 131,
+    EcsTokKeywordMatch = 132,
 } ecs_script_token_kind_t;
 
 typedef struct ecs_script_token_t {
@@ -4970,7 +4971,8 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprElement,
     EcsExprComponent,
     EcsExprCast,
-    EcsExprCastNumber
+    EcsExprCastNumber,
+    EcsExprMatch
 } ecs_expr_node_kind_t;
 
 struct ecs_expr_node_t {
@@ -5068,6 +5070,17 @@ typedef struct ecs_expr_cast_t {
     ecs_expr_node_t *expr;
 } ecs_expr_cast_t;
 
+typedef struct ecs_expr_match_element_t {
+    ecs_expr_node_t *compare;
+    ecs_expr_node_t *expr;
+} ecs_expr_match_element_t;
+
+typedef struct ecs_expr_match_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *expr;
+    ecs_vec_t elements;
+} ecs_expr_match_t;
+
 ecs_expr_value_node_t* flecs_expr_value_from(
     ecs_script_t *script,
     ecs_expr_node_t *node,
@@ -5130,6 +5143,9 @@ ecs_expr_function_t* flecs_expr_function(
     ecs_script_parser_t *parser);
 
 ecs_expr_element_t* flecs_expr_element(
+    ecs_script_parser_t *parser);
+
+ecs_expr_match_t* flecs_expr_match(
     ecs_script_parser_t *parser);
 
 ecs_expr_cast_t* flecs_expr_cast(
@@ -59686,14 +59702,15 @@ const char* flecs_script_token_kind_str(
         return "";
     case EcsTokKeywordWith:
     case EcsTokKeywordUsing:
-    case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
     case EcsTokKeywordFor:
     case EcsTokKeywordIn:
+    case EcsTokKeywordTemplate:
     case EcsTokKeywordModule:
+    case EcsTokKeywordMatch:
         return "keyword ";
     case EcsTokIdentifier:
         return "identifier ";
@@ -59751,13 +59768,14 @@ const char* flecs_script_token_str(
     case EcsTokShiftRight: return ">>";
     case EcsTokKeywordWith: return "with";
     case EcsTokKeywordUsing: return "using";
-    case EcsTokKeywordTemplate: return "template";
     case EcsTokKeywordProp: return "prop";
     case EcsTokKeywordConst: return "const";
+    case EcsTokKeywordMatch: return "match";
     case EcsTokKeywordIf: return "if";
     case EcsTokKeywordElse: return "else";
     case EcsTokKeywordFor: return "for";
     case EcsTokKeywordIn: return "in";
+    case EcsTokKeywordTemplate: return "template";
     case EcsTokKeywordModule: return "module";
     case EcsTokIdentifier: return "identifier";
     case EcsTokString: return "string";
@@ -60196,6 +60214,7 @@ const char* flecs_script_token(
     Keyword           ("else",     EcsTokKeywordElse)
     Keyword           ("for",      EcsTokKeywordFor)
     Keyword           ("in",       EcsTokKeywordIn)
+    Keyword           ("match",    EcsTokKeywordMatch)
     Keyword           ("module",   EcsTokKeywordModule)
 
     } else if (pos[0] == '"') {
@@ -75716,6 +75735,14 @@ ecs_expr_element_t* flecs_expr_element(
     return result;
 }
 
+ecs_expr_match_t* flecs_expr_match(
+    ecs_script_parser_t *parser)
+{
+    ecs_expr_match_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_match_t, EcsExprMatch);
+    return result;
+}
+
 static
 bool flecs_expr_explicit_cast_allowed(
     ecs_world_t *world,
@@ -75886,6 +75913,66 @@ ecs_entity_t flecs_script_default_lookup(
 {
     (void)ctx;
     return ecs_lookup(world, name);
+}
+
+static
+const char* flecs_script_parse_match_elems(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_expr_match_t *node)
+{
+    ecs_allocator_t *a = &parser->script->allocator;
+    bool old_significant_newline = parser->significant_newline;
+    parser->significant_newline = true;
+
+    printf("parse match elems: %s\n", pos);
+
+    do {
+        ParserBegin;
+
+        LookAhead(
+            case '\n': {
+                pos = lookahead;
+                continue;
+            }
+
+            case '}': {
+                /* Return last character of initializer */
+                pos = lookahead - 1;
+                printf("return '%s'\n", pos);
+                parser->significant_newline = old_significant_newline;
+                EndOfRule;
+            }
+        )
+
+        ecs_expr_match_element_t *elem = ecs_vec_append_t(
+            a, &node->elements, ecs_expr_match_element_t);
+        ecs_os_zeromem(elem);
+
+        pos = flecs_script_parse_expr(parser, pos, 0, &elem->compare);
+        if (!pos) {
+            goto error;
+        }
+
+        Parse_1(':', {
+            pos = flecs_script_parse_expr(parser, pos, 0, &elem->expr);
+            if (!pos) {
+                goto error;
+            }
+
+            Parse(
+                case ';':
+                case '\n': {
+                    break;
+                }
+            )
+
+            break;
+        })
+
+    } while (true);
+
+    ParserEnd;
 }
 
 const char* flecs_script_parse_initializer(
@@ -76241,6 +76328,35 @@ const char* flecs_script_parse_lhs(
             node->left = (ecs_expr_node_t*)flecs_expr_int(parser, -1);
             node->operator = EcsTokMul;
             *out = (ecs_expr_node_t*)node;
+            break;
+        }
+
+        case EcsTokKeywordMatch: {
+            ecs_expr_match_t *node = flecs_expr_match(parser);
+            pos = flecs_script_parse_expr(parser, pos, 0, &node->expr);
+            if (!pos) {
+                flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
+                goto error;
+            }
+
+            Parse_1('{', {
+                pos = flecs_script_parse_match_elems(parser, pos, node);
+                if (!pos) {
+                    flecs_script_parser_expr_free(
+                        parser, (ecs_expr_node_t*)node);
+                    goto error;
+                }
+
+                Parse_1('}', {
+                    *out = (ecs_expr_node_t*)node;
+                    break;
+                })
+
+                break;
+            })
+
+            can_have_rhs = false;
+
             break;
         }
 
