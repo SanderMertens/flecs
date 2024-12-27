@@ -298,7 +298,13 @@
                 "for_range_vars",
                 "for_range_1_4",
                 "for_range_min_1_2",
-                "variable_assign_self"
+                "variable_assign_self",
+                "func_w_entity_arg",
+                "func_w_entity_arg_w_using",
+                "method_w_entity_arg",
+                "method_w_entity_arg_w_using",
+                "assign_id",
+                "assign_id_w_using"
             ]
         }, {
             "id": "Template",

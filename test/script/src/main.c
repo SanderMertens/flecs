@@ -295,6 +295,12 @@ void Eval_for_range_vars(void);
 void Eval_for_range_1_4(void);
 void Eval_for_range_min_1_2(void);
 void Eval_variable_assign_self(void);
+void Eval_func_w_entity_arg(void);
+void Eval_func_w_entity_arg_w_using(void);
+void Eval_method_w_entity_arg(void);
+void Eval_method_w_entity_arg_w_using(void);
+void Eval_assign_id(void);
+void Eval_assign_id_w_using(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -2019,6 +2025,30 @@ bake_test_case Eval_testcases[] = {
     {
         "variable_assign_self",
         Eval_variable_assign_self
+    },
+    {
+        "func_w_entity_arg",
+        Eval_func_w_entity_arg
+    },
+    {
+        "func_w_entity_arg_w_using",
+        Eval_func_w_entity_arg_w_using
+    },
+    {
+        "method_w_entity_arg",
+        Eval_method_w_entity_arg
+    },
+    {
+        "method_w_entity_arg_w_using",
+        Eval_method_w_entity_arg_w_using
+    },
+    {
+        "assign_id",
+        Eval_assign_id
+    },
+    {
+        "assign_id_w_using",
+        Eval_assign_id_w_using
     }
 };
 
@@ -4304,7 +4334,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        286,
+        292,
         Eval_testcases
     },
     {

@@ -874,7 +874,7 @@ int flecs_expr_identifier_visit_type(
     ecs_expr_value_node_t *result = flecs_expr_value_from(
         script, (ecs_expr_node_t*)node, type);
 
-    if (type == ecs_id(ecs_entity_t)) {
+    if (type == ecs_id(ecs_entity_t) || type == ecs_id(ecs_id_t)) {
         result->storage.entity = desc->lookup_action(
             script->world, node->value, desc->lookup_ctx);
         result->ptr = &result->storage.entity;
