@@ -306,6 +306,10 @@ void Eval_method_w_entity_arg(void);
 void Eval_method_w_entity_arg_w_using(void);
 void Eval_assign_id(void);
 void Eval_assign_id_w_using(void);
+void Eval_const_assign_empty_initializer(void);
+void Eval_const_assign_empty_collection_initializer(void);
+void Eval_const_i32_assign_empty_initializer(void);
+void Eval_const_i32_assign_empty_collection_initializer(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -2076,6 +2080,22 @@ bake_test_case Eval_testcases[] = {
     {
         "assign_id_w_using",
         Eval_assign_id_w_using
+    },
+    {
+        "const_assign_empty_initializer",
+        Eval_const_assign_empty_initializer
+    },
+    {
+        "const_assign_empty_collection_initializer",
+        Eval_const_assign_empty_collection_initializer
+    },
+    {
+        "const_i32_assign_empty_initializer",
+        Eval_const_i32_assign_empty_initializer
+    },
+    {
+        "const_i32_assign_empty_collection_initializer",
+        Eval_const_i32_assign_empty_collection_initializer
     }
 };
 
@@ -4369,7 +4389,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        297,
+        301,
         Eval_testcases
     },
     {

@@ -232,6 +232,39 @@ int flecs_expr_element_to_str(
 }
 
 static
+int flecs_expr_match_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_match_t *node)
+{
+    ecs_strbuf_appendlit(v->buf, "match ");
+    if (flecs_expr_node_to_str(v, node->expr)) {
+        return -1;
+    }
+
+    ecs_strbuf_appendlit(v->buf, "{\n");
+
+    int32_t i, count = ecs_vec_count(&node->elements);
+    ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_match_element_t *elem = &elems[i];
+        if (flecs_expr_node_to_str(v, elem->compare)) {
+            return -1;
+        }
+
+        ecs_strbuf_appendlit(v->buf, ": ");
+
+        if (flecs_expr_node_to_str(v, elem->expr)) {
+            return -1;
+        }
+    }
+
+    ecs_strbuf_appendlit(v->buf, "}\n");
+
+    return 0;
+}
+
+static
 int flecs_expr_cast_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_cast_t *node)
@@ -337,6 +370,13 @@ int flecs_expr_node_to_str(
     case EcsExprComponent:
         if (flecs_expr_element_to_str(v, 
             (const ecs_expr_element_t*)node)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprMatch:
+        if (flecs_expr_match_to_str(v, 
+            (const ecs_expr_match_t*)node)) 
         {
             goto error;
         }

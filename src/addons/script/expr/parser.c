@@ -82,8 +82,6 @@ const char* flecs_script_parse_match_elems(
     bool old_significant_newline = parser->significant_newline;
     parser->significant_newline = true;
 
-    printf("parse match elems: %s\n", pos);
-
     do {
         ParserBegin;
 
@@ -96,7 +94,6 @@ const char* flecs_script_parse_match_elems(
             case '}': {
                 /* Return last character of initializer */
                 pos = lookahead - 1;
-                printf("return '%s'\n", pos);
                 parser->significant_newline = old_significant_newline;
                 EndOfRule;
             }

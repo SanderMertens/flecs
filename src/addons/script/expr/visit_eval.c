@@ -692,6 +692,64 @@ error:
 }
 
 static
+int flecs_expr_match_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_match_t *node,
+    ecs_expr_value_t *out)
+{
+    flecs_expr_stack_push(ctx->stack);
+
+    ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, node->expr);
+    if (flecs_expr_visit_eval_priv(ctx, node->expr, expr)) {
+        goto error;
+    }
+
+    int32_t i, count = ecs_vec_count(&node->elements);
+    ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_match_element_t *elem = &elems[i];
+
+        flecs_expr_stack_push(ctx->stack);
+        ecs_expr_value_t *compare = flecs_expr_stack_result(
+            ctx->stack, node->expr);
+        if (flecs_expr_visit_eval_priv(ctx, elem->compare, compare)) {
+            goto error;
+        }
+
+        bool value = false;
+        ecs_value_t result = { .type = ecs_id(ecs_bool_t), .ptr = &value };
+
+        if (flecs_value_binary(
+            ctx->script, &expr->value, &compare->value, &result, EcsTokEq))
+        {
+            goto error;
+        }
+
+        flecs_expr_stack_pop(ctx->stack);
+
+        if (value) {
+            if (flecs_expr_visit_eval_priv(ctx, elem->expr, out)) {
+                goto error;
+            }
+            break;
+        }
+    }
+
+    if (i == count) {
+        flecs_expr_visit_error(ctx->script, node, 
+            "match value not handled by case");
+        goto error;
+    }
+
+    flecs_expr_stack_pop(ctx->stack);
+    return 0;
+error:
+    flecs_expr_stack_pop(ctx->stack);
+    return -1;
+}
+
+static
 int flecs_expr_component_visit_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_element_t *node,
@@ -828,6 +886,13 @@ int flecs_expr_visit_eval_priv(
     case EcsExprElement:
         if (flecs_expr_element_visit_eval(
             ctx, (ecs_expr_element_t*)node, out)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprMatch:
+        if (flecs_expr_match_visit_eval(
+            ctx, (ecs_expr_match_t*)node, out)) 
         {
             goto error;
         }
