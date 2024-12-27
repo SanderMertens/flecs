@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_systems Systems
@@ -15,13 +15,18 @@ namespace flecs {
  * @{
  */
 
+
 using TickSource = EcsTickSource;
 
 struct system;
 
+
 template<typename ... Components>
 struct system_builder;
 
+} // namespace flecs
+
+namespace flecs {
 namespace _ {
 
 void system_init(flecs::world& world);

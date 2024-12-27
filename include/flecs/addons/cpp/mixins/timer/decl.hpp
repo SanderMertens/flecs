@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_timer Timer
@@ -21,7 +21,9 @@ using RateFilter = EcsRateFilter;
 struct timer;
 
 /** @} */
+} // namespace flecs
 
+namespace flecs {
 namespace _ {
 
 void timer_init(flecs::world& world);

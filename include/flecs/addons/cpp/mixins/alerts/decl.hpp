@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_alerts Alerts
@@ -16,6 +16,7 @@ namespace flecs {
  */
 
 /** Module */
+
 struct alerts {
     using AlertsActive = EcsAlertsActive;
     using Instance = EcsAlertInstance;
@@ -28,8 +29,10 @@ struct alerts {
     alerts(flecs::world& world);
 };
 
+
 template <typename ... Components>
 struct alert;
+
 
 template <typename ... Components>
 struct alert_builder;
