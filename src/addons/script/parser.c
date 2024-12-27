@@ -298,8 +298,7 @@ const char* flecs_script_stmt(
     Parse(
         case EcsTokIdentifier:        goto identifier;
         case EcsTokString:            goto string_name;
-        case '{':                     return flecs_script_scope(parser, 
-                                        flecs_script_insert_scope(parser), pos);
+        case '{':                     goto anonymous_entity;
         case '(':                     goto paren;
         case '@':                     goto annotation;
         case EcsTokKeywordWith:       goto with_stmt;
@@ -312,6 +311,11 @@ const char* flecs_script_stmt(
         case EcsTokKeywordFor:        goto for_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
+
+anonymous_entity: {
+    return flecs_script_scope(parser, 
+        flecs_script_insert_entity(parser, "_", false)->scope, pos);
+}
 
 string_name:
     /* If this is an interpolated string, we need to evaluate it as expression

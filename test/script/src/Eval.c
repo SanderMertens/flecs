@@ -2297,12 +2297,14 @@ void Eval_dot_assign_binary_expr(void) {
 void Eval_open_scope_no_parent(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Tag);
+
     const char *expr =
     HEAD "Foo {"
     LINE "  Bar {}"
     LINE "}"
     LINE "{"
-    LINE "  Zoo {}"
+    LINE "  Zoo { Tag }"
     LINE "}"
     LINE "Hello {}";
 
@@ -2314,11 +2316,16 @@ void Eval_open_scope_no_parent(void) {
 
     test_assert(foo != 0);
     test_assert(bar != 0);
-    test_assert(zoo != 0);
+    test_assert(zoo == 0);
     test_assert(hello != 0);
 
+    ecs_iter_t it = ecs_each(world, Tag);
+    zoo = ecs_iter_first(&it);
+    test_assert(zoo != 0);
+    test_str("Zoo", ecs_get_name(world, zoo));
+
     test_assert(ecs_has_pair(world, bar, EcsChildOf, foo));
-    test_assert(!ecs_has_pair(world, zoo, EcsChildOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, zoo, EcsChildOf, EcsWildcard));
     test_assert(!ecs_has_pair(world, hello, EcsChildOf, EcsWildcard));
 
     ecs_fini(world);
@@ -2469,6 +2476,7 @@ void Eval_using_nested_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Zoo);
+    ECS_TAG(world, Tag);
 
     const char *expr =
     HEAD "Foo {"
@@ -2478,7 +2486,7 @@ void Eval_using_nested_in_scope(void) {
     LINE "}"
     LINE "{"
     LINE "  using Foo.Bar"
-    LINE "  Zoo Hello {}"
+    LINE "  Zoo Hello { Tag }"
     LINE "}"
     LINE "Zoo World {}";
 
@@ -2494,10 +2502,14 @@ void Eval_using_nested_in_scope(void) {
     test_assert(foo != 0);
     test_assert(bar != 0);
     test_assert(zoo != 0);
-    test_assert(hello != 0);
+    test_assert(hello == 0);
     test_assert(_world != 0);
     test_assert(not_bar == 0);
     test_assert(zoo_root != 0);
+
+    ecs_iter_t it = ecs_each(world, Tag);
+    hello = ecs_iter_first(&it);
+    test_assert(hello != 0);
 
     test_assert(_world != EcsWorld); /* sanity check, verified by other tests */
 
@@ -2970,25 +2982,38 @@ void Eval_multiple_vars_single_line(void) {
 void Eval_2_stmts_in_scope_w_no_parent(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Tag);
+
     const char *expr =
     HEAD "{"
-    LINE "Bar { }"
-    LINE "Foo { }"
+    LINE "Bar { Tag }"
+    LINE "Foo { Tag }"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(foo == 0);
+    test_assert(bar == 0);
 
+    ecs_iter_t it = ecs_each(world, Tag);
+    ecs_entity_t p = ecs_iter_first(&it);
+    test_assert(p != 0);
+    p = ecs_get_target(world, p, EcsChildOf, 0);
+
+    foo = ecs_lookup_from(world, p, "Foo");
+    bar = ecs_lookup_from(world, p, "Bar");
     test_assert(foo != 0);
     test_assert(bar != 0);
 
     test_assert( !ecs_has_id(world, foo, bar));
-    test_assert( !ecs_has_pair(world, foo, EcsChildOf, bar));
+    test_assert( ecs_has_id(world, foo, Tag));
+    test_assert( ecs_has_pair(world, foo, EcsChildOf, p));
 
     test_assert( !ecs_has_id(world, bar, foo));
-    test_assert( !ecs_has_pair(world, bar, EcsChildOf, foo));
+    test_assert( ecs_has_id(world, bar, Tag));
+    test_assert( ecs_has_pair(world, bar, EcsChildOf, p));
 
     ecs_fini(world);
 }
@@ -2996,17 +3021,23 @@ void Eval_2_stmts_in_scope_w_no_parent(void) {
 void Eval_empty_scope_after_using(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Tag);
+
     const char *expr =
     HEAD "using flecs.meta"
     LINE "{"
-    LINE "  Foo {}"
+    LINE "  Foo { Tag }"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
-    test_assert( foo != 0);
-    test_assert( !ecs_has_pair(world, foo, EcsChildOf, EcsWildcard));
+    test_assert( foo == 0);
+
+    ecs_iter_t it = ecs_each(world, Tag);
+    foo = ecs_iter_first(&it);
+
+    test_assert( ecs_has_pair(world, foo, EcsChildOf, EcsWildcard));
 
     ecs_fini(world);
 }
