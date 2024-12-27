@@ -828,6 +828,7 @@ void Deserialize_struct_id(void);
 void Deserialize_struct_nested_i32(void);
 void Deserialize_struct_nested_i32_i32(void);
 void Deserialize_struct_2_nested_i32_i32(void);
+void Deserialize_struct_nested_empty(void);
 void Deserialize_struct_member_i32(void);
 void Deserialize_struct_member_i32_neg(void);
 void Deserialize_struct_member_i32_i32(void);
@@ -843,6 +844,7 @@ void Deserialize_struct_nested_member_auto_var(void);
 void Deserialize_struct_nested_member_auto_vars(void);
 void Deserialize_struct_auto_vars(void);
 void Deserialize_struct_i32_array_3(void);
+void Deserialize_struct_i32_array_3_empty(void);
 void Deserialize_struct_struct_i32_array_3(void);
 void Deserialize_struct_struct_i32_i32_array_3(void);
 void Deserialize_struct_w_array_type_i32_i32(void);
@@ -4121,6 +4123,10 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_struct_2_nested_i32_i32
     },
     {
+        "struct_nested_empty",
+        Deserialize_struct_nested_empty
+    },
+    {
         "struct_member_i32",
         Deserialize_struct_member_i32
     },
@@ -4179,6 +4185,10 @@ bake_test_case Deserialize_testcases[] = {
     {
         "struct_i32_array_3",
         Deserialize_struct_i32_array_3
+    },
+    {
+        "struct_i32_array_3_empty",
+        Deserialize_struct_i32_array_3_empty
     },
     {
         "struct_struct_i32_array_3",
@@ -4410,7 +4420,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        90,
+        92,
         Deserialize_testcases,
         1,
         Deserialize_params

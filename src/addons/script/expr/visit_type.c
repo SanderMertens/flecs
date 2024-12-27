@@ -1326,6 +1326,7 @@ int flecs_expr_visit_type_priv(
         }
         break;
     case EcsExprEmptyInitializer:
+        node->type = ecs_meta_get_type(cur);
         break;
     case EcsExprInitializer:
         if (flecs_expr_initializer_visit_type(

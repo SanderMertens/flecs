@@ -163,7 +163,7 @@ const char* flecs_script_parse_collection_initializer(
 
         /* End of initializer */
         LookAhead_1(']', {
-            if (first) {
+            if (first) {                
                 node->node.kind = EcsExprEmptyInitializer;
             }
             pos = lookahead - 1;
@@ -182,7 +182,7 @@ const char* flecs_script_parse_collection_initializer(
         }
 
         {
-            /* Parse next element or end of initializer*/
+            /* Parse next element or end of initializer */
             LookAhead(
                 case ',': {
                     pos = lookahead;
