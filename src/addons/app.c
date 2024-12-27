@@ -86,12 +86,10 @@ int ecs_app_run(
 {
     ecs_app_desc = *desc;
 
+#ifndef ECS_TARGET_EM
     if (ECS_NEQZERO(ecs_app_desc.target_fps)) {
         ecs_set_target_fps(world, ecs_app_desc.target_fps);
     }
-
-    /* Don't set threads if using emscripten */
-#ifndef ECS_TARGET_EM
     if (ecs_app_desc.threads) {
         ecs_set_threads(world, ecs_app_desc.threads);
     }

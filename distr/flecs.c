@@ -21636,12 +21636,10 @@ int ecs_app_run(
 {
     ecs_app_desc = *desc;
 
+#ifndef ECS_TARGET_EM
     if (ECS_NEQZERO(ecs_app_desc.target_fps)) {
         ecs_set_target_fps(world, ecs_app_desc.target_fps);
     }
-
-    /* Don't set threads if using emscripten */
-#ifndef ECS_TARGET_EM
     if (ecs_app_desc.threads) {
         ecs_set_threads(world, ecs_app_desc.threads);
     }
@@ -56691,6 +56689,60 @@ const char* flecs_script_paren_expr(
 
 /* Parse a single statement */
 static
+const char* flecs_script_if_stmt(
+    ecs_script_parser_t *parser,
+    const char *pos)
+{
+    ParserBegin;
+
+    // if expr
+    Expr('\0',
+        // if expr {
+        Parse_1('{', {
+            ecs_script_if_t *stmt = flecs_script_insert_if(parser);
+            stmt->expr = EXPR;
+            pos = flecs_script_scope(parser, stmt->if_true, pos);
+            if (!pos) {
+                goto error;
+            }
+
+            // if expr { } else
+            LookAhead_1(EcsTokKeywordElse, 
+                pos = lookahead;
+
+                Parse(
+                    // if expr { } else if
+                    case EcsTokKeywordIf: {
+                        Scope(stmt->if_false, 
+                            return flecs_script_if_stmt(parser, pos);
+                        )
+                    }
+
+                    // if expr { } else\n if
+                    case EcsTokNewline: {
+                        Parse_1(EcsTokKeywordIf,
+                            Scope(stmt->if_false, 
+                                return flecs_script_if_stmt(parser, pos);
+                            )
+                        )
+                    }
+
+                    // if expr { } else {
+                    case '{': {
+                        return flecs_script_scope(parser, stmt->if_false, pos);
+                    }
+                )
+            )
+
+            EndOfRule;
+        });
+    )
+
+    ParserEnd;
+}
+
+/* Parse a single statement */
+static
 const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos) 
@@ -56948,30 +57000,7 @@ const_var: {
 
 // if
 if_stmt: {
-    // if expr
-    Expr('\0',
-        // if expr {
-        Parse_1('{', {
-            ecs_script_if_t *stmt = flecs_script_insert_if(parser);
-            stmt->expr = EXPR;
-            pos = flecs_script_scope(parser, stmt->if_true, pos);
-            if (!pos) {
-                goto error;
-            }
-
-            // if expr { } else
-            LookAhead_1(EcsTokKeywordElse, 
-                pos = lookahead;
-
-                // if expr { } else {
-                Parse_1('{',
-                    return flecs_script_scope(parser, stmt->if_false, pos);
-                )
-            )
-
-            EndOfRule;
-        });
-    )
+    return flecs_script_if_stmt(parser, pos);
 }
 
 // for
@@ -59592,6 +59621,10 @@ void flecs_script_template_import(
 
 #define Keyword(keyword, _kind)\
     } else if (!ecs_os_strncmp(pos, keyword " ", ecs_os_strlen(keyword) + 1)) {\
+        out->value = keyword;\
+        out->kind = _kind;\
+        return pos + ecs_os_strlen(keyword);\
+    } else if (!ecs_os_strncmp(pos, keyword "\n", ecs_os_strlen(keyword) + 1)) {\
         out->value = keyword;\
         out->kind = _kind;\
         return pos + ecs_os_strlen(keyword);
