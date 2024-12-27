@@ -9668,3 +9668,222 @@ void Eval_variable_assign_self(void) {
 
     ecs_fini(world);
 }
+
+static
+void func_is_component(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result) 
+{
+    test_assert(result != NULL);
+    test_int(argc, 1);
+    test_assert(argv != NULL);
+
+    *(bool*)result->ptr = (*(ecs_entity_t*)argv[0].ptr) == ecs_id(EcsComponent);
+}
+
+void Eval_func_w_entity_arg(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, True);
+    ECS_TAG(world, False);
+
+    ecs_function(world, {
+        .name = "is_component",
+        .return_type = ecs_id(ecs_bool_t),
+        .params = {
+            { "a", ecs_id(ecs_entity_t) }
+        },
+        .callback = func_is_component
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (bool, True): {is_component(flecs.core.Component)}"
+    LINE "  (bool, False): {is_component(flecs.core.Relationship)}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, True);
+        test_assert(v != NULL);
+        test_bool(*v, true);
+    }
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, False);
+        test_assert(v != NULL);
+        test_bool(*v, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_func_w_entity_arg_w_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, True);
+    ECS_TAG(world, False);
+
+    ecs_function(world, {
+        .name = "is_component",
+        .return_type = ecs_id(ecs_bool_t),
+        .params = {
+            { "a", ecs_id(ecs_entity_t) }
+        },
+        .callback = func_is_component
+    });
+
+    const char *expr =
+    HEAD "using flecs"
+    LINE "e {"
+    LINE "  (bool, True): {is_component(core.Component)}"
+    LINE "  (bool, False): {is_component(core.Relationship)}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, True);
+        test_assert(v != NULL);
+        test_bool(*v, true);
+    }
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, False);
+        test_assert(v != NULL);
+        test_bool(*v, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_method_w_entity_arg(void) {
+   ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, True);
+    ECS_TAG(world, False);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (bool, True): {flecs.core.Component.has(flecs.core.Component)}"
+    LINE "  (bool, False): {flecs.core.Component.has(flecs.core.Relationship)}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, True);
+        test_assert(v != NULL);
+        test_bool(*v, true);
+    }
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, False);
+        test_assert(v != NULL);
+        test_bool(*v, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_method_w_entity_arg_w_using(void) {
+   ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, True);
+    ECS_TAG(world, False);
+
+    const char *expr =
+    HEAD "using flecs"
+    LINE "e {"
+    LINE "  (bool, True): {core.Component.has(core.Component)}"
+    LINE "  (bool, False): {core.Component.has(core.Relationship)}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, True);
+        test_assert(v != NULL);
+        test_bool(*v, true);
+    }
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, False);
+        test_assert(v != NULL);
+        test_bool(*v, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_assign_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_id_t value;
+    } Id;
+
+    ecs_entity_t ecs_id(Id) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Id"}),
+        .members = {
+            {"value", ecs_id(ecs_id_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo = Id: {flecs.core.Component}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Id));
+
+    const Id *ptr = ecs_get(world, foo, Id);
+    test_assert(ptr != NULL);
+
+    test_int(ptr->value, ecs_id(EcsComponent));
+
+    ecs_fini(world);
+}
+
+void Eval_assign_id_w_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_id_t value;
+    } Id;
+
+    ecs_entity_t ecs_id(Id) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Id"}),
+        .members = {
+            {"value", ecs_id(ecs_id_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "using flecs"
+    LINE "Foo = Id: {core.Component}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Id));
+
+    const Id *ptr = ecs_get(world, foo, Id);
+    test_assert(ptr != NULL);
+
+    test_int(ptr->value, ecs_id(EcsComponent));
+
+    ecs_fini(world);
+}
