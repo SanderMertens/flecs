@@ -1120,6 +1120,44 @@ void Deserialize_struct_nested_i32(void) {
     ecs_fini(world);
 }
 
+void Deserialize_struct_nested_empty(void) {
+    typedef struct {
+        ecs_i32_t x;
+    } N1;
+
+    typedef struct {
+        N1 n_1;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t n1 = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "N1"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"n_1", n1},
+        }
+    });
+
+    T value = {{0}};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "{{}}",
+        &(ecs_value_t){t, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.n_1.x, 0);
+
+    ecs_fini(world);
+}
+
 void Deserialize_struct_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
@@ -1812,6 +1850,35 @@ void Deserialize_struct_i32_array_3(void) {
     test_int(value.x[0], 10);
     test_int(value.x[1], 20);
     test_int(value.x[2], 30);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_i32_array_3_empty(void) {
+    typedef struct {
+        int32_t x[3];
+    } T;
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t), 3}
+        }
+    });
+
+    T value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "{x: []}",
+        &(ecs_value_t){t, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.x[0], 0);
+    test_int(value.x[1], 0);
+    test_int(value.x[2], 0);
 
     ecs_fini(world);
 }
