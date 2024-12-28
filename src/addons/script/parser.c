@@ -324,6 +324,18 @@ const char* flecs_script_parse_var(
 
                 // const PI = expr\n
                 Expr('\n',
+                    Warning("'%s var = expr' syntax is deprecated"
+                        ", use '%s var: expr' instead", 
+                            is_prop ? "prop" : "const",
+                            is_prop ? "prop" : "const");
+                    var->expr = EXPR;
+                    EndOfRule;
+                )
+            }
+
+            case ':': {
+                // const PI: expr\n
+                Expr('\n',
                     var->expr = EXPR;
                     EndOfRule;
                 )

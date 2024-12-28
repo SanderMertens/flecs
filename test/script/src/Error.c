@@ -1305,30 +1305,6 @@ void Error_template_prop_no_type(void) {
     ecs_fini(world);
 }
 
-void Error_template_prop_no_default(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "template Tree {"
-    LINE "  prop height: flecs.meta.f32"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
 void Error_template_w_composite_prop_invalid_assignment(void) {
     ecs_world_t *world = ecs_init();
 

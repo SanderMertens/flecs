@@ -63,6 +63,11 @@
         (pos - parser->script->pub.code) - 1, __VA_ARGS__);\
     goto error
 
+/* Warning */
+#define Warning(...)\
+    ecs_parser_warning(parser->script->pub.name, parser->script->pub.code,\
+        (pos - parser->script->pub.code) - 1, __VA_ARGS__);\
+
 /* Parse expression */
 #define Expr(until, ...)\
     {\

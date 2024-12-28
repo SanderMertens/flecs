@@ -4616,12 +4616,45 @@ void Eval_const_var_int(void) {
     });
 
     const char *expr =
+    HEAD "const var_x: 10"
+    LINE "const var_y: 20"
+    LINE ""
+    LINE "e { Position: {$var_x, $var_y} }";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_const_var_int_deprecated_notation(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
     HEAD "const var_x = 10"
     LINE "const var_y = 20"
     LINE ""
     LINE "e { Position: {$var_x, $var_y} }";
 
+    ecs_log_set_level(-3);
     test_assert(ecs_script_run(world, NULL, expr) == 0);
+    ecs_log_set_level(-1);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4647,8 +4680,8 @@ void Eval_const_var_float(void) {
     });
 
     const char *expr =
-    HEAD "const var_x = 10.5"
-    LINE "const var_y = 20.5"
+    HEAD "const var_x: 10.5"
+    LINE "const var_y: 20.5"
     LINE ""
     LINE "e { Position: {$var_x, $var_y} }";
 
@@ -4683,8 +4716,8 @@ void Eval_const_var_bool(void) {
     });
 
     const char *expr =
-    HEAD "const var_x = true"
-    LINE "const var_y = false"
+    HEAD "const var_x: true"
+    LINE "const var_y: false"
     LINE ""
     LINE "e { Bools: {$var_x, $var_y} }";
 
@@ -4714,8 +4747,8 @@ void Eval_const_var_string(void) {
     });
 
     const char *expr =
-    HEAD "const var_x = \"10.5\""
-    LINE "const var_y = \"20.5\""
+    HEAD "const var_x: \"10.5\""
+    LINE "const var_y: \"20.5\""
     LINE ""
     LINE "e { Position: {$var_x, $var_y} }";
 
@@ -4786,15 +4819,15 @@ void Eval_const_var_scoped(void) {
     });
 
     const char *expr =
-    HEAD "const var_x = 10"
+    HEAD "const var_x: 10"
     LINE "a { Position: {$var_x, $var_x} }"
     LINE "a {"
-    LINE "  const var_x = 20"
-    LINE "  const var_y = 30"
+    LINE "  const var_x: 20"
+    LINE "  const var_y: 30"
     LINE "  b { Position: {$var_x, $var_y} }"
     LINE "}"
     LINE "a {"
-    LINE "  const var_y = 20"
+    LINE "  const var_y: 20"
     LINE "  c { Position: {$var_x, $var_y} }"
     LINE "}";
 
@@ -4909,7 +4942,7 @@ void Eval_scope_w_component_after_const_var(void) {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  const var = 5"
+    LINE "  const var: 5"
     LINE "  Position: {x: 10, y: $var}"
     LINE "}";
 
@@ -4940,7 +4973,7 @@ void Eval_component_after_const_add_expr(void) {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  const var = 5 + 15"
+    LINE "  const var: 5 + 15"
     LINE "  Position: {x: 10, y: $var}"
     LINE "}";
 
@@ -4971,7 +5004,7 @@ void Eval_component_after_const_sub_expr(void) {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  const var = 25 - 5"
+    LINE "  const var: 25 - 5"
     LINE "  Position: {x: 10, y: $var}"
     LINE "}";
 
@@ -5002,7 +5035,7 @@ void Eval_component_after_const_mul_expr(void) {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  const var = 2 * 10"
+    LINE "  const var: 2 * 10"
     LINE "  Position: {x: 10, y: $var}"
     LINE "}";
 
@@ -5033,7 +5066,7 @@ void Eval_component_after_const_div_expr(void) {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  const var = 40 / 2"
+    LINE "  const var: 40 / 2"
     LINE "  Position: {x: 10, y: $var}"
     LINE "}";
 
@@ -5066,7 +5099,7 @@ void Eval_component_after_const_paren_expr(void) {
 
     const char *expr =
     LINE "e {"
-    LINE "  const val = (10 + 20)"
+    LINE "  const val: (10 + 20)"
     LINE "  Position: {$val, $val * 2}"
     LINE "}";
 
@@ -5609,7 +5642,7 @@ void Eval_assign_const_w_expr(void) {
     });
 
     const char *expr =
-    LINE "const var = 5 + 1"
+    LINE "const var: 5 + 1"
     LINE "e { Position: {x: $var, y: $var * 2} }";
 
     test_assert(ecs_script_run(world, NULL, expr) == 0);
@@ -5700,7 +5733,7 @@ void Eval_assign_var_to_typed_const_w_composite_type(void) {
 
     const char *expr =
     HEAD "const var_pos_a = Position: {10, 20}"
-    HEAD "const var_pos_b = $var_pos_a"
+    HEAD "const var_pos_b: $var_pos_a"
     LINE "a { $var_pos_b }"
     LINE "";
 
@@ -6379,7 +6412,7 @@ void Eval_pair_w_rel_var(void) {
     ECS_TAG(world, Tgt);
 
     const char *expr =
-    LINE "const rel = Rel\n"
+    LINE "const rel: Rel\n"
     LINE "ent {\n"
     LINE "  ($rel, Tgt)\n"
     LINE "}\n"
@@ -6401,7 +6434,7 @@ void Eval_pair_w_tgt_var(void) {
     ECS_TAG(world, Tgt);
 
     const char *expr =
-    LINE "const tgt = Tgt\n"
+    LINE "const tgt: Tgt\n"
     LINE "ent {\n"
     LINE "  (Rel, $tgt)\n"
     LINE "}\n"
@@ -6780,7 +6813,7 @@ void Eval_if_true_var(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const v = true"
+    HEAD "const v: true"
     LINE "if $v {"
     LINE "  a{}"
     LINE "} else {"
@@ -6798,7 +6831,7 @@ void Eval_if_false_var(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const v = false"
+    HEAD "const v: false"
     LINE "if $v {"
     LINE "  a{}"
     LINE "} else {"
@@ -6897,7 +6930,7 @@ void Eval_if_lt_const(void) {
 
     {
         const char *expr =
-        HEAD "const v = 2.0"
+        HEAD "const v: 2.0"
         LINE "if $v > 3.0 {"
         LINE "  a{}"
         LINE "} else {"
@@ -6911,7 +6944,7 @@ void Eval_if_lt_const(void) {
 
     {
         const char *expr =
-        HEAD "const v = 3.0"
+        HEAD "const v: 3.0"
         LINE "if $v > 2.0 {"
         LINE "  c{}"
         LINE "} else {"
@@ -6930,7 +6963,7 @@ void Eval_if_else_if(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const v = 1"
+    HEAD "const v: 1"
     LINE "if $v == 1 {"
     LINE "  a{}"
     LINE "} else if $v == 0 {"
@@ -6948,7 +6981,7 @@ void Eval_if_else_if_else(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const v = 1"
+    HEAD "const v: 1"
     LINE "if $v == 1 {"
     LINE "  a{}"
     LINE "} else if $v == 0 {"
@@ -6970,7 +7003,7 @@ void Eval_if_else_if_else_if(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const v = 1"
+    HEAD "const v: 1"
     LINE "if $v == 1 {"
     LINE "  a{}"
     LINE "} else if $v == 0 {"
@@ -6992,7 +7025,7 @@ void Eval_if_else_newline_if(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const v = 1"
+    HEAD "const v: 1"
     LINE "if $v == 1 {"
     LINE "  a{}"
     LINE "} else"
@@ -7011,7 +7044,7 @@ void Eval_if_else_space_newline_if(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const v = 1"
+    HEAD "const v: 1"
     LINE "if $v == 1 {"
     LINE "  a{}"
     LINE "} else "
@@ -7577,7 +7610,7 @@ void Eval_assign_component_to_const(void) {
     ecs_set(world, e, Position, {10, 20});
 
     const char *expr =
-    HEAD "const pos = e[Position]"
+    HEAD "const pos: e[Position]"
     LINE "foo {"
     LINE "  Position: {$pos.y, $pos.x}"
     LINE "}";
@@ -7610,8 +7643,8 @@ void Eval_assign_component_member_to_const(void) {
     ecs_set(world, e, Position, {10, 20});
 
     const char *expr =
-    HEAD "const px = e[Position].x"
-    LINE "const py = e[Position].y"
+    HEAD "const px: e[Position].x"
+    LINE "const py: e[Position].y"
     LINE ""
     LINE "foo {"
     LINE "  Position: {$py, $px}"
@@ -7730,7 +7763,7 @@ void Eval_const_w_component_expr(void) {
     ecs_set(world, e, Position, {10, 20});
 
     const char *expr =
-    HEAD "const pos = e[Position]"
+    HEAD "const pos: e[Position]"
     LINE "foo {"
     LINE "  $pos"
     LINE "}";
@@ -7765,7 +7798,7 @@ void Eval_const_w_component_expr_in_scope(void) {
 
     const char *expr =
     HEAD "parent {"
-    LINE "  const pos = e[Position]"
+    LINE "  const pos: e[Position]"
     LINE "  foo {"
     LINE "    $pos"
     LINE "  }"
@@ -7804,7 +7837,7 @@ void Eval_const_w_component_expr_in_module(void) {
 
     const char *expr =
     HEAD "module parent"
-    LINE "const pos = e[Position]"
+    LINE "const pos: e[Position]"
     LINE "foo {"
     LINE "  $pos"
     LINE "}";
@@ -7845,7 +7878,7 @@ void Eval_const_w_component_in_scope_expr_in_scope(void) {
 
     const char *expr =
     HEAD "parent {"
-    LINE "  const pos = e[Position]"
+    LINE "  const pos: e[Position]"
     LINE "  foo {"
     LINE "    $pos"
     LINE "  }"
@@ -7884,7 +7917,7 @@ void Eval_const_w_component_in_scope_expr_in_module(void) {
 
     const char *expr =
     HEAD "module parent"
-    LINE "const pos = e[Position]"
+    LINE "const pos: e[Position]"
     LINE "foo {"
     LINE "  $pos"
     LINE "}";
@@ -7922,7 +7955,7 @@ void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void) {
 
     const char *expr =
     HEAD "parent {"
-    LINE "  const pos = e[Position]"
+    LINE "  const pos: e[Position]"
     LINE "  foo {"
     LINE "    $pos"
     LINE "  }"
@@ -7961,7 +7994,7 @@ void Eval_const_w_component_and_entity_in_scope_expr_in_module(void) {
 
     const char *expr =
     HEAD "module parent"
-    LINE "const pos = e[Position]"
+    LINE "const pos: e[Position]"
     LINE "foo {"
     LINE "  $pos"
     LINE "}";
@@ -9402,7 +9435,7 @@ void Eval_entity_w_interpolated_name_w_var(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const i = 10"
+    HEAD "const i: 10"
     LINE "\"e_{$i + 20}\" { }";
 
     test_assert(ecs_script_run(world, NULL, expr) == 0);
@@ -9554,7 +9587,7 @@ void Eval_entity_w_interpolated_name_w_var_in_scope(void) {
 
     const char *expr =
     HEAD "parent {"
-    LINE "  const i = 10"
+    LINE "  const i: 10"
     LINE "  \"e_{$i + 20}\" { }"
     LINE "}";
 
@@ -9632,8 +9665,8 @@ void Eval_for_range_vars(void) {
     });
 
     const char *expr =
-    HEAD "const x = 0"
-    LINE "const y = 3"
+    HEAD "const x: 0"
+    LINE "const y: 3"
     LINE "for i in $x..$y {"
     LINE "  \"e_{$i}\" {"
     LINE "    Position: {$i, $i * 2}"
@@ -9790,7 +9823,7 @@ void Eval_variable_assign_self(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    LINE "const v = $v"
+    LINE "const v: $v"
     LINE ""
     ;
 
@@ -10023,7 +10056,7 @@ void Eval_const_assign_empty_initializer(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const x = {}"
+    HEAD "const x: {}"
     LINE;
 
     ecs_log_set_level(-4);
@@ -10036,7 +10069,7 @@ void Eval_const_assign_empty_collection_initializer(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const x = []"
+    HEAD "const x: []"
     LINE;
 
     ecs_log_set_level(-4);
@@ -10049,7 +10082,7 @@ void Eval_const_i32_assign_empty_initializer(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const x = i32: {}"
+    HEAD "const x: i32: {}"
     LINE;
 
     ecs_log_set_level(-4);
@@ -10062,7 +10095,7 @@ void Eval_const_i32_assign_empty_collection_initializer(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const x = i32: []"
+    HEAD "const x: i32: []"
     LINE;
 
     ecs_log_set_level(-4);
@@ -10274,7 +10307,7 @@ void Eval_const_w_match(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const x = match $i {"
+    HEAD "const x: match $i {"
     LINE "  1: 10"
     LINE "  2: 20"
     LINE "  3: 30"
