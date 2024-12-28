@@ -5252,97 +5252,6 @@ bool flecs_expr_is_type_integer(
 bool flecs_expr_is_type_number(
     ecs_entity_t type);
 
-#define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
-
-#define ECS_BOP(left, right, result, op, R, T)\
-    ECS_VALUE_GET(result, R) = (R)(ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T))
-
-#define ECS_BOP_COND(left, right, result, op, R, T)\
-    ECS_VALUE_GET(result, ecs_bool_t) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)
-
-/* Unsigned operations */
-#define ECS_BINARY_UINT_OPS(left, right, result, op, OP)\
-    if ((left)->type == ecs_id(ecs_u64_t)) { \
-        OP(left, right, result, op, ecs_u64_t, ecs_u64_t);\
-    } else if ((left)->type == ecs_id(ecs_u32_t)) { \
-        OP(left, right, result, op, ecs_u32_t, ecs_u32_t);\
-    } else if ((left)->type == ecs_id(ecs_u16_t)) { \
-        OP(left, right, result, op, ecs_u16_t, ecs_u16_t);\
-    } else if ((left)->type == ecs_id(ecs_u8_t)) { \
-        OP(left, right, result, op, ecs_u8_t, ecs_u8_t);\
-    }
-
-/* Unsigned + signed operations */
-#define ECS_BINARY_INT_OPS(left, right, result, op, OP)\
-    ECS_BINARY_UINT_OPS(left, right, result, op, OP)\
-     else if ((left)->type == ecs_id(ecs_i64_t)) { \
-        OP(left, right, result, op, ecs_i64_t, ecs_i64_t);\
-    } else if ((left)->type == ecs_id(ecs_i32_t)) { \
-        OP(left, right, result, op, ecs_i32_t, ecs_i32_t);\
-    } else if ((left)->type == ecs_id(ecs_i16_t)) { \
-        OP(left, right, result, op, ecs_i16_t, ecs_i16_t);\
-    } else if ((left)->type == ecs_id(ecs_i8_t)) { \
-        OP(left, right, result, op, ecs_i8_t, ecs_i8_t);\
-    }
-
-/* Unsigned + signed + floating point operations */
-#define ECS_BINARY_NUMBER_OPS(left, right, result, op, OP)\
-    ECS_BINARY_INT_OPS(left, right, result, op, OP)\
-      else if ((left)->type == ecs_id(ecs_f64_t)) { \
-        OP(left, right, result, op, ecs_f64_t, ecs_f64_t);\
-    } else if ((left)->type == ecs_id(ecs_f32_t)) { \
-        OP(left, right, result, op, ecs_f32_t, ecs_f32_t);\
-    }
-
-
-/* Combinations + error checking */
-
-#define ECS_BINARY_INT_OP(left, right, result, op)\
-    ECS_BINARY_INT_OPS(left, right, result, op, ECS_BOP) else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_UINT_OP(left, right, result, op)\
-    ECS_BINARY_UINT_OPS(left, right, result, op, ECS_BOP) else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_OP(left, right, result, op)\
-    ECS_BINARY_NUMBER_OPS(left, right, result, op, ECS_BOP) else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_COND_EQ_OP(left, right, result, op)\
-    ECS_BINARY_INT_OPS(left, right, result, op, ECS_BOP_COND)\
-      else if ((left)->type == ecs_id(ecs_char_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_char_t);\
-    } else if ((left)->type == ecs_id(ecs_u8_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_u8_t);\
-    } else if ((left)->type == ecs_id(ecs_bool_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_COND_OP(left, right, result, op)\
-    ECS_BINARY_NUMBER_OPS(left, right, result, op, ECS_BOP_COND)\
-      else if ((left)->type == ecs_id(ecs_char_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_char_t);\
-    } else if ((left)->type == ecs_id(ecs_u8_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_u8_t);\
-    } else if ((left)->type == ecs_id(ecs_bool_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_BOOL_OP(left, right, result, op)\
-    if ((left)->type == ecs_id(ecs_bool_t)) { \
-        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
 #endif
 
 /**
@@ -57181,6 +57090,13 @@ identifier_colon: {
         )
     }
 
+    {
+        // Position: match
+        LookAhead_1(EcsTokKeywordMatch,
+            goto component_expr_match;
+        )
+    }
+
     // enterprise : SpaceShip
     Parse_1(EcsTokIdentifier, {
         ecs_script_entity_t *entity = flecs_script_insert_entity(
@@ -57352,6 +57268,18 @@ component_expr_collection: {
             parser, Token(0));
         comp->expr = EXPR;
         comp->is_collection = true;
+        EndOfRule; 
+    })
+}
+
+// Position: match
+component_expr_match: {
+
+    // Position: match expr
+    Expr('\n', {
+        ecs_script_component_t *comp = flecs_script_insert_component(
+            parser, Token(0));
+        comp->expr = EXPR;
         EndOfRule; 
     })
 }
@@ -75788,7 +75716,7 @@ bool flecs_expr_explicit_cast_allowed(
             if (to_type->kind == EcsEnumType || 
                 to_type->kind == EcsBitmaskType)
             {
-                /* Can integers to enums/bitmasks */
+                /* Can cast integers to enums/bitmasks */
                 return true;
             }
         }
@@ -75924,6 +75852,8 @@ const char* flecs_script_parse_match_elems(
     ecs_allocator_t *a = &parser->script->allocator;
     bool old_significant_newline = parser->significant_newline;
     parser->significant_newline = true;
+
+    ecs_vec_init_t(NULL, &node->elements, ecs_expr_match_element_t, 0);
 
     do {
         ParserBegin;
@@ -76478,7 +76408,7 @@ ecs_script_t* ecs_expr_parse(
         goto error;
     }
 
-    // printf("%s\n", ecs_script_ast_to_str(script));
+    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     if (!desc || !desc->disable_folding) {
         if (flecs_expr_visit_fold(script, &impl->expr, &priv_desc)) {
@@ -76845,6 +76775,107 @@ int flecs_value_unary(
 
     return 0;
 }
+
+#define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
+
+#define ECS_BOP(left, right, result, op, R, T)\
+    ECS_VALUE_GET(result, R) = (R)(ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T))
+
+#define ECS_BOP_COND(left, right, result, op, R, T)\
+    ECS_VALUE_GET(result, ecs_bool_t) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)
+
+/* Unsigned operations */
+#define ECS_BINARY_UINT_OPS(left, right, result, op, OP)\
+    if ((left)->type == ecs_id(ecs_u64_t)) { \
+        OP(left, right, result, op, ecs_u64_t, ecs_u64_t);\
+    } else if ((left)->type == ecs_id(ecs_u32_t)) { \
+        OP(left, right, result, op, ecs_u32_t, ecs_u32_t);\
+    } else if ((left)->type == ecs_id(ecs_u16_t)) { \
+        OP(left, right, result, op, ecs_u16_t, ecs_u16_t);\
+    } else if ((left)->type == ecs_id(ecs_u8_t)) { \
+        OP(left, right, result, op, ecs_u8_t, ecs_u8_t);\
+    }
+
+/* Unsigned + signed operations */
+#define ECS_BINARY_INT_OPS(left, right, result, op, OP)\
+    ECS_BINARY_UINT_OPS(left, right, result, op, OP)\
+     else if ((left)->type == ecs_id(ecs_i64_t)) { \
+        OP(left, right, result, op, ecs_i64_t, ecs_i64_t);\
+    } else if ((left)->type == ecs_id(ecs_i32_t)) { \
+        OP(left, right, result, op, ecs_i32_t, ecs_i32_t);\
+    } else if ((left)->type == ecs_id(ecs_i16_t)) { \
+        OP(left, right, result, op, ecs_i16_t, ecs_i16_t);\
+    } else if ((left)->type == ecs_id(ecs_i8_t)) { \
+        OP(left, right, result, op, ecs_i8_t, ecs_i8_t);\
+    }
+
+/* Unsigned + signed + floating point operations */
+#define ECS_BINARY_NUMBER_OPS(left, right, result, op, OP)\
+    ECS_BINARY_INT_OPS(left, right, result, op, OP)\
+      else if ((left)->type == ecs_id(ecs_f64_t)) { \
+        OP(left, right, result, op, ecs_f64_t, ecs_f64_t);\
+    } else if ((left)->type == ecs_id(ecs_f32_t)) { \
+        OP(left, right, result, op, ecs_f32_t, ecs_f32_t);\
+    }
+
+
+/* Combinations + error checking */
+
+#define ECS_BINARY_INT_OP(left, right, result, op)\
+    ECS_BINARY_INT_OPS(left, right, result, op, ECS_BOP) else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_UINT_OP(left, right, result, op)\
+    ECS_BINARY_UINT_OPS(left, right, result, op, ECS_BOP) else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_OP(left, right, result, op)\
+    ECS_BINARY_NUMBER_OPS(left, right, result, op, ECS_BOP) else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_COND_EQ_OP(left, right, result, op)\
+    ECS_BINARY_INT_OPS(left, right, result, op, ECS_BOP_COND)\
+      else if ((left)->type == ecs_id(ecs_char_t)) { \
+        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_char_t);\
+    } else if ((left)->type == ecs_id(ecs_u8_t)) { \
+        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_u8_t);\
+    } else if ((left)->type == ecs_id(ecs_bool_t)) { \
+        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
+    } else if ((left)->type == ecs_id(ecs_entity_t)) { \
+        ECS_BOP_COND(left, right, result, op, ecs_entity_t, ecs_entity_t);\
+    } else if ((left)->type == ecs_id(ecs_string_t)) { \
+        char *lstr = *(char**)(left)->ptr;\
+        char *rstr = *(char**)(right)->ptr;\
+        if (lstr && rstr) {\
+            *(bool*)(result)->ptr = ecs_os_strcmp(lstr, rstr) op 0;\
+        } else {\
+            *(bool*)(result)->ptr = lstr == rstr;\
+        }\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_COND_OP(left, right, result, op)\
+    ECS_BINARY_NUMBER_OPS(left, right, result, op, ECS_BOP_COND)\
+      else if ((left)->type == ecs_id(ecs_char_t)) { \
+        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_char_t);\
+    } else if ((left)->type == ecs_id(ecs_u8_t)) { \
+        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_u8_t);\
+    } else if ((left)->type == ecs_id(ecs_bool_t)) { \
+        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_BOOL_OP(left, right, result, op)\
+    if ((left)->type == ecs_id(ecs_bool_t)) { \
+        ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
 
 int flecs_value_binary(
     const ecs_script_t *script,
@@ -78798,6 +78829,9 @@ void flecs_expr_match_visit_free(
         flecs_expr_visit_free(script, elem->compare);
         flecs_expr_visit_free(script, elem->expr);
     }
+    
+    ecs_vec_fini_t(&flecs_script_impl(script)->allocator, 
+        &node->elements, ecs_expr_match_element_t);
 }
 
 static
@@ -79123,17 +79157,35 @@ int flecs_expr_match_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_match_t *node)
 {
+    if (node->node.type) {
+        flecs_expr_color_to_str(v, ECS_BLUE);
+        const char *name = ecs_get_name(v->world, node->node.type);
+        if (name) {
+            ecs_strbuf_appendstr(v->buf, name);
+        } else {
+            char *path = ecs_get_path(v->world, node->node.type);
+            ecs_strbuf_appendstr(v->buf, path);
+            ecs_os_free(path);
+        }
+        flecs_expr_color_to_str(v, ECS_NORMAL);
+        ecs_strbuf_appendlit(v->buf, "(");
+    }
+
+    flecs_expr_color_to_str(v, ECS_BLUE);
     ecs_strbuf_appendlit(v->buf, "match ");
+    flecs_expr_color_to_str(v, ECS_GREEN);
     if (flecs_expr_node_to_str(v, node->expr)) {
         return -1;
     }
 
-    ecs_strbuf_appendlit(v->buf, "{\n");
+    ecs_strbuf_appendlit(v->buf, " {\n");
 
     int32_t i, count = ecs_vec_count(&node->elements);
     ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
 
     for (i = 0; i < count; i ++) {
+        ecs_strbuf_appendlit(v->buf, "  ");
+
         ecs_expr_match_element_t *elem = &elems[i];
         if (flecs_expr_node_to_str(v, elem->compare)) {
             return -1;
@@ -79144,9 +79196,17 @@ int flecs_expr_match_to_str(
         if (flecs_expr_node_to_str(v, elem->expr)) {
             return -1;
         }
+
+        ecs_strbuf_appendlit(v->buf, "\n");
     }
 
-    ecs_strbuf_appendlit(v->buf, "}\n");
+    ecs_strbuf_appendlit(v->buf, "}");
+
+    if (node->node.type) {
+        ecs_strbuf_appendlit(v->buf, ")");
+    }
+
+    ecs_strbuf_appendlit(v->buf, "\n");
 
     return 0;
 }
@@ -79317,23 +79377,7 @@ int flecs_expr_visit_type_priv(
 bool flecs_expr_is_type_integer(
     ecs_entity_t type)
 {
-    if      (type == ecs_id(ecs_bool_t))   return false;
-    else if (type == ecs_id(ecs_char_t))   return false;
-    else if (type == ecs_id(ecs_u8_t))     return false;
-    else if (type == ecs_id(ecs_u64_t))    return true;
-    else if (type == ecs_id(ecs_i64_t))    return true;
-    else if (type == ecs_id(ecs_f64_t))    return false;
-    else if (type == ecs_id(ecs_string_t)) return false;
-    else if (type == ecs_id(ecs_entity_t)) return false;
-    else return false;
-}
-
-bool flecs_expr_is_type_number(
-    ecs_entity_t type)
-{
-    if      (type == ecs_id(ecs_bool_t))   return false;
-    else if (type == ecs_id(ecs_char_t))   return false;
-    else if (type == ecs_id(ecs_u8_t))     return true;
+         if (type == ecs_id(ecs_u8_t))     return true;
     else if (type == ecs_id(ecs_u16_t))    return true;
     else if (type == ecs_id(ecs_u32_t))    return true;
     else if (type == ecs_id(ecs_u64_t))    return true;
@@ -79343,10 +79387,15 @@ bool flecs_expr_is_type_number(
     else if (type == ecs_id(ecs_i32_t))    return true;
     else if (type == ecs_id(ecs_i64_t))    return true;
     else if (type == ecs_id(ecs_iptr_t))   return true;
-    else if (type == ecs_id(ecs_f32_t))    return true;
-    else if (type == ecs_id(ecs_f64_t))    return true;
-    else if (type == ecs_id(ecs_string_t)) return false;
-    else if (type == ecs_id(ecs_entity_t)) return false;
+    else return false;
+}
+
+bool flecs_expr_is_type_number(
+    ecs_entity_t type)
+{
+         if (flecs_expr_is_type_integer(type)) return true;
+    else if (type == ecs_id(ecs_f32_t))        return true;
+    else if (type == ecs_id(ecs_f64_t))        return true;
     else return false;
 }
 
@@ -79696,13 +79745,37 @@ int flecs_expr_type_for_operator(
         ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
     }
 
+    /* If one of the types is an entity or id, the other one should be also */
+    if (left->type == ecs_id(ecs_entity_t) || 
+        right->type == ecs_id(ecs_entity_t)) 
+    {
+        *operand_type = ecs_id(ecs_entity_t);
+        goto done;
+    }
+
     const EcsPrimitive *ltype_ptr = ecs_get(world, left->type, EcsPrimitive);
     const EcsPrimitive *rtype_ptr = ecs_get(world, right->type, EcsPrimitive);
     if (!ltype_ptr || !rtype_ptr) {
-        /* Only primitives and bitmask constants are allowed */
+        /* Only primitives, bitmask constants and enums are allowed */
         if (left->type == right->type) {
             if (ecs_get(world, left->type, EcsBitmask) != NULL) {
                 *operand_type = left->type;
+                goto done;
+            }
+        }
+
+        {
+            const EcsEnum *ptr = ecs_get(script->world, left->type, EcsEnum);
+            if (ptr) {
+                *operand_type = ptr->underlying_type;
+                goto done;
+            }
+        }
+
+        {
+            const EcsEnum *ptr = ecs_get(script->world, right->type, EcsEnum);
+            if (ptr) {
+                *operand_type = ptr->underlying_type;
                 goto done;
             }
         }
@@ -79825,6 +79898,10 @@ done:
 
     if (!*result_type) {
         *result_type = *operand_type;
+    }
+
+    if (ecs_get(script->world, *result_type, EcsBitmask) != NULL) {
+        *operand_type = ecs_id(ecs_u64_t);
     }
 
     return 0;
@@ -80119,6 +80196,13 @@ int flecs_expr_binary_visit_type(
         /* Provides a hint to the type visitor. The lvalue type will be used to
          * reduce the number of casts where possible. */
         node->node.type = ecs_meta_get_type(cur);
+
+        /* If the result of the binary expression is a boolean it's likely a 
+         * conditional expression. We don't want to hint that the operands 
+         * of conditional expressions should be casted to booleans. */
+        if (node->node.type == ecs_id(ecs_bool_t)) {
+            ecs_os_zeromem(cur);
+        }
     }
 
     if (flecs_expr_visit_type_priv(script, node->left, cur, desc)) {
@@ -80129,7 +80213,9 @@ int flecs_expr_binary_visit_type(
         goto error;
     }
 
-    if (flecs_expr_type_for_binary_expr(script, node, &operand_type, &result_type)) {
+    if (flecs_expr_type_for_binary_expr(
+        script, node, &operand_type, &result_type)) 
+    {
         goto error;
     }
 
@@ -80141,10 +80227,6 @@ int flecs_expr_binary_visit_type(
             flecs_script_token_str(node->operator), type_str);
         ecs_os_free(type_str);
         goto error;
-    }
-
-    if (ecs_get(script->world, result_type, EcsBitmask) != NULL) {
-        operand_type = ecs_id(ecs_u64_t);
     }
 
     if (operand_type != node->left->type) {
@@ -80205,9 +80287,9 @@ int flecs_expr_identifier_visit_type(
             result = NULL;
         }
     } else {
-        ecs_meta_cursor_t tmp_cur = ecs_meta_cursor(
+        ecs_meta_cursor_t expr_cur = ecs_meta_cursor(
             script->world, type, &result->storage.u64);
-        if (ecs_meta_set_string(&tmp_cur, node->value)) {
+        if (ecs_meta_set_string(&expr_cur, node->value)) {
             flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
             goto error;
         }
@@ -80631,7 +80713,9 @@ int flecs_expr_match_visit_type(
 {
     ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (flecs_expr_visit_type_priv(script, node->expr, cur, desc)) {
+    ecs_meta_cursor_t expr_cur;
+    ecs_os_zeromem(&expr_cur);
+    if (flecs_expr_visit_type_priv(script, node->expr, &expr_cur, desc)) {
         goto error;
     }
 
@@ -80649,7 +80733,14 @@ int flecs_expr_match_visit_type(
 
     for (i = 0; i < count; i ++) {
         ecs_expr_match_element_t *elem = &elems[i];
-        if (flecs_expr_visit_type_priv(script, elem->expr, cur, desc)) {
+
+        if (node->node.type) {
+            expr_cur = ecs_meta_cursor(script->world, node->node.type, NULL);
+        } else {
+            ecs_os_zeromem(&expr_cur);
+        }
+
+        if (flecs_expr_visit_type_priv(script, elem->expr, &expr_cur, desc)) {
             goto error;
         }
 
@@ -80658,18 +80749,31 @@ int flecs_expr_match_visit_type(
             continue;
         }
 
-        ecs_entity_t result_type = 0, operand_type = 0;
+        if (flecs_expr_is_type_number(node->node.type)) {
+            ecs_entity_t result_type = 0, operand_type = 0;
+            if (flecs_expr_type_for_operator(script, (ecs_expr_node_t*)node, 0, 
+                (ecs_expr_node_t*)node, elem->expr, 
+                EcsTokAdd, /* Use operator that doesn't change types */
+                &operand_type, &result_type))
+            {
+                goto error;
+            }
 
-        if (flecs_expr_type_for_operator(script, (ecs_expr_node_t*)node, 
-            0, 
-            (ecs_expr_node_t*)node, elem->expr, EcsTokAdd, 
-            &operand_type, &result_type))
-        {
-            goto error;
+            /* "Accumulate" most expressive type in result node */
+            node->node.type = result_type;
+        } else {
+            /* If type is not a number it must match exactly */
+            if (elem->expr->type != node->node.type) {
+                char *got = ecs_get_path(script->world, elem->expr->type);
+                char *expect = ecs_get_path(script->world, node->node.type);
+                flecs_expr_visit_error(script, node, 
+                    "invalid type for case %d in match (got %s, expected %s)",
+                        i + 1, got, expect);
+                ecs_os_free(got);
+                ecs_os_free(expect);
+                goto error;
+            }
         }
-
-        /* "Accumulate" most expressive type in result node */
-        node->node.type = result_type;
     }
 
     /* Loop over elements again, cast values to result type */
@@ -80684,18 +80788,29 @@ int flecs_expr_match_visit_type(
         }
     }
 
+    /* If this is an enum type, cast to the underlying type. This is necessary
+     * because the compare operation executed by the match evaluation code isn't
+     * implemented for enums. */
+    ecs_entity_t expr_type = node->expr->type;
+    const EcsEnum *ptr = ecs_get(script->world, expr_type, EcsEnum);
+    if (ptr) {
+        node->expr = (ecs_expr_node_t*)
+            flecs_expr_cast(script, node->expr, ptr->underlying_type);
+    }
+
     /* Make sure that case values match the input type */
     for (i = 0; i < count; i ++) {
         ecs_expr_match_element_t *elem = &elems[i];
-        if (flecs_expr_visit_type_priv(script, elem->compare, cur, desc)) {
+        expr_cur = ecs_meta_cursor(script->world, expr_type, NULL);
+        if (flecs_expr_visit_type_priv(script, elem->compare, &expr_cur, desc)) {
             goto error;
         }
 
         ecs_expr_node_t *compare = elem->compare;
         if (compare->type != node->expr->type) {
-            compare->type = (ecs_expr_node_t*)
+            elem->compare = (ecs_expr_node_t*)
                 flecs_expr_cast(script, compare, node->expr->type);
-            if (!compare->type) {
+            if (!elem->compare) {
                 goto error;
             }
         }

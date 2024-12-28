@@ -18,23 +18,7 @@ int flecs_expr_visit_type_priv(
 bool flecs_expr_is_type_integer(
     ecs_entity_t type)
 {
-    if      (type == ecs_id(ecs_bool_t))   return false;
-    else if (type == ecs_id(ecs_char_t))   return false;
-    else if (type == ecs_id(ecs_u8_t))     return false;
-    else if (type == ecs_id(ecs_u64_t))    return true;
-    else if (type == ecs_id(ecs_i64_t))    return true;
-    else if (type == ecs_id(ecs_f64_t))    return false;
-    else if (type == ecs_id(ecs_string_t)) return false;
-    else if (type == ecs_id(ecs_entity_t)) return false;
-    else return false;
-}
-
-bool flecs_expr_is_type_number(
-    ecs_entity_t type)
-{
-    if      (type == ecs_id(ecs_bool_t))   return false;
-    else if (type == ecs_id(ecs_char_t))   return false;
-    else if (type == ecs_id(ecs_u8_t))     return true;
+         if (type == ecs_id(ecs_u8_t))     return true;
     else if (type == ecs_id(ecs_u16_t))    return true;
     else if (type == ecs_id(ecs_u32_t))    return true;
     else if (type == ecs_id(ecs_u64_t))    return true;
@@ -44,10 +28,15 @@ bool flecs_expr_is_type_number(
     else if (type == ecs_id(ecs_i32_t))    return true;
     else if (type == ecs_id(ecs_i64_t))    return true;
     else if (type == ecs_id(ecs_iptr_t))   return true;
-    else if (type == ecs_id(ecs_f32_t))    return true;
-    else if (type == ecs_id(ecs_f64_t))    return true;
-    else if (type == ecs_id(ecs_string_t)) return false;
-    else if (type == ecs_id(ecs_entity_t)) return false;
+    else return false;
+}
+
+bool flecs_expr_is_type_number(
+    ecs_entity_t type)
+{
+         if (flecs_expr_is_type_integer(type)) return true;
+    else if (type == ecs_id(ecs_f32_t))        return true;
+    else if (type == ecs_id(ecs_f64_t))        return true;
     else return false;
 }
 
@@ -397,13 +386,37 @@ int flecs_expr_type_for_operator(
         ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
     }
 
+    /* If one of the types is an entity or id, the other one should be also */
+    if (left->type == ecs_id(ecs_entity_t) || 
+        right->type == ecs_id(ecs_entity_t)) 
+    {
+        *operand_type = ecs_id(ecs_entity_t);
+        goto done;
+    }
+
     const EcsPrimitive *ltype_ptr = ecs_get(world, left->type, EcsPrimitive);
     const EcsPrimitive *rtype_ptr = ecs_get(world, right->type, EcsPrimitive);
     if (!ltype_ptr || !rtype_ptr) {
-        /* Only primitives and bitmask constants are allowed */
+        /* Only primitives, bitmask constants and enums are allowed */
         if (left->type == right->type) {
             if (ecs_get(world, left->type, EcsBitmask) != NULL) {
                 *operand_type = left->type;
+                goto done;
+            }
+        }
+
+        {
+            const EcsEnum *ptr = ecs_get(script->world, left->type, EcsEnum);
+            if (ptr) {
+                *operand_type = ptr->underlying_type;
+                goto done;
+            }
+        }
+
+        {
+            const EcsEnum *ptr = ecs_get(script->world, right->type, EcsEnum);
+            if (ptr) {
+                *operand_type = ptr->underlying_type;
                 goto done;
             }
         }
@@ -526,6 +539,10 @@ done:
 
     if (!*result_type) {
         *result_type = *operand_type;
+    }
+
+    if (ecs_get(script->world, *result_type, EcsBitmask) != NULL) {
+        *operand_type = ecs_id(ecs_u64_t);
     }
 
     return 0;
@@ -820,6 +837,13 @@ int flecs_expr_binary_visit_type(
         /* Provides a hint to the type visitor. The lvalue type will be used to
          * reduce the number of casts where possible. */
         node->node.type = ecs_meta_get_type(cur);
+
+        /* If the result of the binary expression is a boolean it's likely a 
+         * conditional expression. We don't want to hint that the operands 
+         * of conditional expressions should be casted to booleans. */
+        if (node->node.type == ecs_id(ecs_bool_t)) {
+            ecs_os_zeromem(cur);
+        }
     }
 
     if (flecs_expr_visit_type_priv(script, node->left, cur, desc)) {
@@ -830,7 +854,9 @@ int flecs_expr_binary_visit_type(
         goto error;
     }
 
-    if (flecs_expr_type_for_binary_expr(script, node, &operand_type, &result_type)) {
+    if (flecs_expr_type_for_binary_expr(
+        script, node, &operand_type, &result_type)) 
+    {
         goto error;
     }
 
@@ -842,10 +868,6 @@ int flecs_expr_binary_visit_type(
             flecs_script_token_str(node->operator), type_str);
         ecs_os_free(type_str);
         goto error;
-    }
-
-    if (ecs_get(script->world, result_type, EcsBitmask) != NULL) {
-        operand_type = ecs_id(ecs_u64_t);
     }
 
     if (operand_type != node->left->type) {
@@ -906,9 +928,9 @@ int flecs_expr_identifier_visit_type(
             result = NULL;
         }
     } else {
-        ecs_meta_cursor_t tmp_cur = ecs_meta_cursor(
+        ecs_meta_cursor_t expr_cur = ecs_meta_cursor(
             script->world, type, &result->storage.u64);
-        if (ecs_meta_set_string(&tmp_cur, node->value)) {
+        if (ecs_meta_set_string(&expr_cur, node->value)) {
             flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
             goto error;
         }
@@ -1332,7 +1354,9 @@ int flecs_expr_match_visit_type(
 {
     ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (flecs_expr_visit_type_priv(script, node->expr, cur, desc)) {
+    ecs_meta_cursor_t expr_cur;
+    ecs_os_zeromem(&expr_cur);
+    if (flecs_expr_visit_type_priv(script, node->expr, &expr_cur, desc)) {
         goto error;
     }
 
@@ -1350,7 +1374,14 @@ int flecs_expr_match_visit_type(
 
     for (i = 0; i < count; i ++) {
         ecs_expr_match_element_t *elem = &elems[i];
-        if (flecs_expr_visit_type_priv(script, elem->expr, cur, desc)) {
+
+        if (node->node.type) {
+            expr_cur = ecs_meta_cursor(script->world, node->node.type, NULL);
+        } else {
+            ecs_os_zeromem(&expr_cur);
+        }
+
+        if (flecs_expr_visit_type_priv(script, elem->expr, &expr_cur, desc)) {
             goto error;
         }
 
@@ -1359,18 +1390,31 @@ int flecs_expr_match_visit_type(
             continue;
         }
 
-        ecs_entity_t result_type = 0, operand_type = 0;
+        if (flecs_expr_is_type_number(node->node.type)) {
+            ecs_entity_t result_type = 0, operand_type = 0;
+            if (flecs_expr_type_for_operator(script, (ecs_expr_node_t*)node, 0, 
+                (ecs_expr_node_t*)node, elem->expr, 
+                EcsTokAdd, /* Use operator that doesn't change types */
+                &operand_type, &result_type))
+            {
+                goto error;
+            }
 
-        if (flecs_expr_type_for_operator(script, (ecs_expr_node_t*)node, 
-            0, 
-            (ecs_expr_node_t*)node, elem->expr, EcsTokAdd, 
-            &operand_type, &result_type))
-        {
-            goto error;
+            /* "Accumulate" most expressive type in result node */
+            node->node.type = result_type;
+        } else {
+            /* If type is not a number it must match exactly */
+            if (elem->expr->type != node->node.type) {
+                char *got = ecs_get_path(script->world, elem->expr->type);
+                char *expect = ecs_get_path(script->world, node->node.type);
+                flecs_expr_visit_error(script, node, 
+                    "invalid type for case %d in match (got %s, expected %s)",
+                        i + 1, got, expect);
+                ecs_os_free(got);
+                ecs_os_free(expect);
+                goto error;
+            }
         }
-
-        /* "Accumulate" most expressive type in result node */
-        node->node.type = result_type;
     }
 
     /* Loop over elements again, cast values to result type */
@@ -1385,18 +1429,29 @@ int flecs_expr_match_visit_type(
         }
     }
 
+    /* If this is an enum type, cast to the underlying type. This is necessary
+     * because the compare operation executed by the match evaluation code isn't
+     * implemented for enums. */
+    ecs_entity_t expr_type = node->expr->type;
+    const EcsEnum *ptr = ecs_get(script->world, expr_type, EcsEnum);
+    if (ptr) {
+        node->expr = (ecs_expr_node_t*)
+            flecs_expr_cast(script, node->expr, ptr->underlying_type);
+    }
+
     /* Make sure that case values match the input type */
     for (i = 0; i < count; i ++) {
         ecs_expr_match_element_t *elem = &elems[i];
-        if (flecs_expr_visit_type_priv(script, elem->compare, cur, desc)) {
+        expr_cur = ecs_meta_cursor(script->world, expr_type, NULL);
+        if (flecs_expr_visit_type_priv(script, elem->compare, &expr_cur, desc)) {
             goto error;
         }
 
         ecs_expr_node_t *compare = elem->compare;
         if (compare->type != node->expr->type) {
-            compare->type = (ecs_expr_node_t*)
+            elem->compare = (ecs_expr_node_t*)
                 flecs_expr_cast(script, compare, node->expr->type);
-            if (!compare->type) {
+            if (!elem->compare) {
                 goto error;
             }
         }
