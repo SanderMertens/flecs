@@ -5011,18 +5011,18 @@ typedef struct ecs_expr_initializer_t {
     bool is_dynamic;
 } ecs_expr_initializer_t;
 
-typedef struct ecs_expr_identifier_t {
-    ecs_expr_node_t node;
-    const char *value;
-    ecs_expr_node_t *expr;
-} ecs_expr_identifier_t;
-
 typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
     const char *name;
     ecs_value_t global_value; /* Only set for global variables */
     int32_t sp; /* For fast variable lookups */
 } ecs_expr_variable_t;
+
+typedef struct ecs_expr_identifier_t {
+    ecs_expr_node_t node;
+    const char *value;
+    ecs_expr_node_t *expr;
+} ecs_expr_identifier_t;
 
 typedef struct ecs_expr_unary_t {
     ecs_expr_node_t node;
@@ -78865,6 +78865,13 @@ void flecs_expr_match_visit_free(
         flecs_expr_visit_free(script, elem->compare);
         flecs_expr_visit_free(script, elem->expr);
     }
+
+    if (node->any.compare) {
+        flecs_expr_visit_free(script, node->any.compare);
+    }
+    if (node->any.expr) {
+        flecs_expr_visit_free(script, node->any.expr);
+    }
     
     ecs_vec_fini_t(&flecs_script_impl(script)->allocator, 
         &node->elements, ecs_expr_match_element_t);
@@ -80375,6 +80382,34 @@ error:
     return -1;
 }
 
+//  else {
+//         type = ecs_id(ecs_entity_t);
+//         *cur = ecs_meta_cursor(script->world, ecs_id(ecs_entity_t), NULL);
+//     }
+
+static
+int flecs_expr_constant_identifier_visit_type(
+    ecs_script_t *script,
+    ecs_expr_identifier_t *node)
+{
+    ecs_expr_value_node_t *result = flecs_expr_value_from(
+        script, (ecs_expr_node_t*)node, node->node.type);
+
+    ecs_meta_cursor_t expr_cur = ecs_meta_cursor(
+        script->world, node->node.type, &result->storage.u64);
+    if (ecs_meta_set_string(&expr_cur, node->value)) {
+        flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
+        goto error;
+    }
+
+    result->ptr = &result->storage.u64;
+    node->expr = (ecs_expr_node_t*)result;
+
+    return 0;
+error:
+    return -1;
+}
+
 static
 int flecs_expr_identifier_visit_type(
     ecs_script_t *script,
@@ -80383,43 +80418,78 @@ int flecs_expr_identifier_visit_type(
     const ecs_expr_eval_desc_t *desc)
 {
     (void)desc;
-    if (cur->valid) {
-        node->node.type = ecs_meta_get_type(cur);
-    } else {
-        node->node.type = ecs_id(ecs_entity_t);
-        *cur = ecs_meta_cursor(script->world, ecs_id(ecs_entity_t), NULL);
-    }
 
     ecs_entity_t type = node->node.type;
+    if (cur->valid) {
+        type = ecs_meta_get_type(cur);
+    }
 
-    ecs_expr_value_node_t *result = flecs_expr_value_from(
-        script, (ecs_expr_node_t*)node, type);
+    const EcsType *type_ptr = NULL;
+    if (type) {
+        type_ptr = ecs_get(script->world, type, EcsType);
+        ecs_assert(type_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
 
-    if (type == ecs_id(ecs_entity_t) || type == ecs_id(ecs_id_t)) {
-        result->storage.entity = desc->lookup_action(
+    if (type_ptr && 
+       (type_ptr->kind == EcsEnumType || type_ptr->kind == EcsBitmaskType)) 
+    {
+        /* If the requested type is an enum or bitmask, use cursor to resolve 
+        * identifier to correct type constant. This lets us type 'Red' in places
+        * where we expect a value of type Color, instead of Color.Red. */
+        node->node.type = type;
+        if (flecs_expr_constant_identifier_visit_type(script, node)) {
+            goto error;
+        }
+
+        return 0;
+    } else {
+        /* If not, try to resolve the identifier as entity */
+        ecs_entity_t e = desc->lookup_action(
             script->world, node->value, desc->lookup_ctx);
-        result->ptr = &result->storage.entity;
-        if (!result->storage.entity) {
-            flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
-            if (!desc->allow_unresolved_identifiers) {
-                flecs_expr_visit_error(script, node, 
-                    "unresolved identifier '%s'", node->value);
+        if (e) {
+            if (!type) {
+                type = ecs_id(ecs_entity_t);
+            }
+
+            ecs_expr_value_node_t *result = flecs_expr_value_from(
+                script, (ecs_expr_node_t*)node, type);
+            result->storage.entity = e;
+            result->ptr = &result->storage.entity;
+            node->expr = (ecs_expr_node_t*)result;
+            node->node.type = type;
+            return 0;
+        }
+
+        /* If identifier could not be resolved as entity, try as variable */
+        int32_t var_sp = -1;
+        ecs_script_var_t *var = flecs_script_find_var(
+            desc->vars, node->value, &var_sp);
+        if (var) {
+            ecs_expr_variable_t *var_node = flecs_expr_variable_from(
+                script, (ecs_expr_node_t*)node, node->value);
+            node->expr = (ecs_expr_node_t*)var_node;
+            node->node.type = var->value.type;
+
+            ecs_meta_cursor_t tmp_cur; ecs_os_zeromem(&tmp_cur);
+            if (flecs_expr_visit_type_priv(
+                script, (ecs_expr_node_t*)var_node, &tmp_cur, desc))
+            {
                 goto error;
             }
 
-            result = NULL;
+            return 0;
         }
-    } else {
-        ecs_meta_cursor_t expr_cur = ecs_meta_cursor(
-            script->world, type, &result->storage.u64);
-        if (ecs_meta_set_string(&expr_cur, node->value)) {
-            flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
+
+        /* If unresolved identifiers aren't allowed here, throw error */
+        if (!desc->allow_unresolved_identifiers) {
+            flecs_expr_visit_error(script, node, 
+                "unresolved identifier '%s'", node->value);
             goto error;
         }
-        result->ptr = &result->storage.u64;
-    }
 
-    node->expr = (ecs_expr_node_t*)result;
+        /* Identifier will be resolved at eval time, default to entity */
+        node->node.type = ecs_id(ecs_entity_t);
+    }
 
     return 0;
 error:
@@ -80947,7 +81017,6 @@ int flecs_expr_match_visit_type(
 
             node->any.compare = elem->compare;
             node->any.expr = elem->expr;
-            elem = &node->any;
             ecs_vec_remove_last(&node->elements);
         } else {
             expr_cur = ecs_meta_cursor(script->world, expr_type, NULL);

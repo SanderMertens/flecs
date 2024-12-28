@@ -7785,3 +7785,84 @@ void Expr_match_i_w_any_f(void) {
 
     ecs_fini(world);
 }
+
+void Expr_identifier_as_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(int32_t*)var->value.ptr = 20;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "foo", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(int64_t*)v.ptr, 20);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_expr_w_identifier_as_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(int32_t*)var->value.ptr = 20;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "10 + foo", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(int64_t*)v.ptr, 10 + 20);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_initializer_w_identifier_as_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Position;
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *x_var = ecs_script_vars_define(vars, "x", ecs_i32_t);
+    *(int32_t*)x_var->value.ptr = 10;
+    ecs_script_var_t *y_var = ecs_script_vars_define(vars, "y", ecs_i32_t);
+    *(int32_t*)y_var->value.ptr = 20;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    Position p;
+    ecs_value_t v = { .type = ecs_id(Position), .ptr = &p };
+    test_assert(ecs_expr_run(world, "{x, y}", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(Position));
+    test_assert(v.ptr != NULL);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
