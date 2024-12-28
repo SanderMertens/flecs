@@ -342,6 +342,55 @@ void Template_template_instance_w_overridden_values(void) {
     ecs_fini(world);
 }
 
+void Template_template_w_prop_implicit_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "template Tree {"
+    LINE "  prop width = 10"
+    LINE "  prop height = 20"
+    LINE "}"
+    LINE ""
+    LINE "e { Tree }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_i64_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_i64_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 10, height: 20}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
 void Template_template_w_child(void) {
     ecs_world_t *world = ecs_init();
 

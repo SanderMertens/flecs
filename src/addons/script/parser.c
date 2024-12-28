@@ -284,6 +284,57 @@ const char* flecs_script_if_stmt(
     ParserEnd;
 }
 
+static
+const char* flecs_script_parse_var(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_tokenizer_t *tokenizer,
+    bool is_prop)
+{
+    Parse_1(EcsTokIdentifier,
+        ecs_script_var_node_t *var = flecs_script_insert_var(
+            parser, Token(1));
+        var->node.kind = is_prop ? EcsAstProp : EcsAstConst;
+
+        Parse(
+            // const color =
+            case '=': {
+                // const color = Color :
+                LookAhead_2(EcsTokIdentifier, ':',
+                    pos = lookahead;
+
+                    var->type = Token(3);
+
+                    // const color = Color: {
+                    LookAhead_1('{',
+                        // const color = Color: {expr}
+                        pos = lookahead;
+                        Initializer('}',
+                            var->expr = INITIALIZER;
+                            EndOfRule;
+                        )
+                    )
+
+                    // const color = Color: expr\n
+                    Initializer('\n',
+                        var->expr = INITIALIZER;
+                        EndOfRule;
+                    )
+                )
+
+                // const PI = expr\n
+                Expr('\n',
+                    var->expr = EXPR;
+                    EndOfRule;
+                )
+            }
+        )
+    )
+
+error:
+    return NULL;
+}
+
 /* Parse a single statement */
 static
 const char* flecs_script_stmt(
@@ -477,72 +528,13 @@ template_stmt: {
 // prop
 prop_var: {
     // prop color = Color:
-    Parse_4(EcsTokIdentifier, '=', EcsTokIdentifier, ':',
-        ecs_script_var_node_t *var = flecs_script_insert_var(
-            parser, Token(1));
-        var->node.kind = EcsAstProp;
-        var->type = Token(3);
-
-        // prop color = Color : {
-        LookAhead_1('{',
-            // prop color = Color: {expr}
-            pos = lookahead;
-            Initializer('}',
-                var->expr = INITIALIZER;
-                EndOfRule;
-            )
-        )
-
-        // prop color = Color : expr\n
-        Initializer('\n',
-            var->expr = INITIALIZER;
-            EndOfRule;
-        )
-    )
+    return flecs_script_parse_var(parser, pos, tokenizer, true);
 }
 
 // const
 const_var: {
     // const color
-    Parse_1(EcsTokIdentifier,
-        ecs_script_var_node_t *var = flecs_script_insert_var(
-            parser, Token(1));
-        var->node.kind = EcsAstConst;
-
-        Parse(
-            // const color =
-            case '=': {
-                // const color = Color :
-                LookAhead_2(EcsTokIdentifier, ':',
-                    pos = lookahead;
-
-                    var->type = Token(3);
-
-                    // const color = Color: {
-                    LookAhead_1('{',
-                        // const color = Color: {expr}
-                        pos = lookahead;
-                        Initializer('}',
-                            var->expr = INITIALIZER;
-                            EndOfRule;
-                        )
-                    )
-
-                    // const color = Color: expr\n
-                    Initializer('\n',
-                        var->expr = INITIALIZER;
-                        EndOfRule;
-                    )
-                )
-
-                // const PI = expr\n
-                Expr('\n',
-                    var->expr = EXPR;
-                    EndOfRule;
-                )
-            }
-        )
-    )
+    return flecs_script_parse_var(parser, pos, tokenizer, false);
 }
 
 // if

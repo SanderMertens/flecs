@@ -7,15 +7,15 @@ Some of the features of Flecs Script are:
 
 - Native support for named entities, hierarchies and inheritance
 - Assign component values
-- Expressions and variables (`$var + 10`)
-- Conditionals (`if $var > 10`)
+- Expressions and variables (`var + 10`)
+- Conditionals (`if var > 10`)
 - Native integration with templates (procedural assets)
 
 To learn Flecs Script, check out the [Tutorial](FlecsScriptTutorial.md)!
 
 ## Example
 
-```c
+```cpp
 using flecs.meta
 
 struct MaxSpeed {
@@ -46,13 +46,13 @@ This section goes over the basic syntax over Flecs Script.
 ### Entities
 An entity is created by specifying an identifier followed by a scope. Example:
 
-```c
+```cpp
 my_entity {}
 ```
 
 An entity scope can contain components and child entities. The following example shows how to add a child entity:
 
-```c
+```cpp
 my_parent {
   my_child {}
 }
@@ -62,7 +62,7 @@ Note how a scope is also added to the child entity.
 
 To create anonymous entities, leave out the entity name:
 
-```c
+```cpp
 {
   my_child {} // named child with anonymous parent
 }
@@ -70,7 +70,7 @@ To create anonymous entities, leave out the entity name:
 
 Alternatively, the `_` placeholder can be used to indicate an anomyous entity:
 
-```c
+```cpp
 _ {
   my_child {} // named child with anonymous parent
 }
@@ -78,14 +78,14 @@ _ {
 
 The `_` placeholder can be useful in combination with syntax constructs that require an identifier token, such as inheritance:
 
-```c
+```cpp
 // anonymous entity that inherits from SpaceShip
 _ : SpaceShip { }
 ```
 
 Entity names can be specified using a string. This allows for entities with names that contain special characters, like spaces:
 
-```c
+```cpp
 "my parent" {
   "my child" {}
 }
@@ -93,14 +93,14 @@ Entity names can be specified using a string. This allows for entities with name
 
 String names can be combined with string interpolation (see below) to create names that are computed when the script is evaluated:
 
-```c
+```cpp
 "USS_$name" {}
 ```
 
 ### Tags
 A tag can be added to an entity by simply specifying the tag's identifier in an entity scope. Example:
 
-```c
+```cpp
 SpaceShip {} // Define SpaceShip tag
 
 my_entity {
@@ -111,7 +111,7 @@ my_entity {
 ### Pairs
 Pairs are added to entities by adding them to an entity scope, just like tags:
 
-```c
+```cpp
 Likes {}
 Pizza {}
 
@@ -123,7 +123,7 @@ my_entity {
 ### Components
 Components are specified like tags, but with an additional value:
 
-```c
+```cpp
 my_entity {
   Position: {x: 10, y: 20}
 }
@@ -133,7 +133,7 @@ For a component to be assignable with a value, it also needs to be described in 
 
 A component can also be added without a value. This will create a default constructed component. Example:
 
-```c
+```cpp
 my_entity {
   Position
 }
@@ -141,7 +141,7 @@ my_entity {
 
 Components can be defined in a script:
 
-```c
+```cpp
 using flecs.meta
 
 struct Position {
@@ -156,7 +156,7 @@ my_entity {
 
 Components can be pairs:
 
-```c
+```cpp
 my_entity {
   (Start, Position): {x: 0,  y: 0}
   (Stop,  Position): {x: 10, y: 20}
@@ -166,7 +166,7 @@ my_entity {
 ### Namespacing
 When referring to child entities or components, identifiers need to include the parent path as well as the entity name. Paths are provided as lists of identifiers separated by a dot (`.`):
 
-```c
+```cpp
 Sun.Earth {
   solarsystem.Planet
 }
@@ -177,7 +177,7 @@ To avoid having to repeatedly type the same paths, use the `using` statement (se
 ### Singletons
 To create a singleton component, use `$` as the entity identifier:
 
-```c
+```cpp
 $ {
   TimeOfDay: { t: 0.5 }
 }
@@ -185,7 +185,7 @@ $ {
 
 Multiple singleton components can be specified in the same scope:
 
-```c
+```cpp
 $ {
   TimeOfDay: { t: 0.5 }
   Player: { name: "bob" }
@@ -196,13 +196,13 @@ $ {
 ### Entity kinds
 An entity can be created with a "kind", which is a component specified before the entity name. This is similar to adding a tag or component in a scope, but can provide a more natural way to describe things. For example:
 
-```c
+```cpp
 SpaceShip my_spaceship {}
 ```
 
 This is equivalent to doing:
 
-```c
+```cpp
 my_spaceship {
   SpaceShip
 }
@@ -210,19 +210,19 @@ my_spaceship {
 
 When using the entity kind syntax, the scope is optional:
 
-```c
+```cpp
 SpaceShip my_spaceship // no {}
 ```
 
 If the specified kind is a component, a value can be specified between parentheses:
 
-```c
+```cpp
 CheckBox my_checkbox(checked: true)
 ```
 
 When the entity kind is a component, a value will always be assigned even if none is specified. This is different from component assignments in a scope. Example:
 
-```c
+```cpp
 CheckBox my_checkbox(checked: true)
 
 // is equivalent to
@@ -232,7 +232,7 @@ my_checkbox {
 }
 ```
 
-```c
+```cpp
 CheckBox my_checkbox
 
 // is equivalent to
@@ -245,7 +245,7 @@ my_checkbox {
 #### Builtin kinds
 Applications can specify the following builtin kinds which provide convenience shortcuts to commonly used features:
 
-```c
+```cpp
 prefab SpaceShip
 
 // is equivalent to
@@ -253,7 +253,7 @@ prefab SpaceShip
 Prefab spaceship
 ```
 
-```c
+```cpp
 prefab SpaceShip {
   slot CockPit
 }
@@ -270,7 +270,7 @@ prefab SpaceShip {
 ### Inheritance
 Scripts can natively specify inheritance relationships between entities, which is useful in particular for prefabs. Example:
 
-```c
+```cpp
 prefab SpaceShip {
   MaxSpeed: {value: 100}
 }
@@ -280,13 +280,13 @@ my_spaceship : SpaceShip {}
 
 When specifying inheritance, the scope is optional:
 
-```c
+```cpp
 my_spaceship : SpaceShip // no {}
 ```
 
 This is equivalent to doing:
 
-```c
+```cpp
 my_spaceship {
   (IsA, SpaceShip)
 }
@@ -295,7 +295,7 @@ my_spaceship {
 ### Relationship hierarchies
 By default entity hierarchies are created with the `ChildOf` relationship. Other relationships can also be used to create hierarchies by combining a pair with a scope. Example:
 
-```c
+```cpp
 (IsA, Thing) {
   (IsA, Organism) {
     (IsA, Plant) {
@@ -311,7 +311,7 @@ By default entity hierarchies are created with the `ChildOf` relationship. Other
 ## Expressions
 Scripts can contain expressions, which allow for computing values from inputs such as component values, template properties and variables. Here are some examples of valid Flecs script expressions:
 
-```c
+```cpp
 const x = 10 + 20 * 30
 const x = 10 * (20 + 30)
 const x = $var * 10
@@ -364,7 +364,7 @@ The following table lists the different kinds of values that are supported in ex
 #### Initializers
 Initializers are values that are used to initialize composite and collection members. Composite values are initialized by initializers that are delimited by `{}`, while collection initializers are delimited by `[]`. Furthermore, composite initializers can specify which member of the composite value should be initialized. Here are some examples of initializer expressions:
 
-```c
+```cpp
 {}
 {10, 20}
 {x: 10, y: 20}
@@ -377,20 +377,20 @@ Initializers are values that are used to initialize composite and collection mem
 
 Initializers must always be assigned to an lvalue of a well defined type. This can either be a typed variable, component assignment, function parameter or in the case of nested initializers, an element of another initializer. For example, this is a valid usage of an initializer:
 
-```c
+```cpp
 const x = Position: {10, 20}
 ```
 
 while this is an invalid usage of an initializer:
 
-```c
+```cpp
 // Invalid, unknown type for initializer
 const x = {10, 20}
 ```
 
 When assigning variables to elements in a composite initializer, applications can use the following shorthand notation if the variable names are the same as the member name of the element:
 
-```c
+```cpp
 // Normal notation
 Tree: {color: $color, height: $height}
 
@@ -401,7 +401,7 @@ Tree: {color: $, height: $}
 
 Initializer expressions may contain add assignment (`+=`) or multiply assignment (`*=`) operators. These operators allow an initializer to modify an existing value. An example:
 
-```c
+```cpp
 e {
   Position: {10, 20}
   Position: {x += 1, y += 2}
@@ -431,7 +431,7 @@ e {
 ### Match expressions
 Match expressions can be used to conditionally assign a value. An example:
 
-```c
+```cpp
 const x = 1
 
 // y will be assigned with value 10
@@ -444,7 +444,7 @@ const y = match x {
 
 The input to a match expression must be matched by one of its cases. If the input is not matched, script execution will fail. Match expressions can include an "any" case, which is selected when none of the other cases match:
 
-```c
+```cpp
 const x = 4
 
 // y will be assigned with value 100
@@ -458,7 +458,7 @@ const y = match x {
 
 Match expressions can be used to assign components:
 
-```c
+```cpp
 e {
   Position: match i {
     1: {10, 20}
@@ -473,19 +473,19 @@ The type of a match expression is derived from the case values. When the case st
 ### String interpolation
 Flecs script supports interpolated strings, which are strings that can contain expressions. String interpolation supports two forms, where one allows for easy embedding of variables, whereas the other allows for embedding any kind of expression. The following example shows an embedded variable:
 
-```c
+```cpp
 const x = "The value of PI is $PI"
 ```
 
 The following example shows how to use an expression:
 
-```c
+```cpp
 const x = "The circumference of the circle is {2 * $PI * $r}"
 ```
 
 To prevent evaluating expressions in an interpolated string, the `$` and `{` characters can be escaped:
 
-```c
+```cpp
 const x = "The value of variable \$x is $x"
 ```
 
@@ -582,7 +582,7 @@ Type expressiveness is determined by the kind of type and its storage size. The 
 
 The function to determine whether a type is implicitly castable is:
 
-```c
+```cpp
 bool implicit_cast_allowed(from, to) {
   if (expressiveness(to) >= expressiveness(from)) {
     return storage(to) >= storage(from);
@@ -601,19 +601,19 @@ Lvalues are the left side of assignments. There are two kinds of assignments pos
 
 The type of an expression can be influenced by the type of the lvalue it is assigned to. For example, if the lvalue is a variable of type `Position`, the assigned initializer will also be of type `Position`:
 
-```c
+```cpp
 const p = Position: {10, 20}
 ```
 
 Similarly, when an initializer is used inside of an initializer, it obtains the type of the initializer element. In the following example the outer initializer is of type `Line`, while the inner initializers are of type `Point`:
 
-```c
+```cpp
 const l = Line: {{10, 20}, {30, 40}}
 ```
 
 Another notable example where this matters is for enum and bitmask constants. Consider the following example:
 
-```c
+```cpp
 const c = Color: Red
 ```
 
@@ -622,7 +622,7 @@ Here, `Red` is a resolvable identifier, even though the fully qualified identifi
 ### Functions
 Expressions can call functions. Functions in Flecs script can have arguments of any type, and must return a value. The following snippet shows examples of function calls:
 
-```c
+```cpp
 const x = sqrt(100)
 const x = pow(100, 2)
 const x = add({10, 20}, {30, 40})
@@ -632,7 +632,7 @@ Currently functions can only be defined outside of scripts by the Flecs Script A
 
 A function can be created in code by doing:
 
-```c
+```cpp
 ecs_function(world, {
     .name = "sum",
     .return_type = ecs_id(ecs_i64_t),
@@ -647,7 +647,7 @@ ecs_function(world, {
 ### Methods
 Methods are functions that are called on instances of the method's type. The first argument of a method is the instance on which the method is called. The following snippet shows examples of method calls:
 
-```c
+```cpp
 const x = v.length()
 const x = v1.add(v2)
 ```
@@ -656,7 +656,7 @@ Just like functions, methods can currently only be defined outside of scripts by
 
 A method can be created in code by doing:
 
-```c
+```cpp
 ecs_method(world, {
     .name = "add",
     .parent = ecs_id(ecs_i64_t), // Add method to i64
@@ -751,14 +751,14 @@ const x = $rng.f(1.0)
 
 To use the math functions, make sure to use a Flecs build compiled with the `FLECS_SCRIPT_MATH` addon (disabled by default) and that the module is imported:
 
-```c
+```cpp
 ECS_IMPORT(world, FlecsScriptMath);
 ```
 
 ## Templates
 Templates are parameterized scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. Example:
 
-```c
+```cpp
 template Square {
   Color: {255, 0, 0}
   Rectangle: {width: 100, height: 100}
@@ -767,7 +767,7 @@ template Square {
 
 The script contents of an template are not ran immediately. Instead they are ran whenever an template is _instantiated_. To instantiate an template, add it as a regular component to an entity:
 
-```c
+```cpp
 my_entity {
   Square
 }
@@ -782,29 +782,31 @@ my_entity {
 
 Templates are commonly used in combination with the kind syntax:
 
-```c
+```cpp
 Square my_entity
 ```
 
 Templates can be parameterized with properties. Properties are variables that are exposed as component members. To create a property, use the `prop` keyword. Example:
 
-```c
+```cpp
 template Square {
-  prop size = i32: 10
+  prop size: 10
   prop color = Color: {255, 0, 0}
 
   $color
-  Rectangle: {width: $size, height: $size}
+  Rectangle: {width: size, height: size}
 }
 
 Square my_entity(size: 20, color: {38, 25, 13})
 ```
 
+Just like `const` variables, `prop` variables can explicitly specify a type or implicitly derive their type from the assigned (default) value.
+
 Template scripts can do anything a regular script can do, including creating child entities. The following example shows how to create an template that uses a nested template to create children:
 
-```c
+```cpp
 template Tree {
-  prop height = f32: 10
+  prop height: 10
 
   const wood_color = Color: {38, 25, 13}
   const leaves_color = Color: {51, 76, 38}
@@ -850,7 +852,7 @@ Forest my_forest
 ### Module statement
 The `module` statement puts all contents of a script in a module. Example:
 
-```c
+```cpp
 module components.transform
 
 // Creates components.transform.Position
@@ -865,14 +867,14 @@ The `components.transform` entity will be created with the `Module` tag.
 ### Using statement
 The `using` keyword imports a namespace into the current namespace. Example:
 
-```c
+```cpp
 // Without using
 flecs.meta.struct Position {
   x = flecs.meta.f32
   y = flecs.meta.f32
 }
 ```
-```c
+```cpp
 // With using
 using flecs.meta
 
@@ -884,13 +886,13 @@ struct Position {
 
 The `using` keyword only applies to the scope in which it is specified. Example:
 
-```c
+```cpp
 // Scope without using
 my_engine {
   game.engines.FtlEngine: {active: true}
 }
 ```
-```c
+```cpp
 // Scope with using
 my_spaceship {
   using game.engines
@@ -901,7 +903,7 @@ my_spaceship {
 
 A `using` statement may end with a wildcard (`*`). This will import all namespaces matching the path. Example:
 
-```c
+```cpp
 using flecs.*
 
 struct Position {
@@ -913,7 +915,7 @@ struct Position {
 ### With statement
 When you're building a scene or asset you may find yourself often repeating the same components for multiple entities. To avoid this, a `with` statement can be used. For example:
 
-```c
+```cpp
 with SpaceShip {
   MillenniumFalcon {}
   UssEnterprise {}
@@ -924,7 +926,7 @@ with SpaceShip {
 
 This is equivalent to doing:
 
-```c
+```cpp
 MillenniumFalcon {
   SpaceShip
 }
@@ -944,7 +946,7 @@ Rocinante {
 
 With statements can contain multiple tags:
 
-```c
+```cpp
 with SpaceShip, HasWeapons {
   MillenniumFalcon {}
   UssEnterprise {}
@@ -955,7 +957,7 @@ with SpaceShip, HasWeapons {
 
 With statements can contain component values, specified between parentheses:
 
-```c
+```cpp
 with Color(38, 25, 13) {
   pillar_1 {}
   pillar_2 {}
@@ -966,7 +968,7 @@ with Color(38, 25, 13) {
 ### Variables
 Scripts can contain variables, which are useful for often repeated values. Variables are created with the `const` keyword. Example:
 
-```c
+```cpp
 const pi = 3.1415926
 
 my_entity {
@@ -976,7 +978,7 @@ my_entity {
 
 Variables can be combined with expressions:
 
-```c
+```cpp
 const pi = 3.1415926
 const pi_2 = $pi * 2
 
@@ -987,13 +989,13 @@ my_entity {
 
 In the above examples, the type of the variable is inferred. Variables can also be provided with an explicit type:
 
-```c
+```cpp
 const wood = Color: {38, 25, 13}
 ```
 
 When the name of a variable clashes with an entity, it can be disambiguated by prefixing the variable name with a `$`:
 
-```c
+```cpp
 const pi = 3.1415926
 const pi_2 = $pi * 2
 
@@ -1004,7 +1006,7 @@ pi {
 
 Variables can be used in component values as shown in the previous examples, or can be used directly as component. When used like this, the variable name must be prefixed with a `$`. Example:
 
-```c
+```cpp
 const wood = Color: {38, 25, 13}
 
 my_entity {
@@ -1020,7 +1022,7 @@ my_entity {
 
 Additionally, variables can also be used in combination with `with` statements. When used like this the variable name must also be prefixed with a `$`:
 
-```c
+```cpp
 const wood = Color: {38, 25, 13}
 
 with $color {
@@ -1033,7 +1035,7 @@ with $color {
 ### Component values
 A script can use the value of a component that is looked up on a specific entity. The following example fetches the `width` and `depth` members from the `Level` component, that is fetched from the `Game` entity:
 
-```c
+```cpp
 grid {
   Grid: { Game[Level].width, Game[Level].depth }
 }
@@ -1041,7 +1043,7 @@ grid {
 
 To reduce the number of component lookups in a script, the component value can be stored in a variable:
 
-```c
+```cpp
 const level = Game[Level]
 
 tiles {
@@ -1054,7 +1056,7 @@ The requested component is stored by value, not by reference. Adding or removing
 ### If statement
 Parts of a script can be conditionally executed with an if statement. Example:
 
-```c
+```cpp
 const daytime = bool: false
 
 lantern {
@@ -1070,7 +1072,7 @@ lantern {
 
 If statements can be chained with `else if`:
 
-```c
+```cpp
 const state = 0
 
 traffic_light {
@@ -1087,7 +1089,7 @@ traffic_light {
 ### For statement
 Parts of a script can be repeated with a for loop. Example:
 
-```c
+```cpp
 for i in 0..10 {
   Lantern() {
     Position: {x: $i * 5}
@@ -1097,7 +1099,7 @@ for i in 0..10 {
 
 The values specified in the range can be an expression:
 
-```c
+```cpp
 for i in 0..$count {
   // ...
 }
@@ -1105,7 +1107,7 @@ for i in 0..$count {
 
 When creating entities in a for loop, ensure that they are unique or the for loop will overwrite the same entity:
 
-```c
+```cpp
 for i in 0..10 {
   // overwrites entity "e" 10 times
   e: { Position: {x: $i * 5} }
@@ -1114,7 +1116,7 @@ for i in 0..10 {
 
 To avoid this, scripts can either create anonymous entities:
 
-```c
+```cpp
 for i in 0..10 {
   // creates 10 anonymous entities
   _ { Position: {x: $i * 5} }
@@ -1123,7 +1125,7 @@ for i in 0..10 {
 
 Or use a unique string expression for the entity name:
 
-```c
+```cpp
 for i in 0..10 {
   // creates entities with names e_0, e_1, ... e_9
   "e_$i" { Position: {x: $i * 5} }
@@ -1135,7 +1137,7 @@ A scope can have a default component, which means entities in that scope can ass
 
 There are different ways to specify a default component. One way is to use a `with` statement. Default component values are assigned with the `=` operator, and don't need a `{}` surrounding the value. Example:
 
-```c
+```cpp
 with Position {
   ent_a = 10, 20
   ent_b = 20, 30
@@ -1144,7 +1146,7 @@ with Position {
 
 Another way a default components are derived is from the entity kind. If an entity is specified with a kind, a `DefaultChildComponent` component will be looked up on the kind to find the default component for the scope, if any. For example:
 
-```c
+```cpp
 // Create a PositionList tag with a DefaultChildComponent
 PositionList {
   DefaultChildComponent: {Position}
@@ -1160,7 +1162,7 @@ PositionList plist {
 
 A common use of default components is when creating structs. `struct` is a component with `member` as default child component. Example:
 
-```c
+```cpp
 struct Position {
   x = f32
   y = f32
@@ -1176,7 +1178,7 @@ struct Position {
 
 Note how `member` is also used as kind for the children. This means that children of `x` and `y` derive their default child component from `member`, which is set to `member`. This makes it easy to create nested members:
 
-```c
+```cpp
 struct Line {
   start {
     x = f32
@@ -1205,7 +1207,7 @@ struct Line {
 ### Semicolon operator
 Multiple statements can be combined on a single line when using the semicolon operator. Example:
 
-```c
+```cpp
 my_spaceship {
   SpaceShip; HasFtl
 }
@@ -1214,7 +1216,7 @@ my_spaceship {
 ### Comma operator
 The comma operator can be used as a shortcut to create multiple entities in a scope. Example:
 
-```c
+```cpp
 my_spaceship {
   pilot_a,
   pilot_b,
@@ -1232,7 +1234,7 @@ my_spaceship {
 
 This allows for a more natural way to describe things like enum types:
 
-```c
+```cpp
 enum Color {
   Red,
   Green,
@@ -1254,7 +1256,7 @@ This section goes over how to run scripts in an application.
 ### Run once
 To run a script once, use the `ecs_script_run` function. Example:
 
-```c
+```cpp
 const char *code = "my_spaceship {}";
 
 if (ecs_script_run(world, "my_script_name", code)) {
@@ -1264,7 +1266,7 @@ if (ecs_script_run(world, "my_script_name", code)) {
 
 Alternatively a script can be ran directly from a file:
 
-```c
+```cpp
 if (ecs_script_run_file(world, "my_script.flecs")) {
   // error
 }
@@ -1275,7 +1277,7 @@ If a script fails, the entities created by the script will not be automatically 
 ### Run multiple times
 A script can be ran multiple times by using the `ecs_script_parse` and `ecs_script_eval` functions. Example:
 
-```c
+```cpp
 const char *code = "my_spaceship {}";
 
 ecs_script_t *script = ecs_script_parse(
@@ -1303,7 +1305,7 @@ Managed scripts are scripts that are associated with an entity, and can be ran m
 
 To run a managed script, do:
 
-```c
+```cpp
 const char *code = "my_spaceship {}";
 
 ecs_entity_t s = ecs_script(world, {
@@ -1317,7 +1319,7 @@ if (!s) {
 
 To update the code of a managed script, use the `ecs_script_update` function:
 
-```c
+```cpp
 if (ecs_script_update(world, s, 0, new_code)) {
   // error
 }
