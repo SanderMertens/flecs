@@ -58,6 +58,8 @@ typedef enum ecs_script_token_kind_t {
     EcsTokKeywordProp = 130,
     EcsTokKeywordConst = 131,
     EcsTokKeywordMatch = 132,
+    EcsTokAddAssign = 133,
+    EcsTokMulAssign = 134,
 } ecs_script_token_kind_t;
 
 typedef struct ecs_script_token_t {

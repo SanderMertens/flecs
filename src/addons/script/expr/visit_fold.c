@@ -269,6 +269,10 @@ int flecs_expr_initializer_pre_fold(
         if (elem->value->kind != EcsExprValue) {
             *can_fold = false;
         }
+
+        if (elem->operator) {
+            *can_fold = false;
+        }
     }
 
     if (node->is_dynamic) {

@@ -68,6 +68,8 @@ const char* flecs_script_token_kind_str(
     case EcsTokRange:
     case EcsTokShiftLeft:
     case EcsTokShiftRight:
+    case EcsTokAddAssign:
+    case EcsTokMulAssign:
         return "";
     case EcsTokKeywordWith:
     case EcsTokKeywordUsing:
@@ -135,6 +137,8 @@ const char* flecs_script_token_str(
     case EcsTokRange: return "..";
     case EcsTokShiftLeft: return "<<";
     case EcsTokShiftRight: return ">>";
+    case EcsTokAddAssign: return "+=";
+    case EcsTokMulAssign: return "*=";
     case EcsTokKeywordWith: return "with";
     case EcsTokKeywordUsing: return "using";
     case EcsTokKeywordProp: return "prop";
@@ -536,6 +540,8 @@ const char* flecs_script_token(
     } else if (flecs_script_is_number(pos)) {
         return flecs_script_number(parser, pos, out);
 
+    OperatorMultiChar ("+=",       EcsTokAddAssign)
+    OperatorMultiChar ("*=",       EcsTokMulAssign)
     Operator          (":",        EcsTokColon)
     Operator          ("{",        EcsTokScopeOpen)
     Operator          ("}",        EcsTokScopeClose)

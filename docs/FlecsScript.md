@@ -372,6 +372,7 @@ Initializers are values that are used to initialize composite and collection mem
 {start: {x: 10, y: 20}, stop: {x: 10, y: 20}}
 [10, 20, 30]
 [{10, 20}, {30, 40}, {50, 60}]
+{x += 10, y *= 2}
 ```
 
 Initializers must always be assigned to an lvalue of a well defined type. This can either be a typed variable, component assignment, function parameter or in the case of nested initializers, an element of another initializer. For example, this is a valid usage of an initializer:
@@ -396,6 +397,35 @@ Tree: {color: $color, height: $height}
 
 // Shorthand notation
 Tree: {color: $, height: $}
+```
+
+Initializer expressions may contain add assignment (`+=`) or multiply assignment (`*=`) operators. These operators allow an initializer to modify an existing value. An example:
+
+```c
+e {
+  Position: {10, 20}
+  Position: {x += 1, y += 2}
+}
+
+// e will have Position{11, 22}
+```
+
+This can be especially useful when used in combination with templates (see below):
+
+```cpp
+template Tree {
+  prop height = f32: 4
+
+  // Make sure tree doesn't sink through the ground
+  Position: {y += height} 
+}
+
+e {
+  Position: {10, 0}
+  Tree: {height: 3}
+}
+
+// e will have Position{10, 3}
 ```
 
 ### Match expressions

@@ -988,6 +988,7 @@ void Expr_struct_result_implicit_members(void) {
     const char *ptr = ecs_expr_run(world, "{5 + 5, 10 + 10}", &(ecs_value_t){
         .type = t, .ptr = &v
     }, &desc);
+
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 

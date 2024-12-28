@@ -1825,6 +1825,105 @@ void Deserialize_struct_member_2_nested_i32_i32_reverse(void) {
     ecs_fini(world);
 }
 
+void Deserialize_struct_w_add_assign_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    ECS_COMPONENT(world, Point);
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_id(Point),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    Point value = {10, 20};
+
+    const char *ptr = ecs_expr_run(world, 
+        "{x += 1, y += 2}",
+        &(ecs_value_t){t, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.x, 11);
+    test_int(value.y, 22);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_w_mul_assign_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    ECS_COMPONENT(world, Point);
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_id(Point),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    Point value = {10, 20};
+
+    const char *ptr = ecs_expr_run(world, 
+        "{x *= 2, y *= 4}",
+        &(ecs_value_t){t, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.x, 20);
+    test_int(value.y, 80);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_w_add_assign_expr_invalid_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        char *x;
+        char *y;
+    } Point;
+
+    ECS_COMPONENT(world, Point);
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_id(Point),
+        .members = {
+            {"x", ecs_id(ecs_string_t)},
+            {"y", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    Point value = {0};
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_expr_run(world, 
+        "{x += 1, y += 2}",
+        &(ecs_value_t){t, &value}, &desc);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
 void Deserialize_struct_i32_array_3(void) {
     typedef struct {
         int32_t x[3];

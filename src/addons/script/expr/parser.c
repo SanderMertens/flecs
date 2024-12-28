@@ -165,10 +165,28 @@ const char* flecs_script_parse_initializer(
             a, &node->elements, ecs_expr_initializer_element_t);
         ecs_os_zeromem(elem);
 
+        /* Parse member name */
         {
-            /* Parse member name */
             LookAhead_2(EcsTokIdentifier, ':', {
                 elem->member = Token(0);
+                LookAhead_Keep();
+                pos = lookahead;
+                break;
+            })
+        }
+        {
+            LookAhead_2(EcsTokIdentifier, EcsTokAddAssign, {
+                elem->member = Token(0);
+                elem->operator = EcsTokAddAssign;
+                LookAhead_Keep();
+                pos = lookahead;
+                break;
+            })
+        }
+        {
+            LookAhead_2(EcsTokIdentifier, EcsTokMulAssign, {
+                elem->member = Token(0);
+                elem->operator = EcsTokMulAssign;
                 LookAhead_Keep();
                 pos = lookahead;
                 break;

@@ -3102,3 +3102,81 @@ void Template_clear_script_w_template_w_on_remove_observer_added_after(void) {
 
     ecs_fini(world);
 }
+
+void Template_component_w_assign_add(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop height = f32: 0"
+    LINE "  Position: {y += height / 2}"
+    LINE "}"
+    LINE ""
+    HEAD "Foo {"
+    LINE "  Position: {10, 20}"
+    LINE "  Tree: {6}"
+    LINE "}"
+    ;
+
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, NULL);
+    test_assert(s != NULL);
+
+    test_assert(ecs_script_eval(s, NULL) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 23);
+
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Template_component_w_assign_mul(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop height = f32: 0"
+    LINE "  Position: {y *= height / 2}"
+    LINE "}"
+    LINE ""
+    HEAD "Foo {"
+    LINE "  Position: {10, 20}"
+    LINE "  Tree: {6}"
+    LINE "}"
+    ;
+
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, NULL);
+    test_assert(s != NULL);
+
+    test_assert(ecs_script_eval(s, NULL) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 60);
+
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}

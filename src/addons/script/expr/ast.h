@@ -54,6 +54,7 @@ typedef struct ecs_expr_initializer_element_t {
     const char *member;
     ecs_expr_node_t *value;
     uintptr_t offset;
+    ecs_script_token_kind_t operator;
 } ecs_expr_initializer_element_t;
 
 typedef struct ecs_expr_initializer_t {

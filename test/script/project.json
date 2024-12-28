@@ -318,7 +318,9 @@
                 "component_w_match_invalid",
                 "pair_component_w_match",
                 "component_assign_w_match",
-                "const_w_match"
+                "const_w_match",
+                "component_w_assign_add",
+                "component_w_assign_mul"
             ]
         }, {
             "id": "Template",
@@ -388,7 +390,9 @@
                 "template_w_child_component_w_undefined_identifier",
                 "template_w_anonymous_child_component_w_undefined_identifier",
                 "clear_script_w_template_w_on_remove_observer",
-                "clear_script_w_template_w_on_remove_observer_added_after"
+                "clear_script_w_template_w_on_remove_observer_added_after",
+                "component_w_assign_add",
+                "component_w_assign_mul"
             ]
         }, {
             "id": "Error",
@@ -924,6 +928,9 @@
                 "struct_w_newline",
                 "struct_w_members_newline",
                 "struct_w_trailing_comma",
+                "struct_w_add_assign_expr",
+                "struct_w_mul_assign_expr",
+                "struct_w_add_assign_expr_invalid_type",
                 "array_w_trailing_comma",
                 "array_i32_2",
                 "array_string_2",
