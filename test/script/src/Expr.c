@@ -7234,6 +7234,7 @@ void Expr_match_i32_empty_collection_case(void) {
     typedef int32_t Ints[2];
 
     ecs_entity_t ecs_id(Ints) = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
         .type = ecs_id(ecs_i32_t),
         .count = 2
     });

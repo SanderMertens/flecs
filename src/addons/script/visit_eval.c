@@ -433,7 +433,6 @@ int flecs_script_eval_expr(
         if (flecs_expr_visit_type(script, expr, &desc)) {
             goto error;
         }
-
         if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
             goto error;
         }

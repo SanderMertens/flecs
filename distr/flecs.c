@@ -61620,7 +61620,6 @@ int flecs_script_eval_expr(
         if (flecs_expr_visit_type(script, expr, &desc)) {
             goto error;
         }
-
         if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
             goto error;
         }
@@ -80051,6 +80050,105 @@ error:
 }
 
 static
+int flecs_expr_initializer_collection_check(
+    ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    ecs_meta_cursor_t *cur)
+{
+    if (cur) {
+        if (ecs_meta_is_collection(cur) != node->is_collection) {
+            char *type_str = ecs_get_path(script->world, node->node.type);
+            if (node->is_collection) {
+                flecs_expr_visit_error(script, node, 
+                    "invalid collection literal for non-collection type '%s'", 
+                        type_str);
+            } else {
+                flecs_expr_visit_error(script, node, 
+                    "invalid object literal for collection type '%s'",
+                        type_str);
+            }
+
+            ecs_os_free(type_str);
+            goto error;
+        }
+    }
+
+    ecs_entity_t type = node->node.type;
+    if (type) {
+        const EcsOpaque *op = ecs_get(script->world, type, EcsOpaque);
+        if (op) {
+            type = op->as_type;
+        }
+
+        const EcsType *ptr = ecs_get(script->world, type, EcsType);
+        if (ptr) {
+            ecs_type_kind_t kind = ptr->kind;
+            if (node->is_collection) {
+                /* Only do this check if no cursor is provided. Cursors also 
+                 * handle inline arrays. */
+                if (!cur) {
+                    if (kind != EcsArrayType && kind != EcsVectorType) {
+                        char *type_str = ecs_get_path(
+                            script->world, node->node.type);
+                        flecs_expr_visit_error(script, node, 
+                            "invalid collection literal for type '%s'",
+                                type_str);
+                        ecs_os_free(type_str);
+                        goto error;
+                    }
+                }
+            } else {
+                if (kind != EcsStructType) {
+                    char *type_str = ecs_get_path(
+                        script->world, node->node.type);
+                    flecs_expr_visit_error(script, node, 
+                        "invalid object literal for type '%s'", type_str);
+                    ecs_os_free(type_str);
+                    goto error;
+                }
+            }
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_empty_initializer_visit_type(
+    ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_expr_eval_desc_t *desc)
+{
+    (void)desc;
+
+    node->node.type = ecs_meta_get_type(cur);
+    if (!node->node.type) {
+        flecs_expr_visit_error(script, node, 
+            "unknown type for initializer");
+        goto error;
+    }
+
+    if (ecs_meta_push(cur)) {
+        goto error;
+    }
+
+    if (flecs_expr_initializer_collection_check(script, node, cur)) {
+        goto error;
+    }
+
+    if (ecs_meta_pop(cur)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_initializer_visit_type(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -80073,19 +80171,7 @@ int flecs_expr_initializer_visit_type(
         goto error;
     }
 
-    if (ecs_meta_is_collection(cur) != node->is_collection) {
-        char *type_str = ecs_get_path(script->world, type);
-        if (node->is_collection) {
-            flecs_expr_visit_error(script, node, 
-                "invalid collection literal for non-collection type '%s'"
-                    " (expected '[]')", type_str);
-        } else {
-            flecs_expr_visit_error(script, node, 
-                "invalid object literal for collection type '%s' (expected {})",
-                    type_str);
-        }
-
-        ecs_os_free(type_str);
+    if (flecs_expr_initializer_collection_check(script, node, cur)) {
         goto error;
     }
 
@@ -80841,10 +80927,9 @@ int flecs_expr_visit_type_priv(
         }
         break;
     case EcsExprEmptyInitializer:
-        node->type = ecs_meta_get_type(cur);
-        if (!node->type) {
-            flecs_expr_visit_error(script, node, 
-                "unknown type for initializer");
+        if (flecs_expr_empty_initializer_visit_type(
+            script, (ecs_expr_initializer_t*)node, cur, desc))
+        {
             goto error;
         }
         break;
@@ -80944,9 +81029,15 @@ int flecs_expr_visit_type(
     if (node->kind == EcsExprEmptyInitializer) {
         node->type = desc->type;
         if (node->type) {
+            if (flecs_expr_initializer_collection_check(
+                script, (ecs_expr_initializer_t*)node, NULL))
+            {
+                return -1;
+            }
+
             node->type_info = ecs_get_type_info(script->world, node->type);
+            return 0;
         }
-        return 0;
     }
 
     if (desc->type) {
