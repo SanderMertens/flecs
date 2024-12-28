@@ -737,7 +737,12 @@
                 "match_i32_collection_invalid_case_type",
                 "match_i32_string",
                 "match_enum_string",
-                "match_string_i"
+                "match_string_i",
+                "match_w_any",
+                "match_w_any_not_last",
+                "match_w_any_first",
+                "match_w_any_mismatching_type",
+                "match_i_w_any_f"
             ]
         }, {
             "id": "ExprAst",

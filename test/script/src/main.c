@@ -725,6 +725,11 @@ void Expr_match_i32_collection_invalid_case_type(void);
 void Expr_match_i32_string(void);
 void Expr_match_enum_string(void);
 void Expr_match_string_i(void);
+void Expr_match_w_any(void);
+void Expr_match_w_any_not_last(void);
+void Expr_match_w_any_first(void);
+void Expr_match_w_any_mismatching_type(void);
+void Expr_match_i_w_any_f(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_binary_f32_var_add_f32_var(void);
@@ -3766,6 +3771,26 @@ bake_test_case Expr_testcases[] = {
     {
         "match_string_i",
         Expr_match_string_i
+    },
+    {
+        "match_w_any",
+        Expr_match_w_any
+    },
+    {
+        "match_w_any_not_last",
+        Expr_match_w_any_not_last
+    },
+    {
+        "match_w_any_first",
+        Expr_match_w_any_first
+    },
+    {
+        "match_w_any_mismatching_type",
+        Expr_match_w_any_mismatching_type
+    },
+    {
+        "match_i_w_any_f",
+        Expr_match_i_w_any_f
     }
 };
 
@@ -4555,7 +4580,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        261,
+        266,
         Expr_testcases,
         1,
         Expr_params
