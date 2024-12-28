@@ -708,6 +708,13 @@ identifier_colon: {
         )
     }
 
+    {
+        // Position: match
+        LookAhead_1(EcsTokKeywordMatch,
+            goto component_expr_match;
+        )
+    }
+
     // enterprise : SpaceShip
     Parse_1(EcsTokIdentifier, {
         ecs_script_entity_t *entity = flecs_script_insert_entity(
@@ -879,6 +886,18 @@ component_expr_collection: {
             parser, Token(0));
         comp->expr = EXPR;
         comp->is_collection = true;
+        EndOfRule; 
+    })
+}
+
+// Position: match
+component_expr_match: {
+
+    // Position: match expr
+    Expr('\n', {
+        ecs_script_component_t *comp = flecs_script_insert_component(
+            parser, Token(0));
+        comp->expr = EXPR;
         EndOfRule; 
     })
 }

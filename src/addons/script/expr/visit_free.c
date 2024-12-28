@@ -119,6 +119,9 @@ void flecs_expr_match_visit_free(
         flecs_expr_visit_free(script, elem->compare);
         flecs_expr_visit_free(script, elem->expr);
     }
+    
+    ecs_vec_fini_t(&flecs_script_impl(script)->allocator, 
+        &node->elements, ecs_expr_match_element_t);
 }
 
 static

@@ -274,7 +274,7 @@ bool flecs_expr_explicit_cast_allowed(
             if (to_type->kind == EcsEnumType || 
                 to_type->kind == EcsBitmaskType)
             {
-                /* Can integers to enums/bitmasks */
+                /* Can cast integers to enums/bitmasks */
                 return true;
             }
         }

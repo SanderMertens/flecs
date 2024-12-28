@@ -555,8 +555,14 @@ void Expr_bool_cond_or_int(void);
 void Expr_int_cond_or_bool(void);
 void Expr_cond_eq_bool(void);
 void Expr_cond_eq_int(void);
+void Expr_cond_eq_enum(void);
+void Expr_cond_eq_string(void);
+void Expr_cond_eq_entity(void);
 void Expr_cond_neq_bool(void);
 void Expr_cond_neq_int(void);
+void Expr_cond_neq_enum(void);
+void Expr_cond_neq_string(void);
+void Expr_cond_neq_entity(void);
 void Expr_cond_eq_bool_int(void);
 void Expr_cond_eq_int_flt(void);
 void Expr_cond_eq_cond_and(void);
@@ -696,6 +702,29 @@ void Expr_newline_at_start(void);
 void Expr_global_const_var(void);
 void Expr_scoped_global_const_var(void);
 void Expr_escape_newline(void);
+void Expr_match_i32_1_i_case(void);
+void Expr_match_i32_2_i_cases(void);
+void Expr_match_i32_2_i_f_cases(void);
+void Expr_match_i32_2_f_i_cases(void);
+void Expr_match_i32_3_i_cases(void);
+void Expr_match_i32_3_i_i_f_cases(void);
+void Expr_match_i32_3_i_f_i_cases(void);
+void Expr_match_i32_3_f_i_i_cases(void);
+void Expr_match_i32_1_struct_case(void);
+void Expr_match_i32_2_struct_cases(void);
+void Expr_match_i32_3_struct_cases(void);
+void Expr_match_i32_empty_struct_cases(void);
+void Expr_match_i32_struct_cases_unknown_type(void);
+void Expr_match_i32_1_collection_case(void);
+void Expr_match_i32_2_collection_cases(void);
+void Expr_match_i32_3_collection_cases(void);
+void Expr_match_i32_empty_collection_case(void);
+void Expr_match_i32_collection_case_unknown_type(void);
+void Expr_match_i32_struct_invalid_case_type(void);
+void Expr_match_i32_collection_invalid_case_type(void);
+void Expr_match_i32_string(void);
+void Expr_match_enum_string(void);
+void Expr_match_string_i(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_binary_f32_var_add_f32_var(void);
@@ -3059,12 +3088,36 @@ bake_test_case Expr_testcases[] = {
         Expr_cond_eq_int
     },
     {
+        "cond_eq_enum",
+        Expr_cond_eq_enum
+    },
+    {
+        "cond_eq_string",
+        Expr_cond_eq_string
+    },
+    {
+        "cond_eq_entity",
+        Expr_cond_eq_entity
+    },
+    {
         "cond_neq_bool",
         Expr_cond_neq_bool
     },
     {
         "cond_neq_int",
         Expr_cond_neq_int
+    },
+    {
+        "cond_neq_enum",
+        Expr_cond_neq_enum
+    },
+    {
+        "cond_neq_string",
+        Expr_cond_neq_string
+    },
+    {
+        "cond_neq_entity",
+        Expr_cond_neq_entity
     },
     {
         "cond_eq_bool_int",
@@ -3621,6 +3674,98 @@ bake_test_case Expr_testcases[] = {
     {
         "escape_newline",
         Expr_escape_newline
+    },
+    {
+        "match_i32_1_i_case",
+        Expr_match_i32_1_i_case
+    },
+    {
+        "match_i32_2_i_cases",
+        Expr_match_i32_2_i_cases
+    },
+    {
+        "match_i32_2_i_f_cases",
+        Expr_match_i32_2_i_f_cases
+    },
+    {
+        "match_i32_2_f_i_cases",
+        Expr_match_i32_2_f_i_cases
+    },
+    {
+        "match_i32_3_i_cases",
+        Expr_match_i32_3_i_cases
+    },
+    {
+        "match_i32_3_i_i_f_cases",
+        Expr_match_i32_3_i_i_f_cases
+    },
+    {
+        "match_i32_3_i_f_i_cases",
+        Expr_match_i32_3_i_f_i_cases
+    },
+    {
+        "match_i32_3_f_i_i_cases",
+        Expr_match_i32_3_f_i_i_cases
+    },
+    {
+        "match_i32_1_struct_case",
+        Expr_match_i32_1_struct_case
+    },
+    {
+        "match_i32_2_struct_cases",
+        Expr_match_i32_2_struct_cases
+    },
+    {
+        "match_i32_3_struct_cases",
+        Expr_match_i32_3_struct_cases
+    },
+    {
+        "match_i32_empty_struct_cases",
+        Expr_match_i32_empty_struct_cases
+    },
+    {
+        "match_i32_struct_cases_unknown_type",
+        Expr_match_i32_struct_cases_unknown_type
+    },
+    {
+        "match_i32_1_collection_case",
+        Expr_match_i32_1_collection_case
+    },
+    {
+        "match_i32_2_collection_cases",
+        Expr_match_i32_2_collection_cases
+    },
+    {
+        "match_i32_3_collection_cases",
+        Expr_match_i32_3_collection_cases
+    },
+    {
+        "match_i32_empty_collection_case",
+        Expr_match_i32_empty_collection_case
+    },
+    {
+        "match_i32_collection_case_unknown_type",
+        Expr_match_i32_collection_case_unknown_type
+    },
+    {
+        "match_i32_struct_invalid_case_type",
+        Expr_match_i32_struct_invalid_case_type
+    },
+    {
+        "match_i32_collection_invalid_case_type",
+        Expr_match_i32_collection_invalid_case_type
+    },
+    {
+        "match_i32_string",
+        Expr_match_i32_string
+    },
+    {
+        "match_enum_string",
+        Expr_match_enum_string
+    },
+    {
+        "match_string_i",
+        Expr_match_string_i
     }
 };
 
@@ -4410,7 +4555,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        232,
+        261,
         Expr_testcases,
         1,
         Expr_params

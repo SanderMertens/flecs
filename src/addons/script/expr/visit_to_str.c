@@ -236,17 +236,35 @@ int flecs_expr_match_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_match_t *node)
 {
+    if (node->node.type) {
+        flecs_expr_color_to_str(v, ECS_BLUE);
+        const char *name = ecs_get_name(v->world, node->node.type);
+        if (name) {
+            ecs_strbuf_appendstr(v->buf, name);
+        } else {
+            char *path = ecs_get_path(v->world, node->node.type);
+            ecs_strbuf_appendstr(v->buf, path);
+            ecs_os_free(path);
+        }
+        flecs_expr_color_to_str(v, ECS_NORMAL);
+        ecs_strbuf_appendlit(v->buf, "(");
+    }
+
+    flecs_expr_color_to_str(v, ECS_BLUE);
     ecs_strbuf_appendlit(v->buf, "match ");
+    flecs_expr_color_to_str(v, ECS_GREEN);
     if (flecs_expr_node_to_str(v, node->expr)) {
         return -1;
     }
 
-    ecs_strbuf_appendlit(v->buf, "{\n");
+    ecs_strbuf_appendlit(v->buf, " {\n");
 
     int32_t i, count = ecs_vec_count(&node->elements);
     ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
 
     for (i = 0; i < count; i ++) {
+        ecs_strbuf_appendlit(v->buf, "  ");
+
         ecs_expr_match_element_t *elem = &elems[i];
         if (flecs_expr_node_to_str(v, elem->compare)) {
             return -1;
@@ -257,9 +275,17 @@ int flecs_expr_match_to_str(
         if (flecs_expr_node_to_str(v, elem->expr)) {
             return -1;
         }
+
+        ecs_strbuf_appendlit(v->buf, "\n");
     }
 
-    ecs_strbuf_appendlit(v->buf, "}\n");
+    ecs_strbuf_appendlit(v->buf, "}");
+
+    if (node->node.type) {
+        ecs_strbuf_appendlit(v->buf, ")");
+    }
+
+    ecs_strbuf_appendlit(v->buf, "\n");
 
     return 0;
 }

@@ -82,6 +82,8 @@ const char* flecs_script_parse_match_elems(
     bool old_significant_newline = parser->significant_newline;
     parser->significant_newline = true;
 
+    ecs_vec_init_t(NULL, &node->elements, ecs_expr_match_element_t, 0);
+
     do {
         ParserBegin;
 
@@ -635,7 +637,7 @@ ecs_script_t* ecs_expr_parse(
         goto error;
     }
 
-    // printf("%s\n", ecs_script_ast_to_str(script));
+    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     if (!desc || !desc->disable_folding) {
         if (flecs_expr_visit_fold(script, &impl->expr, &priv_desc)) {
