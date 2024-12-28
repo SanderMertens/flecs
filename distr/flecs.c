@@ -4558,6 +4558,8 @@ typedef enum ecs_script_token_kind_t {
     EcsTokKeywordProp = 130,
     EcsTokKeywordConst = 131,
     EcsTokKeywordMatch = 132,
+    EcsTokAddAssign = 133,
+    EcsTokMulAssign = 134,
 } ecs_script_token_kind_t;
 
 typedef struct ecs_script_token_t {
@@ -5001,6 +5003,7 @@ typedef struct ecs_expr_initializer_element_t {
     const char *member;
     ecs_expr_node_t *value;
     uintptr_t offset;
+    ecs_script_token_kind_t operator;
 } ecs_expr_initializer_element_t;
 
 typedef struct ecs_expr_initializer_t {
@@ -59655,6 +59658,8 @@ const char* flecs_script_token_kind_str(
     case EcsTokRange:
     case EcsTokShiftLeft:
     case EcsTokShiftRight:
+    case EcsTokAddAssign:
+    case EcsTokMulAssign:
         return "";
     case EcsTokKeywordWith:
     case EcsTokKeywordUsing:
@@ -59722,6 +59727,8 @@ const char* flecs_script_token_str(
     case EcsTokRange: return "..";
     case EcsTokShiftLeft: return "<<";
     case EcsTokShiftRight: return ">>";
+    case EcsTokAddAssign: return "+=";
+    case EcsTokMulAssign: return "*=";
     case EcsTokKeywordWith: return "with";
     case EcsTokKeywordUsing: return "using";
     case EcsTokKeywordProp: return "prop";
@@ -60123,6 +60130,8 @@ const char* flecs_script_token(
     } else if (flecs_script_is_number(pos)) {
         return flecs_script_number(parser, pos, out);
 
+    OperatorMultiChar ("+=",       EcsTokAddAssign)
+    OperatorMultiChar ("*=",       EcsTokMulAssign)
     Operator          (":",        EcsTokColon)
     Operator          ("{",        EcsTokScopeOpen)
     Operator          ("}",        EcsTokScopeClose)
@@ -61991,6 +62000,10 @@ int flecs_script_eval_component(
                 return -1;
             }
         }
+
+        ecs_record_t *r = flecs_entities_get(v->world, src);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_table_t *table = r->table;
  
         ecs_value_t value = {
             .ptr = ecs_ensure_id(v->world, src, node->id.eval),
@@ -61999,13 +62012,15 @@ int flecs_script_eval_component(
 
         /* Assign entire value, including members not set by expression. This 
          * prevents uninitialized or unexpected values. */
-        if (!ti->hooks.ctor) {
-            ecs_os_memset(value.ptr, 0, ti->size);
-        } else if (ti->hooks.ctor) {
-            if (ti->hooks.dtor) {
-                ti->hooks.dtor(value.ptr, 1, ti);
+        if (r->table != table) {
+            if (!ti->hooks.ctor) {
+                ecs_os_memset(value.ptr, 0, ti->size);
+            } else if (ti->hooks.ctor) {
+                if (ti->hooks.dtor) {
+                    ti->hooks.dtor(value.ptr, 1, ti);
+                }
+                ti->hooks.ctor(value.ptr, 1, ti);
             }
-            ti->hooks.ctor(value.ptr, 1, ti);
         }
 
         if (flecs_script_eval_expr(v, &node->expr, &value)) {
@@ -75963,10 +75978,28 @@ const char* flecs_script_parse_initializer(
             a, &node->elements, ecs_expr_initializer_element_t);
         ecs_os_zeromem(elem);
 
+        /* Parse member name */
         {
-            /* Parse member name */
             LookAhead_2(EcsTokIdentifier, ':', {
                 elem->member = Token(0);
+                LookAhead_Keep();
+                pos = lookahead;
+                break;
+            })
+        }
+        {
+            LookAhead_2(EcsTokIdentifier, EcsTokAddAssign, {
+                elem->member = Token(0);
+                elem->operator = EcsTokAddAssign;
+                LookAhead_Keep();
+                pos = lookahead;
+                break;
+            })
+        }
+        {
+            LookAhead_2(EcsTokIdentifier, EcsTokMulAssign, {
+                elem->member = Token(0);
+                elem->operator = EcsTokMulAssign;
                 LookAhead_Keep();
                 pos = lookahead;
                 break;
@@ -76782,6 +76815,8 @@ int flecs_value_unary(
     case EcsTokRange:
     case EcsTokShiftLeft:
     case EcsTokShiftRight:
+    case EcsTokAddAssign:
+    case EcsTokMulAssign:
     case EcsTokIdentifier:
     case EcsTokString:
     case EcsTokNumber:
@@ -76972,6 +77007,12 @@ int flecs_value_binary(
         break;
     case EcsTokShiftRight:
         ECS_BINARY_INT_OP(left, right, out, >>);
+        break;
+    case EcsTokAddAssign:
+        ECS_BINARY_OP(out, right, out, +=);
+        break;
+    case EcsTokMulAssign:
+        ECS_BINARY_OP(out, right, out, *=);
         break;
     case EcsTokEnd:
     case EcsTokUnknown:
@@ -77236,15 +77277,28 @@ int flecs_expr_initializer_eval_static(
          * a cast to the type of the initializer element. */
         ecs_entity_t type = elem->value->type;
 
-        if (expr->owned) {
-            if (ecs_value_move(ctx->world, type, 
-                ECS_OFFSET(value, elem->offset), expr->value.ptr))
-            {
-                goto error;
+        if (!elem->operator) {
+            if (expr->owned) {
+                if (ecs_value_move(ctx->world, type, 
+                    ECS_OFFSET(value, elem->offset), expr->value.ptr))
+                {
+                    goto error;
+                }
+            } else {
+                if (ecs_value_copy(ctx->world, type, 
+                    ECS_OFFSET(value, elem->offset), expr->value.ptr))
+                {
+                    goto error;
+                }
             }
         } else {
-            if (ecs_value_copy(ctx->world, type, 
-                ECS_OFFSET(value, elem->offset), expr->value.ptr))
+            ecs_value_t dst = { 
+                .type = type, 
+                .ptr = ECS_OFFSET(value, elem->offset) 
+            };
+
+            if (flecs_value_binary(
+                ctx->script, NULL, &expr->value, &dst, elem->operator))
             {
                 goto error;
             }
@@ -78070,7 +78124,18 @@ int flecs_expr_visit_eval(
 
     flecs_expr_stack_push(stack);
 
-    ecs_expr_value_t *val = flecs_expr_stack_result(stack, node);
+    ecs_expr_value_t val_tmp;
+    ecs_expr_value_t *val;
+    if (out->type && (out->type == node->type) && out->ptr) {
+        val_tmp = (ecs_expr_value_t){
+            .value = *out,
+            .owned = false,
+            .type_info = ecs_get_type_info(script->world, out->type)
+        };
+        val = &val_tmp;
+    } else {
+        val = flecs_expr_stack_result(stack, node);
+    }
 
     ecs_script_eval_ctx_t ctx = {
         .script = script,
@@ -78095,17 +78160,19 @@ int flecs_expr_visit_eval(
         out->ptr = ecs_value_new(ctx.world, out->type);
     }
 
-    if (val->owned) {
-        /* Values owned by the runtime can be moved to output */
-        if (flecs_value_move_to(ctx.world, out, &val->value)) {
-            flecs_expr_visit_error(script, node, "failed to write to output");
-            goto error;
-        }
-    } else {
-        /* Values not owned by runtime should be copied */
-        if (flecs_value_copy_to(ctx.world, out, val)) {
-            flecs_expr_visit_error(script, node, "failed to write to output");
-            goto error;
+    if (val != &val_tmp || out->ptr != val->value.ptr) {
+        if (val->owned) {
+            /* Values owned by the runtime can be moved to output */
+            if (flecs_value_move_to(ctx.world, out, &val->value)) {
+                flecs_expr_visit_error(script, node, "failed to write to output");
+                goto error;
+            }
+        } else {
+            /* Values not owned by runtime should be copied */
+            if (flecs_value_copy_to(ctx.world, out, val)) {
+                flecs_expr_visit_error(script, node, "failed to write to output");
+                goto error;
+            }
         }
     }
 
@@ -78391,6 +78458,10 @@ int flecs_expr_initializer_pre_fold(
         }
 
         if (elem->value->kind != EcsExprValue) {
+            *can_fold = false;
+        }
+
+        if (elem->operator) {
             *can_fold = false;
         }
     }
@@ -79621,6 +79692,8 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokMul:
     case EcsTokDiv:
     case EcsTokMod:
+    case EcsTokAddAssign:
+    case EcsTokMulAssign:
         return flecs_expr_is_type_number(type);
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
@@ -79751,6 +79824,8 @@ int flecs_expr_type_for_operator(
     case EcsTokSub:
     case EcsTokMul:
         break;
+    case EcsTokAddAssign:
+    case EcsTokMulAssign:
     case EcsTokUnknown:
     case EcsTokScopeOpen:
     case EcsTokScopeClose:
@@ -80264,6 +80339,18 @@ int flecs_expr_initializer_visit_type(
                 goto error;
             }
             elem->value = cast;
+        }
+
+        if (elem->operator) {
+            if (!flecs_expr_oper_valid_for_type(
+                script->world, elem_type, elem->operator))
+            {
+                char *type_str = ecs_get_path(script->world, elem_type);
+                flecs_expr_visit_error(script, node, 
+                    "invalid operator for type '%s'", type_str);
+                ecs_os_free(type_str);
+                goto error;
+            }
         }
 
         if (!is_opaque) {

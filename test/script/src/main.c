@@ -315,6 +315,8 @@ void Eval_component_w_match_invalid(void);
 void Eval_pair_component_w_match(void);
 void Eval_component_assign_w_match(void);
 void Eval_const_w_match(void);
+void Eval_component_w_assign_add(void);
+void Eval_component_w_assign_mul(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -383,6 +385,8 @@ void Template_template_w_child_component_w_undefined_identifier(void);
 void Template_template_w_anonymous_child_component_w_undefined_identifier(void);
 void Template_clear_script_w_template_w_on_remove_observer(void);
 void Template_clear_script_w_template_w_on_remove_observer_added_after(void);
+void Template_component_w_assign_add(void);
+void Template_component_w_assign_mul(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -900,6 +904,9 @@ void Deserialize_struct_w_2_array_type_struct(void);
 void Deserialize_struct_w_newline(void);
 void Deserialize_struct_w_members_newline(void);
 void Deserialize_struct_w_trailing_comma(void);
+void Deserialize_struct_w_add_assign_expr(void);
+void Deserialize_struct_w_mul_assign_expr(void);
+void Deserialize_struct_w_add_assign_expr_invalid_type(void);
 void Deserialize_array_w_trailing_comma(void);
 void Deserialize_array_i32_2(void);
 void Deserialize_array_string_2(void);
@@ -2158,6 +2165,14 @@ bake_test_case Eval_testcases[] = {
     {
         "const_w_match",
         Eval_const_w_match
+    },
+    {
+        "component_w_assign_add",
+        Eval_component_w_assign_add
+    },
+    {
+        "component_w_assign_mul",
+        Eval_component_w_assign_mul
     }
 };
 
@@ -2425,6 +2440,14 @@ bake_test_case Template_testcases[] = {
     {
         "clear_script_w_template_w_on_remove_observer_added_after",
         Template_clear_script_w_template_w_on_remove_observer_added_after
+    },
+    {
+        "component_w_assign_add",
+        Template_component_w_assign_add
+    },
+    {
+        "component_w_assign_mul",
+        Template_component_w_assign_mul
     }
 };
 
@@ -4457,6 +4480,18 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_struct_w_trailing_comma
     },
     {
+        "struct_w_add_assign_expr",
+        Deserialize_struct_w_add_assign_expr
+    },
+    {
+        "struct_w_mul_assign_expr",
+        Deserialize_struct_w_mul_assign_expr
+    },
+    {
+        "struct_w_add_assign_expr_invalid_type",
+        Deserialize_struct_w_add_assign_expr_invalid_type
+    },
+    {
         "array_w_trailing_comma",
         Deserialize_array_w_trailing_comma
     },
@@ -4599,14 +4634,14 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        306,
+        308,
         Eval_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        66,
+        68,
         Template_testcases
     },
     {
@@ -4650,7 +4685,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        92,
+        95,
         Deserialize_testcases,
         1,
         Deserialize_params

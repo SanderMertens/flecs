@@ -219,6 +219,8 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokMul:
     case EcsTokDiv:
     case EcsTokMod:
+    case EcsTokAddAssign:
+    case EcsTokMulAssign:
         return flecs_expr_is_type_number(type);
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
@@ -349,6 +351,8 @@ int flecs_expr_type_for_operator(
     case EcsTokSub:
     case EcsTokMul:
         break;
+    case EcsTokAddAssign:
+    case EcsTokMulAssign:
     case EcsTokUnknown:
     case EcsTokScopeOpen:
     case EcsTokScopeClose:
@@ -862,6 +866,18 @@ int flecs_expr_initializer_visit_type(
                 goto error;
             }
             elem->value = cast;
+        }
+
+        if (elem->operator) {
+            if (!flecs_expr_oper_valid_for_type(
+                script->world, elem_type, elem->operator))
+            {
+                char *type_str = ecs_get_path(script->world, elem_type);
+                flecs_expr_visit_error(script, node, 
+                    "invalid operator for type '%s'", type_str);
+                ecs_os_free(type_str);
+                goto error;
+            }
         }
 
         if (!is_opaque) {

@@ -776,6 +776,10 @@ int flecs_script_eval_component(
                 return -1;
             }
         }
+
+        ecs_record_t *r = flecs_entities_get(v->world, src);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_table_t *table = r->table;
  
         ecs_value_t value = {
             .ptr = ecs_ensure_id(v->world, src, node->id.eval),
@@ -784,13 +788,15 @@ int flecs_script_eval_component(
 
         /* Assign entire value, including members not set by expression. This 
          * prevents uninitialized or unexpected values. */
-        if (!ti->hooks.ctor) {
-            ecs_os_memset(value.ptr, 0, ti->size);
-        } else if (ti->hooks.ctor) {
-            if (ti->hooks.dtor) {
-                ti->hooks.dtor(value.ptr, 1, ti);
+        if (r->table != table) {
+            if (!ti->hooks.ctor) {
+                ecs_os_memset(value.ptr, 0, ti->size);
+            } else if (ti->hooks.ctor) {
+                if (ti->hooks.dtor) {
+                    ti->hooks.dtor(value.ptr, 1, ti);
+                }
+                ti->hooks.ctor(value.ptr, 1, ti);
             }
-            ti->hooks.ctor(value.ptr, 1, ti);
         }
 
         if (flecs_script_eval_expr(v, &node->expr, &value)) {

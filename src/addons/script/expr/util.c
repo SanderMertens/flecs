@@ -113,6 +113,8 @@ int flecs_value_unary(
     case EcsTokRange:
     case EcsTokShiftLeft:
     case EcsTokShiftRight:
+    case EcsTokAddAssign:
+    case EcsTokMulAssign:
     case EcsTokIdentifier:
     case EcsTokString:
     case EcsTokNumber:
@@ -303,6 +305,12 @@ int flecs_value_binary(
         break;
     case EcsTokShiftRight:
         ECS_BINARY_INT_OP(left, right, out, >>);
+        break;
+    case EcsTokAddAssign:
+        ECS_BINARY_OP(out, right, out, +=);
+        break;
+    case EcsTokMulAssign:
+        ECS_BINARY_OP(out, right, out, *=);
         break;
     case EcsTokEnd:
     case EcsTokUnknown:

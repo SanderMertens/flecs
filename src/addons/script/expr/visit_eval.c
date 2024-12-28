@@ -118,15 +118,28 @@ int flecs_expr_initializer_eval_static(
          * a cast to the type of the initializer element. */
         ecs_entity_t type = elem->value->type;
 
-        if (expr->owned) {
-            if (ecs_value_move(ctx->world, type, 
-                ECS_OFFSET(value, elem->offset), expr->value.ptr))
-            {
-                goto error;
+        if (!elem->operator) {
+            if (expr->owned) {
+                if (ecs_value_move(ctx->world, type, 
+                    ECS_OFFSET(value, elem->offset), expr->value.ptr))
+                {
+                    goto error;
+                }
+            } else {
+                if (ecs_value_copy(ctx->world, type, 
+                    ECS_OFFSET(value, elem->offset), expr->value.ptr))
+                {
+                    goto error;
+                }
             }
         } else {
-            if (ecs_value_copy(ctx->world, type, 
-                ECS_OFFSET(value, elem->offset), expr->value.ptr))
+            ecs_value_t dst = { 
+                .type = type, 
+                .ptr = ECS_OFFSET(value, elem->offset) 
+            };
+
+            if (flecs_value_binary(
+                ctx->script, NULL, &expr->value, &dst, elem->operator))
             {
                 goto error;
             }
@@ -952,7 +965,18 @@ int flecs_expr_visit_eval(
 
     flecs_expr_stack_push(stack);
 
-    ecs_expr_value_t *val = flecs_expr_stack_result(stack, node);
+    ecs_expr_value_t val_tmp;
+    ecs_expr_value_t *val;
+    if (out->type && (out->type == node->type) && out->ptr) {
+        val_tmp = (ecs_expr_value_t){
+            .value = *out,
+            .owned = false,
+            .type_info = ecs_get_type_info(script->world, out->type)
+        };
+        val = &val_tmp;
+    } else {
+        val = flecs_expr_stack_result(stack, node);
+    }
 
     ecs_script_eval_ctx_t ctx = {
         .script = script,
@@ -977,17 +1001,19 @@ int flecs_expr_visit_eval(
         out->ptr = ecs_value_new(ctx.world, out->type);
     }
 
-    if (val->owned) {
-        /* Values owned by the runtime can be moved to output */
-        if (flecs_value_move_to(ctx.world, out, &val->value)) {
-            flecs_expr_visit_error(script, node, "failed to write to output");
-            goto error;
-        }
-    } else {
-        /* Values not owned by runtime should be copied */
-        if (flecs_value_copy_to(ctx.world, out, val)) {
-            flecs_expr_visit_error(script, node, "failed to write to output");
-            goto error;
+    if (val != &val_tmp || out->ptr != val->value.ptr) {
+        if (val->owned) {
+            /* Values owned by the runtime can be moved to output */
+            if (flecs_value_move_to(ctx.world, out, &val->value)) {
+                flecs_expr_visit_error(script, node, "failed to write to output");
+                goto error;
+            }
+        } else {
+            /* Values not owned by runtime should be copied */
+            if (flecs_value_copy_to(ctx.world, out, val)) {
+                flecs_expr_visit_error(script, node, "failed to write to output");
+                goto error;
+            }
         }
     }
 
