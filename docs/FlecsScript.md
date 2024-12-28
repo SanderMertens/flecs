@@ -398,6 +398,48 @@ Tree: {color: $color, height: $height}
 Tree: {color: $, height: $}
 ```
 
+### Match expressions
+Match expressions can be used to conditionally assign a value. An example:
+
+```c
+const x = 1
+
+// y will be assigned with value 10
+const y = match x {
+  1: 10
+  2: 20
+  3: 30
+}
+```
+
+The input to a match expression must be matched by one of its cases. If the input is not matched, script execution will fail. Match expressions can include an "any" case, which is selected when none of the other cases match:
+
+```c
+const x = 4
+
+// y will be assigned with value 100
+const y = match x {
+  1: 10
+  2: 20
+  3: 30
+  _: 100
+}
+```
+
+Match expressions can be used to assign components:
+
+```c
+e {
+  Position: match i {
+    1: {10, 20}
+    2: {20, 30}
+    3: {40, 50}
+  }
+}
+```
+
+The type of a match expression is derived from the case values. When the case statements in a match contain values of multiple types, the most expressive type is selected. The algorithm for determining the most expressive type is the same as the one used to determine the type for binary expressions. When a match expression contains values with conflicting types, script execution will fail.
+
 ### String interpolation
 Flecs script supports interpolated strings, which are strings that can contain expressions. String interpolation supports two forms, where one allows for easy embedding of variables, whereas the other allows for embedding any kind of expression. The following example shows an embedded variable:
 
@@ -898,7 +940,7 @@ Scripts can contain variables, which are useful for often repeated values. Varia
 const pi = 3.1415926
 
 my_entity {
-  Rotation: {angle: $pi}
+  Rotation: {angle: pi}
 }
 ```
 
@@ -909,7 +951,7 @@ const pi = 3.1415926
 const pi_2 = $pi * 2
 
 my_entity {
-  Rotation: {angle: $pi / 2}
+  Rotation: {angle: pi / 2}
 }
 ```
 
@@ -919,7 +961,18 @@ In the above examples, the type of the variable is inferred. Variables can also 
 const wood = Color: {38, 25, 13}
 ```
 
-Variables can be used in component values as shown in the previous examples, or can be used directly as component. Example:
+When the name of a variable clashes with an entity, it can be disambiguated by prefixing the variable name with a `$`:
+
+```c
+const pi = 3.1415926
+const pi_2 = $pi * 2
+
+pi {
+  Rotation: {angle: $pi / 2}
+}
+```
+
+Variables can be used in component values as shown in the previous examples, or can be used directly as component. When used like this, the variable name must be prefixed with a `$`. Example:
 
 ```c
 const wood = Color: {38, 25, 13}
@@ -935,7 +988,7 @@ my_entity {
 }
 ```
 
-Additionally, variables can also be used in combination with `with` statements:
+Additionally, variables can also be used in combination with `with` statements. When used like this the variable name must also be prefixed with a `$`:
 
 ```c
 const wood = Color: {38, 25, 13}
