@@ -163,6 +163,7 @@ void Eval_const_var_bool(void);
 void Eval_const_var_string(void);
 void Eval_const_var_struct(void);
 void Eval_const_var_scoped(void);
+void Eval_const_var_int_deprecated_notation(void);
 void Eval_assign_component_from_var(void);
 void Eval_assign_component_from_var_in_scope(void);
 void Eval_scope_w_component_after_const_var(void);
@@ -445,7 +446,6 @@ void Error_template_unresolved_with_pair_relationship(void);
 void Error_template_unresolved_with_pair_target(void);
 void Error_template_unresolved_tag_in_child(void);
 void Error_template_prop_no_type(void);
-void Error_template_prop_no_default(void);
 void Error_template_w_composite_prop_invalid_assignment(void);
 void Error_template_redeclare_prop_as_const(void);
 void Error_template_redeclare_prop_as_prop(void);
@@ -1558,6 +1558,10 @@ bake_test_case Eval_testcases[] = {
     {
         "const_var_scoped",
         Eval_const_var_scoped
+    },
+    {
+        "const_var_int_deprecated_notation",
+        Eval_const_var_int_deprecated_notation
     },
     {
         "assign_component_from_var",
@@ -2676,10 +2680,6 @@ bake_test_case Error_testcases[] = {
     {
         "template_prop_no_type",
         Error_template_prop_no_type
-    },
-    {
-        "template_prop_no_default",
-        Error_template_prop_no_default
     },
     {
         "template_w_composite_prop_invalid_assignment",
@@ -4639,7 +4639,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        308,
+        309,
         Eval_testcases
     },
     {
@@ -4653,7 +4653,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        81,
+        80,
         Error_testcases
     },
     {

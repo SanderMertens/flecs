@@ -180,6 +180,22 @@ void ecs_parser_errorv_(
     const char *fmt,
     va_list args);
 
+FLECS_API
+void ecs_parser_warning_(
+    const char *name,
+    const char *expr,
+    int64_t column,
+    const char *fmt,
+    ...);
+
+FLECS_API
+void ecs_parser_warningv_(
+    const char *name,
+    const char *expr,
+    int64_t column,
+    const char *fmt,
+    va_list args);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Logging macros
@@ -424,6 +440,12 @@ void ecs_parser_errorv_(
 
 #define ecs_parser_errorv(name, expr, column, fmt, args)\
     ecs_parser_errorv_(name, expr, column, fmt, args)
+
+#define ecs_parser_warning(name, expr, column, ...)\
+    ecs_parser_warning_(name, expr, column, __VA_ARGS__)
+
+#define ecs_parser_warningv(name, expr, column, fmt, args)\
+    ecs_parser_warningv_(name, expr, column, fmt, args)
 
 #endif // FLECS_LEGACY
 

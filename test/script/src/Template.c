@@ -357,8 +357,8 @@ void Template_template_w_prop_implicit_type(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width = 10"
-    LINE "  prop height = 20"
+    LINE "  prop width: 10"
+    LINE "  prop height: 20"
     LINE "}"
     LINE ""
     LINE "e { Tree }"
@@ -1971,7 +1971,7 @@ void Template_hoist_var(void) {
 
     const char *expr =
     HEAD "using flecs.meta"
-    LINE "const v = 10"
+    LINE "const v: 10"
     LINE "template Tree {"
     LINE "  prop height = f32: 0"
     LINE "  Position: {$v, $height}"
@@ -2008,9 +2008,9 @@ void Template_hoist_vars_nested(void) {
     });
 
     const char *expr =
-    HEAD "const x = 10"
+    HEAD "const x: 10"
     LINE "parent {"
-    LINE "  const y = 20"
+    LINE "  const y: 20"
     LINE "  template Tree {"
     LINE "    Position: {$x, $y}"
     LINE "  }"
@@ -2047,10 +2047,10 @@ void Template_hoist_vars_nested_w_masked(void) {
     });
 
     const char *expr =
-    HEAD "const x = 10"
+    HEAD "const x: 10"
     LINE "parent {"
-    HEAD "  const x = 30"
-    LINE "  const y = 20"
+    HEAD "  const x: 30"
+    LINE "  const y: 20"
     LINE "  template Tree {"
     LINE "    Position: {$x, $y}"
     LINE "  }"
@@ -2684,8 +2684,8 @@ void Template_fold_const(void) {
     const char *expr =
     HEAD "template Foo {"
     LINE "  prop size = i32: 10"
-    LINE "  const size_h = $size / 2"
-    LINE "  const size_h_2 = $size_h + 2"
+    LINE "  const size_h: $size / 2"
+    LINE "  const size_h_2: $size_h + 2"
     LINE "  Position: {$size_h, $size_h_2}"
     LINE "}"
     LINE ""
@@ -2914,7 +2914,7 @@ void Template_template_w_for(void) {
     const char *expr =
     HEAD "template Foo {"
     LINE "  for i in 0..2 {"
-    LINE"     const t = $i"
+    LINE"     const t: $i"
     LINE "    \"child_$i\" = Position: {$t, $t + 2}"
     LINE "  }"
     LINE "}"

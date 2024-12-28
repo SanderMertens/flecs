@@ -262,8 +262,8 @@ void ExprAst_template_w_foldable_const(void) {
     HEAD "Foo {}"
     LINE
     LINE "template Bar {"
-    LINE "  const a = 10"
-    LINE "  const b = $a + 10"
+    LINE "  const a: 10"
+    LINE "  const b: $a + 10"
     LINE "  Position: {$a, $b}"
     LINE "}"
     LINE

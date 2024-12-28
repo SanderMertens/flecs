@@ -24507,12 +24507,13 @@ void ecs_log_pop_(
     }
 }
 
-void ecs_parser_errorv_(
+void flecs_parser_errorv(
     const char *name,
     const char *expr, 
     int64_t column_arg,
     const char *fmt,
-    va_list args)
+    va_list args,
+    bool is_warning)
 {
     if (column_arg > 65536) {
         /* Limit column size, which prevents the code from throwing up when the
@@ -24588,9 +24589,33 @@ void ecs_parser_errorv_(
         }
 
         char *msg = ecs_strbuf_get(&msg_buf);
-        ecs_os_err(name, 0, msg);
+        if (is_warning) {
+            ecs_os_warn(name, 0, msg);
+        } else {
+            ecs_os_err(name, 0, msg);
+        }
         ecs_os_free(msg);
     }
+}
+
+void ecs_parser_errorv_(
+    const char *name,
+    const char *expr, 
+    int64_t column_arg,
+    const char *fmt,
+    va_list args)
+{
+    flecs_parser_errorv(name, expr, column_arg, fmt, args, false);
+}
+
+void ecs_parser_warningv_(
+    const char *name,
+    const char *expr, 
+    int64_t column_arg,
+    const char *fmt,
+    va_list args)
+{
+    flecs_parser_errorv(name, expr, column_arg, fmt, args, true);
 }
 
 void ecs_parser_error_(
@@ -24604,6 +24629,21 @@ void ecs_parser_error_(
         va_list args;
         va_start(args, fmt);
         ecs_parser_errorv_(name, expr, column, fmt, args);
+        va_end(args);
+    }
+}
+
+void ecs_parser_warning_(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    ...)
+{
+    if (ecs_os_api.log_level_  >= -2) {
+        va_list args;
+        va_start(args, fmt);
+        ecs_parser_warningv_(name, expr, column, fmt, args);
         va_end(args);
     }
 }
@@ -56194,6 +56234,11 @@ void FlecsScriptMathImport(
         (pos - parser->script->pub.code) - 1, __VA_ARGS__);\
     goto error
 
+/* Warning */
+#define Warning(...)\
+    ecs_parser_warning(parser->script->pub.name, parser->script->pub.code,\
+        (pos - parser->script->pub.code) - 1, __VA_ARGS__);\
+
 /* Parse expression */
 #define Expr(until, ...)\
     {\
@@ -56709,6 +56754,18 @@ const char* flecs_script_parse_var(
                 )
 
                 // const PI = expr\n
+                Expr('\n',
+                    Warning("'%s var = expr' syntax is deprecated"
+                        ", use '%s var: expr' instead", 
+                            is_prop ? "prop" : "const",
+                            is_prop ? "prop" : "const");
+                    var->expr = EXPR;
+                    EndOfRule;
+                )
+            }
+
+            case ':': {
+                // const PI: expr\n
                 Expr('\n',
                     var->expr = EXPR;
                     EndOfRule;
