@@ -10,7 +10,7 @@
 #include "pipeline.h"
 
 /* Synchronize workers */
-static
+static inline
 void flecs_sync_worker(
     ecs_world_t* world)
 {
@@ -102,7 +102,7 @@ void flecs_create_worker_threads(
     }
 }
 
-static
+static inline
 void flecs_start_workers(
     ecs_world_t *world,
     int32_t threads)

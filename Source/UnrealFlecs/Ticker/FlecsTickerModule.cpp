@@ -20,9 +20,7 @@ DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("FlecsTickerModule::ProgressModule::RunPipel
 
 static FORCEINLINE NO_DISCARD int flecs_entity_compare(
 	ecs_entity_t e1, 
-	MAYBE_UNUSED const void* ptr1, 
-	ecs_entity_t e2, 
-	MAYBE_UNUSED const void* ptr2) 
+	ecs_entity_t e2) 
 {
 	return (e1 > e2) - (e1 < e2);
 }
@@ -34,7 +32,7 @@ static FORCEINLINE NO_DISCARD int flecs_priority_compare(
 	const flecs::SystemPriority* InPtrB) 
 {
 	if (InPtrA->value == InPtrB->value) {
-		return flecs_entity_compare(InEntityA, InPtrA, InEntityB, InPtrB);
+		return flecs_entity_compare(InEntityA, InEntityB);
 	}
 	else // lower value has higher priority
 	{

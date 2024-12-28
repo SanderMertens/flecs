@@ -6,7 +6,7 @@ public class UnrealFlecsTests : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         
-        PublicIncludePaths.AddRange(
+        PrivateIncludePaths.AddRange(
             new string[]
             {
                 ModuleDirectory

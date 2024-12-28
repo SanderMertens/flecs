@@ -26,15 +26,18 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 	Scene->GetSolver()->SetIsDeterministic(true);
 
 	GetFlecsWorld()->RegisterModuleDependency<UFlecsTickerModule>
-		(this, [&](UFlecsTickerModule* InModuleObject,
-			UFlecsWorld* InFlecsWorld, FFlecsEntityHandle& InTickerEntity)
+		(this,
+			[&](
+				UFlecsTickerModule* InModuleObject,
+				UFlecsWorld* InFlecsWorld,
+				FFlecsEntityHandle& InTickerEntity)
 		{
 			InFlecsWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
 
 			const UFlecsTickerModule* TickerModule = InFlecsWorld->GetModule<UFlecsTickerModule>();
 			solid_check(IsValid(TickerModule));
 			
-			Scene->GetSolver()->EnableAsyncMode(1.0 / TickerModule->GetTickerRate());
+			Scene->GetSolver()->EnableAsyncMode(1.0 / static_cast<double>(TickerModule->GetTickerRate()));
 			Scene->GetSolver()->SetIsDeterministic(true);
 			Scene->GetSolver()->SetAsyncPhysicsBlockMode(Chaos::BlockForBestInterpolation);
 
@@ -105,7 +108,6 @@ inline void UFlecsPhysicsModule::ResimulationHandlers()
 		
 		Chaos::FPhysicsSolver* Solver = FlecsWorld->GetWorld()->GetPhysicsScene()->GetSolver();
 		solid_check(Solver);
-
 		solid_check(PhysicsHistoryComponentRef);
 
 		const int32 CurrentPhysicsFrame = Solver->GetCurrentFrame();

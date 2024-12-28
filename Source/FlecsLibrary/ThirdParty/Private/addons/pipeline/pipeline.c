@@ -98,7 +98,7 @@ ecs_write_kind_t flecs_pipeline_get_write_state(
     return result;
 }
 
-static
+static inline
 void flecs_pipeline_set_write_state(
     ecs_write_state_t *write_state,
     ecs_id_t id)
@@ -109,8 +109,7 @@ void flecs_pipeline_set_write_state(
         return;
     }
 
-    ecs_map_t *ids;
-    ids = ecs_id_is_wildcard(id) ? &write_state->wildcard_ids : &write_state->ids;
+    ecs_map_t *ids = ecs_id_is_wildcard(id) ? &write_state->wildcard_ids : &write_state->ids;
 
     ecs_map_ensure(ids, id)[0] = true;
 }
@@ -242,7 +241,7 @@ bool flecs_pipeline_check_terms(
     return needs_merge;
 }
 
-static
+static inline
 EcsPoly* flecs_pipeline_term_system(
     ecs_iter_t *it)
 {
@@ -462,7 +461,7 @@ bool flecs_pipeline_build(
     return true;
 }
 
-static
+static inline
 void flecs_pipeline_next_system(
     ecs_pipeline_state_t *pq)
 {

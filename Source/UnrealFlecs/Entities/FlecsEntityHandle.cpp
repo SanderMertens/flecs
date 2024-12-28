@@ -89,7 +89,7 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
 
 FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptStruct* StructType) const
 {
-    solid_checkf(StructType, TEXT("Struct Type is not valid"));
+    solid_checkf(StructType, TEXT("Struct type is not valid"));
     return GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
 }
 
