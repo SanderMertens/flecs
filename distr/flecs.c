@@ -5079,6 +5079,7 @@ typedef struct ecs_expr_match_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *expr;
     ecs_vec_t elements;
+    ecs_expr_match_element_t any;
 } ecs_expr_match_t;
 
 ecs_expr_value_node_t* flecs_expr_value_from(
@@ -77827,9 +77828,18 @@ int flecs_expr_match_visit_eval(
     }
 
     if (i == count) {
-        flecs_expr_visit_error(ctx->script, node, 
-            "match value not handled by case");
-        goto error;
+        if (node->any.expr) {
+            if (flecs_expr_visit_eval_priv(ctx, node->any.expr, out)) {
+                goto error;
+            }
+        } else {
+            char *str = ecs_ptr_to_str(
+                ctx->world, expr->value.type, expr->value.ptr);
+            flecs_expr_visit_error(ctx->script, node, 
+                "match value '%s' not handled by case", str);
+            ecs_os_free(str);
+            goto error;
+        }
     }
 
     flecs_expr_stack_pop(ctx->stack);
@@ -80791,6 +80801,19 @@ error:
 }
 
 static
+bool flecs_expr_identifier_is_any(
+    ecs_expr_node_t *node)
+{
+    if (node->kind == EcsExprIdentifier) {
+        ecs_expr_identifier_t *id = (ecs_expr_identifier_t*)node;
+        if (id->value && !ecs_os_strcmp(id->value, "_")) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static
 int flecs_expr_match_visit_type(
     ecs_script_t *script,
     ecs_expr_match_t *node,
@@ -80887,17 +80910,33 @@ int flecs_expr_match_visit_type(
     /* Make sure that case values match the input type */
     for (i = 0; i < count; i ++) {
         ecs_expr_match_element_t *elem = &elems[i];
-        expr_cur = ecs_meta_cursor(script->world, expr_type, NULL);
-        if (flecs_expr_visit_type_priv(script, elem->compare, &expr_cur, desc)) {
-            goto error;
-        }
 
-        ecs_expr_node_t *compare = elem->compare;
-        if (compare->type != node->expr->type) {
-            elem->compare = (ecs_expr_node_t*)
-                flecs_expr_cast(script, compare, node->expr->type);
-            if (!elem->compare) {
+        if (flecs_expr_identifier_is_any(elem->compare)) {
+            if (i != count - 1) {
+                flecs_expr_visit_error(script, node, 
+                    "any (_) must be the last case in match");
                 goto error;
+            }
+
+            node->any.compare = elem->compare;
+            node->any.expr = elem->expr;
+            elem = &node->any;
+            ecs_vec_remove_last(&node->elements);
+        } else {
+            expr_cur = ecs_meta_cursor(script->world, expr_type, NULL);
+            if (flecs_expr_visit_type_priv(
+                script, elem->compare, &expr_cur, desc)) 
+            {
+                goto error;
+            }
+
+            ecs_expr_node_t *compare = elem->compare;
+            if (compare->type != node->expr->type) {
+                elem->compare = (ecs_expr_node_t*)
+                    flecs_expr_cast(script, compare, node->expr->type);
+                if (!elem->compare) {
+                    goto error;
+                }
             }
         }
     }

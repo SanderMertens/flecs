@@ -132,6 +132,7 @@ typedef struct ecs_expr_match_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *expr;
     ecs_vec_t elements;
+    ecs_expr_match_element_t any;
 } ecs_expr_match_t;
 
 ecs_expr_value_node_t* flecs_expr_value_from(

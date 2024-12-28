@@ -737,9 +737,18 @@ int flecs_expr_match_visit_eval(
     }
 
     if (i == count) {
-        flecs_expr_visit_error(ctx->script, node, 
-            "match value not handled by case");
-        goto error;
+        if (node->any.expr) {
+            if (flecs_expr_visit_eval_priv(ctx, node->any.expr, out)) {
+                goto error;
+            }
+        } else {
+            char *str = ecs_ptr_to_str(
+                ctx->world, expr->value.type, expr->value.ptr);
+            flecs_expr_visit_error(ctx->script, node, 
+                "match value '%s' not handled by case", str);
+            ecs_os_free(str);
+            goto error;
+        }
     }
 
     flecs_expr_stack_pop(ctx->stack);
