@@ -10023,8 +10023,10 @@ void Eval_const_assign_empty_initializer(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const x = {}";
+    HEAD "const x = {}"
+    LINE;
 
+    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr) != 0);
 
     ecs_fini(world);
@@ -10034,8 +10036,10 @@ void Eval_const_assign_empty_collection_initializer(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const x = []";
+    HEAD "const x = []"
+    LINE;
 
+    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr) != 0);
 
     ecs_fini(world);
@@ -10045,8 +10049,10 @@ void Eval_const_i32_assign_empty_initializer(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const x = i32: {}";
+    HEAD "const x = i32: {}"
+    LINE;
 
+    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr) != 0);
 
     ecs_fini(world);
@@ -10056,8 +10062,10 @@ void Eval_const_i32_assign_empty_collection_initializer(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const x = i32: []";
+    HEAD "const x = i32: []"
+    LINE;
 
+    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr) != 0);
 
     ecs_fini(world);
