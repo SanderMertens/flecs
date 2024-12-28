@@ -5,7 +5,7 @@
 
 class FUnrealFlecsTestsModule : public IModuleInterface
 {
-public:ERemoteFunctionSendPolicy 
+public: 
     virtual void StartupModule() override;
     virtual void ShutdownModule() override;
 };
