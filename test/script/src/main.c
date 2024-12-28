@@ -314,6 +314,7 @@ void Eval_component_w_match(void);
 void Eval_component_w_match_invalid(void);
 void Eval_pair_component_w_match(void);
 void Eval_component_assign_w_match(void);
+void Eval_const_w_match(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -734,6 +735,9 @@ void Expr_match_w_any_not_last(void);
 void Expr_match_w_any_first(void);
 void Expr_match_w_any_mismatching_type(void);
 void Expr_match_i_w_any_f(void);
+void Expr_identifier_as_var(void);
+void Expr_expr_w_identifier_as_var(void);
+void Expr_initializer_w_identifier_as_var(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_binary_f32_var_add_f32_var(void);
@@ -2150,6 +2154,10 @@ bake_test_case Eval_testcases[] = {
     {
         "component_assign_w_match",
         Eval_component_assign_w_match
+    },
+    {
+        "const_w_match",
+        Eval_const_w_match
     }
 };
 
@@ -3811,6 +3819,18 @@ bake_test_case Expr_testcases[] = {
     {
         "match_i_w_any_f",
         Expr_match_i_w_any_f
+    },
+    {
+        "identifier_as_var",
+        Expr_identifier_as_var
+    },
+    {
+        "expr_w_identifier_as_var",
+        Expr_expr_w_identifier_as_var
+    },
+    {
+        "initializer_w_identifier_as_var",
+        Expr_initializer_w_identifier_as_var
     }
 };
 
@@ -4579,7 +4599,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        305,
+        306,
         Eval_testcases
     },
     {
@@ -4600,7 +4620,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        266,
+        269,
         Expr_testcases,
         1,
         Expr_params

@@ -317,7 +317,8 @@
                 "component_w_match",
                 "component_w_match_invalid",
                 "pair_component_w_match",
-                "component_assign_w_match"
+                "component_assign_w_match",
+                "const_w_match"
             ]
         }, {
             "id": "Template",
@@ -746,7 +747,10 @@
                 "match_w_any_not_last",
                 "match_w_any_first",
                 "match_w_any_mismatching_type",
-                "match_i_w_any_f"
+                "match_i_w_any_f",
+                "identifier_as_var",
+                "expr_w_identifier_as_var",
+                "initializer_w_identifier_as_var"
             ]
         }, {
             "id": "ExprAst",
