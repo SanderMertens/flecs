@@ -559,7 +559,8 @@ for_stmt: {
             Parse_1(EcsTokRange, {
                 Expr(0, {
                     ecs_expr_node_t *to = EXPR;
-                    ecs_script_for_range_t *stmt = flecs_script_insert_for_range(parser);
+                    ecs_script_for_range_t *stmt = 
+                        flecs_script_insert_for_range(parser);
                     stmt->loop_var = Token(1);
                     stmt->from = from;
                     stmt->to = to;
@@ -599,16 +600,29 @@ pair: {
 
         // (Eats, Apples):
         case ':': {
-            // (Eats, Apples): {
-            Parse_1('{',
-                // (Eats, Apples): { expr }
-                Initializer('}',
+            // Use lookahead so that expression parser starts at "match"
+            LookAhead_1(EcsTokKeywordMatch, {
+                // (Eats, Apples): match expr
+                Expr('\n', {
                     ecs_script_component_t *comp = 
                         flecs_script_insert_pair_component(
                             parser, Token(1), Token(3));
-                    comp->expr = INITIALIZER;
-                    EndOfRule;
-                )
+                    comp->expr = EXPR;
+                    EndOfRule; 
+                })
+            })
+
+            // (Eats, Apples): {
+            Parse_1('{', {
+                    // (Eats, Apples): { expr }
+                    Initializer('}',
+                        ecs_script_component_t *comp = 
+                            flecs_script_insert_pair_component(
+                                parser, Token(1), Token(3));
+                        comp->expr = INITIALIZER;
+                        EndOfRule;
+                    )
+                }
             )
         }
 
@@ -678,8 +692,9 @@ identifier_flag: {
                     Parse_1('{',
                         // auto_override | Position: {expr}
                         Expr('}', {
-                            ecs_script_component_t *comp = flecs_script_insert_component(
-                                parser, Token(2));
+                            ecs_script_component_t *comp = 
+                                flecs_script_insert_component(
+                                    parser, Token(2));
                             comp->expr = EXPR;
                             EndOfRule; 
                         })
@@ -749,6 +764,18 @@ identifier_assign: {
     // x = Position:
     LookAhead_2(EcsTokIdentifier, ':',
         pos = lookahead;
+
+        // Use lookahead so that expression parser starts at "match"
+        LookAhead_1(EcsTokKeywordMatch, {
+            // (Eats, Apples): match expr
+            Expr('\n', {
+                ecs_script_component_t *comp = 
+                    flecs_script_insert_pair_component(
+                        parser, Token(1), Token(3));
+                comp->expr = EXPR;
+                EndOfRule; 
+            })
+        })
 
         // x = Position: {
         Parse_1('{', {
