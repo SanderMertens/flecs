@@ -310,6 +310,10 @@ void Eval_const_assign_empty_initializer(void);
 void Eval_const_assign_empty_collection_initializer(void);
 void Eval_const_i32_assign_empty_initializer(void);
 void Eval_const_i32_assign_empty_collection_initializer(void);
+void Eval_component_w_match(void);
+void Eval_component_w_match_invalid(void);
+void Eval_pair_component_w_match(void);
+void Eval_component_assign_w_match(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -2130,6 +2134,22 @@ bake_test_case Eval_testcases[] = {
     {
         "const_i32_assign_empty_collection_initializer",
         Eval_const_i32_assign_empty_collection_initializer
+    },
+    {
+        "component_w_match",
+        Eval_component_w_match
+    },
+    {
+        "component_w_match_invalid",
+        Eval_component_w_match_invalid
+    },
+    {
+        "pair_component_w_match",
+        Eval_pair_component_w_match
+    },
+    {
+        "component_assign_w_match",
+        Eval_component_assign_w_match
     }
 };
 
@@ -4559,7 +4579,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        301,
+        305,
         Eval_testcases
     },
     {

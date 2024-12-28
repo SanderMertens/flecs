@@ -313,7 +313,11 @@
                 "const_assign_empty_initializer",
                 "const_assign_empty_collection_initializer",
                 "const_i32_assign_empty_initializer",
-                "const_i32_assign_empty_collection_initializer"
+                "const_i32_assign_empty_collection_initializer",
+                "component_w_match",
+                "component_w_match_invalid",
+                "pair_component_w_match",
+                "component_assign_w_match"
             ]
         }, {
             "id": "Template",

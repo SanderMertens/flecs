@@ -10070,3 +10070,202 @@ void Eval_const_i32_assign_empty_collection_initializer(void) {
 
     ecs_fini(world);
 }
+
+void Eval_component_w_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Position: match $i {"
+    LINE "    1: {10, 20}"
+    LINE "    2: {20, 30}"
+    LINE "    3: {30, 40}"
+    LINE "    _: {40, 50}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+
+    ecs_script_eval_desc_t desc = { .vars = vars };
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &desc);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 1;
+        test_assert(ecs_script_eval(s, &desc) == 0);
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    {
+        *(int32_t*)var->value.ptr = 2;
+        test_assert(ecs_script_eval(s, &desc) == 0);
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 20);
+        test_int(ptr->y, 30);
+    }
+
+    {
+        *(int32_t*)var->value.ptr = 3;
+        test_assert(ecs_script_eval(s, &desc) == 0);
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 30);
+        test_int(ptr->y, 40);
+    }
+
+    {
+        *(int32_t*)var->value.ptr = 4;
+        test_assert(ecs_script_eval(s, &desc) == 0);
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 40);
+        test_int(ptr->y, 50);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_component_w_match_invalid(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Position: match $i {"
+    LINE "    1: {10, 20}"
+    LINE "    2: {20, 30}"
+    LINE "    3: {30, 40}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+
+    ecs_script_eval_desc_t desc = { .vars = vars };
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &desc);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 4;
+        ecs_log_set_level(-4);
+        test_assert(ecs_script_eval(s, &desc) != 0);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_pair_component_w_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tgt);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  (Position, Tgt): match $i {"
+    LINE "    1: {10, 20}"
+    LINE "    2: {20, 30}"
+    LINE "    3: {30, 40}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+
+    ecs_script_eval_desc_t desc = { .vars = vars };
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &desc);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 4;
+        ecs_log_set_level(-4);
+        test_assert(ecs_script_eval(s, &desc) != 0);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_component_assign_w_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo = Position: match $i {"
+    LINE "  1: {10, 20}"
+    LINE "  2: {20, 30}"
+    LINE "  3: {30, 40}"
+    LINE "}"
+    ;
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+
+    ecs_script_eval_desc_t desc = { .vars = vars };
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &desc);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 4;
+        ecs_log_set_level(-4);
+        test_assert(ecs_script_eval(s, &desc) != 0);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
