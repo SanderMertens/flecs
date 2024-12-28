@@ -328,6 +328,7 @@ void Template_template_w_using(void);
 void Template_template_instance_w_default_values(void);
 void Template_template_instance_w_assign_default_values(void);
 void Template_template_instance_w_overridden_values(void);
+void Template_template_w_prop_implicit_type(void);
 void Template_template_w_child(void);
 void Template_template_w_child_parse_script(void);
 void Template_template_w_child_parse_script_twice(void);
@@ -2212,6 +2213,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_instance_w_overridden_values",
         Template_template_instance_w_overridden_values
+    },
+    {
+        "template_w_prop_implicit_type",
+        Template_template_w_prop_implicit_type
     },
     {
         "template_w_child",
@@ -4641,7 +4646,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        68,
+        69,
         Template_testcases
     },
     {

@@ -56670,6 +56670,57 @@ const char* flecs_script_if_stmt(
     ParserEnd;
 }
 
+static
+const char* flecs_script_parse_var(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_tokenizer_t *tokenizer,
+    bool is_prop)
+{
+    Parse_1(EcsTokIdentifier,
+        ecs_script_var_node_t *var = flecs_script_insert_var(
+            parser, Token(1));
+        var->node.kind = is_prop ? EcsAstProp : EcsAstConst;
+
+        Parse(
+            // const color =
+            case '=': {
+                // const color = Color :
+                LookAhead_2(EcsTokIdentifier, ':',
+                    pos = lookahead;
+
+                    var->type = Token(3);
+
+                    // const color = Color: {
+                    LookAhead_1('{',
+                        // const color = Color: {expr}
+                        pos = lookahead;
+                        Initializer('}',
+                            var->expr = INITIALIZER;
+                            EndOfRule;
+                        )
+                    )
+
+                    // const color = Color: expr\n
+                    Initializer('\n',
+                        var->expr = INITIALIZER;
+                        EndOfRule;
+                    )
+                )
+
+                // const PI = expr\n
+                Expr('\n',
+                    var->expr = EXPR;
+                    EndOfRule;
+                )
+            }
+        )
+    )
+
+error:
+    return NULL;
+}
+
 /* Parse a single statement */
 static
 const char* flecs_script_stmt(
@@ -56863,72 +56914,13 @@ template_stmt: {
 // prop
 prop_var: {
     // prop color = Color:
-    Parse_4(EcsTokIdentifier, '=', EcsTokIdentifier, ':',
-        ecs_script_var_node_t *var = flecs_script_insert_var(
-            parser, Token(1));
-        var->node.kind = EcsAstProp;
-        var->type = Token(3);
-
-        // prop color = Color : {
-        LookAhead_1('{',
-            // prop color = Color: {expr}
-            pos = lookahead;
-            Initializer('}',
-                var->expr = INITIALIZER;
-                EndOfRule;
-            )
-        )
-
-        // prop color = Color : expr\n
-        Initializer('\n',
-            var->expr = INITIALIZER;
-            EndOfRule;
-        )
-    )
+    return flecs_script_parse_var(parser, pos, tokenizer, true);
 }
 
 // const
 const_var: {
     // const color
-    Parse_1(EcsTokIdentifier,
-        ecs_script_var_node_t *var = flecs_script_insert_var(
-            parser, Token(1));
-        var->node.kind = EcsAstConst;
-
-        Parse(
-            // const color =
-            case '=': {
-                // const color = Color :
-                LookAhead_2(EcsTokIdentifier, ':',
-                    pos = lookahead;
-
-                    var->type = Token(3);
-
-                    // const color = Color: {
-                    LookAhead_1('{',
-                        // const color = Color: {expr}
-                        pos = lookahead;
-                        Initializer('}',
-                            var->expr = INITIALIZER;
-                            EndOfRule;
-                        )
-                    )
-
-                    // const color = Color: expr\n
-                    Initializer('\n',
-                        var->expr = INITIALIZER;
-                        EndOfRule;
-                    )
-                )
-
-                // const PI = expr\n
-                Expr('\n',
-                    var->expr = EXPR;
-                    EndOfRule;
-                )
-            }
-        )
-    )
+    return flecs_script_parse_var(parser, pos, tokenizer, false);
 }
 
 // if
@@ -59303,8 +59295,10 @@ int flecs_script_template_eval_prop(
         return -1;
     }
 
+    ecs_entity_t type;
+    const ecs_type_info_t *ti;
+
     if (node->type) {
-        ecs_entity_t type;
         if (flecs_script_find_entity(v, 0, node->type, NULL, &type) || !type) {
             flecs_script_eval_error(v, node,
                 "unresolved type '%s' for const variable '%s'", 
@@ -59312,7 +59306,7 @@ int flecs_script_template_eval_prop(
             return -1;
         }
 
-        const ecs_type_info_t *ti = flecs_script_get_type_info(v, node, type);
+        ti = flecs_script_get_type_info(v, node, type);
         if (!ti) {
             return -1;
         }
@@ -59325,23 +59319,32 @@ int flecs_script_template_eval_prop(
         if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
             return -1;
         }
+    } else {
+        if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
+            return -1;
+        }
 
-        ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator, 
-            &template->prop_defaults, ecs_script_var_t);
-        value->value.ptr = flecs_calloc_w_dbg_info(
-            &v->base.script->allocator, ti->size, ti->name);
-        value->value.type = type;
-        value->type_info = ti;
-        ecs_value_copy_w_type_info(
-            v->world, ti, value->value.ptr, var->value.ptr);
-
-        ecs_entity_t mbr = ecs_entity(v->world, {
-            .name = node->name,
-            .parent = template->entity
-        });
-
-        ecs_set(v->world, mbr, EcsMember, { .type = var->value.type });
+        type = var->value.type;
+        ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
+        ti = ecs_get_type_info(v->world, type);
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     }
+
+    ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator, 
+        &template->prop_defaults, ecs_script_var_t);
+    value->value.ptr = flecs_calloc_w_dbg_info(
+        &v->base.script->allocator, ti->size, ti->name);
+    value->value.type = type;
+    value->type_info = ti;
+    ecs_value_copy_w_type_info(
+        v->world, ti, value->value.ptr, var->value.ptr);
+
+    ecs_entity_t mbr = ecs_entity(v->world, {
+        .name = node->name,
+        .parent = template->entity
+    });
+
+    ecs_set(v->world, mbr, EcsMember, { .type = var->value.type });
 
     return 0;
 }

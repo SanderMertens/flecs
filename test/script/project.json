@@ -334,6 +334,7 @@
                 "template_instance_w_default_values",
                 "template_instance_w_assign_default_values",
                 "template_instance_w_overridden_values",
+                "template_w_prop_implicit_type",
                 "template_w_child",
                 "template_w_child_parse_script",
                 "template_w_child_parse_script_twice",
