@@ -26688,7 +26688,11 @@ bool flecs_rest_script(
 
     const char *code = ecs_http_get_param(req, "code");
     if (!code) {
-        flecs_reply_error(reply, "missing data parameter");
+        code = req->body;
+    }
+
+    if (!code) {
+        flecs_reply_error(reply, "missing code parameter");
         return true;
     }
 
