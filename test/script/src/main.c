@@ -741,6 +741,7 @@ void Expr_match_w_any_first(void);
 void Expr_match_w_any_mismatching_type(void);
 void Expr_match_i_w_any_f(void);
 void Expr_identifier_as_var(void);
+void Expr_identifier_as_const_var(void);
 void Expr_expr_w_identifier_as_var(void);
 void Expr_initializer_w_identifier_as_var(void);
 
@@ -3853,6 +3854,10 @@ bake_test_case Expr_testcases[] = {
         Expr_identifier_as_var
     },
     {
+        "identifier_as_const_var",
+        Expr_identifier_as_const_var
+    },
+    {
         "expr_w_identifier_as_var",
         Expr_expr_w_identifier_as_var
     },
@@ -4660,7 +4665,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        269,
+        270,
         Expr_testcases,
         1,
         Expr_params

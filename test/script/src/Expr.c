@@ -7831,6 +7831,27 @@ void Expr_expr_w_identifier_as_var(void) {
     ecs_fini(world);
 }
 
+void Expr_identifier_as_const_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t value = 10;
+
+    test_assert(0 != ecs_const_var(world, {
+        .name = "FOO",
+        .type = ecs_id(ecs_i32_t),
+        .value = &value
+    }));
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "FOO", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(int32_t*)v.ptr, 10);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
 void Expr_initializer_w_identifier_as_var(void) {
     ecs_world_t *world = ecs_init();
 
