@@ -996,11 +996,6 @@ error:
     return -1;
 }
 
-//  else {
-//         type = ecs_id(ecs_entity_t);
-//         *cur = ecs_meta_cursor(script->world, ecs_id(ecs_entity_t), NULL);
-//     }
-
 static
 int flecs_expr_constant_identifier_visit_type(
     ecs_script_t *script,
@@ -1061,16 +1056,33 @@ int flecs_expr_identifier_visit_type(
         ecs_entity_t e = desc->lookup_action(
             script->world, node->value, desc->lookup_ctx);
         if (e) {
-            if (!type) {
-                type = ecs_id(ecs_entity_t);
+            const EcsScriptConstVar *global = ecs_get(
+                script->world, e, EcsScriptConstVar);
+            if (!global) {
+                if (!type) {
+                    type = ecs_id(ecs_entity_t);
+                }
+
+                ecs_expr_value_node_t *result = flecs_expr_value_from(
+                    script, (ecs_expr_node_t*)node, type);
+                result->storage.entity = e;
+                result->ptr = &result->storage.entity;
+                node->expr = (ecs_expr_node_t*)result;
+                node->node.type = type;
+            } else {
+                ecs_expr_variable_t *var_node = flecs_expr_variable_from(
+                    script, (ecs_expr_node_t*)node, node->value);
+                node->expr = (ecs_expr_node_t*)var_node;
+                node->node.type = global->value.type;
+
+                ecs_meta_cursor_t tmp_cur; ecs_os_zeromem(&tmp_cur);
+                if (flecs_expr_visit_type_priv(
+                    script, (ecs_expr_node_t*)var_node, &tmp_cur, desc))
+                {
+                    goto error;
+                }
             }
 
-            ecs_expr_value_node_t *result = flecs_expr_value_from(
-                script, (ecs_expr_node_t*)node, type);
-            result->storage.entity = e;
-            result->ptr = &result->storage.entity;
-            node->expr = (ecs_expr_node_t*)result;
-            node->node.type = type;
             return 0;
         }
 
