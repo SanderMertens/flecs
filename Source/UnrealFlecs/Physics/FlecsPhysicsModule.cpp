@@ -28,9 +28,9 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 	GetFlecsWorld()->RegisterModuleDependency<UFlecsTickerModule>
 		(this,
 			[&](
-				UFlecsTickerModule* InModuleObject,
+				MAYBE_UNUSED UFlecsTickerModule* InModuleObject,
 				UFlecsWorld* InFlecsWorld,
-				FFlecsEntityHandle& InTickerEntity)
+				MAYBE_UNUSED FFlecsEntityHandle& InTickerEntity)
 		{
 			InFlecsWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
 
