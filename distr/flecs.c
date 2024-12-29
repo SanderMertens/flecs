@@ -59349,6 +59349,15 @@ int flecs_script_template_eval_prop(
     ecs_script_var_node_t *node)
 {
     ecs_script_template_t *template = v->template;
+    if (ecs_vec_count(&v->vars->vars) > 
+        ecs_vec_count(&template->prop_defaults)) 
+    {
+        flecs_script_eval_error(v, node, 
+            "const variables declared before prop '%s' (props must come first)", 
+                node->name);
+        return -1;
+    }
+
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->name);
     if (!var) {
         flecs_script_eval_error(v, node, 
@@ -59362,7 +59371,7 @@ int flecs_script_template_eval_prop(
     if (node->type) {
         if (flecs_script_find_entity(v, 0, node->type, NULL, &type) || !type) {
             flecs_script_eval_error(v, node,
-                "unresolved type '%s' for const variable '%s'", 
+                "unresolved type '%s' for prop '%s'", 
                     node->type, node->name);
             return -1;
         }
@@ -62765,6 +62774,10 @@ int ecs_script_eval(
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
     int result = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v, &priv_desc);
+
+    ecs_delete_empty_tables(script->world, 0, 0, 1, 0, 0);
+    ecs_delete_empty_tables(script->world, 0, 0, 1, 0, 0);
+
     return result;
 }
 
