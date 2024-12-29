@@ -389,6 +389,7 @@ void Template_clear_script_w_template_w_on_remove_observer(void);
 void Template_clear_script_w_template_w_on_remove_observer_added_after(void);
 void Template_component_w_assign_add(void);
 void Template_component_w_assign_mul(void);
+void Template_prop_after_const(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -2458,6 +2459,10 @@ bake_test_case Template_testcases[] = {
     {
         "component_w_assign_mul",
         Template_component_w_assign_mul
+    },
+    {
+        "prop_after_const",
+        Template_prop_after_const
     }
 };
 
@@ -4651,7 +4656,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        69,
+        70,
         Template_testcases
     },
     {

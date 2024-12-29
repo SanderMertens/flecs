@@ -3229,3 +3229,30 @@ void Template_component_w_assign_mul(void) {
 
     ecs_fini(world);
 }
+
+void Template_prop_after_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "template Tree {"
+    LINE "  const x = i32: 10"
+    LINE "  prop y = f32: 20"
+    LINE "  Position: {x, y}"
+    LINE "}"
+    LINE "Tree e(30)";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
