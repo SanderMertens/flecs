@@ -312,13 +312,13 @@ By default entity hierarchies are created with the `ChildOf` relationship. Other
 Scripts can contain expressions, which allow for computing values from inputs such as component values, template properties and variables. Here are some examples of valid Flecs script expressions:
 
 ```cpp
-const x = 10 + 20 * 30
-const x = 10 * (20 + 30)
-const x = $var * 10
-const x = pow($var, 2)
-const x = e.parent().name()
-const x = Position: {10, 20}
-const x = Position: {x: 10, y: 20}
+const x: 10 + 20 * 30
+const x: 10 * (20 + 30)
+const x: $var * 10
+const x: pow($var, 2)
+const x: e.parent().name()
+const x: Position: {10, 20}
+const x: Position: {x: 10, y: 20}
 ```
 
 The following sections describe the different features of expressions.
@@ -385,7 +385,7 @@ while this is an invalid usage of an initializer:
 
 ```cpp
 // Invalid, unknown type for initializer
-const x = {10, 20}
+const x: {10, 20}
 ```
 
 When assigning variables to elements in a composite initializer, applications can use the following shorthand notation if the variable names are the same as the member name of the element:
@@ -432,10 +432,10 @@ e {
 Match expressions can be used to conditionally assign a value. An example:
 
 ```cpp
-const x = 1
+const: = 1
 
 // y will be assigned with value 10
-const y = match x {
+const y: match x {
   1: 10
   2: 20
   3: 30
@@ -445,10 +445,10 @@ const y = match x {
 The input to a match expression must be matched by one of its cases. If the input is not matched, script execution will fail. Match expressions can include an "any" case, which is selected when none of the other cases match:
 
 ```cpp
-const x = 4
+const x: 4
 
 // y will be assigned with value 100
-const y = match x {
+const y: match x {
   1: 10
   2: 20
   3: 30
@@ -474,19 +474,19 @@ The type of a match expression is derived from the case values. When the case st
 Flecs script supports interpolated strings, which are strings that can contain expressions. String interpolation supports two forms, where one allows for easy embedding of variables, whereas the other allows for embedding any kind of expression. The following example shows an embedded variable:
 
 ```cpp
-const x = "The value of PI is $PI"
+const x: "The value of PI is $PI"
 ```
 
 The following example shows how to use an expression:
 
 ```cpp
-const x = "The circumference of the circle is {2 * $PI * $r}"
+const x: "The circumference of the circle is {2 * $PI * $r}"
 ```
 
 To prevent evaluating expressions in an interpolated string, the `$` and `{` characters can be escaped:
 
 ```cpp
-const x = "The value of variable \$x is $x"
+const x: "The value of variable \$x is $x"
 ```
 
 ### Types
@@ -623,9 +623,9 @@ Here, `Red` is a resolvable identifier, even though the fully qualified identifi
 Expressions can call functions. Functions in Flecs script can have arguments of any type, and must return a value. The following snippet shows examples of function calls:
 
 ```cpp
-const x = sqrt(100)
-const x = pow(100, 2)
-const x = add({10, 20}, {30, 40})
+const x: sqrt(100)
+const x: pow(100, 2)
+const x: add({10, 20}, {30, 40})
 ```
 
 Currently functions can only be defined outside of scripts by the Flecs Script API. Flecs comes with a set of builtin and math functions. Math functions are defined by the script math addon, which must be explicitly enabled by defining `FLECS_SCRIPT_MATH`.
@@ -648,8 +648,8 @@ ecs_function(world, {
 Methods are functions that are called on instances of the method's type. The first argument of a method is the instance on which the method is called. The following snippet shows examples of method calls:
 
 ```cpp
-const x = v.length()
-const x = v1.add(v2)
+const x: v.length()
+const x: v1.add(v2)
 ```
 
 Just like functions, methods can currently only be defined outside of scripts by using the Flecs Script API.
@@ -746,7 +746,7 @@ The random number generator can be used like this:
 
 ```cpp
 const rng = flecs.script.math.Rng: {}
-const x = $rng.f(1.0)
+const x: $rng.f(1.0)
 ```
 
 To use the math functions, make sure to use a Flecs build compiled with the `FLECS_SCRIPT_MATH` addon (disabled by default) and that the module is imported:
@@ -811,9 +811,9 @@ template Tree {
   const wood_color = Color: {38, 25, 13}
   const leaves_color = Color: {51, 76, 38}
 
-  const canopy_height = 2
-  const trunk_height = $height - $canopy_height
-  const trunk_width = 2
+  const canopy_height: 2
+  const trunk_height: $height - $canopy_height
+  const trunk_width: 2
 
   Trunk {
     Position: {0, ($height / 2), 0}
@@ -822,7 +822,7 @@ template Tree {
   }
 
   Canopy {
-    const canopy_y = $trunk_height + ($canopy_height / 2)
+    const canopy_y: $trunk_height + ($canopy_height / 2)
 
     Position3: {0, $canopy_y, 0}
     Box: {$canopy_width, $canopy_height}
@@ -969,7 +969,7 @@ with Color(38, 25, 13) {
 Scripts can contain variables, which are useful for often repeated values. Variables are created with the `const` keyword. Example:
 
 ```cpp
-const pi = 3.1415926
+const pi: 3.1415926
 
 my_entity {
   Rotation: {angle: pi}
@@ -979,8 +979,8 @@ my_entity {
 Variables can be combined with expressions:
 
 ```cpp
-const pi = 3.1415926
-const pi_2 = $pi * 2
+const pi: 3.1415926
+const pi_2: $pi * 2
 
 my_entity {
   Rotation: {angle: pi / 2}
@@ -996,8 +996,8 @@ const wood = Color: {38, 25, 13}
 When the name of a variable clashes with an entity, it can be disambiguated by prefixing the variable name with a `$`:
 
 ```cpp
-const pi = 3.1415926
-const pi_2 = $pi * 2
+const pi: 3.1415926
+const pi_2: $pi * 2
 
 pi {
   Rotation: {angle: $pi / 2}
@@ -1044,7 +1044,7 @@ grid {
 To reduce the number of component lookups in a script, the component value can be stored in a variable:
 
 ```cpp
-const level = Game[Level]
+const level: Game[Level]
 
 tiles {
   Grid: { width: $level.width, $level.depth, prefab: Tile }
@@ -1073,7 +1073,7 @@ lantern {
 If statements can be chained with `else if`:
 
 ```cpp
-const state = 0
+const state: 0
 
 traffic_light {
   if $state == 0 {
