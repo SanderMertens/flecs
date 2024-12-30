@@ -18,13 +18,13 @@ struct Rectangle {
 
 // Flecs script files can contain variables that can be referenced later on when 
 // assigning values to components
-const width = 5
+const width: 5
 
 // Variables and components can be assigned using expressions. Most arithmetic
 // and conditional operators are supported.
-const height = $width * 2
+const height: width * 2
 
 e {
-  Position: {0, -($height / 2)}
-  Rectangle: {$width, $height}
+  Position: {0, -(height / 2)}
+  Rectangle: {width, height}
 }
