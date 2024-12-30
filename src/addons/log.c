@@ -226,6 +226,7 @@ void ecs_log_pop_(
     }
 }
 
+static
 void flecs_parser_errorv(
     const char *name,
     const char *expr, 
@@ -514,6 +515,34 @@ void ecs_parser_error_(
 }
 
 void ecs_parser_errorv_(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    va_list args)
+{
+    (void)name;
+    (void)expr;
+    (void)column;
+    (void)fmt;
+    (void)args;
+}
+
+
+void ecs_parser_warning_(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    ...)
+{
+    (void)name;
+    (void)expr;
+    (void)column;
+    (void)fmt;
+}
+
+void ecs_parser_warningv_(
     const char *name,
     const char *expr, 
     int64_t column,
