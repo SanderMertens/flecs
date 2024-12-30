@@ -11,6 +11,7 @@
 #include "SolidMacros/Macros.h"
 #include "Unlog/Unlog.h"
 
+LLM_DECLARE_TAG(FlecsMemoryTag);
 LLM_DEFINE_TAG(FlecsMemoryTag, "Flecs Memory");
 
 DECLARE_STATS_GROUP(TEXT("FlecsOS"), STATGROUP_FlecsOS, STATCAT_Advanced);
@@ -56,14 +57,14 @@ struct FFlecsThreadWrapper
 	FRunnableThread* RunnableThread = nullptr;
 	std::atomic<bool> bJoined { false };
 
-	FFlecsThreadWrapper(ecs_os_thread_callback_t Callback, void* Data)
+	FORCEINLINE FFlecsThreadWrapper(ecs_os_thread_callback_t Callback, void* Data)
 	{
 		Runnable = new FFlecsRunnable(Callback, Data);
 		RunnableThread = FRunnableThread::Create(
 			Runnable, TEXT("FlecsThreadWrapper"), 0, TaskThread);
 	}
 
-	~FFlecsThreadWrapper()
+	FORCEINLINE ~FFlecsThreadWrapper()
 	{
 		if (!bJoined.load() && RunnableThread)
 		{
@@ -74,7 +75,7 @@ struct FFlecsThreadWrapper
 		}
 	}
 
-	void Stop() const
+	FORCEINLINE void Stop() const
 	{
 		if (Runnable)
 		{
@@ -82,7 +83,7 @@ struct FFlecsThreadWrapper
 		}
 	}
 
-	void Join()
+	FORCEINLINE void Join()
 	{
 		if (!bJoined.exchange(true))
 		{

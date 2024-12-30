@@ -51,3 +51,22 @@ struct FTestRegisteredPropertyStruct2
 
 REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct2,
 FInstancedStruct::Make<FTestRegisteredTraitProperty>(FTestRegisteredTraitProperty{ 1 }));
+
+USTRUCT()
+struct FTestRegisteredPropertyStruct3
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 MyInt32;
+
+	UPROPERTY()
+	float MyFloat;
+
+	UPROPERTY()
+	FString MyString;
+}; // struct FTestRegisteredPropertyStruct3
+
+REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct3, FInstancedStruct::Make<FTestRegisteredTraitProperty>(
+	FTestRegisteredTraitProperty{ 2 }));
+REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct3, flecs::PairIsTag);

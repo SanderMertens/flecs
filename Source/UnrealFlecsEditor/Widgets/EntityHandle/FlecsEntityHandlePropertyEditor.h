@@ -15,6 +15,8 @@
 #include "Widgets/Input/SSearchBox.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
+#define LOCTEXT_NAMESPACE "Flecs"
+
 class FFlecsEntityHandleCustomization final : public IPropertyTypeCustomization
 {
 	const FText NoneEntityText = NSLOCTEXT("Flecs", "NoneEntity", "None");
@@ -318,3 +320,5 @@ private:
 	}
 	
 }; // class FFlecsEntityHandleCustomization
+
+#undef LOCTEXT_NAMESPACE

@@ -10,6 +10,11 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityHandle)
 
+FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const UFlecsWorld* InWorld)
+{
+    return flecs::entity::null(InWorld->World);
+}
+
 FFlecsEntityHandle::FFlecsEntityHandle()
 {
 }

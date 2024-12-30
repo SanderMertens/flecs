@@ -30,7 +30,8 @@ public class UnrealFlecsEditor : ModuleRules
                 "InputCore",
                 "UnrealEd",
                 "GraphEditor",
-                "BlueprintGraph"
+                "BlueprintGraph",
+                "StructUtilsEditor"
             }
         );
     }

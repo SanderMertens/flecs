@@ -1314,7 +1314,8 @@ public:
 	FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
 	{
 		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
-		return LookupEntity(StringCast<char>(*Tag.GetTagName().ToString()).Get(), ".", ".");
+		return LookupEntity(
+			StringCast<char>(*Tag.GetTagName().ToString()).Get(), ".", ".");
 	}
 
 	template <typename T>

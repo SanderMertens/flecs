@@ -44,7 +44,7 @@ void FEntityBasicTestsSpec::Define()
 
 		It("Should create an entity and destroy it with a specific Id", [this]()
 		{
-			constexpr flecs::entity_t EntityId = 123;
+			static constexpr flecs::entity_t EntityId = 123;
 			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntityWithId(EntityId);
 			TestTrue("Entity should be valid", EntityHandle.IsValid());
 			TestEqual("Entity ID should be 123", EntityHandle.GetId(), EntityId);
@@ -62,6 +62,7 @@ void FEntityBasicTestsSpec::Define()
 			ChildEntity.SetParent(ParentEntity);
 			TestTrue("Child entity should be valid", ChildEntity.IsValid());
 			TestTrue("Parent entity should be valid", ParentEntity.IsValid());
+			TestTrue("Child entity should have a parent", ChildEntity.HasParent());
 			TestEqual("Child entity should have a parent", ChildEntity.GetParent(), ParentEntity);
 		});
 

@@ -347,26 +347,32 @@ void ecs_parser_errorv_(
 /** Assert.
  * Aborts if condition is false, disabled in debug mode. */
     #if (defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT))
-    #define ecs_assert(condition, error_code, ...) __assume(condition)
+        #if defined(__clang__)
+        #define ecs_assert(condition, error_code, ...) __builtin_assume(condition)
+        #elif defined(__GNUC__)
+        #define ecs_assert(condition, error_code, ...) __builtin_assume(condition)
+        #elif defined(_MSC_VER)
+        #define ecs_assert(condition, error_code, ...) __assume(condition)
+        #else
+        #define ecs_assert(condition, error_code, ...)
+        #endif
     #else
+
+    #if defined(_MSC_VER)
+    #include <intrin.h>
+    #define FLECS_BREAK __nop(); __debugbreak();
+    #elif defined(__GNUC__) || defined(__clang__)
+    #define FLECS_BREAK()
+    #else
+    #define FLECS_BREAK()
+    #endif
 
     #define ecs_assert(condition, error_code, ...)\
         if (!(condition)) {                                             \
+        FLECS_BREAK; /* Trap to debugger */                       \
         ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__); \
         abort(); /* satisfy compiler/static analyzers */            \
         }       
-    
-    // #include <exception>
-    // #include <stdexcept>
-    // #include <string>
-    //
-    // #define ecs_assert(condition, error_code, ...)\
-    //     if (!(condition)) [[unlikely]] { \
-    //     ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
-    //     throw std::runtime_error(std::string("Assertion failed: ") \
-    //         + #condition + " at " + __FILE__ + ":" + std::to_string(__LINE__)); \
-    //         __assume(0); \
-    //     }
     
     #endif // FLECS_NDEBUG
 

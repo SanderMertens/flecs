@@ -124,6 +124,25 @@ void FRegisteredPropertiesTestsSpec::Define()
 				.Get<FTestRegisteredTraitProperty>().MyInt32 == 1);
 		});
 	});
+
+	Describe("Multiple Registered Trait and Tag Properties", [this]()
+	{
+		It("Should contain Multiple Registered Trait and Tag Properties",
+			[this]()
+		{
+			const FFlecsEntityHandle TestType
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FTestRegisteredPropertyStruct3::StaticStruct());
+			
+			TestTrue("Component properties should be registered",
+				TestType.Has<FTestRegisteredTraitProperty>());
+			TestTrue("Component properties should be registered",
+				TestType.Has(FTestRegisteredTraitProperty::StaticStruct()));
+			TestTrue("Component property trait should be of value 1",
+				TestType.Get<FTestRegisteredTraitProperty>().MyInt32 == 2);
+			TestTrue("Component properties should be registered",
+				TestType.Has(flecs::PairIsTag));
+		});
+	});
 }
 
 

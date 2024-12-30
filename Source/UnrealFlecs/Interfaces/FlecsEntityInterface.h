@@ -19,7 +19,7 @@ class UNREALFLECS_API IFlecsEntityInterface
 
 public:
 
-	virtual NO_DISCARD FFlecsEntityHandle GetEntityHandle() const
+	NO_DISCARD virtual FFlecsEntityHandle GetEntityHandle() const
 		PURE_VIRTUAL(IFlecsEntityInterface::GetEntityHandle, return FFlecsEntityHandle(););
 
 }; // class IFlecsEntityInterface

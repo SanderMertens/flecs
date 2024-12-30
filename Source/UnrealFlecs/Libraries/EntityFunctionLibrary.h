@@ -15,6 +15,17 @@ class UNREALFLECS_API UEntityFunctionLibrary final : public UBlueprintFunctionLi
     GENERATED_BODY()
 
 public:
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
+    static FORCEINLINE bool IsEntityFromObject(UObject* Object)
+    {
+        if (!IsValid(Object))
+        {
+            return false;
+        }
+        
+        return Object->Implements<UFlecsEntityInterface>()
+            || Cast<AActor>(Object)->FindComponentByClass<UFlecsEntityActorComponent>();
+    }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
     static FORCEINLINE FFlecsEntityHandle GetEntityFromObject(UObject* Object)
@@ -28,7 +39,7 @@ public:
 
         if (const AActor* Actor = Cast<AActor>(Object))
         {
-            if LIKELY_IF(const UFlecsEntityActorComponent* EntityActorComponent
+            if (const UFlecsEntityActorComponent* EntityActorComponent
                 = Actor->FindComponentByClass<UFlecsEntityActorComponent>())
             {
                 return EntityActorComponent->GetEntityHandle();

@@ -17,12 +17,12 @@
 		{
 			"Name": "FlecsLibrary",
 			"Type": "RuntimeAndProgram",
-			"LoadingPhase": "EarliestPossible"
+			"LoadingPhase": "PreDefault"
 		},
 		{
 			"Name": "UnrealFlecs",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "UnrealFlecsEditor",

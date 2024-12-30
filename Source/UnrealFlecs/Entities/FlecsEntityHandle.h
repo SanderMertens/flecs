@@ -24,7 +24,7 @@ class UFlecsWorld;
  *
  * @note This struct is aligned on an 8-byte boundary. It is 32 bytes in Editor builds and 16 bytes in Shipping builds.
  */
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, meta = (DisableSplitPin))
 struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 {
 	GENERATED_BODY()
@@ -43,6 +43,8 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 	{
 		return flecs::entity::null();
 	}
+
+	SOLID_INLINE static NO_DISCARD FFlecsEntityHandle GetNullHandle(const UFlecsWorld* InWorld);
 
 public:
 	FFlecsEntityHandle();
@@ -378,7 +380,7 @@ public:
 
 	SOLID_INLINE NO_DISCARD bool HasParent() const
 	{
-		return GetEntity().parent().is_valid();
+		return HasPair(flecs::ChildOf, flecs::Wildcard);
 	}
 
 	SOLID_INLINE void SetParent(const FFlecsEntityHandle& InParent) const
@@ -454,19 +456,19 @@ public:
 	template <typename FunctionType>
 	SOLID_INLINE void Observe(FunctionType&& InFunction) const
 	{
-		GetEntity().observe(InFunction);
+		GetEntity().observe(std::forward<FunctionType>(InFunction));
 	}
 
 	template <typename TEvent, typename FunctionType>
 	SOLID_INLINE void Observe(FunctionType&& InFunction) const
 	{
-		GetEntity().observe<TEvent>(InFunction);
+		GetEntity().observe<TEvent>(std::forward<FunctionType>(InFunction));
 	}
 
 	template <typename FunctionType>
 	SOLID_INLINE void Observe(const FFlecsEntityHandle& InEntity, FunctionType&& InFunction) const
 	{
-		GetEntity().observe(InEntity.GetEntity(), InFunction);
+		GetEntity().observe(InEntity.GetEntity(), std::forward<FunctionType>(InFunction));
 	}
 
 	SOLID_INLINE NO_DISCARD bool operator==(const FFlecsEntityHandle& Other) const
