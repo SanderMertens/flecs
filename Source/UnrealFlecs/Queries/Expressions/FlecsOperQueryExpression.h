@@ -14,12 +14,9 @@ struct UNREALFLECS_API FFlecsOperQueryExpression final : public FFlecsQueryExpre
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE FFlecsOperQueryExpression() = default;
+	FORCEINLINE FFlecsOperQueryExpression();
 	
-	FORCEINLINE virtual void Apply(flecs::query_builder<>& InQueryBuilder) override
-	{
-		InQueryBuilder.oper(static_cast<flecs::oper_kind_t>(Operator));
-	}
+	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Flecs | Query | Operator")
 	EFlecsQueryOperator Operator = EFlecsQueryOperator::Default;

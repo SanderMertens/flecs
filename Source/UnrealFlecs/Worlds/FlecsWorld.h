@@ -1453,7 +1453,7 @@ public:
 		Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	}
 
-	virtual bool IsNameStableForNetworking() const override
+	FORCEINLINE virtual bool IsNameStableForNetworking() const override
 	{
 		return true;
 	}

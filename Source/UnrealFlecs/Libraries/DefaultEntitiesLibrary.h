@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "Worlds/FlecsWorldSubsystem.h"
 #include "DefaultEntitiesLibrary.generated.h"
 
 UCLASS()

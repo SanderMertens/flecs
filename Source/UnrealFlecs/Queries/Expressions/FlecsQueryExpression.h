@@ -3,8 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "flecs/addons/cpp/mixins/query/builder.hpp"
+#include "flecs.h"
+#include "StructUtils/InstancedStruct.h"
 #include "FlecsQueryExpression.generated.h"
+
+class UFlecsWorld;
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsQueryExpression
@@ -12,10 +15,28 @@ struct UNREALFLECS_API FFlecsQueryExpression
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE FFlecsQueryExpression() = default;
+	FORCEINLINE FFlecsQueryExpression();
+	FORCEINLINE FFlecsQueryExpression(const bool bInAllowsChildExpressions)
+	#if WITH_EDITORONLY_DATA
+		: bAllowsChildExpressions(bInAllowsChildExpressions)
+	#endif // WITH_EDITORONLY_DATA
+	{}
+	
 	virtual ~FFlecsQueryExpression() = default;
 	
-	virtual void Apply(flecs::query_builder<>& InQueryBuilder) PURE_VIRTUAL(FFlecsQueryExpression::Apply, );
+	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const;
+
+	#if WITH_EDITORONLY_DATA
+
+	UPROPERTY(VisibleAnywhere, Category = "Flecs | Query")
+	bool bAllowsChildExpressions = false;
+
+	#endif // WITH_EDITORONLY_DATA
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query",
+		meta = (EditCondition = "bAllowsChildExpressions", EditConditionHides,
+			AllowEditInlineCustomization, ShowOnlyInnerProperties, ExcludeBaseStruct))
+	TArray<TInstancedStruct<FFlecsQueryExpression>> Children;
 	
 }; // struct FFlecsQueryExpression
 

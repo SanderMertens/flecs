@@ -7,18 +7,15 @@
 #include "Queries/Enums/FlecsQueryInOut.h"
 #include "FlecsExpressionInOut.generated.h"
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, meta = (DisplayName = "In Out Expression"))
 struct UNREALFLECS_API FFlecsExpressionInOut final : public FFlecsQueryExpression
 {
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE FFlecsExpressionInOut() = default;
+	FORCEINLINE FFlecsExpressionInOut();
 	
-	FORCEINLINE virtual void Apply(flecs::query_builder<>& InQueryBuilder) override
-	{
-		InQueryBuilder.inout(static_cast<flecs::inout_kind_t>(InOut));
-	}
+	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Flecs | Query | Expression")
 	EFlecsQueryInOut InOut = EFlecsQueryInOut::Default;

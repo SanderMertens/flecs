@@ -41,7 +41,7 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 
 	SOLID_INLINE static NO_DISCARD FFlecsEntityHandle GetNullHandle()
 	{
-		return flecs::entity::null();
+		return FFlecsEntityHandle(flecs::entity::null());
 	}
 
 	SOLID_INLINE static NO_DISCARD FFlecsEntityHandle GetNullHandle(const UFlecsWorld* InWorld);
@@ -52,6 +52,11 @@ public:
 	FFlecsEntityHandle(const flecs::entity& InEntity)
 	{
 		Entity = InEntity;
+
+		if (Entity.world() == nullptr)
+		{
+			ObtainFlecsWorld();
+		}
 	}
 
 	SOLID_INLINE FFlecsEntityHandle(const flecs::entity_t InEntity)

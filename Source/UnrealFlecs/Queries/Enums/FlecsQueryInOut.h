@@ -13,7 +13,7 @@ enum class EFlecsQueryInOut : uint8
 	None = flecs::InOutNone,
 	Read = flecs::In,
 	Write = flecs::Out,
-	ReadWrite = flecs::InOut,
+	ReadWrite = flecs::InOut UMETA(DisplayName = "Read/Write"),
 	Filter = flecs::InOutFilter
 }; // enum class EFlecsQueryInOut
 
