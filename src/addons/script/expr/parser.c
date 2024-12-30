@@ -655,7 +655,7 @@ ecs_script_t* ecs_expr_parse(
         goto error;
     }
 
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
+    //printf("%s\n", ecs_script_ast_to_str(script, true));
 
     if (!desc || !desc->disable_folding) {
         if (flecs_expr_visit_fold(script, &impl->expr, &priv_desc)) {
@@ -663,7 +663,7 @@ ecs_script_t* ecs_expr_parse(
         }
     }
 
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
+    //printf("%s\n", ecs_script_ast_to_str(script, true));
 
     return script;
 error:

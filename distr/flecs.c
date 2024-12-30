@@ -24515,6 +24515,7 @@ void ecs_log_pop_(
     }
 }
 
+static
 void flecs_parser_errorv(
     const char *name,
     const char *expr, 
@@ -24803,6 +24804,34 @@ void ecs_parser_error_(
 }
 
 void ecs_parser_errorv_(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    va_list args)
+{
+    (void)name;
+    (void)expr;
+    (void)column;
+    (void)fmt;
+    (void)args;
+}
+
+
+void ecs_parser_warning_(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    ...)
+{
+    (void)name;
+    (void)expr;
+    (void)column;
+    (void)fmt;
+}
+
+void ecs_parser_warningv_(
     const char *name,
     const char *expr, 
     int64_t column,
@@ -59417,6 +59446,10 @@ int flecs_script_template_eval_prop(
     ecs_value_copy_w_type_info(
         v->world, ti, value->value.ptr, var->value.ptr);
 
+    if (!node->type) {
+        ecs_value_free(v->world, type, var->value.ptr);
+    }
+
     ecs_entity_t mbr = ecs_entity(v->world, {
         .name = node->name,
         .parent = template->entity
@@ -76553,7 +76586,7 @@ ecs_script_t* ecs_expr_parse(
         goto error;
     }
 
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
+    //printf("%s\n", ecs_script_ast_to_str(script, true));
 
     if (!desc || !desc->disable_folding) {
         if (flecs_expr_visit_fold(script, &impl->expr, &priv_desc)) {
@@ -76561,7 +76594,7 @@ ecs_script_t* ecs_expr_parse(
         }
     }
 
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
+    //printf("%s\n", ecs_script_ast_to_str(script, true));
 
     return script;
 error:
@@ -76931,37 +76964,40 @@ int flecs_value_unary(
 #define ECS_BOP_COND(left, right, result, op, R, T)\
     ECS_VALUE_GET(result, ecs_bool_t) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)
 
+#define ECS_BOP_ASSIGN(left, right, result, op, R, T)\
+    ECS_VALUE_GET(result, R) op (R)(ECS_VALUE_GET(right, T))
+
 /* Unsigned operations */
 #define ECS_BINARY_UINT_OPS(left, right, result, op, OP)\
-    if ((left)->type == ecs_id(ecs_u64_t)) { \
+    if ((right)->type == ecs_id(ecs_u64_t)) { \
         OP(left, right, result, op, ecs_u64_t, ecs_u64_t);\
-    } else if ((left)->type == ecs_id(ecs_u32_t)) { \
+    } else if ((right)->type == ecs_id(ecs_u32_t)) { \
         OP(left, right, result, op, ecs_u32_t, ecs_u32_t);\
-    } else if ((left)->type == ecs_id(ecs_u16_t)) { \
+    } else if ((right)->type == ecs_id(ecs_u16_t)) { \
         OP(left, right, result, op, ecs_u16_t, ecs_u16_t);\
-    } else if ((left)->type == ecs_id(ecs_u8_t)) { \
+    } else if ((right)->type == ecs_id(ecs_u8_t)) { \
         OP(left, right, result, op, ecs_u8_t, ecs_u8_t);\
     }
 
 /* Unsigned + signed operations */
 #define ECS_BINARY_INT_OPS(left, right, result, op, OP)\
     ECS_BINARY_UINT_OPS(left, right, result, op, OP)\
-     else if ((left)->type == ecs_id(ecs_i64_t)) { \
+     else if ((right)->type == ecs_id(ecs_i64_t)) { \
         OP(left, right, result, op, ecs_i64_t, ecs_i64_t);\
-    } else if ((left)->type == ecs_id(ecs_i32_t)) { \
+    } else if ((right)->type == ecs_id(ecs_i32_t)) { \
         OP(left, right, result, op, ecs_i32_t, ecs_i32_t);\
-    } else if ((left)->type == ecs_id(ecs_i16_t)) { \
+    } else if ((right)->type == ecs_id(ecs_i16_t)) { \
         OP(left, right, result, op, ecs_i16_t, ecs_i16_t);\
-    } else if ((left)->type == ecs_id(ecs_i8_t)) { \
+    } else if ((right)->type == ecs_id(ecs_i8_t)) { \
         OP(left, right, result, op, ecs_i8_t, ecs_i8_t);\
     }
 
 /* Unsigned + signed + floating point operations */
 #define ECS_BINARY_NUMBER_OPS(left, right, result, op, OP)\
     ECS_BINARY_INT_OPS(left, right, result, op, OP)\
-      else if ((left)->type == ecs_id(ecs_f64_t)) { \
+      else if ((right)->type == ecs_id(ecs_f64_t)) { \
         OP(left, right, result, op, ecs_f64_t, ecs_f64_t);\
-    } else if ((left)->type == ecs_id(ecs_f32_t)) { \
+    } else if ((right)->type == ecs_id(ecs_f32_t)) { \
         OP(left, right, result, op, ecs_f32_t, ecs_f32_t);\
     }
 
@@ -76985,15 +77021,15 @@ int flecs_value_unary(
 
 #define ECS_BINARY_COND_EQ_OP(left, right, result, op)\
     ECS_BINARY_INT_OPS(left, right, result, op, ECS_BOP_COND)\
-      else if ((left)->type == ecs_id(ecs_char_t)) { \
+      else if ((right)->type == ecs_id(ecs_char_t)) { \
         ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_char_t);\
-    } else if ((left)->type == ecs_id(ecs_u8_t)) { \
+    } else if ((right)->type == ecs_id(ecs_u8_t)) { \
         ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_u8_t);\
-    } else if ((left)->type == ecs_id(ecs_bool_t)) { \
+    } else if ((right)->type == ecs_id(ecs_bool_t)) { \
         ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else if ((left)->type == ecs_id(ecs_entity_t)) { \
+    } else if ((right)->type == ecs_id(ecs_entity_t)) { \
         ECS_BOP_COND(left, right, result, op, ecs_entity_t, ecs_entity_t);\
-    } else if ((left)->type == ecs_id(ecs_string_t)) { \
+    } else if ((right)->type == ecs_id(ecs_string_t)) { \
         char *lstr = *(char**)(left)->ptr;\
         char *rstr = *(char**)(right)->ptr;\
         if (lstr && rstr) {\
@@ -77007,18 +77043,21 @@ int flecs_value_unary(
 
 #define ECS_BINARY_COND_OP(left, right, result, op)\
     ECS_BINARY_NUMBER_OPS(left, right, result, op, ECS_BOP_COND)\
-      else if ((left)->type == ecs_id(ecs_char_t)) { \
+      else if ((right)->type == ecs_id(ecs_char_t)) { \
         ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_char_t);\
-    } else if ((left)->type == ecs_id(ecs_u8_t)) { \
+    } else if ((right)->type == ecs_id(ecs_u8_t)) { \
         ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_u8_t);\
-    } else if ((left)->type == ecs_id(ecs_bool_t)) { \
+    } else if ((right)->type == ecs_id(ecs_bool_t)) { \
         ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
     } else {\
         ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
     }
 
+#define ECS_BINARY_ASSIGN_OP(left, right, result, op)\
+    ECS_BINARY_NUMBER_OPS(left, right, result, op, ECS_BOP_ASSIGN)\
+
 #define ECS_BINARY_BOOL_OP(left, right, result, op)\
-    if ((left)->type == ecs_id(ecs_bool_t)) { \
+    if ((right)->type == ecs_id(ecs_bool_t)) { \
         ECS_BOP_COND(left, right, result, op, ecs_bool_t, ecs_bool_t);\
     } else {\
         ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
@@ -77094,10 +77133,10 @@ int flecs_value_binary(
         ECS_BINARY_INT_OP(left, right, out, >>);
         break;
     case EcsTokAddAssign:
-        ECS_BINARY_OP(out, right, out, +=);
+        ECS_BINARY_ASSIGN_OP(left, right, out, +=);
         break;
     case EcsTokMulAssign:
-        ECS_BINARY_OP(out, right, out, *=);
+        ECS_BINARY_ASSIGN_OP(left, right, out, *=);
         break;
     case EcsTokEnd:
     case EcsTokUnknown:

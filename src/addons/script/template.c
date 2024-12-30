@@ -364,6 +364,10 @@ int flecs_script_template_eval_prop(
     ecs_value_copy_w_type_info(
         v->world, ti, value->value.ptr, var->value.ptr);
 
+    if (!node->type) {
+        ecs_value_free(v->world, type, var->value.ptr);
+    }
+
     ecs_entity_t mbr = ecs_entity(v->world, {
         .name = node->name,
         .parent = template->entity

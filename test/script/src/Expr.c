@@ -2234,6 +2234,8 @@ void Expr_cond_eq_enum(void) {
         test_bool(*(bool*)v.ptr, true);
     }
 
+    ecs_value_free(world, v.type, v.ptr);
+
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
@@ -2253,6 +2255,7 @@ void Expr_cond_eq_string(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2276,6 +2279,7 @@ void Expr_cond_eq_entity(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2470,6 +2474,7 @@ void Expr_cond_neq_enum(void) {
     }
 
     ecs_script_vars_fini(vars);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2488,6 +2493,7 @@ void Expr_cond_neq_string(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2511,6 +2517,7 @@ void Expr_cond_neq_entity(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -7075,7 +7082,7 @@ void Expr_match_i32_1_collection_case(void) {
 
     {
         *(int32_t*)var->value.ptr = 0;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         ecs_log_set_level(-4);
         test_assert(0 != ecs_expr_eval(s, &result, &desc));
@@ -7084,7 +7091,7 @@ void Expr_match_i32_1_collection_case(void) {
 
     {
         *(int32_t*)var->value.ptr = 1;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(Ints));
@@ -7125,7 +7132,7 @@ void Expr_match_i32_2_collection_cases(void) {
 
     {
         *(int32_t*)var->value.ptr = 0;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         ecs_log_set_level(-4);
         test_assert(0 != ecs_expr_eval(s, &result, &desc));
@@ -7134,7 +7141,7 @@ void Expr_match_i32_2_collection_cases(void) {
 
     {
         *(int32_t*)var->value.ptr = 1;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(Ints));
@@ -7144,7 +7151,7 @@ void Expr_match_i32_2_collection_cases(void) {
 
     {
         *(int32_t*)var->value.ptr = 2;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(Ints));
@@ -7186,7 +7193,7 @@ void Expr_match_i32_3_collection_cases(void) {
 
     {
         *(int32_t*)var->value.ptr = 0;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         ecs_log_set_level(-4);
         test_assert(0 != ecs_expr_eval(s, &result, &desc));
@@ -7195,7 +7202,7 @@ void Expr_match_i32_3_collection_cases(void) {
 
     {
         *(int32_t*)var->value.ptr = 1;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(Ints));
@@ -7205,7 +7212,7 @@ void Expr_match_i32_3_collection_cases(void) {
 
     {
         *(int32_t*)var->value.ptr = 2;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(Ints));
@@ -7215,7 +7222,7 @@ void Expr_match_i32_3_collection_cases(void) {
 
     {
         *(int32_t*)var->value.ptr = 3;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(Ints));
@@ -7258,7 +7265,7 @@ void Expr_match_i32_empty_collection_case(void) {
 
     {
         *(int32_t*)var->value.ptr = 0;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         ecs_log_set_level(-4);
         test_assert(0 != ecs_expr_eval(s, &result, &desc));
@@ -7267,7 +7274,7 @@ void Expr_match_i32_empty_collection_case(void) {
 
     {
         *(int32_t*)var->value.ptr = 1;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(Ints));
@@ -7277,7 +7284,7 @@ void Expr_match_i32_empty_collection_case(void) {
 
     {
         *(int32_t*)var->value.ptr = 2;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(Ints));
@@ -7287,7 +7294,7 @@ void Expr_match_i32_empty_collection_case(void) {
 
     {
         *(int32_t*)var->value.ptr = 3;
-        Ints p = {};
+        Ints p = {0};
         ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(Ints));
@@ -7882,7 +7889,6 @@ void Expr_initializer_w_identifier_as_var(void) {
     test_assert(v.ptr != NULL);
     test_int(p.x, 10);
     test_int(p.y, 20);
-    ecs_value_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 

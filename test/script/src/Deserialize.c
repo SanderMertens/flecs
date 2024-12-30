@@ -569,10 +569,10 @@ void Deserialize_enum(void) {
 }
 
 void Deserialize_bitmask(void) {
-    uint32_t Lettuce = 0x1;
-    uint32_t Bacon =   0x1 << 1;
-    uint32_t Tomato =  0x1 << 2;
-    uint32_t Cheese =  0x1 << 3;
+    uint64_t Lettuce = 0x1;
+    uint64_t Bacon =   0x1 << 1;
+    uint64_t Tomato =  0x1 << 2;
+    uint64_t Cheese =  0x1 << 3;
 
     ecs_world_t *world = ecs_init();
 
@@ -584,7 +584,7 @@ void Deserialize_bitmask(void) {
     });
 
     {
-    uint32_t value = 0;
+    uint64_t value = 0;
     ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_expr_run(world, 
         "Lettuce",
@@ -594,7 +594,7 @@ void Deserialize_bitmask(void) {
     }
 
     {
-    uint32_t value = 0;
+    uint64_t value = 0;
     ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_expr_run(world, 
         "Lettuce|Bacon",
@@ -604,7 +604,7 @@ void Deserialize_bitmask(void) {
     }
 
     {
-    uint32_t value = 0;
+    uint64_t value = 0;
     ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_expr_run(world, 
         "Lettuce|Bacon|Tomato|Cheese",
@@ -614,7 +614,7 @@ void Deserialize_bitmask(void) {
     }
 
     {
-    uint32_t value = 0;
+    uint64_t value = 0;
     ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_expr_run(world, 
         "Lettuce | Bacon | Tomato | Cheese",
@@ -624,7 +624,7 @@ void Deserialize_bitmask(void) {
     }
 
     {
-    uint32_t value = 0;
+    uint64_t value = 0;
     ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_expr_run(world, 
         "BLT",
@@ -634,7 +634,7 @@ void Deserialize_bitmask(void) {
     }
 
     {
-    uint32_t value = 0;
+    uint64_t value = 0;
     ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_expr_run(world, 
         "0",
@@ -645,7 +645,7 @@ void Deserialize_bitmask(void) {
 
     {
     ecs_log_set_level(-4);
-    uint32_t value = 0;
+    uint64_t value = 0;
     ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_expr_run(world, 
         "Foo",
@@ -728,10 +728,10 @@ void Deserialize_struct_enum(void) {
 }
 
 void Deserialize_struct_bitmask(void) {
-    uint32_t Lettuce = 0x1;
-    uint32_t Bacon =   0x1 << 1;
-    uint32_t Tomato =  0x1 << 2;
-    uint32_t Cheese =  0x1 << 3;
+    uint64_t Lettuce = 0x1;
+    uint64_t Bacon =   0x1 << 1;
+    uint64_t Tomato =  0x1 << 2;
+    uint64_t Cheese =  0x1 << 3;
 
     typedef struct {
         ecs_u32_t v;
