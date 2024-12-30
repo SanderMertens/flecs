@@ -22486,7 +22486,7 @@ typedef int ecs_http_socket_t;
 #define ECS_HTTP_MIN_STATS_INTERVAL (10 * 1000)
 
 /* Receive buffer size */
-#define ECS_HTTP_SEND_RECV_BUFFER_SIZE (16 * 1024)
+#define ECS_HTTP_SEND_RECV_BUFFER_SIZE (64 * 1024)
 
 /* Max length of request (path + query + headers + body) */
 #define ECS_HTTP_REQUEST_LEN_MAX (10 * 1024 * 1024)
@@ -23449,13 +23449,15 @@ void http_recv_connection(
     ecs_http_socket_t sock)
 {
     ecs_size_t bytes_read;
-    char recv_buf[ECS_HTTP_SEND_RECV_BUFFER_SIZE];
+    char *recv_buf = ecs_os_malloc(ECS_HTTP_SEND_RECV_BUFFER_SIZE);
     ecs_http_fragment_t frag = {0};
     int32_t retries = 0;
 
+    ecs_os_sleep(0, 10 * 1000 * 1000);
+
     do {
         if ((bytes_read = http_recv(
-            sock, recv_buf, ECS_SIZEOF(recv_buf), 0)) > 0) 
+            sock, recv_buf, ECS_HTTP_SEND_RECV_BUFFER_SIZE, 0)) > 0) 
         {
             bool is_alive = conn->pub.id == conn_id;
             if (!is_alive) {
@@ -23500,11 +23502,17 @@ void http_recv_connection(
         ecs_os_sleep(0, 10 * 1000 * 1000);
     } while ((bytes_read == -1) && (++retries < ECS_HTTP_REQUEST_RECV_RETRY));
 
+    if (bytes_read == ECS_HTTP_SEND_RECV_BUFFER_SIZE) {
+        ecs_warn("request exceeded receive buffer size (%d)",
+            ECS_HTTP_SEND_RECV_BUFFER_SIZE);
+    }
+
     if (retries == ECS_HTTP_REQUEST_RECV_RETRY) {
         http_close(&sock);
     }
 
 done:
+    ecs_os_free(recv_buf);
     ecs_strbuf_reset(&frag.buf);
 }
 
