@@ -10,7 +10,7 @@
 #include "IDetailChildrenBuilder.h"
 #include "DetailWidgetRow.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
-#include "Logs/FlecsCategories.h"
+#include "Logs/FlecsEditorCategory.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SSearchBox.h"
 #include "Worlds/FlecsWorldSubsystem.h"

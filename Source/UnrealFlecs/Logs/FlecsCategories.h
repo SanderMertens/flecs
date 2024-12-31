@@ -11,4 +11,3 @@ UNLOG_CATEGORY(LogFlecsSystem);
 UNLOG_CATEGORY(LogFlecsComponent);
 UNLOG_CATEGORY(LogFlecsEntity);
 UNLOG_CATEGORY(LogFlecsNetworking);
-UNLOG_CATEGORY(LogFlecsEditor);

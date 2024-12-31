@@ -70,6 +70,7 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 				
 				if (!PIEInfo.IsSet())
 				{
+					FFlecsEditorLog::Warn<LogFlecsEditor>("No PIE instances found");
 					return;
 				}
 				

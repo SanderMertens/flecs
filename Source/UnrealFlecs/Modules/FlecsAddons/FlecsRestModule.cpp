@@ -11,13 +11,14 @@ void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntity
 	int32 ClientPieInstanceOffset = 0;
 	
 	const UWorld* UnrealWorld = InWorld->GetWorld();
+	solid_check(IsValid(UnrealWorld));
+	
 	if (UnrealWorld && UnrealWorld->GetNetMode() == NM_Client)
 	{
 		ClientPieInstanceOffset = UE::GetPlayInEditorID();
 	}
 	
-	// ECS_REST_DEFAULT_PORT is 27750
-	uint16 RestPort = 27750 + ClientPieInstanceOffset;
+	const uint16 RestPort = ECS_REST_DEFAULT_PORT + ClientPieInstanceOffset;
 
 	InWorld->SetSingleton<flecs::Rest>(flecs::Rest{ .port = RestPort});
 	RestEntity = InWorld->GetSingletonEntity<flecs::Rest>();
