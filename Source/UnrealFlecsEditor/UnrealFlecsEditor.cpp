@@ -62,11 +62,29 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 		FUIAction(
 			FExecuteAction::CreateLambda([]()
 			{
-				FPlatformProcess::LaunchURL(TEXT("https://flecs.dev/explorer/?remote=true"), nullptr, nullptr);
+				if (!ensure(GEditor))
+				{
+					return;
+				}
+				
+				TOptional<FPlayInEditorSessionInfo> PIEInfo = GEditor->GetPlayInEditorSessionInfo();
+				if (!PIEInfo.IsSet())
+				{
+					return;
+				}
+				
+				for (int32 i = 0; i < PIEInfo->NumClientInstancesCreated; ++i)
+				{
+					FString TargetUrl = "https://www.flecs.dev/explorer/?host=localhost:";
+					// ECS_REST_DEFAULT_PORT is 27750
+					// Each PIE instance in the rest module incremements the port by 1
+					TargetUrl.Append(FString::FromInt(27750 + i));
+					FPlatformProcess::LaunchURL(*TargetUrl, nullptr, nullptr);
+				}
 			})
 		),
-		INVTEXT("Open Flecs Explorer"),
-		INVTEXT("Open Flecs Explorer"),
+		INVTEXT("Open Flecs Explorer (for each PIE instance)"),
+		INVTEXT("Open Flecs Explorer (for each PIE instance)"),
 		FSlateIcon("UnrealFlecsEditorStyle", "UnrealFlecs.FlecsEditor.FlecsLogo")
 	));
 }
