@@ -11,25 +11,25 @@ FFlecsTestFixture Fixture;
 
 END_DEFINE_SPEC(FTraitQueryTestsSpec);
 
-struct FTestComponent
+struct FTestComponent_TraitQuery
 {
 	int32 Value;
 }; // struct FTestComponent
 
-struct FTestComponent2
+struct FTestComponent2_TraitQuery
 {
 	float Value;
 }; // struct FTestComponent2
 
-struct FTestTrait
+struct FTestTrait_TraitQuery
 {
 	int32 Value;
-}; // struct FTestTrait
+}; // struct FTestTrait_TraitQuery
 
-struct FTestTrait2
+struct FTestTrait2_TraitQuery
 {
 	float Value;
-}; // struct FTestTrait2
+}; // struct FTestTrait2__TraitQuery
 
 void FTraitQueryTestsSpec::Define()
 {
@@ -40,15 +40,15 @@ void FTraitQueryTestsSpec::Define()
 		It("Should be able to query for a trait", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add<FTestComponent>();
-			Entity.AddTrait<FTestComponent, FTestTrait>();
+			Entity.Add<FTestComponent_TraitQuery>();
+			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait_TraitQuery>();
 
 			Fixture.FlecsWorld->Progress();
 
 			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<>()
-				.with<FTestComponent>()
+				.with<FTestComponent_TraitQuery>()
 				.begin_scope_traits()
-					.with<FTestTrait>()
+					.with<FTestTrait_TraitQuery>()
 				.end_scope_traits()
 				.build();
 
@@ -60,17 +60,17 @@ void FTraitQueryTestsSpec::Define()
 		It("Should be able to query for multiple traits", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add<FTestComponent>();
-			Entity.AddTrait<FTestComponent, FTestTrait>();
-			Entity.AddTrait<FTestComponent, FTestTrait2>();
+			Entity.Add<FTestComponent_TraitQuery>();
+			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait_TraitQuery>();
+			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait2_TraitQuery>();
 
 			Fixture.FlecsWorld->Progress();
 
 			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<>()
-				.with<FTestComponent>()
+				.with<FTestComponent_TraitQuery>()
 				.begin_scope_traits()
-					.with<FTestTrait>()
-					.with<FTestTrait2>()
+					.with<FTestTrait_TraitQuery>()
+					.with<FTestTrait2_TraitQuery>()
 				.end_scope_traits()
 				.build();
 
@@ -82,14 +82,14 @@ void FTraitQueryTestsSpec::Define()
 		It("Should be able to query for a trait and a component", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add<FTestComponent>();
-			Entity.AddTrait<FTestComponent, FTestTrait>();
+			Entity.Add<FTestComponent_TraitQuery>();
+			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait_TraitQuery>();
 
 			Fixture.FlecsWorld->Progress();
 
-			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
-				.begin_scope_traits<FTestComponent>()
-					.with<FTestTrait>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent_TraitQuery>()
+				.begin_scope_traits<FTestComponent_TraitQuery>()
+					.with<FTestTrait_TraitQuery>()
 				.end_scope_traits()
 				.build();
 
@@ -102,15 +102,15 @@ void FTraitQueryTestsSpec::Define()
 			[this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add<FTestComponent>();
-			Entity.AddTrait<FTestComponent, FTestTrait>();
-			Entity.AddTrait<FTestComponent, FTestTrait2>();
+			Entity.Add<FTestComponent_TraitQuery>();
+			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait_TraitQuery>();
+			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait2_TraitQuery>();
 
 			Fixture.FlecsWorld->Progress();
 
-			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent_TraitQuery>()
 				.begin_scope_traits()
-					.with<FTestTrait2>()
+					.with<FTestTrait2_TraitQuery>()
 				.end_scope_traits()
 				.build();
 
@@ -123,15 +123,15 @@ void FTraitQueryTestsSpec::Define()
 			[this]()
 		{
 				FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-				Entity.Add<FTestComponent>();
-				Entity.AddTrait<FTestComponent, FTestTrait>();
+				Entity.Add<FTestComponent_TraitQuery>();
+				Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait_TraitQuery>();
 
 				Fixture.FlecsWorld->Progress();
 
 				const flecs::query<> query = Fixture.FlecsWorld->World.query_builder()
-					.with<FTestComponent>()
+					.with<FTestComponent_TraitQuery>()
 					.begin_scope_traits()
-						.with<FTestTrait>()
+						.with<FTestTrait_TraitQuery>()
 					.end_scope_traits()
 					.build();
 
@@ -144,15 +144,15 @@ void FTraitQueryTestsSpec::Define()
 			[this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity("TestEntity");
-			Entity.Add<FTestComponent>();
-			Entity.AddTrait<FTestComponent, FTestTrait>();
-			Entity.AddTrait<FTestComponent, FTestTrait2>();
+			Entity.Add<FTestComponent_TraitQuery>();
+			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait_TraitQuery>();
+			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait2_TraitQuery>();
 
 			Fixture.FlecsWorld->Progress();
 
-			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent_TraitQuery>()
 				.begin_scope_traits_index(0)
-					.with<FTestTrait2>()
+					.with<FTestTrait2_TraitQuery>()
 				.end_scope_traits()
 				.build();
 
@@ -164,17 +164,17 @@ void FTraitQueryTestsSpec::Define()
 		It("Should be able to query using begin_scope_traits_index using Index 1", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity("TestEntity");
-			Entity.Add<FTestComponent>();
-			Entity.Add<FTestComponent2>();
-			Entity.AddTrait<FTestComponent, FTestTrait>();
-			Entity.AddTrait<FTestComponent2, FTestTrait2>();
+			Entity.Add<FTestComponent_TraitQuery>();
+			Entity.Add<FTestComponent2_TraitQuery>();
+			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait_TraitQuery>();
+			Entity.AddTrait<FTestComponent2_TraitQuery, FTestTrait2_TraitQuery>();
 
 			Fixture.FlecsWorld->Progress();
 
-			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
-				.with<FTestComponent2>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent_TraitQuery>()
+				.with<FTestComponent2_TraitQuery>()
 				.begin_scope_traits_index(1)
-					.with<FTestTrait2>()
+					.with<FTestTrait2_TraitQuery>()
 				.end_scope_traits()
 				.build();
 
@@ -194,8 +194,8 @@ void FTraitQueryTestsSpec::Define()
 			Fixture.FlecsWorld->Progress();
 
 			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<>()
-				.begin_scope_traits<FTestComponent>().optional()
-					.without<FTestTrait>()
+				.begin_scope_traits<FTestComponent_TraitQuery>().optional()
+					.without<FTestTrait_TraitQuery>()
 				.end_scope_traits()
 				.build();
 
@@ -208,13 +208,13 @@ void FTraitQueryTestsSpec::Define()
 			[this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add<FTestComponent>();
+			Entity.Add<FTestComponent_TraitQuery>();
 
 			Fixture.FlecsWorld->Progress();
 
-			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
-				.begin_scope_traits<FTestComponent>().optional()
-					.without<FTestTrait>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent_TraitQuery>()
+				.begin_scope_traits<FTestComponent_TraitQuery>().optional()
+					.without<FTestTrait_TraitQuery>()
 				.end_scope_traits()
 				.build();
 
@@ -227,15 +227,15 @@ void FTraitQueryTestsSpec::Define()
 			[this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add<FTestComponent>();
-			Entity.AddTrait<FTestComponent, FTestTrait>();
+			Entity.Add<FTestComponent_TraitQuery>();
+			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait_TraitQuery>();
 
 			Fixture.FlecsWorld->Progress();
 
-			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
-				.begin_scope_traits<FTestComponent>().optional()
-					.with<FTestTrait>()
-					.without<FTestTrait>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent_TraitQuery>()
+				.begin_scope_traits<FTestComponent_TraitQuery>().optional()
+					.with<FTestTrait_TraitQuery>()
+					.without<FTestTrait_TraitQuery>()
 				.end_scope_traits()
 				.build();
 
@@ -248,15 +248,15 @@ void FTraitQueryTestsSpec::Define()
 			[this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add<FTestComponent>();
-			Entity.AddTrait<FTestComponent, FTestTrait>();
+			Entity.Add<FTestComponent_TraitQuery>();
+			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait_TraitQuery>();
 
 			Fixture.FlecsWorld->Progress();
 
-			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
-				.begin_scope_traits<FTestComponent>().optional()
-					.with<FTestTrait>()
-					.without<FTestTrait2>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent_TraitQuery>()
+				.begin_scope_traits<FTestComponent_TraitQuery>().optional()
+					.with<FTestTrait_TraitQuery>()
+					.without<FTestTrait2_TraitQuery>()
 				.end_scope_traits()
 				.build();
 

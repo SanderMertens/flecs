@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "ComponentTestStructs.generated.h"
 
-struct FTestComponent
+struct FTestComponent_TraitQuery
 {
 	int32 Value;
 }; // struct FTestComponent
