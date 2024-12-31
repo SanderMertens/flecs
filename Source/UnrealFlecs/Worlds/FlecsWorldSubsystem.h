@@ -46,6 +46,7 @@ public:
 		Super::Initialize(Collection);
 		
 		DeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
+		
 	}
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override
@@ -74,7 +75,7 @@ public:
 			return;
 		}
 
-		solid_checkf(IsValid(StartComponent->DefaultWorld), TEXT("Default world is not valid"));
+		solid_check(IsValid(StartComponent->DefaultWorld));
 
 		CreateWorld(StartComponent->DefaultWorld->WorldSettings.WorldName, StartComponent->DefaultWorld->WorldSettings);
 	}
@@ -206,7 +207,7 @@ public:
 	static FORCEINLINE bool HasValidFlecsWorldStatic(const UObject* WorldContextObject)
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull)
-			? IsValid(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull)
+			? IsValid(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 				->GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld)
 			: false;
 	}

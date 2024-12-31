@@ -13,12 +13,12 @@
 void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 {
 	World = ToFlecsWorld(InWorld);
-	solid_checkf(World.IsValid(), TEXT("World is not valid!"));
+	solid_check(World.IsValid());
 
 	const FFlecsEntityHandle OldScope = World->ClearScope();
 
 	ModuleEntity = World->CreateEntity(Execute_GetModuleName(_getUObject()));
-	solid_checkf(ModuleEntity.IsValid(), TEXT("Module entity is not valid!"));
+	solid_check(ModuleEntity.IsValid());
 	
 	ModuleEntity.Add(flecs::Module);
 	ModuleEntity.Set<FFlecsUObjectComponent>({ _getUObject() });

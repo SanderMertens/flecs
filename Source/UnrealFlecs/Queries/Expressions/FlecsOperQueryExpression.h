@@ -18,7 +18,7 @@ public:
 	
 	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Flecs | Query | Operator")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Flecs | Query")
 	EFlecsQueryOperator Operator = EFlecsQueryOperator::Default;
 	
 }; // struct FFlecsOperQueryExpression

@@ -17,7 +17,7 @@ public:
 	
 	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Flecs | Query | Expression")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Flecs | Query")
 	EFlecsQueryInOut InOut = EFlecsQueryInOut::Default;
 	
 }; // struct FFlecsExpressionInOut
