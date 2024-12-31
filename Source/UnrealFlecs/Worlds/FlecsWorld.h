@@ -213,8 +213,7 @@ public:
 				#if WITH_EDITOR
 				else
 				{
-					UN_LOGF(LogFlecsWorld, Log,
-						"Component properties %s not found", *StructSymbol);
+					UN_LOGF(LogFlecsWorld, Log, "Component properties %s not found", *StructSymbol);
 				}
 				#endif // WITH_EDITOR
 				

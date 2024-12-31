@@ -40,9 +40,9 @@ public:
 		return Super::ShouldCreateSubsystem(Outer) && GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs;
 	}
 	
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override
+	virtual void PostInitialize() override
 	{
-		Super::Initialize(Collection);
+		Super::PostInitialize();
 		
 		DeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
 		
@@ -64,7 +64,7 @@ public:
 			return;
 		}
 
-		const AFlecsWorldSettings* SettingsActor = AFlecsWorldSettings::Get(this);
+		const AFlecsWorldSettings* SettingsActor = AFlecsWorldSettings::Get(GetWorld());
 
 		if (const UFlecsWorldSettingsAsset* SettingsAsset = SettingsActor->DefaultWorld)
 		{

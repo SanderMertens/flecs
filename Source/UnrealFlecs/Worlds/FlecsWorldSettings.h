@@ -48,16 +48,22 @@ class UNREALFLECS_API AFlecsWorldSettings final : public AInfo
 		return FoundSettings.Num() == 1;
 	}
 
-	static FORCEINLINE NO_DISCARD AFlecsWorldSettings* Get(const UObject* WorldContextObject)
+	static FORCEINLINE NO_DISCARD AFlecsWorldSettings* Get(const UWorld* World)
 	{
-		solid_check(IsValid(WorldContextObject));
-		
-		const UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert);
 		solid_check(IsValid(World));
-
+		
+		solid_check(IsValid(World));
 		solid_checkf(World->IsGameWorld(), TEXT("World %s is not a game world"), *World->GetName());
 
-		return *TActorIterator<AFlecsWorldSettings>(World);
+		TArray<AFlecsWorldSettings*> FoundSettings;
+		
+		for (const TActorIterator<AFlecsWorldSettings> It(World); It;)
+		{
+			FoundSettings.Add(*It);
+			break;
+		}
+
+		return FoundSettings.Num() == 1 ? FoundSettings[0] : nullptr;
 	}
 
 public:
