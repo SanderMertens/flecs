@@ -15,6 +15,10 @@ public class FlecsLibrary : ModuleRules
         
         OptimizationLevel = OptimizationMode.Speed;
         
+        // When compiling flecs.c, make sure to define flecs_EXPORTS, for example by adding -Dflecs_EXPORTS to the compiler command.
+        // https://www.flecs.dev/flecs/md_docs_2Quickstart.html
+        PrivateDefinitions.Add("flecs_EXPORTS");
+        
         PublicDefinitions.AddRange(
             new string[]
             {
