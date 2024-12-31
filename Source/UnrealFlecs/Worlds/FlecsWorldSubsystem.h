@@ -100,6 +100,11 @@ public:
 	virtual void Tick(float DeltaTime) override
 	{
 		Super::Tick(DeltaTime);
+
+		if UNLIKELY_IF(!IsValid(DefaultWorld))
+		{
+			return;
+		}
 		
 		const bool bResult = DefaultWorld->Progress(DeltaTime);
 
@@ -122,8 +127,7 @@ public:
 		
 		TArray<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
 		TMap<FString, flecs::entity_t> DefaultEntityIds = FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;
-
-
+		
 		// Add a the debug string for this world to the passed-in name E.G. "MyWorld (Client)"
 		const FName WorldNameWithWorldContext = FName(Name +" ("+ GetDebugStringForWorld(GetWorld())+")");
 		
@@ -157,8 +161,6 @@ public:
 			UN_LOGF(LogFlecsCore, Log,
 				"Entity %s with id %d", *NewEntity.GetName(), NewEntity.GetId());
 		}
-
-		NewFlecsWorld->SetWorldName(Name);
 
 		if (DeveloperSettings->bUseTaskThreads)
 		{

@@ -637,18 +637,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FString GetWorldName() const
 	{
-		return GetSingleton<FFlecsWorldNameComponent>().WorldName;
+		return GetWorldEntity().GetName();
 	}
-	
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	void SetWorldName(const FString& InName) const
 	{
-		SetSingleton<FFlecsWorldNameComponent>({ InName });
-		
-		#if WITH_EDITOR
-
-		GetSingletonEntity<FFlecsWorldNameComponent>().SetDocName(InName);
-
-		#endif // WITH_EDITOR
+		GetWorldEntity().SetName(InName);
 	}
 
 	template <typename T>
