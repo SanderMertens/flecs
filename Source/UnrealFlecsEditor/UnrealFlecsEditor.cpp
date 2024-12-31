@@ -58,15 +58,31 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 	FToolMenuSection& Section = Menu->FindOrAddSection("Content");
 	
 	Section.AddEntry(FToolMenuEntry::InitToolBarButton(
-		"OpenFlecsExplorer",
-		FUIAction(
+		"OpenFlecsExplorer", FUIAction(
 			FExecuteAction::CreateLambda([]()
 			{
-				FPlatformProcess::LaunchURL(TEXT("https://flecs.dev/explorer/?remote=true"), nullptr, nullptr);
+				if (!ensure(GEditor))
+				{
+					return;
+				}
+				
+				TOptional<FPlayInEditorSessionInfo> PIEInfo = GEditor->GetPlayInEditorSessionInfo();
+				
+				if (!PIEInfo.IsSet())
+				{
+					return;
+				}
+				
+				for (int32 Index = 0; Index < PIEInfo->NumClientInstancesCreated; ++Index)
+				{
+					FString TargetUrl = "https://www.flecs.dev/explorer/?host=localhost:";
+					TargetUrl.Append(FString::FromInt(27750 + Index));
+					FPlatformProcess::LaunchURL(*TargetUrl, nullptr, nullptr);
+				}
 			})
 		),
-		INVTEXT("Open Flecs Explorer"),
-		INVTEXT("Open Flecs Explorer"),
+		INVTEXT("Open Flecs Explorer (for each PIE instance)"),
+		INVTEXT("Open Flecs Explorer (for each PIE instance)"),
 		FSlateIcon("UnrealFlecsEditorStyle", "UnrealFlecs.FlecsEditor.FlecsLogo")
 	));
 }

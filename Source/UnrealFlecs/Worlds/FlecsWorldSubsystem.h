@@ -122,7 +122,11 @@ public:
 		TArray<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
 		TMap<FString, flecs::entity_t> DefaultEntityIds = FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;
 
-		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this, static_cast<FName>(Name));
+
+		// Add a the debug string for this world to the passed-in name E.G. "MyWorld (Client)"
+		const FName WorldNameWithWorldContext = FName(Name +" ("+ GetDebugStringForWorld(GetWorld())+")");
+		
+		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this, WorldNameWithWorldContext);
 		
 		DefaultWorld = NewFlecsWorld;
 		
