@@ -38,7 +38,9 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 public:
 	UFlecsWorld()
 	{
-		World = flecs::world();
+		// Name the FLECS world after this object
+		char* argv[] = {const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*GetName()).Get())};
+		World = flecs::world(1, argv);
 		TypeMapComponent = GetSingletonPtr<FFlecsTypeMapComponent>();
 		solid_checkf(TypeMapComponent, TEXT("Type map component is null"));
 	}

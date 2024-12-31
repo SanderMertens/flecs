@@ -61,9 +61,17 @@ public:
 		SetTickableTickType(ETickableTickType::Always);
 
 		const AGameStateBase* GameState = InWorld.GetGameState();
-		
+
 		if UNLIKELY_IF(!IsValid(GameState))
 		{
+			InWorld.GameStateSetEvent.AddWeakLambda(this, [&](AGameStateBase* InGameState)
+			{
+				if (IsValid(InGameState))
+				{
+					OnWorldBeginPlay(InWorld);
+				}
+			});
+			
 			return;
 		}
 
@@ -103,6 +111,10 @@ public:
 	{
 		Super::Tick(DeltaTime);
 		
+		if (UNLIKELY(!IsValid(DefaultWorld))) {
+			return;
+		}
+		
 		const bool bResult = DefaultWorld->Progress(DeltaTime);
 
 		#if WITH_EDITOR
@@ -123,7 +135,11 @@ public:
 		TArray<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
 		TMap<FString, flecs::entity_t> DefaultEntityIds = FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;
 
-		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this, static_cast<FName>(Name));
+
+		// Add a the debug string for this world to the passed-in name E.G. "MyWorld (Client)"
+		const FName WorldNameWithWorldContext = FName(Name +" ("+ GetDebugStringForWorld(GetWorld())+")");
+		
+		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this, static_cast<FName>(WorldNameWithWorldContext));
 		
 		DefaultWorld = NewFlecsWorld;
 		
