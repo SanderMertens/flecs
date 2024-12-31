@@ -47,7 +47,7 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 	else
 	{
 		UFlecsWorldSubsystem* WorldSubsystem = GameWorld->GetSubsystem<UFlecsWorldSubsystem>();
-		WorldSubsystem->OnWorldBeginPlayDelegate.AddLambda([&](UWorld* InGameWorld)
+		WorldSubsystem->OnWorldBeginPlayDelegate.AddWeakLambda(_getUObject(), [&](UWorld* InGameWorld)
 			{
 				WorldBeginPlay(World.Get(), InGameWorld);
 				Execute_BP_WorldBeginPlay(_getUObject(), World.Get(), InGameWorld);
