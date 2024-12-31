@@ -13,7 +13,6 @@ class UNREALFLECS_API UFlecsDeveloperSettings final : public UDeveloperSettings
 	GENERATED_BODY()
 
 public:
-
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
 	bool bEnableFlecs = true;
 

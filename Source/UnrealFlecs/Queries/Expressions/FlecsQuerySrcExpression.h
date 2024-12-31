@@ -1,0 +1,38 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "FlecsQueryExpression.h"
+#include "Entities/FlecsEntityHandle.h"
+#include "FlecsQuerySrcExpression.generated.h"
+
+UENUM(BlueprintType)
+enum class EFlecsQuerySrcType : uint8
+{
+	Entity,
+	String
+}; // enum class EFlecsQuerySrcType
+
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsQuerySrcExpression : public FFlecsQueryExpression
+{
+	GENERATED_BODY()
+
+public:
+	FFlecsQuerySrcExpression();
+
+	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
+	EFlecsQuerySrcType SrcType = EFlecsQuerySrcType::Entity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query",
+		meta = (EditCondition = "SrcType == EFlecsQuerySrcType::Entity", EditConditionHides))
+	FFlecsEntityHandle Entity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query", 
+		meta = (EditCondition = "SrcType == EFlecsQuerySrcType::String", EditConditionHides))
+	FString Src;
+	
+}; // struct FFlecsQuerySrcExpression

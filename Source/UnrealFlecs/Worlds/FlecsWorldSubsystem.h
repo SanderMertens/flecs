@@ -269,7 +269,7 @@ protected:
 	{
 		if (ProcessedTags.Contains(Tag.GetTagName()))
 		{
-			return FFlecsEntityHandle();
+			return FFlecsEntityHandle::GetNullHandle();
 		}
 		
 		ProcessedTags.Add(Tag.GetTagName());

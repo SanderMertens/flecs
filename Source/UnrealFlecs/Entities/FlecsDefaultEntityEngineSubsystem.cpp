@@ -53,7 +53,7 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 			.with_name_component()
 			.each([&](flecs::entity Entity)
 			{
-				if (UNLIKELY(Entity.name().length() <= 0))
+				if UNLIKELY_IF(Entity.name().length() <= 0)
 				{
 					return;
 				}
