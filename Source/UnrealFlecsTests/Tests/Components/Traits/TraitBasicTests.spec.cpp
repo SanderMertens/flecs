@@ -11,22 +11,22 @@ FFlecsTestFixture Fixture;
 
 END_DEFINE_SPEC(FTraitBasicTestsSpec);
 
-struct FTestComponent_TraitQuery
+struct FTestComponent_TraitBasic
 {
 	int32 Value;
 }; // struct FTestComponent
 
-struct FTestComponent2
+struct FTestComponent2_TraitBasic
 {
 	float Value;
 }; // struct FTestComponent2
 
-struct FTestTrait
+struct FTestTrait_TraitBasic
 {
 	int32 Value;
 }; // struct FTestTrait
 
-struct FTestTrait2
+struct FTestTrait2_TraitBasic
 {
 	float Value;
 }; // struct FTestTrait2
@@ -40,44 +40,44 @@ void FTraitBasicTestsSpec::Define()
 		It("Should be able to Obtain the Trait Holder Entity of a component", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add<FTestComponent_TraitQuery>();
-			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait>();
+			Entity.Add<FTestComponent_TraitBasic>();
+			Entity.AddTrait<FTestComponent_TraitBasic, FTestTrait_TraitBasic>();
 
-			FFlecsEntityHandle TraitHolder = Entity.ObtainTraitHolderEntity<FTestComponent_TraitQuery>();
+			FFlecsEntityHandle TraitHolder = Entity.ObtainTraitHolderEntity<FTestComponent_TraitBasic>();
 			TestTrue("Trait Holder should be valid", TraitHolder.IsValid());
 		});
 		
 		It("Should be able to add a trait to a component", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add<FTestComponent_TraitQuery>();
-			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait>();
+			Entity.Add<FTestComponent_TraitBasic>();
+			Entity.AddTrait<FTestComponent_TraitBasic, FTestTrait_TraitBasic>();
 			
-			TestTrue("Trait should be added", Entity.Has<FTestComponent_TraitQuery>());
-			TestTrue("Trait should be added", Entity.HasTrait<FTestComponent_TraitQuery, FTestTrait>());
+			TestTrue("Trait should be added", Entity.Has<FTestComponent_TraitBasic>());
+			TestTrue("Trait should be added", Entity.HasTrait<FTestComponent_TraitBasic, FTestTrait_TraitBasic>());
 		});
 
 		It("Should be able to remove a trait from a component", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add<FTestComponent_TraitQuery>();
-			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait>();
+			Entity.Add<FTestComponent_TraitBasic>();
+			Entity.AddTrait<FTestComponent_TraitBasic, FTestTrait_TraitBasic>();
 
-			TestTrue("Trait should be removed", Entity.HasTrait<FTestComponent_TraitQuery, FTestTrait>());
+			TestTrue("Trait should be removed", Entity.HasTrait<FTestComponent_TraitBasic, FTestTrait_TraitBasic>());
 
-			Entity.RemoveTrait<FTestComponent_TraitQuery, FTestTrait>();
-			TestFalse("Trait should be removed", Entity.HasTrait<FTestComponent_TraitQuery, FTestTrait>());
+			Entity.RemoveTrait<FTestComponent_TraitBasic, FTestTrait_TraitBasic>();
+			TestFalse("Trait should be removed", Entity.HasTrait<FTestComponent_TraitBasic, FTestTrait_TraitBasic>());
 		});
 
 		It("Should be able to add multiple traits to a component", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add<FTestComponent_TraitQuery>();
-			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait>();
-			Entity.AddTrait<FTestComponent_TraitQuery, FTestTrait2>();
+			Entity.Add<FTestComponent_TraitBasic>();
+			Entity.AddTrait<FTestComponent_TraitBasic, FTestTrait_TraitBasic>();
+			Entity.AddTrait<FTestComponent_TraitBasic, FTestTrait2_TraitBasic>();
 
-			TestTrue("Trait should be added", Entity.HasTrait<FTestComponent_TraitQuery, FTestTrait>());
-			TestTrue("Trait should be added", Entity.HasTrait<FTestComponent_TraitQuery, FTestTrait2>());
+			TestTrue("Trait should be added", Entity.HasTrait<FTestComponent_TraitBasic, FTestTrait_TraitBasic>());
+			TestTrue("Trait should be added", Entity.HasTrait<FTestComponent_TraitBasic, FTestTrait2_TraitBasic>());
 		});
 	});
 }

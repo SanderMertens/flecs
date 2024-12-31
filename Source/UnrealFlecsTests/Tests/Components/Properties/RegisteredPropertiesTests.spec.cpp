@@ -34,7 +34,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 			[this]()
 		{
 			const FFlecsEntityHandle TestType
-				= Fixture.FlecsWorld->ObtainComponentType<FTestRegisteredPropertyStruct>();
+				= Fixture.FlecsWorld->ObtainComponentType<FTestRegisteredPropertyStruct_RegisterPropertyTest>();
 			
 			TestTrue("Component properties should be registered",
 				TestType.Has(flecs::PairIsTag));
@@ -44,7 +44,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 			[this]()
 		{
 			const FFlecsEntityHandle TestType
-				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FTestRegisteredPropertyStruct::StaticStruct());
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FTestRegisteredPropertyStruct_RegisterPropertyTest::StaticStruct());
 			
 			TestTrue("Component properties should be registered",
 				TestType.Has(flecs::PairIsTag));
@@ -54,18 +54,18 @@ void FRegisteredPropertiesTestsSpec::Define()
 			[this]()
 		{
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
-			TestEntity.Add<FTestRegisteredPropertyStruct>();
+			TestEntity.Add<FTestRegisteredPropertyStruct_RegisterPropertyTest>();
 			TestTrue("Component should exist on entity",
-				TestEntity.Has<FTestRegisteredPropertyStruct>());
+				TestEntity.Has<FTestRegisteredPropertyStruct_RegisterPropertyTest>());
 			TestTrue("Component Entity should exist in world",
-				Fixture.FlecsWorld->HasScriptStruct<FTestRegisteredPropertyStruct>());
+				Fixture.FlecsWorld->HasScriptStruct<FTestRegisteredPropertyStruct_RegisterPropertyTest>());
 			TestTrue("Component properties should be registered",
-				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct>().Has(flecs::PairIsTag));
+				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct_RegisterPropertyTest>().Has(flecs::PairIsTag));
 		});
 
 		It("Should contain Meta-Data with Registered Properties", [this]()
 		{
-			UScriptStruct* TestStruct = FTestRegisteredPropertyStruct::StaticStruct();
+			UScriptStruct* TestStruct = FTestRegisteredPropertyStruct_RegisterPropertyTest::StaticStruct();
 			MAYBE_UNUSED const FFlecsEntityHandle TestType = Fixture.FlecsWorld->ObtainComponentTypeStruct(TestStruct);
 			TestTrue("ScriptStruct should be registered",
 				TestStruct->HasMetaData("FlecsTags"));
@@ -80,48 +80,48 @@ void FRegisteredPropertiesTestsSpec::Define()
 			[this]()
 		{
 			const FFlecsEntityHandle TestType
-				= Fixture.FlecsWorld->ObtainComponentType<FTestRegisteredPropertyStruct2>();
+				= Fixture.FlecsWorld->ObtainComponentType<FTestRegisteredPropertyStruct2_RegisterPropertyTest>();
 			
 			TestTrue("Component properties should be registered",
-				TestType.Has<FTestRegisteredTraitProperty>());
+				TestType.Has<FTestRegisteredTraitProperty_RegisterPropertyTest>());
 			TestTrue("Component properties should be registered",
-				TestType.Has(FTestRegisteredTraitProperty::StaticStruct()));
+				TestType.Has(FTestRegisteredTraitProperty_RegisterPropertyTest::StaticStruct()));
 			TestTrue("Component property trait should be of value 1",
-				TestType.Get<FTestRegisteredTraitProperty>().MyInt32 == 1);
+				TestType.Get<FTestRegisteredTraitProperty_RegisterPropertyTest>().MyInt32 == 1);
 		});
 
 		It("Should contain Registered Trait Properties using StaticStruct",
 			[this]()
 		{
 			const FFlecsEntityHandle TestType
-				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FTestRegisteredPropertyStruct2::StaticStruct());
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FTestRegisteredPropertyStruct2_RegisterPropertyTest::StaticStruct());
 			
 			TestTrue("Component properties should be registered",
-				TestType.Has<FTestRegisteredTraitProperty>());
+				TestType.Has<FTestRegisteredTraitProperty_RegisterPropertyTest>());
 			TestTrue("Component properties should be registered",
-				TestType.Has(FTestRegisteredTraitProperty::StaticStruct()));
+				TestType.Has(FTestRegisteredTraitProperty_RegisterPropertyTest::StaticStruct()));
 			TestTrue("Component property trait should be of value 1",
-				TestType.Get<FTestRegisteredTraitProperty>().MyInt32 == 1);
+				TestType.Get<FTestRegisteredTraitProperty_RegisterPropertyTest>().MyInt32 == 1);
 		});
 
 		It("Should contain Registered Trait Properties when Auto Registered",
 			[this]()
 		{
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
-			TestEntity.Add<FTestRegisteredPropertyStruct2>();
+			TestEntity.Add<FTestRegisteredPropertyStruct2_RegisterPropertyTest>();
 			TestTrue("Component should exist on entity",
-				TestEntity.Has<FTestRegisteredPropertyStruct2>());
+				TestEntity.Has<FTestRegisteredPropertyStruct2_RegisterPropertyTest>());
 			TestTrue("Component Entity should exist in world",
-				Fixture.FlecsWorld->HasScriptStruct<FTestRegisteredPropertyStruct2>());
+				Fixture.FlecsWorld->HasScriptStruct<FTestRegisteredPropertyStruct2_RegisterPropertyTest>());
 			TestTrue("Component properties should be registered",
-				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct2>()
-				.Has<FTestRegisteredTraitProperty>());
+				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct2_RegisterPropertyTest>()
+				.Has<FTestRegisteredTraitProperty_RegisterPropertyTest>());
 			TestTrue("Component properties should be registered",
-				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct2>()
-				.Has(FTestRegisteredTraitProperty::StaticStruct()));
+				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct2_RegisterPropertyTest>()
+				.Has(FTestRegisteredTraitProperty_RegisterPropertyTest::StaticStruct()));
 			TestTrue("Component property trait should be of value 1",
-				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct2>()
-				.Get<FTestRegisteredTraitProperty>().MyInt32 == 1);
+				Fixture.FlecsWorld->GetScriptStructEntity<FTestRegisteredPropertyStruct2_RegisterPropertyTest>()
+				.Get<FTestRegisteredTraitProperty_RegisterPropertyTest>().MyInt32 == 1);
 		});
 	});
 
@@ -131,14 +131,14 @@ void FRegisteredPropertiesTestsSpec::Define()
 			[this]()
 		{
 			const FFlecsEntityHandle TestType
-				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FTestRegisteredPropertyStruct3::StaticStruct());
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FTestRegisteredPropertyStruct3_RegisterPropertyTest::StaticStruct());
 			
 			TestTrue("Component properties should be registered",
-				TestType.Has<FTestRegisteredTraitProperty>());
+				TestType.Has<FTestRegisteredTraitProperty_RegisterPropertyTest>());
 			TestTrue("Component properties should be registered",
-				TestType.Has(FTestRegisteredTraitProperty::StaticStruct()));
+				TestType.Has(FTestRegisteredTraitProperty_RegisterPropertyTest::StaticStruct()));
 			TestTrue("Component property trait should be of value 1",
-				TestType.Get<FTestRegisteredTraitProperty>().MyInt32 == 2);
+				TestType.Get<FTestRegisteredTraitProperty_RegisterPropertyTest>().MyInt32 == 2);
 			TestTrue("Component properties should be registered",
 				TestType.Has(flecs::PairIsTag));
 		});

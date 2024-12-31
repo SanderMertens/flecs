@@ -74,6 +74,8 @@ public:
 			return;
 		}
 
+		solid_checkf(IsValid(StartComponent->DefaultWorld), TEXT("Default world is not valid"));
+
 		CreateWorld(StartComponent->DefaultWorld->WorldSettings.WorldName, StartComponent->DefaultWorld->WorldSettings);
 	}
 

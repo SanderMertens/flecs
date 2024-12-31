@@ -7,7 +7,7 @@
 #include "RegisteredPropertyTest.generated.h"
 
 USTRUCT()
-struct FTestRegisteredPropertyStruct
+struct FTestRegisteredPropertyStruct_RegisterPropertyTest
 {
 	GENERATED_BODY()
 
@@ -23,10 +23,10 @@ public:
 	
 }; // struct FTestRegisteredPropertyStruct
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct, flecs::PairIsTag);
+REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct_RegisterPropertyTest, flecs::PairIsTag);
 
 USTRUCT()
-struct FTestRegisteredTraitProperty
+struct FTestRegisteredTraitProperty_RegisterPropertyTest
 {
 	GENERATED_BODY()
 
@@ -35,7 +35,7 @@ struct FTestRegisteredTraitProperty
 }; // struct FTestRegisteredTraitProperty
 
 USTRUCT()
-struct FTestRegisteredPropertyStruct2
+struct FTestRegisteredPropertyStruct2_RegisterPropertyTest
 {
 	GENERATED_BODY()
 
@@ -49,11 +49,11 @@ struct FTestRegisteredPropertyStruct2
 	FString MyString;
 }; // struct FTestRegisteredPropertyStruct2
 
-REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct2,
-FInstancedStruct::Make<FTestRegisteredTraitProperty>(FTestRegisteredTraitProperty{ 1 }));
+REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct2_RegisterPropertyTest,
+FInstancedStruct::Make<FTestRegisteredTraitProperty_RegisterPropertyTest>(FTestRegisteredTraitProperty_RegisterPropertyTest{ 1 }));
 
 USTRUCT()
-struct FTestRegisteredPropertyStruct3
+struct FTestRegisteredPropertyStruct3_RegisterPropertyTest
 {
 	GENERATED_BODY()
 
@@ -67,6 +67,6 @@ struct FTestRegisteredPropertyStruct3
 	FString MyString;
 }; // struct FTestRegisteredPropertyStruct3
 
-REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct3, FInstancedStruct::Make<FTestRegisteredTraitProperty>(
-	FTestRegisteredTraitProperty{ 2 }));
-REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct3, flecs::PairIsTag);
+REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct3_RegisterPropertyTest, FInstancedStruct::Make<FTestRegisteredTraitProperty_RegisterPropertyTest>(
+	FTestRegisteredTraitProperty_RegisterPropertyTest{ 2 }));
+REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct3_RegisterPropertyTest, flecs::PairIsTag);

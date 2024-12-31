@@ -5,13 +5,13 @@
 #include "CoreMinimal.h"
 #include "ComponentTestStructs.generated.h"
 
-struct FTestComponent_TraitQuery
+struct FTestComponent_RegisterComponentTest
 {
 	int32 Value;
 }; // struct FTestComponent
 
 USTRUCT()
-struct FUStructTestComponent
+struct FUStructTestComponent_RegisterComponentTest
 {
 	GENERATED_BODY()
 
