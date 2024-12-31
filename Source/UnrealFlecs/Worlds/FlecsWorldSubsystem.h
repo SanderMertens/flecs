@@ -11,9 +11,9 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "FlecsWorld.h"
-#include "FlecsWorldSettings.h"
+#include "FlecsWorldInfoSettings.h"
 #include "FlecsWorldSettingsAsset.h"
-#include "FlecsWorldStartComponent.h"
+#include "FlecsWorldSettings.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagsManager.h"
 #include "Components/FlecsWorldPtrComponent.h"
@@ -25,7 +25,6 @@
 #include "SolidMacros/Standard/Hashing.h"
 #include "Standard/robin_hood.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "Unlog/Target/MessageLog.h"
 #include "FlecsWorldSubsystem.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldCreated, UFlecsWorld*);
@@ -47,12 +46,6 @@ public:
 		
 		DeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
 		
-	}
-
-	virtual void OnWorldBeginPlay(UWorld& InWorld) override
-	{
-		Super::OnWorldBeginPlay(InWorld);
-
 		if (!DeveloperSettings->bEnableFlecs)
 		{
 			return;
@@ -60,24 +53,28 @@ public:
 
 		SetTickableTickType(ETickableTickType::Always);
 
-		const AGameStateBase* GameState = InWorld.GetGameState();
-		
-		if UNLIKELY_IF(!IsValid(GameState))
+		if (DeveloperSettings->bAssertNoFlecsWorld)
 		{
+			AFlecsWorldSettings::AssertFlecsWorldSettings(GetWorld());
+		}
+		else if (!AFlecsWorldSettings::HasValidFlecsWorldSettings(GetWorld()))
+		{
+			UN_LOG(LogFlecsCore, Warning, "No valid Flecs world settings found in world");
+			SetTickableTickType(ETickableTickType::Never);
 			return;
 		}
 
-		const UFlecsWorldStartComponent* StartComponent = GameState->FindComponentByClass<UFlecsWorldStartComponent>();
-		
-		if UNLIKELY_IF(!IsValid(StartComponent))
+		const AFlecsWorldSettings* SettingsActor = AFlecsWorldSettings::Get(this);
+
+		if (const UFlecsWorldSettingsAsset* SettingsAsset = SettingsActor->DefaultWorld)
 		{
-			UN_LOGF(LogFlecsCore, Warning, "Failed to find Flecs world start component");
-			return;
+			CreateWorld(SettingsAsset->WorldSettings.WorldName, SettingsAsset->WorldSettings);
 		}
+	}
 
-		solid_check(IsValid(StartComponent->DefaultWorld));
-
-		CreateWorld(StartComponent->DefaultWorld->WorldSettings.WorldName, StartComponent->DefaultWorld->WorldSettings);
+	virtual void OnWorldBeginPlay(UWorld& InWorld) override
+	{
+		Super::OnWorldBeginPlay(InWorld);
 	}
 
 	virtual void Deinitialize() override
@@ -116,9 +113,11 @@ public:
 	}
 	
 	UFUNCTION()
-	FORCEINLINE UFlecsWorld* CreateWorld(const FString& Name, const FFlecsWorldSettings& Settings)
+	FORCEINLINE UFlecsWorld* CreateWorld(const FString& Name, const FFlecsWorldSettingsInfo& Settings)
 	{
 		solid_checkf(!Name.IsEmpty(), TEXT("World name cannot be NAME_None"));
+
+		SetTickableTickType(ETickableTickType::Always);
 		
 		TArray<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
 		TMap<FString, flecs::entity_t> DefaultEntityIds = FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;

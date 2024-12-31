@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsWorldSettings.h"
+#include "FlecsWorldInfoSettings.h"
 #include "Engine/DataAsset.h"
 #include "FlecsWorldSettingsAsset.generated.h"
 
@@ -19,7 +19,7 @@ public:
 	}
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
-	FFlecsWorldSettings WorldSettings;
+	FFlecsWorldSettingsInfo WorldSettings;
 
 	FORCEINLINE virtual FPrimaryAssetId GetPrimaryAssetId() const override final
 	{

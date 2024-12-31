@@ -19,9 +19,18 @@ public:
 	TWeakObjectPtr<UWorld> TestWorld = nullptr;
 	TWeakObjectPtr<UFlecsWorldSubsystem> WorldSubsystem = nullptr;
 	TWeakObjectPtr<UFlecsWorld> FlecsWorld = nullptr;
+	bool bOldAssertNoFlecsWorld = false;
 
 	void SetUp(const TArray<UObject*>& InModules = {})
 	{
+		UFlecsDeveloperSettings* DeveloperSettings = GetMutableDefault<UFlecsDeveloperSettings>();
+		bOldAssertNoFlecsWorld = DeveloperSettings->bAssertNoFlecsWorld;
+		
+		/* Disable assert on no Flecs world as we have no way to spawn the
+		 * AInfo Actor before the world is created since we are not in the editor
+		 * */
+		DeveloperSettings->bAssertNoFlecsWorld = false;
+		
 		TestWorld = UWorld::CreateWorld(EWorldType::Game, false, TEXT("FlecsTestWorld"));
 		check(TestWorld.IsValid());
 
@@ -35,7 +44,7 @@ public:
 		check(WorldSubsystem.IsValid());
         
 		// Create world settings
-		FFlecsWorldSettings WorldSettings;
+		FFlecsWorldSettingsInfo WorldSettings;
 		WorldSettings.WorldName = TEXT("TestWorld");
 		WorldSettings.Modules = InModules;
 		
@@ -44,6 +53,9 @@ public:
 
 	void TearDown()
 	{
+		UFlecsDeveloperSettings* DeveloperSettings = GetMutableDefault<UFlecsDeveloperSettings>();
+		DeveloperSettings->bAssertNoFlecsWorld = bOldAssertNoFlecsWorld;
+		
 		if (TestWorld.IsValid())
 		{
 			TestWorld->EndPlay(EEndPlayReason::Quit);

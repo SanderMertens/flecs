@@ -40,7 +40,7 @@ public:
 	{
 		World = flecs::world();
 		TypeMapComponent = GetSingletonPtr<FFlecsTypeMapComponent>();
-		solid_checkf(TypeMapComponent, TEXT("Type map component is null"));
+		solid_check(TypeMapComponent);
 	}
 	
 	virtual ~UFlecsWorld() override
