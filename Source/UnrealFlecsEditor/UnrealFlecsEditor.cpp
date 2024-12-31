@@ -58,8 +58,7 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 	FToolMenuSection& Section = Menu->FindOrAddSection("Content");
 	
 	Section.AddEntry(FToolMenuEntry::InitToolBarButton(
-		"OpenFlecsExplorer",
-		FUIAction(
+		"OpenFlecsExplorer", FUIAction(
 			FExecuteAction::CreateLambda([]()
 			{
 				if (!ensure(GEditor))
@@ -68,17 +67,16 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 				}
 				
 				TOptional<FPlayInEditorSessionInfo> PIEInfo = GEditor->GetPlayInEditorSessionInfo();
+				
 				if (!PIEInfo.IsSet())
 				{
 					return;
 				}
 				
-				for (int32 i = 0; i < PIEInfo->NumClientInstancesCreated; ++i)
+				for (int32 Index = 0; Index < PIEInfo->NumClientInstancesCreated; ++Index)
 				{
 					FString TargetUrl = "https://www.flecs.dev/explorer/?host=localhost:";
-					// ECS_REST_DEFAULT_PORT is 27750
-					// Each PIE instance in the rest module incremements the port by 1
-					TargetUrl.Append(FString::FromInt(27750 + i));
+					TargetUrl.Append(FString::FromInt(27750 + Index));
 					FPlatformProcess::LaunchURL(*TargetUrl, nullptr, nullptr);
 				}
 			})
