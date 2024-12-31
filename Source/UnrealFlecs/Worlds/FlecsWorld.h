@@ -80,8 +80,7 @@ public:
 			.opaque(flecs::String)
 			.serialize([](const flecs::serializer* Serializer, const FString* Data)
 			{
-				auto* String = Data->GetCharArray().GetData();
-				return Serializer->value(flecs::String, String);
+				return Serializer->value(flecs::String, Data->GetCharArray().GetData());
 			})
 			.assign_string([](FString* Data, const char* String)
 			{
@@ -92,8 +91,7 @@ public:
 			.opaque(flecs::String)
 			.serialize([](const flecs::serializer* Serializer, const FName* Data)
 			{
-				const auto* String = Data->ToString().GetCharArray().GetData();
-				return Serializer->value(flecs::String, String);
+				return Serializer->value(flecs::String, Data->ToString().GetCharArray().GetData());
 			})
 			.assign_string([](FName* Data, const char* String)
 			{
@@ -104,8 +102,7 @@ public:
 			.opaque(flecs::String)
 			.serialize([](const flecs::serializer* Serializer, const FText* Data)
 			{
-				auto* String = Data->ToString().GetCharArray().GetData();
-				return Serializer->value(flecs::String, String);
+				return Serializer->value(flecs::String, Data->ToString().GetCharArray().GetData());
 			})
 			.assign_string([](FText* Data, const char* String)
 			{
@@ -1118,7 +1115,7 @@ public:
 
 	//#endif // WITH_EDITOR
 
-	void RegisterEnumProperties(UEnum* Enum, const FFlecsEntityHandle& InComponentEntity) const
+	void RegisterEnumProperties(const UEnum* Enum, const FFlecsEntityHandle& InComponentEntity) const
 	{
 		flecs::untyped_component UntypedComponent = InComponentEntity.GetUntypedComponent_Unsafe();
 		
@@ -1144,7 +1141,7 @@ public:
 	{
 		solid_check(IsValid(Enum));
 
-		FFlecsEntityHandle OldScope = ClearScope();
+		const FFlecsEntityHandle OldScope = ClearScope();
 
 		if (const FFlecsEntityHandle Handle = LookupEntity(Enum->GetName()))
 		{

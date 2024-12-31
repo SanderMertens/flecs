@@ -30,6 +30,7 @@ struct FLECSLIBRARY_API FFlecsScriptEnumComponent
 
 	FORCEINLINE FFlecsScriptEnumComponent() : ScriptEnum(nullptr) {}
 	FORCEINLINE FFlecsScriptEnumComponent(UEnum* InScriptEnum) : ScriptEnum(InScriptEnum) {}
+	FORCEINLINE FFlecsScriptEnumComponent(const TWeakObjectPtr<UEnum>& InScriptEnum) : ScriptEnum(InScriptEnum) {}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	TWeakObjectPtr<UEnum> ScriptEnum;

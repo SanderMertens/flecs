@@ -20,5 +20,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
 	EFlecsQueryFlags Flags = EFlecsQueryFlags::None;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
+	TArray<TInstancedStruct<FFlecsQueryExpression>> OtherExpressions;
 	
 }; // struct FFlecsQueryDefinition
