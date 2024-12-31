@@ -296,6 +296,20 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_PTR_CAST(type, value) (reinterpret_cast<type>(value))
 #endif
 
+#ifndef ECS_CONSTEXPR
+
+#ifdef __cplusplus
+    #if __cplusplus >= 201103L
+        #define ECS_CONSTEXPR constexpr
+    #else
+        #define ECS_CONSTEXPR const
+    #endif
+#else
+    #define ECS_CONSTEXPR const
+#endif
+
+#endif
+
 /* Utility macro's to do bitwise comparisons between floats without warnings */
 #define ECS_EQ(a, b) (ecs_os_memcmp(&(a), &(b), sizeof(a)) == 0)
 #define ECS_NEQ(a, b) (!ECS_EQ(a, b))
