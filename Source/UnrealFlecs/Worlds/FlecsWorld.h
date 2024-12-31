@@ -30,6 +30,12 @@ DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGR
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"),
 	STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
 
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsBeginPlay
+{
+	GENERATED_BODY()
+}; // struct FFlecsBeginPlayEvent
+
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorld final : public UObject
 {
@@ -39,7 +45,7 @@ public:
 	UFlecsWorld()
 	{
 		// Name the FLECS world after this object
-		char* argv[] = {const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*GetName()).Get())};
+		char* argv[] = { const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*GetName()).Get()) };
 		World = flecs::world(1, argv);
 		TypeMapComponent = GetSingletonPtr<FFlecsTypeMapComponent>();
 		solid_check(TypeMapComponent);
@@ -68,12 +74,17 @@ public:
 		}
 	}
 
-	void WorldBeginPlay()
+	void WorldStart()
 	{
 		UN_LOG(LogFlecsWorld, Log, "Flecs World begin play");
 		
 		InitializeSystems();
 		InitializeAssetRegistry();
+	}
+
+	void WorldBeginPlay()
+	{
+		GetWorldEntity().Add<FFlecsBeginPlay>();
 	}
 
 	void InitializeDefaultComponents() const
@@ -187,6 +198,11 @@ public:
 				const FFlecsScriptStructComponent& InScriptStructComponent)
 			{
 				FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
+
+				if (InScriptStructComponent.ScriptStruct == FFlecsScriptStructComponent::StaticStruct())
+				{
+					return;
+				}
 
 				const FString StructSymbol = EntityHandle.GetSymbol();
 				
@@ -1236,12 +1252,12 @@ public:
 	}
 
 	template <typename ...TComponents>
-	flecs::observer_builder<TComponents...> CreateObserver(const FString& Name) const
+	flecs::observer_builder<TComponents...> CreateObserver(const FString& Name = "") const
 	{
 		return World.observer<TComponents...>(StringCast<char>(*Name).Get());
 	}
 
-	flecs::observer_builder<> CreateObserver(const FString& Name) const
+	flecs::observer_builder<> CreateObserver(const FString& Name = "") const
 	{
 		return World.observer<>(StringCast<char>(*Name).Get());
 	}

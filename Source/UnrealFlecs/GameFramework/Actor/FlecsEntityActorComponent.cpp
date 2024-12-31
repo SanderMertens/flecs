@@ -59,7 +59,7 @@ void UFlecsEntityActorComponent::InitializeEntity()
 	}
 	else
 	{
-		GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreated
+		GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreatedDelegate
 			.AddUObject(this, &UFlecsEntityActorComponent::OnWorldCreated);
 	}
 }
@@ -103,7 +103,7 @@ void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 {
 	CreateActorEntity(InWorld);
 	
-	GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreated.RemoveAll(this);
+	GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreatedDelegate.RemoveAll(this);
 }
 
 void UFlecsEntityActorComponent::CreateActorEntity(UFlecsWorld* InWorld)

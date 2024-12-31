@@ -3,8 +3,3 @@
 #include "FlecsWorldSettings.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsWorldSettings)
-
-AFlecsWorldSettings::AFlecsWorldSettings(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-}

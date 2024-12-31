@@ -28,6 +28,8 @@
 #include "FlecsWorldSubsystem.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldCreated, UFlecsWorld*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldBeginPlay, UWorld*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldDestroyed, UFlecsWorld*);
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsystem
@@ -40,9 +42,9 @@ public:
 		return Super::ShouldCreateSubsystem(Outer) && GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs;
 	}
 	
-	virtual void PostInitialize() override
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override
 	{
-		Super::PostInitialize();
+		Super::Initialize(Collection);
 		
 		DeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
 		
@@ -53,18 +55,11 @@ public:
 
 		SetTickableTickType(ETickableTickType::Always);
 
-		if (DeveloperSettings->bAssertNoFlecsWorld)
-		{
-			AFlecsWorldSettings::AssertFlecsWorldSettings(GetWorld());
-		}
-		else if (!AFlecsWorldSettings::HasValidFlecsWorldSettings(GetWorld()))
-		{
-			UN_LOG(LogFlecsCore, Warning, "No valid Flecs world settings found in world");
-			SetTickableTickType(ETickableTickType::Never);
-			return;
-		}
+		solid_check(IsValid(GetWorld()->GetWorldSettings()));
+		checkf(GetWorld()->GetWorldSettings()->IsA<AFlecsWorldSettings>(),
+			TEXT("World settings must be of type AFlecsWorldSettings"));
 
-		const AFlecsWorldSettings* SettingsActor = AFlecsWorldSettings::Get(GetWorld());
+		const AFlecsWorldSettings* SettingsActor = CastChecked<AFlecsWorldSettings>(GetWorld()->GetWorldSettings());
 
 		if (const UFlecsWorldSettingsAsset* SettingsAsset = SettingsActor->DefaultWorld)
 		{
@@ -75,6 +70,12 @@ public:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override
 	{
 		Super::OnWorldBeginPlay(InWorld);
+
+		if LIKELY_IF(IsValid(DefaultWorld))
+		{
+			DefaultWorld->WorldBeginPlay();
+			OnWorldBeginPlayDelegate.Broadcast(&InWorld);
+		}
 	}
 
 	virtual void Deinitialize() override
@@ -168,7 +169,7 @@ public:
 			NewFlecsWorld->SetThreads(std::thread::hardware_concurrency());
 		}
 
-		NewFlecsWorld->WorldBeginPlay();
+		NewFlecsWorld->WorldStart();
 
 		RegisterAllGameplayTags(NewFlecsWorld);
 
@@ -180,7 +181,7 @@ public:
 			NewFlecsWorld->ImportModule(Module);
 		}
 		
-		OnWorldCreated.Broadcast(NewFlecsWorld);
+		OnWorldCreatedDelegate.Broadcast(NewFlecsWorld);
 		
 		return NewFlecsWorld;
 	}
@@ -222,7 +223,9 @@ public:
 			|| WorldType == EWorldType::GameRPC;
 	}
 	
-	FOnWorldCreated OnWorldCreated;
+	FOnWorldCreated OnWorldCreatedDelegate;
+	FOnWorldBeginPlay OnWorldBeginPlayDelegate;
+	FOnWorldDestroyed OnWorldDestroyedDelegate;
 
 protected:
 	UPROPERTY()

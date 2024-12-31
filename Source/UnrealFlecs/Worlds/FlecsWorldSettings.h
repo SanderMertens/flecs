@@ -3,73 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EngineUtils.h"
-#include "GameFramework/Info.h"
-#include "SolidMacros/Macros.h"
+#include "GameFramework/WorldSettings.h"
 #include "FlecsWorldSettings.generated.h"
 
 class UFlecsWorldSettingsAsset;
 
-UCLASS(BlueprintType)
-class UNREALFLECS_API AFlecsWorldSettings final : public AInfo
+UCLASS()
+class UNREALFLECS_API AFlecsWorldSettings : public AWorldSettings
 {
 	GENERATED_BODY()
 
-	friend class UFlecsWorldSubsystem;
-
-	static FORCEINLINE void AssertFlecsWorldSettings(const UWorld* World)
-	{
-		solid_check(IsValid(World));
-		solid_checkf(World->IsGameWorld(), TEXT("World %s is not a game world"), *World->GetName());
-
-		TArray<AFlecsWorldSettings*> FoundSettings;
-		
-		for (TActorIterator<AFlecsWorldSettings> It(World); It; ++It)
-		{
-			FoundSettings.Add(*It);
-		}
-
-		checkf(FoundSettings.Num() == 1,
-			TEXT("Expected exactly one Flecs world settings, but found %d"), FoundSettings.Num());
-	}
-
-	static FORCEINLINE NO_DISCARD bool HasValidFlecsWorldSettings(const UWorld* World)
-	{
-		solid_check(IsValid(World));
-		solid_checkf(World->IsGameWorld(), TEXT("World %s is not a game world"), *World->GetName());
-
-		TArray<AFlecsWorldSettings*> FoundSettings;
-		
-		for (TActorIterator<AFlecsWorldSettings> It(World); It; ++It)
-		{
-			FoundSettings.Add(*It);
-		}
-
-		return FoundSettings.Num() == 1;
-	}
-
-	static FORCEINLINE NO_DISCARD AFlecsWorldSettings* Get(const UWorld* World)
-	{
-		solid_check(IsValid(World));
-		
-		solid_check(IsValid(World));
-		solid_checkf(World->IsGameWorld(), TEXT("World %s is not a game world"), *World->GetName());
-
-		TArray<AFlecsWorldSettings*> FoundSettings;
-		
-		for (const TActorIterator<AFlecsWorldSettings> It(World); It;)
-		{
-			FoundSettings.Add(*It);
-			break;
-		}
-
-		return FoundSettings.Num() == 1 ? FoundSettings[0] : nullptr;
-	}
-
 public:
-	AFlecsWorldSettings(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-	
-	/* Allowed to be null. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs", meta = (ExposeOnSpawn = true))
 	TObjectPtr<UFlecsWorldSettingsAsset> DefaultWorld;
 

@@ -21,7 +21,4 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs", meta = (EditCondition = "bUseTaskThreads"))
 	int32 TaskThreadCount = 4;
 
-	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-	bool bAssertNoFlecsWorld = true;
-
 }; // class UFlecsDeveloperSettings

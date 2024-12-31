@@ -20,7 +20,30 @@ DECLARE_CYCLE_STAT(TEXT("FlecsPhysicsModule::ResimulationHandlers"),
 
 void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-	FPhysScene* Scene = GetFlecsWorld()->GetWorld()->GetPhysicsScene();
+}
+
+void UFlecsPhysicsModule::DeinitializeModule(UFlecsWorld* InWorld)
+{
+	if (!IsValid(InWorld))
+	{
+		return;
+	}
+	
+	GetFlecsWorld()->RemoveSingleton<FFlecsPhysicsSceneComponent>();
+
+	if (bAllowResimulation)
+	{
+		IConsoleVariable* ResimConsoleVariable =
+			IConsoleManager::Get().FindConsoleVariable(TEXT("p.Resim.AllowRewindToResimulatedFrames"));
+		ResimConsoleVariable->Set(PreResimValue);
+	}
+}
+
+void UFlecsPhysicsModule::WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld)
+{
+	Super::WorldBeginPlay(InWorld, InGameWorld);
+
+	FPhysScene* Scene = InGameWorld->GetPhysicsScene();
 	solid_check(Scene);
 	
 	Scene->GetSolver()->SetIsDeterministic(true);
@@ -46,23 +69,6 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 				ResimulationHandlers();
 			}
 		});
-}
-
-void UFlecsPhysicsModule::DeinitializeModule(UFlecsWorld* InWorld)
-{
-	if (!IsValid(InWorld))
-	{
-		return;
-	}
-	
-	GetFlecsWorld()->RemoveSingleton<FFlecsPhysicsSceneComponent>();
-
-	if (bAllowResimulation)
-	{
-		IConsoleVariable* ResimConsoleVariable =
-			IConsoleManager::Get().FindConsoleVariable(TEXT("p.Resim.AllowRewindToResimulatedFrames"));
-		ResimConsoleVariable->Set(PreResimValue);
-	}
 }
 
 inline void UFlecsPhysicsModule::ResimulationHandlers()

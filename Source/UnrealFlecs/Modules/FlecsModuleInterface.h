@@ -34,6 +34,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "Initialize Module"))
 	void BP_InitializeModule(UFlecsWorld* InWorld);
 
+	virtual void WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld);
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "World Begin Play"))
+	void BP_WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld);
+
 	virtual void DeinitializeModule(UFlecsWorld* InWorld);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "Deinitialize Module"))

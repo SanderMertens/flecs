@@ -7,6 +7,7 @@
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Logs/FlecsCategories.h"
 #include "Unlog/Unlog.h"
+#include "Worlds/FlecsWorldSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsModuleInterface)
 
@@ -14,6 +15,8 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 {
 	World = ToFlecsWorld(InWorld);
 	solid_check(World.IsValid());
+
+	const UWorld* GameWorld = World->GetWorld();
 
 	const FFlecsEntityHandle OldScope = World->ClearScope();
 
@@ -35,6 +38,21 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 		.id<FFlecsModuleComponent>()
 		.entity(ModuleEntity)
 		.emit();
+
+	if (World->GetWorldEntity().Has<FFlecsBeginPlay>())
+	{
+		WorldBeginPlay(World.Get(), World->GetWorld());
+		Execute_BP_WorldBeginPlay(_getUObject(), World.Get(), World->GetWorld());
+	}
+	else
+	{
+		UFlecsWorldSubsystem* WorldSubsystem = GameWorld->GetSubsystem<UFlecsWorldSubsystem>();
+		WorldSubsystem->OnWorldBeginPlayDelegate.AddLambda([&](UWorld* InGameWorld)
+			{
+				WorldBeginPlay(World.Get(), InGameWorld);
+				Execute_BP_WorldBeginPlay(_getUObject(), World.Get(), InGameWorld);
+			});
+	}
 	
 	UN_LOGF(LogFlecsCore, Log,
 		"Imported module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
@@ -51,6 +69,10 @@ inline void IFlecsModuleInterface::DeinitializeModule_Internal()
 }
 
 void IFlecsModuleInterface::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
+{
+}
+
+void IFlecsModuleInterface::WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld)
 {
 }
 

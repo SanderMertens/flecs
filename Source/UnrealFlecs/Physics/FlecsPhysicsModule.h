@@ -19,6 +19,8 @@ public:
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
 
+	virtual void WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld) override;
+
 	FORCEINLINE void ResimulationHandlers();
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override

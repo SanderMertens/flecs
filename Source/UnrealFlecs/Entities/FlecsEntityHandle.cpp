@@ -142,11 +142,11 @@ void FFlecsEntityHandle::PostScriptConstruct()
         else
         {
             FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
-                ->OnWorldCreated.AddLambda([&](const UFlecsWorld* InFlecsWorld)
+                ->OnWorldCreatedDelegate.AddLambda([&](const UFlecsWorld* InFlecsWorld)
             {
                 SetEntity(flecs::entity(InFlecsWorld->World, GetEntity().id()));
 
-                FlecsWorldSubsystem->OnWorldCreated.Remove(OnWorldCreatedHandle);
+                FlecsWorldSubsystem->OnWorldCreatedDelegate.Remove(OnWorldCreatedHandle);
             });
         }
     }
