@@ -22,7 +22,7 @@ class UFlecsWorld;
  * The structure provides several utility functions to interact with flecs entities,
  * including validation, component addition/removal, and direct data access.
  *
- * @note This struct is aligned on an 8-byte boundary. It is 32 bytes in Editor builds and 16 bytes in Shipping builds.
+ * @note This struct is aligned on an 8-byte boundary. It is 32 bytes in Editor builds and 16 bytes in Non-Editor builds.
  */
 USTRUCT(BlueprintType, meta = (DisableSplitPin))
 struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
