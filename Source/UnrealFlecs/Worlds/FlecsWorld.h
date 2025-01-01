@@ -292,7 +292,7 @@ public:
 			.each([&](flecs::iter& Iter, const size_t IterIndex,
 				const FFlecsModuleComponent& InModuleComponent, const FFlecsUObjectComponent& InUObjectComponent)
 			{
-				FFlecsEntityHandle ModuleEntity = Iter.entity(IterIndex);
+				const FFlecsEntityHandle ModuleEntity = Iter.entity(IterIndex);
 				
 				DependenciesComponentQuery.each([&](flecs::entity InEntity,
 					const FFlecsDependenciesComponent& InDependenciesComponent)
