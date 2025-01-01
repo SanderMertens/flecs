@@ -761,7 +761,7 @@ void Sparse_ensure_skip_generation(void) {
 			uint64_t id_2 = flecs_sparse_new_id(Sparse);
 			TestEqual("Sparse count should be correct", flecs_sparse_count(Sparse), 2);
 			TestTrue("Sparse element should be alive", flecs_sparse_is_alive(Sparse, id_2));
-		
+		});
 	});
 }
 
