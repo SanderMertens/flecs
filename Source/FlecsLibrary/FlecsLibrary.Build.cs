@@ -58,13 +58,15 @@ public class FlecsLibrary : ModuleRules
         
         PublicIncludePaths.AddRange(
             new string[] {
-                ModuleDirectory + "/ThirdParty/Public",
+                ModuleDirectory + "/Public",
             }
         );
         
         PrivateIncludePaths.AddRange(
             new string[] {
-                ModuleDirectory + "/ThirdParty/Private",
+                ModuleDirectory + "/Private",
+                ModuleDirectory + "/Tests",
+                ModuleDirectory + "/Fixtures",
             }
         );
         

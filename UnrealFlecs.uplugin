@@ -33,11 +33,6 @@
 			"Name": "UnrealFlecsTests",
 			"Type": "DeveloperTool",
 			"LoadingPhase": "PostDefault"
-		},
-		{
-			"Name": "FlecsLibraryTests",
-			"Type": "DeveloperTool",
-			"LoadingPhase": "PostDefault"
 		}
 	],
 	"Plugins": [
