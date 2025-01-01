@@ -22,6 +22,5 @@ void FFlecsQuerySrcExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder<
 				InQueryBuilder.src(StringCast<char>(*Src).Get());
 			}
 			break;
-		default: ;
 	}
 }
