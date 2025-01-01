@@ -13,7 +13,10 @@ FFlecsTestFixture Fixture;
 
 END_DEFINE_SPEC(FDefaultEntityTestsSpec);
 
-DEFINE_DEFAULT_ENTITY_OPTION(TestEntityOption);
+namespace
+{
+	DEFINE_DEFAULT_ENTITY_OPTION(TestEntityOption);
+} // namespace
 
 void FDefaultEntityTestsSpec::Define()
 {
