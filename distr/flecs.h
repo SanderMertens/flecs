@@ -895,6 +895,20 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_PTR_CAST(type, value) (reinterpret_cast<type>(value))
 #endif
 
+#ifndef ECS_CONSTEXPR
+
+#ifdef __cplusplus
+    #if __cplusplus >= 201103L
+        #define ECS_CONSTEXPR constexpr
+    #else
+        #define ECS_CONSTEXPR const
+    #endif
+#else
+    #define ECS_CONSTEXPR const
+#endif
+
+#endif
+
 /* Utility macro's to do bitwise comparisons between floats without warnings */
 #define ECS_EQ(a, b) (ecs_os_memcmp(&(a), &(b), sizeof(a)) == 0)
 #define ECS_NEQ(a, b) (!ECS_EQ(a, b))
@@ -17227,16 +17241,16 @@ static const flecs::entity_t OnTableCreate = EcsOnTableCreate;
 static const flecs::entity_t OnTableDelete = EcsOnTableDelete;
 
 /* Builtin term flags */
-static const uint64_t Self = EcsSelf;
-static const uint64_t Up = EcsUp;
-static const uint64_t Trav = EcsTrav;
-static const uint64_t Cascade = EcsCascade;
-static const uint64_t Desc = EcsDesc;
-static const uint64_t IsVariable = EcsIsVariable;
-static const uint64_t IsEntity = EcsIsEntity;
-static const uint64_t IsName = EcsIsName;
-static const uint64_t TraverseFlags = EcsTraverseFlags;
-static const uint64_t TermRefFlags = EcsTermRefFlags;
+static ECS_CONSTEXPR uint64_t Self = EcsSelf;
+static ECS_CONSTEXPR uint64_t Up = EcsUp;
+static ECS_CONSTEXPR uint64_t Trav = EcsTrav;
+static ECS_CONSTEXPR uint64_t Cascade = EcsCascade;
+static ECS_CONSTEXPR uint64_t Desc = EcsDesc;
+static ECS_CONSTEXPR uint64_t IsVariable = EcsIsVariable;
+static ECS_CONSTEXPR uint64_t IsEntity = EcsIsEntity;
+static ECS_CONSTEXPR uint64_t IsName = EcsIsName;
+static ECS_CONSTEXPR uint64_t TraverseFlags = EcsTraverseFlags;
+static ECS_CONSTEXPR uint64_t TermRefFlags = EcsTermRefFlags;
 
 /* Builtin entity ids */
 static const flecs::entity_t Flecs = EcsFlecs;
