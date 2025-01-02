@@ -481,7 +481,7 @@ public:
 	{
 		if (Name.IsEmpty())
 		{
-			World.entity();
+			return World.entity();
 		}
 
 		return World.entity(StringCast<char>(*Name).Get());
@@ -505,15 +505,14 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord) const
+	FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord, const FString& Name = "") const
 	{
-		FFlecsEntityHandle Entity = CreateEntity(InRecord.Name);
+		FFlecsEntityHandle Entity = CreateEntity(Name);
 		InRecord.ApplyRecordToEntity(Entity);
 		return Entity;
 	}
 
-	FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord,
-		const flecs::entity_t InId) const
+	FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord, const flecs::entity_t InId) const
 	{
 		const FFlecsEntityHandle Entity = CreateEntityWithId(InId);
 		InRecord.ApplyRecordToEntity(Entity);
@@ -530,9 +529,20 @@ public:
 	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void DestroyEntityByName(const FString& Name, const bool bSearchPath = true) const
+	void DestroyEntityByName(const FString& Name) const
 	{
-		World.delete_with(reinterpret_cast<flecs::entity_t>(StringCast<char>(*Name).Get()), bSearchPath);
+		solid_checkf(!Name.IsEmpty(), TEXT("Name is empty"));
+		
+		FFlecsEntityHandle Handle = LookupEntity(Name);
+		
+		if (Handle.IsValid())
+		{
+			Handle.Destroy();
+		}
+		else
+		{
+			UN_LOGF(LogFlecsWorld, Warning, "Entity %s not found", *Name);
+		}
 	}
 
 	template <typename FunctionType>
