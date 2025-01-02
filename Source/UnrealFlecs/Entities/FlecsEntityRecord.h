@@ -284,22 +284,18 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 					return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct && Traits == Other.Traits
 					&& Pair == Other.Pair;
 				}
-			break;
 			case EFlecsComponentNodeType::EntityHandle:
 				{
 					return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
 				}
-			break;
 			case EFlecsComponentNodeType::FGameplayTag:
 				{
 					return NodeType == Other.NodeType && GameplayTag == Other.GameplayTag;
 				}
-			break;
 			case EFlecsComponentNodeType::Pair:
 				{
 					return NodeType == Other.NodeType && Pair == Other.Pair;
 				}
-			break;
 		}
 
 		UNREACHABLE
@@ -342,6 +338,68 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		NewComponent.NodeType = EFlecsComponentNodeType::ScriptStruct;
 		NewComponent.ScriptStruct = FInstancedStruct::Make<T>(InComponent);
 		Components.Add(NewComponent);
+	}
+
+	FORCEINLINE void AddComponent(const FFlecsEntityHandle& InEntityHandle)
+	{
+		FFlecsComponentTypeInfo NewComponent;
+		NewComponent.NodeType = EFlecsComponentNodeType::EntityHandle;
+		NewComponent.EntityHandle = InEntityHandle;
+		Components.Add(NewComponent);
+	}
+
+	FORCEINLINE void AddComponent(const FGameplayTag& InGameplayTag)
+	{
+		FFlecsComponentTypeInfo NewComponent;
+		NewComponent.NodeType = EFlecsComponentNodeType::FGameplayTag;
+		NewComponent.GameplayTag = InGameplayTag;
+		Components.Add(NewComponent);
+	}
+
+	FORCEINLINE void AddComponent(const FFlecsPair& InPair)
+	{
+		FFlecsComponentTypeInfo NewComponent;
+		NewComponent.NodeType = EFlecsComponentNodeType::Pair;
+		NewComponent.Pair = InPair;
+		Components.Add(NewComponent);
+	}
+
+	FORCEINLINE int32 AddSubEntity(const FFlecsEntityRecord& InSubEntity)
+	{
+		return SubEntities.Add(TInstancedStruct<FFlecsEntityRecord>::Make(InSubEntity));
+	}
+
+	FORCEINLINE void RemoveSubEntity(const int32 InIndex)
+	{
+		solid_checkf(SubEntities.IsValidIndex(InIndex), TEXT("Index is out of bounds"));
+		SubEntities.RemoveAt(InIndex);
+	}
+
+	FORCEINLINE void RemoveAllSubEntities()
+	{
+		SubEntities.Empty();
+	}
+
+	FORCEINLINE NO_DISCARD bool HasSubEntities() const
+	{
+		return !SubEntities.IsEmpty();
+	}
+
+	FORCEINLINE NO_DISCARD int32 GetSubEntityCount() const
+	{
+		return SubEntities.Num();
+	}
+
+	FORCEINLINE const FFlecsEntityRecord& GetSubEntity(const int32 InIndex) const
+	{
+		solid_checkf(SubEntities.IsValidIndex(InIndex), TEXT("Index is out of bounds"));
+		return SubEntities[InIndex].Get();
+	}
+
+	FORCEINLINE FFlecsEntityRecord& GetSubEntity(const int32 InIndex)
+	{
+		solid_checkf(SubEntities.IsValidIndex(InIndex), TEXT("Index is out of bounds"));
+		return SubEntities[InIndex].GetMutable<FFlecsEntityRecord>();
 	}
 
 	FORCEINLINE void ApplyRecordToEntity(const FFlecsEntityHandle& InEntityHandle) const
@@ -404,12 +462,13 @@ struct UNREALFLECS_API FFlecsEntityRecord
 
 		for (const TInstancedStruct<FFlecsEntityRecord>& SubEntity : SubEntities)
 		{
-			FFlecsEntityRecord NewEntityRecord = SubEntity.Get();
+			const FFlecsEntityRecord& NewEntityRecord = SubEntity.Get();
 			FFlecsEntityHandle NewEntityHandle = InEntityHandle.GetEntity().world().entity();
 			NewEntityRecord.ApplyRecordToEntity(NewEntityHandle);
 			InEntityHandle.Add(NewEntityHandle);
 		}
 	}
+	
 }; // struct FFlecsEntityRecord
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsEntityRecord, flecs::DontInherit);
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsEntityRecord, ecs_pair(flecs::OnInstantiate, flecs::DontInherit));
