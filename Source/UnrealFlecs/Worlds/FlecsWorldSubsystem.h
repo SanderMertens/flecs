@@ -144,7 +144,7 @@ public:
 		
 		for (int32 Index = 0; Index < DefaultEntities.Num(); ++Index)
 		{
-			FString EntityName = DefaultEntities[Index].EntityRecord.Name;
+			FString EntityName = DefaultEntities[Index].EntityName;
 			const flecs::entity_t EntityId = DefaultEntityIds[EntityName];
 
 			#if WITH_EDITOR

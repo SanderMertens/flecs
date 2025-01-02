@@ -27,7 +27,7 @@ public:
 	TArray<FFlecsDefaultMetaEntity> AddedDefaultEntities;
 	TArray<FFlecsDefaultMetaEntity> CodeAddedDefaultEntities;
 	
-	flecs::world* DefaultEntityWorld;
+	flecs::world* DefaultEntityWorld = nullptr;
 	flecs::entity NoneEntity;
 
 	bool bIsInitialized = false;
@@ -35,27 +35,27 @@ public:
 	void Initialize();
 }; // struct FFlecsDefaultEntityEngine
 
-#define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
-	DLLEXPORT INLINE ECS_ENTITY_DECLARE(EntityName); \
+#define DEFINE_DEFAULT_ENTITY_OPTION(DefaultEntityName) \
+	DLLEXPORT INLINE ECS_ENTITY_DECLARE(DefaultEntityName); \
 	namespace \
 	{                                                             \
-		static void Register##EntityName()                        \
+		static void Register##DefaultEntityName()                        \
 		{                                                         \
 			FFlecsDefaultMetaEntity MetaEntity;                   \
-			MetaEntity.EntityRecord.Name = TEXT(#EntityName);      \
+			MetaEntity.EntityName = TEXT(#DefaultEntityName);      \
 			if (!FFlecsDefaultEntityEngine::Get().bIsInitialized)  \
 			{                                                     \
 				FFlecsDefaultEntityEngine::Get().Initialize();                                   \
 			}                                                     \
-			EntityName = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
+			DefaultEntityName = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
 		}                                                         \
-		struct FRegisterInvoker##EntityName                       \
+		struct FRegisterInvoker##DefaultEntityName                       \
 		{                                                         \
-			FRegisterInvoker##EntityName()                        \
+			FRegisterInvoker##DefaultEntityName()                        \
 			{                                                     \
-				FCoreDelegates::OnPostEngineInit.AddStatic(&Register##EntityName); \
+				FCoreDelegates::OnPostEngineInit.AddStatic(&Register##DefaultEntityName); \
 			}                                                     \
 		};                                                        \
-		inline FRegisterInvoker##EntityName Invoker##EntityName;  \
+		inline FRegisterInvoker##DefaultEntityName Invoker##DefaultEntityName;  \
 	}
 

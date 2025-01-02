@@ -47,12 +47,6 @@ void UFlecsEntityActorComponent::InitializeEntity()
 		return;
 	}
 
-	if UNLIKELY_IF(!EntityRecord.IsValid())
-	{
-		UN_LOG(LogFlecsEntity, Error, "Entity Record is not valid!");
-		return;
-	}
-
 	if (UFlecsWorldSubsystem::HasValidFlecsWorldStatic(this))
 	{
 		CreateActorEntity(UFlecsWorldSubsystem::GetDefaultWorldStatic(this));
@@ -108,7 +102,7 @@ void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 
 void UFlecsEntityActorComponent::CreateActorEntity(UFlecsWorld* InWorld)
 {
-	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord);
+	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord, EntityName);
 	EntityHandle.Set<FFlecsUObjectComponent>(GetOwner());
 	EntityHandle.AddPair<FFlecsActorTag, FFlecsUObjectComponent>();
 	

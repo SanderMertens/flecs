@@ -50,10 +50,10 @@ public:
 
     	bool bIsAddedEntity = false;
 
-    	for (auto [EntityRecord]
+    	for (auto [EntityRecordName, EntityRecord]
     		: FFlecsDefaultEntityEngine::Get().AddedDefaultEntities)
     	{
-    		if (EntityRecord.Name == EntityName)
+    		if (EntityRecordName == EntityName)
 			{
     			Options.Add(FName(*EntityName));
     			

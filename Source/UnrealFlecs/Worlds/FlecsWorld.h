@@ -1387,22 +1387,24 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle CreatePrefab(const FFlecsEntityRecord& InRecord) const
+	FFlecsEntityHandle CreatePrefabWithRecord(
+		const FFlecsEntityRecord& InRecord, const FString& Name = "") const
 	{
-		const FFlecsEntityHandle Prefab = World.prefab(StringCast<char>(*InRecord.Name).Get());
+		const FFlecsEntityHandle Prefab = World.prefab(StringCast<char>(*Name).Get());
 		solid_checkf(Prefab.IsPrefab(), TEXT("Entity is not a prefab"));
 		
 		InRecord.ApplyRecordToEntity(Prefab);
 		
 		#if WITH_EDITOR
 		
-		Prefab.SetDocName(InRecord.Name);
+		Prefab.SetDocName(Name);
 
 		#endif // WITH_EDITOR
 		
 		return Prefab;
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FFlecsEntityHandle CreatePrefab(const FString& Name) const
 	{
 		return World.prefab(StringCast<char>(*Name).Get());
@@ -1418,7 +1420,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	void DestroyPrefab(const FFlecsEntityHandle& InPrefab) const
 	{
-		World.delete_with(InPrefab.GetEntity(), true);
+		InPrefab.Destroy();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")

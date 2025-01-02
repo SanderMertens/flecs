@@ -14,11 +14,14 @@ struct FFlecsDefaultMetaEntity
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Flecs | Default Entities")
+	FString EntityName;
+
+	UPROPERTY(EditAnywhere, Category = "Flecs | Default Entities")
 	FFlecsEntityRecord EntityRecord;
 
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsDefaultMetaEntity& Other) const
 	{
-		return EntityRecord == Other.EntityRecord;
+		return EntityName == Other.EntityName && EntityRecord == Other.EntityRecord;
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsDefaultMetaEntity& Other) const
@@ -27,8 +30,9 @@ struct FFlecsDefaultMetaEntity
 	}
 
 	FFlecsDefaultMetaEntity() = default;
-	FFlecsDefaultMetaEntity(const FFlecsEntityRecord& EntityRecord)
-		: EntityRecord(EntityRecord)
+	FFlecsDefaultMetaEntity(const FString& EntityName, const FFlecsEntityRecord& EntityRecord)
+		: EntityName(EntityName)
+		, EntityRecord(EntityRecord)
 	{
 	}
 	

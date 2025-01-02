@@ -19,6 +19,9 @@ public:
 	{
 		return FPrimaryAssetId("FlecsPrefabAsset", *GetName());
 	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
+	FString PrefabName;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	FFlecsEntityRecord EntityRecord;

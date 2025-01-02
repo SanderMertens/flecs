@@ -22,17 +22,15 @@ void FEntityRecordTestsSpec::Define()
 		It("Should create a new entity record", [this]()
 		{
 			FFlecsEntityRecord Record;
-			Record.Name = "TestEntityRecord";
 			
 			Record.AddComponent<FTestStruct_EntityRecord>(FTestStruct_EntityRecord{ 1 });
-			
-			TestTrue("Entity record should be valid", Record.IsValid());
+
+			TestTrue("Record should have the component", !Record.Components.IsEmpty());
 		});
 
 		It("Should create an entity with a record", [this]()
 		{
 			FFlecsEntityRecord Record;
-			Record.Name = "TestEntityRecord";
 			
 			Record.AddComponent<FTestStruct_EntityRecord>(FTestStruct_EntityRecord{ 1 });
 

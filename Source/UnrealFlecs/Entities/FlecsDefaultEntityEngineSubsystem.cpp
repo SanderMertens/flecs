@@ -69,30 +69,30 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 	for (const FFlecsDefaultMetaEntity& EntityRecord
 		: GetDefault<UFlecsDefaultEntitiesDeveloperSettings>()->DefaultEntities)
 	{
-		if (UNLIKELY(EntityRecord.EntityRecord.Name.IsEmpty()))
+		if (UNLIKELY(EntityRecord.EntityName.IsEmpty()))
 		{
 			UN_LOG(LogFlecsEntity, Warning,
 				"One of the default entities has an empty name");
 			continue;
 		}
 
-		AddedDefaultEntities.Add(FFlecsDefaultMetaEntity(EntityRecord.EntityRecord));
+		AddedDefaultEntities.Add(FFlecsDefaultMetaEntity(EntityRecord.EntityName, EntityRecord.EntityRecord));
 	}
 
 	for (const FFlecsDefaultMetaEntity& MetaEntity : CodeAddedDefaultEntities)
 	{
-		AddedDefaultEntities.Add(FFlecsDefaultMetaEntity(MetaEntity.EntityRecord));
+		AddedDefaultEntities.Add(FFlecsDefaultMetaEntity(MetaEntity.EntityName, MetaEntity.EntityRecord));
 	}
 
 	DefaultEntityWorld->progress();
 	DefaultEntityWorld->set_entity_range(DefaultEntityRangeStart, 0);
 
-	for (const auto& [EntityRecord] : AddedDefaultEntities)
+	for (const auto& [EntityName, EntityRecord] : AddedDefaultEntities)
 	{
-		UN_LOGF(LogFlecsEntity, Log, "Added default entity: %s", *EntityRecord.Name);
+		UN_LOGF(LogFlecsEntity, Log, "Added default entity: %s", *EntityName);
 
-		flecs::entity Entity = DefaultEntityWorld->entity(StringCast<ANSICHAR>(*EntityRecord.Name).Get());
-		DefaultEntityOptions.Add(*EntityRecord.Name, Entity);
+		flecs::entity Entity = DefaultEntityWorld->entity(StringCast<ANSICHAR>(*EntityName).Get());
+		DefaultEntityOptions.Add(*EntityName, Entity);
 	}
 
 	delete DefaultEntityWorld;
@@ -102,5 +102,5 @@ flecs::entity_t FFlecsDefaultEntityEngine::AddDefaultEntity(const FFlecsDefaultM
 {
 	CodeAddedDefaultEntities.Add(DefaultEntity);
 	RefreshDefaultEntities();
-	return DefaultEntityOptions[DefaultEntity.EntityRecord.Name];
+	return DefaultEntityOptions[DefaultEntity.EntityName];
 }

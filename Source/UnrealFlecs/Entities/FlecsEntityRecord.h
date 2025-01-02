@@ -335,11 +335,6 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		return !(*this == Other);
 	}
 
-	FORCEINLINE NO_DISCARD bool IsValid() const
-	{
-		return !Components.IsEmpty();
-	}
-
 	template <Solid::TStaticStructConcept T>
 	FORCEINLINE void AddComponent(const T& InComponent)
 	{
@@ -351,7 +346,6 @@ struct UNREALFLECS_API FFlecsEntityRecord
 
 	FORCEINLINE void ApplyRecordToEntity(const FFlecsEntityHandle& InEntityHandle) const
 	{
-		solid_checkf(IsValid(), TEXT("Entity Record is not valid"));
 		solid_checkf(InEntityHandle.IsValid(), TEXT("Entity Handle is not valid"));
 
 		for (const auto& [NodeType, ScriptStruct, EntityHandle, GameplayTag, Pair, Traits] : Components)

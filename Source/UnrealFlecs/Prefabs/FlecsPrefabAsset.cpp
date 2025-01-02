@@ -7,7 +7,7 @@
 
 void UFlecsPrefabAsset::OnEntityCreated(MAYBE_UNUSED const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)
 {
-	PrefabEntityHandle = World->CreatePrefab(EntityRecord);
+	PrefabEntityHandle = World->CreatePrefabWithRecord(EntityRecord, PrefabName);
 }
 
 void UFlecsPrefabAsset::OnEntityDestroyed(MAYBE_UNUSED const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)
