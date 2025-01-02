@@ -22,6 +22,7 @@
 #include "Modules/FlecsModuleInterface.h"
 #include "Modules/FlecsModuleProgressInterface.h"
 #include "Prefabs/FlecsPrefabAsset.h"
+#include "StructUtils/StructView.h"
 #include "FlecsWorld.generated.h"
 
 DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
@@ -217,10 +218,10 @@ public:
 						EntityHandle.Add(Entity);
 					}
 
-					for (const FInstancedStruct& InstancedStruct : Properties->ComponentPropertyStructs)
+					for (const FSharedStruct& InstancedStruct : Properties->ComponentPropertyStructs)
 					{
 						solid_check(InstancedStruct.IsValid());
-						EntityHandle.Set(InstancedStruct);
+						EntityHandle.Set(FInstancedStruct(FConstStructView(InstancedStruct)));
 					}
 
 					UN_LOGF(LogFlecsWorld, Log,
@@ -382,7 +383,7 @@ public:
 	void RegisterModuleDependency(UObject* InModuleObject, TFunction&& InFunction)
 	{
 		RegisterModuleDependency(
-			InModuleObject, TModule::StaticClass(), [InFunction](UObject* InDependencyObject, UFlecsWorld* InWorld,
+			InModuleObject, TModule::StaticClass(), [&](UObject* InDependencyObject, UFlecsWorld* InWorld,
 			FFlecsEntityHandle InDependencyEntity) FORCEINLINE_ATTRIBUTE
 		{
 			std::invoke(InFunction, CastChecked<TModule>(InDependencyObject), InWorld, InDependencyEntity);

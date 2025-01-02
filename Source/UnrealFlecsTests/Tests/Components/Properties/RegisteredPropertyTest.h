@@ -50,7 +50,7 @@ struct FTestRegisteredPropertyStruct2_RegisterPropertyTest
 }; // struct FTestRegisteredPropertyStruct2
 
 REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct2_RegisterPropertyTest,
-FInstancedStruct::Make<FTestRegisteredTraitProperty_RegisterPropertyTest>(FTestRegisteredTraitProperty_RegisterPropertyTest{ 1 }));
+	TRAIT_PROPERTY_STRUCT(FTestRegisteredTraitProperty_RegisterPropertyTest, { 1 } ));
 
 USTRUCT()
 struct FTestRegisteredPropertyStruct3_RegisterPropertyTest
@@ -67,6 +67,6 @@ struct FTestRegisteredPropertyStruct3_RegisterPropertyTest
 	FString MyString;
 }; // struct FTestRegisteredPropertyStruct3
 
-REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct3_RegisterPropertyTest, FInstancedStruct::Make<FTestRegisteredTraitProperty_RegisterPropertyTest>(
-	FTestRegisteredTraitProperty_RegisterPropertyTest{ 2 }));
+REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct3_RegisterPropertyTest,
+	TRAIT_PROPERTY_STRUCT(FTestRegisteredTraitProperty_RegisterPropertyTest, { 2 } ));
 REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct3_RegisterPropertyTest, flecs::PairIsTag);

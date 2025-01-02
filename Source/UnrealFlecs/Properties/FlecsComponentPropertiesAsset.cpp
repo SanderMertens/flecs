@@ -16,9 +16,16 @@ void UFlecsComponentPropertiesAsset::PostLoad()
 		ComponentPropertiesEntities.emplace_back(ComponentProperty.GetEntity());
 	}
 
+	TArray<FSharedStruct> SharedPropertyStructs;
+
+	for (const FInstancedStruct& PropertyStruct : ComponentPropertyStructs)
+	{
+		SharedPropertyStructs.Add(FSharedStruct::Make(PropertyStruct.GetScriptStruct(), PropertyStruct.GetMemory()));
+	}
+
 	FFlecsComponentPropertiesRegistry::Get()
 		.RegisterComponentProperties(StringCast<ANSICHAR>(*ComponentType->GetName()).Get(),
-			ComponentPropertiesEntities, ComponentPropertyStructs, bResetExistingProperties);
+			ComponentPropertiesEntities, SharedPropertyStructs, bResetExistingProperties);
 }
 
 void UFlecsComponentPropertiesAsset::BeginDestroy()

@@ -11,6 +11,7 @@
 #include "Standard/robin_hood.h"
 #include "SolidMacros/Macros.h"
 #include "StructUtils/InstancedStruct.h"
+#include "StructUtils/SharedStruct.h"
 #include "Unlog/Unlog.h"
 
 struct UNREALFLECS_API FFlecsComponentProperties
@@ -18,7 +19,7 @@ struct UNREALFLECS_API FFlecsComponentProperties
 	std::string Name;
 	std::vector<flecs::entity_t> Entities;
 	
-	TArray<FInstancedStruct> ComponentPropertyStructs;
+	TArray<FSharedStruct> ComponentPropertyStructs;
 }; // struct FFlecsComponentProperties
 
 DECLARE_DELEGATE_OneParam(FOnComponentPropertiesRegistered, FFlecsComponentProperties);
@@ -33,7 +34,7 @@ public:
 	}
 
 	FORCEINLINE void RegisterComponentProperties(const std::string& Name, const std::vector<flecs::entity_t>& Entities,
-		const TArray<FInstancedStruct>& ComponentPropertyStructs, const bool bResetExisting = false)
+		const TArray<FSharedStruct>& ComponentPropertyStructs, const bool bResetExisting = false)
 	{
 		UNLOG_CATEGORY_SCOPED(LogFlecsComponentProperties);
 
@@ -71,7 +72,7 @@ public:
 					"Updated component properties: %s", *FString(Name.data()));
 			}
 
-			for (const FInstancedStruct& ComponentPropertyStruct : ComponentPropertyStructs)
+			for (const FSharedStruct& ComponentPropertyStruct : ComponentPropertyStructs)
 			{
 				ComponentProperties[Name].ComponentPropertyStructs.Add(ComponentPropertyStruct);
 			}
@@ -117,7 +118,7 @@ public:
 /**
  * Do not use this macro directly, use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES
  */
-#define _REGISTER_FLECS_PROPERTIES_TAGS_IMPL(ComponentType, ...) \
+#define REGISTER_FLECS_PROPERTIES_TAGS_IMPL_(ComponentType, ...) \
 	namespace \
 	{ \
 		struct FAutoRegister##ComponentType##_Tags \
@@ -140,7 +141,7 @@ public:
 		inline FAutoRegister##ComponentType##_Tags AutoRegister##ComponentType##_Instance_Tags; \
 	}
 
-#define _REGISTER_FLECS_PROPERTIES_TRAITS_IMPL(ComponentType, ...) \
+#define REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, ...) \
 	namespace \
 	{ \
 		struct FAutoRegister##ComponentType##_Traits \
@@ -149,7 +150,7 @@ public:
 			{ \
 				FCoreDelegates::OnPostEngineInit.AddLambda([&]() \
 				{ \
-					TArray<FInstancedStruct> ComponentPropertyStructs = { __VA_ARGS__ }; \
+					TArray<FSharedStruct> ComponentPropertyStructs = { __VA_ARGS__ }; \
 					FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, {}, ComponentPropertyStructs); \
 				}); \
 			} \
@@ -163,8 +164,11 @@ public:
 		"Do not use REGISTER_FLECS_PROPERTIES directly! Use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES instead.")
 
 #define REGISTER_COMPONENT_TAG_PROPERTIES(ComponentType, ...) \
-	_REGISTER_FLECS_PROPERTIES_TAGS_IMPL(ComponentType, __VA_ARGS__ )
+	REGISTER_FLECS_PROPERTIES_TAGS_IMPL_(ComponentType, __VA_ARGS__ )
 
 // @TODO: Only Support ScriptStructs for now
 #define REGISTER_COMPONENT_TRAIT_PROPERTIES(ComponentType, ...) \
-	_REGISTER_FLECS_PROPERTIES_TRAITS_IMPL(ComponentType, __VA_ARGS__ )
+	REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, __VA_ARGS__ )
+
+#define TRAIT_PROPERTY_STRUCT(PropertyStruct, ...) \
+	FSharedStruct::Make<PropertyStruct>(PropertyStruct __VA_ARGS__)
