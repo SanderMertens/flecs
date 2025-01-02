@@ -17,6 +17,8 @@ public:
 
 	FORCEINLINE void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const
 	{
+		solid_check(InWorld);
+		
 		InQueryBuilder.flags(Flags);
 		
 		for (const FFlecsQueryTermExpression& Term : Terms)

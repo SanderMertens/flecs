@@ -15,8 +15,10 @@ void FFlecsQueryTermExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder
 	{
 		case EFlecsQueryInputType::ScriptStruct:
 			{
-				const UScriptStruct* Struct = InputType.ScriptStruct.Get();
+				const UScriptStruct* Struct = InputType.ScriptStruct;
+				solid_checkf(IsValid(Struct), TEXT("Invalid ScriptStruct provided for query term expression"));
 				const FFlecsEntityHandle ScriptStructEntity = InWorld->ObtainComponentTypeStruct(Struct);
+				solid_check(ScriptStructEntity.IsValid());
 				InQueryBuilder.with(ScriptStructEntity.GetEntity());
 			}
 		break;
@@ -35,7 +37,9 @@ void FFlecsQueryTermExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder
 		case EFlecsQueryInputType::GameplayTag:
 			{
 				const FGameplayTag Tag = InputType.Tag;
+				solid_checkf(Tag.IsValid(), TEXT("Invalid GameplayTag provided for query term expression"));
 				const FFlecsEntityHandle TagEntity = InWorld->GetTagEntity(Tag);
+				solid_check(TagEntity.IsValid());
 				InQueryBuilder.with(TagEntity.GetEntity());
 			}
 		break;
