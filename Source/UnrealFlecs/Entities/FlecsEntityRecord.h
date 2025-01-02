@@ -49,15 +49,21 @@ struct UNREALFLECS_API FFlecsPairSlot
 		switch (NodeType)
 		{
 		case EFlecsPairNodeType::ScriptStruct:
-			return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct;
+			{
+				return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct;
+			}
 		case EFlecsPairNodeType::EntityHandle:
-			return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
+			{
+				return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
+			}
 		case EFlecsPairNodeType::FGameplayTag:
-			return NodeType == Other.NodeType && GameplayTag == Other.GameplayTag;
-		default: UNLIKELY_ATTRIBUTE
-			solid_checkf(false, TEXT("Invalid NodeType"));
-			return false;
+			{
+				return NodeType == Other.NodeType && GameplayTag == Other.GameplayTag;
+			}
 		}
+
+		solid_checkf(false, TEXT("Invalid NodeType"));
+		return false;
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsPairSlot& Other) const
@@ -105,20 +111,20 @@ struct UNREALFLECS_API FFlecsPair
 		case EFlecsPairNodeType::ScriptStruct:
 			switch (Second.NodeType)
 			{
-			case EFlecsPairNodeType::ScriptStruct:
-				
-				if (PairType == EFlecsValuePairType::First)
-				{
-					InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
-						First.ScriptStruct.GetMemory(), Second.ScriptStruct.GetScriptStruct());
-				}
-				else if (PairType == EFlecsValuePairType::Second)
-				{
-					InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.ScriptStruct.GetScriptStruct());
-				}
-				
+				case EFlecsPairNodeType::ScriptStruct:
+					{
+						if (PairType == EFlecsValuePairType::First)
+						{
+							InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
+								First.ScriptStruct.GetMemory(), Second.ScriptStruct.GetScriptStruct());
+						}
+						else if (PairType == EFlecsValuePairType::Second)
+						{
+							InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.ScriptStruct.GetScriptStruct());
+						}
+					}
 				break;
-			case EFlecsPairNodeType::EntityHandle:
+				case EFlecsPairNodeType::EntityHandle:
 				InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.EntityHandle);
 				break;
 			case EFlecsPairNodeType::FGameplayTag:
