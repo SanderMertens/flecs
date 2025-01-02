@@ -62,8 +62,7 @@ struct UNREALFLECS_API FFlecsPairSlot
 			}
 		}
 
-		solid_checkf(false, TEXT("Invalid NodeType"));
-		return false;
+		UNREACHABLE
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsPairSlot& Other) const
@@ -109,72 +108,82 @@ struct UNREALFLECS_API FFlecsPair
 		switch (First.NodeType)
 		{
 		case EFlecsPairNodeType::ScriptStruct:
-			switch (Second.NodeType)
 			{
-				case EFlecsPairNodeType::ScriptStruct:
-					{
-						if (PairType == EFlecsValuePairType::First)
+				switch (Second.NodeType)
+				{
+					case EFlecsPairNodeType::ScriptStruct:
 						{
-							InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
-								First.ScriptStruct.GetMemory(), Second.ScriptStruct.GetScriptStruct());
+							if (PairType == EFlecsValuePairType::First)
+							{
+								InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
+									First.ScriptStruct.GetMemory(), Second.ScriptStruct.GetScriptStruct());
+							}
+							else if (PairType == EFlecsValuePairType::Second)
+							{
+								InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.ScriptStruct.GetScriptStruct());
+							}
 						}
-						else if (PairType == EFlecsValuePairType::Second)
+					break;
+					case EFlecsPairNodeType::EntityHandle:
 						{
-							InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.ScriptStruct.GetScriptStruct());
+							InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.EntityHandle);
 						}
-					}
-				break;
-				case EFlecsPairNodeType::EntityHandle:
-				InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.EntityHandle);
-				break;
-			case EFlecsPairNodeType::FGameplayTag:
-				InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.GameplayTag);
-				break;
-			default: UNLIKELY_ATTRIBUTE
-				solid_checkf(false, TEXT("Invalid Second NodeType"));
-				break;
+					break;
+					case EFlecsPairNodeType::FGameplayTag:
+						{
+							InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.GameplayTag);
+						}
+					break;
+				}
 			}
 			break;
 		case EFlecsPairNodeType::EntityHandle:
-			switch (Second.NodeType)
 			{
-			case EFlecsPairNodeType::ScriptStruct:
-				InEntityHandle.AddPair(First.EntityHandle, Second.ScriptStruct.GetScriptStruct());
-				InEntityHandle.SetPairSecond(First.EntityHandle, Second.ScriptStruct.GetScriptStruct(),
-					Second.ScriptStruct.GetMemory());
-				break;
-			case EFlecsPairNodeType::EntityHandle:
-				InEntityHandle.AddPair(First.EntityHandle, Second.EntityHandle);
-				break;
-			case EFlecsPairNodeType::FGameplayTag:
-				InEntityHandle.AddPair(First.EntityHandle, Second.GameplayTag);
-				break;
-			default: UNLIKELY_ATTRIBUTE
-				solid_checkf(false, TEXT("Invalid Second NodeType"));
-				break;
+				switch (Second.NodeType)
+				{
+					case EFlecsPairNodeType::ScriptStruct:
+						{
+							InEntityHandle.AddPair(First.EntityHandle, Second.ScriptStruct.GetScriptStruct());
+							InEntityHandle.SetPairSecond(First.EntityHandle, Second.ScriptStruct.GetScriptStruct(),
+								Second.ScriptStruct.GetMemory());
+						}
+					break;
+					case EFlecsPairNodeType::EntityHandle:
+						{
+							InEntityHandle.AddPair(First.EntityHandle, Second.EntityHandle);
+						}
+					break;
+					case EFlecsPairNodeType::FGameplayTag:
+						{
+							InEntityHandle.AddPair(First.EntityHandle, Second.GameplayTag);
+						}
+					break;
+				}
 			}
 			break;
 		case EFlecsPairNodeType::FGameplayTag:
-			switch (Second.NodeType)
 			{
-			case EFlecsPairNodeType::ScriptStruct:
-				InEntityHandle.AddPair(First.GameplayTag, Second.ScriptStruct.GetScriptStruct());
-				InEntityHandle.SetPairSecond(First.GameplayTag, Second.ScriptStruct.GetScriptStruct(),
-					Second.ScriptStruct.GetMemory());
-				break;
-			case EFlecsPairNodeType::EntityHandle:
-				InEntityHandle.AddPair(First.GameplayTag, Second.EntityHandle);
-				break;
-			case EFlecsPairNodeType::FGameplayTag:
-				InEntityHandle.AddPair(First.GameplayTag, Second.GameplayTag);
-				break;
-			default: UNLIKELY_ATTRIBUTE
-				solid_checkf(false, TEXT("Invalid Second NodeType"));
-				break;
+				switch (Second.NodeType)
+				{
+					case EFlecsPairNodeType::ScriptStruct:
+						{
+							InEntityHandle.AddPair(First.GameplayTag, Second.ScriptStruct.GetScriptStruct());
+							InEntityHandle.SetPairSecond(First.GameplayTag, Second.ScriptStruct.GetScriptStruct(),
+								Second.ScriptStruct.GetMemory());
+						}
+					break;
+					case EFlecsPairNodeType::EntityHandle:
+						{
+							InEntityHandle.AddPair(First.GameplayTag, Second.EntityHandle);
+						}
+					break;
+					case EFlecsPairNodeType::FGameplayTag:
+						{
+							InEntityHandle.AddPair(First.GameplayTag, Second.GameplayTag);
+						}
+					break;
+				}
 			}
-			break;
-		default: UNLIKELY_ATTRIBUTE
-			solid_checkf(false, TEXT("Invalid First NodeType"));
 			break;
 		}
 	}
@@ -210,17 +219,24 @@ struct UNREALFLECS_API FFlecsTraitTypeInfo final
 		switch (NodeType)
 		{
 		case EFlecsComponentNodeType::ScriptStruct:
-			return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct;
+			{
+				return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct;
+			}
 		case EFlecsComponentNodeType::EntityHandle:
-			return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
+			{
+				return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
+			}
 		case EFlecsComponentNodeType::FGameplayTag:
-			return NodeType == Other.NodeType && GameplayTag == Other.GameplayTag;
+			{
+				return NodeType == Other.NodeType && GameplayTag == Other.GameplayTag;
+			}
 		case EFlecsComponentNodeType::Pair:
-			return NodeType == Other.NodeType && Pair == Other.Pair;
-		default: UNLIKELY_ATTRIBUTE
-			solid_checkf(false, TEXT("Invalid NodeType"));
-			return false;
+			{
+				return NodeType == Other.NodeType && Pair == Other.Pair;
+			}
 		}
+
+		UNREACHABLE
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsTraitTypeInfo& Other) const
@@ -262,17 +278,30 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 	{
 		switch (NodeType)
 		{
-		case EFlecsComponentNodeType::ScriptStruct:
-			return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct && Traits == Other.Traits
-				&& Pair == Other.Pair;
-		case EFlecsComponentNodeType::EntityHandle:
-			return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
-		case EFlecsComponentNodeType::FGameplayTag:
-			return NodeType == Other.NodeType && GameplayTag == Other.GameplayTag;
-		default: UNLIKELY_ATTRIBUTE
-			solid_checkf(false, TEXT("Invalid NodeType"));
-			return false;
+			case EFlecsComponentNodeType::ScriptStruct:
+				{
+					return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct && Traits == Other.Traits
+					&& Pair == Other.Pair;
+				}
+			break;
+			case EFlecsComponentNodeType::EntityHandle:
+				{
+					return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
+				}
+			break;
+			case EFlecsComponentNodeType::FGameplayTag:
+				{
+					return NodeType == Other.NodeType && GameplayTag == Other.GameplayTag;
+				}
+			break;
+			case EFlecsComponentNodeType::Pair:
+				{
+					return NodeType == Other.NodeType && Pair == Other.Pair;
+				}
+			break;
 		}
+
+		UNREACHABLE
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsComponentTypeInfo& Other) const
@@ -328,43 +357,51 @@ struct UNREALFLECS_API FFlecsEntityRecord
 			switch (NodeType)
 			{
 			case EFlecsComponentNodeType::ScriptStruct:
-				
-				InEntityHandle.Set(ScriptStruct);
-
-				for (const auto& [TraitNodeType, TraitScriptStruct, TraitEntityHandle, TraitGameplayTag, TraitPair] : Traits)
 				{
-					switch (TraitNodeType)
+					InEntityHandle.Set(ScriptStruct);
+
+					for (const auto& [TraitNodeType, TraitScriptStruct, TraitEntityHandle, TraitGameplayTag, TraitPair] : Traits)
 					{
-					case EFlecsComponentNodeType::ScriptStruct:
-						InEntityHandle.SetTrait(const_cast<UScriptStruct*>(ScriptStruct.GetScriptStruct()), TraitScriptStruct);
-						break;
-					case EFlecsComponentNodeType::EntityHandle:
-						InEntityHandle.AddTrait(const_cast<UScriptStruct*>(ScriptStruct.GetScriptStruct()), TraitEntityHandle);
-						break;
-					case EFlecsComponentNodeType::FGameplayTag:
-						InEntityHandle.AddTrait(const_cast<UScriptStruct*>(ScriptStruct.GetScriptStruct()), TraitGameplayTag);
-						break;
-					case EFlecsComponentNodeType::Pair:
-						TraitPair.AddToEntity(InEntityHandle);
-						break;
-					default: UNLIKELY_ATTRIBUTE
-						solid_checkf(false, TEXT("Invalid TraitNodeType"));
-						break;
+						switch (TraitNodeType)
+						{
+							case EFlecsComponentNodeType::ScriptStruct:
+								{
+									InEntityHandle.SetTrait(ScriptStruct.GetScriptStruct(), TraitScriptStruct);
+								}
+							break;
+							case EFlecsComponentNodeType::EntityHandle:
+								{
+									InEntityHandle.AddTrait(ScriptStruct.GetScriptStruct(), TraitEntityHandle);
+								}
+							break;
+							case EFlecsComponentNodeType::FGameplayTag:
+								{
+									InEntityHandle.AddTrait(ScriptStruct.GetScriptStruct(), TraitGameplayTag);
+								}
+							break;
+							case EFlecsComponentNodeType::Pair:
+								{
+									TraitPair.AddToEntity(InEntityHandle);
+								}
+							break;
+						}
 					}
+					break;
 				}
-				
-				break;
 			case EFlecsComponentNodeType::EntityHandle:
-				InEntityHandle.Add(EntityHandle);
+				{
+					InEntityHandle.Add(EntityHandle);
+				}
 				break;
 			case EFlecsComponentNodeType::FGameplayTag:
-				InEntityHandle.Add(GameplayTag);
+				{
+					InEntityHandle.Add(GameplayTag);	
+				}
 				break;
 			case EFlecsComponentNodeType::Pair:
-				Pair.AddToEntity(InEntityHandle);
-				break;
-			default: UNLIKELY_ATTRIBUTE
-				solid_checkf(false, TEXT("Invalid NodeType"));
+				{
+					Pair.AddToEntity(InEntityHandle);
+				}
 				break;
 			}
 		}
