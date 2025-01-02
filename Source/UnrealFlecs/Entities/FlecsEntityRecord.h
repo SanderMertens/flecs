@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "StructUtils/InstancedStruct.h"
 #include "Entities/FlecsEntityHandle.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "FlecsEntityRecord.generated.h"
 
 UENUM(BlueprintType)
@@ -342,6 +343,15 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		return !Name.IsEmpty() || !Components.IsEmpty();
 	}
 
+	template <Solid::TStaticStructConcept T>
+	FORCEINLINE void AddComponent(const T& InComponent)
+	{
+		FFlecsComponentTypeInfo NewComponent;
+		NewComponent.NodeType = EFlecsComponentNodeType::ScriptStruct;
+		NewComponent.ScriptStruct = FInstancedStruct::Make<T>(InComponent);
+		Components.Add(NewComponent);
+	}
+
 	FORCEINLINE void ApplyRecordToEntity(const FFlecsEntityHandle& InEntityHandle) const
 	{
 		solid_checkf(IsValid(), TEXT("Entity Record is not valid"));
@@ -414,5 +424,6 @@ struct UNREALFLECS_API FFlecsEntityRecord
 			InEntityHandle.Add(NewEntityHandle);
 		}
 	}
-
 }; // struct FFlecsEntityRecord
+
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsEntityRecord, flecs::DontInherit);
