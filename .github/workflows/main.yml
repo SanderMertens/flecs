@@ -1,0 +1,4 @@
+on:
+  workflow_dispatch:
+  push:
+  - main
