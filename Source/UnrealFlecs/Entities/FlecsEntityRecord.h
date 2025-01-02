@@ -320,9 +320,6 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	FORCEINLINE FFlecsEntityRecord() = default;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
-	FString Name;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
 	TArray<FFlecsComponentTypeInfo> Components;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
@@ -330,7 +327,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityRecord& Other) const
 	{
-		return Name == Other.Name && Components == Other.Components;
+		return Components == Other.Components;
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsEntityRecord& Other) const
@@ -340,7 +337,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 
 	FORCEINLINE NO_DISCARD bool IsValid() const
 	{
-		return !Name.IsEmpty() || !Components.IsEmpty();
+		return !Components.IsEmpty();
 	}
 
 	template <Solid::TStaticStructConcept T>
@@ -356,11 +353,6 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	{
 		solid_checkf(IsValid(), TEXT("Entity Record is not valid"));
 		solid_checkf(InEntityHandle.IsValid(), TEXT("Entity Handle is not valid"));
-		
-		if (!Name.IsEmpty())
-		{
-			InEntityHandle.SetName(Name);
-		}
 
 		for (const auto& [NodeType, ScriptStruct, EntityHandle, GameplayTag, Pair, Traits] : Components)
 		{
@@ -419,7 +411,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		for (const TInstancedStruct<FFlecsEntityRecord>& SubEntity : SubEntities)
 		{
 			FFlecsEntityRecord NewEntityRecord = SubEntity.Get();
-			FFlecsEntityHandle NewEntityHandle = InEntityHandle.GetEntity().world().entity(StringCast<char>(*NewEntityRecord.Name).Get());
+			FFlecsEntityHandle NewEntityHandle = InEntityHandle.GetEntity().world().entity();
 			NewEntityRecord.ApplyRecordToEntity(NewEntityHandle);
 			InEntityHandle.Add(NewEntityHandle);
 		}

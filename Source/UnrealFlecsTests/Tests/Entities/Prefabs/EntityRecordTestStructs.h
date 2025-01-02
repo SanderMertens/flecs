@@ -12,5 +12,5 @@ struct FTestStruct_EntityRecord
 
 public:
 	UPROPERTY()
-	uint32 IntegerValue;
+	int32 IntegerValue;
 }; // struct FTestStruct_EntityRecord
