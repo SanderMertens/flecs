@@ -505,6 +505,8 @@
                 "request_commands_no_commands",
                 "request_commands_garbage_collect",
                 "script_error",
+                "script_update",
+                "script_update_w_body",
                 "import_rest_after_mini",
                 "get_pipeline_stats_after_delete_system",
                 "request_world_summary_before_monitor_sys_run",

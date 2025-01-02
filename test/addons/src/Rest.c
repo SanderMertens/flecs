@@ -18,7 +18,7 @@ void Rest_get(void) {
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
     test_int(0, ecs_http_server_request(srv, "GET",
-        "/entity/flecs/core/World?label=true", &reply));
+        "/entity/flecs/core/World?label=true", NULL, &reply));
     test_int(reply.code, 200);
     
     char *reply_str = ecs_strbuf_get(&reply.body);
@@ -45,7 +45,7 @@ void Rest_get_cached(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/entity/flecs/core/World", &reply));
+            "/entity/flecs/core/World", NULL, &reply));
         test_int(reply.code, 200);
         
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -59,7 +59,7 @@ void Rest_get_cached(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/entity/flecs/core/World", &reply));
+            "/entity/flecs/core/World", NULL, &reply));
         test_int(reply.code, 200);
         
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -87,7 +87,7 @@ void Rest_get_cached_invalid(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(-1, ecs_http_server_request(srv, "GET",
-            "/entity/flecs/core/Wor", &reply));
+            "/entity/flecs/core/Wor", NULL, &reply));
         test_int(reply.code, 404);
         
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -100,7 +100,7 @@ void Rest_get_cached_invalid(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(-1, ecs_http_server_request(srv, "GET",
-            "/entity/flecs/core/Wor", &reply));
+            "/entity/flecs/core/Wor", NULL, &reply));
         test_int(reply.code, 404);
         
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -126,7 +126,7 @@ void Rest_try_query(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(-1, ecs_http_server_request(srv, "GET",
-            "/query?expr=Foo", &reply));
+            "/query?expr=Foo", NULL, &reply));
         test_int(reply.code, 400); // No try, should error
         ecs_strbuf_reset(&reply.body);
     }
@@ -134,7 +134,7 @@ void Rest_try_query(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/query?expr=Foo&try=true", &reply));
+            "/query?expr=Foo&try=true", NULL, &reply));
         test_int(reply.code, 200); // With try, should not error
         ecs_strbuf_reset(&reply.body);
     }
@@ -157,7 +157,7 @@ void Rest_query(void) {
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
     test_int(0, ecs_http_server_request(srv, "GET",
-        "/query?expr=Position", &reply));
+        "/query?expr=Position", NULL, &reply));
     test_int(reply.code, 200);
     
     char *reply_str = ecs_strbuf_get(&reply.body);
@@ -191,7 +191,7 @@ void Rest_named_query(void) {
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
     test_int(0, ecs_http_server_request(srv, "GET",
-        "/query?name=position_query", &reply));
+        "/query?name=position_query", NULL, &reply));
     test_int(reply.code, 200);
     
     char *reply_str = ecs_strbuf_get(&reply.body);
@@ -213,7 +213,7 @@ void Rest_tables(void) {
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
     test_int(0, ecs_http_server_request(srv, "GET",
-        "/tables", &reply));
+        "/tables", NULL, &reply));
     test_int(reply.code, 200);
     
     char *reply_str = ecs_strbuf_get(&reply.body);
@@ -236,7 +236,7 @@ void Rest_request_commands(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/commands/capture", &reply));
+            "/commands/capture", NULL, &reply));
         test_int(reply.code, 200);
 
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -258,7 +258,7 @@ void Rest_request_commands(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/commands/frame/0", &reply));
+            "/commands/frame/0", NULL, &reply));
         test_int(reply.code, 200);
 
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -282,7 +282,7 @@ void Rest_request_commands_2_syncs(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/commands/capture", &reply));
+            "/commands/capture", NULL, &reply));
         test_int(reply.code, 200);
 
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -306,7 +306,7 @@ void Rest_request_commands_2_syncs(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/commands/frame/0", &reply));
+            "/commands/frame/0", NULL, &reply));
         test_int(reply.code, 200);
 
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -330,7 +330,7 @@ void Rest_request_commands_no_frames(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(-1, ecs_http_server_request(srv, "GET",
-            "/commands/frame/0", &reply));
+            "/commands/frame/0", NULL, &reply));
         test_int(reply.code, 404);
 
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -354,7 +354,7 @@ void Rest_request_commands_no_commands(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/commands/capture", &reply));
+            "/commands/capture", NULL, &reply));
         test_int(reply.code, 200);
 
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -371,7 +371,7 @@ void Rest_request_commands_no_commands(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/commands/frame/0", &reply));
+            "/commands/frame/0", NULL, &reply));
         test_int(reply.code, 200);
 
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -395,7 +395,7 @@ void Rest_request_commands_garbage_collect(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/commands/capture", &reply));
+            "/commands/capture", NULL, &reply));
         test_int(reply.code, 200);
 
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -418,7 +418,7 @@ void Rest_request_commands_garbage_collect(void) {
     for (int i = 0; i < 60 * 60; i ++) {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/commands/frame/0", &reply));
+            "/commands/frame/0", NULL, &reply));
         test_int(reply.code, 200);
 
         char *reply_str = ecs_strbuf_get(&reply.body);
@@ -432,7 +432,7 @@ void Rest_request_commands_garbage_collect(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/commands/capture", &reply));
+            "/commands/capture", NULL, &reply));
         test_int(reply.code, 200);
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);
@@ -444,7 +444,7 @@ void Rest_request_commands_garbage_collect(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(-1, ecs_http_server_request(srv, "GET",
-            "/commands/frame/0", &reply));
+            "/commands/frame/0", NULL, &reply));
         test_int(reply.code, 404);
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);
@@ -455,7 +455,7 @@ void Rest_request_commands_garbage_collect(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/commands/frame/3601", &reply));
+            "/commands/frame/3601", NULL, &reply));
         test_int(reply.code, 200);
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);
@@ -473,7 +473,7 @@ void Rest_script_error(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_script(world, {
-        .entity = ecs_entity(world, { .name = "main.flecs" }),
+        .entity = ecs_entity(world, { .name = "main.flecs", .sep = "/" }),
         .code = ""
     });
 
@@ -485,11 +485,67 @@ void Rest_script_error(void) {
         ecs_log_set_level(-4);
         test_int(-1, ecs_http_server_request(srv, "PUT",
             "/script/main.flecs?code=struct%20Position%20%7B%0A%20%20x%20%3A%0A%7D",
-            &reply));
+            NULL, &reply));
         test_int(reply.code, 400);
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);
         ecs_os_free(reply_str);
+    }
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_script_update(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main.flecs", .sep = "/" }),
+        .code = ""
+    });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        test_int(0, ecs_http_server_request(srv, "PUT",
+            "/script/main.flecs?code=e%20%7B%7D",
+            NULL, &reply));
+        test_int(reply.code, 200);
+        char *reply_str = ecs_strbuf_get(&reply.body);
+        test_assert(reply_str == NULL);
+        test_assert(ecs_lookup(world, "e") != 0);
+    }
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_script_update_w_body(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main.flecs", .sep = "/" }),
+        .code = ""
+    });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        test_int(0, ecs_http_server_request(srv, "PUT",
+            "/script/main.flecs", "e {}", &reply));
+        test_int(reply.code, 200);
+        char *reply_str = ecs_strbuf_get(&reply.body);
+        test_assert(reply_str == NULL);
     }
 
     ecs_rest_server_fini(srv);
@@ -531,7 +587,7 @@ void Rest_get_pipeline_stats_after_delete_system(void) {
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
     test_int(0, ecs_http_server_request(srv, "GET",
-        "/stats/pipeline?name=all&period=1m", &reply));
+        "/stats/pipeline?name=all&period=1m", NULL, &reply));
     test_int(reply.code, 200);
     
     char *reply_str = ecs_strbuf_get(&reply.body);
@@ -553,7 +609,7 @@ void Rest_request_world_summary_before_monitor_sys_run(void) {
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
     test_int(0, ecs_http_server_request(srv, "GET",
-        "/entity/flecs/core/World?values=true", &reply));
+        "/entity/flecs/core/World?values=NULL, true", NULL, &reply));
     test_int(reply.code, 200);
     
     char *reply_str = ecs_strbuf_get(&reply.body);
@@ -577,7 +633,7 @@ void Rest_escape_backslash(void) {
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
     test_int(0, ecs_http_server_request(srv, "GET",
-        "/entity/foo%5C%2Fbar", &reply));
+        "/entity/foo%5C%2Fbar", NULL, &reply));
     test_int(reply.code, 200);
     
     char *reply_str = ecs_strbuf_get(&reply.body);

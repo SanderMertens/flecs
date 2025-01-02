@@ -3256,3 +3256,28 @@ void Template_prop_after_const(void) {
 
     ecs_fini(world);
 }
+
+void Template_const_from_prop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    LINE "template Tree {"
+    LINE "  prop x: 10"
+    LINE "  const y: x"
+    LINE "  i32: {y}"
+    LINE "}"
+    LINE "Tree e(30)";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const int32_t *ptr = ecs_get(world, e, ecs_i32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 30);
+
+    ecs_fini(world);
+}

@@ -60,12 +60,13 @@ static ecs_app_desc_t ecs_app_desc;
 ecs_http_server_t *flecs_wasm_rest_server = NULL;
 
 EMSCRIPTEN_KEEPALIVE
-char* flecs_explorer_request(const char *method, char *request) {
+char* flecs_explorer_request(const char *method, char *request, char *body) {
     ecs_assert(flecs_wasm_rest_server != NULL, ECS_INVALID_OPERATION,
         "wasm REST server is not initialized yet");
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
-    ecs_http_server_request(flecs_wasm_rest_server, method, request, &reply);
+    ecs_http_server_request(
+        flecs_wasm_rest_server, method, request, body, &reply);
     if (reply.code == 200) {
         return ecs_strbuf_get(&reply.body);
     } else {

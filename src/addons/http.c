@@ -812,7 +812,7 @@ bool http_parse_request(
                 frag->state = HttpFragStateCRLF;
             } else {
                 frag->state = HttpFragStateHeaderStart;
-            }
+            } 
             break;
         case HttpFragStateCRLF:
             if (c == '\r') {
@@ -1345,7 +1345,6 @@ void http_do_request(
     if (srv->callback(ECS_CONST_CAST(ecs_http_request_t*, req), reply, 
         srv->ctx) == false) 
     {
-        reply->code = 404;
         reply->status = "Resource not found";
         ecs_os_linc(&ecs_http_request_not_handled_count);
     } else {
@@ -1725,25 +1724,52 @@ int ecs_http_server_request(
     ecs_http_server_t* srv,
     const char *method,
     const char *req,
+    const char *body,
     ecs_http_reply_t *reply_out)
 {
-    const char *http_ver = " HTTP/1.1\r\n\r\n";
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(method != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(req != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(reply_out != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const char *http_ver = " HTTP/1.1\r\n";
     int32_t method_len = ecs_os_strlen(method);
     int32_t req_len = ecs_os_strlen(req);
+    int32_t body_len = body ? ecs_os_strlen(body) : 0;
     int32_t http_ver_len = ecs_os_strlen(http_ver);
     char reqbuf[1024], *reqstr = reqbuf;
+    char content_length[32] = {0};
 
-    int32_t len = method_len + req_len + http_ver_len + 1;
-    if (method_len + req_len + http_ver_len >= 1024) {
-        reqstr = ecs_os_malloc(len + 1);
+    if (body_len) {
+        ecs_os_snprintf(content_length, 32, 
+            "Content-Length: %d\r\n\r\n", body_len);
     }
+
+    int32_t content_length_len = ecs_os_strlen(content_length);
+
+    int32_t len = method_len + req_len + content_length_len + body_len + 
+        http_ver_len;
+    if (len >= 1024) {
+        reqstr = ecs_os_malloc(len);
+    }
+
+    len += 3;
 
     char *ptr = reqstr;
     ecs_os_memcpy(ptr, method, method_len); ptr += method_len;
     ptr[0] = ' '; ptr ++;
     ecs_os_memcpy(ptr, req, req_len); ptr += req_len;
     ecs_os_memcpy(ptr, http_ver, http_ver_len); ptr += http_ver_len;
-    ptr[0] = '\n';
+
+    if (body) {
+        ecs_os_memcpy(ptr, content_length, content_length_len);
+        ptr += content_length_len;
+        ecs_os_memcpy(ptr, body, body_len);
+        ptr += body_len;
+    }
+
+    ptr[0] = '\r';
+    ptr[1] = '\n';
 
     int result = ecs_http_server_http_request(srv, reqstr, len, reply_out);
     if (reqbuf != reqstr) {
@@ -1751,6 +1777,8 @@ int ecs_http_server_request(
     }
 
     return result;
+error:
+    return -1;
 }
 
 void* ecs_http_server_ctx(

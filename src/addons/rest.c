@@ -531,14 +531,17 @@ bool flecs_rest_script(
     if (!code) {
         code = req->body;
     }
+    
+    bool try = false;
+    flecs_rest_bool_param(req, "try", &try);
 
     if (!code) {
         flecs_reply_error(reply, "missing code parameter");
+        if (!try) {
+            reply->code = 400;
+        }
         return true;
     }
-
-    bool try = false;
-    flecs_rest_bool_param(req, "try", &try);
 
     bool prev_color = ecs_log_enable_colors(false);
     ecs_os_api_log_t prev_log = ecs_os_api.log_;
