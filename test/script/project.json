@@ -395,7 +395,8 @@
                 "clear_script_w_template_w_on_remove_observer_added_after",
                 "component_w_assign_add",
                 "component_w_assign_mul",
-                "prop_after_const"
+                "prop_after_const",
+                "const_from_prop"
             ]
         }, {
             "id": "Error",
