@@ -667,7 +667,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	void ImportModule(const TScriptInterface<IFlecsModuleInterface> InModule)
 	{
-		solid_checkf(InModule != nullptr, TEXT("Module is nullptr"));
+		solid_checkf(InModule, TEXT("Module is nullptr"));
 		InModule->ImportModule(World);
 	}
 	
@@ -1393,10 +1393,14 @@ public:
 		solid_checkf(Prefab.IsPrefab(), TEXT("Entity is not a prefab"));
 		
 		InRecord.ApplyRecordToEntity(Prefab);
+		Prefab.Set<FFlecsEntityRecord>(InRecord);
 		
 		#if WITH_EDITOR
-		
-		Prefab.SetDocName(Name);
+
+		if (!Name.IsEmpty())
+		{
+			Prefab.SetDocName(Name);
+		}
 
 		#endif // WITH_EDITOR
 		

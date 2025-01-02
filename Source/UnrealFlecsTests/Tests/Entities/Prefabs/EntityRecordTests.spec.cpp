@@ -40,6 +40,22 @@ void FEntityRecordTestsSpec::Define()
 			TestEqual("Entity should have the correct record",
 				TestEntity.Get<FTestStruct_EntityRecord>().IntegerValue, 1);
 		});
+
+		It("Should apply a record to an entity", [this]()
+		{
+			FFlecsEntityRecord Record;
+			
+			Record.AddComponent<FTestStruct_EntityRecord>(FTestStruct_EntityRecord{ 1 });
+
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestTrue("Entity should be valid", TestEntity.IsValid());
+
+			Record.ApplyRecordToEntity(TestEntity);
+			TestTrue("Entity should have the record",
+				TestEntity.Has<FTestStruct_EntityRecord>());
+			TestEqual("Entity should have the correct record",
+				TestEntity.Get<FTestStruct_EntityRecord>().IntegerValue, 1);
+		});
 	});
 }
 
