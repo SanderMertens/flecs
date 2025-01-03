@@ -21,7 +21,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 	}
 	
 	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
-	checkf(Settings, TEXT("Default Entities Developer Settings not found"));
+	check(IsValid(Settings));
 
 	#if WITH_EDITOR
 	

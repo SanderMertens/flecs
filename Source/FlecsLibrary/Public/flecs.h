@@ -254,7 +254,7 @@
  * lookup, which is slower but more memory efficient.
  */
 #ifndef FLECS_HI_ID_RECORD_ID
-#define FLECS_HI_ID_RECORD_ID (4096)
+#define FLECS_HI_ID_RECORD_ID (512)
 #endif
 
 /** @def FLECS_SPARSE_PAGE_BITS
