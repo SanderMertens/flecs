@@ -7,7 +7,7 @@
 	"Category": "ECS",
 	"CreatedBy": "Reddy-dev",
 	"CreatedByURL": "",
-	"DocsURL": "https://www.flecs.dev/flecs/",
+	"DocsURL": "https://www.flecs.dev/",
 	"MarketplaceURL": "",
 	"CanContainContent": true,
 	"IsBetaVersion": true,
@@ -49,5 +49,8 @@
 			"Enabled": true
 		}
 	],
-	"SupportURL": ""
+	"SupportURL": "",
+	"SupportedTargetPlatforms": [
+		"Win64"
+	]
 }

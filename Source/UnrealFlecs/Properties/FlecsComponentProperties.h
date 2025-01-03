@@ -144,6 +144,8 @@ public:
 #define REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, ...) \
 	namespace \
 	{ \
+		static_assert(Solid::IsStaticStruct<ComponentType>(), \
+			"ComponentType must be a UScriptStruct!"); \
 		struct FAutoRegister##ComponentType##_Traits \
 		{ \
 			FAutoRegister##ComponentType##_Traits() \

@@ -12,7 +12,7 @@ struct UNREALFLECS_API FFlecsTranslationPropertyTrait
 	GENERATED_BODY()
 }; // struct FFlecsTranslationPropertyTrait
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsTranslationPropertyTrait, flecs::PairIsTag, flecs::Trait)
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsTranslationPropertyTrait, flecs::PairIsTag)
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsToUnreal
@@ -26,7 +26,7 @@ struct UNREALFLECS_API FUnrealToFlecs
 	GENERATED_BODY()
 }; // struct FUnrealToFlecs
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FUnrealToFlecs, flecs::PairIsTag, flecs::Trait)
+REGISTER_COMPONENT_TAG_PROPERTIES(FUnrealToFlecs, flecs::PairIsTag)
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsToBoth
@@ -34,4 +34,4 @@ struct UNREALFLECS_API FFlecsToBoth
 	GENERATED_BODY()
 }; // struct FFlecsToBoth
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsToBoth, flecs::PairIsTag, flecs::Trait)
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsToBoth, flecs::PairIsTag)

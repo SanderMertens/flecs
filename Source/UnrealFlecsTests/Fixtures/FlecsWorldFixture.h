@@ -13,7 +13,7 @@
 
 UNLOG_CATEGORY(LogFlecsTests);
 
-class FFlecsTestFixture
+class UNREALFLECSTESTS_API FFlecsTestFixture
 {
 public:
 	TWeakObjectPtr<UWorld> TestWorld = nullptr;
