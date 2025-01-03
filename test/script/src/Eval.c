@@ -10434,3 +10434,98 @@ void Eval_component_w_assign_mul(void) {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    int32_t _dummy_1;
+    int32_t x;
+    int32_t _dummy_2;
+    int32_t y;
+} OpaqueStruct;
+
+static void* OpaqueStruct_member(void *ptr, const char *member) {
+    OpaqueStruct *data = ptr;
+    if (!strcmp(member, "x")) {
+        return &data->x;
+    } else if (!strcmp(member, "y")) {
+        return &data->y;
+    } else {
+        return NULL;
+    }
+}
+
+void Eval_opaque_struct_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, OpaqueStruct);
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(OpaqueStruct),
+        .type.as_type = s,
+        .type.ensure_member = OpaqueStruct_member
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  OpaqueStruct: {10, 20}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const OpaqueStruct *p = ecs_get(world, e, OpaqueStruct);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+typedef struct Opaque_string {
+    int32_t len;
+    char *value;
+} Opaque_string;
+
+static void Opaque_string_set(void *ptr, const char *value) {
+    ((Opaque_string*)ptr)->value = ecs_os_strdup(value);
+}
+
+void Eval_opaque_string_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_string);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_string),
+        .type.as_type = ecs_id(ecs_string_t),
+        .type.assign_string = Opaque_string_set
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Opaque_string: {\"Hello World\"}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Opaque_string *p = ecs_get(world, e, Opaque_string);
+    test_assert(p != NULL);
+    test_str(p->value, "Hello World");
+    
+    ecs_os_free(p->value);
+
+    ecs_fini(world);
+}

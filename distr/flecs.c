@@ -48477,8 +48477,18 @@ int ecs_meta_push(
 
     if (cursor->depth == 0) {
         if (!cursor->is_primitive_scope) {
+            bool is_primitive = false;
             if ((op->kind > EcsOpScope) && (op->count <= 1)) {
-                cursor->is_primitive_scope = true;
+                is_primitive = true;
+            } else if (op->kind == EcsOpOpaque) {
+                const EcsOpaque *t = ecs_get(world, op->type, EcsOpaque);
+                ecs_assert(t != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (ecs_has(world, t->as_type, EcsPrimitive)) {
+                    is_primitive = true;
+                }
+            }
+
+            if ((cursor->is_primitive_scope = is_primitive)) {
                 return 0;
             }
         }
@@ -59459,14 +59469,32 @@ int flecs_script_template_eval_prop(
             return -1;
         }
     } else {
-        if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
+        /* We don't know the type yet, so we can't create a storage for it yet.
+         * Run the expression first to deduce the type. */
+        ecs_value_t value = {0};
+        if (flecs_script_eval_expr(v, &node->expr, &value)) {
+            flecs_script_eval_error(v, node,
+                "failed to evaluate expression for const variable '%s'", 
+                    node->name);
             return -1;
         }
 
-        type = var->value.type;
-        ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
-        ti = ecs_get_type_info(v->world, type);
+        ecs_assert(value.type != 0, ECS_INTERNAL_ERROR, NULL);
+        ti = ecs_get_type_info(v->world, value.type);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        var->value.ptr = flecs_stack_calloc(
+            &v->r->stack, ti->size, ti->alignment);
+        type = var->value.type = value.type;
+        var->type_info = ti;
+
+        if (ti->hooks.ctor) {
+            ti->hooks.ctor(var->value.ptr, 1, ti);
+        }
+
+        ecs_value_copy_w_type_info(v->world, ti, var->value.ptr, value.ptr);
+        ecs_value_fini_w_type_info(v->world, ti, value.ptr);
+        flecs_free(&v->world->allocator, ti->size, value.ptr);
     }
 
     ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator, 
