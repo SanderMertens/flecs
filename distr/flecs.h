@@ -5821,6 +5821,24 @@ void ecs_run_aperiodic(
     ecs_world_t *world,
     ecs_flags32_t flags);
 
+/** Used with ecs_delete_empty_tables(). */
+typedef struct ecs_delete_empty_tables_desc_t {
+    /** Optional component filter for the tables to evaluate. */
+    ecs_id_t id;
+
+    /** Free table data when generation > clear_generation. */
+    uint16_t clear_generation;
+
+    /** Delete table when generation > delete_generation. */
+    uint16_t delete_generation;
+
+    /** Minimum number of component ids the table should have. */
+    int32_t min_id_count;
+
+    /** Amount of time operation is allowed to spend. */
+    double time_budget_seconds;
+} ecs_delete_empty_tables_desc_t;
+
 /** Cleanup empty tables.
  * This operation cleans up empty tables that meet certain conditions. Having
  * large amounts of empty tables does not negatively impact performance of the
@@ -5847,21 +5865,13 @@ void ecs_run_aperiodic(
  * The time budget specifies how long the operation should take at most.
  *
  * @param world The world.
- * @param id Optional component filter for the tables to evaluate.
- * @param clear_generation Free table data when generation > clear_generation.
- * @param delete_generation Delete table when generation > delete_generation.
- * @param min_id_count Minimum number of component ids the table should have.
- * @param time_budget_seconds Amount of time operation is allowed to spend.
+ * @param desc Configuration parameters.
  * @return Number of deleted tables.
  */
 FLECS_API
 int32_t ecs_delete_empty_tables(
     ecs_world_t *world,
-    ecs_id_t id,
-    uint16_t clear_generation,
-    uint16_t delete_generation,
-    int32_t min_id_count,
-    double time_budget_seconds);
+    const ecs_delete_empty_tables_desc_t *desc);
 
 /** Get world from poly.
  *
