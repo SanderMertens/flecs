@@ -93,16 +93,16 @@ static const flecs::entity_t OnTableCreate = EcsOnTableCreate;
 static const flecs::entity_t OnTableDelete = EcsOnTableDelete;
 
 /* Builtin term flags */
-static const uint64_t Self = EcsSelf;
-static const uint64_t Up = EcsUp;
-static const uint64_t Trav = EcsTrav;
-static const uint64_t Cascade = EcsCascade;
-static const uint64_t Desc = EcsDesc;
-static const uint64_t IsVariable = EcsIsVariable;
-static const uint64_t IsEntity = EcsIsEntity;
-static const uint64_t IsName = EcsIsName;
-static const uint64_t TraverseFlags = EcsTraverseFlags;
-static const uint64_t TermRefFlags = EcsTermRefFlags;
+static ECS_CONSTEXPR uint64_t Self = EcsSelf;
+static ECS_CONSTEXPR uint64_t Up = EcsUp;
+static ECS_CONSTEXPR uint64_t Trav = EcsTrav;
+static ECS_CONSTEXPR uint64_t Cascade = EcsCascade;
+static ECS_CONSTEXPR uint64_t Desc = EcsDesc;
+static ECS_CONSTEXPR uint64_t IsVariable = EcsIsVariable;
+static ECS_CONSTEXPR uint64_t IsEntity = EcsIsEntity;
+static ECS_CONSTEXPR uint64_t IsName = EcsIsName;
+static ECS_CONSTEXPR uint64_t TraverseFlags = EcsTraverseFlags;
+static ECS_CONSTEXPR uint64_t TermRefFlags = EcsTermRefFlags;
 
 /* Builtin entity ids */
 static const flecs::entity_t Flecs = EcsFlecs;
