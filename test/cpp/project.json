@@ -882,7 +882,13 @@
                 "named_scoped_rule",
                 "is_valid",
                 "unresolved_by_name",
-                "scope"
+                "scope",
+                "each_w_field_w_fixed_src",
+                "each_w_field_at_w_fixed_src",
+                "each_w_const_field_w_fixed_src",
+                "each_w_const_field_at_w_fixed_src",
+                "each_w_untyped_field_w_fixed_src",
+                "each_w_untyped_field_at_w_fixed_src"
             ]
         }, {
             "id": "SystemBuilder",
