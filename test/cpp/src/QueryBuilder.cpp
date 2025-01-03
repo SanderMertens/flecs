@@ -4975,3 +4975,251 @@ void QueryBuilder_scope(void) {
     test_int(count, 3);
 
 }
+
+void QueryBuilder_each_w_field_w_fixed_src(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set(Position{10, 20})
+        .set(Velocity{1, 2});
+
+    flecs::entity e2 = ecs.entity()
+        .set(Position{20, 30});
+
+    auto q = ecs.query_builder()
+        .with<Position>()
+        .with<Velocity>().src(e1)
+        .cache_kind(cache_kind)
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::iter& it, size_t row) {
+        auto e = it.entity(row);
+        auto p = it.field_at<Position>(0, row);
+        auto v = it.field<Velocity>(1);
+
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+        }
+        if (e == e2) {
+            test_int(p.x, 20);
+            test_int(p.y, 30);
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void QueryBuilder_each_w_field_at_w_fixed_src(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set(Position{10, 20})
+        .set(Velocity{1, 2});
+
+    flecs::entity e2 = ecs.entity()
+        .set(Position{20, 30});
+
+    auto q = ecs.query_builder()
+        .with<Position>()
+        .with<Velocity>().src(e1)
+        .cache_kind(cache_kind)
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::iter& it, size_t row) {
+        auto e = it.entity(row);
+        auto p = it.field_at<Position>(0, row);
+        auto v = it.field_at<Velocity>(1, 0);
+
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+        }
+        if (e == e2) {
+            test_int(p.x, 20);
+            test_int(p.y, 30);
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void QueryBuilder_each_w_const_field_w_fixed_src(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set(Position{10, 20})
+        .set(Velocity{1, 2});
+
+    flecs::entity e2 = ecs.entity()
+        .set(Position{20, 30});
+
+    auto q = ecs.query_builder()
+        .with<Position>()
+        .with<Velocity>().src(e1)
+        .cache_kind(cache_kind)
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::iter& it, size_t row) {
+        auto e = it.entity(row);
+        auto p = it.field_at<Position>(0, row);
+        auto v = it.field<const Velocity>(1);
+
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+        }
+        if (e == e2) {
+            test_int(p.x, 20);
+            test_int(p.y, 30);
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void QueryBuilder_each_w_const_field_at_w_fixed_src(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set(Position{10, 20})
+        .set(Velocity{1, 2});
+
+    flecs::entity e2 = ecs.entity()
+        .set(Position{20, 30});
+
+    auto q = ecs.query_builder()
+        .with<Position>()
+        .with<Velocity>().src(e1)
+        .cache_kind(cache_kind)
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::iter& it, size_t row) {
+        auto e = it.entity(row);
+        auto p = it.field_at<Position>(0, row);
+        auto v = it.field_at<const Velocity>(1, 0);
+
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+        }
+        if (e == e2) {
+            test_int(p.x, 20);
+            test_int(p.y, 30);
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void QueryBuilder_each_w_untyped_field_w_fixed_src(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set(Position{10, 20})
+        .set(Velocity{1, 2});
+
+    flecs::entity e2 = ecs.entity()
+        .set(Position{20, 30});
+
+    auto q = ecs.query_builder()
+        .with<Position>()
+        .with<Velocity>().src(e1)
+        .cache_kind(cache_kind)
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::iter& it, size_t row) {
+        auto e = it.entity(row);
+        auto p = it.field_at<Position>(0, row);
+        flecs::untyped_field vf = it.field(1);
+        Velocity *v = static_cast<Velocity*>(vf[0]);
+
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+        }
+        if (e == e2) {
+            test_int(p.x, 20);
+            test_int(p.y, 30);
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void QueryBuilder_each_w_untyped_field_at_w_fixed_src(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set(Position{10, 20})
+        .set(Velocity{1, 2});
+
+    flecs::entity e2 = ecs.entity()
+        .set(Position{20, 30});
+
+    auto q = ecs.query_builder()
+        .with<Position>()
+        .with<Velocity>().src(e1)
+        .cache_kind(cache_kind)
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::iter& it, size_t row) {
+        auto e = it.entity(row);
+        auto p = it.field_at<Position>(0, row);
+        void *vptr = it.field_at(1, 0);
+        Velocity *v = static_cast<Velocity*>(vptr);
+
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+        }
+        if (e == e2) {
+            test_int(p.x, 20);
+            test_int(p.y, 30);
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+        }
+
+        count ++;
+    });
+
+    test_int(count, 2);
+}

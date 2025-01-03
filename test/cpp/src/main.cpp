@@ -854,6 +854,12 @@ void QueryBuilder_named_scoped_rule(void);
 void QueryBuilder_is_valid(void);
 void QueryBuilder_unresolved_by_name(void);
 void QueryBuilder_scope(void);
+void QueryBuilder_each_w_field_w_fixed_src(void);
+void QueryBuilder_each_w_field_at_w_fixed_src(void);
+void QueryBuilder_each_w_const_field_w_fixed_src(void);
+void QueryBuilder_each_w_const_field_at_w_fixed_src(void);
+void QueryBuilder_each_w_untyped_field_w_fixed_src(void);
+void QueryBuilder_each_w_untyped_field_at_w_fixed_src(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -4745,6 +4751,30 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "scope",
         QueryBuilder_scope
+    },
+    {
+        "each_w_field_w_fixed_src",
+        QueryBuilder_each_w_field_w_fixed_src
+    },
+    {
+        "each_w_field_at_w_fixed_src",
+        QueryBuilder_each_w_field_at_w_fixed_src
+    },
+    {
+        "each_w_const_field_w_fixed_src",
+        QueryBuilder_each_w_const_field_w_fixed_src
+    },
+    {
+        "each_w_const_field_at_w_fixed_src",
+        QueryBuilder_each_w_const_field_at_w_fixed_src
+    },
+    {
+        "each_w_untyped_field_w_fixed_src",
+        QueryBuilder_each_w_untyped_field_w_fixed_src
+    },
+    {
+        "each_w_untyped_field_at_w_fixed_src",
+        QueryBuilder_each_w_untyped_field_at_w_fixed_src
     }
 };
 
@@ -7015,7 +7045,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        166,
+        172,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params

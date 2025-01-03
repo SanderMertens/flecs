@@ -66,8 +66,9 @@ inline flecs::table_range iter::range() const {
 template <typename T, typename A,
     typename std::enable_if<std::is_const<T>::value, void>::type*>
 inline flecs::field<A> iter::field(int8_t index) const {
-    ecs_assert(!(iter_->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
-        "cannot .field from .each, use .field_at<const %s>(%d, row) instead",
+    ecs_assert(!(iter_->flags & EcsIterCppEach) || 
+               ecs_field_src(iter_, index) != 0, ECS_INVALID_OPERATION,
+        "cannot .field from .each, use .field_at<%s>(%d, row) instead",
             _::type_name<T>(), index);
     return get_field<A>(index);
 }
@@ -76,7 +77,8 @@ template <typename T, typename A,
     typename std::enable_if<
         std::is_const<T>::value == false, void>::type*>
 inline flecs::field<A> iter::field(int8_t index) const {
-    ecs_assert(!(iter_->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
+    ecs_assert(!(iter_->flags & EcsIterCppEach) || 
+               ecs_field_src(iter_, index) != 0, ECS_INVALID_OPERATION,
         "cannot .field from .each, use .field_at<%s>(%d, row) instead",
             _::type_name<T>(), index);
     ecs_assert(!ecs_field_is_readonly(iter_, index),

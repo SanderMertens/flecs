@@ -37,7 +37,7 @@ struct untyped_field {
      * @return Reference to element.
      */
     void* operator[](size_t index) const {
-        ecs_assert(!is_shared_, ECS_INVALID_PARAMETER,
+        ecs_assert(!is_shared_ || !index, ECS_INVALID_PARAMETER,
             "invalid usage of [] operator for shared component field");
         ecs_assert(index < count_, ECS_COLUMN_INDEX_OUT_OF_RANGE,
             "index %d out of range for field", index);
