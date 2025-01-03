@@ -318,6 +318,8 @@ void Eval_component_assign_w_match(void);
 void Eval_const_w_match(void);
 void Eval_component_w_assign_add(void);
 void Eval_component_w_assign_mul(void);
+void Eval_opaque_struct_component(void);
+void Eval_opaque_string_component(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -928,6 +930,7 @@ void Deserialize_opaque_struct(void);
 void Deserialize_opaque_struct_w_member(void);
 void Deserialize_opaque_struct_w_member_reverse(void);
 void Deserialize_struct_w_opaque_member(void);
+void Deserialize_opaque_string(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
@@ -2181,6 +2184,14 @@ bake_test_case Eval_testcases[] = {
     {
         "component_w_assign_mul",
         Eval_component_w_assign_mul
+    },
+    {
+        "opaque_struct_component",
+        Eval_opaque_struct_component
+    },
+    {
+        "opaque_string_component",
+        Eval_opaque_string_component
     }
 };
 
@@ -4578,6 +4589,10 @@ bake_test_case Deserialize_testcases[] = {
     {
         "struct_w_opaque_member",
         Deserialize_struct_w_opaque_member
+    },
+    {
+        "opaque_string",
+        Deserialize_opaque_string
     }
 };
 
@@ -4654,7 +4669,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        309,
+        311,
         Eval_testcases
     },
     {
@@ -4705,7 +4720,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        95,
+        96,
         Deserialize_testcases,
         1,
         Deserialize_params

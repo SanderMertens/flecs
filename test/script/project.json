@@ -321,7 +321,9 @@
                 "component_assign_w_match",
                 "const_w_match",
                 "component_w_assign_add",
-                "component_w_assign_mul"
+                "component_w_assign_mul",
+                "opaque_struct_component",
+                "opaque_string_component"
             ]
         }, {
             "id": "Template",
@@ -951,7 +953,8 @@
                 "opaque_struct",
                 "opaque_struct_w_member",
                 "opaque_struct_w_member_reverse",
-                "struct_w_opaque_member"
+                "struct_w_opaque_member",
+                "opaque_string"
             ]
         }, {
             "id": "Fuzzing",

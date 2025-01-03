@@ -2778,3 +2778,27 @@ void Deserialize_struct_w_opaque_member(void) {
 
     ecs_fini(world);
 }
+
+void Deserialize_opaque_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_string);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_string),
+        .type.as_type = ecs_id(ecs_string_t),
+        .type.assign_string = Opaque_string_set
+    });
+
+    Opaque_string v = {0, NULL};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "\"foobar\"", &ecs_value_ptr(Opaque_string, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');        
+
+    test_str(v.value, "foobar");
+    ecs_os_free(v.value);
+
+    ecs_fini(world);
+}
