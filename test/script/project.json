@@ -398,7 +398,10 @@
                 "component_w_assign_add",
                 "component_w_assign_mul",
                 "prop_after_const",
-                "const_from_prop"
+                "const_from_prop",
+                "redefine_nested_template_w_prefab",
+                "redefine_nested_template_w_prefab_2",
+                "redefine_nested_template_w_prefab_3"
             ]
         }, {
             "id": "Error",
