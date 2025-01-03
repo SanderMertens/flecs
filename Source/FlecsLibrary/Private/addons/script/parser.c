@@ -231,6 +231,123 @@ const char* flecs_script_paren_expr(
 }
 
 /* Parse a single statement */
+static
+const char* flecs_script_if_stmt(
+    ecs_script_parser_t *parser,
+    const char *pos)
+{
+    ParserBegin;
+
+    // if expr
+    Expr('\0',
+        // if expr {
+        Parse_1('{', {
+            ecs_script_if_t *stmt = flecs_script_insert_if(parser);
+            stmt->expr = EXPR;
+            pos = flecs_script_scope(parser, stmt->if_true, pos);
+            if (!pos) {
+                goto error;
+            }
+
+            // if expr { } else
+            LookAhead_1(EcsTokKeywordElse, 
+                pos = lookahead;
+
+                Parse(
+                    // if expr { } else if
+                    case EcsTokKeywordIf: {
+                        Scope(stmt->if_false, 
+                            return flecs_script_if_stmt(parser, pos);
+                        )
+                    }
+
+                    // if expr { } else\n if
+                    case EcsTokNewline: {
+                        Parse_1(EcsTokKeywordIf,
+                            Scope(stmt->if_false, 
+                                return flecs_script_if_stmt(parser, pos);
+                            )
+                        )
+                    }
+
+                    // if expr { } else {
+                    case '{': {
+                        return flecs_script_scope(parser, stmt->if_false, pos);
+                    }
+                )
+            )
+
+            EndOfRule;
+        });
+    )
+
+    ParserEnd;
+}
+
+static
+const char* flecs_script_parse_var(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_tokenizer_t *tokenizer,
+    bool is_prop)
+{
+    Parse_1(EcsTokIdentifier,
+        ecs_script_var_node_t *var = flecs_script_insert_var(
+            parser, Token(1));
+        var->node.kind = is_prop ? EcsAstProp : EcsAstConst;
+
+        Parse(
+            // const color =
+            case '=': {
+                // const color = Color :
+                LookAhead_2(EcsTokIdentifier, ':',
+                    pos = lookahead;
+
+                    var->type = Token(3);
+
+                    // const color = Color: {
+                    LookAhead_1('{',
+                        // const color = Color: {expr}
+                        pos = lookahead;
+                        Initializer('}',
+                            var->expr = INITIALIZER;
+                            EndOfRule;
+                        )
+                    )
+
+                    // const color = Color: expr\n
+                    Initializer('\n',
+                        var->expr = INITIALIZER;
+                        EndOfRule;
+                    )
+                )
+
+                // const PI = expr\n
+                Expr('\n',
+                    Warning("'%s var = expr' syntax is deprecated"
+                        ", use '%s var: expr' instead", 
+                            is_prop ? "prop" : "const",
+                            is_prop ? "prop" : "const");
+                    var->expr = EXPR;
+                    EndOfRule;
+                )
+            }
+
+            case ':': {
+                // const PI: expr\n
+                Expr('\n',
+                    var->expr = EXPR;
+                    EndOfRule;
+                )
+            }
+        )
+    )
+
+error:
+    return NULL;
+}
+
+/* Parse a single statement */
 static inline
 const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
@@ -244,8 +361,7 @@ const char* flecs_script_stmt(
     Parse(
         case EcsTokIdentifier:        goto identifier;
         case EcsTokString:            goto string_name;
-        case '{':                     return flecs_script_scope(parser, 
-                                        flecs_script_insert_scope(parser), pos);
+        case '{':                     goto anonymous_entity;
         case '(':                     goto paren;
         case '@':                     goto annotation;
         case EcsTokKeywordWith:       goto with_stmt;
@@ -258,6 +374,11 @@ const char* flecs_script_stmt(
         case EcsTokKeywordFor:        goto for_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
+
+anonymous_entity: {
+    return flecs_script_scope(parser, 
+        flecs_script_insert_entity(parser, "_", false)->scope, pos);
+}
 
 string_name:
     /* If this is an interpolated string, we need to evaluate it as expression
@@ -419,100 +540,18 @@ template_stmt: {
 // prop
 prop_var: {
     // prop color = Color:
-    Parse_4(EcsTokIdentifier, '=', EcsTokIdentifier, ':',
-        ecs_script_var_node_t *var = flecs_script_insert_var(
-            parser, Token(1));
-        var->node.kind = EcsAstProp;
-        var->type = Token(3);
-
-        // prop color = Color : {
-        LookAhead_1('{',
-            // prop color = Color: {expr}
-            pos = lookahead;
-            Initializer('}',
-                var->expr = INITIALIZER;
-                EndOfRule;
-            )
-        )
-
-        // prop color = Color : expr\n
-        Initializer('\n',
-            var->expr = INITIALIZER;
-            EndOfRule;
-        )
-    )
+    return flecs_script_parse_var(parser, pos, tokenizer, true);
 }
 
 // const
 const_var: {
     // const color
-    Parse_1(EcsTokIdentifier,
-        ecs_script_var_node_t *var = flecs_script_insert_var(
-            parser, Token(1));
-        var->node.kind = EcsAstConst;
-
-        Parse(
-            // const color =
-            case '=': {
-                // const color = Color :
-                LookAhead_2(EcsTokIdentifier, ':',
-                    pos = lookahead;
-
-                    var->type = Token(3);
-
-                    // const color = Color: {
-                    LookAhead_1('{',
-                        // const color = Color: {expr}
-                        pos = lookahead;
-                        Initializer('}',
-                            var->expr = INITIALIZER;
-                            EndOfRule;
-                        )
-                    )
-
-                    // const color = Color: expr\n
-                    Initializer('\n',
-                        var->expr = INITIALIZER;
-                        EndOfRule;
-                    )
-                )
-
-                // const PI = expr\n
-                Expr('\n',
-                    var->expr = EXPR;
-                    EndOfRule;
-                )
-            }
-        )
-    )
+    return flecs_script_parse_var(parser, pos, tokenizer, false);
 }
 
 // if
 if_stmt: {
-    // if expr
-    Expr('\0',
-        // if expr {
-        Parse_1('{', {
-            ecs_script_if_t *stmt = flecs_script_insert_if(parser);
-            stmt->expr = EXPR;
-            pos = flecs_script_scope(parser, stmt->if_true, pos);
-            if (!pos) {
-                goto error;
-            }
-
-            // if expr { } else
-            LookAhead_1(EcsTokKeywordElse, 
-                pos = lookahead;
-
-                // if expr { } else {
-                Parse_1('{',
-                    return flecs_script_scope(parser, stmt->if_false, pos);
-                )
-            )
-
-            EndOfRule;
-        });
-    )
+    return flecs_script_if_stmt(parser, pos);
 }
 
 // for
@@ -524,7 +563,8 @@ for_stmt: {
             Parse_1(EcsTokRange, {
                 Expr(0, {
                     ecs_expr_node_t *to = EXPR;
-                    ecs_script_for_range_t *stmt = flecs_script_insert_for_range(parser);
+                    ecs_script_for_range_t *stmt = 
+                        flecs_script_insert_for_range(parser);
                     stmt->loop_var = Token(1);
                     stmt->from = from;
                     stmt->to = to;
@@ -564,16 +604,29 @@ pair: {
 
         // (Eats, Apples):
         case ':': {
-            // (Eats, Apples): {
-            Parse_1('{',
-                // (Eats, Apples): { expr }
-                Initializer('}',
+            // Use lookahead so that expression parser starts at "match"
+            LookAhead_1(EcsTokKeywordMatch, {
+                // (Eats, Apples): match expr
+                Expr('\n', {
                     ecs_script_component_t *comp = 
                         flecs_script_insert_pair_component(
                             parser, Token(1), Token(3));
-                    comp->expr = INITIALIZER;
-                    EndOfRule;
-                )
+                    comp->expr = EXPR;
+                    EndOfRule; 
+                })
+            })
+
+            // (Eats, Apples): {
+            Parse_1('{', {
+                    // (Eats, Apples): { expr }
+                    Initializer('}',
+                        ecs_script_component_t *comp = 
+                            flecs_script_insert_pair_component(
+                                parser, Token(1), Token(3));
+                        comp->expr = INITIALIZER;
+                        EndOfRule;
+                    )
+                }
             )
         }
 
@@ -643,8 +696,9 @@ identifier_flag: {
                     Parse_1('{',
                         // auto_override | Position: {expr}
                         Expr('}', {
-                            ecs_script_component_t *comp = flecs_script_insert_component(
-                                parser, Token(2));
+                            ecs_script_component_t *comp = 
+                                flecs_script_insert_component(
+                                    parser, Token(2));
                             comp->expr = EXPR;
                             EndOfRule; 
                         })
@@ -670,6 +724,13 @@ identifier_colon: {
         LookAhead_1('[',
             pos = lookahead;
             goto component_expr_collection;
+        )
+    }
+
+    {
+        // Position: match
+        LookAhead_1(EcsTokKeywordMatch,
+            goto component_expr_match;
         )
     }
 
@@ -707,6 +768,18 @@ identifier_assign: {
     // x = Position:
     LookAhead_2(EcsTokIdentifier, ':',
         pos = lookahead;
+
+        // Use lookahead so that expression parser starts at "match"
+        LookAhead_1(EcsTokKeywordMatch, {
+            // (Eats, Apples): match expr
+            Expr('\n', {
+                ecs_script_component_t *comp = 
+                    flecs_script_insert_pair_component(
+                        parser, Token(1), Token(3));
+                comp->expr = EXPR;
+                EndOfRule; 
+            })
+        })
 
         // x = Position: {
         Parse_1('{', {
@@ -844,6 +917,18 @@ component_expr_collection: {
             parser, Token(0));
         comp->expr = EXPR;
         comp->is_collection = true;
+        EndOfRule; 
+    })
+}
+
+// Position: match
+component_expr_match: {
+
+    // Position: match expr
+    Expr('\n', {
+        ecs_script_component_t *comp = flecs_script_insert_component(
+            parser, Token(0));
+        comp->expr = EXPR;
         EndOfRule; 
     })
 }

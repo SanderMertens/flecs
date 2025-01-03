@@ -14,15 +14,17 @@ typedef struct ecs_script_rng_t {
     uint64_t w; /* Weyl sequence increment */
     uint64_t s; /* Constant for Weyl sequence */
     int32_t refcount; /* Necessary as flecs script doesn't have ref types */
+    bool initialized;
 } ecs_script_rng_t;
 
 static
-ecs_script_rng_t* flecs_script_rng_new(uint64_t seed) {
+ecs_script_rng_t* flecs_script_rng_new(void) {
     ecs_script_rng_t *result = ecs_os_calloc_t(ecs_script_rng_t);
-    result->x = seed;
+    result->x = 0;
     result->w = 0;
     result->s = 0xb5ad4eceda1ce2a9; /* Constant for the Weyl sequence */
     result->refcount = 1;
+    result->initialized = false;
     return result;
 }
 
@@ -58,7 +60,7 @@ ECS_COMPONENT_DECLARE(EcsScriptRng);
 static
 ECS_CTOR(EcsScriptRng, ptr, {
     ptr->seed = 0;
-    ptr->impl = NULL;
+    ptr->impl = flecs_script_rng_new();
 })
 
 static
@@ -93,11 +95,21 @@ void flecs_script_rng_get_float(
     (void)ctx;
     (void)argc;
     EcsScriptRng *rng = argv[0].ptr;
-    if (!rng->impl) rng->impl = flecs_script_rng_new(rng->seed);
+    ecs_assert(rng->impl != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_script_rng_t *impl = rng->impl;
+    if (!impl->initialized) {
+        impl->x = rng->seed;
+        impl->initialized = true;
+    }
     uint64_t x = flecs_script_rng_next(rng->impl);
     double max = *(double*)argv[1].ptr;
     double *r = result->ptr;
-    *r = (double)x / ((double)UINT64_MAX / max);
+
+    if (ECS_EQZERO(max)) {
+        ecs_err("flecs.script.math.Rng.f(): invalid division by zero");
+    } else {
+        *r = (double)x / ((double)UINT64_MAX / max);
+    }
 }
 
 void flecs_script_rng_get_uint(
@@ -109,11 +121,20 @@ void flecs_script_rng_get_uint(
     (void)ctx;
     (void)argc;
     EcsScriptRng *rng = argv[0].ptr;
-    if (!rng->impl) rng->impl = flecs_script_rng_new(rng->seed);
+    ecs_assert(rng->impl != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_script_rng_t *impl = rng->impl;
+    if (!impl->initialized) {
+        impl->x = rng->seed;
+        impl->initialized = true;
+    }
     uint64_t x = flecs_script_rng_next(rng->impl);
     uint64_t max = *(uint64_t*)argv[1].ptr;
     uint64_t *r = result->ptr;
-    *r = x % max;
+    if (!max) {
+        ecs_err("flecs.script.math.Rng.u(): invalid division by zero");
+    } else {
+        *r = x % max;
+    }
 }
 
 #define FLECS_MATH_FUNC_F64(name, ...)\

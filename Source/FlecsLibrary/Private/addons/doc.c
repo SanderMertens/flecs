@@ -218,8 +218,6 @@ void flecs_doc_import_core_definitions(
     ecs_doc_set_brief(world, EcsOnRemove, "Event emitted when component is removed");
     ecs_doc_set_brief(world, EcsOnSet, "Event emitted when component is set");
     ecs_doc_set_brief(world, EcsMonitor, "Marker used to create monitor observers");
-    ecs_doc_set_brief(world, EcsOnTableFill, "Event emitted when table becomes non-empty");
-    ecs_doc_set_brief(world, EcsOnTableEmpty, "Event emitted when table becomes empty");
     ecs_doc_set_brief(world, EcsOnTableCreate, "Event emitted when table is created");
     ecs_doc_set_brief(world, EcsOnTableDelete, "Event emitted when table is deleted");
 

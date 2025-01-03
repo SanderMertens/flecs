@@ -56,12 +56,15 @@ typedef struct ecs_script_var_t {
     const char *name;
     ecs_value_t value;
     const ecs_type_info_t *type_info;
+    int32_t sp;
     bool is_const;
 } ecs_script_var_t;
 
 /** Script variable scope. */
 typedef struct ecs_script_vars_t {
     struct ecs_script_vars_t *parent;
+    int32_t sp;
+
     ecs_hashmap_t var_index;
     ecs_vec_t vars;
 
@@ -452,6 +455,45 @@ ecs_script_var_t* ecs_script_vars_lookup(
     const ecs_script_vars_t *vars,
     const char *name);
 
+/** Lookup a variable by stack pointer.
+ * This operation provides a faster way to lookup variables that are always 
+ * declared in the same order in a ecs_script_vars_t scope.
+ * 
+ * The stack pointer of a variable can be obtained from the ecs_script_var_t 
+ * type. The provided frame offset must be valid for the provided variable  
+ * stack. If the frame offset is not valid, this operation will panic.
+ * 
+ * @param vars The variable scope.
+ * @param sp The stack pointer to the variable.
+ * @return The variable.
+ */
+FLECS_API
+ecs_script_var_t* ecs_script_vars_from_sp(
+    const ecs_script_vars_t *vars,
+    int32_t sp);
+
+/** Print variables.
+ * This operation prints all variables in the vars scope and parent scopes.asm
+ * 
+ * @param vars The variable scope.
+ */
+FLECS_API
+void ecs_script_vars_print(
+    const ecs_script_vars_t *vars);
+
+/** Preallocate space for variables.
+ * This operation preallocates space for the specified number of variables. This
+ * is a performance optimization only, and is not necessary before declaring
+ * variables in a scope.
+ * 
+ * @param vars The variable scope.
+ * @param count The number of variables to preallocate space for.
+ */
+FLECS_API
+void ecs_script_vars_set_size(
+    ecs_script_vars_t *vars,
+    int32_t count);
+
 /** Convert iterator to vars
  * This operation converts an iterator to a variable array. This allows for
  * using iterator results in expressions. The operation only converts a
@@ -497,18 +539,23 @@ void ecs_script_vars_from_iter(
 typedef struct ecs_expr_eval_desc_t {
     const char *name;                /**< Script name */
     const char *expr;                /**< Full expression string */
+    const ecs_script_vars_t *vars;   /**< Variables accessible in expression */
+    ecs_entity_t type;               /**< Type of parsed value (optional) */
     ecs_entity_t (*lookup_action)(   /**< Function for resolving entity identifiers */
         const ecs_world_t*,
         const char *value,
         void *ctx);
     void *lookup_ctx;                /**< Context passed to lookup function */
-    const ecs_script_vars_t *vars;   /**< Variables accessible in expression */
-    ecs_entity_t type;               /**< Type of parsed value (optional) */
-    
-    /* Disable constant folding (slower evaluation, faster parsing) */
+
+    /** Disable constant folding (slower evaluation, faster parsing) */
     bool disable_folding;
-    
-    /* Allow for unresolved identifiers when parsing. Useful when entities can
+
+    /** This option instructs the expression runtime to lookup variables by 
+     * stack pointer instead of by name, which improves performance. Only enable 
+     * when provided variables are always declared in the same order. */
+    bool disable_dynamic_variable_binding;
+
+    /** Allow for unresolved identifiers when parsing. Useful when entities can
      * be created in between parsing & evaluating. */
     bool allow_unresolved_identifiers;
 

@@ -12,6 +12,10 @@
     } else if (!ecs_os_strncmp(pos, keyword " ", ecs_os_strlen(keyword) + 1)) {\
         out->value = keyword;\
         out->kind = _kind;\
+        return pos + ecs_os_strlen(keyword);\
+    } else if (!ecs_os_strncmp(pos, keyword "\n", ecs_os_strlen(keyword) + 1)) {\
+        out->value = keyword;\
+        out->kind = _kind;\
         return pos + ecs_os_strlen(keyword);
 
 #define OperatorMultiChar(oper, _kind)\
@@ -64,17 +68,20 @@ const char* flecs_script_token_kind_str(
     case EcsTokRange:
     case EcsTokShiftLeft:
     case EcsTokShiftRight:
+    case EcsTokAddAssign:
+    case EcsTokMulAssign:
         return "";
     case EcsTokKeywordWith:
     case EcsTokKeywordUsing:
-    case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
     case EcsTokKeywordFor:
     case EcsTokKeywordIn:
+    case EcsTokKeywordTemplate:
     case EcsTokKeywordModule:
+    case EcsTokKeywordMatch:
         return "keyword ";
     case EcsTokIdentifier:
         return "identifier ";
@@ -130,15 +137,18 @@ const char* flecs_script_token_str(
     case EcsTokRange: return "..";
     case EcsTokShiftLeft: return "<<";
     case EcsTokShiftRight: return ">>";
+    case EcsTokAddAssign: return "+=";
+    case EcsTokMulAssign: return "*=";
     case EcsTokKeywordWith: return "with";
     case EcsTokKeywordUsing: return "using";
-    case EcsTokKeywordTemplate: return "template";
     case EcsTokKeywordProp: return "prop";
     case EcsTokKeywordConst: return "const";
+    case EcsTokKeywordMatch: return "match";
     case EcsTokKeywordIf: return "if";
     case EcsTokKeywordElse: return "else";
     case EcsTokKeywordFor: return "for";
     case EcsTokKeywordIn: return "in";
+    case EcsTokKeywordTemplate: return "template";
     case EcsTokKeywordModule: return "module";
     case EcsTokIdentifier: return "identifier";
     case EcsTokString: return "string";
@@ -530,6 +540,8 @@ const char* flecs_script_token(
     } else if (flecs_script_is_number(pos)) {
         return flecs_script_number(parser, pos, out);
 
+    OperatorMultiChar ("+=",       EcsTokAddAssign)
+    OperatorMultiChar ("*=",       EcsTokMulAssign)
     Operator          (":",        EcsTokColon)
     Operator          ("{",        EcsTokScopeOpen)
     Operator          ("}",        EcsTokScopeClose)
@@ -577,6 +589,7 @@ const char* flecs_script_token(
     Keyword           ("else",     EcsTokKeywordElse)
     Keyword           ("for",      EcsTokKeywordFor)
     Keyword           ("in",       EcsTokKeywordIn)
+    Keyword           ("match",    EcsTokKeywordMatch)
     Keyword           ("module",   EcsTokKeywordModule)
 
     } else if (pos[0] == '"') {

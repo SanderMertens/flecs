@@ -269,6 +269,10 @@ int flecs_expr_initializer_pre_fold(
         if (elem->value->kind != EcsExprValue) {
             *can_fold = false;
         }
+
+        if (elem->operator) {
+            *can_fold = false;
+        }
     }
 
     if (node->is_dynamic) {
@@ -383,8 +387,8 @@ int flecs_expr_variable_visit_fold(
 
     ecs_expr_variable_t *node = (ecs_expr_variable_t*)*node_ptr;
 
-    ecs_script_var_t *var = ecs_script_vars_lookup(
-        desc->vars, node->name);
+    ecs_script_var_t *var = flecs_script_find_var(
+        desc->vars, node->name, &node->sp);
     /* Should've been caught by type visitor */
     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(var->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
@@ -507,6 +511,37 @@ error:
     return -1;
 }
 
+static
+int flecs_expr_match_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_expr_match_t *node = (ecs_expr_match_t*)*node_ptr;
+
+    if (flecs_expr_visit_fold(script, &node->expr, desc)) {
+        goto error;
+    }
+
+    int32_t i, count = ecs_vec_count(&node->elements);
+    ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_match_element_t *elem = &elems[i];
+        if (flecs_expr_visit_fold(script, &elem->compare, desc)) {
+            goto error;
+        }
+
+        if (flecs_expr_visit_fold(script, &elem->expr, desc)) {
+            goto error;
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 int flecs_expr_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -571,7 +606,13 @@ int flecs_expr_visit_fold(
             goto error;
         }
         break;
+    case EcsExprMatch:
+        if (flecs_expr_match_visit_fold(script, node_ptr, desc)) {
+            goto error;
+        }
+        break;
     case EcsExprCast:
+    case EcsExprCastNumber:
         if (flecs_expr_cast_visit_fold(script, node_ptr, desc)) {
             goto error;
         }

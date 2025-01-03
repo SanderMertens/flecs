@@ -202,6 +202,7 @@ int ecs_http_server_request(
     ecs_http_server_t* srv,
     const char *method,
     const char *req,
+    const char *body,
     ecs_http_reply_t *reply_out);
 
 /** Get context provided in ecs_http_server_desc_t */

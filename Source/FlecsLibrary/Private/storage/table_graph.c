@@ -519,22 +519,6 @@ void flecs_table_init_node(
     flecs_table_init_edges(&node->remove);
 }
 
-bool flecs_table_records_update_empty(
-    ecs_table_t *table)
-{
-    bool result = false;
-    bool is_empty = ecs_table_count(table) == 0;
-
-    const int32_t count = table->_->record_count;
-    for (int32_t i = 0; i < count; i ++) {
-        const ecs_table_record_t *tr = &table->_->records[i];
-        ecs_table_cache_t *cache = tr->hdr.cache;
-        result |= ecs_table_cache_set_empty(cache, table, is_empty);
-    }
-
-    return result;
-}
-
 static
 void flecs_init_table(
     ecs_world_t *world,
@@ -607,7 +591,6 @@ ecs_table_t *flecs_table_new(
 
     /* Update counters */
     world->info.table_count ++;
-    world->info.empty_table_count ++;
     world->info.table_create_total ++;
 
     ecs_log_pop_2();

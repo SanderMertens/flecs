@@ -49,6 +49,7 @@ ecs_expr_variable_t* flecs_expr_variable_from(
     ecs_expr_variable_t *result = flecs_calloc_t(
         &((ecs_script_impl_t*)script)->allocator, ecs_expr_variable_t);
     result->name = name;
+    result->sp = -1;
     result->node.kind = EcsExprVariable;
     result->node.pos = node ? node->pos : NULL;
     return result;
@@ -176,6 +177,7 @@ ecs_expr_variable_t* flecs_expr_variable(
     ecs_expr_variable_t *result = flecs_expr_ast_new(
         parser, ecs_expr_variable_t, EcsExprVariable);
     result->name = value;
+    result->sp = -1;
     return result;
 }
 
@@ -216,6 +218,14 @@ ecs_expr_element_t* flecs_expr_element(
 {
     ecs_expr_element_t *result = flecs_expr_ast_new(
         parser, ecs_expr_element_t, EcsExprElement);
+    return result;
+}
+
+ecs_expr_match_t* flecs_expr_match(
+    ecs_script_parser_t *parser)
+{
+    ecs_expr_match_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_match_t, EcsExprMatch);
     return result;
 }
 
@@ -264,7 +274,7 @@ bool flecs_expr_explicit_cast_allowed(
             if (to_type->kind == EcsEnumType || 
                 to_type->kind == EcsBitmaskType)
             {
-                /* Can integers to enums/bitmasks */
+                /* Can cast integers to enums/bitmasks */
                 return true;
             }
         }
@@ -282,11 +292,6 @@ bool flecs_expr_explicit_cast_allowed(
     if (to == ecs_id(ecs_string_t)) {
         return true;
     }
-
-    // const EcsPrimitive *from_ptype = ecs_get(world, from, EcsPrimitive);
-    // const EcsPrimitive *to_ptype = ecs_get(world, to, EcsPrimitive);
-    // ecs_assert(from_ptype != NULL, ECS_INTERNAL_ERROR, NULL);
-    // ecs_assert(to_ptype != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return true;
 }
@@ -309,6 +314,12 @@ ecs_expr_cast_t* flecs_expr_cast(
     ecs_allocator_t *a = &((ecs_script_impl_t*)script)->allocator;
     ecs_expr_cast_t *result = flecs_calloc_t(a, ecs_expr_cast_t);
     result->node.kind = EcsExprCast;
+    if (flecs_expr_is_type_number(expr->type) && 
+        flecs_expr_is_type_number(type)) 
+    {
+        result->node.kind = EcsExprCastNumber;
+    }
+
     result->node.pos = expr->pos;
     result->node.type = type;
     result->node.type_info = ecs_get_type_info(script->world, type);

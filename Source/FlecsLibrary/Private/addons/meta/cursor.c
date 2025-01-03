@@ -391,8 +391,18 @@ int ecs_meta_push(
 
     if (cursor->depth == 0) {
         if (!cursor->is_primitive_scope) {
+            bool is_primitive = false;
             if ((op->kind > EcsOpScope) && (op->count <= 1)) {
-                cursor->is_primitive_scope = true;
+                is_primitive = true;
+            } else if (op->kind == EcsOpOpaque) {
+                const EcsOpaque *t = ecs_get(world, op->type, EcsOpaque);
+                ecs_assert(t != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (ecs_has(world, t->as_type, EcsPrimitive)) {
+                    is_primitive = true;
+                }
+            }
+
+            if ((cursor->is_primitive_scope = is_primitive)) {
                 return 0;
             }
         }

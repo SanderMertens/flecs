@@ -97,7 +97,7 @@ void flecs_rest_capture_log(
     }
 
 #ifdef FLECS_DEBUG
-    /* In debug mode, log unexpected errors and warnings to the console */
+    /* In debug mode, log unexpected errors to the console */
     if (level < 0) {
         /* Also log to previous log function in debug mode */
         if (rest_prev_log) {
@@ -108,7 +108,7 @@ void flecs_rest_capture_log(
     }
 #endif
 
-    if (!rest_last_err && level < 0) {
+    if (!rest_last_err && level <= -3) {
         rest_last_err = ecs_os_strdup(msg);
     }
 }
@@ -530,12 +530,19 @@ bool flecs_rest_script(
 
     const char *code = ecs_http_get_param(req, "code");
     if (!code) {
-        flecs_reply_error(reply, "missing data parameter");
-        return true;
+        code = req->body;
     }
-
+    
     bool try = false;
     flecs_rest_bool_param(req, "try", &try);
+
+    if (!code) {
+        flecs_reply_error(reply, "missing code parameter");
+        if (!try) {
+            reply->code = 400;
+        }
+        return true;
+    }
 
     bool prev_color = ecs_log_enable_colors(false);
     const ecs_os_api_log_t prev_log = ecs_os_api.log_;

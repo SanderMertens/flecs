@@ -79,8 +79,6 @@ const ecs_entity_t EcsOnDelete =                    FLECS_HI_COMPONENT_ID + 43;
 const ecs_entity_t EcsOnDeleteTarget =              FLECS_HI_COMPONENT_ID + 44;
 const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 45;
 const ecs_entity_t EcsOnTableDelete =               FLECS_HI_COMPONENT_ID + 46;
-const ecs_entity_t EcsOnTableEmpty =                FLECS_HI_COMPONENT_ID + 47;
-const ecs_entity_t EcsOnTableFill =                 FLECS_HI_COMPONENT_ID + 48;
 
 /* Timers */
 const ecs_entity_t ecs_id(EcsTickSource) =          FLECS_HI_COMPONENT_ID + 49;
@@ -655,7 +653,7 @@ void flecs_fini_root_tables(
 
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-        ecs_table_t *table = tr->hdr.table;
+            ecs_table_t *table = tr->hdr.table;
             if (table->flags & EcsTableHasBuiltins) {
                 continue; /* Query out modules */
             }
@@ -667,7 +665,7 @@ void flecs_fini_root_tables(
                 /* Only delete entities that are used as pair target. Iterate
                 * backwards to minimize moving entities around in table. */
                 for (i = count - 1; i >= 0; i --) {
-                ecs_record_t *r = flecs_entities_get(world, entities[i]);
+                    ecs_record_t *r = flecs_entities_get(world, entities[i]);
                     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                     ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
                     if (ECS_RECORD_TO_ROW_FLAGS(r->row) & EcsEntityIsTarget) {
@@ -685,7 +683,7 @@ void flecs_fini_root_tables(
                 * entity). This limits table moves during cleanup and delays
                 * cleanup of tags. */
                 for (i = count - 1; i >= 0; i --) {
-                ecs_record_t *r = flecs_entities_get(world, entities[i]);
+                    ecs_record_t *r = flecs_entities_get(world, entities[i]);
                     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                     ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
                     if (!ECS_RECORD_TO_ROW_FLAGS(r->row)) {
@@ -714,8 +712,6 @@ void flecs_fini_roots(
     ecs_world_t *world)
 {
     ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
-
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
     /* Delete root entities that are not modules. This prioritizes deleting
      * regular entities first, which reduces the chance of components getting
@@ -973,13 +969,6 @@ ecs_world_t *ecs_mini(void) {
     world->id_index_lo = ecs_os_calloc_n(
         ecs_id_record_t*, FLECS_HI_ID_RECORD_ID);
     flecs_observable_init(&world->observable);
-
-    world->pending_tables = ecs_os_calloc_t(ecs_sparse_t);
-    flecs_sparse_init_t(world->pending_tables, a,
-        &world->allocators.sparse_chunk, ecs_table_t*);
-    world->pending_buffer = ecs_os_calloc_t(ecs_sparse_t);
-    flecs_sparse_init_t(world->pending_buffer, a,
-        &world->allocators.sparse_chunk, ecs_table_t*);
 
     flecs_name_index_init(&world->aliases, a);
     flecs_name_index_init(&world->symbols, a);
@@ -1650,10 +1639,6 @@ int ecs_fini(
     ecs_dbg_1("#[bold]cleanup world data structures");
     ecs_log_push_1();
     flecs_entities_fini(world);
-    flecs_sparse_fini(world->pending_tables);
-    flecs_sparse_fini(world->pending_buffer);
-    ecs_os_free(world->pending_tables);
-    ecs_os_free(world->pending_buffer);
     flecs_fini_id_records(world);
     flecs_fini_type_info(world);
     flecs_observable_fini(&world->observable);
@@ -1695,7 +1680,6 @@ void flecs_eval_component_monitors(
     ecs_world_t *world)
 {
     flecs_poly_assert(world, ecs_world_t); 
-    flecs_process_pending_tables(world);  
     flecs_eval_component_monitor(world);
 }
 
@@ -1742,7 +1726,6 @@ void ecs_set_default_query_flags(
     ecs_flags32_t flags)
 {
     flecs_poly_assert(world, ecs_world_t);
-    flecs_process_pending_tables(world);
     world->default_query_flags = flags;
 }
 
@@ -2170,8 +2153,6 @@ void flecs_process_empty_queries(
         return;
     }
 
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
-
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
     flecs_defer_begin(world, world->stages[0]);
@@ -2197,126 +2178,16 @@ void flecs_process_empty_queries(
     flecs_defer_end(world, world->stages[0]);
 }
 
-/** Walk over tables that had a state change which requires bookkeeping */
-void flecs_process_pending_tables(
-    const ecs_world_t *world_r)
-{
-    flecs_poly_assert(world_r, ecs_world_t);
-
-    /* We can't update the administration while in readonly mode, but we can
-     * ensure that when this function is called there are no pending events. */
-    if (world_r->flags & EcsWorldReadonly) {
-        ecs_assert(flecs_sparse_count(world_r->pending_tables) == 0,
-            ECS_INTERNAL_ERROR, NULL);
-        return;
-    }
-
-    /* Safe to cast, world is not readonly */
-    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, world_r);
-
-    /* If pending buffer is NULL there already is a stackframe that's iterating
-     * the table list. This can happen when an observer for a table event results
-     * in a mutation that causes another table to change state. A typical
-     * example of this is a system that becomes active/inactive as the result of
-     * a query (and as a result, its matched tables) becoming empty/non empty */
-    if (!world->pending_buffer) {
-        return;
-    }
-
-    /* Swap buffer. The logic could in theory have been implemented with a
-     * single sparse set, but that would've complicated (and slowed down) the
-     * iteration. Additionally, by using a double buffer approach we can still
-     * keep most of the original ordering of events intact, which is desirable
-     * as it means that the ordering of tables in the internal data structures is
-     * more predictable. */
-    int32_t i, count = flecs_sparse_count(world->pending_tables);
-    if (!count) {
-        return;
-    }
-
-    ecs_os_perf_trace_push("flecs.process_pending_tables");
-
-    flecs_journal_begin(world, EcsJournalTableEvents, 0, 0, 0);
-
-    do {
-        ecs_sparse_t *pending_tables = world->pending_tables;
-        world->pending_tables = world->pending_buffer;
-        world->pending_buffer = NULL;
-
-        /* Make sure that any ECS operations that occur while delivering the
-         * events does not cause inconsistencies, like sending an Empty
-         * notification for a table that just became non-empty. */
-        flecs_defer_begin(world, world->stages[0]);
-
-        for (i = 0; i < count; i ++) {
-            ecs_table_t *table = flecs_sparse_get_dense_t(
-                pending_tables, ecs_table_t*, i)[0];
-            if (!table->id) {
-                /* Table is being deleted, ignore empty events */
-                continue;
-            }
-
-            /* For each id in the table, add it to the empty/non empty list
-             * based on its current state */
-            if (flecs_table_records_update_empty(table)) {
-                int32_t table_count = ecs_table_count(table);
-                if (table->flags & (EcsTableHasOnTableFill|EcsTableHasOnTableEmpty)) {
-                    /* Only emit an event when there was a change in the
-                    * administration. It is possible that a table ended up in the
-                    * pending_tables list by going from empty->non-empty, but then
-                    * became empty again. By the time we run this code, no changes
-                    * in the administration would actually be made. */
-                    ecs_entity_t evt = table_count ? EcsOnTableFill : EcsOnTableEmpty;
-                    if (ecs_should_log_3()) {
-                        ecs_dbg_3("table %u state change (%s)",
-                            (uint32_t)table->id,
-                            table_count ? "non-empty" : "empty");
-                    }
-
-                    ecs_log_push_3();
-
-                    flecs_table_emit(world, table, evt);
-
-                    ecs_log_pop_3();
-                }
-                world->info.empty_table_count += (table_count == 0) * 2 - 1;
-            }
-        }
-
-        flecs_sparse_clear(pending_tables);
-        ecs_defer_end(world);
-
-        world->pending_buffer = pending_tables;
-    } while ((count = flecs_sparse_count(world->pending_tables)));
-
-    flecs_journal_end();
-
-    ecs_os_perf_trace_pop("flecs.process_pending_tables");
-}
-
-void flecs_table_set_empty(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (ecs_table_count(table)) {
-        table->_->generation = 0;
-    }
-
-    flecs_sparse_ensure_fast_t(world->pending_tables, ecs_table_t*,
-        (uint32_t)table->id)[0] = table;
-}
-
 bool ecs_id_in_use(
     const ecs_world_t *world,
     ecs_id_t id)
 {
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    return !idr ? false : flecs_table_cache_count(&idr->cache) != 0 ||
-               flecs_table_cache_empty_count(&idr->cache) != 0;
+    if (!idr) {
+        return false;
+    }
+
+    return (flecs_table_cache_count(&idr->cache) != 0);
 }
 
 void ecs_run_aperiodic(
@@ -2324,10 +2195,6 @@ void ecs_run_aperiodic(
     ecs_flags32_t flags)
 {
     flecs_poly_assert(world, ecs_world_t);
-    
-    if (!flags || (flags & EcsAperiodicEmptyTables)) {
-        flecs_process_pending_tables(world);
-    }
 
     if ((flags & EcsAperiodicEmptyQueries)) {
         flecs_process_empty_queries(world);
@@ -2340,22 +2207,21 @@ void ecs_run_aperiodic(
 
 int32_t ecs_delete_empty_tables(
     ecs_world_t *world,
-    ecs_id_t id,
-    uint16_t clear_generation,
-    uint16_t delete_generation,
-    int32_t min_id_count,
-    double time_budget_seconds)
+    const ecs_delete_empty_tables_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
 
     ecs_os_perf_trace_push("flecs.delete_empty_tables");
 
-    /* Make sure empty tables are in the empty table lists */
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
-
     ecs_time_t start = {0}, cur = {0};
     int32_t delete_count = 0;
     bool time_budget = false;
+
+    ecs_id_t id = desc->id;
+    uint16_t clear_generation = desc->clear_generation;
+    uint16_t delete_generation = desc->delete_generation;
+    int32_t min_id_count = desc->min_id_count;
+    double time_budget_seconds = desc->time_budget_seconds;
 
     if (ECS_NEQZERO(time_budget_seconds) || (ecs_should_log_1() && ecs_os_has_time())) {
         ecs_time_measure(&start);

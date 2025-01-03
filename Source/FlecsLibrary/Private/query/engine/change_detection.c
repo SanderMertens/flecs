@@ -235,7 +235,7 @@ bool flecs_query_check_cache_monitor(
     }
 
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_iter(&cache->cache, &it)) {
+    if (flecs_table_cache_all_iter(&cache->cache, &it)) {
         ecs_query_cache_table_t *qt;
         while ((qt = flecs_table_cache_next(&it, ecs_query_cache_table_t))) {
             if (flecs_query_check_table_monitor(impl, qt, -1)) {
@@ -534,10 +534,6 @@ bool ecs_query_changed(
      * cached/cacheable and don't have a fixed source, since that requires 
      * storing state per result, which doesn't happen for uncached queries. */
     if (impl->cache) {
-        /* If we're checking the cache, make sure that tables are in the correct
-         * empty/non-empty lists. */
-        flecs_process_pending_tables(q->world);
-
         if (!(impl->pub.flags & EcsQueryHasMonitor)) {
             flecs_query_init_query_monitors(impl);
         }

@@ -179,8 +179,6 @@ ecs_flags32_t flecs_id_record_event_flags(
     result |= flecs_observers_exist(o, id, EcsOnAdd) * EcsIdHasOnAdd;
     result |= flecs_observers_exist(o, id, EcsOnRemove) * EcsIdHasOnRemove;
     result |= flecs_observers_exist(o, id, EcsOnSet) * EcsIdHasOnSet;
-    result |= flecs_observers_exist(o, id, EcsOnTableFill) * EcsIdHasOnTableFill;
-    result |= flecs_observers_exist(o, id, EcsOnTableEmpty) * EcsIdHasOnTableEmpty;
     result |= flecs_observers_exist(o, id, EcsOnTableCreate) * EcsIdHasOnTableCreate;
     result |= flecs_observers_exist(o, id, EcsOnTableDelete) * EcsIdHasOnTableDelete;
     return result;
@@ -399,8 +397,6 @@ void flecs_id_record_assert_empty(
 {
     (void)idr;
     ecs_assert(flecs_table_cache_count(&idr->cache) == 0, 
-        ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(flecs_table_cache_empty_count(&idr->cache) == 0, 
         ECS_INTERNAL_ERROR, NULL);
 }
 

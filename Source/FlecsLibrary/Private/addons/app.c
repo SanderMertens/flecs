@@ -57,12 +57,16 @@ static ecs_app_desc_t ecs_app_desc;
 #ifdef ECS_TARGET_EM
 #include <emscripten.h>
 
-ecs_http_server_t *flecs_wasm_rest_server;
+ecs_http_server_t *flecs_wasm_rest_server = NULL;
 
 EMSCRIPTEN_KEEPALIVE
-char* flecs_explorer_request(const char *method, char *request) {
+char* flecs_explorer_request(const char *method, char *request, char *body) {
+    ecs_assert(flecs_wasm_rest_server != NULL, ECS_INVALID_OPERATION,
+        "wasm REST server is not initialized yet");
+
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
-    ecs_http_server_request(flecs_wasm_rest_server, method, request, &reply);
+    ecs_http_server_request(
+        flecs_wasm_rest_server, method, request, body, &reply);
     if (reply.code == 200) {
         return ecs_strbuf_get(&reply.body);
     } else {
@@ -83,7 +87,6 @@ int ecs_app_run(
 {
     ecs_app_desc = *desc;
 
-    /* Don't set FPS & threads if using emscripten */
 #ifndef ECS_TARGET_EM
     if (ECS_NEQZERO(ecs_app_desc.target_fps)) {
         ecs_set_target_fps(world, ecs_app_desc.target_fps);
@@ -98,6 +101,8 @@ int ecs_app_run(
 #ifdef FLECS_REST
 #ifdef ECS_TARGET_EM
         flecs_wasm_rest_server = ecs_rest_server_init(world, NULL);
+        ecs_assert(flecs_wasm_rest_server != NULL, ECS_INTERNAL_ERROR, 
+            "failed to create wasm REST server (unexpected error)");
 #else
         ECS_IMPORT(world, FlecsRest);
         ecs_set(world, EcsWorld, EcsRest, {.port = desc->port });

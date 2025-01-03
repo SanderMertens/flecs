@@ -8,22 +8,12 @@
 int32_t flecs_query_cache_table_count(
     ecs_query_cache_t *cache)
 {
-    ecs_run_aperiodic(cache->query->world, EcsAperiodicEmptyTables);
     return cache->cache.tables.count;
-}
-
-int32_t flecs_query_cache_empty_table_count(
-    ecs_query_cache_t *cache)
-{
-    ecs_run_aperiodic(cache->query->world, EcsAperiodicEmptyTables);
-    return cache->cache.empty_tables.count;
 }
 
 int32_t flecs_query_cache_entity_count(
     const ecs_query_cache_t *cache)
-{
-    ecs_run_aperiodic(cache->query->world, EcsAperiodicEmptyTables);
-    
+{    
     int32_t result = 0;
     ecs_table_cache_hdr_t *cur, *last = cache->cache.tables.last;
     if (!last) {
@@ -231,7 +221,9 @@ void flecs_query_cache_create_group(
 
         /* This group should appear after another group */
         ecs_query_cache_table_match_t *insert_before = insert_after->next;
-        match->prev = insert_after;
+        if (match != insert_after) {
+            match->prev = insert_after;
+        }
         insert_after->next = match;
         match->next = insert_before;
         if (insert_before) {
@@ -382,6 +374,7 @@ void flecs_query_cache_insert_table_node(
 
     ecs_query_cache_table_list_t *list = 
         flecs_query_cache_ensure_node_list(cache, match);
+
     if (list->last) {
         ecs_assert(cache->list.first != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(cache->list.last != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -490,11 +483,7 @@ ecs_query_cache_table_match_t* flecs_query_cache_add_table_match(
     qm->trs = flecs_balloc(&cache->allocators.trs);
 
     /* Insert match to iteration list if table is not empty */
-    if (!table || ecs_table_count(table) != 0 || 
-        (cache->query->flags & EcsQueryCacheYieldEmptyTables))
-    {
-        flecs_query_cache_insert_table_node(cache, qm);
-    }
+    flecs_query_cache_insert_table_node(cache, qm);
 
     return qm;
 }
@@ -570,11 +559,7 @@ ecs_query_cache_table_t* flecs_query_cache_table_insert(
         qt->table_id = 0;
     }
 
-    if (cache->query->flags & EcsQueryCacheYieldEmptyTables) {
-        ecs_table_cache_insert_w_empty(&cache->cache, table, &qt->hdr, false);
-    } else {
-        ecs_table_cache_insert(&cache->cache, table, &qt->hdr);
-    }
+    ecs_table_cache_insert(&cache->cache, table, &qt->hdr);
 
     return qt;
 }
@@ -597,6 +582,7 @@ void flecs_query_cache_match_tables(
             /* New table matched, add record to cache */
             table = it.table;
             qt = flecs_query_cache_table_insert(world, cache, table);
+            ecs_dbg_3("query cache matched existing table [%s]", NULL);
         }
 
         ecs_query_cache_table_match_t *qm = 
@@ -750,48 +736,10 @@ error:
     return -1;
 }
 
-/** When a table becomes empty remove it from the query list, or vice versa. */
-static
-void flecs_query_cache_update_table(
-    ecs_query_cache_t *cache,
-    ecs_table_t *table,
-    bool empty)
-{
-    int32_t prev_count = flecs_query_cache_table_count(cache);
-    ecs_table_cache_set_empty(&cache->cache, table, empty);
-    int32_t cur_count = flecs_query_cache_table_count(cache);
-
-    if (prev_count != cur_count) {
-        ecs_query_cache_table_t *qt = ecs_table_cache_get(&cache->cache, table);
-        ecs_assert(qt != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_query_cache_table_match_t *cur, *next;
-
-        for (cur = qt->first; cur != NULL; cur = next) {
-            next = cur->next_match;
-
-            if (empty) {
-                ecs_assert(ecs_table_count(table) == 0, 
-                    ECS_INTERNAL_ERROR, NULL);
-
-                flecs_query_cache_remove_table_node(cache, cur);
-            } else {
-                ecs_assert(ecs_table_count(table) != 0, 
-                    ECS_INTERNAL_ERROR, NULL);
-
-                flecs_query_cache_insert_table_node(cache, cur);
-            }
-        }
-    }
-
-    ecs_assert(cur_count || cache->list.first == NULL, 
-        ECS_INTERNAL_ERROR, NULL);
-}
-
 /* Remove table */
 static
 void flecs_query_cache_table_match_free(
     ecs_query_cache_t *cache,
-    ecs_query_cache_table_t *elem,
     ecs_query_cache_table_match_t *first)
 {
     ecs_query_cache_table_match_t *cur, *next;
@@ -812,9 +760,7 @@ void flecs_query_cache_table_match_free(
             flecs_bfree(&cache->allocators.monitors, cur->monitor);
         }
 
-        if (!elem->hdr.empty) {
-            flecs_query_cache_remove_table_node(cache, cur);
-        }
+        flecs_query_cache_remove_table_node(cache, cur);
 
         next = cur->next_match;
 
@@ -827,7 +773,7 @@ void flecs_query_cache_table_free(
     ecs_query_cache_t *cache,
     ecs_query_cache_table_t *elem)
 {
-    flecs_query_cache_table_match_free(cache, elem, elem->first);
+    flecs_query_cache_table_match_free(cache, elem->first);
     flecs_bfree(&cache->query->world->allocators.query_table, elem);
 }
 
@@ -886,7 +832,7 @@ void flecs_query_cache_rematch_tables(
     while (ecs_query_next(&it)) {
         if ((table != it.table) || (!it.table && !qt)) {
             if (qm && qm->next_match) {
-                flecs_query_cache_table_match_free(cache, qt, qm->next_match);
+                flecs_query_cache_table_match_free(cache, qm->next_match);
                 qm->next_match = NULL;
             }
 
@@ -912,7 +858,7 @@ void flecs_query_cache_rematch_tables(
 
         flecs_query_cache_set_table_match(cache, qm, &it);
 
-        if (table && ecs_table_count(table) && cache->group_by_callback) {
+        if (table && cache->group_by_callback) {
             if (flecs_query_cache_get_group_id(cache, table) != qm->group_id) {
                 /* Update table group */
                 flecs_query_cache_remove_table_node(cache, qm);
@@ -922,7 +868,7 @@ void flecs_query_cache_rematch_tables(
     }
 
     if (qm && qm->next_match) {
-        flecs_query_cache_table_match_free(cache, qt, qm->next_match);
+        flecs_query_cache_table_match_free(cache, qm->next_match);
         qm->next_match = NULL;
     }
 
@@ -1112,12 +1058,7 @@ void flecs_query_cache_on_event(
         ecs_os_free(table_str);
     }
 
-    if (event == EcsOnTableEmpty) {
-        flecs_query_cache_update_table(cache, table, true);
-    } else
-    if (event == EcsOnTableFill) {
-        flecs_query_cache_update_table(cache, table, false);
-    } else if (event == EcsOnTableDelete) {
+    if (event == EcsOnTableDelete) {
         /* Deletion of table */
         flecs_query_cache_unmatch_table(cache, table, NULL);
         return;
@@ -1297,11 +1238,6 @@ ecs_query_cache_t* flecs_query_cache_init(
         observer_desc.ctx = impl;
 
         int32_t event_index = 0;
-        if (!(q->flags & EcsQueryCacheYieldEmptyTables)) {
-            observer_desc.events[event_index ++] = EcsOnTableEmpty;
-            observer_desc.events[event_index ++] = EcsOnTableFill;
-        }
-
         observer_desc.events[event_index ++] = EcsOnTableCreate;
         observer_desc.events[event_index ++] = EcsOnTableDelete;
         observer_desc.flags_ = EcsObserverBypassQuery;
@@ -1352,11 +1288,6 @@ ecs_query_cache_t* flecs_query_cache_init(
         result->group_by_ctx_free = const_desc->group_by_ctx_free;
     }
 
-    /* Ensure that while initially populating the query with tables, they are
-     * in the right empty/non-empty list. This ensures the query won't miss
-     * empty/non-empty events for tables that are currently out of sync, but
-     * change back to being in sync before processing pending events. */
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
     ecs_table_cache_init(world, &result->cache);
     flecs_query_cache_match_tables(world, result);
 

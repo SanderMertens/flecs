@@ -118,15 +118,28 @@ int flecs_expr_initializer_eval_static(
          * a cast to the type of the initializer element. */
         ecs_entity_t type = elem->value->type;
 
-        if (expr->owned) {
-            if (ecs_value_move(ctx->world, type, 
-                ECS_OFFSET(value, elem->offset), expr->value.ptr))
-            {
-                goto error;
+        if (!elem->operator) {
+            if (expr->owned) {
+                if (ecs_value_move(ctx->world, type, 
+                    ECS_OFFSET(value, elem->offset), expr->value.ptr))
+                {
+                    goto error;
+                }
+            } else {
+                if (ecs_value_copy(ctx->world, type, 
+                    ECS_OFFSET(value, elem->offset), expr->value.ptr))
+                {
+                    goto error;
+                }
             }
         } else {
-            if (ecs_value_copy(ctx->world, type, 
-                ECS_OFFSET(value, elem->offset), expr->value.ptr))
+            ecs_value_t dst = { 
+                .type = type, 
+                .ptr = ECS_OFFSET(value, elem->offset) 
+            };
+
+            if (flecs_value_binary(
+                ctx->script, NULL, &expr->value, &dst, elem->operator))
             {
                 goto error;
             }
@@ -324,8 +337,9 @@ int flecs_expr_variable_visit_eval(
     ecs_assert(ctx->desc->vars != NULL, ECS_INVALID_OPERATION,
         "variables available at parse time are not provided");
 
-    const ecs_script_var_t *var = ecs_script_vars_lookup(
-        ctx->desc->vars, node->name);
+    const ecs_script_var_t *var = flecs_script_find_var(
+        ctx->desc->vars, node->name, 
+            ctx->desc->disable_dynamic_variable_binding ? &node->sp : NULL);
     if (!var) {
         flecs_expr_visit_error(ctx->script, node, "unresolved variable '%s'",
             node->name);
@@ -376,9 +390,154 @@ int flecs_expr_cast_visit_eval(
     }
 
     /* Copy expression result to storage of casted-to type */
-    if (flecs_value_copy_to(ctx->world, &out->value, &expr->value)) {
+    if (flecs_value_copy_to(ctx->world, &out->value, expr)) {
         flecs_expr_visit_error(ctx->script, node, "failed to cast value");
         goto error;
+    }
+
+    flecs_expr_stack_pop(ctx->stack);
+    return 0;
+error:
+    flecs_expr_stack_pop(ctx->stack);
+    return -1;
+}
+
+static
+bool flecs_expr_get_signed(
+    const ecs_value_t *value,
+    int64_t *out)
+{
+    ecs_entity_t type = value->type;
+    void *ptr = value->ptr;
+
+    if (type == ecs_id(ecs_i8_t)) {
+        *out = *(int8_t*)ptr;
+        return true;
+    } else if (type == ecs_id(ecs_i16_t)) {
+        *out = *(int16_t*)ptr;
+        return true;
+    } else if (type == ecs_id(ecs_i32_t)) {
+        *out = *(int32_t*)ptr;
+        return true;
+    } else if (type == ecs_id(ecs_i64_t)) {
+        *out = *(int64_t*)ptr;
+        return true;
+    }
+
+    return false;
+}
+
+static
+bool flecs_expr_get_unsigned(
+    const ecs_value_t *value,
+    uint64_t *out)
+{
+    ecs_entity_t type = value->type;
+    void *ptr = value->ptr;
+
+    if (type == ecs_id(ecs_u8_t)) {
+        *out = *(uint8_t*)ptr;
+        return true;
+    } else if (type == ecs_id(ecs_u16_t)) {
+        *out = *(uint16_t*)ptr;
+        return true;
+    } else if (type == ecs_id(ecs_u32_t)) {
+        *out = *(uint32_t*)ptr;
+        return true;
+    } else if (type == ecs_id(ecs_u64_t)) {
+        *out = *(uint64_t*)ptr;
+        return true;
+    }
+
+    return false;
+}
+
+static
+bool flecs_expr_get_float(
+    const ecs_value_t *value,
+    double *out)
+{
+    ecs_entity_t type = value->type;
+    void *ptr = value->ptr;
+
+    if (type == ecs_id(ecs_f32_t)) {
+        *out = (double)*(float*)ptr;
+        return true;
+    } else if (type == ecs_id(ecs_f64_t)) {
+        *out = *(double*)ptr;
+        return true;
+    }
+
+    return false;
+}
+
+#define FLECS_EXPR_NUMBER_CAST\
+         if (type == ecs_id(ecs_i8_t))   *(ecs_i8_t*)ptr =   (ecs_i8_t)value;\
+    else if (type == ecs_id(ecs_i16_t))  *(ecs_i16_t*)ptr =  (ecs_i16_t)value;\
+    else if (type == ecs_id(ecs_i32_t))  *(ecs_i32_t*)ptr =  (ecs_i32_t)value;\
+    else if (type == ecs_id(ecs_i64_t))  *(ecs_i64_t*)ptr =  (ecs_i64_t)value;\
+    else if (type == ecs_id(ecs_iptr_t)) *(ecs_iptr_t*)ptr = (ecs_iptr_t)value;\
+    else if (type == ecs_id(ecs_u8_t))   *(ecs_u8_t*)ptr =   (ecs_u8_t)value;\
+    else if (type == ecs_id(ecs_u16_t))  *(ecs_u16_t*)ptr =  (ecs_u16_t)value;\
+    else if (type == ecs_id(ecs_u32_t))  *(ecs_u32_t*)ptr =  (ecs_u32_t)value;\
+    else if (type == ecs_id(ecs_u64_t))  *(ecs_u64_t*)ptr =  (ecs_u64_t)value;\
+    else if (type == ecs_id(ecs_uptr_t)) *(ecs_uptr_t*)ptr = (ecs_uptr_t)value;\
+    else if (type == ecs_id(ecs_f32_t))  *(ecs_f32_t*)ptr =  (ecs_f32_t)value;\
+    else if (type == ecs_id(ecs_f64_t))  *(ecs_f64_t*)ptr =  (ecs_f64_t)value;\
+
+static
+void flecs_expr_set_signed(
+    const ecs_value_t *out,
+    int64_t value)
+{
+    ecs_entity_t type = out->type;
+    void *ptr = out->ptr;
+    FLECS_EXPR_NUMBER_CAST
+}
+
+static
+void flecs_expr_set_unsigned(
+    const ecs_value_t *out,
+    uint64_t value)
+{
+    ecs_entity_t type = out->type;
+    void *ptr = out->ptr;
+    FLECS_EXPR_NUMBER_CAST
+}
+
+static
+void flecs_expr_set_float(
+    const ecs_value_t *out,
+    double value)
+{
+    ecs_entity_t type = out->type;
+    void *ptr = out->ptr;
+    FLECS_EXPR_NUMBER_CAST
+}
+
+static
+int flecs_expr_cast_number_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_cast_t *node,
+    ecs_expr_value_t *out)
+{
+    flecs_expr_stack_push(ctx->stack);
+
+    /* Evaluate expression to cast */
+    ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, node->expr);
+    if (flecs_expr_visit_eval_priv(ctx, node->expr, expr)) {
+        goto error;
+    }
+
+    int64_t signed_;
+    uint64_t unsigned_;
+    double float_;
+    if (flecs_expr_get_signed(&expr->value, &signed_)) {
+        flecs_expr_set_signed(&out->value, signed_);
+    } else if (flecs_expr_get_unsigned(&expr->value, &unsigned_)) {
+        flecs_expr_set_unsigned(&out->value, unsigned_);
+    } else if (flecs_expr_get_float(&expr->value, &float_)) {
+        flecs_expr_set_float(&out->value, float_);
     }
 
     flecs_expr_stack_pop(ctx->stack);
@@ -546,6 +705,73 @@ error:
 }
 
 static
+int flecs_expr_match_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_match_t *node,
+    ecs_expr_value_t *out)
+{
+    flecs_expr_stack_push(ctx->stack);
+
+    ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, node->expr);
+    if (flecs_expr_visit_eval_priv(ctx, node->expr, expr)) {
+        goto error;
+    }
+
+    int32_t i, count = ecs_vec_count(&node->elements);
+    ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_match_element_t *elem = &elems[i];
+
+        flecs_expr_stack_push(ctx->stack);
+        ecs_expr_value_t *compare = flecs_expr_stack_result(
+            ctx->stack, node->expr);
+        if (flecs_expr_visit_eval_priv(ctx, elem->compare, compare)) {
+            goto error;
+        }
+
+        bool value = false;
+        ecs_value_t result = { .type = ecs_id(ecs_bool_t), .ptr = &value };
+
+        if (flecs_value_binary(
+            ctx->script, &expr->value, &compare->value, &result, EcsTokEq))
+        {
+            goto error;
+        }
+
+        flecs_expr_stack_pop(ctx->stack);
+
+        if (value) {
+            if (flecs_expr_visit_eval_priv(ctx, elem->expr, out)) {
+                goto error;
+            }
+            break;
+        }
+    }
+
+    if (i == count) {
+        if (node->any.expr) {
+            if (flecs_expr_visit_eval_priv(ctx, node->any.expr, out)) {
+                goto error;
+            }
+        } else {
+            char *str = ecs_ptr_to_str(
+                ctx->world, expr->value.type, expr->value.ptr);
+            flecs_expr_visit_error(ctx->script, node, 
+                "match value '%s' not handled by case", str);
+            ecs_os_free(str);
+            goto error;
+        }
+    }
+
+    flecs_expr_stack_pop(ctx->stack);
+    return 0;
+error:
+    flecs_expr_stack_pop(ctx->stack);
+    return -1;
+}
+
+static
 int flecs_expr_component_visit_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_element_t *node,
@@ -686,6 +912,13 @@ int flecs_expr_visit_eval_priv(
             goto error;
         }
         break;
+    case EcsExprMatch:
+        if (flecs_expr_match_visit_eval(
+            ctx, (ecs_expr_match_t*)node, out)) 
+        {
+            goto error;
+        }
+        break;
     case EcsExprComponent:
         if (flecs_expr_component_visit_eval(
             ctx, (ecs_expr_element_t*)node, out)) 
@@ -695,6 +928,13 @@ int flecs_expr_visit_eval_priv(
         break;
     case EcsExprCast:
         if (flecs_expr_cast_visit_eval(
+            ctx, (ecs_expr_cast_t*)node, out)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprCastNumber:
+        if (flecs_expr_cast_number_visit_eval(
             ctx, (ecs_expr_cast_t*)node, out)) 
         {
             goto error;
@@ -725,7 +965,18 @@ int flecs_expr_visit_eval(
 
     flecs_expr_stack_push(stack);
 
-    ecs_expr_value_t *val = flecs_expr_stack_result(stack, node);
+    ecs_expr_value_t val_tmp;
+    ecs_expr_value_t *val;
+    if (out->type && (out->type == node->type) && out->ptr) {
+        val_tmp = (ecs_expr_value_t){
+            .value = *out,
+            .owned = false,
+            .type_info = ecs_get_type_info(script->world, out->type)
+        };
+        val = &val_tmp;
+    } else {
+        val = flecs_expr_stack_result(stack, node);
+    }
 
     ecs_script_eval_ctx_t ctx = {
         .script = script,
@@ -750,17 +1001,19 @@ int flecs_expr_visit_eval(
         out->ptr = ecs_value_new(ctx.world, out->type);
     }
 
-    if (val->owned) {
-        /* Values owned by the runtime can be moved to output */
-        if (flecs_value_move_to(ctx.world, out, &val->value)) {
-            flecs_expr_visit_error(script, node, "failed to write to output");
-            goto error;
-        }
-    } else {
-        /* Values not owned by runtime should be copied */
-        if (flecs_value_copy_to(ctx.world, out, &val->value)) {
-            flecs_expr_visit_error(script, node, "failed to write to output");
-            goto error;
+    if (val != &val_tmp || out->ptr != val->value.ptr) {
+        if (val->owned) {
+            /* Values owned by the runtime can be moved to output */
+            if (flecs_value_move_to(ctx.world, out, &val->value)) {
+                flecs_expr_visit_error(script, node, "failed to write to output");
+                goto error;
+            }
+        } else {
+            /* Values not owned by runtime should be copied */
+            if (flecs_value_copy_to(ctx.world, out, val)) {
+                flecs_expr_visit_error(script, node, "failed to write to output");
+                goto error;
+            }
         }
     }
 

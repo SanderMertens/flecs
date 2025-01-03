@@ -1209,6 +1209,29 @@ void flecs_remove_id(
     flecs_defer_end(world, stage);
 }
 
+void flecs_add_ids(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t *ids,
+    int32_t count)
+{
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
+    flecs_table_diff_builder_init(world, &diff);
+
+    ecs_table_t *table = ecs_get_table(world, entity);
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = ids[i];
+        table = flecs_find_table_add(world, table, id, &diff);
+    }
+
+    ecs_table_diff_t table_diff;
+    flecs_table_diff_build_noalloc(&diff, &table_diff);
+    flecs_commit(world, entity, r, table, &table_diff, true, 0);
+    flecs_table_diff_builder_fini(world, &diff);
+}
+
 static inline
 flecs_component_ptr_t flecs_ensure(
     ecs_world_t *world,
@@ -2790,9 +2813,6 @@ void flecs_on_delete(
      * frame will handle the actual cleanup. */
     int32_t i, count = ecs_vec_count(&world->store.marked_ids);
 
-    /* Make sure we're evaluating a consistent list of non-empty tables */
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
-
     /* Collect all ids that need to be deleted */
     flecs_on_delete_mark(world, id, action, delete_id);
 
@@ -2803,9 +2823,6 @@ void flecs_on_delete(
 
         /* Empty tables with all the to be deleted ids */
         flecs_on_delete_clear_tables(world);
-
-        /* All marked tables are empty, ensure they're in the right list */
-        ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
         /* Release remaining references to the ids */
         flecs_on_delete_clear_ids(world);
@@ -3470,7 +3487,7 @@ void flecs_modified_id_if(
 
     const ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_table_t *table = r->table;
-    if (!flecs_table_record_get(world, table, id)) {
+    if (!table || !flecs_table_record_get(world, table, id)) {
         flecs_defer_end(world, stage);
         return;
     }

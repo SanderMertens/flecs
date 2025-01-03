@@ -182,10 +182,6 @@ void flecs_table_delete(
     int32_t index,
     bool destruct);
 
-/* Make sure table records are in correct table cache list */
-bool flecs_table_records_update_empty(
-    ecs_table_t *table);
-
 /* Move a row from one table to another */
 void flecs_table_move(
     ecs_world_t *world,

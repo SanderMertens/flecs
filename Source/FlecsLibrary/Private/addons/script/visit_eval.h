@@ -18,6 +18,7 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_entity_t with_relationship;
     int32_t with_relationship_sp;
     bool is_with_scope;
+    bool dynamic_variable_binding;
     ecs_script_vars_t *vars;
 } ecs_script_eval_visitor_t;
 
@@ -30,10 +31,17 @@ void flecs_script_eval_error_(
 #define flecs_script_eval_error(v, node, ...)\
     flecs_script_eval_error_(v, (ecs_script_node_t*)node, __VA_ARGS__)
 
-ecs_entity_t flecs_script_find_entity(
+int flecs_script_find_entity(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t from,
-    const char *path);
+    const char *path,
+    int32_t *frame_offset,
+    ecs_entity_t *out);
+
+ecs_script_var_t* flecs_script_find_var(
+    const ecs_script_vars_t *vars,
+    const char *name,
+    int32_t *frame_offset);
 
 ecs_entity_t flecs_script_create_entity(
     ecs_script_eval_visitor_t *v,
@@ -65,6 +73,10 @@ int flecs_script_eval_node(
 int flecs_script_check_node(
     ecs_script_eval_visitor_t *v,
     ecs_script_node_t *node);
+
+int flecs_script_check_scope(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_scope_t *node);
 
 /* Functions shared between check and eval visitor */
 

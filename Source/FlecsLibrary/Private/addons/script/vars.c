@@ -37,6 +37,10 @@ ecs_script_vars_t* flecs_script_vars_push(
     result->parent = parent;
     if (parent) {
         result->world = parent->world;
+        result->sp =
+            parent->sp + ecs_vec_count(&parent->vars);
+    } else {
+        result->sp = 0;
     }
     result->stack = stack;
     result->allocator = allocator;
@@ -112,11 +116,13 @@ ecs_script_var_t* ecs_script_vars_declare(
     ecs_script_vars_t *vars,
     const char *name)
 {
-    if (!ecs_vec_count(&vars->vars)) {
-        flecs_name_index_init(&vars->var_index, vars->allocator);
-    } else {
-        if (flecs_name_index_find(&vars->var_index, name, 0, 0) != 0) {
-            goto error;
+    if (name) {
+        if (flecs_name_index_is_init(&vars->var_index)) {
+            if (flecs_name_index_find(&vars->var_index, name, 0, 0) != 0) {
+                goto error;
+            }
+        } else {
+            flecs_name_index_init(&vars->var_index, vars->allocator);
         }
     }
 
@@ -126,14 +132,26 @@ ecs_script_var_t* ecs_script_vars_declare(
     var->value.ptr = NULL;
     var->value.type = 0;
     var->type_info = NULL;
+    var->sp = ecs_vec_count(&vars->vars) + vars->sp - 1;
     var->is_const = false;
 
-    flecs_name_index_ensure(&vars->var_index,
-        flecs_ito(uint64_t, ecs_vec_count(&vars->vars)), name, 0, 0);
+    if (name) {
+        flecs_name_index_ensure(&vars->var_index,
+            flecs_ito(uint64_t, ecs_vec_count(&vars->vars)), name, 0, 0);
+    }
 
     return var;
 error:
     return NULL;
+}
+
+void ecs_script_vars_set_size(
+    ecs_script_vars_t *vars,
+    int32_t count)
+{
+    ecs_assert(!ecs_vec_count(&vars->vars), ECS_INVALID_OPERATION, 
+        "variable scope must be empty for resize operation");
+    ecs_vec_set_size_t(vars->allocator, &vars->vars, ecs_script_var_t, count);
 }
 
 ecs_script_var_t* ecs_script_vars_define_id(
@@ -176,7 +194,9 @@ ecs_script_var_t* ecs_script_vars_lookup(
 
     uint64_t var_id = 0;
     if (ecs_vec_count(&vars->vars)) {
-        var_id = flecs_name_index_find(&vars->var_index, name, 0, 0);
+        if (flecs_name_index_is_init(&vars->var_index)) {
+            var_id = flecs_name_index_find(&vars->var_index, name, 0, 0);
+        }
     }
 
     if (!var_id) {
@@ -188,6 +208,47 @@ ecs_script_var_t* ecs_script_vars_lookup(
 
     return ecs_vec_get_t(&vars->vars, ecs_script_var_t, 
         flecs_uto(int32_t, var_id - 1));
+}
+
+ecs_script_var_t* ecs_script_vars_from_sp(
+    const ecs_script_vars_t *vars,
+    int32_t sp)
+{
+    ecs_check(sp >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (sp < vars->sp) {
+        ecs_assert(vars->parent != NULL, ECS_INTERNAL_ERROR, NULL);
+        return ecs_script_vars_from_sp(vars->parent, sp);
+    }
+
+    sp -= vars->sp;
+    ecs_check(sp < ecs_vec_count(&vars->vars), 
+        ECS_INVALID_PARAMETER, NULL);
+
+    return ecs_vec_get_t(&vars->vars, ecs_script_var_t, sp);
+error:
+    return NULL;
+}
+
+void ecs_script_vars_print(
+    const ecs_script_vars_t *vars)
+{
+    if (vars->parent) {
+        ecs_script_vars_print(vars->parent);
+    }
+
+    int32_t i, count = ecs_vec_count(&vars->vars);
+    ecs_script_var_t *array = ecs_vec_first(&vars->vars);
+    for (i = 0; i < count; i ++) {
+        ecs_script_var_t *var = &array[i];
+        if (!i) {
+            printf("FRAME ");
+        } else {
+            printf("      ");
+        }
+
+        printf("%2d: %s\n", var->sp, var->name);
+    }
 }
 
 /* Static names for iterator fields */

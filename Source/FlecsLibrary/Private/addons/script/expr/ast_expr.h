@@ -23,7 +23,9 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprMember,
     EcsExprElement,
     EcsExprComponent,
-    EcsExprCast
+    EcsExprCast,
+    EcsExprCastNumber,
+    EcsExprMatch
 } ecs_expr_node_kind_t;
 
 struct ecs_expr_node_t {
@@ -52,6 +54,7 @@ typedef struct ecs_expr_initializer_element_t {
     const char *member;
     ecs_expr_node_t *value;
     uintptr_t offset;
+    ecs_script_token_kind_t operator;
 } ecs_expr_initializer_element_t;
 
 typedef struct ecs_expr_initializer_t {
@@ -62,17 +65,18 @@ typedef struct ecs_expr_initializer_t {
     bool is_dynamic;
 } ecs_expr_initializer_t;
 
+typedef struct ecs_expr_variable_t {
+    ecs_expr_node_t node;
+    const char *name;
+    ecs_value_t global_value; /* Only set for global variables */
+    int32_t sp; /* For fast variable lookups */
+} ecs_expr_variable_t;
+
 typedef struct ecs_expr_identifier_t {
     ecs_expr_node_t node;
     const char *value;
     ecs_expr_node_t *expr;
 } ecs_expr_identifier_t;
-
-typedef struct ecs_expr_variable_t {
-    ecs_expr_node_t node;
-    const char *name;
-    ecs_value_t global_value; /* Only set for global variables */
-} ecs_expr_variable_t;
 
 typedef struct ecs_expr_unary_t {
     ecs_expr_node_t node;
@@ -119,6 +123,18 @@ typedef struct ecs_expr_cast_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *expr;
 } ecs_expr_cast_t;
+
+typedef struct ecs_expr_match_element_t {
+    ecs_expr_node_t *compare;
+    ecs_expr_node_t *expr;
+} ecs_expr_match_element_t;
+
+typedef struct ecs_expr_match_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *expr;
+    ecs_vec_t elements;
+    ecs_expr_match_element_t any;
+} ecs_expr_match_t;
 
 ecs_expr_value_node_t* flecs_expr_value_from(
     ecs_script_t *script,
@@ -182,6 +198,9 @@ ecs_expr_function_t* flecs_expr_function(
     ecs_script_parser_t *parser);
 
 ecs_expr_element_t* flecs_expr_element(
+    ecs_script_parser_t *parser);
+
+ecs_expr_match_t* flecs_expr_match(
     ecs_script_parser_t *parser);
 
 ecs_expr_cast_t* flecs_expr_cast(
