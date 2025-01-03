@@ -1478,9 +1478,6 @@ int ecs_script_eval(
     int result = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v, &priv_desc);
 
-    ecs_delete_empty_tables(script->world, 0, 0, 1, 0, 0);
-    ecs_delete_empty_tables(script->world, 0, 0, 1, 0, 0);
-
     return result;
 }
 

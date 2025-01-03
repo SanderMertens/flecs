@@ -20540,11 +20540,7 @@ void ecs_run_aperiodic(
 
 int32_t ecs_delete_empty_tables(
     ecs_world_t *world,
-    ecs_id_t id,
-    uint16_t clear_generation,
-    uint16_t delete_generation,
-    int32_t min_id_count,
-    double time_budget_seconds)
+    const ecs_delete_empty_tables_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
 
@@ -20553,6 +20549,12 @@ int32_t ecs_delete_empty_tables(
     ecs_time_t start = {0}, cur = {0};
     int32_t delete_count = 0;
     bool time_budget = false;
+
+    ecs_id_t id = desc->id;
+    uint16_t clear_generation = desc->clear_generation;
+    uint16_t delete_generation = desc->delete_generation;
+    int32_t min_id_count = desc->min_id_count;
+    double time_budget_seconds = desc->time_budget_seconds;
 
     if (ECS_NEQZERO(time_budget_seconds) || (ecs_should_log_1() && ecs_os_has_time())) {
         ecs_time_measure(&start);
@@ -62871,9 +62873,6 @@ int ecs_script_eval(
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
     int result = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v, &priv_desc);
-
-    ecs_delete_empty_tables(script->world, 0, 0, 1, 0, 0);
-    ecs_delete_empty_tables(script->world, 0, 0, 1, 0, 0);
 
     return result;
 }
