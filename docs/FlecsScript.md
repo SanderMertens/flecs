@@ -432,7 +432,7 @@ e {
 Match expressions can be used to conditionally assign a value. An example:
 
 ```cpp
-const: = 1
+const x: = 1
 
 // y will be assigned with value 10
 const y: match x {
