@@ -48,3 +48,6 @@ struct TStructOpsTypeTraits<FFlecsQueryExpression> : public TStructOpsTypeTraits
 		WithPureVirtual = true
 	};
 }; // struct TStructOpsTypeTraits<FFlecsQueryExpression>
+
+template <typename T>
+concept TQueryExpressionConcept = std::is_base_of_v<FFlecsQueryExpression, T>;

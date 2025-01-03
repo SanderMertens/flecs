@@ -15,9 +15,15 @@ struct UNREALFLECS_API FFlecsQueryDefinition
 public:
 	FORCEINLINE FFlecsQueryDefinition() = default;
 
+	template <TQueryExpressionConcept TExpression>
+	FORCEINLINE void AddExpression(const TExpression& InExpression)
+	{
+		OtherExpressions.Emplace(InExpression);
+	}
+
 	FORCEINLINE void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const
 	{
-		solid_check(InWorld);
+		solid_check(InWorld != nullptr);
 		
 		InQueryBuilder.flags(Flags);
 		
