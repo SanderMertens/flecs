@@ -1391,7 +1391,7 @@ int32_t flecs_table_grow_data(
     flecs_table_mark_table_dirty(world, table, 0);
 
     if (!(world->flags & EcsWorldReadonly) && !count) {
-        flecs_table_set_empty(world, table);
+       // flecs_table_set_empty(world, table);
     }
 
     ecs_os_perf_trace_pop("flecs.table.grow_data");
@@ -1458,7 +1458,7 @@ int32_t flecs_table_append(
         table->data.count = v_entities.count;
         table->data.size = v_entities.size;
         if (!count) {
-            flecs_table_set_empty(world, table); /* See below */
+           // flecs_table_set_empty(world, table); /* See below */
         }
         ecs_os_perf_trace_pop("flecs.table.append");
         return count;
@@ -1515,7 +1515,7 @@ int32_t flecs_table_append(
 }
 
 /* Delete operation for tables that don't have any complex logic */
-static
+static inline
 void flecs_table_fast_delete(
     ecs_table_t *table,
     int32_t row)
