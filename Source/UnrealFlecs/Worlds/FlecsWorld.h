@@ -358,7 +358,7 @@ public:
 			RegisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(Asset.GetAsset()));
 		}
 		
-		AssetRegistry.OnAssetRemoved().AddLambda([this](const FAssetData& InAssetData)
+		AssetRegistry.OnAssetRemoved().AddWeakLambda(this, [this](const FAssetData& InAssetData)
 		{
 			UnregisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(InAssetData.GetAsset()));
 		});
