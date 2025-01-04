@@ -405,6 +405,7 @@ void Enum_enum_class_mixed_auto_manual_constants(void);
 void Enum_enum_child_count(void);
 void Enum_multi_world_constant_ids(void);
 void Enum_empty_enum(void);
+void Enum_enum_w_one_constant_index_of(void);
 void Enum_enum_i8(void);
 void Enum_enum_i16(void);
 void Enum_enum_i32(void);
@@ -2994,6 +2995,10 @@ bake_test_case Enum_testcases[] = {
     {
         "empty_enum",
         Enum_empty_enum
+    },
+    {
+        "enum_w_one_constant_index_of",
+        Enum_enum_w_one_constant_index_of
     },
     {
         "enum_i8",
@@ -6996,7 +7001,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        48,
+        49,
         Enum_testcases
     },
     {

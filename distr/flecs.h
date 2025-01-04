@@ -18235,7 +18235,7 @@ struct enum_data {
      * @return int The index of the enum value.
      */
     int index_by_value(U value) const {
-        if (!impl_.max) {
+        if (impl_.max < 0) {
             return -1;
         }
         // Check if value is in contiguous lookup section

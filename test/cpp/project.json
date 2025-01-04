@@ -417,6 +417,7 @@
                 "enum_child_count",
                 "multi_world_constant_ids",
                 "empty_enum",
+                "enum_w_one_constant_index_of",
                 "enum_i8",
                 "enum_i16",
                 "enum_i32",

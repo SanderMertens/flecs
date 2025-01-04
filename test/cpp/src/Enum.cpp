@@ -1569,3 +1569,14 @@ void Enum_enum_u64(void) {
 
     test_bool(enum_type.is_valid(Blue + 1), false);
 }
+
+enum OneConstant {
+    ConstantOne
+};
+
+void Enum_enum_w_one_constant_index_of(void) {
+    flecs::world ecs;
+
+    auto one_type = flecs::enum_type<OneConstant>(ecs);
+    test_int(one_type.index_by_value(0), 0);
+}
