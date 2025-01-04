@@ -299,7 +299,7 @@ int flecs_script_eval_id(
 {
     ecs_entity_t second_from = 0;
 
-    if (id->eval) {
+    if (id->eval && !id->dynamic) {
         /* Already resolved */
         return 0;
     }
@@ -369,6 +369,7 @@ int flecs_script_eval_id(
             /* Targets may be defined by the template */
             if (v->template) {
                 if (!flecs_script_find_template_entity(v, node, id->second)) {
+                    id->dynamic = true;
                     return 0;
                 } else {
                     return -1;

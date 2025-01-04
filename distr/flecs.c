@@ -4684,6 +4684,11 @@ typedef struct ecs_script_id_t {
      * stack pointers so we don't have to lookup variables by name. */
     int32_t first_sp; 
     int32_t second_sp;
+
+    /* If true, the lookup result for this id cannot be cached. This is the case
+     * for entities that are defined inside of templates, which have different
+     * values for each instantiation. */
+    bool dynamic;
 } ecs_script_id_t;
 
 typedef struct ecs_script_tag_t {
@@ -40789,7 +40794,8 @@ void flecs_add_overrides_for_base(
     ecs_id_t pair)
 {
     ecs_entity_t base = ecs_pair_second(world, pair);
-    ecs_assert(base != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(base != 0, ECS_INVALID_PARAMETER, 
+        "target of IsA pair is not alive");
     ecs_table_t *base_table = ecs_get_table(world, base);
     if (!base_table) {
         return;
@@ -61695,7 +61701,7 @@ int flecs_script_eval_id(
 {
     ecs_entity_t second_from = 0;
 
-    if (id->eval) {
+    if (id->eval && !id->dynamic) {
         /* Already resolved */
         return 0;
     }
@@ -61765,6 +61771,7 @@ int flecs_script_eval_id(
             /* Targets may be defined by the template */
             if (v->template) {
                 if (!flecs_script_find_template_entity(v, node, id->second)) {
+                    id->dynamic = true;
                     return 0;
                 } else {
                     return -1;

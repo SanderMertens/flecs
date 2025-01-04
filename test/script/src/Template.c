@@ -3281,3 +3281,140 @@ void Template_const_from_prop(void) {
 
     ecs_fini(world);
 }
+
+void Template_redefine_nested_template_w_prefab(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  foo_child {}"
+    LINE "}"
+    LINE ""
+    LINE "template Bar {"
+    LINE "  prefab Base {"
+    LINE "    Foo: {}"
+    LINE "  }"
+    LINE ""
+    LINE "  (IsA, Base)"
+    LINE "}"
+    LINE ""
+    LINE "e = Bar: { }"
+    LINE "e = Bar: { }";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t base = ecs_lookup(world, "e.Base");
+    test_assert(base != 0);
+
+    ecs_entity_t foo_child = ecs_lookup(world, "e.foo_child");
+    test_assert(foo_child != 0);
+
+    test_assert(ecs_has_id(world, e, bar));
+    test_assert(ecs_has_pair(world, e, EcsIsA, base));
+    test_assert(ecs_has_id(world, e, foo));
+
+    ecs_fini(world);
+}
+
+void Template_redefine_nested_template_w_prefab_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "}"
+    LINE ""
+    LINE "template Bar {"
+    LINE "  prefab Base {"
+    LINE "    Foo: {}"
+    LINE "  }"
+    LINE ""
+    LINE "  child : Base"
+    LINE "}"
+    LINE ""
+    LINE "e = Bar: { }"
+    LINE "e = Bar: { }";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t base = ecs_lookup(world, "e.Base");
+    test_assert(base != 0);
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+
+    test_assert(ecs_has_id(world, e, bar));
+    test_assert(ecs_has_pair(world, child, EcsIsA, base));
+    test_assert(ecs_has_id(world, child, foo));
+
+    ecs_fini(world);
+}
+
+void Template_redefine_nested_template_w_prefab_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  foo_child {}"
+    LINE "}"
+    LINE ""
+    LINE "template Bar {"
+    LINE "  prefab Base {"
+    LINE "    Foo: {}"
+    LINE "  }"
+    LINE ""
+    LINE "  child : Base"
+    LINE "}"
+    LINE ""
+    LINE "e = Bar: { }"
+    LINE "e = Bar: { }";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t base = ecs_lookup(world, "e.Base");
+    test_assert(base != 0);
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+
+    ecs_entity_t foo_child = ecs_lookup(world, "e.child.foo_child");
+    test_assert(foo_child != 0);
+
+    test_assert(ecs_has_id(world, e, bar));
+    test_assert(ecs_has_pair(world, child, EcsIsA, base));
+    test_assert(ecs_has_id(world, child, foo));
+
+    ecs_fini(world);
+}
