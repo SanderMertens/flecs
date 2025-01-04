@@ -375,8 +375,8 @@ public:
 	template <Solid::TStaticClassConcept TModule, typename TFunction>
 	void RegisterModuleDependency(UObject* InModuleObject, TFunction&& InFunction)
 	{
-		RegisterModuleDependency(
-			InModuleObject, TModule::StaticClass(), [InFunction = std::forward<TFunction>(InFunction)]
+		RegisterModuleDependency(InModuleObject, TModule::StaticClass(),
+			[InFunction = std::forward<TFunction>(InFunction)]
 			(UObject* InDependencyObject, UFlecsWorld* InWorld, FFlecsEntityHandle InDependencyEntity)
 		{
 			std::invoke(InFunction, CastChecked<TModule>(InDependencyObject), InWorld, InDependencyEntity);
