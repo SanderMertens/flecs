@@ -1741,6 +1741,28 @@ void Sparse_sparse_relationship(void) {
     ecs_fini(world);
 }
 
+void Sparse_sparse_relationship_second(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Rel);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(NULL == ecs_get_pair_second(world, e, Rel, Position));
+
+    ecs_set_pair_second(world, e, Rel, Position, {10, 20});
+    const Position *ptr = ecs_get_pair_second(world, e, Rel, Position);
+    test_assert(ptr != NULL);
+
+    ecs_add(world, e, Foo);
+    test_assert(ptr == ecs_get_pair_second(world, e, Rel, Position));
+
+    ecs_fini(world);
+}
+
 void Sparse_defer_ensure(void) {
     ecs_world_t *world = ecs_mini();
 
