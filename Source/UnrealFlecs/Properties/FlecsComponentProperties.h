@@ -143,7 +143,7 @@ public:
 				} \
 			} \
 		}; \
-		static inline FAutoRegister##ComponentType##_Tags AutoRegister##ComponentType##_Instance_Tags; \
+		inline FAutoRegister##ComponentType##_Tags AutoRegister##ComponentType##_Instance_Tags; \
 	}
 
 #define REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, ...) \
@@ -162,7 +162,7 @@ public:
 				}); \
 			} \
 		}; \
-		static inline FAutoRegister##ComponentType##_Traits AutoRegister##ComponentType##_Instance_Traits; \
+		inline FAutoRegister##ComponentType##_Traits AutoRegister##ComponentType##_Instance_Traits; \
 	}
 
 // @Deprecated

@@ -36,7 +36,7 @@ public:
 }; // struct FFlecsDefaultEntityEngine
 
 #define DEFINE_DEFAULT_ENTITY_OPTION(DefaultEntityName) \
-	INLINE DLLEXPORT ECS_ENTITY_DECLARE(DefaultEntityName); \
+	inline DLLEXPORT ECS_ENTITY_DECLARE(DefaultEntityName); \
 	namespace \
 	{                                                             \
 		static void Register##DefaultEntityName()                        \
@@ -47,7 +47,7 @@ public:
 			{                                                     \
 				FFlecsDefaultEntityEngine::Get().Initialize();                                   \
 			}                                                     \
-			DefaultEntityName = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
+			(DefaultEntityName) = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
 		}                                                         \
 		struct FRegisterInvoker##DefaultEntityName                       \
 		{                                                         \
@@ -56,6 +56,6 @@ public:
 				FCoreDelegates::OnPostEngineInit.AddStatic(&Register##DefaultEntityName); \
 			}                                                     \
 		};                                                        \
-		static inline FRegisterInvoker##DefaultEntityName Invoker##DefaultEntityName;  \
+		inline FRegisterInvoker##DefaultEntityName Invoker##DefaultEntityName;  \
 	}
 
