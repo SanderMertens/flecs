@@ -215,7 +215,7 @@ int flecs_script_check_component(
             }
         }
 
-        ecs_entity_t expr_type = node->id.eval;
+        ecs_entity_t expr_type = ti->component;
         if (flecs_script_check_expr(v, &node->expr, &expr_type)) {
             return -1;
         }

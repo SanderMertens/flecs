@@ -821,6 +821,7 @@ int flecs_expr_initializer_visit_type(
         goto error;
     }
 
+
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     int32_t i, count = ecs_vec_count(&node->elements);
     for (i = 0; i < count; i ++) {
