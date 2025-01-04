@@ -784,7 +784,8 @@ void flecs_add_overrides_for_base(
     ecs_id_t pair)
 {
     const ecs_entity_t base = ecs_pair_second(world, pair);
-    ecs_assert(base != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(base != 0, ECS_INVALID_PARAMETER, 
+        "target of IsA pair is not alive");
     ecs_table_t *base_table = ecs_get_table(world, base);
     if (!base_table) {
         return;

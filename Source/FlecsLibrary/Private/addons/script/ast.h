@@ -54,6 +54,11 @@ typedef struct ecs_script_id_t {
      * stack pointers so we don't have to lookup variables by name. */
     int32_t first_sp; 
     int32_t second_sp;
+
+    /* If true, the lookup result for this id cannot be cached. This is the case
+     * for entities that are defined inside of templates, which have different
+     * values for each instantiation. */
+    bool dynamic;
 } ecs_script_id_t;
 
 typedef struct ecs_script_tag_t {

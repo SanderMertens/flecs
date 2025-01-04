@@ -364,6 +364,14 @@ ecs_id_record_t* flecs_id_record_new(
             /* Add reference to (*, tgt) id record to entity record */
             tgt_r->idr = idr_t;
         }
+
+        /* If second element of pair determines the type, check if the pair 
+         * should be stored as a sparse component. */
+        if (idr->type_info && idr->type_info->component == tgt) {
+            if (ecs_has_id(world, tgt, EcsSparse)) {
+                idr->flags |= EcsIdIsSparse;
+            }
+        }
     }
 
     idr->flags |= flecs_id_record_event_flags(world, id);
