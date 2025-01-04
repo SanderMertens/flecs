@@ -57,7 +57,7 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
         const flecs::query<const FFlecsNetworkIdComponent> Query = FlecsWorldSubsystem->GetDefaultWorld()->World
             .query<const FFlecsNetworkIdComponent>();
 
-        const FFlecsEntityHandle EntityHandle = Query.find([&](const FFlecsNetworkIdComponent& InNetworkId)
+        const FFlecsEntityHandle EntityHandle = Query.find([](const FFlecsNetworkIdComponent& InNetworkId)
         {
             return InNetworkId == Info.NetworkId;
         });
@@ -142,10 +142,10 @@ void FFlecsEntityHandle::PostScriptConstruct()
         else
         {
             FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
-                ->OnWorldCreatedDelegate.AddLambda([&](const UFlecsWorld* InFlecsWorld)
+                ->OnWorldCreatedDelegate.AddLambda([FlecsWorldSubsystem, this, OnWorldCreatedHandle]
+                    (const UFlecsWorld* InFlecsWorld)
             {
                 SetEntity(flecs::entity(InFlecsWorld->World, GetEntity().id()));
-
                 FlecsWorldSubsystem->OnWorldCreatedDelegate.Remove(OnWorldCreatedHandle);
             });
         }

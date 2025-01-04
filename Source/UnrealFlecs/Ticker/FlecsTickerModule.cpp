@@ -97,6 +97,8 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 	SCOPE_CYCLE_COUNTER(STAT_FlecsTickerModule_ProgressModule);
 
 	TickerAccumulator += InDeltaTime;
+
+	UFlecsWorld* FlecsWorld = GetFlecsWorld();
 	
 	while (TickerAccumulator >= TickerInterval)
 	{
@@ -108,8 +110,8 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 		++TickerComponentPtr->TickId;
 		SET_DWORD_STAT(STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, TickerComponentPtr->TickId);
 
-		GetFlecsWorld()->ModifiedSingleton<FFlecsTickerComponent>();
+		FlecsWorld->ModifiedSingleton<FFlecsTickerComponent>();
 		
-		GetFlecsWorld()->RunPipeline(TickerPipeline, TickerInterval);
+		FlecsWorld->RunPipeline(TickerPipeline, TickerInterval);
 	}
 }

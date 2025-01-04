@@ -129,7 +129,7 @@ public:
 				FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, Entities, {}); \
 				if constexpr (Solid::IsStaticStruct<ComponentType>()) \
 				{ \
-					FCoreDelegates::OnPostEngineInit.AddLambda([&]() \
+					FCoreDelegates::OnPostEngineInit.AddLambda([]() \
 					{ \
 						UScriptStruct* ScriptStruct = TBaseStructure<ComponentType>::Get(); \
 						const FString Tags = TEXT(#__VA_ARGS__); \
@@ -150,7 +150,7 @@ public:
 		{ \
 			FAutoRegister##ComponentType##_Traits() \
 			{ \
-				FCoreDelegates::OnPostEngineInit.AddLambda([&]() \
+				FCoreDelegates::OnPostEngineInit.AddLambda([]() \
 				{ \
 					TArray<FSharedStruct> ComponentPropertyStructs = { __VA_ARGS__ }; \
 					FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, {}, ComponentPropertyStructs); \

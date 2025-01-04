@@ -16,41 +16,44 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 	World = ToFlecsWorld(InWorld);
 	solid_check(World.IsValid());
 
-	const UWorld* GameWorld = World->GetWorld();
+	UFlecsWorld* FlecsWorld = this->World.Get();
 
-	const FFlecsEntityHandle OldScope = World->ClearScope();
+	const UWorld* GameWorld = FlecsWorld->GetWorld();
 
-	ModuleEntity = World->CreateEntity(Execute_GetModuleName(_getUObject()));
+	const FFlecsEntityHandle OldScope = FlecsWorld->ClearScope();
+
+	ModuleEntity = FlecsWorld->CreateEntity(Execute_GetModuleName(_getUObject()));
 	solid_check(ModuleEntity.IsValid());
 	
 	ModuleEntity.Add(flecs::Module);
 	ModuleEntity.Set<FFlecsUObjectComponent>({ _getUObject() });
 	ModuleEntity.Set<FFlecsModuleComponent>({ _getUObject()->GetClass() });
 
-	World->SetScope(ModuleEntity);
+	FlecsWorld->SetScope(ModuleEntity);
 		
-	InitializeModule(World.Get(), ModuleEntity);
-	Execute_BP_InitializeModule(_getUObject(), World.Get());
+	InitializeModule(FlecsWorld, ModuleEntity);
+	Execute_BP_InitializeModule(_getUObject(), FlecsWorld);
 	
-	World->SetScope(OldScope);
+	FlecsWorld->SetScope(OldScope);
 
-	World->Event<FFlecsModuleInitEvent>()
+	FlecsWorld->Event<FFlecsModuleInitEvent>()
 		.id<FFlecsModuleComponent>()
 		.entity(ModuleEntity)
 		.emit();
 
-	if (World->GetWorldEntity().Has<FFlecsBeginPlay>())
+	if (FlecsWorld->GetWorldEntity().Has<FFlecsBeginPlay>())
 	{
-		WorldBeginPlay(World.Get(), World->GetWorld());
-		Execute_BP_WorldBeginPlay(_getUObject(), World.Get(), World->GetWorld());
+		WorldBeginPlay(World.Get(), FlecsWorld->GetWorld());
+		Execute_BP_WorldBeginPlay(_getUObject(), World.Get(), FlecsWorld->GetWorld());
 	}
 	else
 	{
 		UFlecsWorldSubsystem* WorldSubsystem = GameWorld->GetSubsystem<UFlecsWorldSubsystem>();
-		WorldSubsystem->OnWorldBeginPlayDelegate.AddWeakLambda(_getUObject(), [&](UWorld* InGameWorld)
+		WorldSubsystem->OnWorldBeginPlayDelegate.AddWeakLambda(_getUObject(), [this](UWorld* InGameWorld)
 		{
-			WorldBeginPlay(World.Get(), InGameWorld);
-			Execute_BP_WorldBeginPlay(_getUObject(), World.Get(), InGameWorld);
+			UFlecsWorld* FlecsWorld = World.Get();
+			WorldBeginPlay(FlecsWorld, InGameWorld);
+			Execute_BP_WorldBeginPlay(_getUObject(), FlecsWorld, InGameWorld);
 		});
 	}
 	
@@ -61,8 +64,14 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 inline void IFlecsModuleInterface::DeinitializeModule_Internal()
 {
 	ModuleEntity.Disable();
-	DeinitializeModule(World.Get());
-	Execute_BP_DeinitializeModule(_getUObject(), World.Get());
+
+	if (World.IsValid())
+	{
+		UFlecsWorld* FlecsWorld = World.Get();
+		
+		DeinitializeModule(FlecsWorld);
+		Execute_BP_DeinitializeModule(_getUObject(), FlecsWorld);
+	}
 
 	UN_LOGF(LogFlecsCore, Log, "Deinitialized module: %s",
 		*IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));

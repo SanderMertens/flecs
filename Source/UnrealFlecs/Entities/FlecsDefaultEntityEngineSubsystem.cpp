@@ -25,7 +25,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 
 	#if WITH_EDITOR
 	
-	Settings->OnSettingChanged().AddLambda([&](UObject*, FPropertyChangedEvent&)
+	Settings->OnSettingChanged().AddLambda([this](UObject*, FPropertyChangedEvent&)
 	{
 		RefreshDefaultEntities();
 	});
@@ -51,7 +51,7 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 			.with(flecs::Trait).or_()
 			.with(flecs::PairIsTag).or_()
 			.with_name_component()
-			.each([&](flecs::entity Entity)
+			.each([this](flecs::entity Entity)
 			{
 				if UNLIKELY_IF(Entity.name().length() <= 0)
 				{

@@ -7,7 +7,7 @@
 #include "UObject/Object.h"
 #include "FlecsPipelineInfo.generated.h"
 
-UCLASS(Blueprintable, DefaultToInstanced, EditInlineNew)
+UCLASS(DefaultToInstanced, EditInlineNew)
 class UNREALFLECS_API UFlecsPipelineInfo : public UObject, public IFlecsEntityInterface
 {
 	GENERATED_BODY()

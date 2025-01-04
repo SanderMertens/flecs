@@ -31,12 +31,12 @@ public:
 
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity);
 	
-	UFUNCTION(BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "Initialize Module"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs | Modules", meta = (DisplayName = "Initialize Module"))
 	void BP_InitializeModule(UFlecsWorld* InWorld);
 
 	virtual void WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld);
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "World Begin Play"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs | Modules", meta = (DisplayName = "World Begin Play"))
 	void BP_WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld);
 
 	virtual void DeinitializeModule(UFlecsWorld* InWorld);
@@ -48,7 +48,7 @@ public:
 	FString GetModuleName() const;
 	virtual FString GetModuleName_Implementation() const;
 
-	virtual FFlecsEntityHandle GetEntityHandle() const override final
+	FORCEINLINE virtual FFlecsEntityHandle GetEntityHandle() const override final
 	{
 		return ModuleEntity;
 	}

@@ -29,7 +29,7 @@ void UFlecsPhysicsModule::DeinitializeModule(UFlecsWorld* InWorld)
 		return;
 	}
 	
-	GetFlecsWorld()->RemoveSingleton<FFlecsPhysicsSceneComponent>();
+	InWorld->RemoveSingleton<FFlecsPhysicsSceneComponent>();
 
 	if (bAllowResimulation)
 	{
@@ -43,18 +43,15 @@ void UFlecsPhysicsModule::WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWor
 {
 	Super::WorldBeginPlay(InWorld, InGameWorld);
 
-	FPhysScene* Scene = InGameWorld->GetPhysicsScene();
-	solid_check(Scene);
-	
-	Scene->GetSolver()->SetIsDeterministic(true);
-
-	GetFlecsWorld()->RegisterModuleDependency<UFlecsTickerModule>
+	InWorld->RegisterModuleDependency<UFlecsTickerModule>
 		(this,
-			[&](
+			[this](
 				MAYBE_UNUSED UFlecsTickerModule* InModuleObject,
 				UFlecsWorld* InFlecsWorld,
 				MAYBE_UNUSED FFlecsEntityHandle& InTickerEntity)
 		{
+			FPhysScene* Scene = InFlecsWorld->GetWorld()->GetPhysicsScene();
+
 			InFlecsWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
 
 			const UFlecsTickerModule* TickerModule = InFlecsWorld->GetModule<UFlecsTickerModule>();
@@ -73,7 +70,10 @@ void UFlecsPhysicsModule::WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWor
 
 inline void UFlecsPhysicsModule::ResimulationHandlers()
 {
-	const FPhysScene* Scene = GetFlecsWorld()->GetWorld()->GetPhysicsScene();
+	UFlecsWorld* FlecsWorld = GetFlecsWorld();
+	solid_check(IsValid(FlecsWorld));
+	
+	const FPhysScene* Scene = FlecsWorld->GetWorld()->GetPhysicsScene();
 	solid_check(Scene);
 	
 	IConsoleVariable* ResimConsoleVariable =
@@ -84,17 +84,17 @@ inline void UFlecsPhysicsModule::ResimulationHandlers()
 	Scene->GetSolver()->EnableRewindCapture(MaxFrameHistory, true);
 	Scene->GetSolver()->SetThreadingMode_External(Chaos::EThreadingModeTemp::SingleThread);
 
-	GetFlecsWorld()->AddSingleton<FTickerPhysicsHistoryComponent>();
+	FlecsWorld->AddSingleton<FTickerPhysicsHistoryComponent>();
 		
-	PhysicsHistoryComponentRef = GetFlecsWorld()->GetSingletonPtr<FTickerPhysicsHistoryComponent>();
+	PhysicsHistoryComponentRef = FlecsWorld->GetSingletonPtr<FTickerPhysicsHistoryComponent>();
 	solid_check(PhysicsHistoryComponentRef);
 
 	PhysicsHistoryComponentRef->HistoryItems.Reserve(MaxFrameHistory);
 
-	TickerComponentRef = GetFlecsWorld()->GetSingletonPtr<FFlecsTickerComponent>();
+	TickerComponentRef = FlecsWorld->GetSingletonPtr<FFlecsTickerComponent>();
 
 	FSolverPostAdvance::FDelegate PostAdvanceDelegate;
-	PostAdvanceDelegate.BindWeakLambda(this, [&](MAYBE_UNUSED float InDeltaTime)
+	PostAdvanceDelegate.BindWeakLambda(this, [this](MAYBE_UNUSED float InDeltaTime)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_FlecsPhysicsModule_ResimulationHandlers);
 
@@ -103,16 +103,16 @@ inline void UFlecsPhysicsModule::ResimulationHandlers()
 			return;
 		}
 
-		const UFlecsWorld* FlecsWorld = GetFlecsWorld();
-		solid_checkf(IsValid(FlecsWorld), TEXT("FlecsWorld is invalid"));
+		const UFlecsWorld* FlecsAdvanceWorld = GetFlecsWorld();
+		solid_checkf(IsValid(FlecsAdvanceWorld), TEXT("FlecsWorld is invalid"));
 
-		if UNLIKELY_IF(!FlecsWorld->GetWorld()->GetPhysicsScene())
+		if UNLIKELY_IF(FlecsAdvanceWorld->GetWorld()->GetPhysicsScene() == nullptr)
 		{
 			UN_LOGF(LogFlecsPhysicsModule, Error, "Physics scene is invalid");
 			return;
 		}
 		
-		Chaos::FPhysicsSolver* Solver = FlecsWorld->GetWorld()->GetPhysicsScene()->GetSolver();
+		Chaos::FPhysicsSolver* Solver = FlecsAdvanceWorld->GetWorld()->GetPhysicsScene()->GetSolver();
 		solid_check(Solver);
 		solid_check(PhysicsHistoryComponentRef);
 
@@ -129,7 +129,7 @@ inline void UFlecsPhysicsModule::ResimulationHandlers()
 
 		PhysicsHistoryComponentRef->HistoryItems.Add(CurrentPhysicsFrameItem);
 
-		FlecsWorld->ModifiedSingleton<FTickerPhysicsHistoryComponent>();
+		FlecsAdvanceWorld->ModifiedSingleton<FTickerPhysicsHistoryComponent>();
 	});
 	
 	Scene->GetSolver()->AddPostAdvanceCallback(PostAdvanceDelegate);

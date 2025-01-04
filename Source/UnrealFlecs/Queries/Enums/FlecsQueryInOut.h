@@ -14,7 +14,7 @@ enum class EFlecsQueryInOut : uint8
 	Read = flecs::In,
 	Write = flecs::Out,
 	ReadWrite = flecs::InOut UMETA(DisplayName = "Read/Write"),
-	Filter = flecs::InOutFilter
+	Filter = flecs::InOutFilter /**< Same as None + prevents term from triggering observers */
 }; // enum class EFlecsQueryInOut
 
 FORCEINLINE NO_DISCARD constexpr flecs::inout_kind_t ToFlecsInOut(EFlecsQueryInOut InOut) NOEXCEPT

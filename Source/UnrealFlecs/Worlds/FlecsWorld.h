@@ -194,8 +194,8 @@ public:
 			.with_symbol_component().filter()
 			.event(flecs::OnSet)
 			.yield_existing()
-			.each([&](flecs::iter& Iter, size_t IterIndex,
-				const FFlecsScriptStructComponent& InScriptStructComponent)
+			.each([this](flecs::iter& Iter, size_t IterIndex,
+			             const FFlecsScriptStructComponent& InScriptStructComponent)
 			{
 				FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
 
@@ -246,9 +246,9 @@ public:
 			.cached()
 			.build();
 
-		FCoreUObjectDelegates::GarbageCollectComplete.AddWeakLambda(this, [&]
+		FCoreUObjectDelegates::GarbageCollectComplete.AddWeakLambda(this, [this]
 		{
-			ObjectDestructionComponentQuery.each([&](
+			ObjectDestructionComponentQuery.each([](
 				flecs::entity InEntity, FFlecsUObjectComponent& InUObjectComponent)
 			{
 				if (InUObjectComponent.IsStale(true, true))
@@ -272,8 +272,9 @@ public:
 			.term_at(0).filter()
 			.event(flecs::OnAdd)
 			.yield_existing()
-			.each([&](flecs::entity InEntity,
-				const FFlecsUObjectComponent& InUObjectComponent, const FFlecsModuleComponent& InModuleComponent)
+			.each([this](flecs::entity InEntity,
+			             const FFlecsUObjectComponent& InUObjectComponent,
+			             const FFlecsModuleComponent& InModuleComponent)
 			{
 				UN_LOGF(LogFlecsWorld, Log, "Module component %s added",
                     *InUObjectComponent.GetObjectChecked()->GetName());
@@ -289,13 +290,13 @@ public:
 		CreateObserver<FFlecsModuleComponent, FFlecsUObjectComponent>(TEXT("ModuleInitEventObserver"))
 			.event<FFlecsModuleInitEvent>()
 			.term_at(1).filter().read()
-			.each([&](flecs::iter& Iter, const size_t IterIndex,
-				const FFlecsModuleComponent& InModuleComponent, const FFlecsUObjectComponent& InUObjectComponent)
+			.each([this](flecs::iter& Iter, const size_t IterIndex,
+			             const FFlecsModuleComponent& InModuleComponent, const FFlecsUObjectComponent& InUObjectComponent)
 			{
 				const FFlecsEntityHandle ModuleEntity = Iter.entity(IterIndex);
 				
-				DependenciesComponentQuery.each([&](flecs::entity InEntity,
-					const FFlecsDependenciesComponent& InDependenciesComponent)
+				DependenciesComponentQuery.each([&]
+					(flecs::entity InEntity, const FFlecsDependenciesComponent& InDependenciesComponent)
 				{
 					if (InDependenciesComponent.Dependencies.contains(InModuleComponent.ModuleClass))
 					{
@@ -313,7 +314,7 @@ public:
 			.event(flecs::OnRemove)
 			.with<FFlecsModuleComponent>().inout_none()
 			.with<FFlecsUObjectComponent>().filter().read()
-			.each([&](flecs::iter& Iter, const size_t IterIndex)
+			.each([this](flecs::iter& Iter, const size_t IterIndex)
 			{
 				for (int32 Index = ProgressModules.Num(); Index > 0; --Index)
 				{
@@ -344,15 +345,8 @@ public:
 		AssetRegistry.GetAssetsByClass(FTopLevelAssetPath(UFlecsPrimaryDataAsset::StaticClass()), AssetData,
 			true);
 
-		AssetRegistry.OnAssetAdded().AddWeakLambda(this, [&](const FAssetData& InAssetData)
+		AssetRegistry.OnAssetAdded().AddWeakLambda(this, [this](const FAssetData& InAssetData)
 		{
-			if UNLIKELY_IF(!IsValid(this))
-			{
-				UN_LOG(LogFlecsWorld, Error, "Flecs World is not valid");
-				AssetRegistry.OnAssetAdded().RemoveAll(this);
-				return;
-			}
-
 			if (InAssetData.IsInstanceOf<UFlecsPrimaryDataAsset>())
 			{
 				RegisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(InAssetData.GetAsset()));
@@ -364,7 +358,7 @@ public:
 			RegisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(Asset.GetAsset()));
 		}
 		
-		AssetRegistry.OnAssetRemoved().AddLambda([&](const FAssetData& InAssetData)
+		AssetRegistry.OnAssetRemoved().AddLambda([this](const FAssetData& InAssetData)
 		{
 			UnregisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(InAssetData.GetAsset()));
 		});
@@ -382,8 +376,8 @@ public:
 	void RegisterModuleDependency(UObject* InModuleObject, TFunction&& InFunction)
 	{
 		RegisterModuleDependency(
-			InModuleObject, TModule::StaticClass(), [&](UObject* InDependencyObject, UFlecsWorld* InWorld,
-			FFlecsEntityHandle InDependencyEntity) FORCEINLINE_ATTRIBUTE
+			InModuleObject, TModule::StaticClass(), [InFunction = std::forward<TFunction>(InFunction)]
+			(UObject* InDependencyObject, UFlecsWorld* InWorld, FFlecsEntityHandle InDependencyEntity)
 		{
 			std::invoke(InFunction, CastChecked<TModule>(InDependencyObject), InWorld, InDependencyEntity);
 		});
@@ -657,11 +651,11 @@ public:
 	}
 
 	template <typename T>
-	void ImportFlecsModule()
+	FFlecsEntityHandle ImportFlecsModule()
 	{
 		static_assert(!TIsDerivedFrom<T, IFlecsModuleInterface>::Value,
 			"T must not be derived from IFlecsModuleInterface, use ImportModule(Non-Template) instead");
-		World.import<T>();
+		return World.import<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -1481,6 +1475,17 @@ public:
 	FORCEINLINE virtual bool IsNameStableForNetworking() const override
 	{
 		return true;
+	}
+
+	void* GetContext() const
+	{
+		return World.get_ctx();
+	}
+
+	template <typename T>
+	T* GetContext() const
+	{
+		return static_cast<T*>(World.get_ctx());
 	}
 	
 	flecs::world World;

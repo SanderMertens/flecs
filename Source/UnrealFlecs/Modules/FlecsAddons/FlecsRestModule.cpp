@@ -8,7 +8,7 @@
 
 void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-	int32 ClientPieInstanceOffset = 0;
+	uint16 ClientPieInstanceOffset = 0;
 	
 	const UWorld* UnrealWorld = InWorld->GetWorld();
 	solid_check(IsValid(UnrealWorld));
@@ -25,7 +25,7 @@ void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntity
 
 	if (bImportStats)
 	{
-		StatsEntity = InWorld->World.import<flecs::stats>();
+		StatsEntity = InWorld->ImportFlecsModule<flecs::stats>();
 	}
 }
 
