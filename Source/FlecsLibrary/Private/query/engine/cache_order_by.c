@@ -58,7 +58,7 @@ typedef struct sort_helper_t {
     bool shared;
 } sort_helper_t;
 
-static
+static inline
 const void* ptr_from_helper(
     sort_helper_t *helper)
 {
@@ -72,7 +72,7 @@ const void* ptr_from_helper(
     }
 }
 
-static
+static inline
 ecs_entity_t e_from_helper(
     sort_helper_t *helper)
 {

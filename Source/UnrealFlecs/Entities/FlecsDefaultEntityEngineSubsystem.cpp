@@ -66,8 +66,7 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 
 	AddedDefaultEntities.Empty();
 
-	for (const FFlecsDefaultMetaEntity& EntityRecord
-		: GetDefault<UFlecsDefaultEntitiesDeveloperSettings>()->DefaultEntities)
+	for (const FFlecsDefaultMetaEntity& EntityRecord : GetDefault<UFlecsDefaultEntitiesDeveloperSettings>()->DefaultEntities)
 	{
 		if (UNLIKELY(EntityRecord.EntityName.IsEmpty()))
 		{

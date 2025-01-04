@@ -125,6 +125,7 @@ bool flecs_name_is_id(
         ecs_os_perf_trace_pop("flecs.entity_name.is_id");
         return true;
     }
+    
     ecs_os_perf_trace_pop("flecs.entity_name.is_id");
     return false;
 }

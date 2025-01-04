@@ -105,7 +105,9 @@ FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) c
 
 void FFlecsEntityHandle::ObtainFlecsWorld()
 {
-    if (!GWorld || !GWorld->IsGameWorld())
+    TRACE_CPUPROFILER_EVENT_SCOPE(FFlecsEntityHandle::ObtainFlecsWorld);
+    
+    if UNLIKELY_IF(!GWorld || !GWorld->IsGameWorld())
     {
         return;
     }
@@ -113,7 +115,7 @@ void FFlecsEntityHandle::ObtainFlecsWorld()
     if (GetEntity().world() == nullptr)
     {
         const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
-        solid_checkf(FlecsWorldSubsystem, TEXT("Flecs World Subsystem not found"));
+        solid_check(FlecsWorldSubsystem);
 
         SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World,
             GetEntity().id()));
@@ -135,6 +137,8 @@ void FFlecsEntityHandle::PostScriptConstruct()
     if (GetEntity().world() == nullptr)
     {
         UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
+        solid_check(FlecsWorldSubsystem);
+        
         if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
         {
             SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World, GetEntity().id()));
@@ -142,7 +146,7 @@ void FFlecsEntityHandle::PostScriptConstruct()
         else
         {
             FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
-                ->OnWorldCreatedDelegate.AddLambda([FlecsWorldSubsystem, this, OnWorldCreatedHandle]
+                ->OnWorldCreatedDelegate.AddLambda([FlecsWorldSubsystem, this, &OnWorldCreatedHandle]
                     (const UFlecsWorld* InFlecsWorld)
             {
                 SetEntity(flecs::entity(InFlecsWorld->World, GetEntity().id()));

@@ -299,24 +299,42 @@ struct FOSApiInitializer
             switch (Level)
             {
                 case -4: // Fatal
-                    UN_LOGF(LogFlecsCore, Fatal, "Flecs - File: %s, Line: %d, Message: %s",
-						StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+	                {
+                		UN_LOGF(LogFlecsCore, Fatal, "Flecs - File: %s, Line: %d, Message: %s",
+							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+	                }
                     break;
                 case -3: // Error
-                	UN_LOGF(LogFlecsCore, Warning, "Error Flecs - File: %s, Line: %d, Message: %s",
-						StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+	                {
+                		UN_LOGF(LogFlecsCore, Warning, "Error Flecs - File: %s, Line: %d, Message: %s",
+							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+	                }
                     break;
                 case -2: // Warning
-                	UN_LOGF(LogFlecsCore, Warning, "Flecs - File: %s, Line: %d, Message: %s",
-						StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+	                {
+                		UN_LOGF(LogFlecsCore, Warning, "Flecs - File: %s, Line: %d, Message: %s",
+							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+	                }
                     break;
             	case 0: // Verbose
-                	UN_LOGF(LogFlecsCore, Verbose, "Flecs - File: %s, Line: %d, Message: %s",
-                		StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+            		{
+            			UN_LOGF(LogFlecsCore, Verbose, "Flecs - File: %s, Line: %d, Message: %s",
+							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+            		}
                     break;
+            	case 4: // Bookmark/Journal
+            		{
+            			TRACE_BOOKMARK(TEXT("Flecs - File: %s, Line: %d, Message: %s"),
+            				StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+            			UN_LOGF(LogFlecsJournal, Log, "Flecs - File: %s, Line: %d, Message: %s",
+            				StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+            		}
+					break;
                 default: // Info and Debug
-                	UN_LOGF(LogFlecsCore, Log, "Flecs - File: %s, Line: %d, Message: %s",
-						StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+            		{
+            			UN_LOGF(LogFlecsCore, Log, "Flecs - File: %s, Line: %d, Message: %s",
+							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+            		}
                     break;
             }
 #endif // UNLOG_ENABLED

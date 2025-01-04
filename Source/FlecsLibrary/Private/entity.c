@@ -866,13 +866,11 @@ void flecs_move_entity(
     ecs_assert(ecs_table_count(src_table) > src_row, ECS_INTERNAL_ERROR, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(record == flecs_entities_get(world, entity), 
-        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(record == flecs_entities_get(world, entity), ECS_INTERNAL_ERROR, NULL);
     ecs_assert(record->table == src_table, ECS_INTERNAL_ERROR, NULL);
 
     /* Append new row to destination table */
-    const int32_t dst_row = flecs_table_append(world, dst_table, entity, 
-                                               false, false);
+    const int32_t dst_row = flecs_table_append(world, dst_table, entity, false, false);
 
     /* Invoke remove actions for removed components */
     flecs_notify_on_remove(world, src_table, dst_table, src_row, 1, diff);
@@ -893,7 +891,7 @@ void flecs_move_entity(
     flecs_update_name_index(world, src_table, dst_table, dst_row, 1);
 
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
-    ecs_os_perf_trace_pop("flecs.move_entity");
+    
 error:
     ecs_os_perf_trace_pop("flecs.move_entity");
     return;
@@ -4558,7 +4556,7 @@ char* ecs_id_str(
     return ecs_strbuf_get(&buf);
 }
 
-static
+static inline
 void ecs_type_str_buf(
     const ecs_world_t *world,
     const ecs_type_t *type,
@@ -4600,17 +4598,15 @@ char* ecs_table_str(
     const ecs_world_t *world,
     const ecs_table_t *table)
 {
-    if (table) {
-        return ecs_type_str(world, &table->type);
-    } else {
-        return NULL;
-    }
+    return table ? ecs_type_str(world, &table->type) : NULL;
 }
 
 char* ecs_entity_str(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
+    ecs_os_perf_trace_push("flecs.entity.str");
+    
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
 
@@ -4623,12 +4619,14 @@ char* ecs_entity_str(
     }
     ecs_strbuf_appendch(&buf, ']');
 
+    ecs_os_perf_trace_pop("flecs.entity.str");
+
     return ecs_strbuf_get(&buf);
 error:
     return NULL;
 }
 
-static
+static inline
 void flecs_flush_bulk_new(
     ecs_world_t *world,
     ecs_cmd_t *cmd)

@@ -32,9 +32,8 @@ public class FlecsLibrary : ModuleRules
                 "FLECS_META",
                 "FLECS_JSON",
                 "FLECS_UNITS",
-                "FLECS_HTTP",
-                "FLECS_REST",
-                //"ECS_SIMD"
+                "FLECS_ALERTS",
+                "FLECS_SCRIPT_MATH",
             }
         );
         
@@ -46,12 +45,13 @@ public class FlecsLibrary : ModuleRules
                 {
                     "FLECS_STATS",
                     "FLECS_METRICS",
-                    "FLECS_ALERTS",
+                    "FLECS_HTTP",
+                    "FLECS_REST",
                     "FLECS_DOC",
                     "FLECS_LOG",
                     "FLECS_PERF_TRACE",
                     "FLECS_ACCURATE_COUNTERS",
-                    
+                    "FLECS_JOURNAL",
                 }
             );
         }

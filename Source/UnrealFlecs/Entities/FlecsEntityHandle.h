@@ -52,11 +52,7 @@ public:
 	FFlecsEntityHandle(const flecs::entity& InEntity)
 	{
 		Entity = InEntity;
-
-		if (Entity.world() == nullptr)
-		{
-			ObtainFlecsWorld();
-		}
+		ObtainFlecsWorld();
 	}
 
 	SOLID_INLINE FFlecsEntityHandle(const flecs::entity_t InEntity)

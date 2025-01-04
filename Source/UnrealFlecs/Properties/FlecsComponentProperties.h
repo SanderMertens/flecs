@@ -48,8 +48,10 @@ public:
 		
 		if (!ComponentProperties.contains(Name))
 		{
-			ComponentProperties[Name] = FFlecsComponentProperties{ Name, Entities,
-				ComponentPropertyStructs };
+			ComponentProperties[Name] = FFlecsComponentProperties{
+				.Name = Name, .Entities = Entities,
+				.ComponentPropertyStructs = ComponentPropertyStructs
+			};
 			
 			UN_LOGF(LogFlecsComponentProperties,
 				Log,
@@ -95,7 +97,10 @@ public:
 
 	FORCEINLINE static void RegisterStructMetaData(UScriptStruct* ScriptStruct, const FString& Tags = FString())
 	{
-		solid_check(ScriptStruct != nullptr);
+		if UNLIKELY_IF(!ensureAlways(IsValid(ScriptStruct)))
+		{
+			return;
+		}
 
 		const FName MetaDataKey = "FlecsTags";
 
@@ -138,7 +143,7 @@ public:
 				} \
 			} \
 		}; \
-		inline FAutoRegister##ComponentType##_Tags AutoRegister##ComponentType##_Instance_Tags; \
+		static inline FAutoRegister##ComponentType##_Tags AutoRegister##ComponentType##_Instance_Tags; \
 	}
 
 #define REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, ...) \
@@ -157,7 +162,7 @@ public:
 				}); \
 			} \
 		}; \
-		inline FAutoRegister##ComponentType##_Traits AutoRegister##ComponentType##_Instance_Traits; \
+		static inline FAutoRegister##ComponentType##_Traits AutoRegister##ComponentType##_Instance_Traits; \
 	}
 
 // @Deprecated

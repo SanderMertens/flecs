@@ -1192,8 +1192,9 @@ public:
 		solid_checkf(!TypeMapComponent->ScriptStructMap.contains(ScriptStruct),
 			TEXT("Script struct %s is already registered"), *ScriptStruct->GetStructCPPName());
 
-		const bool bDefer = IsDeferred();
+		TRACE_CPUPROFILER_EVENT_SCOPE(UFlecsWorld::RegisterScriptStruct);
 
+		const bool bDefer = IsDeferred();
 
 		if (bDefer)
 		{
@@ -1203,7 +1204,9 @@ public:
 		flecs::untyped_component ScriptStructComponent = World.component(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get());
 		solid_check(ScriptStructComponent.is_valid());
 		ScriptStructComponent.set_symbol(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get());
-		ScriptStructComponent.set<flecs::Component>({ ScriptStruct->GetStructureSize(), ScriptStruct->GetMinAlignment() });
+		ScriptStructComponent.set<flecs::Component>(
+			{ .size = ScriptStruct->GetStructureSize(), .alignment = ScriptStruct->GetMinAlignment() });
+		
 		if (bDefer)
 		{
 			ResumeDefer();
