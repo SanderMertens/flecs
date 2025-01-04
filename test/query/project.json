@@ -2029,7 +2029,9 @@
                 "1_sparse_written_up",
                 "1_sparse_written_self_up",
                 "sparse_0_src_only_term",
-                "sparse_0_src"
+                "sparse_0_src",
+                "sparse_pair_first",
+                "sparse_pair_second"
             ]
         }, {
             "id": "Union",
