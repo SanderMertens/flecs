@@ -35,8 +35,11 @@ public:
 	void Initialize();
 }; // struct FFlecsDefaultEntityEngine
 
-#define DEFINE_DEFAULT_ENTITY_OPTION(DefaultEntityName) \
-	inline DLLEXPORT ECS_ENTITY_DECLARE(DefaultEntityName); \
+#define DECLARE_DEFAULT_ENTITY(DefaultEntityName) \
+	extern flecs::entity_t DefaultEntityName;
+
+#define DEFINE_DEFAULT_ENTITY(DefaultEntityName) \
+	flecs::entity_t DefaultEntityName; \
 	namespace \
 	{                                                             \
 		static void Register##DefaultEntityName()                        \

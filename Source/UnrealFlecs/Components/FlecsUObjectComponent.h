@@ -80,12 +80,6 @@ public:
 
 REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsUObjectComponent, flecs::PairIsTag)
 
-template <>
-struct TStructOpsTypeTraits<FFlecsUObjectComponent> : public TStructOpsTypeTraitsBase2<FFlecsUObjectComponent>
-{
-	static constexpr EPropertyObjectReferenceType WithSerializerObjectReferences = EPropertyObjectReferenceType::Weak;
-}; // struct TStructOpsTypeTraits<FFlecsUObjectComponent>
-
-DEFINE_DEFAULT_ENTITY_OPTION(DontDeleteUObjectEntity);
+UNREALFLECS_API DECLARE_DEFAULT_ENTITY(DontDeleteUObjectEntity);
 
 

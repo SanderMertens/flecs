@@ -4,6 +4,7 @@
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
 #include "Transforms/FlecsTransformDefaultEntities.h"
+#include "DefaultEntityDefinitions.h"
 
 BEGIN_DEFINE_SPEC(FDefaultEntityTestsSpec,
                   "Flecs.Entity.Default_Entities",
@@ -12,11 +13,6 @@ BEGIN_DEFINE_SPEC(FDefaultEntityTestsSpec,
 FFlecsTestFixture Fixture;
 
 END_DEFINE_SPEC(FDefaultEntityTestsSpec);
-
-namespace
-{
-	DEFINE_DEFAULT_ENTITY_OPTION(TestEntityOption);
-} // namespace
 
 void FDefaultEntityTestsSpec::Define()
 {
