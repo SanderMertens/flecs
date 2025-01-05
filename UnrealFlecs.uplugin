@@ -7,6 +7,7 @@
 	"Category": "ECS",
 	"CreatedBy": "Reddy-dev",
 	"CreatedByURL": "",
+	"Copyright": "Elie Wiese-Namir © 2024. All Rights Reserved.",
 	"DocsURL": "https://www.flecs.dev/",
 	"MarketplaceURL": "",
 	"CanContainContent": true,
@@ -52,5 +53,8 @@
 	"SupportURL": "",
 	"SupportedTargetPlatforms": [
 		"Win64"
+	],
+	"PreBuildSteps": [
+		"echo Scripts/CopyrightReplacer.bat"
 	]
 }
