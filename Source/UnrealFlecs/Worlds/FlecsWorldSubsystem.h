@@ -146,11 +146,11 @@ public:
 			FString EntityName = DefaultEntities[Index].EntityName;
 			const flecs::entity_t EntityId = DefaultEntityIds[EntityName];
 
-			#if WITH_EDITOR
+			#if UNLOG_ENABLED
 			
 			FFlecsEntityHandle NewEntity =
 				
-			#endif // WITH_EDITOR
+			#endif // UNLOG_ENABLED
 				
 			NewFlecsWorld->CreateEntityWithRecordWithId(DefaultEntities[Index].EntityRecord, EntityId);
 
@@ -161,7 +161,7 @@ public:
 				"Entity %s with id %d", *NewEntity.GetName(), NewEntity.GetId());
 		}
 
-		IConsoleManager& ConsoleManager = IConsoleManager::Get();
+		const IConsoleManager& ConsoleManager = IConsoleManager::Get();
 
 		if (ConsoleManager.FindConsoleVariable(TEXT("Flecs.UseTaskThreads"))->GetBool())
 		{
