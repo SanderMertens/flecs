@@ -22,7 +22,7 @@
 		{
 			"Name": "UnrealFlecs",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PreDefault"
 		},
 		{
 			"Name": "UnrealFlecsEditor",

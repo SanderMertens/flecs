@@ -10,7 +10,6 @@
 #include "flecs.h"
 #include "Standard/robin_hood.h"
 #include "SolidMacros/Macros.h"
-#include "StructUtils/InstancedStruct.h"
 #include "StructUtils/SharedStruct.h"
 #include "Unlog/Unlog.h"
 
