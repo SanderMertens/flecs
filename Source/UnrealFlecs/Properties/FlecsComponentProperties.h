@@ -164,11 +164,6 @@ public:
 		inline FAutoRegister##ComponentType##_Traits AutoRegister##ComponentType##_Instance_Traits; \
 	}
 
-// @Deprecated
-#define REGISTER_FLECS_PROPERTIES(ComponentType, EntitiesArray, ComponentPropertyStructsArray) \
-	static_assert(false, \
-		"Do not use REGISTER_FLECS_PROPERTIES directly! Use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES instead.")
-
 #define REGISTER_COMPONENT_TAG_PROPERTIES(ComponentType, ...) \
 	REGISTER_FLECS_PROPERTIES_TAGS_IMPL_(ComponentType, __VA_ARGS__ )
 
