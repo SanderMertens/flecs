@@ -1,4 +1,6 @@
-﻿#include "UnrealFlecsEditor.h"
+﻿// Elie Wiese-Namir © 2024. All Rights Reserved.
+
+#include "UnrealFlecsEditor.h"
 #include "UnrealFlecsEditorStyle.h"
 #include "Widgets/EntityHandle/FlecsEntityHandlePinFactory.h"
 #include "Widgets/EntityHandle/FlecsEntityHandlePropertyEditor.h"

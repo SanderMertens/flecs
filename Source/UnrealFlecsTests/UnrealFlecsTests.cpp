@@ -1,4 +1,6 @@
-﻿#include "UnrealFlecsTests.h"
+﻿// Elie Wiese-Namir © 2024. All Rights Reserved.
+
+#include "UnrealFlecsTests.h"
 
 #define LOCTEXT_NAMESPACE "FUnrealFlecsTestsModule"
 

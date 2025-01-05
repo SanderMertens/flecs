@@ -10,23 +10,36 @@ def get_copyright_from_uplugin(uplugin_path):
         return data.get("Copyright", "")
 
 def insert_copyright(directory, copyright_notice):
-    """Traverse directories, remove existing copyrights, and insert new copyright notice in .h and .cpp files."""
-    copyright_pattern = re.compile(r"/\*.*?Copyright.*?\*/", re.DOTALL)
+    """Traverse directories, replace or move the first line depending on whether it's a comment."""
+    comment_pattern = re.compile(r"^\s*//")
 
     for root, _, files in os.walk(directory):
         for file in files:
             if file.endswith(('.h', '.cpp')):
                 file_path = os.path.join(root, file)
-                with open(file_path, 'r+', encoding='utf-8') as f:
-                    content = f.read()
-                    # Remove all existing copyright notices
-                    content = re.sub(copyright_pattern, "", content).strip()
-                    # Add the new copyright notice at the top
-                    updated_content = f"{copyright_notice}\n\n{content}"
+                with open(file_path, 'r+', encoding='utf-8-sig') as f:
+                    lines = f.readlines()
+                    # Remove any leading ZWNBSP characters
+                    lines = [line.replace("\ufeff", "") for line in lines]
+
+                    if lines:
+                        # Check if the first line is a comment
+                        first_line = lines[0].rstrip("\n")  # Remove trailing newline without altering the content
+                        if comment_pattern.match(first_line):
+                            # Replace the first line with the new copyright notice
+                            lines[0] = f"// {copyright_notice}\n"
+                        else:
+                            # Add the new copyright notice at the top and preserve the original first line
+                            lines = [f"// {copyright_notice}\n\n"] + lines
+                    else:
+                        # If the file is empty, just add the copyright notice
+                        lines.append(f"// {copyright_notice}\n")
+
+                    # Write the modified content back to the file
                     f.seek(0)
-                    f.write(updated_content)
+                    f.writelines(lines)
                     f.truncate()
-                    print(f"Updated copyright notice in: {file_path}")
+                    print(f"Processed copyright notice in: {file_path}")
 
 def main():
     if len(sys.argv) != 3:
@@ -48,11 +61,8 @@ def main():
         print("Error: No copyright notice found in the .uplugin file.")
         return
 
-    # Format the copyright notice as a comment block
-    formatted_copyright = f"/*\n{copyright_notice}\n*/"
-
     # Insert the copyright notice into source files in the target directory
-    insert_copyright(target_directory, formatted_copyright)
+    insert_copyright(target_directory, copyright_notice)
 
 if __name__ == "__main__":
     main()

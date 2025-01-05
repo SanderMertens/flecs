@@ -1,4 +1,4 @@
-﻿// Solstice Games © 2023. All Rights Reserved.
+﻿// Elie Wiese-Namir © 2024. All Rights Reserved.
 
 // ReSharper disable CppExpressionWithoutSideEffects
 #pragma once

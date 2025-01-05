@@ -1,4 +1,6 @@
-﻿#if WITH_AUTOMATION_TESTS
+﻿// Elie Wiese-Namir © 2024. All Rights Reserved.
+
+#if WITH_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"

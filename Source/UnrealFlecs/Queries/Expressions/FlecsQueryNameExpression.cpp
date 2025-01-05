@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Elie Wiese-Namir © 2024. All Rights Reserved.
 
 #include "FlecsQueryNameExpression.h"
 
