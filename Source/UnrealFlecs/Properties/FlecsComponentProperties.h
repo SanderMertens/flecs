@@ -33,7 +33,7 @@ public:
 	}
 
 	FORCEINLINE void RegisterComponentProperties(const std::string& Name, const std::vector<flecs::entity_t>& Entities,
-		const TArray<FSharedStruct>& ComponentPropertyStructs, const bool bResetExisting = false)
+		const TArray<FSharedStruct>& ComponentPropertyStructs, const bool bResetExisting = false, const bool bOverride = false)
 	{
 		UNLOG_CATEGORY_SCOPED(LogFlecsComponentProperties);
 
@@ -47,7 +47,7 @@ public:
 		
 		if (!ComponentProperties.contains(Name))
 		{
-			ComponentProperties[Name] = FFlecsComponentProperties{
+			ComponentProperties[Name] = FFlecsComponentProperties {
 				.Name = Name, .Entities = Entities,
 				.ComponentPropertyStructs = ComponentPropertyStructs
 			};
@@ -75,6 +75,14 @@ public:
 
 			for (const FSharedStruct& ComponentPropertyStruct : ComponentPropertyStructs)
 			{
+				if (!bOverride)
+				{
+					if (ComponentProperties[Name].ComponentPropertyStructs.Contains(ComponentPropertyStruct))
+					{
+						continue;
+					}
+				}
+
 				ComponentProperties[Name].ComponentPropertyStructs.Add(ComponentPropertyStruct);
 			}
 		}
@@ -136,13 +144,12 @@ public:
 					FCoreDelegates::OnPostEngineInit.AddLambda([]() \
 					{ \
 						UScriptStruct* ScriptStruct = TBaseStructure<ComponentType>::Get(); \
-						const FString Tags = TEXT(#__VA_ARGS__); \
-						FFlecsComponentPropertiesRegistry::Get().RegisterStructMetaData(ScriptStruct, Tags); \
+						FFlecsComponentPropertiesRegistry::Get().RegisterStructMetaData(ScriptStruct, TEXT(#__VA_ARGS__)); \
 					}); \
 				} \
 			} \
 		}; \
-		inline FAutoRegister##ComponentType##_Tags AutoRegister##ComponentType##_Instance_Tags; \
+		static FAutoRegister##ComponentType##_Tags AutoRegister##ComponentType##_Instance_Tags; \
 	}
 
 #define REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, ...) \
@@ -161,7 +168,7 @@ public:
 				}); \
 			} \
 		}; \
-		inline FAutoRegister##ComponentType##_Traits AutoRegister##ComponentType##_Instance_Traits; \
+		static FAutoRegister##ComponentType##_Traits AutoRegister##ComponentType##_Instance_Traits; \
 	}
 
 #define REGISTER_COMPONENT_TAG_PROPERTIES(ComponentType, ...) \
