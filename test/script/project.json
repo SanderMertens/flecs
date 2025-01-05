@@ -401,7 +401,9 @@
                 "const_from_prop",
                 "redefine_nested_template_w_prefab",
                 "redefine_nested_template_w_prefab_2",
-                "redefine_nested_template_w_prefab_3"
+                "redefine_nested_template_w_prefab_3",
+                "template_w_script_component",
+                "template_w_script_pair_component"
             ]
         }, {
             "id": "Error",

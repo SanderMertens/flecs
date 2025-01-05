@@ -396,6 +396,8 @@ void Template_const_from_prop(void);
 void Template_redefine_nested_template_w_prefab(void);
 void Template_redefine_nested_template_w_prefab_2(void);
 void Template_redefine_nested_template_w_prefab_3(void);
+void Template_template_w_script_component(void);
+void Template_template_w_script_pair_component(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -2494,6 +2496,14 @@ bake_test_case Template_testcases[] = {
     {
         "redefine_nested_template_w_prefab_3",
         Template_redefine_nested_template_w_prefab_3
+    },
+    {
+        "template_w_script_component",
+        Template_template_w_script_component
+    },
+    {
+        "template_w_script_pair_component",
+        Template_template_w_script_pair_component
     }
 };
 
@@ -4691,7 +4701,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        74,
+        76,
         Template_testcases
     },
     {

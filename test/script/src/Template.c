@@ -3418,3 +3418,75 @@ void Template_redefine_nested_template_w_prefab_3(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_w_script_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE "template Foo {"
+    LINE "  prop x = f32: 0"
+    LINE "  prop y = f32: 0"
+    LINE "  Position: {x, y}"
+    LINE "}"
+    LINE "Foo e(10, 20)";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, foo));
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_script_pair_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE "Tgt {}"
+    LINE "template Foo {"
+    LINE "  prop x = f32: 0"
+    LINE "  prop y = f32: 0"
+    LINE "  (Position, Tgt): {x, y}"
+    LINE "}"
+    LINE "Foo e(10, 20)";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, foo));
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), Tgt));
+
+    const Position *p = ecs_get_pair(world, e, Position, Tgt);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
