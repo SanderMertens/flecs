@@ -4,6 +4,5 @@
 
 #include "CoreMinimal.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
-#include "SolidMacros/Macros.h"
 
 DEFINE_DEFAULT_ENTITY_OPTION(FlecsFixedTick);

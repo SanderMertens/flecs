@@ -143,7 +143,7 @@ public:
 		System.interval(InInterval);
 	}
 
-	FORCEINLINE NO_DISCARD float GetInterval()
+	FORCEINLINE NO_DISCARD double GetInterval()
 	{
 		return System.interval();
 	}
@@ -153,7 +153,7 @@ public:
 		System.timeout(InTimeout);
 	}
 
-	FORCEINLINE NO_DISCARD float GetTimeout()
+	FORCEINLINE NO_DISCARD double GetTimeout()
 	{
 		return System.timeout();
 	}

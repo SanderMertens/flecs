@@ -14,6 +14,6 @@ struct UNREALFLECS_API FFlecsQueryOptionalExpression : public FFlecsQueryExpress
 public:
 	FORCEINLINE FFlecsQueryOptionalExpression();
 
-	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const;
+	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 	
 }; // struct FFlecsQueryOptionalExpression

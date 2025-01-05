@@ -12,13 +12,14 @@ class UNREALFLECS_API UFlecsDeveloperSettings final : public UDeveloperSettings
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
+	UPROPERTY(EditAnywhere, Config, Category = "Flecs", meta = (ConsoleVariable = "Flecs.UseFlecs"))
 	bool bEnableFlecs = true;
 
-	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
+	UPROPERTY(EditAnywhere, Config, Category = "Flecs", meta = (ConsoleVariable = "Flecs.UseTaskThreads"))
 	bool bUseTaskThreads = true;
 
-	UPROPERTY(EditAnywhere, Config, Category = "Flecs", meta = (EditCondition = "bUseTaskThreads"))
+	UPROPERTY(EditAnywhere, Config, Category = "Flecs",
+		meta = (EditCondition = "bUseTaskThreads", ConsoleVariable = "Flecs.TaskThreadCount"))
 	int32 TaskThreadCount = 4;
 
 }; // class UFlecsDeveloperSettings

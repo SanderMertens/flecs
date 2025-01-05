@@ -39,16 +39,15 @@ class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsyste
 public:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override
 	{
-		return Super::ShouldCreateSubsystem(Outer) && GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs;
+		return Super::ShouldCreateSubsystem(Outer)
+			&& IConsoleManager::Get().FindConsoleVariable(TEXT("Flecs.UseFlecs"))->GetBool();
 	}
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override
 	{
 		Super::Initialize(Collection);
 		
-		DeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
-		
-		if (!DeveloperSettings->bEnableFlecs)
+		if (!IConsoleManager::Get().FindConsoleVariable(TEXT("Flecs.UseFlecs"))->GetBool())
 		{
 			return;
 		}
@@ -162,9 +161,13 @@ public:
 				"Entity %s with id %d", *NewEntity.GetName(), NewEntity.GetId());
 		}
 
-		if (DeveloperSettings->bUseTaskThreads)
+		IConsoleManager& ConsoleManager = IConsoleManager::Get();
+
+		if (ConsoleManager.FindConsoleVariable(TEXT("Flecs.UseTaskThreads"))->GetBool())
 		{
-			NewFlecsWorld->SetTaskThreads(DeveloperSettings->TaskThreadCount);
+			const IConsoleVariable* TaskThreads = ConsoleManager.FindConsoleVariable(TEXT("Flecs.TaskThreadCount"));
+			solid_checkf(TaskThreads, TEXT("TaskThreads console variable not found!"));
+			NewFlecsWorld->SetTaskThreads(TaskThreads->GetInt());
 		}
 		else
 		{
@@ -177,6 +180,7 @@ public:
 
 		for (UObject* Module : Settings.Modules)
 		{
+			solid_checkf(IsValid(Module), TEXT("Module is not valid!"));
 			solid_checkf(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
 				TEXT("Module %s does not implement UFlecsModuleInterface"), *Module->GetName());
 			
@@ -232,9 +236,6 @@ public:
 protected:
 	UPROPERTY()
 	TObjectPtr<UFlecsWorld> DefaultWorld;
-
-	UPROPERTY()
-	TWeakObjectPtr<const UFlecsDeveloperSettings> DeveloperSettings;
 
 	void RegisterAllGameplayTags(UFlecsWorld* InFlecsWorld)
 	{

@@ -11,7 +11,4 @@ UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, DefaultToInstanced
 class UNREALFLECS_API UFlecsModuleObject : public UObject, public IFlecsModuleInterface
 {
 	GENERATED_BODY()
-
-public:
-
 }; // class UFlecsModuleObject
