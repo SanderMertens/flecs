@@ -124,7 +124,7 @@ void* flecs_get_base_component(
 
     do {
         ecs_id_t pair = ids[i ++];
-        ecs_entity_t base = ecs_pair_second(world, pair);
+        const ecs_entity_t base = ecs_pair_second(world, pair);
 
         ecs_record_t *r = flecs_entities_get(world, base);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);

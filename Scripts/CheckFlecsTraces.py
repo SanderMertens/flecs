@@ -4,12 +4,12 @@ import sys
 import clang.cindex
 
 # ---------------------------------------------------------------------------
-# 1. Adjust to point clang.cindex to your libclang.dll
+# Adjust to point clang.cindex to your libclang.dll
 # ---------------------------------------------------------------------------
 clang.cindex.Config.set_library_file(r"C:\Program Files\LLVM\bin\libclang.dll")
 
 # ---------------------------------------------------------------------------
-# 2. Utility: which files to parse
+# Utility: which files to parse
 # ---------------------------------------------------------------------------
 def is_source_file(path):
     _, ext = os.path.splitext(path.lower())
@@ -23,7 +23,7 @@ def find_source_files(root_dir):
                 yield full_path
 
 # ---------------------------------------------------------------------------
-# 3. Determine function name
+# Determine function name
 # ---------------------------------------------------------------------------
 def get_function_name(node):
     if node.kind == clang.cindex.CursorKind.FUNCTION_DECL:
@@ -35,7 +35,7 @@ def get_function_name(node):
     return None
 
 # ---------------------------------------------------------------------------
-# 4. Visit function: gather push/pop calls
+# Visit function: gather push/pop calls
 # ---------------------------------------------------------------------------
 def visit_function_and_check(node, filename):
     func_name = get_function_name(node)
@@ -117,7 +117,7 @@ def visit_function_and_check(node, filename):
     return issues
 
 # ---------------------------------------------------------------------------
-# 5. Parse each file, gather issues
+# Parse each file, gather issues
 # ---------------------------------------------------------------------------
 def process_file(filename):
     index = clang.cindex.Index.create()
@@ -151,7 +151,7 @@ def process_file(filename):
     return all_issues
 
 # ---------------------------------------------------------------------------
-# 6. Main routine
+# Main routine
 # ---------------------------------------------------------------------------
 def main():
     if len(sys.argv) != 2:
