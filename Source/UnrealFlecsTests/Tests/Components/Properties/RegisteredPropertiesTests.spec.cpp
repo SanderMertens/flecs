@@ -1,4 +1,4 @@
-﻿// Elie Wiese-Namir © 2024. All Rights Reserved.
+﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
 
 #if WITH_AUTOMATION_TESTS
