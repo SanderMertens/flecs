@@ -35,7 +35,7 @@ def get_function_name(node):
     return None
 
 # ---------------------------------------------------------------------------
-# 4. Visit function: gather push/pop calls, ignoring UNKNOWN_STRING
+# 4. Visit function: gather push/pop calls
 # ---------------------------------------------------------------------------
 def visit_function_and_check(node, filename):
     func_name = get_function_name(node)
@@ -122,11 +122,6 @@ def visit_function_and_check(node, filename):
 def process_file(filename):
     index = clang.cindex.Index.create()
 
-    # Adjust compile args for your code. 
-    # If your code is actually C++:
-    #   args=["-x", "c++", "-std=c++20"]
-    # If it's C:
-    #   args=["-x", "c", "-std=c11"]
     translation_unit = index.parse(
         filename,
         args=["-x", "c", "-std=c11"]
