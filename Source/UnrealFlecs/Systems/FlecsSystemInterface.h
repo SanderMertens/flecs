@@ -43,7 +43,7 @@ public:
 		return System.GetEntity();
 	}
 
-	FORCEINLINE virtual void BuildSystem(flecs::system_builder<>& Builder)
+	virtual void BuildSystem(flecs::system_builder<>& Builder)
 		PURE_VIRTUAL(IFlecsSystemInterface::BuildSystem, return;);
 
 	UFUNCTION(BlueprintImplementableEvent, Meta = (DisplayName = "Initialize System"))
@@ -54,7 +54,7 @@ public:
 		return System;
 	}
 
-	FORCEINLINE NO_DISCARD FString GetName() const;
+	NO_DISCARD FString GetName() const;
 	
 	FFlecsSystem System;
 	

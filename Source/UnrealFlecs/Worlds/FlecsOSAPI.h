@@ -290,7 +290,10 @@ struct FOSApiInitializer
 
         os_api.abort_ = []()
         {
-            UN_LOG(LogFlecsCore, Fatal, "Flecs: abort");
+        	#if UNLOG_ENABLED
+        		UN_LOGF(LogFlecsCore, Fatal, "Flecs - Aborting...");
+			#endif // UNLOG_ENABLED
+        	FGenericPlatformMisc::RequestExit(false);
         };
 
         os_api.log_ = [](int32_t Level, const char* File, int32_t Line, const char* Message)
@@ -342,12 +345,16 @@ struct FOSApiInitializer
 
 		os_api.perf_trace_push_ = [](const char* FileName, size_t Line, const char* Name)
 		{
+			#ifdef FLECS_PERF_TRACE
 			FCpuProfilerTrace::OutputBeginDynamicEvent(Name, FileName, Line);
+			#endif // FLECS_PERF_TRACE
 		};
 
 		os_api.perf_trace_pop_ = [](const char* FileName, size_t Line, const char* Name)
 		{
+			#ifdef FLECS_PERF_TRACE
 			FCpuProfilerTrace::OutputEndEvent();
+			#endif // FLECS_PERF_TRACE
 		};
 
 		os_api.adec_ = [](int32_t* Value) -> int32

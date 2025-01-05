@@ -228,7 +228,7 @@ public:
 						*StructSymbol, Properties->Entities.size(),
 						Properties->ComponentPropertyStructs.Num());
 				}
-				#if WITH_EDITOR
+				#if UNLOG_ENABLED
 				else
 				{
 					UN_LOGF(LogFlecsWorld, Log, "Component properties %s not found", *StructSymbol);

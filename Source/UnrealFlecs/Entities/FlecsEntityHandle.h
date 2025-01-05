@@ -44,12 +44,12 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 		return FFlecsEntityHandle(flecs::entity::null());
 	}
 
-	SOLID_INLINE static NO_DISCARD FFlecsEntityHandle GetNullHandle(const UFlecsWorld* InWorld);
+	static NO_DISCARD FFlecsEntityHandle GetNullHandle(const UFlecsWorld* InWorld);
 
 public:
 	FFlecsEntityHandle();
 	
-	FFlecsEntityHandle(const flecs::entity& InEntity)
+	SOLID_INLINE FFlecsEntityHandle(const flecs::entity& InEntity)
 	{
 		Entity = InEntity;
 		ObtainFlecsWorld();
@@ -61,14 +61,14 @@ public:
 		ObtainFlecsWorld();
 	}
 
-	FFlecsEntityHandle(flecs::world& InWorld, const flecs::entity_t InEntity)
+	SOLID_INLINE FFlecsEntityHandle(flecs::world& InWorld, const flecs::entity_t InEntity)
 	{
 		Entity = flecs::entity(InWorld, InEntity);
 	}
 
-	SOLID_INLINE FFlecsEntityHandle(const UFlecsWorld* InWorld, const flecs::entity_t InEntity);
+	FFlecsEntityHandle(const UFlecsWorld* InWorld, const flecs::entity_t InEntity);
 
-	SOLID_INLINE FFlecsEntityHandle(const flecs::world_t* InWorld, const flecs::entity_t InEntity);
+	FFlecsEntityHandle(const flecs::world_t* InWorld, const flecs::entity_t InEntity);
 	
 	SOLID_INLINE NO_DISCARD flecs::entity GetEntity() const
 	{
@@ -521,7 +521,7 @@ public:
 		GetEntity().from_json(StringCast<char>(*InJson).Get());
 	}
 
-	SOLID_INLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess);
+	bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess);
 
 	template <typename FunctionType>
 	SOLID_INLINE void Iterate(const FunctionType& InFunction) const
@@ -1464,16 +1464,16 @@ public:
 			StringCast<char>(*InitialSeparator).Get()));
 	}
 
-	SOLID_INLINE NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
+	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
 	
 private:
 	flecs::entity Entity;
 	
-	SOLID_INLINE NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
+	NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
 
-	SOLID_INLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return Entity.world(); }
+	NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return Entity.world(); }
 
-	SOLID_INLINE void ObtainFlecsWorld();
+	void ObtainFlecsWorld();
 
 public:
 
@@ -1545,7 +1545,7 @@ public:
 		return TraitHolder;
 	}
 
-	SOLID_INLINE void PostScriptConstruct();
+	void PostScriptConstruct();
 
 	#if WITH_EDITORONLY_DATA
 

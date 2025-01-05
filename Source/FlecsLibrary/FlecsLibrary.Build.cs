@@ -15,9 +15,18 @@ public class FlecsLibrary : ModuleRules
         
         OptimizationLevel = OptimizationMode.Speed;
         
-        // When compiling flecs.c, make sure to define flecs_EXPORTS, for example by adding -Dflecs_EXPORTS to the compiler command.
-        // https://www.flecs.dev/flecs/md_docs_2Quickstart.html
-        PrivateDefinitions.Add("flecs_EXPORTS");
+        bool bIsMonolithic = Target.LinkType == TargetLinkType.Monolithic;
+        
+        if (bIsMonolithic)
+        {
+            PublicDefinitions.Add("flecs_STATIC");
+        }
+        else
+        {
+            // When compiling flecs.c, make sure to define flecs_EXPORTS, for example by adding -Dflecs_EXPORTS to the compiler command.
+            // https://www.flecs.dev/flecs/md_docs_2Quickstart.html
+            PrivateDefinitions.Add("flecs_EXPORTS");
+        }
         
         PublicDefinitions.AddRange(
             new string[]
@@ -31,8 +40,6 @@ public class FlecsLibrary : ModuleRules
                 "FLECS_TIMER",
                 "FLECS_META",
                 "FLECS_JSON",
-                "FLECS_UNITS",
-                "FLECS_ALERTS",
                 "FLECS_SCRIPT_MATH",
             }
         );
@@ -52,6 +59,8 @@ public class FlecsLibrary : ModuleRules
                     "FLECS_PERF_TRACE",
                     "FLECS_ACCURATE_COUNTERS",
                     "FLECS_JOURNAL",
+                    "FLECS_UNITS",
+                    "FLECS_ALERTS",
                 }
             );
         }

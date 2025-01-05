@@ -21,7 +21,7 @@ public:
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
 
-	FORCEINLINE virtual void ProgressModule(double InDeltaTime) override;
+	virtual void ProgressModule(double InDeltaTime) override;
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override
 	{

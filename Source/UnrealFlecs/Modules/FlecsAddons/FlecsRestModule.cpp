@@ -8,6 +8,8 @@
 
 void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
+	#ifdef FLECS_REST
+	
 	uint16 ClientPieInstanceOffset = 0;
 	
 	const UWorld* UnrealWorld = InWorld->GetWorld();
@@ -23,14 +25,22 @@ void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntity
 	InWorld->SetSingleton<flecs::Rest>(flecs::Rest{ .port = RestPort});
 	RestEntity = InWorld->GetSingletonEntity<flecs::Rest>();
 
+	#ifdef FLECS_STATS
+
 	if (bImportStats)
 	{
 		StatsEntity = InWorld->ImportFlecsModule<flecs::stats>();
 	}
+
+	#endif // FLECS_STATS
+
+	#endif // FLECS_REST
 }
 
 void UFlecsRestModule::DeinitializeModule(UFlecsWorld* InWorld)
 {
+	#ifdef FLECS_REST
+	
 	if (StatsEntity.IsValid())
 	{
 		StatsEntity.Disable();
@@ -42,4 +52,6 @@ void UFlecsRestModule::DeinitializeModule(UFlecsWorld* InWorld)
 	}
 	
 	RestEntity.Disable();
+
+	#endif // FLECS_REST
 }

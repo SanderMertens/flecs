@@ -43,6 +43,9 @@ void UFlecsPhysicsModule::WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWor
 {
 	Super::WorldBeginPlay(InWorld, InGameWorld);
 
+	Scene = InGameWorld->GetPhysicsScene();
+	solid_check(Scene);
+
 	InWorld->RegisterModuleDependency<UFlecsTickerModule>
 		(this,
 			[this](
@@ -50,8 +53,6 @@ void UFlecsPhysicsModule::WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWor
 				UFlecsWorld* InFlecsWorld,
 				MAYBE_UNUSED FFlecsEntityHandle& InTickerEntity)
 		{
-			FPhysScene* Scene = InFlecsWorld->GetWorld()->GetPhysicsScene();
-
 			InFlecsWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
 
 			const UFlecsTickerModule* TickerModule = InFlecsWorld->GetModule<UFlecsTickerModule>();
@@ -72,8 +73,6 @@ inline void UFlecsPhysicsModule::ResimulationHandlers()
 {
 	UFlecsWorld* FlecsWorld = GetFlecsWorld();
 	solid_check(IsValid(FlecsWorld));
-	
-	const FPhysScene* Scene = FlecsWorld->GetWorld()->GetPhysicsScene();
 	solid_check(Scene);
 	
 	IConsoleVariable* ResimConsoleVariable =

@@ -25,9 +25,9 @@ class UNREALFLECS_API IFlecsModuleInterface : public IFlecsEntityInterface
 
 public:
 
-	FORCEINLINE void ImportModule(flecs::world& InWorld);
+	void ImportModule(flecs::world& InWorld);
 	
-	FORCEINLINE void DeinitializeModule_Internal();
+	void DeinitializeModule_Internal();
 
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity);
 	

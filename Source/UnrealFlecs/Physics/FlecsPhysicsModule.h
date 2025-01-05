@@ -21,7 +21,7 @@ public:
 
 	virtual void WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld) override;
 
-	FORCEINLINE void ResimulationHandlers();
+	void ResimulationHandlers();
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override
 	{
@@ -42,5 +42,7 @@ private:
 
 	FTickerPhysicsHistoryComponent* PhysicsHistoryComponentRef;
 	FFlecsTickerComponent* TickerComponentRef;
+
+	FPhysScene* Scene = nullptr;
 	
 }; // class UFlecsPhysicsModule

@@ -31,7 +31,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-	FORCEINLINE void SetEntityHandle(const FFlecsEntityHandle& InEntityHandle);
+	void SetEntityHandle(const FFlecsEntityHandle& InEntityHandle);
 
 	UPROPERTY(Replicated)
 	FFlecsEntityHandle EntityHandle;

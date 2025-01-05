@@ -70,8 +70,7 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 	{
 		if (UNLIKELY(EntityRecord.EntityName.IsEmpty()))
 		{
-			UN_LOG(LogFlecsEntity, Warning,
-				"One of the default entities has an empty name");
+			UN_LOG(LogFlecsEntity, Warning, "One of the default entities has an empty name");
 			continue;
 		}
 

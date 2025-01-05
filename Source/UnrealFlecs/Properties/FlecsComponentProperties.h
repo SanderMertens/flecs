@@ -104,6 +104,8 @@ public:
 
 	FORCEINLINE static void RegisterStructMetaData(UScriptStruct* ScriptStruct, const FString& Tags = FString())
 	{
+		#if WITH_EDITOR
+		
 		if UNLIKELY_IF(!ensureAlways(IsValid(ScriptStruct)))
 		{
 			return;
@@ -120,6 +122,8 @@ public:
 		{
 			ScriptStruct->SetMetaData(MetaDataKey, *Tags);
 		}
+
+		#endif // WITH_EDITOR
 	}
 	
 	robin_hood::unordered_flat_map<std::string, FFlecsComponentProperties> ComponentProperties;
