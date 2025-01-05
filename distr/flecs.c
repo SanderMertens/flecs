@@ -13002,6 +13002,9 @@ char* flecs_load_from_file(
 
     return content;
 error:
+    if (file) {
+        fclose(file);
+    }
     ecs_os_free(content);
     return NULL;
 }
