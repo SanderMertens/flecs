@@ -53,8 +53,5 @@
 	"SupportURL": "",
 	"SupportedTargetPlatforms": [
 		"Win64"
-	],
-	"PreBuildSteps": [
-		"echo Scripts/CopyrightReplacer.bat"
 	]
 }
