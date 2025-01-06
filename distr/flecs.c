@@ -37612,6 +37612,7 @@ void flecs_table_emit(
     ecs_table_t *table,
     ecs_entity_t event)
 {
+    ecs_defer_begin(world);
     flecs_emit(world, world, 0, &(ecs_event_desc_t) {
         .ids = &table->type,
         .event = event,
@@ -37619,6 +37620,7 @@ void flecs_table_emit(
         .flags = EcsEventTableOnly,
         .observable = world
     });
+    ecs_defer_end(world);
 }
 
 /* Main table initialization function */

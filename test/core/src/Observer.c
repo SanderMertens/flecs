@@ -6,6 +6,12 @@ void Observer(ecs_iter_t *it) {
 }
 
 static
+void Observer_is_deferred(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+    test_assert(ecs_is_deferred(it->world));
+}
+
+static
 void Observer_w_field(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
@@ -9780,6 +9786,96 @@ void Observer_2_up_terms_w_batched_add(void) {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.e[0], e2);
+
+    ecs_fini(world);
+}
+
+void Observer_on_table_create(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    Probe ctx = {0};
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnTableCreate },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    test_int(ctx.invoked, 1);
+
+    ecs_add(world, e, Bar);
+
+    test_int(ctx.invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_on_table_create_is_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    Probe ctx = {0};
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnTableCreate },
+        .callback = Observer_is_deferred,
+        .ctx = &ctx
+    });
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    test_int(ctx.invoked, 1);
+
+    ecs_add(world, e, Bar);
+
+    test_int(ctx.invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_on_table_create_is_deferred_batched(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    Probe ctx = {0};
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnTableCreate },
+        .callback = Observer_is_deferred,
+        .ctx = &ctx
+    });
+
+    test_int(ctx.invoked, 0);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, e, Bar);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_defer_end(world);
+
+    test_int(ctx.invoked, 2);
 
     ecs_fini(world);
 }
