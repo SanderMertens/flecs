@@ -1949,6 +1949,8 @@ void Sparse_sparse_0_src_only_term(void);
 void Sparse_sparse_0_src(void);
 void Sparse_sparse_pair_first(void);
 void Sparse_sparse_pair_second(void);
+void Sparse_sparse_pair_first_after_query(void);
+void Sparse_sparse_pair_second_after_query(void);
 
 // Testsuite 'Union'
 void Union_setup(void);
@@ -9756,6 +9758,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "sparse_pair_second",
         Sparse_sparse_pair_second
+    },
+    {
+        "sparse_pair_first_after_query",
+        Sparse_sparse_pair_first_after_query
+    },
+    {
+        "sparse_pair_second_after_query",
+        Sparse_sparse_pair_second_after_query
     }
 };
 
@@ -10735,7 +10745,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        25,
+        27,
         Sparse_testcases,
         1,
         Sparse_params

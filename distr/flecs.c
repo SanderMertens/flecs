@@ -35671,6 +35671,8 @@ int flecs_query_finalize_terms(
             ECS_TERMSET_SET(q->var_fields, 1u << term->field_index);
         }
 
+        bool is_sparse = false;
+
         ecs_id_record_t *idr = flecs_id_record_get(world, term->id);
         if (idr) {
             if (ecs_os_has_threading()) {
@@ -35682,17 +35684,26 @@ int flecs_query_finalize_terms(
             term->flags_ |= EcsTermKeepAlive;
 
             if (idr->flags & EcsIdIsSparse) {
-                term->flags_ |= EcsTermIsSparse;
-                ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
-                if (term->flags_ & EcsTermIsCacheable) {
-                    cacheable_terms --;
-                    ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
-                }
+                is_sparse = true;
+            }
+        } else {
+            ecs_entity_t type = ecs_get_typeid(world, term->id);
+            if (type && ecs_has_id(world, type, EcsSparse)) {
+                is_sparse = true;
+            }
+        }
 
-                /* Sparse component fields must be accessed with ecs_field_at */
-                if (!nodata_term) {
-                    q->row_fields |= flecs_uto(uint32_t, 1llu << i);
-                }
+        if (is_sparse) {
+            term->flags_ |= EcsTermIsSparse;
+            ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
+            if (term->flags_ & EcsTermIsCacheable) {
+                cacheable_terms --;
+                ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
+            }
+
+            /* Sparse component fields must be accessed with ecs_field_at */
+            if (!nodata_term) {
+                q->row_fields |= flecs_uto(uint32_t, 1llu << i);
             }
         }
 
