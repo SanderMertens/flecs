@@ -69663,6 +69663,7 @@ void flecs_query_update_node_up_trs(
         const ecs_query_impl_t *impl = ctx->query;
         const ecs_query_t *q = &impl->pub;
         ecs_query_cache_t *cache = impl->cache;
+        int8_t *field_map = cache->field_map;
         int32_t i, field_count = q->field_count;
         for (i = 0; i < field_count; i ++) {
             if (!(fields & (1llu << i))) {
@@ -69677,10 +69678,11 @@ void flecs_query_update_node_up_trs(
                 ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
                 if (r->table != tr->hdr.table) {
                     ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-                    ecs_assert(idr->id == q->ids[i], ECS_INTERNAL_ERROR, NULL);
+                    ecs_assert(idr->id == q->ids[field_map ? field_map[i] : i], 
+                        ECS_INTERNAL_ERROR, NULL);
                     tr = node->trs[i] = flecs_id_record_get_table(idr, r->table);
-                    if (cache->field_map) {
-                        ctx->it->trs[cache->field_map[i]] = tr;
+                    if (field_map) {
+                        ctx->it->trs[field_map[i]] = tr;
                     }
                 }
             }

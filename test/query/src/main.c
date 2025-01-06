@@ -704,6 +704,7 @@ void Basic_get_cache_query_cached(void);
 void Basic_get_cache_query_partially_cached(void);
 void Basic_get_query(void);
 void Basic_get_query_not_a_query(void);
+void Basic_mixed_uncacheable_w_shared(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -4903,6 +4904,10 @@ bake_test_case Basic_testcases[] = {
     {
         "get_query_not_a_query",
         Basic_get_query_not_a_query
+    },
+    {
+        "mixed_uncacheable_w_shared",
+        Basic_mixed_uncacheable_w_shared
     }
 };
 
@@ -10606,7 +10611,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        233,
+        234,
         Basic_testcases,
         1,
         Basic_params
