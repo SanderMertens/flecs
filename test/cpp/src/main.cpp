@@ -1243,6 +1243,7 @@ void World_world_mini(void);
 void World_copy_world(void);
 void World_fini_reentrancy(void);
 void World_fini_copy_move_assign(void);
+void World_world_init_fini_log_all(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -6268,6 +6269,10 @@ bake_test_case World_testcases[] = {
     {
         "fini_copy_move_assign",
         World_fini_copy_move_assign
+    },
+    {
+        "world_init_fini_log_all",
+        World_world_init_fini_log_all
     }
 };
 
@@ -7108,7 +7113,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        116,
+        117,
         World_testcases
     },
     {
