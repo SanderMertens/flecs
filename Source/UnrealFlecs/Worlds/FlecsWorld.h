@@ -233,7 +233,7 @@ public:
 				{
 					UN_LOGF(LogFlecsWorld, Log, "Component properties %s not found", *StructSymbol);
 				}
-				#endif // WITH_EDITOR
+				#endif // UNLOG_ENABLED
 				
 				RegisterMemberProperties(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
 			});
@@ -251,7 +251,7 @@ public:
 			ObjectDestructionComponentQuery.each([](
 				flecs::entity InEntity, FFlecsUObjectComponent& InUObjectComponent)
 			{
-				if (InUObjectComponent.IsStale(true, true))
+				if (InUObjectComponent.IsStale())
 				{
 					UN_LOGF(LogFlecsWorld, Log, "Entity Garbage Collected: %s",
 						StringCast<TCHAR>(InEntity.name().c_str()).Get());
@@ -291,7 +291,8 @@ public:
 			.event<FFlecsModuleInitEvent>()
 			.term_at(1).filter().read()
 			.each([this](flecs::iter& Iter, const size_t IterIndex,
-			             const FFlecsModuleComponent& InModuleComponent, const FFlecsUObjectComponent& InUObjectComponent)
+			             const FFlecsModuleComponent& InModuleComponent,
+			             const FFlecsUObjectComponent& InUObjectComponent)
 			{
 				const FFlecsEntityHandle ModuleEntity = Iter.entity(IterIndex);
 				
@@ -1021,8 +1022,6 @@ public:
 		return GetScriptEnumEntity(StaticEnum<T>());
 	}
 
-	//#if WITH_EDITOR
-
 	void RegisterMemberProperties(const UStruct* InStruct,
 		const FFlecsEntityHandle& InEntity) const
 	{
@@ -1129,8 +1128,6 @@ public:
 		}
 	}
 
-	//#endif // WITH_EDITOR
-
 	void RegisterEnumProperties(const UEnum* Enum, const FFlecsEntityHandle& InComponentEntity) const
 	{
 		flecs::untyped_component UntypedComponent = InComponentEntity.GetUntypedComponent_Unsafe();
@@ -1172,11 +1169,7 @@ public:
 		
 		TypeMapComponent->ScriptEnumMap.emplace(Enum, EnumComponent.GetEntity());
 
-		//#if WITH_EDITOR
-
 		RegisterEnumProperties(Enum, EnumComponent);
-
-		//#endif // WITH_EDITOR
 
 		SetScope(OldScope);
 		return EnumComponent;

@@ -139,20 +139,11 @@ void FFlecsEntityHandle::PostScriptConstruct()
         UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
         solid_check(FlecsWorldSubsystem);
         
-        if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
+        FlecsWorldSubsystem->ListenBeginPlay(FOnWorldBeginPlay::FDelegate::CreateLambda(
+            [this, FlecsWorldSubsystem](UWorld* InWorld)
         {
             SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World, GetEntity().id()));
-        }
-        else
-        {
-            FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
-                ->OnWorldCreatedDelegate.AddLambda([FlecsWorldSubsystem, this, &OnWorldCreatedHandle]
-                    (const UFlecsWorld* InFlecsWorld)
-            {
-                SetEntity(flecs::entity(InFlecsWorld->World, GetEntity().id()));
-                FlecsWorldSubsystem->OnWorldCreatedDelegate.Remove(OnWorldCreatedHandle);
-            });
-        }
+        }));
     }
 }
 

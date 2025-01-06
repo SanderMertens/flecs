@@ -17,6 +17,6 @@ class UNREALFLECS_API IFlecsModuleProgressInterface
 {
 	GENERATED_BODY()
 public:
-	virtual void ProgressModule(double InDeltaTime) = 0;
+	virtual void ProgressModule(double InDeltaTime) PURE_VIRTUAL(IFlecsModuleProgressInterface::ProgressModule, );
 
 }; // class IFlecsModuleProgressInterface

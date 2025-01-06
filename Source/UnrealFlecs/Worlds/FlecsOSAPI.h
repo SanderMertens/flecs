@@ -191,7 +191,7 @@ struct FOSApiInitializer
 
 		os_api.cond_free_ = [](ecs_os_cond_t Cond)
 		{
-			if (Cond)
+			if LIKELY_IF(Cond)
 			{
 				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
 				delete Wrapper->Mutex;
@@ -201,7 +201,7 @@ struct FOSApiInitializer
 
 		os_api.cond_signal_ = [](ecs_os_cond_t Cond)
 		{
-			if (Cond)
+			if LIKELY_IF(Cond)
 			{
 				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
 				Wrapper->ConditionalVariable.NotifyOne();
@@ -210,7 +210,7 @@ struct FOSApiInitializer
 
 		os_api.cond_broadcast_ = [](ecs_os_cond_t Cond)
 		{
-			if (Cond)
+			if LIKELY_IF(Cond)
 			{
 				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
 				Wrapper->ConditionalVariable.NotifyAll();
@@ -219,7 +219,7 @@ struct FOSApiInitializer
 
 		os_api.cond_wait_ = [](ecs_os_cond_t Cond, ecs_os_mutex_t Mutex)
 		{
-			if (Cond && Mutex)
+			if LIKELY_IF(Cond && Mutex)
 			{
 				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
 				FCriticalSection* CritSection = reinterpret_cast<FCriticalSection*>(Mutex);
@@ -236,7 +236,7 @@ struct FOSApiInitializer
 
 		os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
 		{
-			if (FFlecsThreadWrapper* ThreadWrapper = reinterpret_cast<FFlecsThreadWrapper*>(Thread))
+			if LIKELY_IF(FFlecsThreadWrapper* ThreadWrapper = reinterpret_cast<FFlecsThreadWrapper*>(Thread))
 			{
 				ThreadWrapper->Join();
 				delete ThreadWrapper;
@@ -261,7 +261,7 @@ struct FOSApiInitializer
 			const FFlecsTask* FlecsTask = reinterpret_cast<FFlecsTask*>(Thread);
 			solid_check(FlecsTask);
 			
-			if (FlecsTask)
+			if LIKELY_IF(FlecsTask)
 			{
 				FlecsTask->Wait();
 				delete FlecsTask;
@@ -346,14 +346,14 @@ struct FOSApiInitializer
 		os_api.perf_trace_push_ = [](const char* FileName, size_t Line, const char* Name)
 		{
 			#ifdef FLECS_PERF_TRACE
-			FCpuProfilerTrace::OutputBeginDynamicEvent(Name, FileName, Line);
+				FCpuProfilerTrace::OutputBeginDynamicEvent(Name, FileName, Line);
 			#endif // FLECS_PERF_TRACE
 		};
 
 		os_api.perf_trace_pop_ = [](const char* FileName, size_t Line, const char* Name)
 		{
 			#ifdef FLECS_PERF_TRACE
-			FCpuProfilerTrace::OutputEndEvent();
+				FCpuProfilerTrace::OutputEndEvent();
 			#endif // FLECS_PERF_TRACE
 		};
 

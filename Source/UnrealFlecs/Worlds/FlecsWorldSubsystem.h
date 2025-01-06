@@ -228,7 +228,24 @@ public:
 			|| WorldType == EWorldType::PIE
 			|| WorldType == EWorldType::GameRPC;
 	}
-	
+
+	void ListenBeginPlay(const FOnWorldBeginPlay::FDelegate& Delegate)
+	{
+		if UNLIKELY_IF(!GetWorld())
+		{
+			return;
+		}
+
+		if (GetWorld()->HasBegunPlay())
+		{
+			Delegate.ExecuteIfBound(GetWorld());
+		}
+		else
+		{
+			OnWorldBeginPlayDelegate.Add(Delegate);
+		}
+	}
+
 	FOnWorldCreated OnWorldCreatedDelegate;
 	FOnWorldBeginPlay OnWorldBeginPlayDelegate;
 	FOnWorldDestroyed OnWorldDestroyedDelegate;

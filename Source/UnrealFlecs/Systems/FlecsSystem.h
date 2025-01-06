@@ -21,7 +21,7 @@ public:
 	FORCEINLINE FFlecsSystem(const flecs::system& InSystem) : System(InSystem) {}
 	
 	template <typename ...TComponents>
-	FORCEINLINE FFlecsSystem(flecs::system_builder<TComponents...>& InBuilder)
+	FORCEINLINE explicit FFlecsSystem(flecs::system_builder<TComponents...>& InBuilder)
 	{
 		System = InBuilder.build();
 	}

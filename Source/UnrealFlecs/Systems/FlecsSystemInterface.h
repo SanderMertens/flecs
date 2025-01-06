@@ -26,7 +26,7 @@ public:
 		flecs::system_builder Builder(InWorld, StringCast<char>(*GetName()).Get());
 		BuildSystem(Builder);
 
-		System = Builder;
+		System = FFlecsSystem(Builder); // Builder.build();
 
 		System.GetEntity().Set<FFlecsUObjectComponent>({ _getUObject() });
 		

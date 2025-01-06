@@ -13,7 +13,7 @@ class UNREALFLECS_API UFlecsNetworkingModule final : public UFlecsModuleObject
 
 public:
 
-	FORCEINLINE virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
-	FORCEINLINE virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
+	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
+	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
 
 }; // class UFlecsNetworkingModule

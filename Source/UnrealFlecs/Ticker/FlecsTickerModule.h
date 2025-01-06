@@ -44,6 +44,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Ticker")
 	FORCEINLINE FFlecsEntityHandle GetTickerSource() const { return TickerSystem.GetEntity(); }
 
+	UPROPERTY()
+	double TickerAccumulator = 0.0;
+
+	double TickerInterval = 0.0;
+
 	FFlecsTickerComponent* TickerComponentPtr = nullptr;
 
 	UPROPERTY()
@@ -54,10 +59,5 @@ public:
 
 	UPROPERTY()
 	FFlecsEntityHandle TickerPipeline;
-
-	UPROPERTY()
-	double TickerAccumulator = 0.0;
-
-	double TickerInterval = 0.0;
 
 }; // class UFlecsTickerModule
