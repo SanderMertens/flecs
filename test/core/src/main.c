@@ -1994,6 +1994,7 @@ void World_fini_queue_overflow(void);
 void World_exclusive_on_delete(void);
 void World_exclusive_on_delete_target(void);
 void World_exclusive_on_instantiate(void);
+void World_world_init_fini_log_all(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -2338,7 +2339,6 @@ void Error_log_dbg(void);
 void Error_log_log(void);
 void Error_log_warning(void);
 void Error_log_error(void);
-void Error_last_error(void);
 void Error_set_log_level_return(void);
 
 // Testsuite 'StackAlloc'
@@ -10070,6 +10070,10 @@ bake_test_case World_testcases[] = {
     {
         "exclusive_on_instantiate",
         World_exclusive_on_instantiate
+    },
+    {
+        "world_init_fini_log_all",
+        World_world_init_fini_log_all
     }
 };
 
@@ -11383,10 +11387,6 @@ bake_test_case Error_testcases[] = {
         Error_log_error
     },
     {
-        "last_error",
-        Error_last_error
-    },
-    {
         "set_log_level_return",
         Error_set_log_level_return
     }
@@ -11654,7 +11654,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        69,
+        70,
         World_testcases
     },
     {
@@ -11717,7 +11717,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        13,
+        12,
         Error_testcases
     },
     {

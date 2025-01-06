@@ -2068,7 +2068,8 @@
                 "fini_queue_overflow",
                 "exclusive_on_delete",
                 "exclusive_on_delete_target",
-                "exclusive_on_instantiate"
+                "exclusive_on_instantiate",
+                "world_init_fini_log_all"
             ]
         }, {
             "id": "WorldInfo",
@@ -2431,7 +2432,6 @@
                 "log_log",
                 "log_warning",
                 "log_error",
-                "last_error",
                 "set_log_level_return"
             ]
         }, {

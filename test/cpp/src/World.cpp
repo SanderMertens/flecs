@@ -2099,3 +2099,29 @@ void World_fini_copy_move_assign(void) {
     world_C.release();
     test_assert(finished_2 == true);  // '2' is now finished as well.
 }
+
+static
+void test_log(
+    int32_t level,
+    const char *file, 
+    int32_t line,  
+    const char *msg)
+{ }
+
+void World_world_init_fini_log_all(void) {
+    flecs::log::set_level(4);
+
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = test_log;
+    ecs_os_set_api(&os_api);
+
+    flecs::world ecs;
+
+    ecs.import<flecs::stats>();
+    ecs.import<flecs::units>();
+    ecs.import<flecs::metrics>();
+    ecs.import<flecs::alerts>();
+
+    test_assert(true);
+}

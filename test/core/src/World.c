@@ -1785,3 +1785,29 @@ void World_exclusive_on_instantiate(void) {
 
     ecs_fini(world);
 }
+
+static
+void test_log(
+    int32_t level,
+    const char *file, 
+    int32_t line,  
+    const char *msg)
+{ }
+
+void World_world_init_fini_log_all(void) {
+    ecs_log_set_level(4);
+
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = test_log;
+    ecs_os_set_api(&os_api);
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsStats);
+    ECS_IMPORT(world, FlecsUnits);
+    ECS_IMPORT(world, FlecsMetrics);
+    ECS_IMPORT(world, FlecsAlerts);
+    ecs_fini(world);
+
+    test_assert(true);
+}
