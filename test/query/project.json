@@ -720,7 +720,8 @@
                 "get_cache_query_cached",
                 "get_cache_query_partially_cached",
                 "get_query",
-                "get_query_not_a_query"
+                "get_query_not_a_query",
+                "mixed_uncacheable_w_shared"
             ]
         }, {
             "id": "Combinations",
