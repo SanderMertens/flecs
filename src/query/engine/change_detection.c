@@ -97,7 +97,7 @@ bool flecs_query_get_fixed_monitor(
     bool check)
 {
     ecs_query_t *q = &impl->pub;
-    ecs_world_t *world = q->world;
+    ecs_world_t *world = q->real_world;
     ecs_term_t *terms = q->terms;
     int32_t i, term_count = q->term_count;
 
@@ -364,7 +364,7 @@ void flecs_query_mark_fields_dirty(
         return;
     }
 
-    ecs_world_t *world = q->world;
+    ecs_world_t *world = q->real_world;
     int16_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
         ecs_termset_t field_bit = (ecs_termset_t)(1u << i);
@@ -415,7 +415,7 @@ void flecs_query_mark_fixed_fields_dirty(
         return;
     }
 
-    ecs_world_t *world = q->world;
+    ecs_world_t *world = q->real_world;
     int32_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
         if (!(fixed_write_fields & flecs_ito(uint32_t, 1 << i))) {
@@ -479,6 +479,9 @@ void flecs_query_sync_match_monitor(
             }
 
             flecs_query_get_column_for_field(q, match, field, &tc);
+
+            /* Query for cache should never point to stage */
+            ecs_assert(q->world == q->real_world, ECS_INTERNAL_ERROR, NULL);
 
             monitor[field + 1] = flecs_table_get_dirty_state(
                 q->world, tc.table)[tc.column + 1];

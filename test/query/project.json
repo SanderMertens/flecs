@@ -1741,7 +1741,10 @@
                 "query_changed_no_source_component",
                 "query_changed_w_not_out",
                 "query_change_w_optional",
-                "query_changed_after_count"
+                "query_changed_after_count",
+                "staged_query_w_shared_inout_field",
+                "staged_query_w_fixed_inout_field",
+                "staged_query_w_fixed_inout_field_read"
             ]
         }, {
             "id": "GroupBy",
