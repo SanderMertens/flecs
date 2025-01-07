@@ -2456,7 +2456,7 @@ void flecs_targets_mark_for_delete(
     }
 }
 
-static
+static inline
 bool flecs_id_is_delete_target(
     ecs_id_t id,
     ecs_entity_t action)
@@ -2513,7 +2513,7 @@ ecs_entity_t flecs_get_delete_action(
     return result;
 }
 
-static
+static inline
 void flecs_update_monitors_for_delete(
     ecs_world_t *world,
     ecs_id_t id)
@@ -3191,7 +3191,7 @@ error:
     return NULL;
 }
 
-static
+static inline
 ecs_record_t* flecs_access_begin(
     ecs_world_t *stage,
     ecs_entity_t entity,
@@ -3219,7 +3219,7 @@ error:
     return NULL;
 }
 
-static
+static inline
 void flecs_access_end(
     const ecs_record_t *r,
     bool write)
@@ -3341,7 +3341,7 @@ error:
     return (ecs_ref_t){0};
 }
 
-static
+static inline
 bool flecs_ref_needs_sync(
     ecs_ref_t *ref,
     ecs_table_record_t *tr,
@@ -4800,7 +4800,7 @@ ecs_table_t* flecs_cmd_batch_add_diff(
     return dst;
 }
 
-static
+static inline
 void flecs_cmd_batch_for_entity(
     ecs_world_t *world,
     ecs_table_diff_builder_t *diff,

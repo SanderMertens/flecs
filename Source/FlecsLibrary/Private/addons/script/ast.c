@@ -94,7 +94,7 @@ error:
     return NULL;
 }
 
-static
+static inline
 void flecs_script_set_id(
     ecs_script_id_t *id,
     const char *first,

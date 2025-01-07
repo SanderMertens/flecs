@@ -12,7 +12,7 @@
 #define ECS_LOAD_FACTOR (12)
 #define ECS_BUCKET_END(b, c) ECS_ELEM_T(b, ecs_bucket_t, c)
 
-static
+static inline
 uint8_t flecs_log2(uint32_t v) {
     static const uint8_t log2table[32] = 
         {0, 9,  1,  10, 13, 21, 2,  29, 11, 14, 16, 18, 22, 25, 3, 30,
@@ -27,7 +27,7 @@ uint8_t flecs_log2(uint32_t v) {
 }
 
 /* Get bucket count for number of elements */
-static
+static inline
 int32_t flecs_map_get_bucket_count(
     int32_t count)
 {
@@ -35,7 +35,7 @@ int32_t flecs_map_get_bucket_count(
 }
 
 /* Get bucket shift amount for a given bucket count */
-static
+static inline
 uint8_t flecs_map_get_bucket_shift (
     int32_t bucket_count)
 {
@@ -43,7 +43,7 @@ uint8_t flecs_map_get_bucket_shift (
 }
 
 /* Get bucket index for provided map key */
-static
+static inline
 int32_t flecs_map_get_bucket_index(
     uint16_t bucket_shift,
     ecs_map_key_t key) 
@@ -53,7 +53,7 @@ int32_t flecs_map_get_bucket_index(
 }
 
 /* Get bucket for key */
-static
+static inline
 ecs_bucket_t* flecs_map_get_bucket(
     const ecs_map_t *map,
     ecs_map_key_t key)
@@ -65,7 +65,7 @@ ecs_bucket_t* flecs_map_get_bucket(
 }
 
 /* Add element to bucket */
-static
+static inline
 ecs_map_val_t* flecs_map_bucket_add(
     ecs_block_allocator_t *allocator,
     ecs_bucket_t *bucket,

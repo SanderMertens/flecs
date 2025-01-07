@@ -1176,7 +1176,7 @@ bool flecs_rest_get_tables(
     return true;
 }
 
-static
+static inline
 const char* flecs_rest_cmd_kind_to_str(
     ecs_cmd_kind_t kind)
 {
@@ -1283,12 +1283,12 @@ void flecs_rest_server_garbage_collect(
     const int32_t count = ecs_vec_count(&removed_frames);
     if (count) {
         const int64_t *frames = ecs_vec_first(&removed_frames);
-        if (count) {
-            for (int32_t i = 0; i < count; i ++) {
+
+        for (int32_t i = 0; i < count; i ++) {
                 ecs_map_remove(&impl->cmd_captures, 
                     flecs_ito(uint64_t, frames[i]));
             }
-        }
+
         ecs_vec_fini_t(NULL, &removed_frames, int64_t);
     }
 }

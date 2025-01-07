@@ -39,7 +39,7 @@ ECS_DTOR(EcsScript, ptr, {
     }
 })
 
-static
+static inline
 ecs_id_t flecs_script_tag(
     ecs_entity_t script,
     ecs_entity_t instance)
