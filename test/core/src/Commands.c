@@ -4535,3 +4535,32 @@ void Commands_deep_command_nesting(void) {
 
     ecs_fini(world);
 }
+
+void Commands_ensure_from_2_stages(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_set_stage_count(world, 2);
+    ecs_world_t *s1 = ecs_get_stage(world, 0);
+    ecs_world_t *s2 = ecs_get_stage(world, 1);
+
+    ecs_readonly_begin(world, false);
+
+    ecs_ensure(s1, e, Position);
+    ecs_ensure(s2, e, Position);
+    ecs_add(s2, e, Foo);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Foo));
+
+    ecs_readonly_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Foo));
+
+    ecs_fini(world);
+}

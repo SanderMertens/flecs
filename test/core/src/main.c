@@ -2183,6 +2183,7 @@ void Commands_batched_w_table_change_in_observer(void);
 void Commands_redefine_named_in_threaded_app(void);
 void Commands_batched_cmd_w_component_init(void);
 void Commands_deep_command_nesting(void);
+void Commands_ensure_from_2_stages(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -10810,6 +10811,10 @@ bake_test_case Commands_testcases[] = {
     {
         "deep_command_nesting",
         Commands_deep_command_nesting
+    },
+    {
+        "ensure_from_2_stages",
+        Commands_ensure_from_2_stages
     }
 };
 
@@ -11690,7 +11695,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        149,
+        150,
         Commands_testcases
     },
     {
