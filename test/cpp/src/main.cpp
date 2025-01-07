@@ -587,6 +587,7 @@ void Query_each_const(void);
 void Query_each_shared(void);
 void Query_each_optional(void);
 void Query_each_sparse(void);
+void Query_each_sparse_many(void);
 void Query_signature(void);
 void Query_signature_const(void);
 void Query_signature_shared(void);
@@ -3694,6 +3695,10 @@ bake_test_case Query_testcases[] = {
     {
         "each_sparse",
         Query_each_sparse
+    },
+    {
+        "each_sparse_many",
+        Query_each_sparse_many
     },
     {
         "signature",
@@ -7048,7 +7053,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        121,
+        122,
         Query_testcases
     },
     {

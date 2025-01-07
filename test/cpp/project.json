@@ -611,6 +611,7 @@
                 "each_shared",
                 "each_optional",
                 "each_sparse",
+                "each_sparse_many",
                 "signature",
                 "signature_const",
                 "signature_shared",

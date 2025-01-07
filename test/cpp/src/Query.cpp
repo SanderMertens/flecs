@@ -992,6 +992,44 @@ void Query_each_sparse(void) {
     test_int(p->y, 22);
 }
 
+void Query_each_sparse_many(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::Sparse);
+    world.component<Velocity>();
+    
+    std::vector<flecs::entity> entities;
+
+    for (int i = 0; i < 2000; i ++) {
+        entities.push_back(world.entity()
+            .set<Position>({
+                static_cast<float>(10 + i), 
+                static_cast<float>(20 + i)
+            })
+            .set<Velocity>({
+                static_cast<float>(i), 
+                static_cast<float>(i)
+            }));
+    }
+
+    auto q = world.query<Position, Velocity>();
+
+    q.each([](Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    for (int i = 0; i < 2000; i ++) {
+        flecs::entity e = entities[i];
+        const Position *p = e.get<Position>();
+        test_int(p->x, 10 + i * 2);
+        test_int(p->y, 20 + i * 2);
+        const Velocity *v = e.get<Velocity>();
+        test_int(v->x, i);
+        test_int(v->y, i);
+    }
+}
+
 // Generic lambdas are a C++14 feature.
 
 struct GenericLambdaEachEntity {
