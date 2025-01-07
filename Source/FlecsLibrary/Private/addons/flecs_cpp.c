@@ -434,7 +434,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
 
     if (ecs_should_log(0)) {
         ecs_value_t v = { .type = value_type, .ptr = value };
-        char *str;
+        char *str = NULL;
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, 
             ecs_id(ecs_string_t), &str);
         ecs_meta_set_value(&cur, &v);
