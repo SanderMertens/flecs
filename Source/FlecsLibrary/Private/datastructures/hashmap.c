@@ -9,7 +9,7 @@
 
 #include "../private_api.h"
 
-static
+static inline
 int32_t flecs_hashmap_find_key(
     const ecs_hashmap_t *map,
     ecs_vec_t *keys,

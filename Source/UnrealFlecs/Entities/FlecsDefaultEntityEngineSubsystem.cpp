@@ -68,7 +68,7 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 
 	for (const FFlecsDefaultMetaEntity& EntityRecord : GetDefault<UFlecsDefaultEntitiesDeveloperSettings>()->DefaultEntities)
 	{
-		if (UNLIKELY(EntityRecord.EntityName.IsEmpty()))
+		if UNLIKELY_IF(EntityRecord.EntityName.IsEmpty())
 		{
 			UN_LOG(LogFlecsEntity, Warning, "One of the default entities has an empty name");
 			continue;

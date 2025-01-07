@@ -367,6 +367,37 @@
 		#endif
 #endif
 
+// #if defined(__cplusplus)
+// 	#if defined(__GNUC__) || defined(__clang__)
+// 		#define FLECS_RESTRICT __restrict__
+// 	#elif defined(_MSC_VER) // defined(__GNUC__) || defined(__clang__)
+// 		#define FLECS_RESTRICT __restrict
+// 	#else // defined(_MSC_VER)
+// 		#define FLECS_RESTRICT
+// 	#endif // defined(_MSC_VER)
+// #else // defined(__cplusplus)
+// 	#define FLECS_RESTRICT restrict
+// #endif // defined(__cplusplus)
+
+#ifndef FLECS_RESTRICT
+	#ifndef FLECS_DEBUG
+	#define FLECS_RESTRICT restrict
+	#else
+	#define FLECS_RESTRICT
+	#endif
+#endif // FLECS_RESTRICT
+
+#ifndef DEBUG_RESTRICT_CHECK
+
+	#ifdef FLECS_DEBUG
+	#define DEBUG_RESTRICT_CHECK(p1, p2, size) \
+		ecs_assert((uintptr_t)(p1) + (size) <= (uintptr_t)(p2) || (uintptr_t)(p2) + (size) <= (uintptr_t)(p1))
+	#else
+		#define DEBUG_RESTRICT_CHECK(p1, p2, size) ((void)0)
+	#endif
+
+#endif // DEBUG_RESTRICT_CHECK
+
 /** @} */
 
 #include "flecs/private/api_defines.h"

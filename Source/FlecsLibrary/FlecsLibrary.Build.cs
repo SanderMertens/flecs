@@ -58,7 +58,6 @@ public class FlecsLibrary : ModuleRules
                     "FLECS_LOG",
                     "FLECS_PERF_TRACE",
                     "FLECS_ACCURATE_COUNTERS",
-                    "FLECS_JOURNAL",
                     "FLECS_UNITS",
                     "FLECS_ALERTS",
                 }
