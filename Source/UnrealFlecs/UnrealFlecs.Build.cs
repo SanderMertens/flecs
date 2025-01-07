@@ -9,24 +9,14 @@ public class UnrealFlecs : ModuleRules
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		CppStandard = CppStandardVersion.Latest;
-
 		OptimizationLevel = OptimizationMode.Speed;
-		
 		IWYUSupport = IWYUSupport.Full;
-		
+
 		PublicIncludePaths.AddRange(
 			new string[] {
 				ModuleDirectory
 			}
 			);
-				
-		
-		PrivateIncludePaths.AddRange(
-			new string[] {
-				// ... add other private include paths required here ...
-			}
-			);
-			
 		
 		PublicDependencyModuleNames.AddRange(
 			new string[]
@@ -55,14 +45,6 @@ public class UnrealFlecs : ModuleRules
 				"Slate",
 				"SlateCore",
 				"DeveloperSettings",
-			}
-			);
-		
-		
-		DynamicallyLoadedModuleNames.AddRange(
-			new string[]
-			{
-				// ... add any modules that your module loads dynamically here ...
 			}
 			);
 	}
