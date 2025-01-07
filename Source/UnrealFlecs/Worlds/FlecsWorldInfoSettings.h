@@ -37,12 +37,21 @@ public:
         return !(*this == Other);
     }
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
+    UPROPERTY(EditAnywhere, Category = "Flecs")
     FString WorldName;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Flecs",
+    UPROPERTY(EditAnywhere, Instanced, Category = "Flecs",
         meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
     TArray<TObjectPtr<UObject>> Modules;
+
+    #if WITH_EDITORONLY_DATA
+
+    UPROPERTY(EditAnywhere, Instanced, Category = "Flecs",
+         meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
+    TArray<TObjectPtr<UObject>> EditorModules;
+
+    #endif // WITH_EDITORONLY_DATA
+    
     
 }; // struct FFlecsWorldSettingsInfo
 

@@ -171,7 +171,7 @@ public:
 		}
 		else
 		{
-			NewFlecsWorld->SetThreads(std::thread::hardware_concurrency());
+			NewFlecsWorld->SetThreads(static_cast<int32>(std::thread::hardware_concurrency()));
 		}
 
 		NewFlecsWorld->WorldStart();
@@ -186,6 +186,19 @@ public:
 			
 			NewFlecsWorld->ImportModule(Module);
 		}
+
+		#if WITH_EDITOR
+
+		for (UObject* Module : Settings.EditorModules)
+		{
+			solid_checkf(IsValid(Module), TEXT("Module is not valid!"));
+			solid_checkf(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
+				TEXT("Module %s does not implement UFlecsModuleInterface"), *Module->GetName());
+			
+			NewFlecsWorld->ImportModule(Module);
+		}
+
+		#endif // WITH_EDITOR
 		
 		OnWorldCreatedDelegate.Broadcast(NewFlecsWorld);
 		
@@ -207,21 +220,31 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE UFlecsWorld* GetDefaultWorldStatic(const UObject* WorldContextObject)
 	{
-		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
-			? GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
-				->GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld
-			: nullptr;
+		if (GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert))
+		{
+			return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
+			              ->GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld;
+		}
+		else
+		{
+			return nullptr;
+		}
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE bool HasValidFlecsWorldStatic(const UObject* WorldContextObject)
 	{
-		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull)
-			? IsValid(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
-				->GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld)
-			: false;
+		if (GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
+		{
+			return IsValid(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
+			                      ->GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld);
+		}
+		else
+		{
+			return false;
+		}
 	}
-	
+
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
 	{
 		return WorldType == EWorldType::Game
@@ -231,12 +254,17 @@ public:
 
 	void ListenBeginPlay(const FOnWorldBeginPlay::FDelegate& Delegate)
 	{
-		if UNLIKELY_IF(!GetWorld())
+		if UNLIKELY_IF(!ensureAlways(IsValid(DefaultWorld)))
 		{
 			return;
 		}
 
-		if (GetWorld()->HasBegunPlay())
+		if UNLIKELY_IF(!ensureAlways(IsValid(DefaultWorld)))
+		{
+			return;
+		}
+
+		if (DefaultWorld->HasSingleton<FFlecsBeginPlay>())
 		{
 			Delegate.ExecuteIfBound(GetWorld());
 		}

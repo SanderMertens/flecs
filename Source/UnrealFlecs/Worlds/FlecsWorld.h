@@ -1185,8 +1185,6 @@ public:
 		solid_checkf(!TypeMapComponent->ScriptStructMap.contains(ScriptStruct),
 			TEXT("Script struct %s is already registered"), *ScriptStruct->GetStructCPPName());
 
-		TRACE_CPUPROFILER_EVENT_SCOPE(UFlecsWorld::RegisterScriptStruct);
-
 		const bool bDefer = IsDeferred();
 
 		if (bDefer)
