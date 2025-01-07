@@ -17,13 +17,13 @@
 	"Modules": [
 		{
 			"Name": "FlecsLibrary",
-			"Type": "RuntimeAndProgram",
+			"Type": "Runtime",
 			"LoadingPhase": "PreDefault"
 		},
 		{
 			"Name": "UnrealFlecs",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "Default"
 		},
 		{
 			"Name": "UnrealFlecsEditor",
