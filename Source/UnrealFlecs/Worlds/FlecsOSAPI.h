@@ -172,6 +172,7 @@ struct FOSApiInitializer
 
 		os_api.mutex_lock_ = [](ecs_os_mutex_t Mutex)
 		{
+			ASSUME(Mutex);
 			FCriticalSection* MutexPtr = reinterpret_cast<FCriticalSection*>(Mutex);
 			MutexPtr->Lock();
 		};
@@ -245,7 +246,7 @@ struct FOSApiInitializer
 			return nullptr;
 		};
 
-		os_api.thread_self_ = []() -> ecs_os_thread_t
+		os_api.thread_self_ = []() -> ecs_os_thread_id_t
 		{
 			return FPlatformTLS::GetCurrentThreadId();
 		};
@@ -345,8 +346,10 @@ struct FOSApiInitializer
 
 		os_api.perf_trace_push_ = [](const char* FileName, size_t Line, const char* Name)
 		{
+			solid_check(Line < std::numeric_limits<uint32>::max());
+			
 			#ifdef FLECS_PERF_TRACE
-				FCpuProfilerTrace::OutputBeginDynamicEvent(Name, FileName, Line);
+				FCpuProfilerTrace::OutputBeginDynamicEvent(Name, FileName, static_cast<uint32>(Line));
 			#endif // FLECS_PERF_TRACE
 		};
 
