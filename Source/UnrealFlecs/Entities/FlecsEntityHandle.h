@@ -1275,7 +1275,7 @@ public:
 		return GetEntity().has(InFirst, InSecond);
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual>
+	template <typename TFirst, typename TSecond, typename TActual = TSecond>
 	SOLID_INLINE void SetPair(const TActual& InValue) const
 	{
 		GetEntity().set<TFirst, TSecond>(InValue);
@@ -1328,7 +1328,7 @@ public:
 			ecs_pair(ObtainComponentTypeStruct(InFirst).GetEntity(), InSecond.GetEntity()), InValue);
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual>
+	template <typename TFirst, typename TSecond, typename TActual = TSecond>
 	SOLID_INLINE void SetPairSecond(const TActual& InSecond) const
 	{
 		GetEntity().set_second<TFirst, TSecond>(InSecond);

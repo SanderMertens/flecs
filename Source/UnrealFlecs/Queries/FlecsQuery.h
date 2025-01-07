@@ -4,9 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "FlecsQueryDefinition.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsQuery.generated.h"
+
+class UFlecsWorld;
 
 USTRUCT(BlueprintType)
 struct FFlecsQuery
@@ -34,6 +37,8 @@ public:
     {
         Query = InWorld.query<TArgs...>(InName);
     }
+
+    FFlecsQuery(UFlecsWorld* InFlecsWorld, const FString& InName, const FFlecsQueryDefinition& InDefinition);
 
     FORCEINLINE NO_DISCARD bool HasChanged() const
     {
@@ -84,8 +89,7 @@ public:
     {
         return GetEntity() == FFlecsEntityHandle(ecs_get_entity(Other));
     }
-
-private:
+    
     flecs::query<> Query;
 }; // struct FFlecsQuery
 

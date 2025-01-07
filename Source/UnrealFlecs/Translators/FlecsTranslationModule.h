@@ -18,7 +18,7 @@ public:
 	}
 	
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
-	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;;
+	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
 
 private:
 

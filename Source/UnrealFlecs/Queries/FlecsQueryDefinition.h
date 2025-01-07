@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FlecsQueryFlags.h"
+#include "Enums/FlecsQueryCache.h"
 #include "Expressions/FlecsQueryTermExpression.h"
 #include "FlecsQueryDefinition.generated.h"
 
@@ -26,6 +27,7 @@ public:
 		solid_check(InWorld != nullptr);
 		
 		InQueryBuilder.flags(Flags);
+		InQueryBuilder.cache_kind(static_cast<flecs::query_cache_kind_t>(CacheType));
 		
 		for (const FFlecsQueryTermExpression& Term : Terms)
 		{
@@ -43,6 +45,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query", meta = (Bitmask, BitmaskEnum = "EFlecsQueryFlags"))
 	uint8 Flags = static_cast<uint8>(EFlecsQueryFlags::None);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
+	EFlecsQueryCacheType CacheType = EFlecsQueryCacheType::Default;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query", meta = (ExcludeBaseStruct))
 	TArray<TInstancedStruct<FFlecsQueryExpression>> OtherExpressions;

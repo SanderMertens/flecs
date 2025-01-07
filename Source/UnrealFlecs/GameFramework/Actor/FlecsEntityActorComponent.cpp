@@ -42,19 +42,15 @@ void UFlecsEntityActorComponent::InitializeEntity()
 		return;
 	}
 
-	if (EntityHandle.GetEntity().id() != 0)
+	if UNLIKELY_IF(EntityHandle.GetEntity().id() != 0)
 	{
 		return;
 	}
 
-	if (UFlecsWorldSubsystem::HasValidFlecsWorldStatic(this))
+	if LIKELY_IF(ensureMsgf(UFlecsWorldSubsystem::HasValidFlecsWorldStatic(this),
+		TEXT("Flecs World Subsystem is not initialized.")))
 	{
 		CreateActorEntity(UFlecsWorldSubsystem::GetDefaultWorldStatic(this));
-	}
-	else
-	{
-		GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreatedDelegate
-			.AddUObject(this, &UFlecsEntityActorComponent::OnWorldCreated);
 	}
 }
 
@@ -103,11 +99,9 @@ void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 void UFlecsEntityActorComponent::CreateActorEntity(UFlecsWorld* InWorld)
 {
 	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord, EntityName);
-	EntityHandle.Set<FFlecsUObjectComponent>(GetOwner());
-	EntityHandle.AddPair<FFlecsActorTag, FFlecsUObjectComponent>();
+	EntityHandle.SetPairSecond<FFlecsActorTag, FFlecsUObjectComponent>(GetOwner());
 	
-	UN_LOGF(LogFlecsEntity, Log, "Created Actor Entity: %s",
-		*EntityHandle.GetName());
+	UN_LOGF(LogFlecsEntity, Log, "Created Actor Entity: %s", *EntityHandle.GetName());
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(UFlecsEntityActorComponent, EntityHandle, this);
 }
