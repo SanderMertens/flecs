@@ -215,7 +215,7 @@ struct each_ref_field : public each_field<T> {
 
         if (field.is_row) {
             field.ptr = ecs_field_at_w_size(iter, sizeof(T), field.index, 
-                static_cast<int8_t>(row));
+                static_cast<int32_t>(row));
         }
     }
 };
