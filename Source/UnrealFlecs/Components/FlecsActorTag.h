@@ -11,5 +11,3 @@ struct UNREALFLECS_API FFlecsActorTag
 {
 	GENERATED_BODY()
 }; // struct FFlecsActorTag
-
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsActorTag, flecs::PairIsTag)
