@@ -53300,38 +53300,39 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     ecs_world_t *world,
     const ecs_type_info_t *ti,
     ecs_flags32_t flags,
-    ecs_xtor_t ctor,
-    ecs_xtor_t dtor,
-    ecs_move_t move,
-    ecs_copy_t copy,
-    ecs_cmp_t cmp,
-    ecs_equals_t equals)
+    bool ctor,
+    bool dtor,
+    bool move,
+    bool copy,
+    bool cmp,
+    bool equals)
 {
     ecs_type_hooks_t hooks = ti->hooks;
     if (hooks.lifecycle_ctx_free) {
         hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
     }
 
-    if(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) {
-        ctor = NULL;
-    }
-    if(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) {
-        dtor = NULL;
-    }
-    if(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) {
-        move = NULL;
-    }
-    if(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) {
-        copy = NULL;
-    }
-    if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
-        cmp = NULL;
-    }
-    if(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
-        equals = NULL;
-    }
+    hooks.ctor = ctor && !(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) ? 
+        flecs_rtt_struct_ctor : NULL;
+
+    hooks.dtor = dtor && !(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) ? 
+        flecs_rtt_struct_dtor : NULL;
+    
+    hooks.move = move && !(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) ? 
+        flecs_rtt_struct_move : NULL;
+
+    hooks.copy = copy && !(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ? 
+        flecs_rtt_struct_copy : NULL;
+    
+    hooks.cmp = cmp && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) ? 
+        flecs_rtt_struct_cmp : NULL;
+    
+    hooks.equals = equals && !(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) ? 
+        flecs_rtt_struct_equals : NULL;
+
     ecs_rtt_struct_ctx_t *rtt_ctx = NULL;
-    if (ctor || dtor || move || copy || cmp || equals) {
+    if (hooks.ctor || hooks.dtor || hooks.move || hooks.copy 
+        || hooks.cmp || hooks.equals) {
         rtt_ctx = ecs_os_malloc_t(ecs_rtt_struct_ctx_t);
         ecs_vec_init_t(NULL, &rtt_ctx->vctor, ecs_rtt_call_data_t, 0);
         ecs_vec_init_t(NULL, &rtt_ctx->vdtor, ecs_rtt_call_data_t, 0);
@@ -53346,13 +53347,6 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
         hooks.lifecycle_ctx = NULL;
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
     }
-
-    hooks.ctor = ctor;
-    hooks.dtor = dtor;
-    hooks.move = move;
-    hooks.copy = copy;
-    hooks.cmp = cmp;
-    hooks.equals = equals;
 
     hooks.flags = flags;
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
@@ -53407,12 +53401,12 @@ void flecs_rtt_init_default_hooks_struct(
         world,
         ti,
         flags,
-        ctor_hook_required ? flecs_rtt_struct_ctor : NULL,
-        dtor_hook_required ? flecs_rtt_struct_dtor : NULL,
-        move_hook_required ? flecs_rtt_struct_move : NULL,
-        copy_hook_required ? flecs_rtt_struct_copy : NULL,
-        valid_cmp ?  flecs_rtt_struct_cmp : NULL,
-        valid_equals ? flecs_rtt_struct_equals : NULL
+        ctor_hook_required,
+        dtor_hook_required,
+        move_hook_required,
+        copy_hook_required,
+        valid_cmp,
+        valid_equals
         );
 
     if (!rtt_ctx) {

@@ -27840,7 +27840,7 @@ void set_hooks(flecs::type_hooks_t &h) {
 
 public:
 
-untyped_component& op_compare(
+untyped_component& on_compare(
     ecs_cmp_t compare_callback) 
 {
     ecs_assert(compare_callback, ECS_INVALID_PARAMETER, NULL);
@@ -27855,7 +27855,7 @@ untyped_component& op_compare(
     return *this;
 }
 
-untyped_component& op_equals(
+untyped_component& on_equals(
     ecs_equals_t equals_callback) 
 {
     ecs_assert(equals_callback, ECS_INVALID_PARAMETER, NULL);
@@ -28248,7 +28248,7 @@ struct component : untyped_component {
     template <typename Func>
     component<T>& on_add(Func&& func) {
         using Delegate = typename _::each_delegate<typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = this->get_hooks();
+        flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_add == nullptr, ECS_INVALID_OPERATION,
             "on_add hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
@@ -28264,7 +28264,7 @@ struct component : untyped_component {
     component<T>& on_remove(Func&& func) {
         using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = this->get_hooks();
+        flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_remove == nullptr, ECS_INVALID_OPERATION,
             "on_remove hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
@@ -28280,7 +28280,7 @@ struct component : untyped_component {
     component<T>& on_set(Func&& func) {
         using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = this->get_hooks();
+        flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_set == nullptr, ECS_INVALID_OPERATION,
             "on_set hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
@@ -28292,36 +28292,36 @@ struct component : untyped_component {
     }
 
     /** Register operator compare hook. */
-    using untyped_component::op_compare;
-    component<T>& op_compare() {
+    using untyped_component::on_compare;
+    component<T>& on_compare() {
         ecs_cmp_t handler = _::compare<T>();
         ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
             "Type does not have operator> or operator< const or is inaccessible");
-        op_compare(handler);
+        on_compare(handler);
         return *this;
     }
 
     /** Type safe variant of compare op function */
     using cmp_hook = int(*)(const T* a, const T* b, const ecs_type_info_t *ti);
-    component<T>& op_compare(cmp_hook callback) {
-        op_compare(reinterpret_cast<ecs_cmp_t>(callback));
+    component<T>& on_compare(cmp_hook callback) {
+        on_compare(reinterpret_cast<ecs_cmp_t>(callback));
         return *this;
     }
 
     /** Register operator equals hook. */
-    using untyped_component::op_equals;
-    component<T>& op_equals() {
+    using untyped_component::on_equals;
+    component<T>& on_equals() {
         ecs_equals_t handler = _::equals<T>();
         ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
             "Type does not have operator== const or is inaccessible");
-        op_equals(handler);
+        on_equals(handler);
         return *this;
     }
 
     /** Type safe variant of equals op function */
     using equals_hook = bool(*)(const T* a, const T* b, const ecs_type_info_t *ti);
-    component<T>& op_equals(equals_hook callback) {
-        op_equals(reinterpret_cast<ecs_equals_t>(callback));
+    component<T>& on_equals(equals_hook callback) {
+        on_equals(reinterpret_cast<ecs_equals_t>(callback));
         return *this;
     }
 
