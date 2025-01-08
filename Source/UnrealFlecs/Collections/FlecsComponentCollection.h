@@ -8,7 +8,7 @@
 #include "FlecsComponentCollection.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFlecsComponentCollection
+struct UNREALFLECS_API FFlecsComponentCollection
 {
 	GENERATED_BODY()
 
