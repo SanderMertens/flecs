@@ -16,6 +16,11 @@ struct UNREALFLECS_API FFlecsQueryDefinition
 public:
 	FORCEINLINE FFlecsQueryDefinition() = default;
 
+	FORCEINLINE void AddQueryTerm(const FFlecsQueryTermExpression& InTerm)
+	{
+		Terms.Emplace(InTerm);
+	}
+
 	template <TQueryExpressionConcept TExpression>
 	FORCEINLINE void AddExpression(const TExpression& InExpression)
 	{
@@ -26,7 +31,6 @@ public:
 	{
 		solid_check(InWorld != nullptr);
 		
-		InQueryBuilder.flags(Flags);
 		InQueryBuilder.cache_kind(static_cast<flecs::query_cache_kind_t>(CacheType));
 		
 		for (const FFlecsQueryTermExpression& Term : Terms)
@@ -42,9 +46,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
 	TArray<FFlecsQueryTermExpression> Terms;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query", meta = (Bitmask, BitmaskEnum = "EFlecsQueryFlags"))
-	uint8 Flags = static_cast<uint8>(EFlecsQueryFlags::None);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
 	EFlecsQueryCacheType CacheType = EFlecsQueryCacheType::Default;

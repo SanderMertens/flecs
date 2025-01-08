@@ -14,14 +14,15 @@ struct UNREALFLECS_API FFlecsQueryExpression
 {
 	GENERATED_BODY()
 
-public:
-	FORCEINLINE FFlecsQueryExpression();
-	FORCEINLINE FFlecsQueryExpression(const bool bInAllowsChildExpressions)
+protected:
+	FORCEINLINE explicit FFlecsQueryExpression(const bool bInAllowsChildExpressions)
 	#if WITH_EDITORONLY_DATA
 		: bAllowsChildExpressions(bInAllowsChildExpressions)
 	#endif // WITH_EDITORONLY_DATA
 	{}
-	
+
+public:
+	FFlecsQueryExpression() = default;
 	virtual ~FFlecsQueryExpression() = default;
 	
 	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const;

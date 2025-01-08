@@ -1,10 +1,12 @@
 ﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
-
+#include "Queries/FlecsQuery.h"
 #if WITH_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
+#include "Queries/FlecsQueryDefinition.h"
+#include "QueryDefinitionTestComponents.h"
 
 BEGIN_DEFINE_SPEC(FQueryDefinitionTestsSpec,
                   "Flecs.Query.Definition",
@@ -17,6 +19,42 @@ END_DEFINE_SPEC(FQueryDefinitionTestsSpec);
 void FQueryDefinitionTestsSpec::Define()
 {
 	FLECS_FIXTURE_LIFECYCLE(Fixture);
+
+	Describe("Create Query Definition", [this]
+	{
+		It("Should create a query definition", [this]
+		{
+			FFlecsQueryDefinition Definition;
+			
+			FFlecsQueryTermExpression TermExpression1;
+			TermExpression1.InputType.Type = EFlecsQueryInputType::ScriptStruct;
+			TermExpression1.InputType.ScriptStruct = FTestStruct_QueryDefinitions::StaticStruct();
+			
+			Definition.AddQueryTerm(TermExpression1);
+
+			TestTrue("Query definition has 1 term", Definition.Terms.Num() == 1);
+			TestTrue("Query definition has 1 term with correct input type",
+				Definition.Terms[0].InputType.Type == EFlecsQueryInputType::ScriptStruct);
+		});
+
+		It("Should create a query definition and build a Query", [this]
+		{
+			FFlecsQueryDefinition Definition;
+
+			FFlecsQueryTermExpression TermExpression1;
+			TermExpression1.InputType.Type = EFlecsQueryInputType::ScriptStruct;
+			TermExpression1.InputType.ScriptStruct = FTestStruct_QueryDefinitions::StaticStruct();
+
+			Definition.AddQueryTerm(TermExpression1);
+
+			flecs::query_builder<> Builder = flecs::query_builder(Fixture.FlecsWorld->World, "TestQuery");
+			
+			Definition.Apply(Fixture.FlecsWorld.Get(), Builder);
+			flecs::query<> Query = Builder.build();
+
+			TestTrue("Query has 1 term", Query.term_count() == 1);
+		});
+	});
 }
 
 #endif // WITH_AUTOMATION_TESTS
