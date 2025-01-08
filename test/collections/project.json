@@ -1,0 +1,123 @@
+{
+    "id": "collections",
+    "type": "application",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "Test project for flecs data structures",
+        "public": false,
+        "coverage": false,
+        "use": [
+            "flecs"
+        ]
+    },
+    "test": {
+        "testsuites": [{
+            "id": "Map",
+            "setup": true,
+            "testcases": [
+                "count",
+                "count_empty",
+                "set_overwrite",
+                "set_rehash",
+                "get",
+                "get_all",
+                "get_empty",
+                "get_unknown",
+                "get_0_from_empty",
+                "get_0_from_populated",
+                "get_0_after_insert",
+                "get_0_after_ensure",
+                "iter",
+                "iter_empty",
+                "iter_null",
+                "remove",
+                "remove_empty",
+                "remove_unknown",
+                "remove_twice",
+                "clear_empty",
+                "clear_populated",
+                "clear_empty_twice",
+                "clear_populated_twice",
+                "populate_after_clear",
+                "randomized_insert",
+                "randomized_remove",
+                "randomized_insert_large",
+                "randomized_remove_large",
+                "randomized_after_clear"
+            ]
+        }, {
+            "id": "Sparse",
+            "setup": true,
+            "testcases": [
+                "add_1",
+                "add_1_to_empty",
+                "add_1_chunk_size_1",
+                "add_n",
+                "add_n_chunk_size_1",
+                "remove",
+                "remove_first",
+                "remove_last",
+                "remove_all",
+                "remove_all_n_chunks",
+                "clear_1",
+                "clear_empty",
+                "clear_n",
+                "clear_n_chunks",
+                "add_after_clear",
+                "create_delete",
+                "create_delete_2",
+                "count_of_null",
+                "try_low_after_ensure_high",
+                "is_alive_low_after_ensure_high",
+                "remove_low_after_ensure_high",
+                "ensure_skip_generation"
+            ]
+        }, {
+            "id": "Strbuf",
+            "setup": true,
+            "testcases": [
+                "append",
+                "appendstr",
+                "appendstrn",
+                "appendstr_null",
+                "append_list",
+                "append_nested_list",
+                "large_str",
+                "empty_str",
+                "reset",
+                "merge",
+                "merge_empty",
+                "append_char",
+                "append_511_chars",
+                "append_512_chars",
+                "append_513_chars",
+                "append_1023_chars",
+                "append_1024_chars",
+                "append_1025_chars",
+                "append_2047_chars",
+                "append_2048_chars",
+                "append_2049_chars",
+                "append_511_str",
+                "append_512_str",
+                "append_513_str",
+                "append_1023_str",
+                "append_1024_str",
+                "append_1025_str",
+                "append_2047_str",
+                "append_2048_str",
+                "append_2049_str",
+                "append_flt",
+                "append_nan",
+                "append_inf",
+                "append_nan_delim",
+                "append_inf_delim"
+            ]
+        }, {
+            "id": "Allocator",
+            "setup": true,
+            "testcases": [
+                "init_fini_empty"
+            ]
+        }]
+    }
+}

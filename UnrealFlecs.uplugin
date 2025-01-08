@@ -48,6 +48,10 @@
 		{
 			"Name": "AutomationUtils",
 			"Enabled": true
+		},
+		{
+			"Name": "Gauntlet",
+			"Enabled": true
 		}
 	],
 	"SupportURL": "",
