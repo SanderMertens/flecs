@@ -2337,11 +2337,13 @@ struct WithoutOperators {
     int16_t value;
 };
 
+static
 int compare(flecs::world& ecs, flecs::entity_t id, const void *a, const void *b) {
     const ecs_type_info_t* ti = ecs_get_type_info(ecs, id);
     return ti->hooks.cmp(a, b, ti);
 }
 
+static
 bool equals(flecs::world& ecs, flecs::entity_t id, const void *a, const void *b) {
     const ecs_type_info_t* ti = ecs_get_type_info(ecs, id);
     return ti->hooks.equals(a, b, ti);
@@ -2357,7 +2359,7 @@ void ComponentLifecycle_compare_WithGreaterThan(void) {
     test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
 
     /* generate cmp operator from C++ operator> */
-    component.op_compare(); 
+    component.on_compare(); 
 
     hooks = ecs_get_hooks_id(ecs, component);
     test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
@@ -2392,7 +2394,7 @@ void ComponentLifecycle_compare_WithLessThan(void) {
     test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
 
     /* generate cmp operator from C++ operator< */
-    component.op_compare(); 
+    component.on_compare(); 
 
     hooks = ecs_get_hooks_id(ecs, component);
     test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
@@ -2427,7 +2429,7 @@ void ComponentLifecycle_compare_WithLessAndGreaterThan(void) {
     test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
 
     /* generate cmp operator from C++ operator> and operator< */
-    component.op_compare(); 
+    component.on_compare(); 
 
     hooks = ecs_get_hooks_id(ecs, component);
     test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
@@ -2461,7 +2463,7 @@ void ComponentLifecycle_compare_WithEqualsAndGreaterThan(void) {
     test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
 
     /* generate cmp operator from C++ operator> and operator== */
-    component.op_compare(); 
+    component.on_compare(); 
 
     hooks = ecs_get_hooks_id(ecs, component);
     test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
@@ -2495,7 +2497,7 @@ void ComponentLifecycle_compare_WithEqualsAndLessThan(void) {
     test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
 
     /* generate cmp operator from C++ operator< and operator== */
-    component.op_compare(); 
+    component.on_compare(); 
 
     hooks = ecs_get_hooks_id(ecs, component);
     test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
@@ -2532,7 +2534,7 @@ void ComponentLifecycle_compare_WithEqualsOnly(void) {
     test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
 
     /* generate equals operator from C++ operator== */
-    component.op_equals(); 
+    component.on_equals(); 
 
     hooks = ecs_get_hooks_id(ecs, component);
 
@@ -2564,7 +2566,7 @@ void ComponentLifecycle_compare_WithoutOperators(void) {
     test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
 
     /* define operator equals via a explicit callback: */
-    component.op_equals([](
+    component.on_equals([](
         const WithoutOperators *a, 
         const WithoutOperators *b, 
         const ecs_type_info_t* ti) -> bool {
@@ -2584,7 +2586,7 @@ void ComponentLifecycle_compare_WithoutOperators(void) {
     test_assert(equals(ecs, component, &a, &c) == true);
     test_assert(equals(ecs, component, &a, &a) == true);    
 
-    component.op_compare([](
+    component.on_compare([](
         const WithoutOperators *a, 
         const WithoutOperators *b, 
         const ecs_type_info_t *ti) -> int {
