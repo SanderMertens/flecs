@@ -1093,7 +1093,14 @@
                 "compare_WithEqualsAndLessThan",
                 "compare_WithEqualsOnly",
                 "compare_WithoutOperators",
-                "compare_Enum"
+                "compare_uint8_Enum",
+                "compare_uint16_Enum",
+                "compare_uint32_Enum",
+                "compare_uint64_Enum",
+                "compare_int8_Enum",
+                "compare_int16_Enum",
+                "compare_int32_Enum",
+                "compare_int64_Enum"
             ]
         }, {
             "id": "Refs",
