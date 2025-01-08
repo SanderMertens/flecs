@@ -1056,7 +1056,14 @@ void ComponentLifecycle_compare_WithEqualsAndGreaterThan(void);
 void ComponentLifecycle_compare_WithEqualsAndLessThan(void);
 void ComponentLifecycle_compare_WithEqualsOnly(void);
 void ComponentLifecycle_compare_WithoutOperators(void);
-void ComponentLifecycle_compare_Enum(void);
+void ComponentLifecycle_compare_uint8_Enum(void);
+void ComponentLifecycle_compare_uint16_Enum(void);
+void ComponentLifecycle_compare_uint32_Enum(void);
+void ComponentLifecycle_compare_uint64_Enum(void);
+void ComponentLifecycle_compare_int8_Enum(void);
+void ComponentLifecycle_compare_int16_Enum(void);
+void ComponentLifecycle_compare_int32_Enum(void);
+void ComponentLifecycle_compare_int64_Enum(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -5572,8 +5579,36 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_compare_WithoutOperators
     },
     {
-        "compare_Enum",
-        ComponentLifecycle_compare_Enum
+        "compare_uint8_Enum",
+        ComponentLifecycle_compare_uint8_Enum
+    },
+    {
+        "compare_uint16_Enum",
+        ComponentLifecycle_compare_uint16_Enum
+    },
+    {
+        "compare_uint32_Enum",
+        ComponentLifecycle_compare_uint32_Enum
+    },
+    {
+        "compare_uint64_Enum",
+        ComponentLifecycle_compare_uint64_Enum
+    },
+    {
+        "compare_int8_Enum",
+        ComponentLifecycle_compare_int8_Enum
+    },
+    {
+        "compare_int16_Enum",
+        ComponentLifecycle_compare_int16_Enum
+    },
+    {
+        "compare_int32_Enum",
+        ComponentLifecycle_compare_int32_Enum
+    },
+    {
+        "compare_int64_Enum",
+        ComponentLifecycle_compare_int64_Enum
     }
 };
 
@@ -7198,7 +7233,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        97,
+        104,
         ComponentLifecycle_testcases
     },
     {
