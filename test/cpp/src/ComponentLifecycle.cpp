@@ -2605,26 +2605,69 @@ void ComponentLifecycle_compare_WithoutOperators(void) {
 }
 
 
-enum TestColorEnum {
-    Red = 1,
-    Yellow = 2,
-    Blue = 3
+template <typename T>
+struct TestUnsignedEnum {
+    enum Type : T {
+        Red = 1,
+        Yellow = 2,
+        Blue = 3
+    };
 };
 
-void ComponentLifecycle_compare_Enum(void) {
+template <typename T>
+struct TestSignedEnum {
+    enum Type : T {
+        Red = -1,
+        Yellow = 0,
+        Blue = 1
+    };
+};
+
+void ComponentLifecycle_compare_uint8_Enum(void) {
 
     flecs::world ecs;
 
-    auto component = ecs.component<TestColorEnum>();
+    using Enum8 = TestUnsignedEnum<uint8_t>::Type;
+
+    auto component = ecs.component<Enum8>();
 
     const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
 
     test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
     test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
 
-    TestColorEnum a = TestColorEnum::Red;
-    TestColorEnum b = TestColorEnum::Yellow;
-    TestColorEnum c = TestColorEnum::Red;
+    Enum8 a = Enum8::Red;
+    Enum8 b = Enum8::Yellow;
+    Enum8 c = Enum8::Red;
+
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);
+
+    test_assert(equals(ecs, component, &a, &c));
+    test_assert(equals(ecs, component, &b, &b));
+}
+
+
+void ComponentLifecycle_compare_uint16_Enum(void) {
+
+    flecs::world ecs;
+
+    using Enum16 = TestUnsignedEnum<uint16_t>::Type;
+
+    auto component = ecs.component<Enum16>();
+
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    Enum16 a = Enum16::Red;
+    Enum16 b = Enum16::Yellow;
+    Enum16 c = Enum16::Red;
 
     test_assert(compare(ecs, component, &a, &b) < 0);
     test_assert(compare(ecs, component, &b, &a) > 0);
@@ -2632,4 +2675,176 @@ void ComponentLifecycle_compare_Enum(void) {
     test_assert(compare(ecs, component, &b, &c) > 0);
     test_assert(compare(ecs, component, &c, &b) < 0);
     test_assert(compare(ecs, component, &b, &b) == 0);    
+
+    test_assert(equals(ecs, component, &a, &c));
+    test_assert(equals(ecs, component, &b, &b));
+}
+
+void ComponentLifecycle_compare_uint32_Enum(void) {
+
+    flecs::world ecs;
+
+    using Enum32 = TestUnsignedEnum<uint32_t>::Type;
+
+    auto component = ecs.component<Enum32>();
+
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    Enum32 a = Enum32::Red;
+    Enum32 b = Enum32::Yellow;
+    Enum32 c = Enum32::Red;
+
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);    
+
+    test_assert(equals(ecs, component, &a, &c));
+    test_assert(equals(ecs, component, &b, &b));
+}
+
+
+void ComponentLifecycle_compare_uint64_Enum(void) {
+
+    flecs::world ecs;
+
+    using Enum64 = TestUnsignedEnum<uint64_t>::Type;
+
+    auto component = ecs.component<Enum64>();
+
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    Enum64 a = Enum64::Red;
+    Enum64 b = Enum64::Yellow;
+    Enum64 c = Enum64::Red;
+
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);    
+
+    test_assert(equals(ecs, component, &a, &c));
+    test_assert(equals(ecs, component, &b, &b));
+}
+
+void ComponentLifecycle_compare_int8_Enum(void) {
+
+    flecs::world ecs;
+
+    using Enum8 = TestSignedEnum<int8_t>::Type;
+
+    auto component = ecs.component<Enum8>();
+
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    Enum8 a = Enum8::Red;
+    Enum8 b = Enum8::Yellow;
+    Enum8 c = Enum8::Red;
+
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);
+
+    test_assert(equals(ecs, component, &a, &c));
+    test_assert(equals(ecs, component, &b, &b));
+}
+
+void ComponentLifecycle_compare_int16_Enum(void) {
+
+    flecs::world ecs;
+
+    using Enum16 = TestSignedEnum<int16_t>::Type;
+
+    auto component = ecs.component<Enum16>();
+
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    Enum16 a = Enum16::Red;
+    Enum16 b = Enum16::Yellow;
+    Enum16 c = Enum16::Red;
+
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);
+
+    test_assert(equals(ecs, component, &a, &c));
+    test_assert(equals(ecs, component, &b, &b));
+}
+
+void ComponentLifecycle_compare_int32_Enum(void) {
+
+    flecs::world ecs;
+
+    using Enum32 = TestSignedEnum<int32_t>::Type;
+
+    auto component = ecs.component<Enum32>();
+
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    Enum32 a = Enum32::Red;
+    Enum32 b = Enum32::Yellow;
+    Enum32 c = Enum32::Red;
+
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);
+
+    test_assert(equals(ecs, component, &a, &c));
+    test_assert(equals(ecs, component, &b, &b));
+}
+
+void ComponentLifecycle_compare_int64_Enum(void) {
+
+    flecs::world ecs;
+
+    using Enum64 = TestSignedEnum<int64_t>::Type;
+
+    auto component = ecs.component<Enum64>();
+
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    Enum64 a = Enum64::Red;
+    Enum64 b = Enum64::Yellow;
+    Enum64 c = Enum64::Red;
+
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);
+
+    test_assert(equals(ecs, component, &a, &c));
+    test_assert(equals(ecs, component, &b, &b));
 }
