@@ -1,12 +1,11 @@
 ﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
-
 #if WITH_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
 #include "RegisteredPropertyTest.h"
-#include "Components/FlecsActorTag.h"
+#include "Translators/FlecsTranslationSettingTraits.h"
 
 BEGIN_DEFINE_SPEC(FRegisteredPropertiesTestsSpec,
                   "Flecs.Components.RegisteredProperties",
@@ -26,7 +25,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 			[this]()
 		{
 			const FFlecsEntityHandle TestType
-				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FFlecsActorTag::StaticStruct());
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FFlecsTranslationPropertyTrait::StaticStruct());
 			
 			TestTrue("Component properties should be registered",
 				TestType.Has(flecs::PairIsTag));
