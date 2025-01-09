@@ -13,7 +13,7 @@
 class UFlecsWorld;
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsDependenciesComponent
+struct alignas(64) UNREALFLECS_API FFlecsDependenciesComponent
 {
 	GENERATED_BODY()
 

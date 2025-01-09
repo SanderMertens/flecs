@@ -14,11 +14,6 @@ class UNREALFLECS_API UFlecsPrefabAsset : public UFlecsPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
-	
-	FORCEINLINE virtual FPrimaryAssetId GetPrimaryAssetId() const override final
-	{
-		return FPrimaryAssetId("FlecsPrefabAsset", *GetName());
-	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	FString PrefabName;

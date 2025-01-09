@@ -44,7 +44,6 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 public:
 	UFlecsWorld()
 	{
-		// Name the FLECS world after this object
 		char* argv[] = { const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*GetName()).Get()) };
 		World = flecs::world(1, argv);
 		TypeMapComponent = GetSingletonPtr<FFlecsTypeMapComponent>();
@@ -343,8 +342,8 @@ public:
 		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 
 		TArray<FAssetData> AssetData;
-		AssetRegistry.GetAssetsByClass(FTopLevelAssetPath(UFlecsPrimaryDataAsset::StaticClass()), AssetData,
-			true);
+		AssetRegistry.GetAssetsByClass(
+			FTopLevelAssetPath(UFlecsPrimaryDataAsset::StaticClass()), AssetData, true);
 
 		AssetRegistry.OnAssetAdded().AddWeakLambda(this, [this](const FAssetData& InAssetData)
 		{
@@ -686,7 +685,7 @@ public:
 		return ModuleEntity.is_valid();
 	}
 
-	template <typename T>
+	template <Solid::TStaticClassConcept T>
 	NO_DISCARD bool IsModuleImported() const
 	{
 		return IsModuleImported(T::StaticClass());
@@ -704,7 +703,7 @@ public:
 		return ModuleEntity;
 	}
 
-	template <typename T>
+	template <Solid::TStaticClassConcept T>
 	NO_DISCARD FFlecsEntityHandle GetModuleEntity() const
 	{
 		return GetModuleEntity(T::StaticClass());
@@ -1250,7 +1249,7 @@ public:
 		return World.observer<TComponents...>(StringCast<char>(*Name).Get());
 	}
 
-	flecs::observer_builder<> CreateObserver(const FString& Name = "") const
+	NO_DISCARD flecs::observer_builder<> CreateObserver(const FString& Name = "") const
 	{
 		return World.observer<>(StringCast<char>(*Name).Get());
 	}
@@ -1267,7 +1266,7 @@ public:
 		return World.observer(InEntity.GetEntity());
 	}
 
-	flecs::event_builder Event(const FFlecsEntityHandle& InEntity) const
+	NO_DISCARD flecs::event_builder Event(const FFlecsEntityHandle& InEntity) const
 	{
 		return World.event(InEntity.GetEntity());
 	}

@@ -72,5 +72,4 @@ struct TStructOpsTypeTraits<FFlecsNetworkIdComponent> : public TStructOpsTypeTra
 	{
 		WithNetSerializer = true,
 	}; // enum
-	
 }; // struct TStructOpsTypeTraits<FFlecsNetworkIdComponent>

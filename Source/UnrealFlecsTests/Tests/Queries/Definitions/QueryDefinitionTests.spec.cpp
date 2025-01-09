@@ -55,6 +55,31 @@ void FQueryDefinitionTestsSpec::Define()
 			TestTrue("Query has 1 term", Query.term_count() == 1);
 		});
 	});
+
+	Describe("Create and Query for Entities using Definition", [this]
+	{
+		It("Should create a query definition and query for entities", [this]
+		{
+			FFlecsEntityHandle Entity1 = Fixture.FlecsWorld->CreateEntity();
+			Entity1.Add<FTestStruct_QueryDefinitions>();
+			
+			FFlecsQueryDefinition Definition;
+
+			FFlecsQueryTermExpression TermExpression1;
+			TermExpression1.InputType.Type = EFlecsQueryInputType::ScriptStruct;
+			TermExpression1.InputType.ScriptStruct = FTestStruct_QueryDefinitions::StaticStruct();
+
+			Definition.AddQueryTerm(TermExpression1);
+
+			flecs::query_builder<> Builder = flecs::query_builder(Fixture.FlecsWorld->World, "TestQuery");
+
+			Definition.Apply(Fixture.FlecsWorld.Get(), Builder);
+			flecs::query<> Query = Builder.build();
+
+			TestTrue("Query has 1 term", Query.term_count() == 1);
+			TestTrue("Query has 1 entity", Query.count() >= 1);
+		});
+	});
 }
 
 #endif // WITH_AUTOMATION_TESTS

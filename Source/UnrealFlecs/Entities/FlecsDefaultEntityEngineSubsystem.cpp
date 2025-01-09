@@ -7,6 +7,7 @@
 #include "Worlds/FlecsWorldSubsystem.h"
 
 static constexpr int32 DefaultEntityRangeStart = (EcsFirstUserEntityId * 2);
+FFlecsDefaultEntityEngine FFlecsDefaultEntityEngine::Instance;
 
 FFlecsDefaultEntityEngine::FFlecsDefaultEntityEngine()
 {

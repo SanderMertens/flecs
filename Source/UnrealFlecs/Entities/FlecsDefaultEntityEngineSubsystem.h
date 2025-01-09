@@ -8,9 +8,10 @@
 
 struct UNREALFLECS_API FFlecsDefaultEntityEngine final
 {
+	static FFlecsDefaultEntityEngine Instance;
+	
 	static FFlecsDefaultEntityEngine& Get()
 	{
-		static FFlecsDefaultEntityEngine Instance;
 		return Instance;
 	}
 

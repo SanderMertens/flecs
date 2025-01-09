@@ -17,7 +17,7 @@ void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntity
 	
 	if (UnrealWorld && UnrealWorld->GetNetMode() == NM_Client)
 	{
-		ClientPieInstanceOffset = UE::GetPlayInEditorID();
+		ClientPieInstanceOffset = static_cast<uint16>(UE::GetPlayInEditorID());
 	}
 	
 	const uint16 RestPort = ECS_REST_DEFAULT_PORT + ClientPieInstanceOffset;
