@@ -774,8 +774,13 @@
             "testcases": [
                 "get_ref",
                 "get_ref_after_add",
+                "get_ref_after_add_other",
                 "get_ref_after_remove",
+                "get_ref_after_remove_other",
+                "get_ref_after_remove_component",
                 "get_ref_after_delete",
+                "get_ref_after_clear",
+                "get_ref_after_clear_other",
                 "get_ref_after_realloc",
                 "get_ref_after_realloc_w_lifecycle",
                 "get_ref_staged",
