@@ -36,10 +36,46 @@ void Reference_get_ref_after_add(void) {
 
     ecs_add(world, e, Velocity);
 
-    p = ecs_ref_get(world, &ref, Position);
+    const Position *p2 = ecs_ref_get(world, &ref, Position);
+    test_assert(p2 != NULL);
+    test_assert(p2 != p);
+    test_int(p2->x, 10);
+    test_int(p2->y, 20);
+
+    ecs_fini(world);
+}
+
+void Reference_get_ref_after_add_other(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t dummy = ecs_new_w(world, Position);
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
+
+    ecs_add(world, dummy, Velocity);
+
+    const Position *p2 = ecs_ref_get(world, &ref, Position);
+    test_assert(p2 != NULL);
+    test_assert(p2 != p);
+    test_int(p2->x, 10);
+    test_int(p2->y, 20);
+
+    ecs_set(world, e, Position, {30, 40});
+
+    const Position *p3 = ecs_ref_get(world, &ref, Position);
+    test_assert(p3 != NULL);
+    test_assert(p3 == p2);
+    test_int(p3->x, 30);
+    test_int(p3->y, 40);
 
     ecs_fini(world);
 }
@@ -61,10 +97,65 @@ void Reference_get_ref_after_remove(void) {
 
     ecs_remove(world, e, Velocity);
 
-    p = ecs_ref_get(world, &ref, Position);
+    const Position *p2 = ecs_ref_get(world, &ref, Position);
+    test_assert(p2 != NULL);
+    test_assert(p2 != p);
+    test_int(p2->x, 10);
+    test_int(p2->y, 20);
+
+    ecs_fini(world);
+}
+
+void Reference_get_ref_after_remove_other(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t dummy = ecs_new_w(world, Position);
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
+
+    ecs_remove(world, dummy, Position);
+
+    const Position *p2 = ecs_ref_get(world, &ref, Position);
+    test_assert(p2 != NULL);
+    test_assert(p2 != p);
+    test_int(p2->x, 10);
+    test_int(p2->y, 20);
+
+    ecs_set(world, e, Position, {30, 40});
+
+    const Position *p3 = ecs_ref_get(world, &ref, Position);
+    test_assert(p3 != NULL);
+    test_assert(p3 == p2);
+    test_int(p3->x, 30);
+    test_int(p3->y, 40);
+
+    ecs_fini(world);
+}
+
+void Reference_get_ref_after_remove_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_remove(world, e, Position);
+
+    test_assert(ecs_ref_get(world, &ref, Position) == NULL);
 
     ecs_fini(world);
 }
@@ -78,6 +169,7 @@ void Reference_get_ref_after_delete(void) {
     ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     
     ecs_ref_t ref = ecs_ref_init(world, e, Position);
+
     const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
@@ -85,10 +177,73 @@ void Reference_get_ref_after_delete(void) {
 
     ecs_delete(world, dummy);
 
-    p = ecs_ref_get(world, &ref, Position);
+    const Position *p2 = ecs_ref_get(world, &ref, Position);
+    test_assert(p2 != NULL);
+    test_assert(p2 != p);
+    test_int(p2->x, 10);
+    test_int(p2->y, 20);
+
+    ecs_set(world, e, Position, {30, 40});
+
+    const Position *p3 = ecs_ref_get(world, &ref, Position);
+    test_assert(p3 != NULL);
+    test_assert(p3 == p2);
+    test_int(p3->x, 30);
+    test_int(p3->y, 40);
+
+    ecs_fini(world);
+}
+
+void Reference_get_ref_after_clear(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
+
+    ecs_clear(world, e);
+
+    test_assert(ecs_ref_get(world, &ref, Position) == NULL);
+
+    ecs_fini(world);
+}
+
+void Reference_get_ref_after_clear_other(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t dummy = ecs_new_w(world, Position);
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+
+    const Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_clear(world, dummy);
+
+    const Position *p2 = ecs_ref_get(world, &ref, Position);
+    test_assert(p2 != NULL);
+    test_assert(p2 != p);
+    test_int(p2->x, 10);
+    test_int(p2->y, 20);
+
+    ecs_set(world, e, Position, {30, 40});
+
+    const Position *p3 = ecs_ref_get(world, &ref, Position);
+    test_assert(p3 != NULL);
+    test_assert(p3 == p2);
+    test_int(p3->x, 30);
+    test_int(p3->y, 40);
 
     ecs_fini(world);
 }

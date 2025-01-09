@@ -108,6 +108,14 @@ void flecs_resume_readonly(
     ecs_world_t *world,
     ecs_suspend_readonly_state_t *state);
 
+void flecs_increment_table_version(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+uint32_t flecs_get_table_version(
+    const ecs_world_t *world,
+    const uint64_t table_id);
+
 /* Convenience macro's for world allocator */
 #define flecs_walloc(world, size)\
     flecs_alloc(&world->allocator, size)

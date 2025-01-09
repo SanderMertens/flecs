@@ -1108,9 +1108,11 @@ void flecs_table_mark_table_dirty(
     ecs_table_t *table,
     int32_t index)
 {
-    (void)world;
     if (table->dirty_state) {
         table->dirty_state[index] ++;
+    }
+    if (!index) {
+        flecs_increment_table_version(world, table);
     }
 }
 
