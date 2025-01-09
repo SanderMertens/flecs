@@ -1095,7 +1095,10 @@
                 "implicit_operator_bool",
                 "try_get",
                 "has",
-                "bool_operator"
+                "bool_operator",
+                "base_type",
+                "empty_base_type",
+                "get_component"
             ]
         }, {
             "id": "Module",

@@ -1059,6 +1059,9 @@ void Refs_implicit_operator_bool(void);
 void Refs_try_get(void);
 void Refs_has(void);
 void Refs_bool_operator(void);
+void Refs_base_type(void);
+void Refs_empty_base_type(void);
+void Refs_get_component(void);
 
 // Testsuite 'Module'
 void Module_import(void);
@@ -5554,6 +5557,18 @@ bake_test_case Refs_testcases[] = {
     {
         "bool_operator",
         Refs_bool_operator
+    },
+    {
+        "base_type",
+        Refs_base_type
+    },
+    {
+        "empty_base_type",
+        Refs_empty_base_type
+    },
+    {
+        "get_component",
+        Refs_get_component
     }
 };
 
@@ -7090,7 +7105,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        17,
+        20,
         Refs_testcases
     },
     {

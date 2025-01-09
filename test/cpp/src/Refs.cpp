@@ -226,3 +226,61 @@ void Refs_bool_operator(void) {
         test_assert(p);
     }
 }
+
+struct Base {
+    int x;
+};
+
+struct Derived : public Base {
+    Derived() { }
+
+    Derived(int x_, int y_) {
+        x = x_;
+        y = y_;
+    }
+
+    int y;
+};
+
+void Refs_base_type(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().set(Derived{10, 20});
+
+    flecs::ref<Base> r = e.get_ref_w_id<Base>(world.id<Derived>());
+    test_int(r->x, 10);
+}
+
+struct BaseEmpty { };
+
+struct DerivedFromEmpty : public BaseEmpty {
+    DerivedFromEmpty() { }
+
+    DerivedFromEmpty(int y_) {
+        y = y_;
+    }
+
+    int y;
+};
+
+void Refs_empty_base_type(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().set(DerivedFromEmpty{20});
+
+    flecs::ref<BaseEmpty> r = e.get_ref_w_id<BaseEmpty>(world.id<DerivedFromEmpty>());
+
+    BaseEmpty *b = r.get();
+    DerivedFromEmpty *d = static_cast<DerivedFromEmpty*>(b);
+    test_int(d->y, 20);
+}
+
+void Refs_get_component(void) {
+    flecs::world world;
+
+    auto e = flecs::entity(world)
+        .set<Position>({10, 20});
+
+    auto ref = e.get_ref<Position>();
+    test_assert(ref.component() == world.id<Position>());
+}
