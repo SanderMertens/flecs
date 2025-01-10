@@ -34,9 +34,12 @@ struct ref {
             id = _::type<T>::id(world);
         }
 
-        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
-
+#ifdef FLECS_DEBUG
+        flecs::entity_t type = ecs_get_typeid(world, id);
+        const flecs::type_info_t *ti = ecs_get_type_info(world, type);
+        ecs_assert(ti && ti->size != 0, ECS_INVALID_PARAMETER,
+            "cannot create ref to empty type");
+#endif
         ref_ = ecs_ref_init_id(world_, entity, id);
     }
 
@@ -75,7 +78,11 @@ struct ref {
         return has();
     }
 
+    /** Return entity associated with reference. */
     flecs::entity entity() const;
+
+    /** Return component associated with reference. */
+    flecs::id component() const;
 
 private:
     world_t *world_;

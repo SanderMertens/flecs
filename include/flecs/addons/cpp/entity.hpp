@@ -236,6 +236,30 @@ struct entity : entity_builder<entity>
         ecs_modified_id(world_, id_, comp);
     }
 
+    /** Get reference to component specified by id.
+     * A reference allows for quick and safe access to a component value, and is
+     * a faster alternative to repeatedly calling 'get' for the same component.
+     * 
+     * The method accepts a component id argument, which can be used to create a 
+     * ref to a component that is different from the provided type. This allows 
+     * for creating a base type ref that points to a derived type:
+     * 
+     * @code
+     * flecs::ref<Base> r = e.get_ref<Base>(world.id<Derived>());
+     * @endcode
+     * 
+     * If the provided component id is not binary compatible with the specified
+     * type, the behavior is undefined.
+     *
+     * @tparam T component for which to get a reference.
+     * @return The reference.
+     */
+    template <typename T, if_t< is_actual<T>::value > = 0>
+    ref<T> get_ref_w_id(flecs::id_t component) const {
+        _::type<T>::id(world_); // ensure type is registered
+        return ref<T>(world_, id_, component);
+    }
+
     /** Get reference to component.
      * A reference allows for quick and safe access to a component value, and is
      * a faster alternative to repeatedly calling 'get' for the same component.
