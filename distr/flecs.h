@@ -18053,8 +18053,10 @@ struct enum_reflection {
     static constexpr U each_enum(Args... args) {
         return each_mask_range<Value, high_bit>(each_enum_range<0, Value>(0, args...), args...);
     }
-
-    static const U high_bit = static_cast<U>(1) << (sizeof(U) * 8 - 1);
+    /* to avoid warnings with bit manipulation, calculate the high bit with an
+       unsigned type of the same size: */
+    using UU = typename std::make_unsigned<U>::type;
+    static const U high_bit = static_cast<U>(static_cast<UU>(1) << (sizeof(UU) * 8 - 1));
 };
 
 /** Enumeration type data */
