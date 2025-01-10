@@ -9879,3 +9879,65 @@ void Observer_on_table_create_is_deferred_batched(void) {
 
     ecs_fini(world);
 }
+
+void Observer_2_children_w_deferred_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnAdd },
+        .callback = Observer_w_field,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.e[0], p);
+    test_uint(ctx.s[0][0], 0);
+    ecs_os_zeromem(&ctx);
+
+    {
+        ecs_defer_begin(world);
+        ecs_entity_t e = ecs_new(world);
+        ecs_add_pair(world, e, EcsChildOf, p);
+        ecs_set(world, e, Position, {20, 30});
+        test_int(ctx.invoked, 0);
+        ecs_defer_end(world);
+
+        test_int(ctx.invoked, 1);
+        test_int(ctx.count, 1);
+        test_int(ctx.system, o);
+        test_int(ctx.event, EcsOnAdd);
+        test_uint(ctx.e[0], e);
+        test_uint(ctx.s[0][0], 0);
+        ecs_os_zeromem(&ctx);
+    }
+
+    {
+        ecs_defer_begin(world);
+        ecs_entity_t e = ecs_new(world);
+        ecs_add_pair(world, e, EcsChildOf, p);
+        ecs_set(world, e, Position, {30, 40});
+        test_int(ctx.invoked, 0);
+        ecs_defer_end(world);
+
+        test_int(ctx.invoked, 1);
+        test_int(ctx.count, 1);
+        test_int(ctx.system, o);
+        test_int(ctx.event, EcsOnAdd);
+        test_uint(ctx.e[0], e);
+        test_uint(ctx.s[0][0], 0);
+        ecs_os_zeromem(&ctx);
+    }
+
+    ecs_fini(world);
+}
