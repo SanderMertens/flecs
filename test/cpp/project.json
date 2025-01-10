@@ -242,6 +242,7 @@
                 "entity_w_type",
                 "entity_w_nested_type",
                 "entity_w_type_defer",
+                "prefab_w_type",
                 "prefab_hierarchy_w_types",
                 "prefab_hierarchy_w_root_types",
                 "prefab_hierarchy_w_child_override",
@@ -1156,7 +1157,9 @@
                 "implicit_const",
                 "implicit_ref",
                 "implicit_const_ref",
-                "vector_elem_type"
+                "vector_elem_type",
+                "tag_has_component",
+                "component_has_component"
             ]
         }, {
             "id": "WorldFactory",
