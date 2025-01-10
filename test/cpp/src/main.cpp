@@ -234,6 +234,7 @@ void Entity_entity_w_root_name_from_scope(void);
 void Entity_entity_w_type(void);
 void Entity_entity_w_nested_type(void);
 void Entity_entity_w_type_defer(void);
+void Entity_prefab_w_type(void);
 void Entity_prefab_hierarchy_w_types(void);
 void Entity_prefab_hierarchy_w_root_types(void);
 void Entity_prefab_hierarchy_w_child_override(void);
@@ -1113,6 +1114,8 @@ void ImplicitComponents_implicit_const(void);
 void ImplicitComponents_implicit_ref(void);
 void ImplicitComponents_implicit_const_ref(void);
 void ImplicitComponents_vector_elem_type(void);
+void ImplicitComponents_tag_has_component(void);
+void ImplicitComponents_component_has_component(void);
 
 // Testsuite 'WorldFactory'
 void WorldFactory_entity(void);
@@ -2323,6 +2326,10 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_w_type_defer",
         Entity_entity_w_type_defer
+    },
+    {
+        "prefab_w_type",
+        Entity_prefab_w_type
     },
     {
         "prefab_hierarchy_w_types",
@@ -5760,6 +5767,14 @@ bake_test_case ImplicitComponents_testcases[] = {
     {
         "vector_elem_type",
         ImplicitComponents_vector_elem_type
+    },
+    {
+        "tag_has_component",
+        ImplicitComponents_tag_has_component
+    },
+    {
+        "component_has_component",
+        ImplicitComponents_component_has_component
     }
 };
 
@@ -6997,7 +7012,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        278,
+        279,
         Entity_testcases
     },
     {
@@ -7104,7 +7119,7 @@ static bake_test_suite suites[] = {
         "ImplicitComponents",
         NULL,
         NULL,
-        27,
+        29,
         ImplicitComponents_testcases
     },
     {

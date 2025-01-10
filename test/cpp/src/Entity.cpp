@@ -3998,6 +3998,20 @@ void Entity_entity_w_type(void) {
     test_assert(e == e_2);
 }
 
+void Entity_prefab_w_type(void) {
+    flecs::world ecs;
+
+    auto e = ecs.prefab<EntityType>();
+
+    test_str(e.name().c_str(), "EntityType");
+    test_str(e.path().c_str(), "::EntityType");
+    test_assert(!e.has<flecs::Component>());
+    test_assert(e.has(flecs::Prefab));
+
+    auto e_2 = ecs.entity<EntityType>();
+    test_assert(e == e_2);
+}
+
 struct Turret {
     struct Base { };
 };
@@ -4903,3 +4917,4 @@ void Entity_iter_empty_type(void) {
 
     test_int(count, 0);
 }
+

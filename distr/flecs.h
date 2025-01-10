@@ -27375,7 +27375,7 @@ struct type_impl {
     // Register component id.
     static entity_t register_id(world_t *world,
         const char *name = nullptr, bool allow_tag = true, flecs::id_t id = 0,
-        bool is_component = false, bool implicit_name = true, const char *n = nullptr, 
+        bool is_component = true, bool implicit_name = true, const char *n = nullptr, 
         flecs::entity_t module = 0)
     {
         if (!s_index) {
@@ -29310,7 +29310,7 @@ inline flecs::entity world::entity(E value) const {
 
 template <typename T>
 inline flecs::entity world::entity(const char *name) const {
-    return flecs::entity(world_, _::type<T>::register_id(world_, name, true) );
+    return flecs::entity(world_, _::type<T>::register_id(world_, name, true, 0, false) );
 }
 
 template <typename... Args>
@@ -29322,7 +29322,7 @@ inline flecs::entity world::prefab(Args &&... args) const {
 
 template <typename T>
 inline flecs::entity world::prefab(const char *name) const {
-    flecs::entity result = flecs::component<T>(world_, name, true);
+    flecs::entity result = this->entity<T>(name);
     result.add(flecs::Prefab);
     return result;
 }
