@@ -14001,10 +14001,16 @@ void flecs_emit_dump_cache(
         ecs_reachable_elem_t *elem = &elems[i];
         char *idstr = ecs_id_str(world, elem->id);
         char *estr = ecs_id_str(world, elem->src);
+        #ifndef NDEBUG
+        ecs_table_t *table = elem->table;
+        #else
+        ecs_table_t *table = NULL;
+        #endif
+        (void)table;
         ecs_dbg_3("- id: %s (%u), src: %s (%u), table: %p", 
             idstr, (uint32_t)elem->id,
             estr, (uint32_t)elem->src,
-            elem->table);
+            table);
         ecs_os_free(idstr);
         ecs_os_free(estr);
     }
