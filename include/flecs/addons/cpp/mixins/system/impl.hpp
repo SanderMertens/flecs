@@ -7,7 +7,7 @@
 
 #include "builder.hpp"
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 struct system_runner_fluent {
@@ -120,6 +120,9 @@ inline system_builder<Comps...> world::system(Args &&... args) const {
     return flecs::system_builder<Comps...>(world_, FLECS_FWD(args)...);
 }
 
+} // namespace flecs
+
+namespace flecs {
 namespace _ {
 
 inline void system_init(flecs::world& world) {

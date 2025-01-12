@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 struct id;
 struct entity;
@@ -24,6 +24,7 @@ struct entity;
  * - pair ids
  * - entities with id flags set (like flecs::AUTO_OVERRIDE, flecs::TOGGLE)
  */
+
 struct id {
     id()
         : world_(nullptr)

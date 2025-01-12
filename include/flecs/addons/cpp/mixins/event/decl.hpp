@@ -29,5 +29,5 @@ struct event_from_func<Func, if_t< arity<Func>::value == 2>> {
 template <typename Func>
 using event_from_func_t = typename event_from_func<Func>::type;
 
-}
-}
+} // namespace _
+} // namespace flecs
