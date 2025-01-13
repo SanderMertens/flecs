@@ -12,6 +12,11 @@ flecs::entity ref<T>::entity() const {
     return flecs::entity(world_, ref_.entity);
 }
 
+template <typename T>
+flecs::id ref<T>::component() const {
+    return flecs::id(world_, ref_.id);
+}
+
 template <typename Self>
 template <typename Func>
 inline const Self& entity_builder<Self>::insert(const Func& func) const  {
@@ -215,7 +220,7 @@ inline flecs::entity world::entity(E value) const {
 
 template <typename T>
 inline flecs::entity world::entity(const char *name) const {
-    return flecs::entity(world_, _::type<T>::register_id(world_, name, true) );
+    return flecs::entity(world_, _::type<T>::register_id(world_, name, true, 0, false) );
 }
 
 template <typename... Args>
@@ -227,7 +232,7 @@ inline flecs::entity world::prefab(Args &&... args) const {
 
 template <typename T>
 inline flecs::entity world::prefab(const char *name) const {
-    flecs::entity result = flecs::component<T>(world_, name, true);
+    flecs::entity result = this->entity<T>(name);
     result.add(flecs::Prefab);
     return result;
 }

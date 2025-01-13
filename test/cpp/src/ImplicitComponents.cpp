@@ -470,3 +470,19 @@ void ImplicitComponents_vector_elem_type(void) {
         test_assert(v != 0);
     }
 }
+
+struct EmptyType { };
+
+void ImplicitComponents_tag_has_component(void) {
+    flecs::world world;
+
+    flecs::id c = world.id<EmptyType>();
+    test_assert(c.entity().has<flecs::Component>());
+}
+
+void ImplicitComponents_component_has_component(void) {
+    flecs::world world;
+
+    flecs::id c = world.id<Position>();
+    test_assert(c.entity().has<flecs::Component>());
+}

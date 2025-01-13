@@ -155,7 +155,7 @@ struct type_impl {
     // Register component id.
     static entity_t register_id(world_t *world,
         const char *name = nullptr, bool allow_tag = true, flecs::id_t id = 0,
-        bool is_component = false, bool implicit_name = true, const char *n = nullptr, 
+        bool is_component = true, bool implicit_name = true, const char *n = nullptr, 
         flecs::entity_t module = 0)
     {
         if (!s_index) {

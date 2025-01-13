@@ -610,6 +610,8 @@ void flecs_emit_forward_id(
         return;
     }
 
+    ecs_entity_t old_src = it->sources[0];
+
     it->ids[0] = id;
     it->sources[0] = tgt;
     it->event_id = id;
@@ -676,6 +678,8 @@ void flecs_emit_forward_id(
         }
     }
 
+
+    it->sources[0] = old_src;
     it->up_fields = 0;
 }
 
