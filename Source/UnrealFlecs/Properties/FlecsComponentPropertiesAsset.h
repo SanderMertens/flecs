@@ -39,6 +39,6 @@ public:
 	
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	
-	#endif
+	#endif // WITH_EDITOR
 
 }; // class UFlecsComponentPropertiesAsset

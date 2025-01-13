@@ -15,6 +15,7 @@ public:
 
 private:
     void RegisterExplorerMenuExtension();
+    void AddPrimaryAssetTypes();
     
     TSharedPtr<FFlecsEntityHandlePinFactory> FlecsEntityHandlePinFactory;
 }; // class FUnrealFlecsEditorModule

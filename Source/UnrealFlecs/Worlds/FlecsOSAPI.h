@@ -72,6 +72,7 @@ struct FFlecsThreadWrapper
 			Join();
 
 			delete RunnableThread;
+			RunnableThread = nullptr;
 		}
 	}
 
@@ -259,7 +260,7 @@ struct FOSApiInitializer
 
 		os_api.task_join_ = [](ecs_os_thread_t Thread) -> void*
 		{
-			const FFlecsTask* FlecsTask = reinterpret_cast<FFlecsTask*>(Thread);
+			FFlecsTask* FlecsTask = reinterpret_cast<FFlecsTask*>(Thread);
 			solid_check(FlecsTask);
 			
 			if LIKELY_IF(FlecsTask)

@@ -2,4 +2,4 @@
 
 #include "FlecsUObjectComponent.h"
 
-DEFINE_DEFAULT_ENTITY(DontDeleteUObjectEntity);
+DEFINE_DEFAULT_ENTITY(DontDeleteUObjectEntity, 5000);

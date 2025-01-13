@@ -720,6 +720,7 @@ void flecs_bootstrap(
     ecs_make_alive(world, EcsPairIsTag);
     ecs_make_alive(world, EcsCanToggle);
     ecs_make_alive(world, EcsTrait);
+    ecs_make_alive(world, EcsTraitEntity);
     ecs_make_alive(world, EcsRelationship);
     ecs_make_alive(world, EcsTarget);
     ecs_make_alive(world, EcsSparse);
@@ -840,7 +841,10 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsWith);
     flecs_bootstrap_trait(world, EcsOneOf);
     flecs_bootstrap_trait(world, EcsCanToggle);
+    
     flecs_bootstrap_trait(world, EcsTrait);
+    flecs_bootstrap_tag(world, EcsTraitEntity);
+    
     flecs_bootstrap_trait(world, EcsRelationship);
     flecs_bootstrap_trait(world, EcsTarget);
     flecs_bootstrap_trait(world, EcsOnDelete);

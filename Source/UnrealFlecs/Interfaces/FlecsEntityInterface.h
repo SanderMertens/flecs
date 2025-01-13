@@ -8,7 +8,7 @@
 #include "FlecsEntityInterface.generated.h"
 
 UINTERFACE(BlueprintType)
-class UFlecsEntityInterface : public UInterface
+class UNREALFLECS_API UFlecsEntityInterface : public UInterface
 {
 	GENERATED_BODY()
 }; // class UFlecsEntityInterface

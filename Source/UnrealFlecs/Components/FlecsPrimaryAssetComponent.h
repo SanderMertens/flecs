@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "FlecsPrimaryAssetComponent.generated.h"
 
 USTRUCT()
-struct FFlecsPrimaryAssetComponent
+struct UNREALFLECS_API FFlecsPrimaryAssetComponent
 {
 	GENERATED_BODY()
 
@@ -34,3 +35,5 @@ public:
 	FPrimaryAssetId PrimaryAssetId;
 	
 }; // struct FFlecsPrimaryAssetComponent
+
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsPrimaryAssetComponent, ecs_pair(flecs::OnInstantiate, flecs::DontInherit));

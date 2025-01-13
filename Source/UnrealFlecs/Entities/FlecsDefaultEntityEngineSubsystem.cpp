@@ -7,67 +7,59 @@
 #include "Worlds/FlecsWorldSubsystem.h"
 
 static constexpr int32 DefaultEntityRangeStart = (EcsFirstUserEntityId * 2);
+
 FFlecsDefaultEntityEngine FFlecsDefaultEntityEngine::Instance;
 
 FFlecsDefaultEntityEngine::FFlecsDefaultEntityEngine()
 {
 }
 
+FFlecsDefaultEntityEngine::~FFlecsDefaultEntityEngine()
+{
+	if LIKELY_IF(DefaultEntityWorld)
+	{
+		DefaultEntityQuery.~query();
+		delete DefaultEntityWorld;
+		DefaultEntityWorld = nullptr;
+	}
+}
+
 void FFlecsDefaultEntityEngine::Initialize()
 {
 	if (bIsInitialized)
 	{
-		RefreshDefaultEntities();
 		return;
 	}
+
+	DefaultEntityWorld = new flecs::world();
+	
+	DefaultEntityWorld->progress();
+	
+	DefaultEntityQuery = DefaultEntityWorld->query_builder<>()
+		.without<flecs::Component>()
+		.with(flecs::Trait).or_()
+		.with(flecs::PairIsTag).or_()
+		.with_name_component()
+		.build();
+
+	DefaultEntityWorld->progress();
+
+	DefaultEntityQuery.each([this](flecs::entity Entity)
+	{
+		if UNLIKELY_IF(Entity.name().length() <= 0)
+		{
+			return;
+		}
+
+		UN_LOGF(LogFlecsEntity, Log,
+			"Entity: %s", *FString(Entity.name().c_str()));
+		DefaultEntityOptions.Add(Entity.name().c_str(), Entity.id());
+	});
 	
 	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
 	check(IsValid(Settings));
 
-	#if WITH_EDITOR
-	
-	Settings->OnSettingChanged().AddLambda([this](UObject*, FPropertyChangedEvent&)
-	{
-		RefreshDefaultEntities();
-	});
-	
-	#endif // WITH_EDITOR
-
-	RefreshDefaultEntities();
-	
-	bIsInitialized = true;
-}
-
-void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
-{
-	DefaultEntityWorld = new flecs::world();
-
-	while (DefaultEntityOptions.IsEmpty())
-	{
-		NoneEntity = DefaultEntityWorld->entity("NoneEntity");
-		DefaultEntityWorld->progress();
-
-		DefaultEntityWorld->query_builder<>()
-			.without(NoneEntity)
-			.with(flecs::Trait).or_()
-			.with(flecs::PairIsTag).or_()
-			.with_name_component()
-			.each([this](flecs::entity Entity)
-			{
-				if UNLIKELY_IF(Entity.name().length() <= 0)
-				{
-					return;
-				}
-
-				UN_LOGF(LogFlecsEntity, Log,
-					"Entity: %s", *FString(Entity.name().c_str()));
-				DefaultEntityOptions.Add(Entity.name().c_str(), Entity.id());
-			});
-	}
-
-	AddedDefaultEntities.Empty();
-
-	for (const FFlecsDefaultMetaEntity& EntityRecord : GetDefault<UFlecsDefaultEntitiesDeveloperSettings>()->DefaultEntities)
+	for (const FFlecsDefaultMetaEntity& EntityRecord : Settings->DefaultEntities)
 	{
 		if UNLIKELY_IF(EntityRecord.EntityName.IsEmpty())
 		{
@@ -75,31 +67,96 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 			continue;
 		}
 
-		AddedDefaultEntities.Add(FFlecsDefaultMetaEntity(EntityRecord.EntityName, EntityRecord.EntityRecord));
+		DefaultEntityWorld->progress();
+
+		const int32 Index = AddedDefaultEntities.size();
+		AddedDefaultEntities.emplace_back(FFlecsDefaultMetaEntity(EntityRecord.EntityName, EntityRecord.EntityRecord, EntityRecord.EntityId));
+		AddedDefaultEntities[Index].SetId = DefaultEntityWorld->make_alive(static_cast<flecs::entity_t>(EntityRecord.EntityId));
+		ecs_set_name(*DefaultEntityWorld,
+			AddedDefaultEntities[Index].SetId, StringCast<char>(*EntityRecord.EntityName).Get());
+
+		DefaultEntityWorld->progress();
 	}
 
-	for (const FFlecsDefaultMetaEntity& MetaEntity : CodeAddedDefaultEntities)
+	#if WITH_EDITOR
+	
+	Settings->OnSettingChanged().AddLambda([this](UObject* Object, FPropertyChangedEvent& Event)
 	{
-		AddedDefaultEntities.Add(FFlecsDefaultMetaEntity(MetaEntity.EntityName, MetaEntity.EntityRecord));
-	}
+		for (const FFlecsDefaultMetaEntity& EntityRecord
+			: GetDefault<UFlecsDefaultEntitiesDeveloperSettings>()->DefaultEntities)
+		{
+			auto ContainsDefaultEntity = [this](const FString& EntityName) -> bool
+			{
+				return std::ranges::any_of(AddedDefaultEntities,
+				[&EntityName](const FFlecsDefaultMetaEntity& DefaultEntity)
+				{
+					return DefaultEntity.EntityName == EntityName && DefaultEntity.SetId != 0;
+				});
+			};
 
-	DefaultEntityWorld->progress();
-	DefaultEntityWorld->set_entity_range(DefaultEntityRangeStart, 0);
+			if UNLIKELY_IF(EntityRecord.EntityName.IsEmpty())
+			{
+				UN_LOG(LogFlecsEntity, Warning, "One of the default entities has an empty name");
+				continue;
+			}
 
-	for (const auto& [EntityName, EntityRecord] : AddedDefaultEntities)
-	{
-		UN_LOGF(LogFlecsEntity, Log, "Added default entity: %s", *EntityName);
+			if (ContainsDefaultEntity(EntityRecord.EntityName))
+			{
+				continue;
+			}
 
-		flecs::entity Entity = DefaultEntityWorld->entity(StringCast<ANSICHAR>(*EntityName).Get());
-		DefaultEntityOptions.Add(*EntityName, Entity);
-	}
+			DefaultEntityWorld->progress();
 
-	delete DefaultEntityWorld;
+			const int32 Index = AddedDefaultEntities.size();
+			AddedDefaultEntities.emplace_back(FFlecsDefaultMetaEntity(EntityRecord.EntityName, EntityRecord.EntityRecord,
+					EntityRecord.EntityId));
+			AddedDefaultEntities[Index].SetId = DefaultEntityWorld->make_alive(static_cast<flecs::entity_t>(EntityRecord.EntityId));
+			ecs_set_name(*DefaultEntityWorld,
+				AddedDefaultEntities[Index].EntityId, StringCast<char>(*EntityRecord.EntityName).Get());
+
+			DefaultEntityWorld->progress();
+		}
+	});
+	
+	#endif // WITH_EDITOR
+	
+	bIsInitialized = true;
 }
 
-flecs::entity_t FFlecsDefaultEntityEngine::AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity)
+flecs::entity_t FFlecsDefaultEntityEngine::AddDefaultEntity(FFlecsDefaultMetaEntity DefaultEntity)
 {
-	CodeAddedDefaultEntities.Add(DefaultEntity);
-	RefreshDefaultEntities();
-	return DefaultEntityOptions[DefaultEntity.EntityName];
+	auto ContainsDefaultEntity = [this](const FString& EntityName) -> bool
+	{
+		return std::ranges::any_of(AddedDefaultEntities,
+		[&EntityName](const FFlecsDefaultMetaEntity& DefaultEntity)
+		{
+			return DefaultEntity.EntityName == EntityName && DefaultEntity.SetId != 0;
+		});
+	};
+
+	if (ContainsDefaultEntity(DefaultEntity.EntityName))
+	{
+		const auto It = std::ranges::find_if(AddedDefaultEntities,
+			  [&DefaultEntity](const FFlecsDefaultMetaEntity& Entity)
+			  {
+				  return Entity.EntityName == DefaultEntity.EntityName;
+			  });
+
+		solid_check(It != AddedDefaultEntities.end());
+
+		return It->SetId;
+	}
+	
+	DefaultEntityWorld->progress();
+
+	flecs::entity DefaultEntityWorldEntity = DefaultEntityWorld->make_alive(static_cast<flecs::entity_t>(DefaultEntity.EntityId));
+	DefaultEntity.SetId = DefaultEntityWorldEntity.id();
+	DefaultEntityWorldEntity.set_name(StringCast<char>(*DefaultEntity.EntityName).Get());
+	
+	DefaultEntityWorld->progress();
+	
+	DefaultEntityOptions.Add(DefaultEntity.EntityName, DefaultEntity.SetId);
+	AddedDefaultEntities.emplace_back(DefaultEntity);
+
+	return DefaultEntity.SetId;
 }

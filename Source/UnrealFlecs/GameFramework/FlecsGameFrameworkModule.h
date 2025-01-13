@@ -6,7 +6,7 @@
 #include "Modules/FlecsModuleObject.h"
 #include "FlecsGameFrameworkModule.generated.h"
 
-UCLASS(BlueprintType, DisplayName = "Flecs GameFramework Module")
+UCLASS(BlueprintType, DisplayName = "Flecs Game Framework Module")
 class UNREALFLECS_API UFlecsGameFrameworkModule final : public UFlecsModuleObject
 {
 	GENERATED_BODY()

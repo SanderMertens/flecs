@@ -19,17 +19,16 @@ struct UNREALFLECS_API FFlecsDefaultEntityEngine final
 	
 public:
 	FFlecsDefaultEntityEngine();
+	~FFlecsDefaultEntityEngine();
 	
-	void RefreshDefaultEntities();
-	
-	flecs::entity_t AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity);
+	flecs::entity_t AddDefaultEntity(FFlecsDefaultMetaEntity DefaultEntity);
 	
 	TMap<FString, flecs::entity_t> DefaultEntityOptions;
-	TArray<FFlecsDefaultMetaEntity> AddedDefaultEntities;
-	TArray<FFlecsDefaultMetaEntity> CodeAddedDefaultEntities;
+	std::vector<FFlecsDefaultMetaEntity> AddedDefaultEntities;
+	std::vector<FFlecsDefaultMetaEntity> CodeAddedDefaultEntities;
 	
 	flecs::world* DefaultEntityWorld = nullptr;
-	flecs::entity NoneEntity;
+	flecs::query<> DefaultEntityQuery;
 
 	bool bIsInitialized = false;
 	
@@ -39,14 +38,15 @@ public:
 #define DECLARE_DEFAULT_ENTITY(DefaultEntityName) \
 	extern flecs::entity_t DefaultEntityName;
 
-#define DEFINE_DEFAULT_ENTITY(DefaultEntityName) \
-	flecs::entity_t DefaultEntityName; \
+#define DEFINE_DEFAULT_ENTITY(DefaultEntityName, InEntityId) \
+	flecs::entity_t DefaultEntityName = InEntityId; \
 	namespace \
 	{                                                             \
 		static void Register##DefaultEntityName()                        \
 		{                                                         \
 			FFlecsDefaultMetaEntity MetaEntity;                   \
 			MetaEntity.EntityName = TEXT(#DefaultEntityName);      \
+			MetaEntity.EntityId = DefaultEntityName;                      \
 			if (!FFlecsDefaultEntityEngine::Get().bIsInitialized)  \
 			{                                                     \
 				FFlecsDefaultEntityEngine::Get().Initialize();                                   \

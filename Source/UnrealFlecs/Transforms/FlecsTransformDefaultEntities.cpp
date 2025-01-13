@@ -2,7 +2,7 @@
 
 #include "FlecsTransformDefaultEntities.h"
 
-DEFINE_DEFAULT_ENTITY(FlecsLocalTrait);
-DEFINE_DEFAULT_ENTITY(FlecsGlobalTrait);
+DEFINE_DEFAULT_ENTITY(FlecsLocalTrait, 5002);
+DEFINE_DEFAULT_ENTITY(FlecsGlobalTrait, 5003);
 
-DEFINE_DEFAULT_ENTITY(FlecsRelativeTrait);
+DEFINE_DEFAULT_ENTITY(FlecsRelativeTrait, 5004);

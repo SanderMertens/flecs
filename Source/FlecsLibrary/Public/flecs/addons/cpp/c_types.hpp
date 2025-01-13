@@ -124,6 +124,7 @@ static const flecs::entity_t Symmetric = EcsSymmetric;
 static const flecs::entity_t With = EcsWith;
 static const flecs::entity_t OneOf = EcsOneOf;
 static const flecs::entity_t Trait = EcsTrait;
+static const flecs::entity_t TraitEntity = EcsTraitEntity;
 static const flecs::entity_t Relationship = EcsRelationship;
 static const flecs::entity_t Target = EcsTarget;
 static const flecs::entity_t CanToggle = EcsCanToggle;

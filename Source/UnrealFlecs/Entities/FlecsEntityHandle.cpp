@@ -12,6 +12,7 @@
 
 FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const UFlecsWorld* InWorld)
 {
+    solid_checkf(InWorld, TEXT("Flecs World not found"));
     return flecs::entity::null(InWorld->World);
 }
 
@@ -107,7 +108,7 @@ void FFlecsEntityHandle::ObtainFlecsWorld()
 {
     TRACE_CPUPROFILER_EVENT_SCOPE(FFlecsEntityHandle::ObtainFlecsWorld);
     
-    if UNLIKELY_IF(!GWorld || !GWorld->IsGameWorld())
+    if (!GWorld || !GWorld->IsGameWorld())
     {
         return;
     }
@@ -117,19 +118,20 @@ void FFlecsEntityHandle::ObtainFlecsWorld()
         const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
         solid_check(FlecsWorldSubsystem);
 
-        SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World,
-            GetEntity().id()));
+        SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World, GetEntity().id()));
     }
 }
 
 void FFlecsEntityHandle::PostScriptConstruct()
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(FFlecsEntityHandle::PostScriptConstruct);
+    
     if (GetEntity().id() == 0)
     {
         return;
     }
     
-    if (!GWorld  || !GWorld->IsGameWorld())
+    if UNLIKELY_IF(!GWorld  || !GWorld->IsGameWorld())
     {
         return;
     }
@@ -140,7 +142,7 @@ void FFlecsEntityHandle::PostScriptConstruct()
         solid_check(FlecsWorldSubsystem);
         
         FlecsWorldSubsystem->ListenBeginPlay(FOnWorldBeginPlay::FDelegate::CreateLambda(
-            [this, FlecsWorldSubsystem](UWorld* InWorld)
+            [this, FlecsWorldSubsystem](MAYBE_UNUSED UWorld* InWorld)
         {
             SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World, GetEntity().id()));
         }));

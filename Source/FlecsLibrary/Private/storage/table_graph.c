@@ -274,7 +274,7 @@ void flecs_type_free(
 }
 
 /* Add to type */
-static
+static inline
 void flecs_type_add(
     ecs_world_t *world,
     ecs_type_t *type,
@@ -318,7 +318,7 @@ void flecs_table_diff_builder_clear(
     ecs_vec_clear(&builder->removed);
 }
 
-static
+static inline
 void flecs_table_diff_build_type(
     ecs_world_t *world,
     ecs_vec_t *vec,
@@ -362,7 +362,7 @@ void flecs_table_diff_build_noalloc(
     diff->removed_flags = builder->removed_flags;
 }
 
-static
+static inline
 void flecs_table_diff_build_add_type_to_vec(
     ecs_world_t *world,
     ecs_vec_t *vec,
@@ -389,7 +389,7 @@ void flecs_table_diff_build_append_table(
     dst->removed_flags |= src->removed_flags;
 }
 
-static
+static inline
 void flecs_table_diff_free(
     ecs_world_t *world,
     ecs_table_diff_t *diff) 
@@ -399,7 +399,7 @@ void flecs_table_diff_free(
     flecs_bfree(&world->allocators.table_diff, diff);
 }
 
-static
+static 
 ecs_graph_edge_t* flecs_table_ensure_hi_edge(
     ecs_world_t *world,
     ecs_graph_edges_t *edges,
@@ -431,7 +431,7 @@ ecs_graph_edge_t* flecs_table_ensure_hi_edge(
     return edge;
 }
 
-static
+static inline
 ecs_graph_edge_t* flecs_table_ensure_edge(
     ecs_world_t *world,
     ecs_graph_edges_t *edges,
@@ -451,7 +451,7 @@ ecs_graph_edge_t* flecs_table_ensure_edge(
     return edge;
 }
 
-static
+static inline
 void flecs_table_disconnect_edge(
     ecs_world_t *world,
     ecs_id_t id,
@@ -490,7 +490,7 @@ void flecs_table_disconnect_edge(
     ecs_os_perf_trace_pop("flecs.table_graph.remove_edge");
 }
 
-static
+static inline
 void flecs_table_remove_edge(
     ecs_world_t *world,
     ecs_graph_edges_t *edges,
@@ -503,7 +503,7 @@ void flecs_table_remove_edge(
     ecs_map_remove(edges->hi, id);
 }
 
-static
+static inline
 void flecs_table_init_edges(
     ecs_graph_edges_t *edges)
 {
@@ -519,7 +519,7 @@ void flecs_table_init_node(
     flecs_table_init_edges(&node->remove);
 }
 
-static
+static inline
 void flecs_init_table(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -535,7 +535,7 @@ void flecs_init_table(
     flecs_table_init(world, table, prev);
 }
 
-static
+static 
 ecs_table_t *flecs_table_new(
     ecs_world_t *world,
     ecs_type_t *type,
@@ -637,7 +637,7 @@ ecs_table_t* flecs_table_ensure(
     return flecs_table_new(world, &copy, elem, prev);
 }
 
-static
+static inline
 void flecs_diff_insert_added(
     ecs_world_t *world,
     ecs_table_diff_builder_t *diff,
@@ -646,7 +646,7 @@ void flecs_diff_insert_added(
     ecs_vec_append_t(&world->allocator, &diff->added, ecs_id_t)[0] = id;
 }
 
-static
+static inline
 void flecs_diff_insert_removed(
     ecs_world_t *world,
     ecs_table_diff_builder_t *diff,
@@ -942,7 +942,7 @@ ecs_table_t* flecs_find_table_with(
     return flecs_table_ensure(world, &dst_type, true, node);
 }
 
-static
+static inline
 ecs_table_t* flecs_find_table_without(
     ecs_world_t *world,
     ecs_table_t *node,
@@ -966,7 +966,7 @@ ecs_table_t* flecs_find_table_without(
     return flecs_table_ensure(world, &dst_type, true, node);
 }
 
-static
+static inline
 void flecs_table_init_edge(
     ecs_table_t *table,
     ecs_graph_edge_t *edge,
@@ -984,7 +984,7 @@ void flecs_table_init_edge(
     edge->id = id;
 }
 
-static
+static inline
 void flecs_init_edge_for_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -1013,7 +1013,7 @@ void flecs_init_edge_for_add(
     }
 }
 
-static
+static inline
 void flecs_init_edge_for_remove(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -1042,7 +1042,7 @@ void flecs_init_edge_for_remove(
     }
 }
 
-static
+static inline
 ecs_table_t* flecs_create_edge_for_remove(
     ecs_world_t *world,
     ecs_table_t *node,
@@ -1054,7 +1054,7 @@ ecs_table_t* flecs_create_edge_for_remove(
     return to;   
 }
 
-static
+static inline
 ecs_table_t* flecs_create_edge_for_add(
     ecs_world_t *world,
     ecs_table_t *node,

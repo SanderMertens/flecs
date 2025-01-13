@@ -10,7 +10,7 @@
 
 // This class does not need to be modified.
 UINTERFACE(BlueprintType, Blueprintable)
-class UFlecsSystemInterface : public UFlecsEntityInterface
+class UNREALFLECS_API UFlecsSystemInterface : public UFlecsEntityInterface
 {
 	GENERATED_BODY()
 }; // class UFlecsSystemInterface

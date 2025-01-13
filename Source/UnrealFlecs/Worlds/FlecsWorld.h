@@ -76,11 +76,12 @@ public:
 	void WorldStart()
 	{
 		UN_LOG(LogFlecsWorld, Log, "Flecs World begin play");
-		
-		InitializeSystems();
+
 		InitializeAssetRegistry();
+		InitializeSystems();
 	}
 
+	// ReSharper disable once CppMemberFunctionMayBeConst
 	void WorldBeginPlay()
 	{
 		GetWorldEntity().Add<FFlecsBeginPlay>();
@@ -344,7 +345,7 @@ public:
 		TArray<FAssetData> AssetData;
 		AssetRegistry.GetAssetsByClass(
 			FTopLevelAssetPath(UFlecsPrimaryDataAsset::StaticClass()), AssetData, true);
-
+		
 		AssetRegistry.OnAssetAdded().AddWeakLambda(this, [this](const FAssetData& InAssetData)
 		{
 			if (InAssetData.IsInstanceOf<UFlecsPrimaryDataAsset>())
@@ -377,10 +378,10 @@ public:
 	{
 		RegisterModuleDependency(InModuleObject, TModule::StaticClass(),
 			[InFunction = std::forward<TFunction>(InFunction)]
-			(UObject* InDependencyObject, UFlecsWorld* InWorld, FFlecsEntityHandle InDependencyEntity)
-		{
-			std::invoke(InFunction, CastChecked<TModule>(InDependencyObject), InWorld, InDependencyEntity);
-		});
+			(UObject* InDependencyObject, UFlecsWorld* InWorld, FFlecsEntityHandle InDependencyEntity) FORCEINLINE_ATTRIBUTE
+			{
+				std::invoke(InFunction, CastChecked<TModule>(InDependencyObject), InWorld, InDependencyEntity);
+			});
 	}
 
 	/**
@@ -1163,7 +1164,7 @@ public:
 		}
 		
 		FFlecsEntityHandle EnumComponent = World.component(StringCast<char>(*Enum->GetName()).Get())
-			.set<flecs::Component>({ sizeof(int32), alignof(int32) })
+			.set<flecs::Component>({ .size = sizeof(int32), .alignment = alignof(int32) })
 			.set<FFlecsScriptEnumComponent>({ Enum });
 		
 		TypeMapComponent->ScriptEnumMap.emplace(Enum, EnumComponent.GetEntity());
@@ -1373,8 +1374,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle CreatePrefabWithRecord(
-		const FFlecsEntityRecord& InRecord, const FString& Name = "") const
+	FFlecsEntityHandle CreatePrefabWithRecord(const FFlecsEntityRecord& InRecord, const FString& Name = "") const
 	{
 		const FFlecsEntityHandle Prefab = World.prefab(StringCast<char>(*Name).Get());
 		solid_checkf(Prefab.IsPrefab(), TEXT("Entity is not a prefab"));

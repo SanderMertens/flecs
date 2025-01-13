@@ -10,16 +10,15 @@
 #include "IDetailChildrenBuilder.h"
 #include "DetailWidgetRow.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
-#include "Logs/FlecsEditorCategory.h"
+#include "SNameComboBox.h"
 #include "Widgets/Input/SComboBox.h"
-#include "Widgets/Input/SSearchBox.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
 #define LOCTEXT_NAMESPACE "Flecs"
 
 class FFlecsEntityHandleCustomization final : public IPropertyTypeCustomization
 {
-	const FText NoneEntityText = NSLOCTEXT("Flecs", "NoneEntity", "None");
+	TSharedRef<FName> NoneEntityText = MakeShared<FName>(FName(TEXT("None")));
 	
 public:
 	static TSharedRef<IPropertyTypeCustomization> MakeInstance()
@@ -32,77 +31,53 @@ public:
 	{
 	}
 
-	virtual void CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDetailChildrenBuilder& ChildBuilder,
+virtual void CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDetailChildrenBuilder& ChildBuilder,
     IPropertyTypeCustomizationUtils& CustomizationUtils) override
 {
     PropertyHandle = InPropertyHandle;
 
     Options.Empty();
     FilteredOptions.Empty();
+	EntityOptions.Empty();
 
-	FMessageLog("Flecs").Info(FText::FromString("Customizing Flecs Entity Handle"));
-
-    for (const auto& [EntityName, EntityId] :
-        FFlecsDefaultEntityEngine::Get().DefaultEntityOptions)
+	Options.Add(NoneEntityText);
+	EntityOptions.Add(flecs::entity::null());
+		
+    FFlecsDefaultEntityEngine::Get().DefaultEntityQuery.each([this](const flecs::entity InEntity)
     {
-        UN_LOGF(LogFlecsEditor, Verbose,
-            "Adding entity %s to entity handle options.", *EntityName);
-
-    	bool bIsAddedEntity = false;
-
-    	for (auto [EntityRecordName, EntityRecord]
-    		: FFlecsDefaultEntityEngine::Get().AddedDefaultEntities)
-    	{
-    		if (EntityRecordName == EntityName)
-			{
-    			Options.Add(FName(*EntityName));
-    			
-    			bIsAddedEntity = true;
-				break;
-			}
-    	}
-
-    	if (!bIsAddedEntity)
-		{
-			Options.Add(FName(*EntityName));
-		}
-    }
+        Options.Add(MakeShared<FName>(FName(InEntity.name().c_str())));
+    	EntityOptions.Add(InEntity);
+    });
 
     ApplyMetadataFilters();
-    FilteredOptions = Options; // Initialize FilteredOptions to Options
+    // Initialize FilteredOptions to Options.
+    FilteredOptions = Options;
 
-    ChildBuilder.AddCustomRow(NSLOCTEXT("Flecs", "FlecsEntityHandle",
-        "Flecs Entity Handle"))
+	SelectedItem = GetCurrentItemLabel();
+
+    ChildBuilder.AddCustomRow(NSLOCTEXT("Flecs", "FlecsEntityHandle", "Flecs Entity Handle"))
     .NameContent()
     [
         SNew(STextBlock)
-        .Text(NSLOCTEXT("Flecs", "SelectedEntity", "Selected Entity"))
-        .Font(IDetailLayoutBuilder::GetDetailFont())
+            .Text(NSLOCTEXT("Flecs", "SelectedEntity", "Selected Entity"))
+            .Font(IDetailLayoutBuilder::GetDetailFont())
     ]
     .ValueContent()
+	.MinDesiredWidth(250.f)
     .MaxDesiredWidth(250.f)
     [
         SNew(SVerticalBox)
         + SVerticalBox::Slot()
-	        .AutoHeight()
-	        [
-	            SNew(SComboButton)
-		            .OnGetMenuContent(this, &FFlecsEntityHandleCustomization::OnGenerateWidgetWithSearch)
-		            .ContentPadding(2)
-		            .ButtonContent()
-		            [
-		                SNew(STextBlock)
-		                .Text(this, &FFlecsEntityHandleCustomization::GetCurrentItemLabel)
-		            ]
-	        ]
-	        + SVerticalBox::Slot()
-	        .AutoHeight()
-	        [
-	            SNew(SButton)
-		            .Text(NSLOCTEXT("Flecs", "ClearSelection", "Clear"))
-		            .OnClicked(this, &FFlecsEntityHandleCustomization::OnClearClicked)
-		            .ContentPadding(2)
-	        ]
+            .AutoHeight()
+            [
+                SNew(SNameComboBox)
+                    .OptionsSource(&FilteredOptions)
+                    .OnComboBoxOpening(this, &FFlecsEntityHandleCustomization::OnComboBoxOpening)
+                    .OnSelectionChanged(this, &FFlecsEntityHandleCustomization::OnEntitySelected)
+					.ComboBoxStyle(&FCoreStyle::Get().GetWidgetStyle<FComboBoxStyle>("ComboBox"))
+            		.InitiallySelectedItem(SelectedItem)
+                    .ContentPadding(2)
+            ]
     ];
 
     if (Options.IsEmpty())
@@ -112,29 +87,36 @@ public:
         .NameContent()
         [
             SNew(STextBlock)
-            .Text(NSLOCTEXT("Flecs", "NoEntitiesFound", "No entities found."))
-            .Font(IDetailLayoutBuilder::GetDetailFont())
+                .Text(NSLOCTEXT("Flecs", "NoEntitiesFound", "No entities found."))
+                .Font(IDetailLayoutBuilder::GetDetailFont())
         ];
     }
 }
 
+
 private:
-	mutable TOptional<FName> SelectedItem;
-	TArray<FName> Options;
-	TArray<FName> FilteredOptions;
+	mutable TSharedPtr<FName> SelectedItem;
+	TArray<flecs::entity> EntityOptions;
+	TArray<TSharedPtr<FName>> Options;
+	TArray<TSharedPtr<FName>> FilteredOptions;
 
 	TSharedPtr<IPropertyHandle> PropertyHandle;
 
 	// ReSharper disable once CppMemberFunctionMayBeConst
-	void OnEntitySelected(const FName NewValue, ESelectInfo::Type)
+	void OnEntitySelected(TSharedPtr<FName> NewValue, ESelectInfo::Type)
 	{
+		if UNLIKELY_IF(!NewValue.IsValid())
+		{
+			return;
+		}
+		
 		if LIKELY_IF(PropertyHandle && PropertyHandle->IsValidHandle())
 		{
 			FScopedTransaction Transaction(NSLOCTEXT("Flecs", "ChangeEntity", "Change Entity"));
 			PropertyHandle->NotifyPreChange();
 
 			PropertyHandle->EnumerateRawData(
-				[&NewValue]
+				[NewValue, this]
 				(void* RawData, MAYBE_UNUSED const int32 DataIndex, MAYBE_UNUSED const int32 NumDatas)
 				{
 					if UNLIKELY_IF(RawData == nullptr)
@@ -142,9 +124,19 @@ private:
 						return false;
 					}
 
+					if (NewValue == NoneEntityText)
+					{
+						static_cast<FFlecsEntityHandle*>(RawData)->SetEntity(flecs::entity::null().id());
+						SelectedItem.Reset();
+						return true;
+					}
+					
 					FFlecsEntityHandle* EntityId = static_cast<FFlecsEntityHandle*>(RawData);
-					EntityId->SetEntity(FFlecsDefaultEntityEngine::Get().DefaultEntityOptions[NewValue.ToString()]);
-					EntityId->DisplayName = NewValue;
+					flecs::entity Entity = EntityOptions[Options.IndexOfByKey(NewValue)];
+					check(Entity.is_valid());
+					SelectedItem = NewValue;
+					EntityId->SetEntity(Entity.id());
+					
 					return true;
 				});
 
@@ -163,9 +155,9 @@ private:
 		}
 		else
 		{
-			FilteredOptions = Options.FilterByPredicate([&FilterString](const FName& Option)
+			FilteredOptions = Options.FilterByPredicate([&FilterString](const TSharedPtr<FName>& Option)
 			{
-				return Option.ToString().Contains(FilterString);
+				return Option->ToString().Contains(FilterString);
 			});
 		}
 	}
@@ -175,24 +167,24 @@ private:
 		FilteredOptions = Options;
 	}
 
-	TSharedRef<SWidget> GenerateEntityWidget(const FName InOption)
+	TSharedRef<SWidget> GenerateEntityWidget(const TSharedPtr<FName>& InOption)
 	{
-		return SNew(STextBlock).Text(FText::FromName(InOption));
+		return SNew(STextBlock).Text(FText::FromName(*InOption.Get()));
 	}
 
-	FText GetCurrentItemLabel() const
+	TSharedPtr<FName> GetCurrentItemLabel() const
 	{
-		if (SelectedItem.IsSet())
+		if (SelectedItem.IsValid())
 		{
-			return FText::FromName(SelectedItem.GetValue());
+			return SelectedItem;
 		}
 
-		TOptional<FName> CommonValue;
+		TSharedPtr<FName> CommonValue;
 
 		if (PropertyHandle && PropertyHandle->IsValidHandle())
 		{
 			PropertyHandle->EnumerateRawData(
-				[&CommonValue](void* RawData, const int32 DataIndex, MAYBE_UNUSED const int32 NumDatas)
+				[&CommonValue, this](void* RawData, const int32 DataIndex, MAYBE_UNUSED const int32 NumDatas)
 				{
 					if UNLIKELY_IF(RawData == nullptr)
 					{
@@ -200,29 +192,45 @@ private:
 						return false;
 					}
 
-					const FFlecsEntityHandle EntityId = *static_cast<FFlecsEntityHandle*>(RawData);
-					const FName CurrentValue = EntityId.DisplayName;
+					const flecs::entity Entity = FFlecsDefaultEntityEngine::Get().DefaultEntityWorld->get_alive(
+						static_cast<FFlecsEntityHandle*>(RawData)->GetId());
+
+					if UNLIKELY_IF(static_cast<FFlecsEntityHandle*>(RawData)->GetId() == flecs::entity::null().id())
+					{
+						CommonValue.Reset();
+						return false;
+					}
+
+					if UNLIKELY_IF(!Entity.is_valid())
+					{
+						CommonValue.Reset();
+						return false;
+					}
+					
+					const FName CurrentValue = FName(Entity.name().c_str());
 
 					if (DataIndex > 0)
 					{
-						if (CommonValue.IsSet() && (CommonValue.GetValue() != CurrentValue))
+						if (CommonValue.IsValid() && (CommonValue->GetNumber() != CurrentValue.GetNumber()))
 						{
 							CommonValue.Reset();
 							return false;
 						}
 					}
 
-					CommonValue = CurrentValue;
+					CommonValue = MakeShared<FName>(CurrentValue);
 					return true;
 				}
 			);
 		}
 
-		if (CommonValue.IsSet())
+		if (CommonValue.IsValid())
 		{
-			return FText::FromName(CommonValue.GetValue());
+			SelectedItem = CommonValue;
+			return CommonValue;
 		}
 
+		SelectedItem.Reset();
 		return NoneEntityText;
 	}
 
@@ -239,11 +247,11 @@ private:
 		
 		if (!IncludedItems.IsEmpty())
 		{
-			TArray<FName> MetaFilteredOptions;
+			TArray<TSharedPtr<FName>> MetaFilteredOptions;
 			
 			for (const FString& Item : IncludedItems)
 			{
-				MetaFilteredOptions.Add(FName(*Item));
+				MetaFilteredOptions.Add(MakeShared<FName>(FName(*Item)));
 			}
 			
 			Options = MetaFilteredOptions;
@@ -253,63 +261,16 @@ private:
 		{
 			for (const FString& ExcludedItem : ExcludedItems)
 			{
-				Options.Remove(FName(*ExcludedItem));
+				for (int32 Index = 0; Index < Options.Num(); ++Index)
+				{
+					if (Options[Index]->GetPlainNameString() == ExcludedItem)
+					{
+						Options.RemoveAt(Index);
+						break;
+					}
+				}
 			}
 		}
-	}
-	
-	FReply OnClearClicked()
-	{
-		SelectedItem.Reset();
-
-		if (PropertyHandle && PropertyHandle->IsValidHandle())
-		{
-			FScopedTransaction Transaction(NSLOCTEXT("Flecs", "ResetEntity", "Reset Entity"));
-			PropertyHandle->NotifyPreChange();
-
-			PropertyHandle->EnumerateRawData(
-				[](void* RawData, MAYBE_UNUSED const int32 DataIndex,
-					MAYBE_UNUSED const int32 NumDatas)
-				{
-					if (RawData == nullptr)
-					{
-						return false;
-					}
-
-					FFlecsEntityHandle* EntityId = static_cast<FFlecsEntityHandle*>(RawData);
-					EntityId->SetEntity(flecs::entity());
-					EntityId->DisplayName = FName();
-					return true;
-				});
-
-			PropertyHandle->NotifyPostChange(EPropertyChangeType::ValueSet);
-			PropertyHandle->NotifyFinishedChangingProperties();
-		}
-
-		FilteredOptions = Options;
-
-		return FReply::Handled();
-	}
-
-	TSharedRef<SWidget> OnGenerateWidgetWithSearch()
-	{
-		return
-			SNew(SVerticalBox)
-			+ SVerticalBox::Slot()
-			.AutoHeight()
-			.Padding(2)
-			[
-				SNew(SSearchBox)
-				.OnTextChanged(this, &FFlecsEntityHandleCustomization::OnFilterTextChanged)
-			]
-			+ SVerticalBox::Slot()
-			.FillHeight(1.0f)
-			[
-				SNew(SListView<FName>)
-				.ListItemsSource(&FilteredOptions)
-				.OnGenerateRow(this, &FFlecsEntityHandleCustomization::OnGenerateRow)
-				.OnSelectionChanged(this, &FFlecsEntityHandleCustomization::OnEntitySelected)
-			];
 	}
 
 	TSharedRef<ITableRow> OnGenerateRow(const FName InItem, const TSharedRef<STableViewBase>& OwnerTable)

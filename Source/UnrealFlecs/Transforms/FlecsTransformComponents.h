@@ -8,7 +8,7 @@
 #include "FlecsTransformComponents.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFlecsLocationComponent
+struct UNREALFLECS_API FFlecsLocationComponent
 {
 	GENERATED_BODY()
 	
@@ -54,7 +54,7 @@ public:
 DEFINE_STD_HASH(FFlecsLocationComponent)
 
 USTRUCT(BlueprintType)
-struct FFlecsRotationComponent
+struct UNREALFLECS_API FFlecsRotationComponent
 {
 	GENERATED_BODY()
 	
@@ -103,7 +103,7 @@ public:
 DEFINE_STD_HASH(FFlecsRotationComponent)
 
 USTRUCT(BlueprintType)
-struct FFlecsScaleComponent
+struct UNREALFLECS_API FFlecsScaleComponent
 {
 	GENERATED_BODY()
 	
@@ -144,3 +144,5 @@ public:
 }; // struct FFlecsScaleComponent
 
 DEFINE_STD_HASH(FFlecsScaleComponent)
+
+

@@ -2,4 +2,4 @@
 
 #include "DefaultEntityDefinitions.h"
 
-DEFINE_DEFAULT_ENTITY(TestEntityOption);
+DEFINE_DEFAULT_ENTITY(TestEntityOption, 6000);

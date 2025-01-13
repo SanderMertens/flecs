@@ -8,7 +8,7 @@
 #include "FlecsWorldInfoSettings.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFlecsWorldSettingsInfo
+struct UNREALFLECS_API FFlecsWorldSettingsInfo
 {
     GENERATED_BODY()
 

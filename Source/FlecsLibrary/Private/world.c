@@ -176,6 +176,7 @@ const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 119;
 #endif
 
 const ecs_entity_t ecs_id(EcsSystemPriority) =               FLECS_HI_COMPONENT_ID + 120;
+const ecs_entity_t EcsTraitEntity =                 FLECS_HI_COMPONENT_ID + 121;
 
 /* Max static id:
  * #define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 256) */
@@ -576,7 +577,7 @@ void flecs_monitor_unregister(
     }
 }
 
-static
+static inline
 void flecs_init_store(
     ecs_world_t *world)
 {
@@ -2072,7 +2073,7 @@ ecs_ftime_t flecs_start_measure_frame(
     return (ecs_ftime_t)delta_time;
 }
 
-static
+static inline
 void flecs_stop_measure_frame(
     ecs_world_t* world)
 {

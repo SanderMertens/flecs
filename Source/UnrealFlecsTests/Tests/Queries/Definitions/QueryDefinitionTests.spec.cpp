@@ -52,7 +52,7 @@ void FQueryDefinitionTestsSpec::Define()
 			Definition.Apply(Fixture.FlecsWorld.Get(), Builder);
 			flecs::query<> Query = Builder.build();
 
-			TestTrue("Query has 1 term", Query.term_count() == 1);
+			TestTrue("Query has 1 term count", Query.term_count() == 1);
 		});
 	});
 
@@ -76,8 +76,8 @@ void FQueryDefinitionTestsSpec::Define()
 			Definition.Apply(Fixture.FlecsWorld.Get(), Builder);
 			flecs::query<> Query = Builder.build();
 
-			TestTrue("Query has 1 term", Query.term_count() == 1);
-			TestTrue("Query has 1 entity", Query.count() >= 1);
+			TestTrue("Query has 1 term count", Query.term_count() == 1);
+			TestTrue("Query has at least 1 entity", Query.count() >= 1);
 		});
 	});
 }

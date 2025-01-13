@@ -9,7 +9,7 @@
 #include "FlecsId.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFlecsId final
+struct UNREALFLECS_API FFlecsId
 {
     GENERATED_BODY()
 

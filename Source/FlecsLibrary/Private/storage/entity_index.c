@@ -248,7 +248,10 @@ uint64_t flecs_entity_index_new_id(
     }
 
     /* Create new id */
-    const uint32_t id = (uint32_t)++ index->max_id;
+    uint64_t id = ++index->max_id;
+    while (flecs_entity_index_exists(index, id)) {
+        id = ++index->max_id;
+    }
 
     ecs_assert(index->max_id <= UINT32_MAX, ECS_INVALID_OPERATION,
         "max id %u exceeds 32 bits", index->max_id);
@@ -259,7 +262,7 @@ uint64_t flecs_entity_index_new_id(
 
     ecs_vec_append_t(index->allocator, &index->dense, uint64_t)[0] = id;
 
-    ecs_entity_index_page_t *page = flecs_entity_index_ensure_page(index, id);
+    ecs_entity_index_page_t *page = flecs_entity_index_ensure_page(index, (uint32_t)id);
     ecs_assert(page != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
     r->dense = index->alive_count ++;

@@ -124,7 +124,7 @@ public:
 
 		SetTickableTickType(ETickableTickType::Always);
 		
-		TArray<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
+		std::vector<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
 		TMap<FString, flecs::entity_t> DefaultEntityIds = FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;
 		
 		// Add a the debug string for this world to the passed-in name E.G. "MyWorld (Client)"
@@ -141,7 +141,7 @@ public:
 		
 		DefaultWorld->InitializeDefaultComponents();
 		
-		for (int32 Index = 0; Index < DefaultEntities.Num(); ++Index)
+		for (int32 Index = 0; Index < DefaultEntities.size(); ++Index)
 		{
 			FString EntityName = DefaultEntities[Index].EntityName;
 			const flecs::entity_t EntityId = DefaultEntityIds[EntityName];

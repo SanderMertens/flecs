@@ -2,8 +2,14 @@
 
 #include "UnrealFlecsEditor.h"
 #include "UnrealFlecsEditorStyle.h"
+#include "Engine/AssetManagerSettings.h"
+#include "Engine/AssetManagerTypes.h"
+#include "Framework/Notifications/NotificationManager.h"
+#include "Logs/FlecsEditorCategory.h"
+#include "Properties/FlecsComponentPropertiesAsset.h"
 #include "Widgets/EntityHandle/FlecsEntityHandlePinFactory.h"
 #include "Widgets/EntityHandle/FlecsEntityHandlePropertyEditor.h"
+#include "Widgets/Notifications/SNotificationList.h"
 
 #define LOCTEXT_NAMESPACE "FUnrealFlecsEditorModule"
 
@@ -23,8 +29,10 @@ void FUnrealFlecsEditorModule::StartupModule()
 			)
 		);
 
-	PropertyEditorModule.NotifyCustomizationModuleChanged();
+	AddPrimaryAssetTypes();
 
+	PropertyEditorModule.NotifyCustomizationModuleChanged();
+	
 	// FlecsEntityHandlePinFactory = MakeShared<FFlecsEntityHandlePinFactory>();
 	// FEdGraphUtilities::RegisterVisualPinFactory(FlecsEntityHandlePinFactory);
 }
@@ -88,6 +96,70 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 		INVTEXT("Open Flecs Explorer (for each PIE instance)"),
 		FSlateIcon("UnrealFlecsEditorStyle", "UnrealFlecs.FlecsEditor.FlecsLogo")
 	));
+}
+
+void FUnrealFlecsEditorModule::AddPrimaryAssetTypes()
+{
+	UAssetManagerSettings* Settings = GetMutableDefault<UAssetManagerSettings>();
+	
+	if UNLIKELY_IF(!ensureMsgf(Settings, TEXT("Failed to get Asset Manager Settings.")))
+	{
+		return;
+	}
+
+	bool bModified = false;
+
+	// Define your primary asset types
+	FPrimaryAssetTypeInfo FlecsComponentPropertiesTypeInfo(
+		FName("FlecsComponentProperties"),
+		UFlecsComponentPropertiesAsset::StaticClass(),
+		false,
+		false
+	);
+
+	FlecsComponentPropertiesTypeInfo.Rules.CookRule = EPrimaryAssetCookRule::AlwaysCook;
+
+	FPrimaryAssetTypeInfo FlecsPrimaryDataAssetTypeInfo(
+		FName("FlecsPrimaryDataAsset"),
+		UFlecsPrimaryDataAsset::StaticClass(),
+		false,
+		false
+	);
+
+	FlecsPrimaryDataAssetTypeInfo.Rules.CookRule = EPrimaryAssetCookRule::AlwaysCook;
+
+	// Check if these asset types are already present
+	auto IsAssetTypePresent = [&](const FPrimaryAssetTypeInfo& TypeInfo) -> bool
+	{
+		return Settings->PrimaryAssetTypesToScan.ContainsByPredicate([&](const FPrimaryAssetTypeInfo& Info)
+		{
+			return Info.PrimaryAssetType == TypeInfo.PrimaryAssetType;
+		});
+	};
+
+	if (!IsAssetTypePresent(FlecsComponentPropertiesTypeInfo))
+	{
+		Settings->PrimaryAssetTypesToScan.Add(FlecsComponentPropertiesTypeInfo);
+		bModified = true;
+	}
+
+	if (!IsAssetTypePresent(FlecsPrimaryDataAssetTypeInfo))
+	{
+		Settings->PrimaryAssetTypesToScan.Add(FlecsPrimaryDataAssetTypeInfo);
+		bModified = true;
+	}
+
+	if (bModified)
+	{
+		Settings->SaveConfig();
+		UN_LOG(LogFlecsEditor, Log, "Added Flecs asset types to PrimaryAssetTypesToScan.");
+		
+		FNotificationInfo Info(LOCTEXT("FlecsAssetTypesAdded",
+			"Flecs asset types have been added to Asset Manager settings."));
+		Info.ExpireDuration = 3.0f;
+		
+		FSlateNotificationManager::Get().AddNotification(Info);
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

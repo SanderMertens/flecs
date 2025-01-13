@@ -19,7 +19,7 @@ public:
 
 	FORCEINLINE virtual FPrimaryAssetId GetPrimaryAssetId() const override final
 	{
-		return FPrimaryAssetId("FlecsPrimaryDataAsset", *GetName());
+		return FPrimaryAssetId("FlecsPrimaryDataAsset", GetFName());
 	}
 
 	virtual void OnEntityCreated(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)

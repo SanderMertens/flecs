@@ -8,7 +8,7 @@
 #include "FlecsArchetype.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFlecsArchetype
+struct UNREALFLECS_API FFlecsArchetype
 {
     GENERATED_BODY()
 

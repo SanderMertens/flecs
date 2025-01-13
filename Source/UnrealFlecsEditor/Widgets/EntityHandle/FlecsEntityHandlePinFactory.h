@@ -9,4 +9,4 @@ class FFlecsEntityHandlePinFactory : public FGraphPanelPinFactory
 {
 public:
 	virtual TSharedPtr<SGraphPin> CreatePin(UEdGraphPin* InPin) const override;
-};
+}; // class FFlecsEntityHandlePinFactory

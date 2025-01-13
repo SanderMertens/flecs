@@ -15,7 +15,7 @@ void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntity
 	const UWorld* UnrealWorld = InWorld->GetWorld();
 	solid_check(IsValid(UnrealWorld));
 	
-	if (UnrealWorld && UnrealWorld->GetNetMode() == NM_Client)
+	if (UnrealWorld->GetNetMode() == NM_Client)
 	{
 		ClientPieInstanceOffset = static_cast<uint16>(UE::GetPlayInEditorID());
 	}
@@ -40,11 +40,15 @@ void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntity
 void UFlecsRestModule::DeinitializeModule(UFlecsWorld* InWorld)
 {
 	#ifdef FLECS_REST
+
+	#ifdef FLECS_STATS
 	
 	if (StatsEntity.IsValid())
 	{
 		StatsEntity.Disable();
 	}
+
+	#endif // FLECS_STATS
 	
 	if UNLIKELY_IF(!RestEntity.IsValid())
 	{

@@ -21,8 +21,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 
 	Describe("Registered Tag Properties", [this]()
 	{
-		It("Should contain Registered Properties from Struct in the Flecs Module",
-			[this]()
+		It("Should contain Registered Properties from Struct in the Flecs Module", [this]()
 		{
 			const FFlecsEntityHandle TestType
 				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FFlecsTranslationPropertyTrait::StaticStruct());
@@ -31,8 +30,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 				TestType.Has(flecs::PairIsTag));
 		});
 		
-		It("Should contain Registered Properties using type directly",
-			[this]()
+		It("Should contain Registered Properties using type directly", [this]()
 		{
 			const FFlecsEntityHandle TestType
 				= Fixture.FlecsWorld->ObtainComponentType<FTestRegisteredPropertyStruct_RegisterPropertyTest>();
@@ -41,11 +39,11 @@ void FRegisteredPropertiesTestsSpec::Define()
 				TestType.Has(flecs::PairIsTag));
 		});
 		
-		It("Should contain Registered Properties using StaticStruct",
-			[this]()
+		It("Should contain Registered Properties using StaticStruct", [this]()
 		{
 			const FFlecsEntityHandle TestType
-				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FTestRegisteredPropertyStruct_RegisterPropertyTest::StaticStruct());
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct(
+					FTestRegisteredPropertyStruct_RegisterPropertyTest::StaticStruct());
 			
 			TestTrue("Component properties should be registered",
 				TestType.Has(flecs::PairIsTag));
@@ -91,8 +89,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 				TestType.Get<FTestRegisteredTraitProperty_RegisterPropertyTest>().MyInt32 == 1);
 		});
 
-		It("Should contain Registered Trait Properties using StaticStruct",
-			[this]()
+		It("Should contain Registered Trait Properties using StaticStruct", [this]()
 		{
 			const FFlecsEntityHandle TestType
 				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FTestRegisteredPropertyStruct2_RegisterPropertyTest::StaticStruct());
@@ -105,8 +102,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 				TestType.Get<FTestRegisteredTraitProperty_RegisterPropertyTest>().MyInt32 == 1);
 		});
 
-		It("Should contain Registered Trait Properties when Auto Registered",
-			[this]()
+		It("Should contain Registered Trait Properties when Auto Registered", [this]()
 		{
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Add<FTestRegisteredPropertyStruct2_RegisterPropertyTest>();
@@ -128,8 +124,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 
 	Describe("Multiple Registered Trait and Tag Properties", [this]()
 	{
-		It("Should contain Multiple Registered Trait and Tag Properties",
-			[this]()
+		It("Should contain Multiple Registered Trait and Tag Properties", [this]()
 		{
 			const FFlecsEntityHandle TestType
 				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FTestRegisteredPropertyStruct3_RegisterPropertyTest::StaticStruct());

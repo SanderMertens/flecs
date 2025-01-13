@@ -31,7 +31,8 @@ public class UnrealFlecsEditor : ModuleRules
                 "UnrealEd",
                 "GraphEditor",
                 "BlueprintGraph",
-                "StructUtilsEditor"
+                "StructUtilsEditor",
+                "AssetRegistry",
             }
         );
     }

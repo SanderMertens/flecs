@@ -8,7 +8,23 @@
 #include "General/FlecsPrimaryDataAsset.h"
 #include "FlecsPrefabAsset.generated.h"
 
-UCLASS(BlueprintType, Blueprintable)
+USTRUCT(BlueprintType)
+struct FFlecsPrefabSlotInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Prefab")
+	FString Name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Prefab")
+	FFlecsEntityRecord Record;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Prefab")
+	TArray<TInstancedStruct<FFlecsPrefabSlotInfo>> SubSlots;
+	
+}; // struct FFlecsPrefabSlotInfo
+
+UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsPrefabAsset : public UFlecsPrimaryDataAsset
 {
 	GENERATED_BODY()
@@ -16,10 +32,10 @@ class UNREALFLECS_API UFlecsPrefabAsset : public UFlecsPrimaryDataAsset
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
-	FString PrefabName;
-	
+	FFlecsPrefabSlotInfo Prefab;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
-	FFlecsEntityRecord EntityRecord;
+	TArray<FFlecsPrefabSlotInfo> Slots;
 
 	UPROPERTY()
 	FFlecsEntityHandle PrefabEntityHandle;

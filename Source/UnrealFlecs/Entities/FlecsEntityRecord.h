@@ -26,7 +26,7 @@ enum class EFlecsPairNodeType : uint8
 }; // enum class EFlecsPairNodeType
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsPairSlot
+struct UNREALFLECS_API FFlecsRecordPairSlot
 {
 	GENERATED_BODY()
 
@@ -45,7 +45,7 @@ struct UNREALFLECS_API FFlecsPairSlot
 		meta = (EditCondition = "NodeType == EFlecsPairNodeType::FGameplayTag", EditConditionHides))
 	FGameplayTag GameplayTag;
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsPairSlot& Other) const
+	FORCEINLINE NO_DISCARD bool operator==(const FFlecsRecordPairSlot& Other) const
 	{
 		switch (NodeType)
 		{
@@ -66,7 +66,7 @@ struct UNREALFLECS_API FFlecsPairSlot
 		UNREACHABLE
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsPairSlot& Other) const
+	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsRecordPairSlot& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -77,29 +77,28 @@ UENUM(BlueprintType)
 enum class EFlecsValuePairType : uint8
 {
 	First = 0,
-	Second = 1, // @TODO: Unsupported for now
 }; // enum class EFlecsValuePairType
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsPair
+struct UNREALFLECS_API FFlecsRecordPair
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
-	FFlecsPairSlot First;
+	FFlecsRecordPairSlot First;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
-	FFlecsPairSlot Second;
+	FFlecsRecordPairSlot Second;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
-	EFlecsValuePairType PairType = EFlecsValuePairType::First;
+	EFlecsValuePairType PairValueType = EFlecsValuePairType::First;
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsPair& Other) const
+	FORCEINLINE NO_DISCARD bool operator==(const FFlecsRecordPair& Other) const
 	{
 		return First == Other.First && Second == Other.Second;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsPair& Other) const
+	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsRecordPair& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -114,14 +113,10 @@ struct UNREALFLECS_API FFlecsPair
 				{
 					case EFlecsPairNodeType::ScriptStruct:
 						{
-							if (PairType == EFlecsValuePairType::First)
+							if (PairValueType == EFlecsValuePairType::First)
 							{
 								InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
 									First.ScriptStruct.GetMemory(), Second.ScriptStruct.GetScriptStruct());
-							}
-							else if (PairType == EFlecsValuePairType::Second)
-							{
-								InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.ScriptStruct.GetScriptStruct());
 							}
 						}
 					break;
@@ -213,7 +208,7 @@ struct UNREALFLECS_API FFlecsTraitTypeInfo final
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::Pair", EditConditionHides))
-	FFlecsPair Pair;
+	FFlecsRecordPair Pair;
 	
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsTraitTypeInfo& Other) const
 	{
@@ -269,7 +264,7 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::Pair", EditConditionHides))
-	FFlecsPair Pair;
+	FFlecsRecordPair Pair;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::ScriptStruct", EditConditionHides))
@@ -356,7 +351,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		Components.Add(NewComponent);
 	}
 
-	FORCEINLINE void AddComponent(const FFlecsPair& InPair)
+	FORCEINLINE void AddComponent(const FFlecsRecordPair& InPair)
 	{
 		FFlecsComponentTypeInfo NewComponent;
 		NewComponent.NodeType = EFlecsComponentNodeType::Pair;

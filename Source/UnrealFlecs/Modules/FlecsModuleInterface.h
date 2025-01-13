@@ -69,7 +69,6 @@ public:
 	}
 	
 	TWeakObjectPtr<UFlecsWorld> World;
-
 	FFlecsEntityHandle ModuleEntity;
 	
 }; // class IFlecsModuleInterface

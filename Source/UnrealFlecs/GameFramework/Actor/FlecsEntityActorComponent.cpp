@@ -76,14 +76,6 @@ bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) cons
 {
 	const bool bIsEditable = Super::CanEditChange(InProperty);
 	
-	if (bIsEditable)
-	{
-		if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(UFlecsEntityActorComponent, EntityRecord))
-		{
-			return EntityHandle.DisplayName.IsNone();
-		}
-	}
-	
 	return bIsEditable;
 }
 

@@ -104,7 +104,7 @@ public:
 
 	FORCEINLINE static void RegisterStructMetaData(UScriptStruct* ScriptStruct, const FString& Tags = FString())
 	{
-		#if WITH_EDITOR
+		#if WITH_METADATA
 		
 		if UNLIKELY_IF(!ensureAlways(IsValid(ScriptStruct)))
 		{
@@ -123,7 +123,7 @@ public:
 			ScriptStruct->SetMetaData(MetaDataKey, *Tags);
 		}
 
-		#endif // WITH_EDITOR
+		#endif // WITH_METADATA
 	}
 	
 	robin_hood::unordered_flat_map<std::string, FFlecsComponentProperties> ComponentProperties;
@@ -134,7 +134,7 @@ public:
 /**
  * Do not use this macro directly, use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES
  */
-#define REGISTER_FLECS_PROPERTIES_TAGS_IMPL_(ComponentType, ...) \
+#define PRIVATE_REGISTER_FLECS_PROPERTIES_TAGS_IMPL_(ComponentType, ...) \
 	namespace \
 	{ \
 		struct FAutoRegister##ComponentType##_Tags \
@@ -156,7 +156,10 @@ public:
 		static FAutoRegister##ComponentType##_Tags AutoRegister##ComponentType##_Instance_Tags; \
 	}
 
-#define REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, ...) \
+/**
+ * Do not use this macro directly, use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES
+ */
+#define PRIVATE_REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, ...) \
 	namespace \
 	{ \
 		static_assert(Solid::IsStaticStruct<ComponentType>(), \
@@ -176,11 +179,11 @@ public:
 	}
 
 #define REGISTER_COMPONENT_TAG_PROPERTIES(ComponentType, ...) \
-	REGISTER_FLECS_PROPERTIES_TAGS_IMPL_(ComponentType, __VA_ARGS__ )
+	PRIVATE_REGISTER_FLECS_PROPERTIES_TAGS_IMPL_(ComponentType, __VA_ARGS__ )
 
 // @TODO: Only Support ScriptStructs for now
 #define REGISTER_COMPONENT_TRAIT_PROPERTIES(ComponentType, ...) \
-	REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, __VA_ARGS__ )
+	PRIVATE_REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, __VA_ARGS__ )
 
 #define TRAIT_PROPERTY_STRUCT(PropertyStruct, ...) \
 	FSharedStruct::Make<PropertyStruct>(PropertyStruct __VA_ARGS__)

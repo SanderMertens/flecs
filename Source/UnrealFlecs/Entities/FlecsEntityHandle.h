@@ -21,8 +21,6 @@ class UFlecsWorld;
  * A handle for managing flecs entities in Unreal Engine with added blueprint support.
  * The structure provides several utility functions to interact with flecs entities,
  * including validation, component addition/removal, and direct data access.
- *
- * @note This struct is aligned on an 8-byte boundary. It is 32 bytes in Editor builds and 16 bytes in Non-Editor builds.
  */
 USTRUCT(BlueprintType, meta = (DisableSplitPin))
 struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
@@ -404,6 +402,64 @@ public:
 		return Has(flecs::Prefab);
 	}
 
+	template <typename T>
+	SOLID_INLINE NO_DISCARD bool DoesOwn() const
+	{
+		return GetEntity().owns<T>();
+	}
+	
+	SOLID_INLINE NO_DISCARD bool DoesOwn(const FFlecsEntityHandle& InEntity) const
+	{
+		return GetEntity().owns(InEntity);
+	}
+
+	SOLID_INLINE NO_DISCARD bool DoesOwn(const flecs::id& InId) const
+	{
+		return GetEntity().owns(InId);
+	}
+
+	SOLID_INLINE NO_DISCARD bool DoesOwn(const UScriptStruct* StructType) const
+	{
+		return DoesOwn(ObtainComponentTypeStruct(StructType));
+	}
+
+	template <typename First, typename Second>
+	SOLID_INLINE NO_DISCARD bool DoesOwnPair() const
+	{
+		return GetEntity().owns<First, Second>();
+	}
+
+	template <typename First>
+	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const FFlecsEntityHandle& InSecond) const
+	{
+		return GetEntity().owns<First>(InSecond);
+	}
+
+	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const FFlecsEntityHandle& InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		return GetEntity().owns(InFirst, InSecond);
+	}
+
+	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const flecs::id& InFirst, const flecs::id& InSecond) const
+	{
+		return GetEntity().owns(InFirst, InSecond);
+	}
+
+	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const UScriptStruct* First, const UScriptStruct* Second) const
+	{
+		return DoesOwnPair(ObtainComponentTypeStruct(First), ObtainComponentTypeStruct(Second));
+	}
+	
+	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const UScriptStruct* First, const FFlecsEntityHandle& Second) const
+	{
+		return GetEntity().owns(ObtainComponentTypeStruct(First), Second);
+	}
+
+	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const FFlecsEntityHandle& First, const UScriptStruct* Second) const
+	{
+		return GetEntity().owns(First, ObtainComponentTypeStruct(Second));
+	}
+
 	SOLID_INLINE NO_DISCARD bool IsComponent() const
 	{
 		return Has<flecs::Component>();
@@ -533,11 +589,6 @@ public:
 	SOLID_INLINE void Iterate(const FunctionType& InFunction) const
 	{
 		GetEntity().each<TFirst, FunctionType>(InFunction);
-	}
-
-	SOLID_INLINE NO_DISCARD bool IsTraitEntity() const
-	{
-		return Has(flecs::Trait);
 	}
 
 	template <typename TComponent, typename TTrait>
@@ -1336,6 +1387,9 @@ public:
 
 	SOLID_INLINE void SetPairSecond(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond, const void* InValue) const
 	{
+		solid_checkf(!InFirst.IsComponent(),
+			TEXT("First Entity is not allowed to be a component when setting second entity"));
+		
 		if (!HasPair(InFirst, InSecond))
 		{
 			AddPair(InFirst, InSecond);
@@ -1457,8 +1511,7 @@ public:
 		return FString(GetEntity().path());
 	}
 
-	SOLID_INLINE NO_DISCARD FString GetPath(const FString& InSeparator,
-		const FString& InitialSeparator) const
+	SOLID_INLINE NO_DISCARD FString GetPath(const FString& InSeparator, const FString& InitialSeparator) const
 	{
 		return FString(GetEntity().path(StringCast<char>(*InSeparator).Get(),
 			StringCast<char>(*InitialSeparator).Get()));
@@ -1482,6 +1535,8 @@ public:
 	{
 		solid_checkf(Has<TComponent>(), TEXT("Entity does not have component"));
 
+		TRACE_CPUPROFILER_EVENT_SCOPE(FFlecsEntityHandle::ObtainTraitHolderEntity);
+
 		FFlecsEntityHandle TraitHolder;
 
 		if LIKELY_IF(HasPair<TComponent>(flecs::Wildcard))
@@ -1489,13 +1544,13 @@ public:
 			do
 			{
 				TraitHolder = GetEntity().target<TComponent>();
-			} while (!TraitHolder.Has(flecs::Trait));
+			} while (!TraitHolder.Has(flecs::TraitEntity));
 
 			return TraitHolder;
 		}
 		
 		TraitHolder = GetFlecsWorld_Internal().entity();
-		TraitHolder.Add(flecs::Trait);
+		TraitHolder.Add(flecs::TraitEntity);
 		TraitHolder.Add(flecs::PairIsTag);
 		TraitHolder.SetParent(GetEntity());
 
@@ -1514,7 +1569,10 @@ public:
 
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity(const UScriptStruct* StructType) const
 	{
+		solid_check(StructType);
 		solid_checkf(Has(StructType), TEXT("Entity does not have component"));
+
+		TRACE_CPUPROFILER_EVENT_SCOPE(FFlecsEntityHandle::ObtainTraitHolderEntity);
 		
 		FFlecsEntityHandle TraitHolder;
 
@@ -1522,15 +1580,14 @@ public:
 		{
 			do
 			{
-				TraitHolder = GetEntity().target(
-					ObtainComponentTypeStruct(StructType));
-			} while (!TraitHolder.Has(flecs::Trait));
+				TraitHolder = GetEntity().target(ObtainComponentTypeStruct(StructType));
+			} while (!TraitHolder.Has(flecs::TraitEntity));
 
 			return TraitHolder;
 		}
 		
 		TraitHolder = GetFlecsWorld_Internal().entity();
-		TraitHolder.Add(flecs::Trait);
+		TraitHolder.Add(flecs::TraitEntity);
 		TraitHolder.Add(flecs::PairIsTag);
 		TraitHolder.SetParent(GetEntity());
 
@@ -1547,14 +1604,21 @@ public:
 
 	void PostScriptConstruct();
 
-	#if WITH_EDITORONLY_DATA
+	bool Serialize(FArchive& Ar)
+	{
+		uint64 RawId = static_cast<uint64>(GetId());
+		Ar << RawId;
 
-	UPROPERTY()
-	FName DisplayName;
-
-	#endif // WITH_EDITORONLY_DATA
-
-	FORCEINLINE bool ImportTextItem(const TCHAR*& Buffer,
+		if (Ar.IsLoading())
+		{
+			Entity = flecs::entity(RawId);
+			ObtainFlecsWorld();
+		}
+		
+		return true;
+	}
+	
+	bool ImportTextItem(const TCHAR*& Buffer,
 		MAYBE_UNUSED int32 PortFlags, MAYBE_UNUSED UObject* Parent, FOutputDevice* ErrorText)
 	{
 		FString Token;
@@ -1581,7 +1645,7 @@ public:
 		}
 	}
 
-	FORCEINLINE bool ExportTextItem(FString& ValueStr, const FFlecsEntityHandle& DefaultValue,
+	bool ExportTextItem(FString& ValueStr, const FFlecsEntityHandle& DefaultValue,
 		MAYBE_UNUSED UObject* Parent, MAYBE_UNUSED int32 PortFlags, MAYBE_UNUSED UObject* ExportRootScope) const
 	{
 		ValueStr += FString::Printf(TEXT("EntityId=%llu"), GetId());
@@ -1599,6 +1663,6 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 		WithNetSerializer = true,
 		WithImportTextItem = true,
 		WithExportTextItem = true,
-	}; // enum
-	
+		WithSerializer = true,
+	};
 }; // struct TStructOpsTypeTraits<FFlecsEntityHandle>

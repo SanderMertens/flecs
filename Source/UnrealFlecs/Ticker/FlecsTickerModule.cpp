@@ -31,7 +31,8 @@ static FORCEINLINE NO_DISCARD int flecs_priority_compare(
 	const flecs::entity_t InEntityB, 
 	const flecs::SystemPriority* InPtrB) 
 {
-	if (InPtrA->value == InPtrB->value) {
+	if (InPtrA->value == InPtrB->value)
+	{
 		return flecs_entity_compare(InEntityA, InEntityB);
 	}
 	else // lower value has higher priority
@@ -109,8 +110,6 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 		solid_check(TickerComponentPtr);
 		++TickerComponentPtr->TickId;
 		SET_DWORD_STAT(STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, TickerComponentPtr->TickId);
-
-		FlecsWorld->ModifiedSingleton<FFlecsTickerComponent>();
 		
 		FlecsWorld->RunPipeline(TickerPipeline, TickerInterval);
 	}
