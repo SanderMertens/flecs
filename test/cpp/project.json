@@ -982,7 +982,9 @@
                 "on_set_w_override_after_delete",
                 "on_set_w_override_after_clear",
                 "trigger_on_set_in_on_add_implicit_registration",
-                "trigger_on_set_in_on_add_implicit_registration_namespaced"
+                "trigger_on_set_in_on_add_implicit_registration_namespaced",
+                "fixed_src_w_each",
+                "fixed_src_w_run"
             ]
         }, {
             "id": "ComponentLifecycle",

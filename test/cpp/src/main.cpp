@@ -950,6 +950,8 @@ void Observer_on_set_w_override_after_delete(void);
 void Observer_on_set_w_override_after_clear(void);
 void Observer_trigger_on_set_in_on_add_implicit_registration(void);
 void Observer_trigger_on_set_in_on_add_implicit_registration_namespaced(void);
+void Observer_fixed_src_w_each(void);
+void Observer_fixed_src_w_run(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -5134,6 +5136,14 @@ bake_test_case Observer_testcases[] = {
     {
         "trigger_on_set_in_on_add_implicit_registration_namespaced",
         Observer_trigger_on_set_in_on_add_implicit_registration_namespaced
+    },
+    {
+        "fixed_src_w_each",
+        Observer_fixed_src_w_each
+    },
+    {
+        "fixed_src_w_run",
+        Observer_fixed_src_w_run
     }
 };
 
@@ -7106,7 +7116,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        61,
+        63,
         Observer_testcases
     },
     {
