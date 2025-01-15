@@ -1060,6 +1060,7 @@ void Refs_default_ctor(void);
 void Refs_ctor_from_entity(void);
 void Refs_implicit_operator_bool(void);
 void Refs_try_get(void);
+void Refs_try_get_after_delete(void);
 void Refs_has(void);
 void Refs_bool_operator(void);
 void Refs_base_type(void);
@@ -5568,6 +5569,10 @@ bake_test_case Refs_testcases[] = {
         Refs_try_get
     },
     {
+        "try_get_after_delete",
+        Refs_try_get_after_delete
+    },
+    {
         "has",
         Refs_has
     },
@@ -7130,7 +7135,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        20,
+        21,
         Refs_testcases
     },
     {
