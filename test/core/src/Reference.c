@@ -165,6 +165,28 @@ void Reference_get_ref_after_delete(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+
+    const Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_delete(world, e);
+
+    const Position *p2 = ecs_ref_get(world, &ref, Position);
+    test_assert(p2 == NULL);
+
+    ecs_fini(world);
+}
+
+void Reference_get_ref_after_delete_other(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
     ecs_entity_t dummy = ecs_new_w(world, Position);
     ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     
@@ -190,6 +212,30 @@ void Reference_get_ref_after_delete(void) {
     test_assert(p3 == p2);
     test_int(p3->x, 30);
     test_int(p3->y, 40);
+
+    ecs_fini(world);
+}
+
+void Reference_get_ref_after_delete_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_add_pair(world, e, EcsChildOf, parent);
+    
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+
+    const Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_delete(world, parent);
+
+    const Position *p2 = ecs_ref_get(world, &ref, Position);
+    test_assert(p2 == NULL);
 
     ecs_fini(world);
 }

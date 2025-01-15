@@ -1097,6 +1097,7 @@
                 "ctor_from_entity",
                 "implicit_operator_bool",
                 "try_get",
+                "try_get_after_delete",
                 "has",
                 "bool_operator",
                 "base_type",
