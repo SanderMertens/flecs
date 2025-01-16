@@ -1979,7 +1979,6 @@ void World_redefine_component(void);
 void World_delete_empty_tables_after_mini(void);
 void World_delete_empty_tables_after_init(void);
 void World_delete_1000_empty_tables(void);
-void World_delete_empty_tables_for_id(void);
 void World_use_after_delete_empty(void);
 void World_use_after_clear_empty(void);
 void World_use_after_delete_empty_w_component(void);
@@ -10024,10 +10023,6 @@ bake_test_case World_testcases[] = {
         World_delete_1000_empty_tables
     },
     {
-        "delete_empty_tables_for_id",
-        World_delete_empty_tables_for_id
-    },
-    {
         "use_after_delete_empty",
         World_use_after_delete_empty
     },
@@ -11714,7 +11709,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        70,
+        69,
         World_testcases
     },
     {
