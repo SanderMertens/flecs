@@ -9,8 +9,8 @@
 #include "Interfaces/FlecsEntityInterface.h"
 #include "FlecsEntityActorComponent.generated.h"
 
-UCLASS(BlueprintType, Blueprintable, ClassGroup=(Flecs), meta=(BlueprintSpawnableComponent,
-	DisplayName = "Flecs Entity Actor Component"))
+UCLASS(BlueprintType, Blueprintable, ClassGroup=(Flecs),
+	meta=(BlueprintSpawnableComponent, DisplayName = "Flecs Entity Actor Component"))
 class UNREALFLECS_API UFlecsEntityActorComponent : public UActorComponent, public IFlecsEntityInterface
 {
 	GENERATED_BODY()

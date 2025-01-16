@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Collections/FlecsComponentCollection.h"
+#include "Collections/FlecsComponentCollectionObject.h"
 #include "SolidMacros/Macros.h"
 #include "Standard/Hashing.h"
 #include "FlecsTransformComponents.generated.h"
@@ -47,7 +49,7 @@ public:
 	FORCEINLINE const FVector& operator*() const { return Location; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Transform")
-	FVector Location;
+	FVector Location = FVector::ZeroVector;
 	
 }; // struct FFlecsLocationComponent
 
@@ -96,7 +98,7 @@ public:
 	FORCEINLINE const FRotator& operator*() const { return Rotation; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Transform")
-	FRotator Rotation;
+	FRotator Rotation = FRotator::ZeroRotator;
 	
 }; // struct FFlecsRotationComponent
 
@@ -139,10 +141,30 @@ public:
 	FORCEINLINE const FVector& operator*() const { return Scale; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Transform")
-	FVector Scale;
+	FVector Scale = FVector::OneVector;
 	
 }; // struct FFlecsScaleComponent
 
 DEFINE_STD_HASH(FFlecsScaleComponent)
 
+UCLASS(BlueprintType, EditInlineNew)
+class UNREALFLECS_API UFlecsTransform3dCollection : public UFlecsComponentCollectionObject
+{
+	GENERATED_BODY()
+
+public:
+	UFlecsTransform3dCollection(const FObjectInitializer& ObjectInitializer);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Transform")
+	FFlecsLocationComponent Location;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Transform")
+	FFlecsRotationComponent Rotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Transform")
+	FFlecsScaleComponent Scale;
+
+	virtual void ApplyCollectionToEntity_Implementation(FFlecsEntityHandle& Entity) override final;
+	
+}; // class UFlecsTransformCollection
 

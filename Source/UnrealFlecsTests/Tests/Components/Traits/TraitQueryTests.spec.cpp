@@ -236,7 +236,6 @@ void FTraitQueryTestsSpec::Define()
 
 			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent_TraitQuery>()
 				.begin_scope_traits<FTestComponent_TraitQuery>().optional()
-					.with<FTestTrait_TraitQuery>()
 					.without<FTestTrait_TraitQuery>()
 				.end_scope_traits()
 				.build();

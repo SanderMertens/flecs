@@ -195,19 +195,8 @@ struct type_impl {
 
             c = ecs_cpp_component_register(world, c, c, name, type_name<T>(), 
                 symbol, size(), alignment(), is_component, &existing);
-
-            ecs_set_with(world, prev_with);
-            ecs_set_scope(world, prev_scope);
-
-            // Register lifecycle callbacks, but only if the component has a
-            // size. Components that don't have a size are tags, and tags don't
-            // require construction/destruction/copy/move's.
-            if (size() && !existing) {
-                register_lifecycle_actions<T>(world, c);
-            }
-
-            // Set world local component id
-            flecs_component_ids_set(world, s_index, c);
+            
+            
 
             if constexpr (Solid::IsStaticStruct<T>() && !std::is_same_v<T, FFlecsScriptStructComponent>)
             {
@@ -222,6 +211,19 @@ struct type_impl {
                 P_world.modified<FFlecsTypeMapComponent>();
                 entity_id.set<FFlecsScriptStructComponent>({ scriptStruct });
             }
+
+            ecs_set_with(world, prev_with);
+            ecs_set_scope(world, prev_scope);
+
+            // Register lifecycle callbacks, but only if the component has a
+            // size. Components that don't have a size are tags, and tags don't
+            // require construction/destruction/copy/move's.
+            if (size() && !existing) {
+                register_lifecycle_actions<T>(world, c);
+            }
+
+            // Set world local component id
+            flecs_component_ids_set(world, s_index, c);
 
             // // If component is enum type, register constants. Make sure to do 
             // // this after setting the component id, because the enum code will

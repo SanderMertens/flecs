@@ -186,4 +186,4 @@ public:
 	PRIVATE_REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, __VA_ARGS__ )
 
 #define TRAIT_PROPERTY_STRUCT(PropertyStruct, ...) \
-	FSharedStruct::Make<PropertyStruct>(PropertyStruct __VA_ARGS__)
+	FSharedStruct::Make<PropertyStruct>(__VA_ARGS__)

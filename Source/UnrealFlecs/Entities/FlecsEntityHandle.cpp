@@ -2,6 +2,9 @@
 
 // ReSharper disable CppTooWideScopeInitStatement
 #include "FlecsEntityHandle.h"
+
+#include "Collections/CollectionTrackerComponent.h"
+#include "Collections/FlecsComponentCollectionObject.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Components/UWorldPtrComponent.h"
 #include "Networking/FlecsNetworkIdComponent.h"
@@ -97,6 +100,26 @@ FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptSt
 {
     solid_checkf(StructType, TEXT("Struct type is not valid"));
     return GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
+}
+
+void FFlecsEntityHandle::AddCollection(UObject* Collection) const
+{
+    solid_check(Collection);
+    UFlecsComponentCollectionObject* ComponentCollection = CastChecked<UFlecsComponentCollectionObject>(Collection);
+    ComponentCollection->ApplyCollection_Internal(const_cast<FFlecsEntityHandle&>(*this), GetFlecsWorld());
+}
+
+bool FFlecsEntityHandle::HasCollection(const UClass* CollectionClass) const
+{
+    solid_check(CollectionClass);
+    
+    FString CollectionName = UFlecsComponentCollectionObject::GetCollectionTypeName(CollectionClass);
+    const FCollectionTrackerComponent* CollectionTracker = GetPtr<FCollectionTrackerComponent>();
+    return CollectionTracker && CollectionTracker->ComponentProperties.contains(CollectionName);
+}
+
+void FFlecsEntityHandle::RemoveCollection(const FString& CollectionName) const
+{
 }
 
 FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) const

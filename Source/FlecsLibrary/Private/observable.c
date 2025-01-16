@@ -76,7 +76,7 @@ ecs_event_record_t* flecs_event_record_ensure(
     return er;
 }
 
-static
+static inline
 const ecs_event_record_t* flecs_event_record_get_if(
     const ecs_observable_t *o,
     ecs_entity_t event)
@@ -121,7 +121,7 @@ ecs_event_id_record_t* flecs_event_id_record_get(
     }
 }
 
-static
+static inline
 ecs_event_id_record_t* flecs_event_id_record_get_if(
     const ecs_event_record_t *er,
     ecs_id_t id)
@@ -683,7 +683,7 @@ void flecs_emit_forward_id(
     it->up_fields = 0;
 }
 
-static
+static inline
 void flecs_emit_forward_and_cache_id(
     ecs_world_t *world,
     const ecs_event_record_t *er,
@@ -783,7 +783,7 @@ void flecs_emit_forward_cached_ids(
     }
 }
 
-static
+static inline
 void flecs_emit_dump_cache(
     ecs_world_t *world,
     const ecs_vec_t *vec)
@@ -959,7 +959,7 @@ void flecs_emit_forward_table_up(
     ecs_log_pop_3();
 }
 
-static
+static inline
 void flecs_emit_forward_up(
     ecs_world_t *world,
     const ecs_event_record_t *er,

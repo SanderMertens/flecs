@@ -8,6 +8,12 @@
 #include "FlecsPrimaryDataAsset.generated.h"
 
 UCLASS(Abstract, BlueprintType)
+class UNREALFLECS_API UFlecsDataAsset : public UDataAsset
+{
+	GENERATED_BODY()
+}; // class UFlecsDataAsset
+
+UCLASS(Abstract, BlueprintType)
 class UNREALFLECS_API UFlecsPrimaryDataAsset : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
@@ -29,7 +35,7 @@ public:
 
 	FORCEINLINE NO_DISCARD bool ShouldSpawn() const
 	{
-		return bEnabledOnStartup;
+		return bEnabledOnStartup && !GetClass()->HasAnyClassFlags(CLASS_Abstract);
 	}
 
 }; // class UFlecsPrimaryDataAsset

@@ -78,7 +78,8 @@ public:
 	
 }; // struct FFlecsUObjectComponent
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsUObjectComponent, flecs::PairIsTag)
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsUObjectComponent, flecs::PairIsTag,
+	ecs_pair(flecs::OnInstantiate, flecs::DontInherit));
 
 UNREALFLECS_API DECLARE_DEFAULT_ENTITY(DontDeleteUObjectEntity);
 

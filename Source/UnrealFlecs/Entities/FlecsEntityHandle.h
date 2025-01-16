@@ -9,6 +9,7 @@
 #include "flecs.h"
 #include "FlecsArchetype.h"
 #include "GameplayTagContainer.h"
+#include "Components/FlecsTraitTracker.h"
 #include "SolidMacros/Macros.h"
 #include "StructUtils/InstancedStruct.h"
 #include "FlecsEntityHandle.generated.h"
@@ -1207,6 +1208,12 @@ public:
 		GetEntity().add(InFirst, InSecond);
 	}
 
+	template <typename TSecond>
+	SOLID_INLINE void AddPairSecond(const FFlecsEntityHandle& InFirst) const
+	{
+		GetEntity().add_second<TSecond>(InFirst);
+	}
+
 	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
 	{
 		GetEntity().remove(ObtainComponentTypeStruct(InFirst),
@@ -1324,6 +1331,24 @@ public:
 	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsEntityHandle& InFirst, const FFlecsEntityHandle& InSecond) const
 	{
 		return GetEntity().has(InFirst, InSecond);
+	}
+
+	template <typename TSecond>
+	SOLID_INLINE NO_DISCARD bool HasPairSecond(const FFlecsEntityHandle& InFirst) const
+	{
+		return GetEntity().has_second<TSecond>(InFirst);
+	}
+
+	template <typename TSecond>
+	SOLID_INLINE NO_DISCARD bool HasPairSecond(const UScriptStruct* InFirst) const
+	{
+		return GetEntity().has_second<TSecond>(ObtainComponentTypeStruct(InFirst));
+	}
+
+	template <typename TSecond>
+	SOLID_INLINE NO_DISCARD bool HasPairSecond(const FGameplayTag& InFirst) const
+	{
+		return GetEntity().has_second<TSecond>(GetTagEntity(InFirst));
 	}
 
 	template <typename TFirst, typename TSecond, typename TActual = TSecond>
@@ -1518,6 +1543,18 @@ public:
 	}
 
 	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
+
+	void AddCollection(UObject* Collection) const;
+
+	template <typename TCollection>
+	SOLID_INLINE NO_DISCARD bool HasCollection() const
+	{
+		return HasCollection(TCollection::StaticClass());
+	}
+
+	NO_DISCARD bool HasCollection(const UClass* CollectionClass) const;
+	
+	void RemoveCollection(const FString& CollectionName) const;
 	
 private:
 	flecs::entity Entity;
@@ -1528,6 +1565,16 @@ private:
 
 	void ObtainFlecsWorld();
 
+	SOLID_INLINE FFlecsTraitTracker* ObtainTraitTracker() const
+	{
+		if (!Has<FFlecsTraitTracker>())
+		{
+			Add<FFlecsTraitTracker>();
+		}
+
+		return const_cast<FFlecsTraitTracker*>(GetPtr<FFlecsTraitTracker>());
+	}
+
 public:
 
 	template <typename TComponent>
@@ -1537,32 +1584,35 @@ public:
 
 		TRACE_CPUPROFILER_EVENT_SCOPE(FFlecsEntityHandle::ObtainTraitHolderEntity);
 
-		FFlecsEntityHandle TraitHolder;
-
-		if LIKELY_IF(HasPair<TComponent>(flecs::Wildcard))
+		FFlecsTraitTracker* TraitTracker = ObtainTraitTracker();
+		FFlecsEntityHandle ComponentEntity = GetFlecsWorld_Internal().component<TComponent>();
+		
+		if LIKELY_IF(TraitTracker->ComponentProperties.contains(ComponentEntity))
 		{
-			do
-			{
-				TraitHolder = GetEntity().target<TComponent>();
-			} while (!TraitHolder.Has(flecs::TraitEntity));
-
-			return TraitHolder;
+			solid_checkf(GetFlecsWorld_Internal()
+				.is_valid(TraitTracker->ComponentProperties[ComponentEntity]),
+				TEXT("Trait Holder Entity is not valid"));
+			
+			return GetFlecsWorld_Internal().get_alive(
+				TraitTracker->ComponentProperties[ComponentEntity]);
 		}
 		
-		TraitHolder = GetFlecsWorld_Internal().entity();
-		TraitHolder.Add(flecs::TraitEntity);
-		TraitHolder.Add(flecs::PairIsTag);
+		FFlecsEntityHandle TraitHolder = GetFlecsWorld_Internal().entity();
 		TraitHolder.SetParent(GetEntity());
+		TraitHolder.AddPairSecond<TComponent>(flecs::TraitEntity);
+		TraitHolder.Add(flecs::PairIsTag);
 
-		#if WITH_EDITORONLY_DATA
+		#ifdef FLECS_DOC
 
 		std::string TypeName = nameof(TComponent).data();
 		TypeName += " Trait Holder";
 		TraitHolder.SetDocName(TypeName.c_str());
 
-		#endif // WITH_EDITORONLY_DATA
+		#endif // FLECS_DOC
 
-		AddPair<TComponent>(TraitHolder);
+		TraitTracker->ComponentProperties.emplace(ComponentEntity, TraitHolder.GetEntity());
+
+		AddPairSecond<TComponent>(TraitHolder);
 		
 		return TraitHolder;
 	}
@@ -1574,30 +1624,34 @@ public:
 
 		TRACE_CPUPROFILER_EVENT_SCOPE(FFlecsEntityHandle::ObtainTraitHolderEntity);
 		
-		FFlecsEntityHandle TraitHolder;
+		FFlecsTraitTracker* TraitTracker = ObtainTraitTracker();
 
-		if LIKELY_IF(HasPair(StructType, flecs::Wildcard))
+		FFlecsEntityHandle ComponentEntity = ObtainComponentTypeStruct(StructType);
+		
+		if LIKELY_IF(TraitTracker->ComponentProperties.contains(ComponentEntity))
 		{
-			do
-			{
-				TraitHolder = GetEntity().target(ObtainComponentTypeStruct(StructType));
-			} while (!TraitHolder.Has(flecs::TraitEntity));
-
-			return TraitHolder;
+			solid_checkf(GetFlecsWorld_Internal()
+				.is_valid(TraitTracker->ComponentProperties[ComponentEntity]),
+				TEXT("Trait Holder Entity is not valid"));
+			
+			return GetFlecsWorld_Internal().get_alive(
+				TraitTracker->ComponentProperties[ComponentEntity]);
 		}
 		
-		TraitHolder = GetFlecsWorld_Internal().entity();
-		TraitHolder.Add(flecs::TraitEntity);
-		TraitHolder.Add(flecs::PairIsTag);
+		FFlecsEntityHandle TraitHolder = GetFlecsWorld_Internal().entity();
 		TraitHolder.SetParent(GetEntity());
+		TraitHolder.AddPair(flecs::TraitEntity, ObtainComponentTypeStruct(StructType));
+		TraitHolder.Add(flecs::PairIsTag);
 
-		#if WITH_EDITORONLY_DATA
+		#ifdef FLECS_DOC
 
 		TraitHolder.SetDocName(StructType->GetFName().ToString() + TEXT(" Trait Holder"));
 
-		#endif // WITH_EDITORONLY_DATA
+		#endif // FLECS_DOC
 
-		AddPair(ObtainComponentTypeStruct(StructType), TraitHolder);
+		TraitTracker->ComponentProperties.emplace(ComponentEntity, TraitHolder.GetEntity());
+
+		AddPair(TraitHolder, ObtainComponentTypeStruct(StructType));
 		
 		return TraitHolder;
 	}
@@ -1606,7 +1660,7 @@ public:
 
 	bool Serialize(FArchive& Ar)
 	{
-		uint64 RawId = static_cast<uint64>(GetId());
+		uint64 RawId = GetId();
 		Ar << RawId;
 
 		if (Ar.IsLoading())

@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "flecs.h"
+#include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 #include "FlecsComponentCollection.generated.h"
 

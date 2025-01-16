@@ -889,6 +889,10 @@ void flecs_bootstrap(
     ecs_add_pair(world, EcsChildOf, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsIdentifier), EcsOnInstantiate, EcsDontInherit);
 
+    ecs_add_id(world, EcsTraitEntity, EcsPairIsTag);
+    ecs_add_id(world, EcsTraitEntity, EcsAcyclic);
+    ecs_add_id(world, EcsTraitEntity, EcsTraversable);
+
     /* Create triggers in internals scope */
     ecs_set_scope(world, EcsFlecsInternals);
 

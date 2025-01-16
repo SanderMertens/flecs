@@ -9,6 +9,7 @@
 #include "flecs.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Collections/FlecsComponentCollection.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsUObjectComponent.h"
@@ -44,7 +45,7 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 public:
 	UFlecsWorld()
 	{
-		char* argv[] = { const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*GetName()).Get()) };
+		char* argv[] = { const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*GetName()).Get()) };  // NOLINT(clang-diagnostic-dangling)
 		World = flecs::world(1, argv);
 		TypeMapComponent = GetSingletonPtr<FFlecsTypeMapComponent>();
 		solid_check(TypeMapComponent);
@@ -335,6 +336,27 @@ public:
 					}
 				}
 			});
+
+		/*CreateObserver<FFlecsScriptStructComponent>(TEXT("ComponentCollectionObserver"))
+			.term_at(0).filter()
+			.with<FFlecsComponentCollection>().event(flecs::OnAdd)
+			.observer_flags(EcsQueryMatchPrefab)
+			.yield_existing()
+			.each([this](flecs::iter& Iter, size_t IterIndex,
+				const FFlecsScriptStructComponent& InScriptStructComponent)
+			{
+				FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
+				
+				const UScriptStruct* ScriptStruct = InScriptStructComponent.ScriptStruct.Get();
+				solid_check(IsValid(ScriptStruct));
+
+				for (TFieldIterator<FStructProperty> PropertyIt(ScriptStruct, EFieldIteratorFlags::ExcludeSuper);
+					PropertyIt; ++PropertyIt)
+				{
+					const FStructProperty* Property = *PropertyIt;
+					EntityHandle.Add(ObtainComponentTypeStruct(Property->Struct));
+				}
+			});*/
 	}
 
 	void InitializeAssetRegistry()
@@ -761,6 +783,38 @@ public:
 		World.defer<TFunction>(std::forward<TFunction>(Function));
 	}
 
+	template <typename TFunction>
+	void DeferEndScoped(TFunction&& Function, const bool bEndDefer = false) const
+	{
+		const bool bIsDeferred = IsDeferred();
+		
+		if (bIsDeferred)
+		{
+			if (bEndDefer)
+			{
+				EndDefer();
+			}
+			else
+			{
+				SuspendDefer();
+			}
+		}
+
+		std::invoke(std::forward<TFunction>(Function));
+
+		if (bIsDeferred)
+		{
+			if (bEndDefer)
+			{
+				BeginDefer();
+			}
+			else
+			{
+				ResumeDefer();
+			}
+		}
+	}
+
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	bool BeginReadOnly() const
 	{
@@ -931,12 +985,17 @@ public:
 	}
 
 	template <typename FunctionType>
-	void SetEntityRange(const int32 InMin, const int32 InMax, FunctionType&& Function) const
+	void SetEntityRange(const int32 InMin, const int32 InMax, const bool bEnforceEntityRange, FunctionType&& Function) const
 	{
+		const int32 OldMin = static_cast<int32>(ecs_get_world_info(World.c_ptr())->min_id);
+		const int32 OldMax = static_cast<int32>(ecs_get_world_info(World.c_ptr())->max_id);
+		
 		World.set_entity_range(InMin, InMax);
-		EnforceEntityRange(true);
-		Function();
+		EnforceEntityRange(bEnforceEntityRange);
+		std::forward<FunctionType>(Function)();
 		EnforceEntityRange(false);
+
+		World.set_entity_range(OldMin, OldMax);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -1185,24 +1244,17 @@ public:
 
 		solid_checkf(!TypeMapComponent->ScriptStructMap.contains(ScriptStruct),
 			TEXT("Script struct %s is already registered"), *ScriptStruct->GetStructCPPName());
-
-		const bool bDefer = IsDeferred();
-
-		if (bDefer)
-		{
-			SuspendDefer();
-		}
-
-		flecs::untyped_component ScriptStructComponent = World.component(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get());
-		solid_check(ScriptStructComponent.is_valid());
-		ScriptStructComponent.set_symbol(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get());
-		ScriptStructComponent.set<flecs::Component>(
-			{ .size = ScriptStruct->GetStructureSize(), .alignment = ScriptStruct->GetMinAlignment() });
 		
-		if (bDefer)
+		flecs::untyped_component ScriptStructComponent;
+
+		DeferEndScoped([this, ScriptStruct, &ScriptStructComponent]()
 		{
-			ResumeDefer();
-		}
+			ScriptStructComponent = World.component(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get());
+			solid_check(ScriptStructComponent.is_valid());
+			ScriptStructComponent.set_symbol(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get());
+			ScriptStructComponent.set<flecs::Component>(
+			{ .size = ScriptStruct->GetStructureSize(), .alignment = ScriptStruct->GetMinAlignment() });
+		});
 
 		ScriptStructComponent.set<FFlecsScriptStructComponent>({ ScriptStruct });
 

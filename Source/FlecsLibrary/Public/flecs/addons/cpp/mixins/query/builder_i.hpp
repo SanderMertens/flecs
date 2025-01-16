@@ -189,8 +189,7 @@ struct query_builder_i : term_builder_i<Base> {
         }
         
         const char* trait_var = trait_vars_.at(comp_name).c_str();
-        
-        this->with<TComponent>(trait_var);
+        this->with(trait_var).template second<TComponent>();
         trait_scope_ = trait_var;
         
         return *this;
@@ -207,7 +206,7 @@ struct query_builder_i : term_builder_i<Base> {
 
         const char* trait_var = trait_vars_.at(comp_name).c_str();
 
-        this->with(comp, trait_var);
+        this->with(trait_var, comp);
         trait_scope_ = trait_var;
         
         return *this;
