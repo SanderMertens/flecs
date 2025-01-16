@@ -459,6 +459,11 @@ struct UNREALFLECS_API FFlecsEntityRecord
 			}
 		}
 
+		for (UFlecsComponentCollectionObject* Collection : Collections)
+		{
+			InEntityHandle.AddCollection(Collection);
+		}
+
 		for (const TInstancedStruct<FFlecsEntityRecord>& SubEntity : SubEntities)
 		{
 			const FFlecsEntityRecord& NewEntityRecord = SubEntity.Get();
