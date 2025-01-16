@@ -1543,6 +1543,7 @@ void Observer_custom_run_action_2_terms(void);
 void Observer_custom_run_action_w_iter_next_2_terms(void);
 void Observer_custom_run_action_w_field(void);
 void Observer_custom_run_action_w_2_fields(void);
+void Observer_custom_run_action_twice(void);
 void Observer_custom_run_w_yield_existing(void);
 void Observer_custom_run_w_yield_existing_1_field(void);
 void Observer_custom_run_w_yield_existing_1_field_w_callback(void);
@@ -8327,6 +8328,10 @@ bake_test_case Observer_testcases[] = {
         Observer_custom_run_action_w_2_fields
     },
     {
+        "custom_run_action_twice",
+        Observer_custom_run_action_twice
+    },
+    {
         "custom_run_w_yield_existing",
         Observer_custom_run_w_yield_existing
     },
@@ -11665,7 +11670,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        236,
+        237,
         Observer_testcases
     },
     {

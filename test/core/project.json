@@ -1604,6 +1604,7 @@
                 "custom_run_action_w_iter_next_2_terms",
                 "custom_run_action_w_field",
                 "custom_run_action_w_2_fields",
+                "custom_run_action_twice",
                 "custom_run_w_yield_existing",
                 "custom_run_w_yield_existing_1_field",
                 "custom_run_w_yield_existing_1_field_w_callback",
