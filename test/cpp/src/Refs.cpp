@@ -191,6 +191,24 @@ void Refs_try_get(void) {
     test_assert(p.try_get() == nullptr);
 }
 
+void Refs_try_get_after_delete(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().set(Position{10, 20});
+
+    flecs::ref<Position> p = e.get_ref<Position>();
+    Position *ptr = p.try_get();
+    test_assert(ptr != nullptr);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    e.destruct();
+
+    ptr = p.try_get();
+    test_assert(ptr == nullptr);
+}
+
+
 void Refs_has(void) {
     flecs::world world;
 

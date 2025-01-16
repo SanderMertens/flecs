@@ -1,0 +1,14 @@
+{
+    "id": "log_level_3",
+    "type": "application",
+    "value": {
+        "public": false,
+        "use": [
+            "flecs"
+        ],
+        "standalone": true
+    },
+    "lang.c": {
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_LOG", "FLECS_LOG_3", "FLECS_KEEP_ASSERT"]
+    }
+}

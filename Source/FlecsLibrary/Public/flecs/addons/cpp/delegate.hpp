@@ -301,6 +301,8 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
     {
+        ecs_assert(iter->entities != nullptr, ECS_INVALID_PARAMETER, 
+            "query does not return entities ($this variable is not populated)");
         func(flecs::entity(iter->world, iter->entities[i]),
             (ColumnType< remove_reference_t<Components> >(iter, comps, i)
                 .get_row())...);

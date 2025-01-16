@@ -1004,6 +1004,8 @@ void flecs_table_fini(
 {
     flecs_poly_assert(world, ecs_world_t);
 
+    flecs_increment_table_version(world, table);
+
     bool is_root = table == &world->store.root;
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
     ecs_assert(is_root || table->id != 0, ECS_INTERNAL_ERROR, NULL);

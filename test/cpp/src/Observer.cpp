@@ -886,8 +886,6 @@ void Observer_on_set_w_set_sparse(void) {
     test_int(count, 1);
 }
 
-#include <iostream>
-
 void Observer_on_add_singleton(void) {
     flecs::world world;
 
@@ -1543,4 +1541,63 @@ void Observer_trigger_on_set_in_on_add_implicit_registration_namespaced(void) {
         test_int(v->x, 1);
         test_int(v->y, 2);
     }
+}
+
+void Observer_fixed_src_w_each(void) {
+    flecs::world world;
+
+    struct Tag { };
+
+    flecs::entity matched;
+    flecs::entity e = world.entity();
+
+    world.observer()
+        .with<Tag>().src(e)
+        .event(flecs::OnAdd)
+        .each([&](flecs::iter& it, size_t) {
+            matched = it.src(0);
+        });
+
+    test_assert(matched == 0);
+
+    e.add<Tag>();
+
+    test_assert(matched == e);
+
+    matched = flecs::entity::null();
+
+    world.entity().add<Tag>();
+    
+    test_assert(matched == 0);
+}
+
+void Observer_fixed_src_w_run(void) {
+    flecs::world world;
+
+    struct Tag { };
+
+    flecs::entity matched;
+    flecs::entity e = world.entity();
+
+    world.observer()
+        .with<Tag>().src(e)
+        .event(flecs::OnAdd)
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                test_int(it.count(), 0);
+                matched = it.src(0);
+            }
+        });
+
+    test_assert(matched == 0);
+
+    e.add<Tag>();
+
+    test_assert(matched == e);
+
+    matched = flecs::entity::null();
+
+    world.entity().add<Tag>();
+    
+    test_assert(matched == 0);
 }

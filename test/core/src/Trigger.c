@@ -24,9 +24,7 @@ static
 void Trigger_w_value_from_entity(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
-    test_int(it->count, 1);
-    test_assert(it->entities != NULL);
-    test_assert(it->entities[0] == 0);
+    test_int(it->count, 0);
     test_assert(it->sources[0] != 0);
 
     Position *p = ecs_field(it, Position, 0);
@@ -3641,7 +3639,7 @@ void Trigger_entity_source_1_trigger(void) {
 
     ecs_set(world, subj, Position, {10, 20});
     test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
+    test_int(ctx.count, 0);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
     test_int(ctx.event_id, ecs_id(Position));
@@ -3685,7 +3683,7 @@ void Trigger_entity_source_2_triggers(void) {
 
     ecs_set(world, subj_a, Position, {10, 20});
     test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
+    test_int(ctx.count, 0);
     test_int(ctx.system, t1);
     test_int(ctx.event, EcsOnSet);
     test_int(ctx.event_id, ecs_id(Position));
@@ -3698,7 +3696,7 @@ void Trigger_entity_source_2_triggers(void) {
 
     ecs_set(world, subj_b, Position, {10, 20});
     test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
+    test_int(ctx.count, 0);
     test_int(ctx.system, t2);
     test_int(ctx.event, EcsOnSet);
     test_int(ctx.event_id, ecs_id(Position));
@@ -3740,7 +3738,7 @@ void Trigger_entity_source_base_set(void) {
 
     ecs_set(world, base, Position, {10, 20});
     test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
+    test_int(ctx.count, 0);
     test_int(ctx.system, t);
     test_int(ctx.event, EcsOnSet);
     test_int(ctx.event_id, ecs_id(Position));

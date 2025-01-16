@@ -441,16 +441,16 @@ void Event_emit_custom_for_any(void) {
     ecs.observer()
         .event<Evt>()
         .with(flecs::Any).src(e1)
-        .each([&](flecs::entity e) {
-            test_assert(e == 0);
+        .each([&](flecs::iter& it, size_t) {
+            test_assert(it.count() == 0);
             count_a ++;
         });
 
     ecs.observer()
         .event<Evt>()
         .with(flecs::Any).src(e2)
-        .each([&](flecs::entity e) {
-            test_assert(e == 0);
+        .each([&](flecs::iter& it, size_t) {
+            test_assert(it.count() == 0);
             count_b ++;
         });
 
