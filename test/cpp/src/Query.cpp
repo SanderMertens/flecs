@@ -3426,3 +3426,19 @@ void Query_iter_targets_field_not_set(void) {
         it.targets(1, [&](flecs::entity tgt) { });
     });
 }
+
+void Query_copy_operators(void) {
+    flecs::world world{};
+
+    flecs::query<> q = world.query_builder()
+        .with<Position>()
+        .build();
+
+    flecs::query<> copyCtor{q};
+    flecs::query<> copyAssign{};
+    copyAssign = q;
+
+    flecs::query<> defaultInit{};
+    flecs::query<> copyCtorDefault{defaultInit};
+    copyAssign = defaultInit;
+}

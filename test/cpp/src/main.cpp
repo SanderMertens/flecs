@@ -688,6 +688,7 @@ void Query_iter_targets_2nd_field(void);
 void Query_iter_targets_field_out_of_range(void);
 void Query_iter_targets_field_not_a_pair(void);
 void Query_iter_targets_field_not_set(void);
+void Query_copy_operators(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -4108,6 +4109,10 @@ bake_test_case Query_testcases[] = {
     {
         "iter_targets_field_not_set",
         Query_iter_targets_field_not_set
+    },
+    {
+        "copy_operators",
+        Query_copy_operators
     }
 };
 
@@ -7098,7 +7103,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        122,
+        123,
         Query_testcases
     },
     {
