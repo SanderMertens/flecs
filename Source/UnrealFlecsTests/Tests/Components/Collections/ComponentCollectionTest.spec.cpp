@@ -17,15 +17,16 @@ void FComponentCollectionTestSpec::Define()
 {
 	FLECS_FIXTURE_LIFECYCLE(Fixture);
 
-	Describe("Component Collection Addition", [this]()
+	Describe("Component Collection Basic", [this]()
 	{
-		It("Should be able to add a Component Collection and then check if the entity has the Collection's Components",
-			[this]()
+		It("Should be able to add a Component Collection", [this]()
 		{
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+				
 			UFlecsTransform3dCollection* Collection = NewObject<UFlecsTransform3dCollection>();
 			Collection->Location = FFlecsLocationComponent(FVector(1.f, 2.f, 3.f));
 			TestEntity.AddCollection(Collection);
+				
 			TestTrue("Entity has 3d Transform Collection",
 				TestEntity.HasCollection(UFlecsTransform3dCollection::StaticClass()));
 			TestTrue("Entity has 3d Transform Collection",
@@ -35,8 +36,7 @@ void FComponentCollectionTestSpec::Define()
 			TestTrue("Entity has Scale Component", TestEntity.Has<FFlecsScaleComponent>());
 
 			TestEqual("Entity Location Component is correct",
-				TestEntity.Get<FFlecsLocationComponent>().Location,
-				FVector(1.f, 2.f, 3.f));
+				TestEntity.Get<FFlecsLocationComponent>().Location, FVector(1.f, 2.f, 3.f));
 		});
 	});
 }

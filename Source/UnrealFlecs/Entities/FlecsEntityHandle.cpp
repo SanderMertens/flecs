@@ -112,14 +112,32 @@ void FFlecsEntityHandle::AddCollection(UObject* Collection) const
 bool FFlecsEntityHandle::HasCollection(const UClass* CollectionClass) const
 {
     solid_check(CollectionClass);
-    
-    FString CollectionName = UFlecsComponentCollectionObject::GetCollectionTypeName(CollectionClass);
+
+    const FString CollectionName = UFlecsComponentCollectionObject::GetCollectionTypeName(CollectionClass);
     const FCollectionTrackerComponent* CollectionTracker = GetPtr<FCollectionTrackerComponent>();
     return CollectionTracker && CollectionTracker->ComponentProperties.contains(CollectionName);
 }
 
 void FFlecsEntityHandle::RemoveCollection(const FString& CollectionName) const
 {
+    /*solid_checkf(!CollectionName.IsEmpty(), TEXT("Collection name is empty"));
+    FCollectionTrackerComponent* CollectionTracker = GetEntity().get_mut<FCollectionTrackerComponent>();
+
+    solid_checkf(CollectionTracker->ComponentProperties.contains(CollectionName),
+        TEXT("Collection not found!"));
+    
+    const FFlecsEntityHandle CollectionEntity = CollectionTracker->ComponentProperties[CollectionName];
+    
+    RemovePrefab(CollectionEntity);
+    CollectionTracker->ComponentProperties.erase(CollectionName);
+    
+    Modified<FCollectionTrackerComponent>();*/
+}
+
+void FFlecsEntityHandle::RemoveCollection(const UClass* Collection) const
+{
+    // solid_checkf(Collection, TEXT("Collection class is null!"));
+    // RemoveCollection(UFlecsComponentCollectionObject::GetCollectionTypeName(Collection));
 }
 
 FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) const

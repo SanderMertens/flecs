@@ -1544,6 +1544,16 @@ public:
 
 	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
 
+	SOLID_INLINE void AddPrefab(const FFlecsEntityHandle& InPrefab) const
+	{
+		GetEntity().is_a(InPrefab);
+	}
+
+	SOLID_INLINE void RemovePrefab(const FFlecsEntityHandle& InPrefab) const
+	{
+		Remove(flecs::IsA, InPrefab);
+	}
+
 	void AddCollection(UObject* Collection) const;
 
 	template <typename TCollection>
@@ -1555,6 +1565,14 @@ public:
 	NO_DISCARD bool HasCollection(const UClass* CollectionClass) const;
 	
 	void RemoveCollection(const FString& CollectionName) const;
+
+	template <typename TCollection>
+	SOLID_INLINE void RemoveCollection() const
+	{
+		RemoveCollection(TCollection::StaticClass());
+	}
+	
+	void RemoveCollection(const UClass* Collection) const;
 	
 private:
 	flecs::entity Entity;

@@ -56,8 +56,9 @@ void UFlecsComponentCollectionObject::ApplyCollection_Internal(FFlecsEntityHandl
 	FCollectionTrackerComponent* CollectionTracker = Entity.GetPtr<FCollectionTrackerComponent>();
 	solid_check(CollectionTracker);
 	
-	Entity.Add(ObtainCollectionEntity(FlecsWorld));
+	Entity.AddPrefab(ObtainCollectionEntity(FlecsWorld));
 	CollectionTracker->ComponentProperties.emplace(GetCollectionName(), CollectionEntity);
+	Entity.Modified<FCollectionTrackerComponent>();
 	
 	ApplyCollectionToEntity(Entity);
 }
