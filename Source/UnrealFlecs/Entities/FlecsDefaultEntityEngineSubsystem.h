@@ -46,12 +46,13 @@ public:
 		{                                                         \
 			FFlecsDefaultMetaEntity MetaEntity;                   \
 			MetaEntity.EntityName = TEXT(#DefaultEntityName);      \
+			MetaEntity.EntityId = DefaultEntityName;               \
 			MetaEntity.SetId = DefaultEntityName;                      \
 			if (!FFlecsDefaultEntityEngine::Get().bIsInitialized)  \
 			{                                                     \
 				FFlecsDefaultEntityEngine::Get().Initialize();                                   \
 			}                                                     \
-			(DefaultEntityName) = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
+			FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
 		}                                                         \
 		struct FRegisterInvoker##DefaultEntityName                       \
 		{                                                         \

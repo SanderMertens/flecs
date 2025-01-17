@@ -34,6 +34,26 @@ void FDefaultEntityTestsSpec::Define()
 				Fixture.FlecsWorld->GetEntity(FlecsLocalTrait).IsValid());
 		});
 	});
+
+	Describe("Default Entity Ids", [this]()
+	{
+		It("Should have the correct id", [this]()
+		{
+			TestEqual("Default entity should have the correct id",
+				Fixture.FlecsWorld->GetEntity(TestEntityOption).GetId(),
+				6000);
+			TestEqual("Default entity should have the correct id",
+				Fixture.FlecsWorld->GetEntity(FlecsLocalTrait).GetId(),
+				5002);
+			TestEqual("Default entity should have the correct id",
+				Fixture.FlecsWorld->GetEntity(FlecsGlobalTrait).GetId(),
+				5003);
+			TestEqual("Default entity should have the correct id",
+				Fixture.FlecsWorld->GetEntity(FlecsRelativeTrait).GetId(),
+				5004);
+			
+		});
+	});
 }
 
 #endif // WITH_AUTOMATION_TESTS
