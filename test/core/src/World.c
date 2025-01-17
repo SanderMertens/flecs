@@ -1196,42 +1196,6 @@ void World_delete_1000_empty_tables(void) {
     ecs_fini(world);
 }
 
-void World_delete_empty_tables_for_id(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-    ecs_run_aperiodic(world, 0);
-
-    const ecs_world_info_t *info = ecs_get_world_info(world);
-    int32_t old_table_count = info->table_count;
-
-    ecs_entity_t e1 = ecs_new_w(world, TagA);
-    for (int i = 0; i < 500; i ++) {
-        ecs_add_id(world, e1, ecs_new(world));
-    }
-
-    ecs_entity_t e2 = ecs_new_w(world, TagB);
-    for (int i = 0; i < 500; i ++) {
-        ecs_add_id(world, e2, ecs_new(world));
-    }
-
-    test_int(info->table_count, old_table_count + 1000 + 2);
-
-    int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
-        &(ecs_delete_empty_tables_desc_t){ .id = TagA, .delete_generation = 1 });
-    test_int(deleted, 0);
-
-    deleted = ecs_delete_empty_tables(world, 
-        &(ecs_delete_empty_tables_desc_t){ .id = TagA, .delete_generation = 1 });
-    test_assert(deleted != 0);
-    test_assert(deleted >= 500);
-    test_assert(deleted < 1000);
-
-    ecs_fini(world);
-}
-
 void World_use_after_delete_empty(void) {
     ecs_world_t *world = ecs_mini();
 
