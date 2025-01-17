@@ -3702,6 +3702,107 @@ void Basic_1_any_src_w_pair_tgt_var(void) {
     ecs_fini(world);
 }
 
+void Basic_1_any_src_w_pair_tgt_var_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    ecs_entity_t tgt_a = ecs_new(world);
+    ecs_entity_t tgt_b = ecs_new(world);
+
+    ecs_add_pair(world, e1, Rel, tgt_a);
+    ecs_add_pair(world, e2, Rel, tgt_b);
+    ecs_add_pair(world, e3, Rel, tgt_b);
+    ecs_add(world, e3, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Rel(_, $x)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(Rel, tgt_b), ecs_field_id(&it, 0));
+    test_uint(tgt_b, ecs_iter_get_var(&it, x_var));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(Rel, tgt_a), ecs_field_id(&it, 0));
+    test_uint(tgt_a, ecs_iter_get_var(&it, x_var));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_1_any_src_w_pair_tgt_var_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    ecs_entity_t tgt_a = ecs_new(world);
+    ecs_entity_t tgt_b = ecs_new(world);
+
+    ecs_add_pair(world, e1, Rel, tgt_a);
+    ecs_add_pair(world, e2, Rel, tgt_b);
+    ecs_add_pair(world, e3, Rel, tgt_b);
+    ecs_add(world, e3, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "ChildOf(_, $x)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(EcsChildOf, EcsFlecs), ecs_field_id(&it, 0));
+    test_uint(EcsFlecs, ecs_iter_get_var(&it, x_var));
+    test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    ecs_entity_t internals = ecs_lookup(world, "flecs.core.internals");
+    test_int(0, it.count);
+    test_uint(ecs_pair(EcsChildOf, internals), ecs_field_id(&it, 0));
+    test_uint(internals, ecs_iter_get_var(&it, x_var));
+    test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(EcsChildOf, EcsFlecsCore), ecs_field_id(&it, 0));
+    test_uint(EcsFlecsCore, ecs_iter_get_var(&it, x_var));
+    test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Basic_1_any_src_w_pair_rel_var(void) {
     ecs_world_t *world = ecs_mini();
 

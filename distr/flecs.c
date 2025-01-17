@@ -71407,12 +71407,19 @@ bool flecs_query_idsright(
         }
     }
 
+next:
     do {
         cur = op_ctx->cur = op_ctx->cur->first.next;
     } while (cur && !cur->cache.tables.count); /* Skip empty ids */
 
     if (!cur) {
         return false;
+    }
+
+    if (cur->id == ecs_pair(EcsChildOf, 0)) {
+        /* Skip the special (ChildOf, 0) entry for root entities, as 0 is
+         * not a valid target and could be matched by (ChildOf, *) */
+        goto next;
     }
 
     flecs_query_set_vars(op, cur->id, ctx);

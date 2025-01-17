@@ -559,6 +559,8 @@
                 "2_any_src",
                 "2_any_src_w_pair",
                 "1_any_src_w_pair_tgt_var",
+                "1_any_src_w_pair_tgt_var_2",
+                "1_any_src_w_pair_tgt_var_childof",
                 "1_any_src_w_pair_rel_var",
                 "1_any_src_w_pair_tgt_this",
                 "1_any_src_w_pair_rel_this",
