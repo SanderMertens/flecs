@@ -542,6 +542,8 @@ void Basic_1_any_src_w_pair(void);
 void Basic_2_any_src(void);
 void Basic_2_any_src_w_pair(void);
 void Basic_1_any_src_w_pair_tgt_var(void);
+void Basic_1_any_src_w_pair_tgt_var_2(void);
+void Basic_1_any_src_w_pair_tgt_var_childof(void);
 void Basic_1_any_src_w_pair_rel_var(void);
 void Basic_1_any_src_w_pair_tgt_this(void);
 void Basic_1_any_src_w_pair_rel_this(void);
@@ -4259,6 +4261,14 @@ bake_test_case Basic_testcases[] = {
     {
         "1_any_src_w_pair_tgt_var",
         Basic_1_any_src_w_pair_tgt_var
+    },
+    {
+        "1_any_src_w_pair_tgt_var_2",
+        Basic_1_any_src_w_pair_tgt_var_2
+    },
+    {
+        "1_any_src_w_pair_tgt_var_childof",
+        Basic_1_any_src_w_pair_tgt_var_childof
     },
     {
         "1_any_src_w_pair_rel_var",
@@ -10626,7 +10636,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        234,
+        236,
         Basic_testcases,
         1,
         Basic_params
