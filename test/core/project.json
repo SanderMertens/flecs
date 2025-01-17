@@ -2055,7 +2055,6 @@
                 "delete_empty_tables_after_mini",
                 "delete_empty_tables_after_init",
                 "delete_1000_empty_tables",
-                "delete_empty_tables_for_id",
                 "use_after_delete_empty",
                 "use_after_clear_empty",
                 "use_after_delete_empty_w_component",

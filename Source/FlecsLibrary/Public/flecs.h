@@ -2655,17 +2655,11 @@ void ecs_run_aperiodic(
 
 /** Used with ecs_delete_empty_tables(). */
 typedef struct ecs_delete_empty_tables_desc_t {
-    /** Optional component filter for the tables to evaluate. */
-    ecs_id_t id;
-
     /** Free table data when generation > clear_generation. */
     uint16_t clear_generation;
 
     /** Delete table when generation > delete_generation. */
     uint16_t delete_generation;
-
-    /** Minimum number of component ids the table should have. */
-    int32_t min_id_count;
 
     /** Amount of time operation is allowed to spend. */
     double time_budget_seconds;

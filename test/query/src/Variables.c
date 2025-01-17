@@ -11560,4 +11560,3 @@ void Variables_second_invalid_var_name_and_id(void) {
 
     ecs_fini(world);
 }
-
