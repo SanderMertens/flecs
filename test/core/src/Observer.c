@@ -5268,6 +5268,40 @@ void Observer_custom_run_action_w_iter_next_2_terms(void) {
     ecs_fini(world);
 }
 
+void Observer_custom_run_action_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ TagA }},
+        .events = {EcsOnAdd},
+        .run = Run,
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(t1 != 0);
+    ecs_entity_t t2 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ TagA }},
+        .events = {EcsOnAdd},
+        .run = Run,
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(t2 != 0);
+
+    ecs_entity_t e = ecs_new_w(world, TagA);
+
+    test_int(run_invoked, 2);
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_int(ctx.e[0], e);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
 void Observer_read_in_on_remove_after_add_other_w_not(void) {
     ecs_world_t *world = ecs_mini();
 
