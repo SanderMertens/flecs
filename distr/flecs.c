@@ -15083,6 +15083,7 @@ void flecs_observer_invoke(
     if (o->run) {
         it->next = flecs_default_next_callback;
         it->callback = o->callback;
+        it->interrupted_by = 0;
         if (flecs_observer_impl(o)->flags & EcsObserverBypassQuery) {
             it->ctx = o;
         } else {
