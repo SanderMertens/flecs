@@ -144,6 +144,8 @@ inline flecs::entity world::vector() {
 
 } // namespace flecs
 
+extern "C++" {
+
 inline int ecs_serializer_t::value(ecs_entity_t type, const void *v) const {
     return this->value_(this, type, v);
 }
@@ -156,4 +158,5 @@ inline int ecs_serializer_t::value(const T& v) const {
 
 inline int ecs_serializer_t::member(const char *name) const {
     return this->member_(this, name);
+}
 }

@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_core_queries Queries
@@ -16,8 +16,10 @@ namespace flecs {
 
 struct query_base;
 
+
 template<typename ... Components>
 struct query;
+
 
 template<typename ... Components>
 struct query_builder;

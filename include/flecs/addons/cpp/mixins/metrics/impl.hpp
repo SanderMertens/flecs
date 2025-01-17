@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 inline metrics::metrics(flecs::world& world) {
     world.import<flecs::units>();
