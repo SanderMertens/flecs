@@ -65,9 +65,14 @@ struct cursor {
     /** Get unit of value */
     flecs::entity get_unit() const;
 
-    /** Get untyped pointer to value */
-    void* get_ptr() {
-        return ecs_meta_get_ptr(&cursor_);
+    /** Get untyped pointer to value for writing */
+    void* get_write_ptr() {
+        return ecs_meta_get_write_ptr(&cursor_);
+    }
+
+    /** Get untyped pointer to value for reading */
+    const void* get_read_ptr() {
+        return ecs_meta_get_read_ptr(&cursor_);
     }
 
     /** Set boolean value */
