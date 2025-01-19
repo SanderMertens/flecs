@@ -20,7 +20,7 @@ uint64_t flecs_type_hash(const void *ptr) {
     return flecs_hash(ids, count * ECS_SIZEOF(ecs_id_t));
 }
 
-static
+static inline
 int flecs_type_compare(const void *ptr_1, const void *ptr_2) {
     ecs_os_perf_trace_push("flecs.type_compare");
     
@@ -511,7 +511,7 @@ void flecs_table_init_edges(
     edges->hi = NULL;
 }
 
-static
+static inline
 void flecs_table_init_node(
     ecs_graph_node_t *node)
 {

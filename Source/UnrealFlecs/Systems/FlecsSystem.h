@@ -135,7 +135,7 @@ public:
 
 	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetEntity() const
 	{
-		return FFlecsEntityHandle(System);
+		return flecs::entity(System);
 	}
 
 	FORCEINLINE void SetInterval(const float InInterval)

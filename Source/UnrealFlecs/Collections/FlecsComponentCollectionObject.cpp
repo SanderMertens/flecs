@@ -37,6 +37,11 @@ FFlecsEntityHandle UFlecsComponentCollectionObject::ObtainCollectionEntity(UFlec
 	CollectionEntity.Add<FFlecsComponentCollection>();
 	ApplyCollectionToEntity(CollectionEntity);
 
+	if (bRemoveComponentsOnDestroy)
+	{
+		CollectionEntity.Add<FCollectionRemoveComponentsOnDestroyTag>();
+	}
+
 	return CollectionEntity;
 }
 

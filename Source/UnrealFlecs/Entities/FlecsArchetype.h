@@ -39,5 +39,14 @@ public:
         return Type != Other.Type;
     }
     
+    FORCEINLINE void ForEach(std::function<void(const flecs::entity_t)> InFunction) const
+    {
+        std::ranges::for_each(Type,
+                              [&InFunction](const flecs::entity_t InId)
+                              {
+                                  std::invoke(InFunction, InId);
+                              });
+    }
+    
     flecs::type Type;
 }; // struct FFlecsArchetype

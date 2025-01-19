@@ -72,6 +72,7 @@ inline void UFlecsPhysicsModule::ResimulationHandlers()
 {
 	UFlecsWorld* FlecsWorld = GetFlecsWorld();
 	solid_check(IsValid(FlecsWorld));
+	
 	solid_check(Scene);
 	
 	IConsoleVariable* ResimConsoleVariable =

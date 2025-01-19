@@ -45,7 +45,7 @@ static const double rounders[MAX_PRECISION + 1] =
 	0.00000000005		// 10
 };
 
-static
+static inline
 char* flecs_strbuf_itoa(
     char *buf,
     int64_t v)
@@ -84,7 +84,7 @@ char* flecs_strbuf_itoa(
     return ptr;
 }
 
-static
+static inline
 void flecs_strbuf_ftoa(
     ecs_strbuf_t *out, 
     double f, 
@@ -232,7 +232,7 @@ void flecs_strbuf_ftoa(
 }
 
 /* Add an extra element to the buffer */
-static
+static inline
 void flecs_strbuf_grow(
     ecs_strbuf_t *b)
 {
@@ -250,7 +250,7 @@ void flecs_strbuf_grow(
     }
 }
 
-static
+static inline
 char* flecs_strbuf_ptr(
     ecs_strbuf_t *b)
 {
@@ -259,7 +259,7 @@ char* flecs_strbuf_ptr(
 }
 
 /* Append a format string to a buffer */
-static
+static inline
 void flecs_strbuf_vappend(
     ecs_strbuf_t *b,
     const char* str,
@@ -304,7 +304,7 @@ void flecs_strbuf_vappend(
     va_end(arg_cpy);
 }
 
-static
+static inline
 void flecs_strbuf_appendstr(
     ecs_strbuf_t *b,
     const char* str,
@@ -320,7 +320,7 @@ void flecs_strbuf_appendstr(
     b->length += n;
 }
 
-static
+static inline
 void flecs_strbuf_appendch(
     ecs_strbuf_t *b,
     char ch)

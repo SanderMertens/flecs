@@ -25,6 +25,8 @@
 #include "StructUtils/StructView.h"
 #include "FlecsWorld.generated.h"
 
+class UFlecsWorldSubsystem;
+
 DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
 
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
@@ -1369,7 +1371,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	bool HasEntityWithName(const FString& Name) const
 	{
-		return LookupEntity(Name).IsAlive();
+		return LookupEntity(Name).IsValid();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
@@ -1535,16 +1537,8 @@ public:
 		return true;
 	}
 
-	void* GetContext() const
-	{
-		return World.get_ctx();
-	}
-
-	template <typename T>
-	T* GetContext() const
-	{
-		return static_cast<T*>(World.get_ctx());
-	}
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	UFlecsWorldSubsystem* GetContext() const;
 	
 	flecs::world World;
 

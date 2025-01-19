@@ -69,9 +69,11 @@ void FFlecsDefaultEntityEngine::Initialize()
 
 		DefaultEntityWorld->progress();
 
-		const int32 Index = AddedDefaultEntities.size();
+		const size_t Index = AddedDefaultEntities.size();
+		
 		AddedDefaultEntities.emplace_back(FFlecsDefaultMetaEntity(EntityRecord.EntityName, EntityRecord.EntityRecord, EntityRecord.EntityId));
 		AddedDefaultEntities[Index].SetId = DefaultEntityWorld->make_alive(static_cast<flecs::entity_t>(EntityRecord.EntityId));
+		
 		ecs_set_name(*DefaultEntityWorld,
 			AddedDefaultEntities[Index].SetId, StringCast<char>(*EntityRecord.EntityName).Get());
 
@@ -107,7 +109,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 
 			DefaultEntityWorld->progress();
 
-			const int32 Index = AddedDefaultEntities.size();
+			const size_t Index = AddedDefaultEntities.size();
 			AddedDefaultEntities.emplace_back(FFlecsDefaultMetaEntity(EntityRecord.EntityName, EntityRecord.EntityRecord,
 					EntityRecord.EntityId));
 			AddedDefaultEntities[Index].SetId = DefaultEntityWorld->make_alive(static_cast<flecs::entity_t>(EntityRecord.EntityId));

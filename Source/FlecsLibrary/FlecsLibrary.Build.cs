@@ -60,7 +60,7 @@ public class FlecsLibrary : ModuleRules
                     "FLECS_ACCURATE_COUNTERS",
                     "FLECS_UNITS",
                     "FLECS_ALERTS",
-                    "FLECS_SANITIZE",
+                   // "FLECS_SANITIZE",
                 }
             );
         }

@@ -46,18 +46,16 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 	static NO_DISCARD FFlecsEntityHandle GetNullHandle(const UFlecsWorld* InWorld);
 
 public:
-	FFlecsEntityHandle();
+	FFlecsEntityHandle() = default;
 	
 	SOLID_INLINE FFlecsEntityHandle(const flecs::entity& InEntity)
 	{
 		Entity = InEntity;
-		ObtainFlecsWorld();
 	}
 
 	SOLID_INLINE FFlecsEntityHandle(const flecs::entity_t InEntity)
 	{
 		Entity = flecs::entity(InEntity);
-		ObtainFlecsWorld();
 	}
 
 	SOLID_INLINE FFlecsEntityHandle(flecs::world& InWorld, const flecs::entity_t InEntity)

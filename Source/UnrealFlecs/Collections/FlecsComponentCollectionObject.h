@@ -6,6 +6,14 @@
 #include "Entities/FlecsEntityHandle.h"
 #include "FlecsComponentCollectionObject.generated.h"
 
+USTRUCT(BlueprintType)
+struct FCollectionRemoveComponentsOnDestroyTag
+{
+	GENERATED_BODY()
+};
+
+REGISTER_COMPONENT_TAG_PROPERTIES(FCollectionRemoveComponentsOnDestroyTag, ecs_pair(flecs::OnInstantiate, flecs::DontInherit));
+
 UCLASS(Abstract, BlueprintType, Blueprintable, EditInlineNew)
 class UNREALFLECS_API UFlecsComponentCollectionObject : public UObject
 {
@@ -48,6 +56,9 @@ public:
 	UFlecsWorld* GetFlecsWorld() const;
 
 	virtual UWorld* GetWorld() const override final;
+
+	UPROPERTY(EditAnywhere, Category = "Flecs Component Collection")
+	bool bRemoveComponentsOnDestroy = true;
 	
 protected:
 
@@ -55,6 +66,6 @@ protected:
 	FFlecsEntityHandle CollectionEntity = FFlecsEntityHandle::GetNullHandle();
 
 	UPROPERTY()
-	mutable TObjectPtr<UFlecsWorld> FlecsWorld;
+	TObjectPtr<UFlecsWorld> FlecsWorld;
 
 }; // class UFlecsComponentCollectionObject

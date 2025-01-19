@@ -17,10 +17,6 @@ FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const UFlecsWorld* InWorld)
     return flecs::entity::null(InWorld->World);
 }
 
-FFlecsEntityHandle::FFlecsEntityHandle()
-{
-}
-
 FFlecsEntityHandle::FFlecsEntityHandle(const UFlecsWorld* InWorld, const flecs::entity_t InEntity)
 {
     SetEntity(flecs::entity(InWorld->World, InEntity));
@@ -118,24 +114,36 @@ bool FFlecsEntityHandle::HasCollection(const UClass* CollectionClass) const
 
 void FFlecsEntityHandle::RemoveCollection(const FString& CollectionName) const
 {
-    /*solid_checkf(!CollectionName.IsEmpty(), TEXT("Collection name is empty"));
+    solid_checkf(!CollectionName.IsEmpty(), TEXT("Collection name is empty"));
     FCollectionTrackerComponent* CollectionTracker = GetEntity().get_mut<FCollectionTrackerComponent>();
 
     solid_checkf(CollectionTracker->ComponentProperties.contains(CollectionName),
         TEXT("Collection not found!"));
     
     const FFlecsEntityHandle CollectionEntity = CollectionTracker->ComponentProperties[CollectionName];
-    
+
     RemovePrefab(CollectionEntity);
+
+    if (CollectionEntity.Has<FCollectionRemoveComponentsOnDestroyTag>())
+    {
+        CollectionEntity.GetType().ForEach([this](const flecs::entity_t InEntity)
+        {
+            if (Has(InEntity))
+            {
+                Remove(InEntity);
+            }
+        });
+    }
+    
     CollectionTracker->ComponentProperties.erase(CollectionName);
     
-    Modified<FCollectionTrackerComponent>();*/
+    Modified<FCollectionTrackerComponent>();
 }
 
 void FFlecsEntityHandle::RemoveCollection(const UClass* Collection) const
 {
-    // solid_checkf(Collection, TEXT("Collection class is null!"));
-    // RemoveCollection(UFlecsComponentCollectionObject::GetCollectionTypeName(Collection));
+    solid_checkf(Collection, TEXT("Collection class is null!"));
+    RemoveCollection(UFlecsComponentCollectionObject::GetCollectionTypeName(Collection));
 }
 
 FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) const
