@@ -141,7 +141,7 @@ public:
 		
 		DefaultWorld->InitializeDefaultComponents();
 		
-		for (int32 Index = 0; Index < DefaultEntities.size(); ++Index)
+		for (uint32 Index = 0; Index < DefaultEntities.size(); ++Index)
 		{
 			FString EntityName = DefaultEntities[Index].EntityName;
 			const flecs::entity_t EntityId = DefaultEntityIds[EntityName];

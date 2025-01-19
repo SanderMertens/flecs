@@ -2,11 +2,9 @@
 
 // ReSharper disable CppTooWideScopeInitStatement
 #include "FlecsEntityHandle.h"
-
 #include "Collections/CollectionTrackerComponent.h"
 #include "Collections/FlecsComponentCollectionObject.h"
 #include "Components/FlecsWorldPtrComponent.h"
-#include "Components/UWorldPtrComponent.h"
 #include "Networking/FlecsNetworkIdComponent.h"
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldSubsystem.h"
@@ -40,7 +38,7 @@ UFlecsWorld* FFlecsEntityHandle::GetFlecsWorld() const
 
 UWorld* FFlecsEntityHandle::GetOuterWorld() const
 {
-    solid_checkf(GetFlecsWorld(), TEXT("Flecs World not found"));
+    solid_checkf(::IsValid(GetFlecsWorld()), TEXT("Flecs World not found"));
     return GetFlecsWorld()->GetSingleton<FUWorldPtrComponent>().World.Get();
 }
 
@@ -98,20 +96,20 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
 
 FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptStruct* StructType) const
 {
-    solid_checkf(StructType, TEXT("Struct type is not valid"));
+    solid_checkf(::IsValid(StructType), TEXT("Struct type is not valid"));
     return GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
 }
 
 void FFlecsEntityHandle::AddCollection(UObject* Collection) const
 {
-    solid_check(Collection);
+    solid_check(::IsValid(Collection));
     UFlecsComponentCollectionObject* ComponentCollection = CastChecked<UFlecsComponentCollectionObject>(Collection);
     ComponentCollection->ApplyCollection_Internal(const_cast<FFlecsEntityHandle&>(*this), GetFlecsWorld());
 }
 
 bool FFlecsEntityHandle::HasCollection(const UClass* CollectionClass) const
 {
-    solid_check(CollectionClass);
+    solid_check(::IsValid(CollectionClass));
 
     const FString CollectionName = UFlecsComponentCollectionObject::GetCollectionTypeName(CollectionClass);
     const FCollectionTrackerComponent* CollectionTracker = GetPtr<FCollectionTrackerComponent>();
@@ -157,7 +155,7 @@ void FFlecsEntityHandle::ObtainFlecsWorld()
     if (GetEntity().world() == nullptr)
     {
         const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
-        solid_check(FlecsWorldSubsystem);
+        solid_check(::IsValid(FlecsWorldSubsystem));
 
         SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World, GetEntity().id()));
     }
@@ -180,7 +178,7 @@ void FFlecsEntityHandle::PostScriptConstruct()
     if (GetEntity().world() == nullptr)
     {
         UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
-        solid_check(FlecsWorldSubsystem);
+        solid_check(::IsValid(FlecsWorldSubsystem));
         
         FlecsWorldSubsystem->ListenBeginPlay(FOnWorldBeginPlay::FDelegate::CreateLambda(
             [this, FlecsWorldSubsystem](MAYBE_UNUSED UWorld* InWorld)

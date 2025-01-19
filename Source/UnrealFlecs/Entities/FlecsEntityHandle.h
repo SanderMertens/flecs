@@ -1351,7 +1351,19 @@ public:
 		return GetEntity().has_second<TSecond>(GetTagEntity(InFirst));
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = TSecond>
+	template <typename TFirst, typename TSecond, typename TActual = TFirst>
+	SOLID_INLINE NO_DISCARD TActual GetPair() const
+	{
+		return GetEntity().get<TFirst, TSecond>();
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	SOLID_INLINE TActual GetPair(const UScriptStruct* InSecond) const
+	{
+		return GetEntity().get<TFirst>(ObtainComponentTypeStruct(InSecond));
+	}
+
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
 	SOLID_INLINE void SetPair(const TActual& InValue) const
 	{
 		GetEntity().set<TFirst, TSecond>(InValue);

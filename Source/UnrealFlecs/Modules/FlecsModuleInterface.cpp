@@ -5,6 +5,7 @@
 #include "FlecsModuleInitEvent.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsWorldPtrComponent.h"
+#include "Components/ObjectTypes/FFlecsModuleComponentTag.h"
 #include "Logs/FlecsCategories.h"
 #include "Unlog/Unlog.h"
 #include "Worlds/FlecsWorldSubsystem.h"
@@ -20,21 +21,22 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 
 	const UWorld* GameWorld = FlecsWorld->GetWorld();
 
-	const FFlecsEntityHandle OldScope = FlecsWorld->ClearScope();
-
-	ModuleEntity = FlecsWorld->CreateEntity(Execute_GetModuleName(_getUObject()));
-	solid_check(ModuleEntity.IsValid());
-	
-	ModuleEntity.Add(flecs::Module);
-	ModuleEntity.Set<FFlecsUObjectComponent>({ _getUObject() });
-	ModuleEntity.Set<FFlecsModuleComponent>({ _getUObject()->GetClass() });
-
-	FlecsWorld->SetScope(ModuleEntity);
+	FlecsWorld->EndScope([this, &FlecsWorld]()
+	{
+		ModuleEntity = FlecsWorld->CreateEntity(Execute_GetModuleName(_getUObject()));
+		solid_check(ModuleEntity.IsValid());
 		
-	InitializeModule(FlecsWorld, ModuleEntity);
-	Execute_BP_InitializeModule(_getUObject(), FlecsWorld);
-	
-	FlecsWorld->SetScope(OldScope);
+		ModuleEntity.Add(flecs::Module);
+		ModuleEntity.Set<FFlecsUObjectComponent>({ _getUObject() });
+		ModuleEntity.AddTrait<FFlecsUObjectComponent, FFlecsModuleComponentTag>();
+		
+		ModuleEntity.Set<FFlecsModuleComponent>({ _getUObject()->GetClass() });
+
+		FlecsWorld->SetScope(ModuleEntity);
+		
+		InitializeModule(FlecsWorld, ModuleEntity);
+		Execute_BP_InitializeModule(_getUObject(), FlecsWorld);
+	});
 
 	FlecsWorld->Event<FFlecsModuleInitEvent>()
 		.id<FFlecsModuleComponent>()
@@ -51,9 +53,9 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 		UFlecsWorldSubsystem* WorldSubsystem = GameWorld->GetSubsystem<UFlecsWorldSubsystem>();
 		WorldSubsystem->OnWorldBeginPlayDelegate.AddWeakLambda(_getUObject(), [this](UWorld* InGameWorld)
 		{
-			UFlecsWorld* FlecsWorld = World.Get();
-			WorldBeginPlay(FlecsWorld, InGameWorld);
-			Execute_BP_WorldBeginPlay(_getUObject(), FlecsWorld, InGameWorld);
+			UFlecsWorld* NewFlecsWorld = World.Get();
+			WorldBeginPlay(NewFlecsWorld, InGameWorld);
+			Execute_BP_WorldBeginPlay(_getUObject(), NewFlecsWorld, InGameWorld);
 		});
 	}
 	

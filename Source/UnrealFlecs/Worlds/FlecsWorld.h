@@ -9,10 +9,10 @@
 #include "flecs.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
-#include "Collections/FlecsComponentCollection.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsUObjectComponent.h"
+#include "Components/ObjectTypes/FFlecsModuleComponentTag.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
@@ -240,7 +240,6 @@ public:
 			});
 
 		ObjectDestructionComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectDestructionComponentQuery")
-			.without<FFlecsUObjectComponent>(DontDeleteUObjectEntity)
 			.begin_scope_traits<FFlecsUObjectComponent>().optional()
 				.without(DontDeleteUObjectEntity)
 			.end_scope_traits()
@@ -269,8 +268,7 @@ public:
 			.cached()
 			.build();
 
-		CreateObserver<const FFlecsUObjectComponent&,
-			const FFlecsModuleComponent&>(TEXT("AddModuleComponentObserver"))
+		CreateObserver<const FFlecsUObjectComponent&,const FFlecsModuleComponent&>(TEXT("AddModuleComponentObserver"))
 			.term_at(0).filter()
 			.event(flecs::OnAdd)
 			.yield_existing()
@@ -716,7 +714,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule) const
+	FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject>& InModule) const
 	{
 		const flecs::entity ModuleEntity = ModuleComponentQuery
 			.find([&](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
@@ -734,17 +732,21 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	UObject* GetModule(const TSubclassOf<UObject> InModule) const
+	UObject* GetModule(const TSubclassOf<UObject>& InModule) const
 	{
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModule);
-		return ModuleEntity.Get<FFlecsUObjectComponent>().GetObjectChecked();
+		checkf((ModuleEntity.HasTrait<FFlecsUObjectComponent, FFlecsModuleComponentTag>()),
+			TEXT("Module entity %s does not have a UObject component with the Module Trait"), *ModuleEntity.GetName());
+		return ModuleEntity.GetPtr<FFlecsUObjectComponent>()->GetObjectChecked();
 	}
 
-	template <typename T>
+	template <Solid::TStaticClassConcept T>
 	NO_DISCARD T* GetModule() const
 	{
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity<T>();
-		return ModuleEntity.Get<FFlecsUObjectComponent>().GetObjectChecked<T>();
+		checkf((ModuleEntity.HasTrait<FFlecsUObjectComponent, FFlecsModuleComponentTag>()),
+			TEXT("Module entity %s does not have a UObject component with the Module Trait"), *ModuleEntity.GetName());
+		return ModuleEntity.GetPtr<FFlecsUObjectComponent>()->GetObjectChecked<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -1500,6 +1502,16 @@ public:
 	void Scope(FFlecsId InId, FunctionType&& Function) const
 	{
 		World.scope(InId.GetFlecsId(), std::forward<FunctionType>(Function));
+	}
+
+	template <typename FunctionType>
+	void EndScope(FunctionType&& Function) const
+	{
+		const flecs::entity OldScope = World.set_scope(0);
+
+		std::invoke(std::forward<FunctionType>(Function));
+
+		World.set_scope(OldScope);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")

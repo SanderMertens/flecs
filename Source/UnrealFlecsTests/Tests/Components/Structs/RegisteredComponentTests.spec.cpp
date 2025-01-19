@@ -21,8 +21,7 @@ void FRegisteredComponentTestsSpec::Define()
 
 	Describe("Add Components", [this]()
 	{
-		It("Should add USTRUCT Component using StaticStruct",
-			[this]()
+		It("Should add USTRUCT Component using StaticStruct", [this]()
 		{
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Add(FUStructTestComponent_RegisterComponentTest::StaticStruct());

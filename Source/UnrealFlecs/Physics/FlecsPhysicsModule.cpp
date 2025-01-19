@@ -4,7 +4,6 @@
 #include "FlecsPhysicsSceneComponent.h"
 #include "PBDRigidsSolver.h"
 #include "TickerPhysicsHistoryComponent.h"
-#include "Components/UWorldPtrComponent.h"
 #include "Physics/Experimental/PhysScene_Chaos.h"
 #include "Ticker/FlecsTickerComponent.h"
 #include "Ticker/FlecsTickerModule.h"

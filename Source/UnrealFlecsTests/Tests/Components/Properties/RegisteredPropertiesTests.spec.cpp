@@ -139,6 +139,20 @@ void FRegisteredPropertiesTestsSpec::Define()
 				TestType.Has(flecs::PairIsTag));
 		});
 	});
+
+	/*Describe("Non USTRUCT Trait and Properties", [this]()
+	{
+		It("Should contain Registered Properties from Struct in the Flecs Module", [this]()
+		{
+			const FFlecsEntityHandle TestType
+				= Fixture.FlecsWorld->ObtainComponentType<FTestRegisteredPropertyStruct4NoUSTRUCT_RegisterPropertyTest>();
+			
+			TestTrue("Component properties should be registered",
+				TestType.Has(flecs::PairIsTag));
+			TestTrue("Component properties should be registered",
+				TestType.Has(FTestRegisteredTraitProperty_RegisterPropertyTest::StaticStruct()));
+		});
+	});*/
 }
 
 

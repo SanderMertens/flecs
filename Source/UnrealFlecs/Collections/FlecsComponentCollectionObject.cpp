@@ -2,6 +2,7 @@
 
 #include "FlecsComponentCollectionObject.h"
 #include "CollectionTrackerComponent.h"
+#include "FlecsComponentCollection.h"
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 

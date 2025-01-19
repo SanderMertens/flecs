@@ -1246,6 +1246,8 @@ flecs_component_ptr_t flecs_ensure(
         ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER,
             "invalid component id specified for ensure");
 
+    ecs_os_perf_trace_push("flecs.ensure");
+
     ecs_id_record_t *idr = NULL;
     ecs_table_t *table;
     if ((table = r->table)) {
@@ -1257,6 +1259,8 @@ flecs_component_ptr_t flecs_ensure(
                 dst.ptr = ECS_ELEM(column->data, ti->size, 
                     ECS_RECORD_TO_ROW(r->row));
                 dst.ti = ti;
+                
+                ecs_os_perf_trace_pop("flecs.ensure");
                 return dst;
             } else if (column_index < 0) {
                 column_index = flecs_ito(int16_t, -column_index - 1);
@@ -1265,6 +1269,8 @@ flecs_component_ptr_t flecs_ensure(
                 if (idr->flags & EcsIdIsSparse) {
                     dst.ptr = flecs_sparse_get_any(idr->sparse, 0, entity);
                     dst.ti = idr->type_info;
+                    
+                    ecs_os_perf_trace_pop("flecs.ensure");
                     return dst;
                 }
             }
@@ -1272,6 +1278,7 @@ flecs_component_ptr_t flecs_ensure(
             idr = flecs_id_record_get(world, id);
             dst = flecs_get_component_ptr(table, ECS_RECORD_TO_ROW(r->row), idr);
             if (dst.ptr) {
+                ecs_os_perf_trace_pop("flecs.ensure");
                 return dst;
             }
         }
@@ -1292,6 +1299,7 @@ flecs_component_ptr_t flecs_ensure(
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
     dst = flecs_get_component_ptr(r->table, ECS_RECORD_TO_ROW(r->row), idr);
 error:
+    ecs_os_perf_trace_pop("flecs.ensure");
     return dst;
 }
 

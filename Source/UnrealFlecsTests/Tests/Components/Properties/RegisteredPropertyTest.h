@@ -72,3 +72,15 @@ REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct3_RegisterPrope
 	TRAIT_PROPERTY_STRUCT(FTestRegisteredTraitProperty_RegisterPropertyTest,
 		FTestRegisteredTraitProperty_RegisterPropertyTest { 2 } ));
 REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct3_RegisterPropertyTest, flecs::PairIsTag);
+
+struct FTestRegisteredPropertyStruct4NoUSTRUCT_RegisterPropertyTest
+{
+	int32 MyInt32;
+	float MyFloat;
+	FString MyString;
+}; // struct FTestRegisteredPropertyStruct4NoUSTRUCT
+
+REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct4NoUSTRUCT_RegisterPropertyTest, flecs::PairIsTag);
+REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct4NoUSTRUCT_RegisterPropertyTest,
+	TRAIT_PROPERTY_STRUCT(FTestRegisteredTraitProperty_RegisterPropertyTest,
+		FTestRegisteredTraitProperty_RegisterPropertyTest { 3 } ));

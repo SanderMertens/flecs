@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Properties/FlecsComponentProperties.h"
 #include "FFlecsSceneComponentTag.generated.h"
 
 USTRUCT(BlueprintType)

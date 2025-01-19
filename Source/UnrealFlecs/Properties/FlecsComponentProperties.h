@@ -147,7 +147,7 @@ public:
 				{ \
 					FCoreDelegates::OnPostEngineInit.AddLambda([]() \
 					{ \
-						UScriptStruct* ScriptStruct = TBaseStructure<ComponentType>::Get(); \
+						UScriptStruct* ScriptStruct = StaticStruct<ComponentType>(); \
 						FFlecsComponentPropertiesRegistry::Get().RegisterStructMetaData(ScriptStruct, TEXT(#__VA_ARGS__)); \
 					}); \
 				} \
@@ -162,8 +162,6 @@ public:
 #define PRIVATE_REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, ...) \
 	namespace \
 	{ \
-		static_assert(Solid::IsStaticStruct<ComponentType>(), \
-			"ComponentType must be a UScriptStruct!"); \
 		struct FAutoRegister##ComponentType##_Traits \
 		{ \
 			FAutoRegister##ComponentType##_Traits() \
