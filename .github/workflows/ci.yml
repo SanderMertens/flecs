@@ -154,7 +154,6 @@ jobs:
           - { os: ubuntu-20.04, cc: clang-10, cxx: clang++-10 }
           - { os: ubuntu-20.04, cc: clang-11, cxx: clang++-11 }
           - { os: ubuntu-20.04, cc: clang-12, cxx: clang++-12 }
-          - { os: ubuntu-latest, cc: clang-13, cxx: clang++-13 }
           - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
           - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
 
@@ -563,7 +562,6 @@ jobs:
           - { os: ubuntu-20.04, cc: clang-10, cxx: clang++-10 }
           - { os: ubuntu-20.04, cc: clang-11, cxx: clang++-11 }
           - { os: ubuntu-20.04, cc: clang-12, cxx: clang++-12 }
-          - { os: ubuntu-latest, cc: clang-13, cxx: clang++-13 }
           - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
           - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
 
