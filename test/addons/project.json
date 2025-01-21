@@ -113,7 +113,8 @@
                 "pipeline_init_no_system_term",
                 "disable_component_from_immediate_system",
                 "run_w_empty_query",
-                "run_w_0_src_query"
+                "run_w_0_src_query",
+                "inout_none_after_write"
             ]
         }, {
             "id": "SystemMisc",
