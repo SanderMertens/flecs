@@ -9975,3 +9975,88 @@ void Observer_2_children_w_deferred_set(void) {
 
     ecs_fini(world);
 }
+
+void Observer_on_add_on_set_w_not_term(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .oper = EcsNot }},
+        .events = { EcsOnAdd, EcsOnSet },
+        .callback = Observer_w_value_1,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_on_set_w_not_2_terms(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity), .oper = EcsNot }},
+        .events = { EcsOnAdd, EcsOnSet },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnSet);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add(world, e, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {20, 30});
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Velocity);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
