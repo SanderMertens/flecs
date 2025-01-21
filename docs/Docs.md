@@ -8,6 +8,7 @@
 - [Unreal-Flecs (Unreal Engine Flecs plugin)](https://github.com/Reddy-dev/Unreal-Flecs)
 - [Getting Started with Godot](https://github.com/paulfigiel/godot-flecs-sample)
 - [Getting Started with Raylib](https://github.com/kranzky/raylib-flecs-starter-kit)
+- [Getting Started with SDL3, ImGui, Sqlite](https://github.com/ilyas-taouaou/CodotakuCMakeRepo) ([video](https://www.youtube.com/watch?v=T32B7nf6B-8))
 - [Flecs an Raylib template](https://github.com/aog05/Raylib-and-Flecs-Template)
 
 ## Manuals
