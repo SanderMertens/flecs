@@ -1695,6 +1695,7 @@
                 "forward_up_flag_term_2",
                 "propagate_up_flag_term_1",
                 "propagate_up_flag_term_2",
+                "propagate_on_set_self_up",
                 "row_flag_term_1",
                 "row_flag_term_2",
                 "on_add_optional",

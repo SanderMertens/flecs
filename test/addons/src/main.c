@@ -108,6 +108,7 @@ void Pipeline_pipeline_init_no_system_term(void);
 void Pipeline_disable_component_from_immediate_system(void);
 void Pipeline_run_w_empty_query(void);
 void Pipeline_run_w_0_src_query(void);
+void Pipeline_inout_none_after_write(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -932,6 +933,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "run_w_0_src_query",
         Pipeline_run_w_0_src_query
+    },
+    {
+        "inout_none_after_write",
+        Pipeline_inout_none_after_write
     }
 };
 
@@ -2560,7 +2565,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        85,
+        86,
         Pipeline_testcases
     },
     {
