@@ -252,7 +252,7 @@ e.set(Position { x: 10.0, y: 20.0 });
 </ul>
 </div>
 
-### OnSet and Inheritance
+#### OnSet and Inheritance
 To ensure that OnSet events can be used reliably to detect component changes, events can be produced by operations that change inheritance relationships or operate on inherited from components. This is enabled by default for components with the `(OnInstantiate, Inherit)` trait. To prevent this behavior, add the `self` modifier to an observer term. The following inheritance scenarios produce OnSet events. All scenarios assume that the component has the `(OnInstantiate, Inherit)` trait.
 
 #### Adding an IsA pair
@@ -906,6 +906,101 @@ e.set(Velocity { x: 1.0, y: 2.0 });
 
 // Triggers, entity now matches observer query
 e.set(Position { x: 20.0, y: 30.0 });
+```
+
+</li>
+</ul>
+</div>
+
+### Query variables
+Observers terms can use query variables, with some limitations:
+ - Query variables can be used freely as first or second elements of a pair
+ - Terms with a (non-$this) query variable as source won't trigger observers (behavior is like filter terms)
+ - An observer must have at least one term that does not have a query variable as source, except for terms with the default $this source.
+
+The following example shows valid usage of an observer with query variables:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+// Observer that listens for spaceships docked to planets. The observer triggers
+// only when the SpaceShip tag or DockedTo pair is added to an entity. It will
+// not trigger when Planet is added to the target of a DockedTo pair.
+//
+// The DSL notation for this query is
+//   SpaceShip, (DockedTo, $object), Planet($object)
+ecs_observer(world, {
+    .query.terms = {
+        { SpaceShip }, 
+        { .first.id = DockedTo, .second.name = "$object" },
+        { .first.id = Planet, .src.name = "$object" },
+    },
+    .events = { EcsOnAdd },
+    .callback = SpaceshipDocked
+});
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+// Observer that listens for spaceships docked to planets. The observer triggers
+// only when the SpaceShip tag or DockedTo pair is added to an entity. It will
+// not trigger when Planet is added to the target of a DockedTo pair.
+//
+// The DSL notation for this query is
+//   SpaceShip, (DockedTo, $object), Planet($object)
+world.observer()
+    .with<SpaceShip>()
+    .with<DockedTo>("objectt")
+    .with<Planet>().src("$object")
+    .event(flecs::OnAdd)
+    .each([](flecs::entity e) {
+        // ...
+    });
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Observer that listens for spaceships docked to planets. The observer triggers
+// only when the SpaceShip tag or DockedTo pair is added to an entity. It will
+// not trigger when Planet is added to the target of a DockedTo pair.
+//
+// The DSL notation for this query is
+//   SpaceShip, (DockedTo, $object), Planet($object)
+world.Observer()
+    .With<SpaceShip>()
+    .With<DockedTo>("objectt")
+    .With<Planet>().Src("$object")
+    .Event(Ecs.OnAdd)
+    .Each((Iter it, int i, ref Position p) =>
+    {
+        // ...
+    });
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Observer that listens for spaceships docked to planets. The observer triggers
+// only when the SpaceShip tag or DockedTo pair is added to an entity. It will
+// not trigger when Planet is added to the target of a DockedTo pair.
+//
+// The DSL notation for this query is
+//   SpaceShip, (DockedTo, $object), Planet($object)
+world
+    .observer::<flecs::OnAdd>()
+    .with::<SpaceShip>()
+    .with_first_name::<DockedTo>("$object")
+    .with::<Planet>().set_src_name("$object")
+    .each_entity(|e| {
+        // ...
+    });
 ```
 
 </li>

@@ -15630,6 +15630,11 @@ int flecs_multi_observer_init(
         child_desc.term_index_ = query->terms[i].field_index;
         *term = query->terms[i];
 
+        /* Don't create observers for non-$this terms */
+        if (!ecs_term_match_this(term) && term->src.id & EcsIsVariable) {
+            continue;
+        }
+
         int16_t oper = term->oper;
         ecs_id_t id = term->id;
 
@@ -15779,6 +15784,21 @@ ecs_observer_t* flecs_observer_init(
     ecs_check(o->query->term_count > 0, ECS_INVALID_PARAMETER,
         "observer must have at least one term");
 
+    int i, var_count = 0;
+    for (i = 0; i < o->query->term_count; i ++) {
+        ecs_term_t *term = &o->query->terms[i];
+        if (!ecs_term_match_this(term)) {
+            if (term->src.id & EcsIsVariable) {
+                /* Term has a non-$this variable source */
+                var_count ++;
+            }
+        }
+    }
+
+    ecs_check(o->query->term_count > var_count, ECS_UNSUPPORTED,
+        "observers with only non-$this variable sources are not yet supported");
+    (void)var_count;
+
     ecs_observable_t *observable = desc->observable;
     if (!observable) {
         observable = ecs_get_observable(world);
@@ -15805,7 +15825,6 @@ ecs_observer_t* flecs_observer_init(
     /* Check if observer is monitor. Monitors are created as multi observers
      * since they require pre/post checking of the filter to test if the
      * entity is entering/leaving the monitor. */
-    int i;
     for (i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
         ecs_entity_t event = desc->events[i];
         if (!event) {

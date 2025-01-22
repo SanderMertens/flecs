@@ -1713,6 +1713,7 @@
                 "2_children_w_deferred_set",
                 "on_add_on_set_w_not_term",
                 "on_add_on_set_w_not_2_terms",
+                "observer_w_vars",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",
