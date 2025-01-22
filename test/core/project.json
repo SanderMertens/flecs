@@ -1711,6 +1711,8 @@
                 "on_table_create_is_deferred",
                 "on_table_create_is_deferred_batched",
                 "2_children_w_deferred_set",
+                "on_add_on_set_w_not_term",
+                "on_add_on_set_w_not_2_terms",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",

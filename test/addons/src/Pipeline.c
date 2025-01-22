@@ -3285,3 +3285,54 @@ void Pipeline_run_w_0_src_query(void) {
 
     ecs_fini(world);
 }
+
+static
+void AddPosition(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Position);
+    }
+}
+
+static int check_position_invoked = 0;
+
+static void CheckPosition(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        test_assert(ecs_has(it->world, it->entities[i], Position));
+        check_position_invoked ++;
+    }
+}
+
+void Pipeline_inout_none_after_write(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate))
+        }),
+        .query.terms = {{ Foo }, { ecs_id(Position), .src.id = EcsIsEntity, .inout = EcsOut }},
+        .callback = AddPosition
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate))
+        }),
+        .query.terms = { { ecs_id(Position), .inout = EcsInOutNone } },
+        .callback = CheckPosition
+    });
+
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e2, Position));
+    test_int(check_position_invoked, 2);
+
+    ecs_fini(world);
+}

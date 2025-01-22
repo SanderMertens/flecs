@@ -65,8 +65,8 @@ void flecs_inc_observer_count(
 {
     ecs_event_id_record_t *idt = flecs_event_id_record_ensure(world, evt, id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    const int32_t result = idt->observer_count += value;
+    
+    int32_t result = idt->observer_count += value;
     if (result == 1) {
         /* Notify framework that there are observers for the event/id. This 
          * allows parts of the code to skip event evaluation early */
@@ -75,7 +75,7 @@ void flecs_inc_observer_count(
             .event = event
         });
 
-        const ecs_flags32_t flags = flecs_id_flag_for_event(event);
+        ecs_flags32_t flags = flecs_id_flag_for_event(event);
         if (flags) {
             ecs_id_record_t *idr = flecs_id_record_get(world, id);
             if (idr) {
@@ -125,14 +125,24 @@ void flecs_register_observer_for_id(
     ecs_observer_t *o,
     size_t offset)
 {
-    const ecs_observer_impl_t *impl = flecs_observer_impl(o);
-    const ecs_id_t term_id = flecs_observer_id(impl->register_id);
+    ecs_observer_impl_t *impl = flecs_observer_impl(o);
+    ecs_id_t term_id = flecs_observer_id(impl->register_id);
     ecs_term_t *term = &o->query->terms[0];
-    const ecs_entity_t trav = term->trav;
+    ecs_entity_t trav = term->trav;
 
-    for (int i = 0; i < o->event_count; i ++) {
-        const ecs_entity_t event = flecs_get_observer_event(
+    int i, j;
+    for (i = 0; i < o->event_count; i ++) {
+        ecs_entity_t event = flecs_get_observer_event(
             term, o->events[i]);
+        for (j = 0; j < i; j ++) {
+            if (event == flecs_get_observer_event(term, o->events[j])) {
+                break;
+            }
+        }
+        if (i != j) {
+            /* Duplicate event, ignore */
+            continue;
+        }
 
         /* Get observers for event */
         ecs_event_record_t *er = flecs_event_record_ensure(observable, event);
@@ -161,8 +171,8 @@ void flecs_uni_observer_register(
     ecs_observable_t *observable,
     ecs_observer_t *o)
 {
-    const ecs_term_t *term = &o->query->terms[0];
-    const ecs_flags64_t flags = ECS_TERM_REF_FLAGS(&term->src);
+    ecs_term_t *term = &o->query->terms[0];
+    ecs_flags64_t flags = ECS_TERM_REF_FLAGS(&term->src);
 
     if ((flags & (EcsSelf|EcsUp)) == (EcsSelf|EcsUp)) {
         flecs_register_observer_for_id(world, observable, o,
@@ -184,14 +194,24 @@ void flecs_unregister_observer_for_id(
     ecs_observer_t *o,
     size_t offset)
 {
-    const ecs_observer_impl_t *impl = flecs_observer_impl(o);
-    const ecs_id_t term_id = flecs_observer_id(impl->register_id);
+    ecs_observer_impl_t *impl = flecs_observer_impl(o);
+    ecs_id_t term_id = flecs_observer_id(impl->register_id);
     ecs_term_t *term = &o->query->terms[0];
-    const ecs_entity_t trav = term->trav;
+    ecs_entity_t trav = term->trav;
 
-    for (int i = 0; i < o->event_count; i ++) {
-        const ecs_entity_t event = flecs_get_observer_event(
+    int i, j;
+    for (i = 0; i < o->event_count; i ++) {
+        ecs_entity_t event = flecs_get_observer_event(
             term, o->events[i]);
+        for (j = 0; j < i; j ++) {
+            if (event == flecs_get_observer_event(term, o->events[j])) {
+                break;
+            }
+        }
+        if (i != j) {
+            /* Duplicate event, ignore */
+            continue;
+        }
 
         /* Get observers for event */
         ecs_event_record_t *er = flecs_event_record_get(observable, event);
@@ -226,8 +246,8 @@ void flecs_unregister_observer(
         return;
     }
 
-    const ecs_term_t *term = &o->query->terms[0];
-    const ecs_flags64_t flags = ECS_TERM_REF_FLAGS(&term->src);
+    ecs_term_t *term = &o->query->terms[0];
+    ecs_flags64_t flags = ECS_TERM_REF_FLAGS(&term->src);
 
     if ((flags & (EcsSelf|EcsUp)) == (EcsSelf|EcsUp)) {
         flecs_unregister_observer_for_id(world, observable, o,
@@ -339,7 +359,7 @@ void flecs_uni_observer_invoke(
     it->ref_fields = query->fixed_fields | query->row_fields;
     ecs_termset_t row_fields = it->row_fields;
     it->row_fields = query->row_fields;
-    
+
     ecs_entity_t event = it->event;
     int32_t event_cur = it->event_cur;
     it->event = flecs_get_observer_event(term, event);

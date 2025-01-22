@@ -133,7 +133,7 @@ bool flecs_pipeline_check_term(
     (void)world;
 
     ecs_term_ref_t *src = &term->src;
-    if (term->inout == EcsInOutNone || term->inout == EcsInOutFilter) {
+    if (term->inout == EcsInOutFilter) {
         return false;
     }
 
