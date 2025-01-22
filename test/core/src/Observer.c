@@ -10060,3 +10060,38 @@ void Observer_on_add_on_set_w_not_2_terms(void) {
 
     ecs_fini(world);
 }
+
+void Observer_observer_w_vars(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.expr = "Tag, Tag($o), (Rel, $o)",
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_add(world, a, Tag);
+    ecs_add(world, b, Tag);
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, a, Rel, b);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.e[0], a);
+    test_uint(ctx.s[0][0], 0);
+    test_uint(ctx.s[0][1], b);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
