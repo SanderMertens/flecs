@@ -130,10 +130,19 @@ void flecs_register_observer_for_id(
     ecs_term_t *term = &o->query->terms[0];
     ecs_entity_t trav = term->trav;
 
-    int i;
+    int i, j;
     for (i = 0; i < o->event_count; i ++) {
         ecs_entity_t event = flecs_get_observer_event(
             term, o->events[i]);
+        for (j = 0; j < i; j ++) {
+            if (event == flecs_get_observer_event(term, o->events[j])) {
+                break;
+            }
+        }
+        if (i != j) {
+            /* Duplicate event, ignore */
+            continue;
+        }
 
         /* Get observers for event */
         ecs_event_record_t *er = flecs_event_record_ensure(observable, event);
@@ -190,10 +199,19 @@ void flecs_unregister_observer_for_id(
     ecs_term_t *term = &o->query->terms[0];
     ecs_entity_t trav = term->trav;
 
-    int i;
+    int i, j;
     for (i = 0; i < o->event_count; i ++) {
         ecs_entity_t event = flecs_get_observer_event(
             term, o->events[i]);
+        for (j = 0; j < i; j ++) {
+            if (event == flecs_get_observer_event(term, o->events[j])) {
+                break;
+            }
+        }
+        if (i != j) {
+            /* Duplicate event, ignore */
+            continue;
+        }
 
         /* Get observers for event */
         ecs_event_record_t *er = flecs_event_record_get(observable, event);

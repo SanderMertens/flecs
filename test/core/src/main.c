@@ -1650,6 +1650,8 @@ void Observer_on_table_create(void);
 void Observer_on_table_create_is_deferred(void);
 void Observer_on_table_create_is_deferred_batched(void);
 void Observer_2_children_w_deferred_set(void);
+void Observer_on_add_on_set_w_not_term(void);
+void Observer_on_add_on_set_w_not_2_terms(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -8755,6 +8757,14 @@ bake_test_case Observer_testcases[] = {
         Observer_2_children_w_deferred_set
     },
     {
+        "on_add_on_set_w_not_term",
+        Observer_on_add_on_set_w_not_term
+    },
+    {
+        "on_add_on_set_w_not_2_terms",
+        Observer_on_add_on_set_w_not_2_terms
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -11665,7 +11675,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        237,
+        239,
         Observer_testcases
     },
     {
