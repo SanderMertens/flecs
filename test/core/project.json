@@ -1713,6 +1713,7 @@
                 "2_children_w_deferred_set",
                 "on_add_on_set_w_not_term",
                 "on_add_on_set_w_not_2_terms",
+                "observer_w_vars",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",
@@ -2008,7 +2009,9 @@
                 "prefab_child_offset_w_smaller_child_id",
                 "prefab_w_union",
                 "prefab_child_w_union",
-                "prefab_w_union_and_component"
+                "prefab_w_union_and_component",
+                "defer_instantiate_and_set_inherit_and_override",
+                "defer_instantiate_and_set_inherit_and_new"
             ]
         }, {
             "id": "World",

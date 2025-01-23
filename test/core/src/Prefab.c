@@ -5133,3 +5133,74 @@ void Prefab_prefab_w_union_and_component(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_defer_instantiate_and_set_inherit_and_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_set(world, base, Velocity, {1, 2});
+
+    ecs_defer_begin(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, inst, Position, {20, 30});
+    ecs_set(world, inst, Velocity, {2, 3});
+    test_assert(!ecs_has_pair(world, inst, EcsIsA, base));
+    test_assert(!ecs_has(world, inst, Position));
+    test_assert(!ecs_has(world, inst, Velocity));
+    ecs_defer_end(world);
+    test_assert(ecs_has_pair(world, inst, EcsIsA, base));
+    test_assert(ecs_has(world, inst, Position));
+    test_assert(ecs_has(world, inst, Velocity));
+    test_assert(ecs_owns(world, inst, Position));
+    test_assert(ecs_owns(world, inst, Velocity));
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20); test_int(p->y, 30);
+
+    const Velocity *v = ecs_get(world, inst, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 2); test_int(v->y, 3);
+
+    ecs_fini(world);
+}
+
+void Prefab_defer_instantiate_and_set_inherit_and_new(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base, Velocity, {1, 2});
+
+    ecs_defer_begin(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, inst, Position, {20, 30});
+    ecs_set(world, inst, Velocity, {2, 3});
+    test_assert(!ecs_has_pair(world, inst, EcsIsA, base));
+    test_assert(!ecs_has(world, inst, Position));
+    test_assert(!ecs_has(world, inst, Velocity));
+    ecs_defer_end(world);
+    test_assert(ecs_has_pair(world, inst, EcsIsA, base));
+    test_assert(ecs_has(world, inst, Position));
+    test_assert(ecs_has(world, inst, Velocity));
+    test_assert(ecs_owns(world, inst, Position));
+    test_assert(ecs_owns(world, inst, Velocity));
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20); test_int(p->y, 30);
+
+    const Velocity *v = ecs_get(world, inst, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 2); test_int(v->y, 3);
+
+    ecs_fini(world);
+}
