@@ -136,7 +136,7 @@
  * Even though an application may still be able to continue running after a soft
  * assert, it should be treated as if in an undefined state.
  */
-// #define FLECS_SOFT_ASSERT
+ #define FLECS_SOFT_ASSERT
 
 /** @def FLECS_KEEP_ASSERT
  * By default asserts are disabled in release mode, when either FLECS_NDEBUG or
@@ -182,7 +182,7 @@
  *
  * which outputs the full list of addons Flecs was compiled with.
  */
-// #define FLECS_CUSTOM_BUILD
+ #define FLECS_CUSTOM_BUILD
 
 /** @def FLECS_CPP_NO_AUTO_REGISTRATION
  * When set, the C++ API will require that components are registered before they

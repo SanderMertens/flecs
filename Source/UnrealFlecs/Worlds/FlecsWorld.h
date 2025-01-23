@@ -214,7 +214,7 @@ public:
 					const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get().
 						GetComponentProperties(StringCast<char>(*StructSymbol).Get());
 					
-					for (const flecs::entity_t Entity : Properties->Entities)
+					for (const FFlecsId Entity : Properties->Entities)
 					{
 						EntityHandle.Add(Entity);
 					}
@@ -793,6 +793,20 @@ public:
 		World.readonly_end();
 	}
 
+	template <typename TFunction>
+	void ReadOnly(TFunction&& Function) const
+	{
+		BeginReadOnly();
+		std::invoke(std::forward<TFunction>(Function));
+		EndReadOnly();
+	}
+
+	template <typename TFunction>
+	void WithScoped(FFlecsId InId, TFunction&& Function) const
+	{
+		World.with(InId, std::forward<TFunction>(Function));
+	}
+
 	void SetContext(void* InContext) const
 	{
 		World.set_ctx(InContext);
@@ -1214,21 +1228,27 @@ public:
 
 		ScriptStructComponent.set<FFlecsScriptStructComponent>({ ScriptStruct });
 
+		if (ScriptStruct->GetSuperStruct())
+		{
+			const FFlecsEntityHandle SuperStructComponent
+				= ObtainComponentTypeStruct(CastChecked<UScriptStruct>(ScriptStruct->GetSuperStruct()));
+			ScriptStructComponent.is_a(SuperStructComponent.GetEntity());
+		}
+
 		SetScope(OldScope);
 		return ScriptStructComponent;
 	}
 
-	// @TODO: May be deprecated in the future
-	void RegisterScriptStruct(UScriptStruct* ScriptStruct, const FFlecsEntityHandle& InComponentEntity) const
-	{
-		TypeMapComponent->ScriptStructMap
-			.emplace(ScriptStruct, InComponentEntity.GetEntity());
-	}
-
 	template <typename T>
-	FFlecsEntityHandle ObtainComponentType() const
+	FFlecsEntityHandle ObtainComponentTypeStruct() const
 	{
 		return World.component<T>();
+	}
+
+	template <Solid::TStaticStructConcept T>
+	FFlecsEntityHandle ObtainComponentTypeStruct() const
+	{
+		return ObtainComponentTypeStruct(StaticStruct<T>());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")

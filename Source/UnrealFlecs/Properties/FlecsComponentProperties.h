@@ -187,3 +187,4 @@ public:
 
 #define TRAIT_PROPERTY_STRUCT(PropertyStruct, ...) \
 	FSharedStruct::Make<PropertyStruct>(__VA_ARGS__)
+	

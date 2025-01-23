@@ -33,7 +33,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 		It("Should contain Registered Properties using type directly", [this]()
 		{
 			const FFlecsEntityHandle TestType
-				= Fixture.FlecsWorld->ObtainComponentType<FTestRegisteredPropertyStruct_RegisterPropertyTest>();
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct<FTestRegisteredPropertyStruct_RegisterPropertyTest>();
 			
 			TestTrue("Component properties should be registered",
 				TestType.Has(flecs::PairIsTag));
@@ -79,7 +79,7 @@ void FRegisteredPropertiesTestsSpec::Define()
 			[this]()
 		{
 			const FFlecsEntityHandle TestType
-				= Fixture.FlecsWorld->ObtainComponentType<FTestRegisteredPropertyStruct2_RegisterPropertyTest>();
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct<FTestRegisteredPropertyStruct2_RegisterPropertyTest>();
 			
 			TestTrue("Component properties should be registered",
 				TestType.Has<FTestRegisteredTraitProperty_RegisterPropertyTest>());
@@ -139,20 +139,6 @@ void FRegisteredPropertiesTestsSpec::Define()
 				TestType.Has(flecs::PairIsTag));
 		});
 	});
-
-	/*Describe("Non USTRUCT Trait and Properties", [this]()
-	{
-		It("Should contain Registered Properties from Struct in the Flecs Module", [this]()
-		{
-			const FFlecsEntityHandle TestType
-				= Fixture.FlecsWorld->ObtainComponentType<FTestRegisteredPropertyStruct4NoUSTRUCT_RegisterPropertyTest>();
-			
-			TestTrue("Component properties should be registered",
-				TestType.Has(flecs::PairIsTag));
-			TestTrue("Component properties should be registered",
-				TestType.Has(FTestRegisteredTraitProperty_RegisterPropertyTest::StaticStruct()));
-		});
-	});*/
 }
 
 

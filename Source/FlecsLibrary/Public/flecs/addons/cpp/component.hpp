@@ -195,8 +195,6 @@ struct type_impl {
 
             c = ecs_cpp_component_register(world, c, c, name, type_name<T>(), 
                 symbol, size(), alignment(), is_component, &existing);
-            
-            
 
             if constexpr (Solid::IsStaticStruct<T>() && !std::is_same_v<T, FFlecsScriptStructComponent>)
             {

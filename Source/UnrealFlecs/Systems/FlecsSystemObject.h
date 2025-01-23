@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FlecsSystemInterface.h"
+#include "FlecsSystemSettingsInfo.h"
 #include "UObject/Object.h"
 #include "FlecsSystemObject.generated.h"
 
@@ -13,12 +14,11 @@ class UNREALFLECS_API UFlecsSystemObject : public UObject, public IFlecsSystemIn
 	GENERATED_BODY()
 
 public:
+	UFlecsSystemObject(const FObjectInitializer& ObjectInitializer);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs", meta = (ExposeOnSpawn = true))
+	FFlecsSystemSettingsInfo SystemSettings;
 
 private:
-	FORCEINLINE virtual void BuildSystem(flecs::system_builder<>& Builder) override final
-	{
-		
-	}
-
 
 }; // class UFlecsSystemObject

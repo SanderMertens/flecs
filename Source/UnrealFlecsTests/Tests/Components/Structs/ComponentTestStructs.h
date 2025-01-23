@@ -19,5 +19,14 @@ struct FUStructTestComponent_RegisterComponentTest
 	int32 Value;
 }; // struct FUStructTestComponent
 
+USTRUCT()
+struct FUStructTestComponent_Inherited : public FUStructTestComponent_RegisterComponentTest
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 Value2;
+}; // struct FUStructTestComponent_Inherited
+
 
 

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FlecsSystem.h"
+#include "FlecsSystemSettingsInfo.h"
 #include "Components/FlecsUObjectComponent.h"
 #include "Interfaces/FlecsEntityInterface.h"
 #include "FlecsSystemInterface.generated.h"
@@ -23,11 +24,39 @@ public:
 
 	FORCEINLINE void InitializeSystem_Internal(const flecs::world& InWorld)
 	{
-		flecs::system_builder Builder(InWorld, StringCast<char>(*GetName()).Get());
+		const FFlecsSystemSettingsInfo Settings = GetSystemSettings();
+		
+		flecs::system_builder Builder(InWorld, StringCast<char>(*Settings.Name).Get());
+
+		if (Settings.Kind != FFlecsEntityHandle::GetNullHandle())
+		{
+			Builder.kind(Settings.Kind);
+		}
+
+		switch (Settings.TimerKind)
+		{
+		case EFlecsSystemTimerKind::None:
+			break;
+		case EFlecsSystemTimerKind::Interval:
+			Builder.interval(Settings.Interval);
+			break;
+		case EFlecsSystemTimerKind::Rate:
+			Builder.rate(Settings.Rate);
+			break;
+		};
+
+		if (Settings.TickSource != FFlecsEntityHandle::GetNullHandle())
+		{
+			Builder.tick_source(Settings.TickSource);
+		}
+
+		Builder.priority(Settings.Priority);
+		
 		BuildSystem(Builder);
 
 		System = FFlecsSystem(Builder); // Builder.build();
-
+		
+		Settings.SystemRecord.ApplyRecordToEntity(System.GetEntity());
 		System.GetEntity().Set<FFlecsUObjectComponent>({ _getUObject() });
 		
 		InitializeSystem();
@@ -54,7 +83,8 @@ public:
 		return System;
 	}
 
-	NO_DISCARD FString GetName() const;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Flecs | Systems")
+	FFlecsSystemSettingsInfo GetSystemSettings() const;
 	
 	FFlecsSystem System;
 	

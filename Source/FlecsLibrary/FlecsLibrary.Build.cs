@@ -31,7 +31,6 @@ public class FlecsLibrary : ModuleRules
         PublicDefinitions.AddRange(
             new string[]
             {
-                "FLECS_CUSTOM_BUILD",
                 "FLECS_CPP",
                 "FLECS_MODULE",
                 "FLECS_SCRIPT",
