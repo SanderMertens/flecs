@@ -23,6 +23,11 @@ struct UNREALFLECS_API FFlecsId
         return FFlecsId(ecs_pair(InFirst, InSecond));
     }
 
+    FORCEINLINE constexpr NO_DISCARD static FFlecsId MakeId(const uint32 InIndex, const uint32 InGeneration)
+    {
+        return FFlecsId(flecs::entity_t { InIndex | (InGeneration << ECS_GENERATION_MASK) });
+    }
+
 public:
     FORCEINLINE FFlecsId() = default;
 
