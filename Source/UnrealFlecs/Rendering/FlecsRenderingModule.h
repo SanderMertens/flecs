@@ -12,6 +12,6 @@ class UNREALFLECS_API UFlecsRenderingModule final : public UFlecsModuleObject
 	GENERATED_BODY()
 
 public:
-	
+	UFlecsRenderingModule(const FObjectInitializer& ObjectInitializer);
 
 }; // class UFlecsRenderingModule
