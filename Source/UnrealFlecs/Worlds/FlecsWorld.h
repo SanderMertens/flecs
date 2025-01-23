@@ -238,6 +238,14 @@ public:
 				#endif // UNLOG_ENABLED
 				
 				RegisterMemberProperties(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
+
+				if (InScriptStructComponent.ScriptStruct->GetSuperStruct())
+				{
+					const FFlecsEntityHandle SuperStructHandle = ObtainComponentTypeStruct(CastChecked<UScriptStruct>(
+						InScriptStructComponent.ScriptStruct->GetSuperStruct()));
+
+					EntityHandle.AddPair(flecs::IsA, SuperStructHandle);
+				}
 			});
 
 		ObjectDestructionComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectDestructionComponentQuery")
@@ -915,7 +923,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FFlecsEntityHandle GetWorldEntity() const
 	{
-		return World.entity(EcsWorld);
+		return World.entity(flecs::World);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
@@ -1228,13 +1236,6 @@ public:
 
 		ScriptStructComponent.set<FFlecsScriptStructComponent>({ ScriptStruct });
 
-		if (ScriptStruct->GetSuperStruct())
-		{
-			const FFlecsEntityHandle SuperStructComponent
-				= ObtainComponentTypeStruct(CastChecked<UScriptStruct>(ScriptStruct->GetSuperStruct()));
-			ScriptStructComponent.is_a(SuperStructComponent.GetEntity());
-		}
-
 		SetScope(OldScope);
 		return ScriptStructComponent;
 	}
@@ -1243,12 +1244,6 @@ public:
 	FFlecsEntityHandle ObtainComponentTypeStruct() const
 	{
 		return World.component<T>();
-	}
-
-	template <Solid::TStaticStructConcept T>
-	FFlecsEntityHandle ObtainComponentTypeStruct() const
-	{
-		return ObtainComponentTypeStruct(StaticStruct<T>());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
