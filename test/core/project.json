@@ -2009,7 +2009,9 @@
                 "prefab_child_offset_w_smaller_child_id",
                 "prefab_w_union",
                 "prefab_child_w_union",
-                "prefab_w_union_and_component"
+                "prefab_w_union_and_component",
+                "defer_instantiate_and_set_inherit_and_override",
+                "defer_instantiate_and_set_inherit_and_new"
             ]
         }, {
             "id": "World",
