@@ -174,13 +174,6 @@ typedef struct ecs_cmd_t {
     ecs_entity_t system;             /* System that enqueued the command */
 } ecs_cmd_t;
 
-/* Data structures that store the command queue */
-typedef struct ecs_commands_t {
-    ecs_vec_t queue;
-    ecs_stack_t stack;          /* Temp memory used by deferred commands */
-    ecs_sparse_t entries;       /* <entity, op_entry_t> - command batching */
-} ecs_commands_t;
-
 /** Callback used to capture commands of a frame */
 typedef void (*ecs_on_commands_action_t)(
     const ecs_stage_t *stage,

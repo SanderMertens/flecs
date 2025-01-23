@@ -139,6 +139,42 @@ FLECS_API
 char* flecs_to_snake_case(
     const char *str);
 
+/* Suspend/resume readonly state. To fully support implicit registration of
+ * components, it should be possible to register components while the world is
+ * in readonly mode. It is not uncommon that a component is used first from
+ * within a system, which are often ran while in readonly mode.
+ * 
+ * Suspending readonly mode is only allowed when the world is not multithreaded.
+ * When a world is multithreaded, it is not safe to (even temporarily) leave
+ * readonly mode, so a multithreaded application should always explicitly
+ * register components in advance. 
+ * 
+ * These operations also suspend deferred mode.
+ * 
+ * Functions are public to support language bindings.
+ */
+typedef struct ecs_suspend_readonly_state_t {
+    bool is_readonly;
+    bool is_deferred;
+    bool cmd_flushing;
+    int32_t defer_count;
+    ecs_entity_t scope;
+    ecs_entity_t with;
+    ecs_commands_t cmd_stack[2];
+    ecs_commands_t *cmd;
+    ecs_stage_t *stage;
+} ecs_suspend_readonly_state_t;
+
+FLECS_API
+ecs_world_t* flecs_suspend_readonly(
+    const ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
+
+FLECS_API
+void flecs_resume_readonly(
+    ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
+
 FLECS_DBG_API
 int32_t flecs_table_observed_count(
     const ecs_table_t *table);
