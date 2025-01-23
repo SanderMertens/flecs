@@ -23,7 +23,7 @@ void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntity
 	const uint16 RestPort = ECS_REST_DEFAULT_PORT + ClientPieInstanceOffset;
 
 	InWorld->SetSingleton<flecs::Rest>(flecs::Rest{ .port = RestPort});
-	RestEntity = InWorld->GetSingletonEntity<flecs::Rest>();
+	RestEntity = InWorld->ObtainSingletonEntity<flecs::Rest>();
 
 	#ifdef FLECS_STATS
 

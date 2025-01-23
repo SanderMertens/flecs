@@ -9,7 +9,7 @@ void UFlecsComponentPropertiesAsset::PostLoad()
 {
 	Super::PostLoad();
 
-	std::vector<flecs::entity_t> ComponentPropertiesEntities;
+	std::vector<FFlecsId> ComponentPropertiesEntities;
 	
 	for (const FFlecsEntityHandle& ComponentProperty : ComponentProperties)
 	{

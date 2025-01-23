@@ -57,7 +57,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 	});
 	
 	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
-	check(IsValid(Settings));
+	solid_check(IsValid(Settings));
 
 	for (const FFlecsDefaultMetaEntity& EntityRecord : Settings->DefaultEntities)
 	{
@@ -89,16 +89,21 @@ void FFlecsDefaultEntityEngine::Initialize()
 		{
 			auto ContainsDefaultEntity = [this](const FString& EntityName) -> bool
 			{
-				return std::ranges::any_of(AddedDefaultEntities,
-				[&EntityName](const FFlecsDefaultMetaEntity& DefaultEntity)
+				for (const FFlecsDefaultMetaEntity& DefaultEntity : AddedDefaultEntities)
 				{
-					return DefaultEntity.EntityName == EntityName && DefaultEntity.SetId != 0;
-				});
+					if (DefaultEntity.EntityName == EntityName && DefaultEntity.SetId != 0)
+					{
+						return true;
+					}
+				}
+
+				return false;
 			};
 
 			if UNLIKELY_IF(EntityRecord.EntityName.IsEmpty())
 			{
-				UN_LOG(LogFlecsEntity, Warning, "One of the default entities has an empty name");
+				UN_LOG(LogFlecsEntity, Warning,
+					"One of the default entities has an empty name");
 				continue;
 			}
 
@@ -125,21 +130,21 @@ void FFlecsDefaultEntityEngine::Initialize()
 	bIsInitialized = true;
 }
 
-flecs::entity_t FFlecsDefaultEntityEngine::AddDefaultEntity(FFlecsDefaultMetaEntity DefaultEntity)
+FFlecsId FFlecsDefaultEntityEngine::AddDefaultEntity(FFlecsDefaultMetaEntity DefaultEntity)
 {
 	auto ContainsDefaultEntity = [this](const FString& EntityName) -> bool
 	{
 		return std::ranges::any_of(AddedDefaultEntities,
-		[&EntityName](const FFlecsDefaultMetaEntity& DefaultEntity)
+		[&EntityName](const FFlecsDefaultMetaEntity& InDefaultEntity) -> bool
 		{
-			return DefaultEntity.EntityName == EntityName && DefaultEntity.SetId != 0;
+			return InDefaultEntity.EntityName == EntityName && InDefaultEntity.SetId != 0;
 		});
 	};
 
 	if (ContainsDefaultEntity(DefaultEntity.EntityName))
 	{
 		const auto It = std::ranges::find_if(AddedDefaultEntities,
-			  [&DefaultEntity](const FFlecsDefaultMetaEntity& Entity)
+			  [&DefaultEntity](const FFlecsDefaultMetaEntity& Entity) -> bool
 			  {
 				  return Entity.EntityName == DefaultEntity.EntityName;
 			  });

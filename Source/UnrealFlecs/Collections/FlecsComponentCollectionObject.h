@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Entities/FlecsEntityHandle.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "FlecsComponentCollectionObject.generated.h"
 
 USTRUCT(BlueprintType)
@@ -12,7 +13,8 @@ struct FCollectionRemoveComponentsOnDestroyTag
 	GENERATED_BODY()
 };
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FCollectionRemoveComponentsOnDestroyTag, ecs_pair(flecs::OnInstantiate, flecs::DontInherit));
+REGISTER_COMPONENT_TRAIT_TAG(FCollectionRemoveComponentsOnDestroyTag,
+	FFlecsId::MakePair(flecs::OnInstantiate, flecs::DontInherit));
 
 UCLASS(Abstract, BlueprintType, Blueprintable, EditInlineNew)
 class UNREALFLECS_API UFlecsComponentCollectionObject : public UObject
@@ -57,7 +59,7 @@ public:
 
 	virtual UWorld* GetWorld() const override final;
 
-	UPROPERTY(EditAnywhere, Category = "Flecs Component Collection")
+	UPROPERTY(EditDefaultsOnly, Category = "Flecs Component Collection")
 	bool bRemoveComponentsOnDestroy = true;
 	
 protected:

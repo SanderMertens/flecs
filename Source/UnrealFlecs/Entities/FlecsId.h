@@ -15,32 +15,27 @@ struct UNREALFLECS_API FFlecsId
 
     FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsId& InId)
     {
-        return GetTypeHash(InId.Id.raw_id());
+        return GetTypeHash(InId.Id);
+    }
+
+    FORCEINLINE constexpr NO_DISCARD static FFlecsId MakePair(const FFlecsId InFirst, const FFlecsId InSecond)
+    {
+        return FFlecsId(ecs_pair(InFirst, InSecond));
     }
 
 public:
     FORCEINLINE FFlecsId() = default;
+
+    FORCEINLINE constexpr FFlecsId(const flecs::id_t InId)
+        : Id(InId)
+    {
+    }
+
+    FORCEINLINE FFlecsId(const flecs::entity InEntity)
+        : Id(InEntity.id())
+    {
+    }
     
-    FORCEINLINE FFlecsId(const flecs::id InId) : Id(InId) {}
-    FORCEINLINE FFlecsId(const flecs::entity InEntity) : Id(InEntity.id()) {}
-    FORCEINLINE FFlecsId(const flecs::entity_t InEntity) : Id(InEntity) {}
-
-    FORCEINLINE void SetId(const flecs::id& InId) { Id = InId; }
-    FORCEINLINE void SetId(const flecs::id* InId) { Id = *InId; }
-
-    FORCEINLINE NO_DISCARD flecs::id& GetFlecsId() { return Id; }
-    FORCEINLINE NO_DISCARD const flecs::id& GetFlecsId() const { return Id; }
-    
-    FORCEINLINE operator flecs::id() const { return GetFlecsId(); }
-
-    FORCEINLINE operator flecs::id&() { return GetFlecsId(); }
-    FORCEINLINE operator const flecs::id&() const { return GetFlecsId(); }
-    
-    FORCEINLINE NO_DISCARD flecs::id* operator->() { return &Id; }
-    FORCEINLINE NO_DISCARD const flecs::id* operator->() const { return &Id; }
-
-    FORCEINLINE NO_DISCARD bool IsPair() const { return Id.is_pair(); }
-
     FORCEINLINE NO_DISCARD bool operator==(const FFlecsId& Other) const
     {
         return Id == Other.Id;
@@ -51,61 +46,95 @@ public:
         return Id != Other.Id;
     }
 
-    FORCEINLINE NO_DISCARD bool operator==(const flecs::id& Other) const
+    FORCEINLINE NO_DISCARD bool operator<(const FFlecsId& Other) const
     {
-        return Id == Other;
+        return Id < Other.Id;
     }
 
-    FORCEINLINE NO_DISCARD bool operator!=(const flecs::id& Other) const
+    FORCEINLINE NO_DISCARD bool operator>(const FFlecsId& Other) const
     {
-        return Id != Other;
+        return Id > Other.Id;
     }
 
-    FORCEINLINE NO_DISCARD bool operator==(const flecs::id* Other) const
+    FORCEINLINE NO_DISCARD bool operator<=(const FFlecsId& Other) const
     {
-        return Id == *Other;
+        return Id <= Other.Id;
     }
 
-    FORCEINLINE NO_DISCARD bool operator!=(const flecs::id* Other) const
+    FORCEINLINE NO_DISCARD bool operator>=(const FFlecsId& Other) const
     {
-        return Id != *Other;
+        return Id >= Other.Id;
     }
 
-    FORCEINLINE NO_DISCARD flecs::entity GetTypeId() const { return Id.type_id(); }
-    
-    FORCEINLINE bool ImportTextItem(const TCHAR*& Buffer,
-        MAYBE_UNUSED int32 PortFlags, MAYBE_UNUSED UObject* Parent,
-        FOutputDevice* ErrorText)
+    FORCEINLINE NO_DISCARD bool IsPair() const
     {
-        FString Token;
-        
-        if (!FParse::Token(Buffer, Token, true))
-        {
-            ErrorText->Logf(TEXT("FFlecsId::ImportTextItem: Failed to parse token from input"));
-            return false;
-        }
-        
-        if (Token.StartsWith(TEXT("Id=")))
-        {
-            const FString IdString = Token.RightChop(3);
-            Id = flecs::id(FCString::Strtoui64(*IdString, nullptr, 10));
-            return true;
-        }
-        else
-        {
-            ErrorText->Logf(TEXT("FFlecsId::ImportTextItem: Invalid format"));
-            return false;
-        }
+        return ECS_IS_PAIR(Id);
     }
     
-    FORCEINLINE bool ExportTextItem(FString& ValueStr, const FFlecsId& DefaultValue,
-         MAYBE_UNUSED UObject* Parent, MAYBE_UNUSED int32 PortFlags, MAYBE_UNUSED UObject* ExportRootScope) const
+    FORCEINLINE NO_DISCARD bool HasRelation(const FFlecsId InRelation) const
     {
-        ValueStr = FString::Printf(TEXT("Id=%llu"), Id.raw_id());
-        return true;
+        solid_checkf(IsPair(), TEXT("Id is not a pair."));
+        return ECS_HAS_RELATION(Id, InRelation);
+    }
+
+    FORCEINLINE NO_DISCARD bool HasTarget(const FFlecsId InTarget) const
+    {
+        solid_checkf(IsPair(), TEXT("Id is not a pair."));
+        return ECS_HAS_RELATION(Id, InTarget);
+    }
+
+    FORCEINLINE NO_DISCARD FFlecsId GetFirst() const
+    {
+        solid_checkf(IsPair(), TEXT("Id is not a pair."));
+        return FFlecsId(ECS_PAIR_FIRST(Id));
+    }
+
+    FORCEINLINE NO_DISCARD FFlecsId GetSecond() const
+    {
+        solid_checkf(IsPair(), TEXT("Id is not a pair."));
+        return FFlecsId(ECS_PAIR_SECOND(Id));
+    }
+
+    FORCEINLINE NO_DISCARD FFlecsId GetRelation() const
+    {
+        return GetFirst();
+    }
+
+    FORCEINLINE NO_DISCARD FFlecsId GetTarget() const
+    {
+        return GetSecond();
+    }
+
+    FORCEINLINE NO_DISCARD flecs::id_t GetId() const
+    {
+        return Id;
+    }
+
+    FORCEINLINE operator flecs::id_t() const
+    {
+        return GetId();
+    }
+
+    FORCEINLINE NO_DISCARD uint32 GetIndex() const
+    {
+        solid_checkf(!IsPair(), TEXT("Id must not be a pair."));
+        return Id & ECS_ENTITY_MASK;
+    }
+
+    FORCEINLINE NO_DISCARD uint32 GetGeneration() const
+    {
+        solid_checkf(!IsPair(), TEXT("Id must not be a pair."));
+        return flecs::get_generation(Id);
+    }
+
+    FORCEINLINE FString ToString() const
+    {
+        return FString::Printf(TEXT("Index: %d, Generation: %d"), GetIndex(), GetGeneration());
     }
     
-    flecs::id Id;
+    UPROPERTY()
+    uint64 Id = 0;
+    
 }; // struct FFlecsId
 
 template<>
@@ -115,9 +144,7 @@ struct TStructOpsTypeTraits<FFlecsId> : public TStructOpsTypeTraitsBase2<FFlecsI
     {
         WithCopy = true,
         WithIdenticalViaEquality = true,
-        WithImportTextItem = true,
-        WithExportTextItem = true,
-    };
-};
+    }; // enum
+}; // struct TStructOpsTypeTraits<FFlecsId>
 
 DEFINE_STD_HASH(FFlecsId);

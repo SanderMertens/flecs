@@ -1,7 +1,6 @@
 ﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
 #include "FlecsComponentCollectionObject.h"
-#include "CollectionTrackerComponent.h"
 #include "FlecsComponentCollection.h"
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldSubsystem.h"
@@ -48,24 +47,8 @@ FFlecsEntityHandle UFlecsComponentCollectionObject::ObtainCollectionEntity(UFlec
 void UFlecsComponentCollectionObject::ApplyCollection_Internal(FFlecsEntityHandle& Entity, UFlecsWorld* InFlecsWorld)
 {
 	FlecsWorld = InFlecsWorld;
-
-	InFlecsWorld->DeferEndScoped([&Entity, InFlecsWorld]()
-	{
-		FFlecsEntityHandle ScopedEntity = InFlecsWorld->GetEntity(Entity);
-		
-		if (!ScopedEntity.Has<FCollectionTrackerComponent>())
-		{
-			ScopedEntity.Add<FCollectionTrackerComponent>();
-		}
-	});
-	
-	FCollectionTrackerComponent* CollectionTracker = Entity.GetPtr<FCollectionTrackerComponent>();
-	solid_check(CollectionTracker);
 	
 	Entity.AddPrefab(ObtainCollectionEntity(FlecsWorld));
-	CollectionTracker->ComponentProperties.emplace(GetCollectionName(), CollectionEntity);
-	Entity.Modified<FCollectionTrackerComponent>();
-	
 	ApplyCollectionToEntity(Entity);
 }
 

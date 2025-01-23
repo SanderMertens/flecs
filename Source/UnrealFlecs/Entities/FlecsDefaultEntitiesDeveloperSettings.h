@@ -35,10 +35,10 @@ struct UNREALFLECS_API FFlecsDefaultMetaEntity
 	}
 
 	FFlecsDefaultMetaEntity() = default;
-	FFlecsDefaultMetaEntity(const FString& EntityName, const FFlecsEntityRecord& EntityRecord, const flecs::entity_t EntityId)
+	FFlecsDefaultMetaEntity(const FString& EntityName, const FFlecsEntityRecord& EntityRecord, const flecs::entity_t InEntityId)
 		: EntityName(EntityName)
 		, EntityRecord(EntityRecord)
-		, EntityId(EntityId)
+		, SetId(InEntityId)
 	{
 	}
 	

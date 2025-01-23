@@ -77,7 +77,7 @@ public:
 
     FORCEINLINE NO_DISCARD bool operator==(const FFlecsQuery& Other) const
     {
-        return GetEntity() == Other.GetEntity();
+        return Query.c_ptr() == Other.Query.c_ptr();
     }
 
     FORCEINLINE NO_DISCARD bool operator!=(const FFlecsQuery& Other) const

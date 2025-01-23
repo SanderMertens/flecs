@@ -8,8 +8,8 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "FlecsArchetype.h"
+#include "FlecsId.h"
 #include "GameplayTagContainer.h"
-#include "Components/FlecsTraitTracker.h"
 #include "SolidMacros/Macros.h"
 #include "StructUtils/InstancedStruct.h"
 #include "FlecsEntityHandle.generated.h"
@@ -35,7 +35,7 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 
 	SOLID_INLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsEntityHandle& InEntity)
 	{
-		return GetTypeHash(InEntity.GetId());
+		return GetTypeHash(InEntity.GetFlecsId());
 	}
 
 	SOLID_INLINE static NO_DISCARD FFlecsEntityHandle GetNullHandle()
@@ -48,24 +48,23 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 public:
 	FFlecsEntityHandle() = default;
 	
-	SOLID_INLINE FFlecsEntityHandle(const flecs::entity& InEntity)
+	SOLID_INLINE FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity)
 	{
-		Entity = InEntity;
 	}
 
-	SOLID_INLINE FFlecsEntityHandle(const flecs::entity_t InEntity)
+	SOLID_INLINE FFlecsEntityHandle(const FFlecsId InEntity)
 	{
 		Entity = flecs::entity(InEntity);
 	}
 
-	SOLID_INLINE FFlecsEntityHandle(flecs::world& InWorld, const flecs::entity_t InEntity)
+	SOLID_INLINE FFlecsEntityHandle(flecs::world& InWorld, const FFlecsId InEntity)
 	{
 		Entity = flecs::entity(InWorld, InEntity);
 	}
 
-	FFlecsEntityHandle(const UFlecsWorld* InWorld, const flecs::entity_t InEntity);
+	FFlecsEntityHandle(const UFlecsWorld* InWorld, const FFlecsId InEntity);
 
-	FFlecsEntityHandle(const flecs::world_t* InWorld, const flecs::entity_t InEntity);
+	FFlecsEntityHandle(const flecs::world_t* InWorld, const FFlecsId InEntity);
 	
 	SOLID_INLINE NO_DISCARD flecs::entity GetEntity() const
 	{
@@ -77,22 +76,27 @@ public:
 		*this = FFlecsEntityHandle(InEntity);
 	}
 	
-	SOLID_INLINE void SetEntity(const flecs::entity_t InEntity)
+	SOLID_INLINE void SetEntity(const FFlecsId InEntity)
 	{
 		*this = FFlecsEntityHandle(InEntity);
 	}
 	
 	SOLID_INLINE operator flecs::entity() const { return GetEntity(); }
-	SOLID_INLINE operator flecs::id_t() const { return GetEntity().id(); }
+	SOLID_INLINE operator flecs::id_t() const { return GetEntity(); }
 	SOLID_INLINE operator flecs::entity_view() const { return GetEntity().view(); }
+
+	SOLID_INLINE operator FFlecsId() const { return FFlecsId(GetEntity()); }
 	
 	SOLID_INLINE NO_DISCARD bool IsValid() const { return GetEntity().is_valid(); }
 	SOLID_INLINE NO_DISCARD bool IsAlive() const { return GetEntity().is_alive(); }
 
 	SOLID_INLINE operator bool() const { return IsValid(); }
 
-	SOLID_INLINE NO_DISCARD flecs::entity_t GetId() const { return GetEntity().id(); }
-	SOLID_INLINE NO_DISCARD uint32 GetGeneration() const { return get_generation(GetEntity()); }
+	SOLID_INLINE NO_DISCARD FFlecsId GetFlecsId() const { return FFlecsId(GetEntity()); }
+
+	
+	SOLID_INLINE NO_DISCARD flecs::id_t GetIndex() const { return GetFlecsId().GetId(); }
+	SOLID_INLINE NO_DISCARD uint32 GetGeneration() const { return GetFlecsId().GetGeneration(); }
 	SOLID_INLINE NO_DISCARD uint32 GetVersion() const { return GetGeneration(); }
 	
 	SOLID_INLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
@@ -102,14 +106,9 @@ public:
 	
 	SOLID_INLINE NO_DISCARD FFlecsArchetype GetType() const { return FFlecsArchetype(GetEntity().type()); }
 
-	SOLID_INLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InEntity) const
+	SOLID_INLINE NO_DISCARD bool Has(const FFlecsId InEntity) const
 	{
 		return GetEntity().has(InEntity);
-	}
-
-	SOLID_INLINE NO_DISCARD bool Has(const flecs::id& InId) const
-	{
-		return GetEntity().has(InId);
 	}
 
 	template <typename T>
@@ -125,8 +124,7 @@ public:
 		return Has(GetTagEntity(InTag));
 	}
 
-	SOLID_INLINE void Add(const FFlecsEntityHandle& InEntity) const { GetEntity().add(InEntity); }
-	SOLID_INLINE void Add(const flecs::id& InId) const { GetEntity().add(InId); }
+	SOLID_INLINE void Add(const FFlecsId InEntity) const { GetEntity().add(InEntity); }
 
 	SOLID_INLINE void Add(const UScriptStruct* StructType) const
 	{
@@ -141,18 +139,7 @@ public:
 	template <typename T>
 	SOLID_INLINE void Add() const { GetEntity().add<T>(); }
 	
-	SOLID_INLINE void Remove(const FFlecsEntityHandle& InEntity) const { GetEntity().remove(InEntity); }
-	SOLID_INLINE void Remove(const flecs::id& InId) const { GetEntity().remove(InId); }
-
-	SOLID_INLINE void Remove(const FFlecsEntityHandle InFirst, const FFlecsEntityHandle InSecond) const
-	{
-		GetEntity().remove(InFirst, InSecond);
-	}
-	
-	SOLID_INLINE void Remove(const flecs::id InFirst, const flecs::id InSecond) const
-	{
-		GetEntity().remove(InFirst, InSecond);
-	}
+	SOLID_INLINE void Remove(const FFlecsId InEntity) const { GetEntity().remove(InEntity); }
 
 	SOLID_INLINE void Remove(const UScriptStruct* StructType) const
 	{
@@ -167,22 +154,10 @@ public:
 	template <typename T>
 	SOLID_INLINE void Remove() const { GetEntity().remove<T>(); }
 
-	SOLID_INLINE void Set(const FFlecsEntityHandle& InEntity) const { GetEntity().set(InEntity); }
-
 	template <typename T>
 	SOLID_INLINE void Set(const T& InValue) const { GetEntity().set<T>(InValue); }
 
-	SOLID_INLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const
-	{
-		GetEntity().set_ptr(InEntity, InValue);
-	}
-
-	SOLID_INLINE void Set(const flecs::id& InId, const void* InValue) const
-	{
-		GetEntity().set_ptr(InId, InValue);
-	}
-
-	SOLID_INLINE void Set(const flecs::entity_t InId, const void* InValue) const
+	SOLID_INLINE void Set(const FFlecsId InId, const void* InValue) const
 	{
 		GetEntity().set_ptr(InId, InValue);
 	}
@@ -204,24 +179,14 @@ public:
 		return *GetEntity().get<T>();
 	}
 
-	SOLID_INLINE NO_DISCARD void* GetPtr(const FFlecsEntityHandle& InEntity)
+	SOLID_INLINE NO_DISCARD void* GetPtr(const FFlecsId InEntity)
 	{
 		return GetEntity().get_mut(InEntity);
 	}
 
-	SOLID_INLINE NO_DISCARD void* GetPtr(const flecs::id& InId)
-	{
-		return GetEntity().get_mut(InId);
-	}
-
-	SOLID_INLINE NO_DISCARD const void* GetPtr(const FFlecsEntityHandle& InEntity) const
+	SOLID_INLINE NO_DISCARD const void* GetPtr(const FFlecsId InEntity) const
 	{
 		return GetEntity().get(InEntity);
-	}
-
-	SOLID_INLINE NO_DISCARD const void* GetPtr(const flecs::id& InId) const
-	{
-		return GetEntity().get(InId);
 	}
 	
 	template <typename T>
@@ -263,8 +228,7 @@ public:
 	template <typename T>
 	SOLID_INLINE void Enable() const { GetEntity().enable<T>(); }
 
-	SOLID_INLINE void Enable(const FFlecsEntityHandle& InEntity) const { GetEntity().enable(InEntity); }
-	SOLID_INLINE void Enable(const flecs::id& InId) const { GetEntity().enable(InId); }
+	SOLID_INLINE void Enable(const FFlecsId InEntity) const { GetEntity().enable(InEntity); }
 	
 	SOLID_INLINE void Enable(const UScriptStruct* StructType) const
 	{
@@ -276,8 +240,7 @@ public:
 		Enable(GetTagEntity(InTag));
 	}
 
-	SOLID_INLINE void Disable(const FFlecsEntityHandle& InEntity) const { GetEntity().disable(InEntity); }
-	SOLID_INLINE void Disable(const flecs::id& InId) const { GetEntity().disable(InId); }
+	SOLID_INLINE void Disable(const FFlecsId InEntity) const { GetEntity().disable(InEntity); }
 	
 	SOLID_INLINE void Disable(const UScriptStruct* StructType) const
 	{
@@ -297,16 +260,11 @@ public:
 	template <typename T>
 	SOLID_INLINE void Toggle() const { IsEnabled<T>() ? Disable<T>() : Enable<T>(); }
 
-	SOLID_INLINE void Toggle(const FFlecsEntityHandle& InEntity) const
+	SOLID_INLINE void Toggle(const FFlecsId InEntity) const
 	{
 		GetEntity().enable(InEntity, !IsEnabled(InEntity));
 	}
-
-	SOLID_INLINE void Toggle(const flecs::id& InId) const
-	{
-		GetEntity().enable(InId, !IsEnabled(InId));
-	}
-
+	
 	SOLID_INLINE void Toggle(const UScriptStruct* StructType) const
 	{
 		Toggle(ObtainComponentTypeStruct(StructType));
@@ -322,14 +280,9 @@ public:
 	template <typename T>
 	SOLID_INLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled<T>(); }
 
-	SOLID_INLINE NO_DISCARD bool IsEnabled(const FFlecsEntityHandle& InEntity) const
+	SOLID_INLINE NO_DISCARD bool IsEnabled(const FFlecsId InEntity) const
 	{
 		return GetEntity().enabled(InEntity);
-	}
-
-	SOLID_INLINE NO_DISCARD bool IsEnabled(const flecs::id& InId) const
-	{
-		return GetEntity().enabled(InId);
 	}
 	
 	SOLID_INLINE NO_DISCARD bool IsEnabled(const UScriptStruct* StructType) const
@@ -344,7 +297,7 @@ public:
 
 	SOLID_INLINE void Destroy() const { GetEntity().destruct(); }
 
-	SOLID_INLINE NO_DISCARD FFlecsEntityHandle Clone(const bool bCloneValue = true, const flecs::entity_t DestinationId = 0) const
+	SOLID_INLINE NO_DISCARD FFlecsEntityHandle Clone(const bool bCloneValue = true, const FFlecsId DestinationId = 0) const
 	{
 		return GetEntity().clone(bCloneValue, DestinationId);
 	}
@@ -381,12 +334,12 @@ public:
 		return HasPair(flecs::ChildOf, flecs::Wildcard);
 	}
 
-	SOLID_INLINE void SetParent(const FFlecsEntityHandle& InParent) const
+	SOLID_INLINE void SetParent(const FFlecsId InParent) const
 	{
 		GetEntity().child_of(InParent);
 	}
 
-	SOLID_INLINE void SetParent(const FFlecsEntityHandle& InParent, const bool bIsA) const
+	SOLID_INLINE void SetParent(const FFlecsId InParent, const bool bIsA) const
 	{
 		GetEntity().child_of(InParent);
 
@@ -407,14 +360,9 @@ public:
 		return GetEntity().owns<T>();
 	}
 	
-	SOLID_INLINE NO_DISCARD bool DoesOwn(const FFlecsEntityHandle& InEntity) const
+	SOLID_INLINE NO_DISCARD bool DoesOwn(const FFlecsId InEntity) const
 	{
 		return GetEntity().owns(InEntity);
-	}
-
-	SOLID_INLINE NO_DISCARD bool DoesOwn(const flecs::id& InId) const
-	{
-		return GetEntity().owns(InId);
 	}
 
 	SOLID_INLINE NO_DISCARD bool DoesOwn(const UScriptStruct* StructType) const
@@ -429,17 +377,12 @@ public:
 	}
 
 	template <typename First>
-	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const FFlecsId InSecond) const
 	{
 		return GetEntity().owns<First>(InSecond);
 	}
 
-	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const FFlecsEntityHandle& InFirst, const FFlecsEntityHandle& InSecond) const
-	{
-		return GetEntity().owns(InFirst, InSecond);
-	}
-
-	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const flecs::id& InFirst, const flecs::id& InSecond) const
+	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const FFlecsId InFirst, const FFlecsId InSecond) const
 	{
 		return GetEntity().owns(InFirst, InSecond);
 	}
@@ -449,12 +392,12 @@ public:
 		return DoesOwnPair(ObtainComponentTypeStruct(First), ObtainComponentTypeStruct(Second));
 	}
 	
-	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const UScriptStruct* First, const FFlecsEntityHandle& Second) const
+	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const UScriptStruct* First, const FFlecsId Second) const
 	{
 		return GetEntity().owns(ObtainComponentTypeStruct(First), Second);
 	}
 
-	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const FFlecsEntityHandle& First, const UScriptStruct* Second) const
+	SOLID_INLINE NO_DISCARD bool DoesOwnPair(const FFlecsId First, const UScriptStruct* Second) const
 	{
 		return GetEntity().owns(First, ObtainComponentTypeStruct(Second));
 	}
@@ -487,7 +430,7 @@ public:
 		GetEntity().emit<T>(InValue);
 	}
 
-	SOLID_INLINE void Emit(const FFlecsEntityHandle& InEntity) const
+	SOLID_INLINE void Emit(const FFlecsId InEntity) const
 	{
 		GetEntity().emit(InEntity);
 	}
@@ -504,9 +447,9 @@ public:
 		GetEntity().enqueue<T>(InValue);
 	}
 
-	SOLID_INLINE void Enqueue(const FFlecsEntityHandle& InEntity) const
+	SOLID_INLINE void Enqueue(const FFlecsId InEntity) const
 	{
-		GetEntity().enqueue(InEntity.GetEntity());
+		GetEntity().enqueue(InEntity);
 	}
 
 	template <typename FunctionType>
@@ -522,9 +465,9 @@ public:
 	}
 
 	template <typename FunctionType>
-	SOLID_INLINE void Observe(const FFlecsEntityHandle& InEntity, FunctionType&& InFunction) const
+	SOLID_INLINE void Observe(const FFlecsId InEntity, FunctionType&& InFunction) const
 	{
-		GetEntity().observe(InEntity.GetEntity(), std::forward<FunctionType>(InFunction));
+		GetEntity().observe(InEntity, std::forward<FunctionType>(InFunction));
 	}
 
 	SOLID_INLINE NO_DISCARD bool operator==(const FFlecsEntityHandle& Other) const
@@ -536,15 +479,15 @@ public:
 	{
 		return GetEntity() != Other.GetEntity();
 	}
-
-	SOLID_INLINE NO_DISCARD bool operator==(const flecs::entity& Other) const
+	
+	SOLID_INLINE NO_DISCARD bool operator==(const FFlecsId Other) const
 	{
-		return GetEntity() == Other;
+		return GetFlecsId() == Other;
 	}
 
-	SOLID_INLINE NO_DISCARD bool operator!=(const flecs::entity& Other) const
+	SOLID_INLINE NO_DISCARD bool operator!=(const FFlecsId Other) const
 	{
-		return GetEntity() != Other;
+		return GetFlecsId() != Other;
 	}
 	
 	SOLID_INLINE flecs::entity operator->() const
@@ -590,550 +533,6 @@ public:
 		GetEntity().each<TFirst, FunctionType>(InFunction);
 	}
 
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE void AddTrait() const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity<TComponent>().Add<TTrait>();
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void AddTrait(const UScriptStruct* StructType) const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity<TComponent>().Add(StructType);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void AddTrait(const FGameplayTag& InTag) const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity<TComponent>().Add(InTag);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void AddTrait(const FFlecsEntityHandle& InTrait) const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity<TComponent>().Add(InTrait);
-	}
-
-	SOLID_INLINE void AddTrait(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
-	{
-		if UNLIKELY_IF(!Has(StructType))
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity(StructType).Add(TraitType);
-	}
-
-	SOLID_INLINE void AddTrait(const UScriptStruct* StructType, const FGameplayTag& InTag) const
-	{
-		if UNLIKELY_IF(!Has(StructType))
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity(StructType).Add(InTag);
-	}
-
-	SOLID_INLINE void AddTrait(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
-	{
-		if UNLIKELY_IF(!Has(StructType))
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity(StructType).Add(InTrait);
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE void RemoveTrait() const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity<TComponent>().Remove<TTrait>();
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void RemoveTrait(const UScriptStruct* TraitStructType) const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity<TComponent>().Remove(TraitStructType);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void RemoveTrait(const FGameplayTag& InTag) const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity<TComponent>().Remove(InTag);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void RemoveTrait(const FFlecsEntityHandle& InTrait) const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity<TComponent>().Remove(InTrait);
-	}
-
-	SOLID_INLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
-	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity(ComponentStructType).Remove(TraitType);
-	}
-
-	SOLID_INLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
-	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity(ComponentStructType).Remove(InTag);
-	}
-
-	SOLID_INLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
-	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity(ComponentStructType).Remove(InTrait);
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE bool HasTrait() const
-	{
-		if (!Has<TComponent>())
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().Has<TTrait>();
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE bool HasTrait(const UScriptStruct* TraitStructType) const
-	{
-		if (!Has<TComponent>())
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().Has(TraitStructType);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE bool HasTrait(const FGameplayTag& InTag) const
-	{
-		if (!Has<TComponent>())
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().Has(InTag);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE bool HasTrait(const FFlecsEntityHandle& InTrait) const
-	{
-		if (!Has<TComponent>())
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().Has(InTrait);
-	}
-
-	SOLID_INLINE bool HasTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
-	{
-		if (!Has(ComponentStructType))
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity(ComponentStructType).Has(TraitType);
-	}
-
-	SOLID_INLINE bool HasTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
-	{
-		if (!Has(ComponentStructType))
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity(ComponentStructType).Has(InTag);
-	}
-
-	SOLID_INLINE bool HasTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
-	{
-		if (!Has(ComponentStructType))
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity(ComponentStructType).Has(InTrait);
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE void SetTrait(const TTrait& InValue) const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity<TComponent>().Set<TTrait>(InValue);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void SetTrait(const UScriptStruct* TraitStructType, const void* InValue) const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity<TComponent>().Set(TraitStructType, InValue);
-	}
-
-	SOLID_INLINE void SetTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType, const void* InValue) const
-	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity(ComponentStructType).Set(TraitType, InValue);
-	}
-
-	SOLID_INLINE void SetTrait(const UScriptStruct* ComponentStructType, const FInstancedStruct& InValue) const
-	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
-		ObtainTraitHolderEntity(ComponentStructType).Set(InValue);
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE TTrait GetTrait() const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return TTrait();
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().Get<TTrait>();
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE TTrait* GetTraitPtr()
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return nullptr;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().GetPtr<TTrait>();
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE const TTrait* GetTraitPtr() const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return nullptr;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().GetPtr<TTrait>();
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void* GetTraitPtr(const UScriptStruct* TraitStructType)
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return nullptr;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().GetPtr(TraitStructType);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE const void* GetTraitPtr(const UScriptStruct* TraitStructType) const
-	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return nullptr;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().GetPtr(TraitStructType);
-	}
-
-	SOLID_INLINE void* GetTraitPtr(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType)
-	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return nullptr;
-		}
-		
-		return ObtainTraitHolderEntity(ComponentStructType).GetPtr(TraitType);
-	}
-
-	SOLID_INLINE const void* GetTraitPtr(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
-	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return nullptr;
-		}
-		
-		return ObtainTraitHolderEntity(ComponentStructType).GetPtr(TraitType);
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE TTrait& GetTraitRef() const
-	{
-		solid_checkf(Has<TComponent>(), "Entity does not have component %s", nameof(TComponent));
-		return ObtainTraitHolderEntity<TComponent>().GetRef<TTrait>();
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE flecs::ref<TTrait> GetTraitFlecsRef() const
-	{
-		solid_checkf(Has<TComponent>(), "Entity does not have component %s", nameof(TComponent));
-		return ObtainTraitHolderEntity<TComponent>().GetFlecsRef<TTrait>();
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE void EnableTrait() const
-	{
-		ObtainTraitHolderEntity<TComponent>().Enable<TTrait>();
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void EnableTrait(const UScriptStruct* TraitStructType) const
-	{
-		ObtainTraitHolderEntity<TComponent>().Enable(TraitStructType);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void EnableTrait(const FGameplayTag& InTag) const
-	{
-		ObtainTraitHolderEntity<TComponent>().Enable(InTag);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void EnableTrait(const FFlecsEntityHandle& InTrait) const
-	{
-		ObtainTraitHolderEntity<TComponent>().Enable(InTrait);
-	}
-
-	SOLID_INLINE void EnableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
-	{
-		ObtainTraitHolderEntity(ComponentStructType).Enable(TraitType);
-	}
-
-	SOLID_INLINE void EnableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
-	{
-		ObtainTraitHolderEntity(ComponentStructType).Enable(InTag);
-	}
-
-	SOLID_INLINE void EnableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
-	{
-		ObtainTraitHolderEntity(ComponentStructType).Enable(InTrait);
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE void DisableTrait() const
-	{
-		ObtainTraitHolderEntity<TComponent>().Disable<TTrait>();
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void DisableTrait(const UScriptStruct* TraitStructType) const
-	{
-		ObtainTraitHolderEntity<TComponent>().Disable(TraitStructType);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void DisableTrait(const FGameplayTag& InTag) const
-	{
-		ObtainTraitHolderEntity<TComponent>().Disable(InTag);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void DisableTrait(const FFlecsEntityHandle& InTrait) const
-	{
-		ObtainTraitHolderEntity<TComponent>().Disable(InTrait);
-	}
-
-	SOLID_INLINE void DisableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
-	{
-		ObtainTraitHolderEntity(ComponentStructType).Disable(TraitType);
-	}
-
-	SOLID_INLINE void DisableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
-	{
-		ObtainTraitHolderEntity(ComponentStructType).Disable(InTag);
-	}
-
-	SOLID_INLINE void DisableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
-	{
-		ObtainTraitHolderEntity(ComponentStructType).Disable(InTrait);
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE NO_DISCARD bool IsTraitEnabled() const
-	{
-		if (!Has<TComponent>())
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().IsEnabled<TTrait>();
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE bool IsTraitEnabled(const UScriptStruct* TraitStructType) const
-	{
-		if (!Has<TComponent>())
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().IsEnabled(TraitStructType);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE NO_DISCARD bool IsTraitEnabled(const FGameplayTag& InTag) const
-	{
-		if (!Has<TComponent>())
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().IsEnabled(InTag);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE NO_DISCARD bool IsTraitEnabled(const FFlecsEntityHandle& InTrait) const
-	{
-		if (!Has<TComponent>())
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity<TComponent>().IsEnabled(InTrait);
-	}
-
-	SOLID_INLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
-	{
-		if (!Has(ComponentStructType))
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(TraitType);
-	}
-
-	SOLID_INLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
-	{
-		if (!Has(ComponentStructType))
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(InTag);
-	}
-
-	SOLID_INLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
-	{
-		if (!Has(ComponentStructType))
-		{
-			return false;
-		}
-		
-		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(InTrait);
-	}
-
-	template <typename TComponent, typename TTrait>
-	SOLID_INLINE void ToggleTrait() const
-	{
-		ObtainTraitHolderEntity<TComponent>().Toggle<TTrait>();
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void ToggleTrait(const UScriptStruct* TraitStructType) const
-	{
-		ObtainTraitHolderEntity<TComponent>().Toggle(TraitStructType);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void ToggleTrait(const FGameplayTag& InTag) const
-	{
-		ObtainTraitHolderEntity<TComponent>().Toggle(InTag);
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void ToggleTrait(const FFlecsEntityHandle& InTrait) const
-	{
-		ObtainTraitHolderEntity<TComponent>().Toggle(InTrait);
-	}
-
-	SOLID_INLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
-	{
-		ObtainTraitHolderEntity(ComponentStructType).Toggle(TraitType);
-	}
-
-	SOLID_INLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
-	{
-		ObtainTraitHolderEntity(ComponentStructType).Toggle(InTag);
-	}
-
-	SOLID_INLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
-	{
-		ObtainTraitHolderEntity(ComponentStructType).Toggle(InTrait);
-	}
-
 	template <typename TFirst, typename TSecond>
 	SOLID_INLINE void AddPair() const
 	{
@@ -1141,9 +540,9 @@ public:
 	}
 
 	template <typename TFirst>
-	SOLID_INLINE void AddPair(const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE void AddPair(const FFlecsId InSecond) const
 	{
-		GetEntity().add<TFirst>(InSecond.GetEntity());
+		GetEntity().add<TFirst>(InSecond);
 	}
 
 	template <typename TFirst>
@@ -1170,7 +569,7 @@ public:
 			GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE void AddPair(const UScriptStruct* InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE void AddPair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().add(ObtainComponentTypeStruct(InFirst), InSecond);
 	}
@@ -1186,28 +585,28 @@ public:
 		GetEntity().add(GetTagEntity(InFirst), GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE void AddPair(const FGameplayTag& InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE void AddPair(const FGameplayTag& InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().add(GetTagEntity(InFirst), InSecond);
 	}
 
-	SOLID_INLINE void AddPair(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond) const
+	SOLID_INLINE void AddPair(const FFlecsId InFirst, const UScriptStruct* InSecond) const
 	{
 		GetEntity().add(InFirst, ObtainComponentTypeStruct(InSecond));
 	}
 
-	SOLID_INLINE void AddPair(const FFlecsEntityHandle& InFirst, const FGameplayTag& InSecond) const
+	SOLID_INLINE void AddPair(const FFlecsId InFirst, const FGameplayTag& InSecond) const
 	{
 		GetEntity().add(InFirst, GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE void AddPair(const FFlecsEntityHandle& InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE void AddPair(const FFlecsId InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().add(InFirst, InSecond);
 	}
 
 	template <typename TSecond>
-	SOLID_INLINE void AddPairSecond(const FFlecsEntityHandle& InFirst) const
+	SOLID_INLINE void AddPairSecond(const FFlecsId InFirst) const
 	{
 		GetEntity().add_second<TSecond>(InFirst);
 	}
@@ -1224,7 +623,7 @@ public:
 			GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().remove(ObtainComponentTypeStruct(InFirst), InSecond);
 	}
@@ -1239,22 +638,22 @@ public:
 		GetEntity().remove(GetTagEntity(InFirst), GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE void RemovePair(const FGameplayTag& InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE void RemovePair(const FGameplayTag& InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().remove(GetTagEntity(InFirst), InSecond);
 	}
 
-	SOLID_INLINE void RemovePair(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond) const
+	SOLID_INLINE void RemovePair(const FFlecsId InFirst, const UScriptStruct* InSecond) const
 	{
 		GetEntity().remove(InFirst, ObtainComponentTypeStruct(InSecond));
 	}
 
-	SOLID_INLINE void RemovePair(const FFlecsEntityHandle& InFirst, const FGameplayTag& InSecond) const
+	SOLID_INLINE void RemovePair(const FFlecsId InFirst, const FGameplayTag& InSecond) const
 	{
 		GetEntity().remove(InFirst, GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE void RemovePair(const FFlecsEntityHandle& InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE void RemovePair(const FFlecsId InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().remove(InFirst, InSecond);
 	}
@@ -1266,9 +665,9 @@ public:
 	}
 
 	template <typename TFirst>
-	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsId InSecond) const
 	{
-		return GetEntity().has<TFirst>(InSecond.GetEntity());
+		return GetEntity().has<TFirst>(InSecond);
 	}
 
 	template <typename TFirst>
@@ -1295,7 +694,7 @@ public:
 			GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE NO_DISCARD bool HasPair(const UScriptStruct* InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE NO_DISCARD bool HasPair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
 	{
 		return GetEntity().has(ObtainComponentTypeStruct(InFirst), InSecond);
 	}
@@ -1311,28 +710,28 @@ public:
 		return GetEntity().has(GetTagEntity(InFirst), GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE NO_DISCARD bool HasPair(const FGameplayTag& InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE NO_DISCARD bool HasPair(const FGameplayTag& InFirst, const FFlecsId InSecond) const
 	{
 		return GetEntity().has(GetTagEntity(InFirst), InSecond);
 	}
 
-	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond) const
+	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsId InFirst, const UScriptStruct* InSecond) const
 	{
 		return GetEntity().has(InFirst, ObtainComponentTypeStruct(InSecond));
 	}
 
-	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsEntityHandle& InFirst, const FGameplayTag& InSecond) const
+	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsId InFirst, const FGameplayTag& InSecond) const
 	{
 		return GetEntity().has(InFirst, GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsEntityHandle& InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsId InFirst, const FFlecsId InSecond) const
 	{
 		return GetEntity().has(InFirst, InSecond);
 	}
 
 	template <typename TSecond>
-	SOLID_INLINE NO_DISCARD bool HasPairSecond(const FFlecsEntityHandle& InFirst) const
+	SOLID_INLINE NO_DISCARD bool HasPairSecond(const FFlecsId InFirst) const
 	{
 		return GetEntity().has_second<TSecond>(InFirst);
 	}
@@ -1368,7 +767,7 @@ public:
 	}
 
 	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE void SetPair(const FFlecsEntityHandle& InSecond, const TActual& InFirst) const
+	SOLID_INLINE void SetPair(const FFlecsId InSecond, const TActual& InFirst) const
 	{
 		GetEntity().set<TFirst>(InSecond, InFirst);
 	}
@@ -1387,7 +786,7 @@ public:
 		}
 		
 		GetEntity().set_ptr(
-			ecs_pair(ObtainComponentTypeStruct(InFirst).GetEntity(), ObtainComponentTypeStruct(InSecond).GetEntity()),
+			FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst).GetEntity(), ObtainComponentTypeStruct(InSecond).GetEntity()),
 			InValue);
 	}
 
@@ -1399,11 +798,11 @@ public:
 		}
 		
 		GetEntity().set_ptr(
-			ecs_pair(ObtainComponentTypeStruct(InFirst).GetEntity(), GetTagEntity(InSecond).GetEntity()),
+			FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst).GetEntity(), GetTagEntity(InSecond).GetEntity()),
 			InValue);
 	}
 
-	SOLID_INLINE void SetPair(const UScriptStruct* InFirst, const void* InValue, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE void SetPair(const UScriptStruct* InFirst, const void* InValue, const FFlecsId InSecond) const
 	{
 		if (!HasPair(InFirst, InSecond))
 		{
@@ -1411,7 +810,7 @@ public:
 		}
 		
 		GetEntity().set_ptr(
-			ecs_pair(ObtainComponentTypeStruct(InFirst).GetEntity(), InSecond.GetEntity()), InValue);
+			FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst).GetEntity(), InSecond), InValue);
 	}
 
 	template <typename TFirst, typename TSecond, typename TActual = TSecond>
@@ -1420,17 +819,14 @@ public:
 		GetEntity().set_second<TFirst, TSecond>(InSecond);
 	}
 
-	SOLID_INLINE void SetPairSecond(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond, const void* InValue) const
+	SOLID_INLINE void SetPairSecond(const FFlecsId InFirst, const UScriptStruct* InSecond, const void* InValue) const
 	{
-		solid_checkf(!InFirst.IsComponent(),
-			TEXT("First Entity is not allowed to be a component when setting second entity"));
-		
 		if (!HasPair(InFirst, InSecond))
 		{
 			AddPair(InFirst, InSecond);
 		}
 		
-		GetEntity().set_ptr(ecs_pair(InFirst.GetEntity(), ObtainComponentTypeStruct(InSecond).GetEntity()),
+		GetEntity().set_ptr(FFlecsId::MakePair(InFirst, ObtainComponentTypeStruct(InSecond).GetEntity()),
 			InSecond->GetStructureSize(), InValue);
 	}
 
@@ -1442,7 +838,7 @@ public:
 		}
 		
 		GetEntity().set_ptr(
-			ecs_pair(GetTagEntity(InFirst).GetEntity(), ObtainComponentTypeStruct(InSecond).GetEntity()), InValue);
+			FFlecsId::MakePair(GetTagEntity(InFirst).GetEntity(), ObtainComponentTypeStruct(InSecond).GetEntity()), InValue);
 	}
 	
 	template <typename TFirst, typename TSecond>
@@ -1463,7 +859,7 @@ public:
 			GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE void ModifiedPair(const UScriptStruct* InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE void ModifiedPair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().modified(ObtainComponentTypeStruct(InFirst), InSecond);
 	}
@@ -1479,22 +875,22 @@ public:
 		GetEntity().modified(GetTagEntity(InFirst), GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE void ModifiedPair(const FGameplayTag& InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE void ModifiedPair(const FGameplayTag& InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().modified(GetTagEntity(InFirst), InSecond);
 	}
 
-	SOLID_INLINE void ModifiedPair(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond) const
+	SOLID_INLINE void ModifiedPair(const FFlecsId InFirst, const UScriptStruct* InSecond) const
 	{
 		GetEntity().modified(InFirst, ObtainComponentTypeStruct(InSecond));
 	}
 
-	SOLID_INLINE void ModifiedPair(const FFlecsEntityHandle& InFirst, const FGameplayTag& InSecond) const
+	SOLID_INLINE void ModifiedPair(const FFlecsId InFirst, const FGameplayTag& InSecond) const
 	{
 		GetEntity().modified(InFirst, GetTagEntity(InSecond));
 	}
 
-	SOLID_INLINE void ModifiedPair(const FFlecsEntityHandle& InFirst, const FFlecsEntityHandle& InSecond) const
+	SOLID_INLINE void ModifiedPair(const FFlecsId InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().modified(InFirst, InSecond);
 	}
@@ -1515,12 +911,12 @@ public:
 		GetEntity().modified(GetTagEntity(InTag));
 	}
 
-	SOLID_INLINE void Modified(const FFlecsEntityHandle& InEntity) const
+	SOLID_INLINE void Modified(const FFlecsId InEntity) const
 	{
 		GetEntity().modified(InEntity);
 	}
 
-	SOLID_INLINE NO_DISCARD int32 GetDepth(const FFlecsEntityHandle& InEntity) const
+	SOLID_INLINE NO_DISCARD int32 GetDepth(const FFlecsId InEntity) const
 	{
 		return GetEntity().depth(InEntity);
 	}
@@ -1554,14 +950,19 @@ public:
 
 	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
 
-	SOLID_INLINE void AddPrefab(const FFlecsEntityHandle& InPrefab) const
+	SOLID_INLINE void AddPrefab(const FFlecsId InPrefab) const
 	{
 		GetEntity().is_a(InPrefab);
 	}
 
-	SOLID_INLINE void RemovePrefab(const FFlecsEntityHandle& InPrefab) const
+	SOLID_INLINE void RemovePrefab(const FFlecsId InPrefab) const
 	{
-		Remove(flecs::IsA, InPrefab);
+		RemovePair(flecs::IsA, InPrefab);
+	}
+
+	SOLID_INLINE NO_DISCARD bool IsPrefab(const FFlecsId InPrefab) const
+	{
+		return HasPair(flecs::IsA, InPrefab);
 	}
 
 	void AddCollection(UObject* Collection) const;
@@ -1573,6 +974,7 @@ public:
 	}
 
 	NO_DISCARD bool HasCollection(const UClass* CollectionClass) const;
+	NO_DISCARD bool HasCollection(const FString& CollectionName) const;
 	
 	void RemoveCollection(const FString& CollectionName) const;
 
@@ -1593,102 +995,12 @@ private:
 
 	void ObtainFlecsWorld();
 
-	SOLID_INLINE FFlecsTraitTracker* ObtainTraitTracker() const
-	{
-		if (!Has<FFlecsTraitTracker>())
-		{
-			Add<FFlecsTraitTracker>();
-		}
-
-		return const_cast<FFlecsTraitTracker*>(GetPtr<FFlecsTraitTracker>());
-	}
-
 public:
-
-	template <typename TComponent>
-	SOLID_INLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity() const
-	{
-		solid_checkf(Has<TComponent>(), TEXT("Entity does not have component"));
-
-		TRACE_CPUPROFILER_EVENT_SCOPE(FFlecsEntityHandle::ObtainTraitHolderEntity);
-
-		FFlecsTraitTracker* TraitTracker = ObtainTraitTracker();
-		FFlecsEntityHandle ComponentEntity = GetFlecsWorld_Internal().component<TComponent>();
-		
-		if LIKELY_IF(TraitTracker->ComponentProperties.contains(ComponentEntity))
-		{
-			solid_checkf(GetFlecsWorld_Internal()
-				.is_valid(TraitTracker->ComponentProperties[ComponentEntity]),
-				TEXT("Trait Holder Entity is not valid"));
-			
-			return GetFlecsWorld_Internal().get_alive(
-				TraitTracker->ComponentProperties[ComponentEntity]);
-		}
-		
-		FFlecsEntityHandle TraitHolder = GetFlecsWorld_Internal().entity();
-		TraitHolder.SetParent(GetEntity());
-		TraitHolder.AddPairSecond<TComponent>(flecs::TraitEntity);
-		TraitHolder.Add(flecs::PairIsTag);
-
-		#ifdef FLECS_DOC
-
-		std::string TypeName = nameof(TComponent).data();
-		TypeName += " Trait Holder";
-		TraitHolder.SetDocName(TypeName.c_str());
-
-		#endif // FLECS_DOC
-
-		TraitTracker->ComponentProperties.emplace(ComponentEntity, TraitHolder.GetEntity());
-
-		AddPairSecond<TComponent>(TraitHolder);
-		
-		return TraitHolder;
-	}
-
-	SOLID_INLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity(const UScriptStruct* StructType) const
-	{
-		solid_check(StructType);
-		solid_checkf(Has(StructType), TEXT("Entity does not have component"));
-
-		TRACE_CPUPROFILER_EVENT_SCOPE(FFlecsEntityHandle::ObtainTraitHolderEntity);
-		
-		FFlecsTraitTracker* TraitTracker = ObtainTraitTracker();
-
-		FFlecsEntityHandle ComponentEntity = ObtainComponentTypeStruct(StructType);
-		
-		if LIKELY_IF(TraitTracker->ComponentProperties.contains(ComponentEntity))
-		{
-			solid_checkf(GetFlecsWorld_Internal()
-				.is_valid(TraitTracker->ComponentProperties[ComponentEntity]),
-				TEXT("Trait Holder Entity is not valid"));
-			
-			return GetFlecsWorld_Internal().get_alive(
-				TraitTracker->ComponentProperties[ComponentEntity]);
-		}
-		
-		FFlecsEntityHandle TraitHolder = GetFlecsWorld_Internal().entity();
-		TraitHolder.SetParent(GetEntity());
-		TraitHolder.AddPair(flecs::TraitEntity, ObtainComponentTypeStruct(StructType));
-		TraitHolder.Add(flecs::PairIsTag);
-
-		#ifdef FLECS_DOC
-
-		TraitHolder.SetDocName(StructType->GetFName().ToString() + TEXT(" Trait Holder"));
-
-		#endif // FLECS_DOC
-
-		TraitTracker->ComponentProperties.emplace(ComponentEntity, TraitHolder.GetEntity());
-
-		AddPair(TraitHolder, ObtainComponentTypeStruct(StructType));
-		
-		return TraitHolder;
-	}
-
 	void PostScriptConstruct();
 
 	bool Serialize(FArchive& Ar)
 	{
-		uint64 RawId = GetId();
+		uint64 RawId = GetFlecsId();
 		Ar << RawId;
 
 		if (Ar.IsLoading())
@@ -1730,7 +1042,7 @@ public:
 	bool ExportTextItem(FString& ValueStr, const FFlecsEntityHandle& DefaultValue,
 		MAYBE_UNUSED UObject* Parent, MAYBE_UNUSED int32 PortFlags, MAYBE_UNUSED UObject* ExportRootScope) const
 	{
-		ValueStr += FString::Printf(TEXT("EntityId=%llu"), GetId());
+		ValueStr += FString::Printf(TEXT("EntityId=%llu"), static_cast<uint64>(GetFlecsId()));
 		return true;
 	}
 	
@@ -1746,5 +1058,5 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 		WithImportTextItem = true,
 		WithExportTextItem = true,
 		WithSerializer = true,
-	};
+	}; // enum
 }; // struct TStructOpsTypeTraits<FFlecsEntityHandle>

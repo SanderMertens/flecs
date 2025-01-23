@@ -8,6 +8,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "Entities/FlecsId.h"
 #include "Standard/robin_hood.h"
 #include "SolidMacros/Macros.h"
 #include "StructUtils/SharedStruct.h"
@@ -16,7 +17,7 @@
 struct UNREALFLECS_API FFlecsComponentProperties
 {
 	std::string Name;
-	std::vector<flecs::entity_t> Entities;
+	std::vector<FFlecsId> Entities;
 	
 	TArray<FSharedStruct> ComponentPropertyStructs;
 }; // struct FFlecsComponentProperties
@@ -32,7 +33,7 @@ public:
 		return Instance;
 	}
 
-	FORCEINLINE void RegisterComponentProperties(const std::string& Name, const std::vector<flecs::entity_t>& Entities,
+	FORCEINLINE void RegisterComponentProperties(const std::string& Name, const std::vector<FFlecsId>& Entities,
 		const TArray<FSharedStruct>& ComponentPropertyStructs, const bool bResetExisting = false, const bool bOverride = false)
 	{
 		UNLOG_CATEGORY_SCOPED(LogFlecsComponentProperties);
@@ -48,7 +49,8 @@ public:
 		if (!ComponentProperties.contains(Name))
 		{
 			ComponentProperties[Name] = FFlecsComponentProperties {
-				.Name = Name, .Entities = Entities,
+				.Name = Name,
+				.Entities = Entities,
 				.ComponentPropertyStructs = ComponentPropertyStructs
 			};
 			
@@ -59,10 +61,10 @@ public:
 		}
 		else
 		{
-			for (const flecs::entity_t& Entity : Entities)
+			for (const FFlecsId Entity : Entities)
 			{
-				if (std::ranges::find(ComponentProperties[Name].Entities, Entity)
-					!= ComponentProperties[Name].Entities.end())
+				if (std::ranges::find(
+					ComponentProperties[Name].Entities, Entity) != ComponentProperties[Name].Entities.end())
 				{
 					continue;
 				}
@@ -141,7 +143,7 @@ public:
 		{ \
 			FAutoRegister##ComponentType##_Tags() \
 			{ \
-				std::vector<flecs::entity_t> Entities = { __VA_ARGS__ } ; \
+				std::vector<FFlecsId> Entities = { __VA_ARGS__ } ; \
 				FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, Entities, {}); \
 				if constexpr (Solid::IsStaticStruct<ComponentType>()) \
 				{ \
@@ -176,11 +178,11 @@ public:
 		static FAutoRegister##ComponentType##_Traits AutoRegister##ComponentType##_Instance_Traits; \
 	}
 
-#define REGISTER_COMPONENT_TAG_PROPERTIES(ComponentType, ...) \
+#define REGISTER_COMPONENT_TRAIT_TAG(ComponentType, ...) \
 	PRIVATE_REGISTER_FLECS_PROPERTIES_TAGS_IMPL_(ComponentType, __VA_ARGS__ )
 
 // @TODO: Only Support ScriptStructs for now
-#define REGISTER_COMPONENT_TRAIT_PROPERTIES(ComponentType, ...) \
+#define REGISTER_COMPONENT_TRAIT_TYPE(ComponentType, ...) \
 	PRIVATE_REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, __VA_ARGS__ )
 
 #define TRAIT_PROPERTY_STRUCT(PropertyStruct, ...) \

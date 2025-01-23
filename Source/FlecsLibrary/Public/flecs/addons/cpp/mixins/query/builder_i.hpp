@@ -58,8 +58,6 @@ struct query_builder_i : term_builder_i<Base> {
             if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
-
-        this->test_trait_scope();
         
         return *this;
     }
@@ -70,8 +68,6 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
-
-        test_trait_scope();
         
         return *this;
     }
@@ -82,8 +78,6 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
-
-        this->test_trait_scope();
         
         return *this;
     }
@@ -102,8 +96,6 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
-
-        this->test_trait_scope();
         
         return *this;
     }
@@ -115,8 +107,6 @@ struct query_builder_i : term_builder_i<Base> {
             this->inout_none();
         }
 
-        this->test_trait_scope();
-        
         return *this;
     }
 
@@ -126,8 +116,6 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
-
-        this->test_trait_scope();
         
         return *this;
     }
@@ -139,8 +127,6 @@ struct query_builder_i : term_builder_i<Base> {
             this->inout_none();
         }
 
-        this->test_trait_scope();
-        
         return *this;
     }
 
@@ -175,113 +161,6 @@ struct query_builder_i : term_builder_i<Base> {
     Base& with(flecs::term&& term) {
         this->term();
         *this->term_ = term;
-        return *this;
-    }
-    
-    template <typename TComponent>
-    Base& begin_scope_traits() 
-    {
-        const char* comp_name = flecs::_::type_name<TComponent>();
-
-        if (!trait_vars_.contains(comp_name)) {
-            flecs::string new_trait_var = flecs::string::format("$trait:%s", comp_name);
-            trait_vars_.emplace(comp_name, std::move(new_trait_var));
-        }
-        
-        const char* trait_var = trait_vars_.at(comp_name).c_str();
-        this->with(trait_var).template second<TComponent>();
-        trait_scope_ = trait_var;
-        
-        return *this;
-    }
-    
-    Base& begin_scope_traits(flecs::entity_t comp) 
-    {
-        const char* comp_name = ecs_get_name(this->world_v(), comp);
-
-        if (!trait_vars_.contains(comp_name)) {
-            flecs::string new_trait_var = flecs::string::format("$trait:%s", comp_name);
-            trait_vars_.emplace(comp_name, std::move(new_trait_var));
-        }
-
-        const char* trait_var = trait_vars_.at(comp_name).c_str();
-
-        this->with(trait_var, comp);
-        trait_scope_ = trait_var;
-        
-        return *this;
-    }
-    
-    Base& begin_scope_traits(const char* comp_name) 
-    {
-        if (!trait_vars_.contains(comp_name)) {
-            flecs::string new_trait_var = flecs::string::format("$trait:%s", comp_name);
-            trait_vars_.emplace(comp_name, std::move(new_trait_var));
-        }
-
-        const char* trait_var = trait_vars_.at(comp_name).c_str();
-
-        this->with(comp_name, trait_var);
-
-        trait_scope_ = trait_var;
-        
-        return *this;
-    }
-
-    /* Relies on the last term */
-    Base& begin_scope_traits()
-    {
-        this->assert_term();
-        return this->begin_scope_traits(desc_->terms[term_index_ - 1].id == 0 
-            ? desc_->terms[term_index_ - 1].first.id
-            : desc_->terms[term_index_ - 1].id);
-    }
-
-    Base& begin_scope_traits_index(const int32_t term_index) 
-    {
-        // Validate term index is within bounds
-        ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, "Term index must be non-negative");
-        ecs_assert(term_index < term_index_, ECS_INVALID_PARAMETER, "Term index exceeds number of defined terms");
-
-        const int32_t prev_index = term_index_;
-        term_index_ = term_index;
-
-        // Get the term we're scoping to
-        const ecs_term_t& term = desc_->terms[term_index];
-    
-        // Validate we have a valid term
-        ecs_assert(ecs_term_is_initialized(&term), ECS_INVALID_PARAMETER, 
-            "Term at provided index is not initialized");
-
-        // Get the component ID we're scoping to
-        flecs::entity_t comp_id = term.id;
-        if (comp_id == 0) {
-            comp_id = term.first.id;
-        }
-
-        // Validate we have a valid component ID
-        ecs_assert(comp_id != 0, ECS_INVALID_PARAMETER, 
-            "Term at provided index has no valid component ID");
-    
-        // Check if the entity is alive before trying to get its name
-        ecs_assert(ecs_is_alive(this->world_v(), comp_id), ECS_INVALID_PARAMETER,
-            "Component entity is not alive");
-
-        // Now we can safely proceed with the trait scope
-        this->begin_scope_traits(comp_id);
-    
-        // Restore the original term index
-        term_index_ = prev_index;
-        return *this;
-    }
-
-    Base& end_scope_traits() 
-    {
-        ecs_assert(!trait_scope_.empty(), ECS_INVALID_OPERATION, NULL);
-        this->with(flecs::ChildOf, flecs::Wildcard);
-        this->src(trait_scope_.c_str());
-        this->assert_term();
-        trait_scope_.clear();
         return *this;
     }
     
@@ -503,18 +382,6 @@ protected:
     virtual flecs::world_t* world_v() override = 0;
     int32_t term_index_;
     int32_t expr_count_;
-
-    std::string trait_scope_;
-
-    std::unordered_map<const char*, flecs::string> trait_vars_;
-
-    Base& test_trait_scope() {
-        this->assert_term();
-        if (!trait_scope_.empty()) {
-            this->src(trait_scope_.c_str());
-        }
-        return *this;
-    }
 
 private:
     operator Base&() {

@@ -109,8 +109,16 @@ public:
     
 }; // struct FFlecsUObjectComponent
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsUObjectComponent, ecs_pair(flecs::OnInstantiate, flecs::DontInherit));
+REGISTER_COMPONENT_TRAIT_TAG(FFlecsUObjectComponent,
+    FFlecsId::MakePair(flecs::OnInstantiate, flecs::DontInherit));
 
-UNREALFLECS_API DECLARE_DEFAULT_ENTITY(DontDeleteUObjectEntity);
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsNoDeleteUObject
+{
+    GENERATED_BODY()
+}; // struct FFlecsNoDeleteUObject
+
+REGISTER_COMPONENT_TRAIT_TAG(FFlecsNoDeleteUObject,
+    FFlecsId::MakePair(flecs::OnInstantiate, flecs::DontInherit));
 
 

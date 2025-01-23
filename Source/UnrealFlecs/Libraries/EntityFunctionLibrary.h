@@ -22,9 +22,18 @@ public:
         {
             return false;
         }
+
+        if (Object->Implements<UFlecsEntityInterface>())
+        {
+            return true;
+        }
+
+        if (const AActor* Actor = Cast<AActor>(Object))
+        {
+            return Actor->FindComponentByClass<UFlecsEntityActorComponent>() != nullptr;
+        }
         
-        return Object->Implements<UFlecsEntityInterface>()
-            || Cast<AActor>(Object)->FindComponentByClass<UFlecsEntityActorComponent>();
+        return false;
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")

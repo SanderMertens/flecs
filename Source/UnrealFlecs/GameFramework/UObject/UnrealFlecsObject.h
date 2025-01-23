@@ -25,4 +25,5 @@ public:
 protected:
 	UPROPERTY()
 	FFlecsEntityHandle ObjectEntityHandle;
+	
 }; // class UUnrealFlecsObject

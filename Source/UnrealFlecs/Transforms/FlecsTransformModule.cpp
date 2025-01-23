@@ -13,7 +13,7 @@ UFlecsTransformModule::UFlecsTransformModule()
 
 void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-	const flecs::entity_t FlecsTransformSystemKind = flecs::PreUpdate;
+	const FFlecsId FlecsTransformSystemKind = flecs::PreUpdate;
 }
 
 void UFlecsTransformModule::DeinitializeModule(UFlecsWorld* InWorld)

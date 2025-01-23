@@ -22,7 +22,7 @@ void FEntityBasicTestsSpec::Define()
 	{
 		It("Should create and delete an entity", [this]()
 		{
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity();
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity();
 			TestTrue("Entity should be valid", EntityHandle.IsValid());
 		});
 
@@ -30,26 +30,25 @@ void FEntityBasicTestsSpec::Define()
 		{
 			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
 			TestTrue("Entity should be valid", EntityHandle.IsValid());
-			TestEqual("Entity name should be TestEntity", EntityHandle.GetName(),
-				TEXT("TestEntity"));
+			TestEqual("Entity name should be TestEntity", EntityHandle.GetName(), TEXT("TestEntity"));
 			EntityHandle.Destroy();
 			TestFalse("Entity should be invalid", EntityHandle.IsValid());
 		});
 
 		It("Should create an entity with a specific ID", [this]()
 		{
-			constexpr flecs::entity_t EntityId = 123;
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntityWithId(EntityId);
+			constexpr FFlecsId EntityId = 12345;
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntityWithId(EntityId);
 			TestTrue("Entity should be valid", EntityHandle.IsValid());
-			TestEqual("Entity ID should be 123", EntityHandle.GetId(), EntityId);
+			TestTrue("Entity ID should be 12345", EntityHandle == EntityId);
 		});
 
 		It("Should create an entity and destroy it with a specific Id", [this]()
 		{
-			static constexpr flecs::entity_t EntityId = 123;
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntityWithId(EntityId);
+			constexpr FFlecsId EntityId = 12345;
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntityWithId(EntityId);
 			TestTrue("Entity should be valid", EntityHandle.IsValid());
-			TestEqual("Entity ID should be 123", EntityHandle.GetId(), EntityId);
+			TestTrue("Entity ID should be 12345", EntityHandle == EntityId);
 			EntityHandle.Destroy();
 			TestFalse("Entity should be invalid", EntityHandle.IsValid());
 		});

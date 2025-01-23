@@ -2,4 +2,4 @@
 
 #include "DefaultEntityDefinitions.h"
 
-DEFINE_DEFAULT_ENTITY(TestEntityOption, 6000);
+DEFINE_DEFAULT_ENTITY(TestEntityOption, 6000 + FLECS_HI_COMPONENT_ID);

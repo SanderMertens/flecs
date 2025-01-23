@@ -2,4 +2,4 @@
 
 #include "FlecsTickerDefaultEntities.h"
 
-DEFINE_DEFAULT_ENTITY(FlecsFixedTick, 5001);
+DEFINE_DEFAULT_ENTITY(FlecsFixedTick, 5001 + FLECS_HI_COMPONENT_ID);

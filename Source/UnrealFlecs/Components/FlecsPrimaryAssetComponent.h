@@ -36,4 +36,4 @@ public:
 	
 }; // struct FFlecsPrimaryAssetComponent
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsPrimaryAssetComponent, ecs_pair(flecs::OnInstantiate, flecs::DontInherit));
+REGISTER_COMPONENT_TRAIT_TAG(FFlecsPrimaryAssetComponent, FFlecsId::MakePair(flecs::OnInstantiate, flecs::DontInherit));

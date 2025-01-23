@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "FlecsId.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsArchetype.generated.h"
 
@@ -38,14 +39,33 @@ public:
     {
         return Type != Other.Type;
     }
-    
-    FORCEINLINE void ForEach(std::function<void(const flecs::entity_t)> InFunction) const
+
+    /**
+     * @brief Iterates over each component in the archetype.
+     * 
+     * @tparam FunctionType The type of the function to call for each component.
+     * @param InFunction The function to call for each component.
+     * Returns false to continue iteration, true to break.
+     */
+    template <typename FunctionType>
+    FORCEINLINE void ForEach(FunctionType&& InFunction) const
     {
-        std::ranges::for_each(Type,
-                              [&InFunction](const flecs::entity_t InId)
-                              {
-                                  std::invoke(InFunction, InId);
-                              });
+        using ReturnType = std::invoke_result_t<FunctionType, FFlecsId>;
+        
+        for (const FFlecsId Component : Type)
+        {
+            if constexpr (std::is_same_v<ReturnType, bool>)
+            {
+                if (InFunction(Component))
+                {
+                    break;
+                }
+            }
+            else
+            {
+                InFunction(Component);
+            }
+        }
     }
     
     flecs::type Type;

@@ -21,9 +21,9 @@ public:
 	FFlecsDefaultEntityEngine();
 	~FFlecsDefaultEntityEngine();
 	
-	flecs::entity_t AddDefaultEntity(FFlecsDefaultMetaEntity DefaultEntity);
+	FFlecsId AddDefaultEntity(FFlecsDefaultMetaEntity DefaultEntity);
 	
-	TMap<FString, flecs::entity_t> DefaultEntityOptions;
+	TMap<FString, FFlecsId> DefaultEntityOptions;
 	std::vector<FFlecsDefaultMetaEntity> AddedDefaultEntities;
 	std::vector<FFlecsDefaultMetaEntity> CodeAddedDefaultEntities;
 	
@@ -36,10 +36,10 @@ public:
 }; // struct FFlecsDefaultEntityEngine
 
 #define DECLARE_DEFAULT_ENTITY(DefaultEntityName) \
-	extern flecs::entity_t DefaultEntityName;
+	extern FFlecsId DefaultEntityName;
 
 #define DEFINE_DEFAULT_ENTITY(DefaultEntityName, InEntityId) \
-	flecs::entity_t DefaultEntityName = InEntityId; \
+	FFlecsId DefaultEntityName = InEntityId; \
 	namespace \
 	{                                                             \
 		static void Register##DefaultEntityName()                        \

@@ -7,7 +7,6 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
-
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
@@ -129,7 +128,7 @@ public:
 			.opaque(flecs::Entity)
 			.serialize([](const flecs::serializer* Serializer, const FGameplayTag* Data)
 			{
-				const flecs::entity_t TagEntity = ecs_lookup(Serializer->world,
+				const FFlecsId TagEntity = ecs_lookup(Serializer->world,
 					StringCast<char>(*Data->ToString()).Get());
 				return Serializer->value(flecs::Entity, &TagEntity);
 			});
@@ -138,7 +137,7 @@ public:
             .opaque(flecs::Entity)
             .serialize([](const flecs::serializer* Serializer, const FFlecsEntityHandle* Data)
             {
-                const flecs::entity_t Entity = Data->GetEntity();
+                const FFlecsId Entity = Data->GetEntity();
                 return Serializer->value(flecs::Entity, &Entity);
             })
             .assign_entity([](FFlecsEntityHandle* Handle, ecs_world_t* World, ecs_entity_t Entity)
@@ -242,9 +241,6 @@ public:
 			});
 
 		ObjectDestructionComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectDestructionComponentQuery")
-			.begin_scope_traits<FFlecsUObjectComponent>().optional()
-				.without(DontDeleteUObjectEntity)
-			.end_scope_traits()
 			.cached()
 			.build();
 
@@ -488,30 +484,21 @@ public:
 		World.reset_clock();
 	}
 
-	FFlecsEntityHandle CreateEntity(const flecs::entity_t InEntity) const
+	FFlecsEntityHandle CreateEntity(const FFlecsId InEntity) const
 	{
-		return World.entity(InEntity);
+		return World.entity(InEntity.GetId());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FFlecsEntityHandle CreateEntity(const FString& Name = "") const
 	{
-		if (Name.IsEmpty())
-		{
-			return World.entity();
-		}
-
 		return World.entity(StringCast<char>(*Name).Get());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FFlecsEntityHandle CreateEntityWithId(const FFlecsId& InId) const
+	FFlecsEntityHandle CreateEntityWithId(const FFlecsId InId) const
 	{
-		return flecs::entity(World, InId.GetFlecsId());
-	}
-
-	FFlecsEntityHandle CreateEntityWithId(const flecs::entity_t InId) const
-	{
+		solid_checkf(!World.is_alive(InId), TEXT("Entity %s is not alive"), *InId.ToString());
 		return World.make_alive(InId);
 	}
 
@@ -529,7 +516,7 @@ public:
 		return Entity;
 	}
 
-	FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord, const flecs::entity_t InId) const
+	FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord, const FFlecsId InId) const
 	{
 		const FFlecsEntityHandle Entity = CreateEntityWithId(InId);
 		InRecord.ApplyRecordToEntity(Entity);
@@ -577,7 +564,7 @@ public:
 	template <typename FunctionType>
 	void ForEach(const FFlecsId& InTermId, FunctionType&& Function) const
 	{
-		World.each(InTermId.GetFlecsId(), std::forward<FunctionType>(Function));
+		World.each(InTermId, std::forward<FunctionType>(Function));
 	}
 
 	template <typename T>
@@ -645,7 +632,7 @@ public:
 	}
 
 	template <typename T>
-	NO_DISCARD FFlecsEntityHandle GetSingletonEntity() const
+	NO_DISCARD FFlecsEntityHandle ObtainSingletonEntity() const
 	{
 		return World.entity<T>();
 	}
@@ -737,8 +724,6 @@ public:
 	UObject* GetModule(const TSubclassOf<UObject>& InModule) const
 	{
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModule);
-		checkf((ModuleEntity.HasTrait<FFlecsUObjectComponent, FFlecsModuleComponentTag>()),
-			TEXT("Module entity %s does not have a UObject component with the Module Trait"), *ModuleEntity.GetName());
 		return ModuleEntity.GetPtr<FFlecsUObjectComponent>()->GetObjectChecked();
 	}
 
@@ -746,8 +731,6 @@ public:
 	NO_DISCARD T* GetModule() const
 	{
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity<T>();
-		checkf((ModuleEntity.HasTrait<FFlecsUObjectComponent, FFlecsModuleComponentTag>()),
-			TEXT("Module entity %s does not have a UObject component with the Module Trait"), *ModuleEntity.GetName());
 		return ModuleEntity.GetPtr<FFlecsUObjectComponent>()->GetObjectChecked<T>();
 	}
 
@@ -913,23 +896,13 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetAlive(const FFlecsId& InId) const
-	{
-		return World.get_alive(InId.GetFlecsId());
-	}
-
-	FFlecsEntityHandle GetAlive(const flecs::entity_t InId) const
+	FFlecsEntityHandle GetAlive(const FFlecsId InId) const
 	{
 		return World.get_alive(InId);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetEntity(const FFlecsId& InId) const
-	{
-		return World.get_alive(InId.GetFlecsId());
-	}
-
-	FFlecsEntityHandle GetEntity(const flecs::entity_t InId) const
+	FFlecsEntityHandle GetEntity(const FFlecsId InId) const
 	{
 		return World.get_alive(InId);
 	}
@@ -937,7 +910,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FFlecsEntityHandle MakeAlive(const FFlecsId& InId) const
 	{
-		return World.make_alive(InId.GetFlecsId());
+		return World.make_alive(InId);
 	}
 
 	template <typename ...TComponents>
@@ -1503,7 +1476,7 @@ public:
 	template <typename FunctionType>
 	void Scope(FFlecsId InId, FunctionType&& Function) const
 	{
-		World.scope(InId.GetFlecsId(), std::forward<FunctionType>(Function));
+		World.scope(InId, std::forward<FunctionType>(Function));
 	}
 
 	template <typename FunctionType>

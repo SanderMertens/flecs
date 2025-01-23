@@ -1795,7 +1795,7 @@ FLECS_API extern const ecs_entity_t EcsCanToggle;
  */
 FLECS_API extern const ecs_entity_t EcsTrait;
 
-FLECS_API extern const ecs_entity_t EcsTraitEntity;
+FLECS_API extern const ecs_entity_t EcsSubsetOf;
 
 /** Ensure that an entity is always used in pair as relationship.
  *

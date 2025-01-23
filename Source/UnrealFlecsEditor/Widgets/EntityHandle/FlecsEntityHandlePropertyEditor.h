@@ -193,9 +193,9 @@ private:
 					}
 
 					const flecs::entity Entity = FFlecsDefaultEntityEngine::Get().DefaultEntityWorld->get_alive(
-						static_cast<FFlecsEntityHandle*>(RawData)->GetId());
+						static_cast<FFlecsEntityHandle*>(RawData)->GetIndex());
 
-					if UNLIKELY_IF(static_cast<FFlecsEntityHandle*>(RawData)->GetId() == flecs::entity::null().id())
+					if UNLIKELY_IF(static_cast<FFlecsEntityHandle*>(RawData)->GetIndex() == flecs::entity::null())
 					{
 						CommonValue.Reset();
 						return false;

@@ -2,7 +2,7 @@
 
 // ReSharper disable CppTooWideScopeInitStatement
 #include "FlecsEntityHandle.h"
-#include "Collections/CollectionTrackerComponent.h"
+#include "Collections/FlecsComponentCollection.h"
 #include "Collections/FlecsComponentCollectionObject.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Networking/FlecsNetworkIdComponent.h"
@@ -17,12 +17,12 @@ FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const UFlecsWorld* InWorld)
     return flecs::entity::null(InWorld->World);
 }
 
-FFlecsEntityHandle::FFlecsEntityHandle(const UFlecsWorld* InWorld, const flecs::entity_t InEntity)
+FFlecsEntityHandle::FFlecsEntityHandle(const UFlecsWorld* InWorld, const FFlecsId InEntity)
 {
     SetEntity(flecs::entity(InWorld->World, InEntity));
 }
 
-FFlecsEntityHandle::FFlecsEntityHandle(const flecs::world_t* InWorld, const flecs::entity_t InEntity)
+FFlecsEntityHandle::FFlecsEntityHandle(const flecs::world_t* InWorld, const FFlecsId InEntity)
 {
     SetEntity(flecs::entity(InWorld, InEntity));
 }
@@ -45,49 +45,7 @@ FString FFlecsEntityHandle::GetWorldName() const
 
 bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
-    /*if (Ar.IsLoading())
-    {
-        Info.NetSerialize(Ar, Map, bOutSuccess);
-
-        const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
-        solid_checkf(FlecsWorldSubsystem, TEXT("Flecs World Subsystem not found"));
-
-        const flecs::query<const FFlecsNetworkIdComponent> Query = FlecsWorldSubsystem->GetDefaultWorld()->World
-            .query<const FFlecsNetworkIdComponent>();
-
-        const FFlecsEntityHandle EntityHandle = Query.find([](const FFlecsNetworkIdComponent& InNetworkId)
-        {
-            return InNetworkId == Info.NetworkId;
-        });
-
-        if (EntityHandle.IsValid())
-        {
-            SetEntity(EntityHandle.GetEntity());
-        }
-        else
-        {
-            SetEntity(FlecsWorldSubsystem->GetDefaultWorld()->LookupEntity(Info.EntityName).GetEntity());
-        }
-        
-        bOutSuccess = true;
-        return true;
-    }
-    else
-    {
-        solid_checkf(Has<FFlecsNetworkIdComponent>(), TEXT("Entity does not have a network ID component"));
-        solid_checkf(Get<FFlecsNetworkIdComponent>().IsValid(), TEXT("Network ID component is not valid"));
-
-        FNetworkedEntityInfo Info;
-        Info.NetworkId = Get<FFlecsNetworkIdComponent>();
-        Info.EntityName = GetName();
-        Info.WorldName = GetWorldName();
-
-        Info.NetSerialize(Ar, Map, bOutSuccess);
-        bOutSuccess = true;
-        return true;
-    }*/
-
-    return false;
+    return true;
 }
 
 FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptStruct* StructType) const
@@ -107,37 +65,44 @@ bool FFlecsEntityHandle::HasCollection(const UClass* CollectionClass) const
 {
     solid_check(::IsValid(CollectionClass));
 
-    const FString CollectionName = UFlecsComponentCollectionObject::GetCollectionTypeName(CollectionClass);
-    const FCollectionTrackerComponent* CollectionTracker = GetPtr<FCollectionTrackerComponent>();
-    return CollectionTracker && CollectionTracker->ComponentProperties.contains(CollectionName);
+    return HasCollection(UFlecsComponentCollectionObject::GetCollectionTypeName(CollectionClass));
+}
+
+bool FFlecsEntityHandle::HasCollection(const FString& CollectionName) const
+{
+    solid_checkf(!CollectionName.IsEmpty(), TEXT("Collection name is empty"));
+
+    const FFlecsEntityHandle CollectionEntity = GetFlecsWorld()->LookupEntity(CollectionName);
+
+    if UNLIKELY_IF(!CollectionEntity.IsValid())
+    {
+        return false;
+    }
+
+    solid_checkf(CollectionEntity.Has<FFlecsComponentCollection>(), TEXT("Collection entity is not a collection"));
+
+    return IsPrefab(CollectionEntity);
 }
 
 void FFlecsEntityHandle::RemoveCollection(const FString& CollectionName) const
 {
     solid_checkf(!CollectionName.IsEmpty(), TEXT("Collection name is empty"));
-    FCollectionTrackerComponent* CollectionTracker = GetEntity().get_mut<FCollectionTrackerComponent>();
-
-    solid_checkf(CollectionTracker->ComponentProperties.contains(CollectionName),
-        TEXT("Collection not found!"));
     
-    const FFlecsEntityHandle CollectionEntity = CollectionTracker->ComponentProperties[CollectionName];
+    FFlecsEntityHandle CollectionEntity = GetFlecsWorld()->LookupEntity(CollectionName);
+    solid_check(CollectionEntity.IsValid());
 
     RemovePrefab(CollectionEntity);
 
     if (CollectionEntity.Has<FCollectionRemoveComponentsOnDestroyTag>())
     {
-        CollectionEntity.GetType().ForEach([this](const flecs::entity_t InEntity)
+        CollectionEntity.GetType().ForEach([this](const FFlecsId InEntity)
         {
-            if (Has(InEntity))
+            if LIKELY_IF(Has(InEntity))
             {
                 Remove(InEntity);
             }
         });
     }
-    
-    CollectionTracker->ComponentProperties.erase(CollectionName);
-    
-    Modified<FCollectionTrackerComponent>();
 }
 
 void FFlecsEntityHandle::RemoveCollection(const UClass* Collection) const

@@ -44,7 +44,7 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 		return *this;
 	}
 
-	FORCEINLINE FFlecsWorldPtrComponent& operator=(const FFlecsWorldPtrComponent&& InComponent)
+	FORCEINLINE FFlecsWorldPtrComponent& operator=(const FFlecsWorldPtrComponent&& InComponent) NOEXCEPT
 	{
 		World = InComponent.World;
 		return *this;
@@ -77,5 +77,14 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 
 FORCEINLINE NO_DISCARD UFlecsWorld* ToFlecsWorld(const flecs::world& InWorld)
 {
-	return InWorld.get_mut<FFlecsWorldPtrComponent>()->GetFlecsWorld();
+	static TWeakObjectPtr<UFlecsWorld> CachedWorld;
+
+	if (CachedWorld.IsValid() && CachedWorld.Get()->World == InWorld)
+	{
+		return CachedWorld.Get();
+	}
+	
+	CachedWorld = InWorld.get_mut<FFlecsWorldPtrComponent>()->GetFlecsWorld();
+	solid_check(CachedWorld.IsValid());
+	return CachedWorld.Get();
 }

@@ -267,18 +267,13 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::Pair", EditConditionHides))
 	FFlecsRecordPair Pair;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
-		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::ScriptStruct", EditConditionHides))
-	TArray<FFlecsTraitTypeInfo> Traits;
-
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsComponentTypeInfo& Other) const
 	{
 		switch (NodeType)
 		{
 			case EFlecsComponentNodeType::ScriptStruct:
 				{
-					return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct && Traits == Other.Traits
-					&& Pair == Other.Pair;
+					return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct && Pair == Other.Pair;
 				}
 			case EFlecsComponentNodeType::EntityHandle:
 				{
@@ -405,42 +400,15 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	{
 		solid_checkf(InEntityHandle.IsValid(), TEXT("Entity Handle is not valid"));
 
-		for (const auto& [NodeType, ScriptStruct, EntityHandle, GameplayTag, Pair, Traits] : Components)
+		for (const auto& [NodeType, ScriptStruct, EntityHandle, GameplayTag, Pair] : Components)
 		{
 			switch (NodeType)
 			{
 			case EFlecsComponentNodeType::ScriptStruct:
 				{
 					InEntityHandle.Set(ScriptStruct);
-
-					for (const auto& [TraitNodeType, TraitScriptStruct, TraitEntityHandle, TraitGameplayTag, TraitPair] : Traits)
-					{
-						switch (TraitNodeType)
-						{
-							case EFlecsComponentNodeType::ScriptStruct:
-								{
-									InEntityHandle.SetTrait(ScriptStruct.GetScriptStruct(), TraitScriptStruct);
-								}
-							break;
-							case EFlecsComponentNodeType::EntityHandle:
-								{
-									InEntityHandle.AddTrait(ScriptStruct.GetScriptStruct(), TraitEntityHandle);
-								}
-							break;
-							case EFlecsComponentNodeType::FGameplayTag:
-								{
-									InEntityHandle.AddTrait(ScriptStruct.GetScriptStruct(), TraitGameplayTag);
-								}
-							break;
-							case EFlecsComponentNodeType::Pair:
-								{
-									TraitPair.AddToEntity(InEntityHandle);
-								}
-							break;
-						}
-					}
-					break;
 				}
+				break;
 			case EFlecsComponentNodeType::EntityHandle:
 				{
 					InEntityHandle.Add(EntityHandle);
@@ -475,4 +443,5 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	
 }; // struct FFlecsEntityRecord
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsEntityRecord, ecs_pair(flecs::OnInstantiate, flecs::DontInherit));
+REGISTER_COMPONENT_TRAIT_TAG(FFlecsEntityRecord,
+	FFlecsId::MakePair(flecs::OnInstantiate, flecs::DontInherit));

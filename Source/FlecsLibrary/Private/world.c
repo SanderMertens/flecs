@@ -175,8 +175,8 @@ const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 118;
 const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 119;
 #endif
 
-const ecs_entity_t ecs_id(EcsSystemPriority) =               FLECS_HI_COMPONENT_ID + 120;
-const ecs_entity_t EcsTraitEntity =                 FLECS_HI_COMPONENT_ID + 121;
+const ecs_entity_t ecs_id(EcsSystemPriority) =      FLECS_HI_COMPONENT_ID + 120;
+const ecs_entity_t EcsSubsetOf =                    FLECS_HI_COMPONENT_ID + 121;
 
 /* Max static id:
  * #define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 256) */

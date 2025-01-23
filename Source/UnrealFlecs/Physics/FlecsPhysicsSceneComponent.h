@@ -30,4 +30,4 @@ public:
 	
 }; // struct FFlecsPhysicsSceneComponent
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsPhysicsSceneComponent, flecs::Sparse)
+REGISTER_COMPONENT_TRAIT_TAG(FFlecsPhysicsSceneComponent, flecs::Sparse)

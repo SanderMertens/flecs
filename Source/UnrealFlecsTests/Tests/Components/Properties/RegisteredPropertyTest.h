@@ -23,7 +23,7 @@ public:
 	
 }; // struct FTestRegisteredPropertyStruct
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct_RegisterPropertyTest, flecs::PairIsTag);
+REGISTER_COMPONENT_TRAIT_TAG(FTestRegisteredPropertyStruct_RegisterPropertyTest, flecs::PairIsTag);
 
 USTRUCT()
 struct FTestRegisteredTraitProperty_RegisterPropertyTest
@@ -49,7 +49,7 @@ struct FTestRegisteredPropertyStruct2_RegisterPropertyTest
 	FString MyString;
 }; // struct FTestRegisteredPropertyStruct2
 
-REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct2_RegisterPropertyTest,
+REGISTER_COMPONENT_TRAIT_TYPE(FTestRegisteredPropertyStruct2_RegisterPropertyTest,
 	TRAIT_PROPERTY_STRUCT(FTestRegisteredTraitProperty_RegisterPropertyTest,
 		FTestRegisteredTraitProperty_RegisterPropertyTest { 1 } ));
 
@@ -68,10 +68,10 @@ struct FTestRegisteredPropertyStruct3_RegisterPropertyTest
 	FString MyString;
 }; // struct FTestRegisteredPropertyStruct3
 
-REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct3_RegisterPropertyTest,
+REGISTER_COMPONENT_TRAIT_TYPE(FTestRegisteredPropertyStruct3_RegisterPropertyTest,
 	TRAIT_PROPERTY_STRUCT(FTestRegisteredTraitProperty_RegisterPropertyTest,
 		FTestRegisteredTraitProperty_RegisterPropertyTest { 2 } ));
-REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct3_RegisterPropertyTest, flecs::PairIsTag);
+REGISTER_COMPONENT_TRAIT_TAG(FTestRegisteredPropertyStruct3_RegisterPropertyTest, flecs::PairIsTag);
 
 struct FTestRegisteredPropertyStruct4NoUSTRUCT_RegisterPropertyTest
 {
@@ -80,7 +80,7 @@ struct FTestRegisteredPropertyStruct4NoUSTRUCT_RegisterPropertyTest
 	FString MyString;
 }; // struct FTestRegisteredPropertyStruct4NoUSTRUCT
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FTestRegisteredPropertyStruct4NoUSTRUCT_RegisterPropertyTest, flecs::PairIsTag);
-REGISTER_COMPONENT_TRAIT_PROPERTIES(FTestRegisteredPropertyStruct4NoUSTRUCT_RegisterPropertyTest,
+REGISTER_COMPONENT_TRAIT_TAG(FTestRegisteredPropertyStruct4NoUSTRUCT_RegisterPropertyTest, flecs::PairIsTag);
+REGISTER_COMPONENT_TRAIT_TYPE(FTestRegisteredPropertyStruct4NoUSTRUCT_RegisterPropertyTest,
 	TRAIT_PROPERTY_STRUCT(FTestRegisteredTraitProperty_RegisterPropertyTest,
 		FTestRegisteredTraitProperty_RegisterPropertyTest { 3 } ));

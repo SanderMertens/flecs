@@ -720,7 +720,6 @@ void flecs_bootstrap(
     ecs_make_alive(world, EcsPairIsTag);
     ecs_make_alive(world, EcsCanToggle);
     ecs_make_alive(world, EcsTrait);
-    ecs_make_alive(world, EcsTraitEntity);
     ecs_make_alive(world, EcsRelationship);
     ecs_make_alive(world, EcsTarget);
     ecs_make_alive(world, EcsSparse);
@@ -843,7 +842,7 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsCanToggle);
     
     flecs_bootstrap_trait(world, EcsTrait);
-    flecs_bootstrap_tag(world, EcsTraitEntity);
+    flecs_bootstrap_tag(world, EcsSubsetOf);
     
     flecs_bootstrap_trait(world, EcsRelationship);
     flecs_bootstrap_trait(world, EcsTarget);
@@ -889,9 +888,14 @@ void flecs_bootstrap(
     ecs_add_pair(world, EcsChildOf, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsIdentifier), EcsOnInstantiate, EcsDontInherit);
 
-    ecs_add_id(world, EcsTraitEntity, EcsPairIsTag);
-    ecs_add_id(world, EcsTraitEntity, EcsAcyclic);
-    ecs_add_id(world, EcsTraitEntity, EcsTraversable);
+    ecs_add_pair(world, EcsSubsetOf, EcsOnDeleteTarget, EcsDelete);
+    ecs_add_id(world, EcsSubsetOf, EcsExclusive);
+    ecs_add_id(world, EcsSubsetOf, EcsRelationship);
+    ecs_add_id(world, EcsSubsetOf, EcsTrait);
+    ecs_add_id(world, EcsSubsetOf, EcsPairIsTag);
+    ecs_add_id(world, EcsSubsetOf, EcsAcyclic);
+    ecs_add_id(world, EcsSubsetOf, EcsTraversable);
+    ecs_add_pair(world, EcsSubsetOf, EcsOnInstantiate, EcsDontInherit);
 
     /* Create triggers in internals scope */
     ecs_set_scope(world, EcsFlecsInternals);

@@ -125,7 +125,7 @@ public:
 		SetTickableTickType(ETickableTickType::Always);
 		
 		std::vector<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
-		TMap<FString, flecs::entity_t> DefaultEntityIds = FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;
+		TMap<FString, FFlecsId> DefaultEntityIds = FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;
 		
 		// Add a the debug string for this world to the passed-in name E.G. "MyWorld (Client)"
 		const FName WorldNameWithWorldContext = FName(Name +" ("+ GetDebugStringForWorld(GetWorld())+")");
@@ -144,7 +144,7 @@ public:
 		for (uint32 Index = 0; Index < DefaultEntities.size(); ++Index)
 		{
 			FString EntityName = DefaultEntities[Index].EntityName;
-			const flecs::entity_t EntityId = DefaultEntityIds[EntityName];
+			const FFlecsId EntityId = DefaultEntityIds[EntityName];
 
 			#if UNLOG_ENABLED
 			
@@ -155,10 +155,10 @@ public:
 			NewFlecsWorld->CreateEntityWithRecordWithId(DefaultEntities[Index].EntityRecord, EntityId);
 
 			UN_LOGF(LogFlecsCore, Log,
-				"Created default entity %s with id %d", *EntityName, EntityId);
+				"Created default entity %s with id %d", *EntityName, EntityId.GetId());
 			
 			UN_LOGF(LogFlecsCore, Log,
-				"Entity %s with id %d", *NewEntity.GetName(), NewEntity.GetId());
+				"Entity %s with id %d", *NewEntity.GetName(), NewEntity.GetIndex());
 		}
 
 		const IConsoleManager& ConsoleManager = IConsoleManager::Get();
