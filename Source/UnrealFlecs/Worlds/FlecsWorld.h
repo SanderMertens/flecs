@@ -239,13 +239,15 @@ public:
 				
 				RegisterMemberProperties(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
 
-				if (InScriptStructComponent.ScriptStruct->GetSuperStruct())
+				#if 0
+				 if (InScriptStructComponent.ScriptStruct->GetSuperStruct())
 				{
 					const FFlecsEntityHandle SuperStructHandle = ObtainComponentTypeStruct(CastChecked<UScriptStruct>(
 						InScriptStructComponent.ScriptStruct->GetSuperStruct()));
 
 					EntityHandle.AddPair(flecs::IsA, SuperStructHandle);
 				}
+				#endif
 			});
 
 		ObjectDestructionComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectDestructionComponentQuery")
