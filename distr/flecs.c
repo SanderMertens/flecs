@@ -10462,29 +10462,21 @@ void flecs_cmd_batch_for_entity(
         case EcsCmdSet:
         case EcsCmdEnsure: {
             ecs_id_t *ids = diff->added.array;
-            uint8_t added_index = flecs_ito(uint8_t, diff->added.count);
 
             ecs_table_t *next = flecs_find_table_add(world, table, id, diff);
             if (next != table) {
                 table = next;
-                if (diff->added.count == (added_index + 1)) {
-                    /* Single id was added, must be at the end of the array */
-                    ecs_assert(ids[added_index] == id, ECS_INTERNAL_ERROR, NULL);
-                    set_mask |= (1llu << added_index);
-                } else {
-                    /* Id was already added or multiple ids got added. Do a linear
-                    * search to find the index we need to set the set_mask. */
-                    int32_t i;
-                    for (i = 0; i < diff->added.count; i ++) {
-                        if (ids[i] == id) {
-                            break;
-                        }
-                    }
+            }
 
-                    ecs_assert(i != diff->added.count, ECS_INTERNAL_ERROR, NULL);
-                    set_mask |= (1llu << i);
+            /* Find id in added array so we can set the bit in the set_mask */
+            int32_t i;
+            for (i = 0; i < diff->added.count; i ++) {
+                if (ids[i] == id) {
+                    break;
                 }
             }
+
+            set_mask |= (1llu << i);
 
             world->info.cmd.batched_command_count ++;
             break;
