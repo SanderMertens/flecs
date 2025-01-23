@@ -332,27 +332,6 @@ public:
 					}
 				}
 			});
-
-		/*CreateObserver<FFlecsScriptStructComponent>(TEXT("ComponentCollectionObserver"))
-			.term_at(0).filter()
-			.with<FFlecsComponentCollection>().event(flecs::OnAdd)
-			.observer_flags(EcsQueryMatchPrefab)
-			.yield_existing()
-			.each([this](flecs::iter& Iter, size_t IterIndex,
-				const FFlecsScriptStructComponent& InScriptStructComponent)
-			{
-				FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
-				
-				const UScriptStruct* ScriptStruct = InScriptStructComponent.ScriptStruct.Get();
-				solid_check(IsValid(ScriptStruct));
-
-				for (TFieldIterator<FStructProperty> PropertyIt(ScriptStruct, EFieldIteratorFlags::ExcludeSuper);
-					PropertyIt; ++PropertyIt)
-				{
-					const FStructProperty* Property = *PropertyIt;
-					EntityHandle.Add(ObtainComponentTypeStruct(Property->Struct));
-				}
-			});*/
 	}
 
 	void InitializeAssetRegistry()
