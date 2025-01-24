@@ -3061,6 +3061,8 @@ void Cached_rematch_optional_ref(void) {
     test_uint(0, it.sources[1]);
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 

@@ -429,10 +429,8 @@ typedef struct ecs_query_cache_event_t {
 
 /* Query level block allocators have sizes that depend on query field count */
 typedef struct ecs_query_cache_allocators_t {
-    ecs_block_allocator_t trs;
+    ecs_block_allocator_t pointers;
     ecs_block_allocator_t ids;
-    ecs_block_allocator_t sources;
-    ecs_block_allocator_t tables;
     ecs_block_allocator_t monitors;
 } ecs_query_cache_allocators_t;
 

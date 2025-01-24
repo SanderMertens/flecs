@@ -10760,6 +10760,8 @@ void Traversal_this_up_isa_childof_2_lvl(void) {
 
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -10806,6 +10808,8 @@ void Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_inherit(void) {
 
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -10839,6 +10843,8 @@ void Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10874,6 +10880,8 @@ void Traversal_this_up_isa_childof_2_lvl_after_remove_override(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10920,6 +10928,8 @@ void Traversal_this_written_up_isa_childof_2_lvl(void) {
     test_uint(inst, ecs_field_src(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
+    
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10967,6 +10977,8 @@ void Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_inherit(void) 
 
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -11000,6 +11012,8 @@ void Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit(v
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -11035,6 +11049,8 @@ void Traversal_this_written_up_isa_childof_2_lvl_after_remove_override(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
