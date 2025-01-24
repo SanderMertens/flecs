@@ -443,5 +443,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	
 }; // struct FFlecsEntityRecord
 
-REGISTER_COMPONENT_TRAIT_TAG(FFlecsEntityRecord,
-	FFlecsId::MakePair(flecs::OnInstantiate, flecs::DontInherit));
+REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsEntityRecord, [](flecs::world InWorld, flecs::untyped_component InComponent)
+	{
+		InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+	});

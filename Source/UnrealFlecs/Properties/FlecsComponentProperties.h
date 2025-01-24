@@ -8,18 +8,25 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
-#include "Entities/FlecsId.h"
 #include "Standard/robin_hood.h"
 #include "SolidMacros/Macros.h"
-#include "StructUtils/SharedStruct.h"
+#include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Unlog/Unlog.h"
+
+namespace UnrealFlecs
+{
+	using FlecsComponentFunctionPtr = std::function<void(flecs::world, flecs::untyped_component)>;
+} // namespace UnrealFlecs
 
 struct UNREALFLECS_API FFlecsComponentProperties
 {
 	std::string Name;
-	std::vector<FFlecsId> Entities;
-	
-	TArray<FSharedStruct> ComponentPropertyStructs;
+	UScriptStruct* Struct = nullptr;
+
+	uint32 Size = 1;
+	uint16 Alignment = 1;
+
+	UnrealFlecs::FlecsComponentFunctionPtr RegistrationFunction;
 }; // struct FFlecsComponentProperties
 
 DECLARE_DELEGATE_OneParam(FOnComponentPropertiesRegistered, FFlecsComponentProperties);
@@ -33,62 +40,19 @@ public:
 		return Instance;
 	}
 
-	FORCEINLINE void RegisterComponentProperties(const std::string& Name, const std::vector<FFlecsId>& Entities,
-		const TArray<FSharedStruct>& ComponentPropertyStructs, const bool bResetExisting = false, const bool bOverride = false)
+	FORCEINLINE void RegisterComponentProperties(const std::string& Name,
+		UScriptStruct* Struct,
+		const uint32 Size, const uint16 Alignment, const UnrealFlecs::FlecsComponentFunctionPtr& RegistrationFunction)
 	{
 		UNLOG_CATEGORY_SCOPED(LogFlecsComponentProperties);
-
-		if (bResetExisting)
-		{
-			if (ComponentProperties.contains(Name))
-			{
-				ComponentProperties.erase(Name);
-			}
-		}
 		
-		if (!ComponentProperties.contains(Name))
+		ComponentProperties[Name] = FFlecsComponentProperties
 		{
-			ComponentProperties[Name] = FFlecsComponentProperties {
-				.Name = Name,
-				.Entities = Entities,
-				.ComponentPropertyStructs = ComponentPropertyStructs
-			};
-			
-			UN_LOGF(LogFlecsComponentProperties,
-				Log,
-				"Registered component properties: %s",
-				*FString(Name.data()));
-		}
-		else
-		{
-			for (const FFlecsId Entity : Entities)
-			{
-				if (std::ranges::find(
-					ComponentProperties[Name].Entities, Entity) != ComponentProperties[Name].Entities.end())
-				{
-					continue;
-				}
-
-				ComponentProperties[Name].Entities.emplace_back(Entity);
-
-				UN_LOGF(LogFlecsComponentProperties, Log,
-					"Updated component properties: %s", *FString(Name.data()));
-			}
-
-			for (const FSharedStruct& ComponentPropertyStruct : ComponentPropertyStructs)
-			{
-				if (!bOverride)
-				{
-					if (ComponentProperties[Name].ComponentPropertyStructs.Contains(ComponentPropertyStruct))
-					{
-						continue;
-					}
-				}
-
-				ComponentProperties[Name].ComponentPropertyStructs.Add(ComponentPropertyStruct);
-			}
-		}
-
+			.Name = Name, .Struct = Struct,
+			.Size = Size, .Alignment = Alignment,
+			.RegistrationFunction = RegistrationFunction
+		};
+		
 		OnComponentPropertiesRegistered.ExecuteIfBound(ComponentProperties[Name]);
 	}
 
@@ -103,88 +67,44 @@ public:
 		checkf(ComponentProperties.contains(Name), TEXT("Component properties not found!"));
 		return &ComponentProperties.at(Name);
 	}
-
-	FORCEINLINE static void RegisterStructMetaData(UScriptStruct* ScriptStruct, const FString& Tags = FString())
-	{
-		#if WITH_METADATA
-		
-		if UNLIKELY_IF(!ensureAlways(IsValid(ScriptStruct)))
-		{
-			return;
-		}
-
-		const FName MetaDataKey = "FlecsTags";
-
-		if (ScriptStruct->HasMetaData(MetaDataKey))
-		{
-			const FString ExistingTags = ScriptStruct->GetMetaData(MetaDataKey);
-			ScriptStruct->SetMetaData(MetaDataKey, *FString::Printf(TEXT("%s %s"), *ExistingTags, *Tags));
-		}
-		else
-		{
-			ScriptStruct->SetMetaData(MetaDataKey, *Tags);
-		}
-
-		#endif // WITH_METADATA
-	}
 	
 	robin_hood::unordered_flat_map<std::string, FFlecsComponentProperties> ComponentProperties;
 
 	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
 }; // struct FFlecsComponentPropertiesRegistry
 
-/**
- * Do not use this macro directly, use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES
- */
-#define PRIVATE_REGISTER_FLECS_PROPERTIES_TAGS_IMPL_(ComponentType, ...) \
+#define REGISTER_USTRUCT_FLECS_COMPONENT(Name, RegistrationFunction) \
+	static_assert(Solid::IsStaticStruct<Name>(), "Name must be a static struct! Use REGISTER_FLECS_COMPONENT instead!"); \
 	namespace \
 	{ \
-		struct FAutoRegister##ComponentType##_Tags \
+		struct FFlecs_AutoRegister_##Name \
 		{ \
-			FAutoRegister##ComponentType##_Tags() \
-			{ \
-				std::vector<FFlecsId> Entities = { __VA_ARGS__ } ; \
-				FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, Entities, {}); \
-				if constexpr (Solid::IsStaticStruct<ComponentType>()) \
-				{ \
-					FCoreDelegates::OnPostEngineInit.AddLambda([]() \
-					{ \
-						UScriptStruct* ScriptStruct = StaticStruct<ComponentType>(); \
-						FFlecsComponentPropertiesRegistry::Get().RegisterStructMetaData(ScriptStruct, TEXT(#__VA_ARGS__)); \
-					}); \
-				} \
-			} \
-		}; \
-		static FAutoRegister##ComponentType##_Tags AutoRegister##ComponentType##_Instance_Tags; \
-	}
-
-/**
- * Do not use this macro directly, use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES
- */
-#define PRIVATE_REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, ...) \
-	namespace \
-	{ \
-		struct FAutoRegister##ComponentType##_Traits \
-		{ \
-			FAutoRegister##ComponentType##_Traits() \
+			FFlecs_AutoRegister_##Name() \
 			{ \
 				FCoreDelegates::OnPostEngineInit.AddLambda([]() \
 				{ \
-					TArray<FSharedStruct> ComponentPropertyStructs = { __VA_ARGS__ }; \
-					FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, {}, ComponentPropertyStructs); \
+					FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties( \
+					#Name, StaticStruct<Name>(), sizeof(Name), alignof(Name), RegistrationFunction); \
 				}); \
 			} \
 		}; \
-		static FAutoRegister##ComponentType##_Traits AutoRegister##ComponentType##_Instance_Traits; \
+		static FFlecs_AutoRegister_##Name AutoRegister_##Name; \
 	}
 
-#define REGISTER_COMPONENT_TRAIT_TAG(ComponentType, ...) \
-	PRIVATE_REGISTER_FLECS_PROPERTIES_TAGS_IMPL_(ComponentType, __VA_ARGS__ )
-
-// @TODO: Only Support ScriptStructs for now
-#define REGISTER_COMPONENT_TRAIT_TYPE(ComponentType, ...) \
-	PRIVATE_REGISTER_FLECS_PROPERTIES_TRAITS_IMPL_(ComponentType, __VA_ARGS__ )
-
-#define TRAIT_PROPERTY_STRUCT(PropertyStruct, ...) \
-	FSharedStruct::Make<PropertyStruct>(__VA_ARGS__)
-	
+#define REGISTER_FLECS_COMPONENT(Name, RegistrationFunction) \
+	static_assert(!Solid::IsStaticStruct<Name>(), "Name must not be a static struct! Use REGISTER_USTRUCT_FLECS_COMPONENT instead!"); \
+	namespace \
+	{ \
+		struct FFlecs_AutoRegister_##Name \
+		{ \
+			FFlecs_AutoRegister_##Name() \
+			{ \
+				FCoreDelegates::OnPostEngineInit.AddLambda([]() \
+				{ \
+					FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties( \
+						#Name, nullptr, sizeof(StaticStruct), alignof(StaticStruct), RegistrationFunction); \
+				}); \
+			} \
+		}; \
+		static FFlecs_AutoRegister_##Name AutoRegister_##Name; \
+	} 

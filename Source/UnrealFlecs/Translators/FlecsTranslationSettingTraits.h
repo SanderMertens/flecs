@@ -12,7 +12,10 @@ struct UNREALFLECS_API FFlecsTranslationPropertyTrait
 	GENERATED_BODY()
 }; // struct FFlecsTranslationPropertyTrait
 
-REGISTER_COMPONENT_TRAIT_TAG(FFlecsTranslationPropertyTrait, flecs::PairIsTag)
+REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsTranslationPropertyTrait, [](flecs::world InWorld, flecs::untyped_component InComponent)
+{
+	InComponent.add(flecs::PairIsTag);
+})
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsToUnreal

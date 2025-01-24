@@ -14,6 +14,8 @@ struct FFlecsComponentCollection
 	GENERATED_BODY()
 }; // struct FFlecsComponentCollection
 
-REGISTER_COMPONENT_TRAIT_TAG(FFlecsComponentCollection,
-	FFlecsId::MakePair(flecs::With, flecs::Prefab), FFlecsId::MakePair(flecs::OnInstantiate, flecs::DontInherit));
-	
+REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsComponentCollection, [](flecs::world InWorld, flecs::untyped_component InComponent)
+{
+	InComponent.add(flecs::With, flecs::Prefab);
+	InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+});

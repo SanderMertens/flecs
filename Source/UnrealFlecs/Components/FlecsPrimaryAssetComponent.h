@@ -36,4 +36,7 @@ public:
 	
 }; // struct FFlecsPrimaryAssetComponent
 
-REGISTER_COMPONENT_TRAIT_TAG(FFlecsPrimaryAssetComponent, FFlecsId::MakePair(flecs::OnInstantiate, flecs::DontInherit));
+REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsPrimaryAssetComponent, [](flecs::world InWorld, flecs::untyped_component InComponent)
+{
+	InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+});

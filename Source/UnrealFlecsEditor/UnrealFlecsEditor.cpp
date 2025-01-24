@@ -6,7 +6,6 @@
 #include "Engine/AssetManagerTypes.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Logs/FlecsEditorCategory.h"
-#include "Properties/FlecsComponentPropertiesAsset.h"
 #include "Widgets/EntityHandle/FlecsEntityHandlePinFactory.h"
 #include "Widgets/EntityHandle/FlecsEntityHandlePropertyEditor.h"
 #include "Widgets/Notifications/SNotificationList.h"
@@ -109,15 +108,15 @@ void FUnrealFlecsEditorModule::AddPrimaryAssetTypes()
 
 	bool bModified = false;
 
-	// Define your primary asset types
-	FPrimaryAssetTypeInfo FlecsComponentPropertiesTypeInfo(
-		FName("FlecsComponentProperties"),
-		UFlecsComponentPropertiesAsset::StaticClass(),
-		false,
-		false
-	);
+	// // Define your primary asset types
+	// FPrimaryAssetTypeInfo FlecsComponentPropertiesTypeInfo(
+	// 	FName("FlecsComponentProperties"),
+	// 	UFlecsComponentPropertiesAsset::StaticClass(),
+	// 	false,
+	// 	false
+	// );
 
-	FlecsComponentPropertiesTypeInfo.Rules.CookRule = EPrimaryAssetCookRule::AlwaysCook;
+	//FlecsComponentPropertiesTypeInfo.Rules.CookRule = EPrimaryAssetCookRule::AlwaysCook;
 
 	FPrimaryAssetTypeInfo FlecsPrimaryDataAssetTypeInfo(
 		FName("FlecsPrimaryDataAsset"),
@@ -137,11 +136,11 @@ void FUnrealFlecsEditorModule::AddPrimaryAssetTypes()
 		});
 	};
 
-	if (!IsAssetTypePresent(FlecsComponentPropertiesTypeInfo))
-	{
-		Settings->PrimaryAssetTypesToScan.Add(FlecsComponentPropertiesTypeInfo);
-		bModified = true;
-	}
+	// if (!IsAssetTypePresent(FlecsComponentPropertiesTypeInfo))
+	// {
+	// 	Settings->PrimaryAssetTypesToScan.Add(FlecsComponentPropertiesTypeInfo);
+	// 	bModified = true;
+	// }
 
 	if (!IsAssetTypePresent(FlecsPrimaryDataAssetTypeInfo))
 	{

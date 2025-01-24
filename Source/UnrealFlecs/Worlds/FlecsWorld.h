@@ -211,24 +211,12 @@ public:
 				if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(
 					StringCast<char>(*StructSymbol).Get()))
 				{
+					flecs::untyped_component InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
+						
 					const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get().
 						GetComponentProperties(StringCast<char>(*StructSymbol).Get());
-					
-					for (const FFlecsId Entity : Properties->Entities)
-					{
-						EntityHandle.Add(Entity);
-					}
 
-					for (const FSharedStruct& InstancedStruct : Properties->ComponentPropertyStructs)
-					{
-						solid_check(InstancedStruct.IsValid());
-						EntityHandle.Set(FInstancedStruct(FConstStructView(InstancedStruct)));
-					}
-
-					UN_LOGF(LogFlecsWorld, Log,
-						"Component properties %s found with %d entities and %d component properties",
-						*StructSymbol, Properties->Entities.size(),
-						Properties->ComponentPropertyStructs.Num());
+					Properties->RegistrationFunction(Iter.world(), InUntypedComponent);
 				}
 				#if UNLOG_ENABLED
 				else
@@ -238,14 +226,6 @@ public:
 				#endif // UNLOG_ENABLED
 				
 				RegisterMemberProperties(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
-				
-				if (InScriptStructComponent.ScriptStruct->GetSuperStruct())
-				{
-					const FFlecsEntityHandle SuperStructHandle = ObtainComponentTypeStruct(CastChecked<UScriptStruct>(
-						InScriptStructComponent.ScriptStruct->GetSuperStruct()));
-
-					EntityHandle.AddPair(flecs::IsA, SuperStructHandle);
-				}
 			});
 
 		ObjectDestructionComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectDestructionComponentQuery")
