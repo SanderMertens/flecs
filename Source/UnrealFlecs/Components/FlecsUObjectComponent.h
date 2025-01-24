@@ -109,8 +109,10 @@ public:
     
 }; // struct FFlecsUObjectComponent
 
-REGISTER_COMPONENT_TRAIT_TAG(FFlecsUObjectComponent,
-    FFlecsId::MakePair(flecs::OnInstantiate, flecs::DontInherit));
+REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsUObjectComponent, [](flecs::world InWorld, flecs::untyped_component InComponent)
+{
+    InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+});
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsNoDeleteUObject
@@ -118,7 +120,9 @@ struct UNREALFLECS_API FFlecsNoDeleteUObject
     GENERATED_BODY()
 }; // struct FFlecsNoDeleteUObject
 
-REGISTER_COMPONENT_TRAIT_TAG(FFlecsNoDeleteUObject,
-    FFlecsId::MakePair(flecs::OnInstantiate, flecs::DontInherit));
+REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsNoDeleteUObject, [](flecs::world InWorld, flecs::untyped_component InComponent)
+{
+    InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+});
 
 

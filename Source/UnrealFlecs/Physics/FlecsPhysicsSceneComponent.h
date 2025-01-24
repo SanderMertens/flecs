@@ -30,4 +30,7 @@ public:
 	
 }; // struct FFlecsPhysicsSceneComponent
 
-REGISTER_COMPONENT_TRAIT_TAG(FFlecsPhysicsSceneComponent, flecs::Sparse)
+REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsPhysicsSceneComponent, [](flecs::world World, flecs::untyped_component Component)
+	{
+		Component.add(flecs::Sparse);
+	});

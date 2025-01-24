@@ -13,8 +13,11 @@ struct FCollectionRemoveComponentsOnDestroyTag
 	GENERATED_BODY()
 };
 
-REGISTER_COMPONENT_TRAIT_TAG(FCollectionRemoveComponentsOnDestroyTag,
-	FFlecsId::MakePair(flecs::OnInstantiate, flecs::DontInherit));
+REGISTER_USTRUCT_FLECS_COMPONENT(FCollectionRemoveComponentsOnDestroyTag,
+	[](flecs::world InWorld, flecs::untyped_component InComponent)
+	{
+		InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+	});
 
 UCLASS(Abstract, BlueprintType, Blueprintable, EditInlineNew)
 class UNREALFLECS_API UFlecsComponentCollectionObject : public UObject

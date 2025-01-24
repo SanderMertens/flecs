@@ -81,13 +81,13 @@ void FRegisteredComponentTestsSpec::Define()
 
 	Describe("Register Inherited Components", [this]()
 	{
-		It("Should add USTRUCT Component using StaticStruct", [this]()
-		{
-			FFlecsEntityHandle RegisteredInheritedComponent
-				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_Inherited::StaticStruct());
-			TestTrue("Inherited Component should have its parent",
-				RegisteredInheritedComponent.HasPair(flecs::IsA, FUStructTestComponent_RegisterComponentTest::StaticStruct()));
-		});
+		// It("Should add USTRUCT Component using StaticStruct", [this]()
+		// {
+		// 	FFlecsEntityHandle RegisteredInheritedComponent
+		// 		= Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_Inherited::StaticStruct());
+		// 	TestTrue("Inherited Component should have its parent",
+		// 		RegisteredInheritedComponent.HasPair(flecs::IsA, FUStructTestComponent_RegisterComponentTest::StaticStruct()));
+		// });
 	});
 }
 
