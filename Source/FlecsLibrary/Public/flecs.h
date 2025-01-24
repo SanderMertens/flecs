@@ -153,7 +153,7 @@
  * slightly improves performance.
  * The C API is not affected by this feature.
  */
-// #define FLECS_CPP_NO_AUTO_REGISTRATION
+ #define FLECS_CPP_NO_AUTO_REGISTRATION
 
 /** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
