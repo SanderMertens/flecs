@@ -190,10 +190,16 @@ public:
 	}
 	
 	template <typename T>
-	SOLID_INLINE NO_DISCARD T* GetPtr() { return GetEntity().get_mut<T>(); }
+	SOLID_INLINE NO_DISCARD T* GetPtr()
+	{
+		return GetEntity().get_mut<T>();
+	}
 	
 	template <typename T>
-	SOLID_INLINE NO_DISCARD const T* GetPtr() const { return GetEntity().get<T>(); }
+	SOLID_INLINE NO_DISCARD const T* GetPtr() const
+	{
+		return GetEntity().get<T>();
+	}
 
 	SOLID_INLINE NO_DISCARD void* GetPtr(const UScriptStruct* StructType)
 	{
@@ -206,27 +212,55 @@ public:
 	}
 
 	template <typename T>
-	SOLID_INLINE NO_DISCARD T& GetRef() { return *GetEntity().get_ref<T>().get(); }
+	SOLID_INLINE NO_DISCARD T& GetRef()
+	{
+		return *GetEntity().get_ref<T>().get();
+	}
 
 	template <typename T>
-	SOLID_INLINE NO_DISCARD const T& GetRef() const { return *GetEntity().get_ref<T>().get(); }
+	SOLID_INLINE NO_DISCARD const T& GetRef() const
+	{
+		return *GetEntity().get_ref<T>().get();
+	}
 
 	template <typename T>
-	SOLID_INLINE NO_DISCARD flecs::ref<T> GetFlecsRef() const { return GetEntity().get_ref<T>(); }
+	SOLID_INLINE NO_DISCARD flecs::ref<T> GetFlecsRef() const
+	{
+		return GetEntity().get_ref<T>();
+	}
 
 	template <typename T>
-	SOLID_INLINE NO_DISCARD flecs::ref<T> GetFlecsRef() { return GetEntity().get_ref<T>(); }
+	SOLID_INLINE NO_DISCARD flecs::ref<T> GetFlecsRef()
+	{
+		return GetEntity().get_ref<T>();
+	}
 
 	template <typename T>
-	SOLID_INLINE NO_DISCARD bool Has() { return GetEntity().has<T>(); }
+	SOLID_INLINE NO_DISCARD bool Has()
+	{
+		return GetEntity().has<T>();
+	}
 
-	SOLID_INLINE void Clear() const { GetEntity().clear(); }
+	SOLID_INLINE void Clear() const
+	{
+		GetEntity().clear();
+	}
 
-	SOLID_INLINE void Enable() const { GetEntity().enable(); }
-	SOLID_INLINE void Disable() const { GetEntity().disable(); }
+	SOLID_INLINE void Enable() const
+	{
+		GetEntity().enable();
+	}
+	
+	SOLID_INLINE void Disable() const
+	{
+		GetEntity().disable();
+	}
 
 	template <typename T>
-	SOLID_INLINE void Enable() const { GetEntity().enable<T>(); }
+	SOLID_INLINE void Enable() const
+	{
+		GetEntity().enable<T>();
+	}
 
 	SOLID_INLINE void Enable(const FFlecsId InEntity) const { GetEntity().enable(InEntity); }
 	
@@ -240,7 +274,10 @@ public:
 		Enable(GetTagEntity(InTag));
 	}
 
-	SOLID_INLINE void Disable(const FFlecsId InEntity) const { GetEntity().disable(InEntity); }
+	SOLID_INLINE void Disable(const FFlecsId InEntity) const
+	{
+		GetEntity().disable(InEntity);
+	}
 	
 	SOLID_INLINE void Disable(const UScriptStruct* StructType) const
 	{
@@ -253,12 +290,21 @@ public:
 	}
 
 	template <typename T>
-	SOLID_INLINE void Disable() const { GetEntity().disable<T>(); }
+	SOLID_INLINE void Disable() const
+	{
+		GetEntity().disable<T>();
+	}
 
-	SOLID_INLINE void Toggle() const { IsEnabled() ? Disable() : Enable(); }
+	SOLID_INLINE void Toggle() const
+	{
+		IsEnabled() ? Disable() : Enable();
+	}
 
 	template <typename T>
-	SOLID_INLINE void Toggle() const { IsEnabled<T>() ? Disable<T>() : Enable<T>(); }
+	SOLID_INLINE void Toggle() const
+	{
+		IsEnabled<T>() ? Disable<T>() : Enable<T>();
+	}
 
 	SOLID_INLINE void Toggle(const FFlecsId InEntity) const
 	{
@@ -275,10 +321,16 @@ public:
 		Toggle(GetTagEntity(InTag));
 	}
 
-	SOLID_INLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled(); }
+	SOLID_INLINE NO_DISCARD bool IsEnabled() const
+	{
+		return GetEntity().enabled();
+	}
 
 	template <typename T>
-	SOLID_INLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled<T>(); }
+	SOLID_INLINE NO_DISCARD bool IsEnabled() const
+	{
+		return GetEntity().enabled<T>();
+	}
 
 	SOLID_INLINE NO_DISCARD bool IsEnabled(const FFlecsId InEntity) const
 	{
@@ -295,7 +347,10 @@ public:
 		return IsEnabled(GetTagEntity(InTag));
 	}
 
-	SOLID_INLINE void Destroy() const { GetEntity().destruct(); }
+	SOLID_INLINE void Destroy() const
+	{
+		GetEntity().destruct();
+	}
 
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle Clone(const bool bCloneValue = true, const FFlecsId DestinationId = 0) const
 	{

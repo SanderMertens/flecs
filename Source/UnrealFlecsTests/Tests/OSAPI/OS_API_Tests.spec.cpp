@@ -42,6 +42,15 @@ void FFlecsOSApiTestsSpec::Define()
 			const uint32_t Time = ecs_os_now();
 			TestTrue("Time should be greater than 0", Time > 0);
 		});
+
+		It("Should Sleep 10000 nanosecs", [this]
+		{
+			const uint32_t Time = ecs_os_now();
+			ecs_os_sleep(0, 10000);
+			const uint32_t NewTime = ecs_os_now();
+			TestTrue("Time should be greater than 0", Time > 0);
+			TestTrue("NewTime should be greater than Time", NewTime > Time);
+		});
 	});
 }
 

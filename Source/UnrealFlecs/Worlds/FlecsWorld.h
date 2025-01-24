@@ -238,16 +238,14 @@ public:
 				#endif // UNLOG_ENABLED
 				
 				RegisterMemberProperties(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
-
-				#if 0
-				 if (InScriptStructComponent.ScriptStruct->GetSuperStruct())
+				
+				if (InScriptStructComponent.ScriptStruct->GetSuperStruct())
 				{
 					const FFlecsEntityHandle SuperStructHandle = ObtainComponentTypeStruct(CastChecked<UScriptStruct>(
 						InScriptStructComponent.ScriptStruct->GetSuperStruct()));
 
 					EntityHandle.AddPair(flecs::IsA, SuperStructHandle);
 				}
-				#endif
 			});
 
 		ObjectDestructionComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectDestructionComponentQuery")
@@ -1425,14 +1423,7 @@ public:
 	{
 		return World.prefab(StringCast<char>(*Name).Get());
 	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle FindPrefabEntity(UFlecsPrefabAsset* InPrefabAsset) const
-	{
-		solid_checkf(IsValid(InPrefabAsset), TEXT("Prefab asset is nullptr"));
-		return LookupEntity(InPrefabAsset->GetPrimaryAssetId().ToString());
-	}
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	void DestroyPrefab(const FFlecsEntityHandle& InPrefab) const
 	{
