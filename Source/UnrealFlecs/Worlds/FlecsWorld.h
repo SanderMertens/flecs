@@ -192,24 +192,16 @@ public:
 
 	void InitializeSystems()
 	{
-		CreateObserver<const FFlecsScriptStructComponent>("ScriptStructComponentObserver")
+		CreateObserver<flecs::Component>("AnyComponentObserver")
 			.with_symbol_component().filter()
 			.event(flecs::OnSet)
 			.yield_existing()
-			.each([this](flecs::iter& Iter, size_t IterIndex,
-			             const FFlecsScriptStructComponent& InScriptStructComponent)
+			.each([this](flecs::iter& Iter, size_t IterIndex, const flecs::Component& InComponent)
 			{
-				FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
-
-				if (InScriptStructComponent.ScriptStruct == FFlecsScriptStructComponent::StaticStruct())
-				{
-					return;
-				}
-
+				const FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
 				const FString StructSymbol = EntityHandle.GetSymbol();
 				
-				if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(
-					StringCast<char>(*StructSymbol).Get()))
+				if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(StringCast<char>(*StructSymbol).Get()))
 				{
 					flecs::untyped_component InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
 						
@@ -224,6 +216,21 @@ public:
 					UN_LOGF(LogFlecsWorld, Log, "Component properties %s not found", *StructSymbol);
 				}
 				#endif // UNLOG_ENABLED
+			});
+	
+		CreateObserver<const FFlecsScriptStructComponent>("ScriptStructComponentObserver")
+			.with_symbol_component().filter()
+			.event(flecs::OnSet)
+			.yield_existing()
+			.each([this](flecs::iter& Iter, size_t IterIndex,
+			             const FFlecsScriptStructComponent& InScriptStructComponent)
+			{
+				FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
+
+				if (InScriptStructComponent.ScriptStruct == FFlecsScriptStructComponent::StaticStruct())
+				{
+					return;
+				}
 				
 				RegisterMemberProperties(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
 			});
