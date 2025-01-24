@@ -18,7 +18,7 @@ static bool ecs_os_api_initializing = false;
 static int ecs_os_api_init_count = 0;
 
 ecs_os_api_t ecs_os_api = {
-    .flags_ = EcsOsApiHighResolutionTimer | EcsOsApiLogWithColors,
+    .flags_ = EcsOsApiHighResolutionTimer,
     .log_level_ = -1 /* Disable tracing by default, but log warnings/errors */
 };
 
