@@ -700,7 +700,6 @@ error:
     return -1;
 }
 
-FLECS_API
 const char* ecs_expr_run(
     ecs_world_t *world,
     const char *expr,
@@ -738,7 +737,6 @@ error:
     return NULL;
 }
 
-FLECS_API
 char* ecs_script_string_interpolate(
     ecs_world_t *world,
     const char *str,
