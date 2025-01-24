@@ -527,10 +527,22 @@ void flecs_query_cache_set_table_match(
             qm->sources = flecs_balloc(&cache->allocators.sources);
         }
         ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, field_count);
+        if (!qm->tables) {
+            qm->tables = flecs_balloc(&cache->allocators.tables);
+        }
+        for (i = 0; i < field_count; i ++) {
+            if (it->trs[i]) {
+                qm->tables[i] = it->trs[i]->hdr.table;
+            }
+        }
     } else {
         if (qm->sources != cache->sources) {
             flecs_bfree(&cache->allocators.sources, qm->sources);
             qm->sources = cache->sources;
+        }
+        if (qm->tables) {
+            flecs_bfree(&cache->allocators.tables, qm->tables);
+            qm->tables = NULL;
         }
     }
 
@@ -746,6 +758,10 @@ void flecs_query_cache_table_match_free(
 
         if (cur->sources != cache->sources) {
             flecs_bfree(&cache->allocators.sources, cur->sources);
+        }
+
+        if (cur->tables) {
+            flecs_bfree(&cache->allocators.tables, cur->tables);
         }
 
         if (cur->monitor) {
@@ -1072,6 +1088,8 @@ void flecs_query_cache_allocators_init(
             field_count * ECS_SIZEOF(ecs_id_t));
         flecs_ballocator_init(&cache->allocators.sources,
             field_count * ECS_SIZEOF(ecs_entity_t));
+        flecs_ballocator_init(&cache->allocators.tables,
+            field_count * ECS_SIZEOF(ecs_entity_t));
         flecs_ballocator_init(&cache->allocators.monitors,
             (1 + field_count) * ECS_SIZEOF(int32_t));
     }
@@ -1086,6 +1104,7 @@ void flecs_query_cache_allocators_fini(
         flecs_ballocator_fini(&cache->allocators.trs);
         flecs_ballocator_fini(&cache->allocators.ids);
         flecs_ballocator_fini(&cache->allocators.sources);
+        flecs_ballocator_fini(&cache->allocators.tables);
         flecs_ballocator_fini(&cache->allocators.monitors);
     }
 }

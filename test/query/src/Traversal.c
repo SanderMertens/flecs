@@ -11038,3 +11038,119 @@ void Traversal_this_written_up_isa_childof_2_lvl_after_remove_override(void) {
 
     ecs_fini(world);
 }
+
+void Traversal_singleton_w_this_up_w_table_change(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = EcsSingleton }, { Bar, .src.id = EcsUp }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_singleton_add(world, Foo);
+
+    ecs_entity_t p = ecs_new_w(world, Bar);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c, it.entities[0]);
+        test_uint(Foo, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_assert(it.trs[0] != NULL);
+        test_assert(it.trs[1] != NULL);
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, Foo));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, p));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, p, Tag);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c, it.entities[0]);
+        test_uint(Foo, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_assert(it.trs[0] != NULL);
+        test_assert(it.trs[1] != NULL);
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, Foo));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, p));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_this_up_w_singleton_w_table_change(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Bar, .src.id = EcsUp }, { Foo, .src.id = EcsSingleton }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_singleton_add(world, Foo);
+
+    ecs_entity_t p = ecs_new_w(world, Bar);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c, it.entities[0]);
+        test_uint(p, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_src(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_assert(it.trs[0] != NULL);
+        test_assert(it.trs[1] != NULL);
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, p));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, Foo));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, p, Tag);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c, it.entities[0]);
+        test_uint(p, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_src(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_assert(it.trs[0] != NULL);
+        test_assert(it.trs[1] != NULL);
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, p));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, Foo));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
