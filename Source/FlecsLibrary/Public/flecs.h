@@ -192,7 +192,7 @@
  * slightly improves performance.
  * The C API is not affected by this feature.
  */
-// #define FLECS_CPP_NO_AUTO_REGISTRATION
+ #define FLECS_CPP_NO_AUTO_REGISTRATION
 
 #define FLECS_NO_OS_API_IMPL
 
