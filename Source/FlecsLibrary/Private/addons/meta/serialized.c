@@ -7,7 +7,7 @@
 
 #ifdef FLECS_META
 
-static
+static inline
 int flecs_meta_serialize_type(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -18,14 +18,14 @@ ecs_meta_type_op_kind_t flecs_meta_primitive_to_op_kind(ecs_primitive_kind_t kin
     return EcsOpPrimitive + kind;
 }
 
-static
+static inline
 ecs_size_t flecs_meta_type_size(ecs_world_t *world, ecs_entity_t type) {
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
     ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
     return comp->size;
 }
 
-static
+static inline
 ecs_meta_type_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_type_op_kind_t kind) {
     ecs_meta_type_op_t *op = ecs_vec_append_t(NULL, ops, ecs_meta_type_op_t);
     op->kind = kind;
@@ -40,14 +40,14 @@ ecs_meta_type_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_type_op_kind_t k
     return op;
 }
 
-static
+static inline
 ecs_meta_type_op_t* flecs_meta_ops_get(ecs_vec_t *ops, int32_t index) {
     ecs_meta_type_op_t* op = ecs_vec_get_t(ops, ecs_meta_type_op_t, index);
     ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
     return op;
 }
 
-static
+static inline
 int flecs_meta_serialize_primitive(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -69,7 +69,7 @@ int flecs_meta_serialize_primitive(
     return 0;
 }
 
-static
+static inline
 int flecs_meta_serialize_enum(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -85,7 +85,7 @@ int flecs_meta_serialize_enum(
     return 0;
 }
 
-static
+static inline
 int flecs_meta_serialize_bitmask(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -101,7 +101,7 @@ int flecs_meta_serialize_bitmask(
     return 0;
 }
 
-static
+static inline
 int flecs_meta_serialize_array(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -117,7 +117,7 @@ int flecs_meta_serialize_array(
     return 0;
 }
 
-static
+static inline
 int flecs_meta_serialize_array_component(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -137,7 +137,7 @@ int flecs_meta_serialize_array_component(
     return 0;
 }
 
-static
+static inline
 int flecs_meta_serialize_vector(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -152,7 +152,7 @@ int flecs_meta_serialize_vector(
     return 0;
 }
 
-static
+static inline
 int flecs_meta_serialize_custom_type(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -225,7 +225,7 @@ int flecs_meta_serialize_struct(
     return 0;
 }
 
-static
+static inline
 int flecs_meta_serialize_type(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -253,7 +253,7 @@ int flecs_meta_serialize_type(
     return 0;
 }
 
-static
+static inline
 int flecs_meta_serialize_component(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -262,7 +262,7 @@ int flecs_meta_serialize_component(
     const EcsType *ptr = ecs_get(world, type, EcsType);
     if (!ptr) {
         char *path = ecs_get_path(world, type);
-        ecs_err("missing EcsType for type %s'", path);
+        ecs_warn("missing EcsType for type %s'", path);
         ecs_os_free(path);
         return -1;
     }

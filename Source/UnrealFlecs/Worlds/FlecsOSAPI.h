@@ -311,7 +311,7 @@ struct FOSApiInitializer
                     break;
                 case -3: // Error
 	                {
-                		UN_LOGF(LogFlecsCore, Warning, "Error Flecs - File: %s, Line: %d, Message: %s",
+                		UN_LOGF(LogFlecsCore, Error, "Error Flecs - File: %s, Line: %d, Message: %s",
 							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
 	                }
                     break;
