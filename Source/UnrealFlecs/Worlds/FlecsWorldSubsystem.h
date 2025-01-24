@@ -123,8 +123,8 @@ public:
 		solid_checkf(!Name.IsEmpty(), TEXT("World name cannot be NAME_None"));
 
 		SetTickableTickType(ETickableTickType::Always);
-		
-		std::vector<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
+
+		const std::vector<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
 		TMap<FString, FFlecsId> DefaultEntityIds = FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;
 		
 		// Add a the debug string for this world to the passed-in name E.G. "MyWorld (Client)"
@@ -141,24 +141,15 @@ public:
 		
 		DefaultWorld->InitializeDefaultComponents();
 		
-		for (uint32 Index = 0; Index < DefaultEntities.size(); ++Index)
+		for (const FFlecsDefaultMetaEntity& DefaultEntity : DefaultEntities)
 		{
-			FString EntityName = DefaultEntities[Index].EntityName;
+			FString EntityName = DefaultEntity.EntityName;
 			const FFlecsId EntityId = DefaultEntityIds[EntityName];
-
-			#if UNLOG_ENABLED
-			
-			FFlecsEntityHandle NewEntity =
 				
-			#endif // UNLOG_ENABLED
-				
-			NewFlecsWorld->CreateEntityWithRecordWithId(DefaultEntities[Index].EntityRecord, EntityId);
+			NewFlecsWorld->CreateEntityWithRecordWithId(DefaultEntity.EntityRecord, EntityId);
 
 			UN_LOGF(LogFlecsCore, Log,
 				"Created default entity %s with id %d", *EntityName, EntityId.GetId());
-			
-			UN_LOGF(LogFlecsCore, Log,
-				"Entity %s with id %d", *NewEntity.GetName(), NewEntity.GetIndex());
 		}
 
 		const IConsoleManager& ConsoleManager = IConsoleManager::Get();
