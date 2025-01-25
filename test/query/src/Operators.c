@@ -9365,6 +9365,8 @@ void Operators_and_from_existing_and_new_table(void) {
     
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -9418,6 +9420,8 @@ void Operators_not_from_existing_and_new_table(void) {
     
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -9455,6 +9459,8 @@ void Operators_or_from_existing_and_new_table(void) {
     test_bool(true, ecs_field_is_set(&it, 0));
     
     test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

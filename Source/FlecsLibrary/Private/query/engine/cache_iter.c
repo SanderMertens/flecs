@@ -15,29 +15,27 @@ void flecs_query_update_node_up_trs(
     ecs_termset_t fields = node->up_fields & node->set_fields;
     if (fields) {
         const ecs_query_impl_t *impl = ctx->query;
-        const ecs_query_t *q = &impl->pub;
         ecs_query_cache_t *cache = impl->cache;
+        const ecs_query_t *q = cache->query;
+        int32_t f, field_count = q->field_count;
         int8_t *field_map = cache->field_map;
-        int32_t i, field_count = q->field_count;
-        for (i = 0; i < field_count; i ++) {
-            if (!(fields & (1llu << i))) {
+        for (f = 0; f < field_count; f ++) {
+            if (!(fields & (1llu << f))) {
                 continue;
             }
 
-            ecs_entity_t src = node->sources[i];
+            ecs_entity_t src = node->sources[f];
             if (src) {
-                const ecs_table_record_t *tr = node->trs[i];
                 ecs_record_t *r = flecs_entities_get(ctx->world, src);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-                if (r->table != tr->hdr.table) {
-                    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-                    ecs_assert(idr->id == q->ids[field_map ? field_map[i] : i], 
-                        ECS_INTERNAL_ERROR, NULL);
-                    tr = node->trs[i] = flecs_id_record_get_table(idr, r->table);
-                    if (field_map) {
-                        ctx->it->trs[field_map[i]] = tr;
-                    }
+                if (r->table != node->tables[f]) {
+                    ecs_id_record_t *idr = flecs_id_record_get(
+                        ctx->world, q->ids[f]);
+                    const ecs_table_record_t *tr = node->trs[f] = 
+                        flecs_id_record_get_table(idr, r->table);
+                    ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ctx->it->trs[field_map ? field_map[f] : f] = tr;
                 }
             }
         }
