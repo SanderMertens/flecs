@@ -5204,3 +5204,67 @@ void Prefab_defer_instantiate_and_set_inherit_and_new(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_instantiate_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has_pair(world, inst, EcsIsA, p));
+    test_assert(ecs_has(world, inst, Position));
+    test_assert(ecs_owns(world, inst, Position));
+    {
+        const Position *ptr = ecs_get(world, inst, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_pair(world, inst, EcsIsA, p));
+    test_assert(ecs_has(world, inst, Position));
+    test_assert(ecs_owns(world, inst, Position));
+    {
+        const Position *ptr = ecs_get(world, inst, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_w_union_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, p, Rel, TgtA);
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has_pair(world, inst, EcsIsA, p));
+    test_assert(ecs_has_pair(world, inst, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, inst, Rel, TgtB));
+    test_assert(ecs_get_target(world, inst, Rel, 0) == TgtA);
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_pair(world, inst, EcsIsA, p));
+    test_assert(ecs_has_pair(world, inst, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, inst, Rel, TgtB));
+    test_assert(ecs_get_target(world, inst, Rel, 0) == TgtA);
+
+    ecs_fini(world);
+}
