@@ -472,7 +472,7 @@ ecs_query_cache_table_match_t* flecs_query_cache_add_table_match(
         cache->query->world, qt);
     
     qm->table = table;
-    qm->trs = flecs_balloc(&cache->allocators.trs);
+    qm->trs = flecs_balloc(&cache->allocators.pointers);
 
     /* Insert match to iteration list if table is not empty */
     flecs_query_cache_insert_table_node(cache, qm);
@@ -524,13 +524,25 @@ void flecs_query_cache_set_table_match(
 
     if (i != field_count) {
         if (qm->sources == cache->sources || !qm->sources) {
-            qm->sources = flecs_balloc(&cache->allocators.sources);
+            qm->sources = flecs_balloc(&cache->allocators.ids);
         }
         ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, field_count);
+        if (!qm->tables) {
+            qm->tables = flecs_balloc(&cache->allocators.pointers);
+        }
+        for (i = 0; i < field_count; i ++) {
+            if (it->trs[i]) {
+                qm->tables[i] = it->trs[i]->hdr.table;
+            }
+        }
     } else {
         if (qm->sources != cache->sources) {
-            flecs_bfree(&cache->allocators.sources, qm->sources);
+            flecs_bfree(&cache->allocators.ids, qm->sources);
             qm->sources = cache->sources;
+        }
+        if (qm->tables) {
+            flecs_bfree(&cache->allocators.pointers, qm->tables);
+            qm->tables = NULL;
         }
     }
 
@@ -738,14 +750,18 @@ void flecs_query_cache_table_match_free(
     ecs_world_t *world = cache->query->world;
 
     for (cur = first; cur != NULL; cur = next) {
-        flecs_bfree(&cache->allocators.trs, ECS_CONST_CAST(void*, cur->trs));
+        flecs_bfree(&cache->allocators.pointers, ECS_CONST_CAST(void*, cur->trs));
 
         if (cur->ids != cache->query->ids) {
             flecs_bfree(&cache->allocators.ids, cur->ids);
         }
 
         if (cur->sources != cache->sources) {
-            flecs_bfree(&cache->allocators.sources, cur->sources);
+            flecs_bfree(&cache->allocators.ids, cur->sources);
+        }
+
+        if (cur->tables) {
+            flecs_bfree(&cache->allocators.pointers, cur->tables);
         }
 
         if (cur->monitor) {
@@ -1066,12 +1082,10 @@ void flecs_query_cache_allocators_init(
 {
     int32_t field_count = cache->query->field_count;
     if (field_count) {
-        flecs_ballocator_init(&cache->allocators.trs, 
+        flecs_ballocator_init(&cache->allocators.pointers, 
             field_count * ECS_SIZEOF(ecs_table_record_t*));
         flecs_ballocator_init(&cache->allocators.ids, 
             field_count * ECS_SIZEOF(ecs_id_t));
-        flecs_ballocator_init(&cache->allocators.sources,
-            field_count * ECS_SIZEOF(ecs_entity_t));
         flecs_ballocator_init(&cache->allocators.monitors,
             (1 + field_count) * ECS_SIZEOF(int32_t));
     }
@@ -1083,9 +1097,8 @@ void flecs_query_cache_allocators_fini(
 {
     int32_t field_count = cache->query->field_count;
     if (field_count) {
-        flecs_ballocator_fini(&cache->allocators.trs);
+        flecs_ballocator_fini(&cache->allocators.pointers);
         flecs_ballocator_fini(&cache->allocators.ids);
-        flecs_ballocator_fini(&cache->allocators.sources);
         flecs_ballocator_fini(&cache->allocators.monitors);
     }
 }
@@ -1130,7 +1143,7 @@ void flecs_query_cache_fini(
     ecs_vec_fini_t(NULL, &cache->table_slices, ecs_query_cache_table_match_t);
     
     if (cache->query->term_count) {
-        flecs_bfree(&cache->allocators.sources, cache->sources);
+        flecs_bfree(&cache->allocators.ids, cache->sources);
     }
 
     flecs_query_cache_allocators_fini(cache);
@@ -1209,7 +1222,7 @@ ecs_query_cache_t* flecs_query_cache_init(
      * This reduces the amount of memory used by the cache, and improves CPU
      * cache locality during iteration when doing source checks. */
     if (result->query->term_count) {
-        result->sources = flecs_bcalloc(&result->allocators.sources);
+        result->sources = flecs_bcalloc(&result->allocators.ids);
     }
 
     if (q->term_count) {

@@ -1528,6 +1528,8 @@ void Traversal_this_written_up_isa_childof_2_lvl(void);
 void Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_inherit(void);
 void Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit(void);
 void Traversal_this_written_up_isa_childof_2_lvl_after_remove_override(void);
+void Traversal_singleton_w_this_up_w_table_change(void);
+void Traversal_this_up_w_singleton_w_table_change(void);
 
 // Testsuite 'Cascade'
 void Cascade_parent_cascade(void);
@@ -1642,6 +1644,7 @@ void Cached_rematch_empty(void);
 void Cached_rematch_empty_table_w_superset(void);
 void Cached_2_self_up_terms_new_tables(void);
 void Cached_this_self_up_childof_pair_new_tables(void);
+void Cached_up_w_delete_table_and_move_parent(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -8127,6 +8130,14 @@ bake_test_case Traversal_testcases[] = {
     {
         "this_written_up_isa_childof_2_lvl_after_remove_override",
         Traversal_this_written_up_isa_childof_2_lvl_after_remove_override
+    },
+    {
+        "singleton_w_this_up_w_table_change",
+        Traversal_singleton_w_this_up_w_table_change
+    },
+    {
+        "this_up_w_singleton_w_table_change",
+        Traversal_this_up_w_singleton_w_table_change
     }
 };
 
@@ -8573,6 +8584,10 @@ bake_test_case Cached_testcases[] = {
     {
         "this_self_up_childof_pair_new_tables",
         Cached_this_self_up_childof_pair_new_tables
+    },
+    {
+        "up_w_delete_table_and_move_parent",
+        Cached_up_w_delete_table_and_move_parent
     }
 };
 
@@ -10720,7 +10735,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        155,
+        157,
         Traversal_testcases,
         1,
         Traversal_params
@@ -10736,7 +10751,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        87,
+        88,
         Cached_testcases
     },
     {
