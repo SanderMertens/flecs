@@ -26,21 +26,31 @@ void FRegisteredComponentTestsSpec::Define()
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Add(FUStructTestComponent_RegisterComponentTest::StaticStruct());
 
+			FFlecsEntityHandle StaticStructComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_RegisterComponentTest::StaticStruct());
+			FFlecsEntityHandle CPPTypeComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct<FUStructTestComponent_RegisterComponentTest>();
+
 			TestTrue("Component properties should be registered",
 				TestEntity.Has<FUStructTestComponent_RegisterComponentTest>());
 			TestTrue("Component properties should be registered",
 				TestEntity.Has(FUStructTestComponent_RegisterComponentTest::StaticStruct()));
+			TestEqual("Component properties should be registered",
+				StaticStructComponent, CPPTypeComponent);
 		});
 
 		It("Should add USTRUCT Component using cpp type", [this]()
 		{
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Add<FUStructTestComponent_RegisterComponentTest>();
+			
+			FFlecsEntityHandle StaticStructComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_RegisterComponentTest::StaticStruct());
+			FFlecsEntityHandle CPPTypeComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct<FUStructTestComponent_RegisterComponentTest>();
 
 			TestTrue("Component properties should be registered",
 				TestEntity.Has<FUStructTestComponent_RegisterComponentTest>());
 			TestTrue("Component properties should be registered",
 				TestEntity.Has(FUStructTestComponent_RegisterComponentTest::StaticStruct()));
+			TestEqual("Component properties should be registered",
+				StaticStructComponent, CPPTypeComponent);
 		});
 
 		It("Should set USTRUCT Component using FInstancedStruct", [this]()

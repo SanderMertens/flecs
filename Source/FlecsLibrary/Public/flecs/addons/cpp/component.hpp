@@ -8,6 +8,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#include "flecs/os_api.h"
+
 #include "Concepts/SolidConcepts.h"
 #include "flecs/Unreal/FlecsScriptStructComponent.h"
 #include "flecs/Unreal/FlecsTypeMapComponent.h"
@@ -97,12 +99,11 @@ void register_lifecycle_actions(ecs_world_t*, ecs_entity_t) { }
 
 // If the component is non-trivial, register component lifecycle actions.
 // Depending on the type not all callbacks may be available.
-template<typename T, enable_if_t<
-    std::is_trivial<T>::value == false
-        >* = nullptr>
+template<typename T>
 void register_lifecycle_actions(
     ecs_world_t *world,
     ecs_entity_t component)
+requires (std::is_trivial<T>::value == false)
 {
     ecs_type_hooks_t cl{};
     cl.ctor = ctor<T>(cl.flags);
@@ -158,6 +159,8 @@ struct type_impl {
         bool is_component = true, bool implicit_name = true, const char *n = nullptr, 
         flecs::entity_t module = 0)
     {
+        ecs_os_perf_trace_push("flecs.type_impl.register_id");
+        
         if (!s_index) {
             // This is the first time (in this binary image) that this type is
             // being used. Generate a static index that will identify the type
@@ -231,6 +234,8 @@ struct type_impl {
             // #endif
         }
 
+        ecs_os_perf_trace_pop("flecs.type_impl.register_id");
+
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
 
         return c;
@@ -252,14 +257,16 @@ struct type_impl {
             "component '%s' was deleted, reregister before using",
             type_name<T>());
 #else
+        ecs_os_perf_trace_push("flecs.type_impl.id");
         
         if constexpr (Solid::IsStaticStruct<T>())
         {
             flecs::world P_world = flecs::world(world);
             const FFlecsTypeMapComponent* typeMap = P_world.get<FFlecsTypeMapComponent>();
-            if (typeMap && typeMap->ScriptStructMap.contains(TBaseStructure<T>::Get())) [[likely]]
+            if (typeMap && typeMap->ScriptStructMap.contains(StaticStruct<T>())) [[likely]]
             {
-                return typeMap->ScriptStructMap.at(TBaseStructure<T>::Get());
+                ecs_os_perf_trace_pop("flecs.type_impl.id");
+                return typeMap->ScriptStructMap.at(StaticStruct<T>());
             }
         }
         
@@ -269,6 +276,7 @@ struct type_impl {
             c = register_id(world);
         }
 #endif
+        ecs_os_perf_trace_pop("flecs.type_impl.id");
         return c;
     }
 

@@ -646,24 +646,27 @@ void ecs_os_strset(
     char **str, 
     const char *value);
 
-/* Profile tracing */
-#ifdef FLECS_PERF_TRACE
-#define ecs_os_perf_trace_push(name) ecs_os_perf_trace_push_(__FILE__, __LINE__, name)
-#define ecs_os_perf_trace_pop(name) ecs_os_perf_trace_pop_(__FILE__, __LINE__, name)
-#else
-#define ecs_os_perf_trace_push(name)
-#define ecs_os_perf_trace_pop(name)
-#endif
-
+FLECS_API
 void ecs_os_perf_trace_push_(
     const char *file,
     size_t line,
     const char *name);
 
+FLECS_API
 void ecs_os_perf_trace_pop_(
     const char *file,
     size_t line,
     const char *name);
+
+
+    /* Profile tracing */
+    #ifdef FLECS_PERF_TRACE
+    #define ecs_os_perf_trace_push(name) ecs_os_perf_trace_push_(__FILE__, __LINE__, name)
+    #define ecs_os_perf_trace_pop(name) ecs_os_perf_trace_pop_(__FILE__, __LINE__, name)
+    #else
+    #define ecs_os_perf_trace_push(name)
+    #define ecs_os_perf_trace_pop(name)
+    #endif
 
 /** Sleep with floating point time. 
  * 
