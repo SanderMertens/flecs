@@ -1939,6 +1939,8 @@ void Prefab_prefab_child_w_union(void);
 void Prefab_prefab_w_union_and_component(void);
 void Prefab_defer_instantiate_and_set_inherit_and_override(void);
 void Prefab_defer_instantiate_and_set_inherit_and_new(void);
+void Prefab_instantiate_while_defer_suspended(void);
+void Prefab_instantiate_w_union_while_defer_suspended(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -9876,6 +9878,14 @@ bake_test_case Prefab_testcases[] = {
     {
         "defer_instantiate_and_set_inherit_and_new",
         Prefab_defer_instantiate_and_set_inherit_and_new
+    },
+    {
+        "instantiate_while_defer_suspended",
+        Prefab_instantiate_while_defer_suspended
+    },
+    {
+        "instantiate_w_union_while_defer_suspended",
+        Prefab_instantiate_w_union_while_defer_suspended
     }
 };
 
@@ -11732,7 +11742,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        155,
+        157,
         Prefab_testcases
     },
     {
