@@ -99,6 +99,13 @@ void FRegisteredComponentTestsSpec::Define()
 		// 		RegisteredInheritedComponent.HasPair(flecs::IsA, FUStructTestComponent_RegisterComponentTest::StaticStruct()));
 		// });
 	});
+
+	It("Should Register Non Static Struct Script Structs(FVector)", [this]()
+	{
+		FFlecsEntityHandle FVectorComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct<FVector>();
+		TestTrue("Component properties should be registered",
+			FVectorComponent.Has<FFlecsScriptStructComponent>());
+	});
 }
 
 #endif // WITH_AUTOMATION_TESTS

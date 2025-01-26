@@ -1014,16 +1014,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	bool HasScriptStruct(const UScriptStruct* ScriptStruct) const
 	{
+		if (!flecs::_::g_index_to_scriptstruct.Contains(ScriptStruct))
+		{
+			flecs::_::g_index_to_scriptstruct.Add(ScriptStruct, flecs_component_ids_index_get());
+		}
+		
 		if (TypeMapComponent->ScriptStructMap.contains(ScriptStruct)
 			&& TypeMapComponent->ScriptStructMap.at(ScriptStruct).is_valid())
 		{
-			if (!flecs::_::g_index_to_scriptstruct.Contains(ScriptStruct))
-			{
-				flecs::_::g_index_to_scriptstruct.Add(ScriptStruct, flecs_component_ids_index_get());
-				flecs_component_ids_set(World.c_ptr(),
-					flecs::_::g_index_to_scriptstruct[ScriptStruct], TypeMapComponent->ScriptStructMap.at(ScriptStruct));
-			}
-			
 			return true;
 		}
 		
@@ -1033,7 +1031,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FFlecsEntityHandle GetScriptStructEntity(const UScriptStruct* ScriptStruct) const
 	{
-		FFlecsId c = flecs_component_ids_get_alive(World.c_ptr(), flecs::_::g_index_to_scriptstruct[ScriptStruct]);
+		FFlecsId c = TypeMapComponent->ScriptStructMap.at(ScriptStruct);
 		solid_checkf(ecs_is_valid(World.c_ptr(), c), TEXT("Entity is not alive"));
 		return FFlecsEntityHandle(World, c);
 	}

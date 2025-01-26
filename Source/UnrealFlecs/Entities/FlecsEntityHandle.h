@@ -137,9 +137,15 @@ public:
 	}
 	
 	template <typename T>
-	SOLID_INLINE void Add() const { GetEntity().add<T>(); }
+	SOLID_INLINE void Add() const
+	{
+		GetEntity().add<T>();
+	}
 	
-	SOLID_INLINE void Remove(const FFlecsId InEntity) const { GetEntity().remove(InEntity); }
+	SOLID_INLINE void Remove(const FFlecsId InEntity) const
+	{
+		GetEntity().remove(InEntity);
+	}
 
 	SOLID_INLINE void Remove(const UScriptStruct* StructType) const
 	{
@@ -152,10 +158,16 @@ public:
 	}
 
 	template <typename T>
-	SOLID_INLINE void Remove() const { GetEntity().remove<T>(); }
+	SOLID_INLINE void Remove() const
+	{
+		GetEntity().remove<T>();
+	}
 
 	template <typename T>
-	SOLID_INLINE void Set(const T& InValue) const { GetEntity().set<T>(InValue); }
+	SOLID_INLINE void Set(const T& InValue) const
+	{
+		GetEntity().set<T>(InValue);
+	}
 
 	SOLID_INLINE void Set(const FFlecsId InId, const void* InValue) const
 	{
