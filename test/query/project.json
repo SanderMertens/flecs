@@ -1587,7 +1587,9 @@
                 "this_written_up_isa_childof_2_lvl",
                 "this_written_up_isa_childof_2_lvl_w_on_instantiate_inherit",
                 "this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit",
-                "this_written_up_isa_childof_2_lvl_after_remove_override"
+                "this_written_up_isa_childof_2_lvl_after_remove_override",
+                "singleton_w_this_up_w_table_change",
+                "this_up_w_singleton_w_table_change"
             ]
         }, {
             "id": "Cascade",
@@ -1705,7 +1707,8 @@
                 "rematch_empty",
                 "rematch_empty_table_w_superset",
                 "2_self_up_terms_new_tables",
-                "this_self_up_childof_pair_new_tables"
+                "this_self_up_childof_pair_new_tables",
+                "up_w_delete_table_and_move_parent"
             ]
         }, {
             "id": "ChangeDetection",

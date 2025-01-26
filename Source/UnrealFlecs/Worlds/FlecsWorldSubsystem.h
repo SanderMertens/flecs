@@ -127,26 +127,27 @@ public:
 		const std::vector<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
 		TMap<FString, FFlecsId> DefaultEntityIds = FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;
 		
-		// Add a the debug string for this world to the passed-in name E.G. "MyWorld (Client)"
-		const FName WorldNameWithWorldContext = FName(Name +" ("+ GetDebugStringForWorld(GetWorld())+")");
+		// Add a the debug string for this world to the passed-in name e.g. "MyWorld (Client)"
+		const FName WorldNameWithWorldContext = FName(Name + " ("+ GetDebugStringForWorld(GetWorld())+")");
 		
-		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this, WorldNameWithWorldContext);
-		
-		DefaultWorld = NewFlecsWorld;
-		
-		NewFlecsWorld->SetContext(this);
-
-		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ NewFlecsWorld });
-		NewFlecsWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
+		DefaultWorld = NewObject<UFlecsWorld>(this, WorldNameWithWorldContext);
 		
 		DefaultWorld->InitializeDefaultComponents();
+
+		DefaultWorld->ObtainComponentTypeStruct<FFlecsWorldPtrComponent>();
+		DefaultWorld->ObtainComponentTypeStruct<FUWorldPtrComponent>();
+		
+		DefaultWorld->SetContext(this);
+
+		DefaultWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ DefaultWorld });
+		DefaultWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
 		
 		for (const FFlecsDefaultMetaEntity& DefaultEntity : DefaultEntities)
 		{
 			FString EntityName = DefaultEntity.EntityName;
 			const FFlecsId EntityId = DefaultEntityIds[EntityName];
 				
-			NewFlecsWorld->CreateEntityWithRecordWithId(DefaultEntity.EntityRecord, EntityId);
+			DefaultWorld->CreateEntityWithRecordWithId(DefaultEntity.EntityRecord, EntityId);
 
 			UN_LOGF(LogFlecsCore, Log,
 				"Created default entity %s with id %d", *EntityName, EntityId.GetId());
@@ -158,16 +159,16 @@ public:
 		{
 			const IConsoleVariable* TaskThreads = ConsoleManager.FindConsoleVariable(TEXT("Flecs.TaskThreadCount"));
 			solid_checkf(TaskThreads, TEXT("TaskThreads console variable not found!"));
-			NewFlecsWorld->SetTaskThreads(TaskThreads->GetInt());
+			DefaultWorld->SetTaskThreads(TaskThreads->GetInt());
 		}
 		else
 		{
-			NewFlecsWorld->SetThreads(static_cast<int32>(std::thread::hardware_concurrency()));
+			DefaultWorld->SetThreads(static_cast<int32>(std::thread::hardware_concurrency()));
 		}
 
-		NewFlecsWorld->WorldStart();
+		DefaultWorld->WorldStart();
 
-		RegisterAllGameplayTags(NewFlecsWorld);
+		RegisterAllGameplayTags(DefaultWorld);
 
 		for (UObject* Module : Settings.Modules)
 		{
@@ -175,7 +176,7 @@ public:
 			solid_checkf(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
 				TEXT("Module %s does not implement UFlecsModuleInterface"), *Module->GetName());
 			
-			NewFlecsWorld->ImportModule(Module);
+			DefaultWorld->ImportModule(Module);
 		}
 
 		#if WITH_EDITOR
@@ -186,14 +187,14 @@ public:
 			solid_checkf(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
 				TEXT("Module %s does not implement UFlecsModuleInterface"), *Module->GetName());
 			
-			NewFlecsWorld->ImportModule(Module);
+			DefaultWorld->ImportModule(Module);
 		}
 
 		#endif // WITH_EDITOR
 		
-		OnWorldCreatedDelegate.Broadcast(NewFlecsWorld);
+		OnWorldCreatedDelegate.Broadcast(DefaultWorld);
 		
-		return NewFlecsWorld;
+		return DefaultWorld;
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
@@ -331,8 +332,16 @@ protected:
 			{
 				FFlecsEntityHandle ChildEntity = RegisterGameplayTagEntityRecursively(ChildTag, NewFlecsWorld,
 					TagHierarchy, ProcessedTags);
-				
-				ChildEntity.SetParent(TagEntity);
+
+				if LIKELY_IF(ChildEntity.IsValid())
+				{
+					ChildEntity.SetParent(TagEntity);
+				}
+				else
+				{
+					UN_LOGF(LogFlecsCore, Warning, "Failed to register child tag %s for parent tag %s",
+						*ChildTag.GetTagName().ToString(), *Tag.GetTagName().ToString());
+				}
 			}
 		}
 

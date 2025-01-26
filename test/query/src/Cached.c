@@ -3061,6 +3061,8 @@ void Cached_rematch_optional_ref(void) {
     test_uint(0, it.sources[1]);
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -3649,6 +3651,63 @@ void Cached_this_self_up_childof_pair_new_tables(void) {
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Cached_up_w_delete_table_and_move_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+
+    ecs_remove(world, p, Position);
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .delete_generation = 1
+    });
+
+    ecs_add(world, p, Position);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c, it.entities[0]);
+        test_uint(p, ecs_field_src(&it, 0));
+        Position *p = ecs_field(&it, Position, 0);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, p, Foo);
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .delete_generation = 1
+    });
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c, it.entities[0]);
+        test_uint(p, ecs_field_src(&it, 0));
+        Position *p = ecs_field(&it, Position, 0);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_query_next(&it));
+    }
 
     ecs_fini(world);
 }

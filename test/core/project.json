@@ -2011,7 +2011,9 @@
                 "prefab_child_w_union",
                 "prefab_w_union_and_component",
                 "defer_instantiate_and_set_inherit_and_override",
-                "defer_instantiate_and_set_inherit_and_new"
+                "defer_instantiate_and_set_inherit_and_new",
+                "instantiate_while_defer_suspended",
+                "instantiate_w_union_while_defer_suspended"
             ]
         }, {
             "id": "World",

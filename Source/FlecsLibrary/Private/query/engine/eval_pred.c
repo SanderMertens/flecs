@@ -5,7 +5,7 @@
 
 #include "../../private_api.h"
 
-static
+static inline
 const char* flecs_query_name_arg(
     const ecs_query_op_t *op,
     ecs_query_run_ctx_t *ctx)
@@ -15,7 +15,7 @@ const char* flecs_query_name_arg(
     return term->second.name;
 }
 
-static
+static inline
 bool flecs_query_compare_range(
     const ecs_table_range_t *l,
     const ecs_table_range_t *r)

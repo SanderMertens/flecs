@@ -8,7 +8,10 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#include "flecs/os_api.h"
+
 #include "Concepts/SolidConcepts.h"
+#include "Experimental/Containers/RobinHoodHashTable.h"
 #include "flecs/Unreal/FlecsScriptStructComponent.h"
 #include "flecs/Unreal/FlecsTypeMapComponent.h"
 
@@ -90,19 +93,18 @@ template <> inline const char* symbol_name<double>() {
 // that obtain the lifecycle callback do detect whether the callback is required
 // adding a special case for trivial types eases the burden a bit on the
 // compiler as it reduces the number of templates to evaluate.
-template<typename T, enable_if_t<
-    std::is_trivial<T>::value == true
-        >* = nullptr>
-void register_lifecycle_actions(ecs_world_t*, ecs_entity_t) { }
+template<typename T>
+void register_lifecycle_actions(ecs_world_t*, ecs_entity_t) requires (std::is_trivial<T>::value == true)
+{
+}
 
 // If the component is non-trivial, register component lifecycle actions.
 // Depending on the type not all callbacks may be available.
-template<typename T, enable_if_t<
-    std::is_trivial<T>::value == false
-        >* = nullptr>
+template<typename T>
 void register_lifecycle_actions(
     ecs_world_t *world,
     ecs_entity_t component)
+requires (std::is_trivial<T>::value == false)
 {
     ecs_type_hooks_t cl{};
     cl.ctor = ctor<T>(cl.flags);
@@ -123,6 +125,8 @@ void register_lifecycle_actions(
         ecs_add_id(world, component, flecs::Sparse);
     }
 }
+    
+inline static TMap<TObjectKey<UScriptStruct>, int32_t> g_index_to_scriptstruct;
 
 template <typename T>
 struct type_impl {
@@ -133,10 +137,27 @@ struct type_impl {
     static void init(
         bool allow_tag = true)
     {
-        s_index = flecs_component_ids_index_get();
+        if constexpr (Solid::IsStaticStruct<T>())
+        {
+            if (g_index_to_scriptstruct.Contains(TObjectKey<UScriptStruct>(TBaseStructure<T>::Get())))
+            {
+                s_index = g_index_to_scriptstruct[TObjectKey<UScriptStruct>(TBaseStructure<T>::Get())];
+            }
+            else
+            {
+                s_index = flecs_component_ids_index_get();
+                g_index_to_scriptstruct.Add(TObjectKey<UScriptStruct>(TBaseStructure<T>::Get()), s_index);
+            }
+        }
+        else
+        {
+            s_index = flecs_component_ids_index_get();
+        }
+        
         s_allow_tag = allow_tag;
         s_size = sizeof(T);
         s_alignment = alignof(T);
+        
         if (is_empty<T>::value && allow_tag) {
             s_size = 0;
             s_alignment = 0;
@@ -158,6 +179,8 @@ struct type_impl {
         bool is_component = true, bool implicit_name = true, const char *n = nullptr, 
         flecs::entity_t module = 0)
     {
+        ecs_os_perf_trace_push("flecs.type_impl.register_id");
+        
         if (!s_index) {
             // This is the first time (in this binary image) that this type is
             // being used. Generate a static index that will identify the type
@@ -231,6 +254,8 @@ struct type_impl {
             // #endif
         }
 
+        ecs_os_perf_trace_pop("flecs.type_impl.register_id");
+
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
 
         return c;
@@ -252,16 +277,7 @@ struct type_impl {
             "component '%s' was deleted, reregister before using",
             type_name<T>());
 #else
-        
-        if constexpr (Solid::IsStaticStruct<T>())
-        {
-            flecs::world P_world = flecs::world(world);
-            const FFlecsTypeMapComponent* typeMap = P_world.get<FFlecsTypeMapComponent>();
-            if (typeMap && typeMap->ScriptStructMap.contains(TBaseStructure<T>::Get())) [[likely]]
-            {
-                return typeMap->ScriptStructMap.at(TBaseStructure<T>::Get());
-            }
-        }
+        ecs_os_perf_trace_push("flecs.type_impl.id");
         
         flecs::entity_t c = flecs_component_ids_get_alive(world, s_index);
 
@@ -269,48 +285,25 @@ struct type_impl {
             c = register_id(world);
         }
 #endif
+        ecs_os_perf_trace_pop("flecs.type_impl.id");
         return c;
     }
 
     // Return the size of a component.
-    constexpr static size_t size() {
-        if constexpr (Solid::IsStaticStruct<T>())
-        {
-            return sizeof(T);
-        }
-        else
-        {
-            ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
-            return s_size;
-        }
+    static size_t size() {
+        ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
+        return s_size;
     }
 
     // Return the alignment of a component.
-    constexpr static size_t alignment() {
-        if constexpr (Solid::IsStaticStruct<T>())
-        {
-            return alignof(T);
-        }
-        else
-        {
-            ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
-            return s_alignment;
-        }
+    static size_t alignment() {
+        ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
+        return s_alignment;
     }
 
     // Was the component already registered.
     static bool registered(flecs::world_t *world) {
         ecs_assert(world != nullptr, ECS_INVALID_PARAMETER, NULL);
-        
-        if constexpr (Solid::IsStaticStruct<T>())
-        {
-            flecs::world P_world = flecs::world(world);
-            const FFlecsTypeMapComponent* typeMap = P_world.get<FFlecsTypeMapComponent>();
-            if (typeMap && typeMap->ScriptStructMap.contains(TBaseStructure<T>::Get())) [[likely]]
-            {
-                return true;
-            }
-        }
         
         if (s_index == 0)
         {

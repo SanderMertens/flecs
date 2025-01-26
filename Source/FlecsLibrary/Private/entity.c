@@ -531,9 +531,11 @@ void flecs_instantiate(
                 ecs_entity_t rel = ECS_PAIR_FIRST(id);
                 ecs_entity_t tgt = ecs_get_target(world, base, rel, 0);
                 ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+                ecs_id_record_t *idr = 
+                    (ecs_id_record_t*)base_table->_->records[i].hdr.cache;
 
                 for (j = row; j < (row + count); j ++) {
-                    ecs_add_pair(world, entities[j], rel, tgt);
+                    flecs_switch_set(idr->sparse, (uint32_t)entities[j], tgt);
                 }
 
                 union_count ++;
@@ -3980,7 +3982,7 @@ const char* ecs_get_symbol(
     }
 }
 
-static
+static inline
 ecs_entity_t flecs_set_identifier(
     ecs_world_t *world,
     ecs_stage_t *stage,

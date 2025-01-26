@@ -30,12 +30,12 @@ void UFlecsPhysicsModule::DeinitializeModule(UFlecsWorld* InWorld)
 	
 	InWorld->RemoveSingleton<FFlecsPhysicsSceneComponent>();
 
-	if (bAllowResimulation)
-	{
-		IConsoleVariable* ResimConsoleVariable =
-			IConsoleManager::Get().FindConsoleVariable(TEXT("p.Resim.AllowRewindToResimulatedFrames"));
-		ResimConsoleVariable->Set(PreResimValue);
-	}
+	// if (bAllowResimulation)
+	// {
+	// 	IConsoleVariable* ResimConsoleVariable =
+	// 		IConsoleManager::Get().FindConsoleVariable(TEXT("p.Resim.AllowRewindToResimulatedFrames"));
+	// 	ResimConsoleVariable->Set(PreResimValue);
+	// }
 }
 
 void UFlecsPhysicsModule::WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld)
@@ -61,10 +61,10 @@ void UFlecsPhysicsModule::WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWor
 			Scene->GetSolver()->SetIsDeterministic(true);
 			Scene->GetSolver()->SetAsyncPhysicsBlockMode(Chaos::BlockForBestInterpolation);
 
-			if (bAllowResimulation)
-			{
-				ResimulationHandlers();
-			}
+			// if (bAllowResimulation)
+			// {
+			// 	ResimulationHandlers();
+			// }
 		});
 }
 

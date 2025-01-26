@@ -11653,5 +11653,7 @@ void Basic_mixed_uncacheable_w_shared(void) {
     test_uint(Bar, ecs_field_id(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
