@@ -1135,11 +1135,11 @@ public:
 				UntypedComponent.member<TSubclassOf<UObject>>(StringCast<char>(*Property->GetName()).Get(), 1,
 					Property->GetOffset_ForInternal());
 			}
-			else if (Property->IsA<FEnumProperty>())
-			{
-				UntypedComponent.member(flecs::meta::EnumType, StringCast<char>(*Property->GetName()).Get(), 1,
-					Property->GetOffset_ForInternal());
-			}
+			// else if (Property->IsA<FEnumProperty>())
+			// {
+			// 	UntypedComponent.member(flecs::meta::EnumType, StringCast<char>(*Property->GetName()).Get(), 1,
+			// 		Property->GetOffset_ForInternal());
+			// }
 			 else if (Property->IsA<FStructProperty>())
 			 {
 			 	FFlecsEntityHandle StructComponent
