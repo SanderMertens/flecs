@@ -21,7 +21,6 @@
 #include "Modules/FlecsModuleInterface.h"
 #include "Modules/FlecsModuleProgressInterface.h"
 #include "Prefabs/FlecsPrefabAsset.h"
-#include "StructUtils/StructView.h"
 #include "FlecsWorld.generated.h"
 
 class UFlecsWorldSubsystem;
@@ -91,6 +90,9 @@ public:
 
 	void InitializeDefaultComponents() const
 	{
+		World.component<FFlecsEntityHandle>()
+			.disable();
+		
 		World.component<FString>()
 			.opaque(flecs::String)
 			.serialize([](const flecs::serializer* Serializer, const FString* Data)
@@ -132,19 +134,7 @@ public:
 					StringCast<char>(*Data->ToString()).Get());
 				return Serializer->value(flecs::Entity, &TagEntity);
 			});
-
-		World.component<FFlecsEntityHandle>()
-            .opaque(flecs::Entity)
-            .serialize([](const flecs::serializer* Serializer, const FFlecsEntityHandle* Data)
-            {
-                const FFlecsId Entity = Data->GetEntity();
-                return Serializer->value(flecs::Entity, &Entity);
-            })
-            .assign_entity([](FFlecsEntityHandle* Handle, ecs_world_t* World, ecs_entity_t Entity)
-            {
-                *Handle = FFlecsEntityHandle(World, Entity);
-            });
-
+		
 		World.component<FObjectPtr>()
 			.opaque(flecs::Uptr)
 			.serialize([](const flecs::serializer* Serializer, const FObjectPtr* Data)
@@ -188,6 +178,28 @@ public:
 			{
 				*Data = nullptr;
 			});
+
+		ObtainComponentTypeStruct<FVector>();
+		ObtainComponentTypeStruct<FRotator>();
+		ObtainComponentTypeStruct<FTransform>();
+		ObtainComponentTypeStruct<FColor>();
+		ObtainComponentTypeStruct<FLinearColor>();
+		ObtainComponentTypeStruct<FBox>();
+		ObtainComponentTypeStruct<FBox2D>();
+		ObtainComponentTypeStruct<FBoxSphereBounds>();
+		ObtainComponentTypeStruct<FSphere>();
+		ObtainComponentTypeStruct<FCapsuleShape>();
+		ObtainComponentTypeStruct<FPlane>();
+		ObtainComponentTypeStruct<FFloatRange>();
+		ObtainComponentTypeStruct<FInt32Range>();
+		ObtainComponentTypeStruct<FInt32Interval>();
+		ObtainComponentTypeStruct<FFloatInterval>();
+		ObtainComponentTypeStruct<FIntPoint>();
+		ObtainComponentTypeStruct<FIntVector>();
+		ObtainComponentTypeStruct<FIntRect>();
+		ObtainComponentTypeStruct<FMatrix>();
+		ObtainComponentTypeStruct<FQuat>();
+		ObtainComponentTypeStruct<FRay>();
 	}
 
 	void InitializeSystems()
@@ -203,7 +215,7 @@ public:
 				
 				if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(StringCast<char>(*StructSymbol).Get()))
 				{
-					flecs::untyped_component InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
+					const flecs::untyped_component InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
 						
 					const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get().
 						GetComponentProperties(StringCast<char>(*StructSymbol).Get());
@@ -1002,51 +1014,42 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	bool HasScriptStruct(const UScriptStruct* ScriptStruct) const
 	{
-		return TypeMapComponent->ScriptStructMap.contains(ScriptStruct);
+		if (TypeMapComponent->ScriptStructMap.contains(ScriptStruct)
+			&& TypeMapComponent->ScriptStructMap.at(ScriptStruct).is_valid())
+		{
+			if (!flecs::_::g_index_to_scriptstruct.Contains(ScriptStruct))
+			{
+				flecs::_::g_index_to_scriptstruct.Add(ScriptStruct, flecs_component_ids_index_get());
+				flecs_component_ids_set(World.c_ptr(),
+					flecs::_::g_index_to_scriptstruct[ScriptStruct], TypeMapComponent->ScriptStructMap.at(ScriptStruct));
+			}
+			
+			return true;
+		}
+		
+		return false;
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FFlecsEntityHandle GetScriptStructEntity(const UScriptStruct* ScriptStruct) const
 	{
-		return TypeMapComponent->ScriptStructMap.at(ScriptStruct);
+		FFlecsId c = flecs_component_ids_get_alive(World.c_ptr(), flecs::_::g_index_to_scriptstruct[ScriptStruct]);
+		solid_checkf(ecs_is_valid(World.c_ptr(), c), TEXT("Entity is not alive"));
+		return FFlecsEntityHandle(World, c);
 	}
 
 	template <Solid::TStaticStructConcept T>
 	NO_DISCARD FFlecsEntityHandle GetScriptStructEntity() const
 	{
-		return GetScriptStructEntity(StaticStruct<T>());
+		return GetScriptStructEntity(TBaseStructure<T>::Get());
 	}
 
 	template <Solid::TStaticStructConcept T>
 	NO_DISCARD bool HasScriptStruct() const
 	{
-		return HasScriptStruct(StaticStruct<T>());
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	bool HasScriptEnum(UEnum* ScriptEnum) const
-	{
-		return TypeMapComponent->ScriptEnumMap.contains(ScriptEnum);
+		return HasScriptStruct(TBaseStructure<T>::Get());
 	}
 	
-	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetScriptEnumEntity(UEnum* ScriptEnum) const
-	{
-		return TypeMapComponent->ScriptEnumMap.at(ScriptEnum);
-	}
-	
-	template <typename T>
-	NO_DISCARD bool HasScriptEnum() const
-	{
-		return HasScriptEnum(StaticEnum<T>());
-	}
-
-	template <typename T>
-	NO_DISCARD FFlecsEntityHandle GetScriptEnumEntity() const
-	{
-		return GetScriptEnumEntity(StaticEnum<T>());
-	}
-
 	void RegisterMemberProperties(const UStruct* InStruct,
 		const FFlecsEntityHandle& InEntity) const
 	{
@@ -1137,67 +1140,20 @@ public:
 				UntypedComponent.member(flecs::meta::EnumType, StringCast<char>(*Property->GetName()).Get(), 1,
 					Property->GetOffset_ForInternal());
 			}
-			else if (Property->IsA<FStructProperty>())
-			{
-				FFlecsEntityHandle StructComponent
-					= ObtainComponentTypeStruct(CastFieldChecked<FStructProperty>(Property)->Struct);
-				UntypedComponent.member(StructComponent,
-					StringCast<char>(*Property->GetName()).Get(), 1,
-					Property->GetOffset_ForInternal());
-			}
-			else
+			 else if (Property->IsA<FStructProperty>())
+			 {
+			 	FFlecsEntityHandle StructComponent
+			 		= ObtainComponentTypeStruct(CastFieldChecked<FStructProperty>(Property)->Struct);
+			 	UntypedComponent.member(StructComponent,
+			 		StringCast<char>(*Property->GetName()).Get(), 1,
+			 		Property->GetOffset_ForInternal());
+			 }
+			else UNLIKELY_ATTRIBUTE
 			{
 				UN_LOGF(LogFlecsWorld, Warning,
 					"Property Type: %s is not supported", *Property->GetName());
 			}
 		}
-	}
-
-	void RegisterEnumProperties(const UEnum* Enum, const FFlecsEntityHandle& InComponentEntity) const
-	{
-		flecs::untyped_component UntypedComponent = InComponentEntity.GetUntypedComponent_Unsafe();
-		
-		if (Enum->HasAnyEnumFlags(EEnumFlags::Flags))
-		{
-			for (int32 Index = 0; Index < Enum->GetMaxEnumValue(); ++Index)
-			{
-				const uint32 FlagValue = static_cast<uint32>(1) << Index;
-				UntypedComponent.bit(StringCast<char>(*Enum->GetNameStringByIndex(Index)).Get(), FlagValue);
-			}
-		}
-		else
-		{
-			for (int32 Index = 0; Index < Enum->GetMaxEnumValue(); ++Index)
-			{
-				UntypedComponent.constant(StringCast<char>(*Enum->GetNameStringByIndex(Index)).Get(), Index);
-			}
-		}
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FFlecsEntityHandle RegisterScriptEnum(UEnum* Enum) const
-	{
-		solid_check(IsValid(Enum));
-
-		const FFlecsEntityHandle OldScope = ClearScope();
-
-		if (const FFlecsEntityHandle Handle = LookupEntity(Enum->GetName()))
-		{
-			RegisterEnumProperties(Enum, Handle);
-			SetScope(OldScope);
-			return Handle;
-		}
-		
-		FFlecsEntityHandle EnumComponent = World.component(StringCast<char>(*Enum->GetName()).Get())
-			.set<flecs::Component>({ .size = sizeof(int32), .alignment = alignof(int32) })
-			.set<FFlecsScriptEnumComponent>({ Enum });
-		
-		TypeMapComponent->ScriptEnumMap.emplace(Enum, EnumComponent.GetEntity());
-
-		RegisterEnumProperties(Enum, EnumComponent);
-
-		SetScope(OldScope);
-		return EnumComponent;
 	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
@@ -1219,6 +1175,18 @@ public:
 			ScriptStructComponent.set_symbol(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get());
 			ScriptStructComponent.set<flecs::Component>(
 			{ .size = ScriptStruct->GetStructureSize(), .alignment = ScriptStruct->GetMinAlignment() });
+
+			if (flecs::_::g_index_to_scriptstruct.Contains(ScriptStruct))
+			{
+				const int32 Index = flecs::_::g_index_to_scriptstruct[ScriptStruct];
+				flecs_component_ids_set(World.c_ptr(), Index, ScriptStructComponent);
+			}
+			else
+			{
+				const int32 Index = flecs_component_ids_index_get();
+				flecs_component_ids_set(World.c_ptr(), Index, ScriptStructComponent);
+				flecs::_::g_index_to_scriptstruct.Add(ScriptStruct, Index);
+			}
 		});
 
 		ScriptStructComponent.set<FFlecsScriptStructComponent>({ ScriptStruct });
@@ -1242,17 +1210,6 @@ public:
 		}
 
 		return RegisterScriptStruct(ScriptStruct);
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FFlecsEntityHandle ObtainScriptEnumType(UEnum* Enum) const
-	{
-		if (HasScriptEnum(Enum))
-		{
-			return GetScriptEnumEntity(Enum);
-		}
-
-		return RegisterScriptEnum(Enum);
 	}
 
 	template <typename ...TComponents>

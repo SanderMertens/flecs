@@ -3982,7 +3982,7 @@ const char* ecs_get_symbol(
     }
 }
 
-static
+static inline
 ecs_entity_t flecs_set_identifier(
     ecs_world_t *world,
     ecs_stage_t *stage,
