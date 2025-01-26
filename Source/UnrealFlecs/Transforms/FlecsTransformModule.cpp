@@ -12,9 +12,9 @@ UFlecsTransformModule::UFlecsTransformModule()
 
 void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-	InWorld->ObtainComponentTypeStruct<FFlecsLocationComponent>();
-	InWorld->ObtainComponentTypeStruct<FFlecsRotationComponent>();
-	InWorld->ObtainComponentTypeStruct<FFlecsScaleComponent>();
+	InWorld->RegisterComponentType<FFlecsLocationComponent>();
+	InWorld->RegisterComponentType<FFlecsRotationComponent>();
+	InWorld->RegisterComponentType<FFlecsScaleComponent>();
 }
 
 void UFlecsTransformModule::DeinitializeModule(UFlecsWorld* InWorld)

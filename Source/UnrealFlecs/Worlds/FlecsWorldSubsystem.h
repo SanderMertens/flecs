@@ -134,8 +134,8 @@ public:
 		
 		DefaultWorld->InitializeDefaultComponents();
 
-		DefaultWorld->ObtainComponentTypeStruct<FFlecsWorldPtrComponent>();
-		DefaultWorld->ObtainComponentTypeStruct<FUWorldPtrComponent>();
+		DefaultWorld->RegisterComponentType<FFlecsWorldPtrComponent>();
+		DefaultWorld->RegisterComponentType<FUWorldPtrComponent>();
 		
 		DefaultWorld->SetContext(this);
 

@@ -19,7 +19,7 @@ DECLARE_CYCLE_STAT(TEXT("FlecsPhysicsModule::ResimulationHandlers"),
 
 void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-	InWorld->ObtainComponentTypeStruct<FFlecsPhysicsSceneComponent>();
+	InWorld->RegisterComponentType<FFlecsPhysicsSceneComponent>();
 }
 
 void UFlecsPhysicsModule::DeinitializeModule(UFlecsWorld* InWorld)

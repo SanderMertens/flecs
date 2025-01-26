@@ -48,7 +48,7 @@ UFlecsTickerModule::UFlecsTickerModule(const FObjectInitializer& InObjectInitial
 
 void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-	InWorld->ObtainComponentTypeStruct<FFlecsTickerComponent>();
+	InWorld->RegisterComponentType<FFlecsTickerComponent>();
 	
 	FFlecsTickerComponent TickerComponent;
 	TickerComponent.TickId = 0;

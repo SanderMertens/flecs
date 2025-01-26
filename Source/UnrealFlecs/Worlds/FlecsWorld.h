@@ -180,37 +180,37 @@ public:
 				*Data = nullptr;
 			});
 
-		ObtainComponentTypeStruct<FFlecsBeginPlay>();
+		RegisterComponentType<FFlecsBeginPlay>();
 
-		ObtainComponentTypeStruct<FFlecsUObjectComponent>();
+		RegisterComponentType<FFlecsUObjectComponent>();
 
-		ObtainComponentTypeStruct<FFlecsModuleComponent>();
-		ObtainComponentTypeStruct<FFlecsModuleInitEvent>();
-		ObtainComponentTypeStruct<FFlecsDependenciesComponent>();
+		RegisterComponentType<FFlecsModuleComponent>();
+		RegisterComponentType<FFlecsModuleInitEvent>();
+		RegisterComponentType<FFlecsDependenciesComponent>();
 		
-		ObtainComponentTypeStruct<FFlecsComponentCollection>();
+		RegisterComponentType<FFlecsComponentCollection>();
 
-		ObtainComponentTypeStruct<FVector>();
-		ObtainComponentTypeStruct<FRotator>();
-		ObtainComponentTypeStruct<FTransform>();
-		ObtainComponentTypeStruct<FColor>();
-		ObtainComponentTypeStruct<FLinearColor>();
-		ObtainComponentTypeStruct<FBox>();
-		ObtainComponentTypeStruct<FBox2D>();
-		ObtainComponentTypeStruct<FBoxSphereBounds>();
-		ObtainComponentTypeStruct<FSphere>();
-		ObtainComponentTypeStruct<FCapsuleShape>();
-		ObtainComponentTypeStruct<FPlane>();
-		ObtainComponentTypeStruct<FFloatRange>();
-		ObtainComponentTypeStruct<FInt32Range>();
-		ObtainComponentTypeStruct<FInt32Interval>();
-		ObtainComponentTypeStruct<FFloatInterval>();
-		ObtainComponentTypeStruct<FIntPoint>();
-		ObtainComponentTypeStruct<FIntVector>();
-		ObtainComponentTypeStruct<FIntRect>();
-		ObtainComponentTypeStruct<FMatrix>();
-		ObtainComponentTypeStruct<FQuat>();
-		ObtainComponentTypeStruct<FRay>();
+		RegisterComponentType<FVector>();
+		RegisterComponentType<FRotator>();
+		RegisterComponentType<FTransform>();
+		RegisterComponentType<FColor>();
+		RegisterComponentType<FLinearColor>();
+		RegisterComponentType<FBox>();
+		RegisterComponentType<FBox2D>();
+		RegisterComponentType<FBoxSphereBounds>();
+		RegisterComponentType<FSphere>();
+		RegisterComponentType<FCapsuleShape>();
+		RegisterComponentType<FPlane>();
+		RegisterComponentType<FFloatRange>();
+		RegisterComponentType<FInt32Range>();
+		RegisterComponentType<FInt32Interval>();
+		RegisterComponentType<FFloatInterval>();
+		RegisterComponentType<FIntPoint>();
+		RegisterComponentType<FIntVector>();
+		RegisterComponentType<FIntRect>();
+		RegisterComponentType<FMatrix>();
+		RegisterComponentType<FQuat>();
+		RegisterComponentType<FRay>();
 	}
 
 	void InitializeSystems()
@@ -1202,6 +1202,22 @@ public:
 
 		SetScope(OldScope);
 		return ScriptStructComponent;
+	}
+
+	template <typename T>
+	flecs::untyped_component RegisterComponentType() const
+	{
+		return World.component<T>();
+	}
+
+	FFlecsEntityHandle RegisterComponentType(const UScriptStruct* ScriptStruct) const
+	{
+		if (HasScriptStruct(ScriptStruct))
+		{
+			return GetScriptStructEntity(ScriptStruct);
+		}
+
+		return RegisterScriptStruct(ScriptStruct);
 	}
 
 	template <typename T>
