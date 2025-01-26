@@ -48,6 +48,8 @@ UFlecsTickerModule::UFlecsTickerModule(const FObjectInitializer& InObjectInitial
 
 void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
+	InWorld->ObtainComponentTypeStruct<FFlecsTickerComponent>();
+	
 	FFlecsTickerComponent TickerComponent;
 	TickerComponent.TickId = 0;
 	InWorld->SetSingleton<FFlecsTickerComponent>(TickerComponent);

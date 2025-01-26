@@ -8,6 +8,7 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Collections/FlecsComponentCollection.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsUObjectComponent.h"
@@ -178,6 +179,16 @@ public:
 			{
 				*Data = nullptr;
 			});
+
+		ObtainComponentTypeStruct<FFlecsBeginPlay>();
+
+		ObtainComponentTypeStruct<FFlecsUObjectComponent>();
+
+		ObtainComponentTypeStruct<FFlecsModuleComponent>();
+		ObtainComponentTypeStruct<FFlecsModuleInitEvent>();
+		ObtainComponentTypeStruct<FFlecsDependenciesComponent>();
+		
+		ObtainComponentTypeStruct<FFlecsComponentCollection>();
 
 		ObtainComponentTypeStruct<FVector>();
 		ObtainComponentTypeStruct<FRotator>();
