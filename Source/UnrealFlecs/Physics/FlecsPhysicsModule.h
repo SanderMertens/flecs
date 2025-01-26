@@ -28,8 +28,8 @@ public:
 		return TEXT("Flecs Physics Module");
 	}
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
-	bool bAllowResimulation = false;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
+	//bool bAllowResimulation = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics",
 		meta = (EditCondition = "bAllowResimulation"))

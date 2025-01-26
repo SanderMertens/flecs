@@ -45,11 +45,11 @@ void FFlecsOSApiTestsSpec::Define()
 
 		It("Should Sleep 10000 nanosecs", [this]
 		{
-			const uint32_t Time = ecs_os_now();
+			ecs_time_t Time = {};
+			ecs_time_measure(&Time);
 			ecs_os_sleep(0, 10000);
-			const uint32_t NewTime = ecs_os_now();
-			TestTrue("Time should be greater than 0", Time > 0);
-			TestTrue("NewTime should be greater than Time", NewTime > Time);
+			const double Elapsed = ecs_time_measure(&Time);
+			TestTrue("Elapsed time should be greater than 0", Elapsed > 0);
 		});
 	});
 }

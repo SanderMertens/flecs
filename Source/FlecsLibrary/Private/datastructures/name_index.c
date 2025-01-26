@@ -5,7 +5,7 @@
 
 #include "../private_api.h"
 
-static
+static inline
 uint64_t flecs_name_index_hash(
     const void *ptr)
 {
@@ -14,7 +14,7 @@ uint64_t flecs_name_index_hash(
     return str->hash;
 }
 
-static
+static inline
 int flecs_name_index_compare(
     const void *ptr1, 
     const void *ptr2)
