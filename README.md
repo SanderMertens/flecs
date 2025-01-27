@@ -176,9 +176,7 @@ The following language bindings have been developed with Flecs! Note that these 
   - [flecs-polyglot](https://github.com/flecs-hub/flecs-polyglot)
   - [flecs-rs](https://github.com/jazzay/flecs-rs)
 - Zig:
-  - [michal-z/zig-gamedev](https://github.com/michal-z/zig-gamedev/tree/main/libs/zflecs)
-  - [foxnne/zig-flecs](https://github.com/foxnne/zig-flecs)
-  - [prime31/zig-flecs](https://github.com/prime31/zig-flecs)
+  - [zig-gamedev/zflecs](https://github.com/zig-gamedev/zflecs)
 - Lua:
   - [sro5h/flecs-luajit](https://github.com/sro5h/flecs-luajit)
   - [flecs-hub/flecs-lua](https://github.com/flecs-hub/flecs-lua)
