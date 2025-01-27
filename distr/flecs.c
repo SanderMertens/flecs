@@ -69702,6 +69702,7 @@ void flecs_query_update_node_up_trs(
                         flecs_id_record_get_table(idr, r->table);
                     ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
                     ctx->it->trs[field_map ? field_map[f] : f] = tr;
+                    node->tables[f] = r->table;
                 }
             }
         }
