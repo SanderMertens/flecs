@@ -1530,6 +1530,12 @@ void Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit(v
 void Traversal_this_written_up_isa_childof_2_lvl_after_remove_override(void);
 void Traversal_singleton_w_this_up_w_table_change(void);
 void Traversal_this_up_w_singleton_w_table_change(void);
+void Traversal_2_this_up_w_singleton_w_table_change(void);
+void Traversal_2_this_up_w_singleton_w_tag_w_table_change(void);
+void Traversal_singleton_w_this_up_w_table_change_components(void);
+void Traversal_this_up_w_singleton_w_table_change_components(void);
+void Traversal_2_this_up_w_singleton_w_table_change_components(void);
+void Traversal_2_this_up_w_singleton_w_component_w_table_change_components(void);
 
 // Testsuite 'Cascade'
 void Cascade_parent_cascade(void);
@@ -8138,6 +8144,30 @@ bake_test_case Traversal_testcases[] = {
     {
         "this_up_w_singleton_w_table_change",
         Traversal_this_up_w_singleton_w_table_change
+    },
+    {
+        "2_this_up_w_singleton_w_table_change",
+        Traversal_2_this_up_w_singleton_w_table_change
+    },
+    {
+        "2_this_up_w_singleton_w_tag_w_table_change",
+        Traversal_2_this_up_w_singleton_w_tag_w_table_change
+    },
+    {
+        "singleton_w_this_up_w_table_change_components",
+        Traversal_singleton_w_this_up_w_table_change_components
+    },
+    {
+        "this_up_w_singleton_w_table_change_components",
+        Traversal_this_up_w_singleton_w_table_change_components
+    },
+    {
+        "2_this_up_w_singleton_w_table_change_components",
+        Traversal_2_this_up_w_singleton_w_table_change_components
+    },
+    {
+        "2_this_up_w_singleton_w_component_w_table_change_components",
+        Traversal_2_this_up_w_singleton_w_component_w_table_change_components
     }
 };
 
@@ -10735,7 +10765,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        157,
+        163,
         Traversal_testcases,
         1,
         Traversal_params
