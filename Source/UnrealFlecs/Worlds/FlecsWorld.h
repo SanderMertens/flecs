@@ -184,6 +184,8 @@ public:
 				*Data = nullptr;
 			});
 
+		RegisterUnrealTypes();
+
 		RegisterComponentType<FFlecsBeginPlay>();
 
 		RegisterComponentType<FFlecsUObjectComponent>();
@@ -201,27 +203,35 @@ public:
 		
 		RegisterComponentType<FFlecsComponentCollection>();
 
+		
+	}
+
+	void RegisterUnrealTypes() const
+	{
+		RegisterComponentType<FGameplayTagContainer>();
+		
 		RegisterComponentType<FVector>();
+		RegisterComponentType<FQuat>();
 		RegisterComponentType<FRotator>();
 		RegisterComponentType<FTransform>();
+
+		RegisterComponentType<FBox>();
+		RegisterComponentType<FBoxSphereBounds>();
+		RegisterComponentType<FCapsuleShape>();
+		RegisterComponentType<FRay>();
+
+		RegisterComponentType<FVector4>();
+		
+		RegisterComponentType<FVector2D>();
+		RegisterComponentType<FQuat2D>();
+		RegisterComponentType<FTransform2D>();
+
+		RegisterComponentType<FBox2D>();
+
 		RegisterComponentType<FColor>();
 		RegisterComponentType<FLinearColor>();
-		RegisterComponentType<FBox>();
-		RegisterComponentType<FBox2D>();
-		RegisterComponentType<FBoxSphereBounds>();
-		RegisterComponentType<FSphere>();
-		RegisterComponentType<FCapsuleShape>();
-		RegisterComponentType<FPlane>();
-		RegisterComponentType<FFloatRange>();
-		RegisterComponentType<FInt32Range>();
-		RegisterComponentType<FInt32Interval>();
-		RegisterComponentType<FFloatInterval>();
-		RegisterComponentType<FIntPoint>();
-		RegisterComponentType<FIntVector>();
-		RegisterComponentType<FIntRect>();
-		RegisterComponentType<FMatrix>();
-		RegisterComponentType<FQuat>();
-		RegisterComponentType<FRay>();
+
+		
 	}
 
 	void InitializeSystems()
@@ -1175,8 +1185,16 @@ public:
 			// }
 			 else if (Property->IsA<FStructProperty>())
 			 {
-			 	FFlecsEntityHandle StructComponent
-			 		= ObtainComponentTypeStruct(CastFieldChecked<FStructProperty>(Property)->Struct);
+			 	FFlecsEntityHandle StructComponent;
+			 	if (!HasScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct))
+			 	{
+			 		StructComponent = RegisterScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct);
+			 	}
+			    else
+			    {
+				    StructComponent = GetScriptStructEntity(CastFieldChecked<FStructProperty>(Property)->Struct);
+			    }
+			 	
 			 	UntypedComponent.member(StructComponent,
 			 		StringCast<char>(*Property->GetName()).Get(), 1,
 			 		Property->GetOffset_ForInternal());
@@ -1253,12 +1271,22 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* ScriptStruct) const
 	{
+		#ifndef FLECS_CPP_NO_AUTO_REGISTRATION
+		
 		if (HasScriptStruct(ScriptStruct))
 		{
 			return GetScriptStructEntity(ScriptStruct);
 		}
 
 		return RegisterScriptStruct(ScriptStruct);
+		
+		#else
+
+		solid_checkf(HasScriptStruct(ScriptStruct), TEXT("Script struct %s is not registered"),
+			*ScriptStruct->GetStructCPPName());
+		return GetScriptStructEntity(ScriptStruct);
+
+		#endif // !FLECS_CPP_NO_AUTO_REGISTRATION
 	}
 
 	template <typename ...TComponents>
