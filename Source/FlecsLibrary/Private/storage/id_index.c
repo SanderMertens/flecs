@@ -109,7 +109,7 @@ void flecs_remove_id_elem(
     }
 }
 
-static
+static inline
 ecs_id_t flecs_id_record_hash(
     ecs_id_t id)
 {
@@ -169,7 +169,7 @@ void flecs_id_record_fini_sparse(
     }
 }
 
-static
+static inline
 ecs_flags32_t flecs_id_record_event_flags(
     ecs_world_t *world,
     ecs_id_t id)

@@ -815,7 +815,7 @@ public:
 		return GetEntity().has_second<TSecond>(GetTagEntity(InFirst));
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = TFirst>
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
 	SOLID_INLINE NO_DISCARD TActual GetPair() const
 	{
 		return GetEntity().get<TFirst, TSecond>();
@@ -825,6 +825,42 @@ public:
 	SOLID_INLINE TActual GetPair(const UScriptStruct* InSecond) const
 	{
 		return GetEntity().get<TFirst>(ObtainComponentTypeStruct(InSecond));
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	SOLID_INLINE TActual GetPair(const FGameplayTag& InSecond) const
+	{
+		return GetEntity().get<TFirst>(GetTagEntity(InSecond));
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	SOLID_INLINE TActual GetPair(const FFlecsId InSecond) const
+	{
+		return GetEntity().get<TFirst>(InSecond);
+	}
+
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	SOLID_INLINE TActual* GetPairPtr() const
+	{
+		return GetEntity().get_mut<TFirst, TSecond>();
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	SOLID_INLINE TActual* GetPairPtr(const FFlecsId InSecond) const
+	{
+		return GetEntity().get_mut<TFirst>(InSecond);
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	SOLID_INLINE TActual* GetPairPtr(const UScriptStruct* InSecond) const
+	{
+		return GetEntity().get_mut<TFirst>(ObtainComponentTypeStruct(InSecond));
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	SOLID_INLINE TActual* GetPairPtr(const FGameplayTag& InSecond) const
+	{
+		return GetEntity().get_mut<TFirst>(GetTagEntity(InSecond));
 	}
 
 	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
@@ -916,14 +952,12 @@ public:
 
 	SOLID_INLINE void ModifiedPair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
 	{
-		GetEntity().modified(ObtainComponentTypeStruct(InFirst),
-			ObtainComponentTypeStruct(InSecond));
+		GetEntity().modified(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
 	}
 
 	SOLID_INLINE void ModifiedPair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
 	{
-		GetEntity().modified(ObtainComponentTypeStruct(InFirst),
-			GetTagEntity(InSecond));
+		GetEntity().modified(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
 	}
 
 	SOLID_INLINE void ModifiedPair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
@@ -933,8 +967,7 @@ public:
 
 	SOLID_INLINE void ModifiedPair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
 	{
-		GetEntity().modified(GetTagEntity(InFirst),
-			ObtainComponentTypeStruct(InSecond));
+		GetEntity().modified(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond));
 	}
 
 	SOLID_INLINE void ModifiedPair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
@@ -1058,7 +1091,10 @@ private:
 	
 	NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
 
-	NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return Entity.world(); }
+	NO_DISCARD flecs::world GetFlecsWorld_Internal() const
+	{
+		return Entity.world();
+	}
 
 	void ObtainFlecsWorld();
 

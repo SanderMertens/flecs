@@ -1288,7 +1288,7 @@ flecs_component_ptr_t flecs_ensure(
 
     /* If entity didn't have component yet, add it */
     flecs_add_id_w_record(world, entity, r, id, true);
-
+    
     /* Flush commands so the pointer we're fetching is stable */
     flecs_defer_end(world, world->stages[0]);
     flecs_defer_begin(world, world->stages[0]);
@@ -3218,7 +3218,7 @@ ecs_record_t* flecs_access_begin(
         return NULL;
     }
 
-    const int32_t count = ecs_os_ainc(&table->_->lock);
+    const int32_t count = ecs_os_ainc(&table->lock);
     (void)count;
     if (write) {
         ecs_check(count == 1, ECS_ACCESS_VIOLATION, NULL);
@@ -3237,7 +3237,7 @@ void flecs_access_end(
     ecs_check(ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
     ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(r->table != NULL, ECS_INVALID_PARAMETER, NULL);
-    const int32_t count = ecs_os_adec(&r->table->_->lock);
+    const int32_t count = ecs_os_adec(&r->table->lock);
     (void)count;
     if (write) {
         ecs_check(count == 0, ECS_ACCESS_VIOLATION, NULL);

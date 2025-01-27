@@ -71,7 +71,8 @@ void FFlecsDefaultEntityEngine::Initialize()
 
 		const size_t Index = AddedDefaultEntities.size();
 		
-		AddedDefaultEntities.emplace_back(FFlecsDefaultMetaEntity(EntityRecord.EntityName, EntityRecord.EntityRecord, EntityRecord.EntityId));
+		AddedDefaultEntities.emplace_back(
+			FFlecsDefaultMetaEntity(EntityRecord.EntityName, EntityRecord.EntityRecord, EntityRecord.EntityId));
 		AddedDefaultEntities[Index].SetId = DefaultEntityWorld->make_alive(static_cast<flecs::entity_t>(EntityRecord.EntityId));
 		
 		ecs_set_name(*DefaultEntityWorld,
@@ -134,11 +135,15 @@ FFlecsId FFlecsDefaultEntityEngine::AddDefaultEntity(FFlecsDefaultMetaEntity Def
 {
 	auto ContainsDefaultEntity = [this](const FString& EntityName) -> bool
 	{
-		return std::ranges::any_of(AddedDefaultEntities,
-		[&EntityName](const FFlecsDefaultMetaEntity& InDefaultEntity) -> bool
+		for (const FFlecsDefaultMetaEntity& DefaultEntity : AddedDefaultEntities)
 		{
-			return InDefaultEntity.EntityName == EntityName && InDefaultEntity.SetId != 0;
-		});
+			if (DefaultEntity.EntityName == EntityName && DefaultEntity.SetId != 0)
+			{
+				return true;
+			}
+		}
+
+		return false;
 	};
 
 	if (ContainsDefaultEntity(DefaultEntity.EntityName))

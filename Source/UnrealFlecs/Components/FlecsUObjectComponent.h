@@ -4,7 +4,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 #include "SolidMacros/Macros.h"
 #include "UObject/Object.h"
 #include "Properties/FlecsComponentProperties.h"
@@ -110,9 +109,10 @@ public:
 }; // struct FFlecsUObjectComponent
 
 REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsUObjectComponent, [](flecs::world InWorld, flecs::untyped_component InComponent)
-{
-    InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
-});
+    {
+        InComponent.add(flecs::Exclusive);
+        InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+    });
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsNoDeleteUObject
@@ -121,8 +121,8 @@ struct UNREALFLECS_API FFlecsNoDeleteUObject
 }; // struct FFlecsNoDeleteUObject
 
 REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsNoDeleteUObject, [](flecs::world InWorld, flecs::untyped_component InComponent)
-{
-    InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
-});
+    {
+        InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+    });
 
 

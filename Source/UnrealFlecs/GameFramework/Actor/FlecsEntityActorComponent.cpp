@@ -1,6 +1,7 @@
 ﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
 #include "FlecsEntityActorComponent.h"
+
 #include "Components/ObjectTypes/FlecsActorTag.h"
 #include "Logs/FlecsCategories.h"
 #include "Net/UnrealNetwork.h"
@@ -90,7 +91,7 @@ void UFlecsEntityActorComponent::CreateActorEntity(UFlecsWorld* InWorld)
 {
 	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord, EntityName);
 	
-	EntityHandle.Set<FFlecsUObjectComponent>(GetOwner());
+	EntityHandle.SetPair<FFlecsUObjectComponent, FFlecsActorTag>(FFlecsUObjectComponent{ GetOwner() });
 
 	UN_LOGF(LogFlecsEntity, Log, "Created Actor Entity: %s", *EntityHandle.GetName());
 

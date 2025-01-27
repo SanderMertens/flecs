@@ -57,7 +57,7 @@ public:
 		System = FFlecsSystem(Builder); // Builder.build();
 		
 		Settings.SystemRecord.ApplyRecordToEntity(System.GetEntity());
-		System.GetEntity().Set<FFlecsUObjectComponent>({ _getUObject() });
+		//System.GetEntity().Set<FFlecsUObjectComponent>({ _getUObject() });
 		
 		InitializeSystem();
 		BP_InitializeSystem();

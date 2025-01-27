@@ -12,7 +12,11 @@
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsUObjectComponent.h"
+#include "Components/ObjectTypes/FFlecsActorComponentTag.h"
 #include "Components/ObjectTypes/FFlecsModuleComponentTag.h"
+#include "Components/ObjectTypes/FFlecsSceneComponentTag.h"
+#include "Components/ObjectTypes/FFlecsUObjectTag.h"
+#include "Components/ObjectTypes/FlecsActorTag.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
@@ -183,6 +187,13 @@ public:
 		RegisterComponentType<FFlecsBeginPlay>();
 
 		RegisterComponentType<FFlecsUObjectComponent>();
+		RegisterComponentType<FFlecsActorComponentTag>();
+		RegisterComponentType<FFlecsModuleComponentTag>();
+		RegisterComponentType<FFlecsSceneComponentTag>();
+		RegisterComponentType<FFlecsUObjectTag>();
+		RegisterComponentType<FFlecsActorTag>();
+		
+		RegisterComponentType<FFlecsPrimaryAssetComponent>();
 
 		RegisterComponentType<FFlecsModuleComponent>();
 		RegisterComponentType<FFlecsModuleInitEvent>();
@@ -231,7 +242,7 @@ public:
 					const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get().
 						GetComponentProperties(StringCast<char>(*StructSymbol).Get());
 
-					Properties->RegistrationFunction(Iter.world(), InUntypedComponent);
+					std::invoke(Properties->RegistrationFunction, Iter.world(), InUntypedComponent);
 				}
 				#if UNLOG_ENABLED
 				else
@@ -258,20 +269,23 @@ public:
 				RegisterMemberProperties(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
 			});
 
-		ObjectDestructionComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectDestructionComponentQuery")
+		ObjectDestructionComponentQuery = World.query_builder("UObjectDestructionComponentQuery")
+			.with<FFlecsUObjectComponent>(flecs::Wildcard)
+			.term_at(0).second(flecs::Wildcard)
 			.cached()
 			.build();
 
 		FCoreUObjectDelegates::GarbageCollectComplete.AddWeakLambda(this, [this]
 		{
-			ObjectDestructionComponentQuery.each([](
-				flecs::entity InEntity, FFlecsUObjectComponent& InUObjectComponent)
+			ObjectDestructionComponentQuery.each([](flecs::iter& Iter, size_t IterIndex)
 			{
+				FFlecsEntityHandle InEntity = Iter.entity(IterIndex);
+				FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(0, IterIndex);
 				if (InUObjectComponent.IsStale())
 				{
 					UN_LOGF(LogFlecsWorld, Log, "Entity Garbage Collected: %s",
-						StringCast<TCHAR>(InEntity.name().c_str()).Get());
-					InEntity.destruct();
+						StringCast<char>(*InEntity.GetName()).Get());
+					InEntity.Destroy();
 				}
 			});
 		});
@@ -284,14 +298,16 @@ public:
 			.cached()
 			.build();
 
-		CreateObserver<const FFlecsUObjectComponent&,const FFlecsModuleComponent&>(TEXT("AddModuleComponentObserver"))
-			.term_at(0).filter()
+		CreateObserver(TEXT("AddModuleComponentObserver"))
+			.with<FFlecsModuleComponent>()
+			.with<FFlecsUObjectComponent, FFlecsModuleComponentTag>().filter()
 			.event(flecs::OnAdd)
 			.yield_existing()
-			.each([this](flecs::entity InEntity,
-			             const FFlecsUObjectComponent& InUObjectComponent,
-			             const FFlecsModuleComponent& InModuleComponent)
+			.each([this](flecs::iter Iter, size_t IterIndex)
 			{
+				FFlecsEntityHandle InEntity = Iter.entity(IterIndex);
+				FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, IterIndex);
+				
 				UN_LOGF(LogFlecsWorld, Log, "Module component %s added",
                     *InUObjectComponent.GetObjectChecked()->GetName());
 				
@@ -303,24 +319,29 @@ public:
 				}
 			});
 
-		CreateObserver<FFlecsModuleComponent, FFlecsUObjectComponent>(TEXT("ModuleInitEventObserver"))
+		CreateObserver<FFlecsModuleComponent>(TEXT("ModuleInitEventObserver"))
+			.with<FFlecsUObjectComponent, FFlecsModuleComponentTag>()
 			.event<FFlecsModuleInitEvent>()
-			.term_at(1).filter().read()
 			.each([this](flecs::iter& Iter, const size_t IterIndex,
-			             const FFlecsModuleComponent& InModuleComponent,
-			             const FFlecsUObjectComponent& InUObjectComponent)
+			             const FFlecsModuleComponent& InModuleComponent)
 			{
 				const FFlecsEntityHandle ModuleEntity = Iter.entity(IterIndex);
 				
-				DependenciesComponentQuery.each([&]
-					(flecs::entity InEntity, const FFlecsDependenciesComponent& InDependenciesComponent)
+				DependenciesComponentQuery.each([&](
+					flecs::iter& DependenciesIter, const size_t DependenciesIterIndex,
+					FFlecsDependenciesComponent& DependenciesComponent)
 				{
-					if (InDependenciesComponent.Dependencies.contains(InModuleComponent.ModuleClass))
+					const FFlecsEntityHandle InEntity = DependenciesIter.entity(DependenciesIterIndex);
+					
+					const FFlecsUObjectComponent& InUObjectComponent
+						= DependenciesIter.field_at<FFlecsUObjectComponent>(1, DependenciesIterIndex);
+					
+					if (DependenciesComponent.Dependencies.contains(InModuleComponent.ModuleClass))
 					{
 						const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& Function
-							= InDependenciesComponent.Dependencies.at(InModuleComponent.ModuleClass);
+							= DependenciesComponent.Dependencies.at(InModuleComponent.ModuleClass);
 
-						InEntity.add(flecs::DependsOn, ModuleEntity);
+						InEntity.AddPair(flecs::DependsOn, ModuleEntity);
 						
 						Function(InUObjectComponent.GetObjectChecked(), this, ModuleEntity);
 					}
@@ -330,9 +351,12 @@ public:
 		CreateObserver(TEXT("RemoveModuleComponentObserver"))
 			.event(flecs::OnRemove)
 			.with<FFlecsModuleComponent>().inout_none()
-			.with<FFlecsUObjectComponent>().filter().read()
+			.with<FFlecsUObjectComponent>().second(flecs::Wildcard).filter()
 			.each([this](flecs::iter& Iter, const size_t IterIndex)
 			{
+				FFlecsEntityHandle InEntity = Iter.entity(IterIndex);
+				FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, IterIndex);
+				
 				for (int32 Index = ProgressModules.Num(); Index > 0; --Index)
 				{
 					const UObject* Module = ProgressModules[Index - 1].GetObject();
@@ -343,7 +367,7 @@ public:
 						break;
 					}
 					
-					if (Module == Iter.entity(IterIndex).get<FFlecsUObjectComponent>()->GetObjectChecked())
+					if (Module == InUObjectComponent.GetObjectChecked())
 					{
 						ProgressModules.RemoveAt(Index - 1);
 						break;
@@ -703,7 +727,7 @@ public:
 	FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject>& InModule) const
 	{
 		const flecs::entity ModuleEntity = ModuleComponentQuery
-			.find([&](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
+			.find([&InModule](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
 			{
 				return InComponent.ModuleClass == InModule;
 			});
@@ -721,14 +745,14 @@ public:
 	UObject* GetModule(const TSubclassOf<UObject>& InModule) const
 	{
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModule);
-		return ModuleEntity.GetPtr<FFlecsUObjectComponent>()->GetObjectChecked();
+		return ModuleEntity.GetPairPtr<FFlecsUObjectComponent, FFlecsModuleComponentTag>()->GetObjectChecked();
 	}
 
 	template <Solid::TStaticClassConcept T>
 	NO_DISCARD T* GetModule() const
 	{
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity<T>();
-		return ModuleEntity.GetPtr<FFlecsUObjectComponent>()->GetObjectChecked<T>();
+		return ModuleEntity.GetPairPtr<FFlecsUObjectComponent, FFlecsModuleComponentTag>()->GetObjectChecked<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -1314,8 +1338,7 @@ public:
 	FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
 	{
 		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
-		return LookupEntity(StringCast<char>(*Tag.GetTagName().ToString()).Get(),
-		 ".", ".");
+		return LookupEntity(StringCast<char>(*Tag.GetTagName().ToString()).Get(), ".", ".");
 	}
 
 	template <typename T>
@@ -1475,7 +1498,7 @@ public:
 	TArray<TScriptInterface<IFlecsModuleProgressInterface>> ProgressModules;
 
 	flecs::query<FFlecsModuleComponent> ModuleComponentQuery;
-	flecs::query<FFlecsUObjectComponent> ObjectDestructionComponentQuery;
+	flecs::query<> ObjectDestructionComponentQuery;
 	flecs::query<FFlecsDependenciesComponent> DependenciesComponentQuery;
 
 	FFlecsTypeMapComponent* TypeMapComponent;
