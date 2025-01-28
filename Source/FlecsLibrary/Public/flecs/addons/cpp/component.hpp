@@ -191,7 +191,7 @@ struct type_impl {
 
         flecs::entity_t c = flecs_component_ids_get(world, s_index);
 
-        if (!c || !ecs_is_alive(world, c)) [[likely]] {
+        if (!c || !ecs_is_alive(world, c)) {
             // When a component is implicitly registered, ensure that it's not
             // registered in the current scope of the application/that "with"
             // components get added to the component entity.
