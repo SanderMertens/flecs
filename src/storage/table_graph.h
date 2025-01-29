@@ -27,7 +27,7 @@ typedef struct ecs_table_diff_t {
 } ecs_table_diff_t;
 
 /** Edge linked list (used to keep track of incoming edges) */
-typedef struct ecs_graph_edge_hdr_t {
+typedef struct ECS_ALIGNAS(8) ecs_graph_edge_hdr_t {
     struct ecs_graph_edge_hdr_t *prev;
     struct ecs_graph_edge_hdr_t *next;
 } ecs_graph_edge_hdr_t;

@@ -258,6 +258,14 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
+#if defined(ECS_TARGET_GNU)
+#define ECS_ALIGNAS(N) __attribute__((aligned(N)))
+#elif defined(ECS_TARGET_MSVC)
+#define ECS_ALIGNAS(N) __declspec(align(N))
+#else
+#define ECS_ALIGNAS(N)
+#endif
+
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
 #if defined(ECS_TARGET_GNU)
 #define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))

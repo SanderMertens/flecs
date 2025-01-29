@@ -78,7 +78,7 @@ typedef struct ecs_script_vars_t {
 } ecs_script_vars_t;
 
 /** Script object. */
-typedef struct ecs_script_t {
+typedef struct ECS_ALIGNAS(8) ecs_script_t {
     ecs_world_t *world;
     const char *name;
     const char *code;

@@ -883,6 +883,14 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
+#if defined(ECS_TARGET_GNU)
+#define ECS_ALIGNAS(N) __attribute__((aligned(N)))
+#elif defined(ECS_TARGET_MSVC)
+#define ECS_ALIGNAS(N) __declspec(align(N))
+#else
+#define ECS_ALIGNAS(N)
+#endif
+
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
 #if defined(ECS_TARGET_GNU)
 #define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))
@@ -3223,7 +3231,7 @@ struct ecs_record_t {
 };
 
 /** Header for table cache elements. */
-typedef struct ecs_table_cache_hdr_t {
+typedef struct ECS_ALIGNAS(8) ecs_table_cache_hdr_t {
     struct ecs_table_cache_t *cache;  /**< Table cache of element. Of type ecs_id_record_t* for component index elements. */
     ecs_table_t *table;               /**< Table associated with element. */
     struct ecs_table_cache_hdr_t *prev, *next; /**< Next/previous elements for id in table cache. */
@@ -14509,7 +14517,7 @@ typedef struct ecs_script_vars_t {
 } ecs_script_vars_t;
 
 /** Script object. */
-typedef struct ecs_script_t {
+typedef struct ECS_ALIGNAS(8) ecs_script_t {
     ecs_world_t *world;
     const char *name;
     const char *code;
