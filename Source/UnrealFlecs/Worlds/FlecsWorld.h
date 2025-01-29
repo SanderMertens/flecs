@@ -315,7 +315,6 @@ public:
 			.yield_existing()
 			.each([this](flecs::iter Iter, size_t IterIndex)
 			{
-				FFlecsEntityHandle InEntity = Iter.entity(IterIndex);
 				FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, IterIndex);
 				
 				UN_LOGF(LogFlecsWorld, Log, "Module component %s added",
@@ -719,7 +718,7 @@ public:
 	bool IsModuleImported(const TSubclassOf<UObject> InModule) const
 	{
 		const flecs::entity ModuleEntity = ModuleComponentQuery
-			.find([&](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
+			.find([&InModule](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
 			{
 				return InComponent.ModuleClass == InModule;
 			});
