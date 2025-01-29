@@ -81,30 +81,70 @@ public:
 		*this = FFlecsEntityHandle(InEntity);
 	}
 	
-	SOLID_INLINE operator flecs::entity() const { return GetEntity(); }
-	SOLID_INLINE operator flecs::id_t() const { return GetEntity(); }
-	SOLID_INLINE operator flecs::entity_view() const { return GetEntity().view(); }
-
-	SOLID_INLINE operator FFlecsId() const { return FFlecsId(GetEntity()); }
+	SOLID_INLINE operator flecs::entity() const
+	{
+		return GetEntity();
+	}
 	
-	SOLID_INLINE NO_DISCARD bool IsValid() const { return GetEntity().is_valid(); }
-	SOLID_INLINE NO_DISCARD bool IsAlive() const { return GetEntity().is_alive(); }
-
-	SOLID_INLINE operator bool() const { return IsValid(); }
-
-	SOLID_INLINE NO_DISCARD FFlecsId GetFlecsId() const { return FFlecsId(GetEntity()); }
-
+	SOLID_INLINE operator flecs::id_t() const
+	{
+		return GetEntity();
+	}
 	
-	SOLID_INLINE NO_DISCARD flecs::id_t GetIndex() const { return GetFlecsId().GetId(); }
-	SOLID_INLINE NO_DISCARD uint32 GetGeneration() const { return GetFlecsId().GetGeneration(); }
-	SOLID_INLINE NO_DISCARD uint32 GetVersion() const { return GetGeneration(); }
+	SOLID_INLINE operator flecs::entity_view() const
+	{
+		return GetEntity().view();
+	}
+
+	SOLID_INLINE operator FFlecsId() const
+	{
+		return FFlecsId(GetEntity());
+	}
+	
+	SOLID_INLINE NO_DISCARD bool IsValid() const
+	{
+		return GetEntity().is_valid();
+	}
+	
+	SOLID_INLINE NO_DISCARD bool IsAlive() const
+	{
+		return GetEntity().is_alive();
+	}
+
+	SOLID_INLINE operator bool() const
+	{
+		return IsValid();
+	}
+
+	SOLID_INLINE NO_DISCARD FFlecsId GetFlecsId() const
+	{
+		return FFlecsId(GetEntity());
+	}
+	
+	SOLID_INLINE NO_DISCARD flecs::id_t GetIndex() const
+	{
+		return GetFlecsId().GetId();
+	}
+	
+	SOLID_INLINE NO_DISCARD uint32 GetGeneration() const
+	{
+		return GetFlecsId().GetGeneration();
+	}
+	
+	SOLID_INLINE NO_DISCARD uint32 GetVersion() const
+	{
+		return GetGeneration();
+	}
 	
 	SOLID_INLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
 	SOLID_INLINE NO_DISCARD UWorld* GetOuterWorld() const;
 	
 	SOLID_INLINE NO_DISCARD FString GetWorldName() const;
 	
-	SOLID_INLINE NO_DISCARD FFlecsArchetype GetType() const { return FFlecsArchetype(GetEntity().type()); }
+	SOLID_INLINE NO_DISCARD FFlecsArchetype GetType() const
+	{
+		return FFlecsArchetype(GetEntity().type());
+	}
 
 	SOLID_INLINE NO_DISCARD bool Has(const FFlecsId InEntity) const
 	{
@@ -1066,25 +1106,6 @@ public:
 	}
 
 	void AddCollection(UObject* Collection) const;
-
-	template <typename TCollection>
-	SOLID_INLINE NO_DISCARD bool HasCollection() const
-	{
-		return HasCollection(TCollection::StaticClass());
-	}
-
-	NO_DISCARD bool HasCollection(const UClass* CollectionClass) const;
-	NO_DISCARD bool HasCollection(const FString& CollectionName) const;
-	
-	void RemoveCollection(const FString& CollectionName) const;
-
-	template <typename TCollection>
-	SOLID_INLINE void RemoveCollection() const
-	{
-		RemoveCollection(TCollection::StaticClass());
-	}
-	
-	void RemoveCollection(const UClass* Collection) const;
 	
 private:
 	flecs::entity Entity;

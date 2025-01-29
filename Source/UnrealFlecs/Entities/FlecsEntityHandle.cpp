@@ -61,56 +61,6 @@ void FFlecsEntityHandle::AddCollection(UObject* Collection) const
     ComponentCollection->ApplyCollection_Internal(const_cast<FFlecsEntityHandle&>(*this), GetFlecsWorld());
 }
 
-bool FFlecsEntityHandle::HasCollection(const UClass* CollectionClass) const
-{
-    solid_check(::IsValid(CollectionClass));
-
-    return HasCollection(UFlecsComponentCollectionObject::GetCollectionTypeName(CollectionClass));
-}
-
-bool FFlecsEntityHandle::HasCollection(const FString& CollectionName) const
-{
-    solid_checkf(!CollectionName.IsEmpty(), TEXT("Collection name is empty"));
-
-    const FFlecsEntityHandle CollectionEntity = GetFlecsWorld()->LookupEntity(CollectionName);
-
-    if UNLIKELY_IF(!CollectionEntity.IsValid())
-    {
-        return false;
-    }
-
-    solid_checkf(CollectionEntity.Has<FFlecsComponentCollection>(), TEXT("Collection entity is not a collection"));
-
-    return IsPrefab(CollectionEntity);
-}
-
-void FFlecsEntityHandle::RemoveCollection(const FString& CollectionName) const
-{
-    solid_checkf(!CollectionName.IsEmpty(), TEXT("Collection name is empty"));
-    
-    FFlecsEntityHandle CollectionEntity = GetFlecsWorld()->LookupEntity(CollectionName);
-    solid_check(CollectionEntity.IsValid());
-
-    RemovePrefab(CollectionEntity);
-
-    if (CollectionEntity.Has<FCollectionRemoveComponentsOnDestroyTag>())
-    {
-        CollectionEntity.GetType().ForEach([this](const FFlecsId InEntity)
-        {
-            if LIKELY_IF(Has(InEntity))
-            {
-                Remove(InEntity);
-            }
-        });
-    }
-}
-
-void FFlecsEntityHandle::RemoveCollection(const UClass* Collection) const
-{
-    solid_checkf(Collection, TEXT("Collection class is null!"));
-    RemoveCollection(UFlecsComponentCollectionObject::GetCollectionTypeName(Collection));
-}
-
 FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) const
 {
     return GetFlecsWorld()->GetTagEntity(InTag);

@@ -15,7 +15,6 @@ struct FFlecsComponentCollection
 }; // struct FFlecsComponentCollection
 
 REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsComponentCollection, [](flecs::world InWorld, flecs::untyped_component InComponent)
-{
-	InComponent.add(flecs::With, flecs::Prefab);
-	InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
-});
+	{
+		InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+	});
