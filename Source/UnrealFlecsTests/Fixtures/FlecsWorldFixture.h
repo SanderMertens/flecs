@@ -28,18 +28,18 @@ public:
 		FWorldContext& WorldContext = GEngine->CreateNewWorldContext(EWorldType::Game);
 		WorldContext.SetCurrentWorld(TestWorld.Get());
 
-		TestWorld->InitializeActorsForPlay(FURL());
-		TestWorld->BeginPlay();
-	
 		WorldSubsystem = TestWorld->GetSubsystem<UFlecsWorldSubsystem>();
 		check(WorldSubsystem.IsValid());
-        
+
 		// Create world settings
 		FFlecsWorldSettingsInfo WorldSettings;
 		WorldSettings.WorldName = TEXT("TestWorld");
 		WorldSettings.Modules = InModules;
-		
+
 		FlecsWorld = WorldSubsystem->CreateWorld(TEXT("TestWorld"), WorldSettings);
+
+		TestWorld->InitializeActorsForPlay(FURL());
+		TestWorld->BeginPlay();
 	}
 
 	void TearDown()
