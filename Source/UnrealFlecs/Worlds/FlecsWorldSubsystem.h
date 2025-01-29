@@ -131,9 +131,9 @@ public:
 		const FName WorldNameWithWorldContext = FName(Name + " ("+ GetDebugStringForWorld(GetWorld())+")");
 		
 		DefaultWorld = NewObject<UFlecsWorld>(this, WorldNameWithWorldContext);
-		
-		DefaultWorld->InitializeDefaultComponents();
 
+		DefaultWorld->InitializeDefaultComponents();
+		
 		DefaultWorld->RegisterComponentType<FFlecsWorldPtrComponent>();
 		DefaultWorld->RegisterComponentType<FUWorldPtrComponent>();
 		
