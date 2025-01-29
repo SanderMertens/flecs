@@ -10,8 +10,6 @@ UFlecsTransform3dCollection::UFlecsTransform3dCollection(const FObjectInitialize
 	Location = FFlecsLocationComponent();
 	Rotation = FFlecsRotationComponent();
 	Scale = FFlecsScaleComponent();
-
-	CollectionName = TEXT("TransformCollection");
 }
 
 void UFlecsTransform3dCollection::ApplyCollectionToEntity_Implementation(FFlecsEntityHandle& Entity)
