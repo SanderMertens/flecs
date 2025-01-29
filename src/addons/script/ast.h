@@ -28,7 +28,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstFor
 } ecs_script_node_kind_t;
 
-typedef struct ecs_script_node_t {
+typedef struct ECS_ALIGNAS(8) ecs_script_node_t {
     ecs_script_node_kind_t kind;
     const char *pos;
 } ecs_script_node_t;

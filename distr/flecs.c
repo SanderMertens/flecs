@@ -307,7 +307,7 @@ typedef struct ecs_table_diff_t {
 } ecs_table_diff_t;
 
 /** Edge linked list (used to keep track of incoming edges) */
-typedef struct ecs_graph_edge_hdr_t {
+typedef struct ECS_ALIGNAS(8) ecs_graph_edge_hdr_t {
     struct ecs_graph_edge_hdr_t *prev;
     struct ecs_graph_edge_hdr_t *next;
 } ecs_graph_edge_hdr_t;
@@ -734,7 +734,7 @@ typedef struct ecs_table_cache_list_t {
 } ecs_table_cache_list_t;
 
 /** Table cache */
-typedef struct ecs_table_cache_t {
+typedef struct ECS_ALIGNAS(8) ecs_table_cache_t {
     ecs_map_t index; /* <table_id, T*> */
     ecs_table_cache_list_t tables;
 } ecs_table_cache_t;
@@ -4637,7 +4637,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstFor
 } ecs_script_node_kind_t;
 
-typedef struct ecs_script_node_t {
+typedef struct ECS_ALIGNAS(8) ecs_script_node_t {
     ecs_script_node_kind_t kind;
     const char *pos;
 } ecs_script_node_t;
