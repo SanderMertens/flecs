@@ -347,9 +347,8 @@ struct FOSApiInitializer
 
 		os_api.perf_trace_push_ = [](const char* FileName, size_t Line, const char* Name)
 		{
-			solid_check(Line < std::numeric_limits<uint32>::max());
-			
 			#ifdef FLECS_PERF_TRACE
+				solid_check(Line < std::numeric_limits<uint32>::max());
 				FCpuProfilerTrace::OutputBeginDynamicEvent(Name, FileName, static_cast<uint32>(Line));
 			#endif // FLECS_PERF_TRACE
 		};
