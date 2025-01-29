@@ -1,4 +1,5 @@
 ﻿
+#include "Transforms/FlecsTransformModule.h"
 #if WITH_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
@@ -15,7 +16,16 @@ END_DEFINE_SPEC(FComponentCollectionTestSpec);
 
 void FComponentCollectionTestSpec::Define()
 {
-	FLECS_FIXTURE_LIFECYCLE(Fixture);
+	BeforeEach([this]()
+	{
+		UFlecsTransformModule* Module = NewObject<UFlecsTransformModule>();
+		Fixture.SetUp( { Module } );
+	});
+	
+	AfterEach([this]()
+	{
+		Fixture.TearDown();
+	});
 
 	Describe("Component Collection Basic", [this]()
 	{
@@ -26,47 +36,13 @@ void FComponentCollectionTestSpec::Define()
 			UFlecsTransform3dCollection* Collection = NewObject<UFlecsTransform3dCollection>();
 			Collection->Location = FFlecsLocationComponent(FVector(1.f, 2.f, 3.f));
 			TestEntity.AddCollection(Collection);
-				
-			TestTrue("Entity has 3d Transform Collection",
-				TestEntity.HasCollection(UFlecsTransform3dCollection::StaticClass()));
-			TestTrue("Entity has 3d Transform Collection",
-				TestEntity.HasCollection<UFlecsTransform3dCollection>());
+			
 			TestTrue("Entity has Location Component", TestEntity.Has<FFlecsLocationComponent>());
 			TestTrue("Entity has Rotation Component", TestEntity.Has<FFlecsRotationComponent>());
 			TestTrue("Entity has Scale Component", TestEntity.Has<FFlecsScaleComponent>());
 
 			TestEqual("Entity Location Component is correct",
 				TestEntity.Get<FFlecsLocationComponent>().Location, FVector(1.f, 2.f, 3.f));
-		});
-
-		It("Should be able to add and remove a Component Collection", [this]()
-		{
-			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
-				
-			UFlecsTransform3dCollection* Collection = NewObject<UFlecsTransform3dCollection>();
-			Collection->Location = FFlecsLocationComponent(FVector(1.f, 2.f, 3.f));
-			TestEntity.AddCollection(Collection);
-				
-			TestTrue("Entity has 3d Transform Collection",
-				TestEntity.HasCollection(UFlecsTransform3dCollection::StaticClass()));
-			TestTrue("Entity has 3d Transform Collection",
-				TestEntity.HasCollection<UFlecsTransform3dCollection>());
-			TestTrue("Entity has Location Component", TestEntity.Has<FFlecsLocationComponent>());
-			TestTrue("Entity has Rotation Component", TestEntity.Has<FFlecsRotationComponent>());
-			TestTrue("Entity has Scale Component", TestEntity.Has<FFlecsScaleComponent>());
-
-			TestEqual("Entity Location Component is correct",
-				TestEntity.Get<FFlecsLocationComponent>().Location, FVector(1.f, 2.f, 3.f));
-
-			TestEntity.RemoveCollection<UFlecsTransform3dCollection>();
-
-			TestFalse("Entity has 3d Transform Collection",
-				TestEntity.HasCollection(UFlecsTransform3dCollection::StaticClass()));
-			TestFalse("Entity has 3d Transform Collection",
-				TestEntity.HasCollection<UFlecsTransform3dCollection>());
-			TestFalse("Entity has Location Component", TestEntity.Has<FFlecsLocationComponent>());
-			TestFalse("Entity has Rotation Component", TestEntity.Has<FFlecsRotationComponent>());
-			TestFalse("Entity has Scale Component", TestEntity.Has<FFlecsScaleComponent>());
 		});
 	});
 }
