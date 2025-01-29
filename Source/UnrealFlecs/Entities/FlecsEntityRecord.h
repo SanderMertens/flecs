@@ -15,7 +15,7 @@ enum class EFlecsComponentNodeType : uint8
 	ScriptStruct = 0,
 	EntityHandle = 1,
 	FGameplayTag = 2,
-	Pair = 3 /* @TODO: All Pairs if both are component types then the first type is assumed as value */
+	Pair = 3 /* All Pairs if both are component types then the first type is assumed as value */
 }; // enum class EFlecsComponentNodeType
 
 UENUM(BlueprintType)
