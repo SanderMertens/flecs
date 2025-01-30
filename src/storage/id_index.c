@@ -390,7 +390,7 @@ ecs_id_record_t* flecs_id_record_new(
         ecs_os_free(id_str);
     }
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     idr->str = ecs_id_str(world, idr->id);
 #endif
 
@@ -488,7 +488,7 @@ void flecs_id_record_free(
 
     flecs_bfree(&world->allocators.id_record, idr);
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     ecs_os_free(idr->str);
 #endif
 

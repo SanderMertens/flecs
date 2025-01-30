@@ -474,7 +474,7 @@ typedef struct ecs_table__t {
     int16_t bs_offset;
     int16_t ft_offset;
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     /* Fields used for debug visualization */
     struct {
         ecs_world_t *world;
@@ -1145,7 +1145,7 @@ struct ecs_id_record_t {
     /* Flags for id */
     ecs_flags32_t flags;
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     /* String representation of id (used for debug visualization) */
     char *str;
 #endif
@@ -36970,7 +36970,7 @@ ecs_id_record_t* flecs_id_record_new(
         ecs_os_free(id_str);
     }
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     idr->str = ecs_id_str(world, idr->id);
 #endif
 
@@ -37068,7 +37068,7 @@ void flecs_id_record_free(
 
     flecs_bfree(&world->allocators.id_record, idr);
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     ecs_os_free(idr->str);
 #endif
 
@@ -37516,7 +37516,7 @@ void flecs_table_init_columns(
     }
 
     /* For debug visualization */
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     if (table->_->name_column != -1) {
         table->_->name_column = table->column_map[table->_->name_column];
     }
@@ -37555,7 +37555,7 @@ void flecs_table_init_flags(
     ecs_id_t *ids = table->type.array;
     int32_t count = table->type.count;
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     /* For debug visualization */
     table->_->name_column = -1;
     table->_->doc_name_column = -1;
@@ -37602,18 +37602,18 @@ void flecs_table_init_flags(
                         table->flags |= EcsTableHasModule;
                     }
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
                     table->_->parent.id = tgt;
 #endif
                 } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
                     table->flags |= EcsTableHasName;
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
                     table->_->name_column = flecs_ito(int16_t, i);  
 #endif
                 } else if (r == ecs_id(EcsPoly)) {
                     table->flags |= EcsTableHasBuiltins;
                 }
-#if defined(FLECS_DEBUG) && defined(FLECS_DOC)
+#if defined(FLECS_DEBUG_INFO) && defined(FLECS_DOC)
                 else if (id == ecs_pair_t(EcsDocDescription, EcsName)) {
                     table->_->doc_name_column = flecs_ito(int16_t, i);
                 }
@@ -42110,6 +42110,11 @@ const char* flecs_json_deser_components(
             id = ecs_pair(rel, tgt);
         }
 
+        bool skip = false;
+        if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)) {
+            skip = true;
+        }
+
         lah = flecs_json_parse(json, &token_kind, token);
         if (token_kind != JsonNull) {
             ecs_entity_t type = ecs_get_typeid(world, id);
@@ -42128,22 +42133,29 @@ const char* flecs_json_deser_components(
 
                 lah = flecs_json_parse(json, &token_kind, token);
                 if (token_kind != JsonNull) {
-                    const char *next = ecs_ptr_from_json(
-                        world, type, ptr, json, desc);
-                    if (!next) {
-                        flecs_json_missing_reflection(
-                            world, id, json, ctx, desc);
-                        if (desc->strict) {
-                            goto error;
-                        }
+                    if (!skip) {
+                        const char *next = ecs_ptr_from_json(
+                            world, type, ptr, json, desc);
+                        if (!next) {
+                            flecs_json_missing_reflection(
+                                world, id, json, ctx, desc);
+                            if (desc->strict) {
+                                goto error;
+                            }
 
+                            json = flecs_json_skip_object(json + 1, token, desc);
+                            if (!json) {
+                                goto error;
+                            }
+                        } else {
+                            json = next;
+                            ecs_modified_id(world, e, id);
+                        }
+                    } else {
                         json = flecs_json_skip_object(json + 1, token, desc);
                         if (!json) {
                             goto error;
                         }
-                    } else {
-                        json = next;
-                        ecs_modified_id(world, e, id);
                     }
                 } else {
                     json = lah;

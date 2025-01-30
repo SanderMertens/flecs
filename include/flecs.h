@@ -108,6 +108,16 @@
 #endif
 #endif
 
+/** @def FLECS_DEBUG_INFO
+ * Adds additional debug information to internal data structures. Necessary when
+ * using natvis.
+ */
+#ifdef FLECS_DEBUG
+#ifndef FLECS_DEBUG_INFO
+#define FLECS_DEBUG_INFO
+#endif
+#endif
+
 /* Tip: if you see weird behavior that you think might be a bug, make sure to
  * test with the FLECS_DEBUG or FLECS_SANITIZE flags enabled. There's a good
  * chance that this gives you more information about the issue! */

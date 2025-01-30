@@ -189,7 +189,7 @@ void flecs_table_init_columns(
     }
 
     /* For debug visualization */
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     if (table->_->name_column != -1) {
         table->_->name_column = table->column_map[table->_->name_column];
     }
@@ -228,7 +228,7 @@ void flecs_table_init_flags(
     ecs_id_t *ids = table->type.array;
     int32_t count = table->type.count;
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     /* For debug visualization */
     table->_->name_column = -1;
     table->_->doc_name_column = -1;
@@ -275,18 +275,18 @@ void flecs_table_init_flags(
                         table->flags |= EcsTableHasModule;
                     }
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
                     table->_->parent.id = tgt;
 #endif
                 } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
                     table->flags |= EcsTableHasName;
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
                     table->_->name_column = flecs_ito(int16_t, i);  
 #endif
                 } else if (r == ecs_id(EcsPoly)) {
                     table->flags |= EcsTableHasBuiltins;
                 }
-#if defined(FLECS_DEBUG) && defined(FLECS_DOC)
+#if defined(FLECS_DEBUG_INFO) && defined(FLECS_DOC)
                 else if (id == ecs_pair_t(EcsDocDescription, EcsName)) {
                     table->_->doc_name_column = flecs_ito(int16_t, i);
                 }

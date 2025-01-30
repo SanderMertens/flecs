@@ -38,7 +38,7 @@ struct ecs_id_record_t {
     /* Flags for id */
     ecs_flags32_t flags;
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     /* String representation of id (used for debug visualization) */
     char *str;
 #endif

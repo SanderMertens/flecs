@@ -88,7 +88,7 @@ typedef struct ecs_table__t {
     int16_t bs_offset;
     int16_t ft_offset;
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG_INFO
     /* Fields used for debug visualization */
     struct {
         ecs_world_t *world;
