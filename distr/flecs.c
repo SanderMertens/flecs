@@ -16071,6 +16071,11 @@ void ecs_os_set_api(
     ecs_os_api_t *os_api)
 {
     if (!ecs_os_api_initialized) {
+        // Seed the random number generator (RNG) using the current time.
+        // Some libc implementations (like musl) may default to `rand()` returning `0` if not seeded on first `rand` call.
+        // which would cause issues with for example `ecs_randomize_timers`. 
+        srand((unsigned)time(NULL));
+
         ecs_os_api = *os_api;
         ecs_os_api_initialized = true;
     }
@@ -16474,6 +16479,11 @@ void ecs_os_set_api_defaults(void)
     if (ecs_os_api_initializing != 0) {
         return;
     }
+
+    // Seed the random number generator (RNG) using the current time.
+    // Some libc implementations (like musl) may default to `rand()` returning `0` if not seeded on first `rand` call.
+    // which would cause issues with for example `ecs_randomize_timers`. 
+    srand((unsigned)time(NULL));
 
     ecs_os_api_initializing = true;
     
