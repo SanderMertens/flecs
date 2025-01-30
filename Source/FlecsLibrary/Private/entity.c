@@ -2213,7 +2213,7 @@ error:
     return NULL;
 }
 
-static
+static inline
 void flecs_check_component(
     ecs_world_t *world,
     ecs_entity_t result,

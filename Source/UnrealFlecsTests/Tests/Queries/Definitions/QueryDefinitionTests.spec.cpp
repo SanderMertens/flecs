@@ -18,7 +18,17 @@ END_DEFINE_SPEC(FQueryDefinitionTestsSpec);
 
 void FQueryDefinitionTestsSpec::Define()
 {
-	FLECS_FIXTURE_LIFECYCLE(Fixture);
+	BeforeEach([this]()
+	{
+		Fixture.SetUp();
+
+		Fixture.FlecsWorld->RegisterComponentType<FTestStruct_QueryDefinitions>();
+	});
+	
+	AfterEach([this]()
+	{
+		Fixture.TearDown();
+	});
 
 	Describe("Create Query Definition", [this]
 	{

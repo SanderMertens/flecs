@@ -17,7 +17,19 @@ END_DEFINE_SPEC(FRegisteredComponentTestsSpec);
 
 void FRegisteredComponentTestsSpec::Define()
 {
-	FLECS_FIXTURE_LIFECYCLE(Fixture);
+	BeforeEach([this]()
+	{
+		Fixture.SetUp();
+
+		Fixture.FlecsWorld->RegisterComponentType<FTestComponent_RegisterComponentTest>();
+		Fixture.FlecsWorld->RegisterComponentType<FUStructTestComponent_RegisterComponentTest>();
+		Fixture.FlecsWorld->RegisterComponentType<FUStructTestComponent_Inherited>();
+	});
+	
+	AfterEach([this]()
+	{
+		Fixture.TearDown();
+	});
 
 	Describe("Add Components", [this]()
 	{

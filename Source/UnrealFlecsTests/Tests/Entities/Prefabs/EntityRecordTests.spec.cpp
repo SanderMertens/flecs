@@ -17,7 +17,17 @@ END_DEFINE_SPEC(FEntityRecordTestsSpec);
 
 void FEntityRecordTestsSpec::Define()
 {
-	FLECS_FIXTURE_LIFECYCLE(Fixture);
+	BeforeEach([this]()
+	{
+		Fixture.SetUp();
+
+		Fixture.FlecsWorld->RegisterComponentType<FTestStruct_EntityRecord>();
+	});
+	
+	AfterEach([this]()
+	{
+		Fixture.TearDown();
+	});
 
 	Describe("Test Creating and Applying Entity Records", [this]()
 	{

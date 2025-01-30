@@ -131,14 +131,14 @@ public:
 				*Data = FText::FromString(String);
 			});
 
-		World.component<FGameplayTag>()
-			.opaque(flecs::Entity)
-			.serialize([](const flecs::serializer* Serializer, const FGameplayTag* Data)
-			{
-				const FFlecsId TagEntity = ecs_lookup(Serializer->world,
-					StringCast<char>(*Data->ToString()).Get());
-				return Serializer->value(flecs::Entity, &TagEntity);
-			});
+		// World.component<FGameplayTag>()
+		// 	.opaque(flecs::Entity)
+		// 	.serialize([](const flecs::serializer* Serializer, const FGameplayTag* Data)
+		// 	{
+		// 		const FFlecsId TagEntity = ecs_lookup(Serializer->world,
+		// 			StringCast<char>(*Data->ToString()).Get());
+		// 		return Serializer->value(flecs::Entity, &TagEntity);
+		// 	});
 		
 		World.component<FObjectPtr>()
 			.opaque(flecs::Uptr)
@@ -202,8 +202,6 @@ public:
 		RegisterComponentType<FFlecsDependenciesComponent>();
 		
 		RegisterComponentType<FFlecsComponentCollection>();
-
-		
 	}
 
 	void RegisterUnrealTypes() const
@@ -231,16 +229,16 @@ public:
 		RegisterComponentType<FColor>();
 		RegisterComponentType<FLinearColor>();
 
-		
+		RegisterComponentType<FPrimaryAssetId>();
 	}
 
 	void InitializeSystems()
 	{
-		CreateObserver<flecs::Component>("AnyComponentObserver")
+		CreateObserver("AnyComponentObserver")
 			.with_symbol_component().filter()
-			.event(flecs::OnSet)
+			.with<flecs::Component>().event(flecs::OnSet)
 			.yield_existing()
-			.each([this](flecs::iter& Iter, size_t IterIndex, const flecs::Component& InComponent)
+			.each([this](flecs::iter& Iter, size_t IterIndex)
 			{
 				const FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
 				const FString StructSymbol = EntityHandle.GetSymbol();
@@ -363,7 +361,6 @@ public:
 			.with<FFlecsUObjectComponent>().second(flecs::Wildcard).filter()
 			.each([this](flecs::iter& Iter, const size_t IterIndex)
 			{
-				FFlecsEntityHandle InEntity = Iter.entity(IterIndex);
 				FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, IterIndex);
 				
 				for (int32 Index = ProgressModules.Num(); Index > 0; --Index)
@@ -541,7 +538,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord, const FString& Name = "") const
 	{
-		FFlecsEntityHandle Entity = CreateEntity(Name);
+		const FFlecsEntityHandle Entity = CreateEntity(Name);
 		InRecord.ApplyRecordToEntity(Entity);
 		return Entity;
 	}
@@ -1058,11 +1055,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	bool HasScriptStruct(const UScriptStruct* ScriptStruct) const
 	{
-		if (!flecs::_::g_index_to_scriptstruct.Contains(ScriptStruct))
-		{
-			flecs::_::g_index_to_scriptstruct.Add(ScriptStruct, flecs_component_ids_index_get());
-		}
-		
 		if (TypeMapComponent->ScriptStructMap.contains(ScriptStruct)
 			&& TypeMapComponent->ScriptStructMap.at(ScriptStruct).is_valid())
 		{
@@ -1177,14 +1169,9 @@ public:
 				UntypedComponent.member<TSubclassOf<UObject>>(StringCast<char>(*Property->GetName()).Get(), 1,
 					Property->GetOffset_ForInternal());
 			}
-			// else if (Property->IsA<FEnumProperty>())
-			// {
-			// 	UntypedComponent.member(flecs::meta::EnumType, StringCast<char>(*Property->GetName()).Get(), 1,
-			// 		Property->GetOffset_ForInternal());
-			// }
 			 else if (Property->IsA<FStructProperty>())
 			 {
-			 	FFlecsEntityHandle StructComponent;
+			 	/*FFlecsEntityHandle StructComponent;
 			 	if (!HasScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct))
 			 	{
 			 		StructComponent = RegisterScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct);
@@ -1196,9 +1183,9 @@ public:
 			 	
 			 	UntypedComponent.member(StructComponent,
 			 		StringCast<char>(*Property->GetName()).Get(), 1,
-			 		Property->GetOffset_ForInternal());
+			 		Property->GetOffset_ForInternal());*/
 			 }
-			else UNLIKELY_ATTRIBUTE
+			else
 			{
 				UN_LOGF(LogFlecsWorld, Warning,
 					"Property Type: %s is not supported", *Property->GetName());
@@ -1226,17 +1213,25 @@ public:
 			ScriptStructComponent.set<flecs::Component>(
 			{ .size = ScriptStruct->GetStructureSize(), .alignment = ScriptStruct->GetMinAlignment() });
 
-			if (flecs::_::g_index_to_scriptstruct.Contains(ScriptStruct))
+			if (!flecs::_::g_type_to_impl_data.contains(
+				std::string_view(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())))
 			{
-				const int32 Index = flecs::_::g_index_to_scriptstruct[ScriptStruct];
-				flecs_component_ids_set(World.c_ptr(), Index, ScriptStructComponent);
+				flecs::_::type_impl_data NewData{};
+				NewData.s_index = flecs_component_ids_index_get();
+				NewData.s_size = ScriptStruct->GetStructureSize();
+				NewData.s_alignment = ScriptStruct->GetMinAlignment();
+				NewData.s_allow_tag = true;
+				
+				flecs::_::g_type_to_impl_data.emplace(
+					std::string_view(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()), NewData);
 			}
-			else
-			{
-				const int32 Index = flecs_component_ids_index_get();
-				flecs_component_ids_set(World.c_ptr(), Index, ScriptStructComponent);
-				flecs::_::g_index_to_scriptstruct.Add(ScriptStruct, Index);
-			}
+
+			solid_check(flecs::_::g_type_to_impl_data.contains(
+				std::string_view(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())));
+			flecs::_::type_impl_data& Data = flecs::_::g_type_to_impl_data.at(
+				std::string_view(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()));
+
+			flecs_component_ids_set(World, Data.s_index, ScriptStructComponent);
 		});
 
 		ScriptStructComponent.set<FFlecsScriptStructComponent>({ ScriptStruct });
