@@ -87,7 +87,7 @@ typedef struct ecs_table_cache_list_t {
 } ecs_table_cache_list_t;
 
 /** Table cache */
-typedef struct ecs_table_cache_t {
+typedef struct ECS_ALIGNAS(8) ecs_table_cache_t {
     ecs_map_t index; /* <table_id, T*> */
     ecs_table_cache_list_t tables;
 } ecs_table_cache_t;
