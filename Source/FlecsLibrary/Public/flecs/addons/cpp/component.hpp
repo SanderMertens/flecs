@@ -263,8 +263,10 @@ struct type_impl {
                            "script struct is null");
 
                 flecs::entity entity_id = flecs::entity(world, c);
-                P_world.get_mut<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(scriptStruct, entity_id);
-                P_world.modified<FFlecsTypeMapComponent>();
+                
+                static_cast<FFlecsTypeMapComponent*>(P_world.get_binding_ctx())
+                    ->ScriptStructMap.emplace(scriptStruct, entity_id);
+                
                 entity_id.set<FFlecsScriptStructComponent>({ scriptStruct });
             }
 
@@ -284,8 +286,7 @@ struct type_impl {
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
         return c;
     }
-
-    // Return the entity ID for T in this world. Auto-register if necessary.
+        
     static entity_t id(flecs::world_t *world)
     {
 #ifndef FLECS_CPP_NO_AUTO_REGISTRATION
@@ -297,10 +298,15 @@ struct type_impl {
 
         // Check if there's a valid entity in this world for T
         flecs::entity_t c = flecs_component_ids_get_alive(world, td.s_index);
+        
+        #ifndef FLECS_CPP_NO_AUTO_REGISTRATION
         if (!c) {
-            // If none, register now
             c = register_id(world);
+            
         }
+        #endif
+        
+        ecs_assert(c != 0, ECS_NOT_A_COMPONENT, NULL);
 
 #ifndef FLECS_CPP_NO_AUTO_REGISTRATION
         ecs_os_perf_trace_pop("flecs.type_impl.id");

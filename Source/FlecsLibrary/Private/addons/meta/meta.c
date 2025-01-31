@@ -273,7 +273,7 @@ int flecs_init_type(
         } 
     } else {
         if (meta_type->kind != kind) {
-            ecs_err("type '%s' reregistered as '%s' (was '%s')", 
+            ecs_warn("type '%s' reregistered as '%s' (was '%s')", 
                 ecs_get_name(world, type), 
                 flecs_type_kind_str(kind),
                 flecs_type_kind_str(meta_type->kind));

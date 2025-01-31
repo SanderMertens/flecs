@@ -52,7 +52,8 @@ public:
 	{
 		char* argv[] = { const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*GetName()).Get()) };  // NOLINT(clang-diagnostic-dangling)
 		World = flecs::world(1, argv);
-		TypeMapComponent = GetSingletonPtr<FFlecsTypeMapComponent>();
+		
+		TypeMapComponent = GetTypeMapComponent();
 		solid_check(TypeMapComponent);
 	}
 	
@@ -131,14 +132,14 @@ public:
 				*Data = FText::FromString(String);
 			});
 
-		// World.component<FGameplayTag>()
-		// 	.opaque(flecs::Entity)
-		// 	.serialize([](const flecs::serializer* Serializer, const FGameplayTag* Data)
-		// 	{
-		// 		const FFlecsId TagEntity = ecs_lookup(Serializer->world,
-		// 			StringCast<char>(*Data->ToString()).Get());
-		// 		return Serializer->value(flecs::Entity, &TagEntity);
-		// 	});
+		 World.component<FGameplayTag>()
+		 	.opaque(flecs::Entity)
+		 	.serialize([](const flecs::serializer* Serializer, const FGameplayTag* Data)
+		 	{
+		 		const FFlecsId TagEntity = ecs_lookup(Serializer->world,
+		 			StringCast<char>(*Data->ToString()).Get());
+		 		return Serializer->value(flecs::Entity, &TagEntity);
+		 	});
 		
 		World.component<FObjectPtr>()
 			.opaque(flecs::Uptr)
@@ -202,6 +203,8 @@ public:
 		RegisterComponentType<FFlecsDependenciesComponent>();
 		
 		RegisterComponentType<FFlecsComponentCollection>();
+
+		RegisterComponentType<FFlecsEntityRecord>();
 	}
 
 	void RegisterUnrealTypes() const
@@ -269,7 +272,7 @@ public:
 			{
 				FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
 
-				if (InScriptStructComponent.ScriptStruct == FFlecsScriptStructComponent::StaticStruct())
+				if UNLIKELY_IF(InScriptStructComponent.ScriptStruct == FFlecsScriptStructComponent::StaticStruct())
 				{
 					return;
 				}
@@ -1067,7 +1070,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FFlecsEntityHandle GetScriptStructEntity(const UScriptStruct* ScriptStruct) const
 	{
-		FFlecsId c = TypeMapComponent->ScriptStructMap.at(ScriptStruct);
+		const FFlecsId c = TypeMapComponent->ScriptStructMap.at(ScriptStruct);
 		solid_checkf(ecs_is_valid(World.c_ptr(), c), TEXT("Entity is not alive"));
 		return FFlecsEntityHandle(World, c);
 	}
@@ -1171,9 +1174,12 @@ public:
 			}
 			 else if (Property->IsA<FStructProperty>())
 			 {
-			 	/*FFlecsEntityHandle StructComponent;
+			 	FFlecsEntityHandle StructComponent;
 			 	if (!HasScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct))
 			 	{
+			 		UN_LOGF(LogFlecsWorld, Warning,
+			 			"Property Type Script struct %s is not registered", *Property->GetName());
+			 		
 			 		StructComponent = RegisterScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct);
 			 	}
 			    else
@@ -1181,9 +1187,8 @@ public:
 				    StructComponent = GetScriptStructEntity(CastFieldChecked<FStructProperty>(Property)->Struct);
 			    }
 			 	
-			 	UntypedComponent.member(StructComponent,
-			 		StringCast<char>(*Property->GetName()).Get(), 1,
-			 		Property->GetOffset_ForInternal());*/
+			 	UntypedComponent.member(StructComponent, StringCast<char>(*Property->GetName()).Get(), 1,
+			 		Property->GetOffset_ForInternal());
 			 }
 			else
 			{
@@ -1216,7 +1221,7 @@ public:
 			if (!flecs::_::g_type_to_impl_data.contains(
 				std::string_view(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())))
 			{
-				flecs::_::type_impl_data NewData{};
+				flecs::_::type_impl_data NewData;
 				NewData.s_index = flecs_component_ids_index_get();
 				NewData.s_size = ScriptStruct->GetStructureSize();
 				NewData.s_alignment = ScriptStruct->GetMinAlignment();
@@ -1232,6 +1237,8 @@ public:
 				std::string_view(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()));
 
 			flecs_component_ids_set(World, Data.s_index, ScriptStructComponent);
+
+			TypeMapComponent->ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
 		});
 
 		ScriptStructComponent.set<FFlecsScriptStructComponent>({ ScriptStruct });
@@ -1513,6 +1520,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	UFlecsWorldSubsystem* GetContext() const;
+
+	FFlecsTypeMapComponent* GetTypeMapComponent() const
+	{
+		return static_cast<FFlecsTypeMapComponent*>(World.get_binding_ctx());
+	}
 	
 	flecs::world World;
 

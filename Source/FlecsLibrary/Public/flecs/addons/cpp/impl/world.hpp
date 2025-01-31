@@ -15,10 +15,12 @@ inline void world::init_builtin_components() {
     this->component<Identifier>();
     this->component<Poly>();
 
-    this->component<FFlecsTypeMapComponent>();
-    this->add<FFlecsTypeMapComponent>();
+    FFlecsTypeMapComponent* type_map = new FFlecsTypeMapComponent();
+
+    this->set_binding_ctx(type_map, [](void* ctx) {
+        delete static_cast<FFlecsTypeMapComponent*>(ctx);
+    });
     
-    FFlecsTypeMapComponent* type_map = this->get_mut<FFlecsTypeMapComponent>();
     ecs_assert(type_map != nullptr, ECS_INTERNAL_ERROR, NULL);
 
     flecs::entity ScriptStructEntity = this->component<FFlecsScriptStructComponent>()
