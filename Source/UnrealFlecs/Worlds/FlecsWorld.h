@@ -50,10 +50,10 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 public:
 	UFlecsWorld()
 	{
-		char* argv[] = { const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*GetName()).Get()) };  // NOLINT(clang-diagnostic-dangling)
+		char* argv[] = { const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*GetName()).Get()) };  // NOLINT(clang-diagnostic-dangling, cppcoreguidelines-pro-type-const-cast)
 		World = flecs::world(1, argv);
 		
-		TypeMapComponent = GetTypeMapComponent();
+		TypeMapComponent = GetTypeMapComponent();  // NOLINT(cppcoreguidelines-prefer-member-initializer)
 		solid_check(TypeMapComponent);
 	}
 	
@@ -233,6 +233,17 @@ public:
 		RegisterComponentType<FLinearColor>();
 
 		RegisterComponentType<FPrimaryAssetId>();
+
+		RegisterComponentType<FSoftClassPath>();
+		RegisterComponentType<FSoftObjectPath>();
+
+		RegisterComponentType<FAssetData>();
+		RegisterComponentType<FAssetBundleData>();
+
+		RegisterComponentType<FIntVector>();
+		RegisterComponentType<FIntVector4>();
+		RegisterComponentType<FIntPoint>();
+		RegisterComponentType<FIntRect>();
 	}
 
 	void InitializeSystems()
