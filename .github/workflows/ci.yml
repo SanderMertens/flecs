@@ -40,6 +40,7 @@ jobs:
       - name: Install musl tools
         run: |
           sudo apt-get update
+          sudo apt-get install -y musl-dev
           sudo apt-get install -y musl-tools cmake ninja-build
 
       - name: Create CMake build folders
