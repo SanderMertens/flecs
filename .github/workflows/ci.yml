@@ -22,7 +22,6 @@ jobs:
 
     env:
       CC: musl-gcc
-      CXX: musl-g++
       LDFLAGS: "-static -Wl,--dynamic-linker=/lib/ld-musl-x86_64.so.1"
 
     steps:
@@ -48,7 +47,6 @@ jobs:
         run: |
           cmake -G Ninja \
             -DCMAKE_C_COMPILER=musl-gcc \
-            -DCMAKE_CXX_COMPILER=musl-g++ \
             -DCMAKE_EXE_LINKER_FLAGS="-static -Wl,--dynamic-linker=/lib/ld-musl-x86_64.so.1" \
             -DFLECS_TESTS=ON \
             -DFLECS_STRICT=ON \
