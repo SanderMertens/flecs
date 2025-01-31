@@ -51,7 +51,7 @@ jobs:
             -DCMAKE_CXX_COMPILER=musl-g++ \
             -DCMAKE_EXE_LINKER_FLAGS="-static -Wl,--dynamic-linker=/lib/ld-musl-x86_64.so.1" \
             -DFLECS_TESTS=ON \
-            -DBAKE_DIRECTORY=bake
+            -DBAKE_DIRECTORY=bake \
             ..
 
       - name: Build Flecs & tests
