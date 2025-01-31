@@ -32,13 +32,16 @@ jobs:
         run: |
           git clone https://github.com/SanderMertens/bake
 
-      - name: Create CMake Build Directory
-        run: mkdir cmake_build
-
       - name: Install musl tools
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools cmake ninja-build
+
+      - name: create cmake build folders
+        run: |
+          mkdir cmake_build
+          mkdir examples/c/cmake_build
+          mkdir examples/cpp/cmake_build
 
       - name: Configure CMake for musl
         working-directory: cmake_build
@@ -59,5 +62,3 @@ jobs:
       - name: Run Tests
         working-directory: cmake_build
         run: ctest -C Debug --verbose
-    
-    
