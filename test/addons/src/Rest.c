@@ -25,7 +25,7 @@ void Rest_get(void) {
     test_assert(reply_str != NULL);
     test_str(reply_str,
             "{\"parent\":\"flecs.core\", \"name\":\"World\", "
-                "\"components\":{\"(flecs.core.Identifier,flecs.core.Symbol)\":null, \"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Entity associated with world\"}}}");
+                "\"components\":{\"(flecs.core.Identifier,flecs.core.Symbol)\":{\"value\":\"flecs.core.World\"}, \"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Entity associated with world\"}}}");
     ecs_os_free(reply_str);
 
     ecs_rest_server_fini(srv);
@@ -52,7 +52,7 @@ void Rest_get_cached(void) {
         test_assert(reply_str != NULL);
         test_str(reply_str,
             "{\"parent\":\"flecs.core\", \"name\":\"World\", "
-                "\"components\":{\"(flecs.core.Identifier,flecs.core.Symbol)\":null, \"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Entity associated with world\"}}}");
+                "\"components\":{\"(flecs.core.Identifier,flecs.core.Symbol)\":{\"value\":\"flecs.core.World\"}, \"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Entity associated with world\"}}}");
         ecs_os_free(reply_str);
     }
 
@@ -66,7 +66,7 @@ void Rest_get_cached(void) {
         test_assert(reply_str != NULL);
         test_str(reply_str,
             "{\"parent\":\"flecs.core\", \"name\":\"World\", "
-                "\"components\":{\"(flecs.core.Identifier,flecs.core.Symbol)\":null, \"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Entity associated with world\"}}}");
+                "\"components\":{\"(flecs.core.Identifier,flecs.core.Symbol)\":{\"value\":\"flecs.core.World\"}, \"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Entity associated with world\"}}}");
         ecs_os_free(reply_str);
     }
 
