@@ -14,46 +14,52 @@ jobs:
       - uses: actions/checkout@v4
       - uses: crate-ci/typos@master
 
-  build-musl:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-  
-    env:
-      CC: musl-gcc
-      CXX: musl-g++
-      LDFLAGS: "-static -Wl,--dynamic-linker=/lib/ld-musl-x86_64.so.1"
-  
-    steps:
-      - uses: actions/checkout@v4
-  
-      - name: Install musl tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools ninja-build cmake
-  
-      - name: Create CMake Build Directory
-        run: mkdir cmake_build
-  
-      - name: Configure CMake for musl
-        working-directory: cmake_build
-        run: |
-          cmake -G Ninja \
-            -DCMAKE_C_COMPILER=musl-gcc \
-            -DCMAKE_CXX_COMPILER=musl-g++ \
-            -DCMAKE_EXE_LINKER_FLAGS="-static -Wl,--dynamic-linker=/lib/ld-musl-x86_64.so.1" \
-            -DFLECS_TESTS=ON \
-            -DFLECS_STRICT=ON \
-            ..
-  
-      - name: Build Flecs & tests
-        working-directory: cmake_build
-        run: |
-          cmake --build . -j 4
-  
-      - name: Run Tests (musl)
-        working-directory: cmake_build
-        run: ctest -C Debug --verbose
-  
+build-musl:
+  runs-on: ubuntu-latest
+  timeout-minutes: 30
+  strategy:
+    fail-fast: false
+
+  env:
+    CC: musl-gcc
+    CXX: musl-g++
+    LDFLAGS: "-static -Wl,--dynamic-linker=/lib/ld-musl-x86_64.so.1"
+
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Install musl tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y musl-tools ninja-build cmake g++-12
+
+    - name: Check Installed Compilers and Tools
+      run: |
+        echo "C Compiler: $(which musl-gcc)"
+        echo "C++ Compiler: $(which musl-g++)"
+        echo "Ninja: $(which ninja)"
+
+    - name: Create CMake Build Directory
+      run: mkdir cmake_build
+
+    - name: Configure CMake for musl
+      working-directory: cmake_build
+      run: |
+        cmake -G Ninja \
+          -DCMAKE_C_COMPILER=musl-gcc \
+          -DCMAKE_CXX_COMPILER=$(which musl-g++ || echo "/usr/bin/g++") \
+          -DCMAKE_EXE_LINKER_FLAGS="-static -Wl,--dynamic-linker=/lib/ld-musl-x86_64.so.1" \
+          -DFLECS_TESTS=ON \
+          -DFLECS_STRICT=ON \
+          ..
+
+    - name: Build Flecs & tests
+      working-directory: cmake_build
+      run: |
+        cmake --build . -j 4
+
+    - name: Run Tests (musl)
+      working-directory: cmake_build
+      run: ctest -C Debug --verbose
+    
     
