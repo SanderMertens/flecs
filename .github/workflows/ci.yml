@@ -19,30 +19,31 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-
+    
     env:
       CC: musl-gcc
       CXX: musl-g++
       LDFLAGS: "-static -Wl,--dynamic-linker=/lib/ld-musl-x86_64.so.1"
-
+      PATH: /usr/local/musl/bin:$PATH  # Add musl-g++ directory to PATH if needed
+    
     steps:
       - uses: actions/checkout@v4
-
-      - name: clone bake
+    
+      - name: Clone bake
         run: |
           git clone https://github.com/SanderMertens/bake
-
+    
       - name: Install musl tools
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools cmake ninja-build
-
-      - name: create cmake build folders
+    
+      - name: Create CMake build folders
         run: |
           mkdir cmake_build
           mkdir examples/c/cmake_build
           mkdir examples/cpp/cmake_build
-
+    
       - name: Configure CMake for musl
         working-directory: cmake_build
         run: |
@@ -53,12 +54,12 @@ jobs:
             -DFLECS_TESTS=ON \
             -DBAKE_DIRECTORY=bake \
             ..
-
+    
       - name: Build Flecs & tests
         working-directory: cmake_build
         run: |
           cmake --build . -j 4
-
+    
       - name: Run Tests
         working-directory: cmake_build
         run: ctest -C Debug --verbose
