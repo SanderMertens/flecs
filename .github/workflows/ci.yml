@@ -31,7 +31,7 @@ jobs:
       - name: Install musl tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y musl-tools cmake ninja
+          sudo apt-get install -y musl-tools ninja-build cmake
   
       - name: Create CMake Build Directory
         run: mkdir cmake_build
