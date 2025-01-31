@@ -22,11 +22,9 @@ bazel run //example
 ```
 
 To keep your flecs dependency up to date with [Renovate](https://docs.renovatebot.com/) + CI, make sure to declare the version attribute of the `bazel_dep`.
-Due to a bit of laziness, Renovate doesn't discover bzlmod dependencies without the `version` attribute. 
-The actual number doesn't matter, and it will create pull requests to update the commit.
 
 ```bazel
-bazel_dep(name = "flecs", version = "0.0.0")
+bazel_dep(name = "flecs")
 git_override(
     module_name = "flecs",
     remote = "https://github.com/SanderMertens/flecs.git",
@@ -38,11 +36,8 @@ If you use a merge queue for managing CI, you can configure Renovate to automati
 
 ```json5
 {
-  "extends": ["config:base"],
+  "extends": ["config:recommended"],
   "dependencyDashboard": true,
-
   "automerge": true,
-  "automergeType": "pr-comment", // have Renovate leave a comment to kick off CI + merge
-  "automergeComment": "/trunk merge" // the comment to leave
 }
 ```
