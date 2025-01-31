@@ -28,11 +28,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Add /usr/local/musl/bin to PATH
-        run: |
-          echo "Adding /usr/local/musl/bin to PATH"
-          echo "PATH=/usr/local/musl/bin:$PATH" >> $GITHUB_ENV
-
       - name: Clone bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -40,8 +35,7 @@ jobs:
       - name: Install musl tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y musl-dev
-          sudo apt-get install -y musl-tools cmake ninja-build
+          sudo apt-get install -y musl-tools ninja-build cmake
 
       - name: Create CMake build folders
         run: |
@@ -57,6 +51,7 @@ jobs:
             -DCMAKE_CXX_COMPILER=musl-g++ \
             -DCMAKE_EXE_LINKER_FLAGS="-static -Wl,--dynamic-linker=/lib/ld-musl-x86_64.so.1" \
             -DFLECS_TESTS=ON \
+            -DFLECS_STRICT=ON \
             -DBAKE_DIRECTORY=bake \
             ..
 
