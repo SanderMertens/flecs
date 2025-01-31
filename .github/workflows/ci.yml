@@ -45,10 +45,12 @@ jobs:
             -DCMAKE_EXE_LINKER_FLAGS="-static -Wl,--dynamic-linker=/lib/ld-musl-x86_64.so.1" \
             -DFLECS_STRICT=ON ..
   
-      - name: Build Flecs (musl)
+      - name: Build Flecs & tests
         working-directory: cmake_build
-        run: cmake --build . -j 4
-  
+        run: |
+          cmake -DFLECS_TESTS=ON -DBAKE_DIRECTORY=bake
+          cmake --build . -j 4
+
       - name: Run Tests (musl)
         working-directory: cmake_build
         run: ctest -C Debug --verbose
