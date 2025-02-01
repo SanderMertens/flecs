@@ -287,6 +287,11 @@ public:
 				{
 					return;
 				}
+
+				if (EntityHandle.Has<flecs::Opaque>())
+				{
+					return;
+				}
 				
 				RegisterMemberProperties(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
 			});

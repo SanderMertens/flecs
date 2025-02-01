@@ -48,6 +48,7 @@ inline void init(flecs::world& world) {
     world.component<bitmask_constant_t>("flecs::meta::bitmask_constant");
 
     world.component<Type>("flecs::meta::type");
+    world.component<Opaque>("flecs::meta::opaque");
     world.component<TypeSerializer>("flecs::meta::TypeSerializer");
     world.component<Primitive>("flecs::meta::primitive");
     world.component<Enum>("flecs::meta::enum");
