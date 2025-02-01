@@ -282,8 +282,11 @@ public:
 			             const FFlecsScriptStructComponent& InScriptStructComponent)
 			{
 				FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
+				
+				UScriptStruct* ScriptStruct = InScriptStructComponent.ScriptStruct.Get();
+				solid_check(IsValid(ScriptStruct));
 
-				if UNLIKELY_IF(InScriptStructComponent.ScriptStruct == FFlecsScriptStructComponent::StaticStruct())
+				if UNLIKELY_IF(ScriptStruct == FFlecsScriptStructComponent::StaticStruct())
 				{
 					return;
 				}
@@ -293,7 +296,7 @@ public:
 					return;
 				}
 				
-				RegisterMemberProperties(InScriptStructComponent.ScriptStruct.Get(), EntityHandle);
+				RegisterMemberProperties(ScriptStruct, EntityHandle);
 			});
 
 		ObjectDestructionComponentQuery = World.query_builder("UObjectDestructionComponentQuery")
