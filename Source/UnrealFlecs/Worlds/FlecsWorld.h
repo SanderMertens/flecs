@@ -283,7 +283,7 @@ public:
 			{
 				FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
 				
-				UScriptStruct* ScriptStruct = InScriptStructComponent.ScriptStruct.Get();
+				const UScriptStruct* ScriptStruct = InScriptStructComponent.ScriptStruct.Get();
 				solid_check(IsValid(ScriptStruct));
 
 				if UNLIKELY_IF(ScriptStruct == FFlecsScriptStructComponent::StaticStruct())
