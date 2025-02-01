@@ -38,6 +38,11 @@ struct ecs_id_record_t {
     /* Flags for id */
     ecs_flags32_t flags;
 
+#ifdef FLECS_DEBUG_INFO
+    /* String representation of id (used for debug visualization) */
+    char *str;
+#endif
+
     /* Cached pointer to type info for id, if id contains data. */
     const ecs_type_info_t *type_info;
 
