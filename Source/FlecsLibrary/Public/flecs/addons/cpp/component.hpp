@@ -280,6 +280,13 @@ struct type_impl {
 
             // Associate the newly created entity with our index
             flecs_component_ids_set(world, td.s_index, c);
+
+            // If component is enum type, register constants. Make sure to do 
+            // this after setting the component id, because the enum code will
+            // be calling type<T>::id().
+            #if FLECS_CPP_ENUM_REFLECTION_SUPPORT
+            _::init_enum<T>(world, c);
+            #endif
         }
 
         ecs_os_perf_trace_pop("flecs.type_impl.register_id");

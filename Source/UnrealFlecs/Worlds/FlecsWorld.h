@@ -232,6 +232,7 @@ public:
 		RegisterComponentType<FColor>();
 		RegisterComponentType<FLinearColor>();
 
+		RegisterComponentType<FPrimaryAssetType>();
 		RegisterComponentType<FPrimaryAssetId>();
 
 		RegisterComponentType<FSoftClassPath>();
@@ -287,11 +288,6 @@ public:
 				solid_check(IsValid(ScriptStruct));
 
 				if UNLIKELY_IF(ScriptStruct == FFlecsScriptStructComponent::StaticStruct())
-				{
-					return;
-				}
-
-				if (EntityHandle.Has<flecs::Opaque>())
 				{
 					return;
 				}

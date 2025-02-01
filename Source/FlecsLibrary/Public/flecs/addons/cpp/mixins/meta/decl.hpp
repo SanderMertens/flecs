@@ -38,7 +38,6 @@ using bitmask_constant_t = ecs_bitmask_constant_t;
 
 /* Components */
 using Type = EcsType;
-using Opaque = EcsOpaque;
 using TypeSerializer = EcsTypeSerializer;
 using Primitive = EcsPrimitive;
 using Enum = EcsEnum;
