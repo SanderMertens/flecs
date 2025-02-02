@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_stats Stats
@@ -16,13 +16,17 @@ namespace flecs {
  */
 
 /** Component that stores world statistics */
+
 using WorldStats = EcsWorldStats;
 
 /** Component that stores system/pipeline statistics */
+
 using PipelineStats = EcsPipelineStats;
 
 /** Component with world summary stats */
+
 using WorldSummary = EcsWorldSummary;
+
 
 struct stats {
     stats(flecs::world& world);

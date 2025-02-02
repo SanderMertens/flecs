@@ -7,7 +7,7 @@
 
 #include "../term/builder_i.hpp"
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /** Query builder interface.
