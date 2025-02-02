@@ -188,62 +188,6 @@ struct UNREALFLECS_API FFlecsRecordPair
 }; // struct FFlecsPair
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsTraitTypeInfo final
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
-	EFlecsComponentNodeType NodeType = EFlecsComponentNodeType::ScriptStruct;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
-		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::ScriptStruct", EditConditionHides))
-	FInstancedStruct ScriptStruct;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
-		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::EntityHandle", EditConditionHides))
-	FFlecsEntityHandle EntityHandle;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
-		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::FGameplayTag", EditConditionHides))
-	FGameplayTag GameplayTag;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
-		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::Pair", EditConditionHides))
-	FFlecsRecordPair Pair;
-	
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsTraitTypeInfo& Other) const
-	{
-		switch (NodeType)
-		{
-		case EFlecsComponentNodeType::ScriptStruct:
-			{
-				return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct;
-			}
-		case EFlecsComponentNodeType::EntityHandle:
-			{
-				return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
-			}
-		case EFlecsComponentNodeType::FGameplayTag:
-			{
-				return NodeType == Other.NodeType && GameplayTag == Other.GameplayTag;
-			}
-		case EFlecsComponentNodeType::Pair:
-			{
-				return NodeType == Other.NodeType && Pair == Other.Pair;
-			}
-		}
-
-		UNREACHABLE
-	}
-
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsTraitTypeInfo& Other) const
-	{
-		return !(*this == Other);
-	}
-	
-}; // struct FFlecsTraitTypeInfo
-
-USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsComponentTypeInfo final
 {
 	GENERATED_BODY()
