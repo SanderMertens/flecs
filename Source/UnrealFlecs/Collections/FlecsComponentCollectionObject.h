@@ -19,7 +19,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "Flecs Component Collection")
 	void ApplyCollectionToEntity(FFlecsEntityHandle& Entity);
 
-	void ApplyCollection_Internal(FFlecsEntityHandle& Entity, UFlecsWorld* InFlecsWorld);
+	void ApplyCollection_Internal(FFlecsEntityHandle Entity, UFlecsWorld* InFlecsWorld);
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs Component Collection")
 	UFlecsWorld* GetFlecsWorld() const;

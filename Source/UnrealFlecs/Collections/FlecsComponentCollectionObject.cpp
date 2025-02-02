@@ -15,7 +15,7 @@ UFlecsComponentCollectionObject::UFlecsComponentCollectionObject(const FObjectIn
 {
 }
 
-void UFlecsComponentCollectionObject::ApplyCollection_Internal(FFlecsEntityHandle& Entity, UFlecsWorld* InFlecsWorld)
+void UFlecsComponentCollectionObject::ApplyCollection_Internal(FFlecsEntityHandle Entity, UFlecsWorld* InFlecsWorld)
 {
 	FlecsWorld = InFlecsWorld;
 	

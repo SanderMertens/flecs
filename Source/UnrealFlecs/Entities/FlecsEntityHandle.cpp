@@ -57,7 +57,7 @@ void FFlecsEntityHandle::AddCollection(UObject* Collection) const
 {
     solid_check(::IsValid(Collection));
     UFlecsComponentCollectionObject* ComponentCollection = CastChecked<UFlecsComponentCollectionObject>(Collection);
-    ComponentCollection->ApplyCollection_Internal(const_cast<FFlecsEntityHandle&>(*this), GetFlecsWorld());
+    ComponentCollection->ApplyCollection_Internal(*this, GetFlecsWorld());
 }
 
 FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) const
