@@ -36,7 +36,7 @@ struct UNREALFLECS_API FFlecsRecordPairSlot
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::ScriptStruct", EditConditionHides))
-	FInstancedStruct ScriptStruct;
+	FInstancedStruct PairScriptStruct;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::EntityHandle", EditConditionHides))
@@ -52,7 +52,7 @@ struct UNREALFLECS_API FFlecsRecordPairSlot
 		{
 		case EFlecsPairNodeType::ScriptStruct:
 			{
-				return PairNodeType == Other.PairNodeType && ScriptStruct == Other.ScriptStruct;
+				return PairNodeType == Other.PairNodeType && PairScriptStruct == Other.PairScriptStruct;
 			}
 		case EFlecsPairNodeType::EntityHandle:
 			{
@@ -116,19 +116,19 @@ struct UNREALFLECS_API FFlecsRecordPair
 						{
 							if (PairValueType == EFlecsValuePairType::First)
 							{
-								InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
-									First.ScriptStruct.GetMemory(), Second.ScriptStruct.GetScriptStruct());
+								InEntityHandle.SetPair(First.PairScriptStruct.GetScriptStruct(),
+									First.PairScriptStruct.GetMemory(), Second.PairScriptStruct.GetScriptStruct());
 							}
 						}
 					break;
 					case EFlecsPairNodeType::EntityHandle:
 						{
-							InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.EntityHandle);
+							InEntityHandle.AddPair(First.PairScriptStruct.GetScriptStruct(), Second.EntityHandle);
 						}
 					break;
 					case EFlecsPairNodeType::FGameplayTag:
 						{
-							InEntityHandle.AddPair(First.ScriptStruct.GetScriptStruct(), Second.GameplayTag);
+							InEntityHandle.AddPair(First.PairScriptStruct.GetScriptStruct(), Second.GameplayTag);
 						}
 					break;
 				}
@@ -140,9 +140,9 @@ struct UNREALFLECS_API FFlecsRecordPair
 				{
 					case EFlecsPairNodeType::ScriptStruct:
 						{
-							InEntityHandle.AddPair(First.EntityHandle, Second.ScriptStruct.GetScriptStruct());
-							InEntityHandle.SetPairSecond(First.EntityHandle, Second.ScriptStruct.GetScriptStruct(),
-								Second.ScriptStruct.GetMemory());
+							InEntityHandle.AddPair(First.EntityHandle, Second.PairScriptStruct.GetScriptStruct());
+							InEntityHandle.SetPairSecond(First.EntityHandle, Second.PairScriptStruct.GetScriptStruct(),
+								Second.PairScriptStruct.GetMemory());
 						}
 					break;
 					case EFlecsPairNodeType::EntityHandle:
@@ -164,9 +164,9 @@ struct UNREALFLECS_API FFlecsRecordPair
 				{
 					case EFlecsPairNodeType::ScriptStruct:
 						{
-							InEntityHandle.AddPair(First.GameplayTag, Second.ScriptStruct.GetScriptStruct());
-							InEntityHandle.SetPairSecond(First.GameplayTag, Second.ScriptStruct.GetScriptStruct(),
-								Second.ScriptStruct.GetMemory());
+							InEntityHandle.AddPair(First.GameplayTag, Second.PairScriptStruct.GetScriptStruct());
+							InEntityHandle.SetPairSecond(First.GameplayTag, Second.PairScriptStruct.GetScriptStruct(),
+								Second.PairScriptStruct.GetMemory());
 						}
 					break;
 					case EFlecsPairNodeType::EntityHandle:
