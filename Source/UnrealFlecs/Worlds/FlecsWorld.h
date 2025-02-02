@@ -8,7 +8,6 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "AssetRegistry/AssetRegistryModule.h"
-#include "Collections/FlecsComponentCollection.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsUObjectComponent.h"
@@ -201,8 +200,6 @@ public:
 		RegisterComponentType<FFlecsModuleComponent>();
 		RegisterComponentType<FFlecsModuleInitEvent>();
 		RegisterComponentType<FFlecsDependenciesComponent>();
-		
-		RegisterComponentType<FFlecsComponentCollection>();
 
 		RegisterComponentType<FFlecsEntityRecord>();
 	}

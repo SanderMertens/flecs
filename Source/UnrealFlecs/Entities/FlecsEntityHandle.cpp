@@ -2,7 +2,6 @@
 
 // ReSharper disable CppTooWideScopeInitStatement
 #include "FlecsEntityHandle.h"
-#include "Collections/FlecsComponentCollection.h"
 #include "Collections/FlecsComponentCollectionObject.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Networking/FlecsNetworkIdComponent.h"

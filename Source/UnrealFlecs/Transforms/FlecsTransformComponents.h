@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Collections/FlecsComponentCollection.h"
 #include "Collections/FlecsComponentCollectionObject.h"
 #include "SolidMacros/Macros.h"
 #include "Standard/Hashing.h"
