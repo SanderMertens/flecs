@@ -6,8 +6,8 @@
 #include "Engine/AssetManagerTypes.h"
 #include "Framework/Notifications/NotificationManager.h"
 #include "Logs/FlecsEditorCategory.h"
-#include "Widgets/EntityHandle/FlecsEntityHandlePinFactory.h"
-#include "Widgets/EntityHandle/FlecsEntityHandlePropertyEditor.h"
+#include "Widgets/EntityHandle/FlecsIdPinFactory.h"
+#include "Widgets/EntityHandle/FlecsIdPropertyEditor.h"
 #include "Widgets/Notifications/SNotificationList.h"
 
 #define LOCTEXT_NAMESPACE "FUnrealFlecsEditorModule"
@@ -22,9 +22,9 @@ void FUnrealFlecsEditorModule::StartupModule()
 	FPropertyEditorModule& PropertyEditorModule
 		= FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	
-	PropertyEditorModule.RegisterCustomPropertyTypeLayout("FlecsEntityHandle",
+	PropertyEditorModule.RegisterCustomPropertyTypeLayout("FlecsId",
 		FOnGetPropertyTypeCustomizationInstance::CreateStatic(
-			&FFlecsEntityHandleCustomization::MakeInstance
+			&FFlecsIdCustomization::MakeInstance
 			)
 		);
 
@@ -32,8 +32,8 @@ void FUnrealFlecsEditorModule::StartupModule()
 
 	PropertyEditorModule.NotifyCustomizationModuleChanged();
 	
-	// FlecsEntityHandlePinFactory = MakeShared<FFlecsEntityHandlePinFactory>();
-	// FEdGraphUtilities::RegisterVisualPinFactory(FlecsEntityHandlePinFactory);
+	 FlecsIdPinFactory = MakeShared<FFlecsIdPinFactory>();
+	 //FEdGraphUtilities::RegisterVisualPinFactory(FlecsIdPinFactory);
 }
 
 void FUnrealFlecsEditorModule::ShutdownModule()
@@ -41,16 +41,16 @@ void FUnrealFlecsEditorModule::ShutdownModule()
 	if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
 	{
 		FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
-		PropertyEditorModule.UnregisterCustomPropertyTypeLayout("FlecsEntityHandle");
+		PropertyEditorModule.UnregisterCustomPropertyTypeLayout("FlecsId");
 
 		PropertyEditorModule.NotifyCustomizationModuleChanged();
 	}
 	
-	// if (FlecsEntityHandlePinFactory.IsValid())
-	// {
-	// 	FEdGraphUtilities::UnregisterVisualPinFactory(FlecsEntityHandlePinFactory);
-	// 	FlecsEntityHandlePinFactory.Reset();
-	// }
+	 if (FlecsIdPinFactory.IsValid())
+	 {
+	 	//FEdGraphUtilities::UnregisterVisualPinFactory(FlecsIdPinFactory);
+	 	//FlecsIdPinFactory.Reset();
+	 }
 	
 	FUnrealFlecsEditorStyle::Shutdown();
 	
@@ -108,16 +108,6 @@ void FUnrealFlecsEditorModule::AddPrimaryAssetTypes()
 
 	bool bModified = false;
 
-	// // Define your primary asset types
-	// FPrimaryAssetTypeInfo FlecsComponentPropertiesTypeInfo(
-	// 	FName("FlecsComponentProperties"),
-	// 	UFlecsComponentPropertiesAsset::StaticClass(),
-	// 	false,
-	// 	false
-	// );
-
-	//FlecsComponentPropertiesTypeInfo.Rules.CookRule = EPrimaryAssetCookRule::AlwaysCook;
-
 	FPrimaryAssetTypeInfo FlecsPrimaryDataAssetTypeInfo(
 		FName("FlecsPrimaryDataAsset"),
 		UFlecsPrimaryDataAsset::StaticClass(),
@@ -135,12 +125,6 @@ void FUnrealFlecsEditorModule::AddPrimaryAssetTypes()
 			return Info.PrimaryAssetType == TypeInfo.PrimaryAssetType;
 		});
 	};
-
-	// if (!IsAssetTypePresent(FlecsComponentPropertiesTypeInfo))
-	// {
-	// 	Settings->PrimaryAssetTypesToScan.Add(FlecsComponentPropertiesTypeInfo);
-	// 	bModified = true;
-	// }
 
 	if (!IsAssetTypePresent(FlecsPrimaryDataAssetTypeInfo))
 	{

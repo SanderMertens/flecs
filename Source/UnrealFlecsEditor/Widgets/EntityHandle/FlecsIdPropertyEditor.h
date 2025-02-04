@@ -16,14 +16,14 @@
 
 #define LOCTEXT_NAMESPACE "Flecs"
 
-class FFlecsEntityHandleCustomization final : public IPropertyTypeCustomization
+class FFlecsIdCustomization final : public IPropertyTypeCustomization
 {
 	TSharedRef<FName> NoneEntityText = MakeShared<FName>(FName(TEXT("None")));
 	
 public:
 	static TSharedRef<IPropertyTypeCustomization> MakeInstance()
 	{
-		return MakeShareable(new FFlecsEntityHandleCustomization());
+		return MakeShareable(new FFlecsIdCustomization());
 	}
 	
 	virtual void CustomizeHeader(TSharedRef<IPropertyHandle> InPropertyHandle, FDetailWidgetRow& HeaderRow,
@@ -50,7 +50,6 @@ virtual void CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDe
     });
 
     ApplyMetadataFilters();
-    // Initialize FilteredOptions to Options.
     FilteredOptions = Options;
 
 	SelectedItem = GetCurrentItemLabel();
@@ -72,8 +71,8 @@ virtual void CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDe
             [
                 SNew(SNameComboBox)
                     .OptionsSource(&FilteredOptions)
-                    .OnComboBoxOpening(this, &FFlecsEntityHandleCustomization::OnComboBoxOpening)
-                    .OnSelectionChanged(this, &FFlecsEntityHandleCustomization::OnEntitySelected)
+                    .OnComboBoxOpening(this, &FFlecsIdCustomization::OnComboBoxOpening)
+                    .OnSelectionChanged(this, &FFlecsIdCustomization::OnEntitySelected)
 					.ComboBoxStyle(&FCoreStyle::Get().GetWidgetStyle<FComboBoxStyle>("ComboBox"))
             		.InitiallySelectedItem(SelectedItem)
                     .ContentPadding(2)
@@ -126,16 +125,16 @@ private:
 
 					if (NewValue == NoneEntityText)
 					{
-						static_cast<FFlecsEntityHandle*>(RawData)->SetEntity(flecs::entity::null().id());
+						static_cast<FFlecsId*>(RawData)->Id = flecs::entity::null().id();
 						SelectedItem.Reset();
 						return true;
 					}
 					
-					FFlecsEntityHandle* EntityId = static_cast<FFlecsEntityHandle*>(RawData);
+					FFlecsId* EntityId = static_cast<FFlecsId*>(RawData);
 					flecs::entity Entity = EntityOptions[Options.IndexOfByKey(NewValue)];
 					check(Entity.is_valid());
 					SelectedItem = NewValue;
-					EntityId->SetEntity(Entity.id());
+					EntityId->Id = Entity.id();
 					
 					return true;
 				});
@@ -193,9 +192,9 @@ private:
 					}
 
 					const flecs::entity Entity = FFlecsDefaultEntityEngine::Get().DefaultEntityWorld->get_alive(
-						static_cast<FFlecsEntityHandle*>(RawData)->GetIndex());
+						static_cast<FFlecsId*>(RawData)->GetId());
 
-					if UNLIKELY_IF(static_cast<FFlecsEntityHandle*>(RawData)->GetIndex() == flecs::entity::null())
+					if UNLIKELY_IF(static_cast<FFlecsId*>(RawData)->GetId() == flecs::entity::null().id())
 					{
 						CommonValue.Reset();
 						return false;
@@ -281,6 +280,6 @@ private:
 			];
 	}
 	
-}; // class FFlecsEntityHandleCustomization
+}; // class FFlecsIdCustomization
 
 #undef LOCTEXT_NAMESPACE

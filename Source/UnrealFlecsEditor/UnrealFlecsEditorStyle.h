@@ -12,7 +12,7 @@
 class FUnrealFlecsEditorStyle : public FEditorStyle
 {
 public:
-	FORCEINLINE static void Initialize()
+	static void Initialize()
 	{
 		FString PluginContentDir = IPluginManager::Get().FindPlugin(TEXT("UnrealFlecs"))->GetBaseDir();
 		const FString ContentDir = FPaths::Combine(PluginContentDir, TEXT("Resources"));
@@ -22,13 +22,12 @@ public:
 
 		const FVector2D IconSize(128.0f, 128.0f);
 		const FString IconPath = FPaths::Combine(ContentDir, TEXT("Icon128.png"));
-		StyleSet->Set("UnrealFlecs.FlecsEditor.FlecsLogo",
-			new FSlateImageBrush(IconPath, IconSize));
+		StyleSet->Set("UnrealFlecs.FlecsEditor.FlecsLogo", new FSlateImageBrush(IconPath, IconSize));
 
 		FSlateStyleRegistry::RegisterSlateStyle(*StyleSet);
 	}
 
-	FORCEINLINE static void Shutdown()
+	static void Shutdown()
 	{
 		FSlateStyleRegistry::UnRegisterSlateStyle("UnrealFlecsEditorStyle");
 	}

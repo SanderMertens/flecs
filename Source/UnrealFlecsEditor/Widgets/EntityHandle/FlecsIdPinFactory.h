@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "EdGraphUtilities.h"
 
-class FFlecsEntityHandlePinFactory : public FGraphPanelPinFactory
+class FFlecsIdPinFactory : public FGraphPanelPinFactory
 {
 public:
 	virtual TSharedPtr<SGraphPin> CreatePin(UEdGraphPin* InPin) const override;
-}; // class FFlecsEntityHandlePinFactory
+}; // class FFlecsIdPinFactory

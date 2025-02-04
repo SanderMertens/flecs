@@ -24,7 +24,7 @@ public:
 
 	FORCEINLINE void InitializeSystem_Internal(const flecs::world& InWorld)
 	{
-		const FFlecsSystemSettingsInfo Settings = GetSystemSettings();
+		const FFlecsSystemSettingsInfo& Settings = GetSystemSettings();
 		
 		flecs::system_builder Builder(InWorld, StringCast<char>(*Settings.Name).Get());
 
@@ -57,6 +57,7 @@ public:
 		System = FFlecsSystem(Builder); // Builder.build();
 		
 		Settings.SystemRecord.ApplyRecordToEntity(System.GetEntity());
+		//@TODO: Add FlecsSystemObject Component Target Type
 		//System.GetEntity().Set<FFlecsUObjectComponent>({ _getUObject() });
 		
 		InitializeSystem();

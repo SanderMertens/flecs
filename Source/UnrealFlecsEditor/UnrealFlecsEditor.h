@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FFlecsEntityHandlePinFactory;
+class FFlecsIdPinFactory;
 
 class FUnrealFlecsEditorModule : public IModuleInterface
 {
@@ -17,5 +17,5 @@ private:
     void RegisterExplorerMenuExtension();
     void AddPrimaryAssetTypes();
     
-    TSharedPtr<FFlecsEntityHandlePinFactory> FlecsEntityHandlePinFactory;
+    TSharedPtr<FFlecsIdPinFactory> FlecsIdPinFactory;
 }; // class FUnrealFlecsEditorModule

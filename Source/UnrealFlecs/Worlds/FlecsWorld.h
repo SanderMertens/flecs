@@ -479,7 +479,8 @@ public:
 			solid_check(IsValid(DependencyModuleObject));
 
 			ModuleEntity.AddPair(flecs::DependsOn, DependencyEntity);
-			InFunction(DependencyModuleObject, this, DependencyEntity);
+			std::invoke(InFunction, DependencyModuleObject, this, DependencyEntity);
+			//InFunction(DependencyModuleObject, this, DependencyEntity);
 		}
 	}
 

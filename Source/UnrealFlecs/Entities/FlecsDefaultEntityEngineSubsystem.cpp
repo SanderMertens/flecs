@@ -88,9 +88,9 @@ void FFlecsDefaultEntityEngine::Initialize()
 		{
 			auto ContainsDefaultEntity = [this](const FString& EntityName) -> bool
 			{
-				for (const FFlecsDefaultMetaEntity& DefaultEntity : AddedDefaultEntities)
+				for (const FFlecsDefaultMetaEntity& AddedDefaultEntity : AddedDefaultEntities)
 				{
-					if (DefaultEntity.EntityName == EntityName && DefaultEntity.SetId != 0)
+					if (AddedDefaultEntity.EntityName == EntityName && AddedDefaultEntity.SetId != 0)
 					{
 						return true;
 					}
@@ -133,9 +133,9 @@ FFlecsId FFlecsDefaultEntityEngine::AddDefaultEntity(FFlecsDefaultMetaEntity Def
 {
 	auto ContainsDefaultEntity = [this](const FString& EntityName) -> bool
 	{
-		for (const FFlecsDefaultMetaEntity& DefaultEntity : AddedDefaultEntities)
+		for (const FFlecsDefaultMetaEntity& AddedDefaultEntity : AddedDefaultEntities)
 		{
-			if (DefaultEntity.EntityName == EntityName && DefaultEntity.SetId != 0)
+			if (AddedDefaultEntity.EntityName == EntityName && AddedDefaultEntity.SetId != 0)
 			{
 				return true;
 			}

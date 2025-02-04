@@ -94,6 +94,7 @@ inline void UFlecsPhysicsModule::ResimulationHandlers()
 	TickerComponentRef = FlecsWorld->GetSingletonPtr<FFlecsTickerComponent>();
 
 	FSolverPostAdvance::FDelegate PostAdvanceDelegate;
+	
 	PostAdvanceDelegate.BindWeakLambda(this, [this](MAYBE_UNUSED float InDeltaTime)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_FlecsPhysicsModule_ResimulationHandlers);
