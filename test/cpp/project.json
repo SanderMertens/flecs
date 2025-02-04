@@ -526,6 +526,7 @@
                 "multithread_system_w_query_iter",
                 "multithread_system_w_query_iter_w_iter",
                 "multithread_system_w_query_iter_w_world",
+                "multithread_system_w_get_var",
                 "run_callback",
                 "startup_system",
                 "interval_tick_source",
