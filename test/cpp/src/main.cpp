@@ -508,6 +508,7 @@ void System_multithread_system_w_query_each_w_world(void);
 void System_multithread_system_w_query_iter(void);
 void System_multithread_system_w_query_iter_w_iter(void);
 void System_multithread_system_w_query_iter_w_world(void);
+void System_multithread_system_w_get_var(void);
 void System_run_callback(void);
 void System_startup_system(void);
 void System_interval_tick_source(void);
@@ -3404,6 +3405,10 @@ bake_test_case System_testcases[] = {
     {
         "multithread_system_w_query_iter_w_world",
         System_multithread_system_w_query_iter_w_world
+    },
+    {
+        "multithread_system_w_get_var",
+        System_multithread_system_w_get_var
     },
     {
         "run_callback",
@@ -7082,7 +7087,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        73,
+        74,
         System_testcases
     },
     {

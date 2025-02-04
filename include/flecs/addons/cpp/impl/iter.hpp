@@ -95,8 +95,8 @@ inline flecs::entity iter::get_var(int var_id) const {
  * Get value of a query variable for current result.
  */
 inline flecs::entity iter::get_var(const char *name) const {
-    ecs_query_iter_t *qit = &iter_->priv_.iter.query;
-    const flecs::query_t *q = qit->query;
+    const flecs::query_t *q = iter_->query;
+
     int var_id = ecs_query_find_var(q, name);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
     return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
