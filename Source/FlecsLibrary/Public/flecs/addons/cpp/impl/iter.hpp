@@ -39,7 +39,7 @@ inline flecs::id iter::id(int8_t index) const {
 }
 
 inline flecs::id iter::pair(int8_t index) const {
-    const flecs::id_t id = ecs_field_id(iter_, index);
+    flecs::id_t id = ecs_field_id(iter_, index);
     ecs_check(ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, NULL);
     return flecs::id(iter_->world, id);
 error:
@@ -95,9 +95,9 @@ inline flecs::entity iter::get_var(int var_id) const {
  * Get value of a query variable for current result.
  */
 inline flecs::entity iter::get_var(const char *name) const {
-    const ecs_query_iter_t *qit = &iter_->priv_.iter.query;
-    const flecs::query_t *q = qit->query;
-    const int var_id = ecs_query_find_var(q, name);
+    const flecs::query_t *q = iter_->query;
+
+    int var_id = ecs_query_find_var(q, name);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
     return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
 }
@@ -111,7 +111,7 @@ void iter::targets(int8_t index, const Func& func) {
     const ecs_table_record_t *tr = iter_->trs[index];
     int32_t i = tr->index, end = i + tr->count;
     for (; i < end; i ++) {
-        const ecs_id_t id = table_type->array[i];
+        ecs_id_t id = table_type->array[i];
         ecs_assert(ECS_IS_PAIR(id), ECS_INVALID_PARAMETER, 
             "field does not match a pair");
         flecs::entity tgt(iter_->world, 
