@@ -54,7 +54,7 @@ ecs_script_t* flecs_script_new(
     ecs_world_t *world);
 
 ecs_script_scope_t* flecs_script_scope_new(
-    ecs_script_parser_t *parser);
+    ecs_parser_t *parser);
 
 int flecs_script_visit_free(
     ecs_script_t *script);

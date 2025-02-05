@@ -1,13 +1,13 @@
 /**
- * @file addons/script/tokenizer.h
- * @brief Script tokenizer.
+ * @file addons/parser/tokenizer.h
+ * @brief Parser tokenizer.
  */
 
-#ifndef FLECS_SCRIPT_TOKENIZER_H
-#define FLECS_SCRIPT_TOKENIZER_H
+#ifndef FLECS_PARSER_TOKENIZER_H
+#define FLECS_PARSER_TOKENIZER_H
 
 /* Tokenizer */
-typedef enum ecs_script_token_kind_t {
+typedef enum ecs_token_kind_t {
     EcsTokEnd = '\0',
     EcsTokUnknown,
     EcsTokScopeOpen = '{',
@@ -60,48 +60,48 @@ typedef enum ecs_script_token_kind_t {
     EcsTokKeywordMatch = 132,
     EcsTokAddAssign = 133,
     EcsTokMulAssign = 134,
-} ecs_script_token_kind_t;
+} ecs_token_kind_t;
 
-typedef struct ecs_script_token_t {
+typedef struct ecs_token_t {
     const char *value;
-    ecs_script_token_kind_t kind;
-} ecs_script_token_t;
+    ecs_token_kind_t kind;
+} ecs_token_t;
 
-typedef struct ecs_script_tokens_t {
+typedef struct ecs_tokens_t {
     int32_t count;
-    ecs_script_token_t tokens[256];
-} ecs_script_tokens_t;
+    ecs_token_t tokens[256];
+} ecs_tokens_t;
 
-typedef struct ecs_script_tokenizer_t {
-    ecs_script_tokens_t stack;
-    ecs_script_token_t *tokens;
-} ecs_script_tokenizer_t;
+typedef struct ecs_tokenizer_t {
+    ecs_tokens_t stack;
+    ecs_token_t *tokens;
+} ecs_tokenizer_t;
 
-const char* flecs_script_until(
-    ecs_script_parser_t *parser,
+const char* flecs_tokenizer_until(
+    ecs_parser_t *parser,
     const char *ptr,
-    ecs_script_token_t *out,
+    ecs_token_t *out,
     char until);
 
-const char* flecs_script_token_kind_str(
-    ecs_script_token_kind_t kind);
+const char* flecs_token_kind_str(
+    ecs_token_kind_t kind);
 
-const char* flecs_script_token_str(
-    ecs_script_token_kind_t kind);
+const char* flecs_token_str(
+    ecs_token_kind_t kind);
 
-const char* flecs_script_token(
-    ecs_script_parser_t *parser,
+const char* flecs_token(
+    ecs_parser_t *parser,
     const char *ptr,
-    ecs_script_token_t *out,
+    ecs_token_t *out,
     bool is_lookahead);
 
 const char* flecs_scan_whitespace(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos);
 
-const char* flecs_script_identifier(
-    ecs_script_parser_t *parser,
+const char* flecs_tokenizer_identifier(
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out);
+    ecs_token_t *out);
 
 #endif

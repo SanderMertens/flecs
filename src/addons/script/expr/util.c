@@ -69,7 +69,7 @@ int flecs_value_unary(
     const ecs_script_t *script,
     const ecs_value_t *expr,
     ecs_value_t *out,
-    ecs_script_token_kind_t operator)
+    ecs_token_kind_t operator)
 {
     (void)script;
     switch(operator) {
@@ -248,7 +248,7 @@ int flecs_value_binary(
     const ecs_value_t *left,
     const ecs_value_t *right,
     ecs_value_t *out,
-    ecs_script_token_kind_t operator)
+    ecs_token_kind_t operator)
 {
     (void)script;
 

@@ -31,8 +31,8 @@
         out->kind = _kind;\
         return pos + 1;
 
-const char* flecs_script_token_kind_str(
-    ecs_script_token_kind_t kind)
+const char* flecs_token_kind_str(
+    ecs_token_kind_t kind)
 {
     switch(kind) {
     case EcsTokUnknown:
@@ -101,8 +101,8 @@ const char* flecs_script_token_kind_str(
     }
 }
 
-const char* flecs_script_token_str(
-    ecs_script_token_kind_t kind)
+const char* flecs_token_str(
+    ecs_token_kind_t kind)
 {
     switch(kind) {
     case EcsTokUnknown: return "unknown token";
@@ -163,7 +163,7 @@ const char* flecs_script_token_str(
 }
 
 const char* flecs_scan_whitespace(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos) 
 {
     (void)parser;
@@ -183,7 +183,7 @@ const char* flecs_scan_whitespace(
 
 static
 const char* flecs_scan_whitespace_and_comment(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos) 
 {
 repeat_skip_whitespace_comment:
@@ -219,10 +219,10 @@ bool flecs_script_is_identifier(
     return isalpha(c) || (c == '_') || (c == '$') || (c == '#');
 }
 
-const char* flecs_script_identifier(
-    ecs_script_parser_t *parser,
+const char* flecs_tokenizer_identifier(
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out) 
+    ecs_token_t *out) 
 {
     if (out) {
         out->kind = EcsTokIdentifier;
@@ -330,9 +330,9 @@ bool flecs_script_is_number(
 
 static
 const char* flecs_script_number(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out) 
+    ecs_token_t *out) 
 {
     out->kind = EcsTokNumber;
     out->value = parser->token_cur;
@@ -387,7 +387,7 @@ const char* flecs_script_number(
 
 static
 const char* flecs_script_skip_string(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos, 
     char delim)
 {
@@ -409,9 +409,9 @@ const char* flecs_script_skip_string(
 
 static
 const char* flecs_script_string(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out) 
+    ecs_token_t *out) 
 {
     const char *end = flecs_script_skip_string(parser, pos + 1, '"');
     if (!end) {
@@ -433,9 +433,9 @@ const char* flecs_script_string(
 
 static
 const char* flecs_script_multiline_string(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out) 
+    ecs_token_t *out) 
 {
     char ch;
     const char *end = pos + 1;
@@ -462,10 +462,10 @@ const char* flecs_script_multiline_string(
     return end + 2;
 }
 
-const char* flecs_script_until(
-    ecs_script_parser_t *parser,
+const char* flecs_tokenizer_until(
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out,
+    ecs_token_t *out,
     char until)
 {
     parser->pos = pos;
@@ -511,10 +511,10 @@ const char* flecs_script_until(
     return pos;
 }
 
-const char* flecs_script_token(
-    ecs_script_parser_t *parser,
+const char* flecs_token(
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out,
+    ecs_token_t *out,
     bool is_lookahead)
 {
     parser->pos = pos;
@@ -600,7 +600,7 @@ const char* flecs_script_token(
         return flecs_script_multiline_string(parser, pos, out);
 
     } else if (flecs_script_is_identifier(pos[0])) {
-        return flecs_script_identifier(parser, pos, out);
+        return flecs_tokenizer_identifier(parser, pos, out);
     }
 
     if (!is_lookahead) {
