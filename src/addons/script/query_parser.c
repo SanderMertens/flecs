@@ -7,7 +7,7 @@
 
 #ifdef FLECS_SCRIPT
 #include "script.h"
-#include "parser.h"
+#include "../parser/grammar.h"
 
 #define EcsTokTermIdentifier\
     EcsTokIdentifier:\
@@ -521,6 +521,8 @@ int flecs_terms_parse(
     }
 
     ecs_script_parser_t parser = {
+        .name = script->name,
+        .code = script->code,
         .script = flecs_script_impl(script),
         .pos = script->code,
         .merge_variable_members = true

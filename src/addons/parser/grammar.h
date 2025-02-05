@@ -1,12 +1,12 @@
 /**
- * @file addons/script/parser.h
+ * @file addons/parser/grammar.h
  * @brief Script grammar parser.
  * 
  * Macro utilities that facilitate a simple recursive descent parser.
  */
 
-#ifndef FLECS_SCRIPT_PARSER_H
-#define FLECS_SCRIPT_PARSER_H
+#ifndef FLECS_SCRIPT_GRAMMAR_H
+#define FLECS_SCRIPT_GRAMMAR_H
 
 #if defined(ECS_TARGET_CLANG)
 /* Ignore unused enum constants in switch as it would blow up the parser code */
@@ -31,6 +31,8 @@
     };\
     ecs_script_parser_t parser = {\
         .script = flecs_script_impl(&script),\
+        .name = script_name,\
+        .code = expr,\
         .pos = expr,\
         .token_cur = tokens\
     }
@@ -59,14 +61,14 @@
 
 /* Error */
 #define Error(...)\
-    ecs_parser_error(parser->script->pub.name, parser->script->pub.code,\
-        (pos - parser->script->pub.code) - 1, __VA_ARGS__);\
+    ecs_parser_error(parser->name, parser->code,\
+        (pos - parser->code) - 1, __VA_ARGS__);\
     goto error
 
 /* Warning */
 #define Warning(...)\
-    ecs_parser_warning(parser->script->pub.name, parser->script->pub.code,\
-        (pos - parser->script->pub.code) - 1, __VA_ARGS__);\
+    ecs_parser_warning(parser->name, parser->code,\
+        (pos - parser->code) - 1, __VA_ARGS__);\
 
 /* Parse expression */
 #define Expr(until, ...)\

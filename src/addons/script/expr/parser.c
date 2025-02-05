@@ -7,7 +7,7 @@
 
 #ifdef FLECS_SCRIPT
 #include "../script.h"
-#include "../parser.h"
+#include "../../parser/grammar.h"
 
 /* From https://en.cppreference.com/w/c/language/operator_precedence */
 
@@ -633,6 +633,8 @@ ecs_script_t* ecs_expr_parse(
     ecs_script_impl_t *impl = flecs_script_impl(script);
 
     ecs_script_parser_t parser = {
+        .name = script->name,
+        .code = script->code,
         .script = impl,
         .scope = impl->root,
         .significant_newline = false

@@ -10,12 +10,13 @@
 
 #ifdef FLECS_SCRIPT
 
-#include <ctype.h>
-
-typedef struct ecs_script_scope_t ecs_script_scope_t;
 typedef struct ecs_script_entity_t ecs_script_entity_t;
 
-typedef struct ecs_script_impl_t {
+#define flecs_script_impl(script) ((ecs_script_impl_t*)script)
+
+#include "../parser/parser.h"
+
+struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_allocator_t allocator;
     ecs_script_scope_t *root;
@@ -25,27 +26,6 @@ typedef struct ecs_script_impl_t {
     const char *next_token; /* First character after expression */
     int32_t token_buffer_size;
     int32_t refcount;
-} ecs_script_impl_t;
-
-typedef struct ecs_script_parser_t ecs_script_parser_t;
-
-#define flecs_script_impl(script) ((ecs_script_impl_t*)script)
-
-#include "tokenizer.h"
-
-struct ecs_script_parser_t {
-    ecs_script_impl_t *script;
-    ecs_script_scope_t *scope;
-    const char *pos;
-    char *token_cur;
-    char *token_keep;
-    bool significant_newline;
-    bool merge_variable_members;
-
-    /* For term parser */
-    ecs_term_t *term;
-    ecs_oper_kind_t extra_oper;
-    ecs_term_ref_t *extra_args;
 };
 
 typedef struct ecs_function_calldata_t {

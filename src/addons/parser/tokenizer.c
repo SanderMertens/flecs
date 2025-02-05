@@ -6,7 +6,8 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+
+#include "parser.h"
 
 #define Keyword(keyword, _kind)\
     } else if (!ecs_os_strncmp(pos, keyword " ", ecs_os_strlen(keyword) + 1)) {\
@@ -202,8 +203,8 @@ repeat_skip_whitespace_comment:
                 }
             }
 
-            ecs_parser_error(parser->script->pub.name, parser->script->pub.code, 
-                pos - parser->script->pub.code, "missing */ for multiline comment");
+            ecs_parser_error(parser->name, parser->code, 
+                pos - parser->code, "missing */ for multiline comment");
         }
     }
 
@@ -272,9 +273,9 @@ const char* flecs_script_identifier(
                     } else if (c == '>') {
                         indent --;
                     } else if (!c) {
-                        ecs_parser_error(parser->script->pub.name, 
-                            parser->script->pub.code, 
-                                pos - parser->script->pub.code, 
+                        ecs_parser_error(parser->name, 
+                            parser->code, 
+                                pos - parser->code, 
                                     "< without > in identifier");
                         return NULL;
                     }
@@ -296,9 +297,9 @@ const char* flecs_script_identifier(
                 }
                 return pos;
             } else if (c == '>') {
-                ecs_parser_error(parser->script->pub.name, 
-                    parser->script->pub.code,
-                        pos - parser->script->pub.code, 
+                ecs_parser_error(parser->name, 
+                    parser->code,
+                        pos - parser->code, 
                             "> without < in identifier");
                 return NULL;
             } else {
@@ -398,8 +399,8 @@ const char* flecs_script_skip_string(
     }
 
     if (!pos[0]) {
-        ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-            pos - parser->script->pub.code, "unterminated string");
+        ecs_parser_error(parser->name, parser->code,
+            pos - parser->code, "unterminated string");
         return NULL;
     }
 
@@ -480,17 +481,17 @@ const char* flecs_script_until(
 
     if (!pos[0]) {
         if (until == '\0') {
-            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-                pos - parser->script->pub.code, "expected end of script");
+            ecs_parser_error(parser->name, parser->code,
+                pos - parser->code, "expected end of script");
             return NULL;
         } else
         if (until == '\n') {
-            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-                pos - parser->script->pub.code, "expected newline");
+            ecs_parser_error(parser->name, parser->code,
+                pos - parser->code, "expected newline");
             return NULL;
         } else {
-            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-                pos - parser->script->pub.code, "expected '%c'", until);
+            ecs_parser_error(parser->name, parser->code,
+                pos - parser->code, "expected '%c'", until);
             return NULL;
         }
     }
@@ -603,8 +604,8 @@ const char* flecs_script_token(
     }
 
     if (!is_lookahead) {
-        ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-            pos - parser->script->pub.code, "unknown token '%c'", pos[0]);
+        ecs_parser_error(parser->name, parser->code,
+            pos - parser->code, "unknown token '%c'", pos[0]);
     }
 
     return NULL;

@@ -7,7 +7,7 @@
 
 #ifdef FLECS_SCRIPT
 #include "script.h"
-#include "parser.h"
+#include "../parser/grammar.h"
 
 #define EcsTokEndOfStatement\
     case ';':\
@@ -956,6 +956,8 @@ ecs_script_t* ecs_script_parse(
     ecs_script_impl_t *impl = flecs_script_impl(script);
 
     ecs_script_parser_t parser = {
+        .name = script->name,
+        .code = script->code,
         .script = impl,
         .scope = impl->root,
         .significant_newline = true
