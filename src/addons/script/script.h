@@ -64,24 +64,6 @@ ecs_script_vars_t* flecs_script_vars_push(
     ecs_stack_t *stack,
     ecs_allocator_t *allocator);
 
-int flecs_terms_parse(
-    ecs_script_t *script,
-    ecs_term_t *terms,
-    int32_t *term_count_out);
-
-const char* flecs_id_parse(
-    const ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_id_t *id);
-
-const char* flecs_term_parse(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_term_t *term,
-    char *token_buffer);
-
 ecs_script_runtime_t* flecs_script_runtime_get(
     ecs_world_t *world);
 

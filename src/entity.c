@@ -13,8 +13,8 @@
 #include "private_api.h"
 #include <ctype.h>
 
-#ifdef FLECS_SCRIPT
-#include "addons/script/script.h"
+#ifdef FLECS_QUERY_DSL
+#include "addons/query_dsl/query_dsl.h"
 #endif
 
 static
@@ -1671,7 +1671,7 @@ int flecs_traverse_from_expr(
     const char *expr,
     ecs_vec_t *ids)
 {
-#ifdef FLECS_SCRIPT
+#ifdef FLECS_QUERY_DSL
     const char *ptr = expr;
     if (ptr) {
         ecs_id_t id = 0;
@@ -1717,7 +1717,7 @@ void flecs_defer_from_expr(
     const char *name,
     const char *expr)
 {
-#ifdef FLECS_SCRIPT
+#ifdef FLECS_QUERY_DSL
     const char *ptr = expr;
     if (ptr) {
         ecs_id_t id = 0;

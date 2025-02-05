@@ -1,7 +1,6 @@
-
 /**
  * @file addons/parser/parser.h
- * @brief Script parser.
+ * @brief Parser addon.
  */
 
 #ifndef FLECS_PARSER_H
@@ -22,6 +21,8 @@ typedef struct ecs_parser_t {
     char *token_keep;
     bool significant_newline;
     bool merge_variable_members;
+
+    ecs_world_t *world;
 
     /* For script parser */
     ecs_script_impl_t *script;

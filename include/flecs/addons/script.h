@@ -23,6 +23,9 @@
 #define FLECS_DOC
 #endif
 
+#ifndef FLECS_PARSER
+#define FLECS_PARSER
+#endif
 
 #ifndef FLECS_SCRIPT_H
 #define FLECS_SCRIPT_H

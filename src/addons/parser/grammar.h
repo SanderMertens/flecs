@@ -8,6 +8,8 @@
 #ifndef FLECS_PARSER_GRAMMAR_H
 #define FLECS_PARSER_GRAMMAR_H
 
+#include "parser.h"
+
 #if defined(ECS_TARGET_CLANG)
 /* Ignore unused enum constants in switch as it would blow up the parser code */
 #pragma clang diagnostic ignored "-Wswitch-enum"

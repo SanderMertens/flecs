@@ -5,7 +5,7 @@
 
 #include "flecs.h"
 
-#ifdef FLECS_SCRIPT
+#ifdef FLECS_PARSER
 
 #include "parser.h"
 
