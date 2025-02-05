@@ -276,91 +276,15 @@ protected:
 
 	void RegisterAllGameplayTags(UFlecsWorld* InFlecsWorld)
 	{
-		TMap<FGameplayTag, TArray<FGameplayTag>> TagHierarchy;
-		BuildTagHierarchyMap(TagHierarchy);
-
-		TSet<FName> ProcessedTags;
-		
-		for (const TTuple<FGameplayTag, TArray<FGameplayTag>>& Pair : TagHierarchy)
-		{
-			if (!Pair.Key.IsValid())
-			{
-				continue;
-			}
-			
-			RegisterGameplayTagEntityRecursively(Pair.Key, InFlecsWorld, TagHierarchy, ProcessedTags);
-		}
-	}
-
-	void BuildTagHierarchyMap(TMap<FGameplayTag, TArray<FGameplayTag>>& InTagHierarchy)
-	{
 		FGameplayTagContainer AllTags;
 		UGameplayTagsManager::Get().RequestAllGameplayTags(AllTags, false);
 
 		for (const FGameplayTag& Tag : AllTags)
 		{
-			if (FGameplayTag ParentTag = Tag.RequestDirectParent(); ParentTag.IsValid())
-			{
-				InTagHierarchy.FindOrAdd(ParentTag).Add(Tag);
-			}
-			else
-			{
-				InTagHierarchy.FindOrAdd(Tag);
-			}
+			const FFlecsEntityHandle TagEntity =
+				flecs::entity(InFlecsWorld->World, StringCast<char>(*Tag.ToString()).Get(), ".", ".");
+			TagEntity.Set<FGameplayTag>(Tag);
 		}
-	}
-
-	FFlecsEntityHandle RegisterGameplayTagEntityRecursively(const FGameplayTag& Tag, UFlecsWorld* NewFlecsWorld,
-		const TMap<FGameplayTag, TArray<FGameplayTag>>& TagHierarchy, TSet<FName>& ProcessedTags)
-	{
-		if (ProcessedTags.Contains(Tag.GetTagName()))
-		{
-			return FFlecsEntityHandle::GetNullHandle();
-		}
-		
-		ProcessedTags.Add(Tag.GetTagName());
-
-		const FString LastPartOfTagName = ExtractLastPartOfTagName(Tag.GetTagName().ToString());
-
-		const FFlecsEntityHandle TagEntity = NewFlecsWorld->CreateEntity(LastPartOfTagName);
-		
-		TagEntity.Set<FGameplayTag>(Tag);
-		
-		if (const TArray<FGameplayTag>* Children = TagHierarchy.Find(Tag))
-		{
-			for (const FGameplayTag& ChildTag : *Children)
-			{
-				FFlecsEntityHandle ChildEntity = RegisterGameplayTagEntityRecursively(ChildTag, NewFlecsWorld,
-					TagHierarchy, ProcessedTags);
-
-				if LIKELY_IF(ChildEntity.IsValid())
-				{
-					ChildEntity.SetParent(TagEntity);
-				}
-				else
-				{
-					UN_LOGF(LogFlecsCore, Warning, "Failed to register child tag %s for parent tag %s",
-						*ChildTag.GetTagName().ToString(), *Tag.GetTagName().ToString());
-				}
-			}
-		}
-
-		return TagEntity;
-	}
-
-	FString ExtractLastPartOfTagName(const FString& FullTagName)
-	{
-		if (FullTagName.IsEmpty())
-		{
-			return FString();
-		}
-
-		if (int32 LastDotIndex; FullTagName.FindLastChar(TEXT('.'), LastDotIndex))
-		{
-			return FullTagName.RightChop(LastDotIndex + 1);
-		}
-		
-		return FullTagName;
 	}
 	
 }; // class UFlecsWorldSubsystem
