@@ -156,9 +156,10 @@ const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 107;
 const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 108;
 const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 109;
 const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 110;
-const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 111;
 const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 112;
 #endif
+
+const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 111;
 
 /* Doc module components */
 #ifdef FLECS_DOC

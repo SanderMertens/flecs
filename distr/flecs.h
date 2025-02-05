@@ -5157,6 +5157,8 @@ FLECS_API extern const ecs_entity_t EcsOnStore;     /**< OnStore pipeline phase.
 FLECS_API extern const ecs_entity_t EcsPostFrame;   /**< PostFrame pipeline phase. */
 FLECS_API extern const ecs_entity_t EcsPhase;       /**< Phase pipeline phase. */
 
+FLECS_API extern const ecs_entity_t EcsConstant;    /**< Tag added to enum/bitmask constants. */
+
 /** Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete()) */
 #define EcsLastInternalComponentId (ecs_id(EcsPoly))
@@ -15634,7 +15636,6 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsVector);          /**< Id for comp
 FLECS_API extern const ecs_entity_t ecs_id(EcsOpaque);          /**< Id for component that stores reflection data for an opaque type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnit);            /**< Id for component that stores unit data. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);      /**< Id for component that stores unit prefix data. */
-FLECS_API extern const ecs_entity_t EcsConstant;                /**< Tag added to enum/bitmask constants. */
 FLECS_API extern const ecs_entity_t EcsQuantity;                /**< Tag added to unit quantities. */
 
 /* Primitive type component ids */
@@ -17332,6 +17333,7 @@ static const flecs::entity_t Monitor = EcsMonitor;
 static const flecs::entity_t System = EcsSystem;
 static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
 static const flecs::entity_t Phase = EcsPhase;
+static const flecs::entity_t Constant = EcsConstant;
 
 /* Builtin event tags */
 static const flecs::entity_t OnAdd = EcsOnAdd;
@@ -19230,7 +19232,6 @@ static const flecs::entity_t F32 = ecs_id(ecs_f32_t);
 static const flecs::entity_t F64 = ecs_id(ecs_f64_t);
 static const flecs::entity_t String = ecs_id(ecs_string_t);
 static const flecs::entity_t Entity = ecs_id(ecs_entity_t);
-static const flecs::entity_t Constant = EcsConstant;
 static const flecs::entity_t Quantity = EcsQuantity;
 
 namespace meta {

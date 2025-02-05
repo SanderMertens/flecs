@@ -1258,13 +1258,6 @@ void FlecsMetaImport(
     });
 
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = EcsConstant,
-            .name = "constant", .symbol = "EcsConstant",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        })
-    });
-
-    ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsEnum),
             .name = "enum", .symbol = "EcsEnum",
             .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))

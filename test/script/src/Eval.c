@@ -1948,9 +1948,9 @@ void Eval_type_and_assign_in_plecs_w_enum(void) {
 
     const char *expr =
     HEAD "flecs.meta.enum Color {"
-    LINE "  flecs.meta.constant Red"
-    LINE "  flecs.meta.constant Green"
-    LINE "  flecs.meta.constant Blue"
+    LINE "  flecs.core.constant Red"
+    LINE "  flecs.core.constant Green"
+    LINE "  flecs.core.constant Blue"
     LINE "}"
     LINE ""
     LINE "flecs.meta.struct SomeType {"
@@ -4250,9 +4250,9 @@ void Eval_oneof(void) {
 
     const char *expr =
     HEAD "flecs.meta.enum Color {"
-    LINE "  flecs.meta.constant Red"
-    LINE "  flecs.meta.constant Green"
-    LINE "  flecs.meta.constant Blue"
+    LINE "  flecs.core.constant Red"
+    LINE "  flecs.core.constant Green"
+    LINE "  flecs.core.constant Blue"
     LINE "}"
     LINE "e { (Color, Green) }";
 
