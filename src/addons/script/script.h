@@ -7,14 +7,13 @@
 #define FLECS_SCRIPT_PRIVATE_H
 
 #include "../../private_api.h"
+#include "../parser/parser.h"
 
 #ifdef FLECS_SCRIPT
 
 typedef struct ecs_script_entity_t ecs_script_entity_t;
 
 #define flecs_script_impl(script) ((ecs_script_impl_t*)script)
-
-#include "../parser/parser.h"
 
 struct ecs_script_impl_t {
     ecs_script_t pub;

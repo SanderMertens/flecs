@@ -5,9 +5,10 @@
 
 #include "flecs.h"
 
+#include "../parser/grammar.h"
+
 #ifdef FLECS_SCRIPT
 #include "script.h"
-#include "../parser/grammar.h"
 
 #define EcsTokEndOfStatement\
     case ';':\

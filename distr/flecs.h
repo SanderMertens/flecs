@@ -13543,6 +13543,10 @@ void FlecsAlertsImport(
 #define FLECS_META
 #endif
 
+#ifndef FLECS_DOC
+#define FLECS_DOC
+#endif
+
 #ifndef FLECS_QUERY_DSL
 #define FLECS_QUERY_DSL /* For parsing component id expressions */
 #endif

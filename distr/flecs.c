@@ -25702,6 +25702,7 @@ bool flecs_rest_script(
     (void)world;
     (void)req;
     (void)reply;
+    (void)path;
 #ifdef FLECS_SCRIPT
     ecs_entity_t script = flecs_rest_entity_from_path(world, reply, path);
     if (!script) {
@@ -41502,13 +41503,6 @@ const char* ecs_world_from_json_file(
 #ifndef FLECS_SCRIPT_PRIVATE_H
 #define FLECS_SCRIPT_PRIVATE_H
 
-
-#ifdef FLECS_SCRIPT
-
-typedef struct ecs_script_entity_t ecs_script_entity_t;
-
-#define flecs_script_impl(script) ((ecs_script_impl_t*)script)
-
 /**
  * @file addons/parser/parser.h
  * @brief Parser addon.
@@ -41655,6 +41649,12 @@ const char* flecs_tokenizer_identifier(
 
 #endif
 
+
+#ifdef FLECS_SCRIPT
+
+typedef struct ecs_script_entity_t ecs_script_entity_t;
+
+#define flecs_script_impl(script) ((ecs_script_impl_t*)script)
 
 struct ecs_script_impl_t {
     ecs_script_t pub;
@@ -55808,8 +55808,6 @@ bool ecs_using_task_threads(
  * @brief Script grammar parser.
  */
 
-
-#ifdef FLECS_QUERY_DSL
 /**
  * @file addons/parser/grammar.h
  * @brief Grammar parser.
@@ -56082,6 +56080,9 @@ bool ecs_using_task_threads(
 #define EndOfRule return pos
 
 #endif
+
+
+#ifdef FLECS_QUERY_DSL
 
 
 #define EcsTokTermIdentifier\
@@ -58076,6 +58077,7 @@ void FlecsScriptMathImport(
  * @file addons/script/parser.c
  * @brief Script grammar parser.
  */
+
 
 
 #ifdef FLECS_SCRIPT
