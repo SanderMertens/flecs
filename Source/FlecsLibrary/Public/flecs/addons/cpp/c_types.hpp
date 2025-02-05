@@ -84,6 +84,7 @@ static const flecs::entity_t Monitor = EcsMonitor;
 static const flecs::entity_t System = EcsSystem;
 static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
 static const flecs::entity_t Phase = EcsPhase;
+static const flecs::entity_t Constant = EcsConstant;
 
 /* Builtin event tags */
 static const flecs::entity_t OnAdd = EcsOnAdd;

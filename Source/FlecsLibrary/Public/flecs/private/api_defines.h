@@ -14,6 +14,8 @@
 
 #if defined(_WIN32) || defined(_MSC_VER)
 #define ECS_TARGET_WINDOWS
+#elif defined(__COSMOCC__)
+#define ECS_TARGET_POSIX
 #elif defined(__ANDROID__)
 #define ECS_TARGET_ANDROID
 #define ECS_TARGET_POSIX
@@ -386,14 +388,6 @@ enum
 #define ECS_TABLE_UNLOCK(world, table)
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Actions that drive iteration
-////////////////////////////////////////////////////////////////////////////////
-
-#define EcsIterNextYield  (0)   /* Move to next table, yield current */
-#define EcsIterYield      (-1)  /* Stay on current table, yield */
-#define EcsIterNext  (1)   /* Move to next table, don't yield */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macros for ctor, dtor, move and copy

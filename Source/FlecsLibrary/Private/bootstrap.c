@@ -1115,6 +1115,14 @@ void flecs_bootstrap(
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_hierarchy(world);
 
+    /* Register constant tag */
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = EcsConstant,
+            .name = "constant", .symbol = "EcsConstant",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
+        })
+    });
+
     ecs_set_scope(world, 0);
     ecs_set_name_prefix(world, NULL);
 

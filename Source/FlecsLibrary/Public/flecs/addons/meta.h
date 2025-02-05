@@ -125,7 +125,6 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsVector);          /**< Id for comp
 FLECS_API extern const ecs_entity_t ecs_id(EcsOpaque);          /**< Id for component that stores reflection data for an opaque type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnit);            /**< Id for component that stores unit data. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);      /**< Id for component that stores unit prefix data. */
-FLECS_API extern const ecs_entity_t EcsConstant;                /**< Tag added to enum/bitmask constants. */
 FLECS_API extern const ecs_entity_t EcsQuantity;                /**< Tag added to unit quantities. */
 
 /* Primitive type component ids */

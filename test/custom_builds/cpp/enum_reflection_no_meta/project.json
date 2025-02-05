@@ -1,0 +1,15 @@
+{
+    "id": "enum_reflection_no_meta",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false,
+        "standalone": true
+    },
+    "lang.cpp": {
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_CPP"]
+    }
+}

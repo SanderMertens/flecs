@@ -143,8 +143,8 @@ char* ecs_cpp_get_constant_name(
     size_t func_name_len,
     size_t func_back_len)
 {
-    const ecs_size_t f_len = flecs_uto(ecs_size_t, func_name_len);
-    const ecs_size_t fb_len = flecs_uto(ecs_size_t, func_back_len);
+    ecs_size_t f_len = flecs_uto(ecs_size_t, func_name_len);
+    ecs_size_t fb_len = flecs_uto(ecs_size_t, func_back_len);
     const char *start = flecs_cpp_func_rchr(func_name, f_len, fb_len, ' ');
     start = flecs_cpp_func_max(start, flecs_cpp_func_rchr(
         func_name, f_len, fb_len, ')'));
@@ -154,8 +154,8 @@ char* ecs_cpp_get_constant_name(
         func_name, f_len, fb_len, ','));
     ecs_assert(start != NULL, ECS_INVALID_PARAMETER, func_name);
     start ++;
-
-    const ecs_size_t len = flecs_uto(ecs_size_t, 
+    
+    ecs_size_t len = flecs_uto(ecs_size_t, 
         (f_len - (start - func_name) - fb_len));
     ecs_os_memcpy_n(constant_name, start, char, len);
     constant_name[len] = '\0';
@@ -172,14 +172,14 @@ const char* ecs_cpp_trim_module(
     ecs_world_t *world,
     const char *type_name)
 {
-    const ecs_entity_t scope = ecs_get_scope(world);
+    ecs_entity_t scope = ecs_get_scope(world);
     if (!scope) {
         return type_name;
     }
 
     char *path = ecs_get_path_w_sep(world, 0, scope, "::", NULL);
     if (path) {
-        const ecs_size_t len = ecs_os_strlen(path);
+        ecs_size_t len = ecs_os_strlen(path);
         if (!ecs_os_strncmp(path, type_name, len)) {
             // Type is a child of current parent, trim name of parent
             type_name += len;
@@ -192,7 +192,7 @@ const char* ecs_cpp_trim_module(
             type_name += 2;
         } else {
             // Type is not a child of current parent, trim entire path
-            const char *ptr = strrchr(type_name, ':');
+            char *ptr = strrchr(type_name, ':');
             if (ptr) {
                 type_name = ptr + 1;
             }
@@ -287,8 +287,6 @@ ecs_entity_t ecs_cpp_component_find(
             ECS_INCONSISTENT_COMPONENT_ID, symbol);
     }
 
-    ecs_os_perf_trace_pop("flecs.cpp.component_register");
-
     return ent;
 }
 
@@ -304,8 +302,6 @@ ecs_entity_t ecs_cpp_component_register(
     bool is_component,
     bool *existing_out)
 {
-    ecs_os_perf_trace_push("flecs.cpp.component_register_explicit");
-    
     char *existing_name = NULL;
 
     ecs_assert(existing_out != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -370,8 +366,6 @@ ecs_entity_t ecs_cpp_component_register(
     ecs_assert(!s_id || s_id == entity, ECS_INTERNAL_ERROR, NULL);
     ecs_os_free(existing_name);
 
-    ecs_os_perf_trace_pop("flecs.cpp.component_register_explicit");
-
     return entity;
 }
 
@@ -400,14 +394,11 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_entity_t value_type,
     size_t value_size)
 {
-#ifdef FLECS_META
-    ecs_os_perf_trace_push("flecs.cpp.enum_constant_register");
-    
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
 
     const char *parent_name = ecs_get_name(world, parent);
-    const ecs_size_t parent_name_len = ecs_os_strlen(parent_name);
+    ecs_size_t parent_name_len = ecs_os_strlen(parent_name);
     if (!ecs_os_strncmp(name, parent_name, parent_name_len)) {
         name += parent_name_len;
         if (name[0] == '_') {
@@ -415,7 +406,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
         }
     }
 
-    const ecs_entity_t prev = ecs_set_scope(world, parent);
+    ecs_entity_t prev = ecs_set_scope(world, parent);
     id = ecs_entity(world, {
         .id = id,
         .name = name
@@ -432,6 +423,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
 
     flecs_resume_readonly(world, &readonly_state);
 
+#ifdef FLECS_META
     if (ecs_should_log(0)) {
         ecs_value_t v = { .type = value_type, .ptr = value };
         char *str = NULL;
@@ -442,21 +434,9 @@ ecs_entity_t ecs_cpp_enum_constant_register(
             ecs_get_name(world, parent), name, str);
         ecs_os_free(str);
     }
-
-    ecs_os_perf_trace_pop("flecs.cpp.enum_constant_register");
+#endif
 
     return id;
-#else
-    (void)world;
-    (void)parent;
-    (void)id;
-    (void)name;
-    (void)value;
-    (void)value_type;
-    (void)value_size;
-    ecs_err("enum reflection not supported without FLECS_META addon");
-    return 0;
-#endif
 }
 
 #ifdef FLECS_META
@@ -472,7 +452,7 @@ const ecs_member_t* ecs_cpp_last_member(
         return 0;
     }
 
-    const ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 
+    ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 
         ecs_vec_count(&st->members) - 1);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
 

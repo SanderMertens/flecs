@@ -1929,6 +1929,8 @@ FLECS_API extern const ecs_entity_t EcsOnStore;     /**< OnStore pipeline phase.
 FLECS_API extern const ecs_entity_t EcsPostFrame;   /**< PostFrame pipeline phase. */
 FLECS_API extern const ecs_entity_t EcsPhase;       /**< Phase pipeline phase. */
 
+FLECS_API extern const ecs_entity_t EcsConstant;    /**< Tag added to enum/bitmask constants. */
+
 /** Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete()) */
 #define EcsLastInternalComponentId (ecs_id(EcsPoly))
