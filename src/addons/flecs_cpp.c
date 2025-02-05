@@ -394,7 +394,6 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_entity_t value_type,
     size_t value_size)
 {
-#ifdef FLECS_META
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
 
@@ -424,6 +423,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
 
     flecs_resume_readonly(world, &readonly_state);
 
+#ifdef FLECS_META
     if (ecs_should_log(0)) {
         ecs_value_t v = { .type = value_type, .ptr = value };
         char *str = NULL;
@@ -434,19 +434,9 @@ ecs_entity_t ecs_cpp_enum_constant_register(
             ecs_get_name(world, parent), name, str);
         ecs_os_free(str);
     }
+#endif
 
     return id;
-#else
-    (void)world;
-    (void)parent;
-    (void)id;
-    (void)name;
-    (void)value;
-    (void)value_type;
-    (void)value_size;
-    ecs_err("enum reflection not supported without FLECS_META addon");
-    return 0;
-#endif
 }
 
 #ifdef FLECS_META
