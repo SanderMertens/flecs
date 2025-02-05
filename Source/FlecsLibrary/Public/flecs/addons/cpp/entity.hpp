@@ -79,8 +79,8 @@ struct entity : entity_builder<entity>
 
     /** Create a named entity.
      * Named entities can be looked up with the lookup functions. Entity names
-     * may be scoped, where each element in the name is separated by "::". 
-     * For example: "Foo::Bar". If parts of the hierarchy in the scoped name do
+     * may be scoped, where each element in the name is separated by sep.
+     * For example: "Foo.Bar". If parts of the hierarchy in the scoped name do
      * not yet exist, they will be automatically created.
      *
      * @param world The world in which to create the entity.
