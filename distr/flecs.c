@@ -16105,7 +16105,7 @@ void ecs_os_fini(void) {
    This mainly fixes musl support, as musl doesn't define any preprocessor macro specifying its presence. */ 
 #if defined(ECS_TARGET_LINUX) && !defined(__GLIBC__)
 #define HAVE_EXECINFO 0
-#elif !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID)
+#elif defined(ECS_TARGET_LINUX) && !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID)
 #define HAVE_EXECINFO 1
 #else
 #define HAVE_EXECINFO 0
