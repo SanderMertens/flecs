@@ -48,14 +48,6 @@ struct ecs_observable_t {
     uint64_t last_observer_id;
 };
 
-/** Record for entity index */
-struct ecs_record_t {
-    ecs_id_record_t *idr; /* Id record to (*, entity) for target entities */
-    ecs_table_t *table;   /* Identifies a type (and table) in world */
-    uint32_t row;         /* Table row of the entity */
-    int32_t dense;        /* Index in dense array of entity index */    
-};
-
 /** Range in table */
 typedef struct ecs_table_range_t {
     ecs_table_t *table;
