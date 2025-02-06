@@ -5,8 +5,9 @@
 
 #include "flecs.h"
 
-#ifdef FLECS_SCRIPT
-#include "script.h"
+#ifdef FLECS_PARSER
+
+#include "parser.h"
 
 #define Keyword(keyword, _kind)\
     } else if (!ecs_os_strncmp(pos, keyword " ", ecs_os_strlen(keyword) + 1)) {\
@@ -30,8 +31,8 @@
         out->kind = _kind;\
         return pos + 1;
 
-const char* flecs_script_token_kind_str(
-    ecs_script_token_kind_t kind)
+const char* flecs_token_kind_str(
+    ecs_token_kind_t kind)
 {
     switch(kind) {
     case EcsTokUnknown:
@@ -100,8 +101,8 @@ const char* flecs_script_token_kind_str(
     }
 }
 
-const char* flecs_script_token_str(
-    ecs_script_token_kind_t kind)
+const char* flecs_token_str(
+    ecs_token_kind_t kind)
 {
     switch(kind) {
     case EcsTokUnknown: return "unknown token";
@@ -162,7 +163,7 @@ const char* flecs_script_token_str(
 }
 
 const char* flecs_scan_whitespace(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos) 
 {
     (void)parser;
@@ -182,7 +183,7 @@ const char* flecs_scan_whitespace(
 
 static
 const char* flecs_scan_whitespace_and_comment(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos) 
 {
 repeat_skip_whitespace_comment:
@@ -202,8 +203,8 @@ repeat_skip_whitespace_comment:
                 }
             }
 
-            ecs_parser_error(parser->script->pub.name, parser->script->pub.code, 
-                pos - parser->script->pub.code, "missing */ for multiline comment");
+            ecs_parser_error(parser->name, parser->code, 
+                pos - parser->code, "missing */ for multiline comment");
         }
     }
 
@@ -218,10 +219,10 @@ bool flecs_script_is_identifier(
     return isalpha(c) || (c == '_') || (c == '$') || (c == '#');
 }
 
-const char* flecs_script_identifier(
-    ecs_script_parser_t *parser,
+const char* flecs_tokenizer_identifier(
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out) 
+    ecs_token_t *out) 
 {
     if (out) {
         out->kind = EcsTokIdentifier;
@@ -272,9 +273,9 @@ const char* flecs_script_identifier(
                     } else if (c == '>') {
                         indent --;
                     } else if (!c) {
-                        ecs_parser_error(parser->script->pub.name, 
-                            parser->script->pub.code, 
-                                pos - parser->script->pub.code, 
+                        ecs_parser_error(parser->name, 
+                            parser->code, 
+                                pos - parser->code, 
                                     "< without > in identifier");
                         return NULL;
                     }
@@ -296,9 +297,9 @@ const char* flecs_script_identifier(
                 }
                 return pos;
             } else if (c == '>') {
-                ecs_parser_error(parser->script->pub.name, 
-                    parser->script->pub.code,
-                        pos - parser->script->pub.code, 
+                ecs_parser_error(parser->name, 
+                    parser->code,
+                        pos - parser->code, 
                             "> without < in identifier");
                 return NULL;
             } else {
@@ -329,9 +330,9 @@ bool flecs_script_is_number(
 
 static
 const char* flecs_script_number(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out) 
+    ecs_token_t *out) 
 {
     out->kind = EcsTokNumber;
     out->value = parser->token_cur;
@@ -386,7 +387,7 @@ const char* flecs_script_number(
 
 static
 const char* flecs_script_skip_string(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos, 
     char delim)
 {
@@ -398,8 +399,8 @@ const char* flecs_script_skip_string(
     }
 
     if (!pos[0]) {
-        ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-            pos - parser->script->pub.code, "unterminated string");
+        ecs_parser_error(parser->name, parser->code,
+            pos - parser->code, "unterminated string");
         return NULL;
     }
 
@@ -408,9 +409,9 @@ const char* flecs_script_skip_string(
 
 static
 const char* flecs_script_string(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out) 
+    ecs_token_t *out) 
 {
     const char *end = flecs_script_skip_string(parser, pos + 1, '"');
     if (!end) {
@@ -432,9 +433,9 @@ const char* flecs_script_string(
 
 static
 const char* flecs_script_multiline_string(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out) 
+    ecs_token_t *out) 
 {
     char ch;
     const char *end = pos + 1;
@@ -461,10 +462,10 @@ const char* flecs_script_multiline_string(
     return end + 2;
 }
 
-const char* flecs_script_until(
-    ecs_script_parser_t *parser,
+const char* flecs_tokenizer_until(
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out,
+    ecs_token_t *out,
     char until)
 {
     parser->pos = pos;
@@ -480,17 +481,17 @@ const char* flecs_script_until(
 
     if (!pos[0]) {
         if (until == '\0') {
-            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-                pos - parser->script->pub.code, "expected end of script");
+            ecs_parser_error(parser->name, parser->code,
+                pos - parser->code, "expected end of script");
             return NULL;
         } else
         if (until == '\n') {
-            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-                pos - parser->script->pub.code, "expected newline");
+            ecs_parser_error(parser->name, parser->code,
+                pos - parser->code, "expected newline");
             return NULL;
         } else {
-            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-                pos - parser->script->pub.code, "expected '%c'", until);
+            ecs_parser_error(parser->name, parser->code,
+                pos - parser->code, "expected '%c'", until);
             return NULL;
         }
     }
@@ -510,10 +511,10 @@ const char* flecs_script_until(
     return pos;
 }
 
-const char* flecs_script_token(
-    ecs_script_parser_t *parser,
+const char* flecs_token(
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_t *out,
+    ecs_token_t *out,
     bool is_lookahead)
 {
     parser->pos = pos;
@@ -599,12 +600,12 @@ const char* flecs_script_token(
         return flecs_script_multiline_string(parser, pos, out);
 
     } else if (flecs_script_is_identifier(pos[0])) {
-        return flecs_script_identifier(parser, pos, out);
+        return flecs_tokenizer_identifier(parser, pos, out);
     }
 
     if (!is_lookahead) {
-        ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-            pos - parser->script->pub.code, "unknown token '%c'", pos[0]);
+        ecs_parser_error(parser->name, parser->code,
+            pos - parser->code, "unknown token '%c'", pos[0]);
     }
 
     return NULL;

@@ -5,9 +5,10 @@
 
 #include "flecs.h"
 
+#include "../parser/grammar.h"
+
 #ifdef FLECS_SCRIPT
 #include "script.h"
-#include "parser.h"
 
 #define EcsTokEndOfStatement\
     case ';':\
@@ -16,13 +17,13 @@
 
 static
 const char* flecs_script_stmt(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos);
 
 /* Parse scope (statements inside {}) */
 static
 const char* flecs_script_scope(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     ecs_script_scope_t *scope,
     const char *pos)
 {
@@ -62,7 +63,7 @@ scope_close:
 /* Parse comma expression (expressions separated by ',') */
 static
 const char* flecs_script_comma_expr(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
     bool is_base_list)
 {
@@ -98,7 +99,7 @@ const char* flecs_script_comma_expr(
 /* Parse with expression (expression after 'with' keyword) */
 static
 const char* flecs_script_with_expr(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos)
 {
     ParserBegin;
@@ -165,7 +166,7 @@ const char* flecs_script_with_expr(
 /* Parse with expression list (expression list after 'with' keyword) */
 static
 const char* flecs_script_with(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     ecs_script_with_t *with,
     const char *pos)
 {
@@ -198,7 +199,7 @@ const char* flecs_script_with(
 /* Parenthesis expression */
 static
 const char* flecs_script_paren_expr(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *kind,
     ecs_script_entity_t *entity,
     const char *pos)
@@ -233,7 +234,7 @@ const char* flecs_script_paren_expr(
 /* Parse a single statement */
 static
 const char* flecs_script_if_stmt(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos)
 {
     ParserBegin;
@@ -286,9 +287,9 @@ const char* flecs_script_if_stmt(
 
 static
 const char* flecs_script_parse_var(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_tokenizer_t *tokenizer,
+    ecs_tokenizer_t *tokenizer,
     bool is_prop)
 {
     Parse_1(EcsTokIdentifier,
@@ -350,7 +351,7 @@ error:
 /* Parse a single statement */
 static
 const char* flecs_script_stmt(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos) 
 {
     ParserBegin;
@@ -955,7 +956,9 @@ ecs_script_t* ecs_script_parse(
 
     ecs_script_impl_t *impl = flecs_script_impl(script);
 
-    ecs_script_parser_t parser = {
+    ecs_parser_t parser = {
+        .name = script->name,
+        .code = script->code,
         .script = impl,
         .scope = impl->root,
         .significant_newline = true

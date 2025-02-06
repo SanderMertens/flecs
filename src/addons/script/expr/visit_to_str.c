@@ -83,7 +83,7 @@ int flecs_expr_unary_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_unary_t *node)
 {
-    ecs_strbuf_appendstr(v->buf, flecs_script_token_str(node->operator));
+    ecs_strbuf_appendstr(v->buf, flecs_token_str(node->operator));
 
     if (flecs_expr_node_to_str(v, node->expr)) {
         goto error;
@@ -139,7 +139,7 @@ int flecs_expr_binary_to_str(
 
     ecs_strbuf_appendlit(v->buf, " ");
 
-    ecs_strbuf_appendstr(v->buf, flecs_script_token_str(node->operator));
+    ecs_strbuf_appendstr(v->buf, flecs_token_str(node->operator));
 
     ecs_strbuf_appendlit(v->buf, " ");
 
