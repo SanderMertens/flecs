@@ -21,7 +21,7 @@ public:
 	robin_hood::unordered_map<UClass*, std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>> Dependencies;
 }; // struct FFlecsDependenciesComponent
 
-REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsDependenciesComponent, [](flecs::world InWorld, flecs::untyped_component InComponent)
-{
-	InComponent.add(flecs::Sparse);
-});
+REGISTER_FLECS_COMPONENT(FFlecsDependenciesComponent, [](flecs::world InWorld, flecs::untyped_component InComponent)
+	{
+		InComponent.add(flecs::Sparse);
+	});

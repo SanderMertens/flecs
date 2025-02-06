@@ -73,26 +73,7 @@ public:
 	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
 }; // struct FFlecsComponentPropertiesRegistry
 
-#define REGISTER_USTRUCT_FLECS_COMPONENT(Name, RegistrationFunction) \
-	static_assert(Solid::IsStaticStruct<Name>(), "Name must be a static struct! Use REGISTER_FLECS_COMPONENT instead!"); \
-	namespace \
-	{ \
-		struct FFlecs_AutoRegister_##Name \
-		{ \
-			FFlecs_AutoRegister_##Name() \
-			{ \
-				FCoreDelegates::OnPostEngineInit.AddLambda([]() \
-				{ \
-					FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties( \
-					#Name, StaticStruct<Name>(), sizeof(Name), alignof(Name), RegistrationFunction); \
-				}); \
-			} \
-		}; \
-		static FFlecs_AutoRegister_##Name AutoRegister_##Name; \
-	}
-
 #define REGISTER_FLECS_COMPONENT(Name, RegistrationFunction) \
-	static_assert(!Solid::IsStaticStruct<Name>(), "Name must not be a static struct! Use REGISTER_USTRUCT_FLECS_COMPONENT instead!"); \
 	namespace \
 	{ \
 		struct FFlecs_AutoRegister_##Name \
@@ -101,8 +82,16 @@ public:
 			{ \
 				FCoreDelegates::OnPostEngineInit.AddLambda([]() \
 				{ \
-					FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties( \
-						#Name, nullptr, sizeof(StaticStruct), alignof(StaticStruct), RegistrationFunction); \
+					if constexpr (Solid::IsStaticStruct<Name>()) \
+					{ \
+						FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties( \
+						#Name, StaticStruct<Name>(), sizeof(Name), alignof(Name), RegistrationFunction); \
+					} \
+					else \
+					{ \
+						FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties( \
+						#Name, nullptr, sizeof(Name), alignof(Name), RegistrationFunction); \
+					} \
 				}); \
 			} \
 		}; \

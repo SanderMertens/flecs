@@ -108,7 +108,7 @@ public:
     
 }; // struct FFlecsUObjectComponent
 
-REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsUObjectComponent, [](flecs::world InWorld, flecs::untyped_component InComponent)
+REGISTER_FLECS_COMPONENT(FFlecsUObjectComponent, [](flecs::world InWorld, flecs::untyped_component InComponent)
     {
         InComponent.add(flecs::Exclusive);
         InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
@@ -120,7 +120,7 @@ struct UNREALFLECS_API FFlecsNoDeleteUObject
     GENERATED_BODY()
 }; // struct FFlecsNoDeleteUObject
 
-REGISTER_USTRUCT_FLECS_COMPONENT(FFlecsNoDeleteUObject, [](flecs::world InWorld, flecs::untyped_component InComponent)
+REGISTER_FLECS_COMPONENT(FFlecsNoDeleteUObject, [](flecs::world InWorld, flecs::untyped_component InComponent)
     {
         InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
     });
