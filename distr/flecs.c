@@ -6758,10 +6758,10 @@ ecs_entity_t ecs_component_init(
         ptr->alignment = desc->type.alignment;
         if (!new_component || ptr->size != desc->type.size) {
             if (!ptr->size) {
-                ecs_trace("#[green]tag#[reset] %s created", 
+                ecs_trace("#[green]tag#[reset] %s registered", 
                     ecs_get_name(world, result));
             } else {
-                ecs_trace("#[green]component#[reset] %s created", 
+                ecs_trace("#[green]component#[reset] %s registered", 
                     ecs_get_name(world, result));
             }
         }
@@ -18093,9 +18093,6 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_MODULE
     "FLECS_MODULE",
 #endif
-#ifdef FLECS_SCRIPT
-    "FLECS_SCRIPT",
-#endif
 #ifdef FLECS_STATS
     "FLECS_STATS",
 #endif
@@ -18137,6 +18134,12 @@ static const char *flecs_addons_info[] = {
 #endif
 #ifdef FLECS_OS_API_IMPL
     "FLECS_OS_API_IMPL",
+#endif
+#ifdef FLECS_PARSER
+    "FLECS_PARSER",
+#endif
+#ifdef FLECS_QUERY_DSL
+    "FLECS_QUERY_DSL",
 #endif
 #ifdef FLECS_SCRIPT
     "FLECS_SCRIPT",

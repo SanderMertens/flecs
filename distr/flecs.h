@@ -156,6 +156,15 @@
  */
 // #define FLECS_CPP_NO_AUTO_REGISTRATION
 
+/** @def FLECS_CPP_NO_ENUM_REFLECTION 
+ * When set, the C++ API will not attempt to discover and register enum 
+ * constants for registered enum components. This will cause C++ APIs that 
+ * accept enum constants to not work.
+ * Disabling this feature can significantly improve compile times and reduces
+ * the RAM footprint of an application.
+ */
+// #define FLECS_CPP_NO_ENUM_REFLECTION
+
 /** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
  * Without any addons Flecs is just a minimal ECS storage, but addons add
@@ -17880,6 +17889,12 @@ struct string_view : string {
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 126>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
 
+// Flag to turn off enum reflection
+#ifdef FLECS_CPP_NO_ENUM_REFLECTION
+#define FLECS_CPP_ENUM_REFLECTION_SUPPORT 0
+#endif
+
+// Test if we're using a compiler that supports the required features
 #ifndef FLECS_CPP_ENUM_REFLECTION_SUPPORT
 #if !defined(__clang__) && defined(__GNUC__)
 #if __GNUC__ > 7 || (__GNUC__ == 7 && __GNUC_MINOR__ >= 5)
