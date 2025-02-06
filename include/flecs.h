@@ -154,6 +154,15 @@
  */
 // #define FLECS_CPP_NO_AUTO_REGISTRATION
 
+/** @def FLECS_CPP_NO_ENUM_REFLECTION 
+ * When set, the C++ API will not attempt to discover and register enum 
+ * constants for registered enum components. This will cause C++ APIs that 
+ * accept enum constants to not work.
+ * Disabling this feature can significantly improve compile times and reduces
+ * the RAM footprint of an application.
+ */
+// #define FLECS_CPP_NO_ENUM_REFLECTION
+
 /** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
  * Without any addons Flecs is just a minimal ECS storage, but addons add

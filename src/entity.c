@@ -2272,10 +2272,10 @@ ecs_entity_t ecs_component_init(
         ptr->alignment = desc->type.alignment;
         if (!new_component || ptr->size != desc->type.size) {
             if (!ptr->size) {
-                ecs_trace("#[green]tag#[reset] %s created", 
+                ecs_trace("#[green]tag#[reset] %s registered", 
                     ecs_get_name(world, result));
             } else {
-                ecs_trace("#[green]component#[reset] %s created", 
+                ecs_trace("#[green]component#[reset] %s registered", 
                     ecs_get_name(world, result));
             }
         }
