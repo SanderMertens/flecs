@@ -34,6 +34,8 @@ public class FlecsLibrary : ModuleRules
                 "FLECS_CPP",
                 "FLECS_MODULE",
                 "FLECS_SCRIPT",
+                "FLECS_PARSER",
+                "FLECS_QUERY_DSL",
                 "FLECS_SYSTEM",
                 "FLECS_PIPELINE",
                 "FLECS_TIMER",
