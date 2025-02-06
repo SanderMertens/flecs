@@ -178,6 +178,14 @@ public:
 	{
 		Add(GetTagEntity(InTag));
 	}
+
+	SOLID_INLINE void Add(const FGameplayTagContainer& InTags) const
+	{
+		for (const FGameplayTag& Tag : InTags)
+		{
+			Add(Tag);
+		}
+	}
 	
 	template <typename T>
 	SOLID_INLINE void Add() const
@@ -198,6 +206,22 @@ public:
 	SOLID_INLINE void Remove(const FGameplayTag& InTag) const
 	{
 		Remove(GetTagEntity(InTag));
+	}
+
+	SOLID_INLINE void Remove(const FGameplayTagContainer& InTags, const bool bMustHaveAll = false) const
+	{
+		for (const FGameplayTag& Tag : InTags)
+		{
+			if (!bMustHaveAll)
+			{
+				if (!Has(Tag))
+				{
+					continue;
+				}
+			}
+			
+			Remove(Tag);
+		}
 	}
 
 	template <typename T>
