@@ -8,8 +8,8 @@
 #include <ctype.h>
 
 #ifdef FLECS_META
-#ifdef FLECS_SCRIPT
-#include "../script/script.h"
+#ifdef FLECS_QUERY_DSL
+#include "../query_dsl/query_dsl.h"
 #endif
 
 static inline
@@ -1470,7 +1470,7 @@ int ecs_meta_set_string(
         break;
     }
     case EcsOpId: {
-    #ifdef FLECS_SCRIPT
+    #ifdef FLECS_QUERY_DSL
         ecs_id_t id = 0;
         if (flecs_id_parse(cursor->world, NULL, value, &id) == NULL) {
             goto error;

@@ -4,10 +4,11 @@
  */
 
 #include "flecs.h"
+#include "../parser/grammar.h"
 
-#ifdef FLECS_SCRIPT
-#include "script.h"
-#include "parser.h"
+#ifdef FLECS_QUERY_DSL
+
+#include "query_dsl.h"
 
 #define EcsTokTermIdentifier\
     EcsTokIdentifier:\
@@ -31,7 +32,7 @@
 // $this ==
 static
 const char* flecs_term_parse_equality_pred(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
     ecs_entity_t pred) 
 {
@@ -92,7 +93,7 @@ ecs_entity_t flecs_query_parse_trav_flags(
 
 static inline
 const char* flecs_term_parse_trav(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     ecs_term_ref_t *ref,
     const char *pos) 
 {
@@ -113,7 +114,7 @@ const char* flecs_term_parse_trav(
                 case EcsTokIdentifier:
                     pos = lookahead;
                     parser->term->trav = ecs_lookup(
-                        parser->script->pub.world, Token(1));
+                        parser->world, Token(1));
                     if (!parser->term->trav) {
                         Error(
                             "unresolved traversal relationship '%s'", Token(1));
@@ -133,7 +134,7 @@ const char* flecs_term_parse_trav(
 // Position(
 static
 const char* flecs_term_parse_arg(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
     int32_t arg)
 {
@@ -190,7 +191,7 @@ const char* flecs_term_parse_arg(
                         LookAhead_1(EcsTokIdentifier,
                             pos = lookahead;
                             parser->term->trav = ecs_lookup(
-                                parser->script->pub.world, Token(1));
+                                parser->world, Token(1));
                             if (!parser->term->trav) {
                                 Error(
                                     "unresolved trav identifier '%s'", Token(1));
@@ -238,7 +239,7 @@ const char* flecs_term_parse_arg(
 // Position
 static
 const char* flecs_term_parse_id(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos) 
 {
     ParserBegin;
@@ -300,7 +301,7 @@ const char* flecs_term_parse_id(
 
 // (
 static const char* flecs_term_parse_pair(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos)
 {
     ParserBegin;
@@ -334,7 +335,7 @@ static const char* flecs_term_parse_pair(
 // AND
 static
 const char* flecs_term_parse_flags(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *token_0,
     const char *pos) 
 {
@@ -392,7 +393,7 @@ const char* flecs_term_parse_flags(
 // !
 static
 const char* flecs_term_parse_unary(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos)
 {
     ParserBegin;
@@ -425,7 +426,7 @@ const char* flecs_term_parse_unary(
 // [
 static
 const char* flecs_term_parse_inout(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos)
 {
     ParserBegin;
@@ -471,7 +472,7 @@ const char* flecs_term_parse_inout(
 
 static
 const char* flecs_query_term_parse(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos) 
 {
     ParserBegin;
@@ -511,25 +512,30 @@ const char* flecs_query_term_parse(
 }
 
 int flecs_terms_parse(
-    ecs_script_t *script,
+    ecs_world_t *world,
+    const char *name,
+    const char *code,
+    char *token_buffer,
     ecs_term_t *terms,
     int32_t *term_count_out)
 {
-    if (!ecs_os_strcmp(script->code, "0")) {
+    if (!ecs_os_strcmp(code, "0")) {
         *term_count_out = 0;
         return 0;
     }
 
-    ecs_script_parser_t parser = {
-        .script = flecs_script_impl(script),
-        .pos = script->code,
+    ecs_parser_t parser = {
+        .name = name,
+        .code = code,
+        .world = world,
+        .pos = code,
         .merge_variable_members = true
     };
 
-    parser.token_cur = flecs_script_impl(script)->token_buffer;
+    parser.token_cur = token_buffer;
 
     int32_t term_count = 0;
-    const char *ptr = script->code;
+    const char *ptr = code;
     ecs_term_ref_t extra_args[FLECS_TERM_ARG_COUNT_MAX];
     ecs_os_memset_n(extra_args, 0, ecs_term_ref_t, 
         FLECS_TERM_ARG_COUNT_MAX);
@@ -619,14 +625,20 @@ const char* flecs_term_parse(
     ecs_world_t *world,
     const char *name,
     const char *expr,
-    ecs_term_t *term,
-    char *token_buffer)
+    char *token_buffer,
+    ecs_term_t *term)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, name);
     ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    EcsParserFixedBuffer(world, name, expr, token_buffer, 256);
+    ecs_parser_t parser = {
+        .name = name,
+        .code = expr,
+        .world = world,
+        .token_cur = token_buffer
+    };
+
     parser.term = term;
 
     const char *result = flecs_query_term_parse(&parser, expr);
@@ -650,8 +662,15 @@ const char* flecs_id_parse(
     ecs_assert(id != NULL, ECS_INVALID_PARAMETER, NULL);
 
     char token_buffer[256];
+
+    ecs_parser_t parser = {
+        .name = name,
+        .code = expr,
+        .world = ECS_CONST_CAST(ecs_world_t*, world),  /* Safe, won't modify */
+        .token_cur = token_buffer
+    };
+
     ecs_term_t term = {0};
-    EcsParserFixedBuffer(world, name, expr, token_buffer, 256);
     parser.term = &term;
 
     expr = flecs_scan_whitespace(&parser, expr);
@@ -688,7 +707,7 @@ const char* flecs_id_parse(
 
 static
 const char* flecs_query_arg_parse(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     ecs_query_t *q,
     ecs_iter_t *it,
     const char *pos)
@@ -716,7 +735,7 @@ const char* flecs_query_arg_parse(
 
 static
 const char* flecs_query_args_parse(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     ecs_query_t *q,
     ecs_iter_t *it,
     const char *pos)
@@ -776,7 +795,13 @@ const char* ecs_query_args_parse(
     }
 
     char token_buffer[1024];
-    EcsParserFixedBuffer(q->world, q_name, expr, token_buffer, 256);
+    ecs_parser_t parser = {
+        .name = q_name,
+        .code = expr,
+        .world = q->real_world,
+        .token_cur = token_buffer
+    };
+
     return flecs_query_args_parse(&parser, q, it, expr);
 error:
     return NULL;

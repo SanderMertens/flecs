@@ -14,6 +14,12 @@
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 126>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
 
+// Flag to turn off enum reflection
+#ifdef FLECS_CPP_NO_ENUM_REFLECTION
+#define FLECS_CPP_ENUM_REFLECTION_SUPPORT 0
+#endif
+
+// Test if we're using a compiler that supports the required features
 #ifndef FLECS_CPP_ENUM_REFLECTION_SUPPORT
 #if !defined(__clang__) && defined(__GNUC__)
 #if __GNUC__ > 7 || (__GNUC__ == 7 && __GNUC_MINOR__ >= 5)

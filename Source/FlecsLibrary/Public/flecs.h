@@ -165,6 +165,15 @@
  */
  #define FLECS_CPP_NO_AUTO_REGISTRATION
 
+/** @def FLECS_CPP_NO_ENUM_REFLECTION 
+ * When set, the C++ API will not attempt to discover and register enum 
+ * constants for registered enum components. This will cause C++ APIs that 
+ * accept enum constants to not work.
+ * Disabling this feature can significantly improve compile times and reduces
+ * the RAM footprint of an application.
+ */
+// #define FLECS_CPP_NO_ENUM_REFLECTION
+
 /** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
  * Without any addons Flecs is just a minimal ECS storage, but addons add
@@ -211,8 +220,11 @@
 #define FLECS_MODULE         /**< Module support */
 //#define FLECS_OS_API_IMPL    /**< Default implementation for OS API */
 // #define FLECS_PERF_TRACE  /**< Enable performance tracing (disabled by default) */
+// #define FLECS_PERF_TRACE  /**< Enable performance tracing */
 #define FLECS_PIPELINE       /**< Pipeline support */
 #define FLECS_REST           /**< REST API for querying application data */
+#define FLECS_PARSER         /**< Utilities for script and query DSL parsers */
+#define FLECS_QUERY_DSL      /**< Flecs query DSL parser */
 #define FLECS_SCRIPT         /**< Flecs entity notation language */
 // #define FLECS_SCRIPT_MATH /**< Math functions for flecs script (may require linking with libm) */
 #define FLECS_SYSTEM         /**< System support */
@@ -571,6 +583,14 @@ typedef struct ecs_header_t {
     int32_t refcount;           /**< Refcount, to enable RAII handles */
     ecs_mixins_t *mixins;       /**< Table with offsets to (optional) mixins */
 } ecs_header_t;
+
+/** Record for entity index */
+struct ecs_record_t {
+    ecs_id_record_t *idr;       /**< Id record to (*, entity) for target entities */
+    ecs_table_t *table;         /**< Identifies a type (and table) in world */
+    uint32_t row;               /**< Table row of the entity */
+    int32_t dense;              /**< Index in dense array of entity index */    
+};
 
 /** Header for table cache elements. */
 typedef struct ecs_table_cache_hdr_t {
@@ -4763,16 +4783,6 @@ bool ecs_query_var_is_entity(
  * @code
  * ecs_iter_t it = ecs_query_iter(world, q);
  * 
- * @param query The query.
- * @param var_id The variable index.
- * @return The variable name.
- */
-
-/** Test if variable is an entity.
- * Internally the query engine has entity variables and table variables. When
- * iterating through query variables (by using ecs_query_variable_count()) only
- * the values for entity variables are accessible. This operation enables an
- * application to check if a variable is an entity variable.
  * while (ecs_query_next(&it)) {
  *   if (!ecs_field_is_set(&it, 0)) {
  *     ecs_iter_fini(&it); // Free iterator resources
@@ -6328,7 +6338,7 @@ int ecs_value_move_ctor(
     ecs_entity_t type,
     void* dst,
     void *src);
- 
+
 /** @} */
 
 /** @} */

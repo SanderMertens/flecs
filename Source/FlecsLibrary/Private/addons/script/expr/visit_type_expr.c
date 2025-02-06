@@ -211,7 +211,7 @@ static
 bool flecs_expr_oper_valid_for_type(
     ecs_world_t *world,
     ecs_entity_t type,
-    ecs_script_token_kind_t op)
+    ecs_token_kind_t op)
 {
     switch(op) {
     case EcsTokAdd:
@@ -289,7 +289,7 @@ int flecs_expr_type_for_operator(
     ecs_entity_t node_type,
     ecs_expr_node_t *left,
     ecs_expr_node_t *right,
-    ecs_script_token_kind_t operator,
+    ecs_token_kind_t operator,
     ecs_entity_t *operand_type,
     ecs_entity_t *result_type)
 {
@@ -597,7 +597,7 @@ int flecs_expr_interpolated_string_visit_type(
 
             if (ch == '$') {
                 char *var_name = ++ ptr;
-                ptr = ECS_CONST_CAST(char*, flecs_script_identifier(
+                ptr = ECS_CONST_CAST(char*, flecs_tokenizer_identifier(
                     NULL, ptr, NULL));
                 if (!ptr) {
                     goto error;
@@ -619,7 +619,7 @@ int flecs_expr_interpolated_string_visit_type(
             } else {
                 ecs_script_impl_t *impl = flecs_script_impl(script);
 
-                ecs_script_parser_t parser = {
+                ecs_parser_t parser = {
                     .script = impl,
                     .scope = impl->root,
                     .significant_newline = false,
@@ -969,7 +969,7 @@ int flecs_expr_binary_visit_type(
     {
         char *type_str = ecs_get_path(script->world, result_type);
         flecs_expr_visit_error(script, node, "invalid operator %s for type '%s'",
-            flecs_script_token_str(node->operator), type_str);
+            flecs_token_str(node->operator), type_str);
         ecs_os_free(type_str);
         goto error;
     }

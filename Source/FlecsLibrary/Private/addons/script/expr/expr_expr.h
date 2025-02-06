@@ -25,22 +25,22 @@ int flecs_value_binary(
     const ecs_value_t *left,
     const ecs_value_t *right,
     ecs_value_t *out,
-    ecs_script_token_kind_t operator);
+    ecs_token_kind_t operator);
 
 int flecs_value_unary(
     const ecs_script_t *script,
     const ecs_value_t *expr,
     ecs_value_t *out,
-    ecs_script_token_kind_t operator);
+    ecs_token_kind_t operator);
 
 const char* flecs_script_parse_expr(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
-    ecs_script_token_kind_t left_oper,
+    ecs_token_kind_t left_oper,
     ecs_expr_node_t **out);
 
 const char* flecs_script_parse_initializer(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *pos,
     char until,
     ecs_expr_initializer_t **node_out);

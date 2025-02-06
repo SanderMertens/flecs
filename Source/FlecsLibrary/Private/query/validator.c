@@ -6,8 +6,8 @@
 #include "../private_api.h"
 #include <ctype.h>
 
-#ifdef FLECS_SCRIPT
-#include "../addons/script/script.h"
+#ifdef FLECS_QUERY_DSL
+#include "../addons/query_dsl/query_dsl.h"
 #endif
 
 static
@@ -1509,34 +1509,29 @@ int flecs_query_query_populate_terms(
     /* Parse query expression if set */
     const char *expr = desc->expr;
     if (expr && expr[0]) {
-    #ifdef FLECS_SCRIPT
-        ecs_script_impl_t script = {
-            .pub.world = world,
-            .pub.name = desc->entity ? ecs_get_name(world, desc->entity) : NULL,
-            .pub.code = expr
-        };
-
+    #ifdef FLECS_QUERY_DSL
+        const char *name = desc->entity ? 
+            ecs_get_name(world, desc->entity) : NULL;
+        
         /* Allocate buffer that's large enough to tokenize the query string */
-        script.token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
-        script.token_buffer = flecs_alloc(
-            &flecs_query_impl(q)->stage->allocator, script.token_buffer_size);
+        ecs_size_t token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
+        char *token_buffer = flecs_alloc(
+            &flecs_query_impl(q)->stage->allocator, token_buffer_size);
 
-        if (flecs_terms_parse(&script.pub, &q->terms[term_count], 
+        if (flecs_terms_parse(world, name, expr, token_buffer, &q->terms[term_count], 
             &term_count))
         {
-            flecs_free(&stage->allocator, 
-                script.token_buffer_size, script.token_buffer);
+            flecs_free(&stage->allocator, token_buffer_size, token_buffer);
             goto error;
         }
 
         /* Store on query object so we can free later */
-        flecs_query_impl(q)->tokens = script.token_buffer;
-        flecs_query_impl(q)->tokens_len = 
-            flecs_ito(int16_t, script.token_buffer_size);
+        flecs_query_impl(q)->tokens = token_buffer;
+        flecs_query_impl(q)->tokens_len = flecs_ito(int16_t, token_buffer_size);
     #else
         (void)world;
         (void)stage;
-        ecs_err("cannot parse query expression: script addon required");
+        ecs_err("parsing query expressions requires the FLECS_QUERY_DSL addon");
         goto error;
     #endif
     }

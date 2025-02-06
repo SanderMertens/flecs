@@ -18,6 +18,12 @@
 #ifdef FLECS_NO_SCRIPT
 #undef FLECS_SCRIPT
 #endif
+#ifdef FLECS_NO_PARSER
+#undef FLECS_PARSER
+#endif
+#ifdef FLECS_NO_QUERY_DSL
+#undef FLECS_QUERY_DSL
+#endif
 #ifdef FLECS_NO_SCRIPT_MATH
 #undef FLECS_SCRIPT_MATH
 #endif
@@ -169,6 +175,21 @@
 #error "FLECS_NO_SCRIPT_MATH failed: SCRIPT_MATH is required by other addons"
 #endif
 #include "../addons/script_math.h"
+#endif
+
+#ifdef FLECS_PARSER
+#ifdef FLECS_NO_PARSER
+#error "FLECS_NO_PARSER failed: PARSER is required by other addons"
+#endif
+#endif
+
+#ifdef FLECS_QUERY_DSL
+#ifdef FLECS_NO_QUERY_DSL
+#error "FLECS_NO_QUERY_DSL failed: QUERY_DSL is required by other addons"
+#endif
+#ifndef FLECS_PARSER
+#define FLECS_PARSER
+#endif
 #endif
 
 #ifdef FLECS_SCRIPT

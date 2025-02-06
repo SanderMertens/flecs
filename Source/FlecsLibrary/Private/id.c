@@ -5,8 +5,8 @@
 
 #include "private_api.h"
 
-#ifdef FLECS_SCRIPT
-#include "addons/script/script.h"
+#ifdef FLECS_QUERY_DSL
+#include "addons/query_dsl/query_dsl.h"
 #endif
 
 bool ecs_id_match(
@@ -135,7 +135,7 @@ ecs_id_t ecs_id_from_str(
     const ecs_world_t *world,
     const char *expr)
 {
-#ifdef FLECS_SCRIPT
+#ifdef FLECS_QUERY_DSL
     ecs_id_t result;
 
     /* Temporarily disable parser logging */
@@ -150,6 +150,7 @@ ecs_id_t ecs_id_from_str(
 #else
     (void)world;
     (void)expr;
-    ecs_abort(ECS_UNSUPPORTED, "ecs_id_from_str requires FLECS_SCRIPT addon");
+    ecs_abort(ECS_UNSUPPORTED, 
+        "ecs_id_from_str requires FLECS_QUERY_DSL addon");
 #endif
 }

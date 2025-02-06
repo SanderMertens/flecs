@@ -56,7 +56,7 @@ ecs_script_t* flecs_script_new(
 {
     ecs_script_impl_t *result = ecs_os_calloc_t(ecs_script_impl_t);
     flecs_allocator_init(&result->allocator);
-    ecs_script_parser_t parser = { .script = result };
+    ecs_parser_t parser = { .script = result };
     result->root = flecs_script_scope_new(&parser);
     result->pub.world = world;
     result->refcount = 1;

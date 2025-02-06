@@ -3438,7 +3438,11 @@ void Query_copy_operators(void) {
     flecs::query<> copyAssign{};
     copyAssign = q;
 
+    test_assert(copyAssign.c_ptr() == q.c_ptr());
+
     flecs::query<> defaultInit{};
     flecs::query<> copyCtorDefault{defaultInit};
     copyAssign = defaultInit;
+
+    test_assert(copyAssign.c_ptr() == defaultInit.c_ptr());
 }

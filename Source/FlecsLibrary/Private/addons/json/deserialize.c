@@ -5,7 +5,7 @@
 
 #include "../../private_api.h"
 #include "json.h"
-#include "../script/script.h"
+#include "../query_dsl/query_dsl.h"
 #include <ctype.h>
 
 #ifdef FLECS_JSON
@@ -357,7 +357,7 @@ const char* flecs_json_deser_components(
         } else {
             char token_buffer[256];
             ecs_term_t term = {0};
-            if (!flecs_term_parse(world, NULL, token, &term, token_buffer)) {
+            if (!flecs_term_parse(world, NULL, token, token_buffer, &term)) {
                 goto error;
             }
 

@@ -1,0 +1,14 @@
+{
+    "id": "no_enum_reflection",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    },
+    "lang.cpp": {
+        "defines": ["FLECS_CPP_NO_ENUM_REFLECTION"]
+    }
+}

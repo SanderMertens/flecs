@@ -815,9 +815,6 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_MODULE
     "FLECS_MODULE",
 #endif
-#ifdef FLECS_SCRIPT
-    "FLECS_SCRIPT",
-#endif
 #ifdef FLECS_STATS
     "FLECS_STATS",
 #endif
@@ -859,6 +856,12 @@ static const char *flecs_addons_info[] = {
 #endif
 #ifdef FLECS_OS_API_IMPL
     "FLECS_OS_API_IMPL",
+#endif
+#ifdef FLECS_PARSER
+    "FLECS_PARSER",
+#endif
+#ifdef FLECS_QUERY_DSL
+    "FLECS_QUERY_DSL",
 #endif
 #ifdef FLECS_SCRIPT
     "FLECS_SCRIPT",

@@ -5,7 +5,7 @@
 
 #include "../private_api.h"
 
-#include "script/script.h"
+#include "query_dsl/query_dsl.h"
 #include "pipeline/pipeline.h"
 
 #ifdef FLECS_REST
@@ -522,6 +522,7 @@ bool flecs_rest_script(
     (void)world;
     (void)req;
     (void)reply;
+    (void)path;
 #ifdef FLECS_SCRIPT
     ecs_entity_t script = flecs_rest_entity_from_path(world, reply, path);
     if (!script) {
@@ -671,7 +672,7 @@ bool flecs_rest_reply_existing_query(
 
     const char *vars = ecs_http_get_param(req, "vars");
     if (vars) {
-    #ifdef FLECS_SCRIPT
+    #ifdef FLECS_QUERY_DSL
         if (ecs_query_args_parse(q, &it, vars) == NULL) {
             flecs_rest_reply_set_captured_log(reply);
             return true;
