@@ -80,12 +80,18 @@ void Entity_new_named_from_scope_with_custom_separator(void) {
     auto entity = flecs::entity(world, "Foo.Bar", ".", ".");
     test_assert(entity);
     test_str(entity.name().c_str(), "Bar");
-    test_str(entity.path().c_str(), ".Foo.Bar");
+    test_str(entity.path(".", ".").c_str(), ".Foo.Bar");
 
     auto parent = world.lookup("Foo");
     test_assert(parent != 0);
     test_str(parent.name().c_str(), "Foo");
+
+    auto child = world.lookup("Foo.Bar", ".", ".");
+    test_assert(child != 0);
+    test_str(child.name().c_str(), "Bar");
+    test_str(child.path(".", ".").c_str(), ".Foo.Bar");
 }
+
 
 void Entity_new_add(void) {
     flecs::world world;
