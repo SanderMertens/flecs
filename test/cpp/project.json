@@ -26,6 +26,7 @@
                 "new_named_from_scope",
                 "new_nested_named_from_scope",
                 "new_nested_named_from_nested_scope",
+                "new_named_from_scope_with_custom_separator",
                 "new_add",
                 "new_add_2",
                 "new_set",
