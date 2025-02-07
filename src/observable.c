@@ -1126,7 +1126,7 @@ void flecs_emit_forward(
 void flecs_emit(
     ecs_world_t *world,
     ecs_world_t *stage,
-    ecs_flags64_t set_mask,
+    ecs_flags64_t *set_mask,
     ecs_event_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
@@ -1268,10 +1268,22 @@ repeat_event:
         ecs_table_record_t *base_tr = NULL;
         ecs_entity_t base = 0;
         bool id_can_override = can_override;
-        ecs_flags64_t id_bit = 1llu << i;
-        if (id_bit & set_mask) {
-            /* Component is already set, so don't override with prefab value */
-            id_can_override = false;
+
+        /* Only added components can trigger overriding */
+        if (set_mask && event == EcsOnAdd) {
+            ecs_assert(i < 256, ECS_UNSUPPORTED, 
+                "cannot add more than 256 components in a single operation");
+
+            int32_t index = (i >= 64) + (i >= 128) + (i >= 192);
+            int32_t shift = i - 64 * index;
+
+            printf("index = %d, shift = %d\n", index, shift);
+
+            ecs_flags64_t id_bit = 1llu << shift;
+            if (id_bit & set_mask[index]) {
+                /* Component is already set, so don't override with prefab value */
+                id_can_override = false;
+            }
         }
 
         /* Check if this id is a pair of an traversable relationship. If so, we 

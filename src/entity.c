@@ -695,7 +695,7 @@ void flecs_notify_on_add(
     int32_t count,
     const ecs_table_diff_t *diff,
     ecs_flags32_t flags,
-    ecs_flags64_t set_mask,
+    ecs_flags64_t *set_mask,
     bool construct,
     bool sparse)
 {
@@ -4808,8 +4808,10 @@ void flecs_cmd_batch_for_entity(
 
     /* Mask to let observable implementation know which components were set.
      * This prevents the code from overwriting components with an override if
-     * the batch also contains an IsA pair. */
-    ecs_flags64_t set_mask = 0;
+     * the batch also contains an IsA pair. 
+     * Use 4 elements, so the implementation supports up to 256 components added
+     * in a single batch. */
+    ecs_flags64_t set_mask[4] = {0};
 
     do {
         cmd = &cmds[cur];
@@ -4905,7 +4907,9 @@ void flecs_cmd_batch_for_entity(
                 }
             }
 
-            set_mask |= (1llu << i);
+            int32_t index = (i >= 64) + (i >= 128) + (i >= 192);
+            int32_t shift = i - 64 * index;
+            set_mask[index] |= (1llu << shift);
 
             world->info.cmd.batched_command_count ++;
             break;
@@ -4977,7 +4981,7 @@ void flecs_cmd_batch_for_entity(
      * This only happens for entities that didn't have the assigned component
      * yet, as for entities that did have the component already the value will
      * have been assigned directly to the component storage. */
-    if (set_mask) {
+    if (set_mask[0] | set_mask[1] | set_mask[2] | set_mask[3]) {
         cur = start;
         do {
             cmd = &cmds[cur];

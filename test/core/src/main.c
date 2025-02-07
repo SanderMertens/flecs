@@ -2133,6 +2133,11 @@ void Commands_defer_remove_after_set(void);
 void Commands_defer_remove_after_set_w_observer(void);
 void Commands_defer_override_after_remove(void);
 void Commands_defer_override_after_remove_3_ops(void);
+void Commands_defer_override_after_remove_63_commands(void);
+void Commands_defer_override_after_remove_64_commands(void);
+void Commands_defer_override_after_remove_65_commands(void);
+void Commands_defer_override_after_remove_96_commands(void);
+void Commands_defer_override_after_remove_255_commands(void);
 void Commands_flush_stage_to_deferred_world(void);
 void Commands_add_in_observer_during_merge(void);
 void Commands_add_in_observer_during_merge_2_commands(void);
@@ -10628,6 +10633,26 @@ bake_test_case Commands_testcases[] = {
         Commands_defer_override_after_remove_3_ops
     },
     {
+        "defer_override_after_remove_63_commands",
+        Commands_defer_override_after_remove_63_commands
+    },
+    {
+        "defer_override_after_remove_64_commands",
+        Commands_defer_override_after_remove_64_commands
+    },
+    {
+        "defer_override_after_remove_65_commands",
+        Commands_defer_override_after_remove_65_commands
+    },
+    {
+        "defer_override_after_remove_96_commands",
+        Commands_defer_override_after_remove_96_commands
+    },
+    {
+        "defer_override_after_remove_255_commands",
+        Commands_defer_override_after_remove_255_commands
+    },
+    {
         "flush_stage_to_deferred_world",
         Commands_flush_stage_to_deferred_world
     },
@@ -11770,7 +11795,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        150,
+        155,
         Commands_testcases
     },
     {
