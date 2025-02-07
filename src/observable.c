@@ -1277,8 +1277,6 @@ repeat_event:
             int32_t index = (i >= 64) + (i >= 128) + (i >= 192);
             int32_t shift = i - 64 * index;
 
-            printf("index = %d, shift = %d\n", index, shift);
-
             ecs_flags64_t id_bit = 1llu << shift;
             if (id_bit & set_mask[index]) {
                 /* Component is already set, so don't override with prefab value */
