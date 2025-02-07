@@ -2534,7 +2534,7 @@ void flecs_observer_fini(
 void flecs_emit( 
     ecs_world_t *world,
     ecs_world_t *stage,
-    ecs_flags64_t set_mask,
+    ecs_flags64_t *set_mask,
     ecs_event_desc_t *desc);
 
 bool flecs_default_next_callback(
@@ -5181,7 +5181,7 @@ void flecs_notify_on_add(
     int32_t count,
     const ecs_table_diff_t *diff,
     ecs_flags32_t flags,
-    ecs_flags64_t set_mask,
+    ecs_flags64_t *set_mask,
     bool construct,
     bool sparse)
 {
@@ -9294,8 +9294,10 @@ void flecs_cmd_batch_for_entity(
 
     /* Mask to let observable implementation know which components were set.
      * This prevents the code from overwriting components with an override if
-     * the batch also contains an IsA pair. */
-    ecs_flags64_t set_mask = 0;
+     * the batch also contains an IsA pair. 
+     * Use 4 elements, so the implementation supports up to 256 components added
+     * in a single batch. */
+    ecs_flags64_t set_mask[4] = {0};
 
     do {
         cmd = &cmds[cur];
@@ -9391,7 +9393,9 @@ void flecs_cmd_batch_for_entity(
                 }
             }
 
-            set_mask |= (1llu << i);
+            int32_t index = (i >= 64) + (i >= 128) + (i >= 192);
+            int32_t shift = i - 64 * index;
+            set_mask[index] |= (1llu << shift);
 
             world->info.cmd.batched_command_count ++;
             break;
@@ -9463,7 +9467,7 @@ void flecs_cmd_batch_for_entity(
      * This only happens for entities that didn't have the assigned component
      * yet, as for entities that did have the component already the value will
      * have been assigned directly to the component storage. */
-    if (set_mask) {
+    if (set_mask[0] | set_mask[1] | set_mask[2] | set_mask[3]) {
         cur = start;
         do {
             cmd = &cmds[cur];
@@ -13244,7 +13248,7 @@ void flecs_emit_forward(
 void flecs_emit(
     ecs_world_t *world,
     ecs_world_t *stage,
-    ecs_flags64_t set_mask,
+    ecs_flags64_t *set_mask,
     ecs_event_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
@@ -13386,10 +13390,22 @@ repeat_event:
         ecs_table_record_t *base_tr = NULL;
         ecs_entity_t base = 0;
         bool id_can_override = can_override;
-        ecs_flags64_t id_bit = 1llu << i;
-        if (id_bit & set_mask) {
-            /* Component is already set, so don't override with prefab value */
-            id_can_override = false;
+
+        /* Only added components can trigger overriding */
+        if (set_mask && event == EcsOnAdd) {
+            ecs_assert(i < 256, ECS_UNSUPPORTED, 
+                "cannot add more than 256 components in a single operation");
+
+            int32_t index = (i >= 64) + (i >= 128) + (i >= 192);
+            int32_t shift = i - 64 * index;
+
+            printf("index = %d, shift = %d\n", index, shift);
+
+            ecs_flags64_t id_bit = 1llu << shift;
+            if (id_bit & set_mask[index]) {
+                /* Component is already set, so don't override with prefab value */
+                id_can_override = false;
+            }
         }
 
         /* Check if this id is a pair of an traversable relationship. If so, we 
