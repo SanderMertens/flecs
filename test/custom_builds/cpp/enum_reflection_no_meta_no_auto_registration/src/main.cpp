@@ -1,4 +1,4 @@
-#include <enum_reflection_no_meta.h>
+#include <enum_reflection_no_meta_no_auto_registration.h>
 #include <iostream>
 
 // Test if enum reflection works without the meta addon

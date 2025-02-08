@@ -21287,6 +21287,10 @@ void ecs_cpp_enum_init(
     world = flecs_suspend_readonly(world, &readonly_state);
     ecs_set(world, id, EcsEnum, { .underlying_type = underlying_type });
     flecs_resume_readonly(world, &readonly_state);
+#else
+    /* Make sure that enums still behave the same even without meta */
+    ecs_add_id(world, id, EcsExclusive);
+    ecs_add_id(world, id, EcsOneOf);
 #endif
 }
 
