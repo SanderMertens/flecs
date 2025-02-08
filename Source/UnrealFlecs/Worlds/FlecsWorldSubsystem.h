@@ -274,7 +274,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UFlecsWorld> DefaultWorld;
 
-	void RegisterAllGameplayTags(UFlecsWorld* InFlecsWorld)
+	void RegisterAllGameplayTags(const UFlecsWorld* InFlecsWorld)
 	{
 		FGameplayTagContainer AllTags;
 		UGameplayTagsManager::Get().RequestAllGameplayTags(AllTags, false);
