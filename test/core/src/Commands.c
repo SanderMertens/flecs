@@ -2672,6 +2672,191 @@ void Commands_defer_override_after_remove_3_ops(void) {
     ecs_fini(world);
 }
 
+void Commands_defer_override_after_remove_63_commands(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t components[63];
+    for (int i = 0; i < 63; i ++) {
+        components[i] = ecs_component_init(world, &(ecs_component_desc_t){
+            .type.size = ECS_SIZEOF(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
+        });
+    }
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, inst, Position, {20, 30});
+
+    ecs_defer_begin(world);
+    ecs_remove(world, inst, Position);
+    for (int i = 0; i < 63; i ++) {
+        ecs_add_id(world, inst, components[i]);
+    }
+    ecs_add(world, inst, Position);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(p != ecs_get(world, base, Position));
+
+    ecs_fini(world);
+}
+
+void Commands_defer_override_after_remove_64_commands(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t components[64];
+    for (int i = 0; i < 64; i ++) {
+        components[i] = ecs_component_init(world, &(ecs_component_desc_t){
+            .type.size = ECS_SIZEOF(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
+        });
+    }
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, inst, Position, {20, 30});
+
+    ecs_defer_begin(world);
+    ecs_remove(world, inst, Position);
+    for (int i = 0; i < 64; i ++) {
+        ecs_add_id(world, inst, components[i]);
+    }
+    ecs_add(world, inst, Position);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(p != ecs_get(world, base, Position));
+
+    ecs_fini(world);
+}
+
+void Commands_defer_override_after_remove_65_commands(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t components[65];
+    for (int i = 0; i < 65; i ++) {
+        components[i] = ecs_component_init(world, &(ecs_component_desc_t){
+            .type.size = ECS_SIZEOF(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
+        });
+    }
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, inst, Position, {20, 30});
+
+    ecs_defer_begin(world);
+    ecs_remove(world, inst, Position);
+    for (int i = 0; i < 65; i ++) {
+        ecs_add_id(world, inst, components[i]);
+    }
+    ecs_add(world, inst, Position);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(p != ecs_get(world, base, Position));
+
+    ecs_fini(world);
+}
+
+void Commands_defer_override_after_remove_96_commands(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t components[96];
+    for (int i = 0; i < 96; i ++) {
+        components[i] = ecs_component_init(world, &(ecs_component_desc_t){
+            .type.size = ECS_SIZEOF(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
+        });
+    }
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, inst, Position, {20, 30});
+
+    ecs_defer_begin(world);
+    ecs_remove(world, inst, Position);
+    for (int i = 0; i < 96; i ++) {
+        ecs_add_id(world, inst, components[i]);
+    }
+    ecs_add(world, inst, Position);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(p != ecs_get(world, base, Position));
+
+    ecs_fini(world);
+}
+
+void Commands_defer_override_after_remove_255_commands(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t components[255];
+    for (int i = 0; i < 255; i ++) {
+        components[i] = ecs_component_init(world, &(ecs_component_desc_t){
+            .type.size = ECS_SIZEOF(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
+        });
+    }
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_set(world, inst, Position, {20, 30});
+
+    ecs_defer_begin(world);
+    ecs_remove(world, inst, Position);
+    for (int i = 0; i < 255; i ++) {
+        ecs_add_id(world, inst, components[i]);
+    }
+    ecs_add(world, inst, Position);
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(p != ecs_get(world, base, Position));
+
+    ecs_fini(world);
+}
+
 void Commands_flush_stage_to_deferred_world(void) {
     ecs_world_t *world = ecs_mini();
 
