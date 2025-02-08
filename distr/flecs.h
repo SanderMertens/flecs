@@ -33312,6 +33312,20 @@ inline void world::init_builtin_components() {
     this->component<Identifier>();
     this->component<Poly>();
 
+    /* If meta is not defined and we're using enum reflection, make sure that
+     * primitive types are registered. This makes sure we can set components of
+     * underlying_type_t<E> when registering constants. */
+#   if !defined(FLECS_META) && !defined(FLECS_CPP_NO_ENUM_REFLECTION)
+    this->component<uint8_t>("flecs::meta::u8");
+    this->component<uint16_t>("flecs::meta::u16");
+    this->component<uint32_t>("flecs::meta::u32");
+    this->component<uint64_t>("flecs::meta::u64");
+    this->component<int8_t>("flecs::meta::i8");
+    this->component<int16_t>("flecs::meta::i16");
+    this->component<int32_t>("flecs::meta::i32");
+    this->component<int64_t>("flecs::meta::i64");
+#   endif
+
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);
 #   endif
