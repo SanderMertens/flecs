@@ -285,7 +285,25 @@ struct type_impl {
             // this after setting the component id, because the enum code will
             // be calling type<T>::id().
             #if FLECS_CPP_ENUM_REFLECTION_SUPPORT
+
+            
             _::init_enum<T>(world, c);
+
+            if constexpr (Solid::IsStaticEnum<T>())
+            {
+                flecs::world P_world(world);
+                UEnum* scriptEnum = StaticEnum<T>();
+                ecs_assert(scriptEnum != nullptr, ECS_INTERNAL_ERROR, 
+                           "script enum is null");
+
+                flecs::entity entity_id = flecs::entity(world, c);
+                
+                static_cast<FFlecsTypeMapComponent*>(P_world.get_binding_ctx())
+                    ->ScriptEnumMap.emplace(scriptEnum, entity_id);
+                
+                entity_id.set<FFlecsScriptEnumComponent>({ scriptEnum });
+            }
+            
             #endif
         }
 
@@ -307,6 +325,7 @@ struct type_impl {
         flecs::entity_t c = flecs_component_ids_get_alive(world, td.s_index);
         
         #ifndef FLECS_CPP_NO_AUTO_REGISTRATION
+        
         if (!c) {
             c = register_id(world);
             

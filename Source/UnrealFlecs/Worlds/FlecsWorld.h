@@ -1081,9 +1081,29 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	bool HasScriptEnum(const UEnum* ScriptEnum) const
+	{
+		if (TypeMapComponent->ScriptEnumMap.contains(ScriptEnum)
+			&& TypeMapComponent->ScriptEnumMap.at(ScriptEnum).is_valid())
+		{
+			return true;
+		}
+		
+		return false;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FFlecsEntityHandle GetScriptStructEntity(const UScriptStruct* ScriptStruct) const
 	{
 		const FFlecsId c = TypeMapComponent->ScriptStructMap.at(ScriptStruct);
+		solid_checkf(ecs_is_valid(World.c_ptr(), c), TEXT("Entity is not alive"));
+		return FFlecsEntityHandle(World, c);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	FFlecsEntityHandle GetScriptEnumEntity(const UEnum* ScriptEnum) const
+	{
+		const FFlecsId c = TypeMapComponent->ScriptEnumMap.at(ScriptEnum);
 		solid_checkf(ecs_is_valid(World.c_ptr(), c), TEXT("Entity is not alive"));
 		return FFlecsEntityHandle(World, c);
 	}
@@ -1098,6 +1118,18 @@ public:
 	NO_DISCARD bool HasScriptStruct() const
 	{
 		return HasScriptStruct(TBaseStructure<T>::Get());
+	}
+
+	template <Solid::TStaticEnumConcept T>
+	NO_DISCARD FFlecsEntityHandle GetScriptEnumEntity() const
+	{
+		return GetScriptEnumEntity(StaticEnum<T>());
+	}
+
+	template <Solid::TStaticEnumConcept T>
+	NO_DISCARD bool HasScriptEnum() const
+	{
+		return HasScriptEnum(StaticEnum<T>());
 	}
 	
 	void RegisterMemberProperties(const UStruct* InStruct,
@@ -1210,6 +1242,11 @@ public:
 			}
 		}
 	}
+
+	void RegisterEnumMembers(const UEnum* InEnum, const FFlecsEntityHandle& InEntity) const
+	{
+		flecs::untyped_component UntypedComponent = InEntity.GetUntypedComponent_Unsafe();
+	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FFlecsEntityHandle RegisterScriptStruct(const UScriptStruct* ScriptStruct) const
@@ -1260,6 +1297,55 @@ public:
 		return ScriptStructComponent;
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FFlecsEntityHandle RegisterScriptEnum(const UEnum* ScriptEnum) const
+	{
+		solid_check(IsValid(ScriptEnum));
+
+		const FFlecsEntityHandle OldScope = ClearScope();
+
+		solid_checkf(!TypeMapComponent->ScriptEnumMap.contains(ScriptEnum),
+			TEXT("Script enum %s is already registered"), *ScriptEnum->GetName());
+
+		flecs::untyped_component ScriptEnumComponent;
+
+		DeferEndScoped([this, ScriptEnum, &ScriptEnumComponent]()
+		{
+			ScriptEnumComponent = World.component(StringCast<char>(*ScriptEnum->GetName()).Get());
+			solid_check(ScriptEnumComponent.is_valid());
+			ScriptEnumComponent.set_symbol(StringCast<char>(*ScriptEnum->GetName()).Get());
+			ScriptEnumComponent.set<flecs::Component>(
+				{ .size = sizeof(int32), .alignment = alignof(int32) });
+
+			if (!flecs::_::g_type_to_impl_data.contains(
+				std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get())))
+			{
+				flecs::_::type_impl_data NewData;
+				NewData.s_index = flecs_component_ids_index_get();
+				NewData.s_size = sizeof(int32);
+				NewData.s_alignment = alignof(int32);
+				NewData.s_allow_tag = true;
+				
+				flecs::_::g_type_to_impl_data.emplace(
+					std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get()), NewData);
+			}
+
+			solid_check(flecs::_::g_type_to_impl_data.contains(
+				std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get())));
+			flecs::_::type_impl_data& Data = flecs::_::g_type_to_impl_data.at(
+				std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get()));
+
+			flecs_component_ids_set(World, Data.s_index, ScriptEnumComponent);
+
+			TypeMapComponent->ScriptEnumMap.emplace(ScriptEnum, ScriptEnumComponent);
+		});
+
+		ScriptEnumComponent.set<FFlecsScriptEnumComponent>({ ScriptEnum });
+
+		SetScope(OldScope);
+		return ScriptEnumComponent;
+	}
+
 	template <typename T>
 	flecs::untyped_component RegisterComponentType() const
 	{
@@ -1274,6 +1360,11 @@ public:
 		}
 
 		return RegisterScriptStruct(ScriptStruct);
+	}
+
+	FFlecsEntityHandle RegisterComponentType(const UEnum* Enum) const
+	{
+		return World.component(Enum);
 	}
 
 	template <typename T>
@@ -1534,7 +1625,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	UFlecsWorldSubsystem* GetContext() const;
 
-	FFlecsTypeMapComponent* GetTypeMapComponent() const
+	FORCEINLINE FFlecsTypeMapComponent* GetTypeMapComponent() const
 	{
 		return static_cast<FFlecsTypeMapComponent*>(World.get_binding_ctx());
 	}
