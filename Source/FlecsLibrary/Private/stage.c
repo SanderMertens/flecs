@@ -17,7 +17,7 @@
 
 #include "private_api.h"
 
-static
+static inline
 ecs_cmd_t* flecs_cmd_new(
     ecs_stage_t *stage)
 {

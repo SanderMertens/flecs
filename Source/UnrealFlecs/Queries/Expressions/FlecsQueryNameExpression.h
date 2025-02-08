@@ -12,7 +12,7 @@ struct UNREALFLECS_API FFlecsQueryNameExpression : public FFlecsQueryExpression
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE FFlecsQueryNameExpression();
+	FFlecsQueryNameExpression();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
 	FString Name;

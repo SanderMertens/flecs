@@ -56,14 +56,14 @@ public:
         {
             if constexpr (std::is_same_v<ReturnType, bool>)
             {
-                if (InFunction(Component))
+                if (std::invoke(std::forward<FunctionType>(InFunction), Component))
                 {
                     break;
                 }
             }
             else
             {
-                InFunction(Component);
+                std::invoke(std::forward<FunctionType>(InFunction), Component);
             }
         }
     }

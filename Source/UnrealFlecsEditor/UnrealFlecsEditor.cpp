@@ -5,6 +5,7 @@
 #include "Engine/AssetManagerSettings.h"
 #include "Engine/AssetManagerTypes.h"
 #include "Framework/Notifications/NotificationManager.h"
+#include "General/FlecsPrimaryDataAsset.h"
 #include "Logs/FlecsEditorCategory.h"
 #include "Widgets/EntityHandle/FlecsIdPinFactory.h"
 #include "Widgets/EntityHandle/FlecsIdPropertyEditor.h"

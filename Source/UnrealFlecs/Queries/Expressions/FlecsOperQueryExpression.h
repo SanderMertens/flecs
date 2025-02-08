@@ -14,7 +14,7 @@ struct UNREALFLECS_API FFlecsOperQueryExpression final : public FFlecsQueryExpre
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE FFlecsOperQueryExpression();
+	FFlecsOperQueryExpression();
 	
 	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 

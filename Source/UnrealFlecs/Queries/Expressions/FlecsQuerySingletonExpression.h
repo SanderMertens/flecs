@@ -12,7 +12,7 @@ struct UNREALFLECS_API FFlecsQuerySingletonExpression : public FFlecsQueryExpres
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE FFlecsQuerySingletonExpression();
+	FFlecsQuerySingletonExpression();
 	
 	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 	

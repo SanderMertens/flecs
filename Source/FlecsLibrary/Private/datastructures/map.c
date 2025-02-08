@@ -79,7 +79,7 @@ ecs_map_val_t* flecs_map_bucket_add(
 }
 
 /* Remove element from bucket */
-static
+static inline
 ecs_map_val_t flecs_map_bucket_remove(
     ecs_map_t *map,
     ecs_bucket_t *bucket,
@@ -104,7 +104,7 @@ ecs_map_val_t flecs_map_bucket_remove(
 }
 
 /* Free contents of bucket */
-static
+static inline
 void flecs_map_bucket_clear(
     ecs_block_allocator_t *allocator,
     ecs_bucket_t *bucket)
@@ -118,7 +118,7 @@ void flecs_map_bucket_clear(
 }
 
 /* Get payload pointer for key from bucket */
-static
+static inline
 ecs_map_val_t* flecs_map_bucket_get(
     ecs_bucket_t *bucket,
     ecs_map_key_t key)

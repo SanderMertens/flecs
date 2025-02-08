@@ -11,7 +11,7 @@
 #include "private_api.h"
 #include <stddef.h>
 
-static
+static inline
 ecs_entity_t flecs_get_observer_event(
     ecs_term_t *term,
     ecs_entity_t event)
@@ -28,7 +28,7 @@ ecs_entity_t flecs_get_observer_event(
     return event;
 }
 
-static
+static inline
 ecs_flags32_t flecs_id_flag_for_event(
     ecs_entity_t e)
 {
@@ -102,7 +102,7 @@ void flecs_inc_observer_count(
     }
 }
 
-static
+static inline
 ecs_id_t flecs_observer_id(
     ecs_id_t id)
 {
@@ -261,7 +261,7 @@ void flecs_unregister_observer(
     }
 }
 
-static
+static inline
 bool flecs_ignore_observer(
     ecs_observer_t *o,
     ecs_table_t *table,
@@ -729,7 +729,7 @@ int flecs_uni_observer_init(
     return 0;
 }
 
-static
+static inline
 int flecs_observer_add_child(
     ecs_world_t *world,
     ecs_observer_t *o,

@@ -28,7 +28,7 @@ public:
         return Object.Get();
     }
 
-    template <typename T>
+    template <Solid::TStaticClassConcept T>
     FORCEINLINE NO_DISCARD T* GetObject() const
     {
         return Cast<T>(GetObject());
@@ -40,7 +40,7 @@ public:
         return Object.Get();
     }
 
-    template <typename T>
+    template <Solid::TStaticClassConcept T>
     FORCEINLINE NO_DISCARD T* GetObjectChecked() const
     {
         return CastChecked<T>(GetObject());

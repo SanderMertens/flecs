@@ -13,7 +13,7 @@ struct UNREALFLECS_API FFlecsQueryScriptExpression : public FFlecsQueryExpressio
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE FFlecsQueryScriptExpression();
+	FFlecsQueryScriptExpression();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
 	FFlecsQueryScriptExpr ScriptExpr;

@@ -13,7 +13,7 @@ struct UNREALFLECS_API FFlecsExpressionInOut final : public FFlecsQueryExpressio
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE FFlecsExpressionInOut();
+	FFlecsExpressionInOut();
 	
 	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 
