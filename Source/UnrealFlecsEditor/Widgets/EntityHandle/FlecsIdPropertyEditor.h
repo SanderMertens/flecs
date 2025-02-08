@@ -30,11 +30,6 @@ public:
 	//~ End IPropertyTypeCustomization interface
 
 private:
-	/** Callback for when an entity is selected from the combo box. */
-	void OnEntitySelected(TSharedPtr<FName> NewValue, ESelectInfo::Type SelectInfo);
-
-	/** Callback for when the combo box is opened. */
-	void OnComboBoxOpening();
 
 	/** Generates a widget for a given entity option. */
 	TSharedRef<SWidget> GenerateEntityWidget(TSharedPtr<FName> InOption);
@@ -50,6 +45,13 @@ private:
 	FText GetSelectedItemText() const;
 	
 	void OnSearchTextChanged(const FText& InSearchText);
+	
+	TSharedRef<SWidget> GetSearchableMenuContent();
+
+	TSharedRef<ITableRow> OnGenerateRowForSearchableList(TSharedPtr<FName> InItem,
+		const TSharedRef<STableViewBase>& OwnerTable);
+	
+	void OnSearchableSelectionChanged(TSharedPtr<FName> NewValue, ESelectInfo::Type SelectInfo);
 
 private:
 	// The currently selected entity name.
@@ -60,10 +62,10 @@ private:
 	TArray<TSharedPtr<FName>> FilteredOptions;
 	TArray<flecs::entity> EntityOptions;
 
+	TSharedPtr<SComboButton> ComboButtonPtr;
+
 	// Handle to the property being customized.
 	TSharedPtr<IPropertyHandle> PropertyHandle;
-	
-	TSharedPtr<SComboBox<TSharedPtr<FName>>> NameComboBox;
 
 	// The text used when no entity is selected.
 	TSharedRef<FName> NoneEntityText;

@@ -67,25 +67,23 @@ void FFlecsIdCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> InProp
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
-			SAssignNew(NameComboBox, SComboBox<TSharedPtr<FName>>)
-			.OptionsSource(&FilteredOptions)
-			.OnComboBoxOpening(this, &FFlecsIdCustomization::OnComboBoxOpening)
-			.OnSelectionChanged(this, &FFlecsIdCustomization::OnEntitySelected)
-			.ComboBoxStyle(&FCoreStyle::Get().GetWidgetStyle<FComboBoxStyle>("ComboBox"))
-			.InitiallySelectedItem(SelectedItem)
-			.OnGenerateWidget(this, &FFlecsIdCustomization::GenerateEntityWidget)
+			SAssignNew(ComboButtonPtr, SComboButton)
+			.MenuPlacement(EMenuPlacement::MenuPlacement_BelowAnchor)
+			.OnGetMenuContent(this, &FFlecsIdCustomization::GetSearchableMenuContent)
 			.HasDownArrow(true)
 			.ContentPadding(2)
+			.ButtonContent()
 			[
 				SNew(STextBlock)
 				.Text(this, &FFlecsIdCustomization::GetSelectedItemText)
 			]
 		]
 	];
-
-	// In case there are no options, display a simple message.
-	if (Options.IsEmpty())
+	
+	if UNLIKELY_IF(Options.IsEmpty())
 	{
+		ensureAlwaysMsgf(false, TEXT("No entities found in the default entity query."));
+		
 		ChildBuilder.AddCustomRow(LOCTEXT("NoEntitiesFound", "No entities found."))
 		.NameContent()
 		[
@@ -93,6 +91,71 @@ void FFlecsIdCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> InProp
 			.Text(LOCTEXT("NoEntitiesFound", "No entities found."))
 			.Font(IDetailLayoutBuilder::GetDetailFont())
 		];
+	}
+}
+
+TSharedRef<SWidget> FFlecsIdCustomization::GetSearchableMenuContent()
+{
+	FilteredOptions = Options;
+
+	return SNew(SVerticalBox)
+	+ SVerticalBox::Slot()
+	.AutoHeight()
+	.Padding(4)
+	[
+		SNew(SSearchBox)
+		.HintText(LOCTEXT("SearchEntities", "Search..."))
+		.OnTextChanged(this, &FFlecsIdCustomization::OnSearchTextChanged)
+	]
+	+ SVerticalBox::Slot()
+	.AutoHeight()
+	[
+		SNew(SBox)
+		.HeightOverride(350.f)
+		.WidthOverride(150.f)
+		[
+			SNew(SListView<TSharedPtr<FName>>)
+			.ListItemsSource(&FilteredOptions)
+			.OnGenerateRow(this, &FFlecsIdCustomization::OnGenerateRowForSearchableList)
+			.OnSelectionChanged(this, &FFlecsIdCustomization::OnSearchableSelectionChanged)
+		]
+	];
+}
+
+TSharedRef<ITableRow> FFlecsIdCustomization::OnGenerateRowForSearchableList(TSharedPtr<FName> InItem,
+	const TSharedRef<STableViewBase>& OwnerTable)
+{
+	return SNew(STableRow<TSharedPtr<FName>>, OwnerTable)
+	.Padding(FMargin(4.0f))
+	[
+		SNew(STextBlock)
+		.Text(FText::FromName(*InItem))
+	];
+}
+
+void FFlecsIdCustomization::OnSearchableSelectionChanged(TSharedPtr<FName> NewValue, ESelectInfo::Type SelectInfo)
+{
+	if (NewValue.IsValid())
+	{
+		int32 FoundIndex = INDEX_NONE;
+		
+		for (int32 Index = 0; Index < Options.Num(); ++Index)
+		{
+			if (Options[Index]->IsEqual(*NewValue))
+			{
+				FoundIndex = Index;
+				break;
+			}
+		}
+		
+		flecs::entity Entity = (FoundIndex != INDEX_NONE) ? EntityOptions[FoundIndex] : flecs::entity::null();
+		SetPropertyWithEntity(Entity);
+		SelectedItem = NewValue;
+		
+		if (ComboButtonPtr.IsValid())
+		{
+			ComboButtonPtr->SetIsOpen(false);
+		}
 	}
 }
 
@@ -104,7 +167,7 @@ FText FFlecsIdCustomization::GetSelectedItemText() const
 
 void FFlecsIdCustomization::OnSearchTextChanged(const FText& InSearchText)
 {
-	const FString SearchString = InSearchText.ToString();
+	const FString& SearchString = InSearchText.ToString();
 	FilteredOptions.Empty();
 	
 	if (SearchString.IsEmpty())
@@ -120,43 +183,6 @@ void FFlecsIdCustomization::OnSearchTextChanged(const FText& InSearchText)
 				FilteredOptions.Add(Option);
 			}
 		}
-	}
-	
-	if (NameComboBox.IsValid())
-	{
-		NameComboBox->RefreshOptions();
-	}
-}
-
-void FFlecsIdCustomization::OnEntitySelected(TSharedPtr<FName> NewValue, ESelectInfo::Type SelectInfo)
-{
-	if (NewValue.IsValid())
-	{
-		// Look up the entity corresponding to the selected name.
-		int32 FoundIndex = INDEX_NONE;
-		
-		for (int32 Index = 0; Index < Options.Num(); ++Index)
-		{
-			if (Options[Index]->IsEqual(*NewValue))
-			{
-				FoundIndex = Index;
-				break;
-			}
-		}
-
-		const flecs::entity Entity = (FoundIndex != INDEX_NONE) ? EntityOptions[FoundIndex] : flecs::entity::null();
-		SetPropertyWithEntity(Entity);
-		SelectedItem = NewValue;
-	}
-}
-
-void FFlecsIdCustomization::OnComboBoxOpening()
-{
-	FilteredOptions = Options;
-
-	if (NameComboBox.IsValid())
-	{
-		NameComboBox->RefreshOptions();
 	}
 }
 
@@ -176,8 +202,7 @@ TSharedPtr<FName> FFlecsIdCustomization::GetCurrentItemLabel() const
 
 			const FFlecsId* FlecsId = static_cast<FFlecsId*>(RawData);
 			const flecs::entity Entity = FFlecsDefaultEntityEngine::Get().DefaultEntityWorld->get_alive(FlecsId->GetId());
-
-			// If the ID is "None" or the entity is invalid, then return "None".
+			
 			if (FlecsId->GetId() == flecs::entity::null().id() || !Entity.is_valid())
 			{
 				CommonValue.Reset();
@@ -185,7 +210,7 @@ TSharedPtr<FName> FFlecsIdCustomization::GetCurrentItemLabel() const
 			}
 
 			const FName CurrentValue(Entity.name().c_str());
-			// If multiple objects are edited, ensure the values agree.
+
 			if (DataIndex > 0 && CommonValue.IsValid() && (CommonValue->GetNumber() != CurrentValue.GetNumber()))
 			{
 				CommonValue.Reset();
@@ -202,8 +227,8 @@ TSharedPtr<FName> FFlecsIdCustomization::GetCurrentItemLabel() const
 
 void FFlecsIdCustomization::ApplyMetadataFilters()
 {
-	FString ExcludedList = PropertyHandle->GetProperty()->GetMetaData(TEXT("Excluded"));
-	FString IncludedList = PropertyHandle->GetProperty()->GetMetaData(TEXT("Included"));
+	const FString ExcludedList = PropertyHandle->GetProperty()->GetMetaData(TEXT("Excluded"));
+	const FString IncludedList = PropertyHandle->GetProperty()->GetMetaData(TEXT("Included"));
 
 	TArray<FString> ExcludedItems;
 	ExcludedList.ParseIntoArray(ExcludedItems, TEXT(","), true);
