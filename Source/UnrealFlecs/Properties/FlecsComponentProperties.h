@@ -85,7 +85,7 @@ public:
 					if constexpr (Solid::IsStaticStruct<Name>()) \
 					{ \
 						FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties( \
-						#Name, StaticStruct<Name>(), sizeof(Name), alignof(Name), RegistrationFunction); \
+						#Name, TBaseStructure<Name>::Get(), sizeof(Name), alignof(Name), RegistrationFunction); \
 					} \
 					else \
 					{ \
