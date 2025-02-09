@@ -213,7 +213,7 @@ untyped_component& constant(
 template <typename T = uint32_t>
 untyped_component& bit(
     const char *name, 
-    uint32_t value
+    uint32_t value,
     flecs::entity_t TId = flecs::U32)
 {
     ecs_add_id(world_, id_, _::type<flecs::Bitmask>::id(world_));
@@ -230,6 +230,7 @@ untyped_component& bit(
 
     return *this;
 }
+
 /** Register array metadata for component */
 template <typename Elem>
 untyped_component& array(
