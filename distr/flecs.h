@@ -27859,9 +27859,11 @@ untyped_component& member(
 }
 
 /** Add constant. */
+template <typename T = int32_t>
 untyped_component& constant(
     const char *name,
-    int32_t value) 
+    T value,
+    flecs::entity_t TId = flecs::I32)
 {
     ecs_add_id(world_, id_, _::type<flecs::Enum>::id(world_));
 
@@ -27872,16 +27874,18 @@ untyped_component& constant(
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_set_id(world_, eid, 
-        ecs_pair(flecs::Constant, flecs::I32), sizeof(int32_t),
+        ecs_pair(flecs::Constant, TId), sizeof(T),
         &value);
 
     return *this;
 }
 
 /** Add bitmask constant. */
+template <typename T = uint32_t>
 untyped_component& bit(
     const char *name, 
-    uint32_t value) 
+    uint32_t value
+    flecs::entity_t TId = flecs::U32)
 {
     ecs_add_id(world_, id_, _::type<flecs::Bitmask>::id(world_));
 
@@ -27892,7 +27896,7 @@ untyped_component& bit(
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_set_id(world_, eid, 
-        ecs_pair(flecs::Constant, flecs::U32), sizeof(uint32_t),
+        ecs_pair(flecs::Constant, TId), sizeof(T),
         &value);
 
     return *this;
