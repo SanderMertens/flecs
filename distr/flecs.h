@@ -24819,7 +24819,7 @@ struct entity_builder : entity_view {
      * @tparam First The first element of the pair
      * @param second The second element of the pair.
      */
-    template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
+    template<typename First, typename Second, if_not_t< is_enum<Second>::value && std::is_same<First, Second>::value > = 0>
     const Self& add(Second second) const  {
         flecs_static_assert(is_flecs_constructible<First>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");
@@ -24833,7 +24833,7 @@ struct entity_builder : entity_view {
      * @tparam First The first element of the pair
      * @param constant the enum constant.
      */
-    template<typename First, typename Second, if_t< is_enum<Second>::value > = 0>
+    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     const Self& add(Second constant) const  {
         flecs_static_assert(is_flecs_constructible<First>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");
@@ -25108,7 +25108,7 @@ struct entity_builder : entity_view {
      * @tparam First The first element of the pair
      * @param constant the enum constant.
      */
-    template<typename First, typename Second, if_t< is_enum<Second>::value > = 0>
+    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     const Self& remove(Second constant) const  {
         const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t second = et.entity(constant);
@@ -25523,7 +25523,7 @@ struct entity_builder : entity_view {
      * @param constant The enum constant.
      * @param value The value to set.
      */
-    template <typename First, typename Second, if_t< is_enum<Second>::value > = 0>
+    template <typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     const Self& set(Second constant, const First& value) const  {
         const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t second = et.entity(constant);
