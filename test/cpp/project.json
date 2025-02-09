@@ -427,7 +427,8 @@
                 "enum_u8",
                 "enum_u16",
                 "enum_u32",
-                "enum_u64"
+                "enum_u64",
+                "Enum_Constant_u8_template_test"
             ]
         }, {
             "id": "Union",
