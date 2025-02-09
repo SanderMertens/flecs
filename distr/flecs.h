@@ -25523,7 +25523,7 @@ struct entity_builder : entity_view {
      * @param constant The enum constant.
      * @param value The value to set.
      */
-    template <typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
+    template <typename First, typename Second, if_t< is_enum<Second>::value > = 0>
     const Self& set(Second constant, const First& value) const  {
         const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t second = et.entity(constant);
