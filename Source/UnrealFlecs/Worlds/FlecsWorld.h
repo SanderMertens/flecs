@@ -1242,11 +1242,6 @@ public:
 			}
 		}
 	}
-
-	void RegisterEnumMembers(const UEnum* InEnum, const FFlecsEntityHandle& InEntity) const
-	{
-		flecs::untyped_component UntypedComponent = InEntity.GetUntypedComponent_Unsafe();
-	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FFlecsEntityHandle RegisterScriptStruct(const UScriptStruct* ScriptStruct) const
@@ -1315,15 +1310,27 @@ public:
 			solid_check(ScriptEnumComponent.is_valid());
 			ScriptEnumComponent.set_symbol(StringCast<char>(*ScriptEnum->GetName()).Get());
 			ScriptEnumComponent.set<flecs::Component>(
-				{ .size = sizeof(int32), .alignment = alignof(int32) });
+				{ .size = sizeof(uint8), .alignment = alignof(uint8) });
+			ScriptEnumComponent.set<flecs::Enum>(flecs::Enum{
+				.underlying_type = flecs::U8 });
+
+			const int32 EnumCount = ScriptEnum->NumEnums();
+			
+			for (int32 EnumIndex = 0; EnumIndex < EnumCount; ++EnumIndex)
+			{
+				const FString EnumName = ScriptEnum->GetNameStringByIndex(EnumIndex);
+				const int32 EnumValue = ScriptEnum->GetValueByIndex(EnumIndex);
+				
+				ScriptEnumComponent.constant<uint8>(StringCast<char>(*EnumName).Get(), EnumValue, flecs::U8);
+			}
 
 			if (!flecs::_::g_type_to_impl_data.contains(
 				std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get())))
 			{
 				flecs::_::type_impl_data NewData;
 				NewData.s_index = flecs_component_ids_index_get();
-				NewData.s_size = sizeof(int32);
-				NewData.s_alignment = alignof(int32);
+				NewData.s_size = sizeof(uint8);
+				NewData.s_alignment = alignof(uint8);
 				NewData.s_allow_tag = true;
 				
 				flecs::_::g_type_to_impl_data.emplace(
@@ -1351,7 +1358,7 @@ public:
 	{
 		return World.component<T>();
 	}
-
+	
 	FFlecsEntityHandle RegisterComponentType(const UScriptStruct* ScriptStruct) const
 	{
 		if (HasScriptStruct(ScriptStruct))
@@ -1360,11 +1367,6 @@ public:
 		}
 
 		return RegisterScriptStruct(ScriptStruct);
-	}
-
-	FFlecsEntityHandle RegisterComponentType(const UEnum* Enum) const
-	{
-		return World.component(Enum);
 	}
 
 	template <typename T>
@@ -1390,6 +1392,27 @@ public:
 		solid_checkf(HasScriptStruct(ScriptStruct), TEXT("Script struct %s is not registered"),
 			*ScriptStruct->GetStructCPPName());
 		return GetScriptStructEntity(ScriptStruct);
+
+		#endif // !FLECS_CPP_NO_AUTO_REGISTRATION
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FFlecsEntityHandle ObtainComponentTypeEnum(const UEnum* ScriptEnum) const
+	{
+		#ifndef FLECS_CPP_NO_AUTO_REGISTRATION
+		
+		if (HasScriptEnum(ScriptEnum))
+		{
+			return GetScriptEnumEntity(ScriptEnum);
+		}
+
+		return RegisterScriptEnum(ScriptEnum);
+		
+		#else
+
+		solid_checkf(HasScriptEnum(ScriptEnum), TEXT("Script enum %s is not registered"),
+			*ScriptEnum->GetName());
+		return GetScriptEnumEntity(ScriptEnum);
 
 		#endif // !FLECS_CPP_NO_AUTO_REGISTRATION
 	}

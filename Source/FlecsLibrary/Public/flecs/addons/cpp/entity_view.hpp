@@ -652,8 +652,10 @@ struct entity_view : public id {
         if constexpr (is_enum<T>::value) {
             return ecs_has_pair(world_, id_, cid, flecs::Wildcard);
         }
-
-        return false;
+        else
+        {
+            return false;
+        }
     }
 
     /** Check if entity has the provided enum constant.

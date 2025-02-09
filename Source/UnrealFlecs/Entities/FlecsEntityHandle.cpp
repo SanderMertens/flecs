@@ -53,6 +53,12 @@ FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptSt
     return GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
 }
 
+FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeEnum(const UEnum* EnumType) const
+{
+    solid_checkf(::IsValid(EnumType), TEXT("Enum type is not valid"));
+    return GetFlecsWorld()->ObtainComponentTypeEnum(EnumType);
+}
+
 void FFlecsEntityHandle::AddCollection(UObject* Collection) const
 {
     solid_check(::IsValid(Collection));

@@ -167,7 +167,10 @@ public:
 		return Has(GetTagEntity(InTag));
 	}
 
-	SOLID_INLINE void Add(const FFlecsId InEntity) const { GetEntity().add(InEntity); }
+	SOLID_INLINE void Add(const FFlecsId InEntity) const
+	{
+		GetEntity().add(InEntity);
+	}
 
 	SOLID_INLINE void Add(const UScriptStruct* StructType) const
 	{
@@ -244,6 +247,11 @@ public:
 	SOLID_INLINE void Set(const UScriptStruct* StructType, const void* InValue) const
 	{
 		Set(ObtainComponentTypeStruct(StructType), InValue);
+	}
+
+	SOLID_INLINE void Set(const UEnum* EnumType, const int64 InValue) const
+	{
+		Set(ObtainComponentTypeEnum(EnumType), &InValue);
 	}
 
 	SOLID_INLINE void Set(const FInstancedStruct& InValue) const
@@ -1116,6 +1124,7 @@ public:
 	}
 
 	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
+	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeEnum(const UEnum* EnumType) const;
 
 	SOLID_INLINE void AddPrefab(const FFlecsId InPrefab) const
 	{
