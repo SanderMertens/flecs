@@ -606,6 +606,10 @@ void DeserializeFromJson_ser_deser_named_child_to_different_table(void);
 void DeserializeFromJson_ser_deser_with_child_tgt(void);
 void DeserializeFromJson_ser_deser_with_child_tgt_no_child(void);
 void DeserializeFromJson_deser_invalid_entity_name(void);
+void DeserializeFromJson_deser_unknown_component_w_spaces(void);
+void DeserializeFromJson_deser_unknown_component_no_spaces(void);
+void DeserializeFromJson_deser_unknown_component_w_spaces_strict(void);
+void DeserializeFromJson_deser_unknown_component_no_spaces_strict(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -3362,6 +3366,22 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "deser_invalid_entity_name",
         DeserializeFromJson_deser_invalid_entity_name
+    },
+    {
+        "deser_unknown_component_w_spaces",
+        DeserializeFromJson_deser_unknown_component_w_spaces
+    },
+    {
+        "deser_unknown_component_no_spaces",
+        DeserializeFromJson_deser_unknown_component_no_spaces
+    },
+    {
+        "deser_unknown_component_w_spaces_strict",
+        DeserializeFromJson_deser_unknown_component_w_spaces_strict
+    },
+    {
+        "deser_unknown_component_no_spaces_strict",
+        DeserializeFromJson_deser_unknown_component_no_spaces_strict
     }
 };
 
@@ -5091,7 +5111,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        134,
+        138,
         DeserializeFromJson_testcases
     },
     {
