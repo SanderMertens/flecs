@@ -70,7 +70,7 @@ struct UNREALFLECS_API FFlecsRecordPairSlot
 			}
 		}
 
-		UNREACHABLE
+		UNREACHABLE;
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsRecordPairSlot& Other) const
@@ -248,7 +248,7 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 				}
 		}
 
-		UNREACHABLE
+		UNREACHABLE;
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsComponentTypeInfo& Other) const
