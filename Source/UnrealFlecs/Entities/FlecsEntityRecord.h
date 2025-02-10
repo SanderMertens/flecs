@@ -370,7 +370,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 				break;
 			case EFlecsComponentNodeType::ScriptEnum:
 				{
-					InEntityHandle.Set(ScriptEnum.Class, ScriptEnum.Value);
+					InEntityHandle.Add(ScriptEnum.Class, ScriptEnum.Value);
 				}
 			case EFlecsComponentNodeType::EntityHandle:
 				{
