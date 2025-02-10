@@ -12,6 +12,7 @@
 #include "GameplayTagContainer.h"
 #include "SolidMacros/Macros.h"
 #include "StructUtils/InstancedStruct.h"
+#include "Types/SolidEnumSelector.h"
 #include "FlecsEntityHandle.generated.h"
 
 class UFlecsWorld;
@@ -121,11 +122,6 @@ public:
 		return FFlecsId(GetEntity());
 	}
 	
-	SOLID_INLINE NO_DISCARD flecs::id_t GetIndex() const
-	{
-		return GetFlecsId().GetId();
-	}
-	
 	SOLID_INLINE NO_DISCARD uint32 GetGeneration() const
 	{
 		return GetFlecsId().GetGeneration();
@@ -138,7 +134,6 @@ public:
 	
 	SOLID_INLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
 	SOLID_INLINE NO_DISCARD UWorld* GetOuterWorld() const;
-	
 	SOLID_INLINE NO_DISCARD FString GetWorldName() const;
 	
 	SOLID_INLINE NO_DISCARD FFlecsArchetype GetType() const
@@ -165,6 +160,31 @@ public:
 	SOLID_INLINE NO_DISCARD bool Has(const FGameplayTag& InTag) const
 	{
 		return Has(GetTagEntity(InTag));
+	}
+
+	SOLID_INLINE NO_DISCARD bool Has(const UEnum* EnumType) const
+	{
+		return HasPair(ObtainComponentTypeEnum(EnumType), flecs::Wildcard);
+	}
+
+	SOLID_INLINE NO_DISCARD bool Has(const UEnum* EnumType, const int64 InValue) const
+	{
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
+		solid_check(EnumEntity.IsValid());
+		solid_check(EnumEntity.IsEnum());
+
+		auto [underlying_type, constants] = EnumEntity.Get<flecs::Enum>();
+		const ecs_enum_constant_t* Constant = (ecs_enum_constant_t*)ecs_map_get_deref_(
+			&constants,
+			InValue);
+		solid_checkf(Constant != nullptr, TEXT("Enum value %lld not found"), InValue);
+		
+		return HasPair(EnumEntity, Constant->constant);
+	}
+
+	SOLID_INLINE NO_DISCARD bool Has(const FSolidEnumSelector& EnumSelector) const
+	{
+		return Has(EnumSelector.Class, EnumSelector.Value);
 	}
 
 	SOLID_INLINE void Add(const FFlecsId InEntity) const
@@ -211,6 +231,11 @@ public:
 		Remove(GetTagEntity(InTag));
 	}
 
+	SOLID_INLINE void Remove(const UEnum* EnumType) const
+	{
+		Remove(ObtainComponentTypeEnum(EnumType));
+	}
+
 	SOLID_INLINE void Remove(const FGameplayTagContainer& InTags, const bool bMustHaveAll = false) const
 	{
 		for (const FGameplayTag& Tag : InTags)
@@ -243,7 +268,7 @@ public:
 	{
 		GetEntity().set_ptr(InId, InValue);
 	}
-
+	
 	SOLID_INLINE void Set(const UScriptStruct* StructType, const void* InValue) const
 	{
 		Set(ObtainComponentTypeStruct(StructType), InValue);
@@ -548,7 +573,12 @@ public:
 	{
 		return Has<flecs::Component>();
 	}
-	
+
+	SOLID_INLINE NO_DISCARD bool IsEnum() const
+	{
+		return Has<flecs::Enum>();
+	}
+
 	SOLID_INLINE NO_DISCARD flecs::untyped_component GetUntypedComponent() const
 	{
 		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
@@ -1136,9 +1166,14 @@ public:
 		RemovePair(flecs::IsA, InPrefab);
 	}
 
-	SOLID_INLINE NO_DISCARD bool IsPrefab(const FFlecsId InPrefab) const
+	SOLID_INLINE NO_DISCARD bool HasPrefab(const FFlecsId InPrefab) const
 	{
 		return HasPair(flecs::IsA, InPrefab);
+	}
+
+	SOLID_INLINE NO_DISCARD FFlecsEntityHandle Lookup(const FString& InPath, const bool bSearchPath = false) const
+	{
+		return GetEntity().lookup(StringCast<char>(*InPath).Get(), bSearchPath);
 	}
 
 	void AddCollection(UObject* Collection) const;

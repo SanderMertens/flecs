@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "ComponentTestEnums.generated.h"
 
-UENUM(BlueprintType)
+UENUM()
 enum class ETestEnum : uint8
 {
 	None,

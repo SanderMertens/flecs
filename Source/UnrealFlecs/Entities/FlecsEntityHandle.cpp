@@ -12,7 +12,7 @@
 
 FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const UFlecsWorld* InWorld)
 {
-    solid_checkf(InWorld, TEXT("Flecs World not found"));
+    solid_checkf(::IsValid(InWorld), TEXT("Flecs World not found"));
     return flecs::entity::null(InWorld->World);
 }
 

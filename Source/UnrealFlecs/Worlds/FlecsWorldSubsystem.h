@@ -64,6 +64,10 @@ public:
 		{
 			CreateWorld(SettingsAsset->WorldSettings.WorldName, SettingsAsset->WorldSettings);
 		}
+		else
+		{
+			UN_LOGF(LogFlecsCore, Warning, "No default world settings asset found");
+		}
 	}
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override
@@ -212,7 +216,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE UFlecsWorld* GetDefaultWorldStatic(const UObject* WorldContextObject)
 	{
-		if (GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert))
+		if LIKELY_IF(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert))
 		{
 			return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 			              ->GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld;

@@ -15,7 +15,7 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 
 	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsWorldPtrComponent& InComponent)
 	{
-		return GetTypeHash(InComponent.World.Get());
+		return GetTypeHash(InComponent.World);
 	}
 
 	FORCEINLINE FFlecsWorldPtrComponent() = default;
@@ -25,11 +25,14 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 	{
 	}
 
-	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const { return World.Get(); }
+	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const
+	{
+		return World;
+	}
 
 	FORCEINLINE NO_DISCARD bool IsValid() const
 	{
-		return World.IsValid();
+		return ::IsValid(World);
 	}
 
 	FORCEINLINE FFlecsWorldPtrComponent& operator=(UFlecsWorld* InWorld)
@@ -71,7 +74,7 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 	}
 
 	UPROPERTY(BlueprintReadOnly, Category = "Flecs")
-	TWeakObjectPtr<UFlecsWorld> World;
+	TObjectPtr<UFlecsWorld> World;
 	
 }; // struct FFlecsWorldPtrComponent
 

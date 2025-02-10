@@ -7,13 +7,8 @@
 #include "CoreMinimal.h"
 
 #define test_assert(cond) \
-	if (FAutomationTestBase* CurrentTest = FAutomationTestFramework::Get().GetCurrentTest()) \
-	{ \
-		if (!CurrentTest->TestTrue(TEXT(#cond), (cond))) \
-		{ \
-			return; \
-		} \
-	} 
+	checkf((cond), TEXT(#cond)) \
+	TestTrue(#cond, (cond))
 
 #define test_bool(v1, v2) \
 	if (FAutomationTestBase* CurrentTest = FAutomationTestFramework::Get().GetCurrentTest()) \

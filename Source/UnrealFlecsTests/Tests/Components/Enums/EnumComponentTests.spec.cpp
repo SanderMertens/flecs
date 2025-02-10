@@ -5,7 +5,6 @@
 #include "Fixtures/FlecsWorldFixture.h"
 #include "ComponentTestEnums.h"
 
-// Define the Spec using template variables for consistency
 BEGIN_DEFINE_SPEC(FEnumComponentTestsSpec,
                   "Flecs.Components.Enum",
                   EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter);
@@ -18,46 +17,48 @@ void FEnumComponentTestsSpec::Define()
 {
 	FLECS_FIXTURE_LIFECYCLE(Fixture);
 	
-	Describe("Enum Component Basic", [this]()
+	Describe("Enum Component Registration", [this]()
 	{
-		It("Should be able to Register an Static Enum Component", [this]()
+		It("Should Register an Static Enum Component", [this]()
 		{
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->RegisterScriptEnum(StaticEnum<ETestEnum>());
 			
 			TestTrue("Entity is Component", TestEntity.IsComponent());
-			TestTrue("Entity has Enum Component", TestEntity.Has<flecs::Enum>());
+			TestTrue("Entity has Enum Component", TestEntity.IsEnum());
 		});
 
-		It("Should be able to Register an Enum Component in CPP", [this]()
+		It("Should Register an Enum Component in CPP", [this]()
 		{
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->RegisterComponentType<ETestEnum>();
 			
 			TestTrue("Entity is Component", TestEntity.IsComponent());
-			TestTrue("Entity has Enum Component", TestEntity.Has<flecs::Enum>());
+			TestTrue("Entity has Enum Component", TestEntity.IsEnum());
 		});
 
-		It("Should be able to Register an Enum Component in CPP and Static", [this]()
+		It("Should Register an Enum Component in Static then CPP", [this]()
 		{
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->RegisterScriptEnum(StaticEnum<ETestEnum>());
 			TestTrue("Entity is Component", TestEntity.IsComponent());
-			TestTrue("Entity has Enum Component", TestEntity.Has<flecs::Enum>());
+			TestTrue("Entity has Enum Component", TestEntity.IsEnum());
 			
 			FFlecsEntityHandle TestEntity2 = Fixture.FlecsWorld->RegisterComponentType<ETestEnum>();
 			TestTrue("Entity is Component", TestEntity2.IsComponent());
-			TestTrue("Entity has Enum Component", TestEntity2.Has<flecs::Enum>());
+			TestTrue("Entity has Enum Component", TestEntity2.IsEnum());
 
 			TestEqual("Both Entities are the same", TestEntity.GetFlecsId(), TestEntity2.GetFlecsId());
 		});
 
-		It("Should be able to add an Enum Component", [this]()
+		It("Should Register an Enum Component in CPP then Static", [this]()
 		{
-			Fixture.FlecsWorld->RegisterComponentType<ETestEnum>();
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->RegisterComponentType<ETestEnum>();
+			TestTrue("Entity is Component", TestEntity.IsComponent());
+			TestTrue("Entity has Enum Component", TestEntity.IsEnum());
 			
-			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
-			TestEntity.GetEntity().set<ETestEnum>(ETestEnum::One);
-			
-			TestTrue("Entity has ETestEnum Component", TestEntity.Has<ETestEnum>());
-			TestEqual("TestEnum is correct", TestEntity.Get<ETestEnum>(), ETestEnum::One);
+			FFlecsEntityHandle TestEntity2 = Fixture.FlecsWorld->ObtainComponentTypeEnum(StaticEnum<ETestEnum>());
+			TestTrue("Entity is Component", TestEntity2.IsComponent());
+			TestTrue("Entity has Enum Component", TestEntity2.IsEnum());
+
+			TestEqual("Both Entities are the same", TestEntity.GetFlecsId(), TestEntity2.GetFlecsId());
 		});
 	});
 }
