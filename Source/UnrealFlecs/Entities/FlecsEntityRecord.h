@@ -244,6 +244,16 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 }; // struct FFlecsComponentTypeInfo
 
 USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsRecordSubEntity
+{
+	GENERATED_BODY()
+
+public:
+	
+}; // struct FFlecsRecordSubEntity
+
+
+USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsEntityRecord
 {
 	GENERATED_BODY()
