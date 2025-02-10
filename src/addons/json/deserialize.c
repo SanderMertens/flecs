@@ -406,6 +406,8 @@ const char* flecs_json_deser_components(
                     goto error;
                 }
 
+                json = flecs_parse_ws_eol(json);
+
                 json = flecs_json_skip_object(json + 1, token, desc);
                 if (!json) {
                     goto error;
@@ -424,6 +426,8 @@ const char* flecs_json_deser_components(
                             if (desc->strict) {
                                 goto error;
                             }
+
+                            json = flecs_parse_ws_eol(json);
 
                             json = flecs_json_skip_object(json + 1, token, desc);
                             if (!json) {
