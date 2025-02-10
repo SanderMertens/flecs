@@ -313,7 +313,7 @@ struct entity_view : public id {
      * @tparam First The first element of the pair.
      * @param constant the enum constant.
      */
-    template<typename First, typename Second, if_t<is_enum<Second>::value> = 0>
+    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     const First* get(Second constant) const {
         const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t target = et.entity(constant);
@@ -483,7 +483,7 @@ struct entity_view : public id {
      * @tparam First The first element of the pair.
      * @param constant the enum constant.
      */
-    template<typename First, typename Second, if_t<is_enum<Second>::value> = 0>
+    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     First* get_mut(Second constant) const {
         const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t target = et.entity(constant);
