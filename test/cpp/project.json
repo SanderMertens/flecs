@@ -428,7 +428,8 @@
                 "enum_u8",
                 "enum_u16",
                 "enum_u32",
-                "enum_u64"
+                "enum_u64",
+                "runtime_type_constant_u8_template"
             ]
         }, {
             "id": "Union",
