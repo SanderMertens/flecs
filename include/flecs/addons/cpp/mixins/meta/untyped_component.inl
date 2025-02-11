@@ -202,7 +202,7 @@ untyped_component& constant(
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_set_id(world_, eid, 
-        ecs_pair(flecs::Constant, flecs::_::type<T>::id(world)), sizeof(T),
+        ecs_pair(flecs::Constant, _::type<T>::id(world_)), sizeof(T),
         &value);
 
     return *this;
@@ -212,7 +212,7 @@ untyped_component& constant(
 template <typename T = uint32_t>
 untyped_component& bit(
     const char *name, 
-    uint32_t value)
+    T value)
 {
     ecs_add_id(world_, id_, _::type<flecs::Bitmask>::id(world_));
 
@@ -223,7 +223,7 @@ untyped_component& bit(
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_set_id(world_, eid, 
-        ecs_pair(flecs::Constant, flecs::_::type<T>::id(world)), sizeof(T),
+        ecs_pair(flecs::Constant, _::type<T>::id(world_)), sizeof(T),
         &value);
 
     return *this;
