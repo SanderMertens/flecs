@@ -42,6 +42,7 @@ ecs_cmd_t* flecs_cmd_new_batched(
 
     int32_t cur = ecs_vec_count(cmds);
     ecs_cmd_t *cmd = flecs_cmd_new(stage);
+    bool is_new = false;
     if (entry) {
         if (entry->first == -1) {
             /* Existing but invalidated entry */
@@ -50,16 +51,25 @@ ecs_cmd_t* flecs_cmd_new_batched(
         } else {
             int32_t last = entry->last;
             ecs_cmd_t *arr = ecs_vec_first_t(cmds, ecs_cmd_t);
-            ecs_assert(arr[last].entity == e, ECS_INTERNAL_ERROR, NULL);
-            ecs_cmd_t *last_op = &arr[last];
-            last_op->next_for_entity = cur;
-            if (last == entry->first) {
-                /* Flip sign bit so flush logic can tell which command
-                 * is the first for an entity */
-                last_op->next_for_entity *= -1;
+            if (arr[last].entity == e) {
+                ecs_cmd_t *last_op = &arr[last];
+                last_op->next_for_entity = cur;
+                if (last == entry->first) {
+                    /* Flip sign bit so flush logic can tell which command
+                    * is the first for an entity */
+                    last_op->next_for_entity *= -1;
+                }
+            } else {
+                /* Entity with different version was in the same queue. Discard
+                 * the old entry and create a new one. */
+                is_new = true;
             }
         }
     } else {
+        is_new = true;
+    }
+
+    if (is_new) {
         cmd->entry = entry = flecs_sparse_ensure_fast_t(
             &stage->cmd->entries, ecs_cmd_entry_t, e);
         entry->first = cur;
