@@ -1165,7 +1165,8 @@
                 "implicit_const_ref",
                 "vector_elem_type",
                 "tag_has_component",
-                "component_has_component"
+                "component_has_component",
+                "same_name_prefix_component_registration"
             ]
         }, {
             "id": "WorldFactory",
