@@ -4749,3 +4749,50 @@ void Commands_ensure_from_2_stages(void) {
 
     ecs_fini(world);
 }
+
+static ECS_COMPONENT_DECLARE(Velocity);
+
+static void remove_velocity(ecs_iter_t *it) {
+    ecs_remove(it->world, it->entities[0], Velocity);
+}
+
+void Commands_batch_w_old_and_recycled_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = remove_velocity
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_entity_t grandchild = ecs_new(world);
+    ecs_add_pair(world, grandchild, EcsChildOf, child);
+    ecs_add(world, grandchild, Position);
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_delete(world, child);
+    ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_defer_resume(world);
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+
+    test_assert(ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(ecs_is_alive(world, child_2));
+    test_assert(!ecs_is_alive(world, grandchild));
+    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_has_pair(world, child_2, EcsChildOf, parent));
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}

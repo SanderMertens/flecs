@@ -2204,6 +2204,7 @@ void Commands_redefine_named_in_threaded_app(void);
 void Commands_batched_cmd_w_component_init(void);
 void Commands_deep_command_nesting(void);
 void Commands_ensure_from_2_stages(void);
+void Commands_batch_w_old_and_recycled_id(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -10915,6 +10916,10 @@ bake_test_case Commands_testcases[] = {
     {
         "ensure_from_2_stages",
         Commands_ensure_from_2_stages
+    },
+    {
+        "batch_w_old_and_recycled_id",
+        Commands_batch_w_old_and_recycled_id
     }
 };
 
@@ -11795,7 +11800,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        155,
+        156,
         Commands_testcases
     },
     {
