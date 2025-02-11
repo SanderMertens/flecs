@@ -23923,7 +23923,7 @@ struct entity_view : public id {
      * @tparam First The first element of the pair.
      * @param constant the enum constant.
      */
-    template<typename First, typename Second, if_t<is_enum<Second>::value> = 0>
+    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     const First* get(Second constant) const {
         const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t target = et.entity(constant);
@@ -24093,7 +24093,7 @@ struct entity_view : public id {
      * @tparam First The first element of the pair.
      * @param constant the enum constant.
      */
-    template<typename First, typename Second, if_t<is_enum<Second>::value> = 0>
+    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     First* get_mut(Second constant) const {
         const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t target = et.entity(constant);
@@ -24322,7 +24322,7 @@ struct entity_view : public id {
      * @param value The enum constant.
      * @return True if the entity has the provided component, false otherwise.
      */
-    template<typename First, typename E, if_t< is_enum<E>::value > = 0>
+    template<typename First, typename E, if_t< is_enum<E>::value && !std::is_same<First, E>::value > = 0>
     bool has(E value) const {
         const auto& et = enum_type<E>(this->world_);
         flecs::entity_t second = et.entity(value);
@@ -24833,7 +24833,7 @@ struct entity_builder : entity_view {
      * @tparam First The first element of the pair
      * @param constant the enum constant.
      */
-    template<typename First, typename Second, if_t< is_enum<Second>::value > = 0>
+    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     const Self& add(Second constant) const  {
         flecs_static_assert(is_flecs_constructible<First>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");
