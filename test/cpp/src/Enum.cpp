@@ -1588,9 +1588,9 @@ void Enum_runtime_type_constant_u8_template() {
     comp.set<flecs::Component>({ sizeof(uint8_t), alignof(uint8_t) });
     comp.set<flecs::Enum>({ flecs::U8 });
 
-    comp.constant<uint8_t>("First", 1, flecs::U8)
-        .constant<uint8_t>("Second", 2, flecs::U8)
-        .constant<uint8_t>("Third", 3, flecs::U8);
+    comp.constant<uint8_t>("First", 1)
+        .constant<uint8_t>("Second", 2)
+        .constant<uint8_t>("Third", 3);
 
     auto first = comp.lookup("First");
     auto second = comp.lookup("Second");
