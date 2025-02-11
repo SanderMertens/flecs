@@ -27873,7 +27873,7 @@ untyped_component& constant(
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_set_id(world_, eid, 
-        ecs_pair(flecs::Constant, flecs::_::type<T>::id(world)), sizeof(T),
+        ecs_pair(flecs::Constant, _::type<T>::id(world_)), sizeof(T),
         &value);
 
     return *this;
