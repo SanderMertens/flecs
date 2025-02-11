@@ -24272,7 +24272,7 @@ struct entity_view : public id {
      * @param value The enum constant to check. 
      * @return True if the entity has the provided constant, false otherwise.
      */
-    template<typename First, typename E, if_t< is_enum<E>::value && !std::is_same<First, E>::value > = 0>
+    template <typename E, if_t< is_enum<E>::value > = 0>
     bool has(E value) const {
         auto r = _::type<E>::id(world_);
         auto o = enum_type<E>(world_).entity(value);
@@ -24322,7 +24322,7 @@ struct entity_view : public id {
      * @param value The enum constant.
      * @return True if the entity has the provided component, false otherwise.
      */
-    template<typename First, typename E, if_t< is_enum<E>::value > = 0>
+    template<typename First, typename E, if_t< is_enum<E>::value && !std::is_same<First, E>::value >>
     bool has(E value) const {
         const auto& et = enum_type<E>(this->world_);
         flecs::entity_t second = et.entity(value);
