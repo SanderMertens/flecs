@@ -531,6 +531,15 @@ void Enum_replace_enum_constants(void) {
     test_assert(e.has(StandardEnum::Blue));
 }
 
+void Enum_add_enum_constants_explicit(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity().add<StandardEnum>(StandardEnum::Red);
+    test_assert(e.has<StandardEnum>(StandardEnum::Red));
+    test_assert(!e.has<StandardEnum>(StandardEnum::Green));
+    test_assert(!e.has<StandardEnum>(StandardEnum::Blue));
+}
+
 void Enum_has_enum(void) {
     flecs::world ecs;
 
