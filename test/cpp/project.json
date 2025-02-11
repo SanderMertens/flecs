@@ -389,6 +389,7 @@
                 "constant_with_num_reflection",
                 "get_constant_id",
                 "add_enum_constant",
+                "add_enum_constants_explicit",
                 "add_enum_class_constant",
                 "replace_enum_constants",
                 "has_enum",
