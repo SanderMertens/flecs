@@ -117,6 +117,15 @@ namespace ns_parent {
     }
 }
 
+struct module_same_name_component { };
+
+class module_same_name {
+public:
+    module_same_name(flecs::world &world) {
+        world.component<module_same_name_component>();
+    }
+};
+
 struct Module {
     Module(flecs::world& world) {
         world.module<Module>();
@@ -545,4 +554,11 @@ void Module_reimport_after_delete(void) {
         test_assert(m.lookup("Position") == ecs.component<Position>());
         test_assert(m == ecs.entity<Module>());
     }
+}
+
+void Module_same_name_prefix_component_registration(void) {
+    flecs::world world;
+    world.import<module_same_name>();
+
+    //test_assert
 }
