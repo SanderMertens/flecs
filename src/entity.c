@@ -4907,9 +4907,9 @@ void flecs_cmd_batch_for_entity(
                 }
             }
 
-            int32_t index = (i >= 64) + (i >= 128) + (i >= 192);
-            int32_t shift = i - 64 * index;
-            set_mask[index] |= (1llu << shift);
+            ecs_assert(i < 256, ECS_UNSUPPORTED, 
+                "cannot add more than 256 components in a single operation");
+            set_mask[i >> 6] |= 1llu << (i & 63);
 
             world->info.cmd.batched_command_count ++;
             break;

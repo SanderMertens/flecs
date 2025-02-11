@@ -1273,12 +1273,7 @@ repeat_event:
         if (set_mask && event == EcsOnAdd) {
             ecs_assert(i < 256, ECS_UNSUPPORTED, 
                 "cannot add more than 256 components in a single operation");
-
-            int32_t index = (i >= 64) + (i >= 128) + (i >= 192);
-            int32_t shift = i - 64 * index;
-
-            ecs_flags64_t id_bit = 1llu << shift;
-            if (id_bit & set_mask[index]) {
+            if (set_mask[i >> 6] & (1llu << (i & 63))) {
                 /* Component is already set, so don't override with prefab value */
                 id_can_override = false;
             }
