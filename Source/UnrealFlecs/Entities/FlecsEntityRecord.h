@@ -284,7 +284,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		return !(*this == Other);
 	}
 
-	template <Solid::TStaticStructConcept T>
+	template <Solid::TScriptStructConcept T>
 	FORCEINLINE void AddComponent(const T& InComponent)
 	{
 		FFlecsComponentTypeInfo NewComponent;

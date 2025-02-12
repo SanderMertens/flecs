@@ -255,7 +255,7 @@ struct type_impl {
                 is_component,
                 &existing);
             
-            if constexpr (Solid::IsStaticStruct<T>() && !std::is_same_v<T, FFlecsScriptStructComponent>)
+            if constexpr (Solid::IsScriptStruct<T>() && !std::is_same_v<T, FFlecsScriptStructComponent>)
             {
                 flecs::world P_world(world);
                 UScriptStruct* scriptStruct = TBaseStructure<T>::Get();

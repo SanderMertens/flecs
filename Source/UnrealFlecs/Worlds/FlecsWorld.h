@@ -1122,13 +1122,13 @@ public:
 		return FFlecsEntityHandle(World, c);
 	}
 
-	template <Solid::TStaticStructConcept T>
+	template <Solid::TScriptStructConcept T>
 	NO_DISCARD FFlecsEntityHandle GetScriptStructEntity() const
 	{
 		return GetScriptStructEntity(TBaseStructure<T>::Get());
 	}
 
-	template <Solid::TStaticStructConcept T>
+	template <Solid::TScriptStructConcept T>
 	NO_DISCARD bool HasScriptStruct() const
 	{
 		return HasScriptStruct(TBaseStructure<T>::Get());
