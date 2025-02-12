@@ -117,12 +117,12 @@ namespace ns_parent {
     }
 }
 
-struct module_same_name_component { };
+struct module_a_component { };
 
-class module_same_name {
+class module_a {
 public:
-    module_same_name(flecs::world &world) {
-        world.component<module_same_name_component>();
+    module_a(flecs::world &world) {
+        world.component<module_a_component>();
     }
 };
 
@@ -558,7 +558,7 @@ void Module_reimport_after_delete(void) {
 
 void Module_same_name_prefix_component_registration(void) {
     flecs::world world;
-    world.import<module_same_name>();
+    world.import<module_a>();
 
     //test_assert
 }
