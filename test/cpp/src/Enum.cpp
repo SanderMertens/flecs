@@ -494,6 +494,15 @@ void Enum_add_enum_constant(void) {
     test_assert(id == ecs.pair(r, c));
 }
 
+void Enum_add_enum_constant_explicit(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity().add<StandardEnum>(StandardEnum::Red);
+    test_assert(e.has<StandardEnum>(StandardEnum::Red));
+    test_assert(!e.has<StandardEnum>(StandardEnum::Green));
+    test_assert(!e.has<StandardEnum>(StandardEnum::Blue));
+}
+
 void Enum_add_enum_class_constant(void) {
     flecs::world ecs;
 
@@ -1579,4 +1588,32 @@ void Enum_enum_w_one_constant_index_of(void) {
 
     auto one_type = flecs::enum_type<OneConstant>(ecs);
     test_int(one_type.index_by_value(0), 0);
+}
+
+void Enum_runtime_type_constant_u8_template() {
+    flecs::world ecs;
+
+    auto comp = ecs.component("TestEnumConstant");
+    comp.set<flecs::Component>({ sizeof(uint8_t), alignof(uint8_t) });
+    comp.set<flecs::Enum>({ flecs::U8 });
+
+    comp.constant<uint8_t>("First", 1)
+        .constant<uint8_t>("Second", 2)
+        .constant<uint8_t>("Third", 3);
+
+    auto first = comp.lookup("First");
+    auto second = comp.lookup("Second");
+    auto third = comp.lookup("Third");
+
+    test_assert(first.is_valid());
+    test_assert(second.is_valid());
+    test_assert(third.is_valid());
+
+    const uint8_t *val_first = first.get_second<uint8_t>(flecs::Constant);
+    const uint8_t *val_second = second.get_second<uint8_t>(flecs::Constant);
+    const uint8_t *val_third = third.get_second<uint8_t>(flecs::Constant);
+
+    test_true(val_first != nullptr && *val_first == 1);
+    test_true(val_second != nullptr && *val_second == 2);
+    test_true(val_third != nullptr && *val_third == 3);
 }

@@ -100,7 +100,7 @@ struct entity_builder : entity_view {
      * @tparam First The first element of the pair
      * @param constant the enum constant.
      */
-    template<typename First, typename Second, if_t< is_enum<Second>::value > = 0>
+    template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     const Self& add(Second constant) const  {
         flecs_static_assert(is_flecs_constructible<First>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");
