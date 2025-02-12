@@ -1132,7 +1132,8 @@
                 "rename_namespace_nested",
                 "rename_reparent_root_module",
                 "no_recycle_after_rename_reparent",
-                "reimport_after_delete"
+                "reimport_after_delete",
+                "same_name_prefix_component_registration"
             ]
         }, {
             "id": "ImplicitComponents",
@@ -1165,8 +1166,7 @@
                 "implicit_const_ref",
                 "vector_elem_type",
                 "tag_has_component",
-                "component_has_component",
-                "same_name_prefix_component_registration"
+                "component_has_component"
             ]
         }, {
             "id": "WorldFactory",
