@@ -145,6 +145,9 @@ public:
 
 		DefaultWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ DefaultWorld });
 		DefaultWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
+
+		solid_checkf(DefaultWorld->GetSingletonRef<FFlecsWorldPtrComponent>().World == DefaultWorld,
+			TEXT("Singleton world ptr component does not point to the correct world"));
 		
 		for (const FFlecsDefaultMetaEntity& DefaultEntity : DefaultEntities)
 		{
@@ -176,9 +179,8 @@ public:
 
 		for (UObject* Module : Settings.Modules)
 		{
-			solid_checkf(IsValid(Module), TEXT("Module is not valid!"));
-			solid_checkf(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
-				TEXT("Module %s does not implement UFlecsModuleInterface"), *Module->GetName());
+			solid_check(IsValid(Module));
+			solid_check(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()));
 			
 			DefaultWorld->ImportModule(Module);
 		}

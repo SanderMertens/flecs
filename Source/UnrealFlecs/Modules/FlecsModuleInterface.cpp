@@ -42,21 +42,13 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 		.entity(ModuleEntity)
 		.emit();
 
-	if (FlecsWorld->GetWorldEntity().Has<FFlecsBeginPlay>())
+	UFlecsWorldSubsystem* WorldSubsystem = GameWorld->GetSubsystem<UFlecsWorldSubsystem>();
+	WorldSubsystem->ListenBeginPlay(
+		FOnWorldBeginPlay::FDelegate::CreateLambda([this, FlecsWorld](UWorld* InGameWorld)
 	{
-		WorldBeginPlay(World.Get(), FlecsWorld->GetWorld());
-		Execute_BP_WorldBeginPlay(_getUObject(), World.Get(), FlecsWorld->GetWorld());
-	}
-	else
-	{
-		UFlecsWorldSubsystem* WorldSubsystem = GameWorld->GetSubsystem<UFlecsWorldSubsystem>();
-		WorldSubsystem->OnWorldBeginPlayDelegate.AddWeakLambda(_getUObject(), [this](UWorld* InGameWorld)
-		{
-			UFlecsWorld* NewFlecsWorld = World.Get();
-			WorldBeginPlay(NewFlecsWorld, InGameWorld);
-			Execute_BP_WorldBeginPlay(_getUObject(), NewFlecsWorld, InGameWorld);
-		});
-	}
+		WorldBeginPlay(FlecsWorld, InGameWorld);
+		Execute_BP_WorldBeginPlay(_getUObject(), FlecsWorld, InGameWorld);
+	}));
 	
 	UN_LOGF(LogFlecsCore, Log, "Imported module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }

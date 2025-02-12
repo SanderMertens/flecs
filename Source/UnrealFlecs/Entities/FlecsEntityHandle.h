@@ -172,8 +172,10 @@ public:
 		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
 		solid_check(EnumEntity.IsValid());
 		solid_check(EnumEntity.IsEnum());
+
+		FFlecsId EnumConstant = EnumEntity.Lookup(EnumType->GetNameStringByValue(InValue));
 		
-		return HasPair(EnumEntity, GetEnumConstant(EnumType, InValue)->constant);
+		return HasPair(EnumEntity, EnumConstant);
 	}
 
 	SOLID_INLINE NO_DISCARD bool Has(const FSolidEnumSelector& EnumSelector) const
@@ -190,11 +192,15 @@ public:
 	{
 		Add(ObtainComponentTypeStruct(StructType));
 	}
-
+	
 	SOLID_INLINE void Add(const UEnum* EnumType, const int64 InValue) const
 	{
 		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
-		AddPair(EnumEntity, GetEnumConstant(EnumType, InValue)->constant);
+
+		FFlecsId ValueEntity = EnumEntity.Lookup(EnumType->GetNameStringByValue(InValue));
+		solid_check(ValueEntity.IsValid());
+		
+		AddPair(EnumEntity, ValueEntity);
 	}
 
 	SOLID_INLINE void Add(const FGameplayTag& InTag) const
@@ -214,6 +220,13 @@ public:
 	SOLID_INLINE void Add() const
 	{
 		GetEntity().add<T>();
+	}
+
+	template <typename T>
+	requires (std::is_enum<T>::value)
+	SOLID_INLINE void Add(const T InValue) const
+	{
+		GetEntity().add<T>(InValue);
 	}
 	
 	SOLID_INLINE void Remove(const FFlecsId InEntity) const
@@ -242,8 +255,7 @@ public:
 		solid_check(EnumEntity.IsValid());
 		solid_check(EnumEntity.IsEnum());
 
-		const FFlecsId EnumConstant = GetEnumConstant(EnumType, InValue)->constant;
-		solid_check(HasPair(EnumEntity, EnumConstant));
+		const FFlecsId EnumConstant = EnumEntity.Lookup(EnumType->GetNameStringByValue(InValue));
 		
 		RemovePair(EnumEntity, EnumConstant);
 	}
@@ -1249,20 +1261,6 @@ private:
 	SOLID_INLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const
 	{
 		return Entity.world();
-	}
-
-	SOLID_INLINE NO_DISCARD const ecs_enum_constant_t* GetEnumConstant(const UEnum* EnumType, const int64 InValue) const
-	{
-		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
-		solid_check(EnumEntity.IsEnum());
-
-		auto [underlying_type, constants] = EnumEntity.Get<flecs::Enum>();
-		const ecs_enum_constant_t* Constant = static_cast<ecs_enum_constant_t*>(ecs_map_get_deref_(
-			&constants,
-			InValue));
-		solid_checkf(Constant != nullptr, TEXT("Enum value %lld not found"), InValue);
-		
-		return Constant;
 	}
 	
 }; // struct FFlecsEntityHandle

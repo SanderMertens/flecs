@@ -468,7 +468,10 @@ public:
 		solid_check(ModuleEntity.IsValid());
 
 		ModuleEntity.Add<FFlecsDependenciesComponent>();
-		const flecs::ref<FFlecsDependenciesComponent> Dependencies = ModuleEntity.GetFlecsRef<FFlecsDependenciesComponent>();
+		
+		FFlecsDependenciesComponent* Dependencies = ModuleEntity.GetPtr<FFlecsDependenciesComponent>();
+		solid_check(Dependencies);
+		
 		Dependencies->Dependencies.emplace(InDependencyClass, InFunction);
 		
 		if (IsModuleImported(InDependencyClass))
@@ -630,6 +633,7 @@ public:
 	}
 
 	template <typename T>
+	requires (std::is_copy_constructible<T>::value)
 	NO_DISCARD T GetSingleton() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
@@ -1229,8 +1233,8 @@ public:
 				UntypedComponent.member<TSubclassOf<UObject>>(StringCast<char>(*Property->GetName()).Get(), 1,
 					Property->GetOffset_ForInternal());
 			}
-			 else if (Property->IsA<FStructProperty>())
-			 {
+			else if (Property->IsA<FStructProperty>())
+			{
 			 	FFlecsEntityHandle StructComponent;
 			 	if (!HasScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct))
 			 	{
@@ -1246,7 +1250,7 @@ public:
 			 	
 			 	UntypedComponent.member(StructComponent, StringCast<char>(*Property->GetName()).Get(), 1,
 			 		Property->GetOffset_ForInternal());
-			 }
+			}
 			else
 			{
 				UN_LOGF(LogFlecsWorld, Warning,
@@ -1276,7 +1280,7 @@ public:
 			{ .size = ScriptStruct->GetStructureSize(), .alignment = ScriptStruct->GetMinAlignment() });
 
 			if (!flecs::_::g_type_to_impl_data.contains(
-				std::string_view(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())))
+				std::string(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())))
 			{
 				flecs::_::type_impl_data NewData;  // NOLINT(cppcoreguidelines-pro-type-member-init)
 				NewData.s_index = flecs_component_ids_index_get();
@@ -1285,13 +1289,13 @@ public:
 				NewData.s_allow_tag = true;
 				
 				flecs::_::g_type_to_impl_data.emplace(
-					std::string_view(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()), NewData);
+					std::string(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()), NewData);
 			}
 
 			solid_check(flecs::_::g_type_to_impl_data.contains(
-				std::string_view(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())));
+				std::string(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())));
 			flecs::_::type_impl_data& Data = flecs::_::g_type_to_impl_data.at(
-				std::string_view(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()));
+				std::string(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()));
 
 			flecs_component_ids_set(World, Data.s_index, ScriptStructComponent);
 
@@ -1335,7 +1339,10 @@ public:
 
 		flecs::untyped_component ScriptEnumComponent;
 
-		DeferEndScoped([this, ScriptEnum, &ScriptEnumComponent]()
+		const FString EnumName = ScriptEnum->GetName();
+		const char* EnumNameCStr = StringCast<char>(*EnumName).Get();
+
+		DeferEndScoped([this, ScriptEnum, &ScriptEnumComponent, EnumNameCStr]()
 		{
 			ScriptEnumComponent = World.component(StringCast<char>(*ScriptEnum->GetName()).Get());
 			solid_check(ScriptEnumComponent.is_valid());
@@ -1349,31 +1356,32 @@ public:
 			
 			for (int32 EnumIndex = 0; EnumIndex < EnumCount; ++EnumIndex)
 			{
-				const FString EnumName = ScriptEnum->GetNameStringByIndex(EnumIndex);
 				const int32 EnumValue = ScriptEnum->GetValueByIndex(EnumIndex);
+				const FString EnumValueName = ScriptEnum->GetNameStringByIndex(EnumIndex);
+
+				if (ScriptEnum->GetMaxEnumValue() == EnumValue)
+				{
+					continue;
+				}
 				
-				ScriptEnumComponent.constant<uint8>(StringCast<char>(*EnumName).Get(), EnumValue, flecs::U8);  // NOLINT(clang-diagnostic-implicit-int-conversion)
+				ScriptEnumComponent.constant<uint8>(StringCast<char>(*EnumValueName).Get(), EnumValue);
 			}
 
-			if (!flecs::_::g_type_to_impl_data.contains(
-				std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get())))
+			if (!flecs::_::g_type_to_impl_data.contains(std::string(EnumNameCStr)))
 			{
 				flecs::_::type_impl_data NewData;
 				NewData.s_index = flecs_component_ids_index_get();
 				NewData.s_size = sizeof(uint8);
 				NewData.s_alignment = alignof(uint8);
-				NewData.s_allow_tag = true;
+				NewData.s_allow_tag = false;
 				
-				flecs::_::g_type_to_impl_data.emplace(
-					std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get()), NewData);
+				flecs::_::g_type_to_impl_data.emplace(std::string(EnumNameCStr), NewData);
 			}
 
-			solid_check(flecs::_::g_type_to_impl_data.contains(
-				std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get())));
-			flecs::_::type_impl_data& Data = flecs::_::g_type_to_impl_data.at(
-				std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get()));
-
-			flecs_component_ids_set(World, Data.s_index, ScriptEnumComponent);
+			solid_check(flecs::_::g_type_to_impl_data.contains(std::string(EnumNameCStr)));
+			
+			auto& [s_index, s_size, s_alignment, s_allow_tag] = flecs::_::g_type_to_impl_data.at(std::string(EnumNameCStr));
+			flecs_component_ids_set(World, s_index, ScriptEnumComponent);
 
 			TypeMapComponent->ScriptEnumMap.emplace(ScriptEnum, ScriptEnumComponent);
 		});
@@ -1384,7 +1392,7 @@ public:
 		return ScriptEnumComponent;
 	}
 	
-	FFlecsEntityHandle RegisterComponentBitmaskType(const UEnum* ScriptEnum) const
+	/*FFlecsEntityHandle RegisterComponentBitmaskType(const UEnum* ScriptEnum) const
 	{
 		solid_check(IsValid(ScriptEnum));
 
@@ -1415,7 +1423,7 @@ public:
 			}
 
 			if (!flecs::_::g_type_to_impl_data.contains(
-				std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get())))
+				std::string(StringCast<char>(*ScriptEnum->GetName()).Get())))
 			{
 				flecs::_::type_impl_data NewData;
 				NewData.s_index = flecs_component_ids_index_get();
@@ -1424,13 +1432,13 @@ public:
 				NewData.s_allow_tag = true;
 				
 				flecs::_::g_type_to_impl_data.emplace(
-					std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get()), NewData);
+					std::string(StringCast<char>(*ScriptEnum->GetName()).Get()), NewData);
 			}
 
 			solid_check(flecs::_::g_type_to_impl_data.contains(
-				std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get())));
+				std::string(StringCast<char>(*ScriptEnum->GetName()).Get())));
 			flecs::_::type_impl_data& Data = flecs::_::g_type_to_impl_data.at(
-				std::string_view(StringCast<char>(*ScriptEnum->GetName()).Get()));
+				std::string(StringCast<char>(*ScriptEnum->GetName()).Get()));
 
 			flecs_component_ids_set(World, Data.s_index, ScriptEnumComponent);
 			TypeMapComponent->ScriptEnumMap.emplace(ScriptEnum, ScriptEnumComponent);
@@ -1439,7 +1447,7 @@ public:
 		ScriptEnumComponent.set<FFlecsScriptEnumComponent>({ ScriptEnum });
 		SetScope(OldScope);
 		return ScriptEnumComponent;
-	}
+	}*/
 
 	template <typename T>
 	flecs::untyped_component RegisterComponentType() const

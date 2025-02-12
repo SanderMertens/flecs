@@ -61,6 +61,63 @@ void FEnumComponentTestsSpec::Define()
 			TestEqual("Both Entities are the same", TestEntity.GetFlecsId(), TestEntity2.GetFlecsId());
 		});
 	});
+
+	Describe("Enum Component Addition/Removal", [this]()
+	{
+		It("Should Add an Enum Component using CPP API", [this]()
+		{
+			FFlecsEntityHandle TestComponent = Fixture.FlecsWorld->RegisterComponentType<ETestEnum>();
+
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add<ETestEnum>(ETestEnum::One);
+			
+			TestTrue("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
+		});
+
+		It("Should Add an Enum Component using Static API", [this]()
+		{
+			FFlecsEntityHandle TestComponent = Fixture.FlecsWorld->RegisterScriptEnum(StaticEnum<ETestEnum>());
+			
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add(StaticEnum<ETestEnum>(), static_cast<int64>(ETestEnum::One));
+			
+			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
+			TestTrue("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+		});
+
+		It("Should Remove an Enum Component using CPP API", [this]()
+		{
+			FFlecsEntityHandle TestComponent = Fixture.FlecsWorld->RegisterComponentType<ETestEnum>();
+
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add<ETestEnum>(ETestEnum::One);
+			
+			TestTrue("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
+			
+			TestEntity.Remove<ETestEnum>();
+
+			TestFalse("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
+			TestFalse("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+		});
+
+		It("Should Remove an Enum Component using Static API", [this]()
+		{
+			FFlecsEntityHandle TestComponent = Fixture.FlecsWorld->RegisterScriptEnum(StaticEnum<ETestEnum>());
+			
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add(StaticEnum<ETestEnum>(), static_cast<int64>(ETestEnum::One));
+			
+			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
+			TestTrue("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+			
+			TestEntity.Remove(StaticEnum<ETestEnum>());
+			
+			TestFalse("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
+			TestFalse("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+		});
+	});
 }
 
 #endif // WITH_AUTOMATION_TESTS
