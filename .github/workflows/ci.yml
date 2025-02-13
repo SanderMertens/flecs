@@ -905,6 +905,30 @@ jobs:
         run: |
           bake run test/cpp --cfg sanitize -- -j 8
 
+  test-os-alloc-core:
+    needs: [ build-linux ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04 ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --cfg sanitize -D FLECS_USE_OS_ALLOC
+
+      - name: run tests
+        run: |
+          bake run test/core --cfg sanitize -- -j 8
+
   test-cmake:
     needs: [ build-linux, build-macos ]
     runs-on: ${{ matrix.os }}
