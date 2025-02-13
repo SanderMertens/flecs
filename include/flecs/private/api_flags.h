@@ -78,16 +78,13 @@ extern "C" {
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 17) 
 #define EcsIdHasOnSet                  (1u << 18)
-#define EcsIdHasOnTableFill            (1u << 19)
-#define EcsIdHasOnTableEmpty           (1u << 20)
 #define EcsIdHasOnTableCreate          (1u << 21)
 #define EcsIdHasOnTableDelete          (1u << 22)
 #define EcsIdIsSparse                  (1u << 23)
 #define EcsIdIsUnion                   (1u << 24)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
-        EcsIdHasOnTableFill|EcsIdHasOnTableEmpty|EcsIdHasOnTableCreate|\
-            EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion)
+        EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion)
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
