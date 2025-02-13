@@ -937,7 +937,7 @@ let i = world.entity().is_a_id(e); // not allowed
 </ul>
 </div>
 
-Queries may use the final trait to optimize, as they do not have to explore subsets of a final entity. For more information on how queries interpret final, see the [Query manual](Queries.md). By default, all components are created as final.
+Queries may use the final trait to optimize, as they do not have to explore subsets of a final entity. For more information on how queries interpret final, see the [Query manual](Queries.md).
 
 ## OnInstantiate trait
 The `OnInstantiate` trait configures the behavior of components when an entity is instantiated from another entity (usually a prefab). Instantiation happens when an `IsA` pair is added to an entity.
