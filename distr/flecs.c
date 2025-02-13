@@ -28573,16 +28573,13 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
         ECS_SIZEOF(ecs_block_allocator_block_t));
 
     block->memory = first_chunk;
-    if (!allocator->block_tail) {
-        ecs_assert(!allocator->block_head, ECS_INTERNAL_ERROR, 0);
-        block->next = NULL;
-        allocator->block_head = block;
-        allocator->block_tail = block;
-    } else {
-        block->next = NULL;
-        allocator->block_tail->next = block;
-        allocator->block_tail = block;
+    block->next = NULL;
+
+    if (allocator->block_head) {
+        block->next = allocator->block_head;
     }
+
+    allocator->block_head = block;
 
     ecs_block_allocator_chunk_header_t *chunk = first_chunk;
     int32_t i, end;
@@ -28619,7 +28616,6 @@ void flecs_ballocator_init(
     ba->block_size = ba->chunks_per_block * ba->chunk_size;
     ba->head = NULL;
     ba->block_head = NULL;
-    ba->block_tail = NULL;
 }
 
 ecs_block_allocator_t* flecs_ballocator_new(
