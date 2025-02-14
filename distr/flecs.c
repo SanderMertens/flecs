@@ -32141,6 +32141,12 @@ int flecs_query_set_caching_policy(
         }
     }
 
+#ifdef FLECS_DEFAULT_TO_UNCACHED_QUERIES
+    if (kind == EcsQueryCacheDefault && !group_order_by) {
+        kind = EcsQueryCacheNone;
+    }
+#endif
+
     /* If caching policy is default, try to pick a policy that does the right
      * thing in most cases. */
     if (kind == EcsQueryCacheDefault) {

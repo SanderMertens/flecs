@@ -146,6 +146,14 @@
  */
 // #define FLECS_KEEP_ASSERT
 
+/** @def FLECS_DEFAULT_TO_UNCACHED_QUERIES 
+ * When set, this will cause queries with the EcsQueryCacheDefault policy
+ * to default to EcsQueryCacheNone. This can reduce the memory footprint of
+ * applications at the cost of performance. Queries that use features which 
+ * require caching such as group_by and order_by will still use caching.
+ */
+// #define FLECS_DEFAULT_TO_UNCACHED_QUERIES
+
 /** @def FLECS_CPP_NO_AUTO_REGISTRATION
  * When set, the C++ API will require that components are registered before they
  * are used. This is useful in multithreaded applications, where components need
