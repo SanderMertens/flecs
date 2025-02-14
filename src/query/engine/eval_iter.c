@@ -265,6 +265,56 @@ void flecs_query_iter_fini(
     qit->query = NULL;
 }
 
+static
+void flecs_query_validate_final_fields(
+    const ecs_query_t *q)
+{
+    (void)q;
+#ifdef FLECS_DEBUG
+    ecs_query_impl_t *impl = flecs_query_impl(q);
+    ecs_world_t *world = q->real_world;
+
+    if (!impl->final_terms) {
+        return;
+    }
+
+    if (!world->idr_isa_wildcard) {
+        return;
+    }
+
+    int32_t i, count = impl->pub.term_count;
+    ecs_term_t *terms = impl->pub.terms;
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        ecs_id_t id = term->id;
+
+        if (!(impl->final_terms & (1 << i))) {
+            continue;
+        }
+
+        if (ECS_IS_PAIR(id)) {
+            id = ECS_PAIR_FIRST(id);
+        }
+
+        if (ecs_id_is_wildcard(id)) {
+            continue;
+        }
+
+        if (flecs_id_record_get(world, ecs_pair(EcsIsA, id))) {
+            char *query_str = ecs_query_str(q);
+            char *id_str = ecs_id_str(world, id);
+            ecs_abort(ECS_INVALID_OPERATION, 
+                    "query '%s' was created before '(IsA, %s)' relationship, "
+                    "create query after adding inheritance relationship "
+                    "or add 'Inheritable' trait to '%s'", 
+                        query_str, id_str, id_str);
+            ecs_os_free(id_str);
+            ecs_os_free(query_str);
+        }
+    }
+#endif
+}
+
 ecs_iter_t flecs_query_iter(
     const ecs_world_t *world,
     const ecs_query_t *q)
@@ -272,6 +322,8 @@ ecs_iter_t flecs_query_iter(
     ecs_iter_t it = {0};
     ecs_query_iter_t *qit = &it.priv_.iter.query;
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    flecs_query_validate_final_fields(q);
     
     flecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
