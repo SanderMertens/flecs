@@ -1627,7 +1627,8 @@
                 "invalid_cascade_for_second",
                 "invalid_desc_without_cascade",
                 "invalid_desc_for_first",
-                "invalid_desc_for_second"
+                "invalid_desc_for_second",
+                "cascade_w_cache_kind_default"
             ]
         }, {
             "id": "Cached",

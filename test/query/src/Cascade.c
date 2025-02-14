@@ -974,7 +974,8 @@ void Cascade_invalid_cascade_for_uncached(void) {
     ecs_log_set_level(-4);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(cascade)"
+        .expr = "Position(cascade)",
+        .cache_kind = EcsQueryCacheNone
     });
 
     test_assert(q == NULL);
@@ -1076,6 +1077,25 @@ void Cascade_invalid_desc_for_second(void) {
     });
 
     test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Cascade_cascade_w_cache_kind_default(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ECS_COMPONENT(world, Position);
+
+    ecs_log_set_level(-4);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(cascade)",
+        .cache_kind = EcsQueryCacheDefault
+    });
+
+    test_assert(q != NULL);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
