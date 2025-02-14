@@ -208,7 +208,7 @@ public:
 	{
 		RegisterComponentType<FGameplayTagContainer>();
 		
-		RegisterComponentType<FVector>();
+		RegisterComponentType(TBaseStructure<FVector>::Get());
 		RegisterComponentType<FQuat>();
 		RegisterComponentType<FRotator>();
 		RegisterComponentType<FTransform>();
@@ -232,6 +232,7 @@ public:
 		RegisterComponentType<FPrimaryAssetType>();
 		RegisterComponentType<FPrimaryAssetId>();
 
+		RegisterComponentType<FTopLevelAssetPath>();
 		RegisterComponentType<FSoftClassPath>();
 		RegisterComponentType<FSoftObjectPath>();
 
@@ -253,8 +254,8 @@ public:
 			.each([this](flecs::iter& Iter, size_t IterIndex)
 			{
 				const FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
+				
 				const FString StructSymbol = EntityHandle.GetSymbol();
-
 				const char* StructSymbolCStr = StringCast<char>(*StructSymbol).Get();
 				
 				if (FFlecsComponentPropertiesRegistry::Get()
@@ -291,8 +292,8 @@ public:
 				{
 					return;
 				}
-				
-				RegisterMemberProperties(ScriptStruct, EntityHandle);
+
+				//RegisterMemberProperties(ScriptStruct, EntityHandle);
 			});
 
 		ObjectDestructionComponentQuery = World.query_builder("UObjectDestructionComponentQuery")
@@ -1154,106 +1155,89 @@ public:
 		solid_checkf(InEntity.IsValid(), TEXT("Entity is nullptr"));
 		
 		flecs::untyped_component UntypedComponent = InEntity.GetUntypedComponent_Unsafe();
-		
+
 		for (TFieldIterator<FProperty> PropertyIt(InStruct); PropertyIt; ++PropertyIt)
 		{
 			FProperty* Property = *PropertyIt;
 			solid_checkf(Property != nullptr, TEXT("Property is nullptr"));
 
 			const char* PropertyNameCStr = StringCast<char>(*Property->GetName()).Get();
-			
+				
 			if (Property->IsA<FBoolProperty>())
 			{
-				UntypedComponent.member<bool>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<bool>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FByteProperty>())
 			{
-				UntypedComponent.member<uint8>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<uint8>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FIntProperty>())
 			{
-				UntypedComponent.member<int32>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<int32>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FUInt32Property>())
 			{
-				UntypedComponent.member<uint32>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<uint32>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FInt64Property>())
 			{
-				UntypedComponent.member<int64>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<int64>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FUInt64Property>())
 			{
-				UntypedComponent.member<uint64>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<uint64>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FFloatProperty>())
 			{
-				UntypedComponent.member<float>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<float>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FDoubleProperty>())
 			{
-				UntypedComponent.member<double>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<double>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FStrProperty>())
 			{
-				UntypedComponent.member<FString>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<FString>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FNameProperty>())
 			{
-				UntypedComponent.member<FName>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<FName>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FTextProperty>())
 			{
-				UntypedComponent.member<FText>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<FText>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FObjectProperty>())
 			{
-				UntypedComponent.member<FObjectPtr>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<FObjectPtr>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FWeakObjectProperty>())
 			{
-				UntypedComponent.member<FWeakObjectPtr>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<FWeakObjectPtr>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FSoftObjectProperty>())
 			{
-				UntypedComponent.member<FSoftObjectPtr>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<FSoftObjectPtr>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FClassProperty>())
 			{
-				UntypedComponent.member<TSubclassOf<UObject>>(PropertyNameCStr, 1,
-					Property->GetOffset_ForInternal());
+				UntypedComponent.member<TSubclassOf<UObject>>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FStructProperty>())
 			{
-			 	FFlecsEntityHandle StructComponent;
-			 	if (!HasScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct))
-			 	{
-			 		UN_LOGF(LogFlecsWorld, Warning,
-			 			"Property Type Script struct %s is not registered", *Property->GetName());
+				FFlecsEntityHandle StructComponent;
+				if (!HasScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct))
+				{
+					UN_LOGF(LogFlecsWorld, Error,
+						"Property Type Script struct %s is not registered for entity %s",
+						*CastFieldChecked<FStructProperty>(Property)->Struct->GetName(), *InEntity.GetName());
+				}
+				else
+				{
+					StructComponent = GetScriptStructEntity(CastFieldChecked<FStructProperty>(Property)->Struct);
+				}
 			 		
-			 		StructComponent = RegisterScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct);
-			 	}
-			    else
-			    {
-				    StructComponent = GetScriptStructEntity(CastFieldChecked<FStructProperty>(Property)->Struct);
-			    }
-			 	
-			 	UntypedComponent.member(StructComponent, PropertyNameCStr, 1,
-			 		Property->GetOffset_ForInternal());
+				UntypedComponent.member(StructComponent, PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else
 			{
@@ -1275,7 +1259,7 @@ public:
 		
 		flecs::untyped_component ScriptStructComponent;
 
-		const FString StructName = ScriptStruct->GetName();
+		const FString StructName = ScriptStruct->GetStructCPPName();
 		const char* StructNameCStr = StringCast<char>(*StructName).Get();
 		std::string StructNameStd = std::string(StructNameCStr);
 
@@ -1304,6 +1288,8 @@ public:
 			flecs_component_ids_set(World, Data.s_index, ScriptStructComponent);
 
 			TypeMapComponent->ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
+
+			RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
 		});
 
 		ScriptStructComponent.set<FFlecsScriptStructComponent>({ ScriptStruct });
