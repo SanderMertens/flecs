@@ -1446,7 +1446,13 @@ public:
 	template <typename T>
 	FFlecsEntityHandle ObtainComponentTypeStruct() const
 	{
+		#ifdef FLECS_CPP_NO_AUTO_REGISTRATION
+		solid_checkf(World.is_valid(flecs::_::type<T>::id(World)),
+			TEXT("Component %hs is not registered"), nameof(T).data());
 		return World.component<T>();
+		#else
+		return World.component<T>();
+		#endif // FLECS_CPP_NO_AUTO_REGISTRATION
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
