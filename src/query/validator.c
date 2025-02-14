@@ -845,7 +845,9 @@ int flecs_term_finalize(
         /* Only enable inheritance for ids which are inherited from at the time
          * of query creation. To force component inheritance to be evaluated,
          * an application can explicitly set traversal flags. */
-        if (flecs_id_record_get(world, ecs_pair(EcsIsA, first->id))) {
+        if (flecs_id_record_get(world, ecs_pair(EcsIsA, first->id)) || 
+            (id_flags & EcsIdIsInheritable)) 
+        {
             if (!((first_flags & EcsTraverseFlags) == EcsSelf)) {
                 term->flags_ |= EcsTermIdInherited;
             }

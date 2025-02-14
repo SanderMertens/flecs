@@ -1254,6 +1254,7 @@ void ComponentInheritance_1_var_src_not(void);
 void ComponentInheritance_1_this_src_not_written(void);
 void ComponentInheritance_1_var_src_not_written(void);
 void ComponentInheritance_first_self(void);
+void ComponentInheritance_inheritable_trait(void);
 
 // Testsuite 'Recycled'
 void Recycled_setup(void);
@@ -7076,6 +7077,10 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "first_self",
         ComponentInheritance_first_self
+    },
+    {
+        "inheritable_trait",
+        ComponentInheritance_inheritable_trait
     }
 };
 
@@ -10731,7 +10736,7 @@ static bake_test_suite suites[] = {
         "ComponentInheritance",
         NULL,
         NULL,
-        31,
+        32,
         ComponentInheritance_testcases
     },
     {
