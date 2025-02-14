@@ -208,7 +208,7 @@ public:
 	{
 		RegisterComponentType<FGameplayTagContainer>();
 		
-		RegisterComponentType(TBaseStructure<FVector>::Get());
+		RegisterComponentType<FVector>();
 		RegisterComponentType<FQuat>();
 		RegisterComponentType<FRotator>();
 		RegisterComponentType<FTransform>();
@@ -274,26 +274,6 @@ public:
 					UN_LOGF(LogFlecsWorld, Log, "Component properties %s not found", *StructSymbol);
 				}
 				#endif // UNLOG_ENABLED
-			});
-	
-		CreateObserver<const FFlecsScriptStructComponent>("ScriptStructComponentObserver")
-			.with_symbol_component().filter()
-			.event(flecs::OnSet)
-			.yield_existing()
-			.each([this](flecs::iter& Iter, size_t IterIndex,
-			             const FFlecsScriptStructComponent& InScriptStructComponent)
-			{
-				FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
-				
-				const UScriptStruct* ScriptStruct = InScriptStructComponent.ScriptStruct.Get();
-				solid_check(IsValid(ScriptStruct));
-
-				if UNLIKELY_IF(ScriptStruct == FFlecsScriptStructComponent::StaticStruct())
-				{
-					return;
-				}
-
-				//RegisterMemberProperties(ScriptStruct, EntityHandle);
 			});
 
 		ObjectDestructionComponentQuery = World.query_builder("UObjectDestructionComponentQuery")
@@ -1442,7 +1422,15 @@ public:
 	template <typename T>
 	flecs::untyped_component RegisterComponentType() const
 	{
-		return World.component<T>();
+		flecs::untyped_component Component = World.component<T>();
+		solid_check(Component.is_valid());
+		
+		if constexpr (Solid::IsScriptStruct<T>())
+		{
+			RegisterMemberProperties(TBaseStructure<T>::Get(), Component);
+		}
+
+		return Component;
 	}
 	
 	FFlecsEntityHandle RegisterComponentType(const UScriptStruct* ScriptStruct) const
