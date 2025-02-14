@@ -32130,6 +32130,17 @@ int flecs_query_set_caching_policy(
     bool group_order_by = desc->group_by || desc->group_by_callback || 
             desc->order_by || desc->order_by_callback;
 
+    /* If the query has a Cascade term it'll use group_by */
+    int32_t i, term_count = impl->pub.term_count;
+    const ecs_term_t *terms = impl->pub.terms;
+    for (i = 0; i < term_count; i ++) {
+        const ecs_term_t *term = &terms[i];
+        if (term->src.id & EcsCascade) {
+            group_order_by = true;
+            break;
+        }
+    }
+
     /* If caching policy is default, try to pick a policy that does the right
      * thing in most cases. */
     if (kind == EcsQueryCacheDefault) {
@@ -32152,7 +32163,7 @@ int flecs_query_set_caching_policy(
     /* Don't cache query, even if it has cacheable terms */
     if (kind == EcsQueryCacheNone) {
         impl->pub.cache_kind = EcsQueryCacheNone;
-        if (desc->group_by || desc->order_by) {
+        if (group_order_by && !(impl->pub.flags & EcsQueryNested)) {
             ecs_err("cannot create uncached query with group_by/order_by");
             return -1;
         }
@@ -32186,8 +32197,6 @@ int flecs_query_set_caching_policy(
              * terms, as this would build a cache that contains all tables. */
             int32_t not_optional_terms = 0, cacheable_terms = 0;
             if (!group_order_by) {
-                int32_t i, term_count = impl->pub.term_count;
-                const ecs_term_t *terms = impl->pub.terms;
                 for (i = 0; i < term_count; i ++) {
                     const ecs_term_t *term = &terms[i];
                     if (term->flags_ & EcsTermIsCacheable) {
