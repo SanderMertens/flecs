@@ -1650,6 +1650,13 @@ FLECS_API extern const ecs_entity_t EcsReflexive;
  */
 FLECS_API extern const ecs_entity_t EcsFinal;
 
+/** Mark component as inheritable.
+ * This is the opposite of Final. This trait can be used to enforce that queries
+ * take into account component inheritance before inheritance (IsA) 
+ * relationships are added with the component as target.
+ */
+FLECS_API extern const ecs_entity_t EcsInheritable;
+
 /** Relationship that specifies component inheritance behavior. */
 FLECS_API extern const ecs_entity_t EcsOnInstantiate;
 

@@ -416,6 +416,7 @@ extern "C" {
 #define EcsIdWith                      (1u << 12)
 #define EcsIdCanToggle                 (1u << 13)
 #define EcsIdIsTransitive              (1u << 14)
+#define EcsIdIsInheritable             (1u << 15)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 17) 
@@ -4943,6 +4944,13 @@ FLECS_API extern const ecs_entity_t EcsReflexive;
  * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsFinal;
+
+/** Mark component as inheritable.
+ * This is the opposite of Final. This trait can be used to enforce that queries
+ * take into account component inheritance before inheritance (IsA) 
+ * relationships are added with the component as target.
+ */
+FLECS_API extern const ecs_entity_t EcsInheritable;
 
 /** Relationship that specifies component inheritance behavior. */
 FLECS_API extern const ecs_entity_t EcsOnInstantiate;
@@ -17401,6 +17409,7 @@ static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
 static const flecs::entity_t Reflexive = EcsReflexive;
 static const flecs::entity_t Final = EcsFinal;
+static const flecs::entity_t Inheritable = EcsInheritable;
 static const flecs::entity_t PairIsTag = EcsPairIsTag;
 static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Acyclic = EcsAcyclic;

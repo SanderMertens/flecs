@@ -1292,7 +1292,12 @@
                 "1_var_src_not",
                 "1_this_src_not_written",
                 "1_var_src_not_written",
-                "first_self"
+                "first_self",
+                "inheritable_trait",
+                "query_before_isa_relationship_1st_term",
+                "query_before_isa_relationship_2nd_term",
+                "query_before_isa_relationship_subtype",
+                "query_before_isa_relationship_0_src"
             ]
         }, {
             "id": "Recycled",

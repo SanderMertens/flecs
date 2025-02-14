@@ -1630,6 +1630,10 @@ struct ecs_query_impl_t {
     char *tokens;                 /* Buffer with string tokens used by terms */
     int32_t *monitor;             /* Change monitor for fields with fixed src */
 
+#ifdef FLECS_DEBUG
+    ecs_termset_t final_terms;    /* Terms that don't use component inheritance */
+#endif
+
     /* Query cache */
     struct ecs_query_cache_t *cache; /* Cache, if query contains cached terms */
 
@@ -3953,6 +3957,7 @@ void flecs_bootstrap(
     /* Ensure builtin ids are alive */
     ecs_make_alive(world, ecs_id(EcsComponent));
     ecs_make_alive(world, EcsFinal);
+    ecs_make_alive(world, EcsInheritable);
     ecs_make_alive(world, ecs_id(EcsIdentifier));
     ecs_make_alive(world, EcsName);
     ecs_make_alive(world, EcsSymbol);
@@ -4086,6 +4091,7 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsReflexive);
     flecs_bootstrap_trait(world, EcsSymmetric);
     flecs_bootstrap_trait(world, EcsFinal);
+    flecs_bootstrap_trait(world, EcsInheritable);
     flecs_bootstrap_trait(world, EcsPairIsTag);
     flecs_bootstrap_trait(world, EcsExclusive);
     flecs_bootstrap_trait(world, EcsAcyclic);
@@ -4149,6 +4155,15 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_final
+    });
+
+    static ecs_on_trait_ctx_t inheritable_trait = { EcsIdIsInheritable, 0 };
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsInheritable }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_trait,
+        .ctx = &inheritable_trait
     });
 
     ecs_observer(world, {
@@ -17344,36 +17359,38 @@ const ecs_entity_t EcsTransitive =                  FLECS_HI_COMPONENT_ID + 15;
 const ecs_entity_t EcsReflexive =                   FLECS_HI_COMPONENT_ID + 16;
 const ecs_entity_t EcsSymmetric =                   FLECS_HI_COMPONENT_ID + 17;
 const ecs_entity_t EcsFinal =                       FLECS_HI_COMPONENT_ID + 18;
-const ecs_entity_t EcsOnInstantiate =               FLECS_HI_COMPONENT_ID + 19;
-const ecs_entity_t EcsOverride =                    FLECS_HI_COMPONENT_ID + 20;
-const ecs_entity_t EcsInherit =                     FLECS_HI_COMPONENT_ID + 21;
-const ecs_entity_t EcsDontInherit =                 FLECS_HI_COMPONENT_ID + 22;
-const ecs_entity_t EcsPairIsTag =                   FLECS_HI_COMPONENT_ID + 23;
-const ecs_entity_t EcsExclusive =                   FLECS_HI_COMPONENT_ID + 24;
-const ecs_entity_t EcsAcyclic =                     FLECS_HI_COMPONENT_ID + 25;
-const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 26;
-const ecs_entity_t EcsWith =                        FLECS_HI_COMPONENT_ID + 27;
-const ecs_entity_t EcsOneOf =                       FLECS_HI_COMPONENT_ID + 28;
-const ecs_entity_t EcsCanToggle =                   FLECS_HI_COMPONENT_ID + 29;
-const ecs_entity_t EcsTrait =                       FLECS_HI_COMPONENT_ID + 30;
-const ecs_entity_t EcsRelationship =                FLECS_HI_COMPONENT_ID + 31;
-const ecs_entity_t EcsTarget =                      FLECS_HI_COMPONENT_ID + 32;
+const ecs_entity_t EcsInheritable =                 FLECS_HI_COMPONENT_ID + 19;
+
+const ecs_entity_t EcsOnInstantiate =               FLECS_HI_COMPONENT_ID + 20;
+const ecs_entity_t EcsOverride =                    FLECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsInherit =                     FLECS_HI_COMPONENT_ID + 22;
+const ecs_entity_t EcsDontInherit =                 FLECS_HI_COMPONENT_ID + 23;
+const ecs_entity_t EcsPairIsTag =                   FLECS_HI_COMPONENT_ID + 24;
+const ecs_entity_t EcsExclusive =                   FLECS_HI_COMPONENT_ID + 25;
+const ecs_entity_t EcsAcyclic =                     FLECS_HI_COMPONENT_ID + 26;
+const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 27;
+const ecs_entity_t EcsWith =                        FLECS_HI_COMPONENT_ID + 28;
+const ecs_entity_t EcsOneOf =                       FLECS_HI_COMPONENT_ID + 29;
+const ecs_entity_t EcsCanToggle =                   FLECS_HI_COMPONENT_ID + 30;
+const ecs_entity_t EcsTrait =                       FLECS_HI_COMPONENT_ID + 31;
+const ecs_entity_t EcsRelationship =                FLECS_HI_COMPONENT_ID + 32;
+const ecs_entity_t EcsTarget =                      FLECS_HI_COMPONENT_ID + 33;
 
 
 /* Builtin relationships */
-const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 33;
-const ecs_entity_t EcsIsA =                         FLECS_HI_COMPONENT_ID + 34;
-const ecs_entity_t EcsDependsOn =                   FLECS_HI_COMPONENT_ID + 35;
+const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 34;
+const ecs_entity_t EcsIsA =                         FLECS_HI_COMPONENT_ID + 35;
+const ecs_entity_t EcsDependsOn =                   FLECS_HI_COMPONENT_ID + 36;
 
 /* Identifier tags */
-const ecs_entity_t EcsName =                        FLECS_HI_COMPONENT_ID + 36;
-const ecs_entity_t EcsSymbol =                      FLECS_HI_COMPONENT_ID + 37;
-const ecs_entity_t EcsAlias =                       FLECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsName =                        FLECS_HI_COMPONENT_ID + 37;
+const ecs_entity_t EcsSymbol =                      FLECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsAlias =                       FLECS_HI_COMPONENT_ID + 39;
 
 /* Events */
-const ecs_entity_t EcsOnAdd =                       FLECS_HI_COMPONENT_ID + 39;
-const ecs_entity_t EcsOnRemove =                    FLECS_HI_COMPONENT_ID + 40;
-const ecs_entity_t EcsOnSet =                       FLECS_HI_COMPONENT_ID + 41;
+const ecs_entity_t EcsOnAdd =                       FLECS_HI_COMPONENT_ID + 40;
+const ecs_entity_t EcsOnRemove =                    FLECS_HI_COMPONENT_ID + 41;
+const ecs_entity_t EcsOnSet =                       FLECS_HI_COMPONENT_ID + 42;
 const ecs_entity_t EcsOnDelete =                    FLECS_HI_COMPONENT_ID + 43;
 const ecs_entity_t EcsOnDeleteTarget =              FLECS_HI_COMPONENT_ID + 44;
 const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 45;
@@ -34169,19 +34186,39 @@ int flecs_term_finalize(
         }
     }
 
-    if (first_entity) {
-        /* Only enable inheritance for ids which are inherited from at the time
-         * of query creation. To force component inheritance to be evaluated,
-         * an application can explicitly set traversal flags. */
-        if (flecs_id_record_get(world, ecs_pair(EcsIsA, first->id))) {
-            if (!((first_flags & EcsTraverseFlags) == EcsSelf)) {
-                term->flags_ |= EcsTermIdInherited;
+    if (first_entity && !ecs_term_match_0(term)) {
+        bool first_is_self = (first_flags & EcsTraverseFlags) == EcsSelf;
+        ecs_record_t *first_record = flecs_entities_get(world, first_entity);
+        ecs_table_t *first_table = first_record ? first_record->table : NULL;
+        
+        bool first_can_isa = false;
+        if (first_table) {
+            first_can_isa = (first_table->flags & EcsTableHasIsA) != 0;
+            if (first_can_isa) {
+                first_can_isa = !ecs_table_has_id(world, first_table, EcsFinal);
             }
         }
 
-        /* If component id is final, don't attempt component inheritance */
-        ecs_record_t *first_record = flecs_entities_get(world, first_entity);
-        ecs_table_t *first_table = first_record ? first_record->table : NULL;
+        /* Only enable inheritance for ids which are inherited from at the time
+         * of query creation. To force component inheritance to be evaluated,
+         * an application can explicitly set traversal flags. */
+        if (flecs_id_record_get(world, ecs_pair(EcsIsA, first->id)) || 
+            (id_flags & EcsIdIsInheritable) || first_can_isa)
+        {
+            if (!first_is_self) {
+                term->flags_ |= EcsTermIdInherited;
+            }
+        } else {
+#ifdef FLECS_DEBUG
+            if (!first_is_self) {
+                ecs_query_impl_t *q = flecs_query_impl(ctx->query);
+                if (q) {
+                    ECS_TERMSET_SET(q->final_terms, 1u << ctx->term_index);
+                }
+            }
+#endif
+        }
+
         if (first_table) {
             if (ecs_term_ref_is_set(second)) {
                 /* Add traversal flags for transitive relationships */
@@ -34202,7 +34239,7 @@ int flecs_term_finalize(
                 /* Check if term is union */
                 if (ecs_table_has_id(world, first_table, EcsUnion)) {
                     /* Any wildcards don't need special handling as they just return
-                    * (Rel, *). */
+                     * (Rel, *). */
                     if (ECS_IS_PAIR(term->id) && ECS_PAIR_SECOND(term->id) != EcsAny) {
                         term->flags_ |= EcsTermIsUnion;
                     }
@@ -72664,6 +72701,56 @@ void flecs_query_iter_fini(
     qit->query = NULL;
 }
 
+static
+void flecs_query_validate_final_fields(
+    const ecs_query_t *q)
+{
+    (void)q;
+#ifdef FLECS_DEBUG
+    ecs_query_impl_t *impl = flecs_query_impl(q);
+    ecs_world_t *world = q->real_world;
+
+    if (!impl->final_terms) {
+        return;
+    }
+
+    if (!world->idr_isa_wildcard) {
+        return;
+    }
+
+    int32_t i, count = impl->pub.term_count;
+    ecs_term_t *terms = impl->pub.terms;
+    for (i = 0; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        ecs_id_t id = term->id;
+
+        if (!(impl->final_terms & (1ull << i))) {
+            continue;
+        }
+
+        if (ECS_IS_PAIR(id)) {
+            id = ECS_PAIR_FIRST(id);
+        }
+
+        if (ecs_id_is_wildcard(id)) {
+            continue;
+        }
+
+        if (flecs_id_record_get(world, ecs_pair(EcsIsA, id))) {
+            char *query_str = ecs_query_str(q);
+            char *id_str = ecs_id_str(world, id);
+            ecs_abort(ECS_INVALID_OPERATION, 
+                    "query '%s' was created before '(IsA, %s)' relationship, "
+                    "create query after adding inheritance relationship "
+                    "or add 'Inheritable' trait to '%s'", 
+                        query_str, id_str, id_str);
+            ecs_os_free(id_str);
+            ecs_os_free(query_str);
+        }
+    }
+#endif
+}
+
 ecs_iter_t flecs_query_iter(
     const ecs_world_t *world,
     const ecs_query_t *q)
@@ -72671,6 +72758,8 @@ ecs_iter_t flecs_query_iter(
     ecs_iter_t it = {0};
     ecs_query_iter_t *qit = &it.priv_.iter.query;
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    flecs_query_validate_final_fields(q);
     
     flecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
