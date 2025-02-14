@@ -2410,7 +2410,8 @@
                 "clear_table_check_size",
                 "clear_table_twice_check_size",
                 "clear_table_on_remove_hooks",
-                "clear_table_on_remove_observer"
+                "clear_table_on_remove_observer",
+                "65_records_w_tgt"
             ]
         }, {
             "id": "Poly",

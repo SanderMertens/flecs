@@ -447,7 +447,7 @@ void flecs_table_init(
      * we're adding the next set of records */
     if (first_role != -1 || first_pair != -1) {
         int32_t start = first_role;
-        if (first_pair != -1 && (start != -1 || first_pair < start)) {
+        if (first_pair != -1 && (start == -1 || first_pair < start)) {
             start = first_pair;
         }
 
@@ -461,6 +461,10 @@ void flecs_table_init(
         int32_t record_count = start + 3 * flag_id_count + 3 + 1;
         ecs_vec_set_min_size_t(a, records, ecs_table_record_t, record_count);
     }
+
+    /* Get records size now so we can check that array did not resize */
+    int32_t records_size = ecs_vec_size(records);
+    (void)records_size;
 
     /* Add records for ids with roles (used by cleanup logic) */
     if (first_role != -1) {
@@ -578,6 +582,11 @@ void flecs_table_init(
             /* If this is a target wildcard record it has already been 
              * registered, but the record is now at a different location in
              * memory. Patch up the linked list with the new address */
+
+            /* Ensure that record array hasn't been reallocated */
+            ecs_assert(records_size == ecs_vec_size(records), 
+                ECS_INTERNAL_ERROR, NULL);
+
             ecs_table_cache_replace(&idr->cache, table, &tr->hdr);
         } else {
             /* Other records are not registered yet */
