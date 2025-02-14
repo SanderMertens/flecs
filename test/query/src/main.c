@@ -1258,6 +1258,7 @@ void ComponentInheritance_inheritable_trait(void);
 void ComponentInheritance_query_before_isa_relationship_1st_term(void);
 void ComponentInheritance_query_before_isa_relationship_2nd_term(void);
 void ComponentInheritance_query_before_isa_relationship_subtype(void);
+void ComponentInheritance_query_before_isa_relationship_0_src(void);
 
 // Testsuite 'Recycled'
 void Recycled_setup(void);
@@ -7096,6 +7097,10 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "query_before_isa_relationship_subtype",
         ComponentInheritance_query_before_isa_relationship_subtype
+    },
+    {
+        "query_before_isa_relationship_0_src",
+        ComponentInheritance_query_before_isa_relationship_0_src
     }
 };
 
@@ -10751,7 +10756,7 @@ static bake_test_suite suites[] = {
         "ComponentInheritance",
         NULL,
         NULL,
-        35,
+        36,
         ComponentInheritance_testcases
     },
     {

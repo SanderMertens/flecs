@@ -939,6 +939,88 @@ let i = world.entity().is_a_id(e); // not allowed
 
 Queries may use the final trait to optimize, as they do not have to explore subsets of a final entity. For more information on how queries interpret final, see the [Query manual](Queries.md).
 
+## Inheritable trait
+The `Inheritable` trait indicates that a component can be inherited from (it can be used as target of an `IsA` relationship). It is not required to add this trait to components before using them as target of an `IsA` pair, but it can be used to ensure that queries for the component take into account component inheritance.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_TAG(world, Unit);
+ecs_add_id(world, Unit, EcsInheritable);
+
+ecs_query_t *q = ecs_query(world, {
+    .terms = {{ Unit }}
+});
+
+ECS_TAG(world, Warrior);
+ecs_add_pair(world, Warrior, EcsIsA, Unit);
+
+ecs_iter_t it = ecs_query_iter(world, q);
+// iterate query
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+world.component<Unit>().add(flecs::Inheritable);
+
+auto q = world.query_builder()
+  .with<Unit>()
+  .build();
+
+world.component<Warrior>().is_a<Unit>();
+
+q.each([](flecs::entity unit) {
+    // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Component<Unit>().Add(Ecs.Inheritable);
+
+auto q = world.QueryBuilder()
+  .With<Unit>()
+  .Build();
+
+q.Each([](Entity unit) {
+    // ...
+});
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world.component::<Unit>().add_trait::<flecs::Inheritable>();
+
+auto q = world.query()
+  .with::<Unit>()
+  .build();
+
+world.component<Warrior>().is_a<Unit>();
+
+q.each_entity(|e|  {
+    // ...
+});
+```
+
+</li>
+</ul>
+</div>
+
+Queries must be aware of (potential) inheritance relationships when they are created. A query will be created with support for inheritance under the following conditions:
+ - If the component has the `Inheritable` trait
+ - If the component is inherited from
+ - If the component inherits from another component and is not `Final`
+
+If a query was not aware of inheritance relationships at creation time and one or more of the components in the query were inherited from, query iteration will fail in debug mode.
+
 ## OnInstantiate trait
 The `OnInstantiate` trait configures the behavior of components when an entity is instantiated from another entity (usually a prefab). Instantiation happens when an `IsA` pair is added to an entity.
 

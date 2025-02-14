@@ -1296,7 +1296,8 @@
                 "inheritable_trait",
                 "query_before_isa_relationship_1st_term",
                 "query_before_isa_relationship_2nd_term",
-                "query_before_isa_relationship_subtype"
+                "query_before_isa_relationship_subtype",
+                "query_before_isa_relationship_0_src"
             ]
         }, {
             "id": "Recycled",

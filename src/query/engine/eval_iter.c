@@ -288,7 +288,7 @@ void flecs_query_validate_final_fields(
         ecs_term_t *term = &terms[i];
         ecs_id_t id = term->id;
 
-        if (!(impl->final_terms & (1 << i))) {
+        if (!(impl->final_terms & (1ull << i))) {
             continue;
         }
 

@@ -3479,3 +3479,37 @@ void ComponentInheritance_query_before_isa_relationship_subtype(void) {
 
     ecs_fini(world);
 }
+
+void ComponentInheritance_query_before_isa_relationship_0_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Unit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo, Unit()"
+    });
+
+    test_assert(q != NULL);
+
+    ECS_ENTITY(world, Warrior, (IsA, Unit));
+
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(Unit, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

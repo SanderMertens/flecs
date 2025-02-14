@@ -34186,7 +34186,7 @@ int flecs_term_finalize(
         }
     }
 
-    if (first_entity) {
+    if (first_entity && !ecs_term_match_0(term)) {
         bool first_is_self = (first_flags & EcsTraverseFlags) == EcsSelf;
         ecs_record_t *first_record = flecs_entities_get(world, first_entity);
         ecs_table_t *first_table = first_record ? first_record->table : NULL;
@@ -72724,7 +72724,7 @@ void flecs_query_validate_final_fields(
         ecs_term_t *term = &terms[i];
         ecs_id_t id = term->id;
 
-        if (!(impl->final_terms & (1 << i))) {
+        if (!(impl->final_terms & (1ull << i))) {
             continue;
         }
 
