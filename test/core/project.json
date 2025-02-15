@@ -1986,6 +1986,7 @@
                 "hierarchy_w_recycled_id",
                 "disable_ids",
                 "disable_nested_ids",
+                "type_disable_self",
                 "prefab_w_children_w_isa_auto_override",
                 "prefab_child_w_override",
                 "prefab_child_w_override_and_higher_component",

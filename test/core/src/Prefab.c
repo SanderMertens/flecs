@@ -5268,3 +5268,21 @@ void Prefab_instantiate_w_union_while_defer_suspended(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_type_disable_self(void) {
+    // test that no stack overflow, segfault occurs when disabling a type that has itself
+    
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsPrefab);
+
+    //mimics `C++ .prefab<T>()`
+    ecs_add_id(world, ecs_id(Position), ecs_id(Position));
+
+    ecs_enable(world, ecs_id(Position), false);
+
+    //satisfy the test suite so it doesn't report empty, it's purely a stack overflow test
+    test_assert(true);
+}
