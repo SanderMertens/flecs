@@ -1741,6 +1741,7 @@ void Prefab_override_exclusive_2_lvls(void);
 void Prefab_hierarchy_w_recycled_id(void);
 void Prefab_disable_ids(void);
 void Prefab_disable_nested_ids(void);
+void Prefab_type_disable_self(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -8849,6 +8850,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "disable_nested_ids",
         Prefab_disable_nested_ids
+    },
+    {
+        "type_disable_self",
+        Prefab_type_disable_self
     }
 };
 
@@ -10557,7 +10562,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        129,
+        130,
         Prefab_testcases
     },
     {
