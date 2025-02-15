@@ -2284,7 +2284,8 @@
                 "redefine_named_in_threaded_app",
                 "batched_cmd_w_component_init",
                 "deep_command_nesting",
-                "ensure_from_2_stages"
+                "ensure_from_2_stages",
+                "batch_w_old_and_recycled_id"
             ]
         }, {
             "id": "SingleThreadStaging",
@@ -2409,7 +2410,8 @@
                 "clear_table_check_size",
                 "clear_table_twice_check_size",
                 "clear_table_on_remove_hooks",
-                "clear_table_on_remove_observer"
+                "clear_table_on_remove_observer",
+                "65_records_w_tgt"
             ]
         }, {
             "id": "Poly",

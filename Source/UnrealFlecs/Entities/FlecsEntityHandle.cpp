@@ -12,7 +12,7 @@
 
 FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const UFlecsWorld* InWorld)
 {
-    solid_checkf(InWorld, TEXT("Flecs World not found"));
+    solid_checkf(::IsValid(InWorld), TEXT("Flecs World not found"));
     return flecs::entity::null(InWorld->World);
 }
 
@@ -51,6 +51,12 @@ FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptSt
 {
     solid_checkf(::IsValid(StructType), TEXT("Struct type is not valid"));
     return GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
+}
+
+FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeEnum(const UEnum* EnumType) const
+{
+    solid_checkf(::IsValid(EnumType), TEXT("Enum type is not valid"));
+    return GetFlecsWorld()->ObtainComponentTypeEnum(EnumType);
 }
 
 void FFlecsEntityHandle::AddCollection(UObject* Collection) const

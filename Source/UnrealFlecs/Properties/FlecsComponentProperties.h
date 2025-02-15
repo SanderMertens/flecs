@@ -82,7 +82,7 @@ public:
 			{ \
 				FCoreDelegates::OnPostEngineInit.AddLambda([]() \
 				{ \
-					if constexpr (Solid::IsStaticStruct<Name>()) \
+					if constexpr (Solid::IsScriptStruct<Name>()) \
 					{ \
 						FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties( \
 						#Name, TBaseStructure<Name>::Get(), sizeof(Name), alignof(Name), RegistrationFunction); \

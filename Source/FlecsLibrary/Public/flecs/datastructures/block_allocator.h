@@ -22,7 +22,6 @@ typedef struct ecs_block_allocator_chunk_header_t {
 typedef struct ecs_block_allocator_t {
     ecs_block_allocator_chunk_header_t *head;
     ecs_block_allocator_block_t *block_head;
-    ecs_block_allocator_block_t *block_tail;
     int32_t chunk_size;
     int32_t data_size;
     int32_t chunks_per_block;

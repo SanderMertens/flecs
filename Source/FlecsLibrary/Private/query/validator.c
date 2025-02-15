@@ -833,19 +833,39 @@ int flecs_term_finalize(
         }
     }
 
-    if (first_entity) {
-        /* Only enable inheritance for ids which are inherited from at the time
-         * of query creation. To force component inheritance to be evaluated,
-         * an application can explicitly set traversal flags. */
-        if (flecs_id_record_get(world, ecs_pair(EcsIsA, first->id))) {
-            if (!((first_flags & EcsTraverseFlags) == EcsSelf)) {
-                term->flags_ |= EcsTermIdInherited;
+    if (first_entity && !ecs_term_match_0(term)) {
+        bool first_is_self = (first_flags & EcsTraverseFlags) == EcsSelf;
+        ecs_record_t *first_record = flecs_entities_get(world, first_entity);
+        ecs_table_t *first_table = first_record ? first_record->table : NULL;
+        
+        bool first_can_isa = false;
+        if (first_table) {
+            first_can_isa = (first_table->flags & EcsTableHasIsA) != 0;
+            if (first_can_isa) {
+                first_can_isa = !ecs_table_has_id(world, first_table, EcsFinal);
             }
         }
 
-        /* If component id is final, don't attempt component inheritance */
-        ecs_record_t *first_record = flecs_entities_get(world, first_entity);
-        ecs_table_t *first_table = first_record ? first_record->table : NULL;
+        /* Only enable inheritance for ids which are inherited from at the time
+         * of query creation. To force component inheritance to be evaluated,
+         * an application can explicitly set traversal flags. */
+        if (flecs_id_record_get(world, ecs_pair(EcsIsA, first->id)) || 
+            (id_flags & EcsIdIsInheritable) || first_can_isa)
+        {
+            if (!first_is_self) {
+                term->flags_ |= EcsTermIdInherited;
+            }
+        } else {
+#ifdef FLECS_DEBUG
+            if (!first_is_self) {
+                ecs_query_impl_t *q = flecs_query_impl(ctx->query);
+                if (q) {
+                    ECS_TERMSET_SET(q->final_terms, 1u << ctx->term_index);
+                }
+            }
+#endif
+        }
+
         if (first_table) {
             if (ecs_term_ref_is_set(second)) {
                 /* Add traversal flags for transitive relationships */
@@ -866,7 +886,7 @@ int flecs_term_finalize(
                 /* Check if term is union */
                 if (ecs_table_has_id(world, first_table, EcsUnion)) {
                     /* Any wildcards don't need special handling as they just return
-                    * (Rel, *). */
+                     * (Rel, *). */
                     if (ECS_IS_PAIR(term->id) && ECS_PAIR_SECOND(term->id) != EcsAny) {
                         term->flags_ |= EcsTermIsUnion;
                     }

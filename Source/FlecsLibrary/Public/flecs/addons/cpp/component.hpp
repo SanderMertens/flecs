@@ -131,14 +131,14 @@ struct FLECS_API type_impl_data {
     bool s_allow_tag;
 };
 
-FLECS_API extern robin_hood::unordered_map<std::string_view, type_impl_data> g_type_to_impl_data;
+FLECSLIBRARY_API extern robin_hood::unordered_map<std::string, type_impl_data> g_type_to_impl_data;
 
     template <typename T>
     inline type_impl_data& get_or_create_type_data(bool allow_tag) 
     {
         ecs_os_perf_trace_push("flecs.type_impl.init");
         
-        std::string_view key = nameof(T);  // => Solid::type_name<T>()
+        std::string key = std::string(_::type_name<T>());  // => Solid::type_name<T>()
     
         auto it = g_type_to_impl_data.find(key);
         if (it != g_type_to_impl_data.end()) {
@@ -170,7 +170,7 @@ FLECS_API extern robin_hood::unordered_map<std::string_view, type_impl_data> g_t
     template <typename T>
     inline type_impl_data* get_type_data_if_any()
     {
-        std::string_view key = nameof(T);
+        std::string key = std::string(_::type_name<T>());
         auto it = g_type_to_impl_data.find(key);
         if (it != g_type_to_impl_data.end()) {
             return &it->second;
@@ -255,7 +255,7 @@ struct type_impl {
                 is_component,
                 &existing);
             
-            if constexpr (Solid::IsStaticStruct<T>() && !std::is_same_v<T, FFlecsScriptStructComponent>)
+            if constexpr (Solid::IsScriptStruct<T>() && !std::is_same_v<T, FFlecsScriptStructComponent>)
             {
                 flecs::world P_world(world);
                 UScriptStruct* scriptStruct = TBaseStructure<T>::Get();
@@ -285,7 +285,25 @@ struct type_impl {
             // this after setting the component id, because the enum code will
             // be calling type<T>::id().
             #if FLECS_CPP_ENUM_REFLECTION_SUPPORT
+
+            
             _::init_enum<T>(world, c);
+
+            if constexpr (Solid::IsStaticEnum<T>())
+            {
+                flecs::world P_world(world);
+                UEnum* scriptEnum = StaticEnum<T>();
+                ecs_assert(scriptEnum != nullptr, ECS_INTERNAL_ERROR, 
+                           "script enum is null");
+
+                flecs::entity entity_id = flecs::entity(world, c);
+                
+                static_cast<FFlecsTypeMapComponent*>(P_world.get_binding_ctx())
+                    ->ScriptEnumMap.emplace(scriptEnum, entity_id);
+                
+                entity_id.set<FFlecsScriptEnumComponent>({ scriptEnum });
+            }
+            
             #endif
         }
 
@@ -296,28 +314,28 @@ struct type_impl {
         
     static entity_t id(flecs::world_t *world)
     {
-#ifndef FLECS_CPP_NO_AUTO_REGISTRATION
         ecs_os_perf_trace_push("flecs.type_impl.id");
-#endif
 
         // Make sure there's a record
-        auto &td = get_or_create_type_data<T>(true);
+        auto *td = get_type_data_if_any<T>();
+        ecs_assert(td != nullptr, ECS_INTERNAL_ERROR, 
+            "type_impl<T>::id() called without prior init");
 
         // Check if there's a valid entity in this world for T
-        flecs::entity_t c = flecs_component_ids_get_alive(world, td.s_index);
+        flecs::entity_t c = flecs_component_ids_get_alive(world, td->s_index);
         
         #ifndef FLECS_CPP_NO_AUTO_REGISTRATION
+        
         if (!c) {
             c = register_id(world);
             
         }
         #endif
         
-        ecs_assert(c != 0, ECS_NOT_A_COMPONENT, NULL);
-
-#ifndef FLECS_CPP_NO_AUTO_REGISTRATION
+        ecs_assert(c != 0, ECS_NOT_A_COMPONENT, "component not found, %s", 
+            _::type_name<T>());
+        
         ecs_os_perf_trace_pop("flecs.type_impl.id");
-#endif
         return c;
     }
 
@@ -350,7 +368,7 @@ struct type_impl {
         
     static void reset()
     {
-        std::string_view key = nameof(T);
+        std::string key = _::type_name<T>();
         g_type_to_impl_data.erase(key);
     }
 };

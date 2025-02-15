@@ -11,9 +11,6 @@
 #include "SolidMacros/Macros.h"
 #include "Unlog/Unlog.h"
 
-LLM_DECLARE_TAG(FlecsMemoryTag);
-LLM_DEFINE_TAG(FlecsMemoryTag, "Flecs Memory");
-
 DECLARE_STATS_GROUP(TEXT("FlecsOS"), STATGROUP_FlecsOS, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("FlecsOS::TaskThread"), STAT_FlecsOS, STATGROUP_FlecsOS);
 
@@ -173,7 +170,7 @@ struct FOSApiInitializer
 
 		os_api.mutex_lock_ = [](ecs_os_mutex_t Mutex)
 		{
-			ASSUME(Mutex);
+			solid_checkf(Mutex, TEXT("Mutex is nullptr"));
 			FCriticalSection* MutexPtr = reinterpret_cast<FCriticalSection*>(Mutex);
 			MutexPtr->Lock();
 		};
@@ -286,8 +283,8 @@ struct FOSApiInitializer
         os_api.get_time_ = [](ecs_time_t* TimeOut)
         {
             const double Seconds = FPlatformTime::Seconds();
-            TimeOut->sec = static_cast<int32_t>(Seconds);
-            TimeOut->nanosec = static_cast<int32_t>((Seconds - TimeOut->sec) * 1e9);
+            TimeOut->sec = static_cast<uint32_t>(Seconds);
+            TimeOut->nanosec = static_cast<uint32_t>((Seconds - TimeOut->sec) * 1e9);
         };
 
         os_api.abort_ = []()
@@ -382,25 +379,21 @@ struct FOSApiInitializer
 
 		os_api.malloc_ = [](int Size) -> void*
 		{
-			LLM_SCOPE_BYTAG(FlecsMemoryTag);
 			return FMemory::Malloc(Size);
 		};
 
 		os_api.realloc_ = [](void* Ptr, int Size) -> void*
 		{
-			LLM_SCOPE_BYTAG(FlecsMemoryTag);
 			return FMemory::Realloc(Ptr, Size);
 		};
 
 		os_api.calloc_ = [](int Size) -> void*
 		{
-			LLM_SCOPE_BYTAG(FlecsMemoryTag);
 			return FMemory::MallocZeroed(Size);
 		};
 
 		os_api.free_ = [](void* Ptr)
 		{
-			LLM_SCOPE_BYTAG(FlecsMemoryTag);
 			FMemory::Free(Ptr);
 		};
 		

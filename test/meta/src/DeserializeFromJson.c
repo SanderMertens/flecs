@@ -6126,3 +6126,113 @@ void DeserializeFromJson_ser_deser_with_child_tgt_no_child(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_deser_unknown_component_w_spaces(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    const char *r = ecs_world_from_json(world, 
+        "{\"results\":[{\"name\":\"e\", \"components\":{\"Position\": {\"x\": 10, \"y\": 20}, \"DoesntExist\": {\"pos\":{\"x\":20, \"y\":30}}}}]}", NULL);
+    test_assert(r != NULL);
+    test_assert(r[0] == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_unknown_component_no_spaces(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    const char *r = ecs_world_from_json(world, 
+        "{\"results\":[{\"name\":\"e\", \"components\":{\"Position\":{\"x\": 10, \"y\": 20}, \"DoesntExist\":{\"pos\":{\"x\":20, \"y\":30}}}}]}", NULL);
+    test_assert(r != NULL);
+    test_assert(r[0] == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_unknown_component_w_spaces_strict(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    ecs_from_json_desc_t desc = {
+        .strict = true
+    };
+
+    ecs_log_set_level(-4);
+
+    const char *r = ecs_world_from_json(world, 
+        "{\"results\":[{\"name\":\"e\", \"components\":{\"Position\": {\"x\": 10, \"y\": 20}, \"DoesntExist\": {\"pos\":{\"x\":20, \"y\":30}}}}]}", &desc);
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_unknown_component_no_spaces_strict(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    ecs_from_json_desc_t desc = {
+        .strict = true
+    };
+
+    ecs_log_set_level(-4);
+
+    const char *r = ecs_world_from_json(world, 
+        "{\"results\":[{\"name\":\"e\", \"components\":{\"Position\":{\"x\": 10, \"y\": 20}, \"DoesntExist\":{\"pos\":{\"x\":20, \"y\":30}}}}]}", &desc);
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}

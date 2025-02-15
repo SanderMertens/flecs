@@ -29,6 +29,6 @@ public:
 protected:
 
 	UPROPERTY()
-	TObjectPtr<UFlecsWorld> FlecsWorld;
+	TWeakObjectPtr<UFlecsWorld> FlecsWorld;
 
 }; // class UFlecsComponentCollectionObject

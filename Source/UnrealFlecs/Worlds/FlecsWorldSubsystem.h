@@ -64,6 +64,10 @@ public:
 		{
 			CreateWorld(SettingsAsset->WorldSettings.WorldName, SettingsAsset->WorldSettings);
 		}
+		else
+		{
+			UN_LOGF(LogFlecsCore, Warning, "No default world settings asset found");
+		}
 	}
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override
@@ -141,6 +145,9 @@ public:
 
 		DefaultWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ DefaultWorld });
 		DefaultWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
+
+		solid_checkf(DefaultWorld->GetSingletonRef<FFlecsWorldPtrComponent>().World == DefaultWorld,
+			TEXT("Singleton world ptr component does not point to the correct world"));
 		
 		for (const FFlecsDefaultMetaEntity& DefaultEntity : DefaultEntities)
 		{
@@ -172,9 +179,8 @@ public:
 
 		for (UObject* Module : Settings.Modules)
 		{
-			solid_checkf(IsValid(Module), TEXT("Module is not valid!"));
-			solid_checkf(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
-				TEXT("Module %s does not implement UFlecsModuleInterface"), *Module->GetName());
+			solid_check(IsValid(Module));
+			solid_check(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()));
 			
 			DefaultWorld->ImportModule(Module);
 		}
@@ -212,7 +218,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE UFlecsWorld* GetDefaultWorldStatic(const UObject* WorldContextObject)
 	{
-		if (GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert))
+		if LIKELY_IF(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert))
 		{
 			return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 			              ->GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld;

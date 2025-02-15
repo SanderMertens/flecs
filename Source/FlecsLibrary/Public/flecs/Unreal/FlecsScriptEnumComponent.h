@@ -11,9 +11,9 @@ struct FLECSLIBRARY_API FFlecsScriptEnumComponent
 {
 	GENERATED_BODY()
 
-	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsScriptEnumComponent& InScriptStructComponent)
+	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsScriptEnumComponent& InScriptEnumComponent)
 	{
-		return GetTypeHash(InScriptStructComponent.ScriptEnum);
+		return GetTypeHash(InScriptEnumComponent.ScriptEnum);
 	}
 
 	FORCEINLINE friend NO_DISCARD bool operator==(const FFlecsScriptEnumComponent& Lhs, const FFlecsScriptEnumComponent& Rhs)
@@ -27,10 +27,13 @@ struct FLECSLIBRARY_API FFlecsScriptEnumComponent
 	}
 
 	FORCEINLINE operator UEnum*() const { return ScriptEnum.Get(); }
-
-	FORCEINLINE FFlecsScriptEnumComponent() : ScriptEnum(nullptr) {}
-	FORCEINLINE FFlecsScriptEnumComponent(UEnum* InScriptEnum) : ScriptEnum(InScriptEnum) {}
-	FORCEINLINE FFlecsScriptEnumComponent(const TWeakObjectPtr<UEnum>& InScriptEnum) : ScriptEnum(InScriptEnum) {}
+    
+	FORCEINLINE FFlecsScriptEnumComponent(UEnum* InScriptEnum = nullptr)
+		: ScriptEnum(InScriptEnum) {}
+	FORCEINLINE FFlecsScriptEnumComponent(const UEnum* InScriptEnum)
+		: ScriptEnum(const_cast<UEnum*>(InScriptEnum)) {}
+	FORCEINLINE FFlecsScriptEnumComponent(const FFlecsScriptEnumComponent& InScriptEnumComponent)
+		: ScriptEnum(InScriptEnumComponent.ScriptEnum) {}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	TWeakObjectPtr<UEnum> ScriptEnum;

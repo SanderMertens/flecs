@@ -110,10 +110,12 @@ public:
 
 REGISTER_FLECS_COMPONENT(FFlecsUObjectComponent, [](flecs::world InWorld, flecs::untyped_component InComponent)
     {
+        InComponent.add(flecs::Relationship);
         InComponent.add(flecs::Exclusive);
         InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
     });
 
+// @TODO: Currently not used
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsNoDeleteUObject
 {

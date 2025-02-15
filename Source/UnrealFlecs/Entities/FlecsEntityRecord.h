@@ -7,6 +7,7 @@
 #include "StructUtils/InstancedStruct.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "Properties/FlecsComponentProperties.h"
+#include "Types/SolidEnumSelector.h"
 #include "FlecsEntityRecord.generated.h"
 
 UENUM(BlueprintType)
@@ -15,7 +16,8 @@ enum class EFlecsComponentNodeType : uint8
 	ScriptStruct = 0,
 	EntityHandle = 1,
 	FGameplayTag = 2,
-	Pair = 3 /* All Pairs if both are component types then the first type is assumed as value */
+	Pair = 3, /* All Pairs if both are component types then the first type is assumed as value */
+	ScriptEnum = 4,
 }; // enum class EFlecsComponentNodeType
 
 UENUM(BlueprintType)
@@ -23,7 +25,7 @@ enum class EFlecsPairNodeType : uint8
 {
 	ScriptStruct = 0,
 	EntityHandle = 1,
-	FGameplayTag = 2
+	FGameplayTag = 2,
 }; // enum class EFlecsPairNodeType
 
 USTRUCT(BlueprintType)
@@ -37,6 +39,10 @@ struct UNREALFLECS_API FFlecsRecordPairSlot
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::ScriptStruct", EditConditionHides))
 	FInstancedStruct PairScriptStruct;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::ScriptEnum", EditConditionHides))
+	FSolidEnumSelector PairScriptEnum;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::EntityHandle", EditConditionHides))
@@ -64,7 +70,7 @@ struct UNREALFLECS_API FFlecsRecordPairSlot
 			}
 		}
 
-		UNREACHABLE
+		UNREACHABLE;
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsRecordPairSlot& Other) const
@@ -200,6 +206,10 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 	FInstancedStruct ScriptStruct;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::ScriptEnum", EditConditionHides))
+	FSolidEnumSelector ScriptEnum;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::EntityHandle", EditConditionHides))
 	FFlecsId EntityHandle;
 
@@ -219,6 +229,11 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 				{
 					return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct && Pair == Other.Pair;
 				}
+			case EFlecsComponentNodeType::ScriptEnum:
+				{
+					return NodeType == Other.NodeType
+						&& ScriptEnum.Class == Other.ScriptEnum.Class && ScriptEnum.Value == Other.ScriptEnum.Value;
+				}
 			case EFlecsComponentNodeType::EntityHandle:
 				{
 					return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
@@ -233,7 +248,7 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 				}
 		}
 
-		UNREACHABLE
+		UNREACHABLE;
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsComponentTypeInfo& Other) const
@@ -279,7 +294,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		return !(*this == Other);
 	}
 
-	template <Solid::TStaticStructConcept T>
+	template <Solid::TScriptStructConcept T>
 	FORCEINLINE void AddComponent(const T& InComponent)
 	{
 		FFlecsComponentTypeInfo NewComponent;
@@ -354,7 +369,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	{
 		solid_checkf(InEntityHandle.IsValid(), TEXT("Entity Handle is not valid"));
 
-		for (const auto& [NodeType, ScriptStruct, EntityHandle, GameplayTag, Pair] : Components)
+		for (const auto& [NodeType, ScriptStruct, ScriptEnum, EntityHandle, GameplayTag, Pair] : Components)
 		{
 			switch (NodeType)
 			{
@@ -363,6 +378,10 @@ struct UNREALFLECS_API FFlecsEntityRecord
 					InEntityHandle.Set(ScriptStruct);
 				}
 				break;
+			case EFlecsComponentNodeType::ScriptEnum:
+				{
+					InEntityHandle.Add(ScriptEnum.Class, ScriptEnum.Value);
+				}
 			case EFlecsComponentNodeType::EntityHandle:
 				{
 					InEntityHandle.Add(EntityHandle);

@@ -35,6 +35,11 @@ public:
         : Id(InEntity.id())
     {
     }
+
+    FORCEINLINE NO_DISCARD bool IsValid() const
+    {
+        return Id != 0;
+    }
     
     FORCEINLINE NO_DISCARD bool operator==(const FFlecsId& Other) const
     {
@@ -45,7 +50,7 @@ public:
     {
         return Id != Other.Id;
     }
-
+    
     FORCEINLINE NO_DISCARD bool operator<(const FFlecsId& Other) const
     {
         return Id < Other.Id;

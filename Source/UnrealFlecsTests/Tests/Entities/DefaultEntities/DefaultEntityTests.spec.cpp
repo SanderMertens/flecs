@@ -40,16 +40,16 @@ void FDefaultEntityTestsSpec::Define()
 		It("Should have the correct id", [this]()
 		{
 			TestEqual("Default entity should have the correct id",
-				Fixture.FlecsWorld->GetEntity(TestEntityOption).GetIndex(),
+				Fixture.FlecsWorld->GetEntity(TestEntityOption).GetFlecsId(),
 				6000 + FLECS_HI_COMPONENT_ID);
 			TestEqual("Default entity should have the correct id",
-				Fixture.FlecsWorld->GetEntity(FlecsLocalTrait).GetIndex(),
+				Fixture.FlecsWorld->GetEntity(FlecsLocalTrait).GetFlecsId(),
 				5002 + FLECS_HI_COMPONENT_ID);
 			TestEqual("Default entity should have the correct id",
-				Fixture.FlecsWorld->GetEntity(FlecsGlobalTrait).GetIndex(),
+				Fixture.FlecsWorld->GetEntity(FlecsGlobalTrait).GetFlecsId(),
 				5003 + FLECS_HI_COMPONENT_ID);
 			TestEqual("Default entity should have the correct id",
-				Fixture.FlecsWorld->GetEntity(FlecsRelativeTrait).GetIndex(),
+				Fixture.FlecsWorld->GetEntity(FlecsRelativeTrait).GetFlecsId(),
 				5004 + FLECS_HI_COMPONENT_ID);
 			
 		});

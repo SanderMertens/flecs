@@ -17,9 +17,20 @@ public:
 	FORCEINLINE FUWorldPtrComponent() = default;
 	FORCEINLINE FUWorldPtrComponent(UWorld* InWorld) : World(InWorld) {}
 	
-	FORCEINLINE void SetWorld(UWorld* InWorld) { World = InWorld; }
-	FORCEINLINE NO_DISCARD UWorld* GetWorld() const { return World.Get(); }
-	FORCEINLINE NO_DISCARD bool IsValid() const { return World.IsValid(false, true); }
+	FORCEINLINE void SetWorld(UWorld* InWorld)
+	{
+		World = InWorld;
+	}
+	
+	FORCEINLINE NO_DISCARD UWorld* GetWorld() const
+	{
+		return World;
+	}
+	
+	FORCEINLINE NO_DISCARD bool IsValid() const
+	{
+		return ::IsValid(World);
+	}
 
 	FORCEINLINE FUWorldPtrComponent& operator=(UWorld* InWorld)
 	{
@@ -64,6 +75,6 @@ public:
 	}
 
 	UPROPERTY(BlueprintReadOnly, Category = "Flecs")
-	TWeakObjectPtr<UWorld> World;
+	TObjectPtr<UWorld> World;
 	
 }; // struct FUWorldPtrComponent

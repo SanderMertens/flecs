@@ -12,6 +12,7 @@
 #include "GameplayTagContainer.h"
 #include "SolidMacros/Macros.h"
 #include "StructUtils/InstancedStruct.h"
+#include "Types/SolidEnumSelector.h"
 #include "FlecsEntityHandle.generated.h"
 
 class UFlecsWorld;
@@ -121,11 +122,6 @@ public:
 		return FFlecsId(GetEntity());
 	}
 	
-	SOLID_INLINE NO_DISCARD flecs::id_t GetIndex() const
-	{
-		return GetFlecsId().GetId();
-	}
-	
 	SOLID_INLINE NO_DISCARD uint32 GetGeneration() const
 	{
 		return GetFlecsId().GetGeneration();
@@ -138,7 +134,6 @@ public:
 	
 	SOLID_INLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
 	SOLID_INLINE NO_DISCARD UWorld* GetOuterWorld() const;
-	
 	SOLID_INLINE NO_DISCARD FString GetWorldName() const;
 	
 	SOLID_INLINE NO_DISCARD FFlecsArchetype GetType() const
@@ -167,11 +162,45 @@ public:
 		return Has(GetTagEntity(InTag));
 	}
 
-	SOLID_INLINE void Add(const FFlecsId InEntity) const { GetEntity().add(InEntity); }
+	SOLID_INLINE NO_DISCARD bool Has(const UEnum* EnumType) const
+	{
+		return HasPair(ObtainComponentTypeEnum(EnumType), flecs::Wildcard);
+	}
+
+	SOLID_INLINE NO_DISCARD bool Has(const UEnum* EnumType, const int64 InValue) const
+	{
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
+		solid_check(EnumEntity.IsValid());
+		solid_check(EnumEntity.IsEnum());
+
+		FFlecsId EnumConstant = EnumEntity.Lookup(EnumType->GetNameStringByValue(InValue));
+		
+		return HasPair(EnumEntity, EnumConstant);
+	}
+
+	SOLID_INLINE NO_DISCARD bool Has(const FSolidEnumSelector& EnumSelector) const
+	{
+		return Has(EnumSelector.Class, EnumSelector.Value);
+	}
+
+	SOLID_INLINE void Add(const FFlecsId InEntity) const
+	{
+		GetEntity().add(InEntity);
+	}
 
 	SOLID_INLINE void Add(const UScriptStruct* StructType) const
 	{
 		Add(ObtainComponentTypeStruct(StructType));
+	}
+	
+	SOLID_INLINE void Add(const UEnum* EnumType, const int64 InValue) const
+	{
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
+
+		FFlecsId ValueEntity = EnumEntity.Lookup(EnumType->GetNameStringByValue(InValue));
+		solid_check(ValueEntity.IsValid());
+		
+		AddPair(EnumEntity, ValueEntity);
 	}
 
 	SOLID_INLINE void Add(const FGameplayTag& InTag) const
@@ -192,6 +221,13 @@ public:
 	{
 		GetEntity().add<T>();
 	}
+
+	template <typename T>
+	requires (std::is_enum<T>::value)
+	SOLID_INLINE void Add(const T InValue) const
+	{
+		GetEntity().add<T>(InValue);
+	}
 	
 	SOLID_INLINE void Remove(const FFlecsId InEntity) const
 	{
@@ -206,6 +242,22 @@ public:
 	SOLID_INLINE void Remove(const FGameplayTag& InTag) const
 	{
 		Remove(GetTagEntity(InTag));
+	}
+
+	SOLID_INLINE void Remove(const UEnum* EnumType) const
+	{
+		RemovePair(ObtainComponentTypeEnum(EnumType), flecs::Wildcard);
+	}
+
+	SOLID_INLINE void Remove(const UEnum* EnumType, const int64 InValue) const
+	{
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
+		solid_check(EnumEntity.IsValid());
+		solid_check(EnumEntity.IsEnum());
+
+		const FFlecsId EnumConstant = EnumEntity.Lookup(EnumType->GetNameStringByValue(InValue));
+		
+		RemovePair(EnumEntity, EnumConstant);
 	}
 
 	SOLID_INLINE void Remove(const FGameplayTagContainer& InTags, const bool bMustHaveAll = false) const
@@ -240,7 +292,7 @@ public:
 	{
 		GetEntity().set_ptr(InId, InValue);
 	}
-
+	
 	SOLID_INLINE void Set(const UScriptStruct* StructType, const void* InValue) const
 	{
 		Set(ObtainComponentTypeStruct(StructType), InValue);
@@ -341,7 +393,10 @@ public:
 		GetEntity().enable<T>();
 	}
 
-	SOLID_INLINE void Enable(const FFlecsId InEntity) const { GetEntity().enable(InEntity); }
+	SOLID_INLINE void Enable(const FFlecsId InEntity) const
+	{
+		GetEntity().enable(InEntity);
+	}
 	
 	SOLID_INLINE void Enable(const UScriptStruct* StructType) const
 	{
@@ -436,27 +491,80 @@ public:
 		return GetEntity().clone(bCloneValue, DestinationId);
 	}
 
-	SOLID_INLINE void SetName(const FString& InName) const { GetEntity().set_name(StringCast<char>(*InName).Get()); }
-	SOLID_INLINE NO_DISCARD FString GetName() const { return FString(GetEntity().name()); }
-	SOLID_INLINE NO_DISCARD bool HasName() const { return HasPair<flecs::Identifier>(flecs::Name); }
+	SOLID_INLINE void SetName(const FString& InName) const
+	{
+		GetEntity().set_name(StringCast<char>(*InName).Get());
+	}
+	
+	SOLID_INLINE NO_DISCARD FString GetName() const
+	{
+		return FString(GetEntity().name());
+	}
+	
+	SOLID_INLINE NO_DISCARD bool HasName() const
+	{
+		return HasPair<flecs::Identifier>(flecs::Name);
+	}
 
-	SOLID_INLINE NO_DISCARD FString GetSymbol() const { return FString(GetEntity().symbol().c_str()); }
-	SOLID_INLINE NO_DISCARD bool HasSymbol() const { return HasPair<flecs::Identifier>(flecs::Symbol); }
+	SOLID_INLINE NO_DISCARD FString GetSymbol() const
+	{
+		return FString(GetEntity().symbol().c_str());
+	}
+	
+	SOLID_INLINE NO_DISCARD bool HasSymbol() const
+	{
+		return HasPair<flecs::Identifier>(flecs::Symbol);
+	}
 
-	SOLID_INLINE void SetDocBrief(const FString& InDocBrief) const { GetEntity().set_doc_brief(StringCast<char>(*InDocBrief).Get()); }
-	SOLID_INLINE NO_DISCARD FString GetDocBrief() const { return FString(GetEntity().doc_brief()); }
+	SOLID_INLINE void SetDocBrief(const FString& InDocBrief) const
+	{
+		GetEntity().set_doc_brief(StringCast<char>(*InDocBrief).Get());
+	}
+	
+	SOLID_INLINE NO_DISCARD FString GetDocBrief() const
+	{
+		return FString(GetEntity().doc_brief());
+	}
 
-	SOLID_INLINE void SetDocColor(const FString& Link) const { GetEntity().set_doc_color(StringCast<char>(*Link).Get()); }
-	SOLID_INLINE NO_DISCARD FString GetDocColor() const { return FString(GetEntity().doc_color()); }
+	SOLID_INLINE void SetDocColor(const FString& Link) const
+	{
+		GetEntity().set_doc_color(StringCast<char>(*Link).Get());
+	}
+	
+	SOLID_INLINE NO_DISCARD FString GetDocColor() const
+	{
+		return FString(GetEntity().doc_color());
+	}
 
-	SOLID_INLINE void SetDocName(const FString& InDocName) const { GetEntity().set_doc_name(StringCast<char>(*InDocName).Get()); }
-	SOLID_INLINE NO_DISCARD FString GetDocName() const { return FString(GetEntity().doc_name()); }
+	SOLID_INLINE void SetDocName(const FString& InDocName) const
+	{
+		GetEntity().set_doc_name(StringCast<char>(*InDocName).Get());
+	}
+	
+	SOLID_INLINE NO_DISCARD FString GetDocName() const
+	{
+		return FString(GetEntity().doc_name());
+	}
 
-	SOLID_INLINE void SetDocLink(const FString& InDocLink) const { GetEntity().set_doc_link(StringCast<char>(*InDocLink).Get()); }
-	SOLID_INLINE NO_DISCARD FString GetDocLink() const { return FString(GetEntity().doc_link()); }
+	SOLID_INLINE void SetDocLink(const FString& InDocLink) const
+	{
+		GetEntity().set_doc_link(StringCast<char>(*InDocLink).Get());
+	}
+	
+	SOLID_INLINE NO_DISCARD FString GetDocLink() const
+	{
+		return FString(GetEntity().doc_link());
+	}
 
-	SOLID_INLINE void SetDocDetails(const FString& InDocDetails) const { GetEntity().set_doc_detail(StringCast<char>(*InDocDetails).Get()); }
-	SOLID_INLINE NO_DISCARD FString GetDocDetails() const { return FString(GetEntity().doc_detail()); }
+	SOLID_INLINE void SetDocDetails(const FString& InDocDetails) const
+	{
+		GetEntity().set_doc_detail(StringCast<char>(*InDocDetails).Get());
+	}
+	
+	SOLID_INLINE NO_DISCARD FString GetDocDetails() const
+	{
+		return FString(GetEntity().doc_detail());
+	}
 	
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle GetParent() const
 	{
@@ -540,7 +648,12 @@ public:
 	{
 		return Has<flecs::Component>();
 	}
-	
+
+	SOLID_INLINE NO_DISCARD bool IsEnum() const
+	{
+		return Has<flecs::Enum>();
+	}
+
 	SOLID_INLINE NO_DISCARD flecs::untyped_component GetUntypedComponent() const
 	{
 		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
@@ -1116,6 +1229,7 @@ public:
 	}
 
 	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
+	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeEnum(const UEnum* EnumType) const;
 
 	SOLID_INLINE void AddPrefab(const FFlecsId InPrefab) const
 	{
@@ -1127,9 +1241,14 @@ public:
 		RemovePair(flecs::IsA, InPrefab);
 	}
 
-	SOLID_INLINE NO_DISCARD bool IsPrefab(const FFlecsId InPrefab) const
+	SOLID_INLINE NO_DISCARD bool HasPrefab(const FFlecsId InPrefab) const
 	{
 		return HasPair(flecs::IsA, InPrefab);
+	}
+
+	SOLID_INLINE NO_DISCARD FFlecsEntityHandle Lookup(const FString& InPath, const bool bSearchPath = false) const
+	{
+		return GetEntity().lookup(StringCast<char>(*InPath).Get(), bSearchPath);
 	}
 
 	void AddCollection(UObject* Collection) const;
@@ -1139,7 +1258,7 @@ private:
 	
 	NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
 
-	NO_DISCARD flecs::world GetFlecsWorld_Internal() const
+	SOLID_INLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const
 	{
 		return Entity.world();
 	}

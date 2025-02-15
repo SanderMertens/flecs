@@ -362,6 +362,10 @@ struct ecs_query_impl_t {
     char *tokens;                 /* Buffer with string tokens used by terms */
     int32_t *monitor;             /* Change monitor for fields with fixed src */
 
+#ifdef FLECS_DEBUG
+    ecs_termset_t final_terms;    /* Terms that don't use component inheritance */
+#endif
+
     /* Query cache */
     struct ecs_query_cache_t *cache; /* Cache, if query contains cached terms */
 

@@ -40,11 +40,13 @@ inline void world::init_builtin_components() {
     flecs::entity ScriptStructEntity = this->component<FFlecsScriptStructComponent>()
         .add(flecs::Trait)
         .set<FFlecsScriptStructComponent>({ TBaseStructure<FFlecsScriptStructComponent>::Get() });
-
+    
     ecs_assert(ScriptStructEntity.is_valid(), ECS_INTERNAL_ERROR, NULL);
 
     type_map->ScriptStructMap.emplace(FFlecsScriptStructComponent::StaticStruct(), ScriptStructEntity);
-    
+
+    flecs::entity ScriptEnumEntity = this->component<FFlecsScriptEnumComponent>()
+        .add(flecs::Trait);
 
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);

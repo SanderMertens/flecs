@@ -1,6 +1,5 @@
 ﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
-
 #if WITH_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
@@ -31,8 +30,7 @@ void FFlecsWorldLifecycleTestsSpec::Define()
 			[this]()
 		{
 			TestTrue("Flecs world is valid", Fixture.FlecsWorld.IsValid());
-			TestNotNull("Flecs world singleton is valid",
-				ToFlecsWorld(Fixture.FlecsWorld->World));
+			TestNotNull("Flecs world singleton is valid", ToFlecsWorld(Fixture.FlecsWorld->World));
 		});
 	});
 }

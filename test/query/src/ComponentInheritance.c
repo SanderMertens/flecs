@@ -3348,3 +3348,168 @@ void ComponentInheritance_first_self(void) {
 
     ecs_fini(world);
 }
+
+void ComponentInheritance_inheritable_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Unit, Inheritable);
+    test_assert(ecs_has_id(world, Unit, EcsInheritable));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Unit"
+    });
+
+    test_assert(q != NULL);
+
+    ECS_ENTITY(world, Warrior, (IsA, Unit));
+    ECS_ENTITY(world, Wizard, (IsA, Unit));
+
+    ecs_entity_t e1 = ecs_new_w(world, Unit);
+    ecs_entity_t e2 = ecs_new_w(world, Warrior);
+    ecs_entity_t e3 = ecs_new_w(world, Wizard);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Unit, ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(Warrior, ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(Wizard, ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void ComponentInheritance_query_before_isa_relationship_1st_term(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Unit"
+    });
+
+    test_assert(q != NULL);
+
+    ECS_ENTITY(world, Warrior, (IsA, Unit));
+    ECS_ENTITY(world, Wizard, (IsA, Unit));
+
+    test_expect_abort();
+
+    ecs_query_iter(world, q);
+}
+
+void ComponentInheritance_query_before_isa_relationship_2nd_term(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo, Unit"
+    });
+
+    test_assert(q != NULL);
+
+    ECS_ENTITY(world, Warrior, (IsA, Unit));
+    ECS_ENTITY(world, Wizard, (IsA, Unit));
+
+    test_expect_abort();
+
+    ecs_query_iter(world, q);
+}
+
+void ComponentInheritance_query_before_isa_relationship_subtype(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (IsA, Unit));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "MeleeUnit"
+    });
+
+    test_assert(q != NULL);
+
+    ECS_ENTITY(world, Warrior, (IsA, MeleeUnit));
+
+    ecs_new_w(world, Unit);
+    ecs_entity_t e2 = ecs_new_w(world, MeleeUnit);
+    ecs_entity_t e3 = ecs_new_w(world, Warrior);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(MeleeUnit, ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(Warrior, ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void ComponentInheritance_query_before_isa_relationship_0_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Unit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo, Unit()"
+    });
+
+    test_assert(q != NULL);
+
+    ECS_ENTITY(world, Warrior, (IsA, Unit));
+
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(Unit, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
