@@ -440,6 +440,7 @@ void GlobalComponentIds_declare_entity(void);
 void GlobalComponentIds_reuse_300_component_ids(void);
 
 // Testsuite 'Sparse'
+void Sparse_setup(void);
 void Sparse_has(void);
 void Sparse_owns(void);
 void Sparse_get(void);
@@ -11618,6 +11619,10 @@ bake_test_case StackAlloc_testcases[] = {
     }
 };
 
+const char* Sparse_fragment_param[] = {"yes", "no"};
+bake_test_param Sparse_params[] = {
+    {"fragment", (char**)Sparse_fragment_param, 2}
+};
 
 static bake_test_suite suites[] = {
     {
@@ -11699,10 +11704,12 @@ static bake_test_suite suites[] = {
     },
     {
         "Sparse",
-        NULL,
+        Sparse_setup,
         NULL,
         88,
-        Sparse_testcases
+        Sparse_testcases,
+        1,
+        Sparse_params
     },
     {
         "Union",

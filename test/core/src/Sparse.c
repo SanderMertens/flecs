@@ -1,5 +1,20 @@
 #include <core.h>
 
+static bool fragment = true;
+
+void Sparse_setup(void) {
+    const char *fragment_param = test_param("fragment");
+    if (fragment_param) {
+        if (!strcmp(fragment_param, "yes")) {
+            // already set to default
+        } else if (!strcmp(fragment_param, "no")) {
+            fragment = false;
+        } else {
+            printf("unexpected value for fragment '%s'\n", fragment_param);
+        }
+    }
+}
+
 void Sparse_has(void) {
     ecs_world_t *world = ecs_mini();
 

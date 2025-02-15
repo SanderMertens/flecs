@@ -4141,6 +4141,7 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, EcsRelationship);
     flecs_bootstrap_make_alive(world, EcsTarget);
     flecs_bootstrap_make_alive(world, EcsSparse);
+    flecs_bootstrap_make_alive(world, EcsDontFragment);
     flecs_bootstrap_make_alive(world, EcsUnion);
     flecs_bootstrap_make_alive(world, EcsObserver);
     flecs_bootstrap_make_alive(world, EcsPairIsTag);
@@ -4268,6 +4269,7 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsOnDeleteTarget);
     flecs_bootstrap_trait(world, EcsOnInstantiate);
     flecs_bootstrap_trait(world, EcsSparse);
+    flecs_bootstrap_trait(world, EcsDontFragment);
     flecs_bootstrap_trait(world, EcsUnion);
 
     flecs_bootstrap_tag(world, EcsRemove);
@@ -4407,6 +4409,15 @@ void flecs_bootstrap(
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
         .ctx = &sparse_trait
+    });
+
+    static ecs_on_trait_ctx_t dont_fragment_trait = { EcsIdDontFragment, 0 };
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsDontFragment }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_trait,
+        .ctx = &dont_fragment_trait
     });
 
     static ecs_on_trait_ctx_t union_trait = { EcsIdIsUnion, 0 };
@@ -17479,34 +17490,35 @@ const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 54;
 
 /* Storage */
 const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 55;
-const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 56;
+const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 56;
+const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 57;
 
 /* Misc */
-const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 57;
+const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 58;
 
 /* Builtin predicate ids (used by query engine) */
-const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 58;
-const ecs_entity_t EcsPredMatch =                   FLECS_HI_COMPONENT_ID + 59;
-const ecs_entity_t EcsPredLookup =                  FLECS_HI_COMPONENT_ID + 60;
-const ecs_entity_t EcsScopeOpen =                   FLECS_HI_COMPONENT_ID + 61;
-const ecs_entity_t EcsScopeClose =                  FLECS_HI_COMPONENT_ID + 62;
+const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 59;
+const ecs_entity_t EcsPredMatch =                   FLECS_HI_COMPONENT_ID + 60;
+const ecs_entity_t EcsPredLookup =                  FLECS_HI_COMPONENT_ID + 61;
+const ecs_entity_t EcsScopeOpen =                   FLECS_HI_COMPONENT_ID + 62;
+const ecs_entity_t EcsScopeClose =                  FLECS_HI_COMPONENT_ID + 63;
 
 /* Systems */
-const ecs_entity_t EcsMonitor =                     FLECS_HI_COMPONENT_ID + 63;
-const ecs_entity_t EcsEmpty =                       FLECS_HI_COMPONENT_ID + 64;
-const ecs_entity_t ecs_id(EcsPipeline) =            FLECS_HI_COMPONENT_ID + 65;
-const ecs_entity_t EcsOnStart =                     FLECS_HI_COMPONENT_ID + 66;
-const ecs_entity_t EcsPreFrame =                    FLECS_HI_COMPONENT_ID + 67;
-const ecs_entity_t EcsOnLoad =                      FLECS_HI_COMPONENT_ID + 68;
-const ecs_entity_t EcsPostLoad =                    FLECS_HI_COMPONENT_ID + 69;
-const ecs_entity_t EcsPreUpdate =                   FLECS_HI_COMPONENT_ID + 70;
-const ecs_entity_t EcsOnUpdate =                    FLECS_HI_COMPONENT_ID + 71;
-const ecs_entity_t EcsOnValidate =                  FLECS_HI_COMPONENT_ID + 72;
-const ecs_entity_t EcsPostUpdate =                  FLECS_HI_COMPONENT_ID + 73;
-const ecs_entity_t EcsPreStore =                    FLECS_HI_COMPONENT_ID + 74;
-const ecs_entity_t EcsOnStore =                     FLECS_HI_COMPONENT_ID + 75;
-const ecs_entity_t EcsPostFrame =                   FLECS_HI_COMPONENT_ID + 76;
-const ecs_entity_t EcsPhase =                       FLECS_HI_COMPONENT_ID + 77;
+const ecs_entity_t EcsMonitor =                     FLECS_HI_COMPONENT_ID + 64;
+const ecs_entity_t EcsEmpty =                       FLECS_HI_COMPONENT_ID + 65;
+const ecs_entity_t ecs_id(EcsPipeline) =            FLECS_HI_COMPONENT_ID + 66;
+const ecs_entity_t EcsOnStart =                     FLECS_HI_COMPONENT_ID + 67;
+const ecs_entity_t EcsPreFrame =                    FLECS_HI_COMPONENT_ID + 68;
+const ecs_entity_t EcsOnLoad =                      FLECS_HI_COMPONENT_ID + 69;
+const ecs_entity_t EcsPostLoad =                    FLECS_HI_COMPONENT_ID + 70;
+const ecs_entity_t EcsPreUpdate =                   FLECS_HI_COMPONENT_ID + 71;
+const ecs_entity_t EcsOnUpdate =                    FLECS_HI_COMPONENT_ID + 72;
+const ecs_entity_t EcsOnValidate =                  FLECS_HI_COMPONENT_ID + 73;
+const ecs_entity_t EcsPostUpdate =                  FLECS_HI_COMPONENT_ID + 74;
+const ecs_entity_t EcsPreStore =                    FLECS_HI_COMPONENT_ID + 75;
+const ecs_entity_t EcsOnStore =                     FLECS_HI_COMPONENT_ID + 76;
+const ecs_entity_t EcsPostFrame =                   FLECS_HI_COMPONENT_ID + 77;
+const ecs_entity_t EcsPhase =                       FLECS_HI_COMPONENT_ID + 78;
 
 /* Meta primitive components (don't use low ids to save id space) */
 #ifdef FLECS_META

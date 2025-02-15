@@ -466,6 +466,10 @@
             ]
         }, {
             "id": "Sparse",
+            "setup": true,
+            "params": {
+                "fragment": ["yes", "no"]
+            },
             "testcases": [
                 "has",
                 "owns",

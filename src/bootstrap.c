@@ -804,6 +804,7 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, EcsRelationship);
     flecs_bootstrap_make_alive(world, EcsTarget);
     flecs_bootstrap_make_alive(world, EcsSparse);
+    flecs_bootstrap_make_alive(world, EcsDontFragment);
     flecs_bootstrap_make_alive(world, EcsUnion);
     flecs_bootstrap_make_alive(world, EcsObserver);
     flecs_bootstrap_make_alive(world, EcsPairIsTag);
@@ -931,6 +932,7 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsOnDeleteTarget);
     flecs_bootstrap_trait(world, EcsOnInstantiate);
     flecs_bootstrap_trait(world, EcsSparse);
+    flecs_bootstrap_trait(world, EcsDontFragment);
     flecs_bootstrap_trait(world, EcsUnion);
 
     flecs_bootstrap_tag(world, EcsRemove);
@@ -1070,6 +1072,15 @@ void flecs_bootstrap(
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
         .ctx = &sparse_trait
+    });
+
+    static ecs_on_trait_ctx_t dont_fragment_trait = { EcsIdDontFragment, 0 };
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsDontFragment }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_trait,
+        .ctx = &dont_fragment_trait
     });
 
     static ecs_on_trait_ctx_t union_trait = { EcsIdIsUnion, 0 };
