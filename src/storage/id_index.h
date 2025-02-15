@@ -27,8 +27,18 @@ typedef struct ecs_reachable_cache_t {
     ecs_vec_t ids; /* vec<reachable_elem_t> */
 } ecs_reachable_cache_t;
 
-/* Payload for id index which contains all data structures for an id. */
-struct ecs_id_record_t {
+#if defined(__EMSCRIPTEN__)
+#define ECS_TABLE_CACHE_ALIGN __attribute__((aligned(8)))
+#else
+#define ECS_TABLE_CACHE_ALIGN
+#endif
+
+typedef struct ECS_TABLE_CACHE_ALIGN ecs_table_cache_t {
+    ecs_map_t index; /* <table_id, T*> */
+    ecs_table_cache_list_t tables;
+} ecs_table_cache_t;
+
+struct ECS_TABLE_CACHE_ALIGN ecs_id_record_t {
     /* Cache with all tables that contain the id. Must be first member. */
     ecs_table_cache_t cache; /* table_cache<ecs_table_record_t> */
 
