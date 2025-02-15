@@ -1211,6 +1211,7 @@ public:
 					UN_LOGF(LogFlecsWorld, Error,
 						"Property Type Script struct %s is not registered for entity %s",
 						*CastFieldChecked<FStructProperty>(Property)->Struct->GetName(), *InEntity.GetName());
+					continue;
 				}
 				else
 				{
