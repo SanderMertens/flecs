@@ -700,6 +700,7 @@ void flecs_bootstrap(
     /* Ensure builtin ids are alive */
     ecs_make_alive(world, ecs_id(EcsComponent));
     ecs_make_alive(world, EcsFinal);
+    ecs_make_alive(world, EcsInheritable);
     ecs_make_alive(world, ecs_id(EcsIdentifier));
     ecs_make_alive(world, EcsName);
     ecs_make_alive(world, EcsSymbol);
@@ -833,6 +834,7 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsReflexive);
     flecs_bootstrap_trait(world, EcsSymmetric);
     flecs_bootstrap_trait(world, EcsFinal);
+    flecs_bootstrap_trait(world, EcsInheritable);
     flecs_bootstrap_trait(world, EcsPairIsTag);
     flecs_bootstrap_trait(world, EcsExclusive);
     flecs_bootstrap_trait(world, EcsAcyclic);
@@ -908,6 +910,15 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_final
+    });
+
+    static ecs_on_trait_ctx_t inheritable_trait = { EcsIdIsInheritable, 0 };
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsInheritable }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_trait,
+        .ctx = &inheritable_trait
     });
 
     ecs_observer(world, {

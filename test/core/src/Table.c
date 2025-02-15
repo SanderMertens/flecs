@@ -765,7 +765,7 @@ void Observer(ecs_iter_t *it) {
 }
 
 void Table_clear_table_on_remove_observer(void) {
-     ecs_world_t *world = ecs_mini();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -790,6 +790,41 @@ void Table_clear_table_on_remove_observer(void) {
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 2);
+
+    ecs_fini(world);
+}
+
+void Table_65_records_w_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, TgtA);
+
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, TgtB);
+
+    ecs_id_t *ids = ecs_os_malloc_n(ecs_id_t, 39);
+    int32_t i;
+
+    for (i = 0; i < 19; i ++) {
+        ids[i] = ecs_new(world);
+    }
+
+    for (; i < 37; i ++) {
+        ids[i] = ECS_AUTO_OVERRIDE | ecs_new(world);
+    }
+
+    ids[i ++] = ecs_pair(RelA, TgtA);
+    ids[i ++] = ecs_pair(RelB, TgtB);
+
+    ecs_table_t *table = ecs_table_find(world, ids, i);
+    test_assert(table != NULL);
+
+    for (i = 0; i < 39; i ++) {
+        test_assert(ecs_table_has_id(world, table, ids[i]));
+    }
+
+    ecs_os_free(ids);
 
     ecs_fini(world);
 }

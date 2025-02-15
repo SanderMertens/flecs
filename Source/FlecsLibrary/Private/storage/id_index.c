@@ -486,11 +486,11 @@ void flecs_id_record_free(
         world->id_index_lo[hash] = NULL;
     }
 
-    flecs_bfree(&world->allocators.id_record, idr);
-
 #ifdef FLECS_DEBUG_INFO
     ecs_os_free(idr->str);
 #endif
+
+    flecs_bfree(&world->allocators.id_record, idr);
 
     if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);
