@@ -264,6 +264,70 @@ struct UNREALFLECS_API FFlecsRecordSubEntity
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	FString Name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
+	TArray<FFlecsComponentTypeInfo> Components;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Flecs | Entity Record")
+	TArray<TObjectPtr<UFlecsComponentCollectionObject>> Collections;
+
+	FORCEINLINE NO_DISCARD bool operator==(const FFlecsRecordSubEntity& Other) const
+	{
+		return Name == Other.Name && Components == Other.Components;
+	}
+
+	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsRecordSubEntity& Other) const
+	{
+		return !(*this == Other);
+	}
+
+	FORCEINLINE void ApplyRecordToEntity(const FFlecsEntityHandle& InEntityHandle) const
+	{
+		solid_checkf(InEntityHandle.IsValid(), TEXT("Entity Handle is not valid"));
+
+		if (!Name.IsEmpty() && !InEntityHandle.HasName())
+		{
+			InEntityHandle.SetName(StringCast<char>(*Name).Get());
+		}
+
+		for (const auto& [NodeType, ScriptStruct, ScriptEnum, EntityHandle, GameplayTag, Pair] : Components)
+		{
+			switch (NodeType)
+			{
+			case EFlecsComponentNodeType::ScriptStruct:
+				{
+					InEntityHandle.Set(ScriptStruct);
+				}
+				break;
+			case EFlecsComponentNodeType::ScriptEnum:
+				{
+					InEntityHandle.Add(ScriptEnum.Class, ScriptEnum.Value);
+				}
+			case EFlecsComponentNodeType::EntityHandle:
+				{
+					InEntityHandle.Add(EntityHandle);
+				}
+				break;
+			case EFlecsComponentNodeType::FGameplayTag:
+				{
+					InEntityHandle.Add(GameplayTag);	
+				}
+				break;
+			case EFlecsComponentNodeType::Pair:
+				{
+					Pair.AddToEntity(InEntityHandle);
+				}
+				break;
+			}
+		}
+
+		for (UFlecsComponentCollectionObject* Collection : Collections)
+		{
+			InEntityHandle.AddCollection(Collection);
+		}
+	}
 	
 }; // struct FFlecsRecordSubEntity
 
@@ -282,7 +346,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	TArray<TObjectPtr<UFlecsComponentCollectionObject>> Collections;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
-	TArray<TInstancedStruct<FFlecsEntityRecord>> SubEntities;
+	TArray<FFlecsRecordSubEntity> SubEntities;
 
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityRecord& Other) const
 	{
@@ -327,9 +391,9 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		Components.Add(NewComponent);
 	}
 
-	FORCEINLINE int32 AddSubEntity(const FFlecsEntityRecord& InSubEntity)
+	FORCEINLINE int32 AddSubEntity(const FFlecsRecordSubEntity& InSubEntity)
 	{
-		return SubEntities.Add(TInstancedStruct<FFlecsEntityRecord>::Make(InSubEntity));
+		return SubEntities.Add(InSubEntity);
 	}
 
 	FORCEINLINE void RemoveSubEntity(const int32 InIndex)
@@ -353,16 +417,16 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		return SubEntities.Num();
 	}
 
-	FORCEINLINE const FFlecsEntityRecord& GetSubEntity(const int32 InIndex) const
+	FORCEINLINE const FFlecsRecordSubEntity& GetSubEntity(const int32 InIndex) const
 	{
 		solid_checkf(SubEntities.IsValidIndex(InIndex), TEXT("Index is out of bounds"));
-		return SubEntities[InIndex].Get<FFlecsEntityRecord>();
+		return SubEntities[InIndex];
 	}
 
-	FORCEINLINE FFlecsEntityRecord& GetSubEntity(const int32 InIndex)
+	FORCEINLINE FFlecsRecordSubEntity& GetSubEntity(const int32 InIndex)
 	{
 		solid_checkf(SubEntities.IsValidIndex(InIndex), TEXT("Index is out of bounds"));
-		return SubEntities[InIndex].GetMutable<FFlecsEntityRecord>();
+		return SubEntities[InIndex];
 	}
 
 	FORCEINLINE void ApplyRecordToEntity(const FFlecsEntityHandle& InEntityHandle) const
@@ -405,11 +469,12 @@ struct UNREALFLECS_API FFlecsEntityRecord
 			InEntityHandle.AddCollection(Collection);
 		}
 
-		for (const TInstancedStruct<FFlecsEntityRecord>& SubEntity : SubEntities)
+		for (const FFlecsRecordSubEntity& SubEntity : SubEntities)
 		{
-			const FFlecsEntityRecord& NewEntityRecord = SubEntity.Get();
-			FFlecsEntityHandle NewEntityHandle = InEntityHandle.GetEntity().world().entity();
-			NewEntityRecord.ApplyRecordToEntity(NewEntityHandle);
+			FFlecsEntityHandle NewEntityHandle = InEntityHandle
+				.GetEntity().world().entity(StringCast<char>(*SubEntity.Name).Get());
+			
+			SubEntity.ApplyRecordToEntity(NewEntityHandle);
 			InEntityHandle.Add(NewEntityHandle);
 		}
 	}
