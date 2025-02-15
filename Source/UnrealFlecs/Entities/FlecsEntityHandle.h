@@ -132,9 +132,9 @@ public:
 		return GetGeneration();
 	}
 	
-	SOLID_INLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
-	SOLID_INLINE NO_DISCARD UWorld* GetOuterWorld() const;
-	SOLID_INLINE NO_DISCARD FString GetWorldName() const;
+	NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
+	NO_DISCARD UWorld* GetOuterWorld() const;
+	NO_DISCARD FString GetWorldName() const;
 	
 	SOLID_INLINE NO_DISCARD FFlecsArchetype GetType() const
 	{
@@ -812,8 +812,7 @@ public:
 
 	SOLID_INLINE void AddPair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
 	{
-		GetEntity().add(ObtainComponentTypeStruct(InFirst),
-			GetTagEntity(InSecond));
+		GetEntity().add(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
 	}
 
 	SOLID_INLINE void AddPair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
@@ -823,8 +822,7 @@ public:
 
 	SOLID_INLINE void AddPair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
 	{
-		GetEntity().add(GetTagEntity(InFirst),
-			ObtainComponentTypeStruct(InSecond));
+		GetEntity().add(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond));
 	}
 
 	SOLID_INLINE void AddPair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
@@ -860,14 +858,12 @@ public:
 
 	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
 	{
-		GetEntity().remove(ObtainComponentTypeStruct(InFirst),
-			ObtainComponentTypeStruct(InSecond));
+		GetEntity().remove(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
 	}
 
 	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
 	{
-		GetEntity().remove(ObtainComponentTypeStruct(InFirst),
-			GetTagEntity(InSecond));
+		GetEntity().remove(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
 	}
 
 	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
