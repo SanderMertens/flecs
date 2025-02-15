@@ -114,7 +114,7 @@ void* flecs_get_base_component(
     /* Table should always be in the table index for (IsA, *), otherwise the
      * HasBase flag should not have been set */
     const ecs_table_record_t *tr_isa = flecs_component_get_table(
-        world->idr_isa_wildcard, table);
+        world->cdr_isa_wildcard, table);
     ecs_check(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_type_t type = table->type;
@@ -551,11 +551,11 @@ void flecs_instantiate(
     /* If prefab has union relationships, also set them on instance */
     if (base_table->flags & EcsTableHasUnion) {
         const ecs_entity_t *entities = ecs_table_entities(table);
-        ecs_component_record_t *union_idr = flecs_components_get(world, 
+        ecs_component_record_t *union_cdr = flecs_components_get(world, 
             ecs_pair(EcsWildcard, EcsUnion));
-        ecs_assert(union_idr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(union_cdr != NULL, ECS_INTERNAL_ERROR, NULL);
         const ecs_table_record_t *tr = flecs_component_get_table(
-            union_idr, base_table);
+            union_cdr, base_table);
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t i = 0, j, union_count = 0;
         do {
@@ -668,6 +668,45 @@ void flecs_sparse_on_remove(
     }
 }
 
+void flecs_entity_remove_non_fragmenting(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_record_t *r)
+{
+    if (!r) {
+        r = flecs_entities_get(world, e);
+    }
+
+    if (!r || !(r->row & EcsEntityHasDontFragment)) {
+        return;
+    }
+
+    ecs_component_record_t *cur = world->cdr_non_fragmenting_head;
+    while (cur) {
+        ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        if (cur->sparse) {
+            void *ptr = flecs_sparse_get_any(cur->sparse, 0, e);
+            if (ptr) {
+                const ecs_type_info_t *ti = cur->type_info;
+                ecs_xtor_t dtor = ti->hooks.dtor;
+                ecs_iter_action_t on_remove = ti->hooks.on_remove;
+                if (on_remove) {
+                    flecs_invoke_hook(world, NULL, NULL, 1, 0,
+                        &e, cur->id, ti, EcsOnRemove, on_remove);
+                }
+                if (dtor) {
+                    dtor(ptr, 1, ti);
+                }
+                flecs_sparse_remove_fast(cur->sparse, 0, e);
+            }
+        }
+
+        cur = cur->non_fragmenting.next;
+    }
+
+    r->row &= ~EcsEntityHasDontFragment;
+}
+
 static
 void flecs_union_on_add(
     ecs_world_t *world,
@@ -744,6 +783,14 @@ void flecs_notify_on_add(
 
         if (sparse && (diff_flags & EcsTableHasSparse)) {
             flecs_sparse_on_add(world, table, row, count, added, construct);
+            if (diff_flags & EcsTableHasDontFragment) {
+                int32_t i;
+                const ecs_entity_t *entities = ecs_table_entities(table);
+                for (i = row; i < (row + count); i ++) {
+                    ecs_record_t *r = flecs_entities_get(world, entities[i]);
+                    r->row |= EcsEntityHasDontFragment;
+                }
+            }
         }
 
         if (diff_flags & EcsTableHasUnion) {
@@ -991,8 +1038,10 @@ void flecs_commit(
         /* If source and destination table are the same no action is needed *
          * However, if a component was added in the process of traversing a
          * table, this suggests that a union relationship could have changed. */
-        if (src_table->flags & EcsTableHasUnion) {
-            diff->added_flags |= EcsIdIsUnion;
+        ecs_flags32_t non_fragment_flags = 
+            src_table->flags & (EcsTableHasUnion|EcsTableHasDontFragment);
+        if (non_fragment_flags) {
+            diff->added_flags |= non_fragment_flags;
             flecs_notify_on_add(world, src_table, src_table, 
                 ECS_RECORD_TO_ROW(record->row), 1, diff, evt_flags, 0, 
                     construct, true);
@@ -2339,6 +2388,7 @@ void ecs_clear(
         };
 
         flecs_commit(world, entity, r, &world->store.root, &diff, false, 0);
+        flecs_entity_remove_non_fragmenting(world, entity, NULL);
     }    
 
     flecs_defer_end(world, stage);
@@ -2464,8 +2514,8 @@ ecs_entity_t flecs_get_delete_action(
         do {
             ecs_type_t *type = &table->type;
             ecs_table_record_t *trr = &table->_->records[i];
-            ecs_component_record_t *idrr = (ecs_component_record_t*)trr->hdr.cache;
-            result = ECS_ID_ON_DELETE_TARGET(idrr->flags);
+            ecs_component_record_t *cdrr = (ecs_component_record_t*)trr->hdr.cache;
+            result = ECS_ID_ON_DELETE_TARGET(cdrr->flags);
             if (result == EcsDelete) {
                 /* Delete takes precedence over Remove */
                 break;
@@ -2893,6 +2943,8 @@ void ecs_delete(
             if (row_flags & EcsEntityIsTraversable) {
                 flecs_table_traversable_add(r->table, -1);
             }
+
+            flecs_entity_remove_non_fragmenting(world, entity, r);
 
             /* Merge operations before deleting entity */
             flecs_defer_end(world, stage);
@@ -3688,10 +3740,10 @@ bool ecs_has_id(
     }
 
     if (ECS_IS_PAIR(id) && (table->flags & EcsTableHasUnion)) {
-        ecs_component_record_t *u_idr = flecs_components_get(world, 
+        ecs_component_record_t *u_cdr = flecs_components_get(world, 
             ecs_pair(ECS_PAIR_FIRST(id), EcsUnion));
-        if (u_idr && u_idr->flags & EcsIdIsUnion) {
-            uint64_t cur = flecs_switch_get(u_idr->sparse, (uint32_t)entity);
+        if (u_cdr && u_cdr->flags & EcsIdIsUnion) {
+            uint64_t cur = flecs_switch_get(u_cdr->sparse, (uint32_t)entity);
             return (uint32_t)cur == ECS_PAIR_SECOND(id);
         }
     }
@@ -3782,16 +3834,16 @@ ecs_entity_t ecs_get_target(
 
     if (result == EcsUnion) {
         wc = ecs_pair(rel, EcsUnion);
-        ecs_component_record_t *wc_idr = flecs_components_get(world, wc);
-        ecs_assert(wc_idr != NULL, ECS_INTERNAL_ERROR, NULL);
-        result = flecs_switch_get(wc_idr->sparse, (uint32_t)entity);
+        ecs_component_record_t *wc_cdr = flecs_components_get(world, wc);
+        ecs_assert(wc_cdr != NULL, ECS_INTERNAL_ERROR, NULL);
+        result = flecs_switch_get(wc_cdr->sparse, (uint32_t)entity);
     }
 
     return result;
 look_in_base:
     if (table->flags & EcsTableHasIsA) {
         const ecs_table_record_t *tr_isa = flecs_component_get_table(
-            world->idr_isa_wildcard, table);
+            world->cdr_isa_wildcard, table);
         ecs_assert(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_id_t *ids = table->type.array;

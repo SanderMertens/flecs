@@ -128,6 +128,11 @@ void flecs_add_ids(
     ecs_id_t *ids,
     int32_t count);
 
+void flecs_entity_remove_non_fragmenting(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_record_t *r);
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,13 +269,13 @@ void flecs_colorize_buf(
     bool enable_colors,
     ecs_strbuf_t *buf);
 
-int32_t flecs_search_w_idr(
+int32_t flecs_search_w_cdr(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t *id_out,
     ecs_component_record_t *cdr);
 
-int32_t flecs_search_relation_w_idr(
+int32_t flecs_search_relation_w_cdr(
     const ecs_world_t *world,
     const ecs_table_t *table,
     int32_t offset,

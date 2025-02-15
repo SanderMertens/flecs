@@ -670,6 +670,17 @@ void flecs_compute_table_diff(
                 return;
             }
         }
+    } else {
+        ecs_component_record_t *cdr = flecs_components_get(world, id);
+        if (cdr->flags & EcsIdDontFragment) {
+            ecs_table_diff_t *diff = flecs_bcalloc(
+                &world->allocators.table_diff);
+            diff->added.count = 1;
+            diff->added.array = flecs_wdup_n(world, ecs_id_t, 1, &id);
+            diff->added_flags = EcsTableHasDontFragment|EcsTableHasSparse;
+            edge->diff = diff;
+            return;
+        }
     }
 
     ecs_id_t *ids_node = node_type.array;
@@ -820,7 +831,7 @@ void flecs_add_overrides_for_base(
 
     if (flags & EcsTableHasIsA) {
         const ecs_table_record_t *tr = flecs_component_get_table(
-            world->idr_isa_wildcard, base_table);
+            world->cdr_isa_wildcard, base_table);
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t i = tr->index, end = i + tr->count;
         for (; i != end; i ++) {
@@ -832,7 +843,7 @@ void flecs_add_overrides_for_base(
 static
 void flecs_add_with_property(
     ecs_world_t *world,
-    ecs_component_record_t *idr_with_wildcard,
+    ecs_component_record_t *cdr_with_wildcard,
     ecs_type_t *dst_type,
     ecs_entity_t r,
     ecs_entity_t o)
@@ -845,7 +856,7 @@ void flecs_add_with_property(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     
     const ecs_table_record_t *tr = flecs_component_get_table(
-        idr_with_wildcard, table);
+        cdr_with_wildcard, table);
     if (tr) {
         int32_t i = tr->index, end = i + tr->count;
         ecs_id_t *ids = table->type.array;
@@ -860,10 +871,9 @@ void flecs_add_with_property(
             }
 
             flecs_type_add(world, dst_type, a);
-            flecs_add_with_property(world, idr_with_wildcard, dst_type, ra, o);
+            flecs_add_with_property(world, cdr_with_wildcard, dst_type, ra, o);
         }
     }
-
 }
 
 static
@@ -900,6 +910,12 @@ ecs_table_t* flecs_find_table_with(
         r = with;
     }
 
+    if (cdr->flags & EcsIdDontFragment) {
+        /* Component doesn't fragment tables */
+        node->flags |= EcsTableHasDontFragment;
+        return node;
+    }
+
     /* Create sequence with new id */
     ecs_type_t dst_type;
     int res = flecs_type_new_with(world, &dst_type, &node->type, with);
@@ -918,10 +934,10 @@ ecs_table_t* flecs_find_table_with(
     }
 
     if (cdr->flags & EcsIdWith) {
-        ecs_component_record_t *idr_with_wildcard = flecs_components_get(world,
+        ecs_component_record_t *cdr_with_wildcard = flecs_components_get(world,
             ecs_pair(EcsWith, EcsWildcard));
         /* If id has With property, add targets to type */
-        flecs_add_with_property(world, idr_with_wildcard, &dst_type, r, o);
+        flecs_add_with_property(world, cdr_with_wildcard, &dst_type, r, o);
     }
 
     return flecs_table_ensure(world, &dst_type, true, node);
@@ -933,13 +949,20 @@ ecs_table_t* flecs_find_table_without(
     ecs_table_t *node,
     ecs_id_t without)
 {
+    ecs_component_record_t *cdr = NULL;
+
     if (ECS_IS_PAIR(without)) {
         ecs_entity_t r = 0;
-        ecs_component_record_t *cdr = NULL;
         r = ECS_PAIR_FIRST(without);
         cdr = flecs_components_get(world, ecs_pair(r, EcsWildcard));
         if (cdr && cdr->flags & EcsIdIsUnion) {
             without = ecs_pair(r, EcsUnion);
+        }
+    } else {
+        cdr = flecs_components_get(world, without);
+        if (cdr && cdr->flags & EcsIdDontFragment) {
+            /* Component doesn't fragment tables */
+            return node;
         }
     }
 
@@ -983,7 +1006,7 @@ void flecs_init_edge_for_add(
 
     flecs_table_ensure_hi_edge(world, &table->node.add, id);
 
-    if ((table != to) || (table->flags & EcsTableHasUnion)) {
+    if ((table != to) || (table->flags & (EcsTableHasUnion|EcsTableHasDontFragment))) {
         /* Add edges are appended to refs.next */
         ecs_graph_edge_hdr_t *to_refs = &to->node.refs;
         ecs_graph_edge_hdr_t *next = to_refs->next;

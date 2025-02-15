@@ -209,6 +209,9 @@ bool flecs_set_id_flag(
         if (flag == EcsIdIsSparse) {
             flecs_component_init_sparse(world, cdr);
         }
+        if (flag == EcsIdDontFragment) {
+            flecs_component_record_init_dont_fragment(world, cdr);
+        }
         return true;
     }
     return false;
@@ -607,15 +610,15 @@ ecs_table_t* flecs_bootstrap_component_table(
         EcsIdTraversable | EcsIdTag;
 
     /* Initialize id records cached on world */
-    world->idr_childof_wildcard = flecs_components_ensure(world, 
+    world->cdr_childof_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, EcsWildcard));
-    world->idr_childof_wildcard->flags |= EcsIdOnDeleteObjectDelete | 
+    world->cdr_childof_wildcard->flags |= EcsIdOnDeleteObjectDelete | 
         EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdTag | EcsIdExclusive;
     cdr = flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsWildcard));
     cdr->flags |= EcsIdOnInstantiateDontInherit;
-    world->idr_identifier_name = 
+    world->cdr_identifier_name = 
         flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsName));
-    world->idr_childof_0 = flecs_components_ensure(world, 
+    world->cdr_childof_0 = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, 0));
 
     /* Initialize root table */
@@ -1218,8 +1221,8 @@ void flecs_bootstrap(
     ecs_set_scope(world, 0);
     ecs_set_name_prefix(world, NULL);
 
-    ecs_assert(world->idr_childof_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(world->idr_isa_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->cdr_childof_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->cdr_isa_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Verify that all entities are where they're supposed to be */
     flecs_bootstrap_sanity_check(world);

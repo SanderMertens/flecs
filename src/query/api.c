@@ -294,9 +294,9 @@ void flecs_query_fini(
         if (cdr) {
             if (!(ecs_world_get_flags(q->world) & EcsWorldQuit)) {
                 if (ecs_os_has_threading()) {
-                    int32_t idr_keep_alive = ecs_os_adec(&cdr->keep_alive);
-                    ecs_assert(idr_keep_alive >= 0, ECS_INTERNAL_ERROR, NULL);
-                    (void)idr_keep_alive;
+                    int32_t cdr_keep_alive = ecs_os_adec(&cdr->keep_alive);
+                    ecs_assert(cdr_keep_alive >= 0, ECS_INTERNAL_ERROR, NULL);
+                    (void)cdr_keep_alive;
                 } else {
                     cdr->keep_alive --;
                     ecs_assert(cdr->keep_alive >= 0, ECS_INTERNAL_ERROR, NULL);

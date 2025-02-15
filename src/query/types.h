@@ -191,8 +191,8 @@ typedef struct {
     ecs_entity_t trav;
     ecs_id_t with;
     ecs_id_t matched;
-    ecs_component_record_t *idr_with;
-    ecs_component_record_t *idr_trav;
+    ecs_component_record_t *cdr_with;
+    ecs_component_record_t *cdr_trav;
     ecs_trav_down_t *down;
     int32_t cache_elem;
     ecs_trav_up_cache_t cache;

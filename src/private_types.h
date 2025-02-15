@@ -301,13 +301,16 @@ struct ecs_world_t {
     ecs_map_t type_info;             /* map<type_id, type_info_t> */
 
     /* -- Cached handle to id records -- */
-    ecs_component_record_t *idr_wildcard;
-    ecs_component_record_t *idr_wildcard_wildcard;
-    ecs_component_record_t *idr_any;
-    ecs_component_record_t *idr_isa_wildcard;
-    ecs_component_record_t *idr_childof_0;
-    ecs_component_record_t *idr_childof_wildcard;
-    ecs_component_record_t *idr_identifier_name;
+    ecs_component_record_t *cdr_wildcard;
+    ecs_component_record_t *cdr_wildcard_wildcard;
+    ecs_component_record_t *cdr_any;
+    ecs_component_record_t *cdr_isa_wildcard;
+    ecs_component_record_t *cdr_childof_0;
+    ecs_component_record_t *cdr_childof_wildcard;
+    ecs_component_record_t *cdr_identifier_name;
+
+    /* Head of list that points to all non-fragmenting component ids */
+    ecs_component_record_t *cdr_non_fragmenting_head;
 
     /* -- Mixins -- */
     ecs_world_t *self;
