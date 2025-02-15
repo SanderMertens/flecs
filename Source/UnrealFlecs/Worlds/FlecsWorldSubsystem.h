@@ -257,11 +257,6 @@ public:
 			return;
 		}
 
-		if UNLIKELY_IF(!ensureAlways(IsValid(DefaultWorld)))
-		{
-			return;
-		}
-
 		if (DefaultWorld->HasSingleton<FFlecsBeginPlay>())
 		{
 			Delegate.ExecuteIfBound(GetWorld());
