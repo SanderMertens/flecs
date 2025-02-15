@@ -18,6 +18,7 @@ void Entity_new_named(void);
 void Entity_new_named_from_scope(void);
 void Entity_new_nested_named_from_scope(void);
 void Entity_new_nested_named_from_nested_scope(void);
+void Entity_new_named_from_scope_with_custom_separator(void);
 void Entity_new_add(void);
 void Entity_new_add_2(void);
 void Entity_new_set(void);
@@ -376,6 +377,7 @@ void Enum_prefixed_enum_reflection(void);
 void Enum_constant_with_num_reflection(void);
 void Enum_get_constant_id(void);
 void Enum_add_enum_constant(void);
+void Enum_add_enum_constant_explicit(void);
 void Enum_add_enum_class_constant(void);
 void Enum_replace_enum_constants(void);
 void Enum_has_enum(void);
@@ -415,6 +417,7 @@ void Enum_enum_u8(void);
 void Enum_enum_u16(void);
 void Enum_enum_u32(void);
 void Enum_enum_u64(void);
+void Enum_runtime_type_constant_u8_template(void);
 
 // Testsuite 'Union'
 void Union_add_case(void);
@@ -1470,6 +1473,10 @@ bake_test_case Entity_testcases[] = {
     {
         "new_nested_named_from_nested_scope",
         Entity_new_nested_named_from_nested_scope
+    },
+    {
+        "new_named_from_scope_with_custom_separator",
+        Entity_new_named_from_scope_with_custom_separator
     },
     {
         "new_add",
@@ -2894,6 +2901,10 @@ bake_test_case Enum_testcases[] = {
         Enum_add_enum_constant
     },
     {
+        "add_enum_constant_explicit",
+        Enum_add_enum_constant_explicit
+    },
+    {
         "add_enum_class_constant",
         Enum_add_enum_class_constant
     },
@@ -3048,6 +3059,10 @@ bake_test_case Enum_testcases[] = {
     {
         "enum_u64",
         Enum_enum_u64
+    },
+    {
+        "runtime_type_constant_u8_template",
+        Enum_runtime_type_constant_u8_template
     }
 };
 
@@ -7052,7 +7067,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        279,
+        280,
         Entity_testcases
     },
     {
@@ -7066,7 +7081,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        49,
+        51,
         Enum_testcases
     },
     {

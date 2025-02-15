@@ -1914,6 +1914,7 @@ void Prefab_hierarchy_w_recycled_id(void);
 void Prefab_disable_ids(void);
 void Prefab_disable_nested_ids(void);
 void Prefab_type_disable_self(void);
+void Prefab_disable_w_not_alive_id(void);
 void Prefab_prefab_w_children_w_isa_auto_override(void);
 void Prefab_prefab_child_w_override(void);
 void Prefab_prefab_child_w_override_and_higher_component(void);
@@ -9788,6 +9789,10 @@ bake_test_case Prefab_testcases[] = {
         Prefab_type_disable_self
     },
     {
+        "disable_w_not_alive_id",
+        Prefab_disable_w_not_alive_id
+    },
+    {
         "prefab_w_children_w_isa_auto_override",
         Prefab_prefab_w_children_w_isa_auto_override
     },
@@ -11782,7 +11787,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        158,
+        159,
         Prefab_testcases
     },
     {

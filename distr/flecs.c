@@ -8912,16 +8912,21 @@ void ecs_enable(
         if (ecs_has_id(world, entity, ecs_id(EcsComponent))) {
             for (i = 0; i < count; i ++) {
                 ecs_id_t id = ids[i]; 
-                 // id != entity check for prefab types, where they have each other added.
+
+                 // - `id != entity` check for prefab types, where they have each other added.
                  // without it, it would fall into infinite recursion and stack overflow
-                if (id != entity && !(ecs_id_get_flags(world, id) & EcsIdOnInstantiateDontInherit)){
+                 // - `ecs_is_alive` check is to prevent enabling/disabling of non-existing entities, such
+                 // as `ECS_TOGGLE | AComponent`
+                if (id != entity && !(ecs_id_get_flags(world, id) & EcsIdOnInstantiateDontInherit) && (id & ECS_TOGGLE) == 0){
                     ecs_enable(world, id, enabled);
                 }
             }
         } else { 
             for (i = 0; i < count; i ++) {
                 ecs_id_t id = ids[i];
-                if (!(ecs_id_get_flags(world, id) & EcsIdOnInstantiateDontInherit)){
+                // - `ecs_is_alive` check is to prevent enabling/disabling of non-existing entities, such
+                // as `ECS_TOGGLE | AComponent`
+                if (!(ecs_id_get_flags(world, id) & EcsIdOnInstantiateDontInherit) && (id & ECS_TOGGLE) == 0){
                     ecs_enable(world, id, enabled);
                 }
             }

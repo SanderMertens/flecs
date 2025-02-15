@@ -5288,3 +5288,25 @@ void Prefab_type_disable_self(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_disable_w_not_alive_id(void) {
+    // test that disabling prefabs with not alive ids doesn't crash, attempts to disable a non-alive ids.
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Tag, CanToggle);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_id(world, e, EcsPrefab);
+    
+    ecs_add_id(world, e, ECS_TOGGLE | Tag);
+
+    ecs_enable_id(world,e,Tag,false);
+
+    ecs_enable(world, e, false);
+
+    //satisfy the test suite so it doesn't report empty.
+    test_assert(true);
+
+    ecs_fini(world);
+}
