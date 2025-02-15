@@ -37,10 +37,16 @@ public:
 	FFlecsEntityHandle PrefabEntityHandle;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle GetPrefabHandle() const { return PrefabEntityHandle; }
+	FORCEINLINE FFlecsEntityHandle GetPrefabHandle() const
+	{
+		return PrefabEntityHandle;
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE UFlecsWorld* GetFlecsWorld() const { return FlecsWorld.Get(); }
+	FORCEINLINE UFlecsWorld* GetFlecsWorld() const
+	{
+		return FlecsWorld.Get();
+	}
 
 protected:
 	UPROPERTY()
