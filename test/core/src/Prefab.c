@@ -5285,4 +5285,6 @@ void Prefab_type_disable_self(void) {
 
     //satisfy the test suite so it doesn't report empty, it's purely a stack overflow test
     test_assert(true);
+
+    ecs_fini(world);
 }
