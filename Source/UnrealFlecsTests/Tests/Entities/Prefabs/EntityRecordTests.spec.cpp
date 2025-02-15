@@ -68,6 +68,38 @@ void FEntityRecordTestsSpec::Define()
 			TestEqual("Entity should have the correct record",
 				TestEntity.Get<FTestStruct_EntityRecord>().IntegerValue, 1);
 		});
+
+		It("Should apply a record with a sub-entity to an entity", [this]()
+		{
+			FFlecsEntityRecord Record;
+			
+			Record.AddComponent<FTestStruct_EntityRecord>(FTestStruct_EntityRecord{ 1 });
+
+			FFlecsEntityHandle SubEntity = Fixture.FlecsWorld->CreateEntity();
+			TestTrue("Sub-entity should be valid", SubEntity.IsValid());
+
+			int32 Index = Record.AddSubEntity(FFlecsRecordSubEntity{ .Name = TEXT("SubEntity") });
+			FFlecsRecordSubEntity& SubEntityRecord = Record.GetSubEntity(Index);
+			
+			FFlecsComponentTypeInfo NewComponent;
+			NewComponent.NodeType = EFlecsComponentNodeType::ScriptStruct;
+			NewComponent.ScriptStruct = FInstancedStruct::Make<FTestStruct_EntityRecord>(FTestStruct_EntityRecord{ 1 });
+			SubEntityRecord.Components.Add(NewComponent);
+
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestTrue("Entity should be valid", TestEntity.IsValid());
+
+			Record.ApplyRecordToEntity(TestEntity);
+			TestTrue("Entity should have the record",
+				TestEntity.Has<FTestStruct_EntityRecord>());
+			TestEqual("Entity should have the correct record",
+				TestEntity.Get<FTestStruct_EntityRecord>().IntegerValue, 1);
+			
+			TestTrue("Sub-entity should have the correct name",
+				TestEntity.Lookup(TEXT("SubEntity")).IsValid());
+			TestTrue("Sub-entity should have the record",
+				TestEntity.Lookup(TEXT("SubEntity")).Has<FTestStruct_EntityRecord>());
+		});
 	});
 }
 

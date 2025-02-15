@@ -473,6 +473,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		{
 			FFlecsEntityHandle NewEntityHandle = InEntityHandle
 				.GetEntity().world().entity(StringCast<char>(*SubEntity.Name).Get());
+			NewEntityHandle.SetParent(InEntityHandle);
 			
 			SubEntity.ApplyRecordToEntity(NewEntityHandle);
 			InEntityHandle.Add(NewEntityHandle);
