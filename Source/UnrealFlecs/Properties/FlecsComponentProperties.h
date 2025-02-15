@@ -10,7 +10,6 @@
 #include "flecs.h"
 #include "Standard/robin_hood.h"
 #include "SolidMacros/Macros.h"
-#include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Unlog/Unlog.h"
 
 namespace UnrealFlecs
