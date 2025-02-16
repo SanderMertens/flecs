@@ -281,20 +281,20 @@ jobs:
       - name: build flecs
         working-directory: cmake_build
         run: |
-          emcmake -DFLECS_STRICT=ON ..
-          emcmake --build . -j 4
+          emcmake cmake -DFLECS_STRICT=ON ..
+          emcmake cmake --build . -j 4
 
       - name: build c examples
         working-directory: examples/c/cmake_build
         run: |
-          emcmake -DFLECS_STRICT=ON ..
-          emcmake --build . -j 4
+          emcmake cmake -DFLECS_STRICT=ON ..
+          emcmake cmake --build . -j 4
 
       - name: build c++ examples
         working-directory: examples/cpp/cmake_build
         run: |
-          emcmake -DFLECS_STRICT=ON ..
-          emcmake --build . -j 4
+          emcmake cmake -DFLECS_STRICT=ON ..
+          emcmake cmake --build . -j 4
 
   build-cmake-windows:
     needs: build-windows
