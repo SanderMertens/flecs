@@ -52,6 +52,31 @@ jobs:
         run: |
           bake --strict
 
+  build-emscripten:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y emscripten
+      
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+          bake/bake setup --target em
+
+      - name: build flecs
+        run: |
+          bake --strict --target em
+
   build-windows:
     runs-on: windows-latest
     timeout-minutes: 30
@@ -231,6 +256,45 @@ jobs:
         run: |
           cmake -DFLECS_STRICT=ON ..
           cmake --build . -j 4
+
+  build-cmake-emscripten:
+    needs: build-emscripten
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y emscripten
+
+      - name: create cmake build folders
+        run: |
+          mkdir cmake_build
+          mkdir examples/c/cmake_build
+          mkdir examples/cpp/cmake_build
+
+      - name: build flecs
+        working-directory: cmake_build
+        run: |
+          emcmake -DFLECS_STRICT=ON ..
+          emcmake --build . -j 4
+
+      - name: build c examples
+        working-directory: examples/c/cmake_build
+        run: |
+          emcmake -DFLECS_STRICT=ON ..
+          emcmake --build . -j 4
+
+      - name: build c++ examples
+        working-directory: examples/cpp/cmake_build
+        run: |
+          emcmake -DFLECS_STRICT=ON ..
+          emcmake --build . -j 4
 
   build-cmake-windows:
     needs: build-windows
@@ -633,6 +697,52 @@ jobs:
 
       - name: test c++
         run: bake run test/cpp -- -j 8
+
+  test-emscripten:
+    needs: build-emscripten
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y emscripten
+
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+          bake/bake setup --target em
+
+      - name: build flecs
+        run: bake --strict --target em
+
+      - name: test core
+        run: bake run test/core --target em -- -j 8
+
+      - name: test query
+        run: bake run test/query --target em -- -j 8
+
+      - name: test addons
+        run: bake run test/addons --target em -- -j 8
+
+      - name: test meta
+        run: bake run test/meta --target em -- -j 8
+
+      - name: test script
+        run: bake run test/script --target em -- -j 8
+
+      - name: test collections
+        run: bake run test/collections --target em -- -j 8
+
+      - name: test c++
+        run: bake run test/cpp --target em -- -j 8
 
   test-windows:
     needs: build-windows
