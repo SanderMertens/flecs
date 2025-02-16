@@ -31,7 +31,6 @@ typedef enum ecs_script_node_kind_t {
 typedef struct ecs_script_node_t {
     ecs_script_node_kind_t kind;
     const char *pos;
-    int64_t _padding;
 } ecs_script_node_t;
 
 struct ecs_script_scope_t {

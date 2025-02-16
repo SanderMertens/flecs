@@ -341,7 +341,7 @@ void flecs_instantiate_children(
             ECS_PAIR_FIRST(id) != EcsChildOf) 
         {
             ecs_table_record_t *tr = &child_table->_->records[i];
-            ecs_id_record_t *idr = (ecs_id_record_t*)((uintptr_t)tr->hdr.cache);
+            ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
             if (idr->flags & EcsIdOnInstantiateDontInherit) {
                 continue;
             }
@@ -532,7 +532,7 @@ void flecs_instantiate(
                 ecs_entity_t tgt = ecs_get_target(world, base, rel, 0);
                 ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
                 ecs_id_record_t *idr = 
-                    (ecs_id_record_t*)((uintptr_t)base_table->_->records[i].hdr.cache);
+                    (ecs_id_record_t*)base_table->_->records[i].hdr.cache;
 
                 for (j = row; j < (row + count); j ++) {
                     flecs_switch_set(idr->sparse, (uint32_t)entities[j], tgt);
@@ -1266,7 +1266,7 @@ flecs_component_ptr_t flecs_ensure(
             } else if (column_index < 0) {
                 column_index = flecs_ito(int16_t, -column_index - 1);
                 const ecs_table_record_t *tr = &table->_->records[column_index];
-                idr = (ecs_id_record_t*)((uintptr_t)tr->hdr.cache);
+                idr = (ecs_id_record_t*)tr->hdr.cache;
                 if (idr->flags & EcsIdIsSparse) {
                     dst.ptr = flecs_sparse_get_any(idr->sparse, 0, entity);
                     dst.ti = idr->type_info;
@@ -1325,7 +1325,7 @@ void flecs_invoke_hook(
     it.real_world = world;
     it.table = table;
     it.trs[0] = tr;
-    it.row_fields = !!(((ecs_id_record_t*)((uintptr_t)tr->hdr.cache))->flags & EcsIdIsSparse);
+    it.row_fields = !!(((ecs_id_record_t*)tr->hdr.cache)->flags & EcsIdIsSparse);
     it.ref_fields = it.row_fields;
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
     it.ids[0] = id;
@@ -2487,7 +2487,7 @@ ecs_entity_t flecs_get_delete_action(
 {
     ecs_entity_t result = action;
     if (!result && delete_target) {
-        ecs_id_record_t *idr = (ecs_id_record_t*)((uintptr_t)tr->hdr.cache);
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
         ecs_id_t id = idr->id;
 
         /* If action is not specified and we're deleting a relationship target,
@@ -2496,7 +2496,7 @@ ecs_entity_t flecs_get_delete_action(
         do {
             ecs_type_t *type = &table->type;
             ecs_table_record_t *trr = &table->_->records[i];
-            ecs_id_record_t *idrr = (ecs_id_record_t*)((uintptr_t)trr->hdr.cache);
+            ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
             result = ECS_ID_ON_DELETE_TARGET(idrr->flags);
             if (result == EcsDelete) {
                 /* Delete takes precedence over Remove */
@@ -3075,7 +3075,7 @@ error:
     } else if (column_index < 0) {\
         column_index = flecs_ito(int16_t, -column_index - 1);\
         const ecs_table_record_t *tr = &table->_->records[column_index];\
-        ecs_id_record_t *idr = (ecs_id_record_t*)((uintptr_t)tr->hdr.cache);\
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;\
         if (idr->flags & EcsIdIsSparse) {\
             return flecs_sparse_get_any(idr->sparse, 0, entity);\
         }\

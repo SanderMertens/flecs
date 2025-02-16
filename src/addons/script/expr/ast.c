@@ -32,7 +32,7 @@ ecs_expr_value_node_t* flecs_expr_value_from(
     ecs_entity_t type)
 {
     ecs_expr_value_node_t *result = flecs_calloc_t(
-        &((ecs_script_impl_t*)(void*)script)->allocator, ecs_expr_value_node_t);
+        &((ecs_script_impl_t*)script)->allocator, ecs_expr_value_node_t);
     result->ptr = &result->storage.u64;
     result->node.kind = EcsExprValue;
     result->node.pos = node ? node->pos : NULL;
@@ -47,7 +47,7 @@ ecs_expr_variable_t* flecs_expr_variable_from(
     const char *name)
 {
     ecs_expr_variable_t *result = flecs_calloc_t(
-        &((ecs_script_impl_t*)(void*)script)->allocator, ecs_expr_variable_t);
+        &((ecs_script_impl_t*)script)->allocator, ecs_expr_variable_t);
     result->name = name;
     result->sp = -1;
     result->node.kind = EcsExprVariable;
@@ -311,7 +311,7 @@ ecs_expr_cast_t* flecs_expr_cast(
         return NULL;
     }
 
-    ecs_allocator_t *a = &((ecs_script_impl_t*)(void*)script)->allocator;
+    ecs_allocator_t *a = &((ecs_script_impl_t*)script)->allocator;
     ecs_expr_cast_t *result = flecs_calloc_t(a, ecs_expr_cast_t);
     result->node.kind = EcsExprCast;
     if (flecs_expr_is_type_number(expr->type) && 

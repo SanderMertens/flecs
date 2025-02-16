@@ -660,17 +660,17 @@ int flecs_expr_interpolated_string_visit_type(
                 }
             }
 
-            ecs_vec_append_t(&((ecs_script_impl_t*)(void*)script)->allocator, 
+            ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
                 &node->expressions, ecs_expr_node_t*)[0] = result;
 
             frag_end[0] = '\0';
 
             if (frag != frag_end) {
-                ecs_vec_append_t(&((ecs_script_impl_t*)(void*)script)->allocator, 
+                ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
                     &node->fragments, char*)[0] = frag;
             }
 
-            ecs_vec_append_t(&((ecs_script_impl_t*)(void*)script)->allocator, 
+            ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
                 &node->fragments, char*)[0] = NULL;
 
             frag = ptr; /* Point to next fragment */
@@ -686,7 +686,7 @@ int flecs_expr_interpolated_string_visit_type(
 
     /* Add remaining fragment */
     if (frag != ptr) {
-        ecs_vec_append_t(&((ecs_script_impl_t*)(void*)script)->allocator, 
+        ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
             &node->fragments, char*)[0] = frag;
     }
 

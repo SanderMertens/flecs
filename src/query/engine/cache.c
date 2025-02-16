@@ -879,12 +879,7 @@ void flecs_query_cache_rematch_tables(
     /* Iterate all tables in cache, remove ones that weren't just matched */
     ecs_table_cache_iter_t cache_it;
     if (flecs_table_cache_all_iter(&cache->cache, &cache_it)) {
-        while (1) {
-            void *tmp = flecs_table_cache_next_(&cache_it);
-            union { void *in; ecs_query_cache_table_t *out; } u = { .in = tmp };
-            qt = u.out;
-            if (!qt) { break; }
-
+        while ((qt = flecs_table_cache_next(&cache_it, ecs_query_cache_table_t))) {
             if (qt->rematch_count != rematch_count) {
                 flecs_query_cache_unmatch_table(cache, qt->hdr.table, qt);
             }
@@ -1073,12 +1068,7 @@ void flecs_query_cache_table_cache_free(
     ecs_query_cache_table_t *qt;
 
     if (flecs_table_cache_all_iter(&cache->cache, &it)) {
-        while (1) {
-            void *tmp = flecs_table_cache_next_(&it);
-            union { void *in; ecs_query_cache_table_t *out; } u = { .in = tmp };
-            qt = u.out;
-            if (!qt) { break; }
-
+        while ((qt = flecs_table_cache_next(&it, ecs_query_cache_table_t))) {
             flecs_query_cache_table_free(cache, qt);
         }
     }

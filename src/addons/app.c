@@ -70,9 +70,9 @@ char* flecs_explorer_request(const char *method, char *request, char *body) {
     if (reply.code == 200) {
         return ecs_strbuf_get(&reply.body);
     } else {
-        char *reply_body = ecs_strbuf_get(&reply.body);
-        if (reply_body) {
-            return reply_body;
+        char *body = ecs_strbuf_get(&reply.body);
+        if (body) {
+            return body;
         } else {
             return flecs_asprintf(
                 "{\"error\": \"bad request\", \"status\": %d}", reply.code);
