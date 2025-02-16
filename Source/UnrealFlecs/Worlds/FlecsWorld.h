@@ -1544,9 +1544,9 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	void RunPipeline(const FFlecsEntityHandle& InPipeline, const double DeltaTime = 0.0) const
+	void RunPipeline(const FFlecsId InPipeline, const double DeltaTime = 0.0) const
 	{
-		World.run_pipeline(InPipeline.GetEntity(), DeltaTime);
+		World.run_pipeline(InPipeline, DeltaTime);
 	}
 
 	void RandomizeTimers() const
