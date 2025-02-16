@@ -517,14 +517,27 @@ jobs:
       - name: Build tests
         run: |
           mkdir -p test/build
+          mkdir -p test/build/include/sys && \
+          echo "#include <stdlib.h>
+          __attribute__((weak)) int backtrace(void **buffer, int size) { return 0; }
+          __attribute__((weak)) char **backtrace_symbols(void *const *buffer, int size) { return NULL; }
+          __attribute__((weak)) void backtrace_symbols_fd(void *const *buffer, int size, int fd) {}" > test/build/include/execinfo.h && \
+          echo "#include <unistd.h>
+          #define PTRACE_TRACEME 0
+          #define PTRACE_ATTACH 1
+          #define PTRACE_DETACH 2
+          __attribute__((weak)) long ptrace(int request, pid_t pid, void *addr, void *data) { return 0; }" > test/build/include/sys/ptrace.h && \
+          export CFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__" && \
+          export CXXFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__" && \
           emcmake cmake -B test/build \
             -DCMAKE_BUILD_TYPE=Debug \
             -DFLECS_STATIC=ON \
             -DFLECS_PIC=ON \
             -DFLECS_STRICT=ON \
+            -DFLECS_TESTS=ON \
             -DBAKE_DIRECTORY=bake \
             -DCMAKE_EXECUTABLE_SUFFIX=".js" \
-            -DNODE_JS_TEST=ON
+            -DCMAKE_EXE_LINKER_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0 -s DEMANGLE_SUPPORT=1 -s ASSERTIONS=2"
           cd test/build
           emmake make -j 4
 
@@ -547,10 +560,15 @@ jobs:
       - name: Run tests with Node.js
         run: |
           cd test/build
+          export BAKE_TEST_INPLACE=1
+          export BAKE_VERBOSITY=DEBUG
           for test in *.js; do
             if [ -f "$test" ]; then
               echo "Running $test..."
-              node --experimental-wasm-threads --expose-gc "$test"
+              # Force output to display immediately
+              stdbuf -oL -eL node --experimental-wasm-threads --expose-gc "$test" 2>&1 | tee test_output.log
+              echo "Test output:"
+              cat test_output.log
             fi
           done
 
