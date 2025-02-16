@@ -536,6 +536,7 @@ jobs:
             -DFLECS_STRICT=ON \
             -DFLECS_TESTS=ON \
             -DBAKE_DIRECTORY=bake \
+            -DNODE_JS_TEST=ON \
             -DCMAKE_EXECUTABLE_SUFFIX=".js" \
             -DCMAKE_EXE_LINKER_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0 -s DEMANGLE_SUPPORT=1 -s ASSERTIONS=2"
           cd test/build
