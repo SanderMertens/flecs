@@ -789,7 +789,7 @@ void flecs_add_overrides_for_base(
                 to_add = id & ~ECS_AUTO_OVERRIDE;
             } else {
                 ecs_table_record_t *tr = &base_table->_->records[i];
-                ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+                ecs_id_record_t *idr = (ecs_id_record_t*)((uintptr_t)tr->hdr.cache);
                 if (ECS_ID_ON_INSTANTIATE(idr->flags) == EcsOverride) {
                     to_add = id;
                 }
@@ -1178,7 +1178,7 @@ void flecs_table_edges_add_flags(
         ecs_graph_edge_hdr_t *next, *cur = node_refs->next;
         if (cur) {
             do {
-                ecs_graph_edge_t *edge = (ecs_graph_edge_t*)cur;
+                ecs_graph_edge_t *edge = (ecs_graph_edge_t*)((uintptr_t)cur);
                 if ((id == EcsAny) || ecs_id_match(edge->id, id)) {
                     if (!edge->diff) {
                         edge->diff = flecs_bcalloc(&world->allocators.table_diff);
@@ -1199,7 +1199,7 @@ void flecs_table_edges_add_flags(
         while (ecs_map_next(&it)) {
             ecs_id_t edge_id = ecs_map_key(&it);
             if ((id == EcsAny) || ecs_id_match(edge_id, id)) {
-                ecs_graph_edge_t *edge = ecs_map_ptr(&it);
+                ecs_graph_edge_t *edge = (ecs_graph_edge_t*)((uintptr_t)ecs_map_ptr(&it));
                 if (!edge->diff) {
                     edge->diff = flecs_bcalloc(&world->allocators.table_diff);
                     edge->diff->removed.array = flecs_walloc_t(world, ecs_id_t);
@@ -1244,7 +1244,7 @@ void flecs_table_clear_edges(
     ecs_graph_edge_hdr_t *next, *cur = node_refs->next;
     if (cur) {
         do {
-            ecs_graph_edge_t *edge = (ecs_graph_edge_t*)cur;
+            ecs_graph_edge_t *edge = (ecs_graph_edge_t*)((uintptr_t)cur);
             ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
             next = cur->next;
@@ -1256,7 +1256,7 @@ void flecs_table_clear_edges(
     cur = node_refs->prev;
     if (cur) {
         do {
-            ecs_graph_edge_t *edge = (ecs_graph_edge_t*)cur;
+            ecs_graph_edge_t *edge = (ecs_graph_edge_t*)((uintptr_t)cur);
             ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
             next = cur->prev;

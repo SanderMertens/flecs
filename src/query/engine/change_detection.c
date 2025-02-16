@@ -222,12 +222,14 @@ bool flecs_query_check_cache_monitor(
     }
 
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_all_iter(&cache->cache, &it)) {
-        ecs_query_cache_table_t *qt;
-        while ((qt = flecs_table_cache_next(&it, ecs_query_cache_table_t))) {
-            if (flecs_query_check_table_monitor(impl, qt, -1)) {
-                return true;
-            }
+    while (1) {
+        void *tmp = flecs_table_cache_next_(&it);
+        union { void *in; ecs_query_cache_table_t *out; } u = { .in = tmp };
+        ecs_query_cache_table_t *qt = u.out;
+        if (!qt) { break; }
+
+        if (flecs_query_check_table_monitor(impl, qt, -1)) {
+            return true;
         }
     }
 

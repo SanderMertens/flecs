@@ -760,7 +760,8 @@ void flecs_emit_forward_cached_ids(
         ecs_reachable_elem_t *rc_elem = &elems[i];
         const ecs_table_record_t *rc_tr = rc_elem->tr;
         ecs_assert(rc_tr != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_id_record_t *rc_idr = (ecs_id_record_t*)rc_tr->hdr.cache;
+        union { void *in; ecs_id_record_t *out; } u1 = { .in = rc_tr->hdr.cache };
+        ecs_id_record_t *rc_idr = u1.out;
         ecs_record_t *rc_record = rc_elem->record;
 
         ecs_assert(rc_idr->id == rc_elem->id, ECS_INTERNAL_ERROR, NULL);
@@ -855,7 +856,8 @@ void flecs_emit_forward_table_up(
     for (i = 0; i < id_count; i ++) {
         ecs_id_t id = ids[i];
         ecs_table_record_t *tgt_tr = &tgt_table->_->records[i];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tgt_tr->hdr.cache;
+        union { void *in; ecs_id_record_t *out; } u2 = { .in = tgt_tr->hdr.cache };
+        ecs_id_record_t *idr = u2.out;
         if (inherit && !(idr->flags & EcsIdOnInstantiateInherit)) {
             continue;
         }
@@ -1058,7 +1060,8 @@ void flecs_emit_forward(
             ecs_reachable_elem_t *elem = &elems[i];
             const ecs_table_record_t *tr = elem->tr;
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_id_record_t *rc_idr = (ecs_id_record_t*)tr->hdr.cache;
+            union { void *in; ecs_id_record_t *out; } u3 = { .in = tr->hdr.cache };
+            ecs_id_record_t *rc_idr = u3.out;
             ecs_record_t *r = elem->record;
 
             ecs_assert(rc_idr->id == elem->id, ECS_INTERNAL_ERROR, NULL);
@@ -1092,7 +1095,8 @@ void flecs_emit_forward(
                 ecs_reachable_elem_t *elem = &elems[i];
                 const ecs_table_record_t *tr = elem->tr;
                 ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_id_record_t *rc_idr = (ecs_id_record_t*)tr->hdr.cache;
+                union { void *in; ecs_id_record_t *out; } u4 = { .in = tr->hdr.cache };
+                ecs_id_record_t *rc_idr = u4.out;
                 ecs_record_t *r = elem->record;
 
                 ecs_assert(rc_idr->id == elem->id, ECS_INTERNAL_ERROR, NULL);

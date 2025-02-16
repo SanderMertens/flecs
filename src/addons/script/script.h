@@ -13,7 +13,7 @@
 
 typedef struct ecs_script_entity_t ecs_script_entity_t;
 
-#define flecs_script_impl(script) ((ecs_script_impl_t*)script)
+#define flecs_script_impl(script) ((ecs_script_impl_t*)(void*)(script))
 
 struct ecs_script_impl_t {
     ecs_script_t pub;

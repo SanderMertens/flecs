@@ -277,7 +277,11 @@ void flecs_query_cache_sort_tables(
     ecs_query_cache_table_t *qt;
     flecs_table_cache_all_iter(&cache->cache, &it);
 
-    while ((qt = flecs_table_cache_next(&it, ecs_query_cache_table_t))) {
+    while (1) {
+        void *tmp = flecs_table_cache_next_(&it);
+        union { void *in; ecs_query_cache_table_t *out; } u = { .in = tmp };
+        qt = u.out;
+        if (!qt) { break; }
         ecs_table_t *table = qt->hdr.table;
         bool dirty = false;
 

@@ -370,17 +370,17 @@ int flecs_script_stmt_to_str(
 {
     switch(node->kind) {
     case EcsAstScope:
-        if (flecs_script_scope_to_str(v, (ecs_script_scope_t*)node)) {
+        if (flecs_script_scope_to_str(v, (ecs_script_scope_t*)(void *)node)) {
             return -1;
         }
         break;
     case EcsAstTag:
     case EcsAstWithTag:
-        flecs_script_tag_to_str(v, (ecs_script_tag_t*)node);
+        flecs_script_tag_to_str(v, (ecs_script_tag_t*)(void *)node);
         break;
     case EcsAstComponent:
     case EcsAstWithComponent:
-        flecs_script_component_to_str(v, (ecs_script_component_t*)node);
+        flecs_script_component_to_str(v, (ecs_script_component_t*)(void *)node);
         break;
     case EcsAstVarComponent:
     case EcsAstWithVar:
@@ -389,7 +389,7 @@ int flecs_script_stmt_to_str(
         break;
     case EcsAstDefaultComponent:
         flecs_script_default_component_to_str(v, 
-            (ecs_script_default_component_t*)node);
+            (ecs_script_default_component_t*)(void *)node);
         break;
     case EcsAstWith:
         flecs_script_with_to_str(v, (ecs_script_with_t*)node);
@@ -411,10 +411,10 @@ int flecs_script_stmt_to_str(
         flecs_script_var_node_to_str(v, (ecs_script_var_node_t*)node);
         break;
     case EcsAstEntity:
-        flecs_script_entity_to_str(v, (ecs_script_entity_t*)node);
+        flecs_script_entity_to_str(v, (ecs_script_entity_t*)(void *)node);
         break;
     case EcsAstPairScope:
-        flecs_script_pair_scope_to_str(v, (ecs_script_pair_scope_t*)node);
+        flecs_script_pair_scope_to_str(v, (ecs_script_pair_scope_t*)(void *)node);
         break;
     case EcsAstIf:
         flecs_script_if_to_str(v, (ecs_script_if_t*)node);

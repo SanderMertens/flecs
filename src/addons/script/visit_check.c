@@ -65,10 +65,10 @@ int flecs_script_check_scope(
         ecs_script_node_t *stmt = stmts[i];
         ecs_id_t id = 0;
         if (stmt->kind == EcsAstComponent) {
-            ecs_script_component_t *cmp = (ecs_script_component_t*)stmt;
+            ecs_script_component_t *cmp = (ecs_script_component_t*)((uintptr_t)stmt);
             id = cmp->id.eval;
         } else if (stmt->kind == EcsAstTag) {
-            ecs_script_tag_t *cmp = (ecs_script_tag_t*)stmt;
+            ecs_script_tag_t *cmp = (ecs_script_tag_t*)((uintptr_t)stmt);
             id = cmp->id.eval;
         }
 
@@ -450,28 +450,28 @@ int flecs_script_check_node(
     switch(node->kind) {
     case EcsAstScope:
         return flecs_script_check_scope(
-            v, (ecs_script_scope_t*)node);
+            v, (ecs_script_scope_t*)((uintptr_t)node));
     case EcsAstTag:
         return flecs_script_check_tag(
-            v, (ecs_script_tag_t*)node);
+            v, (ecs_script_tag_t*)((uintptr_t)node));
     case EcsAstComponent:
         return flecs_script_check_component(
-            v, (ecs_script_component_t*)node);
+            v, (ecs_script_component_t*)((uintptr_t)node));
     case EcsAstVarComponent:
         return flecs_script_check_var_component(
             v, (ecs_script_var_component_t*)node);
     case EcsAstDefaultComponent:
         return flecs_script_check_default_component(
-            v, (ecs_script_default_component_t*)node);
+            v, (ecs_script_default_component_t*)((uintptr_t)node));
     case EcsAstWithVar:
         return flecs_script_check_with_var(
             v, (ecs_script_var_component_t*)node);
     case EcsAstWithTag:
         return flecs_script_check_with_tag(
-            v, (ecs_script_tag_t*)node);
+            v, (ecs_script_tag_t*)((uintptr_t)node));
     case EcsAstWithComponent:
         return flecs_script_check_with_component(
-            v, (ecs_script_component_t*)node);
+            v, (ecs_script_component_t*)((uintptr_t)node));
     case EcsAstWith:
         return flecs_script_check_with(
             v, (ecs_script_with_t*)node);
@@ -492,10 +492,10 @@ int flecs_script_check_node(
             v, (ecs_script_var_node_t*)node);
     case EcsAstEntity:
         return flecs_script_check_entity(
-            v, (ecs_script_entity_t*)node);
+            v, (ecs_script_entity_t*)((uintptr_t)node));
     case EcsAstPairScope:
         return flecs_script_check_pair_scope(
-            v, (ecs_script_pair_scope_t*)node);
+            v, (ecs_script_pair_scope_t*)((uintptr_t)node));
     case EcsAstIf:
         return flecs_script_check_if(
             v, (ecs_script_if_t*)node);

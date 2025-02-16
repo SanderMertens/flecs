@@ -41,7 +41,7 @@ void flecs_script_entity_free(
     ecs_script_visit_t *v,
     ecs_script_entity_t *node)
 {
-    flecs_script_scope_free(v, node->scope);
+    flecs_script_scope_free(v, (ecs_script_scope_t*)(void*)node);
     if (node->name_expr) {
         flecs_expr_visit_free(&v->script->pub, node->name_expr);
     }
@@ -52,7 +52,7 @@ void flecs_script_pair_scope_free(
     ecs_script_visit_t *v,
     ecs_script_pair_scope_t *node)
 {
-    flecs_script_scope_free(v, node->scope);
+    flecs_script_scope_free(v, (ecs_script_scope_t*)(void*)node);
 }
 
 static
@@ -72,7 +72,7 @@ void flecs_script_for_range_free(
 {
     flecs_expr_visit_free(&v->script->pub, node->from);
     flecs_expr_visit_free(&v->script->pub, node->to);
-    flecs_script_scope_free(v, node->scope);
+    flecs_script_scope_free(v, (ecs_script_scope_t*)(void*)node);
 }
 
 static
@@ -107,7 +107,7 @@ int flecs_script_stmt_free(
     ecs_allocator_t *a = &v->script->allocator;
     switch(node->kind) {
     case EcsAstScope:
-        flecs_script_scope_free(v, (ecs_script_scope_t*)node);
+        flecs_script_scope_free(v, (ecs_script_scope_t*)(void*)node);
         break;
     case EcsAstWith:
         flecs_script_with_free(v, (ecs_script_with_t*)node);
@@ -118,11 +118,11 @@ int flecs_script_stmt_free(
         flecs_free_t(a, ecs_script_template_node_t, node);
         break;
     case EcsAstEntity:
-        flecs_script_entity_free(v, (ecs_script_entity_t*)node);
+        flecs_script_entity_free(v, (ecs_script_entity_t*)(void*)node);
         flecs_free_t(a, ecs_script_entity_t, node);
         break;
     case EcsAstPairScope:
-        flecs_script_pair_scope_free(v, (ecs_script_pair_scope_t*)node);
+        flecs_script_pair_scope_free(v, (ecs_script_pair_scope_t*)(void*)node);
         flecs_free_t(a, ecs_script_pair_scope_t, node);
         break;
     case EcsAstIf:
@@ -138,12 +138,12 @@ int flecs_script_stmt_free(
         break;
     case EcsAstComponent:
     case EcsAstWithComponent:
-        flecs_script_component_free(v, (ecs_script_component_t*)node);
+        flecs_script_component_free(v, (ecs_script_component_t*)(void*)node);
         flecs_free_t(a, ecs_script_component_t, node);
         break;
     case EcsAstDefaultComponent:
         flecs_script_default_component_free(v, 
-            (ecs_script_default_component_t*)node);
+            (ecs_script_default_component_t*)(void*)node);
         flecs_free_t(a, ecs_script_default_component_t, node);
         break;
     case EcsAstVarComponent:
