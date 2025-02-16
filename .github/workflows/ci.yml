@@ -546,14 +546,28 @@ jobs:
         run: |
           cd test/build
           echo "Validating test files..."
-          for file in *.js; do
+          # Show directory contents for debugging
+          echo "Directory contents:"
+          ls -la
+          echo "-------------------------"
+          # First list all JS files
+          echo "Found JS files:"
+          find . -name "*.js" -type f
+          echo "-------------------------"
+          # Then check each file individually
+          for file in $(find . -name "*.js" -type f); do
             if [ -f "$file" ]; then
+              echo ""
               echo "Checking $file..."
+              echo "File contents preview (first 10 lines):"
+              head -n 10 "$file"
+              echo "-------------------------"
               # Validate file is a proper JavaScript/Emscripten output
               if ! grep -q "var Module" "$file"; then
                 echo "Error: $file does not appear to be a valid Emscripten JavaScript output file"
                 exit 1
               fi
+              echo "$file validated successfully"
             fi
           done
           echo "All test files validated successfully"
