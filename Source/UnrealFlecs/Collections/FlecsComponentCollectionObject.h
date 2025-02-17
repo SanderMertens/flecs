@@ -23,8 +23,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs Component Collection")
 	UFlecsWorld* GetFlecsWorld() const;
-
-	virtual UWorld* GetWorld() const override final;
 	
 protected:
 

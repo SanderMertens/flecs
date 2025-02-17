@@ -27,11 +27,6 @@ UFlecsWorld* UFlecsComponentCollectionObject::GetFlecsWorld() const
 	return FlecsWorld.Get();
 }
 
-UWorld* UFlecsComponentCollectionObject::GetWorld() const
-{
-	return GetFlecsWorld()->GetWorld();
-}
-
 void UFlecsComponentCollectionObject::ApplyCollectionToEntity_Implementation(FFlecsEntityHandle& Entity)
 {
 }
