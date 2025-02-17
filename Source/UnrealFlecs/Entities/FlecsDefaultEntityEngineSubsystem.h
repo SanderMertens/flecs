@@ -44,7 +44,7 @@ public:
 	extern FFlecsId DefaultEntityName;
 
 #define DEFINE_DEFAULT_ENTITY(DefaultEntityName, InEntityId, Lambda) \
-	FFlecsId DefaultEntityName = InEntityId; \
+	FFlecsId DefaultEntityName = static_cast<flecs::id_t>(InEntityId); \
 	namespace \
 	{                                                             \
 		static void Register##DefaultEntityName()                        \
