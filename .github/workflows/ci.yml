@@ -572,6 +572,11 @@ jobs:
           done
           echo "All test files validated successfully"
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+
       - name: Run tests with Node.js
         run: |
           cd test/build
