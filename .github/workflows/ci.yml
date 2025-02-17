@@ -594,8 +594,6 @@ jobs:
               else
                 echo "✅ $test passed"
               fi
-              echo "=== Test output for $test ==="
-              cat "${test%.js}.log"
               echo "=== End test output ==="
             fi
           done
