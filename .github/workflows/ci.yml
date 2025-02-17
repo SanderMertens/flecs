@@ -527,8 +527,8 @@ jobs:
           #define PTRACE_ATTACH 1
           #define PTRACE_DETACH 2
           __attribute__((weak)) long ptrace(int request, pid_t pid, void *addr, void *data) { return 0; }" > test/build/include/sys/ptrace.h && \
-          export CFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__" && \
-          export CXXFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__" && \
+          export CFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__ -pthread" && \
+          export CXXFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__ -pthread" && \
           emcmake cmake -B test/build \
             -DCMAKE_BUILD_TYPE=Debug \
             -DFLECS_STATIC=ON \
@@ -580,10 +580,10 @@ jobs:
           echo "Running tests..."
           failed_tests=()
           
-          for test in *.js; do
+          for test in test/*.js; do
             if [ -f "$test" ]; then
               echo "=== Running $test ==="
-              if ! stdbuf -oL -eL node --experimental-wasm-threads --expose-gc "$test" 2>&1 | tee "${test%.js}.log"; then
+              if ! stdbuf -oL -eL node --experimental-wasm-threads --expose-gc "$test" 2>&1 | grep -v "unsupported syscall" | sed '/^[[:space:]]*$/d' | tee "${test%.js}.log"; then
                 failed_tests+=("$test")
                 echo "❌ $test failed"
               else
@@ -596,7 +596,7 @@ jobs:
           done
           
           echo "=== Test Summary ==="
-          total_tests=$(find . -name "*.js" -type f | wc -l)
+          total_tests=$(find test -name "*.js" -type f | wc -l)
           passed_tests=$((total_tests - ${#failed_tests[@]}))
           echo "Total tests: $total_tests"
           echo "Passed tests: $passed_tests"
