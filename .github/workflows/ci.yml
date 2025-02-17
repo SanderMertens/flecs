@@ -588,7 +588,7 @@ jobs:
           for test in test/*.js; do
             if [ -f "$test" ]; then
               echo "=== Running $test ==="
-              if ! stdbuf -oL -eL node --experimental-wasm-threads --expose-gc "$test" 2>&1 | grep -v "unsupported syscall" | sed '/^[[:space:]]*$/d' | tee "${test%.js}.log"; then
+              if ! stdbuf -oL -eL node --expose-gc "$test" 2>&1 | grep -v "unsupported syscall" | sed '/^[[:space:]]*$/d' | tee "${test%.js}.log"; then
                 failed_tests+=("$test")
                 echo "❌ $test failed"
               else
