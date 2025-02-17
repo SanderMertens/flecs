@@ -19,6 +19,7 @@ struct FFlecsPrefabSlotInfo
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Prefab")
 	FFlecsEntityRecord Record;
 
+	// @TODO: Not Implemented
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Prefab")
 	TArray<TInstancedStruct<FFlecsPrefabSlotInfo>> SubSlots;
 	
