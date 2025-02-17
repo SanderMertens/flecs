@@ -10,7 +10,7 @@
 
 namespace UnrealFlecs
 {
-	using EntityFunctionPtr = std::function<void(flecs::entity&)>;
+	using EntityFunctionPtr = std::function<void(flecs::entity)>;
 } // namespace UnrealFlecs
 
 USTRUCT(BlueprintType)
