@@ -28,7 +28,7 @@ public:
 	 * Setting this is optional. If not set, the value of the accessed component
 	 * may be out of sync for at most one frame.
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query", AdvancedDisplay)
 	bool bStage = true;
 	
 }; // struct FFlecsExpressionInOut

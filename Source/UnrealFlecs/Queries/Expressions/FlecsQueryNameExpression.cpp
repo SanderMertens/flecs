@@ -10,6 +10,6 @@ FFlecsQueryNameExpression::FFlecsQueryNameExpression() : Super(false)
 
 void FFlecsQueryNameExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const
 {
-	solid_check(!Name.IsEmpty());
+	solid_checkf(!Name.IsEmpty(), TEXT("Name is empty"));
 	InQueryBuilder.name(StringCast<char>(*Name).Get());
 }
