@@ -577,15 +577,36 @@ jobs:
           cd test/build
           export BAKE_TEST_INPLACE=1
           export BAKE_VERBOSITY=DEBUG
+          echo "Running tests..."
+          failed_tests=()
+          
           for test in *.js; do
             if [ -f "$test" ]; then
-              echo "Running $test..."
-              # Force output to display immediately
-              stdbuf -oL -eL node --experimental-wasm-threads --expose-gc "$test" 2>&1 | tee test_output.log
-              echo "Test output:"
-              cat test_output.log
+              echo "=== Running $test ==="
+              if ! stdbuf -oL -eL node --experimental-wasm-threads --expose-gc "$test" 2>&1 | tee "${test%.js}.log"; then
+                failed_tests+=("$test")
+                echo "❌ $test failed"
+              else
+                echo "✅ $test passed"
+              fi
+              echo "=== Test output for $test ==="
+              cat "${test%.js}.log"
+              echo "=== End test output ==="
             fi
           done
+          
+          echo "=== Test Summary ==="
+          total_tests=$(find . -name "*.js" -type f | wc -l)
+          passed_tests=$((total_tests - ${#failed_tests[@]}))
+          echo "Total tests: $total_tests"
+          echo "Passed tests: $passed_tests"
+          echo "Failed tests: ${#failed_tests[@]}"
+          
+          if [ ${#failed_tests[@]} -ne 0 ]; then
+            echo "Failed tests:"
+            printf '%s\n' "${failed_tests[@]}"
+            exit 1
+          fi
 
   test-amalgamated:
     needs: build-linux
