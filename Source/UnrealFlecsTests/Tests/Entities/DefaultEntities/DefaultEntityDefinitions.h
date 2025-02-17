@@ -6,5 +6,6 @@
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 
 DECLARE_DEFAULT_ENTITY(TestEntityOption);
+DECLARE_DEFAULT_ENTITY(TestEntityOption2);
 
 

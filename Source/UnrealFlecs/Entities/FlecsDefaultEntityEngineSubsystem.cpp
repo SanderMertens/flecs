@@ -22,6 +22,20 @@ FFlecsDefaultEntityEngine::~FFlecsDefaultEntityEngine()
 	}
 }
 
+flecs::entity FFlecsDefaultEntityEngine::CreateDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity, flecs::world& World)
+{
+	flecs::entity Entity = World.make_alive(DefaultEntity.EntityId);
+	Entity.set_name(StringCast<char>(*DefaultEntity.EntityName).Get());
+	
+	if LIKELY_IF(ensureAlwaysMsgf(DefaultEntityFunctions.contains(DefaultEntity.EntityId),
+		TEXT("Default entity %s does not have a function registered for it"), *DefaultEntity.EntityName))
+	{
+		std::invoke(DefaultEntityFunctions.at(DefaultEntity.EntityId), Entity);
+	}
+
+	return Entity;
+}
+
 void FFlecsDefaultEntityEngine::Initialize()
 {
 	if (bIsInitialized)
@@ -57,29 +71,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
 	solid_check(IsValid(Settings));
 
-	for (const FFlecsDefaultMetaEntity& EntityRecord : Settings->DefaultEntities)
-	{
-		if UNLIKELY_IF(EntityRecord.EntityName.IsEmpty())
-		{
-			UN_LOG(LogFlecsEntity, Warning, "One of the default entities has an empty name");
-			continue;
-		}
-
-		DefaultEntityWorld->progress();
-
-		const size_t Index = AddedDefaultEntities.size();
-		
-		AddedDefaultEntities.emplace_back(
-			FFlecsDefaultMetaEntity(EntityRecord.EntityName, EntityRecord.EntityRecord, EntityRecord.EntityId));
-		AddedDefaultEntities[Index].SetId = DefaultEntityWorld->make_alive(static_cast<flecs::entity_t>(EntityRecord.EntityId));
-		
-		ecs_set_name(*DefaultEntityWorld,
-			AddedDefaultEntities[Index].SetId, StringCast<char>(*EntityRecord.EntityName).Get());
-
-		DefaultEntityWorld->progress();
-	}
-
-	#if WITH_EDITOR
+	/*#if WITH_EDITOR
 	
 	Settings->OnSettingChanged().AddLambda([this](UObject* Object, FPropertyChangedEvent& Event)
 	{
@@ -101,8 +93,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 
 			if UNLIKELY_IF(EntityRecord.EntityName.IsEmpty())
 			{
-				UN_LOG(LogFlecsEntity, Warning,
-					"One of the default entities has an empty name");
+				UN_LOG(LogFlecsEntity, Warning, "One of the default entities has an empty name");
 				continue;
 			}
 
@@ -124,7 +115,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 		}
 	});
 	
-	#endif // WITH_EDITOR
+	#endif // WITH_EDITOR*/
 	
 	bIsInitialized = true;
 }
@@ -159,9 +150,7 @@ FFlecsId FFlecsDefaultEntityEngine::AddDefaultEntity(FFlecsDefaultMetaEntity Def
 	
 	DefaultEntityWorld->progress();
 
-	flecs::entity DefaultEntityWorldEntity = DefaultEntityWorld->make_alive(static_cast<flecs::entity_t>(DefaultEntity.EntityId));
-	DefaultEntity.SetId = DefaultEntityWorldEntity.id();
-	DefaultEntityWorldEntity.set_name(StringCast<char>(*DefaultEntity.EntityName).Get());
+	CreateDefaultEntity(DefaultEntity, *DefaultEntityWorld);
 	
 	DefaultEntityWorld->progress();
 	

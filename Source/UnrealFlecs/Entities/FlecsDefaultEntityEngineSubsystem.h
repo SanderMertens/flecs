@@ -20,10 +20,15 @@ struct UNREALFLECS_API FFlecsDefaultEntityEngine final
 public:
 	FFlecsDefaultEntityEngine();
 	~FFlecsDefaultEntityEngine();
+
+	flecs::entity CreateDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity, flecs::world& World);
 	
 	FFlecsId AddDefaultEntity(FFlecsDefaultMetaEntity DefaultEntity);
 	
 	TMap<FString, FFlecsId> DefaultEntityOptions;
+
+	robin_hood::unordered_flat_map<int32, UnrealFlecs::EntityFunctionPtr> DefaultEntityFunctions;
+	
 	std::vector<FFlecsDefaultMetaEntity> AddedDefaultEntities;
 	std::vector<FFlecsDefaultMetaEntity> CodeAddedDefaultEntities;
 	
@@ -38,7 +43,7 @@ public:
 #define DECLARE_DEFAULT_ENTITY(DefaultEntityName) \
 	extern FFlecsId DefaultEntityName;
 
-#define DEFINE_DEFAULT_ENTITY(DefaultEntityName, InEntityId) \
+#define DEFINE_DEFAULT_ENTITY(DefaultEntityName, InEntityId, Lambda) \
 	FFlecsId DefaultEntityName = InEntityId; \
 	namespace \
 	{                                                             \
@@ -52,6 +57,7 @@ public:
 			{                                                     \
 				FFlecsDefaultEntityEngine::Get().Initialize();                                   \
 			}                                                     \
+			FFlecsDefaultEntityEngine::Get().DefaultEntityFunctions.insert_or_assign(InEntityId, Lambda); \
 			FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
 		}                                                         \
 		struct FRegisterInvoker##DefaultEntityName                       \

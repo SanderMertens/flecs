@@ -43,6 +43,9 @@ void FDefaultEntityTestsSpec::Define()
 				Fixture.FlecsWorld->GetEntity(TestEntityOption).GetFlecsId(),
 				6000 + FLECS_HI_COMPONENT_ID);
 			TestEqual("Default entity should have the correct id",
+				Fixture.FlecsWorld->GetEntity(TestEntityOption2).GetFlecsId(),
+				6001 + FLECS_HI_COMPONENT_ID);
+			TestEqual("Default entity should have the correct id",
 				Fixture.FlecsWorld->GetEntity(FlecsLocalTrait).GetFlecsId(),
 				5002 + FLECS_HI_COMPONENT_ID);
 			TestEqual("Default entity should have the correct id",
@@ -51,7 +54,14 @@ void FDefaultEntityTestsSpec::Define()
 			TestEqual("Default entity should have the correct id",
 				Fixture.FlecsWorld->GetEntity(FlecsRelativeTrait).GetFlecsId(),
 				5004 + FLECS_HI_COMPONENT_ID);
+		});
+
+		It("Should have the correct tags on TestEntity2", [this]()
+		{
+			check(Fixture.FlecsWorld->GetEntity(TestEntityOption2).IsValid());
 			
+			TestTrue("Default entity should have the correct tag",
+				Fixture.FlecsWorld->GetEntity(TestEntityOption2).Has(flecs::Trait));
 		});
 	});
 }

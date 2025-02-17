@@ -8,6 +8,11 @@
 #include "SolidMacros/Macros.h"
 #include "FlecsDefaultEntitiesDeveloperSettings.generated.h"
 
+namespace UnrealFlecs
+{
+	using EntityFunctionPtr = std::function<void(flecs::entity&)>;
+} // namespace UnrealFlecs
+
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsDefaultMetaEntity
 {
@@ -16,9 +21,6 @@ struct UNREALFLECS_API FFlecsDefaultMetaEntity
 	UPROPERTY(EditAnywhere, Category = "Flecs | Default Entities")
 	FString EntityName;
 
-	UPROPERTY(EditAnywhere, Category = "Flecs | Default Entities")
-	FFlecsEntityRecord EntityRecord;
-
 	UPROPERTY(EditAnywhere, Category = "Flecs | Default Entities", meta = (ClampMin = "7000"))
 	int32 EntityId = 7001;
 	
@@ -26,7 +28,7 @@ struct UNREALFLECS_API FFlecsDefaultMetaEntity
 
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsDefaultMetaEntity& Other) const
 	{
-		return EntityName == Other.EntityName && EntityRecord == Other.EntityRecord && EntityId == Other.EntityId;
+		return EntityName == Other.EntityName && EntityId == Other.EntityId;
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsDefaultMetaEntity& Other) const
@@ -35,9 +37,9 @@ struct UNREALFLECS_API FFlecsDefaultMetaEntity
 	}
 
 	FFlecsDefaultMetaEntity() = default;
-	FFlecsDefaultMetaEntity(const FString& EntityName, const FFlecsEntityRecord& EntityRecord, const flecs::entity_t InEntityId)
+	FFlecsDefaultMetaEntity(const FString& EntityName,
+		const FFlecsEntityRecord& EntityRecord, const flecs::entity_t InEntityId)
 		: EntityName(EntityName)
-		, EntityRecord(EntityRecord)
 		, SetId(InEntityId)
 	{
 	}
@@ -51,7 +53,7 @@ class UNREALFLECS_API UFlecsDefaultEntitiesDeveloperSettings final : public UDev
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, Config, Category = "Flecs | Default Entities")
-	TArray<FFlecsDefaultMetaEntity> DefaultEntities;
+	//UPROPERTY(EditAnywhere, Config, Category = "Flecs | Default Entities")
+	//TArray<FFlecsDefaultMetaEntity> DefaultEntities;
 
 }; // class UFlecsDefaultEntitiesDeveloperSettings
