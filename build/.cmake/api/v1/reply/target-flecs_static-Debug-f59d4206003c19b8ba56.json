@@ -1,0 +1,2142 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "libflecs_static.a"
+		}
+	],
+	"backtrace" : 2,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"add_flecs_target",
+			"install",
+			"target_compile_definitions",
+			"target_include_directories",
+			"set_target_properties",
+			"target_default_compile_options_c"
+		],
+		"files" : 
+		[
+			"CMakeLists.txt",
+			"cmake/target_default_compile_options.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 69,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 40,
+				"parent" : 1
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 89,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 70,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 57,
+				"parent" : 1
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 43,
+				"parent" : 1
+			},
+			{
+				"command" : 5,
+				"file" : 1,
+				"line" : 11,
+				"parent" : 6
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -std=gnu99 -fPIC -fvisibility=hidden"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 4,
+					"define" : "flecs_STATIC"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 5,
+					"path" : "/home/sambit/git_repos/flecs-solve/include"
+				}
+			],
+			"language" : "C",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					7
+				],
+				"standard" : "99"
+			},
+			"sourceIndexes" : 
+			[
+				125,
+				126,
+				127,
+				128,
+				129,
+				130,
+				131,
+				132,
+				133,
+				134,
+				135,
+				136,
+				137,
+				138,
+				139,
+				140,
+				141,
+				142,
+				143,
+				144,
+				145,
+				146,
+				147,
+				148,
+				149,
+				150,
+				151,
+				152,
+				153,
+				154,
+				155,
+				156,
+				157,
+				158,
+				159,
+				160,
+				161,
+				162,
+				163,
+				164,
+				165,
+				166,
+				167,
+				168,
+				169,
+				170,
+				171,
+				172,
+				173,
+				174,
+				175,
+				176,
+				177,
+				178,
+				179,
+				180,
+				181,
+				182,
+				183,
+				184,
+				185,
+				186,
+				187,
+				188,
+				189,
+				190,
+				191,
+				192,
+				193,
+				194,
+				195,
+				196,
+				197,
+				198,
+				199,
+				200,
+				201,
+				202,
+				203,
+				204,
+				205,
+				206,
+				207,
+				208,
+				209,
+				210,
+				211,
+				212,
+				213,
+				214,
+				215,
+				216,
+				217,
+				218,
+				219,
+				220,
+				221,
+				222,
+				223,
+				224,
+				225,
+				226,
+				227,
+				228,
+				229,
+				230,
+				231,
+				232,
+				233,
+				234,
+				235,
+				236,
+				237,
+				238,
+				239,
+				240,
+				241,
+				242,
+				243,
+				244,
+				245
+			]
+		}
+	],
+	"id" : "flecs_static::@6890427a1f51a3e7e1df",
+	"install" : 
+	{
+		"destinations" : 
+		[
+			{
+				"backtrace" : 3,
+				"path" : "lib"
+			}
+		],
+		"prefix" : 
+		{
+			"path" : "/usr/local"
+		}
+	},
+	"name" : "flecs_static",
+	"nameOnDisk" : "libflecs_static.a",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "include",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons",
+			"sourceIndexes" : 
+			[
+				1,
+				2,
+				87,
+				88,
+				89,
+				90,
+				91,
+				92,
+				93,
+				94,
+				95,
+				96,
+				97,
+				98,
+				99,
+				100,
+				101,
+				102,
+				103,
+				104,
+				105
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp",
+			"sourceIndexes" : 
+			[
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				13,
+				14,
+				15,
+				72,
+				73,
+				74,
+				75,
+				86
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\impl",
+			"sourceIndexes" : 
+			[
+				10,
+				11,
+				12
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\alerts",
+			"sourceIndexes" : 
+			[
+				16,
+				17,
+				18,
+				19
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\app",
+			"sourceIndexes" : 
+			[
+				20,
+				21
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\component",
+			"sourceIndexes" : 
+			[
+				22
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\doc",
+			"sourceIndexes" : 
+			[
+				23,
+				24
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\entity",
+			"sourceIndexes" : 
+			[
+				25,
+				26
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\enum",
+			"sourceIndexes" : 
+			[
+				27
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\event",
+			"sourceIndexes" : 
+			[
+				28,
+				29,
+				30
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\id",
+			"sourceIndexes" : 
+			[
+				31,
+				32
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\json",
+			"sourceIndexes" : 
+			[
+				33
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\meta",
+			"sourceIndexes" : 
+			[
+				34,
+				35,
+				36,
+				37
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\metrics",
+			"sourceIndexes" : 
+			[
+				38,
+				39,
+				40
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\module",
+			"sourceIndexes" : 
+			[
+				41
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\observer",
+			"sourceIndexes" : 
+			[
+				42,
+				43,
+				44,
+				45
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\pipeline",
+			"sourceIndexes" : 
+			[
+				46,
+				47,
+				48,
+				49
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\query",
+			"sourceIndexes" : 
+			[
+				50,
+				51,
+				52,
+				53
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\rest",
+			"sourceIndexes" : 
+			[
+				54,
+				55
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\script",
+			"sourceIndexes" : 
+			[
+				56,
+				57,
+				58
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\stats",
+			"sourceIndexes" : 
+			[
+				59,
+				60
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\system",
+			"sourceIndexes" : 
+			[
+				61,
+				62,
+				63,
+				64
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\term",
+			"sourceIndexes" : 
+			[
+				65,
+				66,
+				67
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\timer",
+			"sourceIndexes" : 
+			[
+				68,
+				69
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\mixins\\units",
+			"sourceIndexes" : 
+			[
+				70,
+				71
+			]
+		},
+		{
+			"name" : "include\\flecs\\addons\\cpp\\utils",
+			"sourceIndexes" : 
+			[
+				76,
+				77,
+				78,
+				79,
+				80,
+				81,
+				82,
+				83,
+				84,
+				85
+			]
+		},
+		{
+			"name" : "include\\flecs",
+			"sourceIndexes" : 
+			[
+				106,
+				117
+			]
+		},
+		{
+			"name" : "include\\flecs\\datastructures",
+			"sourceIndexes" : 
+			[
+				107,
+				108,
+				109,
+				110,
+				111,
+				112,
+				113,
+				114,
+				115,
+				116
+			]
+		},
+		{
+			"name" : "include\\flecs\\private",
+			"sourceIndexes" : 
+			[
+				118,
+				119,
+				120,
+				121,
+				122,
+				123,
+				124
+			]
+		},
+		{
+			"name" : "src\\addons",
+			"sourceIndexes" : 
+			[
+				125,
+				126,
+				127,
+				128,
+				129,
+				130,
+				144,
+				152,
+				153,
+				159,
+				190,
+				191
+			]
+		},
+		{
+			"name" : "src\\addons\\json",
+			"sourceIndexes" : 
+			[
+				131,
+				132,
+				133,
+				134,
+				135,
+				136,
+				137,
+				138,
+				139,
+				140,
+				141,
+				142,
+				143
+			]
+		},
+		{
+			"name" : "src\\addons\\meta",
+			"sourceIndexes" : 
+			[
+				145,
+				146,
+				147,
+				148,
+				149,
+				150,
+				151
+			]
+		},
+		{
+			"name" : "src\\addons\\os_api_impl",
+			"sourceIndexes" : 
+			[
+				154
+			]
+		},
+		{
+			"name" : "src\\addons\\parser",
+			"sourceIndexes" : 
+			[
+				155
+			]
+		},
+		{
+			"name" : "src\\addons\\pipeline",
+			"sourceIndexes" : 
+			[
+				156,
+				157
+			]
+		},
+		{
+			"name" : "src\\addons\\query_dsl",
+			"sourceIndexes" : 
+			[
+				158
+			]
+		},
+		{
+			"name" : "src\\addons\\script",
+			"sourceIndexes" : 
+			[
+				160,
+				170,
+				171,
+				172,
+				173,
+				174,
+				175,
+				176,
+				177,
+				178,
+				179,
+				180,
+				181,
+				182
+			]
+		},
+		{
+			"name" : "src\\addons\\script\\expr",
+			"sourceIndexes" : 
+			[
+				161,
+				162,
+				163,
+				164,
+				165,
+				166,
+				167,
+				168,
+				169
+			]
+		},
+		{
+			"name" : "src\\addons\\stats",
+			"sourceIndexes" : 
+			[
+				183,
+				184,
+				185,
+				186,
+				187,
+				188
+			]
+		},
+		{
+			"name" : "src\\addons\\system",
+			"sourceIndexes" : 
+			[
+				189
+			]
+		},
+		{
+			"name" : "src",
+			"sourceIndexes" : 
+			[
+				192,
+				205,
+				206,
+				207,
+				208,
+				209,
+				210,
+				211,
+				212,
+				213,
+				214,
+				237,
+				238,
+				244,
+				245
+			]
+		},
+		{
+			"name" : "src\\datastructures",
+			"sourceIndexes" : 
+			[
+				193,
+				194,
+				195,
+				196,
+				197,
+				198,
+				199,
+				200,
+				201,
+				202,
+				203,
+				204
+			]
+		},
+		{
+			"name" : "src\\query",
+			"sourceIndexes" : 
+			[
+				215,
+				235,
+				236
+			]
+		},
+		{
+			"name" : "src\\query\\compiler",
+			"sourceIndexes" : 
+			[
+				216,
+				217
+			]
+		},
+		{
+			"name" : "src\\query\\engine",
+			"sourceIndexes" : 
+			[
+				218,
+				219,
+				220,
+				221,
+				222,
+				223,
+				224,
+				225,
+				226,
+				227,
+				228,
+				229,
+				230,
+				231,
+				232,
+				233,
+				234
+			]
+		},
+		{
+			"name" : "src\\storage",
+			"sourceIndexes" : 
+			[
+				239,
+				240,
+				241,
+				242,
+				243
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/alerts.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/app.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/c_types.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/component.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/delegate.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/entity.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/entity_view.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/field.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/flecs.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/impl/field.hpp",
+			"sourceGroupIndex" : 3
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/impl/iter.hpp",
+			"sourceGroupIndex" : 3
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/impl/world.hpp",
+			"sourceGroupIndex" : 3
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/iter.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/lifecycle_traits.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/log.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/alerts/builder.hpp",
+			"sourceGroupIndex" : 4
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/alerts/builder_i.hpp",
+			"sourceGroupIndex" : 4
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/alerts/decl.hpp",
+			"sourceGroupIndex" : 4
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/alerts/impl.hpp",
+			"sourceGroupIndex" : 4
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/app/builder.hpp",
+			"sourceGroupIndex" : 5
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/app/decl.hpp",
+			"sourceGroupIndex" : 5
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/component/impl.hpp",
+			"sourceGroupIndex" : 6
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/doc/decl.hpp",
+			"sourceGroupIndex" : 7
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/doc/impl.hpp",
+			"sourceGroupIndex" : 7
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/entity/builder.hpp",
+			"sourceGroupIndex" : 8
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/entity/impl.hpp",
+			"sourceGroupIndex" : 8
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/enum/impl.hpp",
+			"sourceGroupIndex" : 9
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/event/builder.hpp",
+			"sourceGroupIndex" : 10
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/event/decl.hpp",
+			"sourceGroupIndex" : 10
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/event/impl.hpp",
+			"sourceGroupIndex" : 10
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/id/decl.hpp",
+			"sourceGroupIndex" : 11
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/id/impl.hpp",
+			"sourceGroupIndex" : 11
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/json/decl.hpp",
+			"sourceGroupIndex" : 12
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/meta/cursor.hpp",
+			"sourceGroupIndex" : 13
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/meta/decl.hpp",
+			"sourceGroupIndex" : 13
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/meta/impl.hpp",
+			"sourceGroupIndex" : 13
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/meta/opaque.hpp",
+			"sourceGroupIndex" : 13
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/metrics/builder.hpp",
+			"sourceGroupIndex" : 14
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/metrics/decl.hpp",
+			"sourceGroupIndex" : 14
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/metrics/impl.hpp",
+			"sourceGroupIndex" : 14
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/module/impl.hpp",
+			"sourceGroupIndex" : 15
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/observer/builder.hpp",
+			"sourceGroupIndex" : 16
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/observer/builder_i.hpp",
+			"sourceGroupIndex" : 16
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/observer/decl.hpp",
+			"sourceGroupIndex" : 16
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/observer/impl.hpp",
+			"sourceGroupIndex" : 16
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/pipeline/builder.hpp",
+			"sourceGroupIndex" : 17
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/pipeline/builder_i.hpp",
+			"sourceGroupIndex" : 17
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/pipeline/decl.hpp",
+			"sourceGroupIndex" : 17
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/pipeline/impl.hpp",
+			"sourceGroupIndex" : 17
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/query/builder.hpp",
+			"sourceGroupIndex" : 18
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/query/builder_i.hpp",
+			"sourceGroupIndex" : 18
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/query/decl.hpp",
+			"sourceGroupIndex" : 18
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/query/impl.hpp",
+			"sourceGroupIndex" : 18
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/rest/decl.hpp",
+			"sourceGroupIndex" : 19
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/rest/impl.hpp",
+			"sourceGroupIndex" : 19
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/script/builder.hpp",
+			"sourceGroupIndex" : 20
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/script/decl.hpp",
+			"sourceGroupIndex" : 20
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/script/impl.hpp",
+			"sourceGroupIndex" : 20
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/stats/decl.hpp",
+			"sourceGroupIndex" : 21
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/stats/impl.hpp",
+			"sourceGroupIndex" : 21
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/system/builder.hpp",
+			"sourceGroupIndex" : 22
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/system/builder_i.hpp",
+			"sourceGroupIndex" : 22
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/system/decl.hpp",
+			"sourceGroupIndex" : 22
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/system/impl.hpp",
+			"sourceGroupIndex" : 22
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/term/builder_i.hpp",
+			"sourceGroupIndex" : 23
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/term/decl.hpp",
+			"sourceGroupIndex" : 23
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/term/impl.hpp",
+			"sourceGroupIndex" : 23
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/timer/decl.hpp",
+			"sourceGroupIndex" : 24
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/timer/impl.hpp",
+			"sourceGroupIndex" : 24
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/units/decl.hpp",
+			"sourceGroupIndex" : 25
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/mixins/units/impl.hpp",
+			"sourceGroupIndex" : 25
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/pair.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/ref.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/table.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/type.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/utils/array.hpp",
+			"sourceGroupIndex" : 26
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/utils/builder.hpp",
+			"sourceGroupIndex" : 26
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/utils/enum.hpp",
+			"sourceGroupIndex" : 26
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/utils/function_traits.hpp",
+			"sourceGroupIndex" : 26
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/utils/iterable.hpp",
+			"sourceGroupIndex" : 26
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/utils/node_builder.hpp",
+			"sourceGroupIndex" : 26
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/utils/signature.hpp",
+			"sourceGroupIndex" : 26
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/utils/string.hpp",
+			"sourceGroupIndex" : 26
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/utils/stringstream.hpp",
+			"sourceGroupIndex" : 26
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/utils/utils.hpp",
+			"sourceGroupIndex" : 26
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/cpp/world.hpp",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/deprecated.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/doc.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/flecs_c.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/flecs_cpp.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/http.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/json.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/log.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/meta.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/meta_c.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/metrics.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/module.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/pipeline.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/rest.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/script.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/script_math.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/stats.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/system.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/timer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/addons/units.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/bake_config.h",
+			"sourceGroupIndex" : 27
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/datastructures/allocator.h",
+			"sourceGroupIndex" : 28
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/datastructures/bitset.h",
+			"sourceGroupIndex" : 28
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/datastructures/block_allocator.h",
+			"sourceGroupIndex" : 28
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/datastructures/hashmap.h",
+			"sourceGroupIndex" : 28
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/datastructures/map.h",
+			"sourceGroupIndex" : 28
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/datastructures/sparse.h",
+			"sourceGroupIndex" : 28
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/datastructures/stack_allocator.h",
+			"sourceGroupIndex" : 28
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/datastructures/strbuf.h",
+			"sourceGroupIndex" : 28
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/datastructures/switch_list.h",
+			"sourceGroupIndex" : 28
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/datastructures/vec.h",
+			"sourceGroupIndex" : 28
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/os_api.h",
+			"sourceGroupIndex" : 27
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/private/addons.h",
+			"sourceGroupIndex" : 29
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/private/api_defines.h",
+			"sourceGroupIndex" : 29
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/private/api_flags.h",
+			"sourceGroupIndex" : 29
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/private/api_support.h",
+			"sourceGroupIndex" : 29
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/private/api_types.h",
+			"sourceGroupIndex" : 29
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/private/journal.h",
+			"sourceGroupIndex" : 29
+		},
+		{
+			"backtrace" : 2,
+			"path" : "include/flecs/private/os_api_impl.h",
+			"sourceGroupIndex" : 29
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/alerts.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/app.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/doc.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/flecs_cpp.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/http.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/journal.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/deserialize.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/deserialize_value.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/json.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/serialize_entity.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/serialize_field_info.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/serialize_iter.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/serialize_iter_result.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/serialize_iter_result_query.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/serialize_iter_result_table.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/serialize_query_info.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/serialize_type_info.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/serialize_value.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/json/serialize_world.c",
+			"sourceGroupIndex" : 31
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/log.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/meta/api.c",
+			"sourceGroupIndex" : 32
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/meta/c_utils.c",
+			"sourceGroupIndex" : 32
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/meta/cursor.c",
+			"sourceGroupIndex" : 32
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/meta/definitions.c",
+			"sourceGroupIndex" : 32
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/meta/meta.c",
+			"sourceGroupIndex" : 32
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/meta/rtt_lifecycle.c",
+			"sourceGroupIndex" : 32
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/meta/serialized.c",
+			"sourceGroupIndex" : 32
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/metrics.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/module.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/os_api_impl/os_api_impl.c",
+			"sourceGroupIndex" : 33
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/parser/tokenizer.c",
+			"sourceGroupIndex" : 34
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/pipeline/pipeline.c",
+			"sourceGroupIndex" : 35
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/pipeline/worker.c",
+			"sourceGroupIndex" : 35
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/query_dsl/parser.c",
+			"sourceGroupIndex" : 36
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/rest.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/ast.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/expr/ast.c",
+			"sourceGroupIndex" : 38
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/expr/parser.c",
+			"sourceGroupIndex" : 38
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/expr/stack.c",
+			"sourceGroupIndex" : 38
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/expr/util.c",
+			"sourceGroupIndex" : 38
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/expr/visit_eval.c",
+			"sourceGroupIndex" : 38
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/expr/visit_fold.c",
+			"sourceGroupIndex" : 38
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/expr/visit_free.c",
+			"sourceGroupIndex" : 38
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/expr/visit_to_str.c",
+			"sourceGroupIndex" : 38
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/expr/visit_type.c",
+			"sourceGroupIndex" : 38
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/function.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/functions_builtin.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/functions_math.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/parser.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/script.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/serialize.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/template.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/vars.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/visit.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/visit_check.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/visit_eval.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/visit_free.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/script/visit_to_str.c",
+			"sourceGroupIndex" : 37
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/stats/monitor.c",
+			"sourceGroupIndex" : 39
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/stats/pipeline_monitor.c",
+			"sourceGroupIndex" : 39
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/stats/stats.c",
+			"sourceGroupIndex" : 39
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/stats/system_monitor.c",
+			"sourceGroupIndex" : 39
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/stats/world_monitor.c",
+			"sourceGroupIndex" : 39
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/stats/world_summary.c",
+			"sourceGroupIndex" : 39
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/system/system.c",
+			"sourceGroupIndex" : 40
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/timer.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/addons/units.c",
+			"sourceGroupIndex" : 30
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/bootstrap.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/allocator.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/bitset.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/block_allocator.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/hash.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/hashmap.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/map.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/name_index.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/sparse.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/stack_allocator.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/strbuf.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/switch_list.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/datastructures/vec.c",
+			"sourceGroupIndex" : 42
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/each.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/entity.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/entity_name.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/id.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/iter.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/misc.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/observable.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/observer.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/os_api.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/poly.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/api.c",
+			"sourceGroupIndex" : 43
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/compiler/compiler.c",
+			"sourceGroupIndex" : 44
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/compiler/compiler_term.c",
+			"sourceGroupIndex" : 44
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/cache.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/cache_iter.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/cache_order_by.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/change_detection.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/eval.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/eval_iter.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/eval_member.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/eval_pred.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/eval_toggle.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/eval_trav.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/eval_union.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/eval_up.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/eval_utils.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/trav_cache.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/trav_down_cache.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/trav_up_cache.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/engine/trivial_iter.c",
+			"sourceGroupIndex" : 45
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/util.c",
+			"sourceGroupIndex" : 43
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/query/validator.c",
+			"sourceGroupIndex" : 43
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/search.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/stage.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/storage/entity_index.c",
+			"sourceGroupIndex" : 46
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/storage/id_index.c",
+			"sourceGroupIndex" : 46
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/storage/table.c",
+			"sourceGroupIndex" : 46
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/storage/table_cache.c",
+			"sourceGroupIndex" : 46
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/storage/table_graph.c",
+			"sourceGroupIndex" : 46
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/value.c",
+			"sourceGroupIndex" : 41
+		},
+		{
+			"backtrace" : 2,
+			"compileGroupIndex" : 0,
+			"path" : "src/world.c",
+			"sourceGroupIndex" : 41
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

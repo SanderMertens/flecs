@@ -33,6 +33,8 @@ macro(add_flecs_test DIRECTORY)
     if(IS_DIRECTORY "${DIRECTORY}/include")
       target_include_directories(${TEST_NAME} PUBLIC "${DIRECTORY}/include")
     endif()
+    
+    target_include_directories(${TEST_NAME} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../src")
 
     set_target_properties(
       ${TEST_NAME}
