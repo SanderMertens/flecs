@@ -15,8 +15,3 @@ void UFlecsPrefabObject::CreatePrefab(UFlecsWorld* InWorld)
 	OnPrefabCreated(GetPrefabHandle());
 	BP_OnPrefabCreated(GetPrefabHandle());
 }
-
-UWorld* UFlecsPrefabObject::GetWorld() const
-{
-	return GetFlecsWorld()->GetWorld();
-}

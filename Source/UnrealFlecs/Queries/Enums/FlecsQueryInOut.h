@@ -9,11 +9,11 @@
 UENUM(BlueprintType)
 enum class EFlecsQueryInOut : uint8
 {
-	Default = flecs::InOutDefault,
-	None = flecs::InOutNone,
-	Read = flecs::In,
-	Write = flecs::Out,
-	ReadWrite = flecs::InOut UMETA(DisplayName = "Read/Write"),
+	Default = flecs::InOutDefault, /**< InOut for regular terms, In for shared terms */
+	None = flecs::InOutNone, /**< Term is neither read nor written */
+	Read = flecs::In, /** Term is only read */
+	Write = flecs::Out, /**< Term is only written */
+	ReadWrite = flecs::InOut UMETA(DisplayName = "Read/Write"), /**< Term is both read and written */
 	Filter = flecs::InOutFilter /** Same as None + prevents term from triggering observers */
 }; // enum class EFlecsQueryInOut
 

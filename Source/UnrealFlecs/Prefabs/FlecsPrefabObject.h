@@ -23,8 +23,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs", meta = (DisplayName = "OnPrefabCreated"))
 	void BP_OnPrefabCreated(const FFlecsEntityHandle& InPrefab);
 
-	virtual UWorld* GetWorld() const override final;
-
 	UPROPERTY(EditAnywhere, Category = "Flecs")
 	FString PrefabName;
 
