@@ -741,7 +741,6 @@ void Sparse_delete_w_override_component(void) {
     ecs_entity_t base = ecs_new(world);
     ecs_set(world, base, Position, {10, 20});
 
-    ecs_log_set_level(0);
     ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, EcsIsA, base);
     test_assert(ecs_has(world, e, Position));
@@ -754,7 +753,6 @@ void Sparse_delete_w_override_component(void) {
     test_int(p->y, 20);
 
     ecs_delete(world, e);
-    ecs_log_set_level(-1);
 
     ecs_fini(world);
 }

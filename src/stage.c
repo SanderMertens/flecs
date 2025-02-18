@@ -154,6 +154,21 @@ bool flecs_defer_cmd(
     return false;
 }
 
+bool flecs_defer_new(
+    ecs_stage_t *stage,
+    ecs_entity_t entity)
+{
+    if (flecs_defer_cmd(stage)) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
+        if (cmd) {
+            cmd->kind = EcsCmdNew;
+            cmd->entity = entity;
+        }
+        return true;
+    }
+    return false; 
+}
+
 bool flecs_defer_modified(
     ecs_stage_t *stage,
     ecs_entity_t entity,

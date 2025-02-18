@@ -10,7 +10,8 @@ void Get_component_get_empty(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    test_assert(ecs_get_type(world, e) == NULL);
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
     
     ecs_fini(world);
 }

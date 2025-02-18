@@ -1590,7 +1590,7 @@ void Enum_enum_w_one_constant_index_of(void) {
     test_int(one_type.index_by_value(0), 0);
 }
 
-void Enum_runtime_type_constant_u8_template() {
+void Enum_runtime_type_constant_u8_template(void) {
     flecs::world ecs;
 
     auto comp = ecs.component("TestEnumConstant");

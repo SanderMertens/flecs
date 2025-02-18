@@ -1514,7 +1514,8 @@ void Hierarchies_get_type_after_recycled_parent_add(void) {
 
     ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
-    test_assert( ecs_get_type(world, parent) == NULL);
+    test_assert( ecs_get_type(world, parent) != NULL);
+    test_int( ecs_get_type(world, parent)->count, 0 );
 
     ecs_delete(world, parent);
     test_assert( !ecs_is_alive(world, parent));

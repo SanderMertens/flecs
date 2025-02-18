@@ -1445,7 +1445,9 @@ repeat_event:
                                     ECS_INTERNAL_ERROR, NULL);
                             }
                         }
-                    } else if (er_onset && it.other_table) {
+                    } else if (er_onset && it.other_table && 
+                            it.other_table->type.count) 
+                    {
                         /* If an override was removed, this re-exposes the
                          * overridden component. Because this causes the actual
                          * (now inherited) value of the component to change, an

@@ -2788,7 +2788,10 @@ void OnDelete_create_after_delete_with(void) {
     test_assert(ti != NULL);
 
     ecs_entity_t id = ecs_new(world);
-    test_assert(ecs_get_table(world, id) == NULL);
+    test_assert(ecs_get_table(world, id) != NULL);
+    test_assert(ecs_get_type(world, id) != NULL);
+    test_int(ecs_get_type(world, id)->count, 0);
+
     e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_has(world, e, Position));

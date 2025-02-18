@@ -779,6 +779,7 @@ typedef struct ecs_stage_allocators_t {
 
 /** Types for deferred operations */
 typedef enum ecs_cmd_kind_t {
+    EcsCmdNew,
     EcsCmdClone,
     EcsCmdBulkNew,
     EcsCmdAdd,
@@ -2712,6 +2713,10 @@ bool flecs_defer_cmd(
 bool flecs_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage);
+
+bool flecs_defer_new(
+    ecs_stage_t *stage,
+    ecs_entity_t entity);
 
 bool flecs_defer_modified(
     ecs_stage_t *stage,
@@ -4765,6 +4770,43 @@ error:
 }
 
 static
+ecs_entity_t flecs_new_id(
+    const ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    /* It is possible that the world passed to this function is a stage, so
+     * make sure we have the actual world. Cast away const since this is one of
+     * the few functions that may modify the world while it is in readonly mode,
+     * since it is thread safe (uses atomic inc when in threading mode) */
+    ecs_world_t *unsafe_world = ECS_CONST_CAST(ecs_world_t*, world);
+
+    ecs_entity_t entity;
+    if (unsafe_world->flags & EcsWorldMultiThreaded) {
+        /* When world is in multithreading mode, make sure OS API has threading 
+         * functions initialized */
+        ecs_assert(ecs_os_has_threading(), ECS_INVALID_OPERATION, 
+            "thread safe id creation unavailable: threading API not available");
+
+        /* Can't atomically increase number above max int */
+        ecs_assert(flecs_entities_max_id(unsafe_world) < UINT_MAX, 
+            ECS_INVALID_OPERATION, "thread safe ids exhausted");
+        entity = (ecs_entity_t)ecs_os_ainc(
+            (int32_t*)&flecs_entities_max_id(unsafe_world));
+    } else {
+        entity = flecs_entities_new_id(unsafe_world);
+    }
+
+    ecs_assert(!unsafe_world->info.max_id || 
+        ecs_entity_t_lo(entity) <= unsafe_world->info.max_id, 
+        ECS_OUT_OF_RANGE, NULL);
+
+    flecs_journal(unsafe_world, EcsJournalNew, entity, 0, 0);
+
+    return entity;
+}
+
+static
 int32_t flecs_child_type_insert(
     ecs_type_t *type,
     void **component_data,
@@ -4949,7 +4991,7 @@ void flecs_instantiate_children(
         for (j = 0; j < child_count; j ++) {
             if ((uint32_t)children[j] < (uint32_t)ctx_cur.root_prefab) {
                 /* Child id is smaller than root prefab id, can't use offset */
-                child_ids[j] = ecs_new(world);
+                child_ids[j] = flecs_new_id(world);
                 continue;
             }
 
@@ -4963,7 +5005,7 @@ void flecs_instantiate_children(
             ecs_entity_t alive_id = flecs_entities_get_alive(world, instance_child);
             if (alive_id && flecs_entities_is_alive(world, alive_id)) {
                 /* Alive entity with requested id exists, can't use offset id */
-                child_ids[j] = ecs_new(world);
+                child_ids[j] = flecs_new_id(world);
                 continue;
             }
 
@@ -5347,8 +5389,6 @@ ecs_record_t* flecs_new_entity(
     return record;
 }
 
-static int commit_indent = 0;
-
 static
 void flecs_move_entity(
     ecs_world_t *world,
@@ -5364,7 +5404,7 @@ void flecs_move_entity(
 
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_table != dst_table, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(src_table->type.count > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(src_table->type.count >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_row >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_table_count(src_table) > src_row, ECS_INTERNAL_ERROR, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
@@ -5486,21 +5526,14 @@ void flecs_commit(
         return;
     }
 
-    commit_indent += 2;
-
     ecs_os_perf_trace_push("flecs.commit");
 
     if (src_table) {
         ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_table_traversable_add(dst_table, is_trav);
 
-        if (dst_table->type.count) { 
-            flecs_move_entity(world, entity, record, dst_table, diff, 
-                construct, evt_flags);
-        } else {
-            flecs_delete_entity(world, record, diff);
-            record->table = NULL;
-        }
+        flecs_move_entity(world, entity, record, dst_table, diff, 
+            construct, evt_flags);
 
         flecs_table_traversable_add(src_table, -is_trav);
     } else {        
@@ -5526,8 +5559,6 @@ void flecs_commit(
         ecs_check(entity >= world->info.min_id, 
             ECS_OUT_OF_RANGE, 0);
     }
-
-    commit_indent -=2 ;
 
     ecs_os_perf_trace_pop("flecs.commit");
 
@@ -5994,43 +6025,37 @@ error:
     return 0;
 }
 
+static
+void flecs_add_to_root_table(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t e)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (world->flags & EcsWorldMultiThreaded) {
+        if (flecs_defer_new(stage, e)) {
+            return;
+        }
+        ecs_abort(ECS_INTERNAL_ERROR, NULL); /* Can't happen */
+    }
+
+    ecs_record_t *r = flecs_entities_get(world, e);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
+    flecs_new_entity(world, e, r, &world->store.root, &diff, false, 0);
+    ecs_assert(r->table == &world->store.root, ECS_INTERNAL_ERROR, NULL);
+}
+
 ecs_entity_t ecs_new(
     ecs_world_t *world)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    /* It is possible that the world passed to this function is a stage, so
-     * make sure we have the actual world. Cast away const since this is one of
-     * the few functions that may modify the world while it is in readonly mode,
-     * since it is thread safe (uses atomic inc when in threading mode) */
-    ecs_world_t *unsafe_world = 
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
-
-    ecs_entity_t entity;
-    if (unsafe_world->flags & EcsWorldMultiThreaded) {
-        /* When world is in multithreading mode, make sure OS API has threading 
-         * functions initialized */
-        ecs_assert(ecs_os_has_threading(), ECS_INVALID_OPERATION, 
-            "thread safe id creation unavailable: threading API not available");
-
-        /* Can't atomically increase number above max int */
-        ecs_assert(flecs_entities_max_id(unsafe_world) < UINT_MAX, 
-            ECS_INVALID_OPERATION, "thread safe ids exhausted");
-        entity = (ecs_entity_t)ecs_os_ainc(
-            (int32_t*)&flecs_entities_max_id(unsafe_world));
-    } else {
-        entity = flecs_entities_new_id(unsafe_world);
-    }
-
-    ecs_assert(!unsafe_world->info.max_id || 
-        ecs_entity_t_lo(entity) <= unsafe_world->info.max_id, 
-        ECS_OUT_OF_RANGE, NULL);
-
-    flecs_journal(world, EcsJournalNew, entity, 0, 0);
-
-    return entity;
-error:
-    return 0;
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_entity_t e = flecs_new_id(world);
+    flecs_add_to_root_table(world, stage, e);
+    return e;
 }
 
 ecs_entity_t ecs_new_low_id(
@@ -6038,35 +6063,30 @@ ecs_entity_t ecs_new_low_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    /* It is possible that the world passed to this function is a stage, so
-     * make sure we have the actual world. Cast away const since this is one of
-     * the few functions that may modify the world while it is in readonly mode,
-     * but only if single threaded. */
-    ecs_world_t *unsafe_world = 
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
-    if (unsafe_world->flags & EcsWorldReadonly) {
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+
+    if (world->flags & EcsWorldReadonly) {
         /* Can't issue new comp id while iterating when in multithreaded mode */
         ecs_check(ecs_get_stage_count(world) <= 1,
             ECS_INVALID_WHILE_READONLY, NULL);
     }
 
-    ecs_entity_t id = 0;
-    if (unsafe_world->info.last_component_id < FLECS_HI_COMPONENT_ID) {
+    ecs_entity_t e = 0;
+    if (world->info.last_component_id < FLECS_HI_COMPONENT_ID) {
         do {
-            id = unsafe_world->info.last_component_id ++;
-        } while (ecs_exists(unsafe_world, id) && id <= FLECS_HI_COMPONENT_ID);        
+            e = world->info.last_component_id ++;
+        } while (ecs_exists(world, e) && e <= FLECS_HI_COMPONENT_ID);        
     }
 
-    if (!id || id >= FLECS_HI_COMPONENT_ID) {
+    if (!e || e >= FLECS_HI_COMPONENT_ID) {
         /* If the low component ids are depleted, return a regular entity id */
-        id = ecs_new(unsafe_world);
+        e = ecs_new(world);
     } else {
-        flecs_entities_ensure(world, id);
+        flecs_entities_ensure(world, e);
+        flecs_add_to_root_table(world, stage, e);
     }
 
-    ecs_assert(ecs_get_type(world, id) == NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return id;
+    return e;
 error: 
     return 0;
 }
@@ -6078,8 +6098,8 @@ ecs_entity_t ecs_new_w_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = flecs_stage_from_world(&world);    
-    ecs_entity_t entity = ecs_new(world);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_entity_t entity = flecs_new_id(world);
 
     if (flecs_defer_add(stage, entity, id)) {
         return entity;
@@ -6112,7 +6132,7 @@ ecs_entity_t ecs_new_w_table(
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
 
     flecs_stage_from_world(&world);    
-    ecs_entity_t entity = ecs_new(world);
+    ecs_entity_t entity = flecs_new_id(world);
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
     if (table->flags & EcsTableHasIsA) {
@@ -6579,7 +6599,9 @@ ecs_entity_t ecs_entity_init(
                 result = ecs_new(world);
             }
             flecs_new_entity = true;
-            ecs_assert(ecs_get_type(world, result) == NULL,
+            ecs_assert(ecs_get_type(world, result) != NULL,
+                ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ecs_get_type(world, result)->count == 0,
                 ECS_INTERNAL_ERROR, NULL);
         }
     } else {
@@ -6866,12 +6888,7 @@ void ecs_clear(
             .removed_flags = table->flags & EcsTableRemoveEdgeFlags
         };
 
-        flecs_delete_entity(world, r, &diff);
-        r->table = NULL;
-
-        if (r->row & EcsEntityIsTraversable) {
-            flecs_table_traversable_add(table, -1);
-        }
+        flecs_commit(world, entity, r, &world->store.root, &diff, false, 0);
     }    
 
     flecs_defer_end(world, stage);
@@ -7510,7 +7527,8 @@ ecs_entity_t ecs_clone(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(src != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, src), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!dst || !ecs_get_table(world, dst), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!dst || (ecs_get_table(world, dst)->type.count == 0), 
+        ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (!dst) {
@@ -7524,9 +7542,7 @@ ecs_entity_t ecs_clone(
     ecs_record_t *src_r = flecs_entities_get(world, src);
     ecs_assert(src_r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *src_table = src_r->table;
-    if (!src_table) {
-        goto done;
-    }
+    ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_t *dst_table = src_table;
     if (src_table->flags & EcsTableHasName) {
@@ -7539,10 +7555,13 @@ ecs_entity_t ecs_clone(
         .added = dst_type,
         .added_flags = dst_table->flags & EcsTableAddEdgeFlags
     };
+
     ecs_record_t *dst_r = flecs_entities_get(world, dst);
-    /* Note 'ctor' parameter below is set to 'false' if the value will be copied, since flecs_table_move
-       will call a copy constructor */
-    flecs_new_entity(world, dst, dst_r, dst_table, &diff, !copy_value, 0);
+    /* Note 'ctor' parameter below is set to 'false' if the value will be 
+     * copied, since flecs_table_move will call a copy constructor. */
+    if (dst_table != dst_r->table) {
+        flecs_move_entity(world, dst, dst_r, dst_table, &diff, !copy_value, 0);
+    }
     int32_t row = ECS_RECORD_TO_ROW(dst_r->row);
 
     if (copy_value) {
@@ -7559,7 +7578,6 @@ ecs_entity_t ecs_clone(
         }
     }
 
-done:
     flecs_defer_end(world, stage);
     return dst;
 error:
@@ -9344,6 +9362,8 @@ void flecs_cmd_batch_for_entity(
 
         ecs_cmd_kind_t kind = cmd->kind;
         switch(kind) {
+        case EcsCmdNew:
+            break;
         case EcsCmdAddModified:
             /* Add is batched, but keep Modified */
             cmd->kind = EcsCmdModified;
@@ -9424,7 +9444,8 @@ void flecs_cmd_batch_for_entity(
             world->info.cmd.batched_command_count ++;
             break;
         case EcsCmdClear:
-            if (table) {
+            ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (table->type.count) {
                 ecs_id_t *ids = ecs_vec_grow_t(&world->allocator, 
                     &diff->removed, ecs_id_t, table->type.count);
                 ecs_os_memcpy_n(ids, table->type.array, ecs_id_t, 
@@ -9538,6 +9559,7 @@ void flecs_cmd_batch_for_entity(
                 }
                 break;
             }
+            case EcsCmdNew:
             case EcsCmdClone:
             case EcsCmdBulkNew:
             case EcsCmdAdd:
@@ -9668,6 +9690,9 @@ bool flecs_defer_end(
                 ecs_id_t id = cmd->id;
 
                 switch(kind) {
+                case EcsCmdNew:
+                    flecs_add_to_root_table(world, stage, id);
+                    break;
                 case EcsCmdAdd:
                     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
                     if (flecs_remove_invalid(world, id, &id)) {
@@ -13582,7 +13607,9 @@ repeat_event:
                                     ECS_INTERNAL_ERROR, NULL);
                             }
                         }
-                    } else if (er_onset && it.other_table) {
+                    } else if (er_onset && it.other_table && 
+                            it.other_table->type.count) 
+                    {
                         /* If an override was removed, this re-exposes the
                          * overridden component. Because this causes the actual
                          * (now inherited) value of the component to change, an
@@ -16325,6 +16352,21 @@ bool flecs_defer_cmd(
 
     stage->defer ++;
     return false;
+}
+
+bool flecs_defer_new(
+    ecs_stage_t *stage,
+    ecs_entity_t entity)
+{
+    if (flecs_defer_cmd(stage)) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
+        if (cmd) {
+            cmd->kind = EcsCmdNew;
+            cmd->entity = entity;
+        }
+        return true;
+    }
+    return false; 
 }
 
 bool flecs_defer_modified(
@@ -26405,6 +26447,7 @@ const char* flecs_rest_cmd_kind_to_str(
     ecs_cmd_kind_t kind)
 {
     switch(kind) {
+    case EcsCmdNew: return "New";
     case EcsCmdClone: return "Clone";
     case EcsCmdBulkNew: return "BulkNew";
     case EcsCmdAdd: return "Add";
@@ -26432,6 +26475,7 @@ bool flecs_rest_cmd_has_id(
     const ecs_cmd_t *cmd)
 {
     switch(cmd->kind) {
+    case EcsCmdNew:
     case EcsCmdClear:
     case EcsCmdDelete:
     case EcsCmdClone:

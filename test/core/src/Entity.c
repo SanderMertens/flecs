@@ -5,7 +5,8 @@ void Entity_init_id(void) {
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){0});
     test_assert(e != 0);
-    test_assert(ecs_get_type(world, e) == NULL);
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_assert(ecs_get_type(world, e)->count == 0);
 
     ecs_fini(world);
 }
@@ -1149,7 +1150,8 @@ void Entity_record_find_for_empty(void) {
 
     ecs_record_t *r = ecs_record_find(world, e);
     test_assert(r != NULL);
-    test_assert(r->table == NULL);
+    test_assert(r->table != NULL);
+    test_int(ecs_table_get_type(r->table)->count, 0);
 
     ecs_fini(world);
 }
