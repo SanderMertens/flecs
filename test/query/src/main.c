@@ -1099,12 +1099,18 @@ void Operators_only_optional(void);
 void Operators_only_optional_component(void);
 void Operators_not_after_fixed_src(void);
 void Operators_optional_after_fixed_src(void);
-void Operators_root_entities_empty(void);
+void Operators_root_entities_no_user_entities(void);
 void Operators_root_entities(void);
 void Operators_root_entities_w_children(void);
 void Operators_root_entities_w_optional_children(void);
 void Operators_core_entities_w_optional_children(void);
 void Operators_root_entities_w_not_children(void);
+void Operators_root_entities_empty(void);
+void Operators_root_entities_empty_w_childof_0(void);
+void Operators_root_entities_empty_w_optional(void);
+void Operators_root_entities_empty_w_optional_childof_0(void);
+void Operators_optional_w_root_entities_empty(void);
+void Operators_written_root_entities_empty(void);
 void Operators_core_entities_w_not_children(void);
 void Operators_1_ent_src_not(void);
 void Operators_1_ent_src_not_pair(void);
@@ -2166,6 +2172,8 @@ void QueryStr_pred_eq_name(void);
 void QueryStr_pred_neq_name(void);
 void QueryStr_pred_eq_m(void);
 void QueryStr_pred_neq_m(void);
+void QueryStr_not_childof_any(void);
+void QueryStr_childof_0(void);
 
 bake_test_case Validator_testcases[] = {
     {
@@ -6474,8 +6482,8 @@ bake_test_case Operators_testcases[] = {
         Operators_optional_after_fixed_src
     },
     {
-        "root_entities_empty",
-        Operators_root_entities_empty
+        "root_entities_no_user_entities",
+        Operators_root_entities_no_user_entities
     },
     {
         "root_entities",
@@ -6496,6 +6504,30 @@ bake_test_case Operators_testcases[] = {
     {
         "root_entities_w_not_children",
         Operators_root_entities_w_not_children
+    },
+    {
+        "root_entities_empty",
+        Operators_root_entities_empty
+    },
+    {
+        "root_entities_empty_w_childof_0",
+        Operators_root_entities_empty_w_childof_0
+    },
+    {
+        "root_entities_empty_w_optional",
+        Operators_root_entities_empty_w_optional
+    },
+    {
+        "root_entities_empty_w_optional_childof_0",
+        Operators_root_entities_empty_w_optional_childof_0
+    },
+    {
+        "optional_w_root_entities_empty",
+        Operators_optional_w_root_entities_empty
+    },
+    {
+        "written_root_entities_empty",
+        Operators_written_root_entities_empty
     },
     {
         "core_entities_w_not_children",
@@ -10623,6 +10655,14 @@ bake_test_case QueryStr_testcases[] = {
     {
         "pred_neq_m",
         QueryStr_pred_neq_m
+    },
+    {
+        "not_childof_any",
+        QueryStr_not_childof_any
+    },
+    {
+        "childof_0",
+        QueryStr_childof_0
     }
 };
 
@@ -10745,7 +10785,7 @@ static bake_test_suite suites[] = {
         "Operators",
         Operators_setup,
         NULL,
-        152,
+        158,
         Operators_testcases,
         1,
         Operators_params
@@ -10882,7 +10922,7 @@ static bake_test_suite suites[] = {
         "QueryStr",
         NULL,
         NULL,
-        33,
+        35,
         QueryStr_testcases
     }
 };

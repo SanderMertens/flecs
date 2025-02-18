@@ -217,7 +217,9 @@
                 "each_component",
                 "each_pair",
                 "each_pair_rel_wildcard",
-                "each_pair_tgt_wildcard"
+                "each_pair_tgt_wildcard",
+                "each_root_entities",
+                "each_empty_root_entities"
             ]
         }, {
             "id": "Iter",

@@ -1134,12 +1134,18 @@
                 "only_optional_component",
                 "not_after_fixed_src",
                 "optional_after_fixed_src",
-                "root_entities_empty",
+                "root_entities_no_user_entities",
                 "root_entities",
                 "root_entities_w_children",
                 "root_entities_w_optional_children",
                 "core_entities_w_optional_children",
                 "root_entities_w_not_children",
+                "root_entities_empty",
+                "root_entities_empty_w_childof_0",
+                "root_entities_empty_w_optional",
+                "root_entities_empty_w_optional_childof_0",
+                "optional_w_root_entities_empty",
+                "written_root_entities_empty",
                 "core_entities_w_not_children",
                 "1_ent_src_not",
                 "1_ent_src_not_pair",
@@ -2259,7 +2265,9 @@
                 "pred_eq_name",
                 "pred_neq_name",
                 "pred_eq_m",
-                "pred_neq_m"
+                "pred_neq_m",
+                "not_childof_any",
+                "childof_0"
             ]
         }]
     }

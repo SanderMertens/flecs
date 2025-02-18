@@ -385,8 +385,8 @@ int flecs_term_populate_from_id(
                 flecs_query_validator_error(ctx, "missing second element in term.id");
                 return -1;
             } else {
-                /* (ChildOf, 0) is allowed so query can be used to efficiently
-                 * query for root entities */
+                /* Exception is made for ChildOf so we can use (ChildOf, 0) to match
+                 * all entities in the root */
             }
         }
     } else {
@@ -750,6 +750,11 @@ int flecs_term_finalize(
             second->id = 0;
             second->id |= EcsSelf|EcsIsEntity;
         }
+    }
+
+    if (term->id == ecs_pair(EcsChildOf, 0)) {
+        /* Ensure same behavior for (ChildOf, #0) and !(ChildOf, _) terms */
+        term->flags_ |= EcsTermMatchAny;
     }
 
     ecs_entity_t first_entity = 0;

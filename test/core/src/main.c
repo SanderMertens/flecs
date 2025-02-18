@@ -209,6 +209,8 @@ void Each_each_component(void);
 void Each_each_pair(void);
 void Each_each_pair_rel_wildcard(void);
 void Each_each_pair_tgt_wildcard(void);
+void Each_each_root_entities(void);
+void Each_each_empty_root_entities(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -3161,6 +3163,14 @@ bake_test_case Each_testcases[] = {
     {
         "each_pair_tgt_wildcard",
         Each_each_pair_tgt_wildcard
+    },
+    {
+        "each_root_entities",
+        Each_each_root_entities
+    },
+    {
+        "each_empty_root_entities",
+        Each_each_empty_root_entities
     }
 };
 
@@ -11553,7 +11563,7 @@ static bake_test_suite suites[] = {
         "Each",
         NULL,
         NULL,
-        5,
+        7,
         Each_testcases
     },
     {

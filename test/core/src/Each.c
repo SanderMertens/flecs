@@ -177,3 +177,59 @@ void Each_each_pair_tgt_wildcard(void) {
 
     ecs_fini(world);
 }
+
+void Each_each_root_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+
+    ecs_iter_t it = ecs_each_pair(world, EcsChildOf, 0);
+    test_bool(true, ecs_iter_next(&it));
+    test_int(1, it.count);
+    test_uint(Foo, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(true, ecs_iter_next(&it));
+    test_int(1, it.count);
+    test_uint(EcsFlecs, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(true, ecs_iter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(false, ecs_iter_next(&it));
+
+    ecs_fini(world);
+}
+
+void Each_each_empty_root_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new(world);
+
+    ecs_iter_t it = ecs_each_pair(world, EcsChildOf, 0);
+    test_bool(true, ecs_iter_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(true, ecs_iter_next(&it));
+    test_int(1, it.count);
+    test_uint(Foo, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(true, ecs_iter_next(&it));
+    test_int(1, it.count);
+    test_uint(EcsFlecs, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(false, ecs_iter_next(&it));
+
+    ecs_fini(world);
+}

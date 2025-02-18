@@ -478,7 +478,7 @@ void flecs_query_str_add_id(
     } else if (ref->name) {
         ecs_strbuf_appendstr(buf, ref->name);
     } else {
-        ecs_strbuf_appendlit(buf, "0");
+        ecs_strbuf_appendlit(buf, "#0");
     }
     is_added = true;
 

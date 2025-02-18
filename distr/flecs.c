@@ -3875,6 +3875,9 @@ ecs_table_t* flecs_bootstrap_component_table(
     world->idr_childof_0 = flecs_id_record_ensure(world, 
         ecs_pair(EcsChildOf, 0));
 
+    /* Initialize root table */
+    flecs_init_root_table(world);
+
     ecs_id_t ids[] = {
         ecs_id(EcsComponent), 
         EcsFinal,
@@ -17953,9 +17956,6 @@ void flecs_init_store(
 
     /* Initialize table map */
     flecs_table_hashmap_init(world, &world->store.table_map);
-
-    /* Initialize root table */
-    flecs_init_root_table(world);
 }
 
 static
@@ -33130,7 +33130,7 @@ void flecs_query_str_add_id(
     } else if (ref->name) {
         ecs_strbuf_appendstr(buf, ref->name);
     } else {
-        ecs_strbuf_appendlit(buf, "0");
+        ecs_strbuf_appendlit(buf, "#0");
     }
     is_added = true;
 
@@ -33789,8 +33789,8 @@ int flecs_term_populate_from_id(
                 flecs_query_validator_error(ctx, "missing second element in term.id");
                 return -1;
             } else {
-                /* (ChildOf, 0) is allowed so query can be used to efficiently
-                 * query for root entities */
+                /* Exception is made for ChildOf so we can use (ChildOf, 0) to match
+                 * all entities in the root */
             }
         }
     } else {
@@ -34154,6 +34154,11 @@ int flecs_term_finalize(
             second->id = 0;
             second->id |= EcsSelf|EcsIsEntity;
         }
+    }
+
+    if (term->id == ecs_pair(EcsChildOf, 0)) {
+        /* Ensure same behavior for (ChildOf, #0) and !(ChildOf, _) terms */
+        term->flags_ |= EcsTermMatchAny;
     }
 
     ecs_entity_t first_entity = 0;
@@ -36924,12 +36929,12 @@ void flecs_table_init(
         tr->index = 0;
         tr->count = 1;
     }
-    if (dst_count && !has_childof) {
+    if (!has_childof) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         childof_idr = world->idr_childof_0;
         tr->hdr.cache = (ecs_table_cache_t*)childof_idr;
-        tr->index = 0;
-        tr->count = 1;
+        tr->index = -1; /* The table doesn't have a (ChildOf, 0) component */
+        tr->count = 0;
     }
 
     /* Now that all records have been added, copy them to array */
@@ -39080,7 +39085,6 @@ void* ecs_table_cache_remove(
     ecs_table_cache_hdr_t *elem)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table_id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_assert(elem->cache == cache, ECS_INTERNAL_ERROR, NULL);
@@ -75118,6 +75122,7 @@ ecs_id_t flecs_query_it_set_id(
 {
     ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(field_index >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(column < table->type.count, ECS_INTERNAL_ERROR, NULL);
     return it->ids[field_index] = table->type.array[column];
 }
 
@@ -75127,9 +75132,8 @@ void flecs_query_set_match(
     int32_t column,
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
     int32_t field_index = op->field_index;
-    if (field_index == -1) {
+    if (field_index == -1 || column == -1) {
         return;
     }
 

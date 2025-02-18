@@ -597,9 +597,6 @@ void flecs_init_store(
 
     /* Initialize table map */
     flecs_table_hashmap_init(world, &world->store.table_map);
-
-    /* Initialize root table */
-    flecs_init_root_table(world);
 }
 
 static

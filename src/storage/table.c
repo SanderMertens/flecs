@@ -556,12 +556,12 @@ void flecs_table_init(
         tr->index = 0;
         tr->count = 1;
     }
-    if (dst_count && !has_childof) {
+    if (!has_childof) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         childof_idr = world->idr_childof_0;
         tr->hdr.cache = (ecs_table_cache_t*)childof_idr;
-        tr->index = 0;
-        tr->count = 1;
+        tr->index = -1; /* The table doesn't have a (ChildOf, 0) component */
+        tr->count = 0;
     }
 
     /* Now that all records have been added, copy them to array */

@@ -673,3 +673,37 @@ void QueryStr_pred_neq_m(void) {
 
     ecs_fini(world);
 }
+
+void QueryStr_not_childof_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(EcsChildOf, EcsAny), .oper = EcsNot }}
+    });
+    test_assert(q != NULL);
+
+    char *str = ecs_query_str(q);
+    test_str(str, "ChildOf($this,#0)");
+    ecs_os_free(str);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void QueryStr_childof_0(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(EcsChildOf, 0) }}
+    });
+    test_assert(q != NULL);
+
+    char *str = ecs_query_str(q);
+    test_str(str, "ChildOf($this,#0)");
+    ecs_os_free(str);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

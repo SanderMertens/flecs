@@ -614,6 +614,9 @@ ecs_table_t* flecs_bootstrap_component_table(
     world->idr_childof_0 = flecs_id_record_ensure(world, 
         ecs_pair(EcsChildOf, 0));
 
+    /* Initialize root table */
+    flecs_init_root_table(world);
+
     ecs_id_t ids[] = {
         ecs_id(EcsComponent), 
         EcsFinal,
