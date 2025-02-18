@@ -9,6 +9,7 @@
  */
 
 #include "../private_api.h"
+#include "custom_storage.h"
 
 /* Id sequence (type) utilities */
 

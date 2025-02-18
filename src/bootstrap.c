@@ -17,6 +17,7 @@
  */
 
 #include "private_api.h"
+#include "storage/custom_storage.h"
 
 /* -- Identifier Component -- */
 static ECS_DTOR(EcsIdentifier, ptr, {
