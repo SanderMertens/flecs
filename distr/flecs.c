@@ -47223,9 +47223,7 @@ ecs_entity_t ecs_struct_init(
             goto error;
         }
 
-        ecs_entity_t m = ecs_entity(world, {
-            .name = m_desc->name
-        });
+        ecs_entity_t m = ecs_new_from_path(world, t, m_desc->name);
 
         ecs_set(world, m, EcsMember, {
             .type = m_desc->type, 
