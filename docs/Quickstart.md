@@ -984,7 +984,7 @@ while (ecs_query_next(&it)) {
 
 ```cpp
 auto q = world.query_builder<Position, Position>()
-    .term_at(1).parent().cascade()
+    .term_at(1).parent().cascade().cached()
     .build();
 
 q.each([](Position& p, Position& p_parent) {
