@@ -7,7 +7,7 @@
 
 #ifdef FLECS_META
 
-static inline
+static
 bool flecs_type_is_number(
     ecs_world_t *world,
     ecs_entity_t type)
@@ -62,7 +62,7 @@ int flecs_expr_ser_primitive(
         break;
     case EcsChar: {
         char chbuf[3];
-        const char ch = *(const char*)base;
+        char ch = *(const char*)base;
         if (ch) {
             flecs_chresc(chbuf, *(const char*)base, '"');
             if (is_expr) ecs_strbuf_appendch(str, '"');
@@ -118,7 +118,7 @@ int flecs_expr_ser_primitive(
             if (!is_expr) {
                 ecs_strbuf_appendstr(str, value);
             } else {
-                const ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
+                ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
                 if (length == ecs_os_strlen(value)) {
                     ecs_strbuf_appendch(str, '"');
                     ecs_strbuf_appendstrn(str, value, length);
@@ -139,7 +139,7 @@ int flecs_expr_ser_primitive(
         break;
     }
     case EcsEntity: {
-        const ecs_entity_t e = *(const ecs_entity_t*)base;
+        ecs_entity_t e = *(const ecs_entity_t*)base;
         if (!e) {
             ecs_strbuf_appendlit(str, "#0");
         } else {
@@ -148,7 +148,7 @@ int flecs_expr_ser_primitive(
         break;
     }
     case EcsId: {
-        const ecs_id_t id = *(const ecs_id_t*)base;
+        ecs_id_t id = *(const ecs_id_t*)base;
         if (!id) {
             ecs_strbuf_appendlit(str, "#0");
         } else {
@@ -219,7 +219,7 @@ ecs_entity_t ecs_enum_init(
 
     ecs_set(world, t, EcsEnum, { .underlying_type = underlying });
 
-    const ecs_entity_t old_scope = ecs_set_scope(world, t);
+    ecs_entity_t old_scope = ecs_set_scope(world, t);
 
     int i;
     for (i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
@@ -228,7 +228,7 @@ ecs_entity_t ecs_enum_init(
             break;
         }
 
-        const ecs_entity_t c = ecs_entity(world, {
+        ecs_entity_t c = ecs_entity(world, {
             .name = m_desc->name
         });
 
@@ -301,7 +301,7 @@ ecs_entity_t ecs_bitmask_init(
 
     ecs_add(world, t, EcsBitmask);
 
-    const ecs_entity_t old_scope = ecs_set_scope(world, t);
+    ecs_entity_t old_scope = ecs_set_scope(world, t);
 
     int i;
     for (i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
@@ -310,7 +310,7 @@ ecs_entity_t ecs_bitmask_init(
             break;
         }
 
-        const ecs_entity_t c = ecs_entity(world, {
+        ecs_entity_t c = ecs_entity(world, {
             .name = m_desc->name
         });
 
@@ -411,7 +411,7 @@ ecs_entity_t ecs_struct_init(
         t = ecs_new_low_id(world);
     }
 
-    const ecs_entity_t old_scope = ecs_set_scope(world, t);
+    ecs_entity_t old_scope = ecs_set_scope(world, t);
 
     int i;
     for (i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
@@ -426,9 +426,7 @@ ecs_entity_t ecs_struct_init(
             goto error;
         }
 
-        const ecs_entity_t m = ecs_entity(world, {
-            .name = m_desc->name
-        });
+        ecs_entity_t m = ecs_new_from_path(world, t, m_desc->name);
 
         ecs_set(world, m, EcsMember, {
             .type = m_desc->type, 
@@ -574,7 +572,7 @@ ecs_entity_t ecs_unit_init(
         t = ecs_new_low_id(world);
     }
 
-    const ecs_entity_t quantity = desc->quantity;
+    ecs_entity_t quantity = desc->quantity;
     if (quantity) {
         if (!ecs_has_id(world, quantity, EcsQuantity)) {
             ecs_err("entity '%s' for unit '%s' is not a quantity",
@@ -639,7 +637,7 @@ ecs_entity_t ecs_quantity_init(
     ecs_suspend_readonly_state_t rs;
     world = flecs_suspend_readonly(world, &rs);
 
-    const ecs_entity_t t = ecs_entity_init(world, desc);
+    ecs_entity_t t = ecs_entity_init(world, desc);
     if (!t) {
         return 0;
     }
