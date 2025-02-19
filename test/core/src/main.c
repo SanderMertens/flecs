@@ -2133,6 +2133,11 @@ void Commands_defer_remove_after_set(void);
 void Commands_defer_remove_after_set_w_observer(void);
 void Commands_defer_override_after_remove(void);
 void Commands_defer_override_after_remove_3_ops(void);
+void Commands_defer_override_after_remove_63_commands(void);
+void Commands_defer_override_after_remove_64_commands(void);
+void Commands_defer_override_after_remove_65_commands(void);
+void Commands_defer_override_after_remove_96_commands(void);
+void Commands_defer_override_after_remove_255_commands(void);
 void Commands_flush_stage_to_deferred_world(void);
 void Commands_add_in_observer_during_merge(void);
 void Commands_add_in_observer_during_merge_2_commands(void);
@@ -2199,6 +2204,7 @@ void Commands_redefine_named_in_threaded_app(void);
 void Commands_batched_cmd_w_component_init(void);
 void Commands_deep_command_nesting(void);
 void Commands_ensure_from_2_stages(void);
+void Commands_batch_w_old_and_recycled_id(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -2318,6 +2324,7 @@ void Table_clear_table_check_size(void);
 void Table_clear_table_twice_check_size(void);
 void Table_clear_table_on_remove_hooks(void);
 void Table_clear_table_on_remove_observer(void);
+void Table_65_records_w_tgt(void);
 
 // Testsuite 'Poly'
 void Poly_on_set_poly_observer(void);
@@ -10628,6 +10635,26 @@ bake_test_case Commands_testcases[] = {
         Commands_defer_override_after_remove_3_ops
     },
     {
+        "defer_override_after_remove_63_commands",
+        Commands_defer_override_after_remove_63_commands
+    },
+    {
+        "defer_override_after_remove_64_commands",
+        Commands_defer_override_after_remove_64_commands
+    },
+    {
+        "defer_override_after_remove_65_commands",
+        Commands_defer_override_after_remove_65_commands
+    },
+    {
+        "defer_override_after_remove_96_commands",
+        Commands_defer_override_after_remove_96_commands
+    },
+    {
+        "defer_override_after_remove_255_commands",
+        Commands_defer_override_after_remove_255_commands
+    },
+    {
         "flush_stage_to_deferred_world",
         Commands_flush_stage_to_deferred_world
     },
@@ -10890,6 +10917,10 @@ bake_test_case Commands_testcases[] = {
     {
         "ensure_from_2_stages",
         Commands_ensure_from_2_stages
+    },
+    {
+        "batch_w_old_and_recycled_id",
+        Commands_batch_w_old_and_recycled_id
     }
 };
 
@@ -11343,6 +11374,10 @@ bake_test_case Table_testcases[] = {
     {
         "clear_table_on_remove_observer",
         Table_clear_table_on_remove_observer
+    },
+    {
+        "65_records_w_tgt",
+        Table_65_records_w_tgt
     }
 };
 
@@ -11770,7 +11805,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        150,
+        156,
         Commands_testcases
     },
     {
@@ -11791,7 +11826,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        30,
+        31,
         Table_testcases
     },
     {

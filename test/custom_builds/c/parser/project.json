@@ -1,0 +1,13 @@
+{
+    "id": "parser",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "standalone": true
+    },
+    "lang.c": {
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_PARSER"]
+    }
+}

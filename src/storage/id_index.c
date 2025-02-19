@@ -390,6 +390,10 @@ ecs_id_record_t* flecs_id_record_new(
         ecs_os_free(id_str);
     }
 
+#ifdef FLECS_DEBUG_INFO
+    idr->str = ecs_id_str(world, idr->id);
+#endif
+
     /* Update counters */
     world->info.id_create_total ++;
     world->info.component_id_count += idr->type_info != NULL;
@@ -481,6 +485,10 @@ void flecs_id_record_free(
     } else {
         world->id_index_lo[hash] = NULL;
     }
+
+#ifdef FLECS_DEBUG_INFO
+    ecs_os_free(idr->str);
+#endif
 
     flecs_bfree(&world->allocators.id_record, idr);
 

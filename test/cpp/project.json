@@ -26,6 +26,7 @@
                 "new_named_from_scope",
                 "new_nested_named_from_scope",
                 "new_nested_named_from_nested_scope",
+                "new_named_from_scope_with_custom_separator",
                 "new_add",
                 "new_add_2",
                 "new_set",
@@ -388,6 +389,7 @@
                 "constant_with_num_reflection",
                 "get_constant_id",
                 "add_enum_constant",
+                "add_enum_constant_explicit",
                 "add_enum_class_constant",
                 "replace_enum_constants",
                 "has_enum",
@@ -426,7 +428,8 @@
                 "enum_u8",
                 "enum_u16",
                 "enum_u32",
-                "enum_u64"
+                "enum_u64",
+                "runtime_type_constant_u8_template"
             ]
         }, {
             "id": "Union",
@@ -526,6 +529,7 @@
                 "multithread_system_w_query_iter",
                 "multithread_system_w_query_iter_w_iter",
                 "multithread_system_w_query_iter_w_world",
+                "multithread_system_w_get_var",
                 "run_callback",
                 "startup_system",
                 "interval_tick_source",
@@ -892,7 +896,8 @@
                 "each_w_const_field_w_fixed_src",
                 "each_w_const_field_at_w_fixed_src",
                 "each_w_untyped_field_w_fixed_src",
-                "each_w_untyped_field_at_w_fixed_src"
+                "each_w_untyped_field_at_w_fixed_src",
+                "singleton_pair"
             ]
         }, {
             "id": "SystemBuilder",

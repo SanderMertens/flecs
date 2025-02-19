@@ -45,36 +45,38 @@ const ecs_entity_t EcsTransitive =                  FLECS_HI_COMPONENT_ID + 15;
 const ecs_entity_t EcsReflexive =                   FLECS_HI_COMPONENT_ID + 16;
 const ecs_entity_t EcsSymmetric =                   FLECS_HI_COMPONENT_ID + 17;
 const ecs_entity_t EcsFinal =                       FLECS_HI_COMPONENT_ID + 18;
-const ecs_entity_t EcsOnInstantiate =               FLECS_HI_COMPONENT_ID + 19;
-const ecs_entity_t EcsOverride =                    FLECS_HI_COMPONENT_ID + 20;
-const ecs_entity_t EcsInherit =                     FLECS_HI_COMPONENT_ID + 21;
-const ecs_entity_t EcsDontInherit =                 FLECS_HI_COMPONENT_ID + 22;
-const ecs_entity_t EcsPairIsTag =                   FLECS_HI_COMPONENT_ID + 23;
-const ecs_entity_t EcsExclusive =                   FLECS_HI_COMPONENT_ID + 24;
-const ecs_entity_t EcsAcyclic =                     FLECS_HI_COMPONENT_ID + 25;
-const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 26;
-const ecs_entity_t EcsWith =                        FLECS_HI_COMPONENT_ID + 27;
-const ecs_entity_t EcsOneOf =                       FLECS_HI_COMPONENT_ID + 28;
-const ecs_entity_t EcsCanToggle =                   FLECS_HI_COMPONENT_ID + 29;
-const ecs_entity_t EcsTrait =                       FLECS_HI_COMPONENT_ID + 30;
-const ecs_entity_t EcsRelationship =                FLECS_HI_COMPONENT_ID + 31;
-const ecs_entity_t EcsTarget =                      FLECS_HI_COMPONENT_ID + 32;
+const ecs_entity_t EcsInheritable =                 FLECS_HI_COMPONENT_ID + 19;
+
+const ecs_entity_t EcsOnInstantiate =               FLECS_HI_COMPONENT_ID + 20;
+const ecs_entity_t EcsOverride =                    FLECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsInherit =                     FLECS_HI_COMPONENT_ID + 22;
+const ecs_entity_t EcsDontInherit =                 FLECS_HI_COMPONENT_ID + 23;
+const ecs_entity_t EcsPairIsTag =                   FLECS_HI_COMPONENT_ID + 24;
+const ecs_entity_t EcsExclusive =                   FLECS_HI_COMPONENT_ID + 25;
+const ecs_entity_t EcsAcyclic =                     FLECS_HI_COMPONENT_ID + 26;
+const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 27;
+const ecs_entity_t EcsWith =                        FLECS_HI_COMPONENT_ID + 28;
+const ecs_entity_t EcsOneOf =                       FLECS_HI_COMPONENT_ID + 29;
+const ecs_entity_t EcsCanToggle =                   FLECS_HI_COMPONENT_ID + 30;
+const ecs_entity_t EcsTrait =                       FLECS_HI_COMPONENT_ID + 31;
+const ecs_entity_t EcsRelationship =                FLECS_HI_COMPONENT_ID + 32;
+const ecs_entity_t EcsTarget =                      FLECS_HI_COMPONENT_ID + 33;
 
 
 /* Builtin relationships */
-const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 33;
-const ecs_entity_t EcsIsA =                         FLECS_HI_COMPONENT_ID + 34;
-const ecs_entity_t EcsDependsOn =                   FLECS_HI_COMPONENT_ID + 35;
+const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 34;
+const ecs_entity_t EcsIsA =                         FLECS_HI_COMPONENT_ID + 35;
+const ecs_entity_t EcsDependsOn =                   FLECS_HI_COMPONENT_ID + 36;
 
 /* Identifier tags */
-const ecs_entity_t EcsName =                        FLECS_HI_COMPONENT_ID + 36;
-const ecs_entity_t EcsSymbol =                      FLECS_HI_COMPONENT_ID + 37;
-const ecs_entity_t EcsAlias =                       FLECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsName =                        FLECS_HI_COMPONENT_ID + 37;
+const ecs_entity_t EcsSymbol =                      FLECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsAlias =                       FLECS_HI_COMPONENT_ID + 39;
 
 /* Events */
-const ecs_entity_t EcsOnAdd =                       FLECS_HI_COMPONENT_ID + 39;
-const ecs_entity_t EcsOnRemove =                    FLECS_HI_COMPONENT_ID + 40;
-const ecs_entity_t EcsOnSet =                       FLECS_HI_COMPONENT_ID + 41;
+const ecs_entity_t EcsOnAdd =                       FLECS_HI_COMPONENT_ID + 40;
+const ecs_entity_t EcsOnRemove =                    FLECS_HI_COMPONENT_ID + 41;
+const ecs_entity_t EcsOnSet =                       FLECS_HI_COMPONENT_ID + 42;
 const ecs_entity_t EcsOnDelete =                    FLECS_HI_COMPONENT_ID + 43;
 const ecs_entity_t EcsOnDeleteTarget =              FLECS_HI_COMPONENT_ID + 44;
 const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 45;
@@ -156,9 +158,10 @@ const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 107;
 const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 108;
 const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 109;
 const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 110;
-const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 111;
 const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 112;
 #endif
+
+const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 111;
 
 /* Doc module components */
 #ifdef FLECS_DOC
@@ -811,9 +814,6 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_MODULE
     "FLECS_MODULE",
 #endif
-#ifdef FLECS_SCRIPT
-    "FLECS_SCRIPT",
-#endif
 #ifdef FLECS_STATS
     "FLECS_STATS",
 #endif
@@ -855,6 +855,12 @@ static const char *flecs_addons_info[] = {
 #endif
 #ifdef FLECS_OS_API_IMPL
     "FLECS_OS_API_IMPL",
+#endif
+#ifdef FLECS_PARSER
+    "FLECS_PARSER",
+#endif
+#ifdef FLECS_QUERY_DSL
+    "FLECS_QUERY_DSL",
 #endif
 #ifdef FLECS_SCRIPT
     "FLECS_SCRIPT",

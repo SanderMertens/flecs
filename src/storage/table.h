@@ -87,6 +87,17 @@ typedef struct ecs_table__t {
     int16_t bs_count;
     int16_t bs_offset;
     int16_t ft_offset;
+
+#ifdef FLECS_DEBUG_INFO
+    /* Fields used for debug visualization */
+    struct {
+        ecs_world_t *world;
+        ecs_entity_t id;
+    } parent;                        /* Parent. Include world so it can be cast
+                                      * to a flecs::entity. */
+    int16_t name_column;             /* Column with entity name */
+    int16_t doc_name_column;         /* Column with entity doc name */
+#endif
 } ecs_table__t;
 
 /** Table column */

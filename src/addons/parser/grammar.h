@@ -1,12 +1,14 @@
 /**
- * @file addons/script/parser.h
- * @brief Script grammar parser.
+ * @file addons/parser/grammar.h
+ * @brief Grammar parser.
  * 
  * Macro utilities that facilitate a simple recursive descent parser.
  */
 
-#ifndef FLECS_SCRIPT_PARSER_H
-#define FLECS_SCRIPT_PARSER_H
+#ifndef FLECS_PARSER_GRAMMAR_H
+#define FLECS_PARSER_GRAMMAR_H
+
+#include "parser.h"
 
 #if defined(ECS_TARGET_CLANG)
 /* Ignore unused enum constants in switch as it would blow up the parser code */
@@ -29,18 +31,20 @@
         .pub.name = script_name,\
         .pub.code = expr\
     };\
-    ecs_script_parser_t parser = {\
+    ecs_parser_t parser = {\
         .script = flecs_script_impl(&script),\
+        .name = script_name,\
+        .code = expr,\
         .pos = expr,\
         .token_cur = tokens\
     }
 
 /* Definitions for parser functions */
 #define ParserBegin\
-    ecs_script_tokenizer_t _tokenizer;\
+    ecs_tokenizer_t _tokenizer;\
     ecs_os_zeromem(&_tokenizer);\
     _tokenizer.tokens = _tokenizer.stack.tokens;\
-    ecs_script_tokenizer_t *tokenizer = &_tokenizer;
+    ecs_tokenizer_t *tokenizer = &_tokenizer;
 
 #define ParserEnd\
         Error("unexpected end of rule (parser error)");\
@@ -59,14 +63,14 @@
 
 /* Error */
 #define Error(...)\
-    ecs_parser_error(parser->script->pub.name, parser->script->pub.code,\
-        (pos - parser->script->pub.code) - 1, __VA_ARGS__);\
+    ecs_parser_error(parser->name, parser->code,\
+        (pos - parser->code) - 1, __VA_ARGS__);\
     goto error
 
 /* Warning */
 #define Warning(...)\
-    ecs_parser_warning(parser->script->pub.name, parser->script->pub.code,\
-        (pos - parser->script->pub.code) - 1, __VA_ARGS__);\
+    ecs_parser_warning(parser->name, parser->code,\
+        (pos - parser->code) - 1, __VA_ARGS__);\
 
 /* Parse expression */
 #define Expr(until, ...)\
@@ -116,8 +120,8 @@
 #define Until(until, ...)\
     {\
         ecs_assert(tokenizer->stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
-        ecs_script_token_t *t = &tokenizer->stack.tokens[tokenizer->stack.count ++];\
-        if (!(pos = flecs_script_until(parser, pos, t, until))) {\
+        ecs_token_t *t = &tokenizer->stack.tokens[tokenizer->stack.count ++];\
+        if (!(pos = flecs_tokenizer_until(parser, pos, t, until))) {\
             goto error;\
         }\
     }\
@@ -127,8 +131,8 @@
 #define Parse(...)\
     {\
         ecs_assert(tokenizer->stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
-        ecs_script_token_t *t = &tokenizer->stack.tokens[tokenizer->stack.count ++];\
-        if (!(pos = flecs_script_token(parser, pos, t, false))) {\
+        ecs_token_t *t = &tokenizer->stack.tokens[tokenizer->stack.count ++];\
+        if (!(pos = flecs_token(parser, pos, t, false))) {\
             goto error;\
         }\
         switch(t->kind) {\
@@ -136,10 +140,10 @@
         default:\
             if (t->value) {\
                 Error("unexpected %s'%s'", \
-                    flecs_script_token_kind_str(t->kind), t->value);\
+                    flecs_token_kind_str(t->kind), t->value);\
             } else {\
                 Error("unexpected %s", \
-                    flecs_script_token_kind_str(t->kind));\
+                    flecs_token_kind_str(t->kind));\
             }\
         }\
     }
@@ -195,9 +199,9 @@
 /* Same as Parse, but doesn't error out if token is not in handled cases */
 #define LookAhead(...)\
     const char *lookahead;\
-    ecs_script_token_t lookahead_token;\
+    ecs_token_t lookahead_token;\
     const char *old_lh_token_cur = parser->token_cur;\
-    if ((lookahead = flecs_script_token(parser, pos, &lookahead_token, true))) {\
+    if ((lookahead = flecs_token(parser, pos, &lookahead_token, true))) {\
         tokenizer->stack.tokens[tokenizer->stack.count ++] = lookahead_token;\
         switch(lookahead_token.kind) {\
             __VA_ARGS__\

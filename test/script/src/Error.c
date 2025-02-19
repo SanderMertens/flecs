@@ -173,9 +173,9 @@ void Error_invalid_oneof(void) {
 
     const char *expr =
     HEAD "flecs.meta.enum Color {"
-    LINE "  flecs.meta.constant Red"
-    LINE "  flecs.meta.constant Green"
-    LINE "  flecs.meta.constant Blue"
+    LINE "  flecs.core.constant Red"
+    LINE "  flecs.core.constant Green"
+    LINE "  flecs.core.constant Blue"
     LINE "}"
     LINE "e { (Color, Foo) }";
 

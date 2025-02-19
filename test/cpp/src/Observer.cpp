@@ -960,7 +960,7 @@ void Observer_on_add_with_pair_singleton(void) {
     world.observer()
         .with<Position>(tgt).singleton()
         .event(flecs::OnSet)
-        .each([&](flecs::entity) {
+        .each([&](flecs::iter&, size_t) {
             count ++;
         });
 

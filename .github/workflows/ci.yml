@@ -454,6 +454,163 @@ jobs:
       - name: build flecs
         run: ${{ matrix.compiler }} distr/flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
 
+  build-emscripten:
+    needs: build-linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: Build flecs (debug)
+        run: |
+          emcmake cmake -B build_debug -DCMAKE_BUILD_TYPE=Debug -DFLECS_STRICT=ON
+          emmake make -C build_debug -j 4
+
+      - name: Build flecs (release)
+        run: |
+          emcmake cmake -B build_release -DCMAKE_BUILD_TYPE=Release -DFLECS_STRICT=ON
+          emmake make -C build_release -j 4
+
+      - name: Build C examples
+        run: |
+          cd examples/c
+          emcmake cmake -B build -DFLECS_STRICT=ON
+          emmake make -C build -j 4
+
+      - name: Build C++ examples
+        run: |
+          cd examples/cpp
+          emcmake cmake -B build -DFLECS_STRICT=ON
+          emmake make -C build -j 4
+
+  test-emscripten:
+    needs: build-linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Clone bake repository for test driver
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname) CFLAGS="-fPIC"
+          bake/bake setup
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: Build tests
+        run: |
+          mkdir -p test/build
+          mkdir -p test/build/include/sys && \
+          echo "#include <stdlib.h>
+          __attribute__((weak)) int backtrace(void **buffer, int size) { return 0; }
+          __attribute__((weak)) char **backtrace_symbols(void *const *buffer, int size) { return NULL; }
+          __attribute__((weak)) void backtrace_symbols_fd(void *const *buffer, int size, int fd) {}" > test/build/include/execinfo.h && \
+          echo "#include <unistd.h>
+          #define PTRACE_TRACEME 0
+          #define PTRACE_ATTACH 1
+          #define PTRACE_DETACH 2
+          __attribute__((weak)) long ptrace(int request, pid_t pid, void *addr, void *data) { return 0; }" > test/build/include/sys/ptrace.h && \
+          export CFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__ -pthread" && \
+          export CXXFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__ -pthread" && \
+          emcmake cmake -B test/build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DFLECS_STATIC=ON \
+            -DFLECS_PIC=ON \
+            -DFLECS_STRICT=ON \
+            -DFLECS_TESTS=ON \
+            -DBAKE_DIRECTORY=bake \
+            -DNODE_JS_TEST=ON \
+            -DCMAKE_EXECUTABLE_SUFFIX=".js" \
+            -DCMAKE_EXE_LINKER_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0 -s DEMANGLE_SUPPORT=1 -s ASSERTIONS=2"
+          cd test/build
+          emmake make -j 4
+
+      - name: Validate test files
+        run: |
+          cd test/build
+          echo "Validating test files..."
+          # Show directory contents for debugging
+          echo "Directory contents:"
+          ls -la
+          echo "-------------------------"
+          # First list all JS files
+          echo "Found JS files:"
+          find . -name "*.js" -type f
+          echo "-------------------------"
+          # Then check each file individually
+          for file in $(find . -name "*.js" -type f); do
+            if [ -f "$file" ]; then
+              echo ""
+              echo "Checking $file..."
+              echo "File contents preview (first 10 lines):"
+              head -n 10 "$file"
+              echo "-------------------------"
+              # Validate file is a proper JavaScript/Emscripten output
+              if ! grep -q "var Module" "$file"; then
+                echo "Error: $file does not appear to be a valid Emscripten JavaScript output file"
+                exit 1
+              fi
+              echo "$file validated successfully"
+            fi
+          done
+          echo "All test files validated successfully"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+
+      - name: Run tests with Node.js
+        run: |
+          cd test/build
+          export BAKE_TEST_INPLACE=1
+          export BAKE_VERBOSITY=DEBUG
+          echo "Running tests..."
+          failed_tests=()
+          
+          for test in test/*.js; do
+            if [ -f "$test" ]; then
+              echo "=== Running $test ==="
+              if ! stdbuf -oL -eL node --expose-gc "$test" 2>&1 | grep -v "unsupported syscall" | sed '/^[[:space:]]*$/d' | tee "${test%.js}.log"; then
+                failed_tests+=("$test")
+                echo "❌ $test failed"
+              else
+                echo "✅ $test passed"
+              fi
+              echo "=== End test output ==="
+            fi
+          done
+          
+          echo "=== Test Summary ==="
+          total_tests=$(find test -name "*.js" -type f | wc -l)
+          passed_tests=$((total_tests - ${#failed_tests[@]}))
+          echo "Total tests: $total_tests"
+          echo "Passed tests: $passed_tests"
+          echo "Failed tests: ${#failed_tests[@]}"
+          
+          if [ ${#failed_tests[@]} -ne 0 ]; then
+            echo "Failed tests:"
+            printf '%s\n' "${failed_tests[@]}"
+            exit 1
+          fi
+
   test-amalgamated:
     needs: build-linux
     runs-on: ubuntu-latest
@@ -904,6 +1061,30 @@ jobs:
       - name: run tests
         run: |
           bake run test/cpp --cfg sanitize -- -j 8
+
+  test-os-alloc-core:
+    needs: [ build-linux ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04 ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --cfg sanitize -D FLECS_USE_OS_ALLOC
+
+      - name: run tests
+        run: |
+          bake run test/core --cfg sanitize -- -j 8
 
   test-cmake:
     needs: [ build-linux, build-macos ]

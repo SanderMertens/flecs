@@ -1856,6 +1856,38 @@ void System_multithread_system_w_query_iter_w_world(void) {
     test_int(p->y, 22);
 }
 
+struct Rel { };
+
+void System_multithread_system_w_get_var(void) {
+    flecs::world world;
+    world.set_threads(4);
+
+    flecs::entity bob = world.entity("bob").add<Position>();
+    flecs::entity alice = world.entity("alice").add<Position>();
+
+    bob.add<Rel>(alice);
+
+    int count = 0;
+
+    world.system<const Position>()
+        .with<Rel>("$other")
+        .term_at(0).src("$other")
+        .multi_threaded()
+        .each([&](flecs::iter &it, size_t row, const Position &pos) {
+            flecs::entity e = it.entity(row);
+            flecs::entity other = it.get_var("other");
+
+            test_assert(e == bob);
+            test_assert(other == alice);
+            
+            count ++;
+        });
+
+    world.progress();
+
+    test_int(count, 1);
+}
+
 void System_run_callback(void) {
     flecs::world world;
 

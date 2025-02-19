@@ -1254,6 +1254,11 @@ void ComponentInheritance_1_var_src_not(void);
 void ComponentInheritance_1_this_src_not_written(void);
 void ComponentInheritance_1_var_src_not_written(void);
 void ComponentInheritance_first_self(void);
+void ComponentInheritance_inheritable_trait(void);
+void ComponentInheritance_query_before_isa_relationship_1st_term(void);
+void ComponentInheritance_query_before_isa_relationship_2nd_term(void);
+void ComponentInheritance_query_before_isa_relationship_subtype(void);
+void ComponentInheritance_query_before_isa_relationship_0_src(void);
 
 // Testsuite 'Recycled'
 void Recycled_setup(void);
@@ -1561,6 +1566,7 @@ void Cascade_invalid_cascade_for_second(void);
 void Cascade_invalid_desc_without_cascade(void);
 void Cascade_invalid_desc_for_first(void);
 void Cascade_invalid_desc_for_second(void);
+void Cascade_cascade_w_cache_kind_default(void);
 
 // Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
@@ -7076,6 +7082,26 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "first_self",
         ComponentInheritance_first_self
+    },
+    {
+        "inheritable_trait",
+        ComponentInheritance_inheritable_trait
+    },
+    {
+        "query_before_isa_relationship_1st_term",
+        ComponentInheritance_query_before_isa_relationship_1st_term
+    },
+    {
+        "query_before_isa_relationship_2nd_term",
+        ComponentInheritance_query_before_isa_relationship_2nd_term
+    },
+    {
+        "query_before_isa_relationship_subtype",
+        ComponentInheritance_query_before_isa_relationship_subtype
+    },
+    {
+        "query_before_isa_relationship_0_src",
+        ComponentInheritance_query_before_isa_relationship_0_src
     }
 };
 
@@ -8263,6 +8289,10 @@ bake_test_case Cascade_testcases[] = {
     {
         "invalid_desc_for_second",
         Cascade_invalid_desc_for_second
+    },
+    {
+        "cascade_w_cache_kind_default",
+        Cascade_cascade_w_cache_kind_default
     }
 };
 
@@ -10731,7 +10761,7 @@ static bake_test_suite suites[] = {
         "ComponentInheritance",
         NULL,
         NULL,
-        31,
+        36,
         ComponentInheritance_testcases
     },
     {
@@ -10774,7 +10804,7 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-        23,
+        24,
         Cascade_testcases
     },
     {

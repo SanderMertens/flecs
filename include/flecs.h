@@ -108,6 +108,16 @@
 #endif
 #endif
 
+/** @def FLECS_DEBUG_INFO
+ * Adds additional debug information to internal data structures. Necessary when
+ * using natvis.
+ */
+#ifdef FLECS_DEBUG
+#ifndef FLECS_DEBUG_INFO
+#define FLECS_DEBUG_INFO
+#endif
+#endif
+
 /* Tip: if you see weird behavior that you think might be a bug, make sure to
  * test with the FLECS_DEBUG or FLECS_SANITIZE flags enabled. There's a good
  * chance that this gives you more information about the issue! */
@@ -134,6 +144,14 @@
  */
 // #define FLECS_KEEP_ASSERT
 
+/** @def FLECS_DEFAULT_TO_UNCACHED_QUERIES 
+ * When set, this will cause queries with the EcsQueryCacheDefault policy
+ * to default to EcsQueryCacheNone. This can reduce the memory footprint of
+ * applications at the cost of performance. Queries that use features which 
+ * require caching such as group_by and order_by will still use caching.
+ */
+// #define FLECS_DEFAULT_TO_UNCACHED_QUERIES
+
 /** @def FLECS_CPP_NO_AUTO_REGISTRATION
  * When set, the C++ API will require that components are registered before they
  * are used. This is useful in multithreaded applications, where components need
@@ -143,6 +161,15 @@
  * The C API is not affected by this feature.
  */
 // #define FLECS_CPP_NO_AUTO_REGISTRATION
+
+/** @def FLECS_CPP_NO_ENUM_REFLECTION 
+ * When set, the C++ API will not attempt to discover and register enum 
+ * constants for registered enum components. This will cause C++ APIs that 
+ * accept enum constants to not work.
+ * Disabling this feature can significantly improve compile times and reduces
+ * the RAM footprint of an application.
+ */
+// #define FLECS_CPP_NO_ENUM_REFLECTION
 
 /** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
@@ -179,7 +206,7 @@
 // #define FLECS_C           /**< C API convenience macros, always enabled */
 #define FLECS_CPP            /**< C++ API */
 #define FLECS_DOC            /**< Document entities & components */
-// #define FLECS_JOURNAL     /**< Journaling addon (disabled by default) */
+// #define FLECS_JOURNAL     /**< Journaling addon */
 #define FLECS_JSON           /**< Parsing JSON to/from component values */
 #define FLECS_HTTP           /**< Tiny HTTP server for connecting to remote UI */
 #define FLECS_LOG            /**< When enabled ECS provides more detailed logs */
@@ -187,9 +214,11 @@
 #define FLECS_METRICS        /**< Expose component data as statistics */
 #define FLECS_MODULE         /**< Module support */
 #define FLECS_OS_API_IMPL    /**< Default implementation for OS API */
-// #define FLECS_PERF_TRACE  /**< Enable performance tracing (disabled by default) */
+// #define FLECS_PERF_TRACE  /**< Enable performance tracing */
 #define FLECS_PIPELINE       /**< Pipeline support */
 #define FLECS_REST           /**< REST API for querying application data */
+#define FLECS_PARSER         /**< Utilities for script and query DSL parsers */
+#define FLECS_QUERY_DSL      /**< Flecs query DSL parser */
 #define FLECS_SCRIPT         /**< Flecs entity notation language */
 // #define FLECS_SCRIPT_MATH /**< Math functions for flecs script (may require linking with libm) */
 #define FLECS_SYSTEM         /**< System support */
@@ -1629,6 +1658,13 @@ FLECS_API extern const ecs_entity_t EcsReflexive;
  */
 FLECS_API extern const ecs_entity_t EcsFinal;
 
+/** Mark component as inheritable.
+ * This is the opposite of Final. This trait can be used to enforce that queries
+ * take into account component inheritance before inheritance (IsA) 
+ * relationships are added with the component as target.
+ */
+FLECS_API extern const ecs_entity_t EcsInheritable;
+
 /** Relationship that specifies component inheritance behavior. */
 FLECS_API extern const ecs_entity_t EcsOnInstantiate;
 
@@ -1848,6 +1884,8 @@ FLECS_API extern const ecs_entity_t EcsPreStore;    /**< PreStore pipeline phase
 FLECS_API extern const ecs_entity_t EcsOnStore;     /**< OnStore pipeline phase. */
 FLECS_API extern const ecs_entity_t EcsPostFrame;   /**< PostFrame pipeline phase. */
 FLECS_API extern const ecs_entity_t EcsPhase;       /**< Phase pipeline phase. */
+
+FLECS_API extern const ecs_entity_t EcsConstant;    /**< Tag added to enum/bitmask constants. */
 
 /** Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete()) */

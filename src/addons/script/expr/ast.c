@@ -13,7 +13,7 @@
 
 static
 void* flecs_expr_ast_new_(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     ecs_size_t size, 
     ecs_expr_node_kind_t kind)
 {
@@ -56,7 +56,7 @@ ecs_expr_variable_t* flecs_expr_variable_from(
 }
 
 ecs_expr_value_node_t* flecs_expr_bool(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     bool value)
 {
     ecs_expr_value_node_t *result = flecs_expr_ast_new(
@@ -68,7 +68,7 @@ ecs_expr_value_node_t* flecs_expr_bool(
 }
 
 ecs_expr_value_node_t* flecs_expr_int(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     int64_t value)
 {
     ecs_expr_value_node_t *result = flecs_expr_ast_new(
@@ -80,7 +80,7 @@ ecs_expr_value_node_t* flecs_expr_int(
 }
 
 ecs_expr_value_node_t* flecs_expr_uint(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     uint64_t value)
 {
     ecs_expr_value_node_t *result = flecs_expr_ast_new(
@@ -92,7 +92,7 @@ ecs_expr_value_node_t* flecs_expr_uint(
 }
 
 ecs_expr_value_node_t* flecs_expr_float(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     double value)
 {
     ecs_expr_value_node_t *result = flecs_expr_ast_new(
@@ -104,7 +104,7 @@ ecs_expr_value_node_t* flecs_expr_float(
 }
 
 ecs_expr_value_node_t* flecs_expr_string(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *value)
 {
     char *str = ECS_CONST_CAST(char*, value);
@@ -122,7 +122,7 @@ ecs_expr_value_node_t* flecs_expr_string(
 }
 
 ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *value)
 {
     ecs_expr_interpolated_string_t *result = flecs_expr_ast_new(
@@ -139,7 +139,7 @@ ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
 }
 
 ecs_expr_value_node_t* flecs_expr_entity(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     ecs_entity_t value)
 {
     ecs_expr_value_node_t *result = flecs_expr_ast_new(
@@ -151,7 +151,7 @@ ecs_expr_value_node_t* flecs_expr_entity(
 }
 
 ecs_expr_initializer_t* flecs_expr_initializer(
-    ecs_script_parser_t *parser)
+    ecs_parser_t *parser)
 {
     ecs_expr_initializer_t *result = flecs_expr_ast_new(
         parser, ecs_expr_initializer_t, EcsExprInitializer);
@@ -161,7 +161,7 @@ ecs_expr_initializer_t* flecs_expr_initializer(
 }
 
 ecs_expr_identifier_t* flecs_expr_identifier(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *value)
 {
     ecs_expr_identifier_t *result = flecs_expr_ast_new(
@@ -171,7 +171,7 @@ ecs_expr_identifier_t* flecs_expr_identifier(
 }
 
 ecs_expr_variable_t* flecs_expr_variable(
-    ecs_script_parser_t *parser,
+    ecs_parser_t *parser,
     const char *value)
 {
     ecs_expr_variable_t *result = flecs_expr_ast_new(
@@ -182,7 +182,7 @@ ecs_expr_variable_t* flecs_expr_variable(
 }
 
 ecs_expr_unary_t* flecs_expr_unary(
-    ecs_script_parser_t *parser)
+    ecs_parser_t *parser)
 {
     ecs_expr_unary_t *result = flecs_expr_ast_new(
         parser, ecs_expr_unary_t, EcsExprUnary);
@@ -190,7 +190,7 @@ ecs_expr_unary_t* flecs_expr_unary(
 }
 
 ecs_expr_binary_t* flecs_expr_binary(
-    ecs_script_parser_t *parser)
+    ecs_parser_t *parser)
 {
     ecs_expr_binary_t *result = flecs_expr_ast_new(
         parser, ecs_expr_binary_t, EcsExprBinary);
@@ -198,7 +198,7 @@ ecs_expr_binary_t* flecs_expr_binary(
 }
 
 ecs_expr_member_t* flecs_expr_member(
-    ecs_script_parser_t *parser)
+    ecs_parser_t *parser)
 {
     ecs_expr_member_t *result = flecs_expr_ast_new(
         parser, ecs_expr_member_t, EcsExprMember);
@@ -206,7 +206,7 @@ ecs_expr_member_t* flecs_expr_member(
 }
 
 ecs_expr_function_t* flecs_expr_function(
-    ecs_script_parser_t *parser)
+    ecs_parser_t *parser)
 {
     ecs_expr_function_t *result = flecs_expr_ast_new(
         parser, ecs_expr_function_t, EcsExprFunction);
@@ -214,7 +214,7 @@ ecs_expr_function_t* flecs_expr_function(
 }
 
 ecs_expr_element_t* flecs_expr_element(
-    ecs_script_parser_t *parser)
+    ecs_parser_t *parser)
 {
     ecs_expr_element_t *result = flecs_expr_ast_new(
         parser, ecs_expr_element_t, EcsExprElement);
@@ -222,7 +222,7 @@ ecs_expr_element_t* flecs_expr_element(
 }
 
 ecs_expr_match_t* flecs_expr_match(
-    ecs_script_parser_t *parser)
+    ecs_parser_t *parser)
 {
     ecs_expr_match_t *result = flecs_expr_ast_new(
         parser, ecs_expr_match_t, EcsExprMatch);
