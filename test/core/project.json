@@ -328,6 +328,7 @@
                 "emit_w_param_multi_observer",
                 "emit_w_const_param",
                 "emit_nested",
+                "emit_for_empty_entity",
                 "enqueue_event_1_id",
                 "enqueue_event_2_ids",
                 "enqueue_event_w_data",

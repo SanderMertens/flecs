@@ -371,6 +371,7 @@ int flecs_term_populate_from_id(
 {
     ecs_entity_t first = 0;
     ecs_entity_t second = 0;
+    bool pair_w_0_tgt = false;
 
     if (ECS_HAS_ID_FLAG(term->id, PAIR)) {
         first = ECS_PAIR_FIRST(term->id);
@@ -387,6 +388,7 @@ int flecs_term_populate_from_id(
             } else {
                 /* Exception is made for ChildOf so we can use (ChildOf, 0) to match
                  * all entities in the root */
+                pair_w_0_tgt = true;
             }
         }
     } else {
@@ -425,6 +427,8 @@ int flecs_term_populate_from_id(
         } else {
             term->second.id = second_id | ECS_TERM_REF_FLAGS(&term->second);
         }
+    } else if (pair_w_0_tgt) {
+        term->second.id = EcsIsEntity;
     }
 
     return 0;
@@ -1045,7 +1049,7 @@ bool flecs_identifier_is_0(
 bool ecs_term_ref_is_set(
     const ecs_term_ref_t *ref)
 {
-    return ECS_TERM_REF_ID(ref) != 0 || ref->name != NULL || ref->id & EcsIsEntity;
+    return ECS_TERM_REF_ID(ref) != 0 || ref->name != NULL || (ref->id & EcsIsEntity) != 0;
 }
 
 bool ecs_term_is_initialized(

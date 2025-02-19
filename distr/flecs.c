@@ -13548,11 +13548,24 @@ repeat_event:
 
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
-        if (tr == NULL) {
-            /* When a single batch contains multiple add's for an exclusive
-             * relationship, it's possible that an id was in the added list
-             * that is no longer available for the entity. */
-            continue;
+        ecs_table_record_t dummy_tr = {
+            .hdr.cache = (ecs_table_cache_t*)idr,
+            .hdr.table = table,
+            .index = -1,
+            .column = -1,
+            .count = 0
+        };
+
+        if (id != EcsAny) {
+            if (tr == NULL) {
+                /* When a single batch contains multiple add's for an exclusive
+                * relationship, it's possible that an id was in the added list
+                * that is no longer available for the entity. */
+                continue;
+            }
+        } else {
+            /* When matching Any the table may not have a record for it */
+            tr = &dummy_tr;
         }
 
         int32_t storage_i;
@@ -13704,12 +13717,7 @@ void ecs_emit(
         ecs_assert(desc->offset == 0, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(desc->count == 0, ECS_INVALID_PARAMETER, NULL);
         ecs_record_t *r = flecs_entities_get(world, desc->entity);
-        ecs_table_t *table;
-        if (!r || !(table = r->table)) {
-            /* Empty entities can't trigger observers */
-            return;
-        }
-        desc->table = table;
+        desc->table = r->table;
         desc->offset = ECS_RECORD_TO_ROW(r->row);
         desc->count = 1;
     }
@@ -33775,6 +33783,7 @@ int flecs_term_populate_from_id(
 {
     ecs_entity_t first = 0;
     ecs_entity_t second = 0;
+    bool pair_w_0_tgt = false;
 
     if (ECS_HAS_ID_FLAG(term->id, PAIR)) {
         first = ECS_PAIR_FIRST(term->id);
@@ -33791,6 +33800,7 @@ int flecs_term_populate_from_id(
             } else {
                 /* Exception is made for ChildOf so we can use (ChildOf, 0) to match
                  * all entities in the root */
+                pair_w_0_tgt = true;
             }
         }
     } else {
@@ -33829,6 +33839,8 @@ int flecs_term_populate_from_id(
         } else {
             term->second.id = second_id | ECS_TERM_REF_FLAGS(&term->second);
         }
+    } else if (pair_w_0_tgt) {
+        term->second.id = EcsIsEntity;
     }
 
     return 0;
@@ -34449,7 +34461,7 @@ bool flecs_identifier_is_0(
 bool ecs_term_ref_is_set(
     const ecs_term_ref_t *ref)
 {
-    return ECS_TERM_REF_ID(ref) != 0 || ref->name != NULL || ref->id & EcsIsEntity;
+    return ECS_TERM_REF_ID(ref) != 0 || ref->name != NULL || (ref->id & EcsIsEntity) != 0;
 }
 
 bool ecs_term_is_initialized(
