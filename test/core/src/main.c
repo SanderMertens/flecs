@@ -889,6 +889,7 @@ void OnDelete_fini_cleanup_order(void);
 void OnDelete_fini_cleanup_order_root_id_w_trait(void);
 void OnDelete_fini_cleanup_order_entity_after_singleton(void);
 void OnDelete_fini_cleanup_order_entity_after_component(void);
+void OnDelete_fini_cleanup_order_empty_entity_after_component(void);
 void OnDelete_on_delete_parent_w_in_use_id_w_remove(void);
 void OnDelete_on_delete_parent_w_in_use_id_w_delete(void);
 void OnDelete_create_after_delete_with(void);
@@ -5778,6 +5779,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "fini_cleanup_order_entity_after_component",
         OnDelete_fini_cleanup_order_entity_after_component
+    },
+    {
+        "fini_cleanup_order_empty_entity_after_component",
+        OnDelete_fini_cleanup_order_empty_entity_after_component
     },
     {
         "on_delete_parent_w_in_use_id_w_remove",
@@ -11682,7 +11687,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        125,
+        126,
         OnDelete_testcases
     },
     {
