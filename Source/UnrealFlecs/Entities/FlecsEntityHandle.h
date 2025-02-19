@@ -766,6 +766,7 @@ public:
 		GetEntity().from_json(StringCast<char>(*InJson).Get());
 	}
 
+	// @TODO: Implement serialization
 	bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess);
 
 	template <typename FunctionType>
