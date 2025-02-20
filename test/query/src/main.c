@@ -690,7 +690,6 @@ void Basic_ref_fields_up_src(void);
 void Basic_ref_fields_self_up_src(void);
 void Basic_0_src_match_nothing(void);
 void Basic_0_terms_match_nothing(void);
-void Basic_any_record(void);
 void Basic_pair_rel_any_record(void);
 void Basic_pair_tgt_any_record(void);
 void Basic_pair_any_any_record(void);
@@ -1110,6 +1109,7 @@ void Operators_root_entities_empty_w_childof_0(void);
 void Operators_root_entities_empty_w_optional(void);
 void Operators_root_entities_empty_w_optional_childof_0(void);
 void Operators_optional_w_root_entities_empty(void);
+void Operators_not_w_root_entities_empty(void);
 void Operators_written_root_entities_empty(void);
 void Operators_core_entities_w_not_children(void);
 void Operators_1_ent_src_not(void);
@@ -4878,10 +4878,6 @@ bake_test_case Basic_testcases[] = {
         Basic_0_terms_match_nothing
     },
     {
-        "any_record",
-        Basic_any_record
-    },
-    {
         "pair_rel_any_record",
         Basic_pair_rel_any_record
     },
@@ -6524,6 +6520,10 @@ bake_test_case Operators_testcases[] = {
     {
         "optional_w_root_entities_empty",
         Operators_optional_w_root_entities_empty
+    },
+    {
+        "not_w_root_entities_empty",
+        Operators_not_w_root_entities_empty
     },
     {
         "written_root_entities_empty",
@@ -10751,7 +10751,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        236,
+        235,
         Basic_testcases,
         1,
         Basic_params
@@ -10785,7 +10785,7 @@ static bake_test_suite suites[] = {
         "Operators",
         Operators_setup,
         NULL,
-        158,
+        159,
         Operators_testcases,
         1,
         Operators_params

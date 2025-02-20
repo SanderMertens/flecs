@@ -1311,9 +1311,9 @@ extern char *flecs_this_name_array;
 
 /* -- Instruction kinds -- */
 typedef enum {
+    EcsQueryAll,            /* Yield all tables */
     EcsQueryAnd,            /* And operator: find or match id against variable source */
     EcsQueryAndAny,         /* And operator with support for matching Any src/id */
-    EcsQueryOnlyAny,        /* Dedicated instruction for _ queries where the src is unknown */
     EcsQueryTriv,           /* Trivial search (batches multiple terms) */
     EcsQueryCache,          /* Cached search */
     EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
@@ -1395,7 +1395,13 @@ typedef struct ecs_query_op_t {
     ecs_flags64_t written;     /* Bitset with variables written by op */
 } ecs_query_op_t;
 
- /* And context */
+/* All context */
+typedef struct {
+    int32_t cur;
+    ecs_table_record_t dummy_tr;
+} ecs_query_all_ctx_t;
+
+/* And context */
 typedef struct {
     ecs_id_record_t *idr;
     ecs_table_cache_iter_t it;
@@ -1552,6 +1558,7 @@ typedef struct {
 
 typedef struct ecs_query_op_ctx_t {
     union {
+        ecs_query_all_ctx_t all;
         ecs_query_and_ctx_t and;
         ecs_query_xfrom_ctx_t xfrom;
         ecs_query_up_ctx_t up;
@@ -18454,7 +18461,7 @@ void flecs_notify_tables(
     flecs_poly_assert(world, ecs_world_t);
 
     /* If no id is specified, broadcast to all tables */
-    if (!id) {
+    if (!id || id == EcsAny) {
         ecs_sparse_t *tables = &world->store.tables;
         int32_t i, count = flecs_sparse_count(tables);
         for (i = 0; i < count; i ++) {
@@ -32659,7 +32666,7 @@ const ecs_query_t* ecs_query_get(
     }
 }
 
- /**
+/**
  * @file query/util.c
  * @brief Query utilities.
  */
@@ -32834,12 +32841,12 @@ const char* flecs_query_op_str(
     uint16_t kind)
 {
     switch(kind) {
+    case EcsQueryAll:            return "all       ";
     case EcsQueryAnd:            return "and       ";
     case EcsQueryAndAny:         return "andany    ";
     case EcsQueryTriv:           return "triv      ";
     case EcsQueryCache:          return "cache     ";
     case EcsQueryIsCache:        return "xcache    ";
-    case EcsQueryOnlyAny:        return "any       ";
     case EcsQueryUp:             return "up        ";
     case EcsQuerySelfUp:         return "selfup    ";
     case EcsQueryWith:           return "with      ";
@@ -36935,12 +36942,6 @@ void flecs_table_init(
         tr->index = flecs_ito(int16_t, first_pair);
         tr->count = flecs_ito(int16_t, last_pair - first_pair);
     }
-    if (dst_count) {
-        tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-        tr->hdr.cache = (ecs_table_cache_t*)world->idr_any;
-        tr->index = 0;
-        tr->count = 1;
-    }
     if (!has_childof) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         childof_idr = world->idr_childof_0;
@@ -36998,6 +36999,9 @@ void flecs_table_init(
             }
         }
     }
+
+    /* Initialize event flags for any record */
+    table->flags |= world->idr_any->flags & EcsIdEventMask;
 
     table->component_map = flecs_wcalloc_n(
         world, int16_t, FLECS_HI_COMPONENT_ID);
@@ -66926,10 +66930,10 @@ int flecs_query_compile(
             }
 
             /* If variables have been written, but this term has no known variables,
-            * first try to resolve terms that have known variables. This can 
-            * significantly reduce the search space. 
-            * Only perform this optimization after at least one variable has been
-            * written to, as all terms are unknown otherwise. */
+             * first try to resolve terms that have known variables. This can 
+             * significantly reduce the search space. 
+             * Only perform this optimization after at least one variable has been
+             * written to, as all terms are unknown otherwise. */
             if (can_reorder && ctx.written && 
                 flecs_query_term_is_unknown(query, term, &ctx)) 
             {
@@ -67911,7 +67915,7 @@ bool flecs_query_select_all(
         term->oper == EcsNotFrom || pred_match) 
     {
         ecs_query_op_t match_any = {0};
-        match_any.kind = EcsAnd;
+        match_any.kind = EcsQueryAll;
         match_any.flags = EcsQueryIsSelf | (EcsQueryIsEntity << EcsQueryFirst);
         match_any.flags |= (EcsQueryIsVar << EcsQuerySrc);
         match_any.src = op->src;
@@ -68393,7 +68397,7 @@ int flecs_query_compile_term(
     } else if (!src_written && term->id == EcsAny && op.kind == EcsQueryAndAny) {
         /* Lookup variables ($var.child_name) are always written */
         if (!src_is_lookup) {
-            op.kind = EcsQueryOnlyAny; /* Uses Any (_) id record */
+            op.kind = EcsQueryAll; /* Uses Any (_) id record */
         }
     }
 
@@ -71194,6 +71198,69 @@ bool flecs_query_with(
 }
 
 static
+bool flecs_query_all(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    int8_t field_index = op->field_index;
+    ecs_iter_t *it = ctx->it;
+
+    uint64_t written = ctx->written[ctx->op_index];
+    if (written & (1ull << op->src.var)) {
+        if (field_index != -1) {
+            it->ids[field_index] = EcsWildcard;
+        }
+        return !redo;
+    } else {
+        ecs_query_all_ctx_t *op_ctx = flecs_op_ctx(ctx, all);
+        ecs_world_t *world = ctx->world;
+        ecs_sparse_t *tables = &world->store.tables;
+        bool match_empty = ctx->query->pub.flags & EcsQueryMatchEmptyTables;
+        ecs_table_t *table;
+
+        if (!redo) {
+            op_ctx->cur = 0;
+            op_ctx->dummy_tr.column = -1;
+            op_ctx->dummy_tr.index = -1;
+            op_ctx->dummy_tr.count = 0;
+            op_ctx->dummy_tr.hdr.cache = NULL;
+            if (field_index != -1) {
+                it->ids[field_index] = EcsWildcard;
+                it->trs[field_index] = &op_ctx->dummy_tr;
+            }
+            table = &world->store.root;
+        } else if (op_ctx->cur < flecs_sparse_count(tables)) {
+            table = flecs_sparse_get_dense_t(
+                tables, ecs_table_t, op_ctx->cur);
+        } else {
+            return false;
+        }
+
+repeat:
+        op_ctx->cur ++;
+
+        if (match_empty || ecs_table_count(table)) {
+            if (!flecs_query_table_filter(table, op->other, 
+                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
+            {
+                op_ctx->dummy_tr.hdr.table = table;
+                flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
+                return true;
+            }
+        }
+
+        if (op_ctx->cur < flecs_sparse_count(tables)) {
+            table = flecs_sparse_get_dense_t(
+                tables, ecs_table_t, op_ctx->cur);
+            goto repeat;
+        }
+
+        return false;
+    }
+}
+
+static
 bool flecs_query_and(
     const ecs_query_op_t *op,
     bool redo,
@@ -71360,21 +71427,6 @@ bool flecs_query_and_any(
     ctx->it->trs[field] = (ecs_table_record_t*)op_ctx->it.cur;
 
     return result;
-}
-
-static
-bool flecs_query_only_any(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    uint64_t written = ctx->written[ctx->op_index];
-    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        return flecs_query_and_any(op, redo, ctx);
-    } else {
-        return flecs_query_select_w_id(op, redo, ctx, EcsAny, 
-            (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
-    }
 }
 
 static
@@ -72405,12 +72457,12 @@ bool flecs_query_dispatch(
     ecs_query_run_ctx_t *ctx)
 {
     switch(op->kind) {
+    case EcsQueryAll: return flecs_query_all(op, redo, ctx);
     case EcsQueryAnd: return flecs_query_and(op, redo, ctx);
     case EcsQueryAndAny: return flecs_query_and_any(op, redo, ctx);
     case EcsQueryTriv: return flecs_query_triv(op, redo, ctx);
     case EcsQueryCache: return flecs_query_cache(op, redo, ctx);
     case EcsQueryIsCache: return flecs_query_is_cache(op, redo, ctx);
-    case EcsQueryOnlyAny: return flecs_query_only_any(op, redo, ctx);
     case EcsQueryUp: return flecs_query_up(op, redo, ctx);
     case EcsQuerySelfUp: return flecs_query_self_up(op, redo, ctx);
     case EcsQueryWith: return flecs_query_with(op, redo, ctx);

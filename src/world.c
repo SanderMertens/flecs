@@ -1087,7 +1087,7 @@ void flecs_notify_tables(
     flecs_poly_assert(world, ecs_world_t);
 
     /* If no id is specified, broadcast to all tables */
-    if (!id) {
+    if (!id || id == EcsAny) {
         ecs_sparse_t *tables = &world->store.tables;
         int32_t i, count = flecs_sparse_count(tables);
         for (i = 0; i < count; i ++) {

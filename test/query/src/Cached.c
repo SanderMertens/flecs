@@ -728,8 +728,7 @@ void Cached_only_optional_new_empty_table(void) {
         total_count ++;
     }
 
-    test_assert(total_count == (prev_total_count - 1));
-
+    test_assert(total_count == prev_total_count);
 
     ecs_fini(world);
 }
@@ -840,7 +839,6 @@ void Cached_only_optional_new_unset_tables(void) {
     test_int(count, 1);
     test_assert(total_count == prev_total_count);
 
-
     ecs_fini(world);
 }
 
@@ -900,7 +898,7 @@ void Cached_singleton_w_optional_new_empty_table(void) {
         total_count ++;
     }
 
-    test_assert(total_count == (prev_total_count - 1));
+    test_assert(total_count == prev_total_count);
 
     ecs_query_fini(q);
 

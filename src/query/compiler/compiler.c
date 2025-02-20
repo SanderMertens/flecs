@@ -971,10 +971,10 @@ int flecs_query_compile(
             }
 
             /* If variables have been written, but this term has no known variables,
-            * first try to resolve terms that have known variables. This can 
-            * significantly reduce the search space. 
-            * Only perform this optimization after at least one variable has been
-            * written to, as all terms are unknown otherwise. */
+             * first try to resolve terms that have known variables. This can 
+             * significantly reduce the search space. 
+             * Only perform this optimization after at least one variable has been
+             * written to, as all terms are unknown otherwise. */
             if (can_reorder && ctx.written && 
                 flecs_query_term_is_unknown(query, term, &ctx)) 
             {
