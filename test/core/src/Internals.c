@@ -329,7 +329,8 @@ void Internals_table_observed_after_add(void) {
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
-    test_assert(pt == NULL);
+    test_assert(pt != NULL);
+    test_int(ecs_table_get_type(pt)->count, 0);
     test_assert(ct != NULL);
     test_int(flecs_table_observed_count(ct), 0);
 
@@ -357,7 +358,8 @@ void Internals_table_observed_after_remove(void) {
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
-    test_assert(pt == NULL);
+    test_assert(pt != NULL);
+    test_int(ecs_table_get_type(pt)->count, 0);
     test_assert(ct != NULL);
     test_int(flecs_table_observed_count(ct), 0);
 
@@ -392,7 +394,8 @@ void Internals_table_observed_after_clear(void) {
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
-    test_assert(pt == NULL);
+    test_assert(pt != NULL);
+    test_int(ecs_table_get_type(pt)->count, 0);
     test_assert(ct != NULL);
     test_int(flecs_table_observed_count(ct), 0);
 
@@ -419,7 +422,8 @@ void Internals_table_observed_after_delete(void) {
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
-    test_assert(pt == NULL);
+    test_assert(pt != NULL);
+    test_int(ecs_table_get_type(pt)->count, 0);
     test_assert(ct != NULL);
     test_int(flecs_table_observed_count(ct), 0);
 
@@ -443,7 +447,8 @@ void Internals_table_observed_after_on_remove(void) {
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
-    test_assert(pt == NULL);
+    test_assert(pt != NULL);
+    test_int(ecs_table_get_type(pt)->count, 0);
     test_assert(ct != NULL);
     test_int(flecs_table_observed_count(ct), 0);
 

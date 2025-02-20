@@ -209,6 +209,8 @@ void Each_each_component(void);
 void Each_each_pair(void);
 void Each_each_pair_rel_wildcard(void);
 void Each_each_pair_tgt_wildcard(void);
+void Each_each_root_entities(void);
+void Each_each_empty_root_entities(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -311,6 +313,7 @@ void Event_emit_w_param(void);
 void Event_emit_w_param_multi_observer(void);
 void Event_emit_w_const_param(void);
 void Event_emit_nested(void);
+void Event_emit_for_empty_entity(void);
 void Event_enqueue_event_1_id(void);
 void Event_enqueue_event_2_ids(void);
 void Event_enqueue_event_w_data(void);
@@ -887,6 +890,7 @@ void OnDelete_fini_cleanup_order(void);
 void OnDelete_fini_cleanup_order_root_id_w_trait(void);
 void OnDelete_fini_cleanup_order_entity_after_singleton(void);
 void OnDelete_fini_cleanup_order_entity_after_component(void);
+void OnDelete_fini_cleanup_order_empty_entity_after_component(void);
 void OnDelete_on_delete_parent_w_in_use_id_w_remove(void);
 void OnDelete_on_delete_parent_w_in_use_id_w_delete(void);
 void OnDelete_create_after_delete_with(void);
@@ -3161,6 +3165,14 @@ bake_test_case Each_testcases[] = {
     {
         "each_pair_tgt_wildcard",
         Each_each_pair_tgt_wildcard
+    },
+    {
+        "each_root_entities",
+        Each_each_root_entities
+    },
+    {
+        "each_empty_root_entities",
+        Each_each_empty_root_entities
     }
 };
 
@@ -3554,6 +3566,10 @@ bake_test_case Event_testcases[] = {
     {
         "emit_nested",
         Event_emit_nested
+    },
+    {
+        "emit_for_empty_entity",
+        Event_emit_for_empty_entity
     },
     {
         "enqueue_event_1_id",
@@ -5768,6 +5784,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "fini_cleanup_order_entity_after_component",
         OnDelete_fini_cleanup_order_entity_after_component
+    },
+    {
+        "fini_cleanup_order_empty_entity_after_component",
+        OnDelete_fini_cleanup_order_empty_entity_after_component
     },
     {
         "on_delete_parent_w_in_use_id_w_remove",
@@ -11553,7 +11573,7 @@ static bake_test_suite suites[] = {
         "Each",
         NULL,
         NULL,
-        5,
+        7,
         Each_testcases
     },
     {
@@ -11574,7 +11594,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        35,
+        36,
         Event_testcases
     },
     {
@@ -11672,7 +11692,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        125,
+        126,
         OnDelete_testcases
     },
     {

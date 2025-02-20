@@ -357,6 +357,7 @@ ecs_id_t flecs_query_it_set_id(
 {
     ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(field_index >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(column < table->type.count, ECS_INTERNAL_ERROR, NULL);
     return it->ids[field_index] = table->type.array[column];
 }
 
@@ -366,9 +367,8 @@ void flecs_query_set_match(
     int32_t column,
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
     int32_t field_index = op->field_index;
-    if (field_index == -1) {
+    if (field_index == -1 || column == -1) {
         return;
     }
 

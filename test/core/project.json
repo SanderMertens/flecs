@@ -217,7 +217,9 @@
                 "each_component",
                 "each_pair",
                 "each_pair_rel_wildcard",
-                "each_pair_tgt_wildcard"
+                "each_pair_tgt_wildcard",
+                "each_root_entities",
+                "each_empty_root_entities"
             ]
         }, {
             "id": "Iter",
@@ -326,6 +328,7 @@
                 "emit_w_param_multi_observer",
                 "emit_w_const_param",
                 "emit_nested",
+                "emit_for_empty_entity",
                 "enqueue_event_1_id",
                 "enqueue_event_2_ids",
                 "enqueue_event_w_data",
@@ -930,6 +933,7 @@
                 "fini_cleanup_order_root_id_w_trait",
                 "fini_cleanup_order_entity_after_singleton",
                 "fini_cleanup_order_entity_after_component",
+                "fini_cleanup_order_empty_entity_after_component",
                 "on_delete_parent_w_in_use_id_w_remove",
                 "on_delete_parent_w_in_use_id_w_delete",
                 "create_after_delete_with",

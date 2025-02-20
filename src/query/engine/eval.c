@@ -136,6 +136,69 @@ bool flecs_query_with(
 }
 
 static
+bool flecs_query_all(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    int8_t field_index = op->field_index;
+    ecs_iter_t *it = ctx->it;
+
+    uint64_t written = ctx->written[ctx->op_index];
+    if (written & (1ull << op->src.var)) {
+        if (field_index != -1) {
+            it->ids[field_index] = EcsWildcard;
+        }
+        return !redo;
+    } else {
+        ecs_query_all_ctx_t *op_ctx = flecs_op_ctx(ctx, all);
+        ecs_world_t *world = ctx->world;
+        ecs_sparse_t *tables = &world->store.tables;
+        bool match_empty = ctx->query->pub.flags & EcsQueryMatchEmptyTables;
+        ecs_table_t *table;
+
+        if (!redo) {
+            op_ctx->cur = 0;
+            op_ctx->dummy_tr.column = -1;
+            op_ctx->dummy_tr.index = -1;
+            op_ctx->dummy_tr.count = 0;
+            op_ctx->dummy_tr.hdr.cache = NULL;
+            if (field_index != -1) {
+                it->ids[field_index] = EcsWildcard;
+                it->trs[field_index] = &op_ctx->dummy_tr;
+            }
+            table = &world->store.root;
+        } else if (op_ctx->cur < flecs_sparse_count(tables)) {
+            table = flecs_sparse_get_dense_t(
+                tables, ecs_table_t, op_ctx->cur);
+        } else {
+            return false;
+        }
+
+repeat:
+        op_ctx->cur ++;
+
+        if (match_empty || ecs_table_count(table)) {
+            if (!flecs_query_table_filter(table, op->other, 
+                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
+            {
+                op_ctx->dummy_tr.hdr.table = table;
+                flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
+                return true;
+            }
+        }
+
+        if (op_ctx->cur < flecs_sparse_count(tables)) {
+            table = flecs_sparse_get_dense_t(
+                tables, ecs_table_t, op_ctx->cur);
+            goto repeat;
+        }
+
+        return false;
+    }
+}
+
+static
 bool flecs_query_and(
     const ecs_query_op_t *op,
     bool redo,
@@ -302,21 +365,6 @@ bool flecs_query_and_any(
     ctx->it->trs[field] = (ecs_table_record_t*)op_ctx->it.cur;
 
     return result;
-}
-
-static
-bool flecs_query_only_any(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    uint64_t written = ctx->written[ctx->op_index];
-    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        return flecs_query_and_any(op, redo, ctx);
-    } else {
-        return flecs_query_select_w_id(op, redo, ctx, EcsAny, 
-            (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
-    }
 }
 
 static
@@ -1347,12 +1395,12 @@ bool flecs_query_dispatch(
     ecs_query_run_ctx_t *ctx)
 {
     switch(op->kind) {
+    case EcsQueryAll: return flecs_query_all(op, redo, ctx);
     case EcsQueryAnd: return flecs_query_and(op, redo, ctx);
     case EcsQueryAndAny: return flecs_query_and_any(op, redo, ctx);
     case EcsQueryTriv: return flecs_query_triv(op, redo, ctx);
     case EcsQueryCache: return flecs_query_cache(op, redo, ctx);
     case EcsQueryIsCache: return flecs_query_is_cache(op, redo, ctx);
-    case EcsQueryOnlyAny: return flecs_query_only_any(op, redo, ctx);
     case EcsQueryUp: return flecs_query_up(op, redo, ctx);
     case EcsQuerySelfUp: return flecs_query_self_up(op, redo, ctx);
     case EcsQueryWith: return flecs_query_with(op, redo, ctx);

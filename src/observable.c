@@ -1383,11 +1383,24 @@ repeat_event:
 
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
-        if (tr == NULL) {
-            /* When a single batch contains multiple add's for an exclusive
-             * relationship, it's possible that an id was in the added list
-             * that is no longer available for the entity. */
-            continue;
+        ecs_table_record_t dummy_tr = {
+            .hdr.cache = (ecs_table_cache_t*)idr,
+            .hdr.table = table,
+            .index = -1,
+            .column = -1,
+            .count = 0
+        };
+
+        if (id != EcsAny) {
+            if (tr == NULL) {
+                /* When a single batch contains multiple add's for an exclusive
+                * relationship, it's possible that an id was in the added list
+                * that is no longer available for the entity. */
+                continue;
+            }
+        } else {
+            /* When matching Any the table may not have a record for it */
+            tr = &dummy_tr;
         }
 
         int32_t storage_i;
@@ -1445,7 +1458,9 @@ repeat_event:
                                     ECS_INTERNAL_ERROR, NULL);
                             }
                         }
-                    } else if (er_onset && it.other_table) {
+                    } else if (er_onset && it.other_table && 
+                            it.other_table->type.count) 
+                    {
                         /* If an override was removed, this re-exposes the
                          * overridden component. Because this causes the actual
                          * (now inherited) value of the component to change, an
@@ -1537,12 +1552,7 @@ void ecs_emit(
         ecs_assert(desc->offset == 0, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(desc->count == 0, ECS_INVALID_PARAMETER, NULL);
         ecs_record_t *r = flecs_entities_get(world, desc->entity);
-        ecs_table_t *table;
-        if (!r || !(table = r->table)) {
-            /* Empty entities can't trigger observers */
-            return;
-        }
-        desc->table = table;
+        desc->table = r->table;
         desc->offset = ECS_RECORD_TO_ROW(r->row);
         desc->count = 1;
     }

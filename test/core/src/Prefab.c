@@ -3101,7 +3101,8 @@ void Prefab_get_type_after_recycled_base_add(void) {
 
     ecs_entity_t base = ecs_new(world);
     test_assert(base != 0);
-    test_assert( ecs_get_type(world, base) == NULL);
+    test_assert( ecs_get_type(world, base) != NULL);
+    test_int( ecs_get_type(world, base)->count, 0);
 
     ecs_delete(world, base);
     test_assert( !ecs_is_alive(world, base));

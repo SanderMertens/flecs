@@ -2721,6 +2721,25 @@ void OnDelete_fini_cleanup_order_entity_after_component(void) {
     test_int(on_remove_velocity, 1);
 }
 
+void OnDelete_fini_cleanup_order_empty_entity_after_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Velocity, {
+        .on_remove = ecs_on_remove(Velocity)
+    });
+    
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, e);
+    ecs_add(world, c, Velocity);
+
+    ecs_fini(world);
+
+    test_int(on_remove_velocity, 1);
+}
+
 void OnDelete_on_delete_parent_w_in_use_id_w_remove(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -2788,7 +2807,10 @@ void OnDelete_create_after_delete_with(void) {
     test_assert(ti != NULL);
 
     ecs_entity_t id = ecs_new(world);
-    test_assert(ecs_get_table(world, id) == NULL);
+    test_assert(ecs_get_table(world, id) != NULL);
+    test_assert(ecs_get_type(world, id) != NULL);
+    test_int(ecs_get_type(world, id)->count, 0);
+
     e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_has(world, e, Position));
