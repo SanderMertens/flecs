@@ -175,7 +175,6 @@ void* ecs_table_cache_remove(
     ecs_table_cache_hdr_t *elem)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table_id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_assert(elem->cache == cache, ECS_INTERNAL_ERROR, NULL);

@@ -9,7 +9,8 @@ void New_empty(void) {
 
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
-    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     ecs_fini(world);
 }
@@ -131,7 +132,8 @@ void New_new_id(void) {
 
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
-    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     ecs_fini(world);
 }
@@ -142,7 +144,8 @@ void New_new_component_id(void) {
     ecs_entity_t e = ecs_new_low_id(world);
     test_assert(e != 0);
     test_assert(e < FLECS_HI_COMPONENT_ID);
-    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     ecs_fini(world);
 }
@@ -155,7 +158,8 @@ void New_new_component_id_skip_used(void) {
     ecs_entity_t e = ecs_new_low_id(world);
     test_assert(e != 0);
     test_assert(e < FLECS_HI_COMPONENT_ID);
-    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     /* Explicitly set an id that is one above the last issued id */
     ecs_make_alive(world, e + 1);
@@ -164,7 +168,8 @@ void New_new_component_id_skip_used(void) {
     ecs_entity_t e2 = ecs_new_low_id(world);
     test_assert(e2 != 0);
     test_assert(e2 < FLECS_HI_COMPONENT_ID);
-    test_assert(!ecs_get_type(world, e2));    
+    test_assert(ecs_get_type(world, e2) != NULL);
+    test_int(ecs_get_type(world, e2)->count, 0);  
     test_assert(e2 != (e + 1));
 
     ecs_fini(world);
@@ -188,12 +193,14 @@ void New_new_component_id_skip_to_hi_id(void) {
     ecs_entity_t e2 = ecs_new_low_id(world);
     test_assert(e2 != 0);
     test_assert(e2 > FLECS_HI_COMPONENT_ID);
-    test_assert(!ecs_get_type(world, e2));
+    test_assert(ecs_get_type(world, e2) != NULL);
+    test_int(ecs_get_type(world, e2)->count, 0);
 
     ecs_entity_t e3 = ecs_new(world);
     test_assert(e3 != e2);
     test_assert(e3 > e2);
-    test_assert(!ecs_get_type(world, e3));
+    test_assert(ecs_get_type(world, e3) != NULL);
+    test_int(ecs_get_type(world, e3)->count, 0);
 
     ecs_fini(world);
 }

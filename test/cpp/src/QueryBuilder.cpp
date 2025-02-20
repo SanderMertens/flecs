@@ -5223,3 +5223,29 @@ void QueryBuilder_each_w_untyped_field_at_w_fixed_src(void) {
 
     test_int(count, 2);
 }
+
+void QueryBuilder_singleton_pair(void) {
+    flecs::world ecs;
+
+    flecs::entity rel = ecs.component<Position>();
+    flecs::entity tgt = ecs.entity();
+
+    ecs.set<Position>(tgt, {10, 20});
+
+    int32_t count = 0;
+
+    auto q = ecs.query_builder<const Position>()
+        .term_at(0).second(tgt).singleton()
+        .cache_kind(cache_kind)
+        .build();
+
+    q.each([&](flecs::iter& it, size_t, const Position& p) {
+        test_assert(it.src(0) == rel);
+        test_assert(it.pair(0) == ecs.pair<Position>(tgt));
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

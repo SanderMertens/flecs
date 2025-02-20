@@ -401,7 +401,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
         if (!ECS_IS_PAIR(sid)) {
             term_->src.id = sid;
         } else {
-            term_->src.id = ecs_pair_first(world(), sid);
+            term_->src.id = ecs_pair_first(this->world_v(), sid);
         }
         return *this;
     }

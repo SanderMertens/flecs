@@ -775,6 +775,32 @@ void Event_emit_nested(void) {
     ecs_fini(world);
 }
 
+void Event_emit_for_empty_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t MyEvent = ecs_new(world);
+
+    ecs_entity_t e1 = ecs_new(world);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsAny }},
+        .events = {MyEvent},
+        .callback = ObserverA
+    });
+
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .ids = &(ecs_type_t){ .count = 0 },
+        .entity = e1,
+        .event = MyEvent
+    });
+
+    test_int(ObserverA_invoked, 1);
+
+    ecs_fini(world);
+}
+
 void Event_enqueue_event_1_id(void) {
     ecs_world_t *world = ecs_mini();
 

@@ -371,6 +371,7 @@ int flecs_term_populate_from_id(
 {
     ecs_entity_t first = 0;
     ecs_entity_t second = 0;
+    bool pair_w_0_tgt = false;
 
     if (ECS_HAS_ID_FLAG(term->id, PAIR)) {
         first = ECS_PAIR_FIRST(term->id);
@@ -385,8 +386,9 @@ int flecs_term_populate_from_id(
                 flecs_query_validator_error(ctx, "missing second element in term.id");
                 return -1;
             } else {
-                /* (ChildOf, 0) is allowed so query can be used to efficiently
-                 * query for root entities */
+                /* Exception is made for ChildOf so we can use (ChildOf, 0) to match
+                 * all entities in the root */
+                pair_w_0_tgt = true;
             }
         }
     } else {
@@ -405,7 +407,11 @@ int flecs_term_populate_from_id(
         }
     } else {
         ecs_entity_t first_id = ecs_get_alive(world, first);
-        term->first.id = !first_id ? first | ECS_TERM_REF_FLAGS(&term->first) : first_id | ECS_TERM_REF_FLAGS(&term->first);
+        if (!first_id) {
+            term->first.id = first | ECS_TERM_REF_FLAGS(&term->first);
+        } else {
+            term->first.id = first_id | ECS_TERM_REF_FLAGS(&term->first);
+        }
     }
 
     ecs_entity_t term_second = flecs_term_ref_get_entity(&term->second);
@@ -416,7 +422,13 @@ int flecs_term_populate_from_id(
         }
     } else if (second) {
         ecs_entity_t second_id = ecs_get_alive(world, second);
-        term->second.id = !second_id ? second | ECS_TERM_REF_FLAGS(&term->second) : second_id | ECS_TERM_REF_FLAGS(&term->second);
+        if (!second_id) {
+            term->second.id = second | ECS_TERM_REF_FLAGS(&term->second);
+        } else {
+            term->second.id = second_id | ECS_TERM_REF_FLAGS(&term->second);
+        }
+    } else if (pair_w_0_tgt) {
+        term->second.id = EcsIsEntity;
     }
 
     return 0;
@@ -744,6 +756,11 @@ int flecs_term_finalize(
         }
     }
 
+    if (term->id == ecs_pair(EcsChildOf, 0)) {
+        /* Ensure same behavior for (ChildOf, #0) and !(ChildOf, _) terms */
+        term->flags_ |= EcsTermMatchAny;
+    }
+
     ecs_entity_t first_entity = 0;
     if ((first->id & EcsIsEntity)) {
         first_entity = first_id;
@@ -1032,7 +1049,7 @@ bool flecs_identifier_is_0(
 bool ecs_term_ref_is_set(
     const ecs_term_ref_t *ref)
 {
-    return ECS_TERM_REF_ID(ref) != 0 || ref->name != NULL || ref->id & EcsIsEntity;
+    return ECS_TERM_REF_ID(ref) != 0 || ref->name != NULL || (ref->id & EcsIsEntity) != 0;
 }
 
 bool ecs_term_is_initialized(

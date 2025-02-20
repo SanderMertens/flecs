@@ -42,9 +42,9 @@ extern char *flecs_this_name_array;
 
 /* -- Instruction kinds -- */
 typedef enum {
+    EcsQueryAll,            /* Yield all tables */
     EcsQueryAnd,            /* And operator: find or match id against variable source */
     EcsQueryAndAny,         /* And operator with support for matching Any src/id */
-    EcsQueryOnlyAny,        /* Dedicated instruction for _ queries where the src is unknown */
     EcsQueryTriv,           /* Trivial search (batches multiple terms) */
     EcsQueryCache,          /* Cached search */
     EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
@@ -126,7 +126,13 @@ typedef struct ecs_query_op_t {
     ecs_flags64_t written;     /* Bitset with variables written by op */
 } ecs_query_op_t;
 
- /* And context */
+/* All context */
+typedef struct {
+    int32_t cur;
+    ecs_table_record_t dummy_tr;
+} ecs_query_all_ctx_t;
+
+/* And context */
 typedef struct {
     ecs_id_record_t *idr;
     ecs_table_cache_iter_t it;
@@ -283,6 +289,7 @@ typedef struct {
 
 typedef struct ecs_query_op_ctx_t {
     union {
+        ecs_query_all_ctx_t all;
         ecs_query_and_ctx_t and;
         ecs_query_xfrom_ctx_t xfrom;
         ecs_query_up_ctx_t up;

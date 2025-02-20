@@ -38,7 +38,8 @@ void SingleThreadStaging_new_empty(void) {
     int i;
     for (i = 0; i < ctx.entity_count; i ++) {
         test_assert(ctx.new_entities[i] != 0);
-        test_assert( !ecs_get_type(world, ctx.new_entities[i]));
+        test_assert(ecs_get_type(world, ctx.new_entities[i]) != NULL);
+        test_int(ecs_get_type(world, ctx.new_entities[i])->count, 0);
     }
 
     ecs_fini(world);
@@ -111,7 +112,8 @@ void SingleThreadStaging_new_empty_w_count(void) {
 
     int i;
     for (i = 0; i < 1000; i ++) {
-        test_assert( !ecs_get_type(world, ctx.new_entities[0] + i));
+        test_assert( ecs_get_type(world, ctx.new_entities[0] + i) != NULL );
+        test_int( ecs_get_type(world, ctx.new_entities[0] + i)->count, 0 );
     }
 
     ecs_fini(world);
@@ -234,7 +236,8 @@ void Add_remove_same_from_new(ecs_iter_t *it) {
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = ecs_new(it->world);
 
-        test_assert( !ecs_get_type(it->world, e));
+        test_assert( ecs_get_type(it->world, e) != NULL );
+        test_int( ecs_get_type(it->world, e)->count, 0 );
 
         if (ctx->component) {
             ecs_add_id(it->world, e, ctx->component);
@@ -272,7 +275,8 @@ void SingleThreadStaging_add_remove_same_to_new_empty(void) {
     int i;
     for (i = 0; i < ctx.entity_count; i ++) {
         test_assert(ctx.new_entities[i] != 0);
-        test_assert( !ecs_get_type(world, ctx.new_entities[i]));
+        test_assert( ecs_get_type(world, ctx.new_entities[i]) != NULL );
+        test_int( ecs_get_type(world, ctx.new_entities[i])->count, 0 );
     }
 
     ecs_fini(world);
@@ -299,7 +303,8 @@ void SingleThreadStaging_add_remove_2_same_to_new_empty(void) {
     int i;
     for (i = 0; i < ctx.entity_count; i ++) {
         test_assert(ctx.new_entities[i] != 0);
-        test_assert( !ecs_get_type(world, ctx.new_entities[i]));
+        test_assert( ecs_get_type(world, ctx.new_entities[i]) != NULL );
+        test_int( ecs_get_type(world, ctx.new_entities[i])->count, 0 );
     }
 
     ecs_fini(world);
@@ -677,7 +682,8 @@ void SingleThreadStaging_remove_from_current(void) {
     test_int(ctx.entity_count, 3);
 
     test_assert( !ecs_has(world, e1, Position));
-    test_assert( !ecs_get_type(world, e1));
+    test_assert( ecs_get_type(world, e1) != NULL );
+    test_int( ecs_get_type(world, e1)->count, 0 );
 
     test_assert( !ecs_has(world, e2, Position));
     test_assert( ecs_has(world, e2, Velocity));
@@ -719,11 +725,13 @@ void SingleThreadStaging_remove_2_from_current(void) {
 
     test_assert( !ecs_has(world, e1, Position));
     test_assert( !ecs_has(world, e1, Velocity));
-    test_assert( !ecs_get_type(world, e1));
+    test_assert( ecs_get_type(world, e1) != NULL );
+    test_int( ecs_get_type(world, e1)->count, 0 );
 
     test_assert( !ecs_has(world, e2, Position));
     test_assert( !ecs_has(world, e2, Velocity));
-    test_assert( !ecs_get_type(world, e2));
+    test_assert( ecs_get_type(world, e2) != NULL );
+    test_int( ecs_get_type(world, e2)->count, 0 );
 
     test_assert( !ecs_has(world, e3, Position));
     test_assert( !ecs_has(world, e3, Velocity));
@@ -820,7 +828,8 @@ void SingleThreadStaging_add_remove_same_existing_to_current(void) {
     test_int(ctx.entity_count, 3);
 
     test_assert( !ecs_has(world, e1, Position));
-    test_assert( !ecs_get_type(world, e1));
+    test_assert( ecs_get_type(world, e1) != NULL );
+    test_int( ecs_get_type(world, e1)->count, 0 );
 
     test_assert( !ecs_has(world, e2, Position));
     test_assert( ecs_has(world, e2, Velocity));
@@ -1003,11 +1012,13 @@ void SingleThreadStaging_add_remove_2_same_existing_to_current(void) {
 
     test_assert( !ecs_has(world, e1, Position));
     test_assert( !ecs_has(world, e1, Velocity));
-    test_assert( !ecs_get_type(world, e1));
+    test_assert( ecs_get_type(world, e1) != NULL );
+    test_int( ecs_get_type(world, e1)->count, 0 );
 
     test_assert( !ecs_has(world, e2, Position));
     test_assert( !ecs_has(world, e2, Velocity));
-    test_assert( !ecs_get_type(world, e2));
+    test_assert( ecs_get_type(world, e2) != NULL );
+    test_int( ecs_get_type(world, e2)->count, 0 );
 
     test_assert( !ecs_has(world, e3, Position));
     test_assert( !ecs_has(world, e3, Velocity));
@@ -1825,7 +1836,8 @@ void SingleThreadStaging_remove_after_set(void) {
     for (i = 0; i < ctx.entity_count; i ++) {
         test_assert(ctx.new_entities[i] != 0);
         test_assert( !ecs_has(world, ctx.new_entities[i], Position));
-        test_assert( !ecs_get_type(world, ctx.new_entities[i]));
+        test_assert( ecs_get_type(world, ctx.new_entities[i]) != NULL );
+        test_int( ecs_get_type(world, ctx.new_entities[i])->count, 0 );
     }
 
     ecs_fini(world);
@@ -1840,7 +1852,8 @@ void Delete_after_set(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = ecs_new(it->world);
-        test_assert( !ecs_get_type(it->world, e));
+        test_assert( ecs_get_type(it->world, e) != NULL );
+        test_int( ecs_get_type(it->world, e)->count, 0 );
 
         ecs_set(it->world, e, Position, {10 + e, 20 + e});
         ecs_delete(it->world, e);
