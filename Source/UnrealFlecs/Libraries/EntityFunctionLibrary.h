@@ -16,6 +16,12 @@ class UNREALFLECS_API UEntityFunctionLibrary final : public UBlueprintFunctionLi
 
 public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
+    static FORCEINLINE FFlecsId MakePairId(const FFlecsId First, const FFlecsId Second)
+    {
+        return FFlecsId::MakePair(First, Second);
+    }
+    
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
     static FORCEINLINE bool IsEntityFromObject(UObject* Object)
     {
         if (!IsValid(Object))

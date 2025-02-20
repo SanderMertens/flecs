@@ -7,8 +7,8 @@
 #include "Framework/Notifications/NotificationManager.h"
 #include "General/FlecsPrimaryDataAsset.h"
 #include "Logs/FlecsEditorCategory.h"
+#include "Widgets/EntityHandle/FlecsIdCustomization.h"
 #include "Widgets/EntityHandle/FlecsIdPinFactory.h"
-#include "Widgets/EntityHandle/FlecsIdPropertyEditor.h"
 #include "Widgets/Notifications/SNotificationList.h"
 
 #define LOCTEXT_NAMESPACE "FUnrealFlecsEditorModule"
@@ -34,7 +34,7 @@ void FUnrealFlecsEditorModule::StartupModule()
 	PropertyEditorModule.NotifyCustomizationModuleChanged();
 	
 	 FlecsIdPinFactory = MakeShared<FFlecsIdPinFactory>();
-	 //FEdGraphUtilities::RegisterVisualPinFactory(FlecsIdPinFactory);
+	 FEdGraphUtilities::RegisterVisualPinFactory(FlecsIdPinFactory);
 }
 
 void FUnrealFlecsEditorModule::ShutdownModule()
@@ -49,8 +49,8 @@ void FUnrealFlecsEditorModule::ShutdownModule()
 	
 	 if (FlecsIdPinFactory.IsValid())
 	 {
-	 	//FEdGraphUtilities::UnregisterVisualPinFactory(FlecsIdPinFactory);
-	 	//FlecsIdPinFactory.Reset();
+	 	FEdGraphUtilities::UnregisterVisualPinFactory(FlecsIdPinFactory);
+	 	FlecsIdPinFactory.Reset();
 	 }
 	
 	FUnrealFlecsEditorStyle::Shutdown();

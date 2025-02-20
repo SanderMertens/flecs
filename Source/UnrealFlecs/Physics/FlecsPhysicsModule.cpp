@@ -47,8 +47,7 @@ void UFlecsPhysicsModule::WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWor
 	solid_check(Scene);
 
 	InWorld->RegisterModuleDependency<UFlecsTickerModule>
-		(this,
-			[this](
+		(this, [this](
 				MAYBE_UNUSED UFlecsTickerModule* InModuleObject,
 				UFlecsWorld* InFlecsWorld,
 				MAYBE_UNUSED FFlecsEntityHandle& InTickerEntity)

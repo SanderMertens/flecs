@@ -23,6 +23,11 @@ struct UNREALFLECS_API FFlecsId
         return FFlecsId(ecs_pair(InFirst, InSecond));
     }
 
+    FORCEINLINE constexpr NO_DISCARD static FFlecsId Null()
+    {
+        return FFlecsId(flecs::entity::null().id());
+    }
+
 public:
     FORCEINLINE FFlecsId() = default;
 
@@ -136,6 +141,27 @@ public:
     {
         return FString::Printf(TEXT("Index: %d, Generation: %d"), GetIndex(), GetGeneration());
     }
+
+    FORCEINLINE bool ImportTextItem(const TCHAR*& Buffer, int32 PortFlags, UObject* Parent, FOutputDevice* ErrorText)
+    {
+        uint64 TempId = 0;
+        
+        if LIKELY_IF(FParse::Value(Buffer, TEXT("FlecsId="), TempId))
+        {
+            Id = TempId;
+            return true;
+        }
+
+        return false;
+    }
+
+    FORCEINLINE bool ExportTextItem(FString& ValueStr, const FFlecsId& DefaultValue,
+        UObject* Parent, int32 PortFlags, UObject* ExportRootScope) const
+    {
+        ValueStr = FString::Printf(TEXT("FlecsId=%llu"), Id);
+        return true;
+    }
+
     
     UPROPERTY()
     uint64 Id = 0;
@@ -149,6 +175,8 @@ struct TStructOpsTypeTraits<FFlecsId> : public TStructOpsTypeTraitsBase2<FFlecsI
     {
         WithCopy = true,
         WithIdenticalViaEquality = true,
+        WithImportTextItem = true,
+        WithExportTextItem = true,
     }; // enum
 }; // struct TStructOpsTypeTraits<FFlecsId>
 
