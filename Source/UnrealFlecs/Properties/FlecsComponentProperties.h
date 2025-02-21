@@ -41,7 +41,8 @@ public:
 
 	FORCEINLINE void RegisterComponentProperties(const std::string& Name,
 		UScriptStruct* Struct,
-		const uint32 Size, const uint16 Alignment, const UnrealFlecs::FlecsComponentFunctionPtr& RegistrationFunction)
+		const uint32 Size, const uint16 Alignment,
+		const UnrealFlecs::FlecsComponentFunctionPtr& RegistrationFunction)
 	{
 		UNLOG_CATEGORY_SCOPED(LogFlecsComponentProperties);
 		
@@ -68,8 +69,8 @@ public:
 	}
 	
 	robin_hood::unordered_flat_map<std::string, FFlecsComponentProperties> ComponentProperties;
-
 	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
+	
 }; // struct FFlecsComponentPropertiesRegistry
 
 #define REGISTER_FLECS_COMPONENT(Name, RegistrationFunction) \

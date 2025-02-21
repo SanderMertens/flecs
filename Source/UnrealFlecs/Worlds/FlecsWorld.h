@@ -1737,7 +1737,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	UFlecsWorldSubsystem* GetContext() const;
 
-	FORCEINLINE FFlecsTypeMapComponent* GetTypeMapComponent() const
+	FORCEINLINE NO_DISCARD FFlecsTypeMapComponent* GetTypeMapComponent() const
 	{
 		return static_cast<FFlecsTypeMapComponent*>(World.get_binding_ctx());
 	}
