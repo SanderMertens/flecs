@@ -3230,7 +3230,7 @@ ecs_record_t* flecs_access_begin(
         return NULL;
     }
 
-    int32_t count = ecs_os_ainc(&table->_->lock);
+    int32_t count = ecs_os_ainc(&table->lock);
     (void)count;
     if (write) {
         ecs_check(count == 1, ECS_ACCESS_VIOLATION, NULL);
@@ -3249,7 +3249,7 @@ void flecs_access_end(
     ecs_check(ecs_os_has_threading(), ECS_MISSING_OS_API, NULL);
     ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(r->table != NULL, ECS_INVALID_PARAMETER, NULL);
-    int32_t count = ecs_os_adec(&r->table->_->lock);
+    int32_t count = ecs_os_adec(&r->table->lock);
     (void)count;
     if (write) {
         ecs_check(count == 0, ECS_ACCESS_VIOLATION, NULL);
