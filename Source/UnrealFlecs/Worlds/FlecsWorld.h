@@ -575,17 +575,17 @@ public:
 	template <typename FunctionType>
 	void ForEach(FunctionType&& Function) const
 	{
-		World.each(Function);
+		World.each(std::forward<FunctionType>(Function));
 	}
 
 	template <typename T, typename FunctionType>
 	void ForEach(FunctionType&& Function) const
 	{
-		World.each<T>(Function);
+		World.each<T>(std::forward<FunctionType>(Function));
 	}
 
 	template <typename FunctionType>
-	void ForEach(const FFlecsId& InTermId, FunctionType&& Function) const
+	void ForEach(const FFlecsId& InTermId, const FunctionType& Function) const
 	{
 		World.each(InTermId, Function);
 	}
@@ -1029,7 +1029,7 @@ public:
 	template <typename FunctionType>
 	void ForEachChild(FunctionType&& Function) const
 	{
-		World.children(Function);
+		World.children(std::forward<FunctionType>(Function));
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
@@ -1691,13 +1691,13 @@ public:
 	}
 
 	template <typename T, typename FunctionType>
-	void Scope(FunctionType&& Function) const
+	void Scope(const FunctionType& Function) const
 	{
 		World.scope<T>(std::forward<FunctionType>(Function));
 	}
 
 	template <typename FunctionType>
-	void Scope(FFlecsId InId, FunctionType&& Function) const
+	void Scope(FFlecsId InId, const FunctionType& Function) const
 	{
 		World.scope(InId, Function);
 	}
@@ -1707,7 +1707,7 @@ public:
 	{
 		const flecs::entity OldScope = World.set_scope(0);
 
-		std::invoke(Function);
+		std::invoke(std::forward<FunctionType>(Function));
 
 		World.set_scope(OldScope);
 	}
