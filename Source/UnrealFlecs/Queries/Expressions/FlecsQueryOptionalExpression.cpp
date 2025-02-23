@@ -4,7 +4,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsQueryOptionalExpression)
 
-FFlecsQueryOptionalExpression::FFlecsQueryOptionalExpression() : Super(false)
+FFlecsQueryOptionalExpression::FFlecsQueryOptionalExpression() : Super(false /* bInAllowsChildExpressions */)
 {
 }
 

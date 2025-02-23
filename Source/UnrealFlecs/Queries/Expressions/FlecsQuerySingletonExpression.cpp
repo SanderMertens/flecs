@@ -4,7 +4,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsQuerySingletonExpression)
 
-FFlecsQuerySingletonExpression::FFlecsQuerySingletonExpression() : Super(false)
+FFlecsQuerySingletonExpression::FFlecsQuerySingletonExpression() : Super(false /* bInAllowsChildExpressions */)
 {
 }
 

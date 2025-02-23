@@ -5,7 +5,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsQueryTermExpression)
 
-FFlecsQueryTermExpression::FFlecsQueryTermExpression() : Super(true)
+FFlecsQueryTermExpression::FFlecsQueryTermExpression() : Super(true /* bInAllowsChildExpressions */)
 {
 }
 

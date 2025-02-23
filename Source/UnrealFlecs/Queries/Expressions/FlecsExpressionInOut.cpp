@@ -4,7 +4,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsExpressionInOut)
 
-FFlecsExpressionInOut::FFlecsExpressionInOut() : Super(false)
+FFlecsExpressionInOut::FFlecsExpressionInOut() : Super(false /* bInAllowsChildExpressions */)
 {
 }
 
