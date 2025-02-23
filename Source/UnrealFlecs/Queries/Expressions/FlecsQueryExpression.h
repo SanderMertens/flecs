@@ -51,4 +51,4 @@ struct TStructOpsTypeTraits<FFlecsQueryExpression> : public TStructOpsTypeTraits
 }; // struct TStructOpsTypeTraits<FFlecsQueryExpression>
 
 template <typename T>
-concept TQueryExpressionConcept = std::is_base_of_v<FFlecsQueryExpression, T>;
+concept TQueryExpressionConcept = std::is_base_of<FFlecsQueryExpression, T>::value;

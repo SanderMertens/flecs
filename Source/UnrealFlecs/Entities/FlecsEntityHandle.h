@@ -1250,7 +1250,7 @@ public:
 
 	void AddCollection(UObject* Collection) const;
 	
-private:
+protected:
 	flecs::entity Entity;
 	
 	NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;

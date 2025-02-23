@@ -851,7 +851,7 @@ void flecs_table_dtor_all(
     /* If table has components with destructors, iterate component columns */
     if (table->flags & EcsTableHasDtors) {
         /* Throw up a lock just to be sure */
-        table->lock = true;
+        table->_->lock = true;
 
         /* Run on_remove callbacks first before destructing components */
         for (c = 0; c < column_count; c++) {
@@ -890,7 +890,7 @@ void flecs_table_dtor_all(
             }
         }
 
-        table->lock = false;
+        table->_->lock = false;
 
     /* If table does not have destructors, just update entity index */
     } else {
@@ -926,7 +926,7 @@ void flecs_table_fini_data(
     bool is_delete,
     bool deallocate)
 {
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
 
     if (do_on_remove) {
         flecs_table_notify_on_remove(world, table);        
@@ -1044,7 +1044,7 @@ void flecs_table_fini(
     flecs_increment_table_version(world, table);
 
     bool is_root = table == &world->store.root;
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
     ecs_assert(is_root || table->id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(is_root || flecs_sparse_is_alive(&world->store.tables, table->id),
         ECS_INTERNAL_ERROR, NULL);
@@ -1118,7 +1118,7 @@ void flecs_table_reset(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
     flecs_table_clear_edges(world, table);
 }
 
@@ -1161,7 +1161,7 @@ void flecs_table_mark_dirty(
     ecs_table_t *table,
     ecs_entity_t component)
 {
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (table->dirty_state) {
@@ -1467,7 +1467,7 @@ int32_t flecs_table_append(
     bool on_add)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
 
     flecs_table_check_sanity(world, table);
 
@@ -1577,7 +1577,7 @@ void flecs_table_delete(
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
 
     flecs_table_check_sanity(world, table);
 
@@ -1735,8 +1735,8 @@ void flecs_table_move(
 {
     ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!dst_table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
-    ecs_assert(!src_table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!dst_table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!src_table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
 
     ecs_assert(src_index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(dst_index >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -1844,7 +1844,7 @@ int32_t flecs_table_appendn(
     int32_t to_add,
     const ecs_entity_t *ids)
 {
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
 
     flecs_table_check_sanity(world, table);
     int32_t cur_count = ecs_table_count(table);
@@ -1861,7 +1861,7 @@ bool flecs_table_shrink(
     ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
     (void)world;
 
     flecs_table_check_sanity(world, table);
@@ -1921,7 +1921,7 @@ void flecs_table_swap(
 {    
     (void)world;
 
-    ecs_assert(!table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
     ecs_assert(row_1 >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_2 >= 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -2194,8 +2194,8 @@ void flecs_table_merge(
 {
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!src_table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
-    ecs_assert(!dst_table->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!src_table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
+    ecs_assert(!dst_table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
 
     flecs_table_check_sanity(world, src_table);
     flecs_table_check_sanity(world, dst_table);
@@ -2299,7 +2299,7 @@ void ecs_table_lock(
 {
     if (table) {
         if (flecs_poly_is(world, ecs_world_t) && !(world->flags & EcsWorldReadonly)) {
-            table->lock ++;
+            table->_->lock ++;
         }
     }
 }
@@ -2310,8 +2310,8 @@ void ecs_table_unlock(
 {
     if (table) {
         if (flecs_poly_is(world, ecs_world_t) && !(world->flags & EcsWorldReadonly)) {
-            table->lock --;
-            ecs_assert(table->lock >= 0, ECS_INVALID_OPERATION, 
+            table->_->lock --;
+            ecs_assert(table->_->lock >= 0, ECS_INVALID_OPERATION, 
                 "table_unlock called more often than table_lock");
         }
     }

@@ -75,6 +75,7 @@ typedef struct ecs_table_event_t {
 /** Infrequently accessed data not stored inline in ecs_table_t */
 typedef struct ecs_table__t {
     uint64_t hash;                   /* Type hash */
+    int32_t lock;                    /* Prevents modifications */
     int32_t traversable_count;       /* Traversable relationship targets in table */
     uint16_t generation;             /* Used for table cleanup */
     int16_t record_count;            /* Table record count including wildcards */
@@ -132,7 +133,6 @@ struct ecs_table_t {
                                       *  - 0..count(T):        type index -> column
                                       *  - count(T)..count(C): column -> type index
                                       */
-    int32_t lock;                    /* Prevents modifications */
 
     ecs_table__t *_;                 /* Infrequently accessed table metadata */
 };
