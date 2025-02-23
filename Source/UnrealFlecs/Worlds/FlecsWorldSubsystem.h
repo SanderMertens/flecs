@@ -27,9 +27,9 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "FlecsWorldSubsystem.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldCreated, UFlecsWorld*);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldBeginPlay, UWorld*);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldDestroyed, UFlecsWorld*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldCreated, UFlecsWorld*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldBeginPlay, UWorld*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldDestroyed, UFlecsWorld*);
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsystem
@@ -253,7 +253,7 @@ public:
 			|| WorldType == EWorldType::GameRPC;
 	}
 
-	void ListenBeginPlay(const FOnWorldBeginPlay::FDelegate& Delegate)
+	void ListenBeginPlay(const FFlecsOnWorldBeginPlay::FDelegate& Delegate)
 	{
 		if UNLIKELY_IF(!ensureAlways(IsValid(DefaultWorld)))
 		{
@@ -270,9 +270,9 @@ public:
 		}
 	}
 
-	FOnWorldCreated OnWorldCreatedDelegate;
-	FOnWorldBeginPlay OnWorldBeginPlayDelegate;
-	FOnWorldDestroyed OnWorldDestroyedDelegate;
+	FFlecsOnWorldCreated OnWorldCreatedDelegate;
+	FFlecsOnWorldBeginPlay OnWorldBeginPlayDelegate;
+	FFlecsOnWorldDestroyed OnWorldDestroyedDelegate;
 
 protected:
 	UPROPERTY()

@@ -45,7 +45,7 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 	UFlecsWorldSubsystem* WorldSubsystem = GameWorld->GetSubsystem<UFlecsWorldSubsystem>();
 	
 	WorldSubsystem->ListenBeginPlay(
-		FOnWorldBeginPlay::FDelegate::CreateLambda([this, FlecsWorld](UWorld* InGameWorld)
+		FFlecsOnWorldBeginPlay::FDelegate::CreateLambda([this, FlecsWorld](UWorld* InGameWorld)
 	{
 		WorldBeginPlay(FlecsWorld, InGameWorld);
 		Execute_BP_WorldBeginPlay(_getUObject(), FlecsWorld, InGameWorld);
