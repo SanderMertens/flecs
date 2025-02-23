@@ -320,6 +320,10 @@ struct type<T, if_t< is_pair<T>::value >>
 struct untyped_component : entity {
     using entity::entity;
 
+    untyped_component() : entity() { }
+    explicit untyped_component(flecs::world_t *world, flecs::entity_t id) : entity(world, id) { }
+    explicit untyped_component(flecs::entity_t id) : entity(id) { }
+
     explicit untyped_component(flecs::world_t *world, const char *name = nullptr)
     {
         world_ = world;
