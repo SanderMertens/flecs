@@ -108,8 +108,11 @@ public:
 		{
 			return;
 		}
-		
-		const bool bResult = DefaultWorld->Progress(DeltaTime);
+
+		#if WITH_EDITOR
+		const bool bResult =
+		#endif // WITH_EDITOR
+			DefaultWorld->Progress(DeltaTime);
 
 		#if WITH_EDITOR
 
