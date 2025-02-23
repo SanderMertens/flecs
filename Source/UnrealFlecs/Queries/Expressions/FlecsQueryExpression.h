@@ -24,7 +24,8 @@ protected:
 public:
 	FFlecsQueryExpression() = default;
 	virtual ~FFlecsQueryExpression() = default;
-	
+
+	// We should only call the Super when we have child expressions
 	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const;
 
 	#if WITH_EDITORONLY_DATA
