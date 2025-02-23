@@ -258,8 +258,7 @@ public:
 				const FString StructSymbol = EntityHandle.GetSymbol();
 				const char* StructSymbolCStr = StringCast<char>(*StructSymbol).Get();
 				
-				if (FFlecsComponentPropertiesRegistry::Get()
-					.ContainsComponentProperties(StructSymbolCStr))
+				if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(StructSymbolCStr))
 				{
 					const flecs::untyped_component InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
 						
@@ -312,7 +311,7 @@ public:
 			.yield_existing()
 			.each([this](flecs::iter Iter, size_t IterIndex)
 			{
-				FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, IterIndex);
+				const FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, IterIndex);
 				
 				UN_LOGF(LogFlecsWorld, Log, "Module component %s added",
                     *InUObjectComponent.GetObjectChecked()->GetName());
@@ -576,19 +575,19 @@ public:
 	template <typename FunctionType>
 	void ForEach(FunctionType&& Function) const
 	{
-		World.each(std::forward<FunctionType>(Function));
+		World.each(Function);
 	}
 
 	template <typename T, typename FunctionType>
 	void ForEach(FunctionType&& Function) const
 	{
-		World.each<T>(std::forward<FunctionType>(Function));
+		World.each<T>(Function);
 	}
 
 	template <typename FunctionType>
 	void ForEach(const FFlecsId& InTermId, FunctionType&& Function) const
 	{
-		World.each(InTermId, std::forward<FunctionType>(Function));
+		World.each(InTermId, Function);
 	}
 
 	template <typename T>
@@ -1030,7 +1029,7 @@ public:
 	template <typename FunctionType>
 	void ForEachChild(FunctionType&& Function) const
 	{
-		World.children(std::forward<FunctionType>(Function));
+		World.children(Function);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
@@ -1700,7 +1699,7 @@ public:
 	template <typename FunctionType>
 	void Scope(FFlecsId InId, FunctionType&& Function) const
 	{
-		World.scope(InId, std::forward<FunctionType>(Function));
+		World.scope(InId, Function);
 	}
 
 	template <typename FunctionType>
@@ -1708,7 +1707,7 @@ public:
 	{
 		const flecs::entity OldScope = World.set_scope(0);
 
-		std::invoke(std::forward<FunctionType>(Function));
+		std::invoke(Function);
 
 		World.set_scope(OldScope);
 	}
