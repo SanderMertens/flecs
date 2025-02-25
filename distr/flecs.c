@@ -28633,6 +28633,14 @@ int64_t ecs_block_allocator_free_count = 0;
 
 #ifndef FLECS_USE_OS_ALLOC
 
+/* Bypass block allocator if chunks per block is lower than the configured 
+ * value. This prevents holding on to large memory chunks when they're freed,
+ * which can add up especially in scenarios where an array is reallocated 
+ * several times to a large size. 
+ * A value of 1 seems to yield the best results. Higher values only impact lower
+ * allocation sizes, which are more likely to be reused. */
+#define FLECS_MIN_CHUNKS_PER_BLOCK 1
+
 static
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
@@ -28766,6 +28774,10 @@ void* flecs_balloc_w_dbg_info(
 
     if (!ba) return NULL;
 
+    if (ba->chunks_per_block <= FLECS_MIN_CHUNKS_PER_BLOCK) {
+        return ecs_os_malloc(ba->data_size);
+    }
+
     if (!ba->head) {
         ba->head = flecs_balloc_block(ba);
         ecs_assert(ba->head != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -28840,7 +28852,13 @@ void flecs_bfree_w_dbg_info(
         ecs_assert(memory == NULL, ECS_INTERNAL_ERROR, NULL);
         return;
     }
+
     if (memory == NULL) {
+        return;
+    }
+
+    if (ba->chunks_per_block <= FLECS_MIN_CHUNKS_PER_BLOCK) {
+        ecs_os_free(memory);
         return;
     }
 
