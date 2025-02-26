@@ -22,7 +22,7 @@ ecs_id_record_elem_t* flecs_id_record_elem(
     ecs_id_record_elem_t *list,
     ecs_id_record_t *idr)
 {
-    return ECS_OFFSET(idr, (uintptr_t)list - (uintptr_t)head);
+    return ECS_OFFSET(idr->pair, (uintptr_t)list - (uintptr_t)head->pair);
 }
 
 static
@@ -72,17 +72,20 @@ void flecs_insert_id_elem(
     }
     ecs_assert(widr != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_pair_id_record_t *pair = idr->pair;
+    ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
         ecs_assert(ECS_PAIR_FIRST(wildcard) != EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_id_record_elem_insert(widr, idr, &idr->first);
+        flecs_id_record_elem_insert(widr, idr, &pair->first);
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_id_record_elem_insert(widr, idr, &idr->second);
+        flecs_id_record_elem_insert(widr, idr, &pair->second);
 
         if (idr->flags & EcsIdTraversable) {
-            flecs_id_record_elem_insert(widr, idr, &idr->trav);
+            flecs_id_record_elem_insert(widr, idr, &pair->trav);
         }
     }
 }
@@ -94,17 +97,20 @@ void flecs_remove_id_elem(
 {
     ecs_assert(ecs_id_is_wildcard(wildcard), ECS_INTERNAL_ERROR, NULL);
 
+    ecs_pair_id_record_t *pair = idr->pair;
+    ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
         ecs_assert(ECS_PAIR_FIRST(wildcard) != EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_id_record_elem_remove(idr, &idr->first);
+        flecs_id_record_elem_remove(idr, &pair->first);
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_id_record_elem_remove(idr, &idr->second);
+        flecs_id_record_elem_remove(idr, &pair->second);
 
         if (idr->flags & EcsIdTraversable) {
-            flecs_id_record_elem_remove(idr, &idr->trav);
+            flecs_id_record_elem_remove(idr, &pair->trav);
         }
     }
 }
@@ -204,14 +210,16 @@ ecs_id_record_t* flecs_id_record_new(
 
     idr->id = id;
     idr->refcount = 1;
-    idr->reachable.current = -1;
 
     bool is_wildcard = ecs_id_is_wildcard(id);
     bool is_pair = ECS_IS_PAIR(id);
 
     ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
     if (is_pair) {
-        // rel = ecs_pair_first(world, id);
+        idr->pair = flecs_bcalloc_w_dbg_info(
+            &world->allocators.pair_id_record, "ecs_pair_id_record_t");
+        idr->pair->reachable.current = -1;
+
         rel = ECS_PAIR_FIRST(id);
         rel = flecs_entities_get_alive(world, rel);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
@@ -299,7 +307,7 @@ ecs_id_record_t* flecs_id_record_new(
             /* Inherit flags from (relationship, *) record */
             ecs_id_record_t *idr_r = flecs_id_record_ensure(
                 world, ecs_pair(rel, EcsWildcard));
-            idr->parent = idr_r;
+            idr->pair->parent = idr_r;
             idr->flags = idr_r->flags;
 
             /* If pair is not a wildcard, append it to wildcard lists. These 
@@ -444,20 +452,20 @@ void flecs_id_record_free(
              * wildcard are also empty, so release them */
             if (ECS_PAIR_FIRST(id) == EcsWildcard) {
                 /* Iterate (*, Target) list */
-                ecs_id_record_t *cur, *next = idr->second.next;
+                ecs_id_record_t *cur, *next = idr->pair->second.next;
                 while ((cur = next)) {
                     flecs_id_record_assert_empty(cur);
-                    next = cur->second.next;
+                    next = cur->pair->second.next;
                     flecs_id_record_release(world, cur);
                 }
             } else {
                 /* Iterate (Relationship, *) list */
                 ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
                     ECS_INTERNAL_ERROR, NULL);
-                ecs_id_record_t *cur, *next = idr->first.next;
+                ecs_id_record_t *cur, *next = idr->pair->first.next;
                 while ((cur = next)) {
                     flecs_id_record_assert_empty(cur);
-                    next = cur->first.next;
+                    next = cur->pair->first.next;
                     flecs_id_record_release(world, cur);
                 }
             }
@@ -477,8 +485,14 @@ void flecs_id_record_free(
 
     /* Unregister the id record from the world & free resources */
     ecs_table_cache_fini(&idr->cache);
-    flecs_name_index_free(idr->name_index);
-    ecs_vec_fini_t(&world->allocator, &idr->reachable.ids, ecs_reachable_elem_t);
+
+    if (idr->pair) {
+        flecs_name_index_free(idr->pair->name_index);
+        ecs_vec_fini_t(&world->allocator, &idr->pair->reachable.ids, 
+            ecs_reachable_elem_t);
+        flecs_bfree_w_dbg_info(&world->allocators.pair_id_record, 
+                idr->pair, "ecs_pair_id_record_t");
+    }
 
     ecs_id_t hash = flecs_id_record_hash(id);
     if (hash >= FLECS_HI_ID_RECORD_ID) {
@@ -491,7 +505,8 @@ void flecs_id_record_free(
     ecs_os_free(idr->str);
 #endif
 
-    flecs_bfree(&world->allocators.id_record, idr);
+    flecs_bfree_w_dbg_info(&world->allocators.id_record, 
+        idr, "ecs_id_record_t");
 
     if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);
@@ -601,9 +616,11 @@ ecs_hashmap_t* flecs_id_record_name_index_ensure(
     ecs_world_t *world,
     ecs_id_record_t *idr)
 {
-    ecs_hashmap_t *map = idr->name_index;
+    ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_hashmap_t *map = idr->pair->name_index;
     if (!map) {
-        map = idr->name_index = flecs_name_index_new(world, &world->allocator);
+        map = idr->pair->name_index = 
+            flecs_name_index_new(world, &world->allocator);
     }
 
     return map;
@@ -632,7 +649,7 @@ ecs_hashmap_t* flecs_id_name_index_get(
         return NULL;
     }
 
-    return idr->name_index;
+    return idr->pair->name_index;
 }
 
 ecs_table_record_t* flecs_table_record_get(
@@ -745,4 +762,28 @@ ecs_flags32_t flecs_id_flags_get(
     }
 
     return result;
+}
+
+/* Return next (R, *) record */
+ecs_id_record_t* flecs_id_record_first_next(
+    ecs_id_record_t *idr)
+{
+    ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    return idr->pair->first.next;
+}
+
+/* Return next (*, T) record */
+ecs_id_record_t* flecs_id_record_second_next(
+    ecs_id_record_t *idr)
+{
+    ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    return idr->pair->second.next;
+}
+
+/* Return next traversable (*, T) record */
+ecs_id_record_t* flecs_id_record_trav_next(
+    ecs_id_record_t *idr)
+{
+    ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    return idr->pair->trav.next;
 }

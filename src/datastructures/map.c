@@ -40,7 +40,7 @@ int32_t flecs_map_get_bucket_count(
 
 /* Get bucket shift amount for a given bucket count */
 static
-uint8_t flecs_map_get_bucket_shift (
+uint8_t flecs_map_get_bucket_shift(
     int32_t bucket_count)
 {
     return (uint8_t)(64u - flecs_log2((uint32_t)bucket_count));
@@ -63,7 +63,7 @@ ecs_bucket_t* flecs_map_get_bucket(
     ecs_map_key_t key)
 {
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
-    int32_t bucket_id = flecs_map_get_bucket_index(map->bucket_shift, key);
+    int32_t bucket_id = flecs_map_get_bucket_index((uint16_t)map->bucket_shift, key);
     ecs_assert(bucket_id < map->bucket_count, ECS_INTERNAL_ERROR, NULL);
     return &map->buckets[bucket_id];
 }
@@ -153,7 +153,7 @@ void flecs_map_rehash(
 
     map->buckets = ECS_MAP_CALLOC_N(map->allocator, ecs_bucket_t, count);
     map->bucket_count = count;
-    map->bucket_shift = flecs_map_get_bucket_shift(count);
+    map->bucket_shift = flecs_map_get_bucket_shift(count) & 0x3fu;
 
     /* Remap old bucket entries to new buckets */
     for (b = buckets; b < end; b++) {
@@ -161,7 +161,7 @@ void flecs_map_rehash(
         for (entry = b->first; entry;) {
             ecs_bucket_entry_t* next = entry->next;
             int32_t bucket_index = flecs_map_get_bucket_index(
-                map->bucket_shift, entry->key);
+                (uint16_t)map->bucket_shift, entry->key);
             ecs_bucket_t *bucket = &map->buckets[bucket_index];
             entry->next = bucket->first;
             bucket->first = entry;

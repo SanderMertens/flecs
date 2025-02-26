@@ -403,7 +403,7 @@ static void UpdateCountTargets(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_count_targets_metric_ctx_t *ctx = m[i].ctx;
         ecs_id_record_t *cur = ctx->idr;
-        while ((cur = cur->first.next)) {
+        while ((cur = flecs_id_record_first_next(cur))) {
             ecs_id_t id = cur->id;
             ecs_entity_t *mi = ecs_map_ensure(&ctx->targets, id);
             if (!mi[0]) {

@@ -159,7 +159,7 @@ int flecs_json_serialize_refs(
     if (idr) {
         if (relationship == EcsWildcard) {
             ecs_id_record_t *cur = idr;
-            while ((cur = cur->second.next)) {
+            while ((cur = flecs_id_record_second_next(cur))) {
                 flecs_json_serialize_refs_idr(world, buf, cur);
             }
         } else {

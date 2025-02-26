@@ -77,16 +77,16 @@ typedef struct ecs_table__t {
     uint64_t hash;                   /* Type hash */
     int32_t lock;                    /* Prevents modifications */
     int32_t traversable_count;       /* Traversable relationship targets in table */
+
     uint16_t generation;             /* Used for table cleanup */
     int16_t record_count;            /* Table record count including wildcards */
-    
-    struct ecs_table_record_t *records; /* Array with table records */
-    ecs_hashmap_t *name_index;       /* Cached pointer to name index */
 
-    ecs_bitset_t *bs_columns;        /* Bitset columns */
     int16_t bs_count;
     int16_t bs_offset;
-    int16_t ft_offset;
+    ecs_bitset_t *bs_columns;        /* Bitset columns */
+
+    struct ecs_table_record_t *records; /* Array with table records */
+    ecs_hashmap_t *name_index;       /* Cached pointer to name index */
 
 #ifdef FLECS_DEBUG_INFO
     /* Fields used for debug visualization */
