@@ -510,7 +510,8 @@ void flecs_table_init(
                     childof_idr = p_idr;
                 }
 
-                idr = p_idr->parent; /* (R, *) */
+                ecs_assert(p_idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+                idr = p_idr->pair->parent; /* (R, *) */
                 ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 tr = ecs_vec_append_t(a, records, ecs_table_record_t);

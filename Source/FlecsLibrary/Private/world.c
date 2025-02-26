@@ -762,6 +762,7 @@ void flecs_world_allocators_init(
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
     flecs_ballocator_init_t(&a->id_record, ecs_id_record_t);
+    flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_id_record_t);
     flecs_ballocator_init_n(&a->id_record_chunk, ecs_id_record_t, FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
@@ -782,6 +783,7 @@ void flecs_world_allocators_fini(
     flecs_ballocator_fini(&a->graph_edge_lo);
     flecs_ballocator_fini(&a->graph_edge);
     flecs_ballocator_fini(&a->id_record);
+    flecs_ballocator_fini(&a->pair_id_record);
     flecs_ballocator_fini(&a->id_record_chunk);
     flecs_ballocator_fini(&a->table_diff);
     flecs_ballocator_fini(&a->sparse_chunk);
@@ -1926,7 +1928,7 @@ bool flecs_type_info_init_id(
         {
             changed |= flecs_id_record_set_type_info(world, idr, NULL);
         }
-    } while ((idr = idr->first.next));
+    } while ((idr = flecs_id_record_first_next(idr)));
 
     /* All non-tag id records with component as object inherit type info,
      * if relationship doesn't have type info */
@@ -1935,7 +1937,7 @@ bool flecs_type_info_init_id(
         if (!(idr->flags & EcsIdTag) && !idr->type_info) {
             changed |= flecs_id_record_set_type_info(world, idr, ti);
         }
-    } while ((idr = idr->first.next));
+    } while ((idr = flecs_id_record_first_next(idr)));
 
     /* Type info of (*, component) should always point to component */
     ecs_assert(flecs_id_record_get(world, ecs_pair(EcsWildcard, component))->

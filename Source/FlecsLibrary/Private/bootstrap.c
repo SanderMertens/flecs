@@ -253,7 +253,7 @@ void flecs_register_id_flag_for_relation(
             idr = flecs_id_record_ensure(world, ecs_pair(e, EcsWildcard));
             do {
                 changed |= flecs_set_id_flag(world, idr, flag);
-            } while ((idr = idr->first.next));
+            } while ((idr = flecs_id_record_first_next(idr)));
             if (entity_flag) flecs_add_flag(world, e, entity_flag);
         } else if (event == EcsOnRemove) {
             ecs_id_record_t *idr = flecs_id_record_get(world, e);
@@ -262,7 +262,7 @@ void flecs_register_id_flag_for_relation(
             if (idr) {
                 do {
                     changed |= flecs_unset_id_flag(idr, not_flag);
-                } while ((idr = idr->first.next));
+                } while ((idr = flecs_id_record_first_next(idr)));
             }
         }
 
@@ -310,7 +310,7 @@ void flecs_register_tag(ecs_iter_t *it) {
                     flecs_assert_relation_unused(world, e, EcsPairIsTag);
                 }
                 idr->type_info = NULL;
-            } while ((idr = idr->first.next));
+            } while ((idr = flecs_id_record_first_next(idr)));
         }
     }
 }

@@ -677,7 +677,7 @@ bool flecs_query_idsright(
 
 next:
     do {
-        cur = op_ctx->cur = op_ctx->cur->first.next;
+        cur = op_ctx->cur = flecs_id_record_first_next(op_ctx->cur);
     } while (cur && !cur->cache.tables.count); /* Skip empty ids */
 
     if (!cur) {
@@ -733,7 +733,7 @@ bool flecs_query_idsleft(
     }
 
     do {
-        cur = op_ctx->cur = op_ctx->cur->second.next;
+        cur = op_ctx->cur = flecs_id_record_second_next(op_ctx->cur);
     } while (cur && !cur->cache.tables.count); /* Skip empty ids */ 
 
     if (!cur) {
