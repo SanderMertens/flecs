@@ -230,13 +230,13 @@
 /** @def FLECS_LOW_FOOTPRINT
  * Set a number of constants to values that decrease memory footprint, at the
  * cost of decreased performance. */
-// #define FLECS_LOW_FOOTPRINT
+#define FLECS_LOW_FOOTPRINT
 #ifdef FLECS_LOW_FOOTPRINT
-#define FLECS_HI_COMPONENT_ID (16)
-#define FLECS_HI_ID_RECORD_ID (16)
-#define FLECS_SPARSE_PAGE_BITS (4)
-#define FLECS_ENTITY_PAGE_BITS (6)
-#define FLECS_USE_OS_ALLOC
+// #define FLECS_HI_COMPONENT_ID (8)
+// #define FLECS_HI_ID_RECORD_ID (16)
+// #define FLECS_SPARSE_PAGE_BITS (4)
+// #define FLECS_ENTITY_PAGE_BITS (6)
+// #define FLECS_USE_OS_ALLOC
 #endif
 
 /** @def FLECS_HI_COMPONENT_ID

@@ -232,13 +232,13 @@
 /** @def FLECS_LOW_FOOTPRINT
  * Set a number of constants to values that decrease memory footprint, at the
  * cost of decreased performance. */
-// #define FLECS_LOW_FOOTPRINT
+#define FLECS_LOW_FOOTPRINT
 #ifdef FLECS_LOW_FOOTPRINT
-#define FLECS_HI_COMPONENT_ID (16)
-#define FLECS_HI_ID_RECORD_ID (16)
-#define FLECS_SPARSE_PAGE_BITS (4)
-#define FLECS_ENTITY_PAGE_BITS (6)
-#define FLECS_USE_OS_ALLOC
+// #define FLECS_HI_COMPONENT_ID (8)
+// #define FLECS_HI_ID_RECORD_ID (16)
+// #define FLECS_SPARSE_PAGE_BITS (4)
+// #define FLECS_ENTITY_PAGE_BITS (6)
+// #define FLECS_USE_OS_ALLOC
 #endif
 
 /** @def FLECS_HI_COMPONENT_ID
@@ -1770,11 +1770,9 @@ typedef struct ecs_bucket_t {
 
 struct ecs_map_t {
     uint8_t bucket_shift;
-    bool shared_allocator;
     ecs_bucket_t *buckets;
     int32_t bucket_count;
     int32_t count;
-    struct ecs_block_allocator_t *entry_allocator;
     struct ecs_allocator_t *allocator;
 };
 

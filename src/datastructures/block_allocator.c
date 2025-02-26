@@ -152,11 +152,12 @@ void* flecs_balloc_w_dbg_info(
 {
     (void)type_name;
     void *result;
+
+    if (!ba) return NULL;
+
 #ifdef FLECS_USE_OS_ALLOC
     result = ecs_os_malloc(ba->data_size);
 #else
-
-    if (!ba) return NULL;
 
     if (ba->chunks_per_block <= FLECS_MIN_CHUNKS_PER_BLOCK) {
         return ecs_os_malloc(ba->data_size);

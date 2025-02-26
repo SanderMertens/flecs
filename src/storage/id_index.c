@@ -191,7 +191,8 @@ ecs_id_record_t* flecs_id_record_new(
 {
     ecs_id_record_t *idr, *idr_t = NULL;
     ecs_id_t hash = flecs_id_record_hash(id);
-    idr = flecs_bcalloc(&world->allocators.id_record);
+    idr = flecs_bcalloc_w_dbg_info(
+        &world->allocators.id_record, "ecs_id_record_t");
 
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         ecs_map_insert_ptr(&world->id_index_hi, hash, idr);

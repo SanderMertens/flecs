@@ -28768,11 +28768,12 @@ void* flecs_balloc_w_dbg_info(
 {
     (void)type_name;
     void *result;
+
+    if (!ba) return NULL;
+
 #ifdef FLECS_USE_OS_ALLOC
     result = ecs_os_malloc(ba->data_size);
 #else
-
-    if (!ba) return NULL;
 
     if (ba->chunks_per_block <= FLECS_MIN_CHUNKS_PER_BLOCK) {
         return ecs_os_malloc(ba->data_size);
@@ -29390,6 +29391,10 @@ void* flecs_hashmap_next_(
  * (element_count * ECS_LOAD_FACTOR) > bucket_count, bucket count is increased. */
 #define ECS_LOAD_FACTOR (12)
 #define ECS_BUCKET_END(b, c) ECS_ELEM_T(b, ecs_bucket_t, c)
+#define ECS_MAP_ALLOC(a, T) a ? flecs_alloc_t(a, T) : ecs_os_malloc_t(T)
+#define ECS_MAP_CALLOC_N(a, T, n) a ? flecs_calloc_n(a, T, n) : ecs_os_calloc_n(T, n)
+#define ECS_MAP_FREE(a, T, ptr) a ? flecs_free_t(a, T, ptr) : ecs_os_free(ptr)
+#define ECS_MAP_FREE_N(a, T, n, ptr) a ? flecs_free_n(a, T, n, ptr) : ecs_os_free(ptr)
 
 static
 uint8_t flecs_log2(uint32_t v) {
@@ -29446,11 +29451,11 @@ ecs_bucket_t* flecs_map_get_bucket(
 /* Add element to bucket */
 static
 ecs_map_val_t* flecs_map_bucket_add(
-    ecs_block_allocator_t *allocator,
+    ecs_allocator_t *a,
     ecs_bucket_t *bucket,
     ecs_map_key_t key)
 {
-    ecs_bucket_entry_t *new_entry = flecs_balloc(allocator);
+    ecs_bucket_entry_t *new_entry = ECS_MAP_ALLOC(a, ecs_bucket_entry_t);
     new_entry->key = key;
     new_entry->next = bucket->first;
     bucket->first = new_entry;
@@ -29473,7 +29478,7 @@ ecs_map_val_t flecs_map_bucket_remove(
                 next_holder = &(*next_holder)->next;
             }
             *next_holder = entry->next;
-            flecs_bfree(map->entry_allocator, entry);
+            ECS_MAP_FREE(map->allocator, ecs_bucket_entry_t, entry);
             map->count --;
             return value;
         }
@@ -29485,13 +29490,13 @@ ecs_map_val_t flecs_map_bucket_remove(
 /* Free contents of bucket */
 static
 void flecs_map_bucket_clear(
-    ecs_block_allocator_t *allocator,
+    ecs_allocator_t *allocator,
     ecs_bucket_t *bucket)
 {
     ecs_bucket_entry_t *entry = bucket->first;
     while(entry) {
         ecs_bucket_entry_t *next = entry->next;
-        flecs_bfree(allocator, entry);
+        ECS_MAP_FREE(allocator, ecs_bucket_entry_t, entry);
         entry = next;
     }
 }
@@ -29526,11 +29531,7 @@ void flecs_map_rehash(
     int32_t old_count = map->bucket_count;
     ecs_bucket_t *buckets = map->buckets, *b, *end = ECS_BUCKET_END(buckets, old_count);
 
-    if (map->allocator) {
-        map->buckets = flecs_calloc_n(map->allocator, ecs_bucket_t, count);
-    } else {
-        map->buckets = ecs_os_calloc_n(ecs_bucket_t, count);
-    }
+    map->buckets = ECS_MAP_CALLOC_N(map->allocator, ecs_bucket_t, count);
     map->bucket_count = count;
     map->bucket_shift = flecs_map_get_bucket_shift(count);
 
@@ -29548,11 +29549,7 @@ void flecs_map_rehash(
         }
     }
 
-    if (map->allocator) {
-        flecs_free_n(map->allocator, ecs_bucket_t, old_count, buckets);
-    } else {
-        ecs_os_free(buckets);
-    }
+    ECS_MAP_FREE_N(map->allocator, ecs_bucket_t, old_count, buckets);
 }
 
 void ecs_map_params_init(
@@ -29560,7 +29557,6 @@ void ecs_map_params_init(
     ecs_allocator_t *allocator)
 {
     params->allocator = allocator;
-    flecs_ballocator_init_t(&params->entry_allocator, ecs_bucket_entry_t);
 }
 
 void ecs_map_params_fini(
@@ -29576,13 +29572,6 @@ void ecs_map_init_w_params(
     ecs_os_zeromem(result);
 
     result->allocator = params->allocator;
-
-    if (params->entry_allocator.chunk_size) {
-        result->entry_allocator = &params->entry_allocator;
-        result->shared_allocator = true;
-    } else {
-        result->entry_allocator = flecs_ballocator_new_t(ecs_bucket_entry_t);
-    }
 
     flecs_map_rehash(result, 0);
 }
@@ -29621,34 +29610,16 @@ void ecs_map_fini(
         return;
     }
 
-    bool sanitize = false;
-#if defined(FLECS_SANITIZE) || defined(FLECS_USE_OS_ALLOC)
-    sanitize = true;
-#endif
-
-    /* Free buckets in sanitized mode, so we can replace the allocator with
-     * regular malloc/free and use asan/valgrind to find memory errors. */
     ecs_allocator_t *a = map->allocator;
-    ecs_block_allocator_t *ea = map->entry_allocator;
-    if (map->shared_allocator || sanitize) {
-        ecs_bucket_t *bucket = map->buckets, *end = &bucket[map->bucket_count];
-        while (bucket != end) {
-            flecs_map_bucket_clear(ea, bucket);
-            bucket ++;
-        }
-    }
-
-    if (ea && !map->shared_allocator) {
-        flecs_ballocator_free(ea);
-        map->entry_allocator = NULL;
-    }
-    if (a) {
-        flecs_free_n(a, ecs_bucket_t, map->bucket_count, map->buckets);
-    } else {
-        ecs_os_free(map->buckets);
+    ecs_bucket_t *bucket = map->buckets, *end = &bucket[map->bucket_count];
+    while (bucket != end) {
+        flecs_map_bucket_clear(a, bucket);
+        bucket ++;
     }
 
     map->bucket_shift = 0;
+
+    ECS_MAP_FREE_N(a, ecs_bucket_t, map->bucket_count, map->buckets);
 }
 
 ecs_map_val_t* ecs_map_get(
@@ -29684,7 +29655,7 @@ void ecs_map_insert(
     }
 
     ecs_bucket_t *bucket = flecs_map_get_bucket(map, key);
-    flecs_map_bucket_add(map->entry_allocator, bucket, key)[0] = value;
+    flecs_map_bucket_add(map->allocator, bucket, key)[0] = value;
 }
 
 void* ecs_map_insert_alloc(
@@ -29715,7 +29686,7 @@ ecs_map_val_t* ecs_map_ensure(
         bucket = flecs_map_get_bucket(map, key);
     }
 
-    ecs_map_val_t* v = flecs_map_bucket_add(map->entry_allocator, bucket, key);
+    ecs_map_val_t* v = flecs_map_bucket_add(map->allocator, bucket, key);
     *v = 0;
     return v;
 }
@@ -29758,13 +29729,9 @@ void ecs_map_clear(
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
     int32_t i, count = map->bucket_count;
     for (i = 0; i < count; i ++) {
-        flecs_map_bucket_clear(map->entry_allocator, &map->buckets[i]);
+        flecs_map_bucket_clear(map->allocator, &map->buckets[i]);
     }
-    if (map->allocator) {
-        flecs_free_n(map->allocator, ecs_bucket_t, count, map->buckets);
-    } else {
-        ecs_os_free(map->buckets);
-    }
+    ECS_MAP_FREE_N(map->allocator, ecs_bucket_t, count, map->buckets);
     map->buckets = NULL;
     map->bucket_count = 0;
     map->count = 0;
@@ -35854,7 +35821,8 @@ ecs_id_record_t* flecs_id_record_new(
 {
     ecs_id_record_t *idr, *idr_t = NULL;
     ecs_id_t hash = flecs_id_record_hash(id);
-    idr = flecs_bcalloc(&world->allocators.id_record);
+    idr = flecs_bcalloc_w_dbg_info(
+        &world->allocators.id_record, "ecs_id_record_t");
 
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         ecs_map_insert_ptr(&world->id_index_hi, hash, idr);

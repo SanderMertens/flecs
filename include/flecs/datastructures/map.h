@@ -29,11 +29,9 @@ typedef struct ecs_bucket_t {
 
 struct ecs_map_t {
     uint8_t bucket_shift;
-    bool shared_allocator;
     ecs_bucket_t *buckets;
     int32_t bucket_count;
     int32_t count;
-    struct ecs_block_allocator_t *entry_allocator;
     struct ecs_allocator_t *allocator;
 };
 
