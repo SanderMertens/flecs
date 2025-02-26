@@ -463,16 +463,16 @@ typedef struct ecs_table__t {
     uint64_t hash;                   /* Type hash */
     int32_t lock;                    /* Prevents modifications */
     int32_t traversable_count;       /* Traversable relationship targets in table */
+
     uint16_t generation;             /* Used for table cleanup */
     int16_t record_count;            /* Table record count including wildcards */
-    
-    struct ecs_table_record_t *records; /* Array with table records */
-    ecs_hashmap_t *name_index;       /* Cached pointer to name index */
 
-    ecs_bitset_t *bs_columns;        /* Bitset columns */
     int16_t bs_count;
     int16_t bs_offset;
-    int16_t ft_offset;
+    ecs_bitset_t *bs_columns;        /* Bitset columns */
+
+    struct ecs_table_record_t *records; /* Array with table records */
+    ecs_hashmap_t *name_index;       /* Cached pointer to name index */
 
 #ifdef FLECS_DEBUG_INFO
     /* Fields used for debug visualization */
@@ -759,6 +759,7 @@ typedef struct ecs_world_allocators_t {
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
     ecs_block_allocator_t id_record;
+    ecs_block_allocator_t pair_id_record;
     ecs_block_allocator_t id_record_chunk;
     ecs_block_allocator_t table_diff;
     ecs_block_allocator_t sparse_chunk;
@@ -1135,6 +1136,24 @@ typedef struct ecs_reachable_cache_t {
     ecs_vec_t ids; /* vec<reachable_elem_t> */
 } ecs_reachable_cache_t;
 
+/* Component index data that just applies to pairs */
+typedef struct ecs_pair_id_record_t {
+    /* Name lookup index (currently only used for ChildOf pairs) */
+    ecs_hashmap_t *name_index;
+
+    /* Lists for all id records that match a pair wildcard. The wildcard id
+     * record is at the head of the list. */
+    ecs_id_record_elem_t first;   /* (R, *) */
+    ecs_id_record_elem_t second;  /* (*, T) */
+    ecs_id_record_elem_t trav;    /* (*, T) with only traversable relationships */
+
+    /* Parent id record. For pair records the parent is the (R, *) record. */
+    ecs_id_record_t *parent;
+
+    /* Cache for finding components that are reachable through a relationship */
+    ecs_reachable_cache_t reachable;
+} ecs_pair_id_record_t;
+
 /* Payload for id index which contains all data structures for an id. */
 struct ecs_id_record_t {
     /* Cache with all tables that contain the id. Must be first member. */
@@ -1154,20 +1173,11 @@ struct ecs_id_record_t {
     /* Cached pointer to type info for id, if id contains data. */
     const ecs_type_info_t *type_info;
 
-    /* Name lookup index (currently only used for ChildOf pairs) */
-    ecs_hashmap_t *name_index;
-
     /* Storage for sparse components or union relationships */
     void *sparse;
 
-    /* Lists for all id records that match a pair wildcard. The wildcard id
-     * record is at the head of the list. */
-    ecs_id_record_elem_t first;   /* (R, *) */
-    ecs_id_record_elem_t second;  /* (*, O) */
-    ecs_id_record_elem_t trav;    /* (*, O) with only traversable relationships */
-
-    /* Parent id record. For pair records the parent is the (R, *) record. */
-    ecs_id_record_t *parent;
+    /* Pair data */
+    ecs_pair_id_record_t *pair;
 
     /* Refcount */
     int32_t refcount;
@@ -1176,9 +1186,6 @@ struct ecs_id_record_t {
      * it is not 0, an application attempted to delete an id that was still
      * queried for. */
     int32_t keep_alive;
-
-    /* Cache for finding components that are reachable through a relationship */
-    ecs_reachable_cache_t reachable;
 };
 
 /* Get id record for id */
@@ -1254,6 +1261,18 @@ void flecs_fini_id_records(
 ecs_flags32_t flecs_id_flags_get(
     ecs_world_t *world,
     ecs_id_t id);
+
+/* Return next (R, *) record */
+ecs_id_record_t* flecs_id_record_first_next(
+    ecs_id_record_t *idr);
+
+/* Return next (*, T) record */
+ecs_id_record_t* flecs_id_record_second_next(
+    ecs_id_record_t *idr);
+
+/* Return next traversable (*, T) record */
+ecs_id_record_t* flecs_id_record_trav_next(
+    ecs_id_record_t *idr);
 
 #endif
 
@@ -3521,7 +3540,7 @@ void flecs_register_id_flag_for_relation(
             idr = flecs_id_record_ensure(world, ecs_pair(e, EcsWildcard));
             do {
                 changed |= flecs_set_id_flag(world, idr, flag);
-            } while ((idr = idr->first.next));
+            } while ((idr = flecs_id_record_first_next(idr)));
             if (entity_flag) flecs_add_flag(world, e, entity_flag);
         } else if (event == EcsOnRemove) {
             ecs_id_record_t *idr = flecs_id_record_get(world, e);
@@ -3530,7 +3549,7 @@ void flecs_register_id_flag_for_relation(
             if (idr) {
                 do {
                     changed |= flecs_unset_id_flag(idr, not_flag);
-                } while ((idr = idr->first.next));
+                } while ((idr = flecs_id_record_first_next(idr)));
             }
         }
 
@@ -3578,7 +3597,7 @@ void flecs_register_tag(ecs_iter_t *it) {
                     flecs_assert_relation_unused(world, e, EcsPairIsTag);
                 }
                 idr->type_info = NULL;
-            } while ((idr = idr->first.next));
+            } while ((idr = flecs_id_record_first_next(idr)));
         }
     }
 }
@@ -7120,13 +7139,13 @@ void flecs_id_mark_for_delete(
         ecs_assert(ECS_HAS_ID_FLAG(id, PAIR), ECS_INTERNAL_ERROR, NULL);
         ecs_id_record_t *cur = idr;
         if (ECS_PAIR_SECOND(id) == EcsWildcard) {
-            while ((cur = cur->first.next)) {
+            while ((cur = flecs_id_record_first_next(cur))) {
                 flecs_update_monitors_for_delete(world, cur->id);
             }
         } else {
             ecs_assert(ECS_PAIR_FIRST(id) == EcsWildcard, 
                 ECS_INTERNAL_ERROR, NULL);
-            while ((cur = cur->second.next)) {
+            while ((cur = flecs_id_record_second_next(cur))) {
                 flecs_update_monitors_for_delete(world, cur->id);
             }
         }
@@ -12513,8 +12532,8 @@ void flecs_emit_propagate(
 
     /* Propagate to records of traversable relationships */
     ecs_id_record_t *cur = tgt_idr;
-    while ((cur = cur->trav.next)) {
-        cur->reachable.generation ++; /* Invalidate cache */
+    while ((cur = flecs_id_record_trav_next(cur))) {
+        cur->pair->reachable.generation ++; /* Invalidate cache */
 
         /* Get traversed relationship */
         ecs_entity_t trav = ECS_PAIR_FIRST(cur->id);
@@ -12546,8 +12565,8 @@ void flecs_emit_propagate_invalidate_tables(
 
     /* Invalidate records of traversable relationships */
     ecs_id_record_t *cur = tgt_idr;
-    while ((cur = cur->trav.next)) {
-        ecs_reachable_cache_t *rc = &cur->reachable;
+    while ((cur = flecs_id_record_trav_next(cur))) {
+        ecs_reachable_cache_t *rc = &cur->pair->reachable;
         if (rc->current != rc->generation) {
             /* Subtree is already marked invalid */
             continue;
@@ -13005,7 +13024,8 @@ void flecs_emit_forward_table_up(
 
     /* If tgt_idr is out of sync but is not the current id record being updated,
      * keep track so that we can update two records for the cost of one. */
-    ecs_reachable_cache_t *rc = &tgt_idr->reachable;
+    ecs_assert(tgt_idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_reachable_cache_t *rc = &tgt_idr->pair->reachable;
     bool parent_revalidate = (reachable_ids != &rc->ids) && 
         (rc->current != rc->generation);
     if (parent_revalidate) {
@@ -13045,7 +13065,8 @@ void flecs_emit_forward_table_up(
                 ecs_table_t*);
             t[0] = tgt_table;
 
-            ecs_reachable_cache_t *idr_rc = &idr->reachable;
+            ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_reachable_cache_t *idr_rc = &idr->pair->reachable;
             if (idr_rc->current == idr_rc->generation) {
                 /* Cache hit, use cached ids to prevent traversing the same
                  * hierarchy multiple times. This especially speeds up code 
@@ -13179,7 +13200,8 @@ void flecs_emit_forward(
     ecs_table_t *table,
     ecs_id_record_t *idr)
 {
-    ecs_reachable_cache_t *rc = &idr->reachable;
+    ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_reachable_cache_t *rc = &idr->pair->reachable;
 
     if (rc->current != rc->generation) {
         /* Cache miss, iterate the tree to find ids to forward */
@@ -18133,6 +18155,7 @@ void flecs_world_allocators_init(
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
     flecs_ballocator_init_t(&a->id_record, ecs_id_record_t);
+    flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_id_record_t);
     flecs_ballocator_init_n(&a->id_record_chunk, ecs_id_record_t, FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
@@ -18153,6 +18176,7 @@ void flecs_world_allocators_fini(
     flecs_ballocator_fini(&a->graph_edge_lo);
     flecs_ballocator_fini(&a->graph_edge);
     flecs_ballocator_fini(&a->id_record);
+    flecs_ballocator_fini(&a->pair_id_record);
     flecs_ballocator_fini(&a->id_record_chunk);
     flecs_ballocator_fini(&a->table_diff);
     flecs_ballocator_fini(&a->sparse_chunk);
@@ -19297,7 +19321,7 @@ bool flecs_type_info_init_id(
         {
             changed |= flecs_id_record_set_type_info(world, idr, NULL);
         }
-    } while ((idr = idr->first.next));
+    } while ((idr = flecs_id_record_first_next(idr)));
 
     /* All non-tag id records with component as object inherit type info,
      * if relationship doesn't have type info */
@@ -19306,7 +19330,7 @@ bool flecs_type_info_init_id(
         if (!(idr->flags & EcsIdTag) && !idr->type_info) {
             changed |= flecs_id_record_set_type_info(world, idr, ti);
         }
-    } while ((idr = idr->first.next));
+    } while ((idr = flecs_id_record_first_next(idr)));
 
     /* Type info of (*, component) should always point to component */
     ecs_assert(flecs_id_record_get(world, ecs_pair(EcsWildcard, component))->
@@ -24406,7 +24430,7 @@ static void UpdateCountTargets(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_count_targets_metric_ctx_t *ctx = m[i].ctx;
         ecs_id_record_t *cur = ctx->idr;
-        while ((cur = cur->first.next)) {
+        while ((cur = flecs_id_record_first_next(cur))) {
             ecs_id_t id = cur->id;
             ecs_entity_t *mi = ecs_map_ensure(&ctx->targets, id);
             if (!mi[0]) {
@@ -28633,6 +28657,14 @@ int64_t ecs_block_allocator_free_count = 0;
 
 #ifndef FLECS_USE_OS_ALLOC
 
+/* Bypass block allocator if chunks per block is lower than the configured 
+ * value. This prevents holding on to large memory chunks when they're freed,
+ * which can add up especially in scenarios where an array is reallocated 
+ * several times to a large size. 
+ * A value of 1 seems to yield the best results. Higher values only impact lower
+ * allocation sizes, which are more likely to be reused. */
+#define FLECS_MIN_CHUNKS_PER_BLOCK 1
+
 static
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
@@ -28760,11 +28792,16 @@ void* flecs_balloc_w_dbg_info(
 {
     (void)type_name;
     void *result;
+
+    if (!ba) return NULL;
+
 #ifdef FLECS_USE_OS_ALLOC
     result = ecs_os_malloc(ba->data_size);
 #else
 
-    if (!ba) return NULL;
+    if (ba->chunks_per_block <= FLECS_MIN_CHUNKS_PER_BLOCK) {
+        return ecs_os_malloc(ba->data_size);
+    }
 
     if (!ba->head) {
         ba->head = flecs_balloc_block(ba);
@@ -28840,7 +28877,13 @@ void flecs_bfree_w_dbg_info(
         ecs_assert(memory == NULL, ECS_INTERNAL_ERROR, NULL);
         return;
     }
+
     if (memory == NULL) {
+        return;
+    }
+
+    if (ba->chunks_per_block <= FLECS_MIN_CHUNKS_PER_BLOCK) {
+        ecs_os_free(memory);
         return;
     }
 
@@ -29372,6 +29415,10 @@ void* flecs_hashmap_next_(
  * (element_count * ECS_LOAD_FACTOR) > bucket_count, bucket count is increased. */
 #define ECS_LOAD_FACTOR (12)
 #define ECS_BUCKET_END(b, c) ECS_ELEM_T(b, ecs_bucket_t, c)
+#define ECS_MAP_ALLOC(a, T) a ? flecs_alloc_t(a, T) : ecs_os_malloc_t(T)
+#define ECS_MAP_CALLOC_N(a, T, n) a ? flecs_calloc_n(a, T, n) : ecs_os_calloc_n(T, n)
+#define ECS_MAP_FREE(a, T, ptr) a ? flecs_free_t(a, T, ptr) : ecs_os_free(ptr)
+#define ECS_MAP_FREE_N(a, T, n, ptr) a ? flecs_free_n(a, T, n, ptr) : ecs_os_free(ptr)
 
 static
 uint8_t flecs_log2(uint32_t v) {
@@ -29397,7 +29444,7 @@ int32_t flecs_map_get_bucket_count(
 
 /* Get bucket shift amount for a given bucket count */
 static
-uint8_t flecs_map_get_bucket_shift (
+uint8_t flecs_map_get_bucket_shift(
     int32_t bucket_count)
 {
     return (uint8_t)(64u - flecs_log2((uint32_t)bucket_count));
@@ -29420,7 +29467,7 @@ ecs_bucket_t* flecs_map_get_bucket(
     ecs_map_key_t key)
 {
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
-    int32_t bucket_id = flecs_map_get_bucket_index(map->bucket_shift, key);
+    int32_t bucket_id = flecs_map_get_bucket_index((uint16_t)map->bucket_shift, key);
     ecs_assert(bucket_id < map->bucket_count, ECS_INTERNAL_ERROR, NULL);
     return &map->buckets[bucket_id];
 }
@@ -29428,11 +29475,11 @@ ecs_bucket_t* flecs_map_get_bucket(
 /* Add element to bucket */
 static
 ecs_map_val_t* flecs_map_bucket_add(
-    ecs_block_allocator_t *allocator,
+    ecs_allocator_t *a,
     ecs_bucket_t *bucket,
     ecs_map_key_t key)
 {
-    ecs_bucket_entry_t *new_entry = flecs_balloc(allocator);
+    ecs_bucket_entry_t *new_entry = ECS_MAP_ALLOC(a, ecs_bucket_entry_t);
     new_entry->key = key;
     new_entry->next = bucket->first;
     bucket->first = new_entry;
@@ -29455,7 +29502,7 @@ ecs_map_val_t flecs_map_bucket_remove(
                 next_holder = &(*next_holder)->next;
             }
             *next_holder = entry->next;
-            flecs_bfree(map->entry_allocator, entry);
+            ECS_MAP_FREE(map->allocator, ecs_bucket_entry_t, entry);
             map->count --;
             return value;
         }
@@ -29467,13 +29514,13 @@ ecs_map_val_t flecs_map_bucket_remove(
 /* Free contents of bucket */
 static
 void flecs_map_bucket_clear(
-    ecs_block_allocator_t *allocator,
+    ecs_allocator_t *allocator,
     ecs_bucket_t *bucket)
 {
     ecs_bucket_entry_t *entry = bucket->first;
     while(entry) {
         ecs_bucket_entry_t *next = entry->next;
-        flecs_bfree(allocator, entry);
+        ECS_MAP_FREE(allocator, ecs_bucket_entry_t, entry);
         entry = next;
     }
 }
@@ -29508,13 +29555,9 @@ void flecs_map_rehash(
     int32_t old_count = map->bucket_count;
     ecs_bucket_t *buckets = map->buckets, *b, *end = ECS_BUCKET_END(buckets, old_count);
 
-    if (map->allocator) {
-        map->buckets = flecs_calloc_n(map->allocator, ecs_bucket_t, count);
-    } else {
-        map->buckets = ecs_os_calloc_n(ecs_bucket_t, count);
-    }
+    map->buckets = ECS_MAP_CALLOC_N(map->allocator, ecs_bucket_t, count);
     map->bucket_count = count;
-    map->bucket_shift = flecs_map_get_bucket_shift(count);
+    map->bucket_shift = flecs_map_get_bucket_shift(count) & 0x3fu;
 
     /* Remap old bucket entries to new buckets */
     for (b = buckets; b < end; b++) {
@@ -29522,7 +29565,7 @@ void flecs_map_rehash(
         for (entry = b->first; entry;) {
             ecs_bucket_entry_t* next = entry->next;
             int32_t bucket_index = flecs_map_get_bucket_index(
-                map->bucket_shift, entry->key);
+                (uint16_t)map->bucket_shift, entry->key);
             ecs_bucket_t *bucket = &map->buckets[bucket_index];
             entry->next = bucket->first;
             bucket->first = entry;
@@ -29530,11 +29573,7 @@ void flecs_map_rehash(
         }
     }
 
-    if (map->allocator) {
-        flecs_free_n(map->allocator, ecs_bucket_t, old_count, buckets);
-    } else {
-        ecs_os_free(buckets);
-    }
+    ECS_MAP_FREE_N(map->allocator, ecs_bucket_t, old_count, buckets);
 }
 
 void ecs_map_params_init(
@@ -29542,7 +29581,6 @@ void ecs_map_params_init(
     ecs_allocator_t *allocator)
 {
     params->allocator = allocator;
-    flecs_ballocator_init_t(&params->entry_allocator, ecs_bucket_entry_t);
 }
 
 void ecs_map_params_fini(
@@ -29558,13 +29596,6 @@ void ecs_map_init_w_params(
     ecs_os_zeromem(result);
 
     result->allocator = params->allocator;
-
-    if (params->entry_allocator.chunk_size) {
-        result->entry_allocator = &params->entry_allocator;
-        result->shared_allocator = true;
-    } else {
-        result->entry_allocator = flecs_ballocator_new_t(ecs_bucket_entry_t);
-    }
 
     flecs_map_rehash(result, 0);
 }
@@ -29603,34 +29634,16 @@ void ecs_map_fini(
         return;
     }
 
-    bool sanitize = false;
-#if defined(FLECS_SANITIZE) || defined(FLECS_USE_OS_ALLOC)
-    sanitize = true;
-#endif
-
-    /* Free buckets in sanitized mode, so we can replace the allocator with
-     * regular malloc/free and use asan/valgrind to find memory errors. */
     ecs_allocator_t *a = map->allocator;
-    ecs_block_allocator_t *ea = map->entry_allocator;
-    if (map->shared_allocator || sanitize) {
-        ecs_bucket_t *bucket = map->buckets, *end = &bucket[map->bucket_count];
-        while (bucket != end) {
-            flecs_map_bucket_clear(ea, bucket);
-            bucket ++;
-        }
-    }
-
-    if (ea && !map->shared_allocator) {
-        flecs_ballocator_free(ea);
-        map->entry_allocator = NULL;
-    }
-    if (a) {
-        flecs_free_n(a, ecs_bucket_t, map->bucket_count, map->buckets);
-    } else {
-        ecs_os_free(map->buckets);
+    ecs_bucket_t *bucket = map->buckets, *end = &bucket[map->bucket_count];
+    while (bucket != end) {
+        flecs_map_bucket_clear(a, bucket);
+        bucket ++;
     }
 
     map->bucket_shift = 0;
+
+    ECS_MAP_FREE_N(a, ecs_bucket_t, map->bucket_count, map->buckets);
 }
 
 ecs_map_val_t* ecs_map_get(
@@ -29666,7 +29679,7 @@ void ecs_map_insert(
     }
 
     ecs_bucket_t *bucket = flecs_map_get_bucket(map, key);
-    flecs_map_bucket_add(map->entry_allocator, bucket, key)[0] = value;
+    flecs_map_bucket_add(map->allocator, bucket, key)[0] = value;
 }
 
 void* ecs_map_insert_alloc(
@@ -29697,7 +29710,7 @@ ecs_map_val_t* ecs_map_ensure(
         bucket = flecs_map_get_bucket(map, key);
     }
 
-    ecs_map_val_t* v = flecs_map_bucket_add(map->entry_allocator, bucket, key);
+    ecs_map_val_t* v = flecs_map_bucket_add(map->allocator, bucket, key);
     *v = 0;
     return v;
 }
@@ -29740,13 +29753,9 @@ void ecs_map_clear(
     ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
     int32_t i, count = map->bucket_count;
     for (i = 0; i < count; i ++) {
-        flecs_map_bucket_clear(map->entry_allocator, &map->buckets[i]);
+        flecs_map_bucket_clear(map->allocator, &map->buckets[i]);
     }
-    if (map->allocator) {
-        flecs_free_n(map->allocator, ecs_bucket_t, count, map->buckets);
-    } else {
-        ecs_os_free(map->buckets);
-    }
+    ECS_MAP_FREE_N(map->allocator, ecs_bucket_t, count, map->buckets);
     map->buckets = NULL;
     map->bucket_count = 0;
     map->count = 0;
@@ -35667,7 +35676,7 @@ ecs_id_record_elem_t* flecs_id_record_elem(
     ecs_id_record_elem_t *list,
     ecs_id_record_t *idr)
 {
-    return ECS_OFFSET(idr, (uintptr_t)list - (uintptr_t)head);
+    return ECS_OFFSET(idr->pair, (uintptr_t)list - (uintptr_t)head->pair);
 }
 
 static
@@ -35717,17 +35726,20 @@ void flecs_insert_id_elem(
     }
     ecs_assert(widr != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_pair_id_record_t *pair = idr->pair;
+    ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
         ecs_assert(ECS_PAIR_FIRST(wildcard) != EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_id_record_elem_insert(widr, idr, &idr->first);
+        flecs_id_record_elem_insert(widr, idr, &pair->first);
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_id_record_elem_insert(widr, idr, &idr->second);
+        flecs_id_record_elem_insert(widr, idr, &pair->second);
 
         if (idr->flags & EcsIdTraversable) {
-            flecs_id_record_elem_insert(widr, idr, &idr->trav);
+            flecs_id_record_elem_insert(widr, idr, &pair->trav);
         }
     }
 }
@@ -35739,17 +35751,20 @@ void flecs_remove_id_elem(
 {
     ecs_assert(ecs_id_is_wildcard(wildcard), ECS_INTERNAL_ERROR, NULL);
 
+    ecs_pair_id_record_t *pair = idr->pair;
+    ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
         ecs_assert(ECS_PAIR_FIRST(wildcard) != EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_id_record_elem_remove(idr, &idr->first);
+        flecs_id_record_elem_remove(idr, &pair->first);
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_id_record_elem_remove(idr, &idr->second);
+        flecs_id_record_elem_remove(idr, &pair->second);
 
         if (idr->flags & EcsIdTraversable) {
-            flecs_id_record_elem_remove(idr, &idr->trav);
+            flecs_id_record_elem_remove(idr, &pair->trav);
         }
     }
 }
@@ -35836,7 +35851,8 @@ ecs_id_record_t* flecs_id_record_new(
 {
     ecs_id_record_t *idr, *idr_t = NULL;
     ecs_id_t hash = flecs_id_record_hash(id);
-    idr = flecs_bcalloc(&world->allocators.id_record);
+    idr = flecs_bcalloc_w_dbg_info(
+        &world->allocators.id_record, "ecs_id_record_t");
 
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         ecs_map_insert_ptr(&world->id_index_hi, hash, idr);
@@ -35848,14 +35864,16 @@ ecs_id_record_t* flecs_id_record_new(
 
     idr->id = id;
     idr->refcount = 1;
-    idr->reachable.current = -1;
 
     bool is_wildcard = ecs_id_is_wildcard(id);
     bool is_pair = ECS_IS_PAIR(id);
 
     ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
     if (is_pair) {
-        // rel = ecs_pair_first(world, id);
+        idr->pair = flecs_bcalloc_w_dbg_info(
+            &world->allocators.pair_id_record, "ecs_pair_id_record_t");
+        idr->pair->reachable.current = -1;
+
         rel = ECS_PAIR_FIRST(id);
         rel = flecs_entities_get_alive(world, rel);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
@@ -35943,7 +35961,7 @@ ecs_id_record_t* flecs_id_record_new(
             /* Inherit flags from (relationship, *) record */
             ecs_id_record_t *idr_r = flecs_id_record_ensure(
                 world, ecs_pair(rel, EcsWildcard));
-            idr->parent = idr_r;
+            idr->pair->parent = idr_r;
             idr->flags = idr_r->flags;
 
             /* If pair is not a wildcard, append it to wildcard lists. These 
@@ -36088,20 +36106,20 @@ void flecs_id_record_free(
              * wildcard are also empty, so release them */
             if (ECS_PAIR_FIRST(id) == EcsWildcard) {
                 /* Iterate (*, Target) list */
-                ecs_id_record_t *cur, *next = idr->second.next;
+                ecs_id_record_t *cur, *next = idr->pair->second.next;
                 while ((cur = next)) {
                     flecs_id_record_assert_empty(cur);
-                    next = cur->second.next;
+                    next = cur->pair->second.next;
                     flecs_id_record_release(world, cur);
                 }
             } else {
                 /* Iterate (Relationship, *) list */
                 ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
                     ECS_INTERNAL_ERROR, NULL);
-                ecs_id_record_t *cur, *next = idr->first.next;
+                ecs_id_record_t *cur, *next = idr->pair->first.next;
                 while ((cur = next)) {
                     flecs_id_record_assert_empty(cur);
-                    next = cur->first.next;
+                    next = cur->pair->first.next;
                     flecs_id_record_release(world, cur);
                 }
             }
@@ -36121,8 +36139,14 @@ void flecs_id_record_free(
 
     /* Unregister the id record from the world & free resources */
     ecs_table_cache_fini(&idr->cache);
-    flecs_name_index_free(idr->name_index);
-    ecs_vec_fini_t(&world->allocator, &idr->reachable.ids, ecs_reachable_elem_t);
+
+    if (idr->pair) {
+        flecs_name_index_free(idr->pair->name_index);
+        ecs_vec_fini_t(&world->allocator, &idr->pair->reachable.ids, 
+            ecs_reachable_elem_t);
+        flecs_bfree_w_dbg_info(&world->allocators.pair_id_record, 
+                idr->pair, "ecs_pair_id_record_t");
+    }
 
     ecs_id_t hash = flecs_id_record_hash(id);
     if (hash >= FLECS_HI_ID_RECORD_ID) {
@@ -36135,7 +36159,8 @@ void flecs_id_record_free(
     ecs_os_free(idr->str);
 #endif
 
-    flecs_bfree(&world->allocators.id_record, idr);
+    flecs_bfree_w_dbg_info(&world->allocators.id_record, 
+        idr, "ecs_id_record_t");
 
     if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);
@@ -36245,9 +36270,11 @@ ecs_hashmap_t* flecs_id_record_name_index_ensure(
     ecs_world_t *world,
     ecs_id_record_t *idr)
 {
-    ecs_hashmap_t *map = idr->name_index;
+    ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_hashmap_t *map = idr->pair->name_index;
     if (!map) {
-        map = idr->name_index = flecs_name_index_new(world, &world->allocator);
+        map = idr->pair->name_index = 
+            flecs_name_index_new(world, &world->allocator);
     }
 
     return map;
@@ -36276,7 +36303,7 @@ ecs_hashmap_t* flecs_id_name_index_get(
         return NULL;
     }
 
-    return idr->name_index;
+    return idr->pair->name_index;
 }
 
 ecs_table_record_t* flecs_table_record_get(
@@ -36389,6 +36416,30 @@ ecs_flags32_t flecs_id_flags_get(
     }
 
     return result;
+}
+
+/* Return next (R, *) record */
+ecs_id_record_t* flecs_id_record_first_next(
+    ecs_id_record_t *idr)
+{
+    ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    return idr->pair->first.next;
+}
+
+/* Return next (*, T) record */
+ecs_id_record_t* flecs_id_record_second_next(
+    ecs_id_record_t *idr)
+{
+    ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    return idr->pair->second.next;
+}
+
+/* Return next traversable (*, T) record */
+ecs_id_record_t* flecs_id_record_trav_next(
+    ecs_id_record_t *idr)
+{
+    ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    return idr->pair->trav.next;
 }
 
 /**
@@ -36902,7 +36953,8 @@ void flecs_table_init(
                     childof_idr = p_idr;
                 }
 
-                idr = p_idr->parent; /* (R, *) */
+                ecs_assert(p_idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+                idr = p_idr->pair->parent; /* (R, *) */
                 ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 tr = ecs_vec_append_t(a, records, ecs_table_record_t);
@@ -44363,7 +44415,7 @@ int flecs_json_serialize_refs(
     if (idr) {
         if (relationship == EcsWildcard) {
             ecs_id_record_t *cur = idr;
-            while ((cur = cur->second.next)) {
+            while ((cur = flecs_id_record_second_next(cur))) {
                 flecs_json_serialize_refs_idr(world, buf, cur);
             }
         } else {
@@ -71737,7 +71789,7 @@ bool flecs_query_idsright(
 
 next:
     do {
-        cur = op_ctx->cur = op_ctx->cur->first.next;
+        cur = op_ctx->cur = flecs_id_record_first_next(op_ctx->cur);
     } while (cur && !cur->cache.tables.count); /* Skip empty ids */
 
     if (!cur) {
@@ -71793,7 +71845,7 @@ bool flecs_query_idsleft(
     }
 
     do {
-        cur = op_ctx->cur = op_ctx->cur->second.next;
+        cur = op_ctx->cur = flecs_id_record_second_next(op_ctx->cur);
     } while (cur && !cur->cache.tables.count); /* Skip empty ids */ 
 
     if (!cur) {

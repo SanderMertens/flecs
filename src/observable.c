@@ -341,8 +341,8 @@ void flecs_emit_propagate(
 
     /* Propagate to records of traversable relationships */
     ecs_id_record_t *cur = tgt_idr;
-    while ((cur = cur->trav.next)) {
-        cur->reachable.generation ++; /* Invalidate cache */
+    while ((cur = flecs_id_record_trav_next(cur))) {
+        cur->pair->reachable.generation ++; /* Invalidate cache */
 
         /* Get traversed relationship */
         ecs_entity_t trav = ECS_PAIR_FIRST(cur->id);
@@ -374,8 +374,8 @@ void flecs_emit_propagate_invalidate_tables(
 
     /* Invalidate records of traversable relationships */
     ecs_id_record_t *cur = tgt_idr;
-    while ((cur = cur->trav.next)) {
-        ecs_reachable_cache_t *rc = &cur->reachable;
+    while ((cur = flecs_id_record_trav_next(cur))) {
+        ecs_reachable_cache_t *rc = &cur->pair->reachable;
         if (rc->current != rc->generation) {
             /* Subtree is already marked invalid */
             continue;
@@ -833,7 +833,8 @@ void flecs_emit_forward_table_up(
 
     /* If tgt_idr is out of sync but is not the current id record being updated,
      * keep track so that we can update two records for the cost of one. */
-    ecs_reachable_cache_t *rc = &tgt_idr->reachable;
+    ecs_assert(tgt_idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_reachable_cache_t *rc = &tgt_idr->pair->reachable;
     bool parent_revalidate = (reachable_ids != &rc->ids) && 
         (rc->current != rc->generation);
     if (parent_revalidate) {
@@ -873,7 +874,8 @@ void flecs_emit_forward_table_up(
                 ecs_table_t*);
             t[0] = tgt_table;
 
-            ecs_reachable_cache_t *idr_rc = &idr->reachable;
+            ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_reachable_cache_t *idr_rc = &idr->pair->reachable;
             if (idr_rc->current == idr_rc->generation) {
                 /* Cache hit, use cached ids to prevent traversing the same
                  * hierarchy multiple times. This especially speeds up code 
@@ -1007,7 +1009,8 @@ void flecs_emit_forward(
     ecs_table_t *table,
     ecs_id_record_t *idr)
 {
-    ecs_reachable_cache_t *rc = &idr->reachable;
+    ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_reachable_cache_t *rc = &idr->pair->reachable;
 
     if (rc->current != rc->generation) {
         /* Cache miss, iterate the tree to find ids to forward */
