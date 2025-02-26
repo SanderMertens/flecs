@@ -28771,6 +28771,26 @@ void* flecs_balloc_w_dbg_info(
 
     if (!ba) return NULL;
 
+    static int64_t *alloc_map = NULL;
+    static int64_t alloc_count = 1000 * 1000 * 17;
+
+    if (!alloc_map) alloc_map = ecs_os_calloc_n(int64_t, 100 * 1000 * 1000);
+    alloc_map[ba->data_size] ++;
+    alloc_count --;
+
+    if (alloc_count == 0) {
+        printf("---\n");
+        int64_t total_size = 0;
+        for (int i = 0; i < 100 * 1000 * 1000; i ++) {
+            if (alloc_map[i]) {
+                printf("%d, %lld, %lld\n", i, alloc_map[i], i * alloc_map[i]);
+                total_size += alloc_map[i] * i;
+            }
+        }
+        printf("TOTAL %lld\n", total_size);
+        alloc_count = 100;
+    }
+
 #ifdef FLECS_USE_OS_ALLOC
     result = ecs_os_malloc(ba->data_size);
 #else

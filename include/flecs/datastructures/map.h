@@ -28,10 +28,10 @@ typedef struct ecs_bucket_t {
 } ecs_bucket_t;
 
 struct ecs_map_t {
-    uint8_t bucket_shift;
     ecs_bucket_t *buckets;
     int32_t bucket_count;
-    int32_t count;
+    unsigned count : 26;
+    unsigned bucket_shift : 6;
     struct ecs_allocator_t *allocator;
 };
 
