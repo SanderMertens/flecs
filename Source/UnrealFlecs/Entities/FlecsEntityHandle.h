@@ -173,7 +173,7 @@ public:
 		solid_check(EnumEntity.IsValid());
 		solid_check(EnumEntity.IsEnum());
 
-		FFlecsId EnumConstant = EnumEntity.Lookup(EnumType->GetNameStringByValue(InValue));
+		const FFlecsId EnumConstant = EnumEntity.Lookup(EnumType->GetNameStringByValue(InValue));
 		
 		return HasPair(EnumEntity, EnumConstant);
 	}
@@ -197,7 +197,7 @@ public:
 	{
 		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
 
-		FFlecsId ValueEntity = EnumEntity.Lookup(EnumType->GetNameStringByValue(InValue));
+		const FFlecsId ValueEntity = EnumEntity.Lookup(EnumType->GetNameStringByValue(InValue));
 		solid_check(ValueEntity.IsValid());
 		
 		AddPair(EnumEntity, ValueEntity);
