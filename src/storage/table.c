@@ -1584,6 +1584,7 @@ void flecs_table_delete(
             uint32_t row_flags = record_to_move->row & ECS_ROW_FLAGS_MASK;
             record_to_move->row = ECS_ROW_TO_RECORD(row, row_flags);
             ecs_assert(record_to_move->table != NULL, ECS_INTERNAL_ERROR, NULL);
+            printf("record->table = %p, table = %p\n", record_to_move->table, table);
             ecs_assert(record_to_move->table == table, ECS_INTERNAL_ERROR, NULL);
         }
     }     
