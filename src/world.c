@@ -604,13 +604,6 @@ void flecs_clean_tables(
     ecs_world_t *world)
 {
     int32_t i, count = flecs_sparse_count(&world->store.tables);
-
-    /* Ensure that first table in sparse set has id 0. This is a dummy table
-     * that only exists so that there is no table with id 0 */
-    ecs_table_t *first = flecs_sparse_get_dense_t(&world->store.tables,
-        ecs_table_t, 0);
-    (void)first;
-
     for (i = 1; i < count; i ++) {
         ecs_table_t *t = flecs_sparse_get_dense_t(&world->store.tables,
             ecs_table_t, i);

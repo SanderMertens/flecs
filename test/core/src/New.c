@@ -355,6 +355,7 @@ void New_new_w_id_w_with_defer_w_scope(void) {
 
     ecs_entity_t e = ecs_new_w_id(world, Tag2);
     test_assert(e != 0);
+    test_assert(ecs_get_table(world, e) != NULL);
 
     test_assert(!ecs_has(world, e, Tag));
     test_assert(!ecs_has(world, e, Tag2));

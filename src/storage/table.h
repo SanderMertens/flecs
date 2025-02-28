@@ -163,18 +163,8 @@ void flecs_table_init_data(
     ecs_world_t *world,
     ecs_table_t *table); 
 
-/* Clear all entities from a table. */
-void flecs_table_clear_entities(
-    ecs_world_t *world,
-    ecs_table_t *table);
-
 /* Reset a table to its initial state */
 void flecs_table_reset(
-    ecs_world_t *world,
-    ecs_table_t *table);
-
-/* Clear all entities from the table. Do not invoke OnRemove systems */
-void flecs_table_clear_entities_silent(
     ecs_world_t *world,
     ecs_table_t *table);
 

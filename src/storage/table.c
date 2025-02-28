@@ -886,7 +886,7 @@ void flecs_table_dtor_all(
             } else {
                 // If this is not a delete, clear the entity index record
                 ecs_record_t *record = flecs_entities_get(world, e);
-                record->table = NULL;
+                record->table = &world->store.root;
                 record->row = 0;
             }
         }
@@ -907,7 +907,7 @@ void flecs_table_dtor_all(
                 ecs_entity_t e = entities[i];
                 ecs_assert(!e || ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
                 ecs_record_t *record = flecs_entities_get(world, e);
-                record->table = NULL;
+                record->table = &world->store.root;
                 record->row = record->row & ECS_ROW_FLAGS_MASK;
                 (void)e;
             }
@@ -999,22 +999,6 @@ void ecs_table_clear_entities(
     ecs_table_t* table)
 {
     flecs_table_fini_data(world, table, true, true, false);
-}
-
-/* Cleanup, no OnRemove, clear entity index, deactivate table, free allocations */
-void flecs_table_clear_entities_silent(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    flecs_table_fini_data(world, table, false, false, true);
-}
-
-/* Cleanup, run OnRemove, clear entity index, deactivate table, free allocations */
-void flecs_table_clear_entities(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    flecs_table_fini_data(world, table, true, false, true);
 }
 
 /* Cleanup, run OnRemove, delete from entity index, deactivate table, free allocations */

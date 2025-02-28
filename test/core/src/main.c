@@ -919,6 +919,7 @@ void OnDelete_remove_all_3(void);
 void OnDelete_delete_with_1(void);
 void OnDelete_delete_with_2(void);
 void OnDelete_delete_with_3(void);
+void OnDelete_empty_after_remove(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -5900,6 +5901,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_with_3",
         OnDelete_delete_with_3
+    },
+    {
+        "empty_after_remove",
+        OnDelete_empty_after_remove
     }
 };
 
@@ -11692,7 +11697,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        126,
+        127,
         OnDelete_testcases
     },
     {
