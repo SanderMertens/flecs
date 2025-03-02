@@ -20,7 +20,6 @@ ecs_trav_up_t* flecs_trav_up_ensure(
     }
 
     ecs_os_perf_trace_pop("flecs.trav.up_ensure");
-
     return trav[0];
 }
 

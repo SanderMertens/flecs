@@ -1054,9 +1054,8 @@ void flecs_commit(
             ECS_OUT_OF_RANGE, 0);
     }
 
-    ecs_os_perf_trace_pop("flecs.commit");
-
 error:
+    ecs_os_perf_trace_pop("flecs.commit");
     flecs_journal_end();
     return;
 }
@@ -5324,7 +5323,6 @@ bool flecs_defer_end(
         } while (true);
 
         ecs_os_perf_trace_pop("flecs.commands.merge");
-
         return true;
     }
 

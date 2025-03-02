@@ -421,10 +421,9 @@ ecs_iter_t flecs_query_iter(
     /* Set flags for unconstrained query iteration. Can be reinitialized when
      * variables are constrained on iterator. */
     flecs_query_iter_constrain(&it);
-
-    ecs_os_perf_trace_pop("flecs.query.iter");
     
 error:
+    ecs_os_perf_trace_pop("flecs.query.iter");
     return it;
 }
 

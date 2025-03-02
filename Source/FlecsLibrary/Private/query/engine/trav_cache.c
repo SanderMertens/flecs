@@ -86,6 +86,7 @@ void flecs_query_build_up_cache(
             ecs_table_record_t *r_tr = flecs_id_record_get_table(
                 cache->idr, r->table);
             if (!r_tr) {
+                ecs_os_perf_trace_pop("flecs.query.build_up_cache");
                 return;
             }
             flecs_query_build_up_cache(world, a, ctx, cache, trav, r->table, 

@@ -94,7 +94,6 @@ bool flecs_query_get_match_monitor(
     impl->pub.flags |= EcsQueryHasMonitor;
 
     ecs_os_perf_trace_pop("flecs.query.get_match_monitor");
-
     return true;
 }
 

@@ -989,7 +989,6 @@ int flecs_query_cache_order_by(
     }
 
     ecs_os_perf_trace_pop("flecs.query.order_by");
-
     return 0;
 error:
     ecs_os_perf_trace_pop("flecs.query.order_by");
@@ -1368,8 +1367,6 @@ void ecs_iter_set_group(
         qit->node = NULL;
         qit->last = NULL;
     }
-
-    ecs_os_perf_trace_pop("flecs.iter.set_group");
     
 error:
     ecs_os_perf_trace_pop("flecs.iter.set_group");

@@ -2029,9 +2029,8 @@ ecs_ftime_t flecs_insert_sleep(
     } while ((target_delta_time - delta_time) >
         (sleep_time / (ecs_ftime_t)2.0));
 
-    ecs_os_perf_trace_pop("flecs.insert_sleep");
-
     *stop = now;
+    ecs_os_perf_trace_pop("flecs.insert_sleep");
     return delta_time;
 }
 
@@ -2289,7 +2288,6 @@ int32_t ecs_delete_empty_tables(
 
 done:
     ecs_os_perf_trace_pop("flecs.delete_empty_tables");
-
     return delete_count;
 }
 

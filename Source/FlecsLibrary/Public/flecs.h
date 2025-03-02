@@ -5981,6 +5981,15 @@ void ecs_table_unlock(
     ecs_world_t *world,
     ecs_table_t *table);
 
+FLECS_API
+int32_t internal_ecs_table_disable_lock(
+	ecs_table_t *table);
+
+FLECS_API
+void internal_ecs_table_enable_lock(
+	ecs_table_t *table,
+	int32_t count);
+
 /** Test table for flags.
  * Test if table has all of the provided flags. See
  * include/flecs/private/api_flags.h for a list of table flags that can be used

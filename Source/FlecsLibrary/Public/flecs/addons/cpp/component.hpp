@@ -163,7 +163,6 @@ FLECSLIBRARY_API extern robin_hood::unordered_map<std::string, type_impl_data> g
         auto [ins_it, _] = g_type_to_impl_data.emplace(key, data);
 
         ecs_os_perf_trace_pop("flecs.type_impl.init");
-        
         return ins_it->second;
     }
 

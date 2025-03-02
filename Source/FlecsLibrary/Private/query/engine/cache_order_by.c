@@ -228,7 +228,6 @@ void flecs_query_cache_build_sorted_table_range(
 
 done:
     flecs_free_n(&world->allocator, sort_helper_t, table_count, helper);
-
     ecs_os_perf_trace_pop("flecs.query.cache.build_sorted_table_range");
 }
 

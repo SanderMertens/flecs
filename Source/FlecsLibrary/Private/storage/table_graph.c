@@ -46,7 +46,6 @@ int flecs_type_compare(const void *ptr_1, const void *ptr_2) {
     }
 
     ecs_os_perf_trace_pop("flecs.type_compare");
-
     return result;
 }
 
@@ -415,6 +414,7 @@ ecs_graph_edge_t* flecs_table_ensure_hi_edge(
     ecs_graph_edge_t **r = ecs_map_ensure_ref(edges->hi, ecs_graph_edge_t, id);
     ecs_graph_edge_t *edge = r[0];
     if (edge) {
+        ecs_os_perf_trace_pop("flecs.table_graph.ensure_edge");
         return edge;
     }
 
@@ -427,7 +427,6 @@ ecs_graph_edge_t* flecs_table_ensure_hi_edge(
     r[0] = edge;
 
     ecs_os_perf_trace_pop("flecs.table_graph.ensure_edge");
-    
     return edge;
 }
 
@@ -596,7 +595,6 @@ ecs_table_t *flecs_table_new(
     ecs_log_pop_2();
 
     ecs_os_perf_trace_pop("flecs.table.create");
-
     return result;
 }
 

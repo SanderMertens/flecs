@@ -153,7 +153,6 @@ void* ecs_field_w_size(
     }
 
     ecs_os_perf_trace_pop("flecs.field.w_size");
-
     return ECS_ELEM(column->data, (ecs_size_t)size, row);
 error:
     ecs_os_perf_trace_pop("flecs.field.w_size");
@@ -433,7 +432,6 @@ char* ecs_iter_str(
     }
 
     ecs_os_perf_trace_pop("flecs.iter_str");
-
     return ecs_strbuf_get(&buf);
 }
 
@@ -528,7 +526,6 @@ ecs_entity_t ecs_iter_get_var(
     }
 
     ecs_os_perf_trace_pop("flecs.iter_get_var");
-
     return e;
 error:
     ecs_os_perf_trace_pop("flecs.iter_get_var");
@@ -623,7 +620,6 @@ ecs_table_range_t ecs_iter_get_var_as_range(
     }
 
     ecs_os_perf_trace_pop("flecs.iter_get_var_as_range");
-
     return result;
 error:
     ecs_os_perf_trace_pop("flecs.iter_get_var_as_range");
@@ -666,8 +662,6 @@ void ecs_iter_set_var(
 
     /* Update iterator for constrained iterator */
     flecs_query_iter_constrain(it);
-
-    ecs_os_perf_trace_pop("flecs.iter_set_var");
 
 error:
     ecs_os_perf_trace_pop("flecs.iter_set_var");
@@ -719,8 +713,6 @@ void ecs_iter_set_var_as_range(
 
     /* Update iterator for constrained iterator */
     flecs_query_iter_constrain(it);
-
-    ecs_os_perf_trace_pop("flecs.iter_set_var_as_range");
 
 error:
     ecs_os_perf_trace_pop("flecs.iter_set_var_as_range");

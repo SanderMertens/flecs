@@ -505,6 +505,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
     parent = flecs_get_parent_from_path(
         stage, parent, &path, sep, prefix, true, &error);
     if (error) {
+        ecs_os_perf_trace_pop("flecs.entity_name.lookup_path");
         return 0;
     }
 
@@ -700,6 +701,7 @@ ecs_entity_t ecs_add_path_w_sep(
     parent = flecs_get_parent_from_path(
         world, parent, &path, sep, prefix, !entity, &error);
     if (error) {
+        ecs_os_perf_trace_pop("flecs.entity_name.add_path_w_sep");
         /* Invalid id */
         ecs_err("invalid identifier: '%s'", path);
         return 0;

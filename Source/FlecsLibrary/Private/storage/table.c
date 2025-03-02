@@ -1360,9 +1360,9 @@ void flecs_table_grow_column(
         }
     }
 
-    ecs_assert(column->size == dst_size, ECS_INTERNAL_ERROR, NULL);
-
     ecs_os_perf_trace_pop("flecs.table.grow_column");
+
+    ecs_assert(column->size == dst_size, ECS_INTERNAL_ERROR, NULL);
 }
 
 /* Grow all data structures in a table */
@@ -1624,6 +1624,7 @@ void flecs_table_delete(
         table->data.count --;
 
         flecs_table_check_sanity(world, table);
+        ecs_os_perf_trace_pop("flecs.table.delete");
         return;
     }
 
@@ -1962,6 +1963,7 @@ void flecs_table_swap(
     ecs_column_t *columns = table->data.columns;
     if (!columns) {
         flecs_table_check_sanity(world, table);
+        ecs_os_perf_trace_pop("flecs.table.swap");
         return;
     }
 
@@ -2316,6 +2318,23 @@ void ecs_table_unlock(
                 "table_unlock called more often than table_lock");
         }
     }
+}
+
+int32_t internal_ecs_table_disable_lock(
+    ecs_table_t *table)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    const int32_t lock = table->_->lock;
+    table->_->lock = 0;
+    return lock;
+}
+
+void internal_ecs_table_enable_lock(
+    ecs_table_t *table,
+    int32_t lock)
+{
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    table->_->lock = lock;
 }
 
 const ecs_type_t* ecs_table_get_type(

@@ -90,7 +90,6 @@ ecs_trav_down_t* flecs_trav_table_down(
     }
 
     ecs_os_perf_trace_pop("flecs.trav.table_down");
-    
     return dst;
 }
 
@@ -239,7 +238,6 @@ ecs_trav_down_t* flecs_trav_entity_down(
     }
 
     ecs_os_perf_trace_pop("flecs.trav.entity_down");
-    
     return dst;
 }
 
