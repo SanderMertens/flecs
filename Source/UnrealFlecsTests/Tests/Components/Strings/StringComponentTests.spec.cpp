@@ -22,18 +22,24 @@ void FStringComponentTestsSpec::Define()
 		{
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Set<FString>(FString(TEXT("Hello, World!")));
+
+			FString TestSerialization = TestEntity.ToJson();
 		});
 
 		It("Should be able to add a FName component to an entity", [this]
 		{
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Set<FName>(FName(TEXT("Hello, World!")));
+
+			FString TestSerialization = TestEntity.ToJson();
 		});
 
 		It("Should be able to add a FText component to an entity", [this]
 		{
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Set<FText>(FText::FromString(TEXT("Hello, World!")));
+
+			FString TestSerialization = TestEntity.ToJson();
 		});
 	});
 }
