@@ -245,34 +245,66 @@ public:
 		RegisterComponentType<FIntRect>();
 	}
 
+	template <typename FunctionType>
+	void UnlockIter_Internal(flecs::iter& Iter, FunctionType&& Function)
+	{
+		DeferEndScoped([this, &Iter, Function = std::forward<FunctionType>(Function)]()
+		{
+			if (IsReadOnly())
+			{
+				EndReadOnly();
+			}
+
+			while (Iter.next())
+			{
+				const int32 SavedLockCount = internal_ecs_table_disable_lock(Iter.table());
+
+				for (size_t Index : Iter)
+				{
+					std::invoke(Function, Iter, Index);
+				}
+
+				internal_ecs_table_enable_lock(Iter.table(), SavedLockCount);
+			}
+
+			if (IsReadOnly())
+			{
+				BeginReadOnly();
+			}
+		});
+	}
+
 	void InitializeSystems()
 	{
 		CreateObserver("AnyComponentObserver")
 			.with_symbol_component().filter()
 			.with<flecs::Component>().event(flecs::OnSet)
 			.yield_existing()
-			.each([this](flecs::iter& Iter, size_t IterIndex)
+			.run([this](flecs::iter& Iter)
 			{
-				const FFlecsEntityHandle EntityHandle = Iter.entity(IterIndex);
-				
-				const FString StructSymbol = EntityHandle.GetSymbol();
-				const char* StructSymbolCStr = StringCast<char>(*StructSymbol).Get();
-				
-				if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(StructSymbolCStr))
+				UnlockIter_Internal(Iter, [this](flecs::iter& Iter, size_t Index)
 				{
-					const flecs::untyped_component InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
+					const FFlecsEntityHandle EntityHandle = Iter.entity(Index);
+					
+					const FString StructSymbol = EntityHandle.GetSymbol();
+					const char* StructSymbolCStr = StringCast<char>(*StructSymbol).Get();
+					
+					if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(StructSymbolCStr))
+					{
+						const flecs::untyped_component InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
 						
-					const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get().
-						GetComponentProperties(StructSymbolCStr);
+						const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get().
+							GetComponentProperties(StructSymbolCStr);
 
-					std::invoke(Properties->RegistrationFunction, Iter.world(), InUntypedComponent);
-				}
-				#if UNLOG_ENABLED
-				else
-				{
-					UN_LOGF(LogFlecsWorld, Log, "Component properties %s not found", *StructSymbol);
-				}
-				#endif // UNLOG_ENABLED
+						std::invoke(Properties->RegistrationFunction, Iter.world(), InUntypedComponent);
+					}
+					#if UNLOG_ENABLED
+					else
+					{
+						UN_LOGF(LogFlecsWorld, Log, "Component properties %s not found", *StructSymbol);
+					}
+					#endif // UNLOG_ENABLED
+				});
 			});
 
 		ObjectDestructionComponentQuery = World.query_builder("UObjectDestructionComponentQuery")
@@ -287,7 +319,7 @@ public:
 			{
 				FFlecsEntityHandle InEntity = Iter.entity(IterIndex);
 				FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(0, IterIndex);
-				if (InUObjectComponent.IsStale())
+				if (!InUObjectComponent.IsValid())
 				{
 					UN_LOGF(LogFlecsWorld, Log, "Entity Garbage Collected: %s",
 						StringCast<char>(*InEntity.GetName()).Get());
@@ -327,29 +359,86 @@ public:
 		CreateObserver<FFlecsModuleComponent>(TEXT("ModuleInitEventObserver"))
 			.with<FFlecsUObjectComponent, FFlecsModuleComponentTag>()
 			.event<FFlecsModuleInitEvent>()
-			.each([this](flecs::iter& Iter, const size_t IterIndex,
-			             const FFlecsModuleComponent& InModuleComponent)
+			.run([this](flecs::iter& Iter)
 			{
-				const FFlecsEntityHandle ModuleEntity = Iter.entity(IterIndex);
-				
-				DependenciesComponentQuery.each([InModuleComponent, ModuleEntity, this](
-					flecs::iter& DependenciesIter, const size_t DependenciesIterIndex,
-					FFlecsDependenciesComponent& DependenciesComponent)
+				/*DeferEndScoped([this, &Iter]()
 				{
-					const FFlecsEntityHandle InEntity = DependenciesIter.entity(DependenciesIterIndex);
-					
-					const FFlecsUObjectComponent& InUObjectComponent
-						= DependenciesIter.field_at<FFlecsUObjectComponent>(1, DependenciesIterIndex);
-					
-					if (DependenciesComponent.Dependencies.contains(InModuleComponent.ModuleClass))
+					ecs_suspend_readonly_state_t state{};
+					flecs_suspend_readonly(World, &state);
+
+					while (Iter.next())
 					{
-						const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& Function
-							= DependenciesComponent.Dependencies.at(InModuleComponent.ModuleClass);
+						ECS_TABLE_UNLOCK(World, Iter.table());
 
-						InEntity.AddPair(flecs::DependsOn, ModuleEntity);
+						for (const size_t Index : Iter)
+						{
+							const FFlecsEntityHandle ModuleEntity = Iter.entity(Index);
+							const FFlecsModuleComponent& InModuleComponent = Iter.field_at<FFlecsModuleComponent>(0, Index);
+							FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, Index);
+							
+							DependenciesComponentQuery.run([InModuleComponent, ModuleEntity, this, InUObjectComponent](flecs::iter& DependenciesIter)
+							{
+								DeferEndScoped([this, &DependenciesIter, InModuleComponent, ModuleEntity, InUObjectComponent]()
+								{
+									while (DependenciesIter.next())
+									{
+										ECS_TABLE_UNLOCK(World, DependenciesIter.table());
+									
+										for (const size_t DependenciesIndex : DependenciesIter)
+										{
+											const FFlecsEntityHandle InEntity = DependenciesIter.entity(DependenciesIndex);
+										
+											FFlecsDependenciesComponent& DependenciesComponent
+												= DependenciesIter.field_at<FFlecsDependenciesComponent>(0, DependenciesIndex);
+										
+											if (DependenciesComponent.Dependencies.contains(InModuleComponent.ModuleClass))
+											{
+												const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& Function
+													= DependenciesComponent.Dependencies.at(InModuleComponent.ModuleClass);
 
-						std::invoke(Function, InUObjectComponent.GetObjectChecked(), this, ModuleEntity);
+												InEntity.AddPair(flecs::DependsOn, ModuleEntity);
+
+												std::invoke(Function, InUObjectComponent.GetObjectChecked(), this, ModuleEntity);
+											}
+										}
+
+										ECS_TABLE_LOCK(World, DependenciesIter.table());
+									}
+								});
+							});
+						}
+
+						ECS_TABLE_LOCK(World, Iter.table());
 					}
+
+					flecs_resume_readonly(World, &state);
+				});*/
+				UnlockIter_Internal(Iter, [this](flecs::iter& Iter, size_t Index)
+				{
+					const FFlecsEntityHandle ModuleEntity = Iter.entity(Index);
+					const FFlecsModuleComponent& InModuleComponent = Iter.field_at<FFlecsModuleComponent>(0, Index);
+					FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, Index);
+					
+					DependenciesComponentQuery.run([InModuleComponent, ModuleEntity, this, InUObjectComponent](flecs::iter& DependenciesIter)
+					{
+						UnlockIter_Internal(DependenciesIter, [this, InModuleComponent, ModuleEntity, InUObjectComponent](flecs::iter& DependenciesIter, size_t DependenciesIndex)
+						{
+							const FFlecsEntityHandle InEntity = DependenciesIter.entity(DependenciesIndex);
+							
+							FFlecsDependenciesComponent& DependenciesComponent
+								= DependenciesIter.field_at<FFlecsDependenciesComponent>(0, DependenciesIndex);
+							
+							if (DependenciesComponent.Dependencies.contains(InModuleComponent.ModuleClass))
+							{
+								const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& Function
+									= DependenciesComponent.Dependencies.at(InModuleComponent.ModuleClass);
+
+								InEntity.AddPair(flecs::DependsOn, ModuleEntity);
+
+								std::invoke(Function, InUObjectComponent.GetObjectChecked(), this, ModuleEntity);
+							}
+						});
+					});
 				});
 			});
 
@@ -1149,6 +1238,14 @@ public:
 			else if (Property->IsA<FByteProperty>())
 			{
 				UntypedComponent.member<uint8>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+			}
+			else if (Property->IsA<FInt16Property>())
+			{
+				UntypedComponent.member<int16>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+			}
+			else if (Property->IsA<FUInt16Property>())
+			{
+				UntypedComponent.member<uint16>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FIntProperty>())
 			{
