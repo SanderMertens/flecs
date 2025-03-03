@@ -1081,7 +1081,6 @@ public:
 	{
 		return World.system<TComponents...>(StringCast<char>(*InName).Get());
 	}
-
 	
 	/**
 	 * @brief Equivalent to World.entity(flecs::World)
@@ -1108,6 +1107,17 @@ public:
 		return World.get_stage_count();
 	}
 
+	/**
+	 * Test whether the current world object is readonly.
+	 * This function allows the code to test whether the currently used world
+	 * object is readonly or whether it allows for writing.
+	 *
+	 * @return True if the world or stage is readonly.
+	 *
+	 * @see ecs_stage_is_readonly()
+	 * @see flecs::world::readonly_begin()
+	 * @see flecs::world::readonly_end()
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	bool IsReadOnly() const
 	{
@@ -1155,7 +1165,7 @@ public:
 	 * allowed to modify a certain set of entities, as could be the case for
 	 * networked applications.
 	 *
-	 * @param enabled True if range check should be enabled, false if not.
+	 * @param bInEnforce True if range check should be enabled, false if not.
 	 *
 	 * @see ecs_enable_range_check()
 	 */
@@ -1199,7 +1209,7 @@ public:
 	{
 		World.set_task_threads(InThreadCount);
 	}
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	bool HasScriptStruct(const UScriptStruct* ScriptStruct) const
 	{
@@ -1233,9 +1243,9 @@ public:
 	{
 		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
 		
-		const FFlecsId c = TypeMapComponent->ScriptStructMap.at(ScriptStruct);
-		solid_checkf(ecs_is_valid(World.c_ptr(), c), TEXT("Entity is not alive"));
-		return FFlecsEntityHandle(World, c);
+		const FFlecsId Component = TypeMapComponent->ScriptStructMap.at(ScriptStruct);
+		solid_checkf(ecs_is_valid(World.c_ptr(), Component), TEXT("Entity is not alive"));
+		return FFlecsEntityHandle(World, Component);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
@@ -1243,9 +1253,9 @@ public:
 	{
 		solid_checkf(IsValid(ScriptEnum), TEXT("ScriptEnum is nullptr"));
 		
-		const FFlecsId c = TypeMapComponent->ScriptEnumMap.at(ScriptEnum);
-		solid_checkf(ecs_is_valid(World.c_ptr(), c), TEXT("Entity is not alive"));
-		return FFlecsEntityHandle(World, c);
+		const FFlecsId Component = TypeMapComponent->ScriptEnumMap.at(ScriptEnum);
+		solid_checkf(ecs_is_valid(World.c_ptr(), Component), TEXT("Entity is not alive"));
+		return FFlecsEntityHandle(World, Component);
 	}
 
 	template <Solid::TScriptStructConcept T>
