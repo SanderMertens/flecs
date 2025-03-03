@@ -24,7 +24,7 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
     static FORCEINLINE bool IsEntityFromObject(UObject* Object)
     {
-        if (!IsValid(Object))
+        if UNLIKELY_IF(!ensureMsgf(IsValid(Object), TEXT("Object is not valid")))
         {
             return false;
         }

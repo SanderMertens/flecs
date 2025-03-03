@@ -18,11 +18,20 @@ struct UNREALFLECS_API FFlecsId
         return GetTypeHash(InId.Id);
     }
 
+    /**
+     * @brief Make a new Pair Id from the given First and Second Elements
+     * @param InFirst First Element of the pair
+     * @param InSecond Second Element of the pair
+     * @return The combined pair Id
+     */
     FORCEINLINE constexpr NO_DISCARD static FFlecsId MakePair(const FFlecsId InFirst, const FFlecsId InSecond)
     {
         return FFlecsId(ecs_pair(InFirst, InSecond));
     }
 
+    /**
+     * @return A Null Id without a World Context
+     */
     FORCEINLINE constexpr NO_DISCARD static FFlecsId Null()
     {
         return FFlecsId(flecs::entity::null().id());

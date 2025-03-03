@@ -332,6 +332,10 @@ public:
 }; // struct FFlecsRecordSubEntity
 
 
+/**
+ * @brief A record of a generic entity's components and sub-entities,
+ * this can be applied to an actual entity to give it the same components/sub-entities.
+ */
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsEntityRecord
 {

@@ -35,6 +35,10 @@ DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGR
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"),
 	STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
 
+/**
+ * @brief Component type that represents if the World has begun play.
+ * Can be found in the World entity.
+ */
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsBeginPlay
 {
@@ -761,24 +765,44 @@ public:
 		World.modified<T>();
 	}
 
+	/**
+	 * Merge world or stage.
+	 * When automatic merging is disabled, an application can call this
+	 * operation on either an individual stage, or on the world which will merge
+	 * all stages. This operation may only be called when staging is not enabled
+	 * (either after progress() or after readonly_end()).
+	 *
+	 * This operation may be called on an already merged stage or world.
+	 *
+	 * @see ecs_merge()
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	void Merge() const
 	{
 		World.merge();
 	}
-
+	
+	/**
+	 * @return The Name of the World Entity
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FString GetWorldName() const
 	{
 		return GetWorldEntity().GetName();
 	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	
 	void SetWorldName(const FString& InName) const
 	{
 		GetWorldEntity().SetName(InName);
 	}
 
+	
+	/**
+	 * @brief Import a regular C++ Module to the world,
+	 * this MUST NOT be derived from IFlecsModuleInterface nor should it be a UObject
+	 * @tparam T The module type
+	 * @return The entity handle of the imported module
+	 */
 	template <typename T>
 	FFlecsEntityHandle ImportFlecsModule()
 	{
@@ -802,7 +826,7 @@ public:
 		
 		CastChecked<IFlecsModuleInterface>(InModule)->ImportModule(World);
 	}
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	bool IsModuleImported(const TSubclassOf<UObject> InModule) const
 	{

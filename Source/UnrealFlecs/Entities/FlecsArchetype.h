@@ -8,6 +8,9 @@
 #include "SolidMacros/Macros.h"
 #include "FlecsArchetype.generated.h"
 
+/**
+ * @brief A wrapper for a flecs archetype, flecs::type in C++.
+ */
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsArchetype
 {
@@ -42,10 +45,9 @@ public:
 
     /**
      * @brief Iterates over each component in the archetype.
-     * 
      * @tparam FunctionType The type of the function to call for each component.
      * @param InFunction The function to call for each component.
-     * Returns false to continue iteration, true to break.
+     * @return false to continue iteration, true to break.
      */
     template <typename FunctionType>
     FORCEINLINE void ForEach(FunctionType&& InFunction) const

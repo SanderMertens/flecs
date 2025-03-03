@@ -7,5 +7,4 @@
 AFlecsSystemActor::AFlecsSystemActor(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	
 }
