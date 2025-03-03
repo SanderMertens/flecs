@@ -102,7 +102,8 @@ public:
 			.opaque(flecs::String)
 			.serialize([](const flecs::serializer* Serializer, const FString* Data)
 			{
-				return Serializer->value(flecs::String, Data->GetCharArray().GetData());
+				const TCHAR* CharArray = Data->GetCharArray().GetData();
+				return Serializer->value(flecs::String, &CharArray);
 			})
 			.assign_string([](FString* Data, const char* String)
 			{
@@ -113,7 +114,9 @@ public:
 			.opaque(flecs::String)
 			.serialize([](const flecs::serializer* Serializer, const FName* Data)
 			{
-				return Serializer->value(flecs::String, Data->ToString().GetCharArray().GetData());
+				const FString String = Data->ToString();
+				const TCHAR* CharArray = String.GetCharArray().GetData();
+				return Serializer->value(flecs::String, &CharArray);
 			})
 			.assign_string([](FName* Data, const char* String)
 			{
@@ -124,7 +127,9 @@ public:
 			.opaque(flecs::String)
 			.serialize([](const flecs::serializer* Serializer, const FText* Data)
 			{
-				return Serializer->value(flecs::String, Data->ToString().GetCharArray().GetData());
+				const FString String = Data->ToString();
+				const TCHAR* CharArray = String.GetCharArray().GetData();
+				return Serializer->value(flecs::String, &CharArray);
 			})
 			.assign_string([](FText* Data, const char* String)
 			{
