@@ -53,63 +53,42 @@ struct query_builder_i : term_builder_i<Base> {
         *this->term_ = flecs::term(_::type<T>::id(this->world_v()));
         this->term_->inout = static_cast<ecs_inout_kind_t>(
             _::type_to_inout<T>());
-            if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(id_t id) {
         this->term();
         *this->term_ = flecs::term(id);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(const char *name) {
         this->term();
         *this->term_ = flecs::term().first(name);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(const char *first, const char *second) {
         this->term();
         *this->term_ = flecs::term().first(first).second(second);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(entity_t r, entity_t o) {
         this->term();
         *this->term_ = flecs::term(r, o);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(entity_t r, const char *o) {
         this->term();
         *this->term_ = flecs::term(r).second(o);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(const char *r, entity_t o) {
         this->term();
         *this->term_ = flecs::term().first(r).second(o);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 

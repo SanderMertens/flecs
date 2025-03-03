@@ -3017,7 +3017,7 @@ void QueryBuilder_term_w_write(void) {
         .cache_kind(cache_kind)
         .build();
 
-    test_assert(q.term(0).inout() == flecs::InOutNone);
+    test_assert(q.term(0).inout() == flecs::InOutDefault);
     test_assert(q.term(0).get_src() == flecs::This);
     test_assert(q.term(1).inout() == flecs::Out);
     test_assert(q.term(1).get_src() == 0);
@@ -3032,7 +3032,7 @@ void QueryBuilder_term_w_read(void) {
         .cache_kind(cache_kind)
         .build();
 
-    test_assert(q.term(0).inout() == flecs::InOutNone);
+    test_assert(q.term(0).inout() == flecs::InOutDefault);
     test_assert(q.term(0).get_src() == flecs::This);
     test_assert(q.term(1).inout() == flecs::In);
     test_assert(q.term(1).get_src() == 0);
@@ -4478,7 +4478,7 @@ void QueryBuilder_with_t_inout(void) {
         .cache_kind(cache_kind)
         .build();
 
-    test_assert(f.term(0).inout() == flecs::InOutNone);
+    test_assert(f.term(0).inout() == flecs::InOutDefault);
 }
 
 void QueryBuilder_with_T_inout(void) {
@@ -4489,7 +4489,7 @@ void QueryBuilder_with_T_inout(void) {
         .cache_kind(cache_kind)
         .build();
 
-    test_assert(f.term(0).inout() == flecs::InOutNone);
+    test_assert(f.term(0).inout() == flecs::InOutDefault);
 }
 
 void QueryBuilder_with_R_T_inout(void) {
@@ -4500,7 +4500,7 @@ void QueryBuilder_with_R_T_inout(void) {
         .cache_kind(cache_kind)
         .build();
 
-    test_assert(f.term(0).inout() == flecs::InOutNone);
+    test_assert(f.term(0).inout() == flecs::InOutDefault);
 }
 
 void QueryBuilder_with_R_t_inout(void) {
@@ -4511,7 +4511,7 @@ void QueryBuilder_with_R_t_inout(void) {
         .cache_kind(cache_kind)
         .build();
 
-    test_assert(f.term(0).inout() == flecs::InOutNone);
+    test_assert(f.term(0).inout() == flecs::InOutDefault);
 }
 
 void QueryBuilder_with_r_t_inout(void) {
@@ -4522,7 +4522,7 @@ void QueryBuilder_with_r_t_inout(void) {
         .cache_kind(cache_kind)
         .build();
 
-    test_assert(f.term(0).inout() == flecs::InOutNone);
+    test_assert(f.term(0).inout() == flecs::InOutDefault);
 }
 
 static
@@ -4996,7 +4996,7 @@ void QueryBuilder_each_w_field_w_fixed_src(void) {
     q.each([&](flecs::iter& it, size_t row) {
         auto e = it.entity(row);
         auto p = it.field_at<Position>(0, row);
-        auto v = it.field<Velocity>(1);
+        auto v = it.field<const Velocity>(1);
 
         if (e == e1) {
             test_int(p.x, 10);
@@ -5037,7 +5037,7 @@ void QueryBuilder_each_w_field_at_w_fixed_src(void) {
     q.each([&](flecs::iter& it, size_t row) {
         auto e = it.entity(row);
         auto p = it.field_at<Position>(0, row);
-        auto v = it.field_at<Velocity>(1, 0);
+        auto v = it.field_at<const Velocity>(1, 0);
 
         if (e == e1) {
             test_int(p.x, 10);
