@@ -5,8 +5,6 @@
 
 #pragma once
 
-#include <unordered_map>
-
 #include "../term/builder_i.hpp"
 
 namespace flecs 
@@ -55,30 +53,18 @@ struct query_builder_i : term_builder_i<Base> {
         *this->term_ = flecs::term(_::type<T>::id(this->world_v()));
         this->term_->inout = static_cast<ecs_inout_kind_t>(
             _::type_to_inout<T>());
-            if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
-        
         return *this;
     }
 
     Base& with(id_t id) {
         this->term();
         *this->term_ = flecs::term(id);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
-        
         return *this;
     }
 
     Base& with(const char *name) {
         this->term();
         *this->term_ = flecs::term().first(name);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
-        
         return *this;
     }
 
@@ -93,40 +79,24 @@ struct query_builder_i : term_builder_i<Base> {
     Base& with(const char *first, const char *second) {
         this->term();
         *this->term_ = flecs::term().first(first).second(second);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
-        
         return *this;
     }
 
     Base& with(entity_t r, entity_t o) {
         this->term();
         *this->term_ = flecs::term(r, o);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
-
         return *this;
     }
 
     Base& with(entity_t r, const char *o) {
         this->term();
         *this->term_ = flecs::term(r).second(o);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
-        
         return *this;
     }
 
     Base& with(const char *r, entity_t o) {
         this->term();
         *this->term_ = flecs::term().first(r).second(o);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
-
         return *this;
     }
 
@@ -163,7 +133,7 @@ struct query_builder_i : term_builder_i<Base> {
         *this->term_ = term;
         return *this;
     }
-    
+
     /* Without methods, shorthand for .with(...).not_(). */
 
     template <typename ... Args>
@@ -254,7 +224,7 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& term_at(int32_t term_index) {
         ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, NULL);
-        const int32_t prev_index = term_index_;
+        int32_t prev_index = term_index_;
         term_index_ = term_index;
         this->term();
         term_index_ = prev_index;

@@ -15,7 +15,11 @@ struct UNREALFLECS_API FUWorldPtrComponent
 
 public:
 	FORCEINLINE FUWorldPtrComponent() = default;
-	FORCEINLINE FUWorldPtrComponent(UWorld* InWorld) : World(InWorld) {}
+	
+	FORCEINLINE FUWorldPtrComponent(UWorld* InWorld)
+		: World(InWorld)
+	{
+	}
 	
 	FORCEINLINE void SetWorld(UWorld* InWorld)
 	{

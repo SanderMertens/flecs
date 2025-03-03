@@ -833,6 +833,38 @@ void Query_run_sparse(void) {
     test_int(p->y, 22);
 }
 
+void Query_run_sparse_w_with(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::Sparse);
+    world.component<Velocity>();
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query_builder()
+        .with<Position>()
+        .with<Velocity>()
+        .build();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto v = it.field<Velocity>(1);
+
+            for (auto i : it) {
+                auto& p = it.field_at<Position>(0, i);
+                p.x += v[i].x;
+                p.y += v[i].y;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
 void Query_each(void) {
     flecs::world world;
 
@@ -983,6 +1015,33 @@ void Query_each_sparse(void) {
     auto q = world.query<Position, Velocity>();
 
     q.each([](Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void Query_each_sparse_w_with(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::Sparse);
+    world.component<Velocity>();
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query_builder()
+        .with<Position>()
+        .with<Velocity>()
+        .build();
+
+    q.each([](flecs::iter& it, size_t row) {
+        Position& p = it.field_at<Position>(0, row);
+        Velocity& v = it.field_at<Velocity>(1, row);
         p.x += v.x;
         p.y += v.y;
     });
@@ -1520,12 +1579,12 @@ void Query_inspect_terms(void) {
     t = q.term(1);
     test_int(t.id(), world.id<Velocity>());
     test_int(t.oper(), flecs::And);
-    test_int(t.inout(), flecs::InOutNone);
+    test_int(t.inout(), flecs::InOutDefault);
 
     t = q.term(2);
     test_int(t.id(), world.pair(flecs::ChildOf, p));
     test_int(t.oper(), flecs::And);
-    test_int(t.inout(), flecs::InOutNone);
+    test_int(t.inout(), flecs::InOutDefault);
     test_assert(t.id().second() == p);
 }
 
@@ -1546,11 +1605,11 @@ void Query_inspect_terms_w_each(void) {
             test_int(t.inout(), flecs::InOutDefault);
         } else if (count == 1) {
             test_int(t.id(), world.id<Velocity>());
-            test_int(t.inout(), flecs::InOutNone);
+            test_int(t.inout(), flecs::InOutDefault);
         } else if (count == 2) {
             test_int(t.id(), world.pair(flecs::ChildOf, p));
             test_assert(t.id().second() == p);
-            test_int(t.inout(), flecs::InOutNone);
+            test_int(t.inout(), flecs::InOutDefault);
         } else {
             test_assert(false);
         }
@@ -1569,7 +1628,7 @@ void Query_comp_to_str(void) {
     auto q = ecs.query_builder<Position>()
         .with<Velocity>()
         .build();
-    test_str(q.str(), "Position($this), [none] Velocity($this)");
+    test_str(q.str(), "Position($this), Velocity($this)");
 }
 
 struct Eats { int amount; };
@@ -1583,7 +1642,7 @@ void Query_pair_to_str(void) {
         .with<Velocity>()
         .with<Eats, Apples>()
         .build();
-    test_str(q.str(), "Position($this), [none] Velocity($this), [none] Eats($this,Apples)");
+    test_str(q.str(), "Position($this), Velocity($this), Eats($this,Apples)");
 }
 
 void Query_oper_not_to_str(void) {
@@ -1601,7 +1660,7 @@ void Query_oper_optional_to_str(void) {
     auto q = ecs.query_builder<Position>()
         .with<Velocity>().oper(flecs::Optional)
         .build();
-    test_str(q.str(), "Position($this), [none] ?Velocity($this)");
+    test_str(q.str(), "Position($this), ?Velocity($this)");
 }
 
 void Query_oper_or_to_str(void) {
@@ -1611,7 +1670,7 @@ void Query_oper_or_to_str(void) {
         .with<Position>().oper(flecs::Or)
         .with<Velocity>()
         .build();
-    test_str(q.str(), "[none] Position($this) || Velocity($this)");
+    test_str(q.str(), "Position($this) || Velocity($this)");
 }
 
 using EatsApples = flecs::pair<Eats, Apples>;

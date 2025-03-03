@@ -289,7 +289,7 @@ public:
 
 		if (!Name.IsEmpty() && !InEntityHandle.HasName())
 		{
-			InEntityHandle.SetName(StringCast<char>(*Name).Get());
+			InEntityHandle.SetName(Name);
 		}
 
 		for (const auto& [NodeType, ScriptStruct, ScriptEnum, EntityHandle, GameplayTag, Pair] : Components)
