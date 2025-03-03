@@ -14,8 +14,30 @@ int flecs_meta_serialize_type(
     ecs_size_t offset,
     ecs_vec_t *ops);
 
-ecs_meta_type_op_kind_t flecs_meta_primitive_to_op_kind(ecs_primitive_kind_t kind) {
-    return EcsOpPrimitive + kind;
+ecs_meta_type_op_kind_t flecs_meta_primitive_to_op_kind(
+    ecs_primitive_kind_t kind) 
+{
+    switch(kind) {
+    case EcsBool: return EcsOpBool;
+    case EcsChar: return EcsOpChar;
+    case EcsByte: return EcsOpByte;
+    case EcsU8: return EcsOpU8;
+    case EcsU16: return EcsOpU16;
+    case EcsU32: return EcsOpU32;
+    case EcsU64: return EcsOpU64;
+    case EcsI8: return EcsOpI8;
+    case EcsI16: return EcsOpI16;
+    case EcsI32: return EcsOpI32;
+    case EcsI64: return EcsOpI64;
+    case EcsF32: return EcsOpF32;
+    case EcsF64: return EcsOpF64;
+    case EcsUPtr: return EcsOpUPtr;
+    case EcsIPtr: return EcsOpIPtr;
+    case EcsString: return EcsOpString;
+    case EcsEntity: return EcsOpEntity;
+    case EcsId: return EcsOpId;
+    default: ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    }
 }
 
 static
