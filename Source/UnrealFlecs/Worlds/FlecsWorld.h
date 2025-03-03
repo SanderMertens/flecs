@@ -1082,28 +1082,30 @@ public:
 		return World.system<TComponents...>(StringCast<char>(*InName).Get());
 	}
 
+	
+	/**
+	 * @brief Equivalent to World.entity(flecs::World)
+	 * @return The World Entity
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FFlecsEntityHandle GetWorldEntity() const
 	{
 		return World.entity(flecs::World);
 	}
-	
+
+	/**
+	 * Get number of configured stages.
+	 * Return number of stages set by set_stage_count().
+	 *
+	 * @return The number of stages used for threading.
+	 *
+	 * @see ecs_get_stage_count()
+	 * @see flecs::world::set_stage_count()
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	int32 GetStageCount() const
 	{
 		return World.get_stage_count();
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	int32 GetStageId() const
-	{
-		return World.get_stage_id();
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	bool IsStage() const
-	{
-		return World.is_stage();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
@@ -1124,6 +1126,14 @@ public:
 		World.set_entity_range(InMin, InMax);
 	}
 
+	/**
+	 * @brief Set entity range and invoke a function/lambda
+	 * @tparam FunctionType The function type
+	 * @param InMin Minimum entity id issued.
+	 * @param InMax Maximum entity id issued.
+	 * @param bEnforceEntityRange Whether to enforce the entity range. Enforce that operations cannot modify entities outside of range.
+	 * @param Function The function to invoke
+	 */
 	template <typename FunctionType>
 	void SetEntityRange(const int32 InMin, const int32 InMax, const bool bEnforceEntityRange, FunctionType&& Function) const
 	{
@@ -1138,12 +1148,28 @@ public:
 		World.set_entity_range(OldMin, OldMax);
 	}
 
+	/**
+	 * Enforce that operations cannot modify entities outside of range.
+	 * This function ensures that only entities within the specified range can
+	 * be modified. Use this function if specific parts of the code only are
+	 * allowed to modify a certain set of entities, as could be the case for
+	 * networked applications.
+	 *
+	 * @param enabled True if range check should be enabled, false if not.
+	 *
+	 * @see ecs_enable_range_check()
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	void EnforceEntityRange(const bool bInEnforce) const
 	{
 		World.enable_range_check(bInEnforce);
 	}
 
+	/**
+	 * @brief Iterate over all Child Entities of the 0 Entity
+	 * @tparam FunctionType The function type
+	 * @param Function Function to invoke
+	 */
 	template <typename FunctionType>
 	void ForEachChild(FunctionType&& Function) const
 	{
