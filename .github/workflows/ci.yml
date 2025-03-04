@@ -142,20 +142,19 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - { os: ubuntu-20.04, cc: gcc-7,  cxx: g++-7 }
-          - { os: ubuntu-20.04, cc: gcc-8,  cxx: g++-8 }
-          - { os: ubuntu-20.04, cc: gcc-9,  cxx: g++-9 }
-          - { os: ubuntu-20.04, cc: gcc-10, cxx: g++-10 }
+          - { os: ubuntu-22.04, cc: gcc-9,  cxx: g++-9 }
+          - { os: ubuntu-22.04, cc: gcc-10, cxx: g++-10 }
           - { os: ubuntu-latest, cc: gcc-11, cxx: g++-11 }
           - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
           - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
-          - { os: ubuntu-20.04, cc: clang-8, cxx: clang++-8 }
-          - { os: ubuntu-20.04, cc: clang-9, cxx: clang++-9 }
-          - { os: ubuntu-20.04, cc: clang-10, cxx: clang++-10 }
-          - { os: ubuntu-20.04, cc: clang-11, cxx: clang++-11 }
-          - { os: ubuntu-20.04, cc: clang-12, cxx: clang++-12 }
+          - { os: ubuntu-24.04, cc: gcc-14, cxx: g++-14 }
+          - { os: ubuntu-22.04, cc: clang-11, cxx: clang++-11 }
+          - { os: ubuntu-22.04, cc: clang-12, cxx: clang++-12 }
           - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
           - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
+          - { os: ubuntu-latest, cc: clang-16, cxx: clang++-16 }
+          - { os: ubuntu-latest, cc: clang-17, cxx: clang++-17 }
+          - { os: ubuntu-latest, cc: clang-18, cxx: clang++-18 }
 
     env:
       CC: ${{ matrix.target.cc }}
@@ -709,18 +708,19 @@ jobs:
       fail-fast: false
       matrix:
         target:
-          - { os: ubuntu-20.04, cc: gcc-9,  cxx: g++-9 }
-          - { os: ubuntu-20.04, cc: gcc-10, cxx: g++-10 }
+          - { os: ubuntu-22.04, cc: gcc-9,  cxx: g++-9 }
+          - { os: ubuntu-22.04, cc: gcc-10, cxx: g++-10 }
           - { os: ubuntu-22.04, cc: gcc-11, cxx: g++-11 }
           - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
           - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
-          - { os: ubuntu-20.04, cc: clang-8, cxx: clang++-8 }
-          - { os: ubuntu-20.04, cc: clang-9, cxx: clang++-9 }
-          - { os: ubuntu-20.04, cc: clang-10, cxx: clang++-10 }
-          - { os: ubuntu-20.04, cc: clang-11, cxx: clang++-11 }
-          - { os: ubuntu-20.04, cc: clang-12, cxx: clang++-12 }
+          - { os: ubuntu-24.04, cc: gcc-14, cxx: g++-14 }
+          - { os: ubuntu-22.04, cc: clang-11, cxx: clang++-11 }
+          - { os: ubuntu-22.04, cc: clang-12, cxx: clang++-12 }
           - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
           - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
+          - { os: ubuntu-latest, cc: clang-16, cxx: clang++-16 }
+          - { os: ubuntu-latest, cc: clang-17, cxx: clang++-17 }
+          - { os: ubuntu-latest, cc: clang-18, cxx: clang++-18 }
 
     env:
       CC: ${{ matrix.target.cc }}
@@ -901,7 +901,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v4
@@ -925,7 +925,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v4
@@ -949,7 +949,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v4
@@ -973,7 +973,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v4
@@ -997,7 +997,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v4
@@ -1021,7 +1021,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v4
@@ -1045,7 +1045,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v4
@@ -1069,7 +1069,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v4

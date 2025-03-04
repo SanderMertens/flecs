@@ -805,6 +805,7 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, EcsSparse);
     flecs_bootstrap_make_alive(world, EcsUnion);
     flecs_bootstrap_make_alive(world, EcsObserver);
+    flecs_bootstrap_make_alive(world, EcsPairIsTag);
 
     /* Register type information for builtin components */
     flecs_type_info_init(world, EcsComponent, { 
