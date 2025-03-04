@@ -411,3 +411,36 @@ void Add_add_random_id(void) {
 
     ecs_fini(world);
 }
+
+void Add_table_of_added_not_alive_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, 5000);
+
+    test_assert(ecs_has_id(world, e, 5000));
+    test_assert(ecs_is_alive(world, 5000));
+    test_assert(ecs_get_table(world, 5000) != NULL);
+    test_int(ecs_get_type(world, 5000)->count, 0);
+
+    ecs_fini(world);
+}
+
+void Add_table_of_added_not_alive_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, 5000, 6000);
+
+    test_assert(ecs_has_pair(world, e, 5000, 6000));
+
+    test_assert(ecs_is_alive(world, 5000));
+    test_assert(ecs_get_table(world, 5000) != NULL);
+    test_int(ecs_get_type(world, 5000)->count, 0);
+
+    test_assert(ecs_is_alive(world, 6000));
+    test_assert(ecs_get_table(world, 6000) != NULL);
+    test_int(ecs_get_type(world, 6000)->count, 0);
+
+    ecs_fini(world);
+}

@@ -435,7 +435,9 @@
                 "invalid_pair_w_0",
                 "invalid_pair_w_0_rel",
                 "invalid_pair_w_0_obj",
-                "add_random_id"
+                "add_random_id",
+                "table_of_added_not_alive_id",
+                "table_of_added_not_alive_pair"
             ]
         }, {
             "id": "Remove",

@@ -688,7 +688,7 @@ void flecs_bootstrap_make_alive(
 
     if (r->table == NULL) {
         r->table = root;
-        r->row = root->data.count;
+        r->row = flecs_ito(uint32_t, root->data.count);
 
         ecs_vec_t v_entities = ecs_vec_from_entities(root);
         ecs_entity_t *array = ecs_vec_append_t(&world->allocator, 
@@ -757,13 +757,13 @@ void flecs_bootstrap_sanity_check(
     ecs_assert(count == total_count, ECS_INTERNAL_ERROR, NULL);
 
     for (i = 1; i < count; i ++) {
-        ecs_entity_t e = flecs_entities_ids(world)[i];
-        ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_record_t *r = flecs_entities_get(world, e);
+        ecs_entity_t entity = flecs_entities_ids(world)[i];
+        ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_record_t *r = flecs_entities_get(world, entity);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(r->dense == (i + 1), ECS_INTERNAL_ERROR, NULL);
         ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(r->table->data.entities[ECS_RECORD_TO_ROW(r->row)] == e,
+        ecs_assert(r->table->data.entities[ECS_RECORD_TO_ROW(r->row)] == entity,
             ECS_INTERNAL_ERROR, NULL);
     }
 #endif

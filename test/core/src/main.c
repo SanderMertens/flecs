@@ -415,6 +415,8 @@ void Add_invalid_pair_w_0(void);
 void Add_invalid_pair_w_0_rel(void);
 void Add_invalid_pair_w_0_obj(void);
 void Add_add_random_id(void);
+void Add_table_of_added_not_alive_id(void);
+void Add_table_of_added_not_alive_pair(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -3956,6 +3958,14 @@ bake_test_case Add_testcases[] = {
     {
         "add_random_id",
         Add_add_random_id
+    },
+    {
+        "table_of_added_not_alive_id",
+        Add_table_of_added_not_alive_id
+    },
+    {
+        "table_of_added_not_alive_pair",
+        Add_table_of_added_not_alive_pair
     }
 };
 
@@ -11620,7 +11630,7 @@ static bake_test_suite suites[] = {
         "Add",
         NULL,
         NULL,
-        26,
+        28,
         Add_testcases
     },
     {
