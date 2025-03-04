@@ -934,20 +934,6 @@ error:
     return;
 }
 
-static
-void flecs_delete_entity(
-    ecs_world_t *world,
-    ecs_record_t *record,
-    ecs_table_diff_t *diff)
-{    
-    ecs_table_t *table = record->table;
-    int32_t row = ECS_RECORD_TO_ROW(record->row);
-
-    /* Invoke remove actions before deleting */
-    flecs_notify_on_remove(world, table, NULL, row, 1, diff);
-    flecs_table_delete(world, table, row, true);
-}
-
 /* Updating component monitors is a relatively expensive operation that only
  * happens for entities that are monitored. The approach balances the amount of
  * processing between the operation on the entity vs the amount of work that
@@ -1024,21 +1010,13 @@ void flecs_commit(
 
     ecs_os_perf_trace_push("flecs.commit");
 
-    if (src_table) {
-        ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
-        flecs_table_traversable_add(dst_table, is_trav);
+    ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    flecs_table_traversable_add(dst_table, is_trav);
 
-        flecs_move_entity(world, entity, record, dst_table, diff, 
-            construct, evt_flags);
+    flecs_move_entity(world, entity, record, dst_table, diff, 
+        construct, evt_flags);
 
-        flecs_table_traversable_add(src_table, -is_trav);
-    } else {        
-        flecs_table_traversable_add(dst_table, is_trav);
-        if (dst_table->type.count) {
-            flecs_new_entity(world, entity, record, dst_table, diff, 
-                construct, evt_flags);
-        }
-    }
+    flecs_table_traversable_add(src_table, -is_trav);
 
     /* If the entity is being watched, it is being monitored for changes and
      * requires rematching systems when components are added or removed. This
@@ -2935,10 +2913,9 @@ void ecs_delete(
                 .removed_flags = table->flags & EcsTableRemoveEdgeFlags
             };
 
-            flecs_delete_entity(world, r, &diff);
-
-            r->row = 0;
-            r->table = NULL;
+            int32_t row = ECS_RECORD_TO_ROW(r->row);
+            flecs_notify_on_remove(world, table, NULL, row, 1, &diff);
+            flecs_table_delete(world, table, row, true);
         }
         
         flecs_entities_remove(world, entity);
