@@ -2655,8 +2655,10 @@ void DeserializeFromJson_ser_deser_new_world_component_w_anon_entity_member(void
     test_assert(et->a != 0);
     test_assert(et->b != 0);
     test_assert(et->a != et->b);
-    test_assert(ecs_get_table(world, et->a) == NULL);
-    test_assert(ecs_get_table(world, et->b) == NULL);
+    test_assert(ecs_get_table(world, et->a) != NULL);
+    test_int(ecs_get_type(world, et->a)->count, 0);
+    test_assert(ecs_get_table(world, et->b) != NULL);
+    test_int(ecs_get_type(world, et->b)->count, 0);
 
     test_assert(ecs_has_id(world, e2, et->a));
     test_assert(!ecs_has_id(world, e3, et->a));
@@ -2792,7 +2794,8 @@ void DeserializeFromJson_ser_deser_new_world_component_w_anon_and_named_entity_m
     test_assert(et->b != 0);
     test_assert(et->a != et->b);
     test_str(ecs_get_name(world, et->a), "n1");
-    test_assert(ecs_get_table(world, et->b) == NULL);
+    test_assert(ecs_get_table(world, et->b) != NULL);
+    test_int(ecs_get_type(world, et->b)->count, 0);
 
     test_assert(ecs_has_id(world, e2, et->a));
     test_assert(!ecs_has_id(world, e3, et->a));

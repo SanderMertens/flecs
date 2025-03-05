@@ -415,6 +415,8 @@ void Add_invalid_pair_w_0(void);
 void Add_invalid_pair_w_0_rel(void);
 void Add_invalid_pair_w_0_obj(void);
 void Add_add_random_id(void);
+void Add_table_of_added_not_alive_id(void);
+void Add_table_of_added_not_alive_pair(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -919,6 +921,7 @@ void OnDelete_remove_all_3(void);
 void OnDelete_delete_with_1(void);
 void OnDelete_delete_with_2(void);
 void OnDelete_delete_with_3(void);
+void OnDelete_empty_after_remove(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -3955,6 +3958,14 @@ bake_test_case Add_testcases[] = {
     {
         "add_random_id",
         Add_add_random_id
+    },
+    {
+        "table_of_added_not_alive_id",
+        Add_table_of_added_not_alive_id
+    },
+    {
+        "table_of_added_not_alive_pair",
+        Add_table_of_added_not_alive_pair
     }
 };
 
@@ -5900,6 +5911,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_with_3",
         OnDelete_delete_with_3
+    },
+    {
+        "empty_after_remove",
+        OnDelete_empty_after_remove
     }
 };
 
@@ -11615,7 +11630,7 @@ static bake_test_suite suites[] = {
         "Add",
         NULL,
         NULL,
-        26,
+        28,
         Add_testcases
     },
     {
@@ -11692,7 +11707,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        126,
+        127,
         OnDelete_testcases
     },
     {

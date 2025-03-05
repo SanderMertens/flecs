@@ -555,6 +555,9 @@ void flecs_bootstrap_builtin(
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_record_t *record = flecs_entities_ensure(world, entity);
+    ecs_assert(record->table == &world->store.root, ECS_INTERNAL_ERROR, NULL);
+    flecs_table_delete(
+        world, &world->store.root, ECS_RECORD_TO_ROW(record->row), false);
     record->table = table;
 
     int32_t index = flecs_table_append(world, table, entity, false, false);
@@ -670,6 +673,34 @@ ecs_table_t* flecs_bootstrap_component_table(
     return result;
 }
 
+/* Make entities alive before the root table is initialized */
+static
+void flecs_bootstrap_make_alive(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_table_t *root = &world->store.root;
+    flecs_entities_make_alive(world, e);
+
+    ecs_record_t *r = flecs_entities_ensure(world, e);
+    ecs_assert(r->table == NULL || r->table == root, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    if (r->table == NULL) {
+        r->table = root;
+        r->row = flecs_ito(uint32_t, root->data.count);
+
+        ecs_vec_t v_entities = ecs_vec_from_entities(root);
+        ecs_entity_t *array = ecs_vec_append_t(&world->allocator, 
+            &v_entities, ecs_entity_t);
+        array[0] = e;
+
+        root->data.entities = v_entities.array;
+        root->data.count = v_entities.count;
+        root->data.size = v_entities.size;
+    }
+}
+
 static
 void flecs_bootstrap_entity(
     ecs_world_t *world,
@@ -681,7 +712,7 @@ void flecs_bootstrap_entity(
     ecs_os_strcpy(symbol, "flecs.core.");
     ecs_os_strcat(symbol, name);
     
-    ecs_make_alive(world, id);
+    flecs_bootstrap_make_alive(world, id);
     ecs_add_pair(world, id, EcsChildOf, parent);
     ecs_set_name(world, id, name);
     ecs_set_symbol(world, id, symbol);
@@ -694,6 +725,50 @@ void flecs_bootstrap_entity(
     }
 }
 
+static
+void flecs_bootstrap_sanity_check(
+    ecs_world_t *world)
+{
+    (void)world;
+#ifdef FLECS_DEBUG
+    int32_t i, e, count = flecs_sparse_count(&world->store.tables);
+    int32_t total_count = 0;
+
+    for (i = -1; i < count; i ++) {
+        ecs_table_t *table;
+        if (i == -1) {
+            table = &world->store.root;
+        } else {
+            table = flecs_sparse_get_dense_t(
+                &world->store.tables, ecs_table_t, i);
+        }
+        for (e = 0; e < table->data.count; e ++) {
+            ecs_record_t *r = flecs_entities_get(
+                world, table->data.entities[e]);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ECS_RECORD_TO_ROW(r->row) == e, 
+                ECS_INTERNAL_ERROR, NULL);
+            total_count ++;
+        }
+    }
+
+    count = flecs_entities_count(world);
+    ecs_assert(count == total_count, ECS_INTERNAL_ERROR, NULL);
+
+    for (i = 1; i < count; i ++) {
+        ecs_entity_t entity = flecs_entities_ids(world)[i];
+        ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_record_t *r = flecs_entities_get(world, entity);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(r->dense == (i + 1), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(r->table->data.entities[ECS_RECORD_TO_ROW(r->row)] == entity,
+            ECS_INTERNAL_ERROR, NULL);
+    }
+#endif
+}
+
 void flecs_bootstrap(
     ecs_world_t *world)
 {
@@ -702,33 +777,35 @@ void flecs_bootstrap(
     ecs_set_name_prefix(world, "Ecs");
 
     /* Ensure builtin ids are alive */
-    ecs_make_alive(world, ecs_id(EcsComponent));
-    ecs_make_alive(world, EcsFinal);
-    ecs_make_alive(world, EcsInheritable);
-    ecs_make_alive(world, ecs_id(EcsIdentifier));
-    ecs_make_alive(world, EcsName);
-    ecs_make_alive(world, EcsSymbol);
-    ecs_make_alive(world, EcsAlias);
-    ecs_make_alive(world, EcsChildOf);
-    ecs_make_alive(world, EcsFlecs);
-    ecs_make_alive(world, EcsFlecsCore);
-    ecs_make_alive(world, EcsFlecsInternals);
-    ecs_make_alive(world, EcsOnAdd);
-    ecs_make_alive(world, EcsOnRemove);
-    ecs_make_alive(world, EcsOnSet);
-    ecs_make_alive(world, EcsOnDelete);
-    ecs_make_alive(world, EcsPanic);
-    ecs_make_alive(world, EcsFlag);
-    ecs_make_alive(world, EcsIsA);
-    ecs_make_alive(world, EcsWildcard);
-    ecs_make_alive(world, EcsAny);
-    ecs_make_alive(world, EcsPairIsTag);
-    ecs_make_alive(world, EcsCanToggle);
-    ecs_make_alive(world, EcsTrait);
-    ecs_make_alive(world, EcsRelationship);
-    ecs_make_alive(world, EcsTarget);
-    ecs_make_alive(world, EcsSparse);
-    ecs_make_alive(world, EcsUnion);
+    flecs_bootstrap_make_alive(world, ecs_id(EcsComponent));
+    flecs_bootstrap_make_alive(world, ecs_id(EcsIdentifier));
+    flecs_bootstrap_make_alive(world, ecs_id(EcsPoly));
+    flecs_bootstrap_make_alive(world, ecs_id(EcsDefaultChildComponent));
+    flecs_bootstrap_make_alive(world, EcsFinal);
+    flecs_bootstrap_make_alive(world, EcsName);
+    flecs_bootstrap_make_alive(world, EcsSymbol);
+    flecs_bootstrap_make_alive(world, EcsAlias);
+    flecs_bootstrap_make_alive(world, EcsChildOf);
+    flecs_bootstrap_make_alive(world, EcsFlecs);
+    flecs_bootstrap_make_alive(world, EcsFlecsCore);
+    flecs_bootstrap_make_alive(world, EcsFlecsInternals);
+    flecs_bootstrap_make_alive(world, EcsOnAdd);
+    flecs_bootstrap_make_alive(world, EcsOnRemove);
+    flecs_bootstrap_make_alive(world, EcsOnSet);
+    flecs_bootstrap_make_alive(world, EcsOnDelete);
+    flecs_bootstrap_make_alive(world, EcsPanic);
+    flecs_bootstrap_make_alive(world, EcsFlag);
+    flecs_bootstrap_make_alive(world, EcsIsA);
+    flecs_bootstrap_make_alive(world, EcsWildcard);
+    flecs_bootstrap_make_alive(world, EcsAny);
+    flecs_bootstrap_make_alive(world, EcsCanToggle);
+    flecs_bootstrap_make_alive(world, EcsTrait);
+    flecs_bootstrap_make_alive(world, EcsRelationship);
+    flecs_bootstrap_make_alive(world, EcsTarget);
+    flecs_bootstrap_make_alive(world, EcsSparse);
+    flecs_bootstrap_make_alive(world, EcsUnion);
+    flecs_bootstrap_make_alive(world, EcsObserver);
+    flecs_bootstrap_make_alive(world, EcsPairIsTag);
 
     /* Register type information for builtin components */
     flecs_type_info_init(world, EcsComponent, { 
@@ -1131,6 +1208,9 @@ void flecs_bootstrap(
 
     ecs_assert(world->idr_childof_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(world->idr_isa_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Verify that all entities are where they're supposed to be */
+    flecs_bootstrap_sanity_check(world);
 
     ecs_log_pop();
 }
