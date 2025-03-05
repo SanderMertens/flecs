@@ -26,13 +26,12 @@ bool flecs_path_append(
     ecs_entity_t cur = 0;
     const char *name = NULL;
     ecs_size_t name_len = 0;
-    
+
     if (child && ecs_is_alive(world, child)) {
-        const ecs_record_t *r = flecs_entities_get(world, child);
-        bool hasName = false;
-        if (r && r->table) {
-            hasName = r->table->flags & EcsTableHasName;
-        }
+        ecs_record_t *r = flecs_entities_get(world, child);
+        ecs_assert(r != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+        bool hasName = r->table->flags & EcsTableHasName;
 
         if (hasName) {
             cur = ecs_get_target(world, child, EcsChildOf, 0);
@@ -47,7 +46,11 @@ bool flecs_path_append(
                     }
                 }
             } else if (prefix && prefix[0]) {
-                !prefix[1] ? ecs_strbuf_appendch(buf, prefix[0]) : ecs_strbuf_appendstr(buf, prefix);
+                if (!prefix[1]) {
+                    ecs_strbuf_appendch(buf, prefix[0]);
+                } else {
+                    ecs_strbuf_appendstr(buf, prefix);
+                }
             }
 
             const EcsIdentifier *id = ecs_get_pair(
@@ -67,8 +70,9 @@ bool flecs_path_append(
         }
 
         if (sep_in_name || escape) {
+            const char *name_ptr;
             char ch;
-            for (const char* name_ptr = name; (ch = name_ptr[0]); name_ptr ++) {
+            for (name_ptr = name; (ch = name_ptr[0]); name_ptr ++) {
                 char esc[3];
                 if (ch != sep[0]) {
                     if (escape) {
@@ -115,8 +119,9 @@ bool flecs_name_is_id(
     
     if (name[0] == '#') {
         /* If name is not just digits it's not an id */
+        const char *ptr;
         char ch;
-        for (const char* ptr = name + 1; (ch = ptr[0]); ptr ++) {
+        for (ptr = name + 1; (ch = ptr[0]); ptr ++) {
             if (!isdigit(ch)) {
                 ecs_os_perf_trace_pop("flecs.entity_name.is_id");
                 return false;
@@ -142,7 +147,7 @@ ecs_entity_t flecs_name_to_id(
     return res;
 }
 
-static inline
+static
 ecs_entity_t flecs_get_builtin(
     const char *name)
 {
@@ -159,12 +164,12 @@ ecs_entity_t flecs_get_builtin(
     return 0;
 }
 
-static inline
+static
 bool flecs_is_sep(
     const char **ptr,
     const char *sep)
 {
-    const ecs_size_t len = ecs_os_strlen(sep);
+    ecs_size_t len = ecs_os_strlen(sep);
 
     if (!ecs_os_strncmp(*ptr, sep, len)) {
         *ptr += len;
@@ -238,13 +243,17 @@ const char* flecs_path_elem(
     }
 
     ecs_os_perf_trace_pop("flecs.entity_name.path_elem");
-    return pos || ptr[0] ? ptr : NULL;
+    if (pos || ptr[0]) {
+        return ptr;
+    } else {
+        return NULL;
+    }
 error:
     ecs_os_perf_trace_pop("flecs.entity_name.path_elem");
     return NULL;
 }
 
-static inline
+static
 bool flecs_is_root_path(
     const char *path,
     const char *prefix)
@@ -293,7 +302,7 @@ ecs_entity_t flecs_get_parent_from_path(
 
         /* Skip next separator so that the returned path points to the next
          * name element. */
-        const ecs_size_t sep_len = ecs_os_strlen(sep);
+        ecs_size_t sep_len = ecs_os_strlen(sep);
         if (!ecs_os_strncmp(path, sep, ecs_os_strlen(sep))) {
             path += sep_len;
         }
@@ -311,13 +320,14 @@ ecs_entity_t flecs_get_parent_from_path(
     return parent;
 }
 
-static inline
+static
 void flecs_on_set_symbol(ecs_iter_t *it) {
-    const EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
+    EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
     ecs_world_t *world = it->real_world;
 
-    for (int i = 0; i < it->count; i ++) {
-        const ecs_entity_t e = it->entities[i];
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
         flecs_name_index_ensure(
             &world->symbols, e, n[i].value, n[i].length, n[i].hash);
     }
@@ -398,7 +408,7 @@ ecs_entity_t ecs_lookup_child(
     world = ecs_get_world(world);
 
     if (flecs_name_is_id(name)) {
-        const ecs_entity_t result = flecs_name_to_id(name);
+        ecs_entity_t result = flecs_name_to_id(name);
         if (result && ecs_is_alive(world, result)) {
             if (parent && !ecs_has_pair(world, result, EcsChildOf, parent)) {
                 ecs_os_perf_trace_pop("flecs.entity_name.lookup_child");
@@ -409,8 +419,8 @@ ecs_entity_t ecs_lookup_child(
         }
     }
 
-    const ecs_id_t pair = ecs_childof(parent);
-    const ecs_hashmap_t *index = flecs_id_name_index_get(world, pair);
+    ecs_id_t pair = ecs_childof(parent);
+    ecs_hashmap_t *index = flecs_id_name_index_get(world, pair);
     if (index) {
         ecs_os_perf_trace_pop("flecs.entity_name.lookup_child");
         return flecs_name_index_find(index, name, 0, 0);
@@ -484,11 +494,13 @@ ecs_entity_t ecs_lookup_path_w_sep(
     if (e) {
         return e;
     }
-    
+
     ecs_os_perf_trace_push("flecs.entity_name.lookup_path");
 
     char buff[ECS_NAME_BUFFER_LENGTH], *elem = buff;
+    const char *ptr;
     int32_t size = ECS_NAME_BUFFER_LENGTH;
+    ecs_entity_t cur;
     bool lookup_path_search = false;
 
     const ecs_entity_t *lookup_path = ecs_get_lookup_path(stage);
@@ -525,8 +537,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
     }
 
 retry:
-    ecs_entity_t cur = parent;
-    const char* ptr = path;
+    cur = parent;
+    ptr = path;
 
     while ((ptr = flecs_path_elem(ptr, sep, &elem, &size))) {
         cur = ecs_lookup_child(world, cur, elem);
@@ -573,7 +585,7 @@ ecs_entity_t ecs_set_scope(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    const ecs_entity_t cur = stage->scope;
+    ecs_entity_t cur = stage->scope;
     stage->scope = scope;
 
     return cur;
@@ -740,7 +752,7 @@ ecs_entity_t ecs_add_path_w_sep(
 
                 if (!e) {
                     if (last_elem) {
-                        const ecs_entity_t prev = ecs_set_scope(world, 0);
+                        ecs_entity_t prev = ecs_set_scope(world, 0);
                         e = ecs_entity(world, {0});
                         ecs_set_scope(world, prev);
                     } else {

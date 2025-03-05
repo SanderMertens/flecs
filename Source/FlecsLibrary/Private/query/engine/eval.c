@@ -276,9 +276,7 @@ bool flecs_query_with_id(
     ecs_assert(field != -1, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_t *table = flecs_query_get_table(op, &op->src, EcsQuerySrc, ctx);
-    if (!table) {
-        return false;
-    }
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_t id = it->ids[field];
     ecs_id_record_t *idr = op_ctx->idr;
@@ -455,11 +453,9 @@ bool flecs_query_x_from(
         op_ctx->type_id = type_id;
         ecs_assert(ecs_is_alive(world, type_id), ECS_INTERNAL_ERROR, NULL);
         ecs_record_t *r = flecs_entities_get(world, type_id);
-        ecs_table_t *table;
-        if (!r || !(table = r->table)) {
-            /* Nothing to match */
-            return false;
-        }
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_table_t *table = r->table;
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Find first id to test against. Skip ids with DontInherit flag. */
         type = op_ctx->type = &table->type;
@@ -764,9 +760,7 @@ bool flecs_query_each(
 
     ecs_table_range_t range = flecs_query_var_get_range(op->first.var, ctx);
     ecs_table_t *table = range.table;
-    if (!table) {
-        return false;
-    }
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!redo) {
         if (!ecs_table_count(table)) {

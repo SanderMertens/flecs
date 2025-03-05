@@ -827,91 +827,69 @@ void flecs_table_invoke_remove_hooks(
     }
 }
 
-/* Destruct all components and/or delete all entities in table in range */
+/* Destruct all components and/or delete all entities in table */
 static
 void flecs_table_dtor_all(
     ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t row,
-    int32_t count,
-    bool is_delete)
+    ecs_table_t *table)
 {
+    int32_t i, c, count = ecs_table_count(table);
+    if (!count) {
+        return;
+    }
+
     const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t column_count = table->column_count;
-    int32_t i, c, end = row + count;
 
     ecs_assert(!column_count || table->data.columns != NULL, 
         ECS_INTERNAL_ERROR, NULL);
 
-    if (is_delete && table->_->traversable_count) {
+    if (table->_->traversable_count) {
         /* If table contains monitored entities with traversable relationships,
          * make sure to invalidate observer cache */
-        flecs_emit_propagate_invalidate(world, table, row, count);
+        flecs_emit_propagate_invalidate(world, table, 0, count);
     }
 
     /* If table has components with destructors, iterate component columns */
     if (table->flags & EcsTableHasDtors) {
-        /* Throw up a lock just to be sure */
-        table->_->lock = true;
-
         /* Run on_remove callbacks first before destructing components */
         for (c = 0; c < column_count; c++) {
             ecs_column_t *column = &table->data.columns[c];
             ecs_iter_action_t on_remove = column->ti->hooks.on_remove;
             if (on_remove) {
                 flecs_table_invoke_hook(world, table, on_remove, EcsOnRemove, 
-                    column, &entities[row], row, count);
+                    column, &entities[0], 0, count);
             }
         }
 
         /* Destruct components */
         for (c = 0; c < column_count; c++) {
-            flecs_table_invoke_dtor(&table->data.columns[c], row, count);
+            flecs_table_invoke_dtor(&table->data.columns[c], 0, count);
         }
 
         /* Iterate entities first, then components. This ensures that only one
          * entity is invalidated at a time, which ensures that destructors can
          * safely access other entities. */
-        for (i = row; i < end; i ++) {
+        for (i = 0; i < count; i ++) {
             /* Update entity index after invoking destructors so that entity can
              * be safely used in destructor callbacks. */
             ecs_entity_t e = entities[i];
             ecs_assert(!e || ecs_is_valid(world, e), 
                 ECS_INTERNAL_ERROR, NULL);
 
-            if (is_delete) {
-                flecs_entities_remove(world, e);
-                ecs_assert(ecs_is_valid(world, e) == false, 
-                    ECS_INTERNAL_ERROR, NULL);
-            } else {
-                // If this is not a delete, clear the entity index record
-                ecs_record_t *record = flecs_entities_get(world, e);
-                record->table = NULL;
-                record->row = 0;
-            }
+            flecs_entities_remove(world, e);
+            ecs_assert(ecs_is_valid(world, e) == false, 
+                ECS_INTERNAL_ERROR, NULL);
         }
-
-        table->_->lock = false;
 
     /* If table does not have destructors, just update entity index */
     } else {
-        if (is_delete) {
-            for (i = row; i < end; i ++) {
-                ecs_entity_t e = entities[i];
-                ecs_assert(!e || ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
-                flecs_entities_remove(world, e);
-                ecs_assert(!ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
-            } 
-        } else {
-            for (i = row; i < end; i ++) {
-                ecs_entity_t e = entities[i];
-                ecs_assert(!e || ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
-                ecs_record_t *record = flecs_entities_get(world, e);
-                record->table = NULL;
-                record->row = record->row & ECS_ROW_FLAGS_MASK;
-                (void)e;
-            }
-        }      
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t e = entities[i];
+            ecs_assert(!e || ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
+            flecs_entities_remove(world, e);
+            ecs_assert(!ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
+        }     
     }
 }
 
@@ -924,7 +902,6 @@ void flecs_table_fini_data(
     ecs_world_t *world,
     ecs_table_t *table,
     bool do_on_remove,
-    bool is_delete,
     bool deallocate)
 {
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
@@ -933,10 +910,7 @@ void flecs_table_fini_data(
         flecs_table_notify_on_remove(world, table);        
     }
 
-    int32_t count = ecs_table_count(table);
-    if (count) {
-        flecs_table_dtor_all(world, table, 0, count, is_delete);
-    }
+    flecs_table_dtor_all(world, table);
 
     if (deallocate) {
         ecs_column_t *columns = table->data.columns;
@@ -993,36 +967,20 @@ const ecs_entity_t* ecs_table_entities(
     return table->data.entities;
 }
 
-/* Cleanup, no OnRemove, delete from entity index, deactivate table, retain allocations */
+/* Cleanup, no OnRemove, retain allocations */
 void ecs_table_clear_entities(
     ecs_world_t* world,
     ecs_table_t* table)
 {
-    flecs_table_fini_data(world, table, true, true, false);
+    flecs_table_fini_data(world, table, true, false);
 }
 
-/* Cleanup, no OnRemove, clear entity index, deactivate table, free allocations */
-void flecs_table_clear_entities_silent(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    flecs_table_fini_data(world, table, false, false, true);
-}
-
-/* Cleanup, run OnRemove, clear entity index, deactivate table, free allocations */
-void flecs_table_clear_entities(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    flecs_table_fini_data(world, table, true, false, true);
-}
-
-/* Cleanup, run OnRemove, delete from entity index, deactivate table, free allocations */
+/* Cleanup, run OnRemove, free allocations */
 void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    flecs_table_fini_data(world, table, true, true, true);
+    flecs_table_fini_data(world, table, true, true);
 }
 
 /* Unset all components in table. This function is called before a table is 
@@ -1031,7 +989,6 @@ void flecs_table_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    (void)world;
     flecs_table_notify_on_remove(world, table);
 }
 
@@ -1068,8 +1025,8 @@ void flecs_table_fini(
         ecs_log_push_2();
     }
 
-    /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
-    flecs_table_fini_data(world, table, false, true, true);
+    /* Cleanup data, no OnRemove, free allocations */
+    flecs_table_fini_data(world, table, false, true);
     flecs_table_clear_edges(world, table);
 
     if (!is_root) {
