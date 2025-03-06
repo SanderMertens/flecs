@@ -9,6 +9,7 @@
 - [Getting Started with Godot](https://github.com/paulfigiel/godot-flecs-sample)
 - [Getting Started with Raylib](https://github.com/kranzky/raylib-flecs-starter-kit)
 - [Getting Started with SDL3, ImGui, Sqlite](https://github.com/ilyas-taouaou/CodotakuCMakeRepo) ([video](https://www.youtube.com/watch?v=T32B7nf6B-8))
+- [Getting Started with SDL3, Blend2D](https://github.com/james-j-obrien/flecs-sdl3-blend2d)
 - [Flecs an Raylib template](https://github.com/aog05/Raylib-and-Flecs-Template)
 
 ## Manuals
