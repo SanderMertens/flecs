@@ -220,7 +220,7 @@ inline flecs::entity world::entity(E value) const {
 
 template <typename T>
 inline flecs::entity world::entity(const char *name) const {
-    return flecs::entity(world_, _::type<T>::register_id(world_, name, true, 0, false) );
+    return flecs::entity(world_, _::type<T>::register_id(world_, name, true, false) );
 }
 
 template <typename... Args>
