@@ -33,6 +33,7 @@ DECLARE_DELEGATE_OneParam(FOnComponentPropertiesRegistered, FFlecsComponentPrope
 struct UNREALFLECS_API FFlecsComponentPropertiesRegistry final
 {
 	static FFlecsComponentPropertiesRegistry Instance;
+	
 public:
 	static FFlecsComponentPropertiesRegistry& Get()
 	{

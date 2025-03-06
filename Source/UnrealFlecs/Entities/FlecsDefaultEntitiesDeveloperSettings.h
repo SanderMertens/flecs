@@ -53,6 +53,7 @@ class UNREALFLECS_API UFlecsDefaultEntitiesDeveloperSettings final : public UDev
 	GENERATED_BODY()
 
 public:
+	//@TODO: Implement this or add an equivalent feature.
 	//UPROPERTY(EditAnywhere, Config, Category = "Flecs | Default Entities")
 	//TArray<FFlecsDefaultMetaEntity> DefaultEntities;
 

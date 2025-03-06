@@ -19,8 +19,8 @@ DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("FlecsTickerModule::ProgressModule::RunPipel
 	STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, STATGROUP_FlecsTickerModule);
 
 static FORCEINLINE NO_DISCARD int flecs_entity_compare(
-	ecs_entity_t e1, 
-	ecs_entity_t e2) 
+	const ecs_entity_t e1,
+	const ecs_entity_t e2) 
 {
 	return (e1 > e2) - (e1 < e2);
 }
@@ -49,10 +49,7 @@ UFlecsTickerModule::UFlecsTickerModule(const FObjectInitializer& InObjectInitial
 void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
 	InWorld->RegisterComponentType<FFlecsTickerComponent>();
-	
-	FFlecsTickerComponent TickerComponent;
-	TickerComponent.TickId = 0;
-	InWorld->SetSingleton<FFlecsTickerComponent>(TickerComponent);
+	InWorld->AddSingleton<FFlecsTickerComponent>();
 
 	TickerComponentPtr = InWorld->GetSingletonPtr<FFlecsTickerComponent>();
 	solid_checkf(TickerComponentPtr, TEXT("TickerComponentRef is not valid!"));

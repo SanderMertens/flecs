@@ -22,19 +22,23 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 
 	FlecsWorld->EndScope([this, &FlecsWorld]()
 	{
-		ModuleEntity = FlecsWorld->CreateEntity(Execute_GetModuleName(_getUObject()));
+		FlecsWorld->Defer([this, &FlecsWorld]()
+		{
+			ModuleEntity = FlecsWorld->CreateEntity(Execute_GetModuleName(_getUObject()));
+			
+			ModuleEntity.Add(flecs::Module);
+			ModuleEntity.SetPair<FFlecsUObjectComponent, FFlecsModuleComponentTag>(FFlecsUObjectComponent{ _getUObject() });
+			
+			ModuleEntity.Set<FFlecsModuleComponent>({ _getUObject()->GetClass() });
+		});
+
 		solid_check(ModuleEntity.IsValid());
-		
-		ModuleEntity.Add(flecs::Module);
-		ModuleEntity.SetPair<FFlecsUObjectComponent, FFlecsModuleComponentTag>(FFlecsUObjectComponent{ _getUObject() });
-		
-		ModuleEntity.Set<FFlecsModuleComponent>({ _getUObject()->GetClass() });
 
 		FlecsWorld->SetScope(ModuleEntity);
 		
 		InitializeModule(FlecsWorld, ModuleEntity);
 		Execute_BP_InitializeModule(_getUObject(), FlecsWorld);
-	});
+	}),
 
 	FlecsWorld->Event<FFlecsModuleInitEvent>()
 		.id<FFlecsModuleComponent>()
@@ -53,7 +57,7 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 	UN_LOGF(LogFlecsCore, Log, "Imported module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }
 
-inline void IFlecsModuleInterface::DeinitializeModule_Internal()
+void IFlecsModuleInterface::DeinitializeModule_Internal()
 {
 	ModuleEntity.Disable();
 

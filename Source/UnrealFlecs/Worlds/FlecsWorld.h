@@ -712,8 +712,8 @@ public:
 		return World.has<T>();
 	}
 
-	template <typename T>
-	requires (std::is_copy_constructible<T>::value)
+	template <typename T
+	UE_REQUIRES(std::is_copy_constructible<T>::value)>
 	NO_DISCARD T GetSingleton() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
@@ -752,10 +752,11 @@ public:
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return World.get_ref<T>();
 	}
-
+	
 	template <typename T>
 	NO_DISCARD FFlecsEntityHandle ObtainSingletonEntity() const
 	{
+		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return World.entity<T>();
 	}
 
@@ -790,12 +791,15 @@ public:
 	{
 		return GetWorldEntity().GetName();
 	}
-	
+
+	/**
+	 * @brief Set the Name of the World Entity
+	 * @param InName The new name
+	 */
 	void SetWorldName(const FString& InName) const
 	{
 		GetWorldEntity().SetName(InName);
 	}
-
 	
 	/**
 	 * @brief Import a regular C++ Module to the world,

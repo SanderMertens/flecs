@@ -7,6 +7,8 @@
 #include "UObject/Object.h"
 #include "UnrealFlecsObject.generated.h"
 
+class UFlecsWorld;
+
 UCLASS(Abstract, BlueprintType)
 class UNREALFLECS_API UUnrealFlecsObject : public UObject, public IFlecsEntityInterface
 {
@@ -15,15 +17,30 @@ class UNREALFLECS_API UUnrealFlecsObject : public UObject, public IFlecsEntityIn
 public:
 	UUnrealFlecsObject();
 	UUnrealFlecsObject(const FObjectInitializer& ObjectInitializer);
+
+	void InitializeFlecsObject(UFlecsWorld* InFlecsWorld);
 	
+	// Inheriting class can override this if they want to customize their Entity creation
+	virtual FFlecsEntityHandle CreateObjectEntity();
+
+	virtual void BeginPlay();
 
 	FORCEINLINE virtual FFlecsEntityHandle GetEntityHandle() const override
 	{
 		return ObjectEntityHandle;
 	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	UFlecsWorld* GetFlecsWorld() const;
+	virtual UWorld* GetWorld() const override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FFlecsEntityHandle ObjectEntityHandle;
+
+	UPROPERTY()
+	TWeakObjectPtr<UFlecsWorld> FlecsWorld;
 	
 }; // class UUnrealFlecsObject

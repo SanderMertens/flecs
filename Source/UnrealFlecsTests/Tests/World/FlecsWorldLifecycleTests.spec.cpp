@@ -26,8 +26,7 @@ void FFlecsWorldLifecycleTestsSpec::Define()
 
 	Describe("World Ptr Tests", [this]()
 	{
-		It("Should be able to convert flecs::world to UFlecsWorld using ToFlecsWorld Function",
-			[this]()
+		It("Should be able to convert flecs::world to UFlecsWorld using ToFlecsWorld Function", [this]()
 		{
 			TestTrue("Flecs world is valid", Fixture.FlecsWorld.IsValid());
 			TestNotNull("Flecs world singleton is valid", ToFlecsWorld(Fixture.FlecsWorld->World));
