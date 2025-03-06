@@ -66,27 +66,18 @@ const char* ecs_cpp_trim_module(
     const char *type_name);
 
 FLECS_API
-ecs_entity_t ecs_cpp_component_find(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    const char *name,
-    const char *symbol,
-    size_t size,
-    size_t alignment,
-    bool implicit_name,
-    bool *existing_out);
-
-FLECS_API
 ecs_entity_t ecs_cpp_component_register(
     ecs_world_t *world,
-    ecs_entity_t s_id,
     ecs_entity_t id,
+    int32_t ids_index,
     const char *name,
-    const char *type_name,
-    const char *symbol,
+    const char *cpp_name,
+    const char *cpp_symbol,
     size_t size,
     size_t alignment,
     bool is_component,
+    bool explicit_registration,
+    bool *registered_out,
     bool *existing_out);
 
 FLECS_API

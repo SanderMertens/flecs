@@ -78,8 +78,8 @@ flecs::entity import(world& world) {
 
 template <typename Module>
 inline flecs::entity world::module(const char *name) const {
-    flecs::entity result = this->entity(_::type<Module>::register_id(
-        world_, nullptr, false));
+    flecs::entity result = this->entity(
+        _::type<Module>::register_id(world_, nullptr, false));
 
     if (name) {
         flecs::entity prev_parent = result.parent();
