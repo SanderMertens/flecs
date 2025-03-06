@@ -45,6 +45,7 @@
 - [Some Pointers for C (E7)](https://www.youtube.com/watch?v=0LscDsVy-28)
 - [Demistifying Queries Part 1 (E8)](https://www.youtube.com/watch?v=PKvCpUO55yw&t=216s)
 - [Demistifying Queries Part 2 (E9)](https://www.youtube.com/watch?v=4KZGkT9MqHI)
+- [Flecs Systems (E10)](https://www.youtube.com/watch?v=gXzgO6unZkI)
 
 (Shoutout to [jellycake222](https://www.youtube.com/@jellycake222) for making the awesome tutorial series <3!)
 
