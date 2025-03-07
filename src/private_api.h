@@ -82,8 +82,15 @@ void flecs_notify_on_set(
     ecs_table_t *table,
     int32_t row,
     int32_t count,
-    ecs_type_t *type,
+    ecs_id_t id,
     bool owned);
+
+void flecs_notify_on_set_ids(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    ecs_type_t *type);
 
 int32_t flecs_relation_depth(
     const ecs_world_t *world,
@@ -113,6 +120,7 @@ void* flecs_get_base_component(
 void flecs_invoke_hook(
     ecs_world_t *world,
     ecs_table_t *table,
+    const ecs_component_record_t *cdr,
     const ecs_table_record_t *tr,
     int32_t count,
     int32_t row,

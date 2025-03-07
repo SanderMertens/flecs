@@ -163,6 +163,10 @@ void flecs_component_record_init_dont_fragment(
     }
     cdr->non_fragmenting.next = world->cdr_non_fragmenting_head;
     world->cdr_non_fragmenting_head = cdr;
+
+    if (cdr->id < FLECS_HI_COMPONENT_ID) {
+        world->non_fragmenting[cdr->id] = true;
+    }
 }
 
 static
@@ -172,7 +176,17 @@ void flecs_component_fini_sparse(
 {
     if (cdr->sparse) {
         if (cdr->flags & EcsIdIsSparse) {
-            ecs_assert(flecs_sparse_count(cdr->sparse) == 0, 
+            bool dont_fragment = cdr->flags & EcsIdDontFragment;
+            const ecs_type_info_t *ti = cdr->type_info;
+            if (dont_fragment && ti && ti->hooks.dtor) {
+                int32_t i, count = flecs_sparse_count(cdr->sparse);
+                for (i = 0; i < count; i ++) {
+                    void *ptr = flecs_sparse_get_dense(cdr->sparse, 0, i);
+                    ti->hooks.dtor(ptr, 1, ti);
+                }
+            }
+
+            ecs_assert(dont_fragment || flecs_sparse_count(cdr->sparse) == 0, 
                 ECS_INTERNAL_ERROR, NULL);
             flecs_sparse_fini(cdr->sparse);
             flecs_wfree_t(world, ecs_sparse_t, cdr->sparse);

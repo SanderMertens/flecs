@@ -735,7 +735,8 @@ void flecs_table_invoke_hook(
     ecs_assert(type_index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type_index < table->type.count, ECS_INTERNAL_ERROR, NULL);
     const ecs_table_record_t *tr = &table->_->records[type_index];
-    flecs_invoke_hook(world, table, tr, count, row, entities, 
+    ecs_component_record_t *cdr = (ecs_component_record_t*)tr->hdr.cache;
+    flecs_invoke_hook(world, table, cdr, tr, count, row, entities, 
         table->type.array[type_index], column->ti, event, callback);
 }
 
@@ -867,7 +868,7 @@ void flecs_table_dtor_all(
         /* Destruct components */
         for (c = 0; c < column_count; c++) {
             flecs_table_invoke_dtor(&table->data.columns[c], 0, count);
-        }
+        }       
 
         /* Iterate entities first, then components. This ensures that only one
          * entity is invalidated at a time, which ensures that destructors can

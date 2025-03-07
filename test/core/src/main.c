@@ -448,6 +448,8 @@ void Sparse_get_mut(void);
 void Sparse_ensure(void);
 void Sparse_emplace(void);
 void Sparse_set(void);
+void Sparse_clone(void);
+void Sparse_clone_w_value(void);
 void Sparse_modified_no_on_set(void);
 void Sparse_insert_1(void);
 void Sparse_insert_2(void);
@@ -473,8 +475,11 @@ void Sparse_get_mut_inherited(void);
 void Sparse_ensure_inherited(void);
 void Sparse_emplace_inherited(void);
 void Sparse_override_component(void);
+void Sparse_override_component_2_lvls(void);
 void Sparse_delete_w_override_component(void);
 void Sparse_delete_w_override_on_remove_isa(void);
+void Sparse_bulk_init(void);
+void Sparse_bulk_init_w_non_sparse(void);
 void Sparse_ctor_after_emplace(void);
 void Sparse_ctor_dtor_after_remove(void);
 void Sparse_ctor_dtor_after_clear(void);
@@ -487,6 +492,8 @@ void Sparse_on_add_remove_after_fini(void);
 void Sparse_on_set_after_set(void);
 void Sparse_on_set_after_modified(void);
 void Sparse_on_set_at_offset(void);
+void Sparse_on_set_after_clone(void);
+void Sparse_on_set_after_bulk_init(void);
 void Sparse_on_add_observer(void);
 void Sparse_on_set_observer_set(void);
 void Sparse_on_set_observer_modified(void);
@@ -529,6 +536,7 @@ void Sparse_defer_batched_emplace_w_modified_existing(void);
 void Sparse_defer_batched_set_existing(void);
 void Sparse_defer_batched_set_remove(void);
 void Sparse_defer_batched_set_remove_existing(void);
+void Sparse_dont_fragment_trait_without_sparse_trait(void);
 
 // Testsuite 'Union'
 void Union_add(void);
@@ -4084,6 +4092,14 @@ bake_test_case Sparse_testcases[] = {
         Sparse_set
     },
     {
+        "clone",
+        Sparse_clone
+    },
+    {
+        "clone_w_value",
+        Sparse_clone_w_value
+    },
+    {
         "modified_no_on_set",
         Sparse_modified_no_on_set
     },
@@ -4184,12 +4200,24 @@ bake_test_case Sparse_testcases[] = {
         Sparse_override_component
     },
     {
+        "override_component_2_lvls",
+        Sparse_override_component_2_lvls
+    },
+    {
         "delete_w_override_component",
         Sparse_delete_w_override_component
     },
     {
         "delete_w_override_on_remove_isa",
         Sparse_delete_w_override_on_remove_isa
+    },
+    {
+        "bulk_init",
+        Sparse_bulk_init
+    },
+    {
+        "bulk_init_w_non_sparse",
+        Sparse_bulk_init_w_non_sparse
     },
     {
         "ctor_after_emplace",
@@ -4238,6 +4266,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "on_set_at_offset",
         Sparse_on_set_at_offset
+    },
+    {
+        "on_set_after_clone",
+        Sparse_on_set_after_clone
+    },
+    {
+        "on_set_after_bulk_init",
+        Sparse_on_set_after_bulk_init
     },
     {
         "on_add_observer",
@@ -4406,6 +4442,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "defer_batched_set_remove_existing",
         Sparse_defer_batched_set_remove_existing
+    },
+    {
+        "dont_fragment_trait_without_sparse_trait",
+        Sparse_dont_fragment_trait_without_sparse_trait
     }
 };
 
@@ -11706,7 +11746,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        88,
+        96,
         Sparse_testcases,
         1,
         Sparse_params

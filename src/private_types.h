@@ -312,6 +312,9 @@ struct ecs_world_t {
     /* Head of list that points to all non-fragmenting component ids */
     ecs_component_record_t *cdr_non_fragmenting_head;
 
+    /* Array for quickly checking if components in low id range are fragmenting */
+    bool *non_fragmenting;
+
     /* -- Mixins -- */
     ecs_world_t *self;
     ecs_observable_t observable;

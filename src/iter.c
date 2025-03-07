@@ -171,13 +171,15 @@ void* ecs_field_at_w_size(
         !ecs_field_size(it, index),
             ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
 
+    ecs_component_record_t *cdr = NULL;
     const ecs_table_record_t *tr = it->trs[index];
     if (!tr) {
-        ecs_assert(!ecs_field_is_set(it, index), ECS_INTERNAL_ERROR, NULL);
-        return NULL;
+        cdr = flecs_components_get(it->real_world, it->ids[index]);
+        ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        cdr = (ecs_component_record_t*)tr->hdr.cache;
     }
 
-    ecs_component_record_t *cdr = (ecs_component_record_t*)tr->hdr.cache;
     ecs_assert((cdr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field to access fields for non-sparse components");
     ecs_assert(it->row_fields & (1ull << index), ECS_INTERNAL_ERROR, NULL);

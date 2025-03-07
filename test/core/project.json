@@ -478,6 +478,8 @@
                 "ensure",
                 "emplace",
                 "set",
+                "clone",
+                "clone_w_value",
                 "modified_no_on_set",
                 "insert_1",
                 "insert_2",
@@ -503,8 +505,11 @@
                 "ensure_inherited",
                 "emplace_inherited",
                 "override_component",
+                "override_component_2_lvls",
                 "delete_w_override_component",
                 "delete_w_override_on_remove_isa",
+                "bulk_init",
+                "bulk_init_w_non_sparse",
                 "ctor_after_emplace",
                 "ctor_dtor_after_remove",
                 "ctor_dtor_after_clear",
@@ -517,6 +522,8 @@
                 "on_set_after_set",
                 "on_set_after_modified",
                 "on_set_at_offset",
+                "on_set_after_clone",
+                "on_set_after_bulk_init",
                 "on_add_observer",
                 "on_set_observer_set",
                 "on_set_observer_modified",
@@ -558,7 +565,8 @@
                 "defer_batched_emplace_w_modified_existing",
                 "defer_batched_set_existing",
                 "defer_batched_set_remove",
-                "defer_batched_set_remove_existing"
+                "defer_batched_set_remove_existing",
+                "dont_fragment_trait_without_sparse_trait"
             ]
         }, {
             "id": "Union",
