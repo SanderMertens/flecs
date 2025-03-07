@@ -515,8 +515,8 @@ void flecs_override_copy(
     ecs_iter_action_t on_set = ti->hooks.on_set;
     if (on_set) {
         const ecs_entity_t *entities = &ecs_table_entities(table)[offset];
-        flecs_invoke_hook(world, table, tr, count, offset, entities,
-            ti->component, ti, EcsOnSet, on_set);
+        flecs_invoke_hook(world, table, (ecs_id_record_t*)tr->hdr.cache, tr, 
+            count, offset, entities, ti->component, ti, EcsOnSet, on_set);
     }
 }
 
@@ -1271,6 +1271,7 @@ repeat_event:
         ecs_table_record_t *base_tr = NULL;
         ecs_entity_t base = 0;
         bool id_can_override = can_override;
+        bool dont_fragment = false;
 
         /* Only added components can trigger overriding */
         if (set_mask && event == EcsOnAdd) {
@@ -1282,17 +1283,18 @@ repeat_event:
             }
         }
 
+        idr = flecs_id_record_get(world, id);
+        if (!idr) {
+            /* Possible for union ids */
+            continue;
+        }
+
+        ecs_flags32_t idr_flags = idr->flags;
+        dont_fragment = idr_flags & EcsIdDontFragment;
+
         /* Check if this id is a pair of an traversable relationship. If so, we 
          * may have to forward ids from the pair's target. */
         if ((can_forward && is_pair) || id_can_override) {
-            idr = flecs_id_record_get(world, id);
-            if (!idr) {
-                /* Possible for union ids */
-                continue;
-            }
-
-            ecs_flags32_t idr_flags = idr->flags;
-
             if (is_pair && (idr_flags & EcsIdTraversable)) {
                 const ecs_event_record_t *er_fwd = NULL;
                 if (ECS_PAIR_FIRST(id) == EcsIsA) {
@@ -1331,11 +1333,11 @@ repeat_event:
                         0, id, EcsIsA, EcsUp, &base, NULL, &base_tr);
                     if (base_column != -1) {
                         /* Base found with component */
-                        ecs_table_t *base_table = base_tr->hdr.table;
                         if (idr->flags & EcsIdIsSparse) {
                             override_ptr = flecs_sparse_get_any(
                                 idr->sparse, 0, base);
                         } else {
+                            ecs_table_t *base_table = base_tr->hdr.table;
                             base_column = base_tr->column;
                             ecs_assert(base_column != -1, ECS_INTERNAL_ERROR, NULL);
                             ecs_record_t *base_r = flecs_entities_get(world, base);
@@ -1394,7 +1396,7 @@ repeat_event:
             .count = 0
         };
 
-        if (id != EcsAny) {
+        if (!dont_fragment && id != EcsAny) {
             if (tr == NULL) {
                 /* When a single batch contains multiple add's for an exclusive
                 * relationship, it's possible that an id was in the added list

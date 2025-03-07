@@ -1179,6 +1179,9 @@ void flecs_bootstrap(
     /* Transitive relationships are always Traversable */
     ecs_add_pair(world, EcsTransitive, EcsWith, EcsTraversable);
 
+    /* DontFragment components are always sparse */
+    ecs_add_pair(world, EcsDontFragment, EcsWith, EcsSparse);
+
     /* DontInherit components */
     ecs_add_pair(world, EcsPrefab, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsComponent), EcsOnInstantiate, EcsDontInherit);

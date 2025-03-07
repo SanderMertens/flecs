@@ -649,7 +649,8 @@ void flecs_compute_table_diff(
     ecs_table_t *node,
     ecs_table_t *next,
     ecs_graph_edge_t *edge,
-    ecs_id_t id)
+    ecs_id_t id,
+    bool is_remove)
 {
     ecs_type_t node_type = node->type;
     ecs_type_t next_type = next->type;
@@ -670,17 +671,33 @@ void flecs_compute_table_diff(
                 return;
             }
         }
+    }
+
+    bool dont_fragment = false;
+    if (id < FLECS_HI_COMPONENT_ID) {
+        dont_fragment = world->non_fragmenting[id];
+        if (dont_fragment) {
+            flecs_id_record_ensure(world, id);
+        }
     } else {
-        ecs_id_record_t *idr = flecs_id_record_get(world, id);
-        if (idr->flags & EcsIdDontFragment) {
-            ecs_table_diff_t *diff = flecs_bcalloc(
-                &world->allocators.table_diff);
+        ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
+        dont_fragment = idr->flags & EcsIdDontFragment;
+    }
+    
+    if (dont_fragment) {
+        ecs_table_diff_t *diff = flecs_bcalloc(
+            &world->allocators.table_diff);
+        if (is_remove) {
+            diff->removed.count = 1;
+            diff->removed.array = flecs_wdup_n(world, ecs_id_t, 1, &id);
+            diff->removed_flags = EcsTableHasDontFragment|EcsTableHasSparse;
+        } else {
             diff->added.count = 1;
             diff->added.array = flecs_wdup_n(world, ecs_id_t, 1, &id);
             diff->added_flags = EcsTableHasDontFragment|EcsTableHasSparse;
-            edge->diff = diff;
-            return;
         }
+        edge->diff = diff;
+        return;
     }
 
     ecs_id_t *ids_node = node_type.array;
@@ -1019,7 +1036,7 @@ void flecs_init_edge_for_add(
             next->prev = &edge->hdr;
         }
 
-        flecs_compute_table_diff(world, table, to, edge, id);
+        flecs_compute_table_diff(world, table, to, edge, id, false);
     }
 }
 
@@ -1035,7 +1052,7 @@ void flecs_init_edge_for_remove(
 
     flecs_table_ensure_hi_edge(world, &table->node.remove, id);
 
-    if (table != to) {
+    if ((table != to) || (table->flags & (EcsTableHasUnion|EcsTableHasDontFragment))) {
         /* Remove edges are appended to refs.prev */
         ecs_graph_edge_hdr_t *to_refs = &to->node.refs;
         ecs_graph_edge_hdr_t *prev = to_refs->prev;
@@ -1048,7 +1065,7 @@ void flecs_init_edge_for_remove(
             prev->next = &edge->hdr;
         }
 
-        flecs_compute_table_diff(world, table, to, edge, id);
+        flecs_compute_table_diff(world, table, to, edge, id, true);
     }
 }
 
@@ -1099,7 +1116,7 @@ ecs_table_t* flecs_table_traverse_remove(
         ecs_assert(edge->to != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    if (node != to) {
+    if (node != to || edge->diff) {
         if (edge->diff) {
             *diff = *edge->diff;
         } else {

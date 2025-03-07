@@ -147,6 +147,49 @@ void Sparse_set(void) {
     ecs_fini(world);
 }
 
+void Sparse_clone(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_entity_t c = ecs_clone(world, 0, e, false);
+    test_assert(c != 0);
+    test_assert(ecs_has(world, c, Position));
+
+    ecs_fini(world);
+}
+
+void Sparse_clone_w_value(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_entity_t c = ecs_clone(world, 0, e, true);
+    test_assert(c != 0);
+    test_assert(ecs_has(world, c, Position));
+
+    const Position *p = ecs_get(world, c, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
 void Sparse_modified_no_on_set(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -779,6 +822,33 @@ void Sparse_override_component(void) {
     ecs_fini(world);
 }
 
+void Sparse_override_component_2_lvls(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t base_base = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base_base);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_owns(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_assert(p != ecs_get(world, base, Position));
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
 void Sparse_delete_w_override_component(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -850,6 +920,117 @@ void Sparse_delete_w_override_on_remove_isa(void) {
     ecs_fini(world);
 }
 
+void Sparse_bulk_init(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    Position p[] = {
+        {10, 20},
+        {30, 40},
+        {50, 60}
+    };
+
+    void *data[] = {p};
+
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)},
+        .data = data
+    });
+
+    test_assert(ecs_has(world, entities[0], Position));
+    test_assert(ecs_has(world, entities[1], Position));
+    test_assert(ecs_has(world, entities[2], Position));
+
+    {
+        const Position *p = ecs_get(world, entities[0], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    } {
+        const Position *p = ecs_get(world, entities[1], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30); test_int(p->y, 40);
+    } {
+        const Position *p = ecs_get(world, entities[2], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 50); test_int(p->y, 60);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_bulk_init_w_non_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    Position p[] = {
+        {10, 20},
+        {30, 40},
+        {50, 60}
+    };
+
+    Velocity v[] = {
+        {1, 2},
+        {3, 4},
+        {5, 6}
+    };
+
+    void *data[] = {p, v};
+
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position), ecs_id(Velocity)},
+        .data = data
+    });
+
+    test_assert(ecs_has(world, entities[0], Position));
+    test_assert(ecs_has(world, entities[1], Position));
+    test_assert(ecs_has(world, entities[2], Position));
+
+    test_assert(ecs_has(world, entities[0], Velocity));
+    test_assert(ecs_has(world, entities[1], Velocity));
+    test_assert(ecs_has(world, entities[2], Velocity));
+
+    {
+        const Position *p = ecs_get(world, entities[0], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    } {
+        const Position *p = ecs_get(world, entities[1], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30); test_int(p->y, 40);
+    } {
+        const Position *p = ecs_get(world, entities[2], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 50); test_int(p->y, 60);
+    }
+
+    {
+        const Velocity *p = ecs_get(world, entities[0], Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1); test_int(p->y, 2);
+    } {
+        const Velocity *p = ecs_get(world, entities[1], Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 3); test_int(p->y, 4);
+    } {
+        const Velocity *p = ecs_get(world, entities[2], Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 5); test_int(p->y, 6);
+    }
+
+    ecs_fini(world);
+}
+
 static int position_ctor_invoked = 0;
 static int position_dtor_invoked = 0;
 static int position_on_add_invoked = 0;
@@ -870,7 +1051,7 @@ static ECS_DTOR(Position, ptr, {
 })
 
 static void Position_on_add(ecs_iter_t *it) {
-    test_int(1, position_ctor_invoked);
+    test_int(1, position_ctor_invoked - position_on_add_invoked);
     Position *p = ecs_field_at(it, Position, 0, 0);
     test_assert(p != NULL);
     test_int(p->x, 10);
@@ -893,6 +1074,17 @@ static void Position_on_remove(ecs_iter_t *it) {
 
 static void Position_on_set(ecs_iter_t *it) {
     test_int(1, position_ctor_invoked);
+    test_int(0, position_dtor_invoked);
+    Position *p = ecs_field_at(it, Position, 0, 0);
+    test_assert(p != NULL);
+    position_on_set_value = *p;
+    test_uint(it->event, EcsOnSet);
+
+    position_on_set_invoked ++;
+}
+
+static void Position_on_set_bulk(ecs_iter_t *it) {
+    test_assert(position_ctor_invoked != 0);
     test_int(0, position_dtor_invoked);
     Position *p = ecs_field_at(it, Position, 0, 0);
     test_assert(p != NULL);
@@ -1326,6 +1518,97 @@ void Sparse_on_set_at_offset(void) {
     test_int(1, position_on_set_invoked);
     test_int(30, position_on_set_value.x);
     test_int(40, position_on_set_value.y);
+
+    ecs_fini(world);
+}
+
+void Sparse_on_set_after_clone(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_add = Position_on_add,
+        .on_set = Position_on_set
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_assert(ecs_has(world, e, Position));
+
+    position_ctor_invoked = 0;
+    position_on_add_invoked = 0;
+    position_on_set_invoked = 0;
+
+    ecs_entity_t c = ecs_clone(world, 0, e, true);
+    test_assert(c != 0);
+    test_assert(ecs_has(world, c, Position));
+
+    test_int(1, position_ctor_invoked);
+    test_int(1, position_on_add_invoked);
+    test_int(1, position_on_set_invoked);
+
+    const Position *p = ecs_get(world, c, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Sparse_on_set_after_bulk_init(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_add = Position_on_add,
+        .on_set = Position_on_set_bulk
+    });
+
+    Position p[] = {
+        {10, 20},
+        {30, 40},
+        {50, 60}
+    };
+
+    void *data[] = {p};
+
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)},
+        .data = data
+    });
+
+    test_assert(ecs_has(world, entities[0], Position));
+    test_assert(ecs_has(world, entities[1], Position));
+    test_assert(ecs_has(world, entities[2], Position));
+
+    {
+        const Position *p = ecs_get(world, entities[0], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    } {
+        const Position *p = ecs_get(world, entities[1], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30); test_int(p->y, 40);
+    } {
+        const Position *p = ecs_get(world, entities[2], Position);
+        test_assert(p != NULL);
+        test_int(p->x, 50); test_int(p->y, 60);
+    }
+
+    test_int(3, position_ctor_invoked);
+    test_int(3, position_on_add_invoked);
+    test_int(3, position_on_set_invoked);
 
     ecs_fini(world);
 }
@@ -2984,6 +3267,27 @@ void Sparse_defer_batched_set_remove_existing(void) {
         const Position *p = ecs_get(world, e, Position);
         test_assert(p == NULL);
     }
+
+    ecs_fini(world);
+}
+
+void Sparse_dont_fragment_trait_without_sparse_trait(void) {
+    if (fragment) {
+        test_assert(true);
+        return;
+    }
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(NULL == ecs_get(world, e, Position));
+
+    ecs_add(world, e, Position);
+    test_assert(NULL != ecs_get(world, e, Position));
 
     ecs_fini(world);
 }
