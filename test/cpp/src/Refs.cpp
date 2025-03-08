@@ -302,3 +302,60 @@ void Refs_get_component(void) {
     auto ref = e.get_ref<Position>();
     test_assert(ref.component() == world.id<Position>());
 }
+
+void Refs_untyped_get_ref_by_method(void) {
+    flecs::world world;
+
+    auto e = flecs::entity(world)
+        .set<Position>({10, 20});
+
+    flecs::untyped_ref ref = e.get_ref(world.id<Position>());
+    Position* pos = static_cast<Position*>(ref.get());
+    test_assert(pos->x == 10);
+    test_assert(pos->y == 20);
+}
+
+void Refs_untyped_pair_ref(void) {
+    flecs::world world;
+
+    flecs::entity tag = world.entity();
+
+    auto e = world.entity().set<Position>(tag,{10, 20});
+    flecs::untyped_ref ref = e.get_ref(world.id<Position>(), tag);
+    Position* pos = static_cast<Position*>(ref.get());
+    pos->x ++;
+
+    test_int((e.get<Position>(tag)->x), 11);
+}
+
+void Refs_untyped_runtime_component_ref(void) {
+    flecs::world world;
+
+    auto Position = world.component("Position")
+        .member(flecs::I32, "x")
+        .member(flecs::I32, "y");
+
+    auto e = flecs::entity(world);
+
+    void* pos_ptr = e.ensure(Position);
+
+    flecs::cursor cur(world, Position, pos_ptr);
+    cur.push();
+    cur.member("x");
+    cur.set_int(10);
+    cur.member("y");
+    cur.set_int(20);
+    cur.pop();
+
+    flecs::untyped_ref ref = e.get_ref(Position);
+
+    cur = flecs::cursor(world, Position, ref.get());
+
+    cur.push();
+    cur.member("x");
+    test_int(cur.get_int(), 10);
+    cur.member("y");
+    test_int(cur.get_int(), 20);
+    cur.pop();
+
+}

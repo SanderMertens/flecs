@@ -1074,6 +1074,9 @@ void Refs_bool_operator(void);
 void Refs_base_type(void);
 void Refs_empty_base_type(void);
 void Refs_get_component(void);
+void Refs_untyped_get_ref_by_method(void);
+void Refs_untyped_pair_ref(void);
+void Refs_untyped_runtime_component_ref(void);
 
 // Testsuite 'Module'
 void Module_import(void);
@@ -5631,6 +5634,18 @@ bake_test_case Refs_testcases[] = {
     {
         "get_component",
         Refs_get_component
+    },
+    {
+        "untyped_get_ref_by_method",
+        Refs_untyped_get_ref_by_method
+    },
+    {
+        "untyped_pair_ref",
+        Refs_untyped_pair_ref
+    },
+    {
+        "untyped_runtime_component_ref",
+        Refs_untyped_runtime_component_ref
     }
 };
 
@@ -7175,7 +7190,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        21,
+        24,
         Refs_testcases
     },
     {
