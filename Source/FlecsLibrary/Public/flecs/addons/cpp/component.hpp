@@ -91,18 +91,17 @@ template <> inline const char* symbol_name<double>() {
 // that obtain the lifecycle callback do detect whether the callback is required
 // adding a special case for trivial types eases the burden a bit on the
 // compiler as it reduces the number of templates to evaluate.
-template<typename T>
-void register_lifecycle_actions(ecs_world_t*, ecs_entity_t) requires (std::is_trivial<T>::value == true)
+template<typename T UE_REQUIRES(std::is_trivial<T>::value)>
+void register_lifecycle_actions(ecs_world_t*, ecs_entity_t)
 {
 }
 
 // If the component is non-trivial, register component lifecycle actions.
 // Depending on the type not all callbacks may be available.
-template<typename T>
+template<typename T UE_REQUIRES(!std::is_trivial<T>::value)>
 void register_lifecycle_actions(
     ecs_world_t *world,
     ecs_entity_t component)
-requires (std::is_trivial<T>::value == false)
 {
     ecs_type_hooks_t cl{};
     cl.ctor = ctor<T>(cl.flags);

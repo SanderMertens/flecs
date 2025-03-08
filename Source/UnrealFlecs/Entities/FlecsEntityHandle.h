@@ -222,8 +222,7 @@ public:
 		GetEntity().add<T>();
 	}
 
-	template <typename T>
-	requires (std::is_enum<T>::value)
+	template <typename T UE_REQUIRES (std::is_enum<T>::value)>
 	SOLID_INLINE void Add(const T InValue) const
 	{
 		GetEntity().add<T>(InValue);

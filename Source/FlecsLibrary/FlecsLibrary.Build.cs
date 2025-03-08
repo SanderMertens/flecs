@@ -46,7 +46,7 @@ public class FlecsLibrary : ModuleRules
         );
         
         // Not Packaged
-        if (Target.bBuildEditor)
+        if (Target.Configuration != UnrealTargetConfiguration.Shipping)
         {
             PublicDefinitions.AddRange(
                 new string[]
@@ -61,6 +61,7 @@ public class FlecsLibrary : ModuleRules
                     "FLECS_ACCURATE_COUNTERS",
                     "FLECS_UNITS",
                     "FLECS_ALERTS",
+                    "FLECS_KEEP_ASSERT",
                    // "FLECS_SANITIZE",
                 }
             );

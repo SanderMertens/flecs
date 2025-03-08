@@ -9,6 +9,13 @@
 #include "Properties/FlecsComponentProperties.h"
 #include "FlecsUObjectComponent.generated.h"
 
+/**
+ * FFlecsUObjectComponent is a component that holds a weak pointer to a UObject.
+ * It is used to represent a relationship between an entity and a UObject in the Flecs world,
+ * with the target of the relationship being a component type of the type of UObject
+ * ex. FFlecsActorComponentTag, FFlecsSceneComponentTag, FFlecsUObjectTag, etc.
+ * The owning entity will be automatically destroyed when the UObject is destroyed/garbage collected.
+ */
 USTRUCT(BlueprintType)
 struct alignas(8) UNREALFLECS_API FFlecsUObjectComponent
 {

@@ -116,6 +116,8 @@ void FUnrealFlecsEditorModule::AddPrimaryAssetTypes()
 		false
 	);
 
+	FlecsPrimaryDataAssetTypeInfo.Rules.Priority = 1;
+	FlecsPrimaryDataAssetTypeInfo.Rules.bApplyRecursively = true;
 	FlecsPrimaryDataAssetTypeInfo.Rules.CookRule = EPrimaryAssetCookRule::AlwaysCook;
 
 	// Check if these asset types are already present

@@ -14,25 +14,13 @@ struct UNREALFLECS_API FFlecsPrimaryAssetComponent
 
 public:
 	FORCEINLINE FFlecsPrimaryAssetComponent() = default;
-	FORCEINLINE FFlecsPrimaryAssetComponent(const FPrimaryAssetId& InPrimaryAssetId) : PrimaryAssetId(InPrimaryAssetId) {}
-
-	FORCEINLINE NO_DISCARD FPrimaryAssetId GetPrimaryAssetId() const
+	FORCEINLINE FFlecsPrimaryAssetComponent(const FSoftObjectPath& InObjectPath)
+		: ObjectPath(InObjectPath)
 	{
-		return PrimaryAssetId;
-	}
-
-	FORCEINLINE void SetPrimaryAssetId(const FPrimaryAssetId& InPrimaryAssetId)
-	{
-		PrimaryAssetId = InPrimaryAssetId;
-	}
-
-	FORCEINLINE NO_DISCARD bool IsValid() const
-	{
-		return PrimaryAssetId.IsValid();
 	}
 
 	UPROPERTY()
-	FPrimaryAssetId PrimaryAssetId;
+	FSoftObjectPath ObjectPath;
 	
 }; // struct FFlecsPrimaryAssetComponent
 

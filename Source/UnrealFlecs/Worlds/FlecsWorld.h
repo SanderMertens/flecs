@@ -16,6 +16,7 @@
 #include "Components/ObjectTypes/FFlecsSceneComponentTag.h"
 #include "Components/ObjectTypes/FFlecsUObjectTag.h"
 #include "Components/ObjectTypes/FlecsActorTag.h"
+#include "Engine/AssetManager.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
@@ -203,8 +204,6 @@ public:
 		RegisterComponentType<FFlecsSceneComponentTag>();
 		RegisterComponentType<FFlecsUObjectTag>();
 		RegisterComponentType<FFlecsActorTag>();
-		
-		RegisterComponentType<FFlecsPrimaryAssetComponent>();
 
 		RegisterComponentType<FFlecsModuleComponent>();
 		RegisterComponentType<FFlecsModuleInitEvent>();
@@ -247,6 +246,7 @@ public:
 
 		RegisterComponentType<FAssetData>();
 		RegisterComponentType<FAssetBundleData>();
+		RegisterComponentType<FFlecsPrimaryAssetComponent>();
 
 		RegisterComponentType<FIntVector>();
 		RegisterComponentType<FIntVector4>();
@@ -484,26 +484,67 @@ public:
 			= FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
 		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 
-		TArray<FAssetData> AssetData;
+		TArray<FAssetData> AssetDataArray;
 		AssetRegistry.GetAssetsByClass(
-			FTopLevelAssetPath(UFlecsPrimaryDataAsset::StaticClass()), AssetData, true);
+			FTopLevelAssetPath(UFlecsPrimaryDataAsset::StaticClass()),
+			AssetDataArray, true);
+
+		FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
+
+		for (const FAssetData& AssetData : AssetDataArray)
+		{
+			TSoftObjectPtr<UFlecsPrimaryDataAsset> AssetPtr(AssetData.ToSoftObjectPath());
+			
+			if (AssetPtr.IsValid())
+			{
+				RegisterFlecsAsset(AssetPtr.Get());
+			}
+			else
+			{
+				Streamable.RequestAsyncLoad(
+					AssetPtr.ToSoftObjectPath(),
+					FStreamableDelegate::CreateLambda([this, AssetPtr]()
+					{
+						if (UFlecsPrimaryDataAsset* LoadedAsset = AssetPtr.Get())
+						{
+							RegisterFlecsAsset(LoadedAsset);
+						}
+						else
+						{
+							UN_LOGF(LogFlecsWorld, Warning,
+								"Failed to load asset %s", *AssetPtr.ToString());
+						}
+					})
+				);
+			}
+		}
 		
 		AssetRegistry.OnAssetAdded().AddWeakLambda(this, [this](const FAssetData& InAssetData)
 		{
 			if (InAssetData.IsInstanceOf<UFlecsPrimaryDataAsset>())
 			{
-				RegisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(InAssetData.GetAsset()));
+				TSoftObjectPtr<UFlecsPrimaryDataAsset> NewAsset(InAssetData.ToSoftObjectPath());
+				FStreamableManager& LocalStreamable = UAssetManager::GetStreamableManager();
+				LocalStreamable.RequestAsyncLoad(
+					NewAsset.ToSoftObjectPath(),
+					FStreamableDelegate::CreateLambda([this, NewAsset]()
+					{
+						if (UFlecsPrimaryDataAsset* LoadedAsset = NewAsset.Get())
+						{
+							RegisterFlecsAsset(LoadedAsset);
+						}
+					})
+				);
 			}
 		});
-
-		for (const FAssetData& Asset : AssetData)
-		{
-			RegisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(Asset.GetAsset()));
-		}
 		
 		AssetRegistry.OnAssetRemoved().AddWeakLambda(this, [this](const FAssetData& InAssetData)
 		{
-			UnregisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(InAssetData.GetAsset()));
+			if (InAssetData.IsInstanceOf<UFlecsPrimaryDataAsset>())
+			{
+				UFlecsPrimaryDataAsset* RemovedAsset = CastChecked<UFlecsPrimaryDataAsset>(InAssetData.GetAsset());
+				UnregisterFlecsAsset(RemovedAsset);
+			}
 		});
 	}
 
@@ -577,7 +618,8 @@ public:
 		}
 
 		const FFlecsEntityHandle AssetEntity = CreateEntity(InAsset->GetPrimaryAssetId().ToString());
-		AssetEntity.Set<FFlecsPrimaryAssetComponent>(FFlecsPrimaryAssetComponent{ InAsset->GetPrimaryAssetId() });
+		AssetEntity.Set<FFlecsPrimaryAssetComponent>(FSoftObjectPath(InAsset));
+		FlecsPrimaryDataAssets.Add(InAsset);
 		InAsset->OnEntityCreated(AssetEntity, this);
 	}
 
@@ -595,6 +637,7 @@ public:
 		}
 		
 		InAsset->OnEntityDestroyed(AssetEntity, this);
+		FlecsPrimaryDataAssets.Remove(InAsset);
 		AssetEntity.Destroy();
 	}
 
@@ -712,8 +755,7 @@ public:
 		return World.has<T>();
 	}
 
-	template <typename T
-	UE_REQUIRES(std::is_copy_constructible<T>::value)>
+	template <typename T UE_REQUIRES(std::is_copy_constructible<T>::value)>
 	NO_DISCARD T GetSingleton() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
@@ -1135,7 +1177,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void SetEntityRange(const int32 InMin, const int32 InMax) const
+	void SetEntityRange(const FFlecsId InMin, const FFlecsId InMax) const
 	{
 		World.set_entity_range(InMin, InMax);
 	}
@@ -1149,7 +1191,7 @@ public:
 	 * @param Function The function to invoke
 	 */
 	template <typename FunctionType>
-	void SetEntityRange(const int32 InMin, const int32 InMax, const bool bEnforceEntityRange, FunctionType&& Function) const
+	void SetEntityRange(const FFlecsId InMin, const FFlecsId InMax, const bool bEnforceEntityRange, FunctionType&& Function) const
 	{
 		const int32 OldMin = static_cast<int32>(ecs_get_world_info(World.c_ptr())->min_id);
 		const int32 OldMax = static_cast<int32>(ecs_get_world_info(World.c_ptr())->max_id);
@@ -1911,6 +1953,9 @@ public:
 
 	UPROPERTY()
 	TArray<TScriptInterface<IFlecsModuleProgressInterface>> ProgressModules;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UFlecsPrimaryDataAsset>> FlecsPrimaryDataAssets;
 
 	flecs::query<FFlecsModuleComponent> ModuleComponentQuery;
 	flecs::query<> ObjectDestructionComponentQuery;

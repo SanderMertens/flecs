@@ -57,7 +57,8 @@ public:
 
 	FORCEINLINE bool NetSerialize(FArchive& Ar, MAYBE_UNUSED UPackageMap* Map, bool& bOutSuccess)
 	{
-		SerializeOptionalValue<TOptional<uint32>>(Ar.IsSaving(), Ar, NetworkId, TOptional<uint32>());
+		SerializeOptionalValue<TOptional<uint32>>(Ar.IsSaving(), Ar,
+			NetworkId, TOptional<uint32>());
 
 		bOutSuccess = true;
 		return true;
