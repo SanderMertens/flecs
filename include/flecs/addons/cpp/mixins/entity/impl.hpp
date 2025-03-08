@@ -7,16 +7,6 @@
 
 namespace flecs {
 
-template <typename T>
-flecs::entity ref<T>::entity() const {
-    return flecs::entity(world_, ref_.entity);
-}
-
-template <typename T>
-flecs::id ref<T>::component() const {
-    return flecs::id(world_, ref_.id);
-}
-
 template <typename Self>
 template <typename Func>
 inline const Self& entity_builder<Self>::insert(const Func& func) const  {

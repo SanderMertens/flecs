@@ -29,6 +29,7 @@ struct untyped_component;
 template <typename T>
 struct component;
 
+struct untyped_ref;
 template <typename T>
 struct ref;
 
