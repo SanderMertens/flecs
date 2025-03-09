@@ -200,59 +200,35 @@ struct type_impl {
     // Register component id. This logic remains much the same, but
     // references the global map rather than static fields.
     static entity_t register_id(
-        flecs::world_t *world,
+        world_t *world,
         const char *name = nullptr,
         bool allow_tag = true,
-        flecs::id_t id = 0,
         bool is_component = true,
-        bool implicit_name = true,
-        const char *n = nullptr,
-        flecs::entity_t module = 0)
+        bool explicit_registration = false,
+        flecs::id_t id = 0) 
     {
         ecs_os_perf_trace_push("flecs.type_impl.register_id");
         
         // Ensure there's a record for T
-        auto &td = get_or_create_type_data<T>(allow_tag);
+        auto& td = get_or_create_type_data<T>(allow_tag);
+        
+        bool registered = false, existing = false;
 
-        // Does this world already have an entity for T?
-        flecs::entity_t c = flecs_component_ids_get(world, td.s_index);
+        flecs::entity_t c = ecs_cpp_component_register(
+            world, id, td.s_index, name, type_name<T>(), 
+            symbol_name<T>(), td.s_size, td.s_alignment,
+            is_component, explicit_registration, &registered, &existing);
+        
+        ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
 
-        if (!c || !ecs_is_alive(world, c)) {
-            // Temporarily set scope/with to 0
-            ecs_entity_t prev_scope = ecs_set_scope(world, module);
-            ecs_entity_t prev_with  = ecs_set_with(world, 0);
-
-            bool existing = false;
-            c = ecs_cpp_component_find(
-                world,
-                id,
-                n,
-                symbol_name<T>(),    // The symbol name for T
-                td.s_size,
-                td.s_alignment,
-                implicit_name,
-                &existing);
-
-            const char *symbol = nullptr;
-            if (c) {
-                symbol = ecs_get_symbol(world, c);
+        if (registered) {
+            // Register lifecycle callbacks, but only if the component has a
+            // size. Components that don't have a size are tags, and tags don't
+            // require construction/destruction/copy/move's.
+            if (size() && !existing) {
+                register_lifecycle_actions<T>(world, c);
             }
-            if (!symbol) {
-                symbol = symbol_name<T>();
-            }
-            
-            c = ecs_cpp_component_register(
-                world,
-                c,
-                c,
-                name,
-                flecs::_::type_name<T>(),
-                symbol,
-                td.s_size,
-                td.s_alignment,
-                is_component,
-                &existing);
-            
+
             if constexpr (Solid::IsScriptStruct<T>() && !std::is_same_v<T, FFlecsScriptStructComponent>)
             {
                 flecs::world P_world(world);
@@ -268,23 +244,10 @@ struct type_impl {
                 entity_id.set<FFlecsScriptStructComponent>({ scriptStruct });
             }
 
-            ecs_set_with(world, prev_with);
-            ecs_set_scope(world, prev_scope);
-
-            // Register lifecycle callbacks if non-empty & newly registered
-            if (td.s_size && !existing) {
-                register_lifecycle_actions<T>(world, c);
-            }
-
-            // Associate the newly created entity with our index
-            flecs_component_ids_set(world, td.s_index, c);
-
             // If component is enum type, register constants. Make sure to do 
             // this after setting the component id, because the enum code will
             // be calling type<T>::id().
             #if FLECS_CPP_ENUM_REFLECTION_SUPPORT
-
-            
             _::init_enum<T>(world, c);
 
             if constexpr (Solid::IsStaticEnum<T>())
@@ -305,8 +268,6 @@ struct type_impl {
             #endif
         }
 
-        ecs_os_perf_trace_pop("flecs.type_impl.register_id");
-        ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
         return c;
     }
         
@@ -455,48 +416,8 @@ struct component : untyped_component {
         bool allow_tag = true,
         flecs::id_t id = 0)
     {
-        const char *n = name;
-        bool implicit_name = false;
-        if (!n) {
-            n = _::type_name<T>();
-
-            // Keep track of whether name was explicitly set. If not, and the
-            // component was already registered, just use the registered name.
-            // The registered name may differ from the typename as the registered
-            // name includes the flecs scope. This can in theory be different from
-            // the C++ namespace though it is good practice to keep them the same */
-            implicit_name = true;
-        }
-
-        // If component is registered by module, ensure it's registered in the
-        // scope of the module.
-        flecs::entity_t module = ecs_get_scope(world);
-
-        // Strip off the namespace part of the component name, unless a name was
-        // explicitly provided by the application.
-        if (module && implicit_name) {
-            // If the type is a template type, make sure to ignore
-            // inside the template parameter list.
-            const char *start = strchr(n, '<');
-            const char *last_elem = nullptr;
-            if (start) {
-                const char *ptr = start;
-                while (ptr[0] && (ptr[0] != ':') && (ptr > n)) {
-                    ptr --;
-                }
-                if (ptr[0] == ':') {
-                    last_elem = ptr;
-                }
-            }
-
-            if (last_elem) {
-                name = last_elem + 1;
-            }
-        }
-
         world_ = world;
-        id_ = _::type<T>::register_id(
-            world, name, allow_tag, id, true, implicit_name, n, module);
+        id_ = _::type<T>::register_id(world, name, allow_tag, true, true, id);
     }
 
     /** Register on_add hook. */
