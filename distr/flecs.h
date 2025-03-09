@@ -3366,6 +3366,18 @@ typedef void (*ecs_move_t)(
     int32_t count,
     const ecs_type_info_t *type_info);
 
+/** Compare hook to compare component instances */
+typedef int (*ecs_cmp_t)(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info);
+
+/** Equals operator hook */
+typedef bool (*ecs_equals_t)(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info);
+
 /** Destructor function for poly objects. */
 typedef void (*flecs_poly_dtor_t)(
     ecs_poly_t *poly);
@@ -3584,38 +3596,44 @@ struct ecs_observer_t {
  */
 
 /* Flags that can be used to check which hooks a type has set */
-#define ECS_TYPE_HOOK_CTOR                   (1 << 0)
-#define ECS_TYPE_HOOK_DTOR                   (1 << 1)
-#define ECS_TYPE_HOOK_COPY                   (1 << 2)
-#define ECS_TYPE_HOOK_MOVE                   (1 << 3)
-#define ECS_TYPE_HOOK_COPY_CTOR              (1 << 4)
-#define ECS_TYPE_HOOK_MOVE_CTOR              (1 << 5)
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         (1 << 6)
-#define ECS_TYPE_HOOK_MOVE_DTOR              (1 << 7)
+#define ECS_TYPE_HOOK_CTOR                   ECS_CAST(ecs_flags32_t, 1 << 0)
+#define ECS_TYPE_HOOK_DTOR                   ECS_CAST(ecs_flags32_t, 1 << 1)
+#define ECS_TYPE_HOOK_COPY                   ECS_CAST(ecs_flags32_t, 1 << 2)
+#define ECS_TYPE_HOOK_MOVE                   ECS_CAST(ecs_flags32_t, 1 << 3)
+#define ECS_TYPE_HOOK_COPY_CTOR              ECS_CAST(ecs_flags32_t, 1 << 4)
+#define ECS_TYPE_HOOK_MOVE_CTOR              ECS_CAST(ecs_flags32_t, 1 << 5)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         ECS_CAST(ecs_flags32_t, 1 << 6)
+#define ECS_TYPE_HOOK_MOVE_DTOR              ECS_CAST(ecs_flags32_t, 1 << 7)
+#define ECS_TYPE_HOOK_CMP                    ECS_CAST(ecs_flags32_t, 1 << 8)
+#define ECS_TYPE_HOOK_EQUALS                 ECS_CAST(ecs_flags32_t, 1 << 9)
+
 
 /* Flags that can be used to set/check which hooks of a type are invalid */
-#define ECS_TYPE_HOOK_CTOR_ILLEGAL           (1 << 8)
-#define ECS_TYPE_HOOK_DTOR_ILLEGAL           (1 << 9)
-#define ECS_TYPE_HOOK_COPY_ILLEGAL           (1 << 10)
-#define ECS_TYPE_HOOK_MOVE_ILLEGAL           (1 << 11)
-#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      (1 << 12)
-#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      (1 << 13)
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL (1 << 14)
-#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      (1 << 15)
+#define ECS_TYPE_HOOK_CTOR_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 10)
+#define ECS_TYPE_HOOK_DTOR_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 12)
+#define ECS_TYPE_HOOK_COPY_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 13)
+#define ECS_TYPE_HOOK_MOVE_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 14)
+#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 15)
+#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 16)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL ECS_CAST(ecs_flags32_t, 1 << 17)
+#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 18)
+#define ECS_TYPE_HOOK_CMP_ILLEGAL            ECS_CAST(ecs_flags32_t, 1 << 19)
+#define ECS_TYPE_HOOK_EQUALS_ILLEGAL         ECS_CAST(ecs_flags32_t, 1 << 20)
+
 
 /* All valid hook flags */
 #define ECS_TYPE_HOOKS (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|\
     ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_COPY_CTOR|\
     ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|\
-    ECS_TYPE_HOOK_MOVE_DTOR)
+    ECS_TYPE_HOOK_MOVE_DTOR|ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS)
 
 /* All invalid hook flags */
 #define ECS_TYPE_HOOKS_ILLEGAL (ECS_TYPE_HOOK_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_DTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|\
-    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL)
-
+    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_CMP_ILLEGAL|\
+    ECS_TYPE_HOOK_EQUALS_ILLEGAL)
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
     ecs_xtor_t dtor;            /**< dtor */
@@ -3640,11 +3658,18 @@ struct ecs_type_hooks_t {
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
 
+    /** Compare hook */
+    ecs_cmp_t cmp;
+
+    /** Equals hook */
+    ecs_equals_t equals;
+
     /** Hook flags.
      * Indicates which hooks are set for the type, and which hooks are illegal.
      * When an ILLEGAL flag is set when calling ecs_set_hooks() a hook callback
      * will be set that panics when called. */
     ecs_flags32_t flags;
+    
 
     /** Callback that is invoked when an instance of a component is added. This
      * callback is invoked before triggers are invoked. */
@@ -21057,6 +21082,157 @@ ecs_move_t move_dtor(ecs_flags32_t &) {
     return move_dtor_impl<T>;
 }
 
+// Traits to check for operator<, operator>, and operator==
+template<typename...>
+using void_t = void;
+
+// These traits causes a "float comparison warning" in some compilers
+// when `T` is float or double.
+// Disable this warning with the following pragmas:
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wfloat-equal"
+#elif defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+
+// Trait to check for operator<
+template <typename T, typename = void>
+struct has_operator_less : std::false_type {};
+
+// Only enable if T has an operator< that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_less<T, void_t<decltype(std::declval<const T&>() < std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() < std::declval<const T&>()), bool> {};
+
+// Trait to check for operator>
+template <typename T, typename = void>
+struct has_operator_greater : std::false_type {};
+
+// Only enable if T has an operator> that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_greater<T, void_t<decltype(std::declval<const T&>() > std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() > std::declval<const T&>()), bool> {};
+
+// Trait to check for operator==
+template <typename T, typename = void>
+struct has_operator_equal : std::false_type {};
+
+// Only enable if T has an operator== that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_equal<T, void_t<decltype(std::declval<const T&>() == std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() == std::declval<const T&>()), bool> {};
+
+// 1. Compare function if `<`, `>`, are defined
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    has_operator_greater<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs < rhs) return -1;
+    if (lhs > rhs) return 1;
+    return 0;
+}
+
+// 2. Compare function if `<` and `==` are defined, ignoring `>`
+// if defined.
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs == rhs) return 0;
+    if (lhs < rhs) return -1;
+    return 1; // If not less and not equal, must be greater
+}
+
+// 3. Compare function if `>` and `==` are defined, deducing `<`
+template <typename T, if_t<    
+    has_operator_greater<T>::value &&
+    has_operator_equal<T>::value &&
+    !has_operator_less<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs == rhs) return 0;
+    if (lhs > rhs) return 1;
+    return -1; // If not greater and not equal, must be less
+}
+
+// 4. Compare function if only `<` is defined, deducing the rest
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    !has_operator_greater<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs < rhs) return -1;
+    if (rhs < lhs) return 1;
+    return 0; // If neither is less, they must be equal
+}
+
+// 5. Compare function if only `>` is defined, deducing the rest
+template <typename T, if_t<
+    has_operator_greater<T>::value &&
+    !has_operator_less<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs > rhs) return 1;
+    if (rhs > lhs) return -1;
+    return 0; // If neither is greater, they must be equal
+}
+
+// In order to have a generated compare hook, at least
+// operator> or operator< must be defined:
+template <typename T, if_t<
+    has_operator_less<T>::value ||
+    has_operator_greater<T>::value > = 0>
+ecs_cmp_t compare() {
+    return compare_impl<T>;
+}
+
+template <typename T, if_t<
+    !has_operator_less<T>::value &&
+    !has_operator_greater<T>::value > = 0>
+ecs_cmp_t compare() {
+    return NULL;
+}
+
+// Equals function enabled only if `==` is defined
+template <typename T, if_t<
+    has_operator_equal<T>::value > = 0>
+bool equals_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    return lhs == rhs;
+}
+
+template <typename T, if_t<
+    has_operator_equal<T>::value > = 0>
+ecs_equals_t equals() {
+    return equals_impl<T>;
+}
+
+template <typename T, if_t<
+    !has_operator_equal<T>::value > = 0>
+ecs_equals_t equals() {
+    return NULL;
+}
+
+// re-enable the float comparison warning:
+#if defined(__clang__)
+    #pragma clang diagnostic pop
+#elif defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic pop
+#endif
+
 } // _
 } // flecs
 
@@ -27462,6 +27638,7 @@ void register_lifecycle_actions(
     cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
     cl.move_dtor = move_dtor<T>(cl.flags);
 
+    cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl);
 
     if (cl.flags & (ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL))
@@ -27644,6 +27821,50 @@ struct type<T, if_t< is_pair<T>::value >>
  */
 struct untyped_component : entity {
     using entity::entity;
+
+protected:
+
+flecs::type_hooks_t get_hooks() const {
+    const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
+    if (h) {
+        return *h;
+    } else {
+        return {};
+    }
+}
+
+void set_hooks(flecs::type_hooks_t &h) {
+    h.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world_, id_, &h);
+}
+
+public:
+
+untyped_component& on_compare(
+    ecs_cmp_t compare_callback) 
+{
+    ecs_assert(compare_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.cmp = compare_callback;
+    h.flags &= ~ECS_TYPE_HOOK_CMP_ILLEGAL;
+    if(h.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
+        h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+        h.equals = NULL;
+    }
+    set_hooks(h);
+    return *this;
+}
+
+untyped_component& on_equals(
+    ecs_equals_t equals_callback) 
+{
+    ecs_assert(equals_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.equals = equals_callback;
+    h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    set_hooks(h);
+    return *this;
+}
 
 #   ifdef FLECS_META
 /**
@@ -28034,7 +28255,7 @@ struct component : untyped_component {
         h.on_add = Delegate::run_add;
         ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_add = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
         return *this;
     }
 
@@ -28050,7 +28271,7 @@ struct component : untyped_component {
         h.on_remove = Delegate::run_remove;
         ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_remove = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
         return *this;
     }
 
@@ -28066,7 +28287,41 @@ struct component : untyped_component {
         h.on_set = Delegate::run_set;
         ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_set = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
+        return *this;
+    }
+
+    /** Register operator compare hook. */
+    using untyped_component::on_compare;
+    component<T>& on_compare() {
+        ecs_cmp_t handler = _::compare<T>();
+        ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
+            "Type does not have operator> or operator< const or is inaccessible");
+        on_compare(handler);
+        return *this;
+    }
+
+    /** Type safe variant of compare op function */
+    using cmp_hook = int(*)(const T* a, const T* b, const ecs_type_info_t *ti);
+    component<T>& on_compare(cmp_hook callback) {
+        on_compare(reinterpret_cast<ecs_cmp_t>(callback));
+        return *this;
+    }
+
+    /** Register operator equals hook. */
+    using untyped_component::on_equals;
+    component<T>& on_equals() {
+        ecs_equals_t handler = _::equals<T>();
+        ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
+            "Type does not have operator== const or is inaccessible");
+        on_equals(handler);
+        return *this;
+    }
+
+    /** Type safe variant of equals op function */
+    using equals_hook = bool(*)(const T* a, const T* b, const ecs_type_info_t *ti);
+    component<T>& on_equals(equals_hook callback) {
+        on_equals(reinterpret_cast<ecs_equals_t>(callback));
         return *this;
     }
 
@@ -28133,15 +28388,6 @@ private:
             h.binding_ctx_free = _::free_obj<BindingCtx>;
         }
         return result;
-    }
-
-    flecs::type_hooks_t get_hooks() {
-        const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
-        if (h) {
-            return *h;
-        } else {
-            return {};
-        }
     }
 };
 

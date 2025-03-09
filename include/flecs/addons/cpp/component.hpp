@@ -112,6 +112,7 @@ void register_lifecycle_actions(
     cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
     cl.move_dtor = move_dtor<T>(cl.flags);
 
+    cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl);
 
     if (cl.flags & (ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL))
@@ -295,6 +296,50 @@ struct type<T, if_t< is_pair<T>::value >>
 struct untyped_component : entity {
     using entity::entity;
 
+protected:
+
+flecs::type_hooks_t get_hooks() const {
+    const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
+    if (h) {
+        return *h;
+    } else {
+        return {};
+    }
+}
+
+void set_hooks(flecs::type_hooks_t &h) {
+    h.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world_, id_, &h);
+}
+
+public:
+
+untyped_component& on_compare(
+    ecs_cmp_t compare_callback) 
+{
+    ecs_assert(compare_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.cmp = compare_callback;
+    h.flags &= ~ECS_TYPE_HOOK_CMP_ILLEGAL;
+    if(h.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
+        h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+        h.equals = NULL;
+    }
+    set_hooks(h);
+    return *this;
+}
+
+untyped_component& on_equals(
+    ecs_equals_t equals_callback) 
+{
+    ecs_assert(equals_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.equals = equals_callback;
+    h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    set_hooks(h);
+    return *this;
+}
+
 #   ifdef FLECS_META
 #   include "mixins/meta/untyped_component.inl"
 #   endif
@@ -340,7 +385,7 @@ struct component : untyped_component {
         h.on_add = Delegate::run_add;
         ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_add = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
         return *this;
     }
 
@@ -356,7 +401,7 @@ struct component : untyped_component {
         h.on_remove = Delegate::run_remove;
         ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_remove = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
         return *this;
     }
 
@@ -372,7 +417,41 @@ struct component : untyped_component {
         h.on_set = Delegate::run_set;
         ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_set = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
+        return *this;
+    }
+
+    /** Register operator compare hook. */
+    using untyped_component::on_compare;
+    component<T>& on_compare() {
+        ecs_cmp_t handler = _::compare<T>();
+        ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
+            "Type does not have operator> or operator< const or is inaccessible");
+        on_compare(handler);
+        return *this;
+    }
+
+    /** Type safe variant of compare op function */
+    using cmp_hook = int(*)(const T* a, const T* b, const ecs_type_info_t *ti);
+    component<T>& on_compare(cmp_hook callback) {
+        on_compare(reinterpret_cast<ecs_cmp_t>(callback));
+        return *this;
+    }
+
+    /** Register operator equals hook. */
+    using untyped_component::on_equals;
+    component<T>& on_equals() {
+        ecs_equals_t handler = _::equals<T>();
+        ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
+            "Type does not have operator== const or is inaccessible");
+        on_equals(handler);
+        return *this;
+    }
+
+    /** Type safe variant of equals op function */
+    using equals_hook = bool(*)(const T* a, const T* b, const ecs_type_info_t *ti);
+    component<T>& on_equals(equals_hook callback) {
+        on_equals(reinterpret_cast<ecs_equals_t>(callback));
         return *this;
     }
 
@@ -391,15 +470,6 @@ private:
             h.binding_ctx_free = _::free_obj<BindingCtx>;
         }
         return result;
-    }
-
-    flecs::type_hooks_t get_hooks() {
-        const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
-        if (h) {
-            return *h;
-        } else {
-            return {};
-        }
     }
 };
 
