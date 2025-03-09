@@ -88,7 +88,15 @@ public:
 	{
 		UN_LOG(LogFlecsWorld, Log, "Flecs World begin play");
 
+		#if WITH_AUTOMATION_TESTS
+		if (!GIsAutomationTesting)
+		{
+		#endif // WITH_AUTOMATION_TESTS
 		InitializeAssetRegistry();
+		#if WITH_AUTOMATION_TESTS
+		}
+		#endif // WITH_AUTOMATION_TESTS
+		
 		InitializeSystems();
 	}
 
@@ -254,10 +262,11 @@ public:
 		RegisterComponentType<FIntRect>();
 	}
 
+	// I hate this
 	template <typename FunctionType>
 	void UnlockIter_Internal(flecs::iter& Iter, FunctionType&& Function)
 	{
-		DeferEndScoped([this, &Iter, Function = std::forward<FunctionType>(Function)]()
+		DeferEndLambda([this, &Iter, Function = std::forward<FunctionType>(Function)]()
 		{
 			if (IsReadOnly())
 			{
@@ -966,7 +975,7 @@ public:
 	}
 
 	template <typename TFunction>
-	void DeferEndScoped(TFunction&& Function, const bool bEndDefer = false) const
+	void DeferEndLambda(TFunction&& Function, const bool bEndDefer = false) const
 	{
 		const bool bIsDeferred = IsDeferred();
 		
@@ -1451,7 +1460,7 @@ public:
 		const char* StructNameCStr = StringCast<char>(*StructName).Get();
 		std::string StructNameStd = std::string(StructNameCStr);
 
-		DeferEndScoped([this, ScriptStruct, &ScriptStructComponent, StructNameCStr, &StructNameStd]()
+		DeferEndLambda([this, ScriptStruct, &ScriptStructComponent, StructNameCStr, &StructNameStd]()
 		{
 			ScriptStructComponent = World.component(StructNameCStr);
 			solid_check(ScriptStructComponent.is_valid());
@@ -1520,7 +1529,7 @@ public:
 		const FString EnumName = ScriptEnum->GetName();
 		const char* EnumNameCStr = StringCast<char>(*EnumName).Get();
 
-		DeferEndScoped([this, ScriptEnum, &ScriptEnumComponent, EnumNameCStr]()
+		DeferEndLambda([this, ScriptEnum, &ScriptEnumComponent, EnumNameCStr]()
 		{
 			ScriptEnumComponent = World.component(StringCast<char>(*ScriptEnum->GetName()).Get());
 			solid_check(ScriptEnumComponent.is_valid());

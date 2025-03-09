@@ -10,14 +10,11 @@
 
 void SGraphPinFlecsId::Construct(const FArguments& InArgs, UEdGraphPin* InGraphPinObj)
 {
-	
 	SGraphPin::Construct(SGraphPin::FArguments(), InGraphPinObj);
 }
 
 TSharedRef<SWidget> SGraphPinFlecsId::GetDefaultValueWidget()
 {
-	
-	// Add a "None" option first.
 	Options.Add(MakeShared<FName>(FName(TEXT("None"))));
 	EntityOptions.Add(FFlecsId(flecs::entity::null().id()));
 	
@@ -61,12 +58,10 @@ TSharedRef<SWidget> SGraphPinFlecsId::GetDefaultValueWidget()
 
 TSharedPtr<FName> SGraphPinFlecsId::GetSelectedName() const
 {
-	// Get the current value of the pin.
 	FString CurrentValue = GraphPinObj->GetDefaultAsString();
 	CurrentValue.RemoveFromStart(TEXT("FlecsId="));
 	const uint64 CurrentId = FCString::Strtoui64(*CurrentValue, nullptr, 10);
 	
-	// Find the corresponding name for the current value.
 	for (int32 Index = 0; Index < Options.Num(); ++Index)
 	{
 		if (EntityOptions[Index].Id == CurrentId)

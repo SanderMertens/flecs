@@ -20,12 +20,25 @@ public:
 	FORCEINLINE FFlecsNetworkIdComponent() = default;
 	FORCEINLINE FFlecsNetworkIdComponent(const uint32 InNetworkId) : NetworkId(InNetworkId) {}
 
-	FORCEINLINE NO_DISCARD uint32 GetNetworkId() const { return NetworkId.Get(INDEX_NONE); }
-	FORCEINLINE void SetNetworkId(const uint32 InNetworkId) { NetworkId = InNetworkId; }
+	FORCEINLINE NO_DISCARD uint32 GetNetworkId() const
+	{
+		return NetworkId.Get(INDEX_NONE);
+	}
+	
+	FORCEINLINE void SetNetworkId(const uint32 InNetworkId)
+	{
+		NetworkId = InNetworkId;
+	}
 
-	FORCEINLINE NO_DISCARD bool IsValid() const { return NetworkId.IsSet(); }
+	FORCEINLINE NO_DISCARD bool IsValid() const
+	{
+		return NetworkId.IsSet();
+	}
 
-	FORCEINLINE void Reset() { NetworkId.Reset(); }
+	FORCEINLINE void Reset()
+	{
+		NetworkId.Reset();
+	}
 
 	FORCEINLINE bool operator==(const FFlecsNetworkIdComponent& Other) const
 	{

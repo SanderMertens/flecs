@@ -143,7 +143,8 @@ public:
 		
 		DefaultWorld->RegisterComponentType<FFlecsWorldPtrComponent>();
 		DefaultWorld->RegisterComponentType<FUWorldPtrComponent>();
-		
+
+		// @TODO: Update this to either the FlecsWorldObject or the UWorld
 		DefaultWorld->SetContext(this);
 
 		DefaultWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ DefaultWorld });
@@ -151,6 +152,8 @@ public:
 
 		solid_checkf(DefaultWorld->GetSingletonRef<FFlecsWorldPtrComponent>().World == DefaultWorld,
 			TEXT("Singleton world ptr component does not point to the correct world"));
+
+		RegisterAllGameplayTags(DefaultWorld);
 		
 		for (const FFlecsDefaultMetaEntity& DefaultEntity : DefaultEntities)
 		{
@@ -177,8 +180,6 @@ public:
 		}
 
 		DefaultWorld->WorldStart();
-
-		RegisterAllGameplayTags(DefaultWorld);
 
 		for (UObject* Module : Settings.Modules)
 		{
@@ -221,15 +222,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE UFlecsWorld* GetDefaultWorldStatic(const UObject* WorldContextObject)
 	{
-		if LIKELY_IF(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert))
-		{
-			return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
-			              ->GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld;
-		}
-		else
-		{
-			return nullptr;
-		}
+		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)->
+			GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld;
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
@@ -286,7 +280,9 @@ protected:
 		for (const FGameplayTag& Tag : AllTags)
 		{
 			const FFlecsEntityHandle TagEntity =
-				flecs::entity(InFlecsWorld->World, StringCast<char>(*Tag.ToString()).Get(), ".", ".");
+				flecs::entity(InFlecsWorld->World,
+					StringCast<char>(*Tag.ToString()).Get(),
+					".", ".");
 			TagEntity.Set<FGameplayTag>(Tag);
 		}
 	}
