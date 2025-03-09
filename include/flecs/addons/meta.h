@@ -464,6 +464,43 @@ typedef struct EcsOpaque {
     void (*resize)(
         void *dst,
         size_t count);
+
+    /* Getter interface */
+
+    /** Get bool value */
+    bool (*get_bool)(
+        const void *src);
+
+    /** Get char value */
+    char (*get_char)(
+        const void *src);
+
+    /** Get int value */
+    int64_t (*get_int)(
+        const void *src);
+
+    /** Get unsigned int value */
+    uint64_t (*get_uint)(
+        const void *src);
+
+    /** Get float value */
+    double (*get_float)(
+        const void *src);
+
+    /** Get string value */
+    const char* (*get_string)(
+        const void *src);
+
+    /** Get entity value */
+    ecs_entity_t (*get_entity)(
+        const void *src,
+        const ecs_world_t *world);
+
+    /** Get (component) id value */
+    ecs_id_t (*get_id)(
+        const void *src,
+        const ecs_world_t *world);
+
 } EcsOpaque;
 
 
@@ -929,6 +966,7 @@ ecs_entity_t ecs_meta_get_entity(
  * @param cursor The cursor.
  * @return The value of the current field.
  */
+FLECS_API
 ecs_id_t ecs_meta_get_id(
     const ecs_meta_cursor_t *cursor);
 
