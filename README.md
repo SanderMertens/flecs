@@ -6,4 +6,4 @@ Many Features are not complete
 
 Only tested on Version: UE 5.5 MSVC
 
-Contributors: @Megafunk
+Contributors to Unreal-Flecs: @Megafunk
