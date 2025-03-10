@@ -92,7 +92,7 @@ public:
 
     FORCEINLINE void Reset()
     {
-        Object = nullptr;
+        Object.Reset();
     }
 
     FORCEINLINE bool operator==(const FFlecsUObjectComponent& Other) const
