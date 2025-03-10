@@ -144,8 +144,7 @@ FLECSLIBRARY_API extern robin_hood::unordered_map<std::string, type_impl_data> g
         if (it != g_type_to_impl_data.end()) {
             return it->second;
         }
-
-        // Create a new entry
+        
         type_impl_data data = type_impl_data {
             .s_index = flecs_component_ids_index_get(),
             .s_size = sizeof(T),
@@ -157,8 +156,6 @@ FLECSLIBRARY_API extern robin_hood::unordered_map<std::string, type_impl_data> g
             data.s_size      = 0;
             data.s_alignment = 0;
         }
-        
-        data.s_index = flecs_component_ids_index_get();
 
         auto [ins_it, _] = g_type_to_impl_data.emplace(key, data);
 
