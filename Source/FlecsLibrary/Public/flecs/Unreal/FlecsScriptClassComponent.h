@@ -11,17 +11,17 @@ struct FLECSLIBRARY_API FFlecsScriptClassComponent
 {
     GENERATED_BODY()
 
-    FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsScriptClassComponent& InScriptClassComponent)
+    NO_DISCARD FORCEINLINE friend uint32 GetTypeHash(const FFlecsScriptClassComponent& InScriptClassComponent)
     {
         return GetTypeHash(InScriptClassComponent.ScriptClass);
     }
 
-    FORCEINLINE friend NO_DISCARD bool operator==(const FFlecsScriptClassComponent& Lhs, const FFlecsScriptClassComponent& Rhs)
+    NO_DISCARD FORCEINLINE friend bool operator==(const FFlecsScriptClassComponent& Lhs, const FFlecsScriptClassComponent& Rhs)
     {
         return Lhs.ScriptClass == Rhs.ScriptClass;
     }
 
-    FORCEINLINE friend NO_DISCARD bool operator!=(const FFlecsScriptClassComponent& Lhs, const FFlecsScriptClassComponent& Rhs)
+    NO_DISCARD FORCEINLINE friend bool operator!=(const FFlecsScriptClassComponent& Lhs, const FFlecsScriptClassComponent& Rhs)
     {
         return !(Lhs == Rhs);
     }
@@ -31,13 +31,13 @@ struct FLECSLIBRARY_API FFlecsScriptClassComponent
     FORCEINLINE FFlecsScriptClassComponent(const TSubclassOf<UObject>& InScriptClass = nullptr) : ScriptClass(InScriptClass) {}
 
     template <typename T>
-    FORCEINLINE NO_DISCARD TSubclassOf<T> Get() const
+    NO_DISCARD FORCEINLINE TSubclassOf<T> Get() const
     {
         return Cast<T>(ScriptClass.Get());
     }
 
     template <typename T>
-    FORCEINLINE NO_DISCARD TSubclassOf<T> GetChecked() const
+    NO_DISCARD FORCEINLINE TSubclassOf<T> GetChecked() const
     {
         return CastChecked<T>(ScriptClass.Get());
     }

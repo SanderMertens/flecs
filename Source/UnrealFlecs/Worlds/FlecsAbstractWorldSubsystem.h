@@ -28,7 +28,7 @@ public:
 			|| WorldType == EWorldType::GameRPC;
 	}
 	
-	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const
+	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorld() const
 	{
 		if (!FlecsWorld.IsValid())
 		{

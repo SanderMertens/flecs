@@ -39,7 +39,7 @@ public:
 	}
 	
 	template <typename ...TComponents>
-	FORCEINLINE NO_DISCARD static flecs::system_builder<TComponents...> CreateSystem(flecs::world& InWorld, const TCHAR* InName)
+	NO_DISCARD FORCEINLINE static flecs::system_builder<TComponents...> CreateSystem(flecs::world& InWorld, const TCHAR* InName)
 	{
 		return InWorld.system<TComponents...>(StringCast<char>(InName).Get());
 	}
@@ -63,12 +63,12 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsSystem& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const FFlecsSystem& Other) const
 	{
 		return System == Other.System;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsSystem& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const FFlecsSystem& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -83,12 +83,12 @@ public:
 		System.disable();
 	}
 
-	FORCEINLINE NO_DISCARD bool IsEnabled() const
+	NO_DISCARD FORCEINLINE bool IsEnabled() const
 	{
 		return !System.has(flecs::Disabled);
 	}
 
-	FORCEINLINE NO_DISCARD bool IsDisabled() const
+	NO_DISCARD FORCEINLINE bool IsDisabled() const
 	{
 		return System.has(flecs::Disabled);
 	}
@@ -103,17 +103,17 @@ public:
 		System = InSystem;
 	}
 
-	FORCEINLINE NO_DISCARD flecs::system& GetFlecsSystem()
+	NO_DISCARD FORCEINLINE flecs::system& GetFlecsSystem()
 	{
 		return System;
 	}
 
-	FORCEINLINE NO_DISCARD const flecs::system& GetFlecsSystem() const
+	NO_DISCARD FORCEINLINE const flecs::system& GetFlecsSystem() const
 	{
 		return System;
 	}
 
-	FORCEINLINE NO_DISCARD FString GetName() const
+	NO_DISCARD FORCEINLINE FString GetName() const
 	{
 		return static_cast<FString>(System.name());
 	}
@@ -123,17 +123,17 @@ public:
 		System.ctx(InContext);
 	}
 
-	FORCEINLINE NO_DISCARD void* GetContext() const
+	NO_DISCARD FORCEINLINE void* GetContext() const
 	{
 		return System.ctx();
 	}
 
-	FORCEINLINE NO_DISCARD FFlecsQuery GetQuery() const
+	NO_DISCARD FORCEINLINE FFlecsQuery GetQuery() const
 	{
 		return System.query();
 	}
 
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetEntity() const
+	NO_DISCARD FORCEINLINE FFlecsEntityHandle GetEntity() const
 	{
 		return flecs::entity(System);
 	}
@@ -143,7 +143,7 @@ public:
 		System.interval(InInterval);
 	}
 
-	FORCEINLINE NO_DISCARD double GetInterval()
+	NO_DISCARD FORCEINLINE double GetInterval()
 	{
 		return System.interval();
 	}
@@ -153,7 +153,7 @@ public:
 		System.timeout(InTimeout);
 	}
 
-	FORCEINLINE NO_DISCARD double GetTimeout()
+	NO_DISCARD FORCEINLINE double GetTimeout()
 	{
 		return System.timeout();
 	}
@@ -195,7 +195,7 @@ public:
 		System.set_tick_source(InSource);
 	}
 
-	FORCEINLINE NO_DISCARD bool IsValid() const
+	NO_DISCARD FORCEINLINE bool IsValid() const
 	{
 		return System.is_valid();
 	}
@@ -209,7 +209,7 @@ public:
 	
 }; // struct FFlecsSystem
 
-FORCEINLINE NO_DISCARD bool IsValid(const FFlecsSystem& InSystem)
+NO_DISCARD FORCEINLINE bool IsValid(const FFlecsSystem& InSystem)
 {
 	return InSystem.IsValid();
 }

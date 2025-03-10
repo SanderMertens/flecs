@@ -319,7 +319,8 @@ public:
 					#if UNLOG_ENABLED
 					else
 					{
-						UN_LOGF(LogFlecsWorld, Log, "Component properties %s not found", *StructSymbol);
+						UN_LOGF(LogFlecsWorld, Log,
+							"Component properties %s not found", *StructSymbol);
 					}
 					#endif // UNLOG_ENABLED
 				});
@@ -339,8 +340,8 @@ public:
 				FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(0, IterIndex);
 				if (!InUObjectComponent.IsValid())
 				{
-					UN_LOGF(LogFlecsWorld, Log, "Entity Garbage Collected: %s",
-						StringCast<char>(*InEntity.GetName()).Get());
+					UN_LOGF(LogFlecsWorld, Log,
+						"Entity Garbage Collected: %s", StringCast<char>(*InEntity.GetName()).Get());
 					InEntity.Destroy();
 				}
 			});
@@ -570,7 +571,7 @@ public:
 	{
 		RegisterModuleDependency(InModuleObject, TModule::StaticClass(),
 			[InFunction = std::forward<TFunction>(InFunction)]
-			(UObject* InDependencyObject, UFlecsWorld* InWorld, FFlecsEntityHandle InDependencyEntity) FORCEINLINE_ATTRIBUTE
+			(UObject* InDependencyObject, UFlecsWorld* InWorld, FFlecsEntityHandle InDependencyEntity)
 			{
 				std::invoke(InFunction, CastChecked<TModule>(InDependencyObject), InWorld, InDependencyEntity);
 			});
@@ -1953,7 +1954,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	UFlecsWorldSubsystem* GetContext() const;
 
-	FORCEINLINE NO_DISCARD FFlecsTypeMapComponent* GetTypeMapComponent() const
+	NO_DISCARD FORCEINLINE FFlecsTypeMapComponent* GetTypeMapComponent() const
 	{
 		return static_cast<FFlecsTypeMapComponent*>(World.get_binding_ctx());
 	}

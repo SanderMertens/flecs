@@ -12,7 +12,7 @@ struct UNREALFLECS_API FFlecsWorldSettingsInfo
 {
     GENERATED_BODY()
 
-    FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsWorldSettingsInfo& InWorldSettings)
+    NO_DISCARD FORCEINLINE friend uint32 GetTypeHash(const FFlecsWorldSettingsInfo& InWorldSettings)
     {
         return GetTypeHash(InWorldSettings.WorldName);
     }
@@ -27,12 +27,12 @@ public:
     {
     }
 
-    FORCEINLINE NO_DISCARD bool operator==(const FFlecsWorldSettingsInfo& Other) const
+    NO_DISCARD FORCEINLINE bool operator==(const FFlecsWorldSettingsInfo& Other) const
     {
         return WorldName == Other.WorldName;
     }
 
-    FORCEINLINE NO_DISCARD bool operator!=(const FFlecsWorldSettingsInfo& Other) const
+    NO_DISCARD FORCEINLINE bool operator!=(const FFlecsWorldSettingsInfo& Other) const
     {
         return !(*this == Other);
     }

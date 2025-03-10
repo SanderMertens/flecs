@@ -21,36 +21,36 @@ public:
 	FORCEINLINE void SetTimer(const flecs::timer& InTimer) { Timer = InTimer; }
 	FORCEINLINE void SetTimer(const flecs::timer* InTimer) { Timer = *InTimer; }
 
-	FORCEINLINE NO_DISCARD flecs::timer& GetFlecsTimer() { return Timer; }
-	FORCEINLINE NO_DISCARD const flecs::timer& GetFlecsTimer() const { return Timer; }
+	NO_DISCARD FORCEINLINE flecs::timer& GetFlecsTimer() { return Timer; }
+	NO_DISCARD FORCEINLINE const flecs::timer& GetFlecsTimer() const { return Timer; }
 
 	FORCEINLINE operator flecs::timer&() { return GetFlecsTimer(); }
 	FORCEINLINE operator const flecs::timer&() const { return GetFlecsTimer(); }
 
-	FORCEINLINE NO_DISCARD flecs::timer* operator->() { return &Timer; }
-	FORCEINLINE NO_DISCARD const flecs::timer* operator->() const { return &Timer; }
+	NO_DISCARD FORCEINLINE flecs::timer* operator->() { return &Timer; }
+	NO_DISCARD FORCEINLINE const flecs::timer* operator->() const { return &Timer; }
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsTimer& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const FFlecsTimer& Other) const
 	{
 		return Timer == Other.Timer;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsTimer& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const FFlecsTimer& Other) const
 	{
 		return !(*this == Other);
 	}
 
-	FORCEINLINE NO_DISCARD bool operator==(const flecs::timer& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const flecs::timer& Other) const
 	{
 		return Timer == Other;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const flecs::timer& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const flecs::timer& Other) const
 	{
 		return !(*this == Other);
 	}
 
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetEntity() const
+	NO_DISCARD FORCEINLINE FFlecsEntityHandle GetEntity() const
 	{
 		return FFlecsEntityHandle(Timer);
 	}
@@ -61,7 +61,7 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE NO_DISCARD double GetInterval()
+	NO_DISCARD FORCEINLINE double GetInterval()
 	{
 		return Timer.interval();
 	}
@@ -72,7 +72,7 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE NO_DISCARD double GetTimeout()
+	NO_DISCARD FORCEINLINE double GetTimeout()
 	{
 		return Timer.timeout();
 	}

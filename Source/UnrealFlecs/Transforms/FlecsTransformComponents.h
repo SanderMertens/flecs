@@ -13,7 +13,7 @@ struct UNREALFLECS_API FFlecsLocationComponent
 {
 	GENERATED_BODY()
 	
-	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsLocationComponent& InLocationComponent)
+	NO_DISCARD FORCEINLINE friend uint32 GetTypeHash(const FFlecsLocationComponent& InLocationComponent)
 	{
 		return GetTypeHash(InLocationComponent.Location);
 	}
@@ -27,12 +27,12 @@ public:
 	{
 	}
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsLocationComponent& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const FFlecsLocationComponent& Other) const
 	{
 		return Location == Other.Location;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsLocationComponent& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const FFlecsLocationComponent& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -40,7 +40,7 @@ public:
 	FORCEINLINE void SetLocation(const FVector& InLocation) { Location = InLocation; }
 	FORCEINLINE void SetLocation(const float InX, const float InY, const float InZ) { Location = FVector(InX, InY, InZ); }
 
-	FORCEINLINE NO_DISCARD FVector GetLocation() const { return Location; }
+	NO_DISCARD FORCEINLINE FVector GetLocation() const { return Location; }
 	FORCEINLINE operator FVector() const { return GetLocation(); }
 	FORCEINLINE FVector* operator->() { return &Location; }
 	FORCEINLINE const FVector* operator->() const { return &Location; }
@@ -59,7 +59,7 @@ struct UNREALFLECS_API FFlecsRotationComponent
 {
 	GENERATED_BODY()
 	
-	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsRotationComponent& InRotationComponent)
+	NO_DISCARD FORCEINLINE friend uint32 GetTypeHash(const FFlecsRotationComponent& InRotationComponent)
 	{
 		return GetTypeHash(InRotationComponent.Rotation.Quaternion());
 	}
@@ -73,12 +73,12 @@ public:
 	{
 	}
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsRotationComponent& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const FFlecsRotationComponent& Other) const
 	{
 		return Rotation == Other.Rotation;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsRotationComponent& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const FFlecsRotationComponent& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -89,7 +89,7 @@ public:
 		Rotation = FRotator(InPitch, InYaw, InRoll);
 	}
 
-	FORCEINLINE NO_DISCARD FRotator GetRotation() const { return Rotation; }
+	NO_DISCARD FORCEINLINE FRotator GetRotation() const { return Rotation; }
 	FORCEINLINE operator FRotator() const { return GetRotation(); }
 	FORCEINLINE FRotator* operator->() { return &Rotation; }
 	FORCEINLINE const FRotator* operator->() const { return &Rotation; }
@@ -108,7 +108,7 @@ struct UNREALFLECS_API FFlecsScaleComponent
 {
 	GENERATED_BODY()
 	
-	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsScaleComponent& InScaleComponent)
+	NO_DISCARD FORCEINLINE friend uint32 GetTypeHash(const FFlecsScaleComponent& InScaleComponent)
 	{
 		return GetTypeHash(InScaleComponent.Scale);
 	}
@@ -119,12 +119,12 @@ public:
 	FORCEINLINE FFlecsScaleComponent(const FVector& InScale) : Scale(InScale) {}
 	FORCEINLINE FFlecsScaleComponent(const float InX, const float InY, const float InZ) : Scale(InX, InY, InZ) {}
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsScaleComponent& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const FFlecsScaleComponent& Other) const
 	{
 		return Scale == Other.Scale;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsScaleComponent& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const FFlecsScaleComponent& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -132,7 +132,7 @@ public:
 	FORCEINLINE void SetScale(const FVector& InScale) { Scale = InScale; }
 	FORCEINLINE void SetScale(const float InX, const float InY, const float InZ) { Scale = FVector(InX, InY, InZ); }
 
-	FORCEINLINE NO_DISCARD FVector GetScale() const { return Scale; }
+	NO_DISCARD FORCEINLINE FVector GetScale() const { return Scale; }
 	FORCEINLINE operator FVector() const { return GetScale(); }
 	FORCEINLINE FVector* operator->() { return &Scale; }
 	FORCEINLINE const FVector* operator->() const { return &Scale; }

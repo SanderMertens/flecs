@@ -53,17 +53,17 @@ public:
 		return ModuleEntity;
 	}
 
-	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const
+	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorld() const
 	{
 		return World.Get();
 	}
 
-	FORCEINLINE NO_DISCARD bool IsWorldValid() const
+	NO_DISCARD FORCEINLINE bool IsWorldValid() const
 	{
 		return World.IsValid();
 	}
 
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetModuleEntity() const
+	NO_DISCARD FORCEINLINE FFlecsEntityHandle GetModuleEntity() const
 	{
 		return ModuleEntity;
 	}

@@ -13,7 +13,7 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 {
 	GENERATED_BODY()
 
-	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsWorldPtrComponent& InComponent)
+	NO_DISCARD FORCEINLINE friend uint32 GetTypeHash(const FFlecsWorldPtrComponent& InComponent)
 	{
 		return GetTypeHash(InComponent.World);
 	}
@@ -25,12 +25,12 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 	{
 	}
 
-	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const
+	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorld() const
 	{
 		return World;
 	}
 
-	FORCEINLINE NO_DISCARD bool IsValid() const
+	NO_DISCARD FORCEINLINE bool IsValid() const
 	{
 		return ::IsValid(World);
 	}
@@ -78,7 +78,7 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 	
 }; // struct FFlecsWorldPtrComponent
 
-FORCEINLINE NO_DISCARD UFlecsWorld* ToFlecsWorld(const flecs::world& InWorld)
+NO_DISCARD FORCEINLINE UFlecsWorld* ToFlecsWorld(const flecs::world& InWorld)
 {
 	static TWeakObjectPtr<UFlecsWorld> CachedWorld;
 

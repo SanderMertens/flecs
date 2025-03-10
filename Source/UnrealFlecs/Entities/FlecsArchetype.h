@@ -33,12 +33,12 @@ public:
     FORCEINLINE flecs::type* operator->() { return &Type; }
     FORCEINLINE const flecs::type* operator->() const { return &Type; }
 
-    FORCEINLINE NO_DISCARD bool operator==(const FFlecsArchetype& Other) const
+    NO_DISCARD FORCEINLINE bool operator==(const FFlecsArchetype& Other) const
     {
         return Type == Other.Type;
     }
 
-    FORCEINLINE NO_DISCARD bool operator!=(const FFlecsArchetype& Other) const
+    NO_DISCARD FORCEINLINE bool operator!=(const FFlecsArchetype& Other) const
     {
         return Type != Other.Type;
     }

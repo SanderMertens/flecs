@@ -7,7 +7,7 @@
 
 #include "../private_api.h"
 
-static __forceinline
+static
 ecs_size_t flecs_allocator_size(
     ecs_size_t size)
 {

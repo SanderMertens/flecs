@@ -15,7 +15,7 @@ enum class EFlecsQueryCacheType : uint8
 	None = flecs::QueryCacheNone /**< No caching */
 }; // enum class EFlecsQueryCacheType
 
-FORCEINLINE NO_DISCARD constexpr flecs::query_cache_kind_t ToFlecsQueryCache(EFlecsQueryCacheType CacheType) NOEXCEPT
+NO_DISCARD FORCEINLINE constexpr flecs::query_cache_kind_t ToFlecsQueryCache(EFlecsQueryCacheType CacheType) NOEXCEPT
 {
 	return static_cast<flecs::query_cache_kind_t>(CacheType);
 }

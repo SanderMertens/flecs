@@ -52,7 +52,7 @@ struct UNREALFLECS_API FFlecsRecordPairSlot
 		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::FGameplayTag", EditConditionHides))
 	FGameplayTag GameplayTag;
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsRecordPairSlot& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const FFlecsRecordPairSlot& Other) const
 	{
 		switch (PairNodeType)
 		{
@@ -73,7 +73,7 @@ struct UNREALFLECS_API FFlecsRecordPairSlot
 		UNREACHABLE;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsRecordPairSlot& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const FFlecsRecordPairSlot& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -100,12 +100,12 @@ struct UNREALFLECS_API FFlecsRecordPair
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
 	EFlecsValuePairType PairValueType = EFlecsValuePairType::First;
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsRecordPair& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const FFlecsRecordPair& Other) const
 	{
 		return First == Other.First && Second == Other.Second;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsRecordPair& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const FFlecsRecordPair& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -221,7 +221,7 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::Pair", EditConditionHides))
 	FFlecsRecordPair Pair;
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsComponentTypeInfo& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const FFlecsComponentTypeInfo& Other) const
 	{
 		switch (NodeType)
 		{
@@ -251,7 +251,7 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 		UNREACHABLE;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsComponentTypeInfo& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const FFlecsComponentTypeInfo& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -273,12 +273,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Flecs | Entity Record")
 	TArray<TObjectPtr<UFlecsComponentCollectionObject>> Collections;
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsRecordSubEntity& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const FFlecsRecordSubEntity& Other) const
 	{
 		return Name == Other.Name && Components == Other.Components;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsRecordSubEntity& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const FFlecsRecordSubEntity& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -352,12 +352,12 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
 	TArray<FFlecsRecordSubEntity> SubEntities;
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityRecord& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const FFlecsEntityRecord& Other) const
 	{
 		return Components == Other.Components;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsEntityRecord& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const FFlecsEntityRecord& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -411,12 +411,12 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		SubEntities.Empty();
 	}
 
-	FORCEINLINE NO_DISCARD bool HasSubEntities() const
+	NO_DISCARD FORCEINLINE bool HasSubEntities() const
 	{
 		return !SubEntities.IsEmpty();
 	}
 
-	FORCEINLINE NO_DISCARD int32 GetSubEntityCount() const
+	NO_DISCARD FORCEINLINE int32 GetSubEntityCount() const
 	{
 		return SubEntities.Num();
 	}

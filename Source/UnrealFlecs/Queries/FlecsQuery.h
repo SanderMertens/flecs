@@ -16,7 +16,7 @@ struct FFlecsQuery
 {
     GENERATED_BODY()
 
-    FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsQuery& InQuery)
+    NO_DISCARD FORCEINLINE friend uint32 GetTypeHash(const FFlecsQuery& InQuery)
     {
         return GetTypeHash(InQuery.GetQuery().entity().id());
     }
@@ -40,52 +40,52 @@ public:
 
     FFlecsQuery(UFlecsWorld* InFlecsWorld, const FString& InName, const FFlecsQueryDefinition& InDefinition);
 
-    FORCEINLINE NO_DISCARD bool HasChanged() const
+    NO_DISCARD FORCEINLINE bool HasChanged() const
     {
         return Query.changed();
     }
 
-    FORCEINLINE NO_DISCARD flecs::query<> GetQuery() const
+    NO_DISCARD FORCEINLINE flecs::query<> GetQuery() const
     {
         return Query;
     }
 
-    FORCEINLINE NO_DISCARD int32 GetCount() const
+    NO_DISCARD FORCEINLINE int32 GetCount() const
     {
         return ecs_query_match_count(Query);
     }
 
-    FORCEINLINE NO_DISCARD int32 GetFieldCount()
+    NO_DISCARD FORCEINLINE int32 GetFieldCount()
     {
         return Query.field_count();
     }
 
-    FORCEINLINE NO_DISCARD bool HasMatches() const
+    NO_DISCARD FORCEINLINE bool HasMatches() const
     {
         return ecs_query_is_true(Query);
     }
 
-    FORCEINLINE NO_DISCARD FString ToString() const
+    NO_DISCARD FORCEINLINE FString ToString() const
     {
         return StringCast<TCHAR>(ecs_query_str(Query)).Get();
     }
 
-    FORCEINLINE NO_DISCARD FFlecsEntityHandle GetEntity() const
+    NO_DISCARD FORCEINLINE FFlecsEntityHandle GetEntity() const
     {
         return FFlecsEntityHandle(ecs_get_entity(Query));
     }
 
-    FORCEINLINE NO_DISCARD bool operator==(const FFlecsQuery& Other) const
+    NO_DISCARD FORCEINLINE bool operator==(const FFlecsQuery& Other) const
     {
         return Query.c_ptr() == Other.Query.c_ptr();
     }
 
-    FORCEINLINE NO_DISCARD bool operator!=(const FFlecsQuery& Other) const
+    NO_DISCARD FORCEINLINE bool operator!=(const FFlecsQuery& Other) const
     {
         return !(*this == Other);
     }
 
-    FORCEINLINE NO_DISCARD bool operator==(const flecs::query<>& Other) const
+    NO_DISCARD FORCEINLINE bool operator==(const flecs::query<>& Other) const
     {
         return GetEntity() == FFlecsEntityHandle(ecs_get_entity(Other));
     }

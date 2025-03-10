@@ -26,12 +26,12 @@ struct UNREALFLECS_API FFlecsDefaultMetaEntity
 	
 	flecs::entity_t SetId = 0;
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsDefaultMetaEntity& Other) const
+	NO_DISCARD FORCEINLINE bool operator==(const FFlecsDefaultMetaEntity& Other) const
 	{
 		return EntityName == Other.EntityName && EntityId == Other.EntityId;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsDefaultMetaEntity& Other) const
+	NO_DISCARD FORCEINLINE bool operator!=(const FFlecsDefaultMetaEntity& Other) const
 	{
 		return !(*this == Other);
 	}

@@ -57,7 +57,7 @@ public:
 		OnComponentPropertiesRegistered.ExecuteIfBound(ComponentProperties[Name]);
 	}
 
-	FORCEINLINE NO_DISCARD bool ContainsComponentProperties(const std::string& Name) const
+	NO_DISCARD FORCEINLINE bool ContainsComponentProperties(const std::string& Name) const
 	{
 		return ComponentProperties.contains(Name);
 	}

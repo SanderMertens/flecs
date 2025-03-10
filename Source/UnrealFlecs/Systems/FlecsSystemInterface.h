@@ -79,7 +79,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Meta = (DisplayName = "Initialize System"))
 	void BP_InitializeSystem();
 
-	FORCEINLINE NO_DISCARD FFlecsSystem GetSystem() const
+	NO_DISCARD FORCEINLINE FFlecsSystem GetSystem() const
 	{
 		return System;
 	}

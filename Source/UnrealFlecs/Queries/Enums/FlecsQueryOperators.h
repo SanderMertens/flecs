@@ -20,7 +20,7 @@ enum class EFlecsQueryOperator : uint8
     Default = flecs::And
 }; // enum class EFlecsQueryOperator
 
-FORCEINLINE NO_DISCARD constexpr flecs::oper_kind_t ToFlecsOperator(EFlecsQueryOperator Operator) NOEXCEPT
+NO_DISCARD FORCEINLINE constexpr flecs::oper_kind_t ToFlecsOperator(EFlecsQueryOperator Operator) NOEXCEPT
 {
     return static_cast<flecs::oper_kind_t>(Operator);
 } 

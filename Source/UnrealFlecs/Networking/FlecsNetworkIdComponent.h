@@ -11,7 +11,7 @@ struct UNREALFLECS_API FFlecsNetworkIdComponent
 {
 	GENERATED_BODY()
 
-	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsNetworkIdComponent& InComponent)
+	NO_DISCARD FORCEINLINE friend uint32 GetTypeHash(const FFlecsNetworkIdComponent& InComponent)
 	{
 		return GetTypeHash(InComponent.GetNetworkId());
 	}
@@ -20,7 +20,7 @@ public:
 	FORCEINLINE FFlecsNetworkIdComponent() = default;
 	FORCEINLINE FFlecsNetworkIdComponent(const uint32 InNetworkId) : NetworkId(InNetworkId) {}
 
-	FORCEINLINE NO_DISCARD uint32 GetNetworkId() const
+	NO_DISCARD FORCEINLINE uint32 GetNetworkId() const
 	{
 		return NetworkId.Get(INDEX_NONE);
 	}
@@ -30,7 +30,7 @@ public:
 		NetworkId = InNetworkId;
 	}
 
-	FORCEINLINE NO_DISCARD bool IsValid() const
+	NO_DISCARD FORCEINLINE bool IsValid() const
 	{
 		return NetworkId.IsSet();
 	}
@@ -63,7 +63,7 @@ public:
 	UPROPERTY()
 	TOptional<uint32> NetworkId;
 
-	FORCEINLINE NO_DISCARD FString ToString() const
+	NO_DISCARD FORCEINLINE FString ToString() const
 	{
 		return FString::Printf(TEXT("NetworkId: %lu"), NetworkId.Get(INDEX_NONE));
 	}

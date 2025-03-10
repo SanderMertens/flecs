@@ -21,7 +21,7 @@ struct alignas(8) UNREALFLECS_API FFlecsUObjectComponent
 {
     GENERATED_BODY()
 
-    FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsUObjectComponent& InComponent)
+    NO_DISCARD FORCEINLINE friend uint32 GetTypeHash(const FFlecsUObjectComponent& InComponent)
     {
         return GetTypeHash(InComponent.Object);
     }
@@ -30,25 +30,25 @@ public:
     FORCEINLINE FFlecsUObjectComponent() = default;
     FORCEINLINE FFlecsUObjectComponent(UObject* InObject) : Object(InObject) {}
 
-    FORCEINLINE NO_DISCARD UObject* GetObject() const
+    NO_DISCARD FORCEINLINE UObject* GetObject() const
     {
         return Object.Get();
     }
 
     template <Solid::TStaticClassConcept T>
-    FORCEINLINE NO_DISCARD T* GetObject() const
+    NO_DISCARD FORCEINLINE T* GetObject() const
     {
         return Cast<T>(GetObject());
     }
 
-    FORCEINLINE NO_DISCARD UObject* GetObjectChecked() const
+    NO_DISCARD FORCEINLINE UObject* GetObjectChecked() const
     {
         solid_checkf(IsValid(), TEXT("Object is not valid!"));
         return Object.Get();
     }
 
     template <Solid::TStaticClassConcept T>
-    FORCEINLINE NO_DISCARD T* GetObjectChecked() const
+    NO_DISCARD FORCEINLINE T* GetObjectChecked() const
     {
         return CastChecked<T>(GetObject());
     }
@@ -60,22 +60,22 @@ public:
     }
 
     template <Solid::TStaticClassConcept T>
-    FORCEINLINE NO_DISCARD bool IsA() const
+    NO_DISCARD FORCEINLINE bool IsA() const
     {
         return Object->IsA<T>();
     }
     
-    FORCEINLINE NO_DISCARD bool IsA(const UClass* InClass) const
+    NO_DISCARD FORCEINLINE bool IsA(const UClass* InClass) const
     {
         return Object->IsA(InClass);
     }
 
-    FORCEINLINE NO_DISCARD bool IsValid() const
+    NO_DISCARD FORCEINLINE bool IsValid() const
     {
         return Object.IsValid();
     }
 
-    FORCEINLINE NO_DISCARD bool IsValid(const bool bIncludeIfPendingKill, const bool bThreadSafeTest = false) const
+    NO_DISCARD FORCEINLINE bool IsValid(const bool bIncludeIfPendingKill, const bool bThreadSafeTest = false) const
     {
         return Object.IsValid(bIncludeIfPendingKill, bThreadSafeTest);
     }
@@ -85,7 +85,7 @@ public:
         return IsValid();
     }
     
-    FORCEINLINE NO_DISCARD bool IsStale(const bool bIncludeIfPendingKill = true, const bool bThreadSafeTest = false) const
+    NO_DISCARD FORCEINLINE bool IsStale(const bool bIncludeIfPendingKill = true, const bool bThreadSafeTest = false) const
     {
         return Object.IsStale(bIncludeIfPendingKill, bThreadSafeTest);
     }
@@ -108,7 +108,7 @@ public:
     UPROPERTY()
     TWeakObjectPtr<UObject> Object;
 
-    FORCEINLINE NO_DISCARD FString ToString() const
+    NO_DISCARD FORCEINLINE FString ToString() const
     {
         return IsValid() ? Object->GetName() : TEXT("Invalid");
     }

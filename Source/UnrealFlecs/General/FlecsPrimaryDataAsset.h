@@ -27,7 +27,7 @@ public:
 	virtual void OnEntityDestroyed(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)
 		PURE_VIRTUAL(UFlecsPrimaryDataAsset::OnEntityDestroyed, );
 
-	FORCEINLINE NO_DISCARD bool ShouldSpawn() const
+	NO_DISCARD FORCEINLINE bool ShouldSpawn() const
 	{
 		return bEnabledOnStartup && !GetClass()->HasAnyClassFlags(CLASS_Abstract);
 	}

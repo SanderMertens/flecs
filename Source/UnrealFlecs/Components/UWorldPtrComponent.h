@@ -26,12 +26,12 @@ public:
 		World = InWorld;
 	}
 	
-	FORCEINLINE NO_DISCARD UWorld* GetWorld() const
+	NO_DISCARD FORCEINLINE UWorld* GetWorld() const
 	{
 		return World;
 	}
 	
-	FORCEINLINE NO_DISCARD bool IsValid() const
+	NO_DISCARD FORCEINLINE bool IsValid() const
 	{
 		return ::IsValid(World);
 	}

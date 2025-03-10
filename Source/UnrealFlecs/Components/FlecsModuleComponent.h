@@ -18,7 +18,7 @@ struct UNREALFLECS_API FFlecsModuleComponent
 	{
 	}
 
-	FORCEINLINE NO_DISCARD TSubclassOf<UObject> GetModuleClass() const
+	NO_DISCARD FORCEINLINE TSubclassOf<UObject> GetModuleClass() const
 	{
 		return ModuleClass;
 	}
