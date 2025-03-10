@@ -6,6 +6,7 @@
 #pragma once
 
 #include <ctype.h>
+#include <optional>
 #include <stdio.h>
 
 #include "flecs/os_api.h"
@@ -185,6 +186,13 @@ struct type_impl {
     static void init(bool allow_tag = true)
     {
         get_or_create_type_data<T>(allow_tag);
+        type_impl_data* td = get_type_data_if_any<T>();
+        ecs_assert(td != nullptr, ECS_INTERNAL_ERROR, 
+            "type data not found for %s", _::type_name<T>());
+        s_index = td->s_index;
+        s_size = td->s_size;
+        s_alignment = td->s_alignment;
+        s_allow_tag = td->s_allow_tag;
     }
 
     // init_builtin: set up the data, then set the world-local ID
@@ -195,6 +203,11 @@ struct type_impl {
     {
         auto &td = get_or_create_type_data<T>(allow_tag);
         flecs_component_ids_set(world, td.s_index, id);
+
+        s_index = td.s_index;
+        s_size = td.s_size;
+        s_alignment = td.s_alignment;
+        s_allow_tag = td.s_allow_tag;
     }
 
     // Register component id. This logic remains much the same, but
@@ -209,14 +222,17 @@ struct type_impl {
     {
         ecs_os_perf_trace_push("flecs.type_impl.register_id");
         
-        // Ensure there's a record for T
         auto& td = get_or_create_type_data<T>(allow_tag);
+        s_index = td.s_index;
+        s_size = td.s_size;
+        s_alignment = td.s_alignment;
+        s_allow_tag = td.s_allow_tag;
         
         bool registered = false, existing = false;
 
         flecs::entity_t c = ecs_cpp_component_register(
-            world, id, td.s_index, name, type_name<T>(), 
-            symbol_name<T>(), td.s_size, td.s_alignment,
+            world, id, s_index.value(), name, type_name<T>(), 
+            symbol_name<T>(), s_size.value(), s_alignment.value(),
             is_component, explicit_registration, &registered, &existing);
         
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
@@ -276,12 +292,12 @@ struct type_impl {
         ecs_os_perf_trace_push("flecs.type_impl.id");
 
         // Make sure there's a record
-        auto *td = get_type_data_if_any<T>();
-        ecs_assert(td != nullptr, ECS_INTERNAL_ERROR, 
-            "type_impl<T>::id() called without prior init");
+        const int32_t in_s_index = index();
+        ecs_assert(in_s_index != -1, ECS_INVALID_PARAMETER, 
+            "component not registered, %s", _::type_name<T>());
 
         // Check if there's a valid entity in this world for T
-        flecs::entity_t c = flecs_component_ids_get_alive(world, td->s_index);
+        flecs::entity_t c = flecs_component_ids_get_alive(world, in_s_index);
         
         #ifndef FLECS_CPP_NO_AUTO_REGISTRATION
         
@@ -300,28 +316,58 @@ struct type_impl {
 
     // Return the size
     static size_t size() {
+        if (s_size.has_value()) [[likely]] {
+            return s_size.value();
+        }
+
         auto* td = get_type_data_if_any<T>();
-        ecs_assert(td != nullptr, ECS_INTERNAL_ERROR, 
-            "type_impl<T>::size() called before init");
-        return td->s_size;
+        if (!td) {
+            return 0;
+        }
+
+        s_size = td->s_size;
+        return s_size.value();
     }
 
     // Return the alignment
     static size_t alignment() {
+        if (s_alignment.has_value()) [[likely]] {
+            return s_alignment.value();
+        }
+
         auto* td = get_type_data_if_any<T>();
-        ecs_assert(td != nullptr, ECS_INTERNAL_ERROR,
-            "type_impl<T>::alignment() called before init");
-        return td->s_alignment;
+        if (!td) {
+            return 0;
+        }
+
+        s_alignment = td->s_alignment;
+        return s_alignment.value();
+    }
+        
+    static int32_t index() {
+        if (s_index.has_value()) [[likely]] {
+            return s_index.value();
+        }
+        
+        auto* td = get_type_data_if_any<T>();
+        if (!td) {
+            return -1;
+        }
+        
+        s_index = td->s_index;
+        return s_index.value();
     }
 
     // Check if T is registered in the provided world
     static bool registered(flecs::world_t *world) {
         ecs_assert(world != nullptr, ECS_INVALID_PARAMETER, NULL);
-        auto* td = get_type_data_if_any<T>();
-        if (!td) {
-            return false;
+
+        const int32_t in_s_index = index();
+        if (in_s_index == -1) {
+           return false;
         }
-        flecs::entity_t c = flecs_component_ids_get(world, td->s_index);
+        
+        flecs::entity_t c = flecs_component_ids_get(world, in_s_index);
         return (c != 0);
     }
         
@@ -329,8 +375,23 @@ struct type_impl {
     {
         std::string key = _::type_name<T>();
         g_type_to_impl_data.erase(key);
+        s_index.reset();
+        s_size.reset();
+        s_alignment.reset();
+        s_allow_tag.reset();
     }
+        
+    static std::optional<int32_t> s_index;
+    static std::optional<size_t> s_size;
+    static std::optional<size_t> s_alignment;
+    static std::optional<bool> s_allow_tag;
 };
+
+    // Global templated variables that hold component identifier and other info
+    template <typename T> std::optional<int32_t>  type_impl<T>::s_index;
+    template <typename T> std::optional<size_t>   type_impl<T>::s_size;
+    template <typename T> std::optional<size_t>   type_impl<T>::s_alignment;
+    template <typename T> std::optional<bool>     type_impl<T>::s_allow_tag( true );
 
 // Front facing class for implicitly registering a component & obtaining
 // static component data
@@ -401,6 +462,7 @@ struct untyped_component : entity {
  */
 template <typename T>
 struct component : untyped_component {
+    
     /** Register a component.
      * If the component was already registered, this operation will return a handle
      * to the existing component.

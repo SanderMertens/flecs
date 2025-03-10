@@ -5,12 +5,12 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsPrefabAsset)
 
-void UFlecsPrefabAsset::OnEntityCreated(MAYBE_UNUSED const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)
+void UFlecsPrefabAsset::OnEntityCreated(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)
 {
 	PrefabEntityHandle = World->CreatePrefabWithRecord(Prefab.Record, Prefab.Name);
 }
 
-void UFlecsPrefabAsset::OnEntityDestroyed(MAYBE_UNUSED const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)
+void UFlecsPrefabAsset::OnEntityDestroyed(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)
 {
 	World->DestroyPrefab(PrefabEntityHandle);
 }
