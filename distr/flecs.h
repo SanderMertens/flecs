@@ -30600,6 +30600,8 @@ struct query_builder_i : term_builder_i<Base> {
 
     /* Term notation for more complex query features */
 
+    /** Sets the current term to next one in term list.
+     */
     Base& term() {
         if (this->term_) {
             ecs_check(ecs_term_is_initialized(this->term_), 
@@ -30618,6 +30620,30 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
+    /** Sets the current term to the one with the provided type.
+     * This loops over all terms to find the one with the provided type.
+     * For performance-critical paths, use term_at(int32_t) instead.
+     */
+    template <typename T>
+    Base& term_at() {
+        flecs::id_t term_id = _::type<T>::id(this->world_v());
+        for (int i = 0; i < term_index_; i ++) {
+            ecs_term_t cur_term = desc_->terms[i];
+            ecs_id_t cur_term_id = cur_term.id;
+            ecs_id_t cur_term_pair = ecs_pair(cur_term.first.id, cur_term.second.id);
+
+            if ((term_id == cur_term_id || (cur_term_id != 0 && term_id == ecs_get_typeid(this->world_v(), cur_term_id))) ||
+                (term_id == cur_term_pair || (cur_term_pair != 0 && term_id == ecs_get_typeid(this->world_v(), cur_term_pair)))) {
+                return term_at(i);
+            }
+        }
+
+        ecs_err("term not found");
+        return *this;
+    }
+
+    /** Sets the current term to the one at the provided index.
+     */
     Base& term_at(int32_t term_index) {
         ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, NULL);
         int32_t prev_index = term_index_;
@@ -30626,6 +30652,24 @@ struct query_builder_i : term_builder_i<Base> {
         term_index_ = prev_index;
         ecs_assert(ecs_term_is_initialized(this->term_), 
             ECS_INVALID_PARAMETER, NULL);
+        return *this;
+    }
+
+    /** Sets the current term to the one at the provided index and asserts that the type matches.
+     */
+    template <typename T>
+    Base& term_at(int32_t term_index) {
+        this->term_at(term_index);
+#if !defined(FLECS_NDEBUG) || defined(FLECS_KEEP_ASSERT)
+        flecs::id_t term_id = _::type<T>::id(this->world_v());
+        ecs_term_t cur_term = *this->term_;
+        ecs_id_t cur_term_id = cur_term.id;
+        ecs_id_t cur_term_pair = ecs_pair(cur_term.first.id, cur_term.second.id);
+
+        ecs_assert((term_id == cur_term_id || (cur_term_id != 0 && term_id == ecs_get_typeid(this->world_v(), cur_term_id))) ||
+            (term_id == cur_term_pair || (cur_term_pair != 0 && term_id == ecs_get_typeid(this->world_v(), cur_term_pair))),
+            ECS_INVALID_PARAMETER, "term type mismatch");
+#endif
         return *this;
     }
 

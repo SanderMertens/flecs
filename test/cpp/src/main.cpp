@@ -754,6 +754,8 @@ void QueryBuilder_relation_w_object_wildcard(void);
 void QueryBuilder_relation_w_predicate_wildcard(void);
 void QueryBuilder_add_pair_w_rel_type(void);
 void QueryBuilder_template_term(void);
+void QueryBuilder_typed_term_at(void);
+void QueryBuilder_typed_term_at_indexed(void);
 void QueryBuilder_explicit_subject_w_id(void);
 void QueryBuilder_explicit_subject_w_type(void);
 void QueryBuilder_explicit_object_w_id(void);
@@ -4390,6 +4392,14 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_template_term
     },
     {
+        "typed_term_at",
+        QueryBuilder_typed_term_at
+    },
+    {
+        "typed_term_at_indexed",
+        QueryBuilder_typed_term_at_indexed
+    },
+    {
         "explicit_subject_w_id",
         QueryBuilder_explicit_subject_w_id
     },
@@ -7230,7 +7240,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        173,
+        175,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params
