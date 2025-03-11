@@ -1085,7 +1085,22 @@
                 "sparse_component",
                 "count_in_add_hook",
                 "count_in_remove_hook",
-                "set_multiple_hooks"
+                "set_multiple_hooks",
+                "compare_WithGreaterThan",
+                "compare_WithLessThan",
+                "compare_WithLessAndGreaterThan",
+                "compare_WithEqualsAndGreaterThan",
+                "compare_WithEqualsAndLessThan",
+                "compare_WithEqualsOnly",
+                "compare_WithoutOperators",
+                "compare_uint8_Enum",
+                "compare_uint16_Enum",
+                "compare_uint32_Enum",
+                "compare_uint64_Enum",
+                "compare_int8_Enum",
+                "compare_int16_Enum",
+                "compare_int32_Enum",
+                "compare_int64_Enum"
             ]
         }, {
             "id": "Refs",
