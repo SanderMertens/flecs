@@ -41,13 +41,10 @@ struct untyped_ref {
         ref_ = ecs_ref_init_id(world_, entity, id);
     }
 
-    untyped_ref(flecs::entity entity, flecs::id_t id) 
-    : untyped_ref(entity.world(), entity.id(), id) { }
+    untyped_ref(flecs::entity entity, flecs::id_t id);
 
     /** Return entity associated with reference. */
-    flecs::entity entity() const {
-        return flecs::entity(world_, ref_.entity);
-    }
+    flecs::entity entity() const;
 
     /** Return component associated with reference. */
     flecs::id component() const {
@@ -92,8 +89,7 @@ struct ref : public untyped_ref {
         : untyped_ref(world, entity, id ? id : _::type<T>::id(world))
     {    }
 
-    ref(flecs::entity entity, flecs::id_t id = 0)
-        : ref(entity.world(), entity.id(), id) { }
+    ref(flecs::entity entity, flecs::id_t id = 0);
 
     T* operator->() {
         T* result = static_cast<T*>(get());

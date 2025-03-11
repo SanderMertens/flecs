@@ -325,6 +325,14 @@ struct entity : entity_builder<entity>
         return ref<First>(world_, id_, ecs_pair(first, second));
     }
 
+    untyped_ref get_ref(flecs::id_t component) const {
+        return untyped_ref(world_, id_, component);
+    } 
+
+    untyped_ref get_ref(flecs::id_t first, flecs::id_t second) const {
+        return untyped_ref(world_, id_, ecs_pair(first, second));
+    } 
+
     template <typename Second>
     ref<Second> get_ref_second(flecs::entity_t first) const {
         auto second = _::type<Second>::id(world_);
