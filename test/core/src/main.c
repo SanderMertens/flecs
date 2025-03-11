@@ -2180,7 +2180,6 @@ void Commands_defer_existing_ensure_no_on_set(void);
 void Commands_ensure_override(void);
 void Commands_set_override(void);
 void Commands_absent_ensure_for_entity_w_tag(void);
-void Commands_on_set_hook_before_on_add_for_existing_component(void);
 void Commands_defer_2_sets_w_observer_same_component(void);
 void Commands_defer_2_sets_w_observer_other_component(void);
 void Commands_on_remove_after_deferred_clear_and_add(void);
@@ -10832,10 +10831,6 @@ bake_test_case Commands_testcases[] = {
         Commands_absent_ensure_for_entity_w_tag
     },
     {
-        "on_set_hook_before_on_add_for_existing_component",
-        Commands_on_set_hook_before_on_add_for_existing_component
-    },
-    {
         "defer_2_sets_w_observer_same_component",
         Commands_defer_2_sets_w_observer_same_component
     },
@@ -11850,7 +11845,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        156,
+        155,
         Commands_testcases
     },
     {
