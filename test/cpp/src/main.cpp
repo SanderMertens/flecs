@@ -1076,6 +1076,8 @@ void Refs_ref_after_set(void);
 void Refs_ref_before_set(void);
 void Refs_non_const_ref(void);
 void Refs_pair_ref(void);
+void Refs_pair_ref_w_pair_type(void);
+void Refs_pair_ref_w_pair_type_second(void);
 void Refs_pair_ref_w_entity(void);
 void Refs_pair_ref_second(void);
 void Refs_from_stage(void);
@@ -5656,6 +5658,14 @@ bake_test_case Refs_testcases[] = {
         Refs_pair_ref
     },
     {
+        "pair_ref_w_pair_type",
+        Refs_pair_ref_w_pair_type
+    },
+    {
+        "pair_ref_w_pair_type_second",
+        Refs_pair_ref_w_pair_type_second
+    },
+    {
         "pair_ref_w_entity",
         Refs_pair_ref_w_entity
     },
@@ -7250,7 +7260,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        21,
+        23,
         Refs_testcases
     },
     {
