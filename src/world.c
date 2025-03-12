@@ -738,6 +738,8 @@ void flecs_fini_store(ecs_world_t *world) {
     ecs_vec_fini_t(a, &world->store.records, ecs_table_record_t);
     ecs_vec_fini_t(a, &world->store.marked_ids, ecs_marked_id_t);
     ecs_vec_fini_t(a, &world->store.deleted_components, ecs_entity_t);
+
+    flecs_free_n(a, bool, FLECS_HI_COMPONENT_ID, world->non_fragmenting);
 }
 
 static 

@@ -535,6 +535,7 @@ extern "C" {
 #define EcsTermIsSparse               (1u << 12)
 #define EcsTermIsUnion                (1u << 13)
 #define EcsTermIsOr                   (1u << 14)
+#define EcsTermDontFragment         (1u << 15)
 
 
 ////////////////////////////////////////////////////////////////////////////////

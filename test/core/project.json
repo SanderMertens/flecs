@@ -506,6 +506,7 @@
                 "emplace_inherited",
                 "override_component",
                 "override_component_2_lvls",
+                "dont_override_inherited",
                 "delete_w_override_component",
                 "delete_w_override_on_remove_isa",
                 "bulk_init",

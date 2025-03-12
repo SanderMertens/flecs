@@ -1111,6 +1111,12 @@ void flecs_query_set_op_kind(
                 op->kind = EcsQueryUnionEqSelfUp;
             }
         }
+    } else if (term->flags_ & EcsTermDontFragment) {
+        if (op->kind == EcsQueryAnd) {
+            op->kind = EcsQuerySparse;
+        } else {
+            op->kind = EcsQuerySparseWith;
+        }
     } else {
         if ((term->src.id & trav_flags) == EcsUp) {
             op->kind = EcsQueryUp;

@@ -1957,6 +1957,7 @@ void Sparse_1_this_sparse_simple(void);
 void Sparse_1_this_sparse(void);
 void Sparse_1_this_sparse_none(void);
 void Sparse_1_this_sparse_written(void);
+void Sparse_1_this_sparse_written_partial(void);
 void Sparse_1_this_sparse_written_none(void);
 void Sparse_1_var_sparse(void);
 void Sparse_1_var_sparse_none(void);
@@ -1978,6 +1979,41 @@ void Sparse_sparse_pair_first(void);
 void Sparse_sparse_pair_second(void);
 void Sparse_sparse_pair_first_after_query(void);
 void Sparse_sparse_pair_second_after_query(void);
+
+// Testsuite 'DontFragment'
+void DontFragment_setup(void);
+void DontFragment_1_fixed_sparse(void);
+void DontFragment_1_fixed_sparse_none(void);
+void DontFragment_1_this_sparse_simple(void);
+void DontFragment_1_this_sparse(void);
+void DontFragment_1_this_sparse_none(void);
+void DontFragment_1_this_sparse_written(void);
+void DontFragment_1_this_sparse_written_partial(void);
+void DontFragment_1_this_sparse_written_none(void);
+void DontFragment_1_var_sparse(void);
+void DontFragment_1_var_sparse_none(void);
+void DontFragment_1_var_sparse_written(void);
+void DontFragment_1_var_sparse_written_none(void);
+void DontFragment_2_sparse_simple(void);
+void DontFragment_2_sparse(void);
+void DontFragment_2_sparse_and_regular(void);
+void DontFragment_2_regular_and_sparse(void);
+void DontFragment_1_sparse_self(void);
+void DontFragment_1_sparse_up(void);
+void DontFragment_1_sparse_self_up(void);
+void DontFragment_1_sparse_written_self(void);
+void DontFragment_1_sparse_written_up(void);
+void DontFragment_1_sparse_written_self_up(void);
+void DontFragment_sparse_0_src_only_term(void);
+void DontFragment_sparse_0_src(void);
+void DontFragment_sparse_pair_first(void);
+void DontFragment_sparse_pair_second(void);
+void DontFragment_sparse_pair_first_after_query(void);
+void DontFragment_sparse_pair_second_after_query(void);
+void DontFragment_ignore_prefab_disabled(void);
+void DontFragment_match_prefab_ignore_disabled(void);
+void DontFragment_ignore_prefab_match_disabled(void);
+void DontFragment_match_prefab_disabled(void);
 
 // Testsuite 'Union'
 void Union_setup(void);
@@ -9821,6 +9857,10 @@ bake_test_case Sparse_testcases[] = {
         Sparse_1_this_sparse_written
     },
     {
+        "1_this_sparse_written_partial",
+        Sparse_1_this_sparse_written_partial
+    },
+    {
         "1_this_sparse_written_none",
         Sparse_1_this_sparse_written_none
     },
@@ -9903,6 +9943,137 @@ bake_test_case Sparse_testcases[] = {
     {
         "sparse_pair_second_after_query",
         Sparse_sparse_pair_second_after_query
+    }
+};
+
+bake_test_case DontFragment_testcases[] = {
+    {
+        "1_fixed_sparse",
+        DontFragment_1_fixed_sparse
+    },
+    {
+        "1_fixed_sparse_none",
+        DontFragment_1_fixed_sparse_none
+    },
+    {
+        "1_this_sparse_simple",
+        DontFragment_1_this_sparse_simple
+    },
+    {
+        "1_this_sparse",
+        DontFragment_1_this_sparse
+    },
+    {
+        "1_this_sparse_none",
+        DontFragment_1_this_sparse_none
+    },
+    {
+        "1_this_sparse_written",
+        DontFragment_1_this_sparse_written
+    },
+    {
+        "1_this_sparse_written_partial",
+        DontFragment_1_this_sparse_written_partial
+    },
+    {
+        "1_this_sparse_written_none",
+        DontFragment_1_this_sparse_written_none
+    },
+    {
+        "1_var_sparse",
+        DontFragment_1_var_sparse
+    },
+    {
+        "1_var_sparse_none",
+        DontFragment_1_var_sparse_none
+    },
+    {
+        "1_var_sparse_written",
+        DontFragment_1_var_sparse_written
+    },
+    {
+        "1_var_sparse_written_none",
+        DontFragment_1_var_sparse_written_none
+    },
+    {
+        "2_sparse_simple",
+        DontFragment_2_sparse_simple
+    },
+    {
+        "2_sparse",
+        DontFragment_2_sparse
+    },
+    {
+        "2_sparse_and_regular",
+        DontFragment_2_sparse_and_regular
+    },
+    {
+        "2_regular_and_sparse",
+        DontFragment_2_regular_and_sparse
+    },
+    {
+        "1_sparse_self",
+        DontFragment_1_sparse_self
+    },
+    {
+        "1_sparse_up",
+        DontFragment_1_sparse_up
+    },
+    {
+        "1_sparse_self_up",
+        DontFragment_1_sparse_self_up
+    },
+    {
+        "1_sparse_written_self",
+        DontFragment_1_sparse_written_self
+    },
+    {
+        "1_sparse_written_up",
+        DontFragment_1_sparse_written_up
+    },
+    {
+        "1_sparse_written_self_up",
+        DontFragment_1_sparse_written_self_up
+    },
+    {
+        "sparse_0_src_only_term",
+        DontFragment_sparse_0_src_only_term
+    },
+    {
+        "sparse_0_src",
+        DontFragment_sparse_0_src
+    },
+    {
+        "sparse_pair_first",
+        DontFragment_sparse_pair_first
+    },
+    {
+        "sparse_pair_second",
+        DontFragment_sparse_pair_second
+    },
+    {
+        "sparse_pair_first_after_query",
+        DontFragment_sparse_pair_first_after_query
+    },
+    {
+        "sparse_pair_second_after_query",
+        DontFragment_sparse_pair_second_after_query
+    },
+    {
+        "ignore_prefab_disabled",
+        DontFragment_ignore_prefab_disabled
+    },
+    {
+        "match_prefab_ignore_disabled",
+        DontFragment_match_prefab_ignore_disabled
+    },
+    {
+        "ignore_prefab_match_disabled",
+        DontFragment_ignore_prefab_match_disabled
+    },
+    {
+        "match_prefab_disabled",
+        DontFragment_match_prefab_disabled
     }
 };
 
@@ -10718,6 +10889,10 @@ const char* Sparse_cache_kind_param[] = {"default", "auto"};
 bake_test_param Sparse_params[] = {
     {"cache_kind", (char**)Sparse_cache_kind_param, 2}
 };
+const char* DontFragment_cache_kind_param[] = {"default", "auto"};
+bake_test_param DontFragment_params[] = {
+    {"cache_kind", (char**)DontFragment_cache_kind_param, 2}
+};
 const char* Union_cache_kind_param[] = {"default", "auto"};
 bake_test_param Union_params[] = {
     {"cache_kind", (char**)Union_cache_kind_param, 2}
@@ -10890,10 +11065,19 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        27,
+        28,
         Sparse_testcases,
         1,
         Sparse_params
+    },
+    {
+        "DontFragment",
+        DontFragment_setup,
+        NULL,
+        32,
+        DontFragment_testcases,
+        1,
+        DontFragment_params
     },
     {
         "Union",
@@ -10928,5 +11112,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("query", argc, argv, suites, 25);
+    return bake_test_run("query", argc, argv, suites, 26);
 }
