@@ -1374,6 +1374,8 @@ typedef enum {
     EcsQueryUnionNeq,       /* Evaluate union relationship */
     EcsQueryUnionEqUp,      /* Evaluate union relationship w/up traversal */
     EcsQueryUnionEqSelfUp,  /* Evaluate union relationship w/self|up traversal */
+    EcsQuerySparse,         /* Evaluate sparse component */
+    EcsQuerySparseWith,     /* Evaluate sparse component against fixed or variable source */
     EcsQueryLookup,         /* Lookup relative to variable */
     EcsQuerySetVars,        /* Populate it.sources from variables */
     EcsQuerySetThis,        /* Populate This entity variable */
@@ -1441,6 +1443,13 @@ typedef struct {
     ecs_entity_t tgt;
     int32_t row;
 } ecs_query_union_ctx_t;
+
+/* Sparse context */
+typedef struct {
+    ecs_sparse_t *sparse;
+    ecs_table_range_t range;
+    int32_t cur;
+} ecs_query_sparse_ctx_t;
 
 /* Down traversal cache (for resolving up queries w/unknown source) */
 typedef struct {
@@ -1595,6 +1604,7 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_membereq_ctx_t membereq;
         ecs_query_toggle_ctx_t toggle;
         ecs_query_union_ctx_t union_;
+        ecs_query_sparse_ctx_t sparse;
     } is;
 } ecs_query_op_ctx_t;
 
@@ -2264,6 +2274,19 @@ bool flecs_query_union_up(
     const ecs_query_run_ctx_t *ctx);
 
 bool flecs_query_union_self_up(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+
+/* Sparse evaluation */
+
+bool flecs_query_sparse(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_sparse_with(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx);
@@ -5239,7 +5262,7 @@ void flecs_instantiate_dont_fragment(
     ecs_id_record_t *cur = world->idr_non_fragmenting_head;
     while (cur) {
         ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
-        if (cur->sparse) {
+        if (cur->sparse && !(cur->flags & EcsIdOnInstantiateInherit)) {
             void *base_ptr = flecs_sparse_get_any(cur->sparse, 0, base);
             if (base_ptr) {
                 int32_t i = row, end = row + count;
@@ -18569,6 +18592,8 @@ void flecs_fini_store(ecs_world_t *world) {
     ecs_vec_fini_t(a, &world->store.records, ecs_table_record_t);
     ecs_vec_fini_t(a, &world->store.marked_ids, ecs_marked_id_t);
     ecs_vec_fini_t(a, &world->store.deleted_components, ecs_entity_t);
+
+    flecs_free_n(a, bool, FLECS_HI_COMPONENT_ID, world->non_fragmenting);
 }
 
 static 
@@ -33391,6 +33416,8 @@ const char* flecs_query_op_str(
     case EcsQueryUnionNeq:       return "unionneq  ";
     case EcsQueryUnionEqUp:      return "union_up  ";
     case EcsQueryUnionEqSelfUp:  return "union_sup ";
+    case EcsQuerySparse:         return "sparse    ";
+    case EcsQuerySparseWith:     return "sparse_w  ";
     case EcsQueryLookup:         return "lookup    ";
     case EcsQuerySetVars:        return "setvars   ";
     case EcsQuerySetThis:        return "setthis   ";
@@ -34838,6 +34865,10 @@ int flecs_term_finalize(
                     }
                 }
             }
+
+            if (ecs_table_has_id(world, first_table, EcsDontFragment)) {
+                term->flags_ |= EcsTermDontFragment;
+            }
         }
 
         /* Check if term has toggleable component */
@@ -35614,6 +35645,11 @@ bool flecs_query_finalize_simple(
 
             if (idr->flags & EcsIdCanToggle) {
                 term->flags_ |= EcsTermIsToggle;
+                trivial = false;
+            }
+
+            if (idr->flags & EcsIdDontFragment) {
+                term->flags_ |= EcsTermDontFragment;
                 trivial = false;
             }
 
@@ -67697,8 +67733,6 @@ ecs_var_id_t flecs_query_find_var_id(
             if (query->pub.flags & EcsQueryHasTableThisVar) {
                 return 0;
             } else {
-                printf("VARNONE\n");
-                flecs_dump_backtrace(stdout);
                 return EcsVarNone;
             }
         }
@@ -68790,6 +68824,12 @@ void flecs_query_set_op_kind(
             if (op->kind == EcsQueryUnionEq) {
                 op->kind = EcsQueryUnionEqSelfUp;
             }
+        }
+    } else if (term->flags_ & EcsTermDontFragment) {
+        if (op->kind == EcsQueryAnd) {
+            op->kind = EcsQuerySparse;
+        } else {
+            op->kind = EcsQuerySparseWith;
         }
     } else {
         if ((term->src.id & trav_flags) == EcsUp) {
@@ -71480,6 +71520,11 @@ void flecs_query_mark_fields_dirty(
             }
         }
 
+        const ecs_table_record_t *tr = it->trs[i];
+        if (!tr) {
+            continue; /* Non-fragmenting component */
+        }
+
         int32_t type_index = it->trs[i]->index;
         ecs_assert(type_index >= 0, ECS_INTERNAL_ERROR, NULL);
         
@@ -73092,6 +73137,8 @@ bool flecs_query_dispatch(
     case EcsQueryUnionNeq: return flecs_query_union_neq(op, redo, ctx);
     case EcsQueryUnionEqUp: return flecs_query_union_up(op, redo, ctx);
     case EcsQueryUnionEqSelfUp: return flecs_query_union_self_up(op, redo, ctx);
+    case EcsQuerySparse: return flecs_query_sparse(op, redo, ctx);
+    case EcsQuerySparseWith: return flecs_query_sparse_with(op, redo, ctx);
     case EcsQueryLookup: return flecs_query_lookup(op, redo, ctx);
     case EcsQuerySetVars: return flecs_query_setvars(op, redo, ctx);
     case EcsQuerySetThis: return flecs_query_setthis(op, redo, ctx);
@@ -74051,6 +74098,135 @@ bool flecs_query_pred_neq_name(
 
     ecs_table_range_t r = flecs_range_from_entity(e, ctx);
     return flecs_query_pred_neq_w_range(op, redo, ctx, r);
+}
+
+/**
+ * @file query/engine/eval_sparse.c
+ * @brief Sparse component evaluation.
+ */
+
+
+bool flecs_query_sparse_select(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
+    ecs_iter_t *it = ctx->it;
+    int8_t field_index = op->field_index;
+
+    if (!redo) {
+        ecs_id_record_t *idr = flecs_id_record_get(
+            ctx->world, it->ids[field_index]);
+        ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        op_ctx->sparse = idr->sparse;
+        if (!op_ctx->sparse) {
+            return false;
+        }
+
+        int32_t count = flecs_sparse_count(op_ctx->sparse);
+        if (!count) {
+            return false;
+        }
+
+        op_ctx->cur = count;
+    }
+
+next:
+    if (!(op_ctx->cur--)) {
+        return false;
+    }
+
+    ecs_assert(op_ctx->cur < flecs_sparse_count(op_ctx->sparse), 
+        ECS_INVALID_OPERATION, "sparse iterator invalidated while iterating");
+
+    ecs_entity_t e = flecs_sparse_ids(op_ctx->sparse)[op_ctx->cur];
+    ecs_table_range_t range = flecs_range_from_entity(e, ctx);
+
+    if (flecs_query_table_filter(range.table, op->other,
+        (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
+    {
+        goto next;
+    }
+
+    flecs_query_var_set_range(op, op->src.var, 
+        range.table, range.offset, range.count, ctx);
+    flecs_query_set_vars(op, it->ids[field_index], ctx);
+
+    return true;
+}
+
+bool flecs_query_sparse_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
+    bool is_var = op->flags & (EcsQueryIsVar << EcsQuerySrc);
+    ecs_iter_t *it = ctx->it;
+    int8_t field_index = op->field_index;
+
+    if (!redo) {
+        ecs_id_record_t *idr = flecs_id_record_get(
+            ctx->world, it->ids[field_index]);
+        ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        op_ctx->sparse = idr->sparse;
+        if (!op_ctx->sparse) {
+            return false;
+        }
+
+        ecs_table_range_t range = flecs_query_get_range(
+            op, &op->src, EcsQuerySrc, ctx);
+        if (!range.count) {
+            range.count = ecs_table_count(range.table);
+        }
+
+        op_ctx->range = range;
+        op_ctx->cur = range.offset - 1;
+    }
+
+    int32_t end = op_ctx->range.count + op_ctx->range.offset;
+
+    do {
+        op_ctx->cur ++;
+        ecs_assert(op_ctx->cur <= end, ECS_INTERNAL_ERROR, NULL);
+
+        if (op_ctx->cur == end) {
+            /* Restore range */
+            if (is_var) {
+                flecs_query_var_narrow_range(op->src.var, op_ctx->range.table, 
+                    op_ctx->range.offset, op_ctx->range.count, ctx);
+            }
+            return false;
+        }
+
+        ecs_entity_t e = ecs_table_entities(op_ctx->range.table)[op_ctx->cur];
+        if (flecs_sparse_get_any(op_ctx->sparse, 0, e) != NULL) {
+            break;
+        }
+    } while (true);
+
+    if (is_var) {
+        flecs_query_var_narrow_range(op->src.var, op_ctx->range.table, 
+            op_ctx->cur, 1, ctx);
+    }
+
+    return true;
+}
+
+bool flecs_query_sparse(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (written & (1ull << op->src.var)) {
+        return flecs_query_sparse_with(op, redo, ctx);
+    } else {
+        return flecs_query_sparse_select(op, redo, ctx);
+    }
 }
 
 /**

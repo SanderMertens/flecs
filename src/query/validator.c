@@ -909,6 +909,10 @@ int flecs_term_finalize(
                     }
                 }
             }
+
+            if (ecs_table_has_id(world, first_table, EcsDontFragment)) {
+                term->flags_ |= EcsTermDontFragment;
+            }
         }
 
         /* Check if term has toggleable component */
@@ -1685,6 +1689,11 @@ bool flecs_query_finalize_simple(
 
             if (idr->flags & EcsIdCanToggle) {
                 term->flags_ |= EcsTermIsToggle;
+                trivial = false;
+            }
+
+            if (idr->flags & EcsIdDontFragment) {
+                term->flags_ |= EcsTermDontFragment;
                 trivial = false;
             }
 

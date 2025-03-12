@@ -2040,6 +2040,7 @@
                 "1_this_sparse",
                 "1_this_sparse_none",
                 "1_this_sparse_written",
+                "1_this_sparse_written_partial",
                 "1_this_sparse_written_none",
                 "1_var_sparse",
                 "1_var_sparse_none",
@@ -2061,6 +2062,46 @@
                 "sparse_pair_second",
                 "sparse_pair_first_after_query",
                 "sparse_pair_second_after_query"
+            ]
+        }, {
+            "id": "DontFragment",
+            "setup": true,
+            "params": {
+                "cache_kind": ["default", "auto"]
+            },
+            "testcases": [
+                "1_fixed_sparse",
+                "1_fixed_sparse_none",
+                "1_this_sparse_simple",
+                "1_this_sparse",
+                "1_this_sparse_none",
+                "1_this_sparse_written",
+                "1_this_sparse_written_partial",
+                "1_this_sparse_written_none",
+                "1_var_sparse",
+                "1_var_sparse_none",
+                "1_var_sparse_written",
+                "1_var_sparse_written_none",
+                "2_sparse_simple",
+                "2_sparse",
+                "2_sparse_and_regular",
+                "2_regular_and_sparse",
+                "1_sparse_self",
+                "1_sparse_up",
+                "1_sparse_self_up",
+                "1_sparse_written_self",
+                "1_sparse_written_up",
+                "1_sparse_written_self_up",
+                "sparse_0_src_only_term",
+                "sparse_0_src",
+                "sparse_pair_first",
+                "sparse_pair_second",
+                "sparse_pair_first_after_query",
+                "sparse_pair_second_after_query",
+                "ignore_prefab_disabled",
+                "match_prefab_ignore_disabled",
+                "ignore_prefab_match_disabled",
+                "match_prefab_disabled"
             ]
         }, {
             "id": "Union",

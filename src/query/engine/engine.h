@@ -218,6 +218,19 @@ bool flecs_query_union_self_up(
     const ecs_query_run_ctx_t *ctx);
 
 
+/* Sparse evaluation */
+
+bool flecs_query_sparse(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_sparse_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+
 /* Toggle evaluation*/
 
 bool flecs_query_toggle(

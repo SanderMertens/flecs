@@ -476,6 +476,7 @@ void Sparse_ensure_inherited(void);
 void Sparse_emplace_inherited(void);
 void Sparse_override_component(void);
 void Sparse_override_component_2_lvls(void);
+void Sparse_dont_override_inherited(void);
 void Sparse_delete_w_override_component(void);
 void Sparse_delete_w_override_on_remove_isa(void);
 void Sparse_bulk_init(void);
@@ -4192,6 +4193,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "override_component_2_lvls",
         Sparse_override_component_2_lvls
+    },
+    {
+        "dont_override_inherited",
+        Sparse_dont_override_inherited
     },
     {
         "delete_w_override_component",
@@ -11696,7 +11701,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        96,
+        97,
         Sparse_testcases,
         1,
         Sparse_params

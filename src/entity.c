@@ -590,7 +590,7 @@ void flecs_instantiate_dont_fragment(
     ecs_id_record_t *cur = world->idr_non_fragmenting_head;
     while (cur) {
         ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
-        if (cur->sparse) {
+        if (cur->sparse && !(cur->flags & EcsIdOnInstantiateInherit)) {
             void *base_ptr = flecs_sparse_get_any(cur->sparse, 0, base);
             if (base_ptr) {
                 int32_t i = row, end = row + count;

@@ -843,6 +843,34 @@ void Sparse_override_component_2_lvls(void) {
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_assert(p != ecs_get(world, base, Position));
+    test_assert(p != ecs_get(world, base_base, Position));
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Sparse_dont_override_inherited(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_owns(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_assert(p == ecs_get(world, base, Position));
     test_int(p->x, 10);
     test_int(p->y, 20);
 
