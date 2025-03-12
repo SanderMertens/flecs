@@ -17,7 +17,7 @@ class UNREALFLECS_API UFlecsPrefabObject : public UObject, public IFlecsEntityIn
 
 public:
 	void CreatePrefab(UFlecsWorld* InWorld);
-
+	
 	virtual void OnPrefabCreated(const FFlecsEntityHandle& InPrefab) {}
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs", meta = (DisplayName = "OnPrefabCreated"))

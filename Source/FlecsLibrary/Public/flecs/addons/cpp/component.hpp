@@ -451,8 +451,6 @@ struct untyped_component : entity {
         id_ = ecs_entity_init(world, &desc);
     }
 
-protected:
-
 flecs::type_hooks_t get_hooks() const {
     const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
     if (h) {

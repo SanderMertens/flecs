@@ -28,5 +28,11 @@ struct FUStructTestComponent_Inherited : public FUStructTestComponent_RegisterCo
 	int32 Value2;
 }; // struct FUStructTestComponent_Inherited
 
+USTRUCT()
+struct FUStructTestComponent_TagUSTRUCT
+{
+	GENERATED_BODY()
+}; // struct FUStructTestComponent_TagUSTRUCT
+
 
 

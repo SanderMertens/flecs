@@ -26,6 +26,7 @@
 #include "Modules/FlecsModuleInterface.h"
 #include "Modules/FlecsModuleProgressInterface.h"
 #include "Prefabs/FlecsPrefabAsset.h"
+#include "UObject/PropertyIterator.h"
 #include "FlecsWorld.generated.h"
 
 class UFlecsWorldSubsystem;
@@ -511,8 +512,7 @@ public:
 			}
 			else
 			{
-				Streamable.RequestAsyncLoad(
-					AssetPtr.ToSoftObjectPath(),
+				Streamable.RequestAsyncLoad(AssetPtr.ToSoftObjectPath(),
 					FStreamableDelegate::CreateLambda([this, AssetPtr]()
 					{
 						if (UFlecsPrimaryDataAsset* LoadedAsset = AssetPtr.Get())
@@ -1466,16 +1466,128 @@ public:
 			ScriptStructComponent = World.component(StructNameCStr);
 			solid_check(ScriptStructComponent.is_valid());
 			ScriptStructComponent.set_symbol(StructNameCStr);
+			
+			const TFieldIterator<FProperty> PropertyIt(ScriptStruct);
+			const bool bIsTag = ScriptStruct->GetStructureSize() <= 1 && !PropertyIt;
+			
 			ScriptStructComponent.set<flecs::Component>(
-			{ .size = ScriptStruct->GetStructureSize(), .alignment = ScriptStruct->GetMinAlignment() });
+			{ .size = bIsTag ? 0 : ScriptStruct->GetStructureSize(),
+				.alignment = bIsTag ? 0 : ScriptStruct->GetMinAlignment() });
+
+			if (!bIsTag)
+			{
+				if (ScriptStruct->GetCppStructOps()->HasNoopConstructor())
+				{
+					UN_LOGF(LogFlecsComponent, Warning,
+						"Script struct %s has a noop constructor, this will not be used in flecs",
+						*ScriptStruct->GetName());
+				}
+				
+				flecs::type_hooks_t Hooks = {};
+			
+				{
+					if (!ScriptStruct->GetCppStructOps()->HasZeroConstructor())
+					{
+						Hooks.ctor = [](void* Ptr, int32_t Count, const ecs_type_info_t* TypeInfo)
+						{
+							solid_check(TypeInfo != nullptr);
+							solid_check(Ptr != nullptr);
+							solid_check(TypeInfo->hooks.ctx != nullptr);
+
+							UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+							solid_check(IsValid(ScriptStruct));
+
+							ScriptStruct->InitializeStruct(Ptr, Count);
+						};
+					}
+					else
+					{
+						Hooks.ctor = nullptr;
+					}
+
+					if (ScriptStruct->GetCppStructOps()->HasDestructor())
+					{
+						Hooks.dtor = [](void* Ptr, int32_t Count, const ecs_type_info_t* TypeInfo)
+						{
+							solid_check(TypeInfo != nullptr);
+							solid_check(Ptr != nullptr);
+							solid_check(TypeInfo->hooks.ctx != nullptr);
+
+							UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+							solid_check(IsValid(ScriptStruct));
+
+							ScriptStruct->DestroyStruct(Ptr, Count);
+						};
+					}
+					else
+					{
+						Hooks.dtor = nullptr;
+					}
+					
+					Hooks.copy = [](void* Dst, const void* Src, int32_t Count, const ecs_type_info_t* TypeInfo)
+					{
+						solid_check(TypeInfo != nullptr);
+						solid_check(Src != nullptr);
+						solid_check(Dst != nullptr);
+						solid_check(TypeInfo->hooks.ctx != nullptr);
+
+						UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+						solid_check(IsValid(ScriptStruct));
+
+						ScriptStruct->CopyScriptStruct(Dst, Src, Count);
+					};
+					
+					Hooks.move = [](void* Dst, void* Src, int32_t Count, const ecs_type_info_t* TypeInfo)
+					{
+						solid_check(TypeInfo != nullptr);
+						solid_check(Src != nullptr);
+						solid_check(Dst != nullptr);
+						solid_check(TypeInfo->hooks.ctx != nullptr);
+
+						UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+						solid_check(IsValid(ScriptStruct));
+
+						ScriptStruct->CopyScriptStruct(Dst, Src, Count);
+					};
+
+					if (ScriptStruct->GetCppStructOps()->HasIdentical())
+					{
+						Hooks.equals = [](const void* Ptr1, const void* Ptr2, const ecs_type_info_t* TypeInfo)
+							-> bool
+						{
+							solid_check(TypeInfo != nullptr);
+							solid_check(Ptr1 != nullptr);
+							solid_check(Ptr2 != nullptr);
+							solid_check(TypeInfo->hooks.ctx != nullptr);
+
+							UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+							solid_check(IsValid(ScriptStruct));
+
+							return ScriptStruct->CompareScriptStruct(Ptr1, Ptr2, PPF_DeepComparison);
+						};
+					}
+					else
+					{
+						Hooks.equals = nullptr;
+					}
+				};
+
+				if (ScriptStruct->GetCppStructOps()->IsPlainOldData())
+				{
+					Hooks.copy = nullptr;
+					Hooks.move = nullptr;
+				}
+
+				ScriptStructComponent.set_hooks(Hooks);
+			}
 
 			if (!flecs::_::g_type_to_impl_data.contains(StructNameStd))
 			{
 				flecs::_::type_impl_data NewData;  // NOLINT(cppcoreguidelines-pro-type-member-init)
 				NewData.s_index = flecs_component_ids_index_get();
-				NewData.s_size = ScriptStruct->GetStructureSize();
-				NewData.s_alignment = ScriptStruct->GetMinAlignment();
-				NewData.s_allow_tag = true;
+				NewData.s_size = bIsTag ? 0 : ScriptStruct->GetStructureSize();
+				NewData.s_alignment = bIsTag ? 0 : ScriptStruct->GetMinAlignment();
+				NewData.s_allow_tag = bIsTag;
 				
 				flecs::_::g_type_to_impl_data.emplace(StructNameStd, NewData);
 			}

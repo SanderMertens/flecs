@@ -50,6 +50,10 @@
 			"Enabled": true
 		},
 		{
+			"Name": "FunctionalTestingEditor",
+			"Enabled": true
+		},
+		{
 			"Name": "Gauntlet",
 			"Enabled": true
 		}
