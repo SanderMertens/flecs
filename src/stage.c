@@ -175,7 +175,7 @@ bool flecs_defer_modified(
     ecs_id_t id)
 {
     if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
         if (cmd) {
             cmd->kind = EcsCmdModified;
             cmd->id = id;
