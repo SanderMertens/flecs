@@ -7,15 +7,16 @@
 
 namespace flecs {
 
-template <typename T>
-flecs::entity ref<T>::entity() const {
-    return flecs::entity(world_, ref_.entity);
+inline untyped_ref::untyped_ref(flecs::entity entity, flecs::id_t id) 
+    : untyped_ref(entity.world(), entity.id(), id) { }
+
+inline flecs::entity untyped_ref::entity() const {
+        return flecs::entity(world_, ref_.entity);
 }
 
 template <typename T>
-flecs::id ref<T>::component() const {
-    return flecs::id(world_, ref_.id);
-}
+flecs::ref<T>::ref(flecs::entity entity, flecs::id_t id)
+        : ref(entity.world(), entity.id(), id) { }
 
 template <typename Self>
 template <typename Func>

@@ -1129,7 +1129,10 @@
                 "bool_operator",
                 "base_type",
                 "empty_base_type",
-                "get_component"
+                "get_component",
+                "untyped_get_ref_by_method",
+                "untyped_pair_ref",
+                "untyped_runtime_component_ref"
             ]
         }, {
             "id": "Module",
