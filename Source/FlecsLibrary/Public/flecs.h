@@ -746,6 +746,18 @@ typedef void (*ecs_move_t)(
     int32_t count,
     const ecs_type_info_t *type_info);
 
+/** Compare hook to compare component instances */
+typedef int (*ecs_cmp_t)(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info);
+
+/** Equals operator hook */
+typedef bool (*ecs_equals_t)(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info);
+
 /** Destructor function for poly objects. */
 typedef void (*flecs_poly_dtor_t)(
     ecs_poly_t *poly);
@@ -964,38 +976,44 @@ struct ecs_observer_t {
  */
 
 /* Flags that can be used to check which hooks a type has set */
-#define ECS_TYPE_HOOK_CTOR                   (1 << 0)
-#define ECS_TYPE_HOOK_DTOR                   (1 << 1)
-#define ECS_TYPE_HOOK_COPY                   (1 << 2)
-#define ECS_TYPE_HOOK_MOVE                   (1 << 3)
-#define ECS_TYPE_HOOK_COPY_CTOR              (1 << 4)
-#define ECS_TYPE_HOOK_MOVE_CTOR              (1 << 5)
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         (1 << 6)
-#define ECS_TYPE_HOOK_MOVE_DTOR              (1 << 7)
+#define ECS_TYPE_HOOK_CTOR                   ECS_CAST(ecs_flags32_t, 1 << 0)
+#define ECS_TYPE_HOOK_DTOR                   ECS_CAST(ecs_flags32_t, 1 << 1)
+#define ECS_TYPE_HOOK_COPY                   ECS_CAST(ecs_flags32_t, 1 << 2)
+#define ECS_TYPE_HOOK_MOVE                   ECS_CAST(ecs_flags32_t, 1 << 3)
+#define ECS_TYPE_HOOK_COPY_CTOR              ECS_CAST(ecs_flags32_t, 1 << 4)
+#define ECS_TYPE_HOOK_MOVE_CTOR              ECS_CAST(ecs_flags32_t, 1 << 5)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         ECS_CAST(ecs_flags32_t, 1 << 6)
+#define ECS_TYPE_HOOK_MOVE_DTOR              ECS_CAST(ecs_flags32_t, 1 << 7)
+#define ECS_TYPE_HOOK_CMP                    ECS_CAST(ecs_flags32_t, 1 << 8)
+#define ECS_TYPE_HOOK_EQUALS                 ECS_CAST(ecs_flags32_t, 1 << 9)
+
 
 /* Flags that can be used to set/check which hooks of a type are invalid */
-#define ECS_TYPE_HOOK_CTOR_ILLEGAL           (1 << 8)
-#define ECS_TYPE_HOOK_DTOR_ILLEGAL           (1 << 9)
-#define ECS_TYPE_HOOK_COPY_ILLEGAL           (1 << 10)
-#define ECS_TYPE_HOOK_MOVE_ILLEGAL           (1 << 11)
-#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      (1 << 12)
-#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      (1 << 13)
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL (1 << 14)
-#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      (1 << 15)
+#define ECS_TYPE_HOOK_CTOR_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 10)
+#define ECS_TYPE_HOOK_DTOR_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 12)
+#define ECS_TYPE_HOOK_COPY_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 13)
+#define ECS_TYPE_HOOK_MOVE_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 14)
+#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 15)
+#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 16)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL ECS_CAST(ecs_flags32_t, 1 << 17)
+#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 18)
+#define ECS_TYPE_HOOK_CMP_ILLEGAL            ECS_CAST(ecs_flags32_t, 1 << 19)
+#define ECS_TYPE_HOOK_EQUALS_ILLEGAL         ECS_CAST(ecs_flags32_t, 1 << 20)
+
 
 /* All valid hook flags */
 #define ECS_TYPE_HOOKS (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|\
     ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_COPY_CTOR|\
     ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|\
-    ECS_TYPE_HOOK_MOVE_DTOR)
+    ECS_TYPE_HOOK_MOVE_DTOR|ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS)
 
 /* All invalid hook flags */
 #define ECS_TYPE_HOOKS_ILLEGAL (ECS_TYPE_HOOK_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_DTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|\
-    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL)
-
+    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_CMP_ILLEGAL|\
+    ECS_TYPE_HOOK_EQUALS_ILLEGAL)
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
     ecs_xtor_t dtor;            /**< dtor */
@@ -1020,11 +1038,18 @@ struct ecs_type_hooks_t {
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
 
+    /** Compare hook */
+    ecs_cmp_t cmp;
+
+    /** Equals hook */
+    ecs_equals_t equals;
+
     /** Hook flags.
      * Indicates which hooks are set for the type, and which hooks are illegal.
      * When an ILLEGAL flag is set when calling ecs_set_hooks() a hook callback
      * will be set that panics when called. */
     ecs_flags32_t flags;
+    
 
     /** Callback that is invoked when an instance of a component is added. This
      * callback is invoked before triggers are invoked. */

@@ -92,14 +92,16 @@ template <> inline const char* symbol_name<double>() {
 // that obtain the lifecycle callback do detect whether the callback is required
 // adding a special case for trivial types eases the burden a bit on the
 // compiler as it reduces the number of templates to evaluate.
-template<typename T UE_REQUIRES(std::is_trivial<T>::value)>
-void register_lifecycle_actions(ecs_world_t*, ecs_entity_t)
-{
-}
+template<typename T, enable_if_t<
+    std::is_trivial<T>::value == true
+        >* = nullptr>
+void register_lifecycle_actions(ecs_world_t*, ecs_entity_t) { }
 
 // If the component is non-trivial, register component lifecycle actions.
 // Depending on the type not all callbacks may be available.
-template<typename T UE_REQUIRES(!std::is_trivial<T>::value)>
+template<typename T, enable_if_t<
+    std::is_trivial<T>::value == false
+        >* = nullptr>
 void register_lifecycle_actions(
     ecs_world_t *world,
     ecs_entity_t component)
@@ -116,6 +118,7 @@ void register_lifecycle_actions(
     cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
     cl.move_dtor = move_dtor<T>(cl.flags);
 
+    cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl);
 
     if (cl.flags & (ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL))
@@ -176,11 +179,12 @@ FLECSLIBRARY_API extern robin_hood::unordered_map<std::string, type_impl_data> g
 
 template <typename T>
 struct type_impl {
-    static_assert(!std::is_pointer<T>::value,
+    static_assert(is_pointer<T>::value == false,
         "pointer types are not allowed for components");
 
-    // init: create an entry in the global map if one does not exist
-    static void init(bool allow_tag = true)
+    // Initialize component identifier
+    static void init(
+        bool allow_tag = true)
     {
         get_or_create_type_data<T>(allow_tag);
         type_impl_data* td = get_type_data_if_any<T>();
@@ -190,9 +194,13 @@ struct type_impl {
         s_size = td->s_size;
         s_alignment = td->s_alignment;
         s_allow_tag = td->s_allow_tag;
+
+        if (is_empty<T>::value && allow_tag) {
+            s_size = 0;
+            s_alignment = 0;
+        }
     }
 
-    // init_builtin: set up the data, then set the world-local ID
     static void init_builtin(
         flecs::world_t *world,
         flecs::entity_t id,
@@ -207,8 +215,7 @@ struct type_impl {
         s_allow_tag = td.s_allow_tag;
     }
 
-    // Register component id. This logic remains much the same, but
-    // references the global map rather than static fields.
+    // Register component id.
     static entity_t register_id(
         world_t *world,
         const char *name = nullptr,
@@ -444,6 +451,50 @@ struct untyped_component : entity {
         id_ = ecs_entity_init(world, &desc);
     }
 
+protected:
+
+flecs::type_hooks_t get_hooks() const {
+    const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
+    if (h) {
+        return *h;
+    } else {
+        return {};
+    }
+}
+
+void set_hooks(flecs::type_hooks_t &h) {
+    h.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world_, id_, &h);
+}
+
+public:
+
+untyped_component& on_compare(
+    ecs_cmp_t compare_callback) 
+{
+    ecs_assert(compare_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.cmp = compare_callback;
+    h.flags &= ~ECS_TYPE_HOOK_CMP_ILLEGAL;
+    if(h.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
+        h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+        h.equals = NULL;
+    }
+    set_hooks(h);
+    return *this;
+}
+
+untyped_component& on_equals(
+    ecs_equals_t equals_callback) 
+{
+    ecs_assert(equals_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.equals = equals_callback;
+    h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    set_hooks(h);
+    return *this;
+}
+
 #   ifdef FLECS_META
 #   include "mixins/meta/untyped_component.inl"
 #   endif
@@ -490,7 +541,7 @@ struct component : untyped_component {
         h.on_add = Delegate::run_add;
         ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_add = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
         return *this;
     }
 
@@ -506,7 +557,7 @@ struct component : untyped_component {
         h.on_remove = Delegate::run_remove;
         ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_remove = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
         return *this;
     }
 
@@ -522,7 +573,41 @@ struct component : untyped_component {
         h.on_set = Delegate::run_set;
         ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_set = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
+        return *this;
+    }
+
+    /** Register operator compare hook. */
+    using untyped_component::on_compare;
+    component<T>& on_compare() {
+        ecs_cmp_t handler = _::compare<T>();
+        ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
+            "Type does not have operator> or operator< const or is inaccessible");
+        on_compare(handler);
+        return *this;
+    }
+
+    /** Type safe variant of compare op function */
+    using cmp_hook = int(*)(const T* a, const T* b, const ecs_type_info_t *ti);
+    component<T>& on_compare(cmp_hook callback) {
+        on_compare(reinterpret_cast<ecs_cmp_t>(callback));
+        return *this;
+    }
+
+    /** Register operator equals hook. */
+    using untyped_component::on_equals;
+    component<T>& on_equals() {
+        ecs_equals_t handler = _::equals<T>();
+        ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
+            "Type does not have operator== const or is inaccessible");
+        on_equals(handler);
+        return *this;
+    }
+
+    /** Type safe variant of equals op function */
+    using equals_hook = bool(*)(const T* a, const T* b, const ecs_type_info_t *ti);
+    component<T>& on_equals(equals_hook callback) {
+        on_equals(reinterpret_cast<ecs_equals_t>(callback));
         return *this;
     }
 
@@ -541,15 +626,6 @@ private:
             h.binding_ctx_free = _::free_obj<BindingCtx>;
         }
         return result;
-    }
-
-    flecs::type_hooks_t get_hooks() {
-        const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
-        if (h) {
-            return *h;
-        } else {
-            return {};
-        }
     }
 };
 

@@ -1239,7 +1239,9 @@
                 "move_flags",
                 "copy_flags",
                 "ctor_move_dtor_flags",
-                "move_dtor_flags"
+                "move_dtor_flags",
+                "cmp_flags",
+                "equals_flags"
             ]
         }, {
             "id": "Pairs",
