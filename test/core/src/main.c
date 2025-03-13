@@ -2022,6 +2022,12 @@ void World_exclusive_on_delete(void);
 void World_exclusive_on_delete_target(void);
 void World_exclusive_on_instantiate(void);
 void World_world_init_fini_log_all(void);
+void World_mini_shrink_fini(void);
+void World_init_shrink_fini(void);
+void World_init_shrink_twice_fini(void);
+void World_init_create_delete_entities_shrink_fini(void);
+void World_init_create_delete_random_1_entities_shrink_fini(void);
+void World_init_create_delete_random_2_entities_shrink_fini(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -10216,6 +10222,30 @@ bake_test_case World_testcases[] = {
     {
         "world_init_fini_log_all",
         World_world_init_fini_log_all
+    },
+    {
+        "mini_shrink_fini",
+        World_mini_shrink_fini
+    },
+    {
+        "init_shrink_fini",
+        World_init_shrink_fini
+    },
+    {
+        "init_shrink_twice_fini",
+        World_init_shrink_twice_fini
+    },
+    {
+        "init_create_delete_entities_shrink_fini",
+        World_init_create_delete_entities_shrink_fini
+    },
+    {
+        "init_create_delete_random_1_entities_shrink_fini",
+        World_init_create_delete_random_1_entities_shrink_fini
+    },
+    {
+        "init_create_delete_random_2_entities_shrink_fini",
+        World_init_create_delete_random_2_entities_shrink_fini
     }
 };
 
@@ -11824,7 +11854,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        69,
+        75,
         World_testcases
     },
     {

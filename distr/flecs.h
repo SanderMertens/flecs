@@ -1485,6 +1485,10 @@ FLECS_DBG_API
 const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
+FLECS_DBG_API
+void flecs_sparse_shrink(
+    ecs_sparse_t *sparse);
+
 /* Publicly exposed APIs 
  * These APIs are not part of the public API and as a result may change without
  * notice (though they haven't changed in a long time). */
@@ -5853,6 +5857,24 @@ FLECS_API
 void ecs_dim(
     ecs_world_t *world,
     int32_t entity_count);
+
+/** Free unused memory.
+ * This operation frees allocated memory that is no longer in use by the world.
+ * Examples of allocations that get cleaned up are:
+ * - Unused pages in the entity index
+ * - Component columns
+ * - Empty tables
+ * 
+ * Flecs uses allocators internally for speeding up allocations. Allocators are
+ * not evaluated by this function, which means that the memory reported by the
+ * OS may not go down. For this reason, this function is most effective when
+ * combined with FLECS_USE_OS_ALLOC, which disables internal allocators.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_shrink(
+    ecs_world_t *world);
 
 /** Set a range for issuing new entity ids.
  * This function constrains the entity identifiers returned by ecs_new_w() to the
@@ -22419,6 +22441,14 @@ struct world {
     /** Get delta_time */
     ecs_ftime_t delta_time() const {
         return get_info()->delta_time;
+    }
+
+    /** Free unused memory. 
+     * 
+     * @see ecs_shrink()
+    */
+    void shrink() const {
+        ecs_shrink(world_);
     }
 
 /**
