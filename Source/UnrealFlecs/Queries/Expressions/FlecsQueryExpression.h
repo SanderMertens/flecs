@@ -47,7 +47,7 @@ struct TStructOpsTypeTraits<FFlecsQueryExpression> : public TStructOpsTypeTraits
 {
 	enum
 	{
-		WithPureVirtual = true
+		//WithPureVirtual = true
 	};
 }; // struct TStructOpsTypeTraits<FFlecsQueryExpression>
 

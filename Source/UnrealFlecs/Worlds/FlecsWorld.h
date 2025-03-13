@@ -1484,7 +1484,8 @@ public:
 				}
 				
 				flecs::type_hooks_t Hooks = {};
-			
+				Hooks.ctx = const_cast<UScriptStruct*>(ScriptStruct);
+				
 				{
 					if (!ScriptStruct->GetCppStructOps()->HasZeroConstructor())
 					{

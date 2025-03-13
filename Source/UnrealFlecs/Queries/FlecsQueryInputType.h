@@ -40,4 +40,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query",
 		meta = (EditCondition = "Type == EFlecsQueryInputType::GameplayTag", EditConditionHides))
 	FGameplayTag Tag;
+	
 }; // struct FFlecsQueryInput

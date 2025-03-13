@@ -34,5 +34,14 @@ struct FUStructTestComponent_TagUSTRUCT
 	GENERATED_BODY()
 }; // struct FUStructTestComponent_TagUSTRUCT
 
+USTRUCT()
+struct FUStructTestComponent_NonTagUSTRUCT
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	bool bTest = false;
+}; // struct FUStructTestComponent_NonTagUSTRUCT
+
 
 
