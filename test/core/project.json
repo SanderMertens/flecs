@@ -2096,7 +2096,13 @@
                 "exclusive_on_delete",
                 "exclusive_on_delete_target",
                 "exclusive_on_instantiate",
-                "world_init_fini_log_all"
+                "world_init_fini_log_all",
+                "mini_shrink_fini",
+                "init_shrink_fini",
+                "init_shrink_twice_fini",
+                "init_create_delete_entities_shrink_fini",
+                "init_create_delete_random_1_entities_shrink_fini",
+                "init_create_delete_random_2_entities_shrink_fini"
             ]
         }, {
             "id": "WorldInfo",

@@ -1182,6 +1182,14 @@ struct world {
         return get_info()->delta_time;
     }
 
+    /** Free unused memory. 
+     * 
+     * @see ecs_shrink()
+    */
+    void shrink() const {
+        ecs_shrink(world_);
+    }
+
 #   include "mixins/id/mixin.inl"
 #   include "mixins/component/mixin.inl"
 #   include "mixins/entity/mixin.inl"

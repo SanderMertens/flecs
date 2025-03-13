@@ -350,6 +350,54 @@ void flecs_entity_index_clear(
     index->max_id = 0;
 }
 
+void flecs_entity_index_shrink(
+    ecs_entity_index_t *index)
+{
+    ecs_vec_set_count_t(
+        index->allocator, &index->dense, uint64_t, index->alive_count);
+    ecs_vec_reclaim_t(index->allocator, &index->dense, uint64_t);
+
+    int32_t i, e, max_page_index = 0, count = ecs_vec_count(&index->pages);
+    ecs_entity_index_page_t **pages = ecs_vec_first_t(&index->pages,
+        ecs_entity_index_page_t*);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_index_page_t *page = pages[i];
+        if (!page) {
+            continue;
+        }
+
+        bool has_alive = false;
+        for (e = 0; e < FLECS_ENTITY_PAGE_SIZE; e ++) {
+            ecs_record_t *r = &page->records[e];
+            ecs_entity_t entity = flecs_ito(uint64_t, (i * 4096) + e);
+
+            if (r->dense) {
+                ecs_assert(flecs_entity_index_get_any(index, entity) == r,
+                    ECS_INTERNAL_ERROR, NULL);
+
+                if (flecs_entity_index_is_alive(index, entity)) {
+                    ecs_assert(flecs_entity_index_is_alive(index, entity),
+                        ECS_INTERNAL_ERROR, NULL);
+                    has_alive = true;
+                    break;
+                }
+            }
+        }
+
+        if (!has_alive) {
+            flecs_bfree(&index->page_allocator, page);
+            pages[i] = NULL;
+        } else {
+            max_page_index = i;
+        }
+    }
+
+    ecs_vec_set_count_t(
+        index->allocator, &index->pages, ecs_entity_index_page_t*, 
+        max_page_index + 1);
+    ecs_vec_reclaim_t(index->allocator, &index->pages, ecs_entity_index_page_t*);
+}
+
 const uint64_t* flecs_entity_index_ids(
     const ecs_entity_index_t *index)
 {

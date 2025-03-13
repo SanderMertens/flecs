@@ -326,7 +326,7 @@ void* flecs_brealloc_w_dbg_info(
 }
 
 void* flecs_bdup(
-    ecs_block_allocator_t *ba, 
+    ecs_block_allocator_t *ba,
     void *memory)
 {
 #ifdef FLECS_USE_OS_ALLOC
