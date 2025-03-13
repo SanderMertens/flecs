@@ -1114,6 +1114,9 @@ void flecs_query_set_op_kind(
     } else if (term->flags_ & EcsTermDontFragment) {
         if (op->kind == EcsQueryAnd) {
             op->kind = EcsQuerySparse;
+            if (term->oper == EcsNot) {
+                op->kind = EcsQuerySparseNot;
+            }
         } else {
             op->kind = EcsQuerySparseWith;
         }
@@ -1227,6 +1230,9 @@ int flecs_query_compile_term(
     flecs_query_set_op_kind(&op, term, src_is_var);
 
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
+    if (op.kind == EcsQuerySparseNot) {
+        is_not = false;
+    }
 
     /* Save write state at start of term so we can use it to reliably track
      * variables got written by this term. */

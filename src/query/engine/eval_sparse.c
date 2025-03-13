@@ -15,8 +15,8 @@ bool flecs_query_sparse_select(
     int8_t field_index = op->field_index;
 
     if (!redo) {
-        ecs_id_record_t *idr = flecs_id_record_get(
-            ctx->world, it->ids[field_index]);
+        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        ecs_id_record_t *idr = flecs_id_record_get(ctx->world, id);
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         op_ctx->sparse = idr->sparse;
@@ -59,16 +59,16 @@ next:
 bool flecs_query_sparse_with(
     const ecs_query_op_t *op,
     bool redo,
-    const ecs_query_run_ctx_t *ctx)
+    const ecs_query_run_ctx_t *ctx,
+    bool not)
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
     bool is_var = op->flags & (EcsQueryIsVar << EcsQuerySrc);
-    ecs_iter_t *it = ctx->it;
     int8_t field_index = op->field_index;
 
     if (!redo) {
-        ecs_id_record_t *idr = flecs_id_record_get(
-            ctx->world, it->ids[field_index]);
+        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        ecs_id_record_t *idr = flecs_id_record_get(ctx->world, id);
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         op_ctx->sparse = idr->sparse;
@@ -102,7 +102,12 @@ bool flecs_query_sparse_with(
         }
 
         ecs_entity_t e = ecs_table_entities(op_ctx->range.table)[op_ctx->cur];
-        if (flecs_sparse_get_any(op_ctx->sparse, 0, e) != NULL) {
+        bool result = flecs_sparse_get_any(op_ctx->sparse, 0, e) != NULL;
+        if (not) {
+            result = !result;
+        }
+
+        if (result) {
             break;
         }
     } while (true);
@@ -122,7 +127,7 @@ bool flecs_query_sparse(
 {
     uint64_t written = ctx->written[ctx->op_index];
     if (written & (1ull << op->src.var)) {
-        return flecs_query_sparse_with(op, redo, ctx);
+        return flecs_query_sparse_with(op, redo, ctx, false);
     } else {
         return flecs_query_sparse_select(op, redo, ctx);
     }

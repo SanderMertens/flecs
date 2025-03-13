@@ -216,6 +216,7 @@ const char* flecs_query_op_str(
     case EcsQueryUnionEqSelfUp:  return "union_sup ";
     case EcsQuerySparse:         return "sparse    ";
     case EcsQuerySparseWith:     return "sparse_w  ";
+    case EcsQuerySparseNot:      return "sparsenot ";
     case EcsQueryLookup:         return "lookup    ";
     case EcsQuerySetVars:        return "setvars   ";
     case EcsQuerySetThis:        return "setthis   ";

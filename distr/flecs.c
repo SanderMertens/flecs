@@ -1376,6 +1376,7 @@ typedef enum {
     EcsQueryUnionEqSelfUp,  /* Evaluate union relationship w/self|up traversal */
     EcsQuerySparse,         /* Evaluate sparse component */
     EcsQuerySparseWith,     /* Evaluate sparse component against fixed or variable source */
+    EcsQuerySparseNot,      /* Evaluate sparse component with not operator */
     EcsQueryLookup,         /* Lookup relative to variable */
     EcsQuerySetVars,        /* Populate it.sources from variables */
     EcsQuerySetThis,        /* Populate This entity variable */
@@ -2289,7 +2290,8 @@ bool flecs_query_sparse(
 bool flecs_query_sparse_with(
     const ecs_query_op_t *op,
     bool redo,
-    const ecs_query_run_ctx_t *ctx);
+    const ecs_query_run_ctx_t *ctx,
+    bool not);
 
 
 /* Toggle evaluation*/
@@ -33418,6 +33420,7 @@ const char* flecs_query_op_str(
     case EcsQueryUnionEqSelfUp:  return "union_sup ";
     case EcsQuerySparse:         return "sparse    ";
     case EcsQuerySparseWith:     return "sparse_w  ";
+    case EcsQuerySparseNot:      return "sparsenot ";
     case EcsQueryLookup:         return "lookup    ";
     case EcsQuerySetVars:        return "setvars   ";
     case EcsQuerySetThis:        return "setthis   ";
@@ -68828,6 +68831,9 @@ void flecs_query_set_op_kind(
     } else if (term->flags_ & EcsTermDontFragment) {
         if (op->kind == EcsQueryAnd) {
             op->kind = EcsQuerySparse;
+            if (term->oper == EcsNot) {
+                op->kind = EcsQuerySparseNot;
+            }
         } else {
             op->kind = EcsQuerySparseWith;
         }
@@ -68941,6 +68947,9 @@ int flecs_query_compile_term(
     flecs_query_set_op_kind(&op, term, src_is_var);
 
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
+    if (op.kind == EcsQuerySparseNot) {
+        is_not = false;
+    }
 
     /* Save write state at start of term so we can use it to reliably track
      * variables got written by this term. */
@@ -73138,7 +73147,8 @@ bool flecs_query_dispatch(
     case EcsQueryUnionEqUp: return flecs_query_union_up(op, redo, ctx);
     case EcsQueryUnionEqSelfUp: return flecs_query_union_self_up(op, redo, ctx);
     case EcsQuerySparse: return flecs_query_sparse(op, redo, ctx);
-    case EcsQuerySparseWith: return flecs_query_sparse_with(op, redo, ctx);
+    case EcsQuerySparseWith: return flecs_query_sparse_with(op, redo, ctx, false);
+    case EcsQuerySparseNot: return flecs_query_sparse_with(op, redo, ctx, true);
     case EcsQueryLookup: return flecs_query_lookup(op, redo, ctx);
     case EcsQuerySetVars: return flecs_query_setvars(op, redo, ctx);
     case EcsQuerySetThis: return flecs_query_setthis(op, redo, ctx);
@@ -74116,8 +74126,8 @@ bool flecs_query_sparse_select(
     int8_t field_index = op->field_index;
 
     if (!redo) {
-        ecs_id_record_t *idr = flecs_id_record_get(
-            ctx->world, it->ids[field_index]);
+        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        ecs_id_record_t *idr = flecs_id_record_get(ctx->world, id);
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         op_ctx->sparse = idr->sparse;
@@ -74160,16 +74170,16 @@ next:
 bool flecs_query_sparse_with(
     const ecs_query_op_t *op,
     bool redo,
-    const ecs_query_run_ctx_t *ctx)
+    const ecs_query_run_ctx_t *ctx,
+    bool not)
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
     bool is_var = op->flags & (EcsQueryIsVar << EcsQuerySrc);
-    ecs_iter_t *it = ctx->it;
     int8_t field_index = op->field_index;
 
     if (!redo) {
-        ecs_id_record_t *idr = flecs_id_record_get(
-            ctx->world, it->ids[field_index]);
+        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        ecs_id_record_t *idr = flecs_id_record_get(ctx->world, id);
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         op_ctx->sparse = idr->sparse;
@@ -74203,7 +74213,12 @@ bool flecs_query_sparse_with(
         }
 
         ecs_entity_t e = ecs_table_entities(op_ctx->range.table)[op_ctx->cur];
-        if (flecs_sparse_get_any(op_ctx->sparse, 0, e) != NULL) {
+        bool result = flecs_sparse_get_any(op_ctx->sparse, 0, e) != NULL;
+        if (not) {
+            result = !result;
+        }
+
+        if (result) {
             break;
         }
     } while (true);
@@ -74223,7 +74238,7 @@ bool flecs_query_sparse(
 {
     uint64_t written = ctx->written[ctx->op_index];
     if (written & (1ull << op->src.var)) {
-        return flecs_query_sparse_with(op, redo, ctx);
+        return flecs_query_sparse_with(op, redo, ctx, false);
     } else {
         return flecs_query_sparse_select(op, redo, ctx);
     }

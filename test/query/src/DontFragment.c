@@ -1207,6 +1207,211 @@ void DontFragment_1_sparse_written_self_up(void) {
     ecs_fini(world);
 }
 
+void DontFragment_1_fixed_sparse_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Position(e)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(e, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, e, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_this_sparse_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Position",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {70, 80}));
+
+    int32_t iterated = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_bool(false, ecs_field_is_set(&it, 0));
+
+        for (int i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] != e1);
+            test_assert(it.entities[i] != e2);
+            iterated ++;
+        }
+    }
+
+    test_assert(iterated != 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_var_sparse_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Position($x)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {70, 80}));
+
+    int32_t iterated = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(it.count, 0);
+        test_bool(false, ecs_field_is_set(&it, 0));
+        test_assert(ecs_iter_get_var(&it, x_var) != e1);
+        test_assert(ecs_iter_get_var(&it, x_var) != e2);
+        iterated ++;
+    }
+
+    test_assert(iterated != 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_this_sparse_written_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo, !Position",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+    test_bool(false, !!(q->row_fields & (1llu << 1)));
+
+    /* ecs_entity_t e1 = */ ecs_insert(world, {Foo}, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, {Foo});
+    ecs_entity_t e3 = ecs_insert(world, {Foo});
+    /* ecs_entity_t e4 = */ ecs_insert(world, {Foo}, ecs_value(Position, {70, 80}));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_var_sparse_written_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo($x), !Position($x)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+    test_bool(false, !!(q->row_fields & (1llu << 1)));
+
+    /* ecs_entity_t e1 = */ ecs_insert(world, {Foo}, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, {Foo});
+    ecs_entity_t e3 = ecs_insert(world, {Foo});
+    /* ecs_entity_t e4 = */ ecs_insert(world, {Foo}, ecs_value(Position, {70, 80}));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e2, ecs_iter_get_var(&it, x_var));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e3, ecs_iter_get_var(&it, x_var));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void DontFragment_sparse_0_src_only_term(void) {
     ecs_world_t *world = ecs_mini();
 
