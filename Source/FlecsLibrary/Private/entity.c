@@ -4694,51 +4694,6 @@ bool flecs_remove_invalid(
 }
 
 static
-ecs_table_t* flecs_cmd_batch_add_diff(
-    ecs_world_t *world,
-    ecs_table_t *dst,
-    ecs_table_t *cur,
-    ecs_table_t *prev)
-{
-    int32_t p = 0, p_count = prev->type.count;
-    int32_t c = 0, c_count = cur->type.count;
-    ecs_id_t *p_ids = prev->type.array;
-    ecs_id_t *c_ids = cur->type.array;
-
-    for (; c < c_count;) {
-        ecs_id_t c_id = c_ids[c];
-        ecs_id_t p_id = p_ids[p];
-
-        if (p_id < c_id) {
-            /* Previous id no longer exists in new table, so it was removed */
-            dst = ecs_table_remove_id(world, dst, p_id);
-        }
-        if (c_id < p_id) {
-            /* Current id didn't exist in previous table, so it was added */
-            dst = ecs_table_add_id(world, dst, c_id);
-        }
-
-        c += c_id <= p_id;
-        p += p_id <= c_id;
-        if (p == p_count) {
-            break;
-        }
-    }
-
-    /* Remainder */
-    for (; p < p_count; p ++) {
-        ecs_id_t p_id = p_ids[p];
-        dst = ecs_table_remove_id(world, dst, p_id);
-    }
-    for (; c < c_count; c ++) {
-        ecs_id_t c_id = c_ids[c];
-        dst = ecs_table_add_id(world, dst, c_id);
-    }
-
-    return dst;
-}
-
-static
 void flecs_cmd_batch_for_entity(
     ecs_world_t *world,
     ecs_table_diff_builder_t *diff,
@@ -4808,43 +4763,6 @@ void flecs_cmd_batch_for_entity(
             table = flecs_find_table_add(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
             break;
-        case EcsCmdModified: {
-            /* If a modified was inserted for an existing component, the value
-             * of the component could have been changed. If this is the case,
-             * call on_set hooks before the OnAdd/OnRemove observers are invoked
-             * when moving the entity to a different table.
-             * This ensures that if OnAdd/OnRemove observers access the modified
-             * component value, the on_set hook has had the opportunity to
-             * run first to set any computed values of the component. */
-            int32_t row = ECS_RECORD_TO_ROW(r->row);
-            ecs_id_record_t *idr = flecs_id_record_get(world, cmd->id);
-            const ecs_table_record_t *tr = 
-                flecs_id_record_get_table(idr, start_table);
-            if (tr) {
-                const ecs_type_info_t *ti = idr->type_info;
-                ecs_iter_action_t on_set;
-                if ((on_set = ti->hooks.on_set)) {
-                    ecs_table_t *prev_table = r->table;
-                    ecs_defer_begin(world);
-                    flecs_invoke_hook(world, start_table, tr, 1, row, 
-                        &entity,cmd->id, ti, EcsOnSet, on_set);
-                    ecs_defer_end(world);
-
-                    /* Don't run on_set hook twice, but make sure to still
-                     * invoke observers. */
-                    cmd->kind = EcsCmdModifiedNoHook;
-
-                    /* If entity changed tables in hook, add difference to
-                     * destination table, so we don't lose the side effects
-                     * of the hook. */
-                    if (r->table != prev_table) {
-                        table = flecs_cmd_batch_add_diff(
-                            world, table, r->table, prev_table);
-                    }
-                }
-            }
-            break;
-        }
         case EcsCmdSet:
         case EcsCmdEnsure: {
             ecs_id_t *ids = diff->added.array;
@@ -4899,6 +4817,7 @@ void flecs_cmd_batch_for_entity(
         case EcsCmdEvent:
         case EcsCmdSkip:
         case EcsCmdModifiedNoHook:
+        case EcsCmdModified:
             break;
         }
 
