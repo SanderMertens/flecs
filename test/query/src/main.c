@@ -2004,6 +2004,11 @@ void DontFragment_1_sparse_self_up(void);
 void DontFragment_1_sparse_written_self(void);
 void DontFragment_1_sparse_written_up(void);
 void DontFragment_1_sparse_written_self_up(void);
+void DontFragment_1_fixed_sparse_not(void);
+void DontFragment_1_this_sparse_not(void);
+void DontFragment_1_var_sparse_not(void);
+void DontFragment_1_this_sparse_written_not(void);
+void DontFragment_1_var_sparse_written_not(void);
 void DontFragment_sparse_0_src_only_term(void);
 void DontFragment_sparse_0_src(void);
 void DontFragment_sparse_pair_first(void);
@@ -10036,6 +10041,26 @@ bake_test_case DontFragment_testcases[] = {
         DontFragment_1_sparse_written_self_up
     },
     {
+        "1_fixed_sparse_not",
+        DontFragment_1_fixed_sparse_not
+    },
+    {
+        "1_this_sparse_not",
+        DontFragment_1_this_sparse_not
+    },
+    {
+        "1_var_sparse_not",
+        DontFragment_1_var_sparse_not
+    },
+    {
+        "1_this_sparse_written_not",
+        DontFragment_1_this_sparse_written_not
+    },
+    {
+        "1_var_sparse_written_not",
+        DontFragment_1_var_sparse_written_not
+    },
+    {
         "sparse_0_src_only_term",
         DontFragment_sparse_0_src_only_term
     },
@@ -11074,7 +11099,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        32,
+        37,
         DontFragment_testcases,
         1,
         DontFragment_params

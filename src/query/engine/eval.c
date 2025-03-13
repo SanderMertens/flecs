@@ -1430,7 +1430,8 @@ bool flecs_query_dispatch(
     case EcsQueryUnionEqUp: return flecs_query_union_up(op, redo, ctx);
     case EcsQueryUnionEqSelfUp: return flecs_query_union_self_up(op, redo, ctx);
     case EcsQuerySparse: return flecs_query_sparse(op, redo, ctx);
-    case EcsQuerySparseWith: return flecs_query_sparse_with(op, redo, ctx);
+    case EcsQuerySparseWith: return flecs_query_sparse_with(op, redo, ctx, false);
+    case EcsQuerySparseNot: return flecs_query_sparse_with(op, redo, ctx, true);
     case EcsQueryLookup: return flecs_query_lookup(op, redo, ctx);
     case EcsQuerySetVars: return flecs_query_setvars(op, redo, ctx);
     case EcsQuerySetThis: return flecs_query_setthis(op, redo, ctx);

@@ -228,7 +228,8 @@ bool flecs_query_sparse(
 bool flecs_query_sparse_with(
     const ecs_query_op_t *op,
     bool redo,
-    const ecs_query_run_ctx_t *ctx);
+    const ecs_query_run_ctx_t *ctx,
+    bool not);
 
 
 /* Toggle evaluation*/
