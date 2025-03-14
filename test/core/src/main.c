@@ -2365,6 +2365,9 @@ void Internals_table_observed_after_delete(void);
 void Internals_table_observed_after_on_remove(void);
 void Internals_table_observed_after_entity_flag(void);
 void Internals_table_create_leak_check(void);
+void Internals_component_record_has_table(void);
+void Internals_component_record_iter_tables(void);
+void Internals_table_get_records(void);
 
 // Testsuite 'Error'
 void Error_setup(void);
@@ -11538,6 +11541,18 @@ bake_test_case Internals_testcases[] = {
     {
         "table_create_leak_check",
         Internals_table_create_leak_check
+    },
+    {
+        "component_record_has_table",
+        Internals_component_record_has_table
+    },
+    {
+        "component_record_iter_tables",
+        Internals_component_record_iter_tables
+    },
+    {
+        "table_get_records",
+        Internals_table_get_records
     }
 };
 
@@ -11910,7 +11925,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        18,
+        21,
         Internals_testcases
     },
     {

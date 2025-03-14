@@ -7,7 +7,7 @@
  * with the cache. A table cache also provides functions to iterate the tables
  * in a cache.
  * 
- * The world stores a table cache per (component) id inside the id record 
+ * The world stores a table cache per (component) id inside the component record 
  * administration. Cached queries store a table cache with matched tables.
  * 
  * A table cache has separate lists for non-empty tables and empty tables. This
@@ -174,7 +174,7 @@ void* ecs_table_cache_remove(
 }
 
 bool flecs_table_cache_iter(
-    ecs_table_cache_t *cache,
+    const ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -187,7 +187,7 @@ bool flecs_table_cache_iter(
 }
 
 bool flecs_table_cache_empty_iter(
-    ecs_table_cache_t *cache,
+    const ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -200,7 +200,7 @@ bool flecs_table_cache_empty_iter(
 }
 
 bool flecs_table_cache_all_iter(
-    ecs_table_cache_t *cache,
+    const ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -212,10 +212,10 @@ bool flecs_table_cache_all_iter(
     return out->next != NULL;
 }
 
-ecs_table_cache_hdr_t* flecs_table_cache_next_(
+const ecs_table_cache_hdr_t* flecs_table_cache_next_(
     ecs_table_cache_iter_t *it)
 {
-    ecs_table_cache_hdr_t *next;
+    const ecs_table_cache_hdr_t *next;
 
 repeat:
     next = it->next;
