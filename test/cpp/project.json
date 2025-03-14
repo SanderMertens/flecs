@@ -300,7 +300,8 @@
                 "set_pair_second_invalid_type",
                 "get_ref_pair_second_invalid_type",
                 "iter_type",
-                "iter_empty_type"
+                "iter_empty_type",
+                "untyped_component_use_low_id"
             ]
         }, {
             "id": "Pairs",
