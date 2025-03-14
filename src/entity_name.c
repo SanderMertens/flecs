@@ -400,7 +400,7 @@ ecs_entity_t ecs_lookup_child(
     }
 
     ecs_id_t pair = ecs_childof(parent);
-    ecs_hashmap_t *index = flecs_id_name_index_get(world, pair);
+    ecs_hashmap_t *index = flecs_component_name_index_get(world, pair);
     if (index) {
         return flecs_name_index_find(index, name, 0, 0);
     } else {

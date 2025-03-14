@@ -64,7 +64,7 @@ int flecs_json_serialize_matches(
     flecs_json_memberl(buf, "matches");
     flecs_json_array_push(buf);
 
-    ecs_id_record_t *idr = flecs_id_record_get(world, 
+    ecs_component_record_t *idr = flecs_components_get(world, 
         ecs_pair_t(EcsPoly, EcsQuery));
 
     if (idr) {
@@ -115,7 +115,7 @@ static
 int flecs_json_serialize_refs_idr(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
-    ecs_id_record_t *idr)
+    ecs_component_record_t *idr)
 {
     char *id_str = ecs_id_str(world, ecs_pair_first(world, idr->id));
 
@@ -153,13 +153,13 @@ int flecs_json_serialize_refs(
     flecs_json_memberl(buf, "refs");
     flecs_json_object_push(buf);
 
-    ecs_id_record_t *idr = flecs_id_record_get(world, 
+    ecs_component_record_t *idr = flecs_components_get(world, 
         ecs_pair(relationship, entity));
 
     if (idr) {
         if (relationship == EcsWildcard) {
-            ecs_id_record_t *cur = idr;
-            while ((cur = flecs_id_record_second_next(cur))) {
+            ecs_component_record_t *cur = idr;
+            while ((cur = flecs_component_second_next(cur))) {
                 flecs_json_serialize_refs_idr(world, buf, cur);
             }
         } else {

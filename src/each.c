@@ -21,7 +21,7 @@ ecs_iter_t ecs_each_id(
         .next = ecs_each_next
     };
 
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    ecs_component_record_t *idr = flecs_components_get(world, id);
     if (!idr) {
         return it;
     }

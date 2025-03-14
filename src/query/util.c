@@ -717,7 +717,7 @@ int32_t flecs_query_pivot_term(
             continue;
         }
 
-        ecs_id_record_t *idr = flecs_id_record_get(world, id);
+        ecs_component_record_t *idr = flecs_components_get(world, id);
         if (!idr) {
             /* If one of the terms does not match with any data, iterator 
              * should not return anything */

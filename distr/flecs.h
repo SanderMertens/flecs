@@ -263,7 +263,7 @@
 
 /** @def FLECS_HI_ID_RECORD_ID
  * This constant can be used to balance between performance and memory
- * utilization. The constant is used to determine the size of the id record
+ * utilization. The constant is used to determine the size of the component record
  * lookup array. Id values that fall outside of this range use a regular map
  * lookup, which is slower but more memory efficient.
  */
@@ -401,7 +401,7 @@ extern "C" {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Id flags (used by ecs_id_record_t::flags)
+//// Id flags (used by ecs_component_record_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
 #define EcsIdOnDeleteRemove            (1u << 0)
@@ -3200,7 +3200,7 @@ typedef struct ecs_type_info_t ecs_type_info_t;
 typedef struct ecs_record_t ecs_record_t;
 
 /** Information about a (component) id, such as type info and tables with the id */
-typedef struct ecs_id_record_t ecs_id_record_t;
+typedef struct ecs_component_record_t ecs_component_record_t;
 
 /** A poly object.
  * A poly (short for polymorph) object is an object that has a variable list of
@@ -3236,7 +3236,7 @@ typedef struct ecs_header_t {
 
 /** Record for entity index */
 struct ecs_record_t {
-    ecs_id_record_t *idr;       /**< Id record to (*, entity) for target entities */
+    ecs_component_record_t *idr;       /**< component record to (*, entity) for target entities */
     ecs_table_t *table;         /**< Identifies a type (and table) in world */
     uint32_t row;               /**< Table row of the entity */
     int32_t dense;              /**< Index in dense array of entity index */    
@@ -3244,7 +3244,7 @@ struct ecs_record_t {
 
 /** Header for table cache elements. */
 typedef struct ecs_table_cache_hdr_t {
-    struct ecs_table_cache_t *cache;  /**< Table cache of element. Of type ecs_id_record_t* for component index elements. */
+    struct ecs_table_cache_t *cache;  /**< Table cache of element. Of type ecs_component_record_t* for component index elements. */
     ecs_table_t *table;               /**< Table associated with element. */
     struct ecs_table_cache_hdr_t *prev, *next; /**< Next/previous elements for id in table cache. */
 } ecs_table_cache_hdr_t;

@@ -36,7 +36,7 @@ bool flecs_json_serialize_table_type_info(
     int32_t i, type_count = table->type.count;
     for (i = 0; i < type_count; i ++) {
         const ecs_table_record_t *tr = &table->_->records[i];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_component_record_t *idr = (ecs_component_record_t*)tr->hdr.cache;
         ecs_id_t id = table->type.array[i];
         if (!(idr->flags & EcsIdIsSparse) && 
              (!table->column_map || (table->column_map[i] == -1))) 
@@ -97,7 +97,7 @@ bool flecs_json_serialize_table_tags(
         }
 
         const ecs_table_record_t *tr = &trs[f];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_component_record_t *idr = (ecs_component_record_t*)tr->hdr.cache;
 
         if (src_table) {
             if (!(idr->flags & EcsIdOnInstantiateInherit)) {
@@ -164,7 +164,7 @@ bool flecs_json_serialize_table_pairs(
         }
 
         const ecs_table_record_t *tr = &trs[f];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_component_record_t *idr = (ecs_component_record_t*)tr->hdr.cache;
 
         if (src_table) {
             if (!(idr->flags & EcsIdOnInstantiateInherit)) {
@@ -262,7 +262,7 @@ int flecs_json_serialize_table_components(
 
         void *ptr;
         const ecs_table_record_t *tr = &table->_->records[i];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_component_record_t *idr = (ecs_component_record_t*)tr->hdr.cache;
 
         if (src_table) {
             if (!(idr->flags & EcsIdOnInstantiateInherit)) {
@@ -351,7 +351,7 @@ bool flecs_json_serialize_table_inherited_type(
         return false;
     }
 
-    const ecs_table_record_t *tr = flecs_id_record_get_table(
+    const ecs_table_record_t *tr = flecs_component_get_table(
         world->idr_isa_wildcard, table);
     ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL); /* Table has IsA flag */
 

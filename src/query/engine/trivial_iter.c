@@ -27,7 +27,7 @@ bool flecs_query_trivial_search_init(
         ecs_assert(t != query->term_count, ECS_INTERNAL_ERROR, NULL);
         op_ctx->start_from = t;
 
-        ecs_id_record_t *idr = flecs_id_record_get(ctx->world, query->ids[t]);
+        ecs_component_record_t *idr = flecs_components_get(ctx->world, query->ids[t]);
         if (!idr) {
             return false;
         }
@@ -90,12 +90,12 @@ bool flecs_query_trivial_search(
             }
 
             const ecs_term_t *term = &terms[t];
-            ecs_id_record_t *idr = flecs_id_record_get(ctx->world, term->id);
+            ecs_component_record_t *idr = flecs_components_get(ctx->world, term->id);
             if (!idr) {
                 break;
             }
 
-            const ecs_table_record_t *tr_with = flecs_id_record_get_table(
+            const ecs_table_record_t *tr_with = flecs_component_get_table(
                 idr, table);
             if (!tr_with) {
                 break;
@@ -145,12 +145,12 @@ next:
         }
 
         for (t = 1; t < term_count; t ++) {
-            ecs_id_record_t *idr = flecs_id_record_get(ctx->world, ids[t]);
+            ecs_component_record_t *idr = flecs_components_get(ctx->world, ids[t]);
             if (!idr) {
                 return false;
             }
 
-            const ecs_table_record_t *tr_with = flecs_id_record_get_table(
+            const ecs_table_record_t *tr_with = flecs_component_get_table(
                 idr, table);
             if (!tr_with) {
                 goto next;
@@ -192,12 +192,12 @@ bool flecs_query_trivial_test(
             }
 
             const ecs_term_t *term = &terms[t];
-            ecs_id_record_t *idr = flecs_id_record_get(q->world, term->id);
+            ecs_component_record_t *idr = flecs_components_get(q->world, term->id);
             if (!idr) {
                 return false;
             }
 
-            const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+            const ecs_table_record_t *tr = flecs_component_get_table(idr, table);
             if (!tr) {
                 return false;
             }

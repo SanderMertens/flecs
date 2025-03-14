@@ -7,7 +7,7 @@
  * with the cache. A table cache also provides functions to iterate the tables
  * in a cache.
  * 
- * The world stores a table cache per (component) id inside the id record 
+ * The world stores a table cache per (component) id inside the component record 
  * administration. Cached queries store a table cache with matched tables.
  * 
  * A table cache has separate lists for non-empty tables and empty tables. This

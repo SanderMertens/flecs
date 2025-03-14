@@ -300,7 +300,7 @@ void flecs_query_validate_final_fields(
             continue;
         }
 
-        if (flecs_id_record_get(world, ecs_pair(EcsIsA, id))) {
+        if (flecs_components_get(world, ecs_pair(EcsIsA, id))) {
             char *query_str = ecs_query_str(q);
             char *id_str = ecs_id_str(world, id);
             ecs_abort(ECS_INVALID_OPERATION, 

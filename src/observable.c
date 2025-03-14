@@ -245,8 +245,8 @@ static
 void flecs_emit_propagate(
     ecs_world_t *world,
     ecs_iter_t *it,
-    ecs_id_record_t *idr,
-    ecs_id_record_t *tgt_idr,
+    ecs_component_record_t *idr,
+    ecs_component_record_t *tgt_idr,
     ecs_entity_t trav,
     ecs_event_id_record_t **iders,
     int32_t ider_count);
@@ -255,8 +255,8 @@ static
 void flecs_emit_propagate_id(
     ecs_world_t *world,
     ecs_iter_t *it,
-    ecs_id_record_t *idr,
-    ecs_id_record_t *cur,
+    ecs_component_record_t *idr,
+    ecs_component_record_t *cur,
     ecs_entity_t trav,
     ecs_event_id_record_t **iders,
     int32_t ider_count)
@@ -274,7 +274,7 @@ void flecs_emit_propagate_id(
             continue;
         }
 
-        bool owned = flecs_id_record_get_table(idr, table) != NULL;
+        bool owned = flecs_component_get_table(idr, table) != NULL;
 
         int32_t e, entity_count = ecs_table_count(table);
         it->table = table;
@@ -305,7 +305,7 @@ void flecs_emit_propagate_id(
         for (e = 0; e < entity_count; e ++) {
             ecs_record_t *r = flecs_entities_get(world, entities[e]);
             ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_id_record_t *idr_t = r->idr;
+            ecs_component_record_t *idr_t = r->idr;
             if (idr_t) {
                 /* Only notify for entities that are used in pairs with
                  * traversable relationships */
@@ -323,8 +323,8 @@ static
 void flecs_emit_propagate(
     ecs_world_t *world,
     ecs_iter_t *it,
-    ecs_id_record_t *idr,
-    ecs_id_record_t *tgt_idr,
+    ecs_component_record_t *idr,
+    ecs_component_record_t *tgt_idr,
     ecs_entity_t propagate_trav,
     ecs_event_id_record_t **iders,
     int32_t ider_count)
@@ -340,8 +340,8 @@ void flecs_emit_propagate(
     ecs_log_push_3();
 
     /* Propagate to records of traversable relationships */
-    ecs_id_record_t *cur = tgt_idr;
-    while ((cur = flecs_id_record_trav_next(cur))) {
+    ecs_component_record_t *cur = tgt_idr;
+    while ((cur = flecs_component_trav_next(cur))) {
         cur->pair->reachable.generation ++; /* Invalidate cache */
 
         /* Get traversed relationship */
@@ -362,7 +362,7 @@ void flecs_emit_propagate(
 static
 void flecs_emit_propagate_invalidate_tables(
     ecs_world_t *world,
-    ecs_id_record_t *tgt_idr)
+    ecs_component_record_t *tgt_idr)
 {
     ecs_assert(tgt_idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -373,8 +373,8 @@ void flecs_emit_propagate_invalidate_tables(
     }
 
     /* Invalidate records of traversable relationships */
-    ecs_id_record_t *cur = tgt_idr;
-    while ((cur = flecs_id_record_trav_next(cur))) {
+    ecs_component_record_t *cur = tgt_idr;
+    while ((cur = flecs_component_trav_next(cur))) {
         ecs_reachable_cache_t *rc = &cur->pair->reachable;
         if (rc->current != rc->generation) {
             /* Subtree is already marked invalid */
@@ -400,7 +400,7 @@ void flecs_emit_propagate_invalidate_tables(
 
             for (e = 0; e < entity_count; e ++) {
                 ecs_record_t *r = flecs_entities_get(world, entities[e]);
-                ecs_id_record_t *idr_t = r->idr;
+                ecs_component_record_t *idr_t = r->idr;
                 if (idr_t) {
                     /* Only notify for entities that are used in pairs with
                      * traversable relationships */
@@ -427,7 +427,7 @@ void flecs_emit_propagate_invalidate(
             continue;
         }
 
-        ecs_id_record_t *idr_t = record->idr;
+        ecs_component_record_t *idr_t = record->idr;
         if (idr_t) {
             /* Event is used as target in traversable relationship, propagate */
             flecs_emit_propagate_invalidate_tables(world, idr_t);
@@ -439,7 +439,7 @@ static
 void flecs_propagate_entities(
     ecs_world_t *world,
     ecs_iter_t *it,
-    ecs_id_record_t *idr,
+    ecs_component_record_t *idr,
     const ecs_entity_t *entities,
     int32_t count,
     ecs_entity_t src,
@@ -466,7 +466,7 @@ void flecs_propagate_entities(
             continue;
         }
 
-        ecs_id_record_t *idr_t = record->idr;
+        ecs_component_record_t *idr_t = record->idr;
         if (idr_t) {
             /* Entity is used as target in traversable pairs, propagate */
             ecs_entity_t e = src ? src : entities[i];
@@ -526,7 +526,7 @@ void* flecs_override(
     const ecs_type_t *emit_ids,
     ecs_id_t id,
     ecs_table_t *table,
-    ecs_id_record_t *idr)
+    ecs_component_record_t *idr)
 {
     if (it->event != EcsOnAdd || (it->flags & EcsEventNoOnSet)) {
         return NULL;
@@ -545,7 +545,7 @@ void* flecs_override(
              * after it was inherited, as this does not change the actual value
              * of the component for the entity (it is copied from the existing
              * overridden component), and does not require an OnSet event. */
-            ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+            ecs_table_record_t *tr = flecs_component_get_table(idr, table);
             if (!tr) {
                 continue;
             }
@@ -570,7 +570,7 @@ void flecs_emit_forward_up(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_id_record_t *idr,
+    ecs_component_record_t *idr,
     ecs_vec_t *stack,
     ecs_vec_t *reachable_ids,
     int32_t depth);
@@ -583,7 +583,7 @@ void flecs_emit_forward_id(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_id_record_t *idr,
+    ecs_component_record_t *idr,
     ecs_entity_t tgt,
     ecs_table_t *tgt_table,
     int32_t column,
@@ -624,7 +624,7 @@ void flecs_emit_forward_id(
         ECS_CONST_CAST(int32_t*, it->sizes)[0] = c->ti->size; /* safe, see above */
     }
 
-    ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    ecs_table_record_t *tr = flecs_component_get_table(idr, table);
     bool owned = tr != NULL;
 
     for (ider_i = 0; ider_i < ider_count; ider_i ++) {
@@ -689,7 +689,7 @@ void flecs_emit_forward_and_cache_id(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_id_record_t *idr,
+    ecs_component_record_t *idr,
     ecs_entity_t tgt,
     ecs_record_t *tgt_record,
     ecs_table_t *tgt_table,
@@ -717,14 +717,14 @@ void flecs_emit_forward_and_cache_id(
 static
 int32_t flecs_emit_stack_at(
     ecs_vec_t *stack,
-    ecs_id_record_t *idr)
+    ecs_component_record_t *idr)
 {
     int32_t sp = 0, stack_count = ecs_vec_count(stack);
     ecs_table_t **stack_elems = ecs_vec_first(stack);
 
     for (sp = 0; sp < stack_count; sp ++) {
         ecs_table_t *elem = stack_elems[sp];
-        if (flecs_id_record_get_table(idr, elem)) {
+        if (flecs_component_get_table(idr, elem)) {
             break;
         }
     }
@@ -735,7 +735,7 @@ int32_t flecs_emit_stack_at(
 static
 bool flecs_emit_stack_has(
     ecs_vec_t *stack,
-    ecs_id_record_t *idr)
+    ecs_component_record_t *idr)
 {
     return flecs_emit_stack_at(stack, idr) != ecs_vec_count(stack);
 }
@@ -760,7 +760,7 @@ void flecs_emit_forward_cached_ids(
         ecs_reachable_elem_t *rc_elem = &elems[i];
         const ecs_table_record_t *rc_tr = rc_elem->tr;
         ecs_assert(rc_tr != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_id_record_t *rc_idr = (ecs_id_record_t*)rc_tr->hdr.cache;
+        ecs_component_record_t *rc_idr = (ecs_component_record_t*)rc_tr->hdr.cache;
         ecs_record_t *rc_record = rc_elem->record;
 
         ecs_assert(rc_idr->id == rc_elem->id, ECS_INTERNAL_ERROR, NULL);
@@ -820,7 +820,7 @@ void flecs_emit_forward_table_up(
     ecs_entity_t tgt,
     ecs_table_t *tgt_table,
     ecs_record_t *tgt_record,
-    ecs_id_record_t *tgt_idr,
+    ecs_component_record_t *tgt_idr,
     ecs_vec_t *stack,
     ecs_vec_t *reachable_ids,
     int32_t depth)
@@ -831,7 +831,7 @@ void flecs_emit_forward_table_up(
     int32_t rc_child_offset = ecs_vec_count(reachable_ids);
     int32_t stack_count = ecs_vec_count(stack);
 
-    /* If tgt_idr is out of sync but is not the current id record being updated,
+    /* If tgt_idr is out of sync but is not the current component record being updated,
      * keep track so that we can update two records for the cost of one. */
     ecs_assert(tgt_idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_reachable_cache_t *rc = &tgt_idr->pair->reachable;
@@ -856,7 +856,7 @@ void flecs_emit_forward_table_up(
     for (i = 0; i < id_count; i ++) {
         ecs_id_t id = ids[i];
         ecs_table_record_t *tgt_tr = &tgt_table->_->records[i];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tgt_tr->hdr.cache;
+        ecs_component_record_t *idr = (ecs_component_record_t*)tgt_tr->hdr.cache;
         if (inherit && !(idr->flags & EcsIdOnInstantiateInherit)) {
             continue;
         }
@@ -911,7 +911,7 @@ void flecs_emit_forward_table_up(
 
         int32_t stack_at = flecs_emit_stack_at(stack, idr);
         if (parent_revalidate && (stack_at == (stack_count - 1))) {
-            /* If parent id record needs to be revalidated, add id */
+            /* If parent component record needs to be revalidated, add id */
             ecs_reachable_elem_t *elem = ecs_vec_append_t(a, &rc->ids, 
                 ecs_reachable_elem_t);
             elem->tr = tgt_tr;
@@ -973,7 +973,7 @@ void flecs_emit_forward_up(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_id_record_t *idr,
+    ecs_component_record_t *idr,
     ecs_vec_t *stack,
     ecs_vec_t *reachable_ids,
     int32_t depth)
@@ -1007,7 +1007,7 @@ void flecs_emit_forward(
     const ecs_type_t *emit_ids,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_id_record_t *idr)
+    ecs_component_record_t *idr)
 {
     ecs_assert(idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_reachable_cache_t *rc = &idr->pair->reachable;
@@ -1061,7 +1061,7 @@ void flecs_emit_forward(
             ecs_reachable_elem_t *elem = &elems[i];
             const ecs_table_record_t *tr = elem->tr;
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_id_record_t *rc_idr = (ecs_id_record_t*)tr->hdr.cache;
+            ecs_component_record_t *rc_idr = (ecs_component_record_t*)tr->hdr.cache;
             ecs_record_t *r = elem->record;
 
             ecs_assert(rc_idr->id == elem->id, ECS_INTERNAL_ERROR, NULL);
@@ -1095,7 +1095,7 @@ void flecs_emit_forward(
                 ecs_reachable_elem_t *elem = &elems[i];
                 const ecs_table_record_t *tr = elem->tr;
                 ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_id_record_t *rc_idr = (ecs_id_record_t*)tr->hdr.cache;
+                ecs_component_record_t *rc_idr = (ecs_component_record_t*)tr->hdr.cache;
                 ecs_record_t *r = elem->record;
 
                 ecs_assert(rc_idr->id == elem->id, ECS_INTERNAL_ERROR, NULL);
@@ -1106,7 +1106,7 @@ void flecs_emit_forward(
                 (void)r;
 
                 /* If entities already have the component, don't propagate */
-                if (flecs_id_record_get_table(rc_idr, it->table)) {
+                if (flecs_component_get_table(rc_idr, it->table)) {
                     continue;
                 }
 
@@ -1259,7 +1259,7 @@ repeat_event:
          * One example is when an id was added with a "With" property, or 
          * inheriting from a prefab with overrides. In these cases an entity is 
          * moved directly to the archetype with the additional components. */
-        ecs_id_record_t *idr = NULL;
+        ecs_component_record_t *idr = NULL;
         const ecs_type_info_t *ti = NULL;
         ecs_id_t id = id_array[i];
         ecs_assert(id == EcsAny || !ecs_id_is_wildcard(id), 
@@ -1285,7 +1285,7 @@ repeat_event:
         /* Check if this id is a pair of an traversable relationship. If so, we 
          * may have to forward ids from the pair's target. */
         if ((can_forward && is_pair) || id_can_override) {
-            idr = flecs_id_record_get(world, id);
+            idr = flecs_components_get(world, id);
             if (!idr) {
                 /* Possible for union ids */
                 continue;
@@ -1375,7 +1375,7 @@ repeat_event:
              * example, both observers for (ChildOf, p) and (ChildOf, *) would
              * match an event for (ChildOf, p). */
             ider_count = flecs_event_observers_get(er, id, iders);
-            idr = idr ? idr : flecs_id_record_get(world, id);
+            idr = idr ? idr : flecs_components_get(world, id);
             ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
@@ -1385,7 +1385,7 @@ repeat_event:
         }
 
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+        ecs_table_record_t *tr = flecs_component_get_table(idr, table);
         ecs_table_record_t dummy_tr = {
             .hdr.cache = (ecs_table_cache_t*)idr,
             .hdr.table = table,

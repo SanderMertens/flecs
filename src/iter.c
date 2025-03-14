@@ -115,7 +115,7 @@ void* ecs_field_w_size(
         return NULL;
     }
 
-    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+    ecs_component_record_t *idr = (ecs_component_record_t*)tr->hdr.cache;
     ecs_assert(!(idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field_at to access fields for sparse components");
     (void)idr;
@@ -177,7 +177,7 @@ void* ecs_field_at_w_size(
         return NULL;
     }
 
-    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+    ecs_component_record_t *idr = (ecs_component_record_t*)tr->hdr.cache;
     ecs_assert((idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field to access fields for non-sparse components");
     ecs_assert(it->row_fields & (1ull << index), ECS_INTERNAL_ERROR, NULL);

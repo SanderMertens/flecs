@@ -353,7 +353,7 @@ void* flecs_defer_set(
 
     /* Find type info for id */
     const ecs_type_info_t *ti = NULL;
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    ecs_component_record_t *idr = flecs_components_get(world, id);
     if (!idr) {
         /* If idr doesn't exist yet, create it but only if the 
          * application is not multithreaded. */
@@ -361,13 +361,13 @@ void* flecs_defer_set(
             ti = ecs_get_type_info(world, id);
         } else {
             /* When not in multi threaded mode, it's safe to find or 
-             * create the id record. */
-            idr = flecs_id_record_ensure(world, id);
+             * create the component record. */
+            idr = flecs_components_ensure(world, id);
             ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
             
-            /* Get type_info from id record. We could have called 
+            /* Get type_info from component record. We could have called 
              * ecs_get_type_info directly, but since this function can be
-             * expensive for pairs, creating the id record ensures we can
+             * expensive for pairs, creating the component record ensures we can
              * find the type_info quickly for subsequent operations. */
             ti = idr->type_info;
         }
@@ -389,11 +389,11 @@ void* flecs_defer_set(
     void *existing = NULL;
     ecs_table_t *table = NULL;
     if (idr) {
-        /* Entity can only have existing component if id record exists */
+        /* Entity can only have existing component if component record exists */
         ecs_record_t *r = flecs_entities_get(world, entity);
         table = r->table;
         if (r && table) {
-            const ecs_table_record_t *tr = flecs_id_record_get_table(
+            const ecs_table_record_t *tr = flecs_component_get_table(
                 idr, table);
             if (tr) {
                 if (tr->column != -1) {

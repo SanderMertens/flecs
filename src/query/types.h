@@ -134,7 +134,7 @@ typedef struct {
 
 /* And context */
 typedef struct {
-    ecs_id_record_t *idr;
+    ecs_component_record_t *idr;
     ecs_table_cache_iter_t it;
     int16_t column;
     int16_t remaining;
@@ -142,7 +142,7 @@ typedef struct {
 
 /* Union context */
 typedef struct {
-    ecs_id_record_t *idr;
+    ecs_component_record_t *idr;
     ecs_table_range_t range;
     ecs_map_iter_t tgt_iter;
     ecs_entity_t cur;
@@ -191,8 +191,8 @@ typedef struct {
     ecs_entity_t trav;
     ecs_id_t with;
     ecs_id_t matched;
-    ecs_id_record_t *idr_with;
-    ecs_id_record_t *idr_trav;
+    ecs_component_record_t *idr_with;
+    ecs_component_record_t *idr_trav;
     ecs_trav_down_t *down;
     int32_t cache_elem;
     ecs_trav_up_cache_t cache;
@@ -202,13 +202,13 @@ typedef struct {
  * traversal iterates and caches the entire tree. */
 typedef struct {
     ecs_entity_t entity;
-    ecs_id_record_t *idr;
+    ecs_component_record_t *idr;
     const ecs_table_record_t *tr;
 } ecs_trav_elem_t;
 
 typedef struct {
     ecs_id_t id;
-    ecs_id_record_t *idr;
+    ecs_component_record_t *idr;
     ecs_vec_t entities;
     bool up;
 } ecs_trav_cache_t;
@@ -243,7 +243,7 @@ typedef struct {
 
 /* Ids context */
 typedef struct {
-    ecs_id_record_t *cur;
+    ecs_component_record_t *cur;
 } ecs_query_ids_ctx_t;
 
 /* Control flow context */

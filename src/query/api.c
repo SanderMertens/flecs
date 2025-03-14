@@ -290,7 +290,7 @@ void flecs_query_fini(
             continue;
         }
 
-        ecs_id_record_t *idr = flecs_id_record_get(q->real_world, term->id);
+        ecs_component_record_t *idr = flecs_components_get(q->real_world, term->id);
         if (idr) {
             if (!(ecs_world_get_flags(q->world) & EcsWorldQuit)) {
                 if (ecs_os_has_threading()) {

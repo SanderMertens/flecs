@@ -1173,7 +1173,7 @@ int flecs_query_compile_term(
 
         for (i = 0; i < count; i ++) {
             ecs_id_t ti_id = ti_ids[i];
-            ecs_id_record_t *idr = flecs_id_record_get(world, ti_id);
+            ecs_component_record_t *idr = flecs_components_get(world, ti_id);
             if (!(idr->flags & EcsIdOnInstantiateDontInherit)) {
                 break;
             }
@@ -1318,7 +1318,7 @@ int flecs_query_compile_term(
     } else if (!src_written && term->id == EcsAny && op.kind == EcsQueryAndAny) {
         /* Lookup variables ($var.child_name) are always written */
         if (!src_is_lookup) {
-            op.kind = EcsQueryAll; /* Uses Any (_) id record */
+            op.kind = EcsQueryAll; /* Uses Any (_) component record */
         }
     }
 

@@ -566,7 +566,7 @@ ecs_entity_t ecs_alert_init(
             alert->id = desc->id;
         }
 
-        ecs_id_record_t *idr = flecs_id_record_ensure(world, alert->id);
+        ecs_component_record_t *idr = flecs_components_ensure(world, alert->id);
         ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
         if (!idr->type_info) {
             ecs_err("ecs_alert_desc_t::id must be a component");

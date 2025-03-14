@@ -99,7 +99,7 @@ flecs_src = files(
     'src/datastructures/switch_list.c',
     'src/datastructures/vec.c',
     'src/storage/entity_index.c',
-    'src/storage/id_index.c',
+    'src/storage/component_index.c',
     'src/storage/table.c',
     'src/storage/table_cache.c',
     'src/storage/table_graph.c',

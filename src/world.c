@@ -627,7 +627,7 @@ void flecs_clean_tables(
 static
 void flecs_fini_root_tables(
     ecs_world_t *world,
-    ecs_id_record_t *idr,
+    ecs_component_record_t *idr,
     bool fini_targets)
 {
     ecs_stage_t *stage0 = world->stages[0];
@@ -702,7 +702,7 @@ static
 void flecs_fini_roots(
     ecs_world_t *world)
 {
-    ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
+    ecs_component_record_t *idr = flecs_components_get(world, ecs_pair(EcsChildOf, 0));
 
     /* Delete root entities that are not modules. This prioritizes deleting
      * regular entities first, which reduces the chance of components getting
@@ -751,9 +751,9 @@ void flecs_world_allocators_init(
     flecs_ballocator_init_t(&a->query_table_match, ecs_query_cache_table_match_t);
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
-    flecs_ballocator_init_t(&a->id_record, ecs_id_record_t);
+    flecs_ballocator_init_t(&a->id_record, ecs_component_record_t);
     flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_id_record_t);
-    flecs_ballocator_init_n(&a->id_record_chunk, ecs_id_record_t, FLECS_SPARSE_PAGE_SIZE);
+    flecs_ballocator_init_n(&a->id_record_chunk, ecs_component_record_t, FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&a->hashmap, ecs_hashmap_t);
@@ -963,7 +963,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_map_init(&world->type_info, a);
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
     world->id_index_lo = ecs_os_calloc_n(
-        ecs_id_record_t*, FLECS_HI_ID_RECORD_ID);
+        ecs_component_record_t*, FLECS_HI_ID_RECORD_ID);
     flecs_observable_init(&world->observable);
 
     flecs_name_index_init(&world->aliases, a);
@@ -1092,7 +1092,7 @@ void flecs_notify_tables(
 
     /* If id is specified, only broadcast to tables with id */
     } else {
-        ecs_id_record_t *idr = flecs_id_record_get(world, id);
+        ecs_component_record_t *idr = flecs_components_get(world, id);
         if (!idr) {
             return;
         }
@@ -1711,7 +1711,7 @@ int ecs_fini(
     ecs_dbg_1("#[bold]cleanup world data structures");
     ecs_log_push_1();
     flecs_entities_fini(world);
-    flecs_fini_id_records(world);
+    flecs_components_fini(world);
     flecs_fini_type_info(world);
     flecs_observable_fini(&world->observable);
     flecs_name_index_fini(&world->aliases);
@@ -1977,36 +1977,36 @@ bool flecs_type_info_init_id(
         }
     }
 
-    /* Set type info for id record of component */
-    ecs_id_record_t *idr = flecs_id_record_ensure(world, component);
-    changed |= flecs_id_record_set_type_info(world, idr, ti);
+    /* Set type info for component record of component */
+    ecs_component_record_t *idr = flecs_components_ensure(world, component);
+    changed |= flecs_component_set_type_info(world, idr, ti);
     bool is_tag = idr->flags & EcsIdTag;
 
     /* All id records with component as relationship inherit type info */
-    idr = flecs_id_record_ensure(world, ecs_pair(component, EcsWildcard));
+    idr = flecs_components_ensure(world, ecs_pair(component, EcsWildcard));
     do {
         if (is_tag) {
-            changed |= flecs_id_record_set_type_info(world, idr, NULL);
+            changed |= flecs_component_set_type_info(world, idr, NULL);
         } else if (ti) {
-            changed |= flecs_id_record_set_type_info(world, idr, ti);
+            changed |= flecs_component_set_type_info(world, idr, ti);
         } else if ((idr->type_info != NULL) &&
             (idr->type_info->component == component))
         {
-            changed |= flecs_id_record_set_type_info(world, idr, NULL);
+            changed |= flecs_component_set_type_info(world, idr, NULL);
         }
-    } while ((idr = flecs_id_record_first_next(idr)));
+    } while ((idr = flecs_component_first_next(idr)));
 
     /* All non-tag id records with component as object inherit type info,
      * if relationship doesn't have type info */
-    idr = flecs_id_record_ensure(world, ecs_pair(EcsWildcard, component));
+    idr = flecs_components_ensure(world, ecs_pair(EcsWildcard, component));
     do {
         if (!(idr->flags & EcsIdTag) && !idr->type_info) {
-            changed |= flecs_id_record_set_type_info(world, idr, ti);
+            changed |= flecs_component_set_type_info(world, idr, ti);
         }
-    } while ((idr = flecs_id_record_first_next(idr)));
+    } while ((idr = flecs_component_first_next(idr)));
 
     /* Type info of (*, component) should always point to component */
-    ecs_assert(flecs_id_record_get(world, ecs_pair(EcsWildcard, component))->
+    ecs_assert(flecs_components_get(world, ecs_pair(EcsWildcard, component))->
         type_info == ti, ECS_INTERNAL_ERROR, NULL);
 
     return changed;
@@ -2238,7 +2238,7 @@ void flecs_process_empty_queries(
 {
     flecs_poly_assert(world, ecs_world_t); 
 
-    ecs_id_record_t *idr = flecs_id_record_get(world,
+    ecs_component_record_t *idr = flecs_components_get(world,
         ecs_pair(ecs_id(EcsPoly), EcsQuery));
     if (!idr) {
         return;
@@ -2273,7 +2273,7 @@ bool ecs_id_in_use(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    ecs_component_record_t *idr = flecs_components_get(world, id);
     if (!idr) {
         return false;
     }

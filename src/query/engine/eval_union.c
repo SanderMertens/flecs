@@ -27,13 +27,13 @@ bool flecs_query_union_with_wildcard(
         }
 
         op_ctx->range = range;
-        op_ctx->idr = flecs_id_record_get(ctx->world, ecs_pair(rel, EcsUnion));
+        op_ctx->idr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
         if (!op_ctx->idr) {
             return neq;
         }
 
         if (neq) {
-            if (flecs_id_record_get_table(op_ctx->idr, table) != NULL) {
+            if (flecs_component_get_table(op_ctx->idr, table) != NULL) {
                 /* If table has (R, Union) none match !(R, _) */
                 return false;
             } else {
@@ -106,7 +106,7 @@ bool flecs_query_union_with_tgt(
         }
 
         op_ctx->range = range;
-        op_ctx->idr = flecs_id_record_get(ctx->world, ecs_pair(rel, EcsUnion));
+        op_ctx->idr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
         if (!op_ctx->idr) {
             return false;
         }
@@ -183,7 +183,7 @@ bool flecs_query_union_select_tgt(
     int8_t field_index = op->field_index;
 
     if (!redo) {
-        op_ctx->idr = flecs_id_record_get(ctx->world, ecs_pair(rel, EcsUnion));
+        op_ctx->idr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
         if (!op_ctx->idr) {
             return false;
         }
@@ -219,7 +219,7 @@ bool flecs_query_union_select_wildcard(
     int8_t field_index = op->field_index;
 
     if (!redo) {
-        op_ctx->idr = flecs_id_record_get(ctx->world, ecs_pair(rel, EcsUnion));
+        op_ctx->idr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
         if (!op_ctx->idr) {
             return false;
         }
@@ -306,11 +306,11 @@ void flecs_query_union_set_shared(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_query_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
-    ecs_id_record_t *idr = op_ctx->idr_with;
+    ecs_component_record_t *idr = op_ctx->idr_with;
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t rel = ECS_PAIR_FIRST(idr->id);
-    idr = flecs_id_record_get(ctx->world, ecs_pair(rel, EcsUnion));
+    idr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(idr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
 

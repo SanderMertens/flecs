@@ -8,7 +8,7 @@
 
 #include "private_types.h"
 #include "storage/table_cache.h"
-#include "storage/id_index.h"
+#include "storage/component_index.h"
 #include "query/query.h"
 #include "observable.h"
 #include "iter.h"
@@ -107,7 +107,7 @@ void* flecs_get_base_component(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
-    ecs_id_record_t *table_index,
+    ecs_component_record_t *table_index,
     int32_t recur_depth);
 
 void flecs_invoke_hook(
@@ -268,7 +268,7 @@ int32_t flecs_search_w_idr(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t *id_out,
-    ecs_id_record_t *idr);
+    ecs_component_record_t *idr);
 
 int32_t flecs_search_relation_w_idr(
     const ecs_world_t *world,
@@ -280,12 +280,12 @@ int32_t flecs_search_relation_w_idr(
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out,
-    ecs_id_record_t *idr);
+    ecs_component_record_t *idr);
 
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    const ecs_id_record_t *idr,
+    const ecs_component_record_t *idr,
     ecs_id_t id);
 
 int ecs_term_finalize(
