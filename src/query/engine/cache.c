@@ -563,7 +563,8 @@ ecs_query_cache_table_t* flecs_query_cache_table_insert(
         qt->table_id = 0;
     }
 
-    ecs_table_cache_insert(&cache->cache, table, &qt->hdr);
+    ecs_table_cache_insert(&cache->cache, table, 
+        ECS_CONST_CAST(ecs_table_cache_hdr_t*, &qt->hdr));
 
     return qt;
 }
@@ -795,7 +796,8 @@ void flecs_query_cache_unmatch_table(
         elem = ecs_table_cache_get(&cache->cache, table);
     }
     if (elem) {
-        ecs_table_cache_remove(&cache->cache, elem->table_id, &elem->hdr);
+        ecs_table_cache_remove(&cache->cache, elem->table_id, 
+            ECS_CONST_CAST(ecs_table_cache_hdr_t*, &elem->hdr));
         flecs_query_cache_table_free(cache, elem);
     }
 }

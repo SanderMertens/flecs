@@ -108,16 +108,16 @@ const ecs_type_info_t* flecs_script_get_type_info(
     void *node,
     ecs_id_t id)
 {
-    ecs_component_record_t *idr = flecs_components_ensure(v->world, id);
-    if (!idr) {
+    ecs_component_record_t *cdr = flecs_components_ensure(v->world, id);
+    if (!cdr) {
         goto error;
     }
 
-    if (!idr->type_info) {
+    if (!cdr->type_info) {
         goto error;
     }
 
-    return idr->type_info;
+    return cdr->type_info;
 error:
     {
         char *idstr = ecs_id_str(v->world, id);

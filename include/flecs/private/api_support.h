@@ -3,8 +3,9 @@
  * @brief Support functions and constants.
  *
  * Supporting types and functions that need to be exposed either in support of 
- * the public API or for unit tests, but that may change between minor / patch 
- * releases. 
+ * the public API or for unit tests.
+ * 
+ * Operations may change without warning.
  */
 
 #ifndef FLECS_API_SUPPORT_H

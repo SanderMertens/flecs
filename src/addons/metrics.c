@@ -44,13 +44,13 @@ typedef struct {
 /** Context for metric that monitors whether entity has id */
 typedef struct {
     ecs_metric_ctx_t metric;
-    ecs_component_record_t *idr;            /**< component record for monitored component */
+    ecs_component_record_t *cdr;            /**< component record for monitored component */
 } ecs_id_metric_ctx_t;
 
 /** Context for metric that monitors whether entity has pair target */
 typedef struct {
     ecs_metric_ctx_t metric;
-    ecs_component_record_t *idr;            /**< component record for monitored component */
+    ecs_component_record_t *cdr;            /**< component record for monitored component */
     ecs_size_t size;                 /**< Size of metric type */
     ecs_map_t target_offset;         /**< Pair target to metric type offset */
 } ecs_oneof_metric_ctx_t;
@@ -58,7 +58,7 @@ typedef struct {
 /** Context for metric that monitors how many entities have a pair target */
 typedef struct {
     ecs_metric_ctx_t metric;
-    ecs_component_record_t *idr;            /**< component record for monitored component */
+    ecs_component_record_t *cdr;            /**< component record for monitored component */
     ecs_map_t targets;               /**< Map of counters for each target */
 } ecs_count_targets_metric_ctx_t;
 
@@ -314,8 +314,8 @@ static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
         }
 
         ecs_id_metric_ctx_t *ctx = mi[i].ctx;
-        ecs_component_record_t *idr = ctx->idr;
-        if (flecs_search_w_idr(world, table, NULL, idr) != -1) {
+        ecs_component_record_t *cdr = ctx->cdr;
+        if (flecs_search_w_idr(world, table, NULL, cdr) != -1) {
             if (!counter) {
                 m[i].value = 1.0;
             } else {
@@ -363,9 +363,9 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
             continue;
         }
 
-        ecs_component_record_t *idr = ctx->idr;
+        ecs_component_record_t *cdr = ctx->cdr;
         ecs_id_t id;
-        if (flecs_search_w_idr(world, mtable, &id, idr) == -1) {
+        if (flecs_search_w_idr(world, mtable, &id, cdr) == -1) {
             ecs_delete(it->world, it->entities[i]);
             continue;
         }
@@ -402,7 +402,7 @@ static void UpdateCountTargets(ecs_iter_t *it) {
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_count_targets_metric_ctx_t *ctx = m[i].ctx;
-        ecs_component_record_t *cur = ctx->idr;
+        ecs_component_record_t *cur = ctx->cdr;
         while ((cur = flecs_component_first_next(cur))) {
             ecs_id_t id = cur->id;
             ecs_entity_t *mi = ecs_map_ensure(&ctx->targets, id);
@@ -596,8 +596,8 @@ int flecs_id_metric_init(
     ecs_id_metric_ctx_t *ctx = ecs_os_calloc_t(ecs_id_metric_ctx_t);
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
-    ctx->idr = flecs_components_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ctx->cdr = flecs_components_ensure(world, desc->id);
+    ecs_check(ctx->cdr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_observer(world, {
         .entity = metric,
@@ -628,8 +628,8 @@ int flecs_oneof_metric_init(
     ecs_oneof_metric_ctx_t *ctx = ecs_os_calloc_t(ecs_oneof_metric_ctx_t);
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
-    ctx->idr = flecs_components_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ctx->cdr = flecs_components_ensure(world, desc->id);
+    ecs_check(ctx->cdr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_init(&ctx->target_offset, NULL);
 
     /* Add member for each child of oneof to metric, so it can be used as metric
@@ -697,8 +697,8 @@ int flecs_count_id_targets_metric_init(
     ecs_count_targets_metric_ctx_t *ctx = ecs_os_calloc_t(ecs_count_targets_metric_ctx_t);
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
-    ctx->idr = flecs_components_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ctx->cdr = flecs_components_ensure(world, desc->id);
+    ecs_check(ctx->cdr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_init(&ctx->targets, NULL);
 
     ecs_set(world, metric, EcsMetricCountTargets, { .ctx = ctx });

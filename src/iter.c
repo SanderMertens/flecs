@@ -115,10 +115,10 @@ void* ecs_field_w_size(
         return NULL;
     }
 
-    ecs_component_record_t *idr = (ecs_component_record_t*)tr->hdr.cache;
-    ecs_assert(!(idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_component_record_t *cdr = (ecs_component_record_t*)tr->hdr.cache;
+    ecs_assert(!(cdr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field_at to access fields for sparse components");
-    (void)idr;
+    (void)cdr;
 
     ecs_entity_t src = it->sources[index];
     ecs_table_t *table;
@@ -177,8 +177,8 @@ void* ecs_field_at_w_size(
         return NULL;
     }
 
-    ecs_component_record_t *idr = (ecs_component_record_t*)tr->hdr.cache;
-    ecs_assert((idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_component_record_t *cdr = (ecs_component_record_t*)tr->hdr.cache;
+    ecs_assert((cdr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field to access fields for non-sparse components");
     ecs_assert(it->row_fields & (1ull << index), ECS_INTERNAL_ERROR, NULL);
 
@@ -187,7 +187,7 @@ void* ecs_field_at_w_size(
         src = ecs_table_entities(it->table)[row + it->offset];
     }
 
-    return flecs_sparse_get_any(idr->sparse, flecs_uto(int32_t, size), src);
+    return flecs_sparse_get_any(cdr->sparse, flecs_uto(int32_t, size), src);
 error:
     return NULL;
 }

@@ -114,7 +114,7 @@ void flecs_trav_entity_down_isa(
 
     ecs_table_cache_iter_t it;
     if (flecs_table_cache_iter(&idr_isa->cache, &it)) {
-        ecs_table_record_t *tr;
+        const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
             if (!table->_->traversable_count) {

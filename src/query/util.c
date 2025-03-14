@@ -717,14 +717,14 @@ int32_t flecs_query_pivot_term(
             continue;
         }
 
-        ecs_component_record_t *idr = flecs_components_get(world, id);
-        if (!idr) {
+        ecs_component_record_t *cdr = flecs_components_get(world, id);
+        if (!cdr) {
             /* If one of the terms does not match with any data, iterator 
              * should not return anything */
             return -2; /* -2 indicates query doesn't match anything */
         }
 
-        int32_t table_count = flecs_table_cache_count(&idr->cache);
+        int32_t table_count = flecs_table_cache_count(&cdr->cache);
         if (min_count == -1 || table_count < min_count) {
             min_count = table_count;
             pivot_term = i;

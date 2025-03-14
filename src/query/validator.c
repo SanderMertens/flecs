@@ -773,10 +773,10 @@ int flecs_term_finalize(
         first_entity = first_id;
     }
 
-    ecs_component_record_t *idr = flecs_components_get(world, term->id);
+    ecs_component_record_t *cdr = flecs_components_get(world, term->id);
     ecs_flags32_t id_flags = 0;
-    if (idr) {
-        id_flags = idr->flags;
+    if (cdr) {
+        id_flags = cdr->flags;
     } else if (ECS_IS_PAIR(term->id)) {
         ecs_component_record_t *wc_idr = flecs_components_get(
             world, ecs_pair(ECS_PAIR_FIRST(term->id), EcsWildcard));
@@ -1343,17 +1343,17 @@ int flecs_query_finalize_terms(
 
         bool is_sparse = false;
 
-        ecs_component_record_t *idr = flecs_components_get(world, term->id);
-        if (idr) {
+        ecs_component_record_t *cdr = flecs_components_get(world, term->id);
+        if (cdr) {
             if (ecs_os_has_threading()) {
-                ecs_os_ainc(&idr->keep_alive);
+                ecs_os_ainc(&cdr->keep_alive);
             } else {
-                idr->keep_alive ++;
+                cdr->keep_alive ++;
             }
 
             term->flags_ |= EcsTermKeepAlive;
 
-            if (idr->flags & EcsIdIsSparse) {
+            if (cdr->flags & EcsIdIsSparse) {
                 is_sparse = true;
             }
         } else {
@@ -1451,12 +1451,12 @@ int flecs_query_finalize_terms(
                 }
             }
 
-            ecs_component_record_t *idr = flecs_components_get(world, term->id);
-            if (idr) {
-                if (!ECS_IS_PAIR(idr->id) || ECS_PAIR_FIRST(idr->id) != EcsWildcard) {
-                    if (idr->type_info) {
-                        q->sizes[field] = idr->type_info->size;
-                        q->ids[field] = idr->id;
+            ecs_component_record_t *cdr = flecs_components_get(world, term->id);
+            if (cdr) {
+                if (!ECS_IS_PAIR(cdr->id) || ECS_PAIR_FIRST(cdr->id) != EcsWildcard) {
+                    if (cdr->type_info) {
+                        q->sizes[field] = cdr->type_info->size;
+                        q->ids[field] = cdr->id;
                     }
                 }
             } else {
@@ -1659,45 +1659,45 @@ bool flecs_query_finalize_simple(
 
         q->ids[i] = id;
 
-        ecs_component_record_t *idr = flecs_components_get(world, id);
-        if (idr) {
-            idr->keep_alive ++;
+        ecs_component_record_t *cdr = flecs_components_get(world, id);
+        if (cdr) {
+            cdr->keep_alive ++;
             term->flags_ |= EcsTermKeepAlive;
         }
 
-        if (!idr && ECS_IS_PAIR(id)) {
-            idr = flecs_components_get(world, 
+        if (!cdr && ECS_IS_PAIR(id)) {
+            cdr = flecs_components_get(world, 
                 ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
         }
 
         bool cacheable = true, trivial = true;
-        if (idr) {
-            if (idr->type_info) {
-                q->sizes[i] = idr->type_info->size;
+        if (cdr) {
+            if (cdr->type_info) {
+                q->sizes[i] = cdr->type_info->size;
                 q->flags |= EcsQueryHasOutTerms;
                 q->data_fields |= (ecs_termset_t)(1llu << i);
             }
 
-            if (idr->flags & EcsIdOnInstantiateInherit) {
+            if (cdr->flags & EcsIdOnInstantiateInherit) {
                 term->src.id |= EcsUp;
                 term->trav = EcsIsA;
                 up_count ++;
             }
 
-            if (idr->flags & EcsIdCanToggle) {
+            if (cdr->flags & EcsIdCanToggle) {
                 term->flags_ |= EcsTermIsToggle;
                 trivial = false;
             }
 
             if (ECS_IS_PAIR(id)) {
-                if (idr->flags & EcsIdIsUnion) {
+                if (cdr->flags & EcsIdIsUnion) {
                     term->flags_ |= EcsTermIsUnion;
                     trivial = false;
                     cacheable = false;
                 }
             }
 
-            if (idr->flags & EcsIdIsSparse) {
+            if (cdr->flags & EcsIdIsSparse) {
                 term->flags_ |= EcsTermIsSparse;
                 cacheable = false; trivial = false;
                 q->row_fields |= flecs_uto(uint32_t, 1llu << i);

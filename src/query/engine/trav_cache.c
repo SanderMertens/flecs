@@ -14,19 +14,19 @@ void flecs_query_build_down_cache(
     ecs_entity_t trav,
     ecs_entity_t entity)
 {
-    ecs_component_record_t *idr = flecs_components_get(world, ecs_pair(trav, entity));
-    if (!idr) {
+    ecs_component_record_t *cdr = flecs_components_get(world, ecs_pair(trav, entity));
+    if (!cdr) {
         return;
     }
 
     ecs_trav_elem_t *elem = ecs_vec_append_t(a, &cache->entities, 
         ecs_trav_elem_t);
     elem->entity = entity;
-    elem->idr = idr;
+    elem->cdr = cdr;
 
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_iter(&idr->cache, &it)) {
-        ecs_table_record_t *tr; 
+    if (flecs_table_cache_iter(&cdr->cache, &it)) {
+        const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
             ecs_table_t *table = tr->hdr.table;
@@ -73,12 +73,12 @@ void flecs_query_build_up_cache(
         
         el->entity = second;
         el->tr = &table->_->records[i];
-        el->idr = NULL;
+        el->cdr = NULL;
 
         ecs_record_t *r = flecs_entities_get_any(world, second);
         if (r->table) {
-            ecs_table_record_t *r_tr = flecs_component_get_table(
-                cache->idr, r->table);
+            const ecs_table_record_t *r_tr = flecs_component_get_table(
+                cache->cdr, r->table);
             if (!r_tr) {
                 return;
             }
@@ -121,17 +121,17 @@ void flecs_query_get_trav_up_cache(
     ecs_world_t *world = ctx->it->real_world;
     ecs_allocator_t *a = flecs_query_get_allocator(ctx->it);
 
-    ecs_component_record_t *idr = cache->idr;
-    if (!idr || idr->id != ecs_pair(trav, EcsWildcard)) {
-        idr = cache->idr = flecs_components_get(world, 
+    ecs_component_record_t *cdr = cache->cdr;
+    if (!cdr || cdr->id != ecs_pair(trav, EcsWildcard)) {
+        cdr = cache->cdr = flecs_components_get(world, 
             ecs_pair(trav, EcsWildcard));
-        if (!idr) {
+        if (!cdr) {
             ecs_vec_reset_t(a, &cache->entities, ecs_trav_elem_t);
             return;
         }
     }
 
-    ecs_table_record_t *tr = flecs_component_get_table(idr, table);
+    const ecs_table_record_t *tr = flecs_component_get_table(cdr, table);
     if (!tr) {
         ecs_vec_reset_t(a, &cache->entities, ecs_trav_elem_t);
         return;
