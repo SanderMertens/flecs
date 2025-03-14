@@ -4937,3 +4937,10 @@ void Entity_iter_empty_type(void) {
     test_int(count, 0);
 }
 
+void Entity_untyped_component_use_low_id(void) {
+    flecs::world world;
+    
+    flecs::untyped_component c = world.component("test_low_id_comp");
+    test_assert(c.is_valid());
+    test_assert(c < FLECS_HI_COMPONENT_ID);
+}
