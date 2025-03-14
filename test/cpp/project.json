@@ -612,11 +612,13 @@
                 "run_shared",
                 "run_optional",
                 "run_sparse",
+                "run_sparse_w_with",
                 "each",
                 "each_const",
                 "each_shared",
                 "each_optional",
                 "each_sparse",
+                "each_sparse_w_with",
                 "each_sparse_many",
                 "signature",
                 "signature_const",
@@ -782,6 +784,8 @@
                 "relation_w_predicate_wildcard",
                 "add_pair_w_rel_type",
                 "template_term",
+                "typed_term_at",
+                "typed_term_at_indexed",
                 "explicit_subject_w_id",
                 "explicit_subject_w_type",
                 "explicit_object_w_id",
@@ -1084,7 +1088,22 @@
                 "sparse_component",
                 "count_in_add_hook",
                 "count_in_remove_hook",
-                "set_multiple_hooks"
+                "set_multiple_hooks",
+                "compare_WithGreaterThan",
+                "compare_WithLessThan",
+                "compare_WithLessAndGreaterThan",
+                "compare_WithEqualsAndGreaterThan",
+                "compare_WithEqualsAndLessThan",
+                "compare_WithEqualsOnly",
+                "compare_WithoutOperators",
+                "compare_uint8_Enum",
+                "compare_uint16_Enum",
+                "compare_uint32_Enum",
+                "compare_uint64_Enum",
+                "compare_int8_Enum",
+                "compare_int16_Enum",
+                "compare_int32_Enum",
+                "compare_int64_Enum"
             ]
         }, {
             "id": "Refs",
@@ -1097,6 +1116,8 @@
                 "ref_before_set",
                 "non_const_ref",
                 "pair_ref",
+                "pair_ref_w_pair_type",
+                "pair_ref_w_pair_type_second",
                 "pair_ref_w_entity",
                 "pair_ref_second",
                 "from_stage",
@@ -1109,7 +1130,10 @@
                 "bool_operator",
                 "base_type",
                 "empty_base_type",
-                "get_component"
+                "get_component",
+                "untyped_get_ref_by_method",
+                "untyped_pair_ref",
+                "untyped_runtime_component_ref"
             ]
         }, {
             "id": "Module",

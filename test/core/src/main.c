@@ -415,6 +415,8 @@ void Add_invalid_pair_w_0(void);
 void Add_invalid_pair_w_0_rel(void);
 void Add_invalid_pair_w_0_obj(void);
 void Add_add_random_id(void);
+void Add_table_of_added_not_alive_id(void);
+void Add_table_of_added_not_alive_pair(void);
 
 // Testsuite 'Remove'
 void Remove_zero(void);
@@ -919,6 +921,7 @@ void OnDelete_remove_all_3(void);
 void OnDelete_delete_with_1(void);
 void OnDelete_delete_with_2(void);
 void OnDelete_delete_with_3(void);
+void OnDelete_empty_after_remove(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -1182,6 +1185,8 @@ void ComponentLifecycle_move_flags(void);
 void ComponentLifecycle_copy_flags(void);
 void ComponentLifecycle_ctor_move_dtor_flags(void);
 void ComponentLifecycle_move_dtor_flags(void);
+void ComponentLifecycle_cmp_flags(void);
+void ComponentLifecycle_equals_flags(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -2017,6 +2022,12 @@ void World_exclusive_on_delete(void);
 void World_exclusive_on_delete_target(void);
 void World_exclusive_on_instantiate(void);
 void World_world_init_fini_log_all(void);
+void World_mini_shrink_fini(void);
+void World_init_shrink_fini(void);
+void World_init_shrink_twice_fini(void);
+void World_init_create_delete_entities_shrink_fini(void);
+void World_init_create_delete_random_1_entities_shrink_fini(void);
+void World_init_create_delete_random_2_entities_shrink_fini(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -2175,7 +2186,6 @@ void Commands_defer_existing_ensure_no_on_set(void);
 void Commands_ensure_override(void);
 void Commands_set_override(void);
 void Commands_absent_ensure_for_entity_w_tag(void);
-void Commands_on_set_hook_before_on_add_for_existing_component(void);
 void Commands_defer_2_sets_w_observer_same_component(void);
 void Commands_defer_2_sets_w_observer_other_component(void);
 void Commands_on_remove_after_deferred_clear_and_add(void);
@@ -3955,6 +3965,14 @@ bake_test_case Add_testcases[] = {
     {
         "add_random_id",
         Add_add_random_id
+    },
+    {
+        "table_of_added_not_alive_id",
+        Add_table_of_added_not_alive_id
+    },
+    {
+        "table_of_added_not_alive_pair",
+        Add_table_of_added_not_alive_pair
     }
 };
 
@@ -5900,6 +5918,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_with_3",
         OnDelete_delete_with_3
+    },
+    {
+        "empty_after_remove",
+        OnDelete_empty_after_remove
     }
 };
 
@@ -6914,6 +6936,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "move_dtor_flags",
         ComponentLifecycle_move_dtor_flags
+    },
+    {
+        "cmp_flags",
+        ComponentLifecycle_cmp_flags
+    },
+    {
+        "equals_flags",
+        ComponentLifecycle_equals_flags
     }
 };
 
@@ -10192,6 +10222,30 @@ bake_test_case World_testcases[] = {
     {
         "world_init_fini_log_all",
         World_world_init_fini_log_all
+    },
+    {
+        "mini_shrink_fini",
+        World_mini_shrink_fini
+    },
+    {
+        "init_shrink_fini",
+        World_init_shrink_fini
+    },
+    {
+        "init_shrink_twice_fini",
+        World_init_shrink_twice_fini
+    },
+    {
+        "init_create_delete_entities_shrink_fini",
+        World_init_create_delete_entities_shrink_fini
+    },
+    {
+        "init_create_delete_random_1_entities_shrink_fini",
+        World_init_create_delete_random_1_entities_shrink_fini
+    },
+    {
+        "init_create_delete_random_2_entities_shrink_fini",
+        World_init_create_delete_random_2_entities_shrink_fini
     }
 };
 
@@ -10805,10 +10859,6 @@ bake_test_case Commands_testcases[] = {
     {
         "absent_ensure_for_entity_w_tag",
         Commands_absent_ensure_for_entity_w_tag
-    },
-    {
-        "on_set_hook_before_on_add_for_existing_component",
-        Commands_on_set_hook_before_on_add_for_existing_component
     },
     {
         "defer_2_sets_w_observer_same_component",
@@ -11615,7 +11665,7 @@ static bake_test_suite suites[] = {
         "Add",
         NULL,
         NULL,
-        26,
+        28,
         Add_testcases
     },
     {
@@ -11692,7 +11742,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        126,
+        127,
         OnDelete_testcases
     },
     {
@@ -11734,7 +11784,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        120,
+        122,
         ComponentLifecycle_testcases
     },
     {
@@ -11804,7 +11854,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        69,
+        75,
         World_testcases
     },
     {
@@ -11825,7 +11875,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        156,
+        155,
         Commands_testcases
     },
     {

@@ -9,6 +9,7 @@
 - [Getting Started with Godot](https://github.com/paulfigiel/godot-flecs-sample)
 - [Getting Started with Raylib](https://github.com/kranzky/raylib-flecs-starter-kit)
 - [Getting Started with SDL3, ImGui, Sqlite](https://github.com/ilyas-taouaou/CodotakuCMakeRepo) ([video](https://www.youtube.com/watch?v=T32B7nf6B-8))
+- [Getting Started with SDL3, Blend2D](https://github.com/james-j-obrien/flecs-sdl3-blend2d)
 - [Flecs an Raylib template](https://github.com/aog05/Raylib-and-Flecs-Template)
 
 ## Manuals
@@ -45,6 +46,7 @@
 - [Some Pointers for C (E7)](https://www.youtube.com/watch?v=0LscDsVy-28)
 - [Demistifying Queries Part 1 (E8)](https://www.youtube.com/watch?v=PKvCpUO55yw&t=216s)
 - [Demistifying Queries Part 2 (E9)](https://www.youtube.com/watch?v=4KZGkT9MqHI)
+- [Flecs Systems (E10)](https://www.youtube.com/watch?v=gXzgO6unZkI)
 
 (Shoutout to [jellycake222](https://www.youtube.com/@jellycake222) for making the awesome tutorial series <3!)
 

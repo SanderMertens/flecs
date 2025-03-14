@@ -27,6 +27,24 @@ typedef struct ecs_reachable_cache_t {
     ecs_vec_t ids; /* vec<reachable_elem_t> */
 } ecs_reachable_cache_t;
 
+/* Component index data that just applies to pairs */
+typedef struct ecs_pair_id_record_t {
+    /* Name lookup index (currently only used for ChildOf pairs) */
+    ecs_hashmap_t *name_index;
+
+    /* Lists for all id records that match a pair wildcard. The wildcard id
+     * record is at the head of the list. */
+    ecs_id_record_elem_t first;   /* (R, *) */
+    ecs_id_record_elem_t second;  /* (*, T) */
+    ecs_id_record_elem_t trav;    /* (*, T) with only traversable relationships */
+
+    /* Parent id record. For pair records the parent is the (R, *) record. */
+    ecs_id_record_t *parent;
+
+    /* Cache for finding components that are reachable through a relationship */
+    ecs_reachable_cache_t reachable;
+} ecs_pair_id_record_t;
+
 /* Payload for id index which contains all data structures for an id. */
 struct ecs_id_record_t {
     /* Cache with all tables that contain the id. Must be first member. */
@@ -46,20 +64,11 @@ struct ecs_id_record_t {
     /* Cached pointer to type info for id, if id contains data. */
     const ecs_type_info_t *type_info;
 
-    /* Name lookup index (currently only used for ChildOf pairs) */
-    ecs_hashmap_t *name_index;
-
     /* Storage for sparse components or union relationships */
     void *sparse;
 
-    /* Lists for all id records that match a pair wildcard. The wildcard id
-     * record is at the head of the list. */
-    ecs_id_record_elem_t first;   /* (R, *) */
-    ecs_id_record_elem_t second;  /* (*, O) */
-    ecs_id_record_elem_t trav;    /* (*, O) with only traversable relationships */
-
-    /* Parent id record. For pair records the parent is the (R, *) record. */
-    ecs_id_record_t *parent;
+    /* Pair data */
+    ecs_pair_id_record_t *pair;
 
     /* Refcount */
     int32_t refcount;
@@ -68,9 +77,6 @@ struct ecs_id_record_t {
      * it is not 0, an application attempted to delete an id that was still
      * queried for. */
     int32_t keep_alive;
-
-    /* Cache for finding components that are reachable through a relationship */
-    ecs_reachable_cache_t reachable;
 };
 
 /* Get id record for id */
@@ -146,5 +152,17 @@ void flecs_fini_id_records(
 ecs_flags32_t flecs_id_flags_get(
     ecs_world_t *world,
     ecs_id_t id);
+
+/* Return next (R, *) record */
+ecs_id_record_t* flecs_id_record_first_next(
+    ecs_id_record_t *idr);
+
+/* Return next (*, T) record */
+ecs_id_record_t* flecs_id_record_second_next(
+    ecs_id_record_t *idr);
+
+/* Return next traversable (*, T) record */
+ecs_id_record_t* flecs_id_record_trav_next(
+    ecs_id_record_t *idr);
 
 #endif

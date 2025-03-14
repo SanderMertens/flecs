@@ -113,6 +113,13 @@ int flecs_term_ref_finalize_flags(
 }
 
 static
+bool flecs_identifier_is_0(
+    const char *id)
+{
+    return id[0] == '#' && id[1] == '0' && !id[2];
+}
+
+static
 int flecs_term_ref_lookup(
     const ecs_world_t *world,
     ecs_entity_t scope,
@@ -1038,12 +1045,6 @@ int flecs_term_finalize(
     }
 
     return 0;
-}
-
-bool flecs_identifier_is_0(
-    const char *id)
-{
-    return id[0] == '#' && id[1] == '0' && !id[2];
 }
 
 bool ecs_term_ref_is_set(

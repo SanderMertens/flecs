@@ -435,7 +435,9 @@
                 "invalid_pair_w_0",
                 "invalid_pair_w_0_rel",
                 "invalid_pair_w_0_obj",
-                "add_random_id"
+                "add_random_id",
+                "table_of_added_not_alive_id",
+                "table_of_added_not_alive_pair"
             ]
         }, {
             "id": "Remove",
@@ -961,7 +963,8 @@
                 "remove_all_3",
                 "delete_with_1",
                 "delete_with_2",
-                "delete_with_3"
+                "delete_with_3",
+                "empty_after_remove"
             ]
         }, {
             "id": "Set",
@@ -1236,7 +1239,9 @@
                 "move_flags",
                 "copy_flags",
                 "ctor_move_dtor_flags",
-                "move_dtor_flags"
+                "move_dtor_flags",
+                "cmp_flags",
+                "equals_flags"
             ]
         }, {
             "id": "Pairs",
@@ -2091,7 +2096,13 @@
                 "exclusive_on_delete",
                 "exclusive_on_delete_target",
                 "exclusive_on_instantiate",
-                "world_init_fini_log_all"
+                "world_init_fini_log_all",
+                "mini_shrink_fini",
+                "init_shrink_fini",
+                "init_shrink_twice_fini",
+                "init_create_delete_entities_shrink_fini",
+                "init_create_delete_random_1_entities_shrink_fini",
+                "init_create_delete_random_2_entities_shrink_fini"
             ]
         }, {
             "id": "WorldInfo",
@@ -2256,7 +2267,6 @@
                 "ensure_override",
                 "set_override",
                 "absent_ensure_for_entity_w_tag",
-                "on_set_hook_before_on_add_for_existing_component",
                 "defer_2_sets_w_observer_same_component",
                 "defer_2_sets_w_observer_other_component",
                 "on_remove_after_deferred_clear_and_add",

@@ -3742,7 +3742,6 @@ void Commands_absent_ensure_for_entity_w_tag(void) {
 
 static int set_position_invoked = 0;
 static int set_velocity_invoked = 0;
-static int add_tag_invoked = 0;
 
 static void set_position_hook(ecs_iter_t *it) {
     set_position_invoked ++;
@@ -3750,45 +3749,6 @@ static void set_position_hook(ecs_iter_t *it) {
 
 static void set_velocity_hook(ecs_iter_t *it) {
     set_velocity_invoked ++;
-}
-
-static void add_tag(ecs_iter_t *it) {
-    test_int(set_position_invoked, 1);
-    add_tag_invoked ++;
-}
-
-void Commands_on_set_hook_before_on_add_for_existing_component(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-
-    ecs_set_hooks(world, Position, {
-        .on_set = set_position_hook
-    });
-
-    ecs_observer(world, {
-        .query.terms[0].id = TagA,
-        .events = { EcsOnAdd },
-        .callback = add_tag
-    });
-
-    ecs_entity_t e = ecs_new_w(world, Position);
-
-    ecs_defer_begin(world);
-    ecs_add(world, e, TagB); /* 2 add commands, to trigger batching */
-    ecs_modified(world, e, Position);
-    ecs_add(world, e, TagA);
-
-    test_int(set_position_invoked, 0);
-    test_int(add_tag_invoked, 0);
-    ecs_defer_end(world);
-
-    test_assert(set_position_invoked != 0);
-    test_int(add_tag_invoked, 1);
-
-    ecs_fini(world);
 }
 
 void Commands_defer_2_sets_w_observer_same_component(void) {

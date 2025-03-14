@@ -173,6 +173,12 @@
  */
 // #define FLECS_CPP_NO_ENUM_REFLECTION
 
+/** @def FLECS_NO_ALWAYS_INLINE
+ * When set, this will prevent functions from being annotated with always_inline
+ * which can improve performance at the cost of increased binary footprint.
+ */
+// #define FLECS_NO_ALWAYS_INLINE
+
 /** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
  * Without any addons Flecs is just a minimal ECS storage, but addons add
@@ -883,6 +889,18 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
+#ifndef FLECS_NO_ALWAYS_INLINE
+    #if defined(ECS_TARGET_CLANG) || defined(ECS_TARGET_GCC)
+        #define FLECS_ALWAYS_INLINE __attribute__((always_inline))
+    #elif defined(ECS_TARGET_MSVC)
+        #define FLECS_ALWAYS_INLINE
+    #else
+        #define FLECS_ALWAYS_INLINE
+    #endif
+#else
+    #define FLECS_ALWAYS_INLINE
+#endif
+
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
 #if defined(ECS_TARGET_GNU)
 #define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))
@@ -1485,6 +1503,10 @@ FLECS_DBG_API
 const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
+FLECS_DBG_API
+void flecs_sparse_shrink(
+    ecs_sparse_t *sparse);
+
 /* Publicly exposed APIs 
  * These APIs are not part of the public API and as a result may change without
  * notice (though they haven't changed in a long time). */
@@ -1769,12 +1791,10 @@ typedef struct ecs_bucket_t {
 } ecs_bucket_t;
 
 struct ecs_map_t {
-    uint8_t bucket_shift;
-    bool shared_allocator;
     ecs_bucket_t *buckets;
     int32_t bucket_count;
-    int32_t count;
-    struct ecs_block_allocator_t *entry_allocator;
+    unsigned count : 26;
+    unsigned bucket_shift : 6;
     struct ecs_allocator_t *allocator;
 };
 
@@ -3368,6 +3388,18 @@ typedef void (*ecs_move_t)(
     int32_t count,
     const ecs_type_info_t *type_info);
 
+/** Compare hook to compare component instances */
+typedef int (*ecs_cmp_t)(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info);
+
+/** Equals operator hook */
+typedef bool (*ecs_equals_t)(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info);
+
 /** Destructor function for poly objects. */
 typedef void (*flecs_poly_dtor_t)(
     ecs_poly_t *poly);
@@ -3586,38 +3618,44 @@ struct ecs_observer_t {
  */
 
 /* Flags that can be used to check which hooks a type has set */
-#define ECS_TYPE_HOOK_CTOR                   (1 << 0)
-#define ECS_TYPE_HOOK_DTOR                   (1 << 1)
-#define ECS_TYPE_HOOK_COPY                   (1 << 2)
-#define ECS_TYPE_HOOK_MOVE                   (1 << 3)
-#define ECS_TYPE_HOOK_COPY_CTOR              (1 << 4)
-#define ECS_TYPE_HOOK_MOVE_CTOR              (1 << 5)
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         (1 << 6)
-#define ECS_TYPE_HOOK_MOVE_DTOR              (1 << 7)
+#define ECS_TYPE_HOOK_CTOR                   ECS_CAST(ecs_flags32_t, 1 << 0)
+#define ECS_TYPE_HOOK_DTOR                   ECS_CAST(ecs_flags32_t, 1 << 1)
+#define ECS_TYPE_HOOK_COPY                   ECS_CAST(ecs_flags32_t, 1 << 2)
+#define ECS_TYPE_HOOK_MOVE                   ECS_CAST(ecs_flags32_t, 1 << 3)
+#define ECS_TYPE_HOOK_COPY_CTOR              ECS_CAST(ecs_flags32_t, 1 << 4)
+#define ECS_TYPE_HOOK_MOVE_CTOR              ECS_CAST(ecs_flags32_t, 1 << 5)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         ECS_CAST(ecs_flags32_t, 1 << 6)
+#define ECS_TYPE_HOOK_MOVE_DTOR              ECS_CAST(ecs_flags32_t, 1 << 7)
+#define ECS_TYPE_HOOK_CMP                    ECS_CAST(ecs_flags32_t, 1 << 8)
+#define ECS_TYPE_HOOK_EQUALS                 ECS_CAST(ecs_flags32_t, 1 << 9)
+
 
 /* Flags that can be used to set/check which hooks of a type are invalid */
-#define ECS_TYPE_HOOK_CTOR_ILLEGAL           (1 << 8)
-#define ECS_TYPE_HOOK_DTOR_ILLEGAL           (1 << 9)
-#define ECS_TYPE_HOOK_COPY_ILLEGAL           (1 << 10)
-#define ECS_TYPE_HOOK_MOVE_ILLEGAL           (1 << 11)
-#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      (1 << 12)
-#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      (1 << 13)
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL (1 << 14)
-#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      (1 << 15)
+#define ECS_TYPE_HOOK_CTOR_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 10)
+#define ECS_TYPE_HOOK_DTOR_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 12)
+#define ECS_TYPE_HOOK_COPY_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 13)
+#define ECS_TYPE_HOOK_MOVE_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 14)
+#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 15)
+#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 16)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL ECS_CAST(ecs_flags32_t, 1 << 17)
+#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 18)
+#define ECS_TYPE_HOOK_CMP_ILLEGAL            ECS_CAST(ecs_flags32_t, 1 << 19)
+#define ECS_TYPE_HOOK_EQUALS_ILLEGAL         ECS_CAST(ecs_flags32_t, 1 << 20)
+
 
 /* All valid hook flags */
 #define ECS_TYPE_HOOKS (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|\
     ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_COPY_CTOR|\
     ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|\
-    ECS_TYPE_HOOK_MOVE_DTOR)
+    ECS_TYPE_HOOK_MOVE_DTOR|ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS)
 
 /* All invalid hook flags */
 #define ECS_TYPE_HOOKS_ILLEGAL (ECS_TYPE_HOOK_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_DTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|\
-    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL)
-
+    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_CMP_ILLEGAL|\
+    ECS_TYPE_HOOK_EQUALS_ILLEGAL)
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
     ecs_xtor_t dtor;            /**< dtor */
@@ -3642,11 +3680,18 @@ struct ecs_type_hooks_t {
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
 
+    /** Compare hook */
+    ecs_cmp_t cmp;
+
+    /** Equals hook */
+    ecs_equals_t equals;
+
     /** Hook flags.
      * Indicates which hooks are set for the type, and which hooks are illegal.
      * When an ILLEGAL flag is set when calling ecs_set_hooks() a hook callback
      * will be set that panics when called. */
     ecs_flags32_t flags;
+    
 
     /** Callback that is invoked when an instance of a component is added. This
      * callback is invoked before triggers are invoked. */
@@ -3888,27 +3933,45 @@ extern "C" {
 /** Maximum length of a parser token (used by parser-related addons) */
 #define ECS_MAX_TOKEN_SIZE (256)
 
+/** Convert a C module name into a path.
+ * This operation converts a PascalCase name to a path, for example MyFooModule
+ * into my.foo.module.
+ * 
+ * @param c_name The C module name
+ * @return The path.
+*/
 FLECS_API
 char* flecs_module_path_from_c(
     const char *c_name);
 
-bool flecs_identifier_is_0(
-    const char *id);
-
-/* Constructor that zeromem's a component value */
+/** Constructor that zeromem's a component value.
+ * 
+ * @param ptr Pointer to the value.
+ * @param count Number of elements to construct.
+ * @param type_info Type info for the component.
+ */
 FLECS_API
 void flecs_default_ctor(
     void *ptr, 
     int32_t count, 
-    const ecs_type_info_t *ctx);
+    const ecs_type_info_t *type_info);
 
-/* Create allocated string from format */
+/** Create allocated string from format. 
+ * 
+ * @param fmt The format string.
+ * @param args Format arguments.
+ * @return The formatted string.
+ */
 FLECS_DBG_API
 char* flecs_vasprintf(
     const char *fmt,
     va_list args);
 
-/* Create allocated string from format */
+/** Create allocated string from format. 
+ * 
+ * @param fmt The format string.
+ * @return The formatted string.
+ */
 FLECS_API
 char* flecs_asprintf(
     const char *fmt,
@@ -4035,50 +4098,100 @@ void flecs_resume_readonly(
     ecs_world_t *world,
     ecs_suspend_readonly_state_t *state);
 
+/** Number of observed entities in table.
+ * Operation is public to support test cases.
+ * 
+ * @param table The table.
+ */
 FLECS_DBG_API
 int32_t flecs_table_observed_count(
     const ecs_table_t *table);
 
+/** Print backtrace to specified stream.
+ * 
+ * @param stream The stream to use for printing the backtrace.
+ */
 FLECS_DBG_API
 void flecs_dump_backtrace(
     void *stream);
 
+/** Increase refcount of poly object.
+ * 
+ * @param poly The poly object.
+ * @return The refcount after incrementing.
+ */
 FLECS_API
 int32_t flecs_poly_claim_(
     ecs_poly_t *poly);
 
+/** Decrease refcount of poly object.
+ * 
+ * @param poly The poly object.
+ * @return The refcount after decrementing.
+ */
 FLECS_API
 int32_t flecs_poly_release_(
     ecs_poly_t *poly);
-
-FLECS_API
-int32_t flecs_poly_refcount(
-    ecs_poly_t *poly);
-
-FLECS_API
-int32_t flecs_component_ids_index_get(void);
-
-FLECS_API
-ecs_entity_t flecs_component_ids_get(
-    const ecs_world_t *world, 
-    int32_t index);
-
-FLECS_API
-ecs_entity_t flecs_component_ids_get_alive(
-    const ecs_world_t *stage_world, 
-    int32_t index);
-
-FLECS_API
-void flecs_component_ids_set(
-    ecs_world_t *world, 
-    int32_t index,
-    ecs_entity_t id);
 
 #define flecs_poly_claim(poly) \
     flecs_poly_claim_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
 
 #define flecs_poly_release(poly) \
     flecs_poly_release_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
+
+/** Return refcount of poly object.
+ * 
+ * @param poly The poly object.
+ * @return Refcount of the poly object.
+ */
+FLECS_API
+int32_t flecs_poly_refcount(
+    ecs_poly_t *poly);
+
+/** Get unused index for static world local component id array. 
+ * This operation returns an unused index for the world-local component id 
+ * array. This index can be used by language bindings to obtain a component id.
+ * 
+ * @return Unused index for component id array.
+ */
+FLECS_API
+int32_t flecs_component_ids_index_get(void);
+
+/** Get world local component id.
+ * 
+ * @param world The world.
+ * @param index Component id array index.
+ * @return The component id.
+ */
+FLECS_API
+ecs_entity_t flecs_component_ids_get(
+    const ecs_world_t *world, 
+    int32_t index);
+
+/** Get alive world local component id.
+ * Same as flecs_component_ids_get, but return 0 if component is no longer 
+ * alive.
+ * 
+ * @param world The world.
+ * @param index Component id array index.
+ * @return The component id.
+ */
+FLECS_API
+ecs_entity_t flecs_component_ids_get_alive(
+    const ecs_world_t *world, 
+    int32_t index);
+
+/** Set world local component id. 
+ * 
+ * @param world The world.
+ * @param index Component id array index.
+ * @param id The component id.
+ */
+FLECS_API
+void flecs_component_ids_set(
+    ecs_world_t *world, 
+    int32_t index,
+    ecs_entity_t id);
 
 
 /** Calculate offset from address */
@@ -5831,6 +5944,24 @@ void ecs_dim(
     ecs_world_t *world,
     int32_t entity_count);
 
+/** Free unused memory.
+ * This operation frees allocated memory that is no longer in use by the world.
+ * Examples of allocations that get cleaned up are:
+ * - Unused pages in the entity index
+ * - Component columns
+ * - Empty tables
+ * 
+ * Flecs uses allocators internally for speeding up allocations. Allocators are
+ * not evaluated by this function, which means that the memory reported by the
+ * OS may not go down. For this reason, this function is most effective when
+ * combined with FLECS_USE_OS_ALLOC, which disables internal allocators.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_shrink(
+    ecs_world_t *world);
+
 /** Set a range for issuing new entity ids.
  * This function constrains the entity identifiers returned by ecs_new_w() to the
  * specified range. This operation can be used to ensure that multiple processes
@@ -6410,7 +6541,7 @@ bool ecs_is_enabled_id(
  * @see ecs_get_mut_id()
  */
 FLECS_API
-const void* ecs_get_id(
+FLECS_ALWAYS_INLINE const void* ecs_get_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -6427,7 +6558,7 @@ const void* ecs_get_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
-void* ecs_get_mut_id(
+FLECS_ALWAYS_INLINE void* ecs_get_mut_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -6998,7 +7129,7 @@ char* ecs_entity_str(
  * @see ecs_owns_id()
  */
 FLECS_API
-bool ecs_has_id(
+FLECS_ALWAYS_INLINE bool ecs_has_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -7014,7 +7145,7 @@ bool ecs_has_id(
  * @return True if the entity has the id, false if not.
  */
 FLECS_API
-bool ecs_owns_id(
+FLECS_ALWAYS_INLINE bool ecs_owns_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -10552,82 +10683,6 @@ int ecs_value_move_ctor(
 #endif
 
 /* Always included, if disabled functions are replaced with dummy macros */
-/**
- * @file addons/journal.h
- * @brief Journaling addon that logs API functions.
- *
- * The journaling addon traces API calls. The trace is formatted as runnable
- * C code, which allows for (partially) reproducing the behavior of an app
- * with the journaling trace.
- *
- * The journaling addon is disabled by default. Enabling it can have a
- * significant impact on performance.
- */
-
-#ifdef FLECS_JOURNAL
-
-#ifndef FLECS_LOG
-#define FLECS_LOG
-#endif
-
-#ifndef FLECS_JOURNAL_H
-#define FLECS_JOURNAL_H
-
-/**
- * @defgroup c_addons_journal Journal
- * @ingroup c_addons
- * Journaling addon (disabled by default).
- *
- *
- * @{
- */
-
-/* Trace when log level is at or higher than level */
-#define FLECS_JOURNAL_LOG_LEVEL (0)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Journaling API, meant to be used by internals. */
-
-typedef enum ecs_journal_kind_t {
-    EcsJournalNew,
-    EcsJournalMove,
-    EcsJournalClear,
-    EcsJournalDelete,
-    EcsJournalDeleteWith,
-    EcsJournalRemoveAll,
-    EcsJournalTableEvents
-} ecs_journal_kind_t;
-
-FLECS_DBG_API
-void flecs_journal_begin(
-    ecs_world_t *world,
-    ecs_journal_kind_t kind,
-    ecs_entity_t entity,
-    ecs_type_t *add,
-    ecs_type_t *remove);
-
-FLECS_DBG_API
-void flecs_journal_end(void);
-
-#define flecs_journal(...)\
-    flecs_journal_begin(__VA_ARGS__);\
-    flecs_journal_end();
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-/** @} */
-#endif // FLECS_JOURNAL_H
-#else
-#define flecs_journal_begin(...)
-#define flecs_journal_end(...)
-#define flecs_journal(...)
-
-#endif // FLECS_JOURNAL
-
 /**
  * @file addons/log.h
  * @brief Logging addon.
@@ -17196,27 +17251,18 @@ const char* ecs_cpp_trim_module(
     const char *type_name);
 
 FLECS_API
-ecs_entity_t ecs_cpp_component_find(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    const char *name,
-    const char *symbol,
-    size_t size,
-    size_t alignment,
-    bool implicit_name,
-    bool *existing_out);
-
-FLECS_API
 ecs_entity_t ecs_cpp_component_register(
     ecs_world_t *world,
-    ecs_entity_t s_id,
     ecs_entity_t id,
+    int32_t ids_index,
     const char *name,
-    const char *type_name,
-    const char *symbol,
+    const char *cpp_name,
+    const char *cpp_symbol,
     size_t size,
     size_t alignment,
     bool is_component,
+    bool explicit_registration,
+    bool *registered_out,
     bool *existing_out);
 
 FLECS_API
@@ -17283,6 +17329,7 @@ struct untyped_component;
 template <typename T>
 struct component;
 
+struct untyped_ref;
 template <typename T>
 struct ref;
 
@@ -21068,6 +21115,157 @@ ecs_move_t move_dtor(ecs_flags32_t &) {
     return move_dtor_impl<T>;
 }
 
+// Traits to check for operator<, operator>, and operator==
+template<typename...>
+using void_t = void;
+
+// These traits causes a "float comparison warning" in some compilers
+// when `T` is float or double.
+// Disable this warning with the following pragmas:
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wfloat-equal"
+#elif defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+
+// Trait to check for operator<
+template <typename T, typename = void>
+struct has_operator_less : std::false_type {};
+
+// Only enable if T has an operator< that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_less<T, void_t<decltype(std::declval<const T&>() < std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() < std::declval<const T&>()), bool> {};
+
+// Trait to check for operator>
+template <typename T, typename = void>
+struct has_operator_greater : std::false_type {};
+
+// Only enable if T has an operator> that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_greater<T, void_t<decltype(std::declval<const T&>() > std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() > std::declval<const T&>()), bool> {};
+
+// Trait to check for operator==
+template <typename T, typename = void>
+struct has_operator_equal : std::false_type {};
+
+// Only enable if T has an operator== that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_equal<T, void_t<decltype(std::declval<const T&>() == std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() == std::declval<const T&>()), bool> {};
+
+// 1. Compare function if `<`, `>`, are defined
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    has_operator_greater<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs < rhs) return -1;
+    if (lhs > rhs) return 1;
+    return 0;
+}
+
+// 2. Compare function if `<` and `==` are defined, ignoring `>`
+// if defined.
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs == rhs) return 0;
+    if (lhs < rhs) return -1;
+    return 1; // If not less and not equal, must be greater
+}
+
+// 3. Compare function if `>` and `==` are defined, deducing `<`
+template <typename T, if_t<    
+    has_operator_greater<T>::value &&
+    has_operator_equal<T>::value &&
+    !has_operator_less<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs == rhs) return 0;
+    if (lhs > rhs) return 1;
+    return -1; // If not greater and not equal, must be less
+}
+
+// 4. Compare function if only `<` is defined, deducing the rest
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    !has_operator_greater<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs < rhs) return -1;
+    if (rhs < lhs) return 1;
+    return 0; // If neither is less, they must be equal
+}
+
+// 5. Compare function if only `>` is defined, deducing the rest
+template <typename T, if_t<
+    has_operator_greater<T>::value &&
+    !has_operator_less<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs > rhs) return 1;
+    if (rhs > lhs) return -1;
+    return 0; // If neither is greater, they must be equal
+}
+
+// In order to have a generated compare hook, at least
+// operator> or operator< must be defined:
+template <typename T, if_t<
+    has_operator_less<T>::value ||
+    has_operator_greater<T>::value > = 0>
+ecs_cmp_t compare() {
+    return compare_impl<T>;
+}
+
+template <typename T, if_t<
+    !has_operator_less<T>::value &&
+    !has_operator_greater<T>::value > = 0>
+ecs_cmp_t compare() {
+    return NULL;
+}
+
+// Equals function enabled only if `==` is defined
+template <typename T, if_t<
+    has_operator_equal<T>::value > = 0>
+bool equals_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    return lhs == rhs;
+}
+
+template <typename T, if_t<
+    has_operator_equal<T>::value > = 0>
+ecs_equals_t equals() {
+    return equals_impl<T>;
+}
+
+template <typename T, if_t<
+    !has_operator_equal<T>::value > = 0>
+ecs_equals_t equals() {
+    return NULL;
+}
+
+// re-enable the float comparison warning:
+#if defined(__clang__)
+    #pragma clang diagnostic pop
+#elif defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic pop
+#endif
+
 } // _
 } // flecs
 
@@ -22253,6 +22451,14 @@ struct world {
     /** Get delta_time */
     ecs_ftime_t delta_time() const {
         return get_info()->delta_time;
+    }
+
+    /** Free unused memory. 
+     * 
+     * @see ecs_shrink()
+    */
+    void shrink() const {
+        ecs_shrink(world_);
     }
 
 /**
@@ -23611,6 +23817,121 @@ private:
 } // namespace flecs
 
 /** @} */
+
+/**
+ * @file addons/cpp/ref.hpp
+ * @brief Class that caches data to speedup get operations.
+ */
+
+#pragma once
+
+namespace flecs
+{
+
+/**
+ * @defgroup cpp_ref Refs
+ * @ingroup cpp_core
+ * Refs are a fast mechanism for referring to a specific entity/component.
+ *
+ * @{
+ */
+
+/** Untyped component reference.
+ * Reference to a component from a specific entity.
+ */
+struct untyped_ref {
+
+    untyped_ref () : world_(nullptr), ref_{} {}
+
+    untyped_ref(world_t *world, entity_t entity, flecs::id_t id)
+        : ref_() {
+        ecs_assert(id != 0, ECS_INVALID_PARAMETER,
+            "invalid id");
+        // the world we were called with may be a stage; convert it to a world
+        // here if that is the case
+        world_ = world ? const_cast<flecs::world_t *>(ecs_get_world(world))
+            : nullptr;
+
+#ifdef FLECS_DEBUG
+        flecs::entity_t type = ecs_get_typeid(world, id);
+        const flecs::type_info_t *ti = ecs_get_type_info(world, type);
+        ecs_assert(ti && ti->size != 0, ECS_INVALID_PARAMETER,
+            "cannot create ref to empty type");
+#endif
+        ref_ = ecs_ref_init_id(world_, entity, id);
+    }
+
+    untyped_ref(flecs::entity entity, flecs::id_t id);
+
+    /** Return entity associated with reference. */
+    flecs::entity entity() const;
+
+    /** Return component associated with reference. */
+    flecs::id component() const {
+        return flecs::id(world_, ref_.id);
+    }
+
+    void* get() {
+        return ecs_ref_get_id(world_, &ref_, this->ref_.id);
+    }
+
+    bool has() {
+        return !!try_get();
+    }
+
+    /** implicit conversion to bool.  return true if there is a valid 
+     * component instance being referred to **/
+    operator bool() {
+        return has();
+    }
+
+    void* try_get() {
+        if (!world_ || !ref_.entity) {
+            return nullptr;
+        }
+
+        return get();
+    }
+
+private:
+    world_t *world_;
+    flecs::ref_t ref_;
+};
+
+/** Component reference.
+ * Reference to a component from a specific entity.
+ */
+template <typename T>
+struct ref : public untyped_ref {
+    ref() : untyped_ref() { }
+
+    ref(world_t *world, entity_t entity, flecs::id_t id = 0)
+        : untyped_ref(world, entity, id ? id : _::type<T>::id(world))
+    {    }
+
+    ref(flecs::entity entity, flecs::id_t id = 0);
+
+    T* operator->() {
+        T* result = static_cast<T*>(get());
+
+        ecs_assert(result != NULL, ECS_INVALID_PARAMETER,
+            "nullptr dereference by flecs::ref");
+
+        return result;
+    }
+
+    T* get() {
+        return static_cast<T*>(untyped_ref::get());
+    }
+
+    T* try_get() {
+        return static_cast<T*>(untyped_ref::try_get());
+    }
+};
+
+/** @} */
+
+}
 
 /**
  * @file addons/cpp/entity.hpp
@@ -26383,6 +26704,14 @@ struct entity : entity_builder<entity>
         return ref<First>(world_, id_, ecs_pair(first, second));
     }
 
+    untyped_ref get_ref(flecs::id_t component) const {
+        return untyped_ref(world_, id_, component);
+    } 
+
+    untyped_ref get_ref(flecs::id_t first, flecs::id_t second) const {
+        return untyped_ref(world_, id_, ecs_pair(first, second));
+    } 
+
     template <typename Second>
     ref<Second> get_ref_second(flecs::entity_t first) const {
         auto second = _::type<Second>::id(world_);
@@ -27473,6 +27802,7 @@ void register_lifecycle_actions(
     cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
     cl.move_dtor = move_dtor<T>(cl.flags);
 
+    cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl);
 
     if (cl.flags & (ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL))
@@ -27510,10 +27840,13 @@ struct type_impl {
     }
 
     // Register component id.
-    static entity_t register_id(world_t *world,
-        const char *name = nullptr, bool allow_tag = true, flecs::id_t id = 0,
-        bool is_component = true, bool implicit_name = true, const char *n = nullptr, 
-        flecs::entity_t module = 0)
+    static entity_t register_id(
+        world_t *world,                     // The world
+        const char *name = nullptr,         // User provided name (overrides typename)
+        bool allow_tag = true,              // Register empty types as zero-sized components
+        bool is_component = true,           // Add flecs::Component to result
+        bool explicit_registration = false, // Entered from world.component<T>()?
+        flecs::id_t id = 0)                 // User provided component id
     {
         if (!s_index) {
             // This is the first time (in this binary image) that this type is
@@ -27523,48 +27856,22 @@ struct type_impl {
             ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
         }
 
-        flecs::entity_t c = flecs_component_ids_get(world, s_index);
+        bool registered = false, existing = false;
 
-        if (!c || !ecs_is_alive(world, c)) {
-            // When a component is implicitly registered, ensure that it's not
-            // registered in the current scope of the application/that "with"
-            // components get added to the component entity.
-            ecs_entity_t prev_scope = ecs_set_scope(world, module);
-            ecs_entity_t prev_with = ecs_set_with(world, 0);
+        flecs::entity_t c = ecs_cpp_component_register(
+            world, id, s_index, name, type_name<T>(), 
+            symbol_name<T>(), size(), alignment(),
+            is_component, explicit_registration, &registered, &existing);
 
-            // At this point it is possible that the type was already registered
-            // with the world, just not for this binary. The registration code
-            // uses the type symbol to check if it was already registered. Note
-            // that the symbol is separate from the typename, as an application
-            // can override a component name when registering a type.
-            bool existing = false;
-            c = ecs_cpp_component_find(
-                world, id, n, symbol_name<T>(), size(), alignment(), 
-                implicit_name, &existing);
+        ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
 
-            const char *symbol = nullptr;
-            if (c) {
-                symbol = ecs_get_symbol(world, c);
-            }
-            if (!symbol) {
-                symbol = symbol_name<T>();
-            }
-
-            c = ecs_cpp_component_register(world, c, c, name, type_name<T>(), 
-                symbol, size(), alignment(), is_component, &existing);
-
-            ecs_set_with(world, prev_with);
-            ecs_set_scope(world, prev_scope);
-
+        if (registered) {
             // Register lifecycle callbacks, but only if the component has a
             // size. Components that don't have a size are tags, and tags don't
             // require construction/destruction/copy/move's.
             if (size() && !existing) {
                 register_lifecycle_actions<T>(world, c);
             }
-
-            // Set world local component id
-            flecs_component_ids_set(world, s_index, c);
 
             // If component is enum type, register constants. Make sure to do 
             // this after setting the component id, because the enum code will
@@ -27573,8 +27880,6 @@ struct type_impl {
             _::init_enum<T>(world, c);
             #endif
         }
-
-        ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
 
         return c;
     }
@@ -27680,7 +27985,7 @@ struct type<T, if_t< is_pair<T>::value >>
  */
 struct untyped_component : entity {
     using entity::entity;
-
+  
     untyped_component() : entity() { }
     explicit untyped_component(flecs::world_t *world, flecs::entity_t id) : entity(world, id) { }
     explicit untyped_component(flecs::entity_t id) : entity(id) { }
@@ -27708,6 +28013,50 @@ struct untyped_component : entity {
         desc.use_low_id = true;
         id_ = ecs_entity_init(world, &desc);
     }
+
+protected:
+
+flecs::type_hooks_t get_hooks() const {
+    const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
+    if (h) {
+        return *h;
+    } else {
+        return {};
+    }
+}
+
+void set_hooks(flecs::type_hooks_t &h) {
+    h.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world_, id_, &h);
+}
+
+public:
+
+untyped_component& on_compare(
+    ecs_cmp_t compare_callback) 
+{
+    ecs_assert(compare_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.cmp = compare_callback;
+    h.flags &= ~ECS_TYPE_HOOK_CMP_ILLEGAL;
+    if(h.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
+        h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+        h.equals = NULL;
+    }
+    set_hooks(h);
+    return *this;
+}
+
+untyped_component& on_equals(
+    ecs_equals_t equals_callback) 
+{
+    ecs_assert(equals_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.equals = equals_callback;
+    h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    set_hooks(h);
+    return *this;
+}
 
 #   ifdef FLECS_META
 /**
@@ -28083,47 +28432,8 @@ struct component : untyped_component {
         bool allow_tag = true,
         flecs::id_t id = 0)
     {
-        const char *n = name;
-        bool implicit_name = false;
-        if (!n) {
-            n = _::type_name<T>();
-
-            // Keep track of whether name was explicitly set. If not, and the
-            // component was already registered, just use the registered name.
-            // The registered name may differ from the typename as the registered
-            // name includes the flecs scope. This can in theory be different from
-            // the C++ namespace though it is good practice to keep them the same */
-            implicit_name = true;
-        }
-
-        // If component is registered by module, ensure it's registered in the
-        // scope of the module.
-        flecs::entity_t module = ecs_get_scope(world);
-
-        // Strip off the namespace part of the component name, unless a name was
-        // explicitly provided by the application.
-        if (module && implicit_name) {
-            // If the type is a template type, make sure to ignore
-            // inside the template parameter list.
-            const char *start = strchr(n, '<'), *last_elem = NULL;
-            if (start) {
-                const char *ptr = start;
-                while (ptr[0] && (ptr[0] != ':') && (ptr > n)) {
-                    ptr --;
-                }
-                if (ptr[0] == ':') {
-                    last_elem = ptr;
-                }
-            }
-
-            if (last_elem) {
-                name = last_elem + 1;
-            }
-        }
-
         world_ = world;
-        id_ = _::type<T>::register_id(
-            world, name, allow_tag, id, true, implicit_name, n, module);
+        id_ = _::type<T>::register_id(world, name, allow_tag, true, true, id);
     }
 
     /** Register on_add hook. */
@@ -28137,7 +28447,7 @@ struct component : untyped_component {
         h.on_add = Delegate::run_add;
         ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_add = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
         return *this;
     }
 
@@ -28153,7 +28463,7 @@ struct component : untyped_component {
         h.on_remove = Delegate::run_remove;
         ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_remove = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
         return *this;
     }
 
@@ -28169,7 +28479,41 @@ struct component : untyped_component {
         h.on_set = Delegate::run_set;
         ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_set = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
+        return *this;
+    }
+
+    /** Register operator compare hook. */
+    using untyped_component::on_compare;
+    component<T>& on_compare() {
+        ecs_cmp_t handler = _::compare<T>();
+        ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
+            "Type does not have operator> or operator< const or is inaccessible");
+        on_compare(handler);
+        return *this;
+    }
+
+    /** Type safe variant of compare op function */
+    using cmp_hook = int(*)(const T* a, const T* b, const ecs_type_info_t *ti);
+    component<T>& on_compare(cmp_hook callback) {
+        on_compare(reinterpret_cast<ecs_cmp_t>(callback));
+        return *this;
+    }
+
+    /** Register operator equals hook. */
+    using untyped_component::on_equals;
+    component<T>& on_equals() {
+        ecs_equals_t handler = _::equals<T>();
+        ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
+            "Type does not have operator== const or is inaccessible");
+        on_equals(handler);
+        return *this;
+    }
+
+    /** Type safe variant of equals op function */
+    using equals_hook = bool(*)(const T* a, const T* b, const ecs_type_info_t *ti);
+    component<T>& on_equals(equals_hook callback) {
+        on_equals(reinterpret_cast<ecs_equals_t>(callback));
         return *this;
     }
 
@@ -28237,115 +28581,11 @@ private:
         }
         return result;
     }
-
-    flecs::type_hooks_t get_hooks() {
-        const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
-        if (h) {
-            return *h;
-        } else {
-            return {};
-        }
-    }
 };
 
 }
 
 /** @} */
-
-/**
- * @file addons/cpp/ref.hpp
- * @brief Class that caches data to speedup get operations.
- */
-
-#pragma once
-
-namespace flecs
-{
-
-/**
- * @defgroup cpp_ref Refs
- * @ingroup cpp_core
- * Refs are a fast mechanism for referring to a specific entity/component.
- *
- * @{
- */
-
-/** Component reference.
- * Reference to a component from a specific entity.
- */
-template <typename T>
-struct ref {
-    ref() : world_(nullptr), ref_{} { }
-
-    ref(world_t *world, entity_t entity, flecs::id_t id = 0)
-        : ref_()
-    {
-        // the world we were called with may be a stage; convert it to a world
-        // here if that is the case
-        world_ = world ? const_cast<flecs::world_t *>(ecs_get_world(world))
-            : nullptr;
-        if (!id) {
-            id = _::type<T>::id(world);
-        }
-
-#ifdef FLECS_DEBUG
-        flecs::entity_t type = ecs_get_typeid(world, id);
-        const flecs::type_info_t *ti = ecs_get_type_info(world, type);
-        ecs_assert(ti && ti->size != 0, ECS_INVALID_PARAMETER,
-            "cannot create ref to empty type");
-#endif
-        ref_ = ecs_ref_init_id(world_, entity, id);
-    }
-
-    ref(flecs::entity entity, flecs::id_t id = 0)
-        : ref(entity.world(), entity.id(), id) { }
-
-    T* operator->() {
-        T* result = static_cast<T*>(ecs_ref_get_id(
-            world_, &ref_, this->ref_.id));
-
-        ecs_assert(result != NULL, ECS_INVALID_PARAMETER,
-            "nullptr dereference by flecs::ref");
-
-        return result;
-    }
-
-    T* get() {
-        return static_cast<T*>(ecs_ref_get_id(
-            world_, &ref_, this->ref_.id));
-    }
-
-    T* try_get() {
-        if (!world_ || !ref_.entity) {
-            return nullptr;
-        }
-
-        return get();
-    }
-
-    bool has() {
-        return !!try_get();
-    }
-
-    /** implicit conversion to bool.  return true if there is a valid T* being referred to **/
-    operator bool() {
-        return has();
-    }
-
-    /** Return entity associated with reference. */
-    flecs::entity entity() const;
-
-    /** Return component associated with reference. */
-    flecs::id component() const;
-
-private:
-    world_t *world_;
-    flecs::ref_t ref_;
-};
-
-/** @} */
-
-}
 
 /**
  * @file addons/cpp/type.hpp
@@ -29276,15 +29516,16 @@ inline flecs::id world::pair(entity_t r, entity_t o) const {
 
 namespace flecs {
 
-template <typename T>
-flecs::entity ref<T>::entity() const {
-    return flecs::entity(world_, ref_.entity);
+inline untyped_ref::untyped_ref(flecs::entity entity, flecs::id_t id) 
+    : untyped_ref(entity.world(), entity.id(), id) { }
+
+inline flecs::entity untyped_ref::entity() const {
+        return flecs::entity(world_, ref_.entity);
 }
 
 template <typename T>
-flecs::id ref<T>::component() const {
-    return flecs::id(world_, ref_.id);
-}
+flecs::ref<T>::ref(flecs::entity entity, flecs::id_t id)
+        : ref(entity.world(), entity.id(), id) { }
 
 template <typename Self>
 template <typename Func>
@@ -29489,7 +29730,7 @@ inline flecs::entity world::entity(E value) const {
 
 template <typename T>
 inline flecs::entity world::entity(const char *name) const {
-    return flecs::entity(world_, _::type<T>::register_id(world_, name, true, 0, false) );
+    return flecs::entity(world_, _::type<T>::register_id(world_, name, true, false) );
 }
 
 template <typename... Args>
@@ -30314,63 +30555,42 @@ struct query_builder_i : term_builder_i<Base> {
         *this->term_ = flecs::term(_::type<T>::id(this->world_v()));
         this->term_->inout = static_cast<ecs_inout_kind_t>(
             _::type_to_inout<T>());
-            if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(id_t id) {
         this->term();
         *this->term_ = flecs::term(id);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(const char *name) {
         this->term();
         *this->term_ = flecs::term().first(name);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(const char *first, const char *second) {
         this->term();
         *this->term_ = flecs::term().first(first).second(second);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(entity_t r, entity_t o) {
         this->term();
         *this->term_ = flecs::term(r, o);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(entity_t r, const char *o) {
         this->term();
         *this->term_ = flecs::term(r).second(o);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
     Base& with(const char *r, entity_t o) {
         this->term();
         *this->term_ = flecs::term().first(r).second(o);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
         return *this;
     }
 
@@ -30478,6 +30698,8 @@ struct query_builder_i : term_builder_i<Base> {
 
     /* Term notation for more complex query features */
 
+    /** Sets the current term to next one in term list.
+     */
     Base& term() {
         if (this->term_) {
             ecs_check(ecs_term_is_initialized(this->term_), 
@@ -30496,6 +30718,30 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
+    /** Sets the current term to the one with the provided type.
+     * This loops over all terms to find the one with the provided type.
+     * For performance-critical paths, use term_at(int32_t) instead.
+     */
+    template <typename T>
+    Base& term_at() {
+        flecs::id_t term_id = _::type<T>::id(this->world_v());
+        for (int i = 0; i < term_index_; i ++) {
+            ecs_term_t cur_term = desc_->terms[i];
+            ecs_id_t cur_term_id = cur_term.id;
+            ecs_id_t cur_term_pair = ecs_pair(cur_term.first.id, cur_term.second.id);
+
+            if ((term_id == cur_term_id || (cur_term_id != 0 && term_id == ecs_get_typeid(this->world_v(), cur_term_id))) ||
+                (term_id == cur_term_pair || (cur_term_pair != 0 && term_id == ecs_get_typeid(this->world_v(), cur_term_pair)))) {
+                return term_at(i);
+            }
+        }
+
+        ecs_err("term not found");
+        return *this;
+    }
+
+    /** Sets the current term to the one at the provided index.
+     */
     Base& term_at(int32_t term_index) {
         ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, NULL);
         int32_t prev_index = term_index_;
@@ -30504,6 +30750,24 @@ struct query_builder_i : term_builder_i<Base> {
         term_index_ = prev_index;
         ecs_assert(ecs_term_is_initialized(this->term_), 
             ECS_INVALID_PARAMETER, NULL);
+        return *this;
+    }
+
+    /** Sets the current term to the one at the provided index and asserts that the type matches.
+     */
+    template <typename T>
+    Base& term_at(int32_t term_index) {
+        this->term_at(term_index);
+#if !defined(FLECS_NDEBUG) || defined(FLECS_KEEP_ASSERT)
+        flecs::id_t term_id = _::type<T>::id(this->world_v());
+        ecs_term_t cur_term = *this->term_;
+        ecs_id_t cur_term_id = cur_term.id;
+        ecs_id_t cur_term_pair = ecs_pair(cur_term.first.id, cur_term.second.id);
+
+        ecs_assert((term_id == cur_term_id || (cur_term_id != 0 && term_id == ecs_get_typeid(this->world_v(), cur_term_id))) ||
+            (term_id == cur_term_pair || (cur_term_pair != 0 && term_id == ecs_get_typeid(this->world_v(), cur_term_pair))),
+            ECS_INVALID_PARAMETER, "term type mismatch");
+#endif
         return *this;
     }
 
@@ -31468,8 +31732,8 @@ flecs::entity import(world& world) {
 
 template <typename Module>
 inline flecs::entity world::module(const char *name) const {
-    flecs::entity result = this->entity(_::type<Module>::register_id(
-        world_, nullptr, false));
+    flecs::entity result = this->entity(
+        _::type<Module>::register_id(world_, nullptr, false));
 
     if (name) {
         flecs::entity prev_parent = result.parent();
