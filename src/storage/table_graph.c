@@ -680,15 +680,23 @@ void flecs_compute_table_diff(
             flecs_components_ensure(world, id);
         }
     } else {
-        ecs_component_record_t *cdr = flecs_components_get(world, id);
-        if (cdr->flags & EcsIdDontFragment) {
-            ecs_table_diff_t *diff = flecs_bcalloc(
-                &world->allocators.table_diff);
+        ecs_component_record_t *cdr = flecs_components_ensure(world, id);
+        dont_fragment = cdr->flags & EcsIdDontFragment;
+    }
+
+    if (dont_fragment) {
+        ecs_table_diff_t *diff = flecs_bcalloc(
+            &world->allocators.table_diff);
+        if (is_remove) {
+            diff->removed.count = 1;
+            diff->removed.array = flecs_wdup_n(world, ecs_id_t, 1, &id);
+            diff->removed_flags = EcsTableHasDontFragment|EcsTableHasSparse;
+        } else {
             diff->added.count = 1;
             diff->added.array = flecs_wdup_n(world, ecs_id_t, 1, &id);
             diff->added_flags = EcsTableHasDontFragment|EcsTableHasSparse;
-            edge->diff = diff;
         }
+        edge->diff = diff;
         return;
     }
 

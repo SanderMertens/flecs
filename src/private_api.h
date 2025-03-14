@@ -9,6 +9,7 @@
 #include "private_types.h"
 #include "storage/table_cache.h"
 #include "storage/component_index.h"
+#include "storage/sparse_storage.h"
 #include "query/query.h"
 #include "observable.h"
 #include "iter.h"

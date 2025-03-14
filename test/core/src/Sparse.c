@@ -15,6 +15,77 @@ void Sparse_setup(void) {
     }
 }
 
+static int position_ctor_invoked = 0;
+static int position_dtor_invoked = 0;
+static int position_on_add_invoked = 0;
+static int position_on_remove_invoked = 0;
+static int position_on_set_invoked = 0;
+static Position position_on_set_value = {0, 0};
+
+static ECS_CTOR(Position, ptr, {
+    position_ctor_invoked ++;
+    ptr->x = 10;
+    ptr->y = 20;
+})
+
+static ECS_DTOR(Position, ptr, {
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    position_dtor_invoked ++;
+})
+
+static void Position_on_add(ecs_iter_t *it) {
+    test_int(1, position_ctor_invoked - position_on_add_invoked);
+    Position *p = ecs_field_at(it, Position, 0, 0);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_uint(it->event, EcsOnAdd);
+
+    position_on_add_invoked ++;
+}
+
+static void Position_on_add_no_ctor(ecs_iter_t *it) {
+    Position *p = ecs_field_at(it, Position, 0, 0);
+    test_assert(p != NULL);
+    test_uint(it->event, EcsOnAdd);
+
+    position_on_add_invoked ++;
+}
+
+static void Position_on_remove(ecs_iter_t *it) {
+    test_int(0, position_dtor_invoked);
+    Position *p = ecs_field_at(it, Position, 0, 0);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_uint(it->event, EcsOnRemove);
+
+    position_on_remove_invoked ++;
+}
+
+static void Position_on_set(ecs_iter_t *it) {
+    test_int(1, position_ctor_invoked);
+    test_int(0, position_dtor_invoked);
+    Position *p = ecs_field_at(it, Position, 0, 0);
+    test_assert(p != NULL);
+    position_on_set_value = *p;
+    test_uint(it->event, EcsOnSet);
+
+    position_on_set_invoked ++;
+}
+
+static void Position_on_set_bulk(ecs_iter_t *it) {
+    test_assert(position_ctor_invoked != 0);
+    test_int(0, position_dtor_invoked);
+    Position *p = ecs_field_at(it, Position, 0, 0);
+    test_assert(p != NULL);
+    position_on_set_value = *p;
+    test_uint(it->event, EcsOnSet);
+
+    position_on_set_invoked ++;
+}
+
 void Sparse_has(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -32,6 +103,50 @@ void Sparse_has(void) {
     ecs_fini(world);
 }
 
+void Sparse_has_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    test_bool(false, ecs_has_pair(world, e, ecs_id(Position), TgtA));
+    test_bool(false, ecs_has_pair(world, e, ecs_id(Position), TgtB));
+
+    ecs_add_pair(world, e, ecs_id(Position), TgtA);
+    test_bool(true, ecs_has_pair(world, e, ecs_id(Position), TgtA));
+    test_bool(false, ecs_has_pair(world, e, ecs_id(Position), TgtB));
+
+    ecs_fini(world);
+}
+
+void Sparse_has_pair_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    test_bool(false, ecs_has_pair(world, e, ecs_id(Position), EcsWildcard));
+    test_bool(false, ecs_has_pair(world, e, EcsWildcard, TgtA));
+    test_bool(false, ecs_has_pair(world, e, EcsWildcard, TgtB));
+
+    ecs_add_pair(world, e, ecs_id(Position), TgtA);
+    test_bool(true, ecs_has_pair(world, e, ecs_id(Position), EcsWildcard));
+    test_bool(true, ecs_has_pair(world, e, EcsWildcard, TgtA));
+    test_bool(false, ecs_has_pair(world, e, EcsWildcard, TgtB));
+
+    ecs_fini(world);
+}
+
 void Sparse_owns(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -45,6 +160,203 @@ void Sparse_owns(void) {
 
     ecs_add(world, e, Position);
     test_bool(true, ecs_owns(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Sparse_owns_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    test_bool(false, ecs_owns_pair(world, e, ecs_id(Position), TgtA));
+    test_bool(false, ecs_owns_pair(world, e, ecs_id(Position), TgtB));
+
+    ecs_add_pair(world, e, ecs_id(Position), TgtA);
+    test_bool(true, ecs_owns_pair(world, e, ecs_id(Position), TgtA));
+    test_bool(false, ecs_owns_pair(world, e, ecs_id(Position), TgtB));
+
+    ecs_fini(world);
+}
+
+void Sparse_owns_pair_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    test_bool(false, ecs_owns_pair(world, e, ecs_id(Position), EcsWildcard));
+    test_bool(false, ecs_owns_pair(world, e, EcsWildcard, TgtA));
+    test_bool(false, ecs_owns_pair(world, e, EcsWildcard, TgtB));
+
+    ecs_add_pair(world, e, ecs_id(Position), TgtA);
+    test_bool(true, ecs_owns_pair(world, e, ecs_id(Position), EcsWildcard));
+    test_bool(true, ecs_owns_pair(world, e, EcsWildcard, TgtA));
+    test_bool(false, ecs_owns_pair(world, e, EcsWildcard, TgtB));
+
+    ecs_fini(world);
+}
+
+void Sparse_add_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(NULL != ecs_get(world, e, Position));
+
+    ecs_add(world, e, Position);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(NULL != ecs_get(world, e, Position));
+
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(NULL == ecs_get(world, e, Position));
+
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(NULL == ecs_get(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Sparse_add_remove_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, Sparse);
+    if (!fragment) ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+    test_assert(ecs_has(world, e, Foo));
+
+    ecs_add(world, e, Foo);
+    test_assert(ecs_has(world, e, Foo));
+
+    ecs_remove(world, e, Foo);
+    test_assert(!ecs_has(world, e, Foo));
+
+    ecs_remove(world, e, Foo);
+    test_assert(!ecs_has(world, e, Foo));
+
+    ecs_fini(world);
+}
+
+void Sparse_add_remove_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, ecs_id(Position), TgtA);
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtA));
+
+    ecs_add_pair(world, e, ecs_id(Position), TgtA);
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtA));
+
+    ecs_remove_pair(world, e, ecs_id(Position), TgtA);
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
+
+    ecs_remove_pair(world, e, ecs_id(Position), TgtA);
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
+
+    ecs_fini(world);
+}
+
+void Sparse_add_remove_pair_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, Sparse);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    if (!fragment) ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Foo, TgtA);
+    test_assert(ecs_has_pair(world, e, Foo, TgtA));
+
+    ecs_add_pair(world, e, Foo, TgtA);
+    test_assert(ecs_has_pair(world, e, Foo, TgtA));
+
+    ecs_remove_pair(world, e, Foo, TgtA);
+    test_assert(!ecs_has_pair(world, e, Foo, TgtA));
+
+    ecs_remove_pair(world, e, Foo, TgtA);
+    test_assert(!ecs_has_pair(world, e, Foo, TgtA));
+
+    ecs_fini(world);
+}
+
+void Sparse_add_remove_twice_w_hooks(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_add = ecs_on_add(Position),
+        .dtor = ecs_dtor(Position),
+        .on_remove = ecs_on_remove(Position)
+    });
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    test_int(position_ctor_invoked, 0);
+    test_int(position_dtor_invoked, 0);
+    test_int(position_on_add_invoked, 0);
+    test_int(position_on_remove_invoked, 0);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    test_assert(ecs_has(world, e, Position));
+    test_int(position_ctor_invoked, 1);
+    test_int(position_dtor_invoked, 0);
+    test_int(position_on_add_invoked, 1);
+    test_int(position_on_remove_invoked, 0);
+
+    ecs_add(world, e, Position);
+    test_assert(ecs_has(world, e, Position));
+    test_int(position_ctor_invoked, 1);
+    test_int(position_dtor_invoked, 0);
+    test_int(position_on_add_invoked, 1);
+    test_int(position_on_remove_invoked, 0);
+
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    test_int(position_ctor_invoked, 1);
+    test_int(position_dtor_invoked, 1);
+    test_int(position_on_add_invoked, 1);
+    test_int(position_on_remove_invoked, 1);
+
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    test_int(position_ctor_invoked, 1);
+    test_int(position_dtor_invoked, 1);
+    test_int(position_on_add_invoked, 1);
+    test_int(position_on_remove_invoked, 1);
 
     ecs_fini(world);
 }
@@ -101,6 +413,47 @@ void Sparse_ensure(void) {
     ecs_fini(world);
 }
 
+void Sparse_ensure_twice_w_hooks(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_add = ecs_on_add(Position),
+        .dtor = ecs_dtor(Position),
+        .on_remove = ecs_on_remove(Position)
+    });
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    test_int(position_ctor_invoked, 0);
+    test_int(position_dtor_invoked, 0);
+    test_int(position_on_add_invoked, 0);
+    test_int(position_on_remove_invoked, 0);
+
+    ecs_entity_t e = ecs_new(world);
+    void *p = ecs_ensure(world, e, Position);
+    test_assert(p != NULL);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(p == ecs_get(world, e, Position));
+    test_int(position_ctor_invoked, 1);
+    test_int(position_dtor_invoked, 0);
+    test_int(position_on_add_invoked, 1);
+    test_int(position_on_remove_invoked, 0);
+
+    test_assert(p == ecs_ensure(world, e, Position));
+    test_assert(ecs_has(world, e, Position));
+    test_assert(p == ecs_get(world, e, Position));
+    test_int(position_ctor_invoked, 1);
+    test_int(position_dtor_invoked, 0);
+    test_int(position_on_add_invoked, 1);
+    test_int(position_on_remove_invoked, 0);
+
+    ecs_fini(world);
+}
+
 void Sparse_emplace(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -125,6 +478,60 @@ void Sparse_emplace(void) {
     test_bool(false, is_new);
 
     ecs_fini(world);
+}
+
+void Sparse_emplace_twice_w_hooks(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_add = Position_on_add_no_ctor,
+        .dtor = ecs_dtor(Position),
+        .on_remove = ecs_on_remove(Position)
+    });
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    test_int(position_ctor_invoked, 0);
+    test_int(position_dtor_invoked, 0);
+    test_int(position_on_add_invoked, 0);
+    test_int(position_on_remove_invoked, 0);
+
+    bool is_new = false;
+
+    ecs_entity_t e = ecs_new(world);
+    Position *p = ecs_emplace(world, e, Position, &is_new);
+    test_assert(p != NULL);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(p == ecs_get(world, e, Position));
+    test_bool(true, is_new);
+    test_int(position_ctor_invoked, 0);
+    test_int(position_dtor_invoked, 0);
+    test_int(position_on_add_invoked, 1);
+    test_int(position_on_remove_invoked, 0);
+
+    test_assert(p == ecs_emplace(world, e, Position, &is_new));
+    test_assert(ecs_has(world, e, Position));
+    test_assert(p == ecs_get(world, e, Position));
+    test_bool(false, is_new);
+    test_int(position_ctor_invoked, 0);
+    test_int(position_dtor_invoked, 0);
+    test_int(position_on_add_invoked, 1);
+    test_int(position_on_remove_invoked, 0);
+
+    p->x = 10;
+    p->y = 20;
+    position_ctor_invoked = 1;
+
+    ecs_fini(world);
+
+    test_int(position_ctor_invoked, 1);
+    test_int(position_dtor_invoked, 1);
+    test_int(position_on_add_invoked, 1);
+    test_int(position_on_remove_invoked, 1);
 }
 
 void Sparse_set(void) {
@@ -1057,69 +1464,6 @@ void Sparse_bulk_init_w_non_sparse(void) {
     }
 
     ecs_fini(world);
-}
-
-static int position_ctor_invoked = 0;
-static int position_dtor_invoked = 0;
-static int position_on_add_invoked = 0;
-static int position_on_remove_invoked = 0;
-static int position_on_set_invoked = 0;
-static Position position_on_set_value = {0, 0};
-
-static ECS_CTOR(Position, ptr, {
-    position_ctor_invoked ++;
-    ptr->x = 10;
-    ptr->y = 20;
-})
-
-static ECS_DTOR(Position, ptr, {
-    test_int(ptr->x, 10);
-    test_int(ptr->y, 20);
-    position_dtor_invoked ++;
-})
-
-static void Position_on_add(ecs_iter_t *it) {
-    test_int(1, position_ctor_invoked - position_on_add_invoked);
-    Position *p = ecs_field_at(it, Position, 0, 0);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-    test_uint(it->event, EcsOnAdd);
-
-    position_on_add_invoked ++;
-}
-
-static void Position_on_remove(ecs_iter_t *it) {
-    test_int(0, position_dtor_invoked);
-    Position *p = ecs_field_at(it, Position, 0, 0);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-    test_uint(it->event, EcsOnRemove);
-
-    position_on_remove_invoked ++;
-}
-
-static void Position_on_set(ecs_iter_t *it) {
-    test_int(1, position_ctor_invoked);
-    test_int(0, position_dtor_invoked);
-    Position *p = ecs_field_at(it, Position, 0, 0);
-    test_assert(p != NULL);
-    position_on_set_value = *p;
-    test_uint(it->event, EcsOnSet);
-
-    position_on_set_invoked ++;
-}
-
-static void Position_on_set_bulk(ecs_iter_t *it) {
-    test_assert(position_ctor_invoked != 0);
-    test_int(0, position_dtor_invoked);
-    Position *p = ecs_field_at(it, Position, 0, 0);
-    test_assert(p != NULL);
-    position_on_set_value = *p;
-    test_uint(it->event, EcsOnSet);
-
-    position_on_set_invoked ++;
 }
 
 void Sparse_ctor_after_emplace(void) {

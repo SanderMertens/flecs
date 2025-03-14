@@ -1693,7 +1693,7 @@ bool flecs_query_finalize_simple(
                 trivial = false;
             }
 
-            if (idr->flags & EcsIdDontFragment) {
+            if (cdr->flags & EcsIdDontFragment) {
                 term->flags_ |= EcsTermDontFragment;
                 trivial = false;
             }

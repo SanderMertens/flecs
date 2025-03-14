@@ -442,11 +442,22 @@ void GlobalComponentIds_reuse_300_component_ids(void);
 // Testsuite 'Sparse'
 void Sparse_setup(void);
 void Sparse_has(void);
+void Sparse_has_pair(void);
+void Sparse_has_pair_wildcard(void);
 void Sparse_owns(void);
+void Sparse_owns_pair(void);
+void Sparse_owns_pair_wildcard(void);
 void Sparse_get(void);
+void Sparse_add_remove(void);
+void Sparse_add_remove_tag(void);
+void Sparse_add_remove_pair(void);
+void Sparse_add_remove_pair_tag(void);
+void Sparse_add_remove_twice_w_hooks(void);
 void Sparse_get_mut(void);
 void Sparse_ensure(void);
+void Sparse_ensure_twice_w_hooks(void);
 void Sparse_emplace(void);
+void Sparse_emplace_twice_w_hooks(void);
 void Sparse_set(void);
 void Sparse_clone(void);
 void Sparse_clone_w_value(void);
@@ -4069,12 +4080,48 @@ bake_test_case Sparse_testcases[] = {
         Sparse_has
     },
     {
+        "has_pair",
+        Sparse_has_pair
+    },
+    {
+        "has_pair_wildcard",
+        Sparse_has_pair_wildcard
+    },
+    {
         "owns",
         Sparse_owns
     },
     {
+        "owns_pair",
+        Sparse_owns_pair
+    },
+    {
+        "owns_pair_wildcard",
+        Sparse_owns_pair_wildcard
+    },
+    {
         "get",
         Sparse_get
+    },
+    {
+        "add_remove",
+        Sparse_add_remove
+    },
+    {
+        "add_remove_tag",
+        Sparse_add_remove_tag
+    },
+    {
+        "add_remove_pair",
+        Sparse_add_remove_pair
+    },
+    {
+        "add_remove_pair_tag",
+        Sparse_add_remove_pair_tag
+    },
+    {
+        "add_remove_twice_w_hooks",
+        Sparse_add_remove_twice_w_hooks
     },
     {
         "get_mut",
@@ -4085,8 +4132,16 @@ bake_test_case Sparse_testcases[] = {
         Sparse_ensure
     },
     {
+        "ensure_twice_w_hooks",
+        Sparse_ensure_twice_w_hooks
+    },
+    {
         "emplace",
         Sparse_emplace
+    },
+    {
+        "emplace_twice_w_hooks",
+        Sparse_emplace_twice_w_hooks
     },
     {
         "set",
@@ -11751,7 +11806,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        97,
+        108,
         Sparse_testcases,
         1,
         Sparse_params

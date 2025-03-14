@@ -142,10 +142,12 @@ void flecs_component_init_sparse(
         if (cdr->flags & EcsIdIsSparse) {
             ecs_assert(!(cdr->flags & EcsIdIsUnion), ECS_CONSTRAINT_VIOLATED,
                 "cannot mix union and sparse traits");
-            ecs_assert(cdr->type_info != NULL, ECS_INVALID_OPERATION, 
-                "only components can be marked as sparse");
             cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
-            flecs_sparse_init(cdr->sparse, NULL, NULL, cdr->type_info->size);
+            if (cdr->type_info) {
+                flecs_sparse_init(cdr->sparse, NULL, NULL, cdr->type_info->size);
+            } else {
+                flecs_sparse_init(cdr->sparse, NULL, NULL, 0);
+            }
         } else
         if (cdr->flags & EcsIdIsUnion) {
             cdr->sparse = flecs_walloc_t(world, ecs_switch_t);

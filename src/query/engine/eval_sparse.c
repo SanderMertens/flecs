@@ -16,10 +16,10 @@ bool flecs_query_sparse_select(
 
     if (!redo) {
         ecs_id_t id = flecs_query_op_get_id(op, ctx);
-        ecs_id_record_t *idr = flecs_id_record_get(ctx->world, id);
-        ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_component_record_t *cdr = flecs_components_get(ctx->world, id);
+        ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        op_ctx->sparse = idr->sparse;
+        op_ctx->sparse = cdr->sparse;
         if (!op_ctx->sparse) {
             return false;
         }
@@ -64,14 +64,13 @@ bool flecs_query_sparse_with(
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
     bool is_var = op->flags & (EcsQueryIsVar << EcsQuerySrc);
-    int8_t field_index = op->field_index;
 
     if (!redo) {
         ecs_id_t id = flecs_query_op_get_id(op, ctx);
-        ecs_id_record_t *idr = flecs_id_record_get(ctx->world, id);
-        ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_component_record_t *cdr = flecs_components_get(ctx->world, id);
+        ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        op_ctx->sparse = idr->sparse;
+        op_ctx->sparse = cdr->sparse;
         if (!op_ctx->sparse) {
             return false;
         }
