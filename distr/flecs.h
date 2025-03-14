@@ -173,6 +173,12 @@
  */
 // #define FLECS_CPP_NO_ENUM_REFLECTION
 
+/** @def FLECS_NO_ALWAYS_INLINE
+ * When set, this will prevent functions from being annotated with always_inline
+ * which can improve performance at the cost of increased binary footprint.
+ */
+// #define FLECS_NO_ALWAYS_INLINE
+
 /** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
  * Without any addons Flecs is just a minimal ECS storage, but addons add
@@ -881,6 +887,18 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
 #else
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
+#endif
+
+#ifndef FLECS_NO_ALWAYS_INLINE
+    #if defined(ECS_TARGET_CLANG) || defined(ECS_TARGET_GCC)
+        #define FLECS_ALWAYS_INLINE __attribute__((always_inline))
+    #elif defined(ECS_TARGET_MSVC)
+        #define FLECS_ALWAYS_INLINE __forceinline
+    #else
+        #define FLECS_ALWAYS_INLINE
+    #endif
+#else
+    #define FLECS_ALWAYS_INLINE
 #endif
 
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
@@ -6523,7 +6541,7 @@ bool ecs_is_enabled_id(
  * @see ecs_get_mut_id()
  */
 FLECS_API
-const void* ecs_get_id(
+FLECS_ALWAYS_INLINE const void* ecs_get_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -6540,7 +6558,7 @@ const void* ecs_get_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
-void* ecs_get_mut_id(
+FLECS_ALWAYS_INLINE void* ecs_get_mut_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -7111,7 +7129,7 @@ char* ecs_entity_str(
  * @see ecs_owns_id()
  */
 FLECS_API
-bool ecs_has_id(
+FLECS_ALWAYS_INLINE bool ecs_has_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -7127,7 +7145,7 @@ bool ecs_has_id(
  * @return True if the entity has the id, false if not.
  */
 FLECS_API
-bool ecs_owns_id(
+FLECS_ALWAYS_INLINE bool ecs_owns_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -10665,82 +10683,6 @@ int ecs_value_move_ctor(
 #endif
 
 /* Always included, if disabled functions are replaced with dummy macros */
-/**
- * @file addons/journal.h
- * @brief Journaling addon that logs API functions.
- *
- * The journaling addon traces API calls. The trace is formatted as runnable
- * C code, which allows for (partially) reproducing the behavior of an app
- * with the journaling trace.
- *
- * The journaling addon is disabled by default. Enabling it can have a
- * significant impact on performance.
- */
-
-#ifdef FLECS_JOURNAL
-
-#ifndef FLECS_LOG
-#define FLECS_LOG
-#endif
-
-#ifndef FLECS_JOURNAL_H
-#define FLECS_JOURNAL_H
-
-/**
- * @defgroup c_addons_journal Journal
- * @ingroup c_addons
- * Journaling addon (disabled by default).
- *
- *
- * @{
- */
-
-/* Trace when log level is at or higher than level */
-#define FLECS_JOURNAL_LOG_LEVEL (0)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Journaling API, meant to be used by internals. */
-
-typedef enum ecs_journal_kind_t {
-    EcsJournalNew,
-    EcsJournalMove,
-    EcsJournalClear,
-    EcsJournalDelete,
-    EcsJournalDeleteWith,
-    EcsJournalRemoveAll,
-    EcsJournalTableEvents
-} ecs_journal_kind_t;
-
-FLECS_DBG_API
-void flecs_journal_begin(
-    ecs_world_t *world,
-    ecs_journal_kind_t kind,
-    ecs_entity_t entity,
-    ecs_type_t *add,
-    ecs_type_t *remove);
-
-FLECS_DBG_API
-void flecs_journal_end(void);
-
-#define flecs_journal(...)\
-    flecs_journal_begin(__VA_ARGS__);\
-    flecs_journal_end();
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-/** @} */
-#endif // FLECS_JOURNAL_H
-#else
-#define flecs_journal_begin(...)
-#define flecs_journal_end(...)
-#define flecs_journal(...)
-
-#endif // FLECS_JOURNAL
-
 /**
  * @file addons/log.h
  * @brief Logging addon.

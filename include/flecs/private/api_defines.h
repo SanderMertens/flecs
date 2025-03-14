@@ -258,6 +258,18 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
+#ifndef FLECS_NO_ALWAYS_INLINE
+    #if defined(ECS_TARGET_CLANG) || defined(ECS_TARGET_GCC)
+        #define FLECS_ALWAYS_INLINE __attribute__((always_inline))
+    #elif defined(ECS_TARGET_MSVC)
+        #define FLECS_ALWAYS_INLINE __forceinline
+    #else
+        #define FLECS_ALWAYS_INLINE
+    #endif
+#else
+    #define FLECS_ALWAYS_INLINE
+#endif
+
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
 #if defined(ECS_TARGET_GNU)
 #define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))

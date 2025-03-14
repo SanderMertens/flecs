@@ -171,6 +171,12 @@
  */
 // #define FLECS_CPP_NO_ENUM_REFLECTION
 
+/** @def FLECS_NO_ALWAYS_INLINE
+ * When set, this will prevent functions from being annotated with always_inline
+ * which can improve performance at the cost of increased binary footprint.
+ */
+// #define FLECS_NO_ALWAYS_INLINE
+
 /** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
  * Without any addons Flecs is just a minimal ECS storage, but addons add
@@ -3158,7 +3164,7 @@ bool ecs_is_enabled_id(
  * @see ecs_get_mut_id()
  */
 FLECS_API
-const void* ecs_get_id(
+FLECS_ALWAYS_INLINE const void* ecs_get_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -3175,7 +3181,7 @@ const void* ecs_get_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
-void* ecs_get_mut_id(
+FLECS_ALWAYS_INLINE void* ecs_get_mut_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -3746,7 +3752,7 @@ char* ecs_entity_str(
  * @see ecs_owns_id()
  */
 FLECS_API
-bool ecs_has_id(
+FLECS_ALWAYS_INLINE bool ecs_has_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -3762,7 +3768,7 @@ bool ecs_has_id(
  * @return True if the entity has the id, false if not.
  */
 FLECS_API
-bool ecs_owns_id(
+FLECS_ALWAYS_INLINE bool ecs_owns_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);

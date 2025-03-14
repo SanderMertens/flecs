@@ -15,6 +15,7 @@
 #include "poly.h"
 #include "stage.h"
 #include "world.h"
+#include "journal.h"
 #include "datastructures/name_index.h"
 
 
