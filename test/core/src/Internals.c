@@ -523,3 +523,156 @@ void Internals_table_create_leak_check(void) {
 
     ecs_fini(world);
 }
+
+void Internals_component_record_has_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+
+    ecs_table_t *table_1 = ecs_table_add_id(world, NULL, ecs_id(Position));
+    test_assert(table_1 != NULL);
+    ecs_table_t *table_2 = ecs_table_add_id(world, table_1, ecs_id(Velocity));
+    test_assert(table_2 != NULL);
+    ecs_table_t *table_3 = ecs_table_add_id(world, table_2, Tag);
+    test_assert(table_3 != NULL);
+
+    ecs_component_record_t *pos_cdr = flecs_components_get(world, ecs_id(Position));
+    ecs_component_record_t *vel_cdr = flecs_components_get(world, ecs_id(Velocity));
+    ecs_component_record_t *tag_cdr = flecs_components_get(world, Tag);
+    test_assert(pos_cdr != NULL);
+    test_assert(vel_cdr != NULL);
+    test_assert(tag_cdr != NULL);
+
+    {
+        const ecs_table_record_t *tr = flecs_component_get_table(pos_cdr, table_1);
+        test_assert(tr != NULL);
+        test_int(tr->column, 0);
+        test_int(tr->index, 0);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_1);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cdr, table_1);
+        test_assert(tr == NULL);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cdr, table_1);
+        test_assert(tr == NULL);
+    }
+
+    {
+        const ecs_table_record_t *tr = flecs_component_get_table(pos_cdr, table_2);
+        test_assert(tr != NULL);
+        test_int(tr->column, 0);
+        test_int(tr->index, 0);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_2);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cdr, table_2);
+        test_assert(tr != NULL);
+        test_int(tr->column, 1);
+        test_int(tr->index, 1);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_2);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(tag_cdr, table_2);
+        test_assert(tr == NULL);
+    }
+
+    {
+        const ecs_table_record_t *tr = flecs_component_get_table(pos_cdr, table_3);
+        test_assert(tr != NULL);
+        test_int(tr->column, 0);
+        test_int(tr->index, 0);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_3);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cdr, table_3);
+        test_assert(tr != NULL);
+        test_int(tr->column, 1);
+        test_int(tr->index, 1);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_3);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(tag_cdr, table_3);
+        test_assert(tr != NULL);
+        test_int(tr->column, -1);
+        test_int(tr->index, 2);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_3);
+    }
+
+    ecs_fini(world);
+}
+
+void Internals_component_record_iter_tables(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+
+    ecs_table_t *table_1 = ecs_table_add_id(world, NULL, ecs_id(Position));
+    test_assert(table_1 != NULL);
+    ecs_table_t *table_2 = ecs_table_add_id(world, table_1, ecs_id(Velocity));
+    test_assert(table_2 != NULL);
+    ecs_table_t *table_3 = ecs_table_add_id(world, table_2, Tag);
+    test_assert(table_3 != NULL);
+
+    ecs_component_record_t *pos_cdr = flecs_components_get(world, ecs_id(Position));
+    test_assert(pos_cdr != NULL);
+
+    ecs_table_cache_iter_t it;
+    if (flecs_component_iter(pos_cdr, &it)) {
+        const ecs_table_record_t *tr;
+
+        tr = flecs_component_next(&it);
+        test_assert(tr != NULL);
+        test_assert(tr->hdr.table == table_1);
+
+        tr = flecs_component_next(&it);
+        test_assert(tr != NULL);
+        test_assert(tr->hdr.table == table_2);
+
+        tr = flecs_component_next(&it);
+        test_assert(tr != NULL);
+        test_assert(tr->hdr.table == table_3);
+
+        tr = flecs_component_next(&it);
+        test_assert(tr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Internals_table_get_records(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+    test_assert(table != NULL);
+    table = ecs_table_add_id(world, table, ecs_id(Velocity));
+    test_assert(table != NULL);
+    table = ecs_table_add_id(world, table, Tag);
+    test_assert(table != NULL);
+
+    ecs_table_records_t r = flecs_table_records(table);
+    test_int(r.count, 5); /* Including *, (ChildOf, 0) */
+
+    test_int(r.array[0].column, 0);
+    test_int(r.array[0].index, 0);
+    test_int(r.array[0].count, 1);
+
+    test_int(r.array[1].column, 1);
+    test_int(r.array[1].index, 1);
+    test_int(r.array[1].count, 1);
+
+    test_int(r.array[2].column, -1);
+    test_int(r.array[2].index, 2);
+    test_int(r.array[2].count, 1);
+
+    ecs_fini(world);
+}

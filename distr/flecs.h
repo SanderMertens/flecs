@@ -4602,6 +4602,7 @@ FLECS_ALWAYS_INLINE const ecs_table_record_t* flecs_component_get_table(
  * @param iter_out Out parameter for the iterator.
  * @return True if there are results, false if there are no results.
  */
+FLECS_API
 bool flecs_component_iter(
     const ecs_component_record_t *cdr,
     ecs_table_cache_iter_t *iter_out);
@@ -4612,12 +4613,13 @@ bool flecs_component_iter(
  * @param iter The iterator.
  * @return The next table record, or NULL if there are no more results.
  */
+FLECS_API
 const ecs_table_record_t* flecs_component_next(
     ecs_table_cache_iter_t *iter);
 
 /** Struct returned by flecs_table_records(). */
 typedef struct ecs_table_records_t {
-    ecs_table_record_t *array;
+    const ecs_table_record_t *array;
     int32_t count;
 } ecs_table_records_t;
 

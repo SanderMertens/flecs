@@ -36216,7 +36216,6 @@ ecs_flags32_t flecs_id_flags_get(
     return result;
 }
 
-/* Return next (R, *) record */
 ecs_component_record_t* flecs_component_first_next(
     ecs_component_record_t *cdr)
 {
@@ -36224,7 +36223,6 @@ ecs_component_record_t* flecs_component_first_next(
     return cdr->pair->first.next;
 }
 
-/* Return next (*, T) record */
 ecs_component_record_t* flecs_component_second_next(
     ecs_component_record_t *cdr)
 {
@@ -36232,7 +36230,6 @@ ecs_component_record_t* flecs_component_second_next(
     return cdr->pair->second.next;
 }
 
-/* Return next traversable (*, T) record */
 ecs_component_record_t* flecs_component_trav_next(
     ecs_component_record_t *cdr)
 {
@@ -36244,15 +36241,9 @@ bool flecs_component_iter(
     const ecs_component_record_t *cdr,
     ecs_table_cache_iter_t *iter_out)
 {
-    return flecs_table_cache_iter(&cdr->cache, iter_out);
+    return flecs_table_cache_all_iter(&cdr->cache, iter_out);
 }
 
-/** Get next table record for iterator.
- * Returns next table record for iterator.
- * 
- * @param iter The iterator.
- * @return The next table record, or NULL if there are no more results.
- */
 const ecs_table_record_t* flecs_component_next(
     ecs_table_cache_iter_t *iter)
 {

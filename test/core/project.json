@@ -2455,7 +2455,10 @@
                 "table_observed_after_delete",
                 "table_observed_after_on_remove",
                 "table_observed_after_entity_flag",
-                "table_create_leak_check"
+                "table_create_leak_check",
+                "component_record_has_table",
+                "component_record_iter_tables",
+                "table_get_records"
             ]
         }, {
             "id": "Error",
