@@ -273,7 +273,7 @@ ecs_entity_t flecs_component_ids_get(
  */
 FLECS_API
 ecs_entity_t flecs_component_ids_get_alive(
-    const ecs_world_t *stage_world, 
+    const ecs_world_t *world, 
     int32_t index);
 
 /** Set world local component id. 
