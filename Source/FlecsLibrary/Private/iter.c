@@ -115,10 +115,10 @@ void* ecs_field_w_size(
         return NULL;
     }
 
-    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-    ecs_assert(!(idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_component_record_t *cdr = (ecs_component_record_t*)tr->hdr.cache;
+    ecs_assert(!(cdr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field_at to access fields for sparse components");
-    (void)idr;
+    (void)cdr;
 
     ecs_os_perf_trace_push("flecs.field.w_size");
 
@@ -183,8 +183,8 @@ void* ecs_field_at_w_size(
 
     ecs_os_perf_trace_push("flecs.field.at_w_size");
 
-    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-    ecs_assert((idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_component_record_t *cdr = (ecs_component_record_t*)tr->hdr.cache;
+    ecs_assert((cdr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field to access fields for non-sparse components");
     ecs_assert(it->row_fields & (1ull << index), ECS_INTERNAL_ERROR, NULL);
 
@@ -194,7 +194,7 @@ void* ecs_field_at_w_size(
     }
 
     ecs_os_perf_trace_pop("flecs.field.at_w_size");
-    return flecs_sparse_get_any(idr->sparse, flecs_uto(int32_t, size), src);
+    return flecs_sparse_get_any(cdr->sparse, flecs_uto(int32_t, size), src);
 error:
     ecs_os_perf_trace_pop("flecs.field.at_w_size");
     return NULL;
@@ -726,7 +726,7 @@ bool ecs_iter_var_is_constrained(
     return (it->constrained_vars & (flecs_uto(uint64_t, 1 << var_id))) != 0;
 }
 
-static inline
+static
 void ecs_chained_iter_fini(
     ecs_iter_t *it)
 {

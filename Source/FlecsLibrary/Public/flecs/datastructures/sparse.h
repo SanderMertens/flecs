@@ -169,6 +169,10 @@ FLECS_DBG_API
 const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
+FLECS_DBG_API
+void flecs_sparse_shrink(
+    ecs_sparse_t *sparse);
+
 /* Publicly exposed APIs 
  * These APIs are not part of the public API and as a result may change without
  * notice (though they haven't changed in a long time). */

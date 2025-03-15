@@ -21,21 +21,21 @@ ecs_iter_t ecs_each_id(
         .next = ecs_each_next
     };
 
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (!idr) {
+    ecs_component_record_t *cdr = flecs_components_get(world, id);
+    if (!cdr) {
         return it;
     }
 
     ecs_each_iter_t *each_iter = &it.priv_.iter.each;
     each_iter->ids = id;
     each_iter->sizes = 0;
-    if (idr->type_info) {
-        each_iter->sizes = idr->type_info->size;
+    if (cdr->type_info) {
+        each_iter->sizes = cdr->type_info->size;
     }
 
     each_iter->sources = 0;
-    each_iter->ptrs = NULL;
-    flecs_table_cache_iter((ecs_table_cache_t*)idr, &each_iter->it);
+    each_iter->trs = NULL;
+    flecs_table_cache_iter((ecs_table_cache_t*)cdr, &each_iter->it);
 
     return it;
 error:
@@ -50,13 +50,13 @@ bool ecs_each_next(
         &each_iter->it, ecs_table_record_t);
     it->flags |= EcsIterIsValid;
     if (next) {
-        each_iter->ptrs = next;
+        each_iter->trs = next;
         ecs_table_t *table = next->hdr.table;
         it->table = table;
         it->count = ecs_table_count(table);
         it->entities = ecs_table_entities(table);
         it->ids = &table->type.array[next->index];
-        it->trs = &each_iter->ptrs;
+        it->trs = &each_iter->trs;
         it->sources = &each_iter->sources;
         it->sizes = &each_iter->sizes;
         it->set_fields = 1;

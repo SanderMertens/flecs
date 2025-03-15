@@ -420,7 +420,11 @@ ecs_entity_t ecs_lookup_child(
     }
 
     ecs_id_t pair = ecs_childof(parent);
-    ecs_hashmap_t *index = flecs_id_name_index_get(world, pair);
+    ecs_component_record_t *cdr = flecs_components_get(world, pair);
+    ecs_hashmap_t *index = NULL;
+    if (cdr) {
+        index = flecs_component_name_index_get(world, cdr);
+    }
     if (index) {
         ecs_os_perf_trace_pop("flecs.entity_name.lookup_child");
         return flecs_name_index_find(index, name, 0, 0);

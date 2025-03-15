@@ -118,6 +118,10 @@ int32_t flecs_entity_index_not_alive_count(
 void flecs_entity_index_clear(
     ecs_entity_index_t *index);
 
+/* Shrink entity index */
+void flecs_entity_index_shrink(
+    ecs_entity_index_t *index);
+
 /* Return number of alive entities in index */
 const uint64_t* flecs_entity_index_ids(
     const ecs_entity_index_t *index);

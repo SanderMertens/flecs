@@ -126,13 +126,13 @@ bool flecs_query_up_select(
 
     op_ctx->trav = q->terms[op->term_index].trav;
 
-    /* Reuse id record from previous iteration if possible*/
+    /* Reuse component record from previous iteration if possible*/
     if (!op_ctx->idr_trav) {
-        op_ctx->idr_trav = flecs_id_record_get(ctx->world, 
+        op_ctx->idr_trav = flecs_components_get(ctx->world, 
             ecs_pair(op_ctx->trav, EcsWildcard));
     }
 
-    /* If id record is not found, or if it doesn't have any tables, revert to
+    /* If component record is not found, or if it doesn't have any tables, revert to
      * iterating owned components (no traversal) */
     if (!op_ctx->idr_trav || 
         !flecs_table_cache_count(&op_ctx->idr_trav->cache))
@@ -157,10 +157,10 @@ bool flecs_query_up_select(
         /* Get component id to match */
         op_ctx->with = flecs_query_op_get_id(op, ctx);
 
-        /* Get id record for component to match */
-        op_ctx->idr_with = flecs_id_record_get(ctx->world, op_ctx->with);
+        /* Get component record for component to match */
+        op_ctx->idr_with = flecs_components_get(ctx->world, op_ctx->with);
         if (!op_ctx->idr_with) {
-            /* If id record does not exist, there can't be any results */
+            /* If component record does not exist, there can't be any results */
             return false;
         }
 
@@ -261,7 +261,7 @@ bool flecs_query_up_with(
 
     op_ctx->trav = q->terms[op->term_index].trav;
     if (!op_ctx->idr_trav) {
-        op_ctx->idr_trav = flecs_id_record_get(ctx->world, 
+        op_ctx->idr_trav = flecs_components_get(ctx->world, 
             ecs_pair(op_ctx->trav, EcsWildcard));
     }
 
@@ -276,9 +276,9 @@ bool flecs_query_up_with(
     if (!redo) {
         op_ctx->trav = q->terms[op->term_index].trav;
         op_ctx->with = flecs_query_op_get_id(op, ctx);
-        op_ctx->idr_with = flecs_id_record_get(ctx->world, op_ctx->with);
+        op_ctx->idr_with = flecs_components_get(ctx->world, op_ctx->with);
 
-        /* If id record for component doesn't exist, there are no matches */
+        /* If component record for component doesn't exist, there are no matches */
         if (!op_ctx->idr_with) {
             return false;
         }
