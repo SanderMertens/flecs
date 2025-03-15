@@ -15,7 +15,7 @@
     case '\n':\
     case '\0'
 
-static inline
+static
 const char* flecs_script_stmt(
     ecs_parser_t *parser,
     const char *pos);
@@ -349,7 +349,7 @@ error:
 }
 
 /* Parse a single statement */
-static inline
+static
 const char* flecs_script_stmt(
     ecs_parser_t *parser,
     const char *pos) 

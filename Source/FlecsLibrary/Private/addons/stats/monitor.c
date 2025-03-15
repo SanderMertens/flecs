@@ -124,7 +124,7 @@ void MonitorStats(ecs_iter_t *it) {
     }
 }
 
-static inline
+static
 void ReduceStats(ecs_iter_t *it) {
     const ecs_reduce_stats_ctx_t *ctx = it->ctx;
 
@@ -147,7 +147,7 @@ void ReduceStats(ecs_iter_t *it) {
     }
 }
 
-static inline
+static
 void AggregateStats(ecs_iter_t *it) {
     const ecs_aggregate_stats_ctx_t *ctx = it->ctx;
     const int32_t interval = ctx->interval;
@@ -215,7 +215,7 @@ void AggregateStats(ecs_iter_t *it) {
     }
 }
 
-static inline
+static
 void flecs_monitor_ctx_free(
     void *ptr)
 {
@@ -226,14 +226,14 @@ void flecs_monitor_ctx_free(
     ecs_os_free(ctx);
 }
 
-static inline
+static
 void flecs_reduce_ctx_free(
     void *ptr)
 {
     ecs_os_free(ptr);
 }
 
-static inline
+static
 void flecs_aggregate_ctx_free(
     void *ptr)
 {

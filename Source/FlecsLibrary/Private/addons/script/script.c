@@ -39,7 +39,7 @@ ECS_DTOR(EcsScript, ptr, {
     }
 })
 
-static inline
+static
 ecs_id_t flecs_script_tag(
     ecs_entity_t script,
     ecs_entity_t instance)
@@ -295,7 +295,7 @@ ecs_script_runtime_t* flecs_script_runtime_get(
     return stage->runtime;
 }
 
-static inline
+static
 int EcsScript_serialize(
     const ecs_serializer_t *ser, 
     const void *ptr) 

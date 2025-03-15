@@ -59,7 +59,7 @@ ecs_var_id_t flecs_query_find_var_id(
     return flecs_query_find_var_id(query, name, EcsVarTable);
 }
 
-static inline
+static
 ecs_var_id_t flecs_query_most_specific_var(
     ecs_query_impl_t *query,
     const char *name,

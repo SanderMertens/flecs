@@ -6368,7 +6368,7 @@ int ecs_value_move_ctor(
 	} ecs_simd_float_t;
 
 	/* Core vector operations */
-	static inline ecs_simd_double_t ecs_simd_double_load(const double *ptr) {
+	static ecs_simd_double_t ecs_simd_double_load(const double *ptr) {
 	    ecs_simd_double_t result;
 	#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
 	    #ifdef FLECS_SIMD_AVX512
@@ -6386,7 +6386,7 @@ int ecs_value_move_ctor(
 	    return result;
 	}
 
-	static inline void ecs_simd_double_store(double *ptr, ecs_simd_double_t v) {
+	static void ecs_simd_double_store(double *ptr, ecs_simd_double_t v) {
 	#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
 	    #ifdef FLECS_SIMD_AVX512
 	        _mm512_storeu_pd(ptr, v.v512);
@@ -6402,7 +6402,7 @@ int ecs_value_move_ctor(
 	#endif
 	}
 
-	static inline ecs_simd_double_t ecs_simd_double_add(
+	static ecs_simd_double_t ecs_simd_double_add(
 	    ecs_simd_double_t a, 
 	    ecs_simd_double_t b) 
 	{
@@ -6423,7 +6423,7 @@ int ecs_value_move_ctor(
 	    return result;
 	}
 
-	static inline ecs_simd_double_t ecs_simd_double_sub(
+	static ecs_simd_double_t ecs_simd_double_sub(
 	ecs_simd_double_t a, 
 	ecs_simd_double_t b) 
 	{
@@ -6467,7 +6467,7 @@ int ecs_value_move_ctor(
 	    #define ecs_simd_prefetch(addr)
 	#endif
 
-	static inline double ecs_simd_double_hadd(ecs_simd_double_t v) {
+	static double ecs_simd_double_hadd(ecs_simd_double_t v) {
 		double result = 0;
 		#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
 		#ifdef FLECS_SIMD_AVX512
@@ -6488,7 +6488,7 @@ int ecs_value_move_ctor(
 		return result;
 	}
 
-	static inline ecs_simd_double_t ecs_simd_double_broadcast(double value) {
+	static ecs_simd_double_t ecs_simd_double_broadcast(double value) {
 		ecs_simd_double_t result;
 		#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
 		#ifdef FLECS_SIMD_AVX512
@@ -6506,7 +6506,7 @@ int ecs_value_move_ctor(
 		return result;
 	}
 
-	static inline ecs_simd_double_t ecs_simd_double_mul(
+	static ecs_simd_double_t ecs_simd_double_mul(
 	ecs_simd_double_t a,
 	ecs_simd_double_t b)
 	{
@@ -6527,7 +6527,7 @@ int ecs_value_move_ctor(
 		return result;
 	}
 
-	static inline ecs_simd_double_t ecs_simd_double_min(
+	static ecs_simd_double_t ecs_simd_double_min(
 	ecs_simd_double_t a,
 	ecs_simd_double_t b)
 	{
@@ -6548,7 +6548,7 @@ int ecs_value_move_ctor(
 		return result;
 	}
 
-	static inline ecs_simd_double_t ecs_simd_double_cmplt(
+	static ecs_simd_double_t ecs_simd_double_cmplt(
 	ecs_simd_double_t a,
 	ecs_simd_double_t b)
 	{

@@ -382,14 +382,14 @@ struct entity : entity_builder<entity>
      *
      * @param world The world.
      */
-    static inline
+    static
     flecs::entity null(const flecs::world_t *world) {
         flecs::entity result;
         result.world_ = const_cast<flecs::world_t*>(world);
         return result;
     }
 
-    static inline
+    static
     flecs::entity null() {
         return flecs::entity();
     }

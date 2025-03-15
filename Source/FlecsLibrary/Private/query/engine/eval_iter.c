@@ -5,7 +5,7 @@
 
 #include "../../private_api.h"
 
-static inline
+static
 void flecs_query_iter_run_ctx_init(
     ecs_iter_t *it,
     ecs_query_run_ctx_t *ctx)
@@ -207,7 +207,7 @@ yield:
     return true;
 }
 
-static inline
+static
 void flecs_query_iter_fini_ctx(
     ecs_iter_t *it,
     ecs_query_iter_t *qit)

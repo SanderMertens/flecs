@@ -12,7 +12,7 @@
 #include "../query_dsl/query_dsl.h"
 #endif
 
-static inline
+static
 const char* flecs_meta_op_kind_str(
     ecs_meta_type_op_kind_t kind)
 {
@@ -50,7 +50,7 @@ const char* flecs_meta_op_kind_str(
 }
 
 /* Get current scope */
-static inline
+static
 ecs_meta_scope_t* flecs_meta_cursor_get_scope(
     const ecs_meta_cursor_t *cursor)
 {
@@ -61,7 +61,7 @@ error:
 }
 
 /* Restore scope, if dotmember was used */
-static inline
+static
 ecs_meta_scope_t* flecs_meta_cursor_restore_scope(
     ecs_meta_cursor_t *cursor,
     const ecs_meta_scope_t* scope)
@@ -76,7 +76,7 @@ error:
 }
 
 /* Get current operation for scope */
-static inline
+static
 ecs_meta_type_op_t* flecs_meta_cursor_get_op(
     ecs_meta_scope_t *scope)
 {
@@ -86,7 +86,7 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_op(
 }
 
 /* Get component for type in current scope */
-static inline
+static
 const EcsComponent* get_ecs_component(
     const ecs_world_t *world,
     ecs_meta_scope_t *scope)
@@ -100,7 +100,7 @@ const EcsComponent* get_ecs_component(
 }
 
 /* Get size for type in current scope */
-static inline
+static
 ecs_size_t get_size(
     const ecs_world_t *world,
     ecs_meta_scope_t *scope)
@@ -108,7 +108,7 @@ ecs_size_t get_size(
     return get_ecs_component(world, scope)->size;
 }
 
-static inline
+static
 int32_t get_elem_count(
     ecs_meta_scope_t *scope)
 {

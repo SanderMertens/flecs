@@ -1401,7 +1401,7 @@ int32_t flecs_table_grow_data(
 }
 
 /* Append operation for tables that don't have any complex logic */
-static inline
+static
 void flecs_table_fast_append(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -1512,7 +1512,7 @@ int32_t flecs_table_append(
 }
 
 /* Delete operation for tables that don't have any complex logic */
-static inline
+static
 void flecs_table_fast_delete(
     ecs_table_t *table,
     int32_t row)
@@ -1652,7 +1652,7 @@ void flecs_table_delete(
 }
 
 /* Move operation for tables that don't have any complex logic */
-static inline
+static
 void flecs_table_fast_move(
     ecs_table_t *dst_table,
     int32_t dst_index,
@@ -1854,7 +1854,7 @@ bool flecs_table_shrink(
 }
 
 /* Swap operation for bitset (toggle component) columns */
-static inline
+static
 void flecs_table_swap_bitset_columns(
     ecs_table_t *table,
     int32_t row_1,

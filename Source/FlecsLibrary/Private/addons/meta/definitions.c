@@ -9,7 +9,7 @@
 #ifdef FLECS_META
 
 /* Opaque type serializatior addon vector */
-static inline
+static
 int flecs_addon_vec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     char ***data = ECS_CONST_CAST(char***, ptr);
     char **addons = data[0];
@@ -19,7 +19,7 @@ int flecs_addon_vec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-static inline
+static
 size_t flecs_addon_vec_count(const void *ptr) {
     int32_t count = 0;
     char ***data = ECS_CONST_CAST(char***, ptr);

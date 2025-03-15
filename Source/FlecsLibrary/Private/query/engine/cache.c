@@ -27,7 +27,7 @@ int32_t flecs_query_cache_entity_count(
     return result;
 }
 
-static inline
+static
 uint64_t flecs_query_cache_get_group_id(
     ecs_query_cache_t *cache,
     ecs_table_t *table)
@@ -40,7 +40,7 @@ uint64_t flecs_query_cache_get_group_id(
     }
 }
 
-static inline
+static
 void flecs_query_cache_compute_group_id(
     ecs_query_cache_t *cache,
     ecs_query_cache_table_match_t *match)
@@ -57,7 +57,7 @@ void flecs_query_cache_compute_group_id(
     }
 }
 
-static inline
+static
 ecs_query_cache_table_list_t* flecs_query_cache_get_group(
     const ecs_query_cache_t *cache,
     uint64_t group_id)

@@ -24,7 +24,7 @@ void flecs_pipeline_free(
     }
 }
 
-static inline
+static
 int compare_system_priority(
     ecs_entity_t e1, const EcsSystemPriority *ptr1,
     ecs_entity_t e2, const EcsSystemPriority *ptr2)
@@ -100,7 +100,7 @@ ecs_write_kind_t flecs_pipeline_get_write_state(
     return result;
 }
 
-static inline
+static
 void flecs_pipeline_set_write_state(
     ecs_write_state_t *write_state,
     ecs_id_t id)
@@ -116,7 +116,7 @@ void flecs_pipeline_set_write_state(
     ecs_map_ensure(ids, id)[0] = true;
 }
 
-static inline
+static
 void flecs_pipeline_reset_write_state(
     ecs_write_state_t *write_state)
 {
@@ -243,7 +243,7 @@ bool flecs_pipeline_check_terms(
     return needs_merge;
 }
 
-static inline
+static
 EcsPoly* flecs_pipeline_term_system(
     ecs_iter_t *it)
 {
@@ -463,7 +463,7 @@ bool flecs_pipeline_build(
     return true;
 }
 
-static inline
+static
 void flecs_pipeline_next_system(
     ecs_pipeline_state_t *pq)
 {

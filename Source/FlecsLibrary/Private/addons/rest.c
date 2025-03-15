@@ -1177,7 +1177,7 @@ bool flecs_rest_get_tables(
     return true;
 }
 
-static inline
+static
 const char* flecs_rest_cmd_kind_to_str(
     ecs_cmd_kind_t kind)
 {

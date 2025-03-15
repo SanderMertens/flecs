@@ -8,7 +8,7 @@
 
 #include "../private_api.h"
 
-static inline
+static
 void ensure(
     ecs_bitset_t *bs,
     ecs_size_t size)
@@ -26,11 +26,11 @@ void ensure(
     }
 }
 
-static inline void set_bit(uint64_t *word, uint32_t lo, bool value) {
+static void set_bit(uint64_t *word, uint32_t lo, bool value) {
     *word = (*word & ~((uint64_t)1 << lo)) | ((uint64_t)value << lo);
 }
 
-static inline bool get_bit(uint64_t word, uint32_t lo) {
+static bool get_bit(uint64_t word, uint32_t lo) {
     return !!(word & ((uint64_t)1 << lo));
 }
 

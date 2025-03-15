@@ -8,7 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-static inline
+static
 void flecs_meta_entity_name(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -20,7 +20,7 @@ void flecs_meta_entity_name(
     *(char**)result->ptr = ecs_os_strdup(ecs_get_name(ctx->world, entity));
 }
 
-static inline
+static
 void flecs_meta_entity_path(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -32,7 +32,7 @@ void flecs_meta_entity_path(
     *(char**)result->ptr = ecs_get_path(ctx->world, entity);
 }
 
-static inline
+static
 void flecs_meta_entity_parent(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -44,7 +44,7 @@ void flecs_meta_entity_parent(
     *(ecs_entity_t*)result->ptr = ecs_get_parent(ctx->world, entity);
 }
 
-static inline
+static
 void flecs_meta_entity_has(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -57,7 +57,7 @@ void flecs_meta_entity_has(
     *(ecs_bool_t*)result->ptr = ecs_has_id(ctx->world, entity, id);
 }
 
-static inline
+static
 void flecs_meta_core_pair(
     const ecs_function_ctx_t *ctx,
     int32_t argc,

@@ -8,7 +8,7 @@
 
 #ifdef FLECS_JSON
 
-static inline
+static
 const char* flecs_json_token_str(
     ecs_json_token_t token_kind)
 {

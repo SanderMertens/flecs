@@ -10,7 +10,7 @@ typedef struct {
     int32_t column;
 } flecs_table_column_t;
 
-static inline
+static
 void flecs_query_get_column_for_field(
     const ecs_query_t *q,
     ecs_query_cache_table_match_t *match,

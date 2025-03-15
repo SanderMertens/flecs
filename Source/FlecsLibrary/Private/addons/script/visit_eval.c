@@ -29,7 +29,7 @@ void flecs_script_eval_error_(
     ecs_os_free(msg);
 }
 
-static inline
+static
 ecs_value_t* flecs_script_with_append(
     ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
@@ -51,7 +51,7 @@ ecs_value_t* flecs_script_with_append(
     return ecs_vec_get_t(&v->r->with, ecs_value_t, ecs_vec_count(&v->r->with) - 2);
 }
 
-static inline
+static
 void flecs_script_with_set_count(
     ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
@@ -78,7 +78,7 @@ void flecs_script_with_set_count(
     ecs_vec_set_count_t(a, &v->r->with_type_info, ecs_type_info_t*, count);
 }
 
-static inline
+static
 ecs_value_t* flecs_script_with_last(
     ecs_script_eval_visitor_t *v)
 {
@@ -89,7 +89,7 @@ ecs_value_t* flecs_script_with_last(
     return NULL;
 }
 
-static inline
+static
 int32_t flecs_script_with_count(
     ecs_script_eval_visitor_t *v)
 {
@@ -255,7 +255,7 @@ ecs_entity_t flecs_script_find_entity_action(
     return 0;
 }
 
-static inline
+static
 int flecs_script_find_template_entity(
     ecs_script_eval_visitor_t *v,
     void *node,
@@ -662,7 +662,7 @@ int flecs_script_eval_entity(
     return 0;
 }
 
-static inline
+static
 ecs_entity_t flecs_script_get_src(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity,
@@ -674,7 +674,7 @@ ecs_entity_t flecs_script_get_src(
     return entity;
 }
 
-static inline
+static
 int flecs_script_eval_tag(
     ecs_script_eval_visitor_t *v,
     ecs_script_tag_t *node)

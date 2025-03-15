@@ -281,7 +281,7 @@ void ecs_os_fatal(
     }
 }
 
-static inline
+static
 void ecs_os_gettime(ecs_time_t *time) {
     ecs_assert(ecs_os_has_time() == true, ECS_MISSING_OS_API, NULL);
 
@@ -295,21 +295,21 @@ void ecs_os_gettime(ecs_time_t *time) {
     time->nanosec = (uint32_t)(now - sec * 1000000000);
 }
 
-static inline
+static
 void* ecs_os_api_malloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_malloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     return malloc((size_t)size);
 }
 
-static inline
+static
 void* ecs_os_api_calloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_calloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     return calloc(1, (size_t)size);
 }
 
-static inline
+static
 void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
 
@@ -323,7 +323,7 @@ void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
     return realloc(ptr, (size_t)size);
 }
 
-static inline
+static
 void ecs_os_api_free(void *ptr) {
     if (ptr) {
         ecs_os_linc(&ecs_os_api_free_count);
@@ -331,7 +331,7 @@ void ecs_os_api_free(void *ptr) {
     free(ptr);
 }
 
-static inline
+static
 char* ecs_os_api_strdup(const char *str) {
     if (str) {
         const int len = ecs_os_strlen(str);
