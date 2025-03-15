@@ -1159,7 +1159,8 @@
                 "rename_namespace_nested",
                 "rename_reparent_root_module",
                 "no_recycle_after_rename_reparent",
-                "reimport_after_delete"
+                "reimport_after_delete",
+                "component_name_w_module_name"
             ]
         }, {
             "id": "ImplicitComponents",

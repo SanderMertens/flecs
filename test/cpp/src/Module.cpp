@@ -546,3 +546,22 @@ void Module_reimport_after_delete(void) {
         test_assert(m == ecs.entity<Module>());
     }
 }
+
+struct module_a_component { };
+
+struct module_a {
+    module_a(flecs::world &world) {
+        world.component<module_a_component>();
+    }
+};
+
+void Module_component_name_w_module_name(void) {
+    flecs::world world;
+
+    flecs::entity m = world.import<module_a>();
+    test_assert(m != 0);
+    flecs::entity c = world.lookup("module_a::module_a_component");
+    test_assert(c != 0);
+    test_str(c.name().c_str(), "module_a_component");
+    test_str(c.parent().name().c_str(), "module_a");
+}

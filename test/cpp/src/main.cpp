@@ -1121,6 +1121,7 @@ void Module_rename_namespace_nested(void);
 void Module_rename_reparent_root_module(void);
 void Module_no_recycle_after_rename_reparent(void);
 void Module_reimport_after_delete(void);
+void Module_component_name_w_module_name(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -5836,6 +5837,10 @@ bake_test_case Module_testcases[] = {
     {
         "reimport_after_delete",
         Module_reimport_after_delete
+    },
+    {
+        "component_name_w_module_name",
+        Module_component_name_w_module_name
     }
 };
 
@@ -7292,7 +7297,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        23,
+        24,
         Module_testcases
     },
     {
