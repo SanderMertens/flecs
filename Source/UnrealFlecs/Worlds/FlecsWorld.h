@@ -97,8 +97,6 @@ public:
 		#if WITH_AUTOMATION_TESTS
 		}
 		#endif // WITH_AUTOMATION_TESTS
-		
-		InitializeSystems();
 	}
 
 	// ReSharper disable once CppMemberFunctionMayBeConst

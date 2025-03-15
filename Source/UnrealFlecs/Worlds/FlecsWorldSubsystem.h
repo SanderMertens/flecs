@@ -153,6 +153,8 @@ public:
 		solid_checkf(DefaultWorld->GetSingletonRef<FFlecsWorldPtrComponent>().World == DefaultWorld,
 			TEXT("Singleton world ptr component does not point to the correct world"));
 
+		DefaultWorld->InitializeSystems();
+
 		RegisterAllGameplayTags(DefaultWorld);
 		
 		for (const FFlecsDefaultMetaEntity& DefaultEntity : DefaultEntities)
