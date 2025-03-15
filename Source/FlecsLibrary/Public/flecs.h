@@ -3694,7 +3694,7 @@ FLECS_ALWAYS_INLINE bool ecs_has_id(
  * @return True if the entity has the id, false if not.
  */
 FLECS_API
-FLECS_ALWAYS_INLINE bool ecs_owns_id(
+bool ecs_owns_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);

@@ -1,5 +1,5 @@
 /**
- * @file query/each.c
+* @file query/each.c
  * @brief Simple iterator for a single component id.
  */
 
@@ -38,8 +38,8 @@ ecs_iter_t ecs_each_id(
     flecs_table_cache_iter((ecs_table_cache_t*)cdr, &each_iter->it);
 
     return it;
-error:
-    return (ecs_iter_t){0};
+    error:
+        return (ecs_iter_t){0};
 }
 
 bool ecs_each_next(

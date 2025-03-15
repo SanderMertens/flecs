@@ -32,8 +32,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	UFlecsWorld* GetFlecsWorld() const;
+	
 	virtual UWorld* GetWorld() const override;
-
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:

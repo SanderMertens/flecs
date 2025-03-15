@@ -106,7 +106,7 @@ typedef struct ecs_each_iter_t {
     ecs_entity_t sources;
     ecs_size_t sizes;
     int32_t columns;
-    void *ptrs;
+    const ecs_table_record_t* trs;
 } ecs_each_iter_t;
 
 typedef struct ecs_query_op_profile_t {
@@ -134,11 +134,10 @@ typedef struct ecs_query_iter_t {
  * Used by flecs_iter_init, flecs_iter_validate and ecs_iter_fini. 
  * Constants are named to enable easy macro substitution. */
 #define flecs_iter_cache_ids           (1u << 0u)
-#define flecs_iter_cache_columns       (1u << 1u)
+#define flecs_iter_cache_trs           (1u << 1u)
 #define flecs_iter_cache_sources       (1u << 2u)
 #define flecs_iter_cache_ptrs          (1u << 3u)
 #define flecs_iter_cache_variables     (1u << 4u)
-#define flecs_iter_cache_trs           (1u << 5u)
 #define flecs_iter_cache_all           (255)
 
 /* Inline iterator arrays to prevent allocations for small array sizes */
@@ -174,4 +173,3 @@ typedef struct ecs_commands_t {
 #endif
 
 #endif
-

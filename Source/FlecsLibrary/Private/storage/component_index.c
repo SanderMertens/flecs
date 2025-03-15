@@ -16,15 +16,9 @@
 
 #include "../private_api.h"
 
-<<<<<<<< HEAD:Source/FlecsLibrary/Private/storage/id_index.c
-static inline
-ecs_id_record_elem_t* flecs_id_record_elem(
-    ecs_id_record_t *head,
-========
 static
 ecs_id_record_elem_t* flecs_component_elem(
     ecs_component_record_t *head,
->>>>>>>> upstream/master:Source/FlecsLibrary/Private/storage/component_index.c
     ecs_id_record_elem_t *list,
     ecs_component_record_t *cdr)
 {
@@ -121,13 +115,8 @@ void flecs_remove_id_elem(
     }
 }
 
-<<<<<<<< HEAD:Source/FlecsLibrary/Private/storage/id_index.c
-static inline
-ecs_id_t flecs_id_record_hash(
-========
 static
 ecs_id_t flecs_component_hash(
->>>>>>>> upstream/master:Source/FlecsLibrary/Private/storage/component_index.c
     ecs_id_t id)
 {
     id = ecs_strip_generation(id);
@@ -186,13 +175,8 @@ void flecs_component_fini_sparse(
     }
 }
 
-<<<<<<<< HEAD:Source/FlecsLibrary/Private/storage/id_index.c
-static inline
-ecs_flags32_t flecs_id_record_event_flags(
-========
 static
 ecs_flags32_t flecs_component_event_flags(
->>>>>>>> upstream/master:Source/FlecsLibrary/Private/storage/component_index.c
     ecs_world_t *world,
     ecs_id_t id)
 {
@@ -283,7 +267,7 @@ ecs_component_record_t* flecs_component_new(
 
         if (tgt && !ecs_id_is_wildcard(tgt) && tgt != EcsUnion) {
             /* Check if target of relationship satisfies OneOf property */
-            const ecs_entity_t oneof = flecs_get_oneof(world, rel);
+            ecs_entity_t oneof = flecs_get_oneof(world, rel);
             if (oneof) {
                 if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
                     char *idstr = ecs_id_str(world, id);
@@ -443,13 +427,8 @@ void flecs_component_free(
     ecs_component_record_t *cdr)
 {
     flecs_poly_assert(world, ecs_world_t);
-<<<<<<<< HEAD:Source/FlecsLibrary/Private/storage/id_index.c
-    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-    const ecs_id_t id = idr->id;
-========
     ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_id_t id = cdr->id;
->>>>>>>> upstream/master:Source/FlecsLibrary/Private/storage/component_index.c
 
     flecs_component_assert_empty(cdr);
 
@@ -458,8 +437,8 @@ void flecs_component_free(
         ECS_ID_IN_USE, "cannot delete id that is queried for");
 
     if (ECS_IS_PAIR(id)) {
-        const ecs_entity_t rel = ECS_PAIR_FIRST(id);
-        const ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+        ecs_entity_t rel = ECS_PAIR_FIRST(id);
+        ecs_entity_t tgt = ECS_PAIR_SECOND(id);
         if (!ecs_id_is_wildcard(id)) {
             if (ECS_PAIR_FIRST(id) != EcsFlag) {
                 /* If id is not a wildcard, remove it from the wildcard lists */
@@ -515,11 +494,7 @@ void flecs_component_free(
                 cdr->pair, "ecs_pair_id_record_t");
     }
 
-<<<<<<<< HEAD:Source/FlecsLibrary/Private/storage/id_index.c
-    const ecs_id_t hash = flecs_id_record_hash(id);
-========
     ecs_id_t hash = flecs_component_hash(id);
->>>>>>>> upstream/master:Source/FlecsLibrary/Private/storage/component_index.c
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         ecs_map_remove(&world->id_index_hi, hash);
     } else {
@@ -564,13 +539,8 @@ ecs_component_record_t* flecs_components_get(
         return world->idr_identifier_name;
     }
 
-<<<<<<<< HEAD:Source/FlecsLibrary/Private/storage/id_index.c
-    const ecs_id_t hash = flecs_id_record_hash(id);
-    ecs_id_record_t *idr = NULL;
-========
     ecs_id_t hash = flecs_component_hash(id);
     ecs_component_record_t *cdr = NULL;
->>>>>>>> upstream/master:Source/FlecsLibrary/Private/storage/component_index.c
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         cdr = ecs_map_get_deref(&world->id_index_hi, ecs_component_record_t, hash);
     } else {
@@ -592,11 +562,7 @@ int32_t flecs_component_release(
     ecs_world_t *world,
     ecs_component_record_t *cdr)
 {
-<<<<<<<< HEAD:Source/FlecsLibrary/Private/storage/id_index.c
-    const int32_t rc = -- idr->refcount;
-========
     int32_t rc = -- cdr->refcount;
->>>>>>>> upstream/master:Source/FlecsLibrary/Private/storage/component_index.c
     ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
 
     if (!rc) {
@@ -743,8 +709,8 @@ ecs_flags32_t flecs_id_flags_get(
     }
 
     if (ECS_IS_PAIR(id)) {
-        const ecs_entity_t first = ECS_PAIR_FIRST(id);
-        const ecs_entity_t second = ECS_PAIR_SECOND(id);
+        ecs_entity_t first = ECS_PAIR_FIRST(id);
+        ecs_entity_t second = ECS_PAIR_SECOND(id);
 
         if (id != ecs_pair(first, EcsWildcard)) {
             result |= flecs_id_flags(world, ecs_pair(first, EcsWildcard));

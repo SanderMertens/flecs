@@ -54,7 +54,8 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 		Execute_BP_WorldBeginPlay(_getUObject(), FlecsWorld, InGameWorld);
 	}));
 	
-	UN_LOGF(LogFlecsCore, Log, "Imported module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
+	UN_LOGF(LogFlecsCore, Log,
+		"Imported module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }
 
 void IFlecsModuleInterface::DeinitializeModule_Internal()
@@ -69,7 +70,8 @@ void IFlecsModuleInterface::DeinitializeModule_Internal()
 		Execute_BP_DeinitializeModule(_getUObject(), FlecsWorld);
 	}
 
-	UN_LOGF(LogFlecsCore, Log, "Deinitialized module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
+	UN_LOGF(LogFlecsCore, Log,
+		"Deinitialized module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }
 
 void IFlecsModuleInterface::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
