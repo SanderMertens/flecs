@@ -5,7 +5,7 @@
 
 #include "../../private_api.h"
 
-static inline
+static
 bool flecs_query_var_is_anonymous(
     const ecs_query_impl_t *query,
     ecs_var_id_t var_id)
