@@ -1405,6 +1405,8 @@ void Meta_ser_deser_std_string(void);
 void Meta_ser_deser_std_vector_int(void);
 void Meta_ser_deser_std_vector_std_string(void);
 void Meta_ser_deser_type_w_std_string_std_vector_std_string(void);
+void Meta_std_vector_random_access(void);
+void Meta_struct_random_access(void);
 void Meta_ser_deser_flecs_entity(void);
 void Meta_world_ser_deser_flecs_entity(void);
 void Meta_new_world_ser_deser_flecs_entity(void);
@@ -6940,6 +6942,14 @@ bake_test_case Meta_testcases[] = {
         Meta_ser_deser_type_w_std_string_std_vector_std_string
     },
     {
+        "std_vector_random_access",
+        Meta_std_vector_random_access
+    },
+    {
+        "struct_random_access",
+        Meta_struct_random_access
+    },
+    {
         "ser_deser_flecs_entity",
         Meta_ser_deser_flecs_entity
     },
@@ -7334,7 +7344,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        61,
+        63,
         Meta_testcases
     },
     {

@@ -35,6 +35,15 @@ flecs::opaque<std::vector<T>, T> std_vector_support(flecs::world& world) {
         return 0;
     });
 
+    // Enable direct access to vector elements
+    ts.serialize_element([](const flecs::serializer *s, const std::vector<T> *data,
+        size_t element) -> int {
+            if (element >= data->size()) {
+                return 1;
+            }
+            return s->value((*data)[element]);
+        });
+
     // Return vector count
     ts.count([](const std::vector<T> *data) {
         return data->size();
@@ -943,6 +952,94 @@ void Meta_ser_deser_type_w_std_string_std_vector_std_string(void) {
     world.from_json(&v, "{\"s\":\"foo\", \"v\":[\"bar\"]}");
 
     test_str(world.to_json(&v).c_str(), "{\"s\":\"foo\", \"v\":[\"bar\"]}");
+}
+
+void Meta_std_vector_random_access(void) {
+    flecs::world world;
+
+    auto vector_type = world.component<std::vector<int>>()
+        .opaque(std_vector_support<int>);
+
+    std::vector<int> v = {1, 2};
+
+    const EcsOpaque *opaque_info = vector_type.get<EcsOpaque>();
+    test_assert(opaque_info != nullptr);
+    test_assert(opaque_info->serialize_element != nullptr);
+
+    auto read_element = [&](const void* v, int element) -> int {
+        int out;
+        flecs::serializer ser;
+        ser.value_ = [](
+                const struct ecs_serializer_t *ser,
+                ecs_entity_t type,
+                const void *value) -> int {
+                    int *out = (int*)ser->ctx;
+                    *out = *(int*)value;
+                    return 0;
+                },
+        ser.world = world;
+        ser.ctx = &out;
+        
+        if(opaque_info->serialize_element(&ser, v, element)) {
+            return -1;
+        }
+        return out;
+    };
+
+    test_assert(read_element(&v, 0) == 1);
+    test_assert(read_element(&v, 1) == 2);
+    test_assert(read_element(&v, 2) == -1);
+}
+
+void Meta_struct_random_access(void) {
+    flecs::world world;
+
+    world.component<Position>()
+        .opaque(world.component()
+            .member(flecs::F32, "x")
+            .member(flecs::F32, "y"))
+        .serialize_member([](
+            const flecs::serializer * ser,
+            const Position* data,
+            const char* member) {
+                const Position *p = (const Position*) data;
+                if(!strcmp(member, "x")) {
+                    return ser->value(p->x);
+                } else if(!strcmp(member, "y")) {
+                    return ser->value(p->y);
+                }
+                return 1;
+            });
+
+    const EcsOpaque *opaque_info = world.component<Position>().get<EcsOpaque>();
+    test_assert(opaque_info != nullptr);
+    test_assert(opaque_info->serialize_member != nullptr);
+
+    auto read_member = [&](const void* v, const char* member) -> float {
+        float out = -1;
+        flecs::serializer ser;
+        ser.value_ = [](
+                const struct ecs_serializer_t *ser,
+                ecs_entity_t type,
+                const void *value) -> int {
+                    float *out = (float*)ser->ctx;
+                    *out = *(const float*)value;
+                    return 0;
+                },
+        ser.world = world;
+        ser.ctx = &out;
+        
+        if(opaque_info->serialize_member(&ser, v, member)) {
+            return -1;
+        }
+        return out;
+    };
+    
+    Position p = {10, 20};
+
+    test_assert(read_member(&p, "x") == 10);
+    test_assert(read_member(&p, "y") == 20);
+    test_assert(read_member(&p, "doesnotexist") == -1);
 }
 
 void Meta_ser_deser_flecs_entity(void) {
