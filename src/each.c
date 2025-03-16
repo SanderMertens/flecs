@@ -55,7 +55,11 @@ bool ecs_each_next(
         it->table = table;
         it->count = ecs_table_count(table);
         it->entities = ecs_table_entities(table);
-        it->ids = &table->type.array[next->index];
+        if (next->index != -1) {
+            it->ids = &table->type.array[next->index];
+        } else {
+            it->ids = NULL;
+        }
         it->trs = &each_iter->trs;
         it->sources = &each_iter->sources;
         it->sizes = &each_iter->sizes;
