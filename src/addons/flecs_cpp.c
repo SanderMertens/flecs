@@ -180,7 +180,7 @@ const char* ecs_cpp_trim_module(
     char *path = ecs_get_path_w_sep(world, 0, scope, "::", NULL);
     if (path) {
         ecs_size_t len = ecs_os_strlen(path);
-        if (!ecs_os_strncmp(path, type_name, len)) {
+        if (!ecs_os_strncmp(path, type_name, len) && type_name[len] == ':') {
             // Type is a child of current parent, trim name of parent
             type_name += len;
             ecs_assert(type_name[0], ECS_INVALID_PARAMETER, 
@@ -199,6 +199,7 @@ const char* ecs_cpp_trim_module(
 
         }
     }
+
     ecs_os_free(path);
 
     return type_name;
