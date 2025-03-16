@@ -30,6 +30,10 @@ void UUnrealFlecsObject::InitializeFlecsObject(UFlecsWorld* InFlecsWorld)
 	FlecsWorldSubsystem->ListenBeginPlay(
 		FFlecsOnWorldBeginPlay::FDelegate::CreateWeakLambda(this, [this](UWorld* InWorld)
 	{
+		solid_check(IsValid(InWorld));
+		solid_check(IsValid(FlecsWorld.Get()));
+		solid_check(FlecsWorld->GetWorld() == InWorld);
+		
 		BeginPlay();
 	}));
 }
@@ -56,6 +60,7 @@ FFlecsEntityHandle UUnrealFlecsObject::CreateObjectEntity()
 
 void UUnrealFlecsObject::BeginPlay()
 {
+	BP_BeginPlay();
 }
 
 void UUnrealFlecsObject::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

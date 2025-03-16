@@ -19,6 +19,7 @@ public:
 		Super::Initialize(Collection);
 
 		Collection.InitializeDependency<UFlecsWorldSubsystem>();
+		FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorldStatic(this);
 	}
 	
 	FORCEINLINE virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override final
@@ -30,16 +31,11 @@ public:
 	
 	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorld() const
 	{
-		if (!FlecsWorld.IsValid())
-		{
-			FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorldStatic(this);
-		}
-
 		return FlecsWorld.Get();
 	}
 
 	UPROPERTY()
-	mutable TWeakObjectPtr<UFlecsWorld> FlecsWorld;
+	TWeakObjectPtr<UFlecsWorld> FlecsWorld;
 	
 }; // class UFlecsAbstractWorldSubsystem
 

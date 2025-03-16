@@ -25,6 +25,9 @@ public:
 
 	virtual void BeginPlay();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs", meta = (DisplayName = "BeginPlay"))
+	void BP_BeginPlay();
+
 	FORCEINLINE virtual FFlecsEntityHandle GetEntityHandle() const override
 	{
 		return ObjectEntityHandle;

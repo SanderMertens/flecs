@@ -1269,10 +1269,10 @@ public:
 	{
 		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
 		
-		if (TypeMapComponent->ScriptStructMap.contains(ScriptStruct)
-			&& TypeMapComponent->ScriptStructMap.at(ScriptStruct).is_valid())
+		if (TypeMapComponent->ScriptStructMap.contains(ScriptStruct))
 		{
-			return true;
+			const FFlecsId Component = TypeMapComponent->ScriptStructMap.at(ScriptStruct);
+			return ecs_is_valid(World.c_ptr(), Component);
 		}
 		
 		return false;
@@ -1283,12 +1283,12 @@ public:
 	{
 		solid_checkf(IsValid(ScriptEnum), TEXT("ScriptEnum is nullptr"));
 		
-		if (TypeMapComponent->ScriptEnumMap.contains(ScriptEnum)
-			&& TypeMapComponent->ScriptEnumMap.at(ScriptEnum).is_valid())
+		if (TypeMapComponent->ScriptEnumMap.contains(ScriptEnum))
 		{
-			return true;
+			const FFlecsId Component = TypeMapComponent->ScriptEnumMap.at(ScriptEnum);
+			return ecs_is_valid(World.c_ptr(), Component);
 		}
-		
+
 		return false;
 	}
 
@@ -1352,71 +1352,88 @@ public:
 				
 			if (Property->IsA<FBoolProperty>())
 			{
-				UntypedComponent.member<bool>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<bool>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FByteProperty>())
 			{
-				UntypedComponent.member<uint8>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<uint8>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FInt16Property>())
 			{
-				UntypedComponent.member<int16>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<int16>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FUInt16Property>())
 			{
-				UntypedComponent.member<uint16>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<uint16>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FIntProperty>())
 			{
-				UntypedComponent.member<int32>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<int32>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FUInt32Property>())
 			{
-				UntypedComponent.member<uint32>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<uint32>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FInt64Property>())
 			{
-				UntypedComponent.member<int64>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<int64>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FUInt64Property>())
 			{
-				UntypedComponent.member<uint64>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<uint64>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FFloatProperty>())
 			{
-				UntypedComponent.member<float>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<float>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FDoubleProperty>())
 			{
-				UntypedComponent.member<double>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<double>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FStrProperty>())
 			{
-				UntypedComponent.member<FString>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<FString>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FNameProperty>())
 			{
-				UntypedComponent.member<FName>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<FName>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FTextProperty>())
 			{
-				UntypedComponent.member<FText>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<FText>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FObjectProperty>())
 			{
-				UntypedComponent.member<FObjectPtr>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<FObjectPtr>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FWeakObjectProperty>())
 			{
-				UntypedComponent.member<FWeakObjectPtr>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<FWeakObjectPtr>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FSoftObjectProperty>())
 			{
-				UntypedComponent.member<FSoftObjectPtr>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<FSoftObjectPtr>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FClassProperty>())
 			{
-				UntypedComponent.member<TSubclassOf<UObject>>(PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member<TSubclassOf<UObject>>(PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FStructProperty>())
 			{
@@ -1433,7 +1450,8 @@ public:
 					StructComponent = GetScriptStructEntity(CastFieldChecked<FStructProperty>(Property)->Struct);
 				}
 			 		
-				UntypedComponent.member(StructComponent, PropertyNameCStr, 1, Property->GetOffset_ForInternal());
+				UntypedComponent.member(StructComponent, PropertyNameCStr,
+					1, Property->GetOffset_ForInternal());
 			}
 			else
 			{
@@ -1648,8 +1666,7 @@ public:
 			ScriptEnumComponent.set_symbol(StringCast<char>(*ScriptEnum->GetName()).Get());
 			ScriptEnumComponent.set<flecs::Component>(
 				{ .size = sizeof(uint8), .alignment = alignof(uint8) });
-			ScriptEnumComponent.set<flecs::Enum>(flecs::Enum{
-				.underlying_type = flecs::U8 });
+			ScriptEnumComponent.set<flecs::Enum>(flecs::Enum{ .underlying_type = flecs::U8 });
 
 			const int32 EnumCount = ScriptEnum->NumEnums();
 			
