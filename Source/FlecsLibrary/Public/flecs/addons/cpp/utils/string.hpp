@@ -3,8 +3,6 @@
  * @brief String utility that doesn't implicitly allocate memory.
  */
 
-#include <string_view>
-
 namespace flecs {
 
 struct string_view;
@@ -92,17 +90,13 @@ struct string {
 
     bool operator!=(const char *str) const {
         return !(*this == str);
-    }
+    }    
 
-    bool operator==(std::string_view other) const noexcept {
-        return view() == other;
-    }
-
-    const char* c_str() const noexcept  {
+    const char* c_str() const {
         return const_str_;
     }
 
-    std::size_t length() const noexcept {
+    std::size_t length() const {
         return static_cast<std::size_t>(length_);
     }
 
@@ -121,40 +115,13 @@ struct string {
         const_str_ = nullptr;
     }
 
-    bool contains(const char *substr) const
-    {
+    bool contains(const char *substr) {
         if (const_str_) {
             return strstr(const_str_, substr) != nullptr;
         } else {
             return false;
         }
     }
-
-    static string from(const char* str) {
-        return string(ecs_os_strdup(str));
-    }
-
-    template<typename... Args>
-    static string format(std::string_view fmt, Args&&... args) {
-        int size = std::snprintf(nullptr, 0, fmt.data(), std::forward<Args>(args)...);
-        if (size <= 0) {
-            return string();
-        }
-
-        char* buf = static_cast<char*>(ecs_os_malloc(size + 1));
-        std::snprintf(buf, size + 1, fmt.data(), std::forward<Args>(args)...);
-        return string(buf);
-    }
-
-    string clone(flecs::world_t*) const {
-        return string(ecs_os_strdup(const_str_));
-    }
-
-    std::string_view view() const noexcept {
-        return std::string_view(const_str_, length_);
-    }
-
-    
 
 protected:
     // Must be constructed through string_view. This allows for using the string
@@ -182,9 +149,3 @@ struct string_view : string {
 };
 
 }
-
-template<> struct std::hash<flecs::string> {
-    std::size_t operator()(const flecs::string& str) const noexcept {
-        return std::hash<std::string_view>()(std::string_view(str.c_str(), str.length()));
-    }
-};
