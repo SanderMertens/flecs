@@ -40,9 +40,9 @@ struct entity_builder : entity_view {
      */
     template <typename E, if_t< is_enum<E>::value > = 0>
     const Self& add(E value) const  {
-        const flecs::entity_t first = _::type<E>::id(this->world_);
+        flecs::entity_t first = _::type<E>::id(this->world_);
         const auto& et = enum_type<E>(this->world_);
-        const flecs::entity_t second = et.entity(value);
+        flecs::entity_t second = et.entity(value);
 
         ecs_assert(second, ECS_INVALID_PARAMETER, "Component was not found in reflection data.");
         return this->add(first, second);
@@ -246,7 +246,7 @@ struct entity_builder : entity_view {
     template <typename E, if_t<is_enum<E>::value> = 0>
     const Self& depends_on(E second) const {
         const auto& et = enum_type<E>(this->world_);
-        const flecs::entity_t target = et.entity(second);
+        flecs::entity_t target = et.entity(second);
         return depends_on(target);
     }
 
@@ -299,21 +299,10 @@ struct entity_builder : entity_view {
      *
      * @tparam T the type of the component to remove.
      */
-    template <typename T, if_not_t< is_enum<T>::value > = 0>
+    template <typename T>
     const Self& remove() const {
         ecs_remove_id(this->world_, this->id_, _::type<T>::id(this->world_));
         return to_base();
-    }
-
-     /** Remove pair for enum.
-     * This operation will remove any `(Enum, *)` pair from the entity.
-     * 
-     * @tparam E The enumeration type.
-     */
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    const Self& remove() const  {
-        const flecs::entity_t first = _::type<E>::id(this->world_);
-        return this->remove(first, flecs::Wildcard);
     }
 
     /** Remove an entity from an entity.
@@ -378,7 +367,7 @@ struct entity_builder : entity_view {
     template<typename First, typename Second, if_t< is_enum<Second>::value > = 0>
     const Self& remove(Second constant) const  {
         const auto& et = enum_type<Second>(this->world_);
-        const flecs::entity_t second = et.entity(constant);
+        flecs::entity_t second = et.entity(constant);
         return this->remove<First>(second);
     }  
 
@@ -685,22 +674,8 @@ struct entity_builder : entity_view {
     }
 
     const Self& set_ptr(entity_t comp, const void *ptr) const  {
-        const flecs::Component *cptr = nullptr;
-        if (ECS_IS_PAIR(comp)) {
-            if (const flecs::entity_t rel = ecs_pair_first(this->world_, comp);
-                ecs_has(this->world_, rel, EcsComponent)) {
-                cptr = ecs_get(this->world_, rel, EcsComponent);
-            }
-            else if (flecs::entity_t target = ecs_pair_second(this->world_, comp); 
-                ecs_has(this->world_, target, EcsComponent)) 
-            {
-                cptr = ecs_get(this->world_, target, EcsComponent);
-            }
-        }
-        else
-        {
-            cptr = ecs_get(this->world_, comp, EcsComponent);
-        }
+        const flecs::Component *cptr = ecs_get(
+            this->world_, comp, EcsComponent);
 
         /* Can't set if it's not a component */
         ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -807,7 +782,7 @@ struct entity_builder : entity_view {
     template <typename First, typename Second, if_t< is_enum<Second>::value > = 0>
     const Self& set(Second constant, const First& value) const  {
         const auto& et = enum_type<Second>(this->world_);
-        const flecs::entity_t second = et.entity(constant);
+        flecs::entity_t second = et.entity(constant);
         return set<First>(second, value);
     }
 
@@ -855,7 +830,7 @@ struct entity_builder : entity_view {
     const Self& set_second(const Second& value) const  {
         flecs::set<pair_object<First, Second>>(this->world_, this->id_, value);
         return to_base();
-    }
+    }    
 
     /** Set 1..N components.
      * This operation accepts a callback with as arguments the components to
@@ -928,7 +903,7 @@ struct entity_builder : entity_view {
      */
     template <typename Func>
     const Self& with(const Func& func) const  {
-        const ecs_id_t prev = ecs_set_with(this->world_, this->id_);
+        ecs_id_t prev = ecs_set_with(this->world_, this->id_);
         func();
         ecs_set_with(this->world_, prev);
         return to_base();
@@ -954,8 +929,8 @@ struct entity_builder : entity_view {
      */
     template <typename Func>
     const Self& with(entity_t first, const Func& func) const  {
-        const ecs_id_t prev = ecs_set_with(this->world_, 
-                                           ecs_pair(first, this->id_));
+        ecs_id_t prev = ecs_set_with(this->world_, 
+            ecs_pair(first, this->id_));
         func();
         ecs_set_with(this->world_, prev);
         return to_base();
@@ -964,7 +939,7 @@ struct entity_builder : entity_view {
     /** The function will be ran with the scope set to the current entity. */
     template <typename Func>
     const Self& scope(const Func& func) const  {
-        const ecs_entity_t prev = ecs_set_scope(this->world_, this->id_);
+        ecs_entity_t prev = ecs_set_scope(this->world_, this->id_);
         func();
         ecs_set_scope(this->world_, prev);
         return to_base();
