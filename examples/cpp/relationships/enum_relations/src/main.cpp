@@ -86,5 +86,5 @@ int main(int, char *[]) {
     //  ::Tile::Sand
 
     // Remove any instance of the TileStatus relationship
-    tile.remove<TileStatus>();
+    tile.remove<TileStatus>(flecs::Wildcard);
 }
