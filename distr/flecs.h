@@ -16103,6 +16103,19 @@ typedef int (*ecs_meta_serialize_t)(
     const ecs_serializer_t *ser,
     const void *src);                  /**< Pointer to value to serialize */
 
+
+/** Callback invoked to serialize an opaque struct member */
+typedef int (*ecs_meta_serialize_member_t)(
+    const ecs_serializer_t *ser,
+    const void *src,                   /**< Pointer to value to serialize */
+    const char* name);                 /**< Name of member to serialize */
+    
+/** Callback invoked to serialize an opaque vector/array element */
+typedef int (*ecs_meta_serialize_element_t)(
+    const ecs_serializer_t *ser,
+    const void *src,                   /**< Pointer to value to serialize */
+    size_t elem);                      /**< Element index to serialize */
+    
 /** Opaque type reflection data. 
  * An opaque type is a type with an unknown layout that can be mapped to a type
  * known to the reflection framework. See the opaque type reflection examples.
@@ -16110,6 +16123,8 @@ typedef int (*ecs_meta_serialize_t)(
 typedef struct EcsOpaque {
     ecs_entity_t as_type;              /**< Type that describes the serialized output */
     ecs_meta_serialize_t serialize;    /**< Serialize action */
+    ecs_meta_serialize_member_t serialize_member; /**< Serialize member action */
+    ecs_meta_serialize_element_t serialize_element; /**< Serialize element action */
 
     /* Deserializer interface
      * Only override the callbacks that are valid for the opaque type. If a
@@ -19679,6 +19694,15 @@ using serialize_t = ecs_meta_serialize_t;
 template <typename T>
 using serialize = int(*)(const serializer *, const T*);
 
+/** Type safe variant of serialize_member function */
+template <typename T>
+using serialize_member = int(*)(const serializer *, const T*, const char* name);
+
+/** Type safe variant of serialize_element function */
+template <typename T>
+using serialize_element = int(*)(const serializer *, const T*, size_t element);
+
+
 /** Type safe interface for opaque types */
 template <typename T, typename ElemType = void>
 struct opaque {
@@ -19699,6 +19723,22 @@ struct opaque {
         this->desc.type.serialize =
             reinterpret_cast<decltype(
                 this->desc.type.serialize)>(func);
+        return *this;
+    }
+
+    /** Serialize member function */
+    opaque& serialize_member(flecs::serialize_member<T> func) {
+        this->desc.type.serialize_member =
+            reinterpret_cast<decltype(
+                this->desc.type.serialize_member)>(func);
+        return *this;
+    }
+
+    /** Serialize element function */
+    opaque& serialize_element(flecs::serialize_element<T> func) {
+        this->desc.type.serialize_element =
+            reinterpret_cast<decltype(
+                this->desc.type.serialize_element)>(func);
         return *this;
     }
 
