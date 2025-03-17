@@ -71,7 +71,7 @@ void FEnumComponentTestsSpec::Define()
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Add<ETestEnum>(ETestEnum::One);
 			
-			TestTrue("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+			TestTrue("Entity has Enum Component", TestEntity.HasPair<ETestEnum>(flecs::Wildcard));
 			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
 		});
 
@@ -83,7 +83,7 @@ void FEnumComponentTestsSpec::Define()
 			TestEntity.Add(StaticEnum<ETestEnum>(), static_cast<int64>(ETestEnum::One));
 			
 			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
-			TestTrue("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+			TestTrue("Entity has Enum Component", TestEntity.HasPair<ETestEnum>(flecs::Wildcard));
 		});
 
 		It("Should Remove an Enum Component using CPP API", [this]()
@@ -93,13 +93,13 @@ void FEnumComponentTestsSpec::Define()
 			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Add<ETestEnum>(ETestEnum::One);
 			
-			TestTrue("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+			TestTrue("Entity has Enum Component", TestEntity.HasPair<ETestEnum>(flecs::Wildcard));
 			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
 			
-			TestEntity.Remove<ETestEnum>();
+			TestEntity.RemovePair<ETestEnum>(flecs::Wildcard);
 
 			TestFalse("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
-			TestFalse("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+			TestFalse("Entity has Enum Component", TestEntity.HasPair<ETestEnum>(flecs::Wildcard));
 		});
 
 		It("Should Remove an Enum Component using Static API", [this]()
@@ -110,12 +110,12 @@ void FEnumComponentTestsSpec::Define()
 			TestEntity.Add(StaticEnum<ETestEnum>(), static_cast<int64>(ETestEnum::One));
 			
 			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
-			TestTrue("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+			TestTrue("Entity has Enum Component", TestEntity.HasPair<ETestEnum>(flecs::Wildcard));
 			
 			TestEntity.Remove(StaticEnum<ETestEnum>());
 			
 			TestFalse("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum>()));
-			TestFalse("Entity has Enum Component", TestEntity.Has<ETestEnum>());
+			TestFalse("Entity has Enum Component", TestEntity.HasPair<ETestEnum>(flecs::Wildcard));
 		});
 	});
 }

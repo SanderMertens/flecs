@@ -281,6 +281,18 @@ public:
 		GetEntity().remove<T>();
 	}
 
+	template <typename First, typename Second>
+	SOLID_INLINE void RemovePair() const
+	{
+		GetEntity().remove<First, Second>();
+	}
+
+	template <typename First>
+	SOLID_INLINE void RemovePair(const FFlecsId InSecond) const
+	{
+		GetEntity().remove<First>(InSecond);
+	}
+
 	template <typename T>
 	SOLID_INLINE void Set(const T& InValue) const
 	{
