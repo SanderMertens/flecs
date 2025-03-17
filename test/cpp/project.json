@@ -300,7 +300,8 @@
                 "set_pair_second_invalid_type",
                 "get_ref_pair_second_invalid_type",
                 "iter_type",
-                "iter_empty_type"
+                "iter_empty_type",
+                "add_remove_enum_component"
             ]
         }, {
             "id": "Pairs",
@@ -1353,7 +1354,8 @@
                 "add_remove_singleton_pair_R_T",
                 "add_remove_singleton_pair_R_t",
                 "add_remove_singleton_pair_r_t",
-                "get_target"
+                "get_target",
+                "singleton_enum"
             ]
         }, {
             "id": "Misc",

@@ -25470,21 +25470,10 @@ struct entity_builder : entity_view {
      *
      * @tparam T the type of the component to remove.
      */
-    template <typename T, if_not_t< is_enum<T>::value > = 0>
+    template <typename T>
     const Self& remove() const {
         ecs_remove_id(this->world_, this->id_, _::type<T>::id(this->world_));
         return to_base();
-    }
-
-     /** Remove pair for enum.
-     * This operation will remove any `(Enum, *)` pair from the entity.
-     * 
-     * @tparam E The enumeration type.
-     */
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    const Self& remove() const  {
-        flecs::entity_t first = _::type<E>::id(this->world_);
-        return this->remove(first, flecs::Wildcard);
     }
 
     /** Remove an entity from an entity.

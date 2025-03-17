@@ -293,6 +293,7 @@ void Entity_set_pair_second_invalid_type(void);
 void Entity_get_ref_pair_second_invalid_type(void);
 void Entity_iter_type(void);
 void Entity_iter_empty_type(void);
+void Entity_add_remove_enum_component(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -1307,6 +1308,7 @@ void Singleton_add_remove_singleton_pair_R_T(void);
 void Singleton_add_remove_singleton_pair_R_t(void);
 void Singleton_add_remove_singleton_pair_r_t(void);
 void Singleton_get_target(void);
+void Singleton_singleton_enum(void);
 
 // Testsuite 'Misc'
 void Misc_setup(void);
@@ -2599,6 +2601,10 @@ bake_test_case Entity_testcases[] = {
     {
         "iter_empty_type",
         Entity_iter_empty_type
+    },
+    {
+        "add_remove_enum_component",
+        Entity_add_remove_enum_component
     }
 };
 
@@ -6561,6 +6567,10 @@ bake_test_case Singleton_testcases[] = {
     {
         "get_target",
         Singleton_get_target
+    },
+    {
+        "singleton_enum",
+        Singleton_singleton_enum
     }
 };
 
@@ -7197,7 +7207,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        280,
+        281,
         Entity_testcases
     },
     {
@@ -7325,7 +7335,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        20,
+        21,
         Singleton_testcases
     },
     {
