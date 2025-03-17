@@ -171,26 +171,20 @@ struct enum_is_valid {
 /** Extract name of constant from string */
 template <typename E, E C>
 static const char* enum_constant_to_name() {
-    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, enum_constant_to_name, ECS_FUNC_NAME);
+    static const size_t len = ECS_FUNC_TYPE_LEN(
+        const char*, enum_constant_to_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};
     return ecs_cpp_get_constant_name(
         result, ECS_FUNC_NAME, string::length(ECS_FUNC_NAME),
             ECS_FUNC_NAME_BACK);
 }
 
-/** Enumeration constant data */
-template<typename T>
-struct enum_constant_data {
-    int32_t index; // Global index used to obtain world local entity id
-    T offset;
-};
-
 /**
  * @brief Provides utilities for enum reflection.
  * 
- * This struct provides static functions for enum reflection, including conversion
- * between enum values and their underlying integral types, and iteration over enum
- * values.
+ * This struct provides static functions for enum reflection, including 
+ * conversion between enum values and their underlying integral types, and 
+ * iteration over enum values.
  * 
  * @tparam E The enum type.
  * @tparam Handler The handler for enum reflection operations.
@@ -200,11 +194,13 @@ struct enum_reflection {
     using U = underlying_type_t<E>;
 
     /**
-     * @brief Iterates over the range [Low, High] of enum values between Low and High.
+     * @brief Iterates over the range [Low, High] of enum values between Low and 
+     * High.
      *
-     * Recursively divide and conquers the search space to reduce the template-depth. Once
-     * recursive division is complete, calls Handle<E>::handle_constant in ascending order,
-     * passing the values computed up the chain.
+     * Recursively divide and conquers the search space to reduce the 
+     * template-depth. Once recursive division is complete, calls 
+     * Handle<E>::handle_constant in ascending order, passing the values 
+     * computed up the chain.
      * 
      * @tparam Low The lower bound of the search range, inclusive.
      * @tparam High The upper bound of the search range, inclusive.
@@ -214,11 +210,13 @@ struct enum_reflection {
      * @return constexpr U The result of the iteration.
      */
     template <U Low, U High, typename... Args>
-    static constexpr U each_enum_range(U last_value, Args... args) {
+    static constexpr U each_enum_range(U last_value, Args&... args) {
         return High - Low <= 1
             ? High == Low
                 ? Handler::template handle_constant<Low>(last_value, args...)
-                : Handler::template handle_constant<High>(Handler::template handle_constant<Low>(last_value, args...), args...)
+                : Handler::template handle_constant<High>(
+                    Handler::template handle_constant<Low>(last_value, args...), 
+                    args...)
             : each_enum_range<(Low + High) / 2 + 1, High>(
                     each_enum_range<Low, (Low + High) / 2>(last_value, args...),
                     args...
@@ -226,11 +224,13 @@ struct enum_reflection {
     }
 
     /**
-     * @brief Iterates over the mask range (Low, High] of enum values between Low and High.
+     * @brief Iterates over the mask range (Low, High] of enum values between 
+     * Low and High.
      *
-     * Recursively iterates the search space, looking for enums defined as multiple-of-2 
-     * bitmasks. Each iteration, shifts bit to the right until it hits Low, then calls
-     * Handler::handle_constant for each bitmask in ascending order.
+     * Recursively iterates the search space, looking for enums defined as 
+     * multiple-of-2 bitmasks. Each iteration, shifts bit to the right until it 
+     * hits Low, then calls Handler::handle_constant for each bitmask in 
+     * ascending order.
      * 
      * @tparam Low The lower bound of the search range, not inclusive
      * @tparam High The upper bound of the search range, inclusive.
@@ -240,8 +240,9 @@ struct enum_reflection {
      * @return constexpr U The result of the iteration.
      */
     template <U Low, U High, typename... Args>
-    static constexpr U each_mask_range(U last_value, Args... args) {
-        // If Low shares any bits with Current Flag, or if High is less than/equal to Low (and High isn't negative because max-flag signed)
+    static constexpr U each_mask_range(U last_value, Args&... args) {
+        // If Low shares any bits with Current Flag, or if High is less 
+        // than/equal to Low (and High isn't negative because max-flag signed)
         return (Low & High) || (High <= Low && High != high_bit)
             ? last_value
             : Handler::template handle_constant<High>(
@@ -263,105 +264,116 @@ struct enum_reflection {
      * @return constexpr U The result of the iteration.
      */
     template <U Value = static_cast<U>(FLECS_ENUM_MAX(E)), typename... Args>
-    static constexpr U each_enum(Args... args) {
-        return each_mask_range<Value, high_bit>(each_enum_range<0, Value>(0, args...), args...);
+    static constexpr U each_enum(Args&... args) {
+        return each_mask_range<Value, high_bit>(
+            each_enum_range<0, Value>(0, args...), args...);
     }
     /* to avoid warnings with bit manipulation, calculate the high bit with an
        unsigned type of the same size: */
     using UU = typename std::make_unsigned<U>::type;
-    static const U high_bit = static_cast<U>(static_cast<UU>(1) << (sizeof(UU) * 8 - 1));
+    static const U high_bit = 
+        static_cast<U>(static_cast<UU>(1) << (sizeof(UU) * 8 - 1));
 };
 
-/** Enumeration type data */
-template<typename E>
-struct enum_data_impl {
-private:
-    using U = underlying_type_t<E>;
-
-    /**
-     * @brief Handler struct for generating compile-time count of enum constants.
-     */
-    struct reflection_count {
-        template <U Value, flecs::if_not_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
-        static constexpr U handle_constant(U last_value) {
-            return last_value;
-        }
-
-        template <U Value, flecs::if_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
-        static constexpr U handle_constant(U last_value) {
-            return 1 + last_value;
-        }
-    };
-
-public:
-    int min;
-    int max;
-    bool has_contiguous;
-	// If enum constants start not-sparse, contiguous_until will be the index of the first sparse value, or end of the constants array
-    U contiguous_until;
-	// Compile-time generated count of enum constants.
-    static constexpr unsigned int constants_size = enum_reflection<E, reflection_count>::template each_enum< static_cast<U>(enum_last<E>::value) >();
-    // Constants array is sized to the number of found-constants, or 1 (to avoid 0-sized array)
-    enum_constant_data<U> constants[constants_size? constants_size: 1];
+/** Enumeration constant data */
+template<typename T>
+struct enum_constant {
+    int32_t index; // Global index used to obtain world local entity id
+    T value;
+    T offset;
+    const char *name;
 };
 
 /** Class that scans an enum for constants, extracts names & creates entities */
 template <typename E>
 struct enum_type {
 private:
+    using This = enum_type<E>;
     using U = underlying_type_t<E>;
 
     /**
-     * @brief Helper struct for filling enum_type's static `enum_data_impl<E>` member with reflection data.
+     * @brief Handler struct for generating compile-time count of enum constants.
+     */
+    struct reflection_count {
+        template <U Value, 
+            flecs::if_not_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
+        static constexpr U handle_constant(U last_value) {
+            return last_value;
+        }
+
+        template <U Value, 
+            flecs::if_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
+        static constexpr U handle_constant(U last_value) {
+            return 1 + last_value;
+        }
+    };
+
+    /**
+     * @brief Helper struct for filling enum_type's static `enum_data_impl<E>` 
+     * member with reflection data.
      *
-     * Because reflection occurs in-order, we can use current value/last value to determine continuity, and
-     * use that as a lookup heuristic later on.
+     * Because reflection occurs in-order, we can use current value/last value 
+     * to determine continuity, and use that as a lookup heuristic later on.
      */
     struct reflection_init {
-        template <U Value, flecs::if_not_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
-        static U handle_constant(U last_value, flecs::world_t*) {
+        template <U Value, 
+            flecs::if_not_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
+        static U handle_constant(U last_value, This&) {
             // Search for constant failed. Pass last valid value through.
             return last_value;
         }
 
-        template <U Value, flecs::if_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
-        static U handle_constant(U last_value, flecs::world_t *world) {
+        template <U Value, 
+            flecs::if_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
+        static U handle_constant(U last_value, This& me) {
             // Constant is valid, so fill reflection data.
             auto v = Value;
             const char *name = enum_constant_to_name<E, flecs_enum_cast(E, Value)>();
 
-            ++enum_type<E>::data.max; // Increment cursor as we build constants array.
+            ++me.max; // Increment cursor as we build constants array.
 
-            // If the enum was previously contiguous, and continues to be through the current value...
-            if (enum_type<E>::data.has_contiguous && static_cast<U>(enum_type<E>::data.max) == v && enum_type<E>::data.contiguous_until == v) {
-                ++enum_type<E>::data.contiguous_until;
-            }
-            // else, if the enum was never contiguous and hasn't been set as not contiguous...
-            else if (!enum_type<E>::data.contiguous_until && enum_type<E>::data.has_contiguous) {
-                enum_type<E>::data.has_contiguous = false;
+            // If the enum was previously contiguous, and continues to be 
+            // through the current value...
+            if (me.has_contiguous && static_cast<U>(me.max) == v && me.contiguous_until == v) {
+                ++me.contiguous_until;
             }
 
-            ecs_assert(!(last_value > 0 && v < std::numeric_limits<U>::min() + last_value), ECS_UNSUPPORTED,
-                "Signed integer enums causes integer overflow when recording offset from high positive to"
-                " low negative. Consider using unsigned integers as underlying type.");
-            enum_type<E>::data.constants[enum_type<E>::data.max].offset = v - last_value;
-            if (!enum_type<E>::data.constants[enum_type<E>::data.max].index) {
-                enum_type<E>::data.constants[enum_type<E>::data.max].index = 
+            // else, if the enum was never contiguous and hasn't been set as not
+            // contiguous...
+            else if (!me.contiguous_until && me.has_contiguous) {
+                me.has_contiguous = false;
+            }
+
+            ecs_assert(!(last_value > 0 && 
+                v < std::numeric_limits<U>::min() + last_value), 
+                ECS_UNSUPPORTED,
+                "Signed integer enums causes integer overflow when recording "
+                "offset from high positive to low negative. Consider using "
+                "unsigned integers as underlying type.");
+
+            me.constants[me.max].value = v;
+            me.constants[me.max].offset = v - last_value;
+            me.constants[me.max].name = name;
+            if (!me.constants[me.max].index) {
+                me.constants[me.max].index = 
                     flecs_component_ids_index_get();
             }
-            
-            flecs::entity_t constant = ecs_cpp_enum_constant_register(
-                world, type<E>::id(world), 0, name, &v, type<U>::id(world), sizeof(U));
-            flecs_component_ids_set(world, 
-                enum_type<E>::data.constants[enum_type<E>::data.max].index, 
-                constant);
 
             return v;
         }
     };
 public:
 
-    static enum_data_impl<E> data;
+    enum_type() {
+        // Initialize/reset reflection data values to default state.
+        min = 0;
+        max = -1;
+        has_contiguous = true;
+        contiguous_until = 0;
+
+        enum_reflection<E, reflection_init>::
+            template each_enum< static_cast<U>(enum_last<E>::value) >(*this);
+    }
 
     static enum_type<E>& get() {
         static _::enum_type<E> instance;
@@ -371,37 +383,53 @@ public:
     flecs::entity_t entity(E value) const {
         int index = index_by_value(value);
         if (index >= 0) {
-            return data.constants[index].id;
+            return constants[index].id;
         }
         return 0;
     }
 
-    void init(flecs::world_t *world, flecs::entity_t id) {
+    void register_for_world(flecs::world_t *world, flecs::entity_t id) {
 #if !FLECS_CPP_ENUM_REFLECTION_SUPPORT
         ecs_abort(ECS_UNSUPPORTED, "enum reflection requires gcc 7.5 or higher")
 #endif
-        // Initialize/reset reflection data values to default state.
-        data.min = 0;
-        data.max = -1;
-        data.has_contiguous = true;
-        data.contiguous_until = 0;
 
         ecs_log_push();
         ecs_cpp_enum_init(world, id, type<U>::id(world));
-        // data.id = id;
 
-        // Generate reflection data
-        enum_reflection<E, reflection_init>::template each_enum< static_cast<U>(enum_last<E>::value) >(world);
+        for (U v = 0; v < static_cast<U>(max + 1); v ++) {
+            if (constants[v].index) {
+                flecs::entity_t constant = ecs_cpp_enum_constant_register(world,
+                    type<E>::id(world), 0, constants[v].name, &constants[v].value, 
+                    type<U>::id(world), sizeof(U));
+
+                flecs_component_ids_set(world, constants[v].index, constant);
+            }
+        }
+        
         ecs_log_pop();
     }
-};
 
-template <typename E>
-enum_data_impl<E> enum_type<E>::data;
+    int min;
+    int max;
+    bool has_contiguous;
+
+    // If enum constants start not-sparse, contiguous_until will be the index of
+    // the first sparse value, or end of the constants array
+    U contiguous_until;
+
+    // Compile-time generated count of enum constants.
+    static constexpr unsigned int constants_size = 
+        enum_reflection<E, reflection_count>::
+            template each_enum< static_cast<U>(enum_last<E>::value) >();
+
+    // Constants array is sized to the number of found-constants, or 1 
+    // to avoid 0-sized array
+    enum_constant<U> constants[constants_size? constants_size: 1] = {};
+};
 
 template <typename E, if_t< is_enum<E>::value > = 0>
 inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
-    _::enum_type<E>::get().init(world, id);
+    _::enum_type<E>::get().register_for_world(world, id);
 }
 
 template <typename E, if_not_t< is_enum<E>::value > = 0>
@@ -414,7 +442,7 @@ template <typename E>
 struct enum_data {
     using U = underlying_type_t<E>;
 
-    enum_data(flecs::world_t *world, _::enum_data_impl<E>& impl)
+    enum_data(flecs::world_t *world, _::enum_type<E>& impl)
         : world_(world)
         , impl_(impl) { }
     
@@ -495,7 +523,7 @@ struct enum_data {
     flecs::entity entity(E value) const;
 
     flecs::world_t *world_;
-    _::enum_data_impl<E>& impl_;
+    _::enum_type<E>& impl_;
 };
 
 /** Convenience function for getting enum reflection data */
@@ -503,7 +531,7 @@ template <typename E>
 enum_data<E> enum_type(flecs::world_t *world) {
     _::type<E>::id(world); // Ensure enum is registered
     auto& ref = _::enum_type<E>::get();
-    return enum_data<E>(world, ref.data);
+    return enum_data<E>(world, ref);
 }
 
 } // namespace flecs

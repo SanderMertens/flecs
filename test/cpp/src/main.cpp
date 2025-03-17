@@ -419,6 +419,7 @@ void Enum_enum_u16(void);
 void Enum_enum_u32(void);
 void Enum_enum_u64(void);
 void Enum_runtime_type_constant_u8_template(void);
+void Enum_multithreaded_enum_registration(void);
 
 // Testsuite 'Union'
 void Union_add_case(void);
@@ -3097,6 +3098,10 @@ bake_test_case Enum_testcases[] = {
     {
         "runtime_type_constant_u8_template",
         Enum_runtime_type_constant_u8_template
+    },
+    {
+        "multithreaded_enum_registration",
+        Enum_multithreaded_enum_registration
     }
 };
 
@@ -7231,7 +7236,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        51,
+        52,
         Enum_testcases
     },
     {
