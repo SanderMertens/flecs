@@ -489,6 +489,7 @@ void Expr_sub_2_int_literals(void);
 void Expr_mul_2_int_literals(void);
 void Expr_div_2_int_literals(void);
 void Expr_add_3_int_literals(void);
+void Expr_add_3_int_literals_dec_hex_bin(void);
 void Expr_add_3_int_literals_twice(void);
 void Expr_sub_3_int_literals(void);
 void Expr_mul_3_int_literals(void);
@@ -600,6 +601,8 @@ void Expr_cond_lteq_int(void);
 void Expr_cond_lteq_flt(void);
 void Expr_min_lparen_int_rparen(void);
 void Expr_min_lparen_int_add_int_rparen(void);
+void Expr_min_number_hex(void);
+void Expr_min_number_bin(void);
 void Expr_min_var(void);
 void Expr_min_lparen_int_rparen_to_i64(void);
 void Expr_min_lparen_int_rparen_to_i32(void);
@@ -2856,6 +2859,10 @@ bake_test_case Expr_testcases[] = {
         Expr_add_3_int_literals
     },
     {
+        "add_3_int_literals_dec_hex_bin",
+        Expr_add_3_int_literals_dec_hex_bin
+    },
+    {
         "add_3_int_literals_twice",
         Expr_add_3_int_literals_twice
     },
@@ -3298,6 +3305,14 @@ bake_test_case Expr_testcases[] = {
     {
         "min_lparen_int_add_int_rparen",
         Expr_min_lparen_int_add_int_rparen
+    },
+    {
+        "min_number_hex",
+        Expr_min_number_hex
+    },
+    {
+        "min_number_bin",
+        Expr_min_number_bin
     },
     {
         "min_var",
@@ -4715,7 +4730,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        270,
+        273,
         Expr_testcases,
         1,
         Expr_params

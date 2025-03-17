@@ -104,6 +104,20 @@ void Expr_add_3_int_literals(void) {
     ecs_fini(world);
 }
 
+void Expr_add_3_int_literals_dec_hex_bin(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "10 + 0xABCDEF1 + 0b1101", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, 10 + 0xABCDEF1 + 0b1101);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
 void Expr_add_3_int_literals_twice(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3007,6 +3021,34 @@ void Expr_min_lparen_int_add_int_rparen(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -30);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_min_number_hex(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "0xABCDEF9", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_int(*(ecs_i64_t*)v.ptr, 0xABCDEF9);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_min_number_bin(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "0b10", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_int(*(ecs_i64_t*)v.ptr, 0b10);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);

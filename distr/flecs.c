@@ -55389,6 +55389,7 @@ const char* flecs_script_number(
     
     bool dot_parsed = false;
     bool e_parsed = false;
+    int base = 10;
 
     ecs_assert(flecs_script_is_number(pos), ECS_INTERNAL_ERROR, NULL);
     char *outpos = parser->token_cur;
@@ -55397,6 +55398,20 @@ const char* flecs_script_number(
         outpos[0] = pos[0];
         pos ++;
         outpos ++;
+    }
+
+    if (pos[0] == '0' && (pos[1] == 'x' || pos[1] == 'X')) {
+        base = 16;
+        outpos[0] = pos[0];
+        outpos[1] = pos[1];
+        outpos += 2;
+        pos += 2;
+    } else if (pos[0] == '0' && (pos[1] == 'b' || pos[1] == 'B')) {
+        base = 2;
+        outpos[0] = pos[0];
+        outpos[1] = pos[1];
+        outpos += 2;
+        pos += 2;
     }
 
     do {
@@ -55417,7 +55432,11 @@ const char* flecs_script_number(
                     valid_number = true;
                 }
             }
-        } else if (isdigit(c)) {
+        } else if ((base == 10) && isdigit(c)) {
+            valid_number = true;
+        } else if ((base == 16) && isxdigit(c)) {
+            valid_number = true;
+        }  else if ((base == 2) && (c == '0' || c == '1')) {
             valid_number = true;
         }
 
@@ -77813,14 +77832,24 @@ const char* flecs_script_parse_lhs(
             const char *expr = Token(0);
             if (strchr(expr, '.') || strchr(expr, 'e')) {
                 *out = (ecs_expr_node_t*)flecs_expr_float(parser, atof(expr));
-            } else if (expr[0] == '-') {
+                break;
+            }
+            int base = 10;
+            if (expr[0] == '0' && (expr[1] == 'x' || expr[1] == 'X')) {
+                base = 16;
+                expr += 2;
+            } else if (expr[0] == '0' && (expr[1] == 'b' || expr[1] == 'B')) {
+                base = 2;
+                expr += 2;
+            }
+            if (expr[0] == '-') {
                 char *end;
                 *out = (ecs_expr_node_t*)flecs_expr_int(parser, 
-                    strtoll(expr, &end, 10));
+                    strtoll(expr, &end, base));
             } else {
                 char *end;
                 *out = (ecs_expr_node_t*)flecs_expr_uint(parser, 
-                    strtoull(expr, &end, 10));
+                    strtoull(expr, &end, base));
             }
             break;
         }
