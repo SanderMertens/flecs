@@ -471,6 +471,10 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
 
+    ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(value != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
+
     const char *parent_name = ecs_get_name(world, parent);
     ecs_size_t parent_name_len = ecs_os_strlen(parent_name);
     if (!ecs_os_strncmp(name, parent_name, parent_name_len)) {
