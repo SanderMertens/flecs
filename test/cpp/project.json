@@ -301,6 +301,7 @@
                 "get_ref_pair_second_invalid_type",
                 "iter_type",
                 "iter_empty_type",
+                "untyped_component_use_low_id",
                 "add_remove_enum_component"
             ]
         }, {
