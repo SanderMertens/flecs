@@ -339,6 +339,7 @@ const char* flecs_script_number(
     
     bool dot_parsed = false;
     bool e_parsed = false;
+    int base = 10;
 
     ecs_assert(flecs_script_is_number(pos), ECS_INTERNAL_ERROR, NULL);
     char *outpos = parser->token_cur;
@@ -347,6 +348,20 @@ const char* flecs_script_number(
         outpos[0] = pos[0];
         pos ++;
         outpos ++;
+    }
+
+    if (pos[0] == '0' && (pos[1] == 'x' || pos[1] == 'X')) {
+        base = 16;
+        outpos[0] = pos[0];
+        outpos[1] = pos[1];
+        outpos += 2;
+        pos += 2;
+    } else if (pos[0] == '0' && (pos[1] == 'b' || pos[1] == 'B')) {
+        base = 2;
+        outpos[0] = pos[0];
+        outpos[1] = pos[1];
+        outpos += 2;
+        pos += 2;
     }
 
     do {
@@ -367,7 +382,11 @@ const char* flecs_script_number(
                     valid_number = true;
                 }
             }
-        } else if (isdigit(c)) {
+        } else if ((base == 10) && isdigit(c)) {
+            valid_number = true;
+        } else if ((base == 16) && isxdigit(c)) {
+            valid_number = true;
+        }  else if ((base == 2) && (c == '0' || c == '1')) {
             valid_number = true;
         }
 

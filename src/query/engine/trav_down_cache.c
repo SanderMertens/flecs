@@ -13,7 +13,7 @@ void flecs_trav_entity_down_isa(
     ecs_trav_down_t *dst,
     ecs_entity_t trav,
     ecs_entity_t entity,
-    ecs_id_record_t *idr_with,
+    ecs_component_record_t *idr_with,
     bool self,
     bool empty);
 
@@ -24,8 +24,8 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_trav_up_cache_t *cache,
     ecs_trav_down_t *dst,
     ecs_entity_t trav,
-    ecs_id_record_t *idr_trav,
-    ecs_id_record_t *idr_with,
+    ecs_component_record_t *idr_trav,
+    ecs_component_record_t *idr_with,
     bool self,
     bool empty);
 
@@ -53,7 +53,7 @@ ecs_trav_down_t* flecs_trav_table_down(
     ecs_trav_down_t *dst,
     ecs_entity_t trav,
     const ecs_table_t *table,
-    ecs_id_record_t *idr_with,
+    ecs_component_record_t *idr_with,
     bool self,
     bool empty)
 {
@@ -76,7 +76,7 @@ ecs_trav_down_t* flecs_trav_table_down(
 
         uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(record->row);
         if (flags & EcsEntityIsTraversable) {
-            ecs_id_record_t *idr_trav = flecs_id_record_get(world, 
+            ecs_component_record_t *idr_trav = flecs_components_get(world, 
                 ecs_pair(trav, entity));
             if (!idr_trav) {
                 continue;
@@ -98,7 +98,7 @@ void flecs_trav_entity_down_isa(
     ecs_trav_down_t *dst,
     ecs_entity_t trav,
     ecs_entity_t entity,
-    ecs_id_record_t *idr_with,
+    ecs_component_record_t *idr_with,
     bool self,
     bool empty)
 {
@@ -106,7 +106,7 @@ void flecs_trav_entity_down_isa(
         return;
     }
 
-    ecs_id_record_t *idr_isa = flecs_id_record_get(
+    ecs_component_record_t *idr_isa = flecs_components_get(
         world, ecs_pair(EcsIsA, entity));
     if (!idr_isa) {
         return;
@@ -114,7 +114,7 @@ void flecs_trav_entity_down_isa(
 
     ecs_table_cache_iter_t it;
     if (flecs_table_cache_iter(&idr_isa->cache, &it)) {
-        ecs_table_record_t *tr;
+        const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
             if (!table->_->traversable_count) {
@@ -137,7 +137,7 @@ void flecs_trav_entity_down_isa(
 
                 uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(record->row);
                 if (flags & EcsEntityIsTraversable) {
-                    ecs_id_record_t *idr_trav = flecs_id_record_get(world, 
+                    ecs_component_record_t *idr_trav = flecs_components_get(world, 
                         ecs_pair(trav, e));
                     if (idr_trav) {
                         flecs_trav_entity_down(world, a, cache, dst, trav,
@@ -159,8 +159,8 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_trav_up_cache_t *cache,
     ecs_trav_down_t *dst,
     ecs_entity_t trav,
-    ecs_id_record_t *idr_trav,
-    ecs_id_record_t *idr_with,
+    ecs_component_record_t *idr_trav,
+    ecs_component_record_t *idr_with,
     bool self,
     bool empty)
 {
@@ -185,7 +185,7 @@ ecs_trav_down_t* flecs_trav_entity_down(
             ecs_table_t *table = tr->hdr.table;
             bool leaf = false;
 
-            if (flecs_id_record_get_table(idr_with, table) != NULL) {
+            if (flecs_component_get_table(idr_with, table) != NULL) {
                 if (self) {
                     continue;
                 }
@@ -236,7 +236,7 @@ ecs_trav_down_t* flecs_query_get_down_cache(
     ecs_trav_up_cache_t *cache,
     ecs_entity_t trav,
     ecs_entity_t e,
-    ecs_id_record_t *idr_with,
+    ecs_component_record_t *idr_with,
     bool self,
     bool empty)
 {
@@ -252,7 +252,7 @@ ecs_trav_down_t* flecs_query_get_down_cache(
         return result;
     }
 
-    ecs_id_record_t *idr_trav = flecs_id_record_get(world, ecs_pair(trav, e));
+    ecs_component_record_t *idr_trav = flecs_components_get(world, ecs_pair(trav, e));
     if (!idr_trav) {
         if (trav != EcsIsA) {
             flecs_trav_entity_down_isa(

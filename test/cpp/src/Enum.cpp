@@ -597,7 +597,7 @@ void Enum_remove_enum(void) {
     auto e = ecs.entity().add(StandardEnum::Green);
     test_assert(e.has(StandardEnum::Green));
 
-    e.remove<StandardEnum>();
+    e.remove<StandardEnum>(flecs::Wildcard);
     test_assert(!e.has(StandardEnum::Green));
 }
 

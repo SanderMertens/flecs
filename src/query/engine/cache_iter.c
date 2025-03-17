@@ -28,10 +28,10 @@ void flecs_query_update_node_up_trs(
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
                 if (r->table != node->tables[f]) {
-                    ecs_id_record_t *idr = flecs_id_record_get(
+                    ecs_component_record_t *cdr = flecs_components_get(
                         ctx->world, q->ids[f]);
                     const ecs_table_record_t *tr = node->trs[f] = 
-                        flecs_id_record_get_table(idr, r->table);
+                        flecs_component_get_table(cdr, r->table);
                     ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
                     ctx->it->trs[field_map ? field_map[f] : f] = tr;
                     node->tables[f] = r->table;

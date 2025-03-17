@@ -261,7 +261,7 @@
 
 /** @def FLECS_HI_ID_RECORD_ID
  * This constant can be used to balance between performance and memory
- * utilization. The constant is used to determine the size of the id record
+ * utilization. The constant is used to determine the size of the component record
  * lookup array. Id values that fall outside of this range use a regular map
  * lookup, which is slower but more memory efficient.
  */
@@ -490,7 +490,7 @@ typedef struct ecs_type_info_t ecs_type_info_t;
 typedef struct ecs_record_t ecs_record_t;
 
 /** Information about a (component) id, such as type info and tables with the id */
-typedef struct ecs_id_record_t ecs_id_record_t;
+typedef struct ecs_component_record_t ecs_component_record_t;
 
 /** A poly object.
  * A poly (short for polymorph) object is an object that has a variable list of
@@ -524,31 +524,7 @@ typedef struct ecs_header_t {
     ecs_mixins_t *mixins;       /**< Table with offsets to (optional) mixins */
 } ecs_header_t;
 
-/** Record for entity index */
-struct ecs_record_t {
-    ecs_id_record_t *idr;       /**< Id record to (*, entity) for target entities */
-    ecs_table_t *table;         /**< Identifies a type (and table) in world */
-    uint32_t row;               /**< Table row of the entity */
-    int32_t dense;              /**< Index in dense array of entity index */    
-};
-
-/** Header for table cache elements. */
-typedef struct ecs_table_cache_hdr_t {
-    struct ecs_table_cache_t *cache;  /**< Table cache of element. Of type ecs_id_record_t* for component index elements. */
-    ecs_table_t *table;               /**< Table associated with element. */
-    struct ecs_table_cache_hdr_t *prev, *next; /**< Next/previous elements for id in table cache. */
-} ecs_table_cache_hdr_t;
-
-/** Metadata describing where a component id is stored in a table.
- * This type is used as element type for the component index table cache. One
- * record exists per table/component in the table. Only records for wildcard ids
- * can have a count > 1. */
-typedef struct ecs_table_record_t {
-    ecs_table_cache_hdr_t hdr;  /**< Table cache header */
-    int16_t index;              /**< First type index where id occurs in table */
-    int16_t count;              /**< Number of times id occurs in table */
-    int16_t column;             /**< First column index where id occurs */
-} ecs_table_record_t;
+typedef struct ecs_table_record_t ecs_table_record_t;
 
 /** @} */
 
@@ -1021,6 +997,7 @@ struct ecs_type_info_t {
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
 #include "flecs/datastructures/hashmap.h"   /* Hashmap */
+#include "flecs/private/api_internals.h"    /* Supporting API functions */
 
 /** Utility to hold a value of a dynamic type. */
 typedef struct ecs_value_t {
@@ -3267,164 +3244,6 @@ FLECS_API
 void ecs_ref_update(
     const ecs_world_t *world,
     ecs_ref_t *ref);
-
-/** Find record for entity. 
- * An entity record contains the table and row for the entity.
- * 
- * @param world The world.
- * @param entity The entity.
- * @return The record, NULL if the entity does not exist.
- */
-FLECS_API
-ecs_record_t* ecs_record_find(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Begin exclusive write access to entity.
- * This operation provides safe exclusive access to the components of an entity
- * without the overhead of deferring operations.
- *
- * When this operation is called simultaneously for the same entity more than
- * once it will throw an assert. Note that for this to happen, asserts must be
- * enabled. It is up to the application to ensure that access is exclusive, for
- * example by using a read-write mutex.
- *
- * Exclusive access is enforced at the table level, so only one entity can be
- * exclusively accessed per table. The exclusive access check is thread safe.
- *
- * This operation must be followed up with ecs_write_end().
- *
- * @param world The world.
- * @param entity The entity.
- * @return A record to the entity.
- */
-FLECS_API
-ecs_record_t* ecs_write_begin(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** End exclusive write access to entity.
- * This operation ends exclusive access, and must be called after
- * ecs_write_begin().
- *
- * @param record Record to the entity.
- */
-FLECS_API
-void ecs_write_end(
-    ecs_record_t *record);
-
-/** Begin read access to entity.
- * This operation provides safe read access to the components of an entity.
- * Multiple simultaneous reads are allowed per entity.
- *
- * This operation ensures that code attempting to mutate the entity's table will
- * throw an assert. Note that for this to happen, asserts must be enabled. It is
- * up to the application to ensure that this does not happen, for example by
- * using a read-write mutex.
- *
- * This operation does *not* provide the same guarantees as a read-write mutex,
- * as it is possible to call ecs_read_begin() after calling ecs_write_begin(). It is
- * up to application has to ensure that this does not happen.
- *
- * This operation must be followed up with ecs_read_end().
- *
- * @param world The world.
- * @param entity The entity.
- * @return A record to the entity.
- */
-FLECS_API
-const ecs_record_t* ecs_read_begin(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** End read access to entity.
- * This operation ends read access, and must be called after ecs_read_begin().
- *
- * @param record Record to the entity.
- */
-FLECS_API
-void ecs_read_end(
-    const ecs_record_t *record);
-
-/** Get entity corresponding with record.
- * This operation only works for entities that are not empty.
- *
- * @param record The record for which to obtain the entity id.
- * @return The entity id for the record.
- */
-FLECS_API
-ecs_entity_t ecs_record_get_entity(
-    const ecs_record_t *record);
-
-/** Get component from entity record.
- * This operation returns a pointer to a component for the entity
- * associated with the provided record. For safe access to the component, obtain
- * the record with ecs_read_begin() or ecs_write_begin().
- *
- * Obtaining a component from a record is faster than obtaining it from the
- * entity handle, as it reduces the number of lookups required.
- *
- * @param world The world.
- * @param record Record to the entity.
- * @param id The (component) id.
- * @return Pointer to component, or NULL if entity does not have the component.
- *
- * @see ecs_record_ensure_id()
- */
-FLECS_API
-const void* ecs_record_get_id(
-    const ecs_world_t *world,
-    const ecs_record_t *record,
-    ecs_id_t id);
-
-/** Same as ecs_record_get_id(), but returns a mutable pointer.
- * For safe access to the component, obtain the record with ecs_write_begin().
- *
- * @param world The world.
- * @param record Record to the entity.
- * @param id The (component) id.
- * @return Pointer to component, or NULL if entity does not have the component.
- */
-FLECS_API
-void* ecs_record_ensure_id(
-    ecs_world_t *world,
-    ecs_record_t *record,
-    ecs_id_t id);
-
-/** Test if entity for record has a (component) id.
- *
- * @param world The world.
- * @param record Record to the entity.
- * @param id The (component) id.
- * @return Whether the entity has the component.
- */
-FLECS_API
-bool ecs_record_has_id(
-    ecs_world_t *world,
-    const ecs_record_t *record,
-    ecs_id_t id);
-
-/** Get component pointer from column/record. 
- * This returns a pointer to the component using a table column index. The
- * table's column index can be found with ecs_table_get_column_index().
- * 
- * Usage:
- * @code
- * ecs_record_t *r = ecs_record_find(world, entity);
- * int32_t column = ecs_table_get_column_index(world, table, ecs_id(Position));
- * Position *ptr = ecs_record_get_by_column(r, column, sizeof(Position));
- * @endcode
- * 
- * @param record The record.
- * @param column The column index in the entity's table.
- * @param size The component size.
- * @return The component pointer.
- */
-FLECS_API
-void* ecs_record_get_by_column(
-    const ecs_record_t *record,
-    int32_t column,
-    size_t size);
 
 /** Emplace a component.
  * Emplace is similar to ecs_ensure_id() except that the component constructor

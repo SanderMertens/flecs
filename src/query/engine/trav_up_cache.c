@@ -24,7 +24,7 @@ static
 int32_t flecs_trav_type_search(
     ecs_trav_up_t *up,
     const ecs_table_t *table,
-    ecs_id_record_t *idr_with,
+    ecs_component_record_t *idr_with,
     ecs_type_t *type)
 {    
     ecs_table_record_t *tr = ecs_table_cache_get(&idr_with->cache, table);
@@ -69,8 +69,8 @@ ecs_trav_up_t* flecs_trav_table_up(
     ecs_entity_t src,
     ecs_id_t with,
     ecs_id_t rel,
-    ecs_id_record_t *idr_with,
-    ecs_id_record_t *idr_trav)
+    ecs_component_record_t *idr_with,
+    ecs_component_record_t *idr_trav)
 {
     ecs_trav_up_t *up = flecs_trav_up_ensure(ctx, cache, src);
     if (up->ready) {
@@ -160,8 +160,8 @@ ecs_trav_up_t* flecs_query_get_up_cache(
     ecs_table_t *table,
     ecs_id_t with,
     ecs_entity_t trav,
-    ecs_id_record_t *idr_with,
-    ecs_id_record_t *idr_trav)
+    ecs_component_record_t *idr_with,
+    ecs_component_record_t *idr_trav)
 {
     if (cache->with && cache->with != with) {
         flecs_query_up_cache_fini(cache);

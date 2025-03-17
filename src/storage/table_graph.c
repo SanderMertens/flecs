@@ -655,9 +655,9 @@ void flecs_compute_table_diff(
     ecs_type_t next_type = next->type;
 
     if (ECS_IS_PAIR(id)) {
-        ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(
+        ecs_component_record_t *cdr = flecs_components_get(world, ecs_pair(
             ECS_PAIR_FIRST(id), EcsWildcard));
-        if (idr->flags & EcsIdIsUnion) {
+        if (cdr->flags & EcsIdIsUnion) {
             if (node != next) {
                 id = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
             } else {
@@ -789,8 +789,8 @@ void flecs_add_overrides_for_base(
                 to_add = id & ~ECS_AUTO_OVERRIDE;
             } else {
                 ecs_table_record_t *tr = &base_table->_->records[i];
-                ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-                if (ECS_ID_ON_INSTANTIATE(idr->flags) == EcsOverride) {
+                ecs_component_record_t *cdr = (ecs_component_record_t*)tr->hdr.cache;
+                if (ECS_ID_ON_INSTANTIATE(cdr->flags) == EcsOverride) {
                     to_add = id;
                 }
             }
@@ -799,9 +799,9 @@ void flecs_add_overrides_for_base(
                 ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(to_add), EcsWildcard);
                 bool exclusive = false;
                 if (ECS_IS_PAIR(to_add)) {
-                    ecs_id_record_t *idr = flecs_id_record_get(world, wc);
-                    if (idr) {
-                        exclusive = (idr->flags & EcsIdExclusive) != 0;
+                    ecs_component_record_t *cdr = flecs_components_get(world, wc);
+                    if (cdr) {
+                        exclusive = (cdr->flags & EcsIdExclusive) != 0;
                     }
                 }
                 if (!exclusive) {
@@ -819,7 +819,7 @@ void flecs_add_overrides_for_base(
     }
 
     if (flags & EcsTableHasIsA) {
-        ecs_table_record_t *tr = flecs_id_record_get_table(
+        const ecs_table_record_t *tr = flecs_component_get_table(
             world->idr_isa_wildcard, base_table);
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t i = tr->index, end = i + tr->count;
@@ -832,7 +832,7 @@ void flecs_add_overrides_for_base(
 static
 void flecs_add_with_property(
     ecs_world_t *world,
-    ecs_id_record_t *idr_with_wildcard,
+    ecs_component_record_t *idr_with_wildcard,
     ecs_type_t *dst_type,
     ecs_entity_t r,
     ecs_entity_t o)
@@ -844,7 +844,7 @@ void flecs_add_with_property(
     ecs_table_t *table = ecs_get_table(world, r);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     
-    ecs_table_record_t *tr = flecs_id_record_get_table(
+    const ecs_table_record_t *tr = flecs_component_get_table(
         idr_with_wildcard, table);
     if (tr) {
         int32_t i = tr->index, end = i + tr->count;
@@ -874,18 +874,18 @@ ecs_table_t* flecs_find_table_with(
 {
     ecs_make_alive_id(world, with);
 
-    ecs_id_record_t *idr = NULL;
+    ecs_component_record_t *cdr = NULL;
     ecs_entity_t r = 0, o = 0;
 
     if (ECS_IS_PAIR(with)) {
         r = ECS_PAIR_FIRST(with);
         o = ECS_PAIR_SECOND(with);
-        idr = flecs_id_record_ensure(world, ecs_pair(r, EcsWildcard));
-        if (idr->flags & EcsIdIsUnion) {
+        cdr = flecs_components_ensure(world, ecs_pair(r, EcsWildcard));
+        if (cdr->flags & EcsIdIsUnion) {
             with = ecs_pair(r, EcsUnion);
-        } else if (idr->flags & EcsIdExclusive) {
+        } else if (cdr->flags & EcsIdExclusive) {
             /* Relationship is exclusive, check if table already has it */
-            ecs_table_record_t *tr = flecs_id_record_get_table(idr, node);
+            const ecs_table_record_t *tr = flecs_component_get_table(cdr, node);
             if (tr) {
                 /* Table already has an instance of the relationship, create
                  * a new id sequence with the existing id replaced */
@@ -896,7 +896,7 @@ ecs_table_t* flecs_find_table_with(
             }
         }
     } else {
-        idr = flecs_id_record_ensure(world, with);
+        cdr = flecs_components_ensure(world, with);
         r = with;
     }
 
@@ -917,8 +917,8 @@ ecs_table_t* flecs_find_table_with(
         }
     }
 
-    if (idr->flags & EcsIdWith) {
-        ecs_id_record_t *idr_with_wildcard = flecs_id_record_get(world,
+    if (cdr->flags & EcsIdWith) {
+        ecs_component_record_t *idr_with_wildcard = flecs_components_get(world,
             ecs_pair(EcsWith, EcsWildcard));
         /* If id has With property, add targets to type */
         flecs_add_with_property(world, idr_with_wildcard, &dst_type, r, o);
@@ -935,10 +935,10 @@ ecs_table_t* flecs_find_table_without(
 {
     if (ECS_IS_PAIR(without)) {
         ecs_entity_t r = 0;
-        ecs_id_record_t *idr = NULL;
+        ecs_component_record_t *cdr = NULL;
         r = ECS_PAIR_FIRST(without);
-        idr = flecs_id_record_get(world, ecs_pair(r, EcsWildcard));
-        if (idr && idr->flags & EcsIdIsUnion) {
+        cdr = flecs_components_get(world, ecs_pair(r, EcsWildcard));
+        if (cdr && cdr->flags & EcsIdIsUnion) {
             without = ecs_pair(r, EcsUnion);
         }
     }

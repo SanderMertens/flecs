@@ -66,10 +66,11 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
         ecs_search(world, it->table, ecs_childof(EcsWildcard), &pair);
         ecs_assert(pair != 0, ECS_INTERNAL_ERROR, NULL);
 
+        ecs_component_record_t *cdr = flecs_components_get(world, pair);
         if (evt == EcsOnSet) {
-            index = flecs_id_name_index_ensure(world, pair);
+            index = flecs_component_name_index_ensure(world, cdr);
         } else {
-            index = flecs_id_name_index_get(world, pair);
+            index = flecs_component_name_index_get(world, cdr);
         }
     }
 
@@ -200,13 +201,13 @@ error:
 static
 bool flecs_set_id_flag(
     ecs_world_t *world,
-    ecs_id_record_t *idr, 
+    ecs_component_record_t *cdr, 
     ecs_flags32_t flag)
 {
-    if (!(idr->flags & flag)) {
-        idr->flags |= flag;
+    if (!(cdr->flags & flag)) {
+        cdr->flags |= flag;
         if (flag == EcsIdIsSparse) {
-            flecs_id_record_init_sparse(world, idr);
+            flecs_component_init_sparse(world, cdr);
         }
         return true;
     }
@@ -215,11 +216,11 @@ bool flecs_set_id_flag(
 
 static
 bool flecs_unset_id_flag(
-    ecs_id_record_t *idr, 
+    ecs_component_record_t *cdr, 
     ecs_flags32_t flag)
 {
-    if ((idr->flags & flag)) {
-        idr->flags &= ~flag;
+    if ((cdr->flags & flag)) {
+        cdr->flags &= ~flag;
         return true;
     }
     return false;
@@ -242,27 +243,27 @@ void flecs_register_id_flag_for_relation(
         bool changed = false;
 
         if (event == EcsOnAdd) {
-            ecs_id_record_t *idr;
+            ecs_component_record_t *cdr;
             if (!ecs_has_id(world, e, EcsRelationship) &&
                 !ecs_has_id(world, e, EcsTarget)) 
             {
-                idr = flecs_id_record_ensure(world, e);
-                changed |= flecs_set_id_flag(world, idr, flag);
+                cdr = flecs_components_ensure(world, e);
+                changed |= flecs_set_id_flag(world, cdr, flag);
             }
 
-            idr = flecs_id_record_ensure(world, ecs_pair(e, EcsWildcard));
+            cdr = flecs_components_ensure(world, ecs_pair(e, EcsWildcard));
             do {
-                changed |= flecs_set_id_flag(world, idr, flag);
-            } while ((idr = flecs_id_record_first_next(idr)));
+                changed |= flecs_set_id_flag(world, cdr, flag);
+            } while ((cdr = flecs_component_first_next(cdr)));
             if (entity_flag) flecs_add_flag(world, e, entity_flag);
         } else if (event == EcsOnRemove) {
-            ecs_id_record_t *idr = flecs_id_record_get(world, e);
-            if (idr) changed |= flecs_unset_id_flag(idr, not_flag);
-            idr = flecs_id_record_get(world, ecs_pair(e, EcsWildcard));
-            if (idr) {
+            ecs_component_record_t *cdr = flecs_components_get(world, e);
+            if (cdr) changed |= flecs_unset_id_flag(cdr, not_flag);
+            cdr = flecs_components_get(world, ecs_pair(e, EcsWildcard));
+            if (cdr) {
                 do {
-                    changed |= flecs_unset_id_flag(idr, not_flag);
-                } while ((idr = flecs_id_record_first_next(idr)));
+                    changed |= flecs_unset_id_flag(cdr, not_flag);
+                } while ((cdr = flecs_component_first_next(cdr)));
             }
         }
 
@@ -279,7 +280,7 @@ void flecs_register_final(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        if (flecs_id_record_get(world, ecs_pair(EcsIsA, e)) != NULL) {
+        if (flecs_components_get(world, ecs_pair(EcsIsA, e)) != NULL) {
             char *e_str = ecs_get_path(world, e);
             ecs_throw(ECS_ID_IN_USE,
                 "cannot change property 'Final' for '%s': already inherited from",
@@ -302,15 +303,15 @@ void flecs_register_tag(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
 
         if (it->event == EcsOnAdd) {
-            ecs_id_record_t *idr = flecs_id_record_get(world, 
+            ecs_component_record_t *cdr = flecs_components_get(world, 
                 ecs_pair(e, EcsWildcard));
-            ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
             do {
-                if (idr->type_info != NULL) {
+                if (cdr->type_info != NULL) {
                     flecs_assert_relation_unused(world, e, EcsPairIsTag);
                 }
-                idr->type_info = NULL;
-            } while ((idr = flecs_id_record_first_next(idr)));
+                cdr->type_info = NULL;
+            } while ((cdr = flecs_component_first_next(cdr)));
         }
     }
 }
@@ -601,20 +602,20 @@ ecs_table_t* flecs_bootstrap_component_table(
 {
     /* Before creating table, manually set flags for ChildOf/Identifier, as this
      * can no longer be done after they are in use. */
-    ecs_id_record_t *idr = flecs_id_record_ensure(world, EcsChildOf);
-    idr->flags |= EcsIdOnDeleteObjectDelete | EcsIdOnInstantiateDontInherit |
+    ecs_component_record_t *cdr = flecs_components_ensure(world, EcsChildOf);
+    cdr->flags |= EcsIdOnDeleteObjectDelete | EcsIdOnInstantiateDontInherit |
         EcsIdTraversable | EcsIdTag;
 
     /* Initialize id records cached on world */
-    world->idr_childof_wildcard = flecs_id_record_ensure(world, 
+    world->idr_childof_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, EcsWildcard));
     world->idr_childof_wildcard->flags |= EcsIdOnDeleteObjectDelete | 
         EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdTag | EcsIdExclusive;
-    idr = flecs_id_record_ensure(world, ecs_pair_t(EcsIdentifier, EcsWildcard));
-    idr->flags |= EcsIdOnInstantiateDontInherit;
+    cdr = flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsWildcard));
+    cdr->flags |= EcsIdOnInstantiateDontInherit;
     world->idr_identifier_name = 
-        flecs_id_record_ensure(world, ecs_pair_t(EcsIdentifier, EcsName));
-    world->idr_childof_0 = flecs_id_record_ensure(world, 
+        flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsName));
+    world->idr_childof_0 = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, 0));
 
     /* Initialize root table */
@@ -835,7 +836,7 @@ void flecs_bootstrap(
     });
 
     /* Create and cache often used id records on world */
-    flecs_init_id_records(world);
+    flecs_components_init(world);
 
     /* Create table for builtin components. This table temporarily stores the 
      * entities associated with builtin components, until they get moved to 
@@ -972,7 +973,7 @@ void flecs_bootstrap(
     ecs_set_scope(world, EcsFlecsInternals);
 
     /* Register observers for components/relationship properties. Most observers
-     * set flags on an id record when a property is added to a component, which
+     * set flags on an component record when a property is added to a component, which
      * allows for quick property testing in various operations. */
     ecs_observer(world, {
         .query.terms = {{ .id = EcsFinal }},

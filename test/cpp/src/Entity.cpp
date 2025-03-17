@@ -4944,3 +4944,34 @@ void Entity_untyped_component_use_low_id(void) {
     test_assert(c.is_valid());
     test_assert(c < FLECS_HI_COMPONENT_ID);
 }
+
+enum Color {
+    Red, Green, Blue
+};
+
+void Entity_add_remove_enum_component(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    e.set<Color>(Blue);
+    test_assert(e.has<Color>());
+
+    {
+        const Color *c = e.get<Color>();
+        test_assert(c != nullptr);
+        test_assert(*c == Blue);
+    }
+
+    e.set<Color>(Green);
+    test_assert(e.has<Color>());
+
+    {
+        const Color *c = e.get<Color>();
+        test_assert(c != nullptr);
+        test_assert(*c == Green);
+    }
+
+    e.remove<Color>();
+    test_assert(!e.has<Color>());
+}

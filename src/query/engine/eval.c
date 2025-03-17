@@ -25,24 +25,24 @@ bool flecs_query_select_w_id(
     ecs_flags32_t filter_mask)
 {
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
-    ecs_id_record_t *idr = op_ctx->idr;
-    ecs_table_record_t *tr;
+    ecs_component_record_t *cdr = op_ctx->cdr;
+    const ecs_table_record_t *tr;
     ecs_table_t *table;
 
     if (!redo) {
-        if (!idr || idr->id != id) {
-            idr = op_ctx->idr = flecs_id_record_get(ctx->world, id);
-            if (!idr) {
+        if (!cdr || cdr->id != id) {
+            cdr = op_ctx->cdr = flecs_components_get(ctx->world, id);
+            if (!cdr) {
                 return false;
             }
         }
 
         if (ctx->query->pub.flags & EcsQueryMatchEmptyTables) {
-            if (!flecs_table_cache_all_iter(&idr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_all_iter(&cdr->cache, &op_ctx->it)) {
                 return false;
             }
         } else {
-            if (!flecs_table_cache_iter(&idr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_iter(&cdr->cache, &op_ctx->it)) {
                 return false;
             }
         }
@@ -60,10 +60,10 @@ repeat:
         table = tr->hdr.table;
         flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
     } else {
-        tr = (ecs_table_record_t*)op_ctx->it.cur;
+        tr = (const ecs_table_record_t*)op_ctx->it.cur;
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
         table = tr->hdr.table;
-        op_ctx->column = flecs_query_next_column(table, idr->id, op_ctx->column);
+        op_ctx->column = flecs_query_next_column(table, cdr->id, op_ctx->column);
         op_ctx->remaining --;
     }
 
@@ -94,8 +94,8 @@ bool flecs_query_with(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
-    ecs_id_record_t *idr = op_ctx->idr;
-    ecs_table_record_t *tr;
+    ecs_component_record_t *cdr = op_ctx->cdr;
+    const ecs_table_record_t *tr;
 
     ecs_table_t *table = flecs_query_get_table(op, &op->src, EcsQuerySrc, ctx);
     if (!table) {
@@ -104,14 +104,14 @@ bool flecs_query_with(
 
     if (!redo) {
         ecs_id_t id = flecs_query_op_get_id(op, ctx);
-        if (!idr || idr->id != id) {
-            idr = op_ctx->idr = flecs_id_record_get(ctx->world, id);
-            if (!idr) {
+        if (!cdr || cdr->id != id) {
+            cdr = op_ctx->cdr = flecs_components_get(ctx->world, id);
+            if (!cdr) {
                 return false;
             }
         }
 
-        tr = flecs_id_record_get_table(idr, table);
+        tr = flecs_component_get_table(cdr, table);
         if (!tr) {
             return false;
         }
@@ -127,7 +127,7 @@ bool flecs_query_with(
             return false;
         }
 
-        op_ctx->column = flecs_query_next_column(table, idr->id, op_ctx->column);
+        op_ctx->column = flecs_query_next_column(table, cdr->id, op_ctx->column);
         ecs_assert(op_ctx->column != -1, ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -225,20 +225,20 @@ bool flecs_query_select_id(
 
     if (!redo) {
         ecs_id_t id = it->ids[field];
-        ecs_id_record_t *idr = op_ctx->idr;
-        if (!idr || idr->id != id) {
-            idr = op_ctx->idr = flecs_id_record_get(ctx->world, id);
-            if (!idr) {
+        ecs_component_record_t *cdr = op_ctx->cdr;
+        if (!cdr || cdr->id != id) {
+            cdr = op_ctx->cdr = flecs_components_get(ctx->world, id);
+            if (!cdr) {
                 return false;
             }
         }
 
         if (ctx->query->pub.flags & EcsQueryMatchEmptyTables) {
-            if (!flecs_table_cache_all_iter(&idr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_all_iter(&cdr->cache, &op_ctx->it)) {
                 return false;
             }
         } else {
-            if (!flecs_table_cache_iter(&idr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_iter(&cdr->cache, &op_ctx->it)) {
                 return false;
             }
         }
@@ -279,15 +279,15 @@ bool flecs_query_with_id(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_t id = it->ids[field];
-    ecs_id_record_t *idr = op_ctx->idr;
-    if (!idr || idr->id != id) {
-        idr = op_ctx->idr = flecs_id_record_get(ctx->world, id);
-        if (!idr) {
+    ecs_component_record_t *cdr = op_ctx->cdr;
+    if (!cdr || cdr->id != id) {
+        cdr = op_ctx->cdr = flecs_components_get(ctx->world, id);
+        if (!cdr) {
             return false;
         }
     }
 
-    ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    const ecs_table_record_t *tr = flecs_component_get_table(cdr, table);
     if (!tr) {
         return false;
     }
@@ -360,7 +360,7 @@ bool flecs_query_and_any(
         ctx->it->ids[field] = flecs_query_op_get_id(op, ctx);
     }
 
-    ctx->it->trs[field] = (ecs_table_record_t*)op_ctx->it.cur;
+    ctx->it->trs[field] = (const ecs_table_record_t*)op_ctx->it.cur;
 
     return result;
 }
@@ -426,8 +426,8 @@ int32_t flecs_query_next_inheritable_id(
 {
     int32_t i;
     for (i = index; i < type->count; i ++) {
-        ecs_id_record_t *idr = flecs_id_record_get(world, type->array[i]);
-        if (!(idr->flags & EcsIdOnInstantiateDontInherit)) {
+        ecs_component_record_t *cdr = flecs_components_get(world, type->array[i]);
+        if (!(cdr->flags & EcsIdOnInstantiateDontInherit)) {
             return i;
         }
     }
@@ -521,16 +521,16 @@ bool flecs_query_x_from(
              * components from the type list */
             if (op_ctx->cur_id_index != op_ctx->first_id_index) {
                 for (i = op_ctx->first_id_index; i < op_ctx->cur_id_index; i ++) {
-                    ecs_id_record_t *idr = flecs_id_record_get(world, ids[i]);
-                    if (!idr) {
+                    ecs_component_record_t *cdr = flecs_components_get(world, ids[i]);
+                    if (!cdr) {
                         continue;
                     }
 
-                    if (idr->flags & EcsIdOnInstantiateDontInherit) {
+                    if (cdr->flags & EcsIdOnInstantiateDontInherit) {
                         continue;
                     }
                     
-                    if (flecs_id_record_get_table(idr, src_table) != NULL) {
+                    if (flecs_component_get_table(cdr, src_table) != NULL) {
                         /* Already matched */
                         break;
                     }
@@ -544,8 +544,8 @@ bool flecs_query_x_from(
 
         if (oper == EcsAndFrom || oper == EcsNotFrom || src_written) {
             for (i = id_index; i < type->count; i ++) {
-                ecs_id_record_t *idr = flecs_id_record_get(world, ids[i]);
-                if (!idr) {
+                ecs_component_record_t *cdr = flecs_components_get(world, ids[i]);
+                if (!cdr) {
                     if (oper == EcsAndFrom) {
                         return false;
                     } else {
@@ -553,11 +553,11 @@ bool flecs_query_x_from(
                     }
                 }
 
-                if (idr->flags & EcsIdOnInstantiateDontInherit) {
+                if (cdr->flags & EcsIdOnInstantiateDontInherit) {
                     continue;
                 }
 
-                if (flecs_id_record_get_table(idr, src_table) == NULL) {
+                if (flecs_component_get_table(cdr, src_table) == NULL) {
                     if (oper == EcsAndFrom) {
                         break; /* Must have all ids */
                     }
@@ -620,11 +620,11 @@ bool flecs_query_ids(
         return false;
     }
 
-    ecs_id_record_t *cur;
+    ecs_component_record_t *cur;
     ecs_id_t id = flecs_query_op_get_id(op, ctx);
 
     {
-        cur = flecs_id_record_get(ctx->world, id);
+        cur = flecs_components_get(ctx->world, id);
         if (!cur || !cur->cache.tables.count) {
             return false;
         }
@@ -649,7 +649,7 @@ bool flecs_query_idsright(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_query_ids_ctx_t *op_ctx = flecs_op_ctx(ctx, ids);
-    ecs_id_record_t *cur;
+    ecs_component_record_t *cur;
 
     if (!redo) {
         ecs_id_t id = flecs_query_op_get_id(op, ctx);
@@ -661,7 +661,7 @@ bool flecs_query_idsright(
             return true;
         }
 
-        cur = op_ctx->cur = flecs_id_record_get(ctx->world, id);
+        cur = op_ctx->cur = flecs_components_get(ctx->world, id);
         if (!cur) {
             return false;
         }
@@ -673,7 +673,7 @@ bool flecs_query_idsright(
 
 next:
     do {
-        cur = op_ctx->cur = flecs_id_record_first_next(op_ctx->cur);
+        cur = op_ctx->cur = flecs_component_first_next(op_ctx->cur);
     } while (cur && !cur->cache.tables.count); /* Skip empty ids */
 
     if (!cur) {
@@ -706,7 +706,7 @@ bool flecs_query_idsleft(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_query_ids_ctx_t *op_ctx = flecs_op_ctx(ctx, ids);
-    ecs_id_record_t *cur;
+    ecs_component_record_t *cur;
 
     if (!redo) {
         ecs_id_t id = flecs_query_op_get_id(op, ctx);
@@ -718,7 +718,7 @@ bool flecs_query_idsleft(
             return true;
         }
 
-        cur = op_ctx->cur = flecs_id_record_get(ctx->world, id);
+        cur = op_ctx->cur = flecs_components_get(ctx->world, id);
         if (!cur) {
             return false;
         }
@@ -729,7 +729,7 @@ bool flecs_query_idsleft(
     }
 
     do {
-        cur = op_ctx->cur = flecs_id_record_second_next(op_ctx->cur);
+        cur = op_ctx->cur = flecs_component_second_next(op_ctx->cur);
     } while (cur && !cur->cache.tables.count); /* Skip empty ids */ 
 
     if (!cur) {
