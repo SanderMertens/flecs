@@ -33,7 +33,7 @@
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
 #define FLECS_VERSION_MINOR 0  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 4  /**< Flecs patch version. */
+#define FLECS_VERSION_PATCH 5  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
