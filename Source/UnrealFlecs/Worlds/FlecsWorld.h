@@ -263,7 +263,7 @@ public:
 
 	// I hate this
 	template <typename FunctionType>
-	void UnlockIter_Internal(flecs::iter& Iter, FunctionType&& Function)
+	FORCEINLINE_DEBUGGABLE void UnlockIter_Internal(flecs::iter& Iter, FunctionType&& Function)
 	{
 		DeferEndLambda([this, &Iter, Function = std::forward<FunctionType>(Function)]()
 		{
@@ -565,7 +565,7 @@ public:
 	 * @tparam TModule The module class
 	 */
 	template <Solid::TStaticClassConcept TModule, typename TFunction>
-	void RegisterModuleDependency(UObject* InModuleObject, TFunction&& InFunction)
+	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(UObject* InModuleObject, TFunction&& InFunction)
 	{
 		RegisterModuleDependency(InModuleObject, TModule::StaticClass(),
 			[InFunction = std::forward<TFunction>(InFunction)]
@@ -583,7 +583,7 @@ public:
 	 * @param InDependencyClass The dependency class
 	 * @param InFunction The function to call when the dependency is imported
 	 */
-	void RegisterModuleDependency(
+	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(
 		const UObject* InModuleObject, const TSubclassOf<UFlecsModuleInterface>& InDependencyClass,
 		const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& InFunction)
 	{
@@ -616,7 +616,7 @@ public:
 		}
 	}
 
-	void RegisterFlecsAsset(UFlecsPrimaryDataAsset* InAsset)
+	FORCEINLINE_DEBUGGABLE void RegisterFlecsAsset(UFlecsPrimaryDataAsset* InAsset)
 	{
 		solid_checkf(IsValid(InAsset), TEXT("Asset is nullptr"));
 
@@ -631,7 +631,7 @@ public:
 		InAsset->OnEntityCreated(AssetEntity, this);
 	}
 
-	void UnregisterFlecsAsset(UFlecsPrimaryDataAsset* InAsset)
+	FORCEINLINE_DEBUGGABLE void UnregisterFlecsAsset(UFlecsPrimaryDataAsset* InAsset)
 	{
 		solid_checkf(IsValid(InAsset), TEXT("Asset is nullptr"));
 
@@ -650,45 +650,47 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	void Reset()
+	FORCEINLINE_DEBUGGABLE void Reset()
 	{
 		World.reset();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void ResetClock() const
+	FORCEINLINE_DEBUGGABLE void ResetClock() const
 	{
 		World.reset_clock();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FFlecsEntityHandle CreateEntity(const FString& Name = "") const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntity(const FString& Name = "") const
 	{
 		return World.entity(StringCast<char>(*Name).Get());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FFlecsEntityHandle CreateEntityWithId(const FFlecsId InId) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithId(const FFlecsId InId) const
 	{
 		solid_checkf(!World.is_alive(InId), TEXT("Entity %s is not alive"), *InId.ToString());
 		return World.make_alive(InId);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FFlecsEntityHandle CreateEntityWithPrefab(const FFlecsEntityHandle& InPrefab) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithPrefab(const FFlecsEntityHandle& InPrefab) const
 	{
 		return World.entity().is_a(InPrefab.GetEntity());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord, const FString& Name = "") const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecord(
+		const FFlecsEntityRecord& InRecord,
+		const FString& Name = "") const
 	{
 		const FFlecsEntityHandle Entity = CreateEntity(Name);
 		InRecord.ApplyRecordToEntity(Entity);
 		return Entity;
 	}
 
-	FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord, const FFlecsId InId) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord, const FFlecsId InId) const
 	{
 		const FFlecsEntityHandle Entity = CreateEntityWithId(InId);
 		InRecord.ApplyRecordToEntity(Entity);
@@ -697,7 +699,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World",
 		meta = (AdvancedDisplay = "Separator, RootSeparator, bRecursive"))
-	FFlecsEntityHandle LookupEntity(const FString& Name,
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle LookupEntity(const FString& Name,
 		const FString& Separator = "::", const FString& RootSeparator = "::", const bool bRecursive = true) const
 	{
 		return World.lookup(StringCast<char>(*Name).Get(), StringCast<char>(*Separator).Get(),
@@ -705,7 +707,7 @@ public:
 	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void DestroyEntityByName(const FString& Name) const
+	FORCEINLINE_DEBUGGABLE void DestroyEntityByName(const FString& Name) const
 	{
 		solid_checkf(!Name.IsEmpty(), TEXT("Name is empty"));
 		
@@ -722,96 +724,96 @@ public:
 	}
 
 	template <typename FunctionType>
-	void ForEach(FunctionType&& Function) const
+	FORCEINLINE_DEBUGGABLE void ForEach(FunctionType&& Function) const
 	{
 		World.each(std::forward<FunctionType>(Function));
 	}
 
 	template <typename T, typename FunctionType>
-	void ForEach(FunctionType&& Function) const
+	FORCEINLINE_DEBUGGABLE void ForEach(FunctionType&& Function) const
 	{
 		World.each<T>(std::forward<FunctionType>(Function));
 	}
 
 	template <typename FunctionType>
-	void ForEach(const FFlecsId& InTermId, const FunctionType& Function) const
+	FORCEINLINE_DEBUGGABLE void ForEach(const FFlecsId& InTermId, const FunctionType& Function) const
 	{
 		World.each(InTermId, Function);
 	}
 
 	template <typename T>
-	void AddSingleton() const
+	FORCEINLINE_DEBUGGABLE void AddSingleton() const
 	{
 		World.add<T>();
 	}
 
 	template <typename T>
-	void SetSingleton(const T& Value) const
+	FORCEINLINE_DEBUGGABLE void SetSingleton(const T& Value) const
 	{
 		World.set<T>(Value);
 	}
 
 	template <typename T>
-	void RemoveSingleton() const
+	FORCEINLINE_DEBUGGABLE void RemoveSingleton() const
 	{
 		World.remove<T>();
 	}
 	
 	template <typename T>
-	NO_DISCARD bool HasSingleton() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE bool HasSingleton() const
 	{
 		return World.has<T>();
 	}
 
 	template <typename T UE_REQUIRES(std::is_copy_constructible<T>::value)>
-	NO_DISCARD T GetSingleton() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE T GetSingleton() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return *World.get<T>();
 	}
 
 	template <typename T>
-	NO_DISCARD T* GetSingletonPtr()
+	NO_DISCARD FORCEINLINE_DEBUGGABLE T* GetSingletonPtr()
 	{
 		return World.get_mut<T>();
 	}
 
 	template <typename T>
-	NO_DISCARD const T* GetSingletonPtr() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE const T* GetSingletonPtr() const
 	{
 		return World.get<T>();
 	}
 
 	template <typename T>
-	NO_DISCARD T& GetSingletonRef()
+	NO_DISCARD FORCEINLINE_DEBUGGABLE T& GetSingletonRef()
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return *GetSingletonPtr<T>();
 	}
 
 	template <typename T>
-	NO_DISCARD const T& GetSingletonRef() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE const T& GetSingletonRef() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return *GetSingletonPtr<T>();
 	}
 
 	template <typename T>
-	NO_DISCARD flecs::ref<T> GetSingletonFlecsRef() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::ref<T> GetSingletonFlecsRef() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return World.get_ref<T>();
 	}
 	
 	template <typename T>
-	NO_DISCARD FFlecsEntityHandle ObtainSingletonEntity() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainSingletonEntity() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return World.entity<T>();
 	}
 
 	template <typename T>
-	void ModifiedSingleton() const
+	FORCEINLINE_DEBUGGABLE void ModifiedSingleton() const
 	{
 		World.modified<T>();
 	}
@@ -828,7 +830,7 @@ public:
 	 * @see ecs_merge()
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void Merge() const
+	FORCEINLINE_DEBUGGABLE void Merge() const
 	{
 		World.merge();
 	}
@@ -837,7 +839,7 @@ public:
 	 * @return The Name of the World Entity
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FString GetWorldName() const
+	FORCEINLINE_DEBUGGABLE FString GetWorldName() const
 	{
 		return GetWorldEntity().GetName();
 	}
@@ -846,7 +848,7 @@ public:
 	 * @brief Set the Name of the World Entity
 	 * @param InName The new name
 	 */
-	void SetWorldName(const FString& InName) const
+	FORCEINLINE_DEBUGGABLE void SetWorldName(const FString& InName) const
 	{
 		GetWorldEntity().SetName(InName);
 	}
@@ -858,7 +860,7 @@ public:
 	 * @return The entity handle of the imported module
 	 */
 	template <typename T>
-	FFlecsEntityHandle ImportFlecsModule()
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ImportFlecsModule()
 	{
 		static_assert(!TIsDerivedFrom<T, IFlecsModuleInterface>::Value,
 			"T must not be derived from IFlecsModuleInterface, use ImportModule(Non-Template) instead");
@@ -866,13 +868,13 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void ImportModule(const TScriptInterface<IFlecsModuleInterface> InModule)
+	FORCEINLINE_DEBUGGABLE void ImportModule(const TScriptInterface<IFlecsModuleInterface> InModule)
 	{
 		solid_checkf(IsValid(InModule.GetObject()), TEXT("Module is nullptr"));
 		InModule->ImportModule(World);
 	}
 	
-	void ImportModule(UObject* InModule)
+	FORCEINLINE_DEBUGGABLE void ImportModule(UObject* InModule)
 	{
 		solid_checkf(IsValid(InModule), TEXT("Module is nullptr"));
 		solid_checkf(InModule->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
@@ -882,7 +884,7 @@ public:
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	bool IsModuleImported(const TSubclassOf<UObject> InModule) const
+	FORCEINLINE_DEBUGGABLE bool IsModuleImported(const TSubclassOf<UObject> InModule) const
 	{
 		solid_checkf(IsValid(InModule), TEXT("Module is nullptr"));
 		
@@ -896,13 +898,13 @@ public:
 	}
 
 	template <Solid::TStaticClassConcept T>
-	NO_DISCARD bool IsModuleImported() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE bool IsModuleImported() const
 	{
 		return IsModuleImported(T::StaticClass());
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule) const
 	{
 		solid_checkf(IsValid(InModule), TEXT("Module is nullptr"));
 		
@@ -916,13 +918,13 @@ public:
 	}
 
 	template <Solid::TStaticClassConcept T>
-	NO_DISCARD FFlecsEntityHandle GetModuleEntity() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetModuleEntity() const
 	{
 		return GetModuleEntity(T::StaticClass());
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	UObject* GetModule(const TSubclassOf<UObject> InModule) const
+	FORCEINLINE_DEBUGGABLE UObject* GetModule(const TSubclassOf<UObject> InModule) const
 	{
 		solid_checkf(IsValid(InModule), TEXT("Module is nullptr"));
 		
@@ -931,50 +933,50 @@ public:
 	}
 
 	template <Solid::TStaticClassConcept T>
-	NO_DISCARD T* GetModule() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE T* GetModule() const
 	{
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity<T>();
 		return ModuleEntity.GetPairPtr<FFlecsUObjectComponent, FFlecsModuleComponentTag>()->GetObjectChecked<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	bool BeginDefer() const
+	FORCEINLINE_DEBUGGABLE bool BeginDefer() const
 	{
 		return World.defer_begin();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	bool EndDefer() const
+	FORCEINLINE_DEBUGGABLE bool EndDefer() const
 	{
 		return World.defer_end();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void ResumeDefer() const
+	FORCEINLINE_DEBUGGABLE void ResumeDefer() const
 	{
 		World.defer_resume();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void SuspendDefer() const
+	FORCEINLINE_DEBUGGABLE void SuspendDefer() const
 	{
 		World.defer_suspend();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	bool IsDeferred() const
+	FORCEINLINE_DEBUGGABLE bool IsDeferred() const
 	{
 		return World.is_deferred();
 	}
 
 	template <typename TFunction>
-	void Defer(TFunction&& Function) const
+	FORCEINLINE_DEBUGGABLE void Defer(TFunction&& Function) const
 	{
 		World.defer<TFunction>(std::forward<TFunction>(Function));
 	}
 
 	template <typename TFunction>
-	void DeferEndLambda(TFunction&& Function, const bool bEndDefer = false) const
+	FORCEINLINE_DEBUGGABLE void DeferEndLambda(TFunction&& Function, const bool bEndDefer = false) const
 	{
 		const bool bIsDeferred = IsDeferred();
 		
@@ -1006,19 +1008,19 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	bool BeginReadOnly() const
+	FORCEINLINE_DEBUGGABLE bool BeginReadOnly() const
 	{
 		return World.readonly_begin();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void EndReadOnly() const
+	FORCEINLINE_DEBUGGABLE void EndReadOnly() const
 	{
 		World.readonly_end();
 	}
 
 	template <typename TFunction>
-	void ReadOnly(TFunction&& Function) const
+	FORCEINLINE_DEBUGGABLE void ReadOnly(TFunction&& Function) const
 	{
 		BeginReadOnly();
 		std::invoke(std::forward<TFunction>(Function));
@@ -1026,18 +1028,18 @@ public:
 	}
 
 	template <typename TFunction>
-	void WithScoped(FFlecsId InId, TFunction&& Function) const
+	FORCEINLINE_DEBUGGABLE void WithScoped(FFlecsId InId, TFunction&& Function) const
 	{
 		World.with(InId, std::forward<TFunction>(Function));
 	}
 
-	void SetContext(void* InContext) const
+	FORCEINLINE_DEBUGGABLE void SetContext(void* InContext) const
 	{
 		World.set_ctx(InContext);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	bool Progress(const double DeltaTime = 0.0)
+	FORCEINLINE_DEBUGGABLE bool Progress(const double DeltaTime = 0.0)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_FlecsWorldProgress);
 
@@ -1055,7 +1057,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void SetTimeScale(const double InTimeScale) const
+	FORCEINLINE_DEBUGGABLE void SetTimeScale(const double InTimeScale) const
 	{
 		World.set_time_scale(InTimeScale);
 	}
@@ -1089,49 +1091,49 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void SetPipeline(const FFlecsEntityHandle& InPipeline) const
+	FORCEINLINE_DEBUGGABLE void SetPipeline(const FFlecsEntityHandle& InPipeline) const
 	{
 		World.set_pipeline(InPipeline);
 	}
 
 	template <typename T>
-	void SetPipeline() const
+	FORCEINLINE_DEBUGGABLE void SetPipeline() const
 	{
 		World.set_pipeline<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetPipeline() const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetPipeline() const
 	{
 		return World.get_pipeline();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	double GetDeltaTime() const
+	FORCEINLINE_DEBUGGABLE double GetDeltaTime() const
 	{
 		return World.delta_time();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetAlive(const FFlecsId InId) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetAlive(const FFlecsId InId) const
 	{
 		return World.get_alive(InId);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetEntity(const FFlecsId InId) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetEntity(const FFlecsId InId) const
 	{
 		return World.get_alive(InId);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FFlecsEntityHandle MakeAlive(const FFlecsId& InId) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle MakeAlive(const FFlecsId& InId) const
 	{
 		return World.make_alive(InId);
 	}
 
 	template <typename ...TComponents>
-	NO_DISCARD flecs::system_builder<TComponents...> CreateSystemWithBuilder(const FString& InName) const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::system_builder<TComponents...> CreateSystemWithBuilder(const FString& InName) const
 	{
 		return World.system<TComponents...>(StringCast<char>(*InName).Get());
 	}
@@ -1141,7 +1143,7 @@ public:
 	 * @return The World Entity
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetWorldEntity() const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetWorldEntity() const
 	{
 		return World.entity(flecs::World);
 	}
@@ -1156,7 +1158,7 @@ public:
 	 * @see flecs::world::set_stage_count()
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	int32 GetStageCount() const
+	FORCEINLINE_DEBUGGABLE int32 GetStageCount() const
 	{
 		return World.get_stage_count();
 	}
@@ -1173,19 +1175,19 @@ public:
 	 * @see flecs::world::readonly_end()
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	bool IsReadOnly() const
+	FORCEINLINE_DEBUGGABLE bool IsReadOnly() const
 	{
 		return World.is_readonly();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void PreallocateEntities(const int32 InEntityCount) const
+	FORCEINLINE_DEBUGGABLE void PreallocateEntities(const int32 InEntityCount) const
 	{
 		World.dim(InEntityCount);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void SetEntityRange(const FFlecsId InMin, const FFlecsId InMax) const
+	FORCEINLINE_DEBUGGABLE void SetEntityRange(const FFlecsId InMin, const FFlecsId InMax) const
 	{
 		World.set_entity_range(InMin, InMax);
 	}
@@ -1199,7 +1201,7 @@ public:
 	 * @param Function The function to invoke
 	 */
 	template <typename FunctionType>
-	void SetEntityRange(const FFlecsId InMin, const FFlecsId InMax, const bool bEnforceEntityRange, FunctionType&& Function) const
+	FORCEINLINE_DEBUGGABLE void SetEntityRange(const FFlecsId InMin, const FFlecsId InMax, const bool bEnforceEntityRange, FunctionType&& Function) const
 	{
 		const int32 OldMin = static_cast<int32>(ecs_get_world_info(World.c_ptr())->min_id);
 		const int32 OldMax = static_cast<int32>(ecs_get_world_info(World.c_ptr())->max_id);
@@ -1224,7 +1226,7 @@ public:
 	 * @see ecs_enable_range_check()
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	void EnforceEntityRange(const bool bInEnforce) const
+	FORCEINLINE_DEBUGGABLE void EnforceEntityRange(const bool bInEnforce) const
 	{
 		World.enable_range_check(bInEnforce);
 	}
@@ -1235,37 +1237,37 @@ public:
 	 * @param Function Function to invoke
 	 */
 	template <typename FunctionType>
-	void ForEachChild(FunctionType&& Function) const
+	FORCEINLINE_DEBUGGABLE void ForEachChild(FunctionType&& Function) const
 	{
 		World.children(std::forward<FunctionType>(Function));
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	void SetThreads(const int32 InThreadCount) const
+	FORCEINLINE_DEBUGGABLE void SetThreads(const int32 InThreadCount) const
 	{
 		World.set_threads(InThreadCount);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	int32 GetThreads() const
+	FORCEINLINE_DEBUGGABLE int32 GetThreads() const
 	{
 		return World.get_threads();
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	bool UsingTaskThreads() const
+	FORCEINLINE_DEBUGGABLE bool UsingTaskThreads() const
 	{
 		return World.using_task_threads();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	void SetTaskThreads(const int32 InThreadCount) const
+	FORCEINLINE_DEBUGGABLE void SetTaskThreads(const int32 InThreadCount) const
 	{
 		World.set_task_threads(InThreadCount);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	bool HasScriptStruct(const UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE bool HasScriptStruct(const UScriptStruct* ScriptStruct) const
 	{
 		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
 		
@@ -1279,7 +1281,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	bool HasScriptEnum(const UEnum* ScriptEnum) const
+	FORCEINLINE_DEBUGGABLE bool HasScriptEnum(const UEnum* ScriptEnum) const
 	{
 		solid_checkf(IsValid(ScriptEnum), TEXT("ScriptEnum is nullptr"));
 		
@@ -1293,7 +1295,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetScriptStructEntity(const UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetScriptStructEntity(const UScriptStruct* ScriptStruct) const
 	{
 		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
 		
@@ -1303,7 +1305,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetScriptEnumEntity(const UEnum* ScriptEnum) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetScriptEnumEntity(const UEnum* ScriptEnum) const
 	{
 		solid_checkf(IsValid(ScriptEnum), TEXT("ScriptEnum is nullptr"));
 		
@@ -1313,25 +1315,25 @@ public:
 	}
 
 	template <Solid::TScriptStructConcept T>
-	NO_DISCARD FFlecsEntityHandle GetScriptStructEntity() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetScriptStructEntity() const
 	{
 		return GetScriptStructEntity(TBaseStructure<T>::Get());
 	}
 
 	template <Solid::TScriptStructConcept T>
-	NO_DISCARD bool HasScriptStruct() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE bool HasScriptStruct() const
 	{
 		return HasScriptStruct(TBaseStructure<T>::Get());
 	}
 
 	template <Solid::TStaticEnumConcept T>
-	NO_DISCARD FFlecsEntityHandle GetScriptEnumEntity() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetScriptEnumEntity() const
 	{
 		return GetScriptEnumEntity(StaticEnum<T>());
 	}
 
 	template <Solid::TStaticEnumConcept T>
-	NO_DISCARD bool HasScriptEnum() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE bool HasScriptEnum() const
 	{
 		return HasScriptEnum(StaticEnum<T>());
 	}
@@ -1462,7 +1464,7 @@ public:
 	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FFlecsEntityHandle RegisterScriptStruct(const UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterScriptStruct(const UScriptStruct* ScriptStruct) const
 	{
 		solid_check(IsValid(ScriptStruct));
 
@@ -1626,7 +1628,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FFlecsEntityHandle RegisterScriptEnum(const UEnum* ScriptEnum) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterScriptEnum(const UEnum* ScriptEnum) const
 	{
 		solid_check(IsValid(ScriptEnum));
 
@@ -1645,7 +1647,7 @@ public:
 		return RegisterComponentEnumType(ScriptEnum);
 	}
 	
-	FFlecsEntityHandle RegisterComponentEnumType(const UEnum* ScriptEnum) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentEnumType(const UEnum* ScriptEnum) const
 	{
 		solid_check(IsValid(ScriptEnum));
 
@@ -1766,7 +1768,7 @@ public:
 	}*/
 
 	template <typename T>
-	flecs::untyped_component RegisterComponentType() const
+	FORCEINLINE_DEBUGGABLE flecs::untyped_component RegisterComponentType() const
 	{
 		flecs::untyped_component Component = World.component<T>();
 		solid_check(Component.is_valid());
@@ -1779,7 +1781,7 @@ public:
 		return Component;
 	}
 	
-	FFlecsEntityHandle RegisterComponentType(const UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentType(const UScriptStruct* ScriptStruct) const
 	{
 		if (HasScriptStruct(ScriptStruct))
 		{
@@ -1790,7 +1792,7 @@ public:
 	}
 
 	template <typename T>
-	FFlecsEntityHandle ObtainComponentTypeStruct() const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeStruct() const
 	{
 		#ifdef FLECS_CPP_NO_AUTO_REGISTRATION
 		solid_checkf(World.is_valid(flecs::_::type<T>::id(World)),
@@ -1802,7 +1804,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* ScriptStruct) const
 	{
 		#ifndef FLECS_CPP_NO_AUTO_REGISTRATION
 		
@@ -1823,7 +1825,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FFlecsEntityHandle ObtainComponentTypeEnum(const UEnum* ScriptEnum) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeEnum(const UEnum* ScriptEnum) const
 	{
 		#ifndef FLECS_CPP_NO_AUTO_REGISTRATION
 		
@@ -1844,93 +1846,93 @@ public:
 	}
 
 	template <typename ...TComponents>
-	flecs::observer_builder<TComponents...> CreateObserver(const FString& Name = "") const
+	FORCEINLINE_DEBUGGABLE flecs::observer_builder<TComponents...> CreateObserver(const FString& Name = "") const
 	{
 		return World.observer<TComponents...>(StringCast<char>(*Name).Get());
 	}
 
-	NO_DISCARD flecs::observer_builder<> CreateObserver(const FString& Name = "") const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD flecs::observer_builder<> CreateObserver(const FString& Name = "") const
 	{
 		return World.observer<>(StringCast<char>(*Name).Get());
 	}
 
 	template <typename ...TComponents, typename ...TArgs>
-	flecs::observer_builder<TComponents...> CreateObserver(
+	FORCEINLINE_DEBUGGABLE flecs::observer_builder<TComponents...> CreateObserver(
 		const FFlecsEntityHandle& InEntity, TArgs&&... Args) const
 	{
 		return World.observer<TComponents...>(InEntity.GetEntity(), std::forward<TArgs>(Args)...);
 	}
 
-	FFlecsEntityHandle CreateObserver(const FFlecsEntityHandle& InEntity) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateObserver(const FFlecsEntityHandle& InEntity) const
 	{
 		return World.observer(InEntity.GetEntity());
 	}
 
-	NO_DISCARD flecs::event_builder Event(const FFlecsEntityHandle& InEntity) const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::event_builder Event(const FFlecsEntityHandle& InEntity) const
 	{
 		return World.event(InEntity.GetEntity());
 	}
 
 	template <typename TEvent>
-	flecs::event_builder_typed<TEvent> Event() const
+	FORCEINLINE_DEBUGGABLE flecs::event_builder_typed<TEvent> Event() const
 	{
 		return World.event<TEvent>();
 	}
 
-	NO_DISCARD flecs::pipeline_builder<> CreatePipeline() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::pipeline_builder<> CreatePipeline() const
 	{
 		return World.pipeline();
 	}
 
 	template <typename ...TComponents>
-	NO_DISCARD flecs::pipeline_builder<TComponents...> CreatePipeline() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::pipeline_builder<TComponents...> CreatePipeline() const
 	{
 		return World.pipeline<TComponents...>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	void RunPipeline(const FFlecsId InPipeline, const double DeltaTime = 0.0) const
+	FORCEINLINE_DEBUGGABLE void RunPipeline(const FFlecsId InPipeline, const double DeltaTime = 0.0) const
 	{
 		World.run_pipeline(InPipeline, DeltaTime);
 	}
 
-	void RandomizeTimers() const
+	FORCEINLINE_DEBUGGABLE void RandomizeTimers() const
 	{
 		World.randomize_timers();
 	}
 
-	NO_DISCARD flecs::timer CreateTimer(const FString& Name) const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::timer CreateTimer(const FString& Name) const
 	{
 		return World.timer(StringCast<char>(*Name).Get());
 	}
 
 	template <typename T>
-	NO_DISCARD flecs::timer CreateTimer() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::timer CreateTimer() const
 	{
 		return World.timer<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	bool HasEntityWithName(const FString& Name) const
+	FORCEINLINE_DEBUGGABLE bool HasEntityWithName(const FString& Name) const
 	{
 		return LookupEntity(Name).IsValid();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
 	{
 		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
 		return LookupEntity(StringCast<char>(*Tag.GetTagName().ToString()).Get(), ".", ".");
 	}
 
 	template <typename T>
-	void EnableType() const
+	FORCEINLINE_DEBUGGABLE void EnableType() const
 	{
 		World.component<T>().enable();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	void EnableType(UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE void EnableType(UScriptStruct* ScriptStruct) const
 	{
 		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
 		
@@ -1938,13 +1940,13 @@ public:
 	}
 
 	template <typename T>
-	void DisableType() const
+	FORCEINLINE_DEBUGGABLE void DisableType() const
 	{
 		World.component<T>().disable();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	void DisableType(UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE void DisableType(UScriptStruct* ScriptStruct) const
 	{
 		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
 		
@@ -1952,13 +1954,13 @@ public:
 	}
 
 	template <typename T>
-	NO_DISCARD bool IsTypeEnabled() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE bool IsTypeEnabled() const
 	{
 		return World.component<T>().enabled();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	bool IsTypeEnabled(UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE bool IsTypeEnabled(UScriptStruct* ScriptStruct) const
 	{
 		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
 		
@@ -1966,13 +1968,13 @@ public:
 	}
 
 	template <typename T>
-	void ToggleType() const
+	FORCEINLINE_DEBUGGABLE void ToggleType() const
 	{
 		World.component<T>().enabled() ? World.component<T>().disable() : World.component<T>().enable();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	void ToggleType(UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE void ToggleType(UScriptStruct* ScriptStruct) const
 	{
 		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
 		
@@ -1980,7 +1982,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle CreatePrefabWithRecord(const FFlecsEntityRecord& InRecord, const FString& Name = "") const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreatePrefabWithRecord(const FFlecsEntityRecord& InRecord, const FString& Name = "") const
 	{
 		const FFlecsEntityHandle Prefab = World.prefab(StringCast<char>(*Name).Get());
 		solid_checkf(Prefab.IsPrefab(), TEXT("Entity is not a prefab"));
@@ -2001,55 +2003,55 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle CreatePrefab(const FString& Name) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreatePrefab(const FString& Name) const
 	{
 		return World.prefab(StringCast<char>(*Name).Get());
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	void DestroyPrefab(const FFlecsEntityHandle& InPrefab) const
+	FORCEINLINE_DEBUGGABLE void DestroyPrefab(const FFlecsEntityHandle& InPrefab) const
 	{
 		InPrefab.Destroy();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	bool ShouldQuit() const
+	FORCEINLINE_DEBUGGABLE bool ShouldQuit() const
 	{
 		return World.should_quit();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FFlecsEntityHandle ClearScope() const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ClearScope() const
 	{
 		return World.set_scope(0);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FFlecsEntityHandle SetScope(const FFlecsEntityHandle& InScope) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle SetScope(const FFlecsEntityHandle& InScope) const
 	{
 		return World.set_scope(InScope.GetEntity());
 	}
 
 	template <typename T>
-	void Scope() const
+	FORCEINLINE_DEBUGGABLE void Scope() const
 	{
 		World.scope<T>();
 	}
 
 	template <typename T, typename FunctionType>
-	void Scope(const FunctionType& Function) const
+	FORCEINLINE_DEBUGGABLE void Scope(const FunctionType& Function) const
 	{
 		World.scope<T>(std::forward<FunctionType>(Function));
 	}
 
 	template <typename FunctionType>
-	void Scope(FFlecsId InId, const FunctionType& Function) const
+	FORCEINLINE_DEBUGGABLE void Scope(FFlecsId InId, const FunctionType& Function) const
 	{
 		World.scope(InId, Function);
 	}
 
 	template <typename FunctionType>
-	void EndScope(FunctionType&& Function) const
+	FORCEINLINE_DEBUGGABLE void EndScope(FunctionType&& Function) const
 	{
 		const flecs::entity OldScope = World.set_scope(0);
 
@@ -2059,22 +2061,22 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle GetScope() const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetScope() const
 	{
 		return World.get_scope();
 	}
 
-	FORCEINLINE virtual bool IsSupportedForNetworking() const override
+	FORCEINLINE_DEBUGGABLE virtual bool IsSupportedForNetworking() const override
 	{
 		return true;
 	}
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override
+	FORCEINLINE_DEBUGGABLE virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override
 	{
 		Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	}
 
-	FORCEINLINE virtual bool IsNameStableForNetworking() const override
+	FORCEINLINE_DEBUGGABLE virtual bool IsNameStableForNetworking() const override
 	{
 		return true;
 	}
@@ -2082,7 +2084,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	UFlecsWorldSubsystem* GetContext() const;
 
-	NO_DISCARD FORCEINLINE FFlecsTypeMapComponent* GetTypeMapComponent() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsTypeMapComponent* GetTypeMapComponent() const
 	{
 		return static_cast<FFlecsTypeMapComponent*>(World.get_binding_ctx());
 	}
