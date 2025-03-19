@@ -426,6 +426,34 @@ struct type<T, if_t< is_pair<T>::value >>
  */
 struct untyped_component : entity {
     using entity::entity;
+  
+    untyped_component() : entity() { }
+    explicit untyped_component(flecs::world_t *world, flecs::entity_t id) : entity(world, id) { }
+    explicit untyped_component(flecs::entity_t id) : entity(id) { }
+
+    explicit untyped_component(flecs::world_t *world, const char *name)
+    {
+        world_ = world;
+
+        ecs_entity_desc_t desc = {};
+        desc.name = name;
+        desc.sep = "::";
+        desc.root_sep = "::";
+        desc.use_low_id = true;
+        id_ = ecs_entity_init(world, &desc);
+    }
+
+    explicit untyped_component(world_t *world, const char *name, const char *sep, const char *root_sep)
+    {
+        world_ = world;
+
+        ecs_entity_desc_t desc = {};
+        desc.name = name;
+        desc.sep = sep;
+        desc.root_sep = root_sep;
+        desc.use_low_id = true;
+        id_ = ecs_entity_init(world, &desc);
+    }
 
     explicit untyped_component(flecs::world_t *world, const char *name = nullptr)
     {
