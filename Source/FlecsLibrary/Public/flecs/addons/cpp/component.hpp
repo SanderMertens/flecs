@@ -455,30 +455,6 @@ struct untyped_component : entity {
         id_ = ecs_entity_init(world, &desc);
     }
 
-    explicit untyped_component(flecs::world_t *world, const char *name = nullptr)
-    {
-        world_ = world;
-
-        ecs_entity_desc_t desc = {};
-        desc.name = name;
-        desc.sep = "::";
-        desc.root_sep = "::";
-        desc.use_low_id = true;
-        id_ = ecs_entity_init(world, &desc);
-    }
-
-    explicit untyped_component(world_t *world, const char *name, const char *sep, const char *root_sep)
-    {
-        world_ = world;
-
-        ecs_entity_desc_t desc = {};
-        desc.name = name;
-        desc.sep = sep;
-        desc.root_sep = root_sep;
-        desc.use_low_id = true;
-        id_ = ecs_entity_init(world, &desc);
-    }
-
 flecs::type_hooks_t get_hooks() const {
     const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
     if (h) {
