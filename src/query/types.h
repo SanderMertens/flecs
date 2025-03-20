@@ -83,8 +83,10 @@ typedef enum {
     EcsQueryUnionEqUp,      /* Evaluate union relationship w/up traversal */
     EcsQueryUnionEqSelfUp,  /* Evaluate union relationship w/self|up traversal */
     EcsQuerySparse,         /* Evaluate sparse component */
-    EcsQuerySparseWith,     /* Evaluate sparse component against fixed or variable source */
     EcsQuerySparseNot,      /* Evaluate sparse component with not operator */
+    EcsQuerySparseSelfUp,
+    EcsQuerySparseUp,
+    EcsQuerySparseWith,     /* Evaluate sparse component against fixed or variable source */
     EcsQueryLookup,         /* Lookup relative to variable */
     EcsQuerySetVars,        /* Populate it.sources from variables */
     EcsQuerySetThis,        /* Populate This entity variable */
@@ -158,6 +160,10 @@ typedef struct {
     ecs_sparse_t *sparse;
     ecs_table_range_t range;
     int32_t cur;
+    bool self;
+
+    ecs_table_range_t prev_range;
+    int32_t prev_cur;
 } ecs_query_sparse_ctx_t;
 
 /* Down traversal cache (for resolving up queries w/unknown source) */
@@ -194,6 +200,7 @@ typedef struct {
     union {
         ecs_query_and_ctx_t and;
         ecs_query_union_ctx_t union_;
+        ecs_query_sparse_ctx_t sparse_;
     } is;
     ecs_table_t *table;
     int32_t row;

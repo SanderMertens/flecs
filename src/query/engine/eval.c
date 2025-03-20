@@ -1432,6 +1432,8 @@ bool flecs_query_dispatch(
     case EcsQuerySparse: return flecs_query_sparse(op, redo, ctx);
     case EcsQuerySparseWith: return flecs_query_sparse_with(op, redo, ctx, false);
     case EcsQuerySparseNot: return flecs_query_sparse_with(op, redo, ctx, true);
+    case EcsQuerySparseSelfUp: return flecs_query_sparse_self_up(op, redo, ctx);
+    case EcsQuerySparseUp: return flecs_query_sparse_up(op, redo, ctx);
     case EcsQueryLookup: return flecs_query_lookup(op, redo, ctx);
     case EcsQuerySetVars: return flecs_query_setvars(op, redo, ctx);
     case EcsQuerySetThis: return flecs_query_setthis(op, redo, ctx);

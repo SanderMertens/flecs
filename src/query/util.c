@@ -214,9 +214,11 @@ const char* flecs_query_op_str(
     case EcsQueryUnionNeq:       return "unionneq  ";
     case EcsQueryUnionEqUp:      return "union_up  ";
     case EcsQueryUnionEqSelfUp:  return "union_sup ";
-    case EcsQuerySparse:         return "sparse    ";
-    case EcsQuerySparseWith:     return "sparse_w  ";
-    case EcsQuerySparseNot:      return "sparsenot ";
+    case EcsQuerySparse:         return "spars     ";
+    case EcsQuerySparseWith:     return "spars_w   ";
+    case EcsQuerySparseNot:      return "spars_not ";
+    case EcsQuerySparseSelfUp:   return "spars_sup ";
+    case EcsQuerySparseUp:       return "spars_up  ";
     case EcsQueryLookup:         return "lookup    ";
     case EcsQuerySetVars:        return "setvars   ";
     case EcsQuerySetThis:        return "setthis   ";

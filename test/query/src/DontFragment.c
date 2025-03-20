@@ -80,6 +80,149 @@ void DontFragment_1_fixed_sparse_none(void) {
     ecs_fini(world);
 }
 
+void DontFragment_1_fixed_sparse_self(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add_id(world, base, EcsPrefab);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
+    ecs_add_pair(world, ent, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(ent|self)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, ent, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(ent, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_fixed_sparse_self_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add_id(world, base, EcsPrefab);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
+    ecs_add_pair(world, ent, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(ent|self|up IsA)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(base, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, ent, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(ent, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_fixed_sparse_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(ent|up IsA)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, ent, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add_id(world, base, EcsPrefab);
+    ecs_add_pair(world, ent, EcsIsA, base);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, base, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(base, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void DontFragment_1_this_sparse(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -756,47 +899,96 @@ void DontFragment_2_sparse_and_regular(void) {
         ecs_value(Position, {50, 60}),
         ecs_value(Velocity, {5,  6}));
 
+    
+
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(e3, it.entities[0]);
-    {
-        Position *p = ecs_field_at(&it, Position, 0, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 50); test_int(p->y, 60);
-    }
-    {
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        test_assert(v != NULL);
-        test_int(v->x, 5); test_int(v->y, 6);
-    }
 
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(e2, it.entities[0]);
-    {
-        Position *p = ecs_field_at(&it, Position, 0, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 30); test_int(p->y, 40);
-    }
-    {
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        test_assert(v != NULL);
-        test_int(v->x, 3); test_int(v->y, 4);
-    }
+    if (cache_kind == EcsQueryCacheDefault) {
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e3, it.entities[0]);
+        {
+            Position *p = ecs_field_at(&it, Position, 0, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 50); test_int(p->y, 60);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 1);
+            test_assert(v != NULL);
+            test_int(v->x, 5); test_int(v->y, 6);
+        }
 
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(e1, it.entities[0]);
-    {
-        Position *p = ecs_field_at(&it, Position, 0, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 10); test_int(p->y, 20);
-    }
-    {
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        test_assert(v != NULL);
-        test_int(v->x, 1); test_int(v->y, 2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e2, it.entities[0]);
+        {
+            Position *p = ecs_field_at(&it, Position, 0, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 30); test_int(p->y, 40);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 1);
+            test_assert(v != NULL);
+            test_int(v->x, 3); test_int(v->y, 4);
+        }
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e1, it.entities[0]);
+        {
+            Position *p = ecs_field_at(&it, Position, 0, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 10); test_int(p->y, 20);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 1);
+            test_assert(v != NULL);
+            test_int(v->x, 1); test_int(v->y, 2);
+        }
+    } else {
+        // Different ordering, same results
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e1, it.entities[0]);
+        {
+            Position *p = ecs_field_at(&it, Position, 0, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 10); test_int(p->y, 20);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 1);
+            test_assert(v != NULL);
+            test_int(v->x, 1); test_int(v->y, 2);
+        }
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e2, it.entities[0]);
+        {
+            Position *p = ecs_field_at(&it, Position, 0, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 30); test_int(p->y, 40);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 1);
+            test_assert(v != NULL);
+            test_int(v->x, 3); test_int(v->y, 4);
+        }
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e3, it.entities[0]);
+        {
+            Position *p = ecs_field_at(&it, Position, 0, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 50); test_int(p->y, 60);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 1);
+            test_assert(v != NULL);
+            test_int(v->x, 5); test_int(v->y, 6);
+        }
     }
 
     test_bool(false, ecs_query_next(&it));
@@ -935,6 +1127,7 @@ void DontFragment_1_sparse_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_id(world, ecs_id(Position), EcsDontFragment);
@@ -952,12 +1145,18 @@ void DontFragment_1_sparse_up(void) {
     ecs_entity_t e2 = ecs_insert(world, {ecs_isa(base)}, ecs_value(Position, {30, 40}));
     ecs_entity_t e3 = ecs_insert(world, {ecs_isa(base)});
     ecs_entity_t e4 = ecs_insert(world, {ecs_isa(base)});
+    ecs_entity_t e5 = ecs_insert(world, {ecs_isa(base)});
+    ecs_add(world, e5, Foo);
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_int(2, it.count);
-    test_uint(e3, it.entities[0]);
-    test_uint(e4, it.entities[1]);
+    test_int(4, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
+    test_uint(e3, it.entities[2]);
+    test_uint(e4, it.entities[3]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(base, ecs_field_src(&it, 0));
     {
         Position *p = ecs_field_at(&it, Position, 0, 0);
         test_assert(p != NULL);
@@ -965,14 +1164,16 @@ void DontFragment_1_sparse_up(void) {
     }
 
     test_bool(true, ecs_query_next(&it));
-    test_int(2, it.count);
-    test_uint(e1, it.entities[0]);
-    test_uint(e2, it.entities[1]);
+    test_int(1, it.count);
+    test_uint(e5, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(base, ecs_field_src(&it, 0));
     {
         Position *p = ecs_field_at(&it, Position, 0, 0);
         test_assert(p != NULL);
         test_int(p->x, 1); test_int(p->y, 2);
     }
+
 
     test_bool(false, ecs_query_next(&it));
 
@@ -1005,15 +1206,32 @@ void DontFragment_1_sparse_self_up(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_int(2, it.count);
-    test_uint(e3, it.entities[0]);
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
     {
         Position *p = ecs_field_at(&it, Position, 0, 0);
         test_assert(p != NULL);
-        test_int(p->x, 1); test_int(p->y, 2);
+        test_int(p->x, 30); test_int(p->y, 40);
     }
 
-    test_uint(e4, it.entities[1]);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    {
+        Position *p = ecs_field_at(&it, Position, 0, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(base, ecs_field_src(&it, 0));
     {
         Position *p = ecs_field_at(&it, Position, 0, 0);
         test_assert(p != NULL);
@@ -1021,19 +1239,14 @@ void DontFragment_1_sparse_self_up(void) {
     }
 
     test_bool(true, ecs_query_next(&it));
-    test_int(2, it.count);
-    test_uint(e1, it.entities[0]);
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(base, ecs_field_src(&it, 0));
     {
         Position *p = ecs_field_at(&it, Position, 0, 0);
         test_assert(p != NULL);
-        test_int(p->x, 10); test_int(p->y, 20);
-    }
-
-    test_uint(e2, it.entities[1]);
-    {
-        Position *p = ecs_field_at(&it, Position, 0, 1);
-        test_assert(p != NULL);
-        test_int(p->x, 30); test_int(p->y, 40);
+        test_int(p->x, 1); test_int(p->y, 2);
     }
 
     test_bool(false, ecs_query_next(&it));
@@ -1049,7 +1262,7 @@ void DontFragment_1_sparse_written_self(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
 
-    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_id(world, ecs_id(Position), EcsDontFragment);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1069,7 +1282,7 @@ void DontFragment_1_sparse_written_self(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_int(2, it.count);
+    test_int(1, it.count);
     test_uint(e1, it.entities[0]);
     {
         Position *p = ecs_field_at(&it, Position, 1, 0);
@@ -1077,9 +1290,10 @@ void DontFragment_1_sparse_written_self(void) {
         test_int(p->x, 10); test_int(p->y, 20);
     }
 
-    test_uint(e2, it.entities[1]);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(e2, it.entities[0]);
     {
-        Position *p = ecs_field_at(&it, Position, 1, 1);
+        Position *p = ecs_field_at(&it, Position, 1, 0);
         test_assert(p != NULL);
         test_int(p->x, 30); test_int(p->y, 40);
     }
@@ -1114,22 +1328,19 @@ void DontFragment_1_sparse_written_up(void) {
     ecs_entity_t e2 = ecs_insert(world, {ecs_isa(base)}, {Foo}, ecs_value(Position, {30, 40}));
     ecs_entity_t e3 = ecs_insert(world, {ecs_isa(base)}, {Foo});
     ecs_entity_t e4 = ecs_insert(world, {ecs_isa(base)}, {Foo});
+    /* ecs_entity_t e5 = */ ecs_insert(world, {Foo});
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_int(2, it.count);
-    test_uint(e3, it.entities[0]);
-    test_uint(e4, it.entities[1]);
-    {
-        Position *p = ecs_field_at(&it, Position, 1, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 1); test_int(p->y, 2);
-    }
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(2, it.count);
+    test_int(4, it.count);
     test_uint(e1, it.entities[0]);
     test_uint(e2, it.entities[1]);
+    test_uint(e3, it.entities[2]);
+    test_uint(e4, it.entities[3]);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(base, ecs_field_src(&it, 1));
     {
         Position *p = ecs_field_at(&it, Position, 1, 0);
         test_assert(p != NULL);
@@ -1166,26 +1377,12 @@ void DontFragment_1_sparse_written_self_up(void) {
     ecs_entity_t e2 = ecs_insert(world, {ecs_isa(base)}, {Foo}, ecs_value(Position, {30, 40}));
     ecs_entity_t e3 = ecs_insert(world, {ecs_isa(base)}, {Foo});
     ecs_entity_t e4 = ecs_insert(world, {ecs_isa(base)}, {Foo});
+    /* ecs_entity_t e5 = */ ecs_insert(world, {Foo});
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_next(&it));
-    test_int(2, it.count);
-    test_uint(e3, it.entities[0]);
-    {
-        Position *p = ecs_field_at(&it, Position, 1, 0);
-        test_assert(p != NULL);
-        test_int(p->x, 1); test_int(p->y, 2);
-    }
-
-    test_uint(e4, it.entities[1]);
-    {
-        Position *p = ecs_field_at(&it, Position, 1, 1);
-        test_assert(p != NULL);
-        test_int(p->x, 1); test_int(p->y, 2);
-    }
 
     test_bool(true, ecs_query_next(&it));
-    test_int(2, it.count);
+    test_int(1, it.count);
     test_uint(e1, it.entities[0]);
     {
         Position *p = ecs_field_at(&it, Position, 1, 0);
@@ -1193,11 +1390,29 @@ void DontFragment_1_sparse_written_self_up(void) {
         test_int(p->x, 10); test_int(p->y, 20);
     }
 
-    test_uint(e2, it.entities[1]);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(e2, it.entities[0]);
     {
-        Position *p = ecs_field_at(&it, Position, 1, 1);
+        Position *p = ecs_field_at(&it, Position, 1, 0);
         test_assert(p != NULL);
         test_int(p->x, 30); test_int(p->y, 40);
+    }
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    {
+        Position *p = ecs_field_at(&it, Position, 1, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 1); test_int(p->y, 2);
+    }
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(e4, it.entities[0]);
+    {
+        Position *p = ecs_field_at(&it, Position, 1, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 1); test_int(p->y, 2);
     }
 
     test_bool(false, ecs_query_next(&it));

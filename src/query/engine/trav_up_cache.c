@@ -84,9 +84,18 @@ ecs_trav_up_t* flecs_trav_table_up(
     }
 
     ecs_type_t type = table->type;
-    if (flecs_trav_type_search(up, table, cdr_with, &type) >= 0) {
-        up->src = src;
-        goto found;
+    if (cdr_with->flags & EcsIdDontFragment) {
+        if (flecs_sparse_has_any(cdr_with->sparse, src)) {
+            up->src = src;
+            up->tr = NULL;
+            up->id = cdr_with->id;
+            goto found;
+        }
+    } else {
+        if (flecs_trav_type_search(up, table, cdr_with, &type) >= 0) {
+            up->src = src;
+            goto found;
+        }
     }
 
     ecs_flags32_t flags = table->flags;

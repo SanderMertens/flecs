@@ -1953,6 +1953,9 @@ void Toggle_toggle_0_src(void);
 void Sparse_setup(void);
 void Sparse_1_fixed_sparse(void);
 void Sparse_1_fixed_sparse_none(void);
+void Sparse_1_fixed_sparse_self(void);
+void Sparse_1_fixed_sparse_self_up(void);
+void Sparse_1_fixed_sparse_up(void);
 void Sparse_1_this_sparse_simple(void);
 void Sparse_1_this_sparse(void);
 void Sparse_1_this_sparse_none(void);
@@ -1984,6 +1987,9 @@ void Sparse_sparse_pair_second_after_query(void);
 void DontFragment_setup(void);
 void DontFragment_1_fixed_sparse(void);
 void DontFragment_1_fixed_sparse_none(void);
+void DontFragment_1_fixed_sparse_self(void);
+void DontFragment_1_fixed_sparse_self_up(void);
+void DontFragment_1_fixed_sparse_up(void);
 void DontFragment_1_this_sparse_simple(void);
 void DontFragment_1_this_sparse(void);
 void DontFragment_1_this_sparse_none(void);
@@ -9846,6 +9852,18 @@ bake_test_case Sparse_testcases[] = {
         Sparse_1_fixed_sparse_none
     },
     {
+        "1_fixed_sparse_self",
+        Sparse_1_fixed_sparse_self
+    },
+    {
+        "1_fixed_sparse_self_up",
+        Sparse_1_fixed_sparse_self_up
+    },
+    {
+        "1_fixed_sparse_up",
+        Sparse_1_fixed_sparse_up
+    },
+    {
         "1_this_sparse_simple",
         Sparse_1_this_sparse_simple
     },
@@ -9959,6 +9977,18 @@ bake_test_case DontFragment_testcases[] = {
     {
         "1_fixed_sparse_none",
         DontFragment_1_fixed_sparse_none
+    },
+    {
+        "1_fixed_sparse_self",
+        DontFragment_1_fixed_sparse_self
+    },
+    {
+        "1_fixed_sparse_self_up",
+        DontFragment_1_fixed_sparse_self_up
+    },
+    {
+        "1_fixed_sparse_up",
+        DontFragment_1_fixed_sparse_up
     },
     {
         "1_this_sparse_simple",
@@ -11090,7 +11120,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        28,
+        31,
         Sparse_testcases,
         1,
         Sparse_params
@@ -11099,7 +11129,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        37,
+        40,
         DontFragment_testcases,
         1,
         DontFragment_params

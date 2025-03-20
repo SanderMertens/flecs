@@ -1120,6 +1120,12 @@ void flecs_query_set_op_kind(
         } else {
             op->kind = EcsQuerySparseWith;
         }
+
+        if ((term->src.id & trav_flags) == EcsUp) {
+            op->kind = EcsQuerySparseUp;
+        } else if ((term->src.id & trav_flags) == (EcsSelf|EcsUp)) {
+            op->kind = EcsQuerySparseSelfUp;
+        }
     } else {
         if ((term->src.id & trav_flags) == EcsUp) {
             op->kind = EcsQueryUp;
