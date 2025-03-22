@@ -152,6 +152,33 @@ void FEntityBasicTestsSpec::Define()
 				Fixture.FlecsWorld->LookupEntity("Child2").IsValid());
 		});
 	});
+
+	Describe("Entity Serialization", [this]()
+	{
+		It("Should serialize and deserialize an entity with one basic component", [this]()
+		{
+			struct FTestComponent
+			{
+				int32 Value;
+			};
+
+			Fixture.FlecsWorld->RegisterComponentType<FTestComponent>()
+				.member<int32>("Value");
+			
+			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			EntityHandle.Set<FTestComponent>({ 42 });
+			FString SerializedEntity = EntityHandle.ToJson();
+			EntityHandle.Destroy();
+			
+			TestTrue("Serialized entity should not be empty", !SerializedEntity.IsEmpty());
+			
+			FFlecsEntityHandle DeserializedEntity = Fixture.FlecsWorld->CreateEntity();
+			DeserializedEntity.FromJson(SerializedEntity);
+			TestTrue("Deserialized entity should be valid", DeserializedEntity.IsValid());
+			TestEqual("Deserialized entity value should be 42",
+				DeserializedEntity.Get<FTestComponent>().Value, 42);
+		});
+	});
 }
 
 #endif // WITH_AUTOMATION_TESTS

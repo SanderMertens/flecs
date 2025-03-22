@@ -437,9 +437,11 @@ public:
 					const FFlecsModuleComponent& InModuleComponent = Iter.field_at<FFlecsModuleComponent>(0, Index);
 					FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, Index);
 					
-					DependenciesComponentQuery.run([InModuleComponent, ModuleEntity, this, InUObjectComponent](flecs::iter& DependenciesIter)
+					DependenciesComponentQuery.run([InModuleComponent, ModuleEntity, this, InUObjectComponent]
+						(flecs::iter& DependenciesIter)
 					{
-						UnlockIter_Internal(DependenciesIter, [this, InModuleComponent, ModuleEntity, InUObjectComponent](flecs::iter& DependenciesIter, size_t DependenciesIndex)
+						UnlockIter_Internal(DependenciesIter, [this, InModuleComponent, ModuleEntity, InUObjectComponent]
+							(flecs::iter& DependenciesIter, size_t DependenciesIndex)
 						{
 							const FFlecsEntityHandle InEntity = DependenciesIter.entity(DependenciesIndex);
 							

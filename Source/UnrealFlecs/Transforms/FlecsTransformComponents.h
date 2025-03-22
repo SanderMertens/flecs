@@ -37,8 +37,15 @@ public:
 		return !(*this == Other);
 	}
 
-	FORCEINLINE void SetLocation(const FVector& InLocation) { Location = InLocation; }
-	FORCEINLINE void SetLocation(const float InX, const float InY, const float InZ) { Location = FVector(InX, InY, InZ); }
+	FORCEINLINE void SetLocation(const FVector& InLocation)
+	{
+		Location = InLocation;
+	}
+	
+	FORCEINLINE void SetLocation(const float InX, const float InY, const float InZ)
+	{
+		Location = FVector(InX, InY, InZ);
+	}
 
 	NO_DISCARD FORCEINLINE FVector GetLocation() const { return Location; }
 	FORCEINLINE operator FVector() const { return GetLocation(); }
@@ -129,8 +136,15 @@ public:
 		return !(*this == Other);
 	}
 
-	FORCEINLINE void SetScale(const FVector& InScale) { Scale = InScale; }
-	FORCEINLINE void SetScale(const float InX, const float InY, const float InZ) { Scale = FVector(InX, InY, InZ); }
+	FORCEINLINE void SetScale(const FVector& InScale)
+	{
+		Scale = InScale;
+	}
+	
+	FORCEINLINE void SetScale(const float InX, const float InY, const float InZ)
+	{
+		Scale = FVector(InX, InY, InZ);
+	}
 
 	NO_DISCARD FORCEINLINE FVector GetScale() const { return Scale; }
 	FORCEINLINE operator FVector() const { return GetScale(); }

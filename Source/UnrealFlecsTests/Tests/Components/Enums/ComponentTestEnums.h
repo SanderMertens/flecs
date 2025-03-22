@@ -5,8 +5,16 @@
 #include "CoreMinimal.h"
 #include "ComponentTestEnums.generated.h"
 
-UENUM()
 enum class ETestEnum : uint8
+{
+	None,
+	One,
+	Two,
+	Three
+}; // enum class ETestEnum
+
+UENUM()
+enum class ETestEnum_UENUM : uint8
 {
 	None,
 	One,

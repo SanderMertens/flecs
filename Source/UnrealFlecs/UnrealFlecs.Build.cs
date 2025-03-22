@@ -33,6 +33,7 @@ public class UnrealFlecs : ModuleRules
                 "Chaos",
                 "ChaosCore",
                 "ChaosSolverEngine",
+                "DeveloperSettings",
 			}
 			);
 			
@@ -43,8 +44,7 @@ public class UnrealFlecs : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"Slate",
-				"SlateCore",
-				"DeveloperSettings",
+				"SlateCore"
 			}
 			);
 	}

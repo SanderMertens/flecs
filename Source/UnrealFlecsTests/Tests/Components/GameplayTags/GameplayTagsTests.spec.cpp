@@ -5,7 +5,7 @@
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
 
-struct FNativeGameplayTags : public FGameplayTagNativeAdder
+struct FFlecsTestNativeGameplayTags : public FGameplayTagNativeAdder
 {
 	FGameplayTag TestTag1;
 	FGameplayTag TestTag2;
@@ -25,13 +25,14 @@ struct FNativeGameplayTags : public FGameplayTagNativeAdder
 		TestSameSubTag2 = Manager.AddNativeGameplayTag(TEXT("Test.UnrealFlecs.Sub2.Tag1"));
 	}
 
-	FORCEINLINE static const FNativeGameplayTags& Get()
+	FORCEINLINE static const FFlecsTestNativeGameplayTags& Get()
 	{
 		return StaticInstance;
 	}
-	static FNativeGameplayTags StaticInstance;
+	
+	static FFlecsTestNativeGameplayTags StaticInstance;
 };
-FNativeGameplayTags FNativeGameplayTags::StaticInstance;
+FFlecsTestNativeGameplayTags FFlecsTestNativeGameplayTags::StaticInstance;
 
 BEGIN_DEFINE_SPEC(FGameplayTagsTestsSpec,
                   "Flecs.Components.GameplayTags",
@@ -50,49 +51,49 @@ void FGameplayTagsTestsSpec::Define()
 		It("Should add a Gameplay Tag to an entity", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add(FNativeGameplayTags::Get().TestTag1);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestTag1);
 
-			TestTrue("Entity has Gameplay Tag", Entity.Has(FNativeGameplayTags::Get().TestTag1));
-			TestFalse("Entity does not have other Gameplay Tags", Entity.Has(FNativeGameplayTags::Get().TestTag2));
+			TestTrue("Entity has Gameplay Tag", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag1));
+			TestFalse("Entity does not have other Gameplay Tags", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag2));
 		});
 
 		It("Should add multiple Gameplay Tags to an entity", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add(FNativeGameplayTags::Get().TestTag1);
-			Entity.Add(FNativeGameplayTags::Get().TestTag2);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestTag1);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestTag2);
 
-			TestTrue("Entity has Gameplay Tag 1", Entity.Has(FNativeGameplayTags::Get().TestTag1));
-			TestTrue("Entity has Gameplay Tag 2", Entity.Has(FNativeGameplayTags::Get().TestTag2));
-			TestFalse("Entity does not have other Gameplay Tags", Entity.Has(FNativeGameplayTags::Get().TestTag3));
+			TestTrue("Entity has Gameplay Tag 1", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag1));
+			TestTrue("Entity has Gameplay Tag 2", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag2));
+			TestFalse("Entity does not have other Gameplay Tags", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag3));
 		});
 
 		It("Should remove a Gameplay Tag from an entity", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add(FNativeGameplayTags::Get().TestTag1);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestTag1);
 
-			TestTrue("Entity has Gameplay Tag", Entity.Has(FNativeGameplayTags::Get().TestTag1));
+			TestTrue("Entity has Gameplay Tag", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag1));
 
-			Entity.Remove(FNativeGameplayTags::Get().TestTag1);
+			Entity.Remove(FFlecsTestNativeGameplayTags::Get().TestTag1);
 
-			TestFalse("Entity does not have Gameplay Tag", Entity.Has(FNativeGameplayTags::Get().TestTag1));
+			TestFalse("Entity does not have Gameplay Tag", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag1));
 		});
 
 		It("Should remove multiple Gameplay Tags from an entity", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add(FNativeGameplayTags::Get().TestTag1);
-			Entity.Add(FNativeGameplayTags::Get().TestTag2);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestTag1);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestTag2);
 
-			TestTrue("Entity has Gameplay Tag 1", Entity.Has(FNativeGameplayTags::Get().TestTag1));
-			TestTrue("Entity has Gameplay Tag 2", Entity.Has(FNativeGameplayTags::Get().TestTag2));
+			TestTrue("Entity has Gameplay Tag 1", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag1));
+			TestTrue("Entity has Gameplay Tag 2", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag2));
 
-			Entity.Remove(FNativeGameplayTags::Get().TestTag1);
-			Entity.Remove(FNativeGameplayTags::Get().TestTag2);
+			Entity.Remove(FFlecsTestNativeGameplayTags::Get().TestTag1);
+			Entity.Remove(FFlecsTestNativeGameplayTags::Get().TestTag2);
 
-			TestFalse("Entity does not have Gameplay Tag 1", Entity.Has(FNativeGameplayTags::Get().TestTag1));
-			TestFalse("Entity does not have Gameplay Tag 2", Entity.Has(FNativeGameplayTags::Get().TestTag2));
+			TestFalse("Entity does not have Gameplay Tag 1", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag1));
+			TestFalse("Entity does not have Gameplay Tag 2", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag2));
 		});
 	});
 
@@ -101,48 +102,48 @@ void FGameplayTagsTestsSpec::Define()
 		It("Should add a Same Sub Gameplay Tag to an entity", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add(FNativeGameplayTags::Get().TestSameSubTag1);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1);
 
-			TestTrue("Entity has Gameplay Tag", Entity.Has(FNativeGameplayTags::Get().TestSameSubTag1));
-			TestFalse("Entity does not have other Gameplay Tags", Entity.Has(FNativeGameplayTags::Get().TestSameSubTag2));
+			TestTrue("Entity has Gameplay Tag", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1));
+			TestFalse("Entity does not have other Gameplay Tags", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestSameSubTag2));
 		});
 
 		It("Should add multiple Same Sub Gameplay Tags to an entity", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add(FNativeGameplayTags::Get().TestSameSubTag1);
-			Entity.Add(FNativeGameplayTags::Get().TestSameSubTag2);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestSameSubTag2);
 
-			TestTrue("Entity has Gameplay Tag 1", Entity.Has(FNativeGameplayTags::Get().TestSameSubTag1));
-			TestTrue("Entity has Gameplay Tag 2", Entity.Has(FNativeGameplayTags::Get().TestSameSubTag2));
+			TestTrue("Entity has Gameplay Tag 1", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1));
+			TestTrue("Entity has Gameplay Tag 2", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestSameSubTag2));
 		});
 
 		It("Should remove a Same Sub Gameplay Tag from an entity", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add(FNativeGameplayTags::Get().TestSameSubTag1);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1);
 
-			TestTrue("Entity has Gameplay Tag", Entity.Has(FNativeGameplayTags::Get().TestSameSubTag1));
+			TestTrue("Entity has Gameplay Tag", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1));
 
-			Entity.Remove(FNativeGameplayTags::Get().TestSameSubTag1);
+			Entity.Remove(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1);
 
-			TestFalse("Entity does not have Gameplay Tag", Entity.Has(FNativeGameplayTags::Get().TestSameSubTag1));
+			TestFalse("Entity does not have Gameplay Tag", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1));
 		});
 
 		It("Should remove multiple Same Sub Gameplay Tags from an entity", [this]()
 		{
 			FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity();
-			Entity.Add(FNativeGameplayTags::Get().TestSameSubTag1);
-			Entity.Add(FNativeGameplayTags::Get().TestSameSubTag2);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1);
+			Entity.Add(FFlecsTestNativeGameplayTags::Get().TestSameSubTag2);
 
-			TestTrue("Entity has Gameplay Tag 1", Entity.Has(FNativeGameplayTags::Get().TestSameSubTag1));
-			TestTrue("Entity has Gameplay Tag 2", Entity.Has(FNativeGameplayTags::Get().TestSameSubTag2));
+			TestTrue("Entity has Gameplay Tag 1", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1));
+			TestTrue("Entity has Gameplay Tag 2", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestSameSubTag2));
 
-			Entity.Remove(FNativeGameplayTags::Get().TestSameSubTag1);
-			Entity.Remove(FNativeGameplayTags::Get().TestSameSubTag2);
+			Entity.Remove(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1);
+			Entity.Remove(FFlecsTestNativeGameplayTags::Get().TestSameSubTag2);
 
-			TestFalse("Entity does not have Gameplay Tag 1", Entity.Has(FNativeGameplayTags::Get().TestSameSubTag1));
-			TestFalse("Entity does not have Gameplay Tag 2", Entity.Has(FNativeGameplayTags::Get().TestSameSubTag2));
+			TestFalse("Entity does not have Gameplay Tag 1", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestSameSubTag1));
+			TestFalse("Entity does not have Gameplay Tag 2", Entity.Has(FFlecsTestNativeGameplayTags::Get().TestSameSubTag2));
 		});
 	});
 }
