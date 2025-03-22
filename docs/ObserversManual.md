@@ -880,7 +880,7 @@ e.Set(new Position(10, 20));
 e.Set(new Velocity(1, 2));
 
 // Triggers, entity now matches observer query
-e.Set(new Velocity(20, 30));
+e.Set(new Position(20, 30));
 ```
 
 </li>
