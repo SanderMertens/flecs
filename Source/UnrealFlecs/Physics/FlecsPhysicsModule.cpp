@@ -98,6 +98,7 @@ inline void UFlecsPhysicsModule::ResimulationHandlers()
 	{
 		SCOPE_CYCLE_COUNTER(STAT_FlecsPhysicsModule_ResimulationHandlers);
 
+		// We get a crash as somehow the world is invalid sometimes in this callback
 		if UNLIKELY_IF(!IsWorldValid())
 		{
 			return;

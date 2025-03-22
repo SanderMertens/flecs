@@ -6,6 +6,7 @@
 #include "Modules/FlecsModuleObject.h"
 #include "FlecsTranslationModule.generated.h"
 
+// @TODO: Not Implemented
 UCLASS(BlueprintType, meta = (DisplayName = "Flecs Translation Module"))
 class UNREALFLECS_API UFlecsTranslationModule final : public UFlecsModuleObject
 {

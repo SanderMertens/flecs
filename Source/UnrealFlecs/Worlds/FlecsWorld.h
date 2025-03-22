@@ -1865,11 +1865,6 @@ public:
 		return World.observer<TComponents...>(InEntity.GetEntity(), std::forward<TArgs>(Args)...);
 	}
 
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateObserver(const FFlecsEntityHandle& InEntity) const
-	{
-		return World.observer(InEntity.GetEntity());
-	}
-
 	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::event_builder Event(const FFlecsEntityHandle& InEntity) const
 	{
 		return World.event(InEntity.GetEntity());

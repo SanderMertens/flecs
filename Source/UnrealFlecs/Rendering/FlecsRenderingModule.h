@@ -6,6 +6,7 @@
 #include "Modules/FlecsModuleObject.h"
 #include "FlecsRenderingModule.generated.h"
 
+// @TODO: Not Implemented
 UCLASS(BlueprintType, DefaultToInstanced, EditInlineNew)
 class UNREALFLECS_API UFlecsRenderingModule final : public UFlecsModuleObject
 {

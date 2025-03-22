@@ -19,6 +19,9 @@ class UNREALFLECS_API UFlecsModuleInterface : public UFlecsEntityInterface
 	GENERATED_BODY()
 }; // class UFlecsModuleInterface
 
+/**
+ * @brief Interface for Flecs modules.
+ */
 class UNREALFLECS_API IFlecsModuleInterface : public IFlecsEntityInterface
 {
 	GENERATED_BODY()

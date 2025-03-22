@@ -35,6 +35,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	FFlecsPrefabSlotInfo Prefab;
 
+	// @TODO: Not Implemented
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	TArray<FFlecsPrefabSlotInfo> Slots;
 

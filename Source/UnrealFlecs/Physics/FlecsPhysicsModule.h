@@ -10,6 +10,7 @@
 #include "UObject/Object.h"
 #include "FlecsPhysicsModule.generated.h"
 
+// @TODO: Not Fully Implemented
 UCLASS(BlueprintType, DefaultToInstanced, EditInlineNew)
 class UNREALFLECS_API UFlecsPhysicsModule final : public UFlecsModuleObject
 {

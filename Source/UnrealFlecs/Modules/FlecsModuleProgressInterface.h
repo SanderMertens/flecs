@@ -13,6 +13,10 @@ class UNREALFLECS_API UFlecsModuleProgressInterface : public UInterface
 	GENERATED_BODY()
 }; // class UFlecsModuleProgressInterface
 
+/**
+ * Use this interface to implement a module that needs to be updated every frame.
+ * This is called before Progress is called on the flecs world.
+ */
 class UNREALFLECS_API IFlecsModuleProgressInterface
 {
 	GENERATED_BODY()
