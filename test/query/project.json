@@ -2112,7 +2112,13 @@
                 "ignore_prefab_disabled",
                 "match_prefab_ignore_disabled",
                 "ignore_prefab_match_disabled",
-                "match_prefab_disabled"
+                "match_prefab_disabled",
+                "1_fixed_sparse_wildcard",
+                "1_this_sparse_wildcard",
+                "1_var_sparse_wildcard",
+                "1_fixed_sparse_written_wildcard",
+                "1_this_sparse_written_wildcard",
+                "1_var_sparse_written_wildcard"
             ]
         }, {
             "id": "Union",

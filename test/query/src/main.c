@@ -2025,6 +2025,12 @@ void DontFragment_ignore_prefab_disabled(void);
 void DontFragment_match_prefab_ignore_disabled(void);
 void DontFragment_ignore_prefab_match_disabled(void);
 void DontFragment_match_prefab_disabled(void);
+void DontFragment_1_fixed_sparse_wildcard(void);
+void DontFragment_1_this_sparse_wildcard(void);
+void DontFragment_1_var_sparse_wildcard(void);
+void DontFragment_1_fixed_sparse_written_wildcard(void);
+void DontFragment_1_this_sparse_written_wildcard(void);
+void DontFragment_1_var_sparse_written_wildcard(void);
 
 // Testsuite 'Union'
 void Union_setup(void);
@@ -10129,6 +10135,30 @@ bake_test_case DontFragment_testcases[] = {
     {
         "match_prefab_disabled",
         DontFragment_match_prefab_disabled
+    },
+    {
+        "1_fixed_sparse_wildcard",
+        DontFragment_1_fixed_sparse_wildcard
+    },
+    {
+        "1_this_sparse_wildcard",
+        DontFragment_1_this_sparse_wildcard
+    },
+    {
+        "1_var_sparse_wildcard",
+        DontFragment_1_var_sparse_wildcard
+    },
+    {
+        "1_fixed_sparse_written_wildcard",
+        DontFragment_1_fixed_sparse_written_wildcard
+    },
+    {
+        "1_this_sparse_written_wildcard",
+        DontFragment_1_this_sparse_written_wildcard
+    },
+    {
+        "1_var_sparse_written_wildcard",
+        DontFragment_1_var_sparse_written_wildcard
     }
 };
 
@@ -11129,7 +11159,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        40,
+        46,
         DontFragment_testcases,
         1,
         DontFragment_params
