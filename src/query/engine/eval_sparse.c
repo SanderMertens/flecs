@@ -6,6 +6,29 @@
 #include "../../private_api.h"
 
 static
+bool flecs_query_sparse_init_sparse(
+    ecs_query_sparse_ctx_t *op_ctx,
+    ecs_component_record_t *cdr)
+{
+    ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cdr->flags & EcsIdDontFragment, ECS_INTERNAL_ERROR, NULL);
+
+    op_ctx->sparse = cdr->sparse;
+    if (!op_ctx->sparse) {
+        return false;
+    }
+
+    int32_t count = flecs_sparse_count(op_ctx->sparse);
+    if (!count) {
+        return false;
+    }
+
+    op_ctx->cur = count;
+
+    return true;
+}
+
+static
 void flecs_query_sparse_init_range(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,
@@ -42,7 +65,7 @@ next:
     }
 
     ecs_entity_t e = ecs_table_entities(op_ctx->range.table)[op_ctx->cur];
-    bool result = flecs_sparse_get_any(op_ctx->sparse, 0, e) != NULL;
+    bool result = flecs_sparse_has_any(op_ctx->sparse, e);
     if (not) {
         result = !result;
     }
@@ -59,32 +82,22 @@ next:
     return true;
 }
 
-bool flecs_query_sparse_select(
+bool flecs_query_sparse_select_id(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
-    ecs_flags32_t table_mask)
+    ecs_flags32_t table_mask,
+    ecs_id_t id)
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
     ecs_iter_t *it = ctx->it;
     int8_t field_index = op->field_index;
 
     if (!redo) {
-        ecs_id_t id = flecs_query_op_get_id(op, ctx);
         ecs_component_record_t *cdr = flecs_components_get(ctx->world, id);
-        ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        op_ctx->sparse = cdr->sparse;
-        if (!op_ctx->sparse) {
+        if (!flecs_query_sparse_init_sparse(op_ctx, cdr)) {
             return false;
         }
-
-        int32_t count = flecs_sparse_count(op_ctx->sparse);
-        if (!count) {
-            return false;
-        }
-
-        op_ctx->cur = count;
     }
 
 next:
@@ -110,16 +123,88 @@ next:
     return true;
 }
 
-bool flecs_query_sparse_with(
+bool flecs_query_sparse_select_wildcard(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
-    bool not)
+    ecs_flags32_t table_mask,
+    ecs_id_t id)
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
 
     if (!redo) {
-        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        ecs_component_record_t *cdr = flecs_components_get(ctx->world, id);
+
+        if (ECS_PAIR_FIRST(id) == EcsWildcard) {
+            op_ctx->cdr = cdr->pair->second.next;
+        } else {
+            ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
+                ECS_INTERNAL_ERROR, NULL);
+            op_ctx->cdr = cdr->pair->first.next;
+        }
+    } else {
+        goto next_select;
+    }
+
+next:
+    if (!flecs_query_sparse_init_sparse(op_ctx, op_ctx->cdr)) {
+        return false;
+    }
+
+next_select:
+    if (flecs_query_sparse_select_id(op, true, ctx, table_mask, 0)) {
+        ecs_id_t actual_id = op_ctx->cdr->id;
+        ctx->it->ids[op->field_index] = actual_id;
+        flecs_query_set_vars(op, actual_id, ctx);
+        return true;
+    }
+    
+next_component: {
+        ecs_component_record_t *cdr = op_ctx->cdr;
+        if (ECS_PAIR_FIRST(id) == EcsWildcard) {
+            cdr = op_ctx->cdr = cdr->pair->second.next;
+        } else {
+            ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
+                ECS_INTERNAL_ERROR, NULL);
+            cdr = op_ctx->cdr = cdr->pair->first.next;
+        }
+
+        if (!cdr) {
+            return false;
+        }
+
+        if (!(cdr->flags & EcsIdDontFragment)) {
+            goto next_component;
+        }
+    }
+
+    goto next;
+}
+
+bool flecs_query_sparse_select(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    ecs_flags32_t table_mask)
+{
+    ecs_id_t id = flecs_query_op_get_id(op, ctx);
+    if (ecs_id_is_wildcard(id)) {
+        return flecs_query_sparse_select_wildcard(op, redo, ctx, table_mask, id);
+    } else {
+        return flecs_query_sparse_select_id(op, redo, ctx, table_mask, id);
+    }
+}
+
+bool flecs_query_sparse_with_id(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool not,
+    ecs_id_t id)
+{
+    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
+
+    if (!redo) {
         ecs_component_record_t *cdr = flecs_components_get(ctx->world, id);
         ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -132,6 +217,82 @@ bool flecs_query_sparse_with(
     }
 
     return flecs_query_sparse_next_entity(op, ctx, op_ctx, not);
+}
+
+bool flecs_query_sparse_with_wildcard(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool not,
+    ecs_id_t id)
+{
+    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
+    bool with_redo = false;
+
+    if (!redo) {
+        ecs_component_record_t *cdr = flecs_components_get(ctx->world, id);
+
+        if (ECS_PAIR_FIRST(id) == EcsWildcard) {
+            op_ctx->cdr = cdr->pair->second.next;
+        } else {
+            ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
+                ECS_INTERNAL_ERROR, NULL);
+            op_ctx->cdr = cdr->pair->first.next;
+        }
+    } else {
+        with_redo = true;
+        goto next_select;
+    }
+
+next:
+    if (!flecs_query_sparse_init_sparse(op_ctx, op_ctx->cdr)) {
+        return false;
+    }
+
+next_select: {
+        ecs_id_t actual_id = op_ctx->cdr->id;
+        if (flecs_query_sparse_with_id(op, with_redo, ctx, not, actual_id)) {
+            ctx->it->ids[op->field_index] = actual_id;
+            flecs_query_set_vars(op, actual_id, ctx);
+            return true;
+        }
+    }
+        
+next_component: {
+        ecs_component_record_t *cdr = op_ctx->cdr;
+        if (ECS_PAIR_FIRST(id) == EcsWildcard) {
+            cdr = op_ctx->cdr = cdr->pair->second.next;
+        } else {
+            ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
+                ECS_INTERNAL_ERROR, NULL);
+            cdr = op_ctx->cdr = cdr->pair->first.next;
+        }
+
+        if (!cdr) {
+            return false;
+        }
+
+        if (!(cdr->flags & EcsIdDontFragment)) {
+            goto next_component;
+        }
+    }
+
+    with_redo = false;
+    goto next;
+}
+
+bool flecs_query_sparse_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool not)
+{
+    ecs_id_t id = flecs_query_op_get_id(op, ctx);
+    if (ecs_id_is_wildcard(id)) {
+        return flecs_query_sparse_with_wildcard(op, redo, ctx, not, id);
+    } else {
+        return flecs_query_sparse_with_id(op, redo, ctx, not, id);
+    }
 }
 
 bool flecs_query_sparse_up(
@@ -197,8 +358,9 @@ bool flecs_query_sparse_self_up(
         bool up_redo = true;
 
         if (op_ctx->self) {
-            if (flecs_query_sparse_select(op, redo, ctx, 
-                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled))) 
+            ecs_id_t id = flecs_query_op_get_id(op, ctx);
+            if (flecs_query_sparse_select_id(op, redo, ctx, 
+                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled), id))
             {
                 return true;
             }
@@ -246,7 +408,7 @@ bool flecs_query_sparse(
     if (written & (1ull << op->src.var)) {
         return flecs_query_sparse_with(op, redo, ctx, false);
     } else {
-        return flecs_query_sparse_select(op, redo, ctx,
+        return flecs_query_sparse_select(op, redo, ctx, 
             (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
     }
 }

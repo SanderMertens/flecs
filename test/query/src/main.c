@@ -2025,12 +2025,21 @@ void DontFragment_ignore_prefab_disabled(void);
 void DontFragment_match_prefab_ignore_disabled(void);
 void DontFragment_ignore_prefab_match_disabled(void);
 void DontFragment_match_prefab_disabled(void);
-void DontFragment_1_fixed_sparse_wildcard(void);
-void DontFragment_1_this_sparse_wildcard(void);
-void DontFragment_1_var_sparse_wildcard(void);
-void DontFragment_1_fixed_sparse_written_wildcard(void);
-void DontFragment_1_this_sparse_written_wildcard(void);
-void DontFragment_1_var_sparse_written_wildcard(void);
+void DontFragment_1_fixed_sparse_second_wildcard(void);
+void DontFragment_1_this_sparse_second_wildcard(void);
+void DontFragment_1_var_sparse_second_wildcard(void);
+void DontFragment_1_this_sparse_written_second_wildcard(void);
+void DontFragment_1_var_sparse_written_second_wildcard(void);
+void DontFragment_1_fixed_sparse_first_wildcard(void);
+void DontFragment_1_fixed_sparse_first_wildcard_mixed(void);
+void DontFragment_1_this_sparse_first_wildcard(void);
+void DontFragment_1_this_sparse_first_wildcard_mixed(void);
+void DontFragment_1_this_sparse_written_first_wildcard_mixed(void);
+void DontFragment_1_this_sparse_first_wildcard_simple(void);
+void DontFragment_1_var_sparse_first_wildcard(void);
+void DontFragment_1_var_sparse_first_wildcard_mixed(void);
+void DontFragment_1_this_sparse_written_first_wildcard(void);
+void DontFragment_1_var_sparse_written_first_wildcard(void);
 
 // Testsuite 'Union'
 void Union_setup(void);
@@ -10137,28 +10146,64 @@ bake_test_case DontFragment_testcases[] = {
         DontFragment_match_prefab_disabled
     },
     {
-        "1_fixed_sparse_wildcard",
-        DontFragment_1_fixed_sparse_wildcard
+        "1_fixed_sparse_second_wildcard",
+        DontFragment_1_fixed_sparse_second_wildcard
     },
     {
-        "1_this_sparse_wildcard",
-        DontFragment_1_this_sparse_wildcard
+        "1_this_sparse_second_wildcard",
+        DontFragment_1_this_sparse_second_wildcard
     },
     {
-        "1_var_sparse_wildcard",
-        DontFragment_1_var_sparse_wildcard
+        "1_var_sparse_second_wildcard",
+        DontFragment_1_var_sparse_second_wildcard
     },
     {
-        "1_fixed_sparse_written_wildcard",
-        DontFragment_1_fixed_sparse_written_wildcard
+        "1_this_sparse_written_second_wildcard",
+        DontFragment_1_this_sparse_written_second_wildcard
     },
     {
-        "1_this_sparse_written_wildcard",
-        DontFragment_1_this_sparse_written_wildcard
+        "1_var_sparse_written_second_wildcard",
+        DontFragment_1_var_sparse_written_second_wildcard
     },
     {
-        "1_var_sparse_written_wildcard",
-        DontFragment_1_var_sparse_written_wildcard
+        "1_fixed_sparse_first_wildcard",
+        DontFragment_1_fixed_sparse_first_wildcard
+    },
+    {
+        "1_fixed_sparse_first_wildcard_mixed",
+        DontFragment_1_fixed_sparse_first_wildcard_mixed
+    },
+    {
+        "1_this_sparse_first_wildcard",
+        DontFragment_1_this_sparse_first_wildcard
+    },
+    {
+        "1_this_sparse_first_wildcard_mixed",
+        DontFragment_1_this_sparse_first_wildcard_mixed
+    },
+    {
+        "1_this_sparse_written_first_wildcard_mixed",
+        DontFragment_1_this_sparse_written_first_wildcard_mixed
+    },
+    {
+        "1_this_sparse_first_wildcard_simple",
+        DontFragment_1_this_sparse_first_wildcard_simple
+    },
+    {
+        "1_var_sparse_first_wildcard",
+        DontFragment_1_var_sparse_first_wildcard
+    },
+    {
+        "1_var_sparse_first_wildcard_mixed",
+        DontFragment_1_var_sparse_first_wildcard_mixed
+    },
+    {
+        "1_this_sparse_written_first_wildcard",
+        DontFragment_1_this_sparse_written_first_wildcard
+    },
+    {
+        "1_var_sparse_written_first_wildcard",
+        DontFragment_1_var_sparse_written_first_wildcard
     }
 };
 
@@ -11159,7 +11204,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        46,
+        55,
         DontFragment_testcases,
         1,
         DontFragment_params

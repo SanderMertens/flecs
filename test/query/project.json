@@ -2113,12 +2113,21 @@
                 "match_prefab_ignore_disabled",
                 "ignore_prefab_match_disabled",
                 "match_prefab_disabled",
-                "1_fixed_sparse_wildcard",
-                "1_this_sparse_wildcard",
-                "1_var_sparse_wildcard",
-                "1_fixed_sparse_written_wildcard",
-                "1_this_sparse_written_wildcard",
-                "1_var_sparse_written_wildcard"
+                "1_fixed_sparse_second_wildcard",
+                "1_this_sparse_second_wildcard",
+                "1_var_sparse_second_wildcard",
+                "1_this_sparse_written_second_wildcard",
+                "1_var_sparse_written_second_wildcard",
+                "1_fixed_sparse_first_wildcard",
+                "1_fixed_sparse_first_wildcard_mixed",
+                "1_this_sparse_first_wildcard",
+                "1_this_sparse_first_wildcard_mixed",
+                "1_this_sparse_written_first_wildcard_mixed",
+                "1_this_sparse_first_wildcard_simple",
+                "1_var_sparse_first_wildcard",
+                "1_var_sparse_first_wildcard_mixed",
+                "1_this_sparse_written_first_wildcard",
+                "1_var_sparse_written_first_wildcard"
             ]
         }, {
             "id": "Union",

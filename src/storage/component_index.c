@@ -411,6 +411,13 @@ ecs_component_record_t* flecs_component_new(
                 cdr->flags |= EcsIdDontFragment;
             }
         }
+
+        /* Mark (*, tgt) record with HasDontFragment so that queries can quickly
+         * detect if there are any non-fragmenting records to consider for a
+         * (*, tgt) query. */
+        if (cdr->flags & EcsIdDontFragment) {
+            cdr_t->flags |= EcsIdMatchDontFragment;
+        }
     }
 
     cdr->flags |= flecs_component_event_flags(world, id);

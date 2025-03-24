@@ -964,6 +964,11 @@ int flecs_term_finalize(
     }
 
     if (ecs_id_is_wildcard(term->id)) {
+        if (ECS_PAIR_FIRST(term->id) == EcsWildcard) {
+            cacheable_term = false;
+            trivial_term = false;
+        }
+
         if (!(id_flags & EcsIdExclusive)) {
             trivial_term = false;
         }

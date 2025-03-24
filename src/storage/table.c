@@ -967,6 +967,7 @@ void flecs_table_fini_data(
 const ecs_entity_t* ecs_table_entities(
     const ecs_table_t *table)
 {
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     return table->data.entities;
 }
 

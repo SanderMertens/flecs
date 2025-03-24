@@ -1133,6 +1133,14 @@ void flecs_query_set_op_kind(
             op->kind = EcsQuerySelfUp;
         } else if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op->kind = EcsQueryAndAny;
+        } else if (ECS_IS_PAIR(term->id) && 
+            ECS_PAIR_FIRST(term->id) == EcsWildcard) 
+        {
+            if (op->kind == EcsQueryAnd) {
+                op->kind = EcsQueryAndWcTgt;
+            } else {
+                op->kind = EcsQueryWithWcTgt;
+            }
         }
     }
 }

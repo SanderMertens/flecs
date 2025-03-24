@@ -45,12 +45,14 @@ typedef enum {
     EcsQueryAll,            /* Yield all tables */
     EcsQueryAnd,            /* And operator: find or match id against variable source */
     EcsQueryAndAny,         /* And operator with support for matching Any src/id */
+    EcsQueryAndWcTgt,       /* And operator for (*, T) queries */
     EcsQueryTriv,           /* Trivial search (batches multiple terms) */
     EcsQueryCache,          /* Cached search */
     EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
     EcsQueryUp,             /* Up traversal */
     EcsQuerySelfUp,         /* Self|up traversal */
     EcsQueryWith,           /* Match id against fixed or variable source */
+    EcsQueryWithWcTgt,      /* Match (*, T) id against fixed or variable source */
     EcsQueryTrav,           /* Support for transitive/reflexive queries */
     EcsQueryAndFrom,        /* AndFrom operator */
     EcsQueryOrFrom,         /* OrFrom operator */
@@ -143,6 +145,7 @@ typedef struct {
     ecs_table_cache_iter_t it;
     int16_t column;
     int16_t remaining;
+    bool non_fragmenting;
 } ecs_query_and_ctx_t;
 
 /* Union context */
@@ -157,11 +160,14 @@ typedef struct {
 
 /* Sparse context */
 typedef struct {
+    ecs_query_and_ctx_t and_; /* For mixed sparse/non-sparse results */
+
     ecs_sparse_t *sparse;
     ecs_table_range_t range;
     int32_t cur;
     bool self;
 
+    ecs_component_record_t *cdr;
     ecs_table_range_t prev_range;
     int32_t prev_cur;
 } ecs_query_sparse_ctx_t;

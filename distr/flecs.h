@@ -440,7 +440,8 @@ extern "C" {
 #define EcsIdHasOnTableDelete          (1u << 22)
 #define EcsIdIsSparse                  (1u << 23)
 #define EcsIdDontFragment              (1u << 24)
-#define EcsIdIsUnion                   (1u << 25)
+#define EcsIdMatchDontFragment         (1u << 25) /* For (*, T) wildcards */
+#define EcsIdIsUnion                   (1u << 26)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
         EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion)
@@ -580,9 +581,9 @@ extern "C" {
 #define EcsTableHasOnTableDelete       (1u << 22u)
 #define EcsTableHasSparse              (1u << 23u)
 #define EcsTableHasDontFragment        (1u << 24u)
-#define EcsTableHasUnion               (1u << 25u)
+#define EcsTableHasUnion               (1u << 26u)
 
-#define EcsTableHasTraversable         (1u << 26u)
+#define EcsTableHasTraversable         (1u << 27u)
 #define EcsTableMarkedForDelete        (1u << 30u)
 
 /* Composite table flags */
