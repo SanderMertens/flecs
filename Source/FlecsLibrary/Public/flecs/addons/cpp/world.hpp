@@ -697,9 +697,9 @@ struct world {
 
     /** Ensure singleton component.
      */
-    #ifndef ensure
+    #ifndef obtain
     template <typename T>
-    T& ensure() const;
+    T& obtain() const;
     #endif
 
     /** Mark singleton component as modified.

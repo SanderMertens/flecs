@@ -377,8 +377,6 @@ struct type_impl {
         
     static void reset()
     {
-        std::string key = _::type_name<T>();
-        g_type_to_impl_data.erase(key);
         s_index.reset();
         s_size.reset();
         s_alignment.reset();

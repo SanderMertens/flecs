@@ -113,11 +113,11 @@ inline entity world::lookup(const char *name, const char *sep, const char *root_
     return flecs::entity(*this, e);
 }
 
-#ifndef ensure
+#ifndef obtain
 template <typename T>
-inline T& world::ensure() const {
+inline T& world::obtain() const {
     flecs::entity e(world_, _::type<T>::id(world_));
-    return e.ensure<T>();
+    return e.obtain<T>();
 }
 #endif
 

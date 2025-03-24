@@ -8,6 +8,8 @@ public class FlecsLibrary : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         
+        const bool bCompileWithLibraryTests = false;
+        
         Type = ModuleType.CPlusPlus;
         
         CppStandard = CppStandardVersion.Cpp20;
@@ -26,6 +28,11 @@ public class FlecsLibrary : ModuleRules
             // When compiling flecs.c, make sure to define flecs_EXPORTS, for example by adding -Dflecs_EXPORTS to the compiler command.
             // https://www.flecs.dev/flecs/md_docs_2Quickstart.html
             PrivateDefinitions.Add("flecs_EXPORTS");
+        }
+        
+        if (bCompileWithLibraryTests)
+        {
+            PublicDefinitions.Add("FLECS_TESTS");
         }
         
         PublicDefinitions.AddRange(
@@ -81,7 +88,6 @@ public class FlecsLibrary : ModuleRules
             }
         );
         
-
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
