@@ -38,7 +38,7 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 		
 		InitializeModule(FlecsWorld, ModuleEntity);
 		Execute_BP_InitializeModule(_getUObject(), FlecsWorld);
-	}),
+	});
 
 	FlecsWorld->Event<FFlecsModuleInitEvent>()
 		.id<FFlecsModuleComponent>()
