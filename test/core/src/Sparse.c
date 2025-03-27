@@ -1226,6 +1226,10 @@ void Sparse_override_component(void) {
     test_int(p->x, 10);
     test_int(p->y, 20);
 
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_owns(world, e, Position));
+    test_assert(!ecs_has(world, e, Position));
+
     ecs_fini(world);
 }
 
@@ -1351,6 +1355,123 @@ void Sparse_delete_w_override_on_remove_isa(void) {
     ecs_delete(world, e);
 
     test_int(1, on_remove_isa_invoked);
+
+    ecs_fini(world);
+}
+
+void Sparse_manual_override_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_owns(world, e, Position));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_assert(p == ecs_get(world, base, Position));
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_add(world, e, Position);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_owns(world, e, Position));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_assert(p != ecs_get(world, base, Position));
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_remove(world, e, Position);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_owns(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Sparse_auto_override_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_id(Position));
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+
+    if (!fragment) {
+        test_int(ecs_get_type(world, e)->count, 1);
+    } else {
+        test_int(ecs_get_type(world, e)->count, 2);
+    }
+    
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_owns(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_assert(p != ecs_get(world, base, Position));
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_remove(world, e, Position);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_owns(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Sparse_auto_override_component_no_value(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_id(Position));
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+
+    if (!fragment) {
+        test_int(ecs_get_type(world, e)->count, 1);
+    } else {
+        test_int(ecs_get_type(world, e)->count, 2);
+    }
+    
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_owns(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_assert(p != ecs_get(world, base, Position));
+
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_owns(world, e, Position));
+    test_assert(!ecs_has(world, e, Position));
 
     ecs_fini(world);
 }
@@ -2299,6 +2420,9 @@ void Sparse_on_set_after_remove_override(void) {
     });
 
     ecs_remove(world, e, Position);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_owns(world, e, Position));
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);

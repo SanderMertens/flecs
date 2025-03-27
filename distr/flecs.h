@@ -581,6 +581,7 @@ extern "C" {
 #define EcsTableHasOnTableDelete       (1u << 22u)
 #define EcsTableHasSparse              (1u << 23u)
 #define EcsTableHasDontFragment        (1u << 24u)
+#define EcsTableOverrideDontFragment   (1u << 25u)
 #define EcsTableHasUnion               (1u << 26u)
 
 #define EcsTableHasTraversable         (1u << 27u)

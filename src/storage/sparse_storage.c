@@ -5,13 +5,14 @@ bool flecs_component_sparse_has(
     ecs_entity_t entity)
 {
     ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cdr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_t id = cdr->id;
     if (ecs_id_is_wildcard(id)) {
         if (ECS_IS_PAIR(id)) {
-            if (ECS_PAIR_SECOND(id) == EcsWildcard) {
+            if ((ECS_PAIR_SECOND(id) == EcsWildcard) && 
+                (cdr->flags & EcsIdDontFragment)) 
+            {
                 ecs_component_record_t *cur = cdr;
                 while ((cur = flecs_component_first_next(cur))) {
                     if (!cur->sparse) {
@@ -24,9 +25,11 @@ bool flecs_component_sparse_has(
                 }
             }
 
-            if (ECS_PAIR_FIRST(id) == EcsWildcard) {
+            if ((ECS_PAIR_FIRST(id) == EcsWildcard) && 
+                (cdr->flags & EcsIdMatchDontFragment)) 
+            {
                 ecs_component_record_t *cur = cdr;
-                while ((cur = flecs_component_first_next(cur))) {
+                while ((cur = flecs_component_second_next(cur))) {
                     if (!cur->sparse) {
                         continue;
                     }
@@ -42,6 +45,8 @@ bool flecs_component_sparse_has(
 
         return false;
     } else {
+        ecs_assert(cdr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(cdr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
         return flecs_sparse_has_any(cdr->sparse, entity);
     }
 }

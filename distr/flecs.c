@@ -5415,6 +5415,36 @@ void flecs_instantiate_dont_fragment(
     }
 }
 
+static
+void flecs_instantiate_override_dont_fragment(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_t *base_table,
+    int32_t row,
+    int32_t count)
+{
+    int32_t i, type_count = base_table->type.count;
+    for (i = 0; i < type_count; i ++) {
+        ecs_id_t id = base_table->type.array[i];
+        if (!(id & ECS_AUTO_OVERRIDE)) {
+            continue;
+        }
+
+        id &= ~ECS_AUTO_OVERRIDE;
+
+        ecs_component_record_t *cr = flecs_components_get(world, id);
+        if (!cr || !(cr->flags & EcsIdDontFragment)) {
+            continue;
+        }
+
+        int32_t r = row, end = row + count;
+        for (; r < end; r ++) {
+            ecs_entity_t e = ecs_table_entities(table)[i];
+            ecs_add_id(world, e, id);
+        }
+    }
+}
+
 void flecs_instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -5430,6 +5460,11 @@ void flecs_instantiate(
     /* If prefab has union relationships, also set them on instance */
     if (base_table->flags & EcsTableHasUnion) {
         flecs_instantiate_union(world, base, base_table, table, row, count);
+    }
+
+    if (base_table->flags & EcsTableOverrideDontFragment) {
+        flecs_instantiate_override_dont_fragment(
+            world, table, base_table, row, count);
     }
 
     /* If base has non-fragmenting components, add to instance */
@@ -5711,7 +5746,9 @@ void flecs_notify_on_remove(
         }
 
         if (diff_flags & EcsTableHasDontFragment) {
-            if (flecs_dont_fragment_on_remove(world, table, row, count, removed)) {
+            if (flecs_dont_fragment_on_remove(
+                world, table, row, count, removed)) 
+            {
                 diff_flags |= EcsTableHasOnRemove;
             }
         }
@@ -8062,20 +8099,31 @@ ecs_entity_t ecs_clone(
     };
 
     ecs_record_t *dst_r = flecs_entities_get(world, dst);
-    /* Note 'ctor' parameter below is set to 'false' if the value will be 
-     * copied, since flecs_table_move will call a copy constructor. */
+
     if (dst_table != dst_r->table) {
-        flecs_move_entity(world, dst, dst_r, dst_table, &diff, !copy_value, 0);
+        flecs_move_entity(world, dst, dst_r, dst_table, &diff, true, 0);
     }
-    int32_t row = ECS_RECORD_TO_ROW(dst_r->row);
 
     if (copy_value) {
-        flecs_table_move(world, dst, src, dst_table,
-            row, src_table, ECS_RECORD_TO_ROW(src_r->row), true);
-
-        int32_t i, count = dst_table->column_count;
+        int32_t row = ECS_RECORD_TO_ROW(dst_r->row);
+        int32_t i, count = src_table->column_count;
         for (i = 0; i < count; i ++) {
-            ecs_id_t id = flecs_column_id(dst_table, i);
+            int32_t type_id = ecs_table_column_to_type_index(src_table, i);
+            ecs_id_t id = src_table->type.array[type_id];
+
+            void *dst_ptr = ecs_get_mut_id(world, dst, id);
+            if (!dst_ptr) {
+                continue;
+            }
+
+            const void *src_ptr = ecs_get_id(world, src, id);
+            const ecs_type_info_t *ti = src_table->data.columns[i].ti;
+            if (ti->hooks.copy) {
+                ti->hooks.copy(dst_ptr, src_ptr, 1, ti);
+            } else {
+                ecs_os_memcpy(dst_ptr, src_ptr, ti->size);
+            }
+
             flecs_notify_on_set(world, dst_table, row, 1, id, true);
         }
 
@@ -8790,20 +8838,23 @@ bool ecs_has_id(
     }
 
     ecs_component_record_t *cdr = flecs_components_get(world, id);
+    bool can_inherit = false;
+
     if (cdr) {
         const ecs_table_record_t *tr = flecs_component_get_table(cdr, table);
         if (tr) {
             return true;
         }
 
-        if (cdr->flags & EcsIdDontFragment) {
-            ecs_assert(cdr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (cdr->flags & (EcsIdDontFragment|EcsIdMatchDontFragment)) {
             if (flecs_component_sparse_has(cdr, entity)) {
                 return true;
             } else {
                 return flecs_get_base_component(world, table, id, cdr, 0) != NULL;
             }
         }
+
+        can_inherit = cdr->flags & EcsIdOnInstantiateInherit;
     }
 
     if (!(table->flags & (EcsTableHasUnion|EcsTableHasIsA))) {
@@ -8817,6 +8868,10 @@ bool ecs_has_id(
             uint64_t cur = flecs_switch_get(u_cdr->sparse, (uint32_t)entity);
             return (uint32_t)cur == ECS_PAIR_SECOND(id);
         }
+    }
+
+    if (!can_inherit) {
+        return false;
     }
 
     ecs_table_record_t *tr;
@@ -8864,7 +8919,7 @@ bool ecs_owns_id(
             return true;
         }
 
-        if (cdr->flags & EcsIdDontFragment) {
+        if (cdr->flags & (EcsIdDontFragment|EcsIdMatchDontFragment)) {
             return flecs_component_sparse_has(cdr, entity);
         }
     }
@@ -36437,7 +36492,7 @@ ecs_component_record_t* flecs_component_new(
         /* Mark (*, tgt) record with HasDontFragment so that queries can quickly
          * detect if there are any non-fragmenting records to consider for a
          * (*, tgt) query. */
-        if (cdr->flags & EcsIdDontFragment) {
+        if (cdr->flags & EcsIdDontFragment && ECS_PAIR_FIRST(id) != EcsFlag) {
             cdr_t->flags |= EcsIdMatchDontFragment;
         }
     }
@@ -37240,13 +37295,14 @@ bool flecs_component_sparse_has(
     ecs_entity_t entity)
 {
     ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cdr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_t id = cdr->id;
     if (ecs_id_is_wildcard(id)) {
         if (ECS_IS_PAIR(id)) {
-            if (ECS_PAIR_SECOND(id) == EcsWildcard) {
+            if ((ECS_PAIR_SECOND(id) == EcsWildcard) && 
+                (cdr->flags & EcsIdDontFragment)) 
+            {
                 ecs_component_record_t *cur = cdr;
                 while ((cur = flecs_component_first_next(cur))) {
                     if (!cur->sparse) {
@@ -37259,9 +37315,11 @@ bool flecs_component_sparse_has(
                 }
             }
 
-            if (ECS_PAIR_FIRST(id) == EcsWildcard) {
+            if ((ECS_PAIR_FIRST(id) == EcsWildcard) && 
+                (cdr->flags & EcsIdMatchDontFragment)) 
+            {
                 ecs_component_record_t *cur = cdr;
-                while ((cur = flecs_component_first_next(cur))) {
+                while ((cur = flecs_component_second_next(cur))) {
                     if (!cur->sparse) {
                         continue;
                     }
@@ -37277,6 +37335,8 @@ bool flecs_component_sparse_has(
 
         return false;
     } else {
+        ecs_assert(cdr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(cdr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
         return flecs_sparse_has_any(cdr->sparse, entity);
     }
 }
@@ -39106,11 +39166,6 @@ void flecs_table_move(
     flecs_table_move_bitset_columns(
         dst_table, dst_index, src_table, src_index, 1, false);
 
-    /* If the source and destination entities are the same, move component 
-     * between tables. If the entities are not the same (like when cloning) use
-     * a copy. */
-    bool same_entity = dst_entity == src_entity;
-
     /* Call move_dtor for moved away from storage only if the entity is at the
      * last index in the source table. If it isn't the last entity, the last 
      * entity in the table will be moved to the src storage, which will take
@@ -39137,33 +39192,24 @@ void flecs_table_move(
             void *dst = ECS_ELEM(dst_column->data, size, dst_index);
             void *src = ECS_ELEM(src_column->data, size, src_index);
 
-            if (same_entity) {
-                ecs_move_t move = ti->hooks.move_ctor;
-                if (use_move_dtor || !move) {
-                    /* Also use move_dtor if component doesn't have a move_ctor
-                     * registered, to ensure that the dtor gets called to 
-                     * cleanup resources. */
-                    move = ti->hooks.ctor_move_dtor;
-                }
+            ecs_move_t move = ti->hooks.move_ctor;
+            if (use_move_dtor || !move) {
+                /* Also use move_dtor if component doesn't have a move_ctor
+                 * registered, to ensure that the dtor gets called to 
+                 * cleanup resources. */
+                move = ti->hooks.ctor_move_dtor;
+            }
 
-                if (move) {
-                    move(dst, src, 1, ti);
-                } else {
-                    ecs_os_memcpy(dst, src, size);
-                }
+            if (move) {
+                move(dst, src, 1, ti);
             } else {
-                ecs_copy_t copy = ti->hooks.copy_ctor;
-                if (copy) {
-                    copy(dst, src, 1, ti);
-                } else {
-                    ecs_os_memcpy(dst, src, size);
-                }
+                ecs_os_memcpy(dst, src, size);
             }
         } else {
             if (dst_id < src_id) {
                 flecs_table_invoke_add_hooks(world, dst_table,
                     dst_column, &dst_entity, dst_index, 1, construct);
-            } else if (same_entity) {
+            } else {
                 flecs_table_invoke_remove_hooks(world, src_table,
                     src_column, &src_entity, src_index, 1, use_move_dtor);
             }
@@ -39178,11 +39224,9 @@ void flecs_table_move(
             &dst_entity, dst_index, 1, construct);
     }
 
-    if (same_entity) {
-        for (; (i_old < src_column_count); i_old ++) {
-            flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old], 
-                &src_entity, src_index, 1, use_move_dtor);
-        }
+    for (; (i_old < src_column_count); i_old ++) {
+        flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old], 
+            &src_entity, src_index, 1, use_move_dtor);
     }
 
     flecs_table_check_sanity(world, dst_table);
@@ -40981,6 +41025,16 @@ void flecs_add_overrides_for_base(
             ecs_id_t to_add = 0;
             if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
                 to_add = id & ~ECS_AUTO_OVERRIDE;
+                ecs_component_record_t *cdr = flecs_components_get(
+                    world, to_add);
+                if (cdr && (cdr->flags & EcsIdDontFragment)) {
+                    to_add = 0;
+
+                    /* Add flag to base table. Cheaper to do here vs adding an
+                     * observer for OnAdd AUTO_OVERRIDE|* / during table 
+                     * creation. */
+                    base_table->flags |= EcsTableOverrideDontFragment;
+                }
             } else {
                 ecs_table_record_t *tr = &base_table->_->records[i];
                 ecs_component_record_t *cdr = (ecs_component_record_t*)tr->hdr.cache;
@@ -75594,7 +75648,6 @@ next_component: {
 
     with_redo = false;
     goto next;
-    
 }
 
 bool flecs_query_sparse_with(

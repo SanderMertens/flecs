@@ -815,6 +815,16 @@ void flecs_add_overrides_for_base(
             ecs_id_t to_add = 0;
             if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
                 to_add = id & ~ECS_AUTO_OVERRIDE;
+                ecs_component_record_t *cdr = flecs_components_get(
+                    world, to_add);
+                if (cdr && (cdr->flags & EcsIdDontFragment)) {
+                    to_add = 0;
+
+                    /* Add flag to base table. Cheaper to do here vs adding an
+                     * observer for OnAdd AUTO_OVERRIDE|* / during table 
+                     * creation. */
+                    base_table->flags |= EcsTableOverrideDontFragment;
+                }
             } else {
                 ecs_table_record_t *tr = &base_table->_->records[i];
                 ecs_component_record_t *cdr = (ecs_component_record_t*)tr->hdr.cache;

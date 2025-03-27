@@ -1696,11 +1696,6 @@ void flecs_table_move(
     flecs_table_move_bitset_columns(
         dst_table, dst_index, src_table, src_index, 1, false);
 
-    /* If the source and destination entities are the same, move component 
-     * between tables. If the entities are not the same (like when cloning) use
-     * a copy. */
-    bool same_entity = dst_entity == src_entity;
-
     /* Call move_dtor for moved away from storage only if the entity is at the
      * last index in the source table. If it isn't the last entity, the last 
      * entity in the table will be moved to the src storage, which will take
@@ -1727,33 +1722,24 @@ void flecs_table_move(
             void *dst = ECS_ELEM(dst_column->data, size, dst_index);
             void *src = ECS_ELEM(src_column->data, size, src_index);
 
-            if (same_entity) {
-                ecs_move_t move = ti->hooks.move_ctor;
-                if (use_move_dtor || !move) {
-                    /* Also use move_dtor if component doesn't have a move_ctor
-                     * registered, to ensure that the dtor gets called to 
-                     * cleanup resources. */
-                    move = ti->hooks.ctor_move_dtor;
-                }
+            ecs_move_t move = ti->hooks.move_ctor;
+            if (use_move_dtor || !move) {
+                /* Also use move_dtor if component doesn't have a move_ctor
+                 * registered, to ensure that the dtor gets called to 
+                 * cleanup resources. */
+                move = ti->hooks.ctor_move_dtor;
+            }
 
-                if (move) {
-                    move(dst, src, 1, ti);
-                } else {
-                    ecs_os_memcpy(dst, src, size);
-                }
+            if (move) {
+                move(dst, src, 1, ti);
             } else {
-                ecs_copy_t copy = ti->hooks.copy_ctor;
-                if (copy) {
-                    copy(dst, src, 1, ti);
-                } else {
-                    ecs_os_memcpy(dst, src, size);
-                }
+                ecs_os_memcpy(dst, src, size);
             }
         } else {
             if (dst_id < src_id) {
                 flecs_table_invoke_add_hooks(world, dst_table,
                     dst_column, &dst_entity, dst_index, 1, construct);
-            } else if (same_entity) {
+            } else {
                 flecs_table_invoke_remove_hooks(world, src_table,
                     src_column, &src_entity, src_index, 1, use_move_dtor);
             }
@@ -1768,11 +1754,9 @@ void flecs_table_move(
             &dst_entity, dst_index, 1, construct);
     }
 
-    if (same_entity) {
-        for (; (i_old < src_column_count); i_old ++) {
-            flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old], 
-                &src_entity, src_index, 1, use_move_dtor);
-        }
+    for (; (i_old < src_column_count); i_old ++) {
+        flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old], 
+            &src_entity, src_index, 1, use_move_dtor);
     }
 
     flecs_table_check_sanity(world, dst_table);

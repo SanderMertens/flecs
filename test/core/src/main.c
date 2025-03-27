@@ -490,6 +490,9 @@ void Sparse_override_component_2_lvls(void);
 void Sparse_dont_override_inherited(void);
 void Sparse_delete_w_override_component(void);
 void Sparse_delete_w_override_on_remove_isa(void);
+void Sparse_auto_override_component(void);
+void Sparse_auto_override_component_no_value(void);
+void Sparse_manual_override_component(void);
 void Sparse_bulk_init(void);
 void Sparse_bulk_init_w_non_sparse(void);
 void Sparse_ctor_after_emplace(void);
@@ -1830,6 +1833,9 @@ void Prefab_iterate_w_prefab_shared(void);
 void Prefab_match_entity_prefab_w_system_optional(void);
 void Prefab_prefab_in_system_expr(void);
 void Prefab_dont_match_prefab(void);
+void Prefab_has_on_instantiate_override(void);
+void Prefab_has_on_instantiate_inherit(void);
+void Prefab_has_on_instantiate_dont_inherit(void);
 void Prefab_new_w_count_w_override(void);
 void Prefab_override_2_components_different_size(void);
 void Prefab_ignore_prefab_parent_component(void);
@@ -4270,6 +4276,18 @@ bake_test_case Sparse_testcases[] = {
     {
         "delete_w_override_on_remove_isa",
         Sparse_delete_w_override_on_remove_isa
+    },
+    {
+        "auto_override_component",
+        Sparse_auto_override_component
+    },
+    {
+        "auto_override_component_no_value",
+        Sparse_auto_override_component_no_value
+    },
+    {
+        "manual_override_component",
+        Sparse_manual_override_component
     },
     {
         "bulk_init",
@@ -9485,6 +9503,18 @@ bake_test_case Prefab_testcases[] = {
         Prefab_dont_match_prefab
     },
     {
+        "has_on_instantiate_override",
+        Prefab_has_on_instantiate_override
+    },
+    {
+        "has_on_instantiate_inherit",
+        Prefab_has_on_instantiate_inherit
+    },
+    {
+        "has_on_instantiate_dont_inherit",
+        Prefab_has_on_instantiate_dont_inherit
+    },
+    {
         "new_w_count_w_override",
         Prefab_new_w_count_w_override
     },
@@ -11806,7 +11836,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        108,
+        111,
         Sparse_testcases,
         1,
         Sparse_params
@@ -11969,7 +11999,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        157,
+        160,
         Prefab_testcases
     },
     {
