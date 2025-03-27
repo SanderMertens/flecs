@@ -134,6 +134,23 @@ ecs_id_t flecs_component_hash(
     return id;
 }
 
+void flecs_component_record_init_exclusive(
+    ecs_world_t *world,
+    ecs_component_record_t *cdr)
+{
+    if (!(cdr->flags & EcsIdDontFragment)) {
+        return;
+    }
+
+    if (!ecs_id_is_wildcard(cdr->id)) {
+        return;
+    }
+
+    cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
+
+    flecs_sparse_init(cdr->sparse, NULL, NULL, ECS_SIZEOF(ecs_entity_t));
+}
+
 void flecs_component_init_sparse(
     ecs_world_t *world,
     ecs_component_record_t *cdr)
@@ -168,6 +185,10 @@ void flecs_component_record_init_dont_fragment(
 
     if (cdr->id < FLECS_HI_COMPONENT_ID) {
         world->non_fragmenting[cdr->id] = true;
+    }
+
+    if (cdr->flags & EcsIdExclusive) {
+        flecs_component_record_init_exclusive(world, cdr);
     }
 }
 
@@ -806,3 +827,4 @@ const ecs_table_record_t* flecs_component_next(
 {
     return flecs_table_cache_next(iter, ecs_table_record_t);
 }
+ 

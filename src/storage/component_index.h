@@ -152,4 +152,8 @@ void flecs_component_record_init_dont_fragment(
     ecs_world_t *world,
     ecs_component_record_t *cdr);
 
+void flecs_component_record_init_exclusive(
+    ecs_world_t *world,
+    ecs_component_record_t *cdr);
+
 #endif

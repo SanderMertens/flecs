@@ -21,6 +21,8 @@ static int position_on_add_invoked = 0;
 static int position_on_remove_invoked = 0;
 static int position_on_set_invoked = 0;
 static Position position_on_set_value = {0, 0};
+static int Position_x = 10;
+static int Position_y = 20;
 
 static ECS_CTOR(Position, ptr, {
     position_ctor_invoked ++;
@@ -29,8 +31,8 @@ static ECS_CTOR(Position, ptr, {
 })
 
 static ECS_DTOR(Position, ptr, {
-    test_int(ptr->x, 10);
-    test_int(ptr->y, 20);
+    test_int(ptr->x, Position_x);
+    test_int(ptr->y, Position_y);
     position_dtor_invoked ++;
 })
 
@@ -57,8 +59,8 @@ static void Position_on_remove(ecs_iter_t *it) {
     test_int(0, position_dtor_invoked);
     Position *p = ecs_field_at(it, Position, 0, 0);
     test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    test_int(p->x, Position_x);
+    test_int(p->y, Position_y);
     test_uint(it->event, EcsOnRemove);
 
     position_on_remove_invoked ++;
@@ -2615,6 +2617,178 @@ void Sparse_sparse_relationship_second(void) {
 
     ecs_add(world, e, Foo);
     test_assert(ptr == ecs_get_pair_second(world, e, Rel, Position));
+
+    ecs_fini(world);
+}
+
+void Sparse_exclusive_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, Rel, EcsSparse);
+    ecs_add_id(world, Rel, EcsExclusive);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_add_pair(world, e, Rel, TgtB);
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_remove_pair(world, e, Rel, TgtB);
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void Sparse_exclusive_pair_w_data(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Position), EcsExclusive);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_pair(world, e, Position, TgtA, {10, 20});
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtA));
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtB));
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtA);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtB);
+        test_assert(p == NULL);
+    }
+
+    ecs_set_pair(world, e, Position, TgtB, {30, 40});
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtB));
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtA);
+        test_assert(p == NULL);
+    }
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtB);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+
+    ecs_remove_pair(world, e, ecs_id(Position), TgtB);
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtB));
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtA);
+        test_assert(p == NULL);
+    }
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtB);
+        test_assert(p == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_exclusive_pair_w_hooks(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Position), EcsExclusive);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_add = ecs_on_add(Position),
+        .dtor = ecs_dtor(Position),
+        .on_remove = ecs_on_remove(Position)
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_pair(world, e, Position, TgtA, {10, 20});
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtA));
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtB));
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtA);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtB);
+        test_assert(p == NULL);
+    }
+
+    test_int(position_ctor_invoked, 1);
+    test_int(position_dtor_invoked, 0);
+    test_int(position_on_add_invoked, 1);
+    test_int(position_on_remove_invoked, 0);
+
+    position_ctor_invoked = 0;
+    position_dtor_invoked = 0;
+    position_on_add_invoked = 0;
+    position_on_remove_invoked = 0;
+
+    ecs_set_pair(world, e, Position, TgtB, {30, 40});
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), TgtB));
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtA);
+        test_assert(p == NULL);
+    }
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtB);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+
+    test_int(position_ctor_invoked, 1);
+    test_int(position_dtor_invoked, 1);
+    test_int(position_on_add_invoked, 1);
+    test_int(position_on_remove_invoked, 1);
+
+    position_ctor_invoked = 0;
+    position_dtor_invoked = 0;
+    position_on_add_invoked = 0;
+    position_on_remove_invoked = 0;
+
+    Position_x = 30;
+    Position_y = 40;
+
+    ecs_remove_pair(world, e, ecs_id(Position), TgtB);
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtA));
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), TgtB));
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtA);
+        test_assert(p == NULL);
+    }
+    {
+        const Position *p = ecs_get_pair(world, e, Position, TgtB);
+        test_assert(p == NULL);
+    }
+
+    test_int(position_ctor_invoked, 0);
+    test_int(position_dtor_invoked, 1);
+    test_int(position_on_add_invoked, 0);
+    test_int(position_on_remove_invoked, 1);
 
     ecs_fini(world);
 }

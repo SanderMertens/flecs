@@ -212,6 +212,9 @@ bool flecs_set_id_flag(
         if (flag == EcsIdDontFragment) {
             flecs_component_record_init_dont_fragment(world, cdr);
         }
+        if (flag == EcsIdExclusive) {
+            flecs_component_record_init_exclusive(world, cdr);
+        }
         return true;
     }
     return false;

@@ -523,6 +523,9 @@ void Sparse_on_set_observer_2_terms(void);
 void Sparse_on_remove_observer_2_terms(void);
 void Sparse_sparse_relationship(void);
 void Sparse_sparse_relationship_second(void);
+void Sparse_exclusive_pair(void);
+void Sparse_exclusive_pair_w_data(void);
+void Sparse_exclusive_pair_w_hooks(void);
 void Sparse_defer_ensure(void);
 void Sparse_defer_ensure_w_modified(void);
 void Sparse_defer_ensure_modified(void);
@@ -4408,6 +4411,18 @@ bake_test_case Sparse_testcases[] = {
     {
         "sparse_relationship_second",
         Sparse_sparse_relationship_second
+    },
+    {
+        "exclusive_pair",
+        Sparse_exclusive_pair
+    },
+    {
+        "exclusive_pair_w_data",
+        Sparse_exclusive_pair_w_data
+    },
+    {
+        "exclusive_pair_w_hooks",
+        Sparse_exclusive_pair_w_hooks
     },
     {
         "defer_ensure",
@@ -11836,7 +11851,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        111,
+        114,
         Sparse_testcases,
         1,
         Sparse_params

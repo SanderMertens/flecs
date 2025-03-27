@@ -788,7 +788,7 @@ void flecs_entity_remove_non_fragmenting(
     ecs_component_record_t *cur = world->cdr_non_fragmenting_head;
     while (cur) {
         ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
-        if (cur->sparse) {
+        if (cur->sparse && !(ecs_id_is_wildcard(cur->id))) {
             void *ptr = flecs_sparse_get_any(cur->sparse, 0, e);
             if (ptr) {
                 ecs_type_t type = { .count = 1, .array = &cur->id };
