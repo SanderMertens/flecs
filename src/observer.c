@@ -280,11 +280,7 @@ bool flecs_ignore_observer(
         return true;
     }
 
-    if (!o->query) {
-        return false;
-    }
-
-    ecs_flags32_t table_flags = table->flags, query_flags = o->query->flags;
+    ecs_flags32_t table_flags = table->flags, query_flags = impl->flags;
 
     bool result = (table_flags & EcsTableIsPrefab) &&
         !(query_flags & EcsQueryMatchPrefab);
@@ -996,14 +992,19 @@ ecs_observer_t* flecs_observer_init(
 
     ecs_query_t dummy_query, *query = NULL;
 
-    {
-        if (flecs_query_finalize_simple(world, &dummy_query, &query_desc)) {
-            printf("#### simple!\n");
-            if (dummy_query.term_count == 1) {
+    /* Only do optimization when not in sanitized mode. This ensures that the
+     * behavior is consistent between observers with and without queries, as
+     * both paths will be exercised in unit tests. */
+#ifndef FLECS_SANITIZE
+    if (flecs_query_finalize_simple(world, &dummy_query, &query_desc)) {
+        if (dummy_query.term_count == 1 && desc->events[0] != EcsMonitor) {
+            if (!dummy_query.row_fields) {
+                dummy_query.flags |= desc->query.flags;
                 query = &dummy_query;
             }
         }
     }
+#endif
 
     /* Create query */
     if (!query) {
@@ -1052,7 +1053,8 @@ ecs_observer_t* flecs_observer_init(
     o->entity = entity;
     o->world = world;
     impl->term_index = desc->term_index_;
-    impl->flags = desc->flags_;
+    impl->flags |= desc->flags_ | 
+        (query->flags & (EcsQueryMatchPrefab|EcsQueryMatchDisabled));
 
     ecs_check(!(desc->yield_existing && 
         (desc->flags_ & (EcsObserverYieldOnCreate|EcsObserverYieldOnDelete))), 
@@ -1264,11 +1266,7 @@ void flecs_observer_fini(
 
         ecs_os_free(impl->last_event_id);
     } else {
-        // if (o->query->term_count) {
-            flecs_unregister_observer(world, o->observable, o);
-        // } else {
-            /* Observer creation failed while creating query */
-        // }
+        flecs_unregister_observer(world, o->observable, o);
     }
 
     ecs_vec_fini_t(&world->allocator, &impl->children, ecs_observer_t*);
