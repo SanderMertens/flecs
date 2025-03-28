@@ -539,13 +539,15 @@ extern "C" {
 //// Observer flags (used by ecs_observer_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsObserverIsMulti             (1u << 1u)  /* Does observer have multiple terms */
-#define EcsObserverIsMonitor           (1u << 2u)  /* Is observer a monitor */
-#define EcsObserverIsDisabled          (1u << 3u)  /* Is observer entity disabled */
-#define EcsObserverIsParentDisabled    (1u << 4u)  /* Is module parent of observer disabled  */
-#define EcsObserverBypassQuery         (1u << 5u)  /* Don't evaluate query for multi-component observer*/
-#define EcsObserverYieldOnCreate       (1u << 6u)  /* Yield matching entities when creating observer */
-#define EcsObserverYieldOnDelete       (1u << 7u)  /* Yield matching entities when deleting observer */
+#define EcsObserverMatchPrefab         (1u << 1u)  /* Same as query*/
+#define EcsObserverMatchDisabled       (1u << 2u)  /* Same as query*/
+#define EcsObserverIsMulti             (1u << 3u)  /* Does observer have multiple terms */
+#define EcsObserverIsMonitor           (1u << 4u)  /* Is observer a monitor */
+#define EcsObserverIsDisabled          (1u << 5u)  /* Is observer entity disabled */
+#define EcsObserverIsParentDisabled    (1u << 6u)  /* Is module parent of observer disabled  */
+#define EcsObserverBypassQuery         (1u << 7u)  /* Don't evaluate query for multi-component observer*/
+#define EcsObserverYieldOnCreate       (1u << 8u)  /* Yield matching entities when creating observer */
+#define EcsObserverYieldOnDelete       (1u << 9u)  /* Yield matching entities when deleting observer */
 
 
 ////////////////////////////////////////////////////////////////////////////////

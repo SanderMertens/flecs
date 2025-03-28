@@ -293,6 +293,7 @@ void Entity_set_pair_second_invalid_type(void);
 void Entity_get_ref_pair_second_invalid_type(void);
 void Entity_iter_type(void);
 void Entity_iter_empty_type(void);
+void Entity_untyped_component_use_low_id(void);
 void Entity_add_remove_enum_component(void);
 
 // Testsuite 'Pairs'
@@ -2604,6 +2605,10 @@ bake_test_case Entity_testcases[] = {
     {
         "iter_empty_type",
         Entity_iter_empty_type
+    },
+    {
+        "untyped_component_use_low_id",
+        Entity_untyped_component_use_low_id
     },
     {
         "add_remove_enum_component",
@@ -7222,7 +7227,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        281,
+        282,
         Entity_testcases
     },
     {

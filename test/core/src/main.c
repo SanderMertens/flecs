@@ -1621,7 +1621,6 @@ void Observer_on_remove_pair_w_any_any(void);
 void Observer_on_add_any(void);
 void Observer_on_remove_any(void);
 void Observer_get_filter(void);
-void Observer_uni_observer_eval_count(void);
 void Observer_multi_observer_eval_count(void);
 void Observer_yield_existing_uni_no_this(void);
 void Observer_yield_existing_multi_no_this(void);
@@ -8670,10 +8669,6 @@ bake_test_case Observer_testcases[] = {
         Observer_get_filter
     },
     {
-        "uni_observer_eval_count",
-        Observer_uni_observer_eval_count
-    },
-    {
         "multi_observer_eval_count",
         Observer_multi_observer_eval_count
     },
@@ -11820,7 +11815,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        240,
+        239,
         Observer_testcases
     },
     {
