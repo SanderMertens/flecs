@@ -13,6 +13,12 @@
 #define flecs_set_var_label(var, lbl)
 #endif
 
+/* Fast function for finalizing simple queries */
+bool flecs_query_finalize_simple(
+    ecs_world_t *world,
+    ecs_query_t *q,
+    const ecs_query_desc_t *desc);
+
 /* Finalize query data & validate */
 int flecs_query_finalize_query(
     ecs_world_t *world,

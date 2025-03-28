@@ -1581,8 +1581,6 @@ error:
     return -1;
 }
 
-#ifndef FLECS_SANITIZE
-static
 bool flecs_query_finalize_simple(
     ecs_world_t *world,
     ecs_query_t *q,
@@ -1599,11 +1597,12 @@ bool flecs_query_finalize_simple(
 
     int8_t i, term_count;
     for (i = 0; i < FLECS_TERM_COUNT_MAX; i ++) {
+        const ecs_term_t *term = &desc->terms[i];
         if (!ecs_term_is_initialized(&desc->terms[i])) {
             break;
         }
 
-        ecs_id_t id = desc->terms[i].id;
+        ecs_id_t id = term->id;
         if (ecs_id_is_wildcard(id)) {
             return false;
         }
@@ -1624,8 +1623,21 @@ bool flecs_query_finalize_simple(
             return false;
         }
 
-        ecs_term_t term = { .id = desc->terms[i].id };
-        if (ecs_os_memcmp_t(&term, &desc->terms[i], ecs_term_t)) {
+        ecs_term_t cmp_term = { 
+            .id = id, 
+            .flags_ = term->flags_, 
+            .field_index = term->field_index
+        };
+
+        if (term->src.id == (EcsThis|EcsSelf|EcsIsVariable)) {
+            cmp_term.src.id = EcsThis|EcsSelf|EcsIsVariable;
+        }
+
+        if (term->first.id == (term->id|EcsSelf|EcsIsEntity)) {
+            cmp_term.first.id = term->id|EcsSelf|EcsIsEntity;
+        }
+
+        if (ecs_os_memcmp_t(&cmp_term, term, ecs_term_t)) {
             return false;
         }
     }
@@ -1754,7 +1766,6 @@ bool flecs_query_finalize_simple(
 
     return true;
 }
-#endif
 
 static
 char* flecs_query_append_token(
