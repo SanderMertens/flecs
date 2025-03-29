@@ -35,23 +35,23 @@ int flecs_json_ser_enum(
     const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
     ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    uint64_t value;
+    int64_t value;
     if (enum_type->underlying_type == ecs_id(ecs_u8_t)) {
-        value = *(const uint8_t*)base;
+        value = flecs_uto(int64_t, *(const uint8_t*)base);
     } else if (enum_type->underlying_type == ecs_id(ecs_u16_t)) {
-        value = *(const uint16_t*)base;
+        value = flecs_uto(int64_t, *(const uint16_t*)base);
     } else if (enum_type->underlying_type == ecs_id(ecs_u32_t)) {
-        value = *(const uint32_t*)base;
+        value = flecs_uto(int64_t, *(const uint32_t*)base);
     } else if (enum_type->underlying_type == ecs_id(ecs_u64_t)) {
-        value = *(const uint64_t*)base;
+        value = flecs_uto(int64_t, *(const uint64_t*)base);
     } else if (enum_type->underlying_type == ecs_id(ecs_i8_t)) {
-        value = *(const int8_t*)base;
+        value = flecs_uto(int64_t, *(const int8_t*)base);
     } else if (enum_type->underlying_type == ecs_id(ecs_i16_t)) {
-        value = *(const int16_t*)base;
+        value = flecs_uto(int64_t, *(const int16_t*)base);
     } else if (enum_type->underlying_type == ecs_id(ecs_i32_t)) {
-        value = *(const int32_t*)base;
+        value = flecs_uto(int64_t, *(const int32_t*)base);
     } else if (enum_type->underlying_type == ecs_id(ecs_i64_t)) {
-        value = *(const int64_t*)base;
+        value = flecs_uto(int64_t, *(const int64_t*)base);
     }
     
     /* Enumeration constants are stored in a map that is keyed on the
