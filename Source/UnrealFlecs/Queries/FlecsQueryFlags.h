@@ -10,27 +10,32 @@ UENUM(BlueprintType, meta = (Bitflags))
 enum class EFlecsQueryFlags : uint8
 {
 	None = 0,
-	/** Query must match prefabs.
+	/**
+	 * Query must match prefabs.
      * Can be combined with other query flags on the ecs_query_desc_t::flags field.
      * \ingroup queries
      */
 	MatchPrefabs = EcsQueryMatchPrefab,
-	/** Query must match disabled entities.
+	/**
+	 * Query must match disabled entities.
 	 * Can be combined with other query flags on the ecs_query_desc_t::flags field.
 	 * \ingroup queries
 	 */
 	MatchDisabled = EcsQueryMatchDisabled,
-	/** Query must match empty tables.
+	/**
+	 * Query must match empty tables.
 	 * Can be combined with other query flags on the ecs_query_desc_t::flags field.
 	 * \ingroup queries
 	 */
 	MatchEmptyTables = EcsQueryMatchEmptyTables,
-	/** Query may have unresolved entity identifiers.
+	/**
+	 * Query may have unresolved entity identifiers.
      * Can be combined with other query flags on the ecs_query_desc_t::flags field.
      * \ingroup queries
      */
 	AllowUnresolvedByName = EcsQueryAllowUnresolvedByName,
-	/** Query only returns whole tables (ignores toggle/member fields).
+	/**
+	 * Query only returns whole tables (ignores toggle/member fields).
 	 * Can be combined with other query flags on the ecs_query_desc_t::flags field.
 	 * \ingroup queries
 	 */

@@ -288,6 +288,7 @@ struct type_impl {
             #endif
         }
 
+        ecs_os_perf_trace_pop("flecs.type_impl.register_id");
         return c;
     }
         
@@ -478,7 +479,7 @@ untyped_component& on_compare(
     h.flags &= ~ECS_TYPE_HOOK_CMP_ILLEGAL;
     if(h.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
         h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
-        h.equals = NULL;
+        h.equals = nullptr;
     }
     set_hooks(h);
     return *this;

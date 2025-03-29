@@ -15,7 +15,7 @@ class UNREALFLECS_API UFlecsTranslationModule final : public UFlecsModuleObject
 public:
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override
 	{
-		return TEXT("Flecs Translation Module");
+		return "Flecs Translation Module";
 	}
 	
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;

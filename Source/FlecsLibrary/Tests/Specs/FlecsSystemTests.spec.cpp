@@ -2442,6 +2442,44 @@ void System_run_w_0_src_query(void) {
     test_int(count, 1);
 }
 
+void System_priority_test(void) {
+    flecs::world ecs;
+    RegisterTestTypeComponents(ecs);
+
+    int32_t count = 0;
+
+    // have system initialize out of order to make sure Ids are not used in ordering
+    
+    ecs.system()
+       .priority(1000)
+       .each([&](flecs::iter& Iter, size_t Index) {
+           test_assert(count == 3);
+           count ++;
+       });
+
+    ecs.system()
+        .each([&](flecs::iter& Iter, size_t Index) {
+            test_assert(count == 2);
+            count ++;
+        });
+    
+    ecs.system()
+        .priority(99)
+        .each([&](flecs::iter& Iter, size_t Index) {
+            test_assert(count == 1);
+            count ++;
+        });
+
+    ecs.system()
+        .priority(50)
+        .each([&](flecs::iter& Iter, size_t Index) {
+            count ++;
+        });
+
+    ecs.progress();
+    test_int(count, 4);
+}
+
 
 END_DEFINE_SPEC(FFlecsSystemTestsSpec);
 
@@ -2520,7 +2558,8 @@ END_DEFINE_SPEC(FFlecsSystemTestsSpec);
                 "register_twice_w_run",
                 "register_twice_w_run_each",
                 "register_twice_w_each_run",
-                "run_w_0_src_query"
+                "run_w_0_src_query",
+                "priority_test"
             ]*/
 
 void FFlecsSystemTestsSpec::Define()
@@ -2598,6 +2637,7 @@ void FFlecsSystemTestsSpec::Define()
     It("register_twice_w_run_each", [&] { System_register_twice_w_run_each(); });
     It("register_twice_w_each_run", [&] { System_register_twice_w_each_run(); });
     It("run_w_0_src_query", [&] { System_run_w_0_src_query(); });
+    It("priority_test", [&] { System_priority_test(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS

@@ -44,7 +44,7 @@ public:
 
 	virtual void DeinitializeModule(UFlecsWorld* InWorld);
 
-	UFUNCTION(BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "Deinitialize Module"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs | Modules", meta = (DisplayName = "Deinitialize Module"))
 	void BP_DeinitializeModule(UFlecsWorld* InWorld);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Flecs | Modules")

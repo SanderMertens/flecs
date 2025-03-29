@@ -22,7 +22,7 @@ struct UNREALFLECS_API FFlecsDefaultMetaEntity
 	FString EntityName;
 
 	UPROPERTY(EditAnywhere, Category = "Flecs | Default Entities", meta = (ClampMin = "7000"))
-	int32 EntityId = 7001;
+	uint32 EntityId = 7001;
 	
 	flecs::entity_t SetId = 0;
 

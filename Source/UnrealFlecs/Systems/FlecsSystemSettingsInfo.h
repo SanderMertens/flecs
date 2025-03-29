@@ -33,12 +33,12 @@ public:
 	EFlecsSystemTimerKind TimerKind = EFlecsSystemTimerKind::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System",
-		meta = (ClampMin = 0.0f, EditCondition = "TimerKind == EFlecsSystemTimerKind::Interval"))
+		meta = (ClampMin = 0.0f, UIMin = 0.0f, EditCondition = "TimerKind == EFlecsSystemTimerKind::Interval"))
 	double Interval = 0.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System",
-		meta = (ClampMin = 0, EditCondition = "TimerKind == EFlecsSystemTimerKind::Rate"))
-	int32 Rate = 0.0f;
+		meta = (ClampMin = 0, UIMin = 0, EditCondition = "TimerKind == EFlecsSystemTimerKind::Rate"))
+	int32 Rate = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System")
 	FFlecsEntityHandle TickSource;
@@ -49,7 +49,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System")
 	bool bMultiThreaded = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System", AdvancedDisplay)
 	int32 Priority = FLECS_DEFAULT_SYSTEM_PRIORITY;
 	
 }; // struct FFlecsSystemSettingsInfo

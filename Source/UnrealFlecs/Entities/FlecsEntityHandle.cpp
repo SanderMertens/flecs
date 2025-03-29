@@ -34,7 +34,7 @@ UFlecsWorld* FFlecsEntityHandle::GetFlecsWorld() const
 UWorld* FFlecsEntityHandle::GetOuterWorld() const
 {
     solid_checkf(::IsValid(GetFlecsWorld()), TEXT("Flecs World not found"));
-    return GetFlecsWorld()->GetSingleton<FUWorldPtrComponent>().World.Get();
+    return GetFlecsWorld()->GetSingletonPtr<FUWorldPtrComponent>()->World.Get();
 }
 
 FString FFlecsEntityHandle::GetWorldName() const

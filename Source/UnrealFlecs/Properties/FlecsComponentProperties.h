@@ -62,7 +62,7 @@ public:
 		return ComponentProperties.contains(Name);
 	}
 
-	FORCEINLINE const FFlecsComponentProperties* GetComponentProperties(const std::string& Name) const
+	NO_DISCARD FORCEINLINE const FFlecsComponentProperties* GetComponentProperties(const std::string& Name) const
 	{
 		checkf(!Name.empty(), TEXT("Component properties name is empty!"));
 		checkf(ComponentProperties.contains(Name), TEXT("Component properties not found!"));
