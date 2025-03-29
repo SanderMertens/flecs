@@ -46479,7 +46479,7 @@ int flecs_json_ser_enum(
     const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
     ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    int64_t value;
+    int64_t value = 0;
     if (enum_type->underlying_type == ecs_id(ecs_u8_t)) {
         value = flecs_uto(int64_t, *(const uint8_t*)base);
     } else if (enum_type->underlying_type == ecs_id(ecs_u16_t)) {
