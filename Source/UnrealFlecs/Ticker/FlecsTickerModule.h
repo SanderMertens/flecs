@@ -10,7 +10,7 @@
 #include "UObject/Object.h"
 #include "FlecsTickerModule.generated.h"
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, DisplayName = "Flecs Ticker Module")
 class UNREALFLECS_API UFlecsTickerModule final : public UFlecsModuleObject, public IFlecsModuleProgressInterface
 {
 	GENERATED_BODY()
@@ -25,7 +25,7 @@ public:
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override
 	{
-		return TEXT("Flecs Ticker Module");
+		return "Flecs Ticker Module";
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ticker",

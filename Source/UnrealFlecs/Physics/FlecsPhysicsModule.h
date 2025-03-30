@@ -11,7 +11,7 @@
 #include "FlecsPhysicsModule.generated.h"
 
 // @TODO: Not Fully Implemented
-UCLASS(BlueprintType, DefaultToInstanced, EditInlineNew)
+UCLASS(BlueprintType, DefaultToInstanced, EditInlineNew, DisplayName = "Flecs Physics Module")
 class UNREALFLECS_API UFlecsPhysicsModule final : public UFlecsModuleObject
 {
 	GENERATED_BODY()
@@ -26,14 +26,13 @@ public:
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override
 	{
-		return TEXT("Flecs Physics Module");
+		return "Flecs Physics Module";
 	}
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Physics")
 	//bool bAllowResimulation = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Physics",
-		meta = (EditCondition = "bAllowResimulation"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Physics", meta = (EditCondition = "bAllowResimulation"))
 	int32 MaxFrameHistory = 300;
 
 	flecs::observer AddPhysicsComponentObserver;

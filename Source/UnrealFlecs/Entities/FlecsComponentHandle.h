@@ -15,5 +15,6 @@ struct alignas(8) UNREALFLECS_API FFlecsComponentHandle : public FFlecsEntityHan
 	GENERATED_BODY()
 
 public:
+	FFlecsComponentHandle() = default;
 
 }; // struct FFlecsComponentHandle

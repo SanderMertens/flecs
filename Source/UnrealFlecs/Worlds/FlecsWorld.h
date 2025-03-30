@@ -704,8 +704,10 @@ public:
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle LookupEntity(const FString& Name,
 		const FString& Separator = "::", const FString& RootSeparator = "::", const bool bRecursive = true) const
 	{
-		return World.lookup(StringCast<char>(*Name).Get(), StringCast<char>(*Separator).Get(),
-			StringCast<char>(*RootSeparator).Get(), bRecursive);
+		return World.lookup(StringCast<char>(*Name).Get(),
+			StringCast<char>(*Separator).Get(),
+			StringCast<char>(*RootSeparator).Get(),
+			bRecursive);
 	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
