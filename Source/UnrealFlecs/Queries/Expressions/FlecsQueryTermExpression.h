@@ -16,10 +16,10 @@ struct UNREALFLECS_API FFlecsQueryTermExpression : public FFlecsQueryExpression
 public:
 	FFlecsQueryTermExpression();
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query")
 	FFlecsQueryInput InputType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query")
 	bool bWithout = false;
 
 	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;

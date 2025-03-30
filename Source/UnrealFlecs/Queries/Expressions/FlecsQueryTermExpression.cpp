@@ -26,8 +26,8 @@ void FFlecsQueryTermExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder
 		break;
 		case EFlecsQueryInputType::Entity:
 			{
-				const FFlecsEntityHandle Entity = InputType.Entity;
-				InQueryBuilder.with(Entity.GetEntity());
+				const FFlecsId Entity = InputType.Entity;
+				InQueryBuilder.with(Entity);
 			}
 		break;
 		case EFlecsQueryInputType::String:

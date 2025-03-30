@@ -45,17 +45,17 @@ public:
 		}
 	}
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query")
 	TArray<FFlecsQueryTermExpression> Terms;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query")
 	EFlecsQueryCacheType CacheType = EFlecsQueryCacheType::Default;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query",
 		meta = (Bitmask, BitmaskEnum = "EFlecsQueryFlags"))
 	uint8 Flags = static_cast<uint8>(EFlecsQueryFlags::None);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query", meta = (ExcludeBaseStruct))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query", meta = (ExcludeBaseStruct))
 	TArray<TInstancedStruct<FFlecsQueryExpression>> OtherExpressions;
 	
 }; // struct FFlecsQueryDefinition

@@ -29,10 +29,10 @@ public:
 		return TEXT("Flecs Physics Module");
 	}
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Physics")
 	//bool bAllowResimulation = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Physics",
 		meta = (EditCondition = "bAllowResimulation"))
 	int32 MaxFrameHistory = 300;
 

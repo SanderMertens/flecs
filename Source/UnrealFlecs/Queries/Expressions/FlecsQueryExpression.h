@@ -36,7 +36,7 @@ public:
 
 	#endif // WITH_EDITORONLY_DATA
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query",
 		meta = (EditCondition = "bAllowsChildExpressions", EditConditionHides,
 			AllowEditInlineCustomization, ShowOnlyInnerProperties, ExcludeBaseStruct))
 	TArray<TInstancedStruct<FFlecsQueryExpression>> Children;

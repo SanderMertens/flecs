@@ -19,13 +19,13 @@ public:
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override
 	{
-		return TEXT("Flecs Rest Module");
+		return "Flecs Rest Module";
 	}
 
 	UPROPERTY()
 	FFlecsEntityHandle RestEntity;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rest")
 	bool bImportStats = true;
 
 	UPROPERTY()

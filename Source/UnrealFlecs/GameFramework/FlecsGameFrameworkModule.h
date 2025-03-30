@@ -17,7 +17,7 @@ public:
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override
 	{
-		return TEXT("Flecs GameFramework Module");
+		return "Flecs GameFramework Module";
 	}
 
 

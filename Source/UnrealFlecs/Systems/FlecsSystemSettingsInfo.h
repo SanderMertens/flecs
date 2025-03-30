@@ -20,36 +20,36 @@ struct UNREALFLECS_API FFlecsSystemSettingsInfo
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
 	FString Name;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
 	FFlecsEntityRecord SystemRecord;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
 	FFlecsEntityHandle Kind;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
 	EFlecsSystemTimerKind TimerKind = EFlecsSystemTimerKind::None;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System",
 		meta = (ClampMin = 0.0f, UIMin = 0.0f, EditCondition = "TimerKind == EFlecsSystemTimerKind::Interval"))
 	double Interval = 0.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System",
 		meta = (ClampMin = 0, UIMin = 0, EditCondition = "TimerKind == EFlecsSystemTimerKind::Rate"))
 	int32 Rate = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
 	FFlecsEntityHandle TickSource;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
 	bool bImmediate = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
 	bool bMultiThreaded = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | System", AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System", AdvancedDisplay)
 	int32 Priority = FLECS_DEFAULT_SYSTEM_PRIORITY;
 	
 }; // struct FFlecsSystemSettingsInfo

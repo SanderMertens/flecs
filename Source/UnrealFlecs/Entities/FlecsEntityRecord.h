@@ -33,22 +33,22 @@ struct UNREALFLECS_API FFlecsRecordPairSlot
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree")
 	EFlecsPairNodeType PairNodeType = EFlecsPairNodeType::ScriptStruct;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
 		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::ScriptStruct", EditConditionHides))
 	FInstancedStruct PairScriptStruct;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
 		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::ScriptEnum", EditConditionHides))
 	FSolidEnumSelector PairScriptEnum;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
 		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::EntityHandle", EditConditionHides))
 	FFlecsId EntityHandle;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
 		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::FGameplayTag", EditConditionHides))
 	FGameplayTag GameplayTag;
 
@@ -91,13 +91,13 @@ struct UNREALFLECS_API FFlecsRecordPair
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree")
 	FFlecsRecordPairSlot First;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree")
 	FFlecsRecordPairSlot Second;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree")
 	EFlecsValuePairType PairValueType = EFlecsValuePairType::First;
 
 	NO_DISCARD FORCEINLINE bool operator==(const FFlecsRecordPair& Other) const
@@ -198,26 +198,26 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree")
 	EFlecsComponentNodeType NodeType = EFlecsComponentNodeType::ScriptStruct;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::ScriptStruct", EditConditionHides))
 	FInstancedStruct ScriptStruct;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::ScriptEnum", EditConditionHides))
 	FSolidEnumSelector ScriptEnum;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::EntityHandle", EditConditionHides))
 	FFlecsId EntityHandle;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::FGameplayTag", EditConditionHides))
 	FGameplayTag GameplayTag;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::Pair", EditConditionHides))
 	FFlecsRecordPair Pair;
 
@@ -264,13 +264,13 @@ struct UNREALFLECS_API FFlecsRecordSubEntity
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree")
 	FString Name;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entity Record")
 	TArray<FFlecsComponentTypeInfo> Components;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Flecs | Entity Record")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Entity Record")
 	TArray<TObjectPtr<UFlecsComponentCollectionObject>> Collections;
 
 	NO_DISCARD FORCEINLINE bool operator==(const FFlecsRecordSubEntity& Other) const
@@ -343,13 +343,13 @@ struct UNREALFLECS_API FFlecsEntityRecord
 
 	FORCEINLINE FFlecsEntityRecord() = default;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entity Record")
 	TArray<FFlecsComponentTypeInfo> Components;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Flecs | Entity Record")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Entity Record")
 	TArray<TObjectPtr<UFlecsComponentCollectionObject>> Collections;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entity Record")
 	TArray<FFlecsRecordSubEntity> SubEntities;
 
 	NO_DISCARD FORCEINLINE bool operator==(const FFlecsEntityRecord& Other) const

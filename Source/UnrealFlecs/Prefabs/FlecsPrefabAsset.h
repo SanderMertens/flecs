@@ -13,14 +13,14 @@ struct FFlecsPrefabSlotInfo
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Prefab")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Prefab")
 	FString Name;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Prefab")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Prefab")
 	FFlecsEntityRecord Record;
 
 	// @TODO: Not Implemented
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Prefab")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Prefab")
 	TArray<TInstancedStruct<FFlecsPrefabSlotInfo>> SubSlots;
 	
 }; // struct FFlecsPrefabSlotInfo
@@ -32,11 +32,11 @@ class UNREALFLECS_API UFlecsPrefabAsset : public UFlecsPrimaryDataAsset
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Prefab")
 	FFlecsPrefabSlotInfo Prefab;
 
 	// @TODO: Not Implemented
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Prefab")
 	TArray<FFlecsPrefabSlotInfo> Slots;
 
 	UPROPERTY()

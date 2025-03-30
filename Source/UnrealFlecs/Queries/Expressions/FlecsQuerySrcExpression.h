@@ -24,14 +24,14 @@ public:
 
 	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query")
 	EFlecsQuerySrcType SrcType = EFlecsQuerySrcType::Entity;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query",
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query",
 		meta = (EditCondition = "SrcType == EFlecsQuerySrcType::Entity", EditConditionHides))
 	FFlecsEntityHandle Entity;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query", 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query", 
 		meta = (EditCondition = "SrcType == EFlecsQuerySrcType::String", EditConditionHides))
 	FString Src;
 	

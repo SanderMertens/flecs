@@ -18,10 +18,10 @@ struct UNREALFLECS_API FFlecsDefaultMetaEntity
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category = "Flecs | Default Entities")
+	UPROPERTY(EditAnywhere, Category = "Default Entities")
 	FString EntityName;
 
-	UPROPERTY(EditAnywhere, Category = "Flecs | Default Entities", meta = (ClampMin = "7000"))
+	UPROPERTY(EditAnywhere, Category = "Default Entities", meta = (ClampMin = "7000"))
 	uint32 EntityId = 7001;
 	
 	flecs::entity_t SetId = 0;
@@ -54,7 +54,7 @@ class UNREALFLECS_API UFlecsDefaultEntitiesDeveloperSettings final : public UDev
 
 public:
 	//@TODO: Implement this or add an equivalent feature.
-	//UPROPERTY(EditAnywhere, Config, Category = "Flecs | Default Entities")
+	//UPROPERTY(EditAnywhere, Config, Category = "Default Entities")
 	//TArray<FFlecsDefaultMetaEntity> DefaultEntities;
 
 }; // class UFlecsDefaultEntitiesDeveloperSettings

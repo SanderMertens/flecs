@@ -17,7 +17,7 @@ public:
 	
 	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query")
 	EFlecsQueryInOut InOut = EFlecsQueryInOut::Default;
 
 	/** Set read/write access for stage. Use this when a system reads or writes
@@ -28,7 +28,7 @@ public:
 	 * Setting this is optional. If not set, the value of the accessed component
 	 * may be out of sync for at most one frame.
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Query", AdvancedDisplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query", AdvancedDisplay)
 	bool bStage = true;
 	
 }; // struct FFlecsExpressionInOut
