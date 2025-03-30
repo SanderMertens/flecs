@@ -30,7 +30,8 @@ public:
 
 	#if WITH_EDITORONLY_DATA
 
-	UPROPERTY(VisibleAnywhere, Category = "Flecs | Query")
+	//UPROPERTY(VisibleAnywhere, Category = "Flecs | Query")
+	UPROPERTY()
 	bool bAllowsChildExpressions = false;
 
 	#endif // WITH_EDITORONLY_DATA
