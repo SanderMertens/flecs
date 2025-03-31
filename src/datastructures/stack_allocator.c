@@ -12,15 +12,13 @@
 
 #include "../private_api.h"
 
-#define FLECS_STACK_PAGE_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_page_t), 16)
-
 int64_t ecs_stack_allocator_alloc_count = 0;
 int64_t ecs_stack_allocator_free_count = 0;
 
 static
 ecs_stack_page_t* flecs_stack_page_new(uint32_t page_id) {
     ecs_stack_page_t *result = ecs_os_malloc(
-        FLECS_STACK_PAGE_OFFSET + ECS_STACK_PAGE_SIZE);
+        FLECS_STACK_PAGE_OFFSET + FLECS_STACK_PAGE_SIZE);
     result->data = ECS_OFFSET(result, FLECS_STACK_PAGE_OFFSET);
     result->next = NULL;
     result->id = page_id + 1;
@@ -35,20 +33,20 @@ void* flecs_stack_alloc(
     ecs_size_t align)
 {
     ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
+    void *result = NULL;
+
+    if (size > FLECS_STACK_PAGE_SIZE) {
+        result = ecs_os_malloc(size); /* Too large for page */
+        goto done;
+    }
 
     ecs_stack_page_t *page = stack->tail_page;
     ecs_assert(page->data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int16_t sp = flecs_ito(int16_t, ECS_ALIGN(page->sp, align));
     int16_t next_sp = flecs_ito(int16_t, sp + size);
-    void *result = NULL;
 
-    if (next_sp > ECS_STACK_PAGE_SIZE) {
-        if (size > ECS_STACK_PAGE_SIZE) {
-            result = ecs_os_malloc(size); /* Too large for page */
-            goto done;
-        }
-
+    if (next_sp > FLECS_STACK_PAGE_SIZE) {
         if (page->next) {
             page = page->next;
         } else {
@@ -84,7 +82,7 @@ void flecs_stack_free(
     void *ptr,
     ecs_size_t size)
 {
-    if (size > ECS_STACK_PAGE_SIZE) {
+    if (size > FLECS_STACK_PAGE_SIZE) {
         ecs_os_free(ptr);
     }
 }
@@ -95,6 +93,11 @@ ecs_stack_cursor_t* flecs_stack_get_cursor(
     ecs_assert(stack != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_stack_page_t *page = stack->tail_page;
+    if (!page) {
+        page = stack->first = flecs_stack_page_new(0);
+        stack->tail_page = page;
+    }
+
     int16_t sp = stack->tail_page->sp;
     ecs_stack_cursor_t *result = flecs_stack_alloc_t(stack, ecs_stack_cursor_t);
     result->page = page;
