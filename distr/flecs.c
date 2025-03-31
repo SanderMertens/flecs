@@ -2441,6 +2441,14 @@ int flecs_query_finalize_query(
     ecs_query_t *q,
     const ecs_query_desc_t *desc);
 
+/* Copy terms, sizes and ids arrays from stack to heap */
+void flecs_query_copy_arrays(
+    ecs_query_t *q);
+
+/* Free terms, sizes and ids arrays */
+void flecs_query_free_arrays(
+    ecs_query_t *q);
+
 /* Internal function for creating iterator, doesn't run aperiodic tasks */
 ecs_iter_t flecs_query_iter(
     const ecs_world_t *world,
@@ -14793,8 +14801,18 @@ ecs_observer_t* flecs_observer_init(
     query_desc.entity = 0;
     query_desc.cache_kind = EcsQueryCacheNone;
 
-    ecs_query_t dummy_query = {0}, *query = NULL;
+    ecs_query_t dummy_query, *query = NULL;
 
+    /* Temporary arrays for dummy query */
+    ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
+    ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};
+    ecs_id_t ids[FLECS_TERM_COUNT_MAX] = {0};
+    dummy_query = (ecs_query_t){
+        .terms = terms,
+        .sizes = sizes,
+        .ids = ids
+    };
+    
     /* Only do optimization when not in sanitized mode. This ensures that the
      * behavior is consistent between observers with and without queries, as
      * both paths will be exercised in unit tests. */
@@ -32616,6 +32634,24 @@ error:
     return -1;
 }
 
+void flecs_query_copy_arrays(
+    ecs_query_t *q)
+{
+    ecs_allocator_t *a = &flecs_query_impl(q)->stage->allocator;
+    q->terms = flecs_dup_n(a, ecs_term_t, q->term_count, q->terms);
+    q->sizes = flecs_dup_n(a, ecs_size_t, q->term_count, q->sizes);
+    q->ids = flecs_dup_n(a, ecs_id_t, q->term_count, q->ids);
+}
+
+void flecs_query_free_arrays(
+    ecs_query_t *q)
+{
+    ecs_allocator_t *a = &flecs_query_impl(q)->stage->allocator;
+    flecs_free_n(a, ecs_term_t, q->term_count, q->terms);
+    flecs_free_n(a, ecs_size_t, q->term_count, q->sizes);
+    flecs_free_n(a, ecs_id_t, q->term_count, q->ids);
+}
+
 static
 void flecs_query_fini(
     ecs_query_impl_t *impl)
@@ -32674,6 +32710,8 @@ void flecs_query_fini(
         flecs_free_n(a, int8_t, FLECS_TERM_COUNT_MAX, impl->cache->field_map);
         flecs_query_cache_fini(impl);
     }
+
+    flecs_query_free_arrays(q);
 
     flecs_poly_fini(impl, ecs_query_t);
     flecs_bfree(&stage->allocators.query_impl, impl);
@@ -32751,7 +32789,7 @@ ecs_query_t* ecs_query_init(
     ecs_assert(flecs_poly_is(result->stage, ecs_stage_t),
         ECS_INTERNAL_ERROR, NULL);
 
-    /* Validate input, translate to canonical query representation */
+    /* Validate input, translate input to canonical query representation */
     if (flecs_query_finalize_query(world, &result->pub, &desc)) {
         goto error;
     }
@@ -35208,7 +35246,7 @@ int flecs_query_query_populate_terms(
 
     /* Copy terms from array to query */
     if (term_count) {
-        ecs_os_memcpy_n(&q->terms, desc->terms, ecs_term_t, term_count);
+        ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
     }
 
     /* Parse query expression if set */
@@ -35253,6 +35291,10 @@ bool flecs_query_finalize_simple(
     ecs_query_t *q,
     const ecs_query_desc_t *desc)
 {
+    ecs_assert(q->terms != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(q->sizes != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(q->ids != NULL, ECS_INTERNAL_ERROR, NULL);
+
     /* Filter out queries that aren't simple enough */
     if (desc->expr) {
         return false;
@@ -35314,7 +35356,7 @@ bool flecs_query_finalize_simple(
     }
 
     term_count = i;
-    ecs_os_memcpy_n(&q->terms, desc->terms, ecs_term_t, term_count);
+    ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
 
     /* Simple query that only queries for component ids */
 
@@ -35516,13 +35558,21 @@ int flecs_query_finalize_query(
 
     q->flags |= desc->flags | world->default_query_flags;
 
+    ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
+    ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};
+    ecs_id_t ids[FLECS_TERM_COUNT_MAX] = {0};
+
+    q->terms = terms;
+    q->sizes = sizes;
+    q->ids = ids;
+
     /* Fast routine that initializes simple queries and skips complex validation 
      * logic if it's not needed. When running in sanitized mode, always take the 
      * slow path. This in combination with the test suite ensures that the
      * result of the fast & slow code is the same. */
     #ifndef FLECS_SANITIZE
     if (flecs_query_finalize_simple(world, q, desc)) {
-        return 0;
+        goto done;
     }
     #endif
 
@@ -35540,8 +35590,11 @@ int flecs_query_finalize_query(
      * token buffer which simplifies memory management & reduces allocations. */
     flecs_query_populate_tokens(flecs_query_impl(q));
 
+done:
+    flecs_query_copy_arrays(q);
     return 0;
 error:
+    flecs_query_copy_arrays(q);
     return -1;
 }
 
@@ -70847,7 +70900,7 @@ ecs_query_cache_t* flecs_query_cache_init(
         /* ecs_query_init could have moved away resources from the terms array
          * in the descriptor, so use the terms array from the query. */
         ecs_os_memcpy_n(observer_desc.query.terms, q->terms, 
-            ecs_term_t, FLECS_TERM_COUNT_MAX);
+            ecs_term_t, q->term_count);
         observer_desc.query.expr = NULL; /* Already parsed */
 
         result->observer = flecs_observer_init(world, entity, &observer_desc);

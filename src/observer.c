@@ -990,8 +990,18 @@ ecs_observer_t* flecs_observer_init(
     query_desc.entity = 0;
     query_desc.cache_kind = EcsQueryCacheNone;
 
-    ecs_query_t dummy_query = {0}, *query = NULL;
+    ecs_query_t dummy_query, *query = NULL;
 
+    /* Temporary arrays for dummy query */
+    ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
+    ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};
+    ecs_id_t ids[FLECS_TERM_COUNT_MAX] = {0};
+    dummy_query = (ecs_query_t){
+        .terms = terms,
+        .sizes = sizes,
+        .ids = ids
+    };
+    
     /* Only do optimization when not in sanitized mode. This ensures that the
      * behavior is consistent between observers with and without queries, as
      * both paths will be exercised in unit tests. */

@@ -3524,9 +3524,9 @@ struct ecs_term_t {
 struct ecs_query_t {
     ecs_header_t hdr;           /**< Object header */
 
-    ecs_term_t terms[FLECS_TERM_COUNT_MAX]; /**< Query terms */
-    int32_t sizes[FLECS_TERM_COUNT_MAX]; /**< Component sizes. Indexed by field */
-    ecs_id_t ids[FLECS_TERM_COUNT_MAX]; /**< Component ids. Indexed by field */
+    ecs_term_t *terms;          /**< Query terms */
+    int32_t *sizes;             /**< Component sizes. Indexed by field */
+    ecs_id_t *ids;              /**< Component ids. Indexed by field */
 
     ecs_flags32_t flags;        /**< Query flags */
     int8_t var_count;           /**< Number of query variables */

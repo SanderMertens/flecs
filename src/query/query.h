@@ -25,6 +25,14 @@ int flecs_query_finalize_query(
     ecs_query_t *q,
     const ecs_query_desc_t *desc);
 
+/* Copy terms, sizes and ids arrays from stack to heap */
+void flecs_query_copy_arrays(
+    ecs_query_t *q);
+
+/* Free terms, sizes and ids arrays */
+void flecs_query_free_arrays(
+    ecs_query_t *q);
+
 /* Internal function for creating iterator, doesn't run aperiodic tasks */
 ecs_iter_t flecs_query_iter(
     const ecs_world_t *world,
