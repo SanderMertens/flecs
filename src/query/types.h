@@ -181,10 +181,6 @@ typedef struct {
 
 /* And up context */
 typedef struct {
-    union {
-        ecs_query_and_ctx_t and;
-        ecs_query_union_ctx_t union_;
-    } is;
     ecs_table_t *table;
     int32_t row;
     int32_t end;
@@ -196,6 +192,16 @@ typedef struct {
     ecs_trav_down_t *down;
     int32_t cache_elem;
     ecs_trav_up_cache_t cache;
+} ecs_query_up_impl_t;
+
+typedef struct {
+    union {
+        ecs_query_and_ctx_t and;
+        ecs_query_union_ctx_t union_;
+    } is;
+
+    /* Indirection because otherwise the ctx struct gets too large */
+    ecs_query_up_impl_t *impl;
 } ecs_query_up_ctx_t;
 
 /* Cache for storing results of upward/downward "all" traversal. This type of 

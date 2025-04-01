@@ -1706,7 +1706,7 @@ typedef struct ecs_stack_t {
 } ecs_stack_t;
 
 #define FLECS_STACK_PAGE_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_page_t), 16)
-#define FLECS_STACK_PAGE_SIZE (512 - FLECS_STACK_PAGE_OFFSET)
+#define FLECS_STACK_PAGE_SIZE (1024 - FLECS_STACK_PAGE_OFFSET)
 
 FLECS_DBG_API
 void flecs_stack_init(

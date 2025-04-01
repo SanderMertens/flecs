@@ -306,7 +306,9 @@ void flecs_query_union_set_shared(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_query_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
-    ecs_component_record_t *cdr = op_ctx->idr_with;
+    ecs_query_up_impl_t *impl = op_ctx->impl;
+    ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_component_record_t *cdr = impl->idr_with;
     ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t rel = ECS_PAIR_FIRST(cdr->id);
