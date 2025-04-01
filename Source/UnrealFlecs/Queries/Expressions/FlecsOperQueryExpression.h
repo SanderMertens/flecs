@@ -8,7 +8,7 @@
 #include "Queries/Enums/FlecsQueryOperators.h"
 #include "FlecsOperQueryExpression.generated.h"
 
-USTRUCT(BlueprintType, meta = (DisplayName = "Operator Query Expression"))
+USTRUCT(BlueprintType, meta = (DisplayName = "Operator Expression"))
 struct UNREALFLECS_API FFlecsOperQueryExpression final : public FFlecsQueryExpression
 {
 	GENERATED_BODY()

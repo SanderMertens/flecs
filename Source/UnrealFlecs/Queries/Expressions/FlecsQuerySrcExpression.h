@@ -14,7 +14,7 @@ enum class EFlecsQuerySrcType : uint8
 	String
 }; // enum class EFlecsQuerySrcType
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, meta = (DisplayName = "Source Expression"))
 struct UNREALFLECS_API FFlecsQuerySrcExpression : public FFlecsQueryExpression
 {
 	GENERATED_BODY()

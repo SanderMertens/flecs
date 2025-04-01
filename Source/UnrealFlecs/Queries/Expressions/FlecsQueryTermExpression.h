@@ -8,7 +8,7 @@
 #include "Queries/FlecsQueryInputType.h"
 #include "FlecsQueryTermExpression.generated.h"
 
-USTRUCT(BlueprintType, meta = (DisplayName = "Term Query Expression"))
+USTRUCT(BlueprintType, meta = (DisplayName = "Term Query"))
 struct UNREALFLECS_API FFlecsQueryTermExpression : public FFlecsQueryExpression
 {
 	GENERATED_BODY()

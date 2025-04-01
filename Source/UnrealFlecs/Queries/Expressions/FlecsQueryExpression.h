@@ -9,7 +9,7 @@
 
 class UFlecsWorld;
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintInternalUseOnly)
 struct UNREALFLECS_API FFlecsQueryExpression
 {
 	GENERATED_BODY()

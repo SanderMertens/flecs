@@ -1077,7 +1077,8 @@ public:
 		}
 		
 		GetEntity().set_ptr(
-			FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst).GetEntity(), ObtainComponentTypeStruct(InSecond).GetEntity()),
+			FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst).GetEntity(),
+				ObtainComponentTypeStruct(InSecond).GetEntity()),
 			InValue);
 	}
 
@@ -1089,7 +1090,8 @@ public:
 		}
 		
 		GetEntity().set_ptr(
-			FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst).GetEntity(), GetTagEntity(InSecond).GetEntity()),
+			FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst).GetEntity(),
+				GetTagEntity(InSecond).GetEntity()),
 			InValue);
 	}
 
@@ -1101,7 +1103,10 @@ public:
 		}
 		
 		GetEntity().set_ptr(
-			FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst).GetEntity(), InSecond), InValue);
+			FFlecsId::MakePair(
+				ObtainComponentTypeStruct(InFirst).GetEntity(),
+				InSecond),
+				InValue);
 	}
 
 	template <typename TFirst, typename TSecond, typename TActual = TSecond>
@@ -1117,7 +1122,8 @@ public:
 			AddPair(InFirst, InSecond);
 		}
 		
-		GetEntity().set_ptr(FFlecsId::MakePair(InFirst, ObtainComponentTypeStruct(InSecond).GetEntity()),
+		GetEntity().set_ptr(FFlecsId::MakePair(InFirst,
+			ObtainComponentTypeStruct(InSecond).GetEntity()),
 			InSecond->GetStructureSize(), InValue);
 	}
 
@@ -1129,7 +1135,8 @@ public:
 		}
 		
 		GetEntity().set_ptr(
-			FFlecsId::MakePair(GetTagEntity(InFirst).GetEntity(), ObtainComponentTypeStruct(InSecond).GetEntity()), InValue);
+			FFlecsId::MakePair(GetTagEntity(InFirst).GetEntity(),
+				ObtainComponentTypeStruct(InSecond).GetEntity()), InValue);
 	}
 	
 	template <typename TFirst, typename TSecond>

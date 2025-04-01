@@ -6,7 +6,7 @@
 #include "FlecsQueryExpression.h"
 #include "FlecsQueryNameExpression.generated.h"
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, meta = (DisplayName = "Name Expression"))
 struct UNREALFLECS_API FFlecsQueryNameExpression : public FFlecsQueryExpression
 {
 	GENERATED_BODY()

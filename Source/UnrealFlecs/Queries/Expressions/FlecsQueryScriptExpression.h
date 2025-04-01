@@ -7,7 +7,7 @@
 #include "Queries/FlecsQueryScriptExpr.h"
 #include "FlecsQueryScriptExpression.generated.h"
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, DisplayName = "Script Expression")
 struct UNREALFLECS_API FFlecsQueryScriptExpression : public FFlecsQueryExpression
 {
 	GENERATED_BODY()
@@ -15,7 +15,7 @@ struct UNREALFLECS_API FFlecsQueryScriptExpression : public FFlecsQueryExpressio
 public:
 	FFlecsQueryScriptExpression();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query", meta = (ShowOnlyInnerProperties))
 	FFlecsQueryScriptExpr ScriptExpr;
 
 	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;

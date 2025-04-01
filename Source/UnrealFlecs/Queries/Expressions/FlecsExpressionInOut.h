@@ -7,7 +7,7 @@
 #include "Queries/Enums/FlecsQueryInOut.h"
 #include "FlecsExpressionInOut.generated.h"
 
-USTRUCT(BlueprintType, meta = (DisplayName = "In Out Expression"))
+USTRUCT(BlueprintType, meta = (DisplayName = "In/Out Expression"))
 struct UNREALFLECS_API FFlecsExpressionInOut final : public FFlecsQueryExpression
 {
 	GENERATED_BODY()

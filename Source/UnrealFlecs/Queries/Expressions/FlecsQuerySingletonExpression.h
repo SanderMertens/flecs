@@ -6,7 +6,7 @@
 #include "FlecsQueryExpression.h"
 #include "FlecsQuerySingletonExpression.generated.h"
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, meta = (DisplayName = "Singleton Expression"))
 struct UNREALFLECS_API FFlecsQuerySingletonExpression : public FFlecsQueryExpression
 {
 	GENERATED_BODY()
