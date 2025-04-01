@@ -4564,6 +4564,10 @@ void flecs_bootstrap(
     ecs_assert(world->idr_childof_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(world->idr_isa_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
 
+#ifdef FLECS_LOW_FOOTPRINT
+    ecs_shrink(world);
+#endif
+
     /* Verify that all entities are where they're supposed to be */
     flecs_bootstrap_sanity_check(world);
 
@@ -36744,7 +36748,7 @@ void flecs_entity_index_shrink(
         bool has_alive = false;
         for (e = 0; e < FLECS_ENTITY_PAGE_SIZE; e ++) {
             ecs_record_t *r = &page->records[e];
-            ecs_entity_t entity = flecs_ito(uint64_t, (i * 4096) + e);
+            ecs_entity_t entity = flecs_ito(uint64_t, (i * FLECS_ENTITY_PAGE_SIZE) + e);
 
             if (r->dense) {
                 ecs_assert(flecs_entity_index_get_any(index, entity) == r,
@@ -75839,7 +75843,6 @@ bool flecs_query_up_with(
     ecs_iter_t *it = ctx->it;
 
     if (!impl) {
-        ecs_iter_t *it = ctx->it;
         ecs_allocator_t *a = flecs_query_get_allocator(it);
         impl = op_ctx->impl = flecs_calloc_t(a, ecs_query_up_impl_t);
     }
@@ -75924,8 +75927,7 @@ bool flecs_query_self_up_with(
         if (id_only) {
             /* Simple id, no wildcards */
             result = flecs_query_with_id(op, redo, ctx);
-            ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
-            op_ctx->remaining = 1;
+            op_ctx->is.and.remaining = 1;
         } else {
             result = flecs_query_with(op, redo, ctx);
         }
@@ -75934,13 +75936,11 @@ bool flecs_query_self_up_with(
 
         if (result) {
             /* Table has component, no need to traverse*/
-            ecs_query_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
             ecs_query_up_impl_t *impl = op_ctx->impl;
             ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
             impl->trav = 0;
             if (flecs_query_ref_flags(op->flags, EcsQuerySrc) & EcsQueryIsVar) {
                 /* Matching self, so set sources to 0 */
-                ecs_iter_t *it = ctx->it;
                 it->sources[op->field_index] = 0;
             }
             return true;
