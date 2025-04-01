@@ -62,8 +62,11 @@ void flecs_script_with_set_count(
         ecs_value_t *val = ecs_vec_get_t(&v->r->with, ecs_value_t, i);
         ecs_type_info_t *ti = ecs_vec_get_t(
             &v->r->with_type_info, ecs_type_info_t*, i)[0];
-        if (ti && ti->hooks.dtor) {
-            ti->hooks.dtor(val->ptr, 1, ti);
+        if (ti) {
+            if (ti->hooks.dtor) {
+                ti->hooks.dtor(val->ptr, 1, ti);
+            }
+            flecs_stack_free(val->ptr, ti->size);
         }
     }
 
