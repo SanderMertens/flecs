@@ -2469,4 +2469,8 @@ void ecs_shrink(
     flecs_table_shrink(world, &world->store.root);
 
     flecs_sparse_shrink(&world->store.tables);
+
+    for (i = 0; i < world->stage_count; i ++) {
+        ecs_stage_shrink(world->stages[i]);
+    }
 }

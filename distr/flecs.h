@@ -1581,15 +1581,17 @@ typedef struct ecs_block_allocator_chunk_header_t {
 } ecs_block_allocator_chunk_header_t;
 
 typedef struct ecs_block_allocator_t {
-    ecs_block_allocator_chunk_header_t *head;
-    ecs_block_allocator_block_t *block_head;
-    int32_t chunk_size;
     int32_t data_size;
+#ifndef FLECS_USE_OS_ALLOC
+    int32_t chunk_size;
     int32_t chunks_per_block;
     int32_t block_size;
+    ecs_block_allocator_chunk_header_t *head;
+    ecs_block_allocator_block_t *block_head;
 #ifdef FLECS_SANITIZE
     int32_t alloc_count;
     ecs_map_t *outstanding;
+#endif
 #endif
 } ecs_block_allocator_t;
 
@@ -2052,8 +2054,12 @@ FLECS_DBG_API extern int64_t ecs_stack_allocator_alloc_count;
 FLECS_DBG_API extern int64_t ecs_stack_allocator_free_count;
 
 struct ecs_allocator_t {
+#ifndef FLECS_USE_OS_ALLOC
     ecs_block_allocator_t chunks;
     struct ecs_sparse_t sizes; /* <size, block_allocator_t> */
+#else
+    bool dummy;
+#endif
 };
 
 FLECS_API
@@ -3923,7 +3929,6 @@ typedef struct ecs_commands_t {
 #endif
 
 #endif
-
 
 /**
  * @file api_support.h

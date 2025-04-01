@@ -116,4 +116,7 @@ void flecs_commands_fini(
     ecs_stage_t *stage,
     ecs_commands_t *cmd);
 
+void ecs_stage_shrink(
+    ecs_stage_t *stage);
+
 #endif

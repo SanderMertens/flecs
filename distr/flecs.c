@@ -2829,6 +2829,9 @@ void flecs_commands_fini(
     ecs_stage_t *stage,
     ecs_commands_t *cmd);
 
+void ecs_stage_shrink(
+    ecs_stage_t *stage);
+
 #endif
 
 /**
@@ -17211,6 +17214,15 @@ bool ecs_stage_is_readonly(
     return false;
 }
 
+void ecs_stage_shrink(
+    ecs_stage_t *stage)
+{
+    flecs_sparse_shrink(&stage->cmd_stack[0].entries);
+    flecs_sparse_shrink(&stage->cmd_stack[1].entries);
+    ecs_vec_reclaim_t(&stage->allocator, &stage->cmd_stack[0].queue, ecs_cmd_t);
+    ecs_vec_reclaim_t(&stage->allocator, &stage->cmd_stack[1].queue, ecs_cmd_t);
+}
+
 bool ecs_is_deferred(
     const ecs_world_t *world)
 {
@@ -19924,6 +19936,10 @@ void ecs_shrink(
     flecs_table_shrink(world, &world->store.root);
 
     flecs_sparse_shrink(&world->store.tables);
+
+    for (i = 0; i < world->stage_count; i ++) {
+        ecs_stage_shrink(world->stages[i]);
+    }
 }
 
 /**
@@ -29009,6 +29025,7 @@ void flecs_ballocator_init(
     ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
     ba->data_size = size;
+#ifndef FLECS_USE_OS_ALLOC
 #ifdef FLECS_SANITIZE
     ba->alloc_count = 0;
     if (size != 24) { /* Prevent stack overflow as map uses block allocator */
@@ -29022,6 +29039,7 @@ void flecs_ballocator_init(
     ba->block_size = ba->chunks_per_block * ba->chunk_size;
     ba->head = NULL;
     ba->block_head = NULL;
+#endif
 }
 
 ecs_block_allocator_t* flecs_ballocator_new(
@@ -29037,6 +29055,7 @@ void flecs_ballocator_fini(
 {
     ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
 
+#ifndef FLECS_USE_OS_ALLOC
 #ifdef FLECS_SANITIZE
     if (ba->alloc_count != 0) {
         ecs_err("Leak detected! (size %u, remaining = %d)",
@@ -29070,6 +29089,7 @@ void flecs_ballocator_fini(
     }
 
     ba->block_head = NULL;
+#endif
 }
 
 void flecs_ballocator_free(
@@ -29269,7 +29289,7 @@ void* flecs_bdup(
     void *memory)
 {
 #ifdef FLECS_USE_OS_ALLOC
-    if (memory && ba->chunk_size) {
+    if (memory && ba->data_size) {
         return ecs_os_memdup(memory, ba->data_size);
     } else {
         return NULL;

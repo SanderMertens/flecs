@@ -14,8 +14,12 @@ FLECS_DBG_API extern int64_t ecs_stack_allocator_alloc_count;
 FLECS_DBG_API extern int64_t ecs_stack_allocator_free_count;
 
 struct ecs_allocator_t {
+#ifndef FLECS_USE_OS_ALLOC
     ecs_block_allocator_t chunks;
     struct ecs_sparse_t sizes; /* <size, block_allocator_t> */
+#else
+    bool dummy;
+#endif
 };
 
 FLECS_API
