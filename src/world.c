@@ -985,6 +985,10 @@ ecs_world_t *ecs_mini(void) {
 
     world->flags &= ~EcsWorldInit;
 
+    #ifdef FLECS_LOW_FOOTPRINT
+    ecs_shrink(world);
+    #endif
+
     ecs_trace("world ready!");
     ecs_log_pop();
 
@@ -1024,6 +1028,9 @@ ecs_world_t *ecs_init(void) {
 #endif
     ecs_trace("addons imported!");
     ecs_log_pop();
+#endif
+#ifdef FLECS_LOW_FOOTPRINT
+    ecs_shrink(world);
 #endif
     return world;
 }

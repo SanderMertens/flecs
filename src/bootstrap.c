@@ -1210,10 +1210,6 @@ void flecs_bootstrap(
     ecs_assert(world->idr_childof_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(world->idr_isa_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
 
-#ifdef FLECS_LOW_FOOTPRINT
-    ecs_shrink(world);
-#endif
-
     /* Verify that all entities are where they're supposed to be */
     flecs_bootstrap_sanity_check(world);
 
