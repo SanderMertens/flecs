@@ -80,6 +80,8 @@ ecs_block_allocator_t* flecs_allocator_get(
 
     return result;
 #else
+    (void)a;
+    (void)size;
     ecs_err("invalid call to flecs_allocator_get in FLECS_USE_OS_ALLOC build");
     return NULL;
 #endif
@@ -118,16 +120,16 @@ void* flecs_dup(
     ecs_size_t size,
     const void *src)
 {
-#ifndef FLECS_USE_OS_ALLOC
-    ecs_block_allocator_t *ba = flecs_allocator_get(a, size);
-    if (ba) {
-        void *dst = flecs_balloc(ba);
-        ecs_os_memcpy(dst, src, size);
-        return dst;
-    } else {
+    if (!size) {
         return NULL;
     }
+#ifndef FLECS_USE_OS_ALLOC
+    ecs_block_allocator_t *ba = flecs_allocator_get(a, size);
+    void *dst = flecs_balloc(ba);
+    ecs_os_memcpy(dst, src, size);
+    return dst;
 #else
+    (void)a;
     return ecs_os_memdup(src, size);
 #endif
 }
