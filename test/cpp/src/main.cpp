@@ -876,6 +876,7 @@ void QueryBuilder_each_w_const_field_at_w_fixed_src(void);
 void QueryBuilder_each_w_untyped_field_w_fixed_src(void);
 void QueryBuilder_each_w_untyped_field_at_w_fixed_src(void);
 void QueryBuilder_singleton_pair(void);
+void QueryBuilder_query_w_this_second(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -4888,6 +4889,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "singleton_pair",
         QueryBuilder_singleton_pair
+    },
+    {
+        "query_w_this_second",
+        QueryBuilder_query_w_this_second
     }
 };
 
@@ -7290,7 +7295,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        175,
+        176,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params

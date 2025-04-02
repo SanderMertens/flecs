@@ -67,7 +67,8 @@ struct term final : term_builder_i<term> {
         : term_builder_i<term>(&value)
         , value({})
         , world_(nullptr) { 
-            value.id = ecs_pair(first, second);
+            value.first.id = first;
+            value.second.id = second;
         }
 
     void reset() {
