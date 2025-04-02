@@ -33,9 +33,6 @@ extern const ecs_entity_t EcsFlag;
 /* The number of table versions to split tables across */
 #define ECS_TABLE_VERSION_ARRAY_SIZE (ECS_TABLE_VERSION_ARRAY_BITMASK + 1)
 
-/* Magic number for a flecs object */
-#define ECS_OBJECT_MAGIC (0x6563736f)
-
 /* Tags associated with poly for (Poly, tag) components */
 #define ecs_world_t_tag     invalid
 #define ecs_stage_t_tag     invalid

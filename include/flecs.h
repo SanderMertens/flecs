@@ -240,9 +240,9 @@
 #ifdef FLECS_LOW_FOOTPRINT
 #define FLECS_HI_COMPONENT_ID (16)
 #define FLECS_HI_ID_RECORD_ID (16)
-#define FLECS_SPARSE_PAGE_BITS (4)
 #define FLECS_ENTITY_PAGE_BITS (6)
 #define FLECS_USE_OS_ALLOC
+#define FLECS_DEFAULT_TO_UNCACHED_QUERIES
 #endif
 
 /** @def FLECS_HI_COMPONENT_ID
@@ -281,7 +281,7 @@
 /** @def FLECS_ENTITY_PAGE_BITS
  * Same as FLECS_SPARSE_PAGE_BITS, but for the entity index. */
 #ifndef FLECS_ENTITY_PAGE_BITS
-#define FLECS_ENTITY_PAGE_BITS (12)
+#define FLECS_ENTITY_PAGE_BITS (10)
 #endif
 
 /** @def FLECS_USE_OS_ALLOC
@@ -518,7 +518,6 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 
 /** Header for ecs_poly_t objects. */
 typedef struct ecs_header_t {
-    int32_t magic;              /**< Magic number verifying it's a flecs object */
     int32_t type;               /**< Magic number indicating which type of flecs object */
     int32_t refcount;           /**< Refcount, to enable RAII handles */
     ecs_mixins_t *mixins;       /**< Table with offsets to (optional) mixins */
@@ -813,9 +812,9 @@ struct ecs_term_t {
 struct ecs_query_t {
     ecs_header_t hdr;           /**< Object header */
 
-    ecs_term_t terms[FLECS_TERM_COUNT_MAX]; /**< Query terms */
-    int32_t sizes[FLECS_TERM_COUNT_MAX]; /**< Component sizes. Indexed by field */
-    ecs_id_t ids[FLECS_TERM_COUNT_MAX]; /**< Component ids. Indexed by field */
+    ecs_term_t *terms;          /**< Query terms */
+    int32_t *sizes;             /**< Component sizes. Indexed by field */
+    ecs_id_t *ids;              /**< Component ids. Indexed by field */
 
     ecs_flags32_t flags;        /**< Query flags */
     int8_t var_count;           /**< Number of query variables */

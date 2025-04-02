@@ -75,6 +75,9 @@ void flecs_sparse_page_free(
     } else {
         ecs_os_free(page->data);
     }
+
+    page->sparse = NULL;
+    page->data = NULL;
 }
 
 static
@@ -674,7 +677,7 @@ const uint64_t* flecs_sparse_ids(
 void flecs_sparse_shrink(
     ecs_sparse_t *sparse)
 {
-    int32_t i, e, max_page_index = 0, count = ecs_vec_count(&sparse->pages);
+    int32_t i, e, max_page_index = -1, count = ecs_vec_count(&sparse->pages);
     ecs_sparse_page_t *pages = ecs_vec_first_t(&sparse->pages,
         ecs_sparse_page_t);
     for (i = 0; i < count; i ++) {

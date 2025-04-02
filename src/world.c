@@ -985,6 +985,10 @@ ecs_world_t *ecs_mini(void) {
 
     world->flags &= ~EcsWorldInit;
 
+    #ifdef FLECS_LOW_FOOTPRINT
+    ecs_shrink(world);
+    #endif
+
     ecs_trace("world ready!");
     ecs_log_pop();
 
@@ -1024,6 +1028,9 @@ ecs_world_t *ecs_init(void) {
 #endif
     ecs_trace("addons imported!");
     ecs_log_pop();
+#endif
+#ifdef FLECS_LOW_FOOTPRINT
+    ecs_shrink(world);
 #endif
     return world;
 }
@@ -2462,4 +2469,8 @@ void ecs_shrink(
     flecs_table_shrink(world, &world->store.root);
 
     flecs_sparse_shrink(&world->store.tables);
+
+    for (i = 0; i < world->stage_count; i ++) {
+        ecs_stage_shrink(world->stages[i]);
+    }
 }

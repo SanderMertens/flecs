@@ -220,11 +220,16 @@ void flecs_query_iter_fini_ctx(
         case EcsQuerySelfUp:
         case EcsQueryUnionEqUp:
         case EcsQueryUnionEqSelfUp: {
-            ecs_trav_up_cache_t *cache = &ctx[i].is.up.cache;
-            if (cache->dir == EcsTravDown) {
-                flecs_query_down_cache_fini(a, cache);
-            } else {
-                flecs_query_up_cache_fini(cache);
+            ecs_query_up_ctx_t *op_ctx = &ctx[i].is.up;
+            ecs_query_up_impl_t *impl = op_ctx->impl;
+            if (impl) {
+                ecs_trav_up_cache_t *cache = &impl->cache;
+                if (cache->dir == EcsTravDown) {
+                    flecs_query_down_cache_fini(a, cache);
+                } else {
+                    flecs_query_up_cache_fini(cache);
+                }
+                flecs_free_t(a, ecs_query_up_impl_t, impl);
             }
             break;
         }

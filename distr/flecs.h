@@ -242,9 +242,9 @@
 #ifdef FLECS_LOW_FOOTPRINT
 #define FLECS_HI_COMPONENT_ID (16)
 #define FLECS_HI_ID_RECORD_ID (16)
-#define FLECS_SPARSE_PAGE_BITS (4)
 #define FLECS_ENTITY_PAGE_BITS (6)
 #define FLECS_USE_OS_ALLOC
+#define FLECS_DEFAULT_TO_UNCACHED_QUERIES
 #endif
 
 /** @def FLECS_HI_COMPONENT_ID
@@ -283,7 +283,7 @@
 /** @def FLECS_ENTITY_PAGE_BITS
  * Same as FLECS_SPARSE_PAGE_BITS, but for the entity index. */
 #ifndef FLECS_ENTITY_PAGE_BITS
-#define FLECS_ENTITY_PAGE_BITS (12)
+#define FLECS_ENTITY_PAGE_BITS (10)
 #endif
 
 /** @def FLECS_USE_OS_ALLOC
@@ -539,13 +539,15 @@ extern "C" {
 //// Observer flags (used by ecs_observer_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsObserverIsMulti             (1u << 1u)  /* Does observer have multiple terms */
-#define EcsObserverIsMonitor           (1u << 2u)  /* Is observer a monitor */
-#define EcsObserverIsDisabled          (1u << 3u)  /* Is observer entity disabled */
-#define EcsObserverIsParentDisabled    (1u << 4u)  /* Is module parent of observer disabled  */
-#define EcsObserverBypassQuery         (1u << 5u)  /* Don't evaluate query for multi-component observer*/
-#define EcsObserverYieldOnCreate       (1u << 6u)  /* Yield matching entities when creating observer */
-#define EcsObserverYieldOnDelete       (1u << 7u)  /* Yield matching entities when deleting observer */
+#define EcsObserverMatchPrefab         (1u << 1u)  /* Same as query*/
+#define EcsObserverMatchDisabled       (1u << 2u)  /* Same as query*/
+#define EcsObserverIsMulti             (1u << 3u)  /* Does observer have multiple terms */
+#define EcsObserverIsMonitor           (1u << 4u)  /* Is observer a monitor */
+#define EcsObserverIsDisabled          (1u << 5u)  /* Is observer entity disabled */
+#define EcsObserverIsParentDisabled    (1u << 6u)  /* Is module parent of observer disabled  */
+#define EcsObserverBypassQuery         (1u << 7u)  /* Don't evaluate query for multi-component observer*/
+#define EcsObserverYieldOnCreate       (1u << 8u)  /* Yield matching entities when creating observer */
+#define EcsObserverYieldOnDelete       (1u << 9u)  /* Yield matching entities when deleting observer */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1580,15 +1582,17 @@ typedef struct ecs_block_allocator_chunk_header_t {
 } ecs_block_allocator_chunk_header_t;
 
 typedef struct ecs_block_allocator_t {
-    ecs_block_allocator_chunk_header_t *head;
-    ecs_block_allocator_block_t *block_head;
-    int32_t chunk_size;
     int32_t data_size;
+#ifndef FLECS_USE_OS_ALLOC
+    int32_t chunk_size;
     int32_t chunks_per_block;
     int32_t block_size;
+    ecs_block_allocator_chunk_header_t *head;
+    ecs_block_allocator_block_t *block_head;
 #ifdef FLECS_SANITIZE
     int32_t alloc_count;
     ecs_map_t *outstanding;
+#endif
 #endif
 } ecs_block_allocator_t;
 
@@ -1677,7 +1681,6 @@ void* flecs_bdup(
 #define FLECS_STACK_ALLOCATOR_H
 
 /** Stack allocator for quick allocation of small temporary values */
-#define ECS_STACK_PAGE_SIZE (4096)
 
 typedef struct ecs_stack_page_t {
     void *data;
@@ -1704,6 +1707,9 @@ typedef struct ecs_stack_t {
     int32_t cursor_count;
 #endif
 } ecs_stack_t;
+
+#define FLECS_STACK_PAGE_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_page_t), 16)
+#define FLECS_STACK_PAGE_SIZE (1024 - FLECS_STACK_PAGE_OFFSET)
 
 FLECS_DBG_API
 void flecs_stack_init(
@@ -2049,8 +2055,12 @@ FLECS_DBG_API extern int64_t ecs_stack_allocator_alloc_count;
 FLECS_DBG_API extern int64_t ecs_stack_allocator_free_count;
 
 struct ecs_allocator_t {
+#ifndef FLECS_USE_OS_ALLOC
     ecs_block_allocator_t chunks;
     struct ecs_sparse_t sizes; /* <size, block_allocator_t> */
+#else
+    bool dummy;
+#endif
 };
 
 FLECS_API
@@ -2082,6 +2092,7 @@ void* flecs_dup(
     ecs_size_t size,
     const void *src);
 
+#ifndef FLECS_USE_OS_ALLOC
 #define flecs_allocator(obj) (&obj->allocators.dyn)
 
 #define flecs_alloc(a, size) flecs_balloc(flecs_allocator_get(a, size))
@@ -2115,6 +2126,48 @@ void* flecs_dup(
     flecs_realloc(a, ECS_SIZEOF(T) * (count_dst), ECS_SIZEOF(T) * (count_src), ptr)
 
 #define flecs_dup_n(a, T, count, ptr) flecs_dup(a, ECS_SIZEOF(T) * (count), ptr)
+
+#else
+
+void* flecs_alloc(
+    ecs_allocator_t *a, 
+    ecs_size_t size);
+
+void* flecs_calloc(
+    ecs_allocator_t *a, 
+    ecs_size_t size);
+
+void* flecs_realloc(
+    ecs_allocator_t *a, 
+    ecs_size_t dst_size, 
+    ecs_size_t src_size, 
+    void *ptr);
+
+void flecs_free(
+    ecs_allocator_t *a, 
+    ecs_size_t size,
+    void *ptr);
+
+#define flecs_alloc_w_dbg_info(a, size, type_name) flecs_alloc(a, size)
+#define flecs_alloc_t(a, T) flecs_alloc(a, ECS_SIZEOF(T))
+#define flecs_alloc_n(a, T, count) flecs_alloc(a, ECS_SIZEOF(T) * (count))
+
+#define flecs_calloc_w_dbg_info(a, size, type_name) flecs_calloc(a, size)
+#define flecs_calloc_t(a, T) flecs_calloc(a, ECS_SIZEOF(T))
+#define flecs_calloc_n(a, T, count) flecs_calloc(a, ECS_SIZEOF(T) * (count))
+
+#define flecs_free_t(a, T, ptr) flecs_free(a, ECS_SIZEOF(T), ptr)
+#define flecs_free_n(a, T, count, ptr) flecs_free(a, ECS_SIZEOF(T) * (count), ptr)
+
+#define flecs_realloc_w_dbg_info(a, size_dst, size_src, ptr, type_name)\
+    flecs_realloc(a, size_dst, size_src, ptr)
+
+#define flecs_realloc_n(a, T, count_dst, count_src, ptr)\
+    flecs_realloc(a, ECS_SIZEOF(T) * count_dst, ECS_SIZEOF(T) * count_src, ptr)
+
+#define flecs_dup_n(a, T, count, ptr) flecs_dup(a, ECS_SIZEOF(T) * (count), ptr)
+
+#endif
 
 #endif
 
@@ -3228,7 +3281,6 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 
 /** Header for ecs_poly_t objects. */
 typedef struct ecs_header_t {
-    int32_t magic;              /**< Magic number verifying it's a flecs object */
     int32_t type;               /**< Magic number indicating which type of flecs object */
     int32_t refcount;           /**< Refcount, to enable RAII handles */
     ecs_mixins_t *mixins;       /**< Table with offsets to (optional) mixins */
@@ -3523,9 +3575,9 @@ struct ecs_term_t {
 struct ecs_query_t {
     ecs_header_t hdr;           /**< Object header */
 
-    ecs_term_t terms[FLECS_TERM_COUNT_MAX]; /**< Query terms */
-    int32_t sizes[FLECS_TERM_COUNT_MAX]; /**< Component sizes. Indexed by field */
-    ecs_id_t ids[FLECS_TERM_COUNT_MAX]; /**< Component ids. Indexed by field */
+    ecs_term_t *terms;          /**< Query terms */
+    int32_t *sizes;             /**< Component sizes. Indexed by field */
+    ecs_id_t *ids;              /**< Component ids. Indexed by field */
 
     ecs_flags32_t flags;        /**< Query flags */
     int8_t var_count;           /**< Number of query variables */
@@ -3878,7 +3930,6 @@ typedef struct ecs_commands_t {
 #endif
 
 #endif
-
 
 /**
  * @file api_support.h

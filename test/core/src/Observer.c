@@ -9050,7 +9050,7 @@ void Observer_get_filter(void) {
 
     ecs_entity_t o = ecs_observer(world, {
         .query.terms = {
-            { .id = ecs_id(Position) }
+            { .id = ecs_id(Position), .src.id = EcsSelf|EcsUp }
         },
         .callback = Observer,
         .events = { EcsOnAdd },

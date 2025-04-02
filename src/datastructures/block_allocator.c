@@ -70,6 +70,7 @@ void flecs_ballocator_init(
     ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
     ba->data_size = size;
+#ifndef FLECS_USE_OS_ALLOC
 #ifdef FLECS_SANITIZE
     ba->alloc_count = 0;
     if (size != 24) { /* Prevent stack overflow as map uses block allocator */
@@ -83,6 +84,7 @@ void flecs_ballocator_init(
     ba->block_size = ba->chunks_per_block * ba->chunk_size;
     ba->head = NULL;
     ba->block_head = NULL;
+#endif
 }
 
 ecs_block_allocator_t* flecs_ballocator_new(
@@ -98,6 +100,7 @@ void flecs_ballocator_fini(
 {
     ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
 
+#ifndef FLECS_USE_OS_ALLOC
 #ifdef FLECS_SANITIZE
     if (ba->alloc_count != 0) {
         ecs_err("Leak detected! (size %u, remaining = %d)",
@@ -131,6 +134,7 @@ void flecs_ballocator_fini(
     }
 
     ba->block_head = NULL;
+#endif
 }
 
 void flecs_ballocator_free(
@@ -330,7 +334,7 @@ void* flecs_bdup(
     void *memory)
 {
 #ifdef FLECS_USE_OS_ALLOC
-    if (memory && ba->chunk_size) {
+    if (memory && ba->data_size) {
         return ecs_os_memdup(memory, ba->data_size);
     } else {
         return NULL;

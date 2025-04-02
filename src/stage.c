@@ -912,6 +912,15 @@ bool ecs_stage_is_readonly(
     return false;
 }
 
+void ecs_stage_shrink(
+    ecs_stage_t *stage)
+{
+    flecs_sparse_shrink(&stage->cmd_stack[0].entries);
+    flecs_sparse_shrink(&stage->cmd_stack[1].entries);
+    ecs_vec_reclaim_t(&stage->allocator, &stage->cmd_stack[0].queue, ecs_cmd_t);
+    ecs_vec_reclaim_t(&stage->allocator, &stage->cmd_stack[1].queue, ecs_cmd_t);
+}
+
 bool ecs_is_deferred(
     const ecs_world_t *world)
 {
