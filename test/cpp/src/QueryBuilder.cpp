@@ -5297,3 +5297,24 @@ void QueryBuilder_singleton_pair(void) {
 
     test_int(count, 1);
 }
+
+void QueryBuilder_query_w_this_second(void) {
+    flecs::world ecs;
+
+    flecs::entity rel = ecs.entity();
+
+    auto q = ecs.query_builder()
+        .with(rel, flecs::This)
+        .build();
+
+    flecs::entity e1 = ecs.entity();
+    e1.add(rel, e1);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        test_assert(e == e1);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

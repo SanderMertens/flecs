@@ -904,7 +904,8 @@
                 "each_w_const_field_at_w_fixed_src",
                 "each_w_untyped_field_w_fixed_src",
                 "each_w_untyped_field_at_w_fixed_src",
-                "singleton_pair"
+                "singleton_pair",
+                "query_w_this_second"
             ]
         }, {
             "id": "SystemBuilder",
