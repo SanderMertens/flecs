@@ -30538,42 +30538,42 @@ struct term final : term_builder_i<term> {
             this->set_term(&value);
         }
 
-    term(flecs::world_t *world_ptr, id_t id)
+    term(flecs::world_t *world_ptr, id_t component_id)
         : term_builder_i<term>(&value)
         , value({})
         , world_(world_ptr) {
-            if (id & ECS_ID_FLAGS_MASK) {
-                value.id = id;
+            if (component_id & ECS_ID_FLAGS_MASK) {
+                value.id = component_id;
             } else {
-                value.first.id = id;
+                value.first.id = component_id;
             }
             this->set_term(&value);
         }
 
-    term(flecs::world_t *world_ptr, entity_t r, entity_t o)
+    term(flecs::world_t *world_ptr, entity_t first, entity_t second)
         : term_builder_i<term>(&value)
         , value({})
         , world_(world_ptr) {
-            value.id = ecs_pair(r, o);
+            value.id = ecs_pair(first, second);
             this->set_term(&value);
         }
 
-    term(id_t id) 
+    term(id_t component_id) 
         : term_builder_i<term>(&value)
         , value({})
         , world_(nullptr) { 
-            if (id & ECS_ID_FLAGS_MASK) {
-                value.id = id;
+            if (component_id & ECS_ID_FLAGS_MASK) {
+                value.id = component_id;
             } else {
-                value.first.id = id;
+                value.first.id = component_id;
             }
         }
 
-    term(id_t r, id_t o) 
+    term(id_t first, id_t second) 
         : term_builder_i<term>(&value)
         , value({})
         , world_(nullptr) { 
-            value.id = ecs_pair(r, o);
+            value.id = ecs_pair(first, second);
         }
 
     void reset() {
@@ -30770,15 +30770,15 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    Base& with(id_t id) {
+    Base& with(id_t component_id) {
         this->term();
-        *this->term_ = flecs::term(id);
+        *this->term_ = flecs::term(component_id);
         return *this;
     }
 
-    Base& with(const char *name) {
+    Base& with(const char *component_name) {
         this->term();
-        *this->term_ = flecs::term().first(name);
+        *this->term_ = flecs::term().first(component_name);
         return *this;
     }
 
@@ -30788,27 +30788,27 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    Base& with(entity_t r, entity_t o) {
+    Base& with(entity_t first, entity_t second) {
         this->term();
-        *this->term_ = flecs::term(r, o);
+        *this->term_ = flecs::term(first, second);
         return *this;
     }
 
-    Base& with(entity_t r, const char *o) {
+    Base& with(entity_t first, const char *second) {
         this->term();
-        *this->term_ = flecs::term(r).second(o);
+        *this->term_ = flecs::term(first).second(second);
         return *this;
     }
 
-    Base& with(const char *r, entity_t o) {
+    Base& with(const char *first, entity_t second) {
         this->term();
-        *this->term_ = flecs::term().first(r).second(o);
+        *this->term_ = flecs::term().first(first).second(second);
         return *this;
     }
 
     template<typename First>
-    Base& with(id_t o) {
-        return this->with(_::type<First>::id(this->world_v()), o);
+    Base& with(entity_t second) {
+        return this->with(_::type<First>::id(this->world_v()), second);
     }
 
     template<typename First>
