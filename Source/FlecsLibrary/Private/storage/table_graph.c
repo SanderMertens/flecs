@@ -296,8 +296,8 @@ void flecs_table_diff_builder_init(
     ecs_table_diff_builder_t *builder)
 {
     ecs_allocator_t *a = &world->allocator;
-    ecs_vec_init_t(a, &builder->added, ecs_id_t, 256);
-    ecs_vec_init_t(a, &builder->removed, ecs_id_t, 256);
+    ecs_vec_init_t(a, &builder->added, ecs_id_t, 32);
+    ecs_vec_init_t(a, &builder->removed, ecs_id_t, 32);
     builder->added_flags = 0;
     builder->removed_flags = 0;
 }

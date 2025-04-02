@@ -1541,7 +1541,7 @@ int flecs_query_query_populate_terms(
 
     /* Copy terms from array to query */
     if (term_count) {
-        ecs_os_memcpy_n(&q->terms, desc->terms, ecs_term_t, term_count);
+        ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
     }
 
     /* Parse query expression if set */
@@ -1581,13 +1581,15 @@ error:
     return -1;
 }
 
-#ifndef FLECS_SANITIZE
-static
 bool flecs_query_finalize_simple(
     ecs_world_t *world,
     ecs_query_t *q,
     const ecs_query_desc_t *desc)
 {
+    ecs_assert(q->terms != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(q->sizes != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(q->ids != NULL, ECS_INTERNAL_ERROR, NULL);
+
     /* Filter out queries that aren't simple enough */
     if (desc->expr) {
         return false;
@@ -1599,11 +1601,12 @@ bool flecs_query_finalize_simple(
 
     int8_t i, term_count;
     for (i = 0; i < FLECS_TERM_COUNT_MAX; i ++) {
+        const ecs_term_t *term = &desc->terms[i];
         if (!ecs_term_is_initialized(&desc->terms[i])) {
             break;
         }
 
-        ecs_id_t id = desc->terms[i].id;
+        ecs_id_t id = term->id;
         if (ecs_id_is_wildcard(id)) {
             return false;
         }
@@ -1624,8 +1627,21 @@ bool flecs_query_finalize_simple(
             return false;
         }
 
-        ecs_term_t term = { .id = desc->terms[i].id };
-        if (ecs_os_memcmp_t(&term, &desc->terms[i], ecs_term_t)) {
+        ecs_term_t cmp_term = { 
+            .id = id, 
+            .flags_ = term->flags_, 
+            .field_index = term->field_index
+        };
+
+        if (term->src.id == (EcsThis|EcsSelf|EcsIsVariable)) {
+            cmp_term.src.id = EcsThis|EcsSelf|EcsIsVariable;
+        }
+
+        if (term->first.id == (term->id|EcsSelf|EcsIsEntity)) {
+            cmp_term.first.id = term->id|EcsSelf|EcsIsEntity;
+        }
+
+        if (ecs_os_memcmp_t(&cmp_term, term, ecs_term_t)) {
             return false;
         }
     }
@@ -1635,7 +1651,7 @@ bool flecs_query_finalize_simple(
     }
 
     term_count = i;
-    ecs_os_memcpy_n(&q->terms, desc->terms, ecs_term_t, term_count);
+    ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
 
     /* Simple query that only queries for component ids */
 
@@ -1754,7 +1770,6 @@ bool flecs_query_finalize_simple(
 
     return true;
 }
-#endif
 
 static
 char* flecs_query_append_token(
@@ -1838,13 +1853,21 @@ int flecs_query_finalize_query(
 
     q->flags |= desc->flags | world->default_query_flags;
 
+    ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
+    ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};
+    ecs_id_t ids[FLECS_TERM_COUNT_MAX] = {0};
+
+    q->terms = terms;
+    q->sizes = sizes;
+    q->ids = ids;
+
     /* Fast routine that initializes simple queries and skips complex validation 
      * logic if it's not needed. When running in sanitized mode, always take the 
      * slow path. This in combination with the test suite ensures that the
      * result of the fast & slow code is the same. */
     #ifndef FLECS_SANITIZE
     if (flecs_query_finalize_simple(world, q, desc)) {
-        return 0;
+        goto done;
     }
     #endif
 
@@ -1862,7 +1885,10 @@ int flecs_query_finalize_query(
      * token buffer which simplifies memory management & reduces allocations. */
     flecs_query_populate_tokens(flecs_query_impl(q));
 
+done:
+    flecs_query_copy_arrays(q);
     return 0;
 error:
+    flecs_query_copy_arrays(q);
     return -1;
 }

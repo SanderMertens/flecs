@@ -592,39 +592,10 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 
 /** Header for ecs_poly_t objects. */
 typedef struct ecs_header_t {
-    int32_t magic;              /**< Magic number verifying it's a flecs object */
     int32_t type;               /**< Magic number indicating which type of flecs object */
     int32_t refcount;           /**< Refcount, to enable RAII handles */
     ecs_mixins_t *mixins;       /**< Table with offsets to (optional) mixins */
 } ecs_header_t;
-
-	#if 0
-	*/** Record for entity index */
-	struct ecs_record_t {
-		ecs_id_record_t *idr; /* Id record to (*, entity) for target entities */
-		ecs_table_t *table;   /* Identifies a type (and table) in world */
-		uint32_t row;         /* Table row of the entity */
-		int32_t dense;        /* Index in dense array of entity index */    
-	};
-
-	/** Header for table cache elements. */
-	typedef struct ecs_table_cache_hdr_t {
-		struct ecs_table_cache_t *cache;  /**< Table cache of element. Of type ecs_id_record_t* for component index elements. */
-		ecs_table_t *table;               /**< Table associated with element. */
-		struct ecs_table_cache_hdr_t *prev, *next; /**< Next/previous elements for id in table cache. */
-	} ecs_table_cache_hdr_t;
-
-	/** Metadata describing where a component id is stored in a table.
-	 * This type is used as element type for the component index table cache. One
-	 * record exists per table/component in the table. Only records for wildcard ids
-	 * can have a count > 1. */
-	typedef struct ecs_table_record_t {
-		ecs_table_cache_hdr_t hdr;  /**< Table cache header */
-		int16_t index;              /**< First type index where id occurs in table */
-		int16_t count;              /**< Number of times id occurs in table */
-		int16_t column;             /**< First column index where id occurs */
-	} ecs_table_record_t;
-	#endif // #if 0
 
 typedef struct ecs_table_record_t ecs_table_record_t;
 
@@ -915,9 +886,9 @@ struct ecs_term_t {
 struct ecs_query_t {
     ecs_header_t hdr;           /**< Object header */
 
-    ecs_term_t terms[FLECS_TERM_COUNT_MAX]; /**< Query terms */
-    int32_t sizes[FLECS_TERM_COUNT_MAX]; /**< Component sizes. Indexed by field */
-    ecs_id_t ids[FLECS_TERM_COUNT_MAX]; /**< Component ids. Indexed by field */
+    ecs_term_t *terms;          /**< Query terms */
+    int32_t *sizes;             /**< Component sizes. Indexed by field */
+    ecs_id_t *ids;              /**< Component ids. Indexed by field */
 
     ecs_flags32_t flags;        /**< Query flags */
     int8_t var_count;           /**< Number of query variables */
@@ -3694,7 +3665,7 @@ FLECS_ALWAYS_INLINE bool ecs_has_id(
  * @return True if the entity has the id, false if not.
  */
 FLECS_API
-bool ecs_owns_id(
+FLECS_ALWAYS_INLINE bool ecs_owns_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);

@@ -7,7 +7,6 @@
 #define FLECS_STACK_ALLOCATOR_H
 
 /** Stack allocator for quick allocation of small temporary values */
-#define ECS_STACK_PAGE_SIZE (4096)
 
 typedef struct ecs_stack_page_t {
     void *data;
@@ -34,6 +33,9 @@ typedef struct ecs_stack_t {
     int32_t cursor_count;
 #endif
 } ecs_stack_t;
+
+#define FLECS_STACK_PAGE_OFFSET ECS_ALIGN(ECS_SIZEOF(ecs_stack_page_t), 16)
+#define FLECS_STACK_PAGE_SIZE (1024 - FLECS_STACK_PAGE_OFFSET)
 
 FLECS_DBG_API
 void flecs_stack_init(

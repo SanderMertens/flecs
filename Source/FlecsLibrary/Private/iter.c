@@ -206,8 +206,11 @@ bool ecs_field_is_readonly(
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
         "operation invalid before calling next()");
-    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER,
-        "operation only valid for query iterators");
+
+    if (!it->query) {
+        return false;
+    }
+
     ecs_check(it->query->terms != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
         "invalid field index %d", index);

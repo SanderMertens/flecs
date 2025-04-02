@@ -31,11 +31,12 @@ typedef struct ecs_observer_impl_t {
     int32_t *last_event_id;     /**< Last handled event id */
     int32_t last_event_id_storage;
 
-    ecs_id_t register_id;       /**< Id observer is registered with (single term observers only) */
-    int32_t term_index;         /**< Index of the term in parent observer (single term observers only) */
-
     ecs_flags32_t flags;        /**< Observer flags */
+
+    int8_t term_index;          /**< Index of the term in parent observer (single term observers only) */
+    ecs_id_t register_id;       /**< Id observer is registered with (single term observers only) */
     uint64_t id;                /**< Internal id (not entity id) */
+
     ecs_vec_t children;         /**< If multi observer, vector stores child observers */
 
     ecs_query_t *not_query;     /**< Query used to populate observer data when a

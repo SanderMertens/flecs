@@ -372,7 +372,7 @@ void flecs_entity_index_shrink(
         bool has_alive = false;
         for (e = 0; e < FLECS_ENTITY_PAGE_SIZE; e ++) {
             ecs_record_t *r = &page->records[e];
-            ecs_entity_t entity = flecs_ito(uint64_t, (i * 4096) + e);
+            ecs_entity_t entity = flecs_ito(uint64_t, (i * FLECS_ENTITY_PAGE_SIZE) + e);
 
             if (r->dense) {
                 ecs_assert(flecs_entity_index_get_any(index, entity) == r,

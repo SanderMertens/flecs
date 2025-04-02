@@ -255,6 +255,24 @@ error:
     return -1;
 }
 
+void flecs_query_copy_arrays(
+    ecs_query_t *q)
+{
+    ecs_allocator_t *a = &flecs_query_impl(q)->stage->allocator;
+    q->terms = flecs_dup_n(a, ecs_term_t, q->term_count, q->terms);
+    q->sizes = flecs_dup_n(a, ecs_size_t, q->term_count, q->sizes);
+    q->ids = flecs_dup_n(a, ecs_id_t, q->term_count, q->ids);
+}
+
+void flecs_query_free_arrays(
+    ecs_query_t *q)
+{
+    ecs_allocator_t *a = &flecs_query_impl(q)->stage->allocator;
+    flecs_free_n(a, ecs_term_t, q->term_count, q->terms);
+    flecs_free_n(a, ecs_size_t, q->term_count, q->sizes);
+    flecs_free_n(a, ecs_id_t, q->term_count, q->ids);
+}
+
 static
 void flecs_query_fini(
     ecs_query_impl_t *impl)
@@ -313,6 +331,8 @@ void flecs_query_fini(
         flecs_free_n(a, int8_t, FLECS_TERM_COUNT_MAX, impl->cache->field_map);
         flecs_query_cache_fini(impl);
     }
+
+    flecs_query_free_arrays(q);
 
     flecs_poly_fini(impl, ecs_query_t);
     flecs_bfree(&stage->allocators.query_impl, impl);
@@ -390,7 +410,7 @@ ecs_query_t* ecs_query_init(
     ecs_assert(flecs_poly_is(result->stage, ecs_stage_t),
         ECS_INTERNAL_ERROR, NULL);
 
-    /* Validate input, translate to canonical query representation */
+    /* Validate input, translate input to canonical query representation */
     if (flecs_query_finalize_query(world, &result->pub, &desc)) {
         goto error;
     }
