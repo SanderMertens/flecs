@@ -21630,7 +21630,12 @@ void ecs_cpp_enum_init(
 #ifdef FLECS_META
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
-    ecs_set(world, id, EcsEnum, { .underlying_type = underlying_type });
+    ecs_vec_t ordered_constants;
+    ecs_vec_init_t(NULL, &ordered_constants, ecs_enum_constant_t, 0);
+    ecs_set(world, id, EcsEnum, { 
+        .underlying_type = underlying_type,
+        .ordered_constants = ordered_constants
+    });
     flecs_resume_readonly(world, &readonly_state);
 #else
     /* Make sure that enums still behave the same even without meta */
@@ -47551,7 +47556,13 @@ ecs_entity_t ecs_enum_init(
         ut_is_unsigned = true;
     }
 
-    ecs_set(world, t, EcsEnum, { .underlying_type = underlying });
+    ecs_vec_t ordered_constants;
+    ecs_vec_init_t(NULL, &ordered_constants, ecs_enum_constant_t, 0);
+
+    ecs_set(world, t, EcsEnum, { 
+        .underlying_type = underlying, 
+        .ordered_constants = ordered_constants
+    });
 
     ecs_entity_t old_scope = ecs_set_scope(world, t);
 
@@ -47633,7 +47644,12 @@ ecs_entity_t ecs_bitmask_init(
         t = ecs_new_low_id(world);
     }
 
-    ecs_add(world, t, EcsBitmask);
+    ecs_vec_t ordered_constants;
+    ecs_vec_init_t(NULL, &ordered_constants, ecs_bitmask_constant_t, 0);
+
+    ecs_set(world, t, EcsBitmask, { 
+        .ordered_constants = ordered_constants
+    });
 
     ecs_entity_t old_scope = ecs_set_scope(world, t);
 
@@ -48786,7 +48802,12 @@ int flecs_meta_utils_parse_enum(
     ecs_entity_t t,
     const char *desc)
 {
-    ecs_set(world, t, EcsEnum, { .underlying_type = ecs_id(ecs_i32_t) });
+    ecs_vec_t ordered_constants;
+    ecs_vec_init_t(NULL, &ordered_constants, ecs_enum_constant_t, 0);
+    ecs_set(world, t, EcsEnum, { 
+        .underlying_type = ecs_id(ecs_i32_t),
+        .ordered_constants = ordered_constants
+    });
     return flecs_meta_utils_parse_constants(world, t, desc, false);
 }
 
@@ -51895,20 +51916,46 @@ static void flecs_constants_copy(
     }
 }
 
+static void  flecs_ordered_constants_dtor(
+    ecs_vec_t* ordered_constants)
+{
+    /* shallow fini of is ok since map deallocs name c-string member */
+    ecs_vec_fini_t(NULL, ordered_constants, ecs_enum_constant_t);
+}
+
+static void flecs_ordered_constants_copy(
+    ecs_vec_t* dst,
+    const ecs_vec_t* src)
+{
+    /* shallow copy of is ok since map deep-copies name c-string member */
+    *dst = ecs_vec_copy_t(NULL, src, ecs_enum_constant_t);
+}
+
+
 static ECS_COPY(EcsEnum, dst, src, {
     flecs_constants_dtor(&dst->constants);
     flecs_constants_copy(&dst->constants, &src->constants);
+    flecs_ordered_constants_dtor(&dst->ordered_constants);
+    flecs_ordered_constants_copy(&dst->ordered_constants, &src->ordered_constants);  
+
     dst->underlying_type = src->underlying_type;
 })
 
 static ECS_MOVE(EcsEnum, dst, src, {
     flecs_constants_dtor(&dst->constants);
     dst->constants = src->constants;
-    dst->underlying_type = src->underlying_type;
     ecs_os_zeromem(&src->constants);
+    flecs_ordered_constants_dtor(&dst->ordered_constants);
+    dst->ordered_constants = src->ordered_constants;
+    ecs_os_zeromem(&src->ordered_constants);
+
+    dst->underlying_type = src->underlying_type;
 })
 
-static ECS_DTOR(EcsEnum, ptr, { flecs_constants_dtor(&ptr->constants); })
+static ECS_DTOR(EcsEnum, ptr, { 
+    flecs_constants_dtor(&ptr->constants);
+    flecs_ordered_constants_dtor(&ptr->ordered_constants);
+})
 
 
 /* EcsBitmask lifecycle */
@@ -51917,15 +51964,24 @@ static ECS_COPY(EcsBitmask, dst, src, {
     /* bitmask constant & enum constant have the same layout */
     flecs_constants_dtor(&dst->constants);
     flecs_constants_copy(&dst->constants, &src->constants);
+    flecs_ordered_constants_dtor(&dst->ordered_constants);
+    flecs_ordered_constants_copy(&dst->ordered_constants, &src->ordered_constants);
 })
 
 static ECS_MOVE(EcsBitmask, dst, src, {
     flecs_constants_dtor(&dst->constants);
     dst->constants = src->constants;
     ecs_os_zeromem(&src->constants);
+
+    flecs_ordered_constants_dtor(&dst->ordered_constants);
+    dst->ordered_constants = src->ordered_constants;
+    ecs_os_zeromem(&src->ordered_constants);
 })
 
-static ECS_DTOR(EcsBitmask, ptr, { flecs_constants_dtor(&ptr->constants); })
+static ECS_DTOR(EcsBitmask, ptr, { 
+    flecs_constants_dtor(&ptr->constants);
+    flecs_ordered_constants_dtor(&ptr->ordered_constants);
+})
 
 
 /* EcsUnit lifecycle */
@@ -52382,13 +52438,28 @@ int flecs_add_constant_to_enum(
         ut_is_unsigned = true;
     }
 
-    /* Remove constant from map if it was already added */
+    /* Remove constant from map and vector if it was already added */
     ecs_map_iter_t it = ecs_map_iter(&ptr->constants);
     while (ecs_map_next(&it)) {
         ecs_enum_constant_t *c = ecs_map_ptr(&it);
         if (c->constant == e) {
             ecs_os_free(ECS_CONST_CAST(char*, c->name));
             ecs_map_remove_free(&ptr->constants, ecs_map_key(&it));
+
+            ecs_enum_constant_t* constants = ecs_vec_first_t(
+                &ptr->ordered_constants, ecs_enum_constant_t);
+            int32_t i, count = ecs_vec_count(&ptr->ordered_constants);
+            for (i = 0; i < count; i++) {
+                if (constants[i].constant == e) {
+                    break;
+                }
+            }
+            if (i < count) {
+                for (int j = i; j < count - 1; j++) {
+                    constants[j] = constants[j + 1];
+                }
+                ecs_vec_remove_last(&ptr->ordered_constants);
+            }
         }
     }
 
@@ -52486,6 +52557,14 @@ int flecs_add_constant_to_enum(
     c->name = ecs_os_strdup(ecs_get_name(world, e));
     c->constant = e;
 
+    ecs_vec_init_if_t(&ptr->ordered_constants, ecs_enum_constant_t);
+    ecs_enum_constant_t* ordered_c = ecs_vec_append_t(NULL,
+        &ptr->ordered_constants, ecs_enum_constant_t);
+    ordered_c->name = c->name;
+    ordered_c->value = value;
+    ordered_c->value_unsigned = value_unsigned;
+    ordered_c->constant = c->constant;
+
     if (!value_set) {
         void *cptr = ecs_ensure_id(world, e, ecs_pair(EcsConstant, ut));
         ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -52520,13 +52599,27 @@ int flecs_add_constant_to_bitmask(
 {
     EcsBitmask *ptr = ecs_ensure(world, type, EcsBitmask);
     
-    /* Remove constant from map if it was already added */
+    /* Remove constant from map and vector if it was already added */
     ecs_map_iter_t it = ecs_map_iter(&ptr->constants);
     while (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
         if (c->constant == e) {
             ecs_os_free(ECS_CONST_CAST(char*, c->name));
             ecs_map_remove_free(&ptr->constants, ecs_map_key(&it));
+
+            ecs_bitmask_constant_t* constants = ecs_vec_first_t(&ptr->ordered_constants, ecs_bitmask_constant_t);
+            int32_t i, count = ecs_vec_count(&ptr->ordered_constants);
+            for (i = 0; i < count; i++) {
+                if (constants[i].constant == c->value) {
+                    break;
+                }
+            }
+            if (i < count) {
+                for (int j = i; j < count - 1; j++) {
+                    constants[j] = constants[j + 1];
+                }
+                ecs_vec_remove_last(&ptr->ordered_constants);
+            }
         }
     }
 
@@ -52568,6 +52661,13 @@ int flecs_add_constant_to_bitmask(
     c->name = ecs_os_strdup(ecs_get_name(world, e));
     c->value = value;
     c->constant = e;
+
+    ecs_vec_init_if_t(&ptr->ordered_constants, ecs_bitmask_constant_t);
+    ecs_bitmask_constant_t* ordered_c = ecs_vec_append_t(NULL,
+        &ptr->ordered_constants, ecs_bitmask_constant_t);
+    ordered_c->name = c->name;
+    ordered_c->value = value;
+    ordered_c->constant = c->constant;
 
     ecs_u32_t *cptr = ecs_ensure_pair_second(
         world, e, EcsConstant, ecs_u32_t);
