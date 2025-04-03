@@ -623,6 +623,7 @@ void flecs_table_init(
     }
 
     table->column_count = flecs_ito(int16_t, column_count);
+    table->version = 1;
     flecs_table_init_data(world, table);
 
     if (table->flags & EcsTableHasName) {

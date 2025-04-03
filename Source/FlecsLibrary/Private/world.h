@@ -80,7 +80,7 @@ void flecs_increment_table_version(
     ecs_world_t *world,
     ecs_table_t *table);
 
-uint32_t flecs_get_table_version(
+uint32_t flecs_get_table_version_fast(
     const ecs_world_t *world,
     const uint64_t table_id);
 

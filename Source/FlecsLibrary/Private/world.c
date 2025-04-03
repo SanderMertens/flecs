@@ -1902,10 +1902,12 @@ void flecs_increment_table_version(
     ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
 
     world->table_version[table->id & ECS_TABLE_VERSION_ARRAY_BITMASK] ++;
+    table->version ++;
+
     return;
 }
 
-uint32_t flecs_get_table_version(
+uint32_t flecs_get_table_version_fast(
     const ecs_world_t *world,
     const uint64_t table_id)
 {
