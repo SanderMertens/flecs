@@ -95,50 +95,50 @@ ecs_component_record_t* flecs_components_ensure(
 /* Increase refcount of component record */
 void flecs_component_claim(
     ecs_world_t *world,
-    ecs_component_record_t *cdr);
+    ecs_component_record_t *cr);
 
 /* Decrease refcount of component record, delete if 0 */
 int32_t flecs_component_release(
     ecs_world_t *world,
-    ecs_component_record_t *cdr);
+    ecs_component_record_t *cr);
 
 /* Release all empty tables in component record */
 void flecs_component_release_tables(
     ecs_world_t *world,
-    ecs_component_record_t *cdr);
+    ecs_component_record_t *cr);
 
 /* Set (component) type info for component record */
 bool flecs_component_set_type_info(
     ecs_world_t *world,
-    ecs_component_record_t *cdr,
+    ecs_component_record_t *cr,
     const ecs_type_info_t *ti);
 
 /* Return next (R, *) record */
 ecs_component_record_t* flecs_component_first_next(
-    ecs_component_record_t *cdr);
+    ecs_component_record_t *cr);
 
 /* Return next (*, T) record */
 ecs_component_record_t* flecs_component_second_next(
-    ecs_component_record_t *cdr);
+    ecs_component_record_t *cr);
 
 /* Return next traversable (*, T) record */
 ecs_component_record_t* flecs_component_trav_next(
-    ecs_component_record_t *cdr);
+    ecs_component_record_t *cr);
 
 /* Ensure name index for component record */
 ecs_hashmap_t* flecs_component_name_index_ensure(
     ecs_world_t *world,
-    ecs_component_record_t *cdr);
+    ecs_component_record_t *cr);
 
 /* Get name index for component record */
 ecs_hashmap_t* flecs_component_name_index_get(
     const ecs_world_t *world,
-    ecs_component_record_t *cdr);
+    ecs_component_record_t *cr);
 
 /* Init sparse storage */
 void flecs_component_init_sparse(
     ecs_world_t *world,
-    ecs_component_record_t *cdr);
+    ecs_component_record_t *cr);
 
 /* Return flags for matching component records */
 ecs_flags32_t flecs_id_flags_get(

@@ -4422,7 +4422,7 @@ extern "C" {
 
 /** Record for entity index. */
 struct ecs_record_t {
-    ecs_component_record_t *cdr;               /**< component record to (*, entity) for target entities */
+    ecs_component_record_t *cr;               /**< component record to (*, entity) for target entities */
     ecs_table_t *table;                        /**< Identifies a type (and table) in world */
     uint32_t row;                              /**< Table row of the entity */
     int32_t dense;                             /**< Index in dense array of entity index */    
@@ -4623,13 +4623,13 @@ FLECS_ALWAYS_INLINE ecs_component_record_t* flecs_components_get(
  * This operation returns the table record for the table/component record if it
  * exists. If the record exists, it means the table has the component.
  * 
- * @param cdr The component record.
+ * @param cr The component record.
  * @param table The table.
  * @return The table record if the table has the component, or NULL if not.
  */
 FLECS_API
 FLECS_ALWAYS_INLINE const ecs_table_record_t* flecs_component_get_table(
-    const ecs_component_record_t *cdr,
+    const ecs_component_record_t *cr,
     const ecs_table_t *table);
 
 /** Create component record iterator.
@@ -4640,7 +4640,7 @@ FLECS_ALWAYS_INLINE const ecs_table_record_t* flecs_component_get_table(
  * 
  * @code
  * ecs_table_cache_iter_t it;
- * if (flecs_component_iter(cdr, &it)) {
+ * if (flecs_component_iter(cr, &it)) {
  *   const ecs_table_record_t *tr;
  *   while ((tr = flecs_component_next(&it))) {
  *     ecs_table_t *table = tr->hdr.table;
@@ -4649,13 +4649,13 @@ FLECS_ALWAYS_INLINE const ecs_table_record_t* flecs_component_get_table(
  * }
  * @endcode
  * 
- * @param cdr The component record.
+ * @param cr The component record.
  * @param iter_out Out parameter for the iterator.
  * @return True if there are results, false if there are no results.
  */
 FLECS_API
 bool flecs_component_iter(
-    const ecs_component_record_t *cdr,
+    const ecs_component_record_t *cr,
     ecs_table_cache_iter_t *iter_out);
 
 /** Get next table record for iterator.

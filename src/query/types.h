@@ -134,7 +134,7 @@ typedef struct {
 
 /* And context */
 typedef struct {
-    ecs_component_record_t *cdr;
+    ecs_component_record_t *cr;
     ecs_table_cache_iter_t it;
     int16_t column;
     int16_t remaining;
@@ -142,7 +142,7 @@ typedef struct {
 
 /* Union context */
 typedef struct {
-    ecs_component_record_t *cdr;
+    ecs_component_record_t *cr;
     ecs_table_range_t range;
     ecs_map_iter_t tgt_iter;
     ecs_entity_t cur;
@@ -208,13 +208,13 @@ typedef struct {
  * traversal iterates and caches the entire tree. */
 typedef struct {
     ecs_entity_t entity;
-    ecs_component_record_t *cdr;
+    ecs_component_record_t *cr;
     const ecs_table_record_t *tr;
 } ecs_trav_elem_t;
 
 typedef struct {
     ecs_id_t id;
-    ecs_component_record_t *cdr;
+    ecs_component_record_t *cr;
     ecs_vec_t entities;
     bool up;
 } ecs_trav_cache_t;

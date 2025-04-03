@@ -627,7 +627,7 @@ void flecs_clean_tables(
 static
 void flecs_fini_root_tables(
     ecs_world_t *world,
-    ecs_component_record_t *cdr,
+    ecs_component_record_t *cr,
     bool fini_targets)
 {
     ecs_stage_t *stage0 = world->stages[0];
@@ -638,7 +638,7 @@ void flecs_fini_root_tables(
         ecs_size_t queue_size = 0;
         finished = true;
 
-        bool has_roots = flecs_table_cache_iter(&cdr->cache, &it);
+        bool has_roots = flecs_table_cache_iter(&cr->cache, &it);
         ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
         (void)has_roots;
 
@@ -702,18 +702,18 @@ static
 void flecs_fini_roots(
     ecs_world_t *world)
 {
-    ecs_component_record_t *cdr = flecs_components_get(world, ecs_pair(EcsChildOf, 0));
+    ecs_component_record_t *cr = flecs_components_get(world, ecs_pair(EcsChildOf, 0));
 
     /* Delete root entities that are not modules. This prioritizes deleting
      * regular entities first, which reduces the chance of components getting
      * destructed in random order because it got deleted before entities,
      * thereby bypassing the OnDeleteTarget policy. */
     flecs_defer_begin(world, world->stages[0]);
-    flecs_fini_root_tables(world, cdr, true);
+    flecs_fini_root_tables(world, cr, true);
     flecs_defer_end(world, world->stages[0]);
 
     flecs_defer_begin(world, world->stages[0]);
-    flecs_fini_root_tables(world, cdr, false);
+    flecs_fini_root_tables(world, cr, false);
     flecs_defer_end(world, world->stages[0]);
 }
 
@@ -1099,15 +1099,15 @@ void flecs_notify_tables(
 
     /* If id is specified, only broadcast to tables with id */
     } else {
-        ecs_component_record_t *cdr = flecs_components_get(world, id);
-        if (!cdr) {
+        ecs_component_record_t *cr = flecs_components_get(world, id);
+        if (!cr) {
             return;
         }
 
         ecs_table_cache_iter_t it;
         const ecs_table_record_t *tr;
 
-        flecs_table_cache_all_iter(&cdr->cache, &it);
+        flecs_table_cache_all_iter(&cr->cache, &it);
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             flecs_table_notify(world, tr->hdr.table, id, event);
         }
@@ -1985,32 +1985,32 @@ bool flecs_type_info_init_id(
     }
 
     /* Set type info for component record of component */
-    ecs_component_record_t *cdr = flecs_components_ensure(world, component);
-    changed |= flecs_component_set_type_info(world, cdr, ti);
-    bool is_tag = cdr->flags & EcsIdTag;
+    ecs_component_record_t *cr = flecs_components_ensure(world, component);
+    changed |= flecs_component_set_type_info(world, cr, ti);
+    bool is_tag = cr->flags & EcsIdTag;
 
     /* All id records with component as relationship inherit type info */
-    cdr = flecs_components_ensure(world, ecs_pair(component, EcsWildcard));
+    cr = flecs_components_ensure(world, ecs_pair(component, EcsWildcard));
     do {
         if (is_tag) {
-            changed |= flecs_component_set_type_info(world, cdr, NULL);
+            changed |= flecs_component_set_type_info(world, cr, NULL);
         } else if (ti) {
-            changed |= flecs_component_set_type_info(world, cdr, ti);
-        } else if ((cdr->type_info != NULL) &&
-            (cdr->type_info->component == component))
+            changed |= flecs_component_set_type_info(world, cr, ti);
+        } else if ((cr->type_info != NULL) &&
+            (cr->type_info->component == component))
         {
-            changed |= flecs_component_set_type_info(world, cdr, NULL);
+            changed |= flecs_component_set_type_info(world, cr, NULL);
         }
-    } while ((cdr = flecs_component_first_next(cdr)));
+    } while ((cr = flecs_component_first_next(cr)));
 
     /* All non-tag id records with component as object inherit type info,
      * if relationship doesn't have type info */
-    cdr = flecs_components_ensure(world, ecs_pair(EcsWildcard, component));
+    cr = flecs_components_ensure(world, ecs_pair(EcsWildcard, component));
     do {
-        if (!(cdr->flags & EcsIdTag) && !cdr->type_info) {
-            changed |= flecs_component_set_type_info(world, cdr, ti);
+        if (!(cr->flags & EcsIdTag) && !cr->type_info) {
+            changed |= flecs_component_set_type_info(world, cr, ti);
         }
-    } while ((cdr = flecs_component_first_next(cdr)));
+    } while ((cr = flecs_component_first_next(cr)));
 
     /* Type info of (*, component) should always point to component */
     ecs_assert(flecs_components_get(world, ecs_pair(EcsWildcard, component))->
@@ -2245,9 +2245,9 @@ void flecs_process_empty_queries(
 {
     flecs_poly_assert(world, ecs_world_t); 
 
-    ecs_component_record_t *cdr = flecs_components_get(world,
+    ecs_component_record_t *cr = flecs_components_get(world,
         ecs_pair(ecs_id(EcsPoly), EcsQuery));
-    if (!cdr) {
+    if (!cr) {
         return;
     }
 
@@ -2257,7 +2257,7 @@ void flecs_process_empty_queries(
 
     ecs_table_cache_iter_t it;
     const ecs_table_record_t *tr;
-    if (flecs_table_cache_iter(&cdr->cache, &it)) {
+    if (flecs_table_cache_iter(&cr->cache, &it)) {
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
             EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
@@ -2280,12 +2280,12 @@ bool ecs_id_in_use(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_component_record_t *cdr = flecs_components_get(world, id);
-    if (!cdr) {
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (!cr) {
         return false;
     }
 
-    return (flecs_table_cache_count(&cdr->cache) != 0);
+    return (flecs_table_cache_count(&cr->cache) != 0);
 }
 
 void ecs_run_aperiodic(

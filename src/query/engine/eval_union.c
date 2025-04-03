@@ -27,13 +27,13 @@ bool flecs_query_union_with_wildcard(
         }
 
         op_ctx->range = range;
-        op_ctx->cdr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
-        if (!op_ctx->cdr) {
+        op_ctx->cr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
+        if (!op_ctx->cr) {
             return neq;
         }
 
         if (neq) {
-            if (flecs_component_get_table(op_ctx->cdr, table) != NULL) {
+            if (flecs_component_get_table(op_ctx->cr, table) != NULL) {
                 /* If table has (R, Union) none match !(R, _) */
                 return false;
             } else {
@@ -66,7 +66,7 @@ next_row:
 
     ecs_entity_t e = ecs_table_entities(range.table)
         [range.offset + op_ctx->row];
-    ecs_entity_t tgt = flecs_switch_get(op_ctx->cdr->sparse, (uint32_t)e);
+    ecs_entity_t tgt = flecs_switch_get(op_ctx->cr->sparse, (uint32_t)e);
     if (!tgt) {
         op_ctx->row ++;
         goto next_row;
@@ -106,8 +106,8 @@ bool flecs_query_union_with_tgt(
         }
 
         op_ctx->range = range;
-        op_ctx->cdr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
-        if (!op_ctx->cdr) {
+        op_ctx->cr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
+        if (!op_ctx->cr) {
             return false;
         }
 
@@ -130,7 +130,7 @@ next_row:
 
     ecs_entity_t e = ecs_table_entities(range.table)
         [range.offset + op_ctx->row];
-    ecs_entity_t e_tgt = flecs_switch_get(op_ctx->cdr->sparse, (uint32_t)e);
+    ecs_entity_t e_tgt = flecs_switch_get(op_ctx->cr->sparse, (uint32_t)e);
     bool match = e_tgt == tgt;
     if (neq) {
         match = !match;
@@ -183,14 +183,14 @@ bool flecs_query_union_select_tgt(
     int8_t field_index = op->field_index;
 
     if (!redo) {
-        op_ctx->cdr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
-        if (!op_ctx->cdr) {
+        op_ctx->cr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
+        if (!op_ctx->cr) {
             return false;
         }
 
-        op_ctx->cur = flecs_switch_first(op_ctx->cdr->sparse, tgt);
+        op_ctx->cur = flecs_switch_first(op_ctx->cr->sparse, tgt);
     } else {
-        op_ctx->cur = flecs_switch_next(op_ctx->cdr->sparse, (uint32_t)op_ctx->cur);
+        op_ctx->cur = flecs_switch_next(op_ctx->cr->sparse, (uint32_t)op_ctx->cur);
     }
 
     if (!op_ctx->cur) {
@@ -219,12 +219,12 @@ bool flecs_query_union_select_wildcard(
     int8_t field_index = op->field_index;
 
     if (!redo) {
-        op_ctx->cdr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
-        if (!op_ctx->cdr) {
+        op_ctx->cr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
+        if (!op_ctx->cr) {
             return false;
         }
 
-        op_ctx->tgt_iter = flecs_switch_targets(op_ctx->cdr->sparse);
+        op_ctx->tgt_iter = flecs_switch_targets(op_ctx->cr->sparse);
         op_ctx->tgt = 0;
     }
 
@@ -240,9 +240,9 @@ next_tgt:
     }
 
     if (!op_ctx->cur) {
-        op_ctx->cur = flecs_switch_first(op_ctx->cdr->sparse, op_ctx->tgt);
+        op_ctx->cur = flecs_switch_first(op_ctx->cr->sparse, op_ctx->tgt);
     } else {
-        op_ctx->cur = flecs_switch_next(op_ctx->cdr->sparse, (uint32_t)op_ctx->cur);
+        op_ctx->cur = flecs_switch_next(op_ctx->cr->sparse, (uint32_t)op_ctx->cur);
     }
 
     if (!op_ctx->cur) {
@@ -308,18 +308,18 @@ void flecs_query_union_set_shared(
     ecs_query_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
     ecs_query_up_impl_t *impl = op_ctx->impl;
     ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_component_record_t *cdr = impl->idr_with;
-    ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_component_record_t *cr = impl->idr_with;
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t rel = ECS_PAIR_FIRST(cdr->id);
-    cdr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
-    ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cdr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_entity_t rel = ECS_PAIR_FIRST(cr->id);
+    cr = flecs_components_get(ctx->world, ecs_pair(rel, EcsUnion));
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int8_t field_index = op->field_index;
     ecs_iter_t *it = ctx->it;
     ecs_entity_t src = it->sources[field_index];
-    ecs_entity_t tgt = flecs_switch_get(cdr->sparse, (uint32_t)src);
+    ecs_entity_t tgt = flecs_switch_get(cr->sparse, (uint32_t)src);
     
     it->ids[field_index] = ecs_pair(rel, tgt);
 }

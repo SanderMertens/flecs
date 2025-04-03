@@ -21,21 +21,21 @@ ecs_iter_t ecs_each_id(
         .next = ecs_each_next
     };
 
-    ecs_component_record_t *cdr = flecs_components_get(world, id);
-    if (!cdr) {
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (!cr) {
         return it;
     }
 
     ecs_each_iter_t *each_iter = &it.priv_.iter.each;
     each_iter->ids = id;
     each_iter->sizes = 0;
-    if (cdr->type_info) {
-        each_iter->sizes = cdr->type_info->size;
+    if (cr->type_info) {
+        each_iter->sizes = cr->type_info->size;
     }
 
     each_iter->sources = 0;
     each_iter->trs = NULL;
-    flecs_table_cache_iter((ecs_table_cache_t*)cdr, &each_iter->it);
+    flecs_table_cache_iter((ecs_table_cache_t*)cr, &each_iter->it);
 
     return it;
 error:
