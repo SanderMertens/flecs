@@ -122,6 +122,7 @@ struct ecs_table_t {
     uint64_t id;                     /* Table id in sparse set */
     ecs_flags32_t flags;             /* Flags for testing table properties */
     int16_t column_count;            /* Number of components (excluding tags) */
+    uint16_t version;                /* Version of table */
     ecs_type_t type;                 /* Vector with component ids */
 
     ecs_data_t data;                 /* Component storage */

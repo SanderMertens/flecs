@@ -68,12 +68,13 @@ typedef struct ecs_var_t {
 
 /** Cached reference. */
 struct ecs_ref_t {
-    ecs_entity_t entity;    /* Entity */
-    ecs_entity_t id;        /* Component id */
-    uint64_t table_id;      /* Table id for detecting ABA issues */
-    uint32_t table_version; /* Table version for detecting changes */
-    ecs_record_t *record;   /* Entity index record */
-    void *ptr;              /* Cached component pointer */
+    ecs_entity_t entity;         /* Entity */
+    ecs_entity_t id;             /* Component id */
+    uint64_t table_id;           /* Table id for detecting ABA issues */
+    uint32_t table_version_fast; /* Fast change detection w/false positives */
+    uint16_t table_version;      /* Change detection */
+    ecs_record_t *record;        /* Entity index record */
+    void *ptr;                   /* Cached component pointer */
 };
 
 
