@@ -64,12 +64,12 @@ int flecs_json_serialize_matches(
     flecs_json_memberl(buf, "matches");
     flecs_json_array_push(buf);
 
-    ecs_component_record_t *cdr = flecs_components_get(world, 
+    ecs_component_record_t *cr = flecs_components_get(world, 
         ecs_pair_t(EcsPoly, EcsQuery));
 
-    if (cdr) {
+    if (cr) {
         ecs_table_cache_iter_t it;
-        if (cdr && flecs_table_cache_iter((ecs_table_cache_t*)cdr, &it)) {
+        if (cr && flecs_table_cache_iter((ecs_table_cache_t*)cr, &it)) {
             const ecs_table_record_t *tr;
             while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
                 ecs_table_t *table = tr->hdr.table;
@@ -115,9 +115,9 @@ static
 int flecs_json_serialize_refs_idr(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
-    ecs_component_record_t *cdr)
+    ecs_component_record_t *cr)
 {
-    char *id_str = ecs_id_str(world, ecs_pair_first(world, cdr->id));
+    char *id_str = ecs_id_str(world, ecs_pair_first(world, cr->id));
 
     flecs_json_member(buf, id_str);
     ecs_os_free(id_str);
@@ -125,7 +125,7 @@ int flecs_json_serialize_refs_idr(
     flecs_json_array_push(buf);
 
     ecs_table_cache_iter_t it;
-    if (cdr && flecs_table_cache_all_iter((ecs_table_cache_t*)cdr, &it)) {
+    if (cr && flecs_table_cache_all_iter((ecs_table_cache_t*)cr, &it)) {
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
@@ -153,17 +153,17 @@ int flecs_json_serialize_refs(
     flecs_json_memberl(buf, "refs");
     flecs_json_object_push(buf);
 
-    ecs_component_record_t *cdr = flecs_components_get(world, 
+    ecs_component_record_t *cr = flecs_components_get(world, 
         ecs_pair(relationship, entity));
 
-    if (cdr) {
+    if (cr) {
         if (relationship == EcsWildcard) {
-            ecs_component_record_t *cur = cdr;
+            ecs_component_record_t *cur = cr;
             while ((cur = flecs_component_second_next(cur))) {
                 flecs_json_serialize_refs_idr(world, buf, cur);
             }
         } else {
-            flecs_json_serialize_refs_idr(world, buf, cdr);
+            flecs_json_serialize_refs_idr(world, buf, cr);
         }
     }
 

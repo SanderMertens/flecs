@@ -684,9 +684,9 @@ static
 void flecs_run_startup_systems(
     ecs_world_t *world)
 {
-    ecs_component_record_t *cdr = flecs_components_get(world, 
+    ecs_component_record_t *cr = flecs_components_get(world, 
         ecs_dependson(EcsOnStart));
-    if (!cdr || !flecs_table_cache_count(&cdr->cache)) {
+    if (!cr || !flecs_table_cache_count(&cr->cache)) {
         /* Don't bother creating startup pipeline if no systems exist */
         return;
     }

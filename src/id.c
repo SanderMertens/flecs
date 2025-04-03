@@ -127,9 +127,9 @@ ecs_flags32_t ecs_id_get_flags(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_component_record_t *cdr = flecs_components_get(world, id);
-    if (cdr) {
-        return cdr->flags;
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (cr) {
+        return cr->flags;
     } else {
         return 0;
     }

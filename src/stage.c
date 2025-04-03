@@ -353,26 +353,26 @@ void* flecs_defer_set(
 
     /* Find type info for id */
     const ecs_type_info_t *ti = NULL;
-    ecs_component_record_t *cdr = flecs_components_get(world, id);
-    if (!cdr) {
-        /* If cdr doesn't exist yet, create it but only if the 
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (!cr) {
+        /* If cr doesn't exist yet, create it but only if the 
          * application is not multithreaded. */
         if (world->flags & EcsWorldMultiThreaded) {
             ti = ecs_get_type_info(world, id);
         } else {
             /* When not in multi threaded mode, it's safe to find or 
              * create the component record. */
-            cdr = flecs_components_ensure(world, id);
-            ecs_assert(cdr != NULL, ECS_INTERNAL_ERROR, NULL);
+            cr = flecs_components_ensure(world, id);
+            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
             
             /* Get type_info from component record. We could have called 
              * ecs_get_type_info directly, but since this function can be
              * expensive for pairs, creating the component record ensures we can
              * find the type_info quickly for subsequent operations. */
-            ti = cdr->type_info;
+            ti = cr->type_info;
         }
     } else {
-        ti = cdr->type_info;
+        ti = cr->type_info;
     }
 
     /* If the id isn't associated with a type, we can't set anything */
@@ -388,13 +388,13 @@ void* flecs_defer_set(
      * component of a prefab. */
     void *existing = NULL;
     ecs_table_t *table = NULL;
-    if (cdr) {
+    if (cr) {
         /* Entity can only have existing component if component record exists */
         ecs_record_t *r = flecs_entities_get(world, entity);
         table = r->table;
         if (r && table) {
             const ecs_table_record_t *tr = flecs_component_get_table(
-                cdr, table);
+                cr, table);
             if (tr) {
                 if (tr->column != -1) {
                     /* Entity has the component */
@@ -402,9 +402,9 @@ void* flecs_defer_set(
                     existing = ECS_ELEM(existing, size, 
                         ECS_RECORD_TO_ROW(r->row));
                 } else {
-                    ecs_assert(cdr->flags & EcsIdIsSparse, 
+                    ecs_assert(cr->flags & EcsIdIsSparse, 
                         ECS_NOT_A_COMPONENT, NULL);
-                    existing = flecs_sparse_get_any(cdr->sparse, 0, entity);
+                    existing = flecs_sparse_get_any(cr->sparse, 0, entity);
                 }
             }
         }
@@ -448,7 +448,7 @@ void* flecs_defer_set(
             /* Check if entity inherits component */
             void *base = NULL;
             if (table && (table->flags & EcsTableHasIsA)) {
-                base = flecs_get_base_component(world, table, id, cdr, 0);
+                base = flecs_get_base_component(world, table, id, cr, 0);
             }
 
             if (!base) {
@@ -494,7 +494,7 @@ void* flecs_defer_set(
         /* If component didn't exist yet, insert command that will create it */
         cmd->kind = cmd_kind;
         cmd->id = id;
-        cmd->cdr = cdr;
+        cmd->cr = cr;
         cmd->entity = entity;
         cmd->is._1.size = size;
         cmd->is._1.value = cmd_value;

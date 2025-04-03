@@ -127,12 +127,12 @@ bool flecs_query_get_fixed_monitor(
             continue; /* Entity is empty, nothing to track */
         }
 
-        ecs_component_record_t *cdr = flecs_components_get(world, term->id);
-        if (!cdr) {
+        ecs_component_record_t *cr = flecs_components_get(world, term->id);
+        if (!cr) {
             continue; /* If id doesn't exist, entity can't have it */
         }
 
-        const ecs_table_record_t *tr = flecs_component_get_table(cdr, r->table);
+        const ecs_table_record_t *tr = flecs_component_get_table(cr, r->table);
         if (!tr) {
             continue; /* Entity doesn't have the component */
         }
