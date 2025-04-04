@@ -25,7 +25,8 @@ void meta_test_constant(
     ecs_world_t *world, 
     ecs_entity_t t, 
     const char *name,
-    int32_t value)
+    int32_t value,
+    int32_t order)
 {
     ecs_entity_t m = ecs_lookup_child(world, t, name);
     test_assert(m != 0);
@@ -59,6 +60,17 @@ void meta_test_constant(
     }
 
     test_assert(constant_found == true);
+
+    /* Ensure ordering is correct */
+    ecs_bitmask_constant_t* constants = ecs_vec_first(&bt->ordered_constants);
+    test_assert(constants != NULL);
+    int32_t i, count = ecs_vec_count(&bt->ordered_constants);
+    for (i = 0; i < count; i++) {
+        if (constants[i].value == value) {
+            test_int(i, order);
+            break;
+        }
+    }
 }
 
 void BitmaskTypes_bitmask_1_constant(void) {
@@ -71,7 +83,7 @@ void BitmaskTypes_bitmask_1_constant(void) {
     });
 
     meta_test_bitmask(world, b, 1);
-    meta_test_constant(world, b, "Lettuce", 1);
+    meta_test_constant(world, b, "Lettuce", 1, 0);
 
     ecs_fini(world);
 }
@@ -86,8 +98,8 @@ void BitmaskTypes_bitmask_2_constants(void) {
     });
 
     meta_test_bitmask(world, b, 2);
-    meta_test_constant(world, b, "Lettuce", 1);
-    meta_test_constant(world, b, "Bacon", 2);
+    meta_test_constant(world, b, "Lettuce", 1, 0);
+    meta_test_constant(world, b, "Bacon", 2, 1);
 
     ecs_fini(world);
 }
@@ -102,9 +114,9 @@ void BitmaskTypes_bitmask_3_constants(void) {
     });
 
     meta_test_bitmask(world, b, 3);
-    meta_test_constant(world, b, "Lettuce", 1);
-    meta_test_constant(world, b, "Bacon", 2);
-    meta_test_constant(world, b, "Tomato", 4);
+    meta_test_constant(world, b, "Lettuce", 1, 0);
+    meta_test_constant(world, b, "Bacon", 2, 1);
+    meta_test_constant(world, b, "Tomato", 4, 2);
 
     ecs_fini(world);
 }
@@ -119,10 +131,10 @@ void BitmaskTypes_bitmask_4_constants(void) {
     });
 
     meta_test_bitmask(world, b, 4);
-    meta_test_constant(world, b, "Lettuce", 1);
-    meta_test_constant(world, b, "Bacon", 2);
-    meta_test_constant(world, b, "Tomato", 4);
-    meta_test_constant(world, b, "Cheese", 8);
+    meta_test_constant(world, b, "Lettuce", 1, 0);
+    meta_test_constant(world, b, "Bacon", 2, 1);
+    meta_test_constant(world, b, "Tomato", 4, 2);
+    meta_test_constant(world, b, "Cheese", 8, 3);
 
     ecs_fini(world);
 }
@@ -137,10 +149,10 @@ void BitmaskTypes_bitmask_4_constants_manual_values(void) {
     });
 
     meta_test_bitmask(world, b, 4);
-    meta_test_constant(world, b, "Lettuce", 8);
-    meta_test_constant(world, b, "Bacon", 4);
-    meta_test_constant(world, b, "Tomato", 2);
-    meta_test_constant(world, b, "BLT", 16);
+    meta_test_constant(world, b, "Lettuce", 8, 0);
+    meta_test_constant(world, b, "Bacon", 4, 1);
+    meta_test_constant(world, b, "Tomato", 2, 2);
+    meta_test_constant(world, b, "BLT", 16, 3);
 
     ecs_fini(world);
 }

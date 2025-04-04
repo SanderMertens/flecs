@@ -25,7 +25,8 @@ void meta_test_constant(
     ecs_world_t *world, 
     ecs_entity_t t, 
     const char *name,
-    int32_t value)
+    int32_t value,
+    int32_t order)
 {
     ecs_entity_t m = ecs_lookup_child(world, t, name);
     test_assert(m != 0);
@@ -59,6 +60,16 @@ void meta_test_constant(
     }
 
     test_assert(constant_found == true);
+
+    ecs_enum_constant_t* constants = ecs_vec_first(&et->ordered_constants);
+    test_assert(constants != NULL);
+    int32_t i, count = ecs_vec_count(&et->ordered_constants);
+    for (i = 0; i < count; i++) {
+        if (constants[i].value == value) {
+            test_int(i, order);
+            break;
+        }
+    }
 }
 
 void EnumTypes_enum_1_constant(void) {
@@ -73,7 +84,7 @@ void EnumTypes_enum_1_constant(void) {
     test_assert(e != 0);
 
     meta_test_enum(world, e, 1);
-    meta_test_constant(world, e, "Red", 0);
+    meta_test_constant(world, e, "Red", 0, 0);
 
     ecs_fini(world);
 }
@@ -90,8 +101,8 @@ void EnumTypes_enum_2_constants(void) {
     test_assert(e != 0);
 
     meta_test_enum(world, e, 2);
-    meta_test_constant(world, e, "Red", 0);
-    meta_test_constant(world, e, "Blue", 1);
+    meta_test_constant(world, e, "Red", 0, 0);
+    meta_test_constant(world, e, "Blue", 1, 1);
 
     ecs_fini(world);
 }
@@ -108,9 +119,9 @@ void EnumTypes_enum_3_constants(void) {
     test_assert(e != 0);
 
     meta_test_enum(world, e, 3);
-    meta_test_constant(world, e, "Red", 0);
-    meta_test_constant(world, e, "Blue", 1);
-    meta_test_constant(world, e, "Green", 2);
+    meta_test_constant(world, e, "Red", 0, 0);
+    meta_test_constant(world, e, "Blue", 1, 1);
+    meta_test_constant(world, e, "Green", 2, 2);
 
     ecs_fini(world);
 }
@@ -127,9 +138,9 @@ void EnumTypes_enum_3_constants_manual_values(void) {
     test_assert(e != 0);
 
     meta_test_enum(world, e, 3);
-    meta_test_constant(world, e, "Red", 3);
-    meta_test_constant(world, e, "Blue", 2);
-    meta_test_constant(world, e, "Green", 1);
+    meta_test_constant(world, e, "Red", 3, 0);
+    meta_test_constant(world, e, "Blue", 2, 1);
+    meta_test_constant(world, e, "Green", 1, 2);
 
     ecs_fini(world);
 }
@@ -305,9 +316,9 @@ void EnumTypes_enum_modified_event(void) {
     test_int(enum_modified_calls, 4); 
 
     meta_test_enum(world, e, 3);
-    meta_test_constant(world, e, "Red", 0);
-    meta_test_constant(world, e, "Blue", 1);
-    meta_test_constant(world, e, "Orange", 2);
+    meta_test_constant(world, e, "Red", 0, 0);
+    meta_test_constant(world, e, "Blue", 1, 1);
+    meta_test_constant(world, e, "Orange", 2, 2);
 
     ecs_fini(world);
 }
