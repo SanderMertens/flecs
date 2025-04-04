@@ -166,6 +166,7 @@ typedef struct {
     ecs_table_range_t range;
     int32_t cur;
     bool self;
+    bool exclusive;
 
     ecs_component_record_t *cdr;
     ecs_table_range_t prev_range;

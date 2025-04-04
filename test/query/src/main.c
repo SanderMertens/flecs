@@ -2040,6 +2040,16 @@ void DontFragment_1_var_sparse_first_wildcard(void);
 void DontFragment_1_var_sparse_first_wildcard_mixed(void);
 void DontFragment_1_this_sparse_written_first_wildcard(void);
 void DontFragment_1_var_sparse_written_first_wildcard(void);
+void DontFragment_1_fixed_exclusive(void);
+void DontFragment_1_fixed_exclusive_second_wildcard(void);
+void DontFragment_1_this_exclusive(void);
+void DontFragment_1_this_exclusive_second_wildcard(void);
+void DontFragment_1_var_exclusive(void);
+void DontFragment_1_var_exclusive_second_wildcard(void);
+void DontFragment_1_this_written_exclusive(void);
+void DontFragment_1_this_written_exclusive_second_wildcard(void);
+void DontFragment_1_var_written_exclusive(void);
+void DontFragment_1_var_written_exclusive_second_wildcard(void);
 
 // Testsuite 'Union'
 void Union_setup(void);
@@ -10204,6 +10214,46 @@ bake_test_case DontFragment_testcases[] = {
     {
         "1_var_sparse_written_first_wildcard",
         DontFragment_1_var_sparse_written_first_wildcard
+    },
+    {
+        "1_fixed_exclusive",
+        DontFragment_1_fixed_exclusive
+    },
+    {
+        "1_fixed_exclusive_second_wildcard",
+        DontFragment_1_fixed_exclusive_second_wildcard
+    },
+    {
+        "1_this_exclusive",
+        DontFragment_1_this_exclusive
+    },
+    {
+        "1_this_exclusive_second_wildcard",
+        DontFragment_1_this_exclusive_second_wildcard
+    },
+    {
+        "1_var_exclusive",
+        DontFragment_1_var_exclusive
+    },
+    {
+        "1_var_exclusive_second_wildcard",
+        DontFragment_1_var_exclusive_second_wildcard
+    },
+    {
+        "1_this_written_exclusive",
+        DontFragment_1_this_written_exclusive
+    },
+    {
+        "1_this_written_exclusive_second_wildcard",
+        DontFragment_1_this_written_exclusive_second_wildcard
+    },
+    {
+        "1_var_written_exclusive",
+        DontFragment_1_var_written_exclusive
+    },
+    {
+        "1_var_written_exclusive_second_wildcard",
+        DontFragment_1_var_written_exclusive_second_wildcard
     }
 };
 
@@ -11204,7 +11254,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        55,
+        65,
         DontFragment_testcases,
         1,
         DontFragment_params

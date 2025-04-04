@@ -1481,6 +1481,7 @@ typedef struct {
     ecs_table_range_t range;
     int32_t cur;
     bool self;
+    bool exclusive;
 
     ecs_component_record_t *cdr;
     ecs_table_range_t prev_range;
@@ -75498,7 +75499,8 @@ bool flecs_query_sparse_next_entity(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_sparse_ctx_t *op_ctx,
-    bool not)
+    bool not,
+    void **ptr_out)
 {
     int32_t end = op_ctx->range.count + op_ctx->range.offset;
 
@@ -75514,7 +75516,16 @@ next:
     }
 
     ecs_entity_t e = ecs_table_entities(op_ctx->range.table)[op_ctx->cur];
-    bool result = flecs_sparse_has_any(op_ctx->sparse, e);
+    bool result;
+
+    if (ptr_out) {
+        void *ptr = flecs_sparse_get_any(op_ctx->sparse, 0, e);
+        result = ptr != NULL;
+        *ptr_out = ptr;
+    } else {
+        result = flecs_sparse_has_any(op_ctx->sparse, e);
+    }
+
     if (not) {
         result = !result;
     }
@@ -75644,12 +75655,14 @@ bool flecs_query_sparse_select(
     }
 }
 
+static
 bool flecs_query_sparse_with_id(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
     bool not,
-    ecs_id_t id)
+    ecs_id_t id,
+    void **ptr_out)
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
 
@@ -75665,7 +75678,36 @@ bool flecs_query_sparse_with_id(
         flecs_query_sparse_init_range(op, ctx, op_ctx);
     }
 
-    return flecs_query_sparse_next_entity(op, ctx, op_ctx, not);
+    return flecs_query_sparse_next_entity(op, ctx, op_ctx, not, ptr_out);
+}
+
+static
+bool flecs_query_sparse_with_exclusive(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool not,
+    ecs_id_t id)
+{
+    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
+
+    if (!redo) {
+        if (!flecs_query_sparse_init_sparse(op_ctx, op_ctx->cdr)) {
+            return false;
+        }
+    }
+
+    ecs_id_t actual_id = op_ctx->cdr->id;
+    void *tgt_ptr = NULL;
+    if (flecs_query_sparse_with_id(op, redo, ctx, not, actual_id, &tgt_ptr)) {
+        ecs_entity_t tgt = *(ecs_entity_t*)tgt_ptr;
+        ctx->it->ids[op->field_index] = 
+            ecs_pair(ECS_PAIR_FIRST(actual_id), tgt);
+        flecs_query_set_vars(op, actual_id, ctx);
+        return true;
+    }
+
+    return false;
 }
 
 bool flecs_query_sparse_with_wildcard(
@@ -75681,6 +75723,12 @@ bool flecs_query_sparse_with_wildcard(
     if (!redo) {
         ecs_component_record_t *cdr = flecs_components_get(ctx->world, id);
 
+        if (cdr->flags & EcsIdExclusive) {
+            op_ctx->cdr = cdr;
+            op_ctx->exclusive = true;
+            return flecs_query_sparse_with_exclusive(op, false, ctx, not, id);
+        }
+
         if (ECS_PAIR_FIRST(id) == EcsWildcard) {
             op_ctx->cdr = cdr->pair->second.next;
         } else {
@@ -75689,6 +75737,9 @@ bool flecs_query_sparse_with_wildcard(
             op_ctx->cdr = cdr->pair->first.next;
         }
     } else {
+        if (op_ctx->exclusive) {
+            return flecs_query_sparse_with_exclusive(op, true, ctx, not, id);
+        }
         with_redo = true;
         goto next_select;
     }
@@ -75700,13 +75751,13 @@ next:
 
 next_select: {
         ecs_id_t actual_id = op_ctx->cdr->id;
-        if (flecs_query_sparse_with_id(op, with_redo, ctx, not, actual_id)) {
+        if (flecs_query_sparse_with_id(op, with_redo, ctx, not, actual_id, NULL)) {
             ctx->it->ids[op->field_index] = actual_id;
             flecs_query_set_vars(op, actual_id, ctx);
             return true;
         }
     }
-        
+
 next_component: {
         ecs_component_record_t *cdr = op_ctx->cdr;
         if (ECS_PAIR_FIRST(id) == EcsWildcard) {
@@ -75740,7 +75791,7 @@ bool flecs_query_sparse_with(
     if (ecs_id_is_wildcard(id)) {
         return flecs_query_sparse_with_wildcard(op, redo, ctx, not, id);
     } else {
-        return flecs_query_sparse_with_id(op, redo, ctx, not, id);
+        return flecs_query_sparse_with_id(op, redo, ctx, not, id, NULL);
     }
 }
 
@@ -75796,7 +75847,7 @@ bool flecs_query_sparse_self_up(
             flecs_query_sparse_init_range(op, ctx, op_ctx);
         }
 
-        return flecs_query_sparse_next_entity(op, ctx, op_ctx, true);
+        return flecs_query_sparse_next_entity(op, ctx, op_ctx, true, NULL);
     } else {
         ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
 
@@ -75821,7 +75872,8 @@ bool flecs_query_sparse_self_up(
         }
 
 next_entity: {
-            bool result = flecs_query_sparse_next_entity(op, ctx, op_ctx, true);
+            bool result = flecs_query_sparse_next_entity(
+                op, ctx, op_ctx, true, NULL);
             if (!result) {
                 op_ctx->cur = op_ctx->prev_cur;
                 op_ctx->range = op_ctx->prev_range;

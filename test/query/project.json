@@ -2127,7 +2127,17 @@
                 "1_var_sparse_first_wildcard",
                 "1_var_sparse_first_wildcard_mixed",
                 "1_this_sparse_written_first_wildcard",
-                "1_var_sparse_written_first_wildcard"
+                "1_var_sparse_written_first_wildcard",
+                "1_fixed_exclusive",
+                "1_fixed_exclusive_second_wildcard",
+                "1_this_exclusive",
+                "1_this_exclusive_second_wildcard",
+                "1_var_exclusive",
+                "1_var_exclusive_second_wildcard",
+                "1_this_written_exclusive",
+                "1_this_written_exclusive_second_wildcard",
+                "1_var_written_exclusive",
+                "1_var_written_exclusive_second_wildcard"
             ]
         }, {
             "id": "Union",
