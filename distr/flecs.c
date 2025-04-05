@@ -8984,22 +8984,14 @@ ecs_entity_t ecs_get_target(
                 }
 
                 ecs_entity_t *tgt = flecs_component_sparse_get(cdr, entity);
-                if (!tgt) {
-                    return 0;
+                if (tgt) {
+                    return *tgt;
                 }
-
-                return *tgt;
             } else {
                 ecs_type_t *type = flecs_component_sparse_get(cdr, entity);
-                if (!type) {
-                    return 0;
+                if (type && (index < type->count)) {
+                    return type->array[index];
                 }
-
-                if (index >= type->count) {
-                    return 0;
-                }
-
-                return type->array[index];
             }
         }
 

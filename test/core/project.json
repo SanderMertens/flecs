@@ -562,6 +562,7 @@
                 "target_2_pairs",
                 "target_exclusive_pair",
                 "target_from_base",
+                "exclusive_target_from_base",
                 "defer_ensure",
                 "defer_ensure_w_modified",
                 "defer_ensure_modified",

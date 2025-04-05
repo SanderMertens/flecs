@@ -2942,6 +2942,7 @@ void Sparse_target_from_base(void) {
 
     ecs_add_id(world, Rel, EcsSparse);
     if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w_pair(world, Rel, TgtA);
     ecs_add_pair(world, base, Rel, TgtC);
@@ -2951,6 +2952,29 @@ void Sparse_target_from_base(void) {
     test_uint(TgtA, ecs_get_target(world, e1, Rel, 0));
     test_uint(TgtC, ecs_get_target(world, e1, Rel, 1));
     test_uint(0, ecs_get_target(world, e1, Rel, 2));
+
+    ecs_fini(world);
+}
+
+void Sparse_exclusive_target_from_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, TgtD);
+
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
+    ecs_add_id(world, Rel, EcsExclusive);
+
+    ecs_entity_t base = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_uint(TgtA, ecs_get_target(world, e1, Rel, 0));
+    test_uint(0, ecs_get_target(world, e1, Rel, 1));
 
     ecs_fini(world);
 }
