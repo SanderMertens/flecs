@@ -588,11 +588,15 @@ void flecs_instantiate_dont_fragment(
     int32_t count)
 {
     ecs_component_record_t *cur = world->cdr_non_fragmenting_head;
+
     while (cur) {
         ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
-        if (cur->sparse && !(cur->flags & EcsIdOnInstantiateInherit)) {
-            void *base_ptr = flecs_component_sparse_get(cur, base);
-            if (base_ptr) {
+        if (cur->sparse && !(cur->flags & EcsIdOnInstantiateInherit) && 
+            !ecs_id_is_wildcard(cur->id)) 
+        {
+            if (flecs_component_sparse_has(cur, base)) {
+                void *base_ptr = flecs_component_sparse_get(cur, base);
+
                 int32_t i = row, end = row + count;
                 for (; i < end; i ++) {
                     ecs_entity_t e = ecs_table_entities(table)[i];

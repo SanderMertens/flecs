@@ -487,6 +487,8 @@ void Sparse_ensure_inherited(void);
 void Sparse_emplace_inherited(void);
 void Sparse_override_component(void);
 void Sparse_override_component_2_lvls(void);
+void Sparse_override_tag(void);
+void Sparse_override_pair(void);
 void Sparse_dont_override_inherited(void);
 void Sparse_delete_w_override_component(void);
 void Sparse_delete_w_override_on_remove_isa(void);
@@ -529,6 +531,7 @@ void Sparse_exclusive_pair_w_hooks(void);
 void Sparse_target_1_pair(void);
 void Sparse_target_2_pairs(void);
 void Sparse_target_exclusive_pair(void);
+void Sparse_target_from_base(void);
 void Sparse_defer_ensure(void);
 void Sparse_defer_ensure_w_modified(void);
 void Sparse_defer_ensure_modified(void);
@@ -4272,6 +4275,14 @@ bake_test_case Sparse_testcases[] = {
         Sparse_override_component_2_lvls
     },
     {
+        "override_tag",
+        Sparse_override_tag
+    },
+    {
+        "override_pair",
+        Sparse_override_pair
+    },
+    {
         "dont_override_inherited",
         Sparse_dont_override_inherited
     },
@@ -4438,6 +4449,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "target_exclusive_pair",
         Sparse_target_exclusive_pair
+    },
+    {
+        "target_from_base",
+        Sparse_target_from_base
     },
     {
         "defer_ensure",
@@ -11866,7 +11881,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        117,
+        120,
         Sparse_testcases,
         1,
         Sparse_params

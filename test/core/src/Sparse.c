@@ -1263,6 +1263,53 @@ void Sparse_override_component_2_lvls(void) {
     ecs_fini(world);
 }
 
+void Sparse_override_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, Foo, EcsSparse);
+    if (!fragment) ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add(world, base, Foo);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_owns(world, e, Foo));
+
+    ecs_remove(world, e, Foo);
+    test_assert(!ecs_owns(world, e, Foo));
+    test_assert(!ecs_has(world, e, Foo));
+
+    ecs_fini(world);
+}
+
+void Sparse_override_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add_pair(world, base, Rel, TgtA);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(ecs_owns_pair(world, e, Rel, TgtA));
+
+    ecs_remove_pair(world, e, Rel, TgtA);
+    test_assert(!ecs_owns_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+
+    ecs_fini(world);
+}
+
 void Sparse_dont_override_inherited(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -2880,6 +2927,30 @@ void Sparse_target_exclusive_pair(void) {
 
     test_uint(TgtB, ecs_get_target(world, e2, Rel, 0));
     test_uint(0, ecs_get_target(world, e2, Rel, 1));
+
+    ecs_fini(world);
+}
+
+void Sparse_target_from_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, TgtD);
+
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t base = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_add_pair(world, base, Rel, TgtC);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_uint(TgtA, ecs_get_target(world, e1, Rel, 0));
+    test_uint(TgtC, ecs_get_target(world, e1, Rel, 1));
+    test_uint(0, ecs_get_target(world, e1, Rel, 2));
 
     ecs_fini(world);
 }
