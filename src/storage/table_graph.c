@@ -270,7 +270,6 @@ void flecs_type_free(
 }
 
 /* Add to type */
-static
 void flecs_type_add(
     ecs_world_t *world,
     ecs_type_t *type,

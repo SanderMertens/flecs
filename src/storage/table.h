@@ -143,16 +143,6 @@ void flecs_table_init(
     ecs_table_t *table,
     ecs_table_t *from);
 
-/** Copy type. */
-ecs_type_t flecs_type_copy(
-    ecs_world_t *world,
-    const ecs_type_t *src);
-
-/** Free type. */
-void flecs_type_free(
-    ecs_world_t *world,
-    ecs_type_t *type);
-
 /** Find or create table for a set of components */
 ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,

@@ -4147,16 +4147,33 @@ ecs_entity_t ecs_get_target(
 
     ecs_id_t wc = ecs_pair(rel, EcsWildcard);
     ecs_component_record_t *cdr = flecs_components_get(world, wc);
-    const ecs_table_record_t *tr = NULL;
-    if (cdr) {
-        tr = flecs_component_get_table(cdr, table);
+    if (!cdr) {
+        return 0;
     }
+
+    const ecs_table_record_t *tr = flecs_component_get_table(cdr, table);;
     if (!tr) {
-        if (!cdr || (cdr->flags & EcsIdOnInstantiateInherit)) {
-            goto look_in_base;
-        } else {
-            return 0;
+        if (cdr->flags & EcsIdDontFragment) {
+            if (cdr->flags & EcsIdExclusive) {
+                if (index > 0) {
+                    return 0;
+                }
+
+                ecs_entity_t *tgt = flecs_component_sparse_get(cdr, entity);
+                if (!tgt) {
+                    return 0;
+                }
+
+                return *tgt;
+            }
+
         }
+
+        if (cdr->flags & EcsIdOnInstantiateInherit) {
+            goto look_in_base;
+        }
+
+        return 0;
     }
 
     if (index >= tr->count) {

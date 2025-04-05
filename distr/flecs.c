@@ -341,6 +341,22 @@ typedef struct ecs_graph_node_t {
     ecs_graph_edge_hdr_t refs;
 } ecs_graph_node_t;
 
+/** Add to existing type */
+void flecs_type_add(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t add);
+
+/** Copy type. */
+ecs_type_t flecs_type_copy(
+    ecs_world_t *world,
+    const ecs_type_t *src);
+
+/** Free type. */
+void flecs_type_free(
+    ecs_world_t *world,
+    ecs_type_t *type);
+
 /* Find table by adding id to current table */
 ecs_table_t *flecs_table_traverse_add(
     ecs_world_t *world,
@@ -532,16 +548,6 @@ void flecs_table_init(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *from);
-
-/** Copy type. */
-ecs_type_t flecs_type_copy(
-    ecs_world_t *world,
-    const ecs_type_t *src);
-
-/** Free type. */
-void flecs_type_free(
-    ecs_world_t *world,
-    ecs_type_t *type);
 
 /** Find or create table for a set of components */
 ecs_table_t* flecs_table_find_or_create(
@@ -8955,16 +8961,33 @@ ecs_entity_t ecs_get_target(
 
     ecs_id_t wc = ecs_pair(rel, EcsWildcard);
     ecs_component_record_t *cdr = flecs_components_get(world, wc);
-    const ecs_table_record_t *tr = NULL;
-    if (cdr) {
-        tr = flecs_component_get_table(cdr, table);
+    if (!cdr) {
+        return 0;
     }
+
+    const ecs_table_record_t *tr = flecs_component_get_table(cdr, table);;
     if (!tr) {
-        if (!cdr || (cdr->flags & EcsIdOnInstantiateInherit)) {
-            goto look_in_base;
-        } else {
-            return 0;
+        if (cdr->flags & EcsIdDontFragment) {
+            if (cdr->flags & EcsIdExclusive) {
+                if (index > 0) {
+                    return 0;
+                }
+
+                ecs_entity_t *tgt = flecs_component_sparse_get(cdr, entity);
+                if (!tgt) {
+                    return 0;
+                }
+
+                return *tgt;
+            }
+
         }
+
+        if (cdr->flags & EcsIdOnInstantiateInherit) {
+            goto look_in_base;
+        }
+
+        return 0;
     }
 
     if (index >= tr->count) {
@@ -36219,23 +36242,6 @@ ecs_id_t flecs_component_hash(
     return id;
 }
 
-void flecs_component_record_init_exclusive(
-    ecs_world_t *world,
-    ecs_component_record_t *cdr)
-{
-    if (!(cdr->flags & EcsIdDontFragment)) {
-        return;
-    }
-
-    if (!ecs_id_is_wildcard(cdr->id)) {
-        return;
-    }
-
-    cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
-
-    flecs_sparse_init(cdr->sparse, NULL, NULL, ECS_SIZEOF(ecs_entity_t));
-}
-
 void flecs_component_init_sparse(
     ecs_world_t *world,
     ecs_component_record_t *cdr)
@@ -36275,6 +36281,23 @@ void flecs_component_record_init_dont_fragment(
     if (cdr->flags & EcsIdExclusive) {
         flecs_component_record_init_exclusive(world, cdr);
     }
+}
+
+void flecs_component_record_init_exclusive(
+    ecs_world_t *world,
+    ecs_component_record_t *cdr)
+{
+    if (!(cdr->flags & EcsIdDontFragment)) {
+        return;
+    }
+
+    if (!ecs_id_is_wildcard(cdr->id)) {
+        return;
+    }
+
+    cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
+
+    flecs_sparse_init(cdr->sparse, NULL, NULL, ECS_SIZEOF(ecs_entity_t));
 }
 
 static
@@ -40561,7 +40584,6 @@ void flecs_type_free(
 }
 
 /* Add to type */
-static
 void flecs_type_add(
     ecs_world_t *world,
     ecs_type_t *type,

@@ -2793,6 +2793,79 @@ void Sparse_exclusive_pair_w_hooks(void) {
     ecs_fini(world);
 }
 
+void Sparse_target_1_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, TgtB);
+
+    test_uint(TgtA, ecs_get_target(world, e1, Rel, 0));
+    test_uint(0, ecs_get_target(world, e1, Rel, 1));
+
+    test_uint(TgtB, ecs_get_target(world, e2, Rel, 0));
+    test_uint(0, ecs_get_target(world, e2, Rel, 1));
+
+    ecs_fini(world);
+}
+
+void Sparse_target_2_pairs(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, TgtD);
+
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_add_pair(world, e1, Rel, TgtC);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, TgtB);
+    ecs_add_pair(world, e2, Rel, TgtD);
+
+    test_uint(TgtA, ecs_get_target(world, e1, Rel, 0));
+    test_uint(TgtC, ecs_get_target(world, e1, Rel, 1));
+    test_uint(0, ecs_get_target(world, e1, Rel, 2));
+
+    test_uint(TgtB, ecs_get_target(world, e2, Rel, 0));
+    test_uint(TgtD, ecs_get_target(world, e2, Rel, 1));
+    test_uint(0, ecs_get_target(world, e2, Rel, 2));
+
+    ecs_fini(world);
+}
+
+void Sparse_target_exclusive_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, Rel, EcsSparse);
+    ecs_add_id(world, Rel, EcsExclusive);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, TgtB);
+
+    test_uint(TgtA, ecs_get_target(world, e1, Rel, 0));
+    test_uint(0, ecs_get_target(world, e1, Rel, 1));
+
+    test_uint(TgtB, ecs_get_target(world, e2, Rel, 0));
+    test_uint(0, ecs_get_target(world, e2, Rel, 1));
+
+    ecs_fini(world);
+}
+
 void Sparse_defer_ensure(void) {
     ecs_world_t *world = ecs_mini();
 

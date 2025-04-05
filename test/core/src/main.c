@@ -526,6 +526,9 @@ void Sparse_sparse_relationship_second(void);
 void Sparse_exclusive_pair(void);
 void Sparse_exclusive_pair_w_data(void);
 void Sparse_exclusive_pair_w_hooks(void);
+void Sparse_target_1_pair(void);
+void Sparse_target_2_pairs(void);
+void Sparse_target_exclusive_pair(void);
 void Sparse_defer_ensure(void);
 void Sparse_defer_ensure_w_modified(void);
 void Sparse_defer_ensure_modified(void);
@@ -4423,6 +4426,18 @@ bake_test_case Sparse_testcases[] = {
     {
         "exclusive_pair_w_hooks",
         Sparse_exclusive_pair_w_hooks
+    },
+    {
+        "target_1_pair",
+        Sparse_target_1_pair
+    },
+    {
+        "target_2_pairs",
+        Sparse_target_2_pairs
+    },
+    {
+        "target_exclusive_pair",
+        Sparse_target_exclusive_pair
     },
     {
         "defer_ensure",
@@ -11851,7 +11866,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        114,
+        117,
         Sparse_testcases,
         1,
         Sparse_params
