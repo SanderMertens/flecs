@@ -2050,6 +2050,7 @@ void DontFragment_1_this_written_exclusive(void);
 void DontFragment_1_this_written_exclusive_second_wildcard(void);
 void DontFragment_1_var_written_exclusive(void);
 void DontFragment_1_var_written_exclusive_second_wildcard(void);
+void DontFragment_add_to_self_while_iterate(void);
 
 // Testsuite 'Union'
 void Union_setup(void);
@@ -10254,6 +10255,10 @@ bake_test_case DontFragment_testcases[] = {
     {
         "1_var_written_exclusive_second_wildcard",
         DontFragment_1_var_written_exclusive_second_wildcard
+    },
+    {
+        "add_to_self_while_iterate",
+        DontFragment_add_to_self_while_iterate
     }
 };
 
@@ -11254,7 +11259,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        65,
+        66,
         DontFragment_testcases,
         1,
         DontFragment_params

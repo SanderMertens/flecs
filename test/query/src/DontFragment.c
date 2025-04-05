@@ -3548,3 +3548,51 @@ void DontFragment_1_var_written_exclusive_second_wildcard(void) {
 
     ecs_fini(world);
 }
+
+void DontFragment_add_to_self_while_iterate(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+
+    ecs_add_id(world, Hello, EcsDontFragment);
+
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_entity_t e3 = ecs_new_w(world, Foo);
+    ecs_add(world, e3, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(2, it.count);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    ecs_add(world, e1, Hello);
+    ecs_add(world, e2, Hello);
+    test_assert(ecs_has(world, e1, Hello));
+    test_assert(ecs_has(world, e2, Hello));
+    test_uint(e1, it.entities[0]); // ensure entities are still in table
+    test_uint(e2, it.entities[1]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    ecs_add(world, e3, Hello);
+    test_assert(ecs_has(world, e3, Hello));
+    test_uint(e3, it.entities[0]);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

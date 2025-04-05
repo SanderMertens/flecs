@@ -2137,7 +2137,8 @@
                 "1_this_written_exclusive",
                 "1_this_written_exclusive_second_wildcard",
                 "1_var_written_exclusive",
-                "1_var_written_exclusive_second_wildcard"
+                "1_var_written_exclusive_second_wildcard",
+                "add_to_self_while_iterate"
             ]
         }, {
             "id": "Union",
