@@ -236,8 +236,7 @@ bool flecs_query_sparse_with_exclusive(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
-    bool not,
-    ecs_id_t id)
+    bool not)
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
 
@@ -276,7 +275,7 @@ bool flecs_query_sparse_with_wildcard(
         if (cdr->flags & EcsIdExclusive) {
             op_ctx->cdr = cdr;
             op_ctx->exclusive = true;
-            return flecs_query_sparse_with_exclusive(op, false, ctx, not, id);
+            return flecs_query_sparse_with_exclusive(op, false, ctx, not);
         }
 
         if (ECS_PAIR_FIRST(id) == EcsWildcard) {
@@ -288,7 +287,7 @@ bool flecs_query_sparse_with_wildcard(
         }
     } else {
         if (op_ctx->exclusive) {
-            return flecs_query_sparse_with_exclusive(op, true, ctx, not, id);
+            return flecs_query_sparse_with_exclusive(op, true, ctx, not);
         }
         with_redo = true;
         goto next_select;

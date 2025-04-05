@@ -4165,8 +4165,18 @@ ecs_entity_t ecs_get_target(
                 }
 
                 return *tgt;
-            }
+            } else {
+                ecs_type_t *type = flecs_component_sparse_get(cdr, entity);
+                if (!type) {
+                    return 0;
+                }
 
+                if (index >= type->count) {
+                    return 0;
+                }
+
+                return type->array[index];
+            }
         }
 
         if (cdr->flags & EcsIdOnInstantiateInherit) {

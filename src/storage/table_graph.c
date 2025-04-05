@@ -284,6 +284,21 @@ void flecs_type_add(
     }
 }
 
+/* Remove from type */
+void flecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t remove)
+{
+    ecs_type_t new_type;
+    int res = flecs_type_new_without(world, &new_type, type, remove);
+    if (res != -1) {
+        flecs_type_free(world, type);
+        type->array = new_type.array;
+        type->count = new_type.count;
+    }
+}
+
 /* Graph edge utilities */
 
 void flecs_table_diff_builder_init(

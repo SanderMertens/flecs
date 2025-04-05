@@ -63,6 +63,12 @@ void flecs_type_add(
     ecs_type_t *type,
     ecs_id_t add);
 
+/* Remove from existing type */
+void flecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t remove);
+
 /** Copy type. */
 ecs_type_t flecs_type_copy(
     ecs_world_t *world,

@@ -441,7 +441,7 @@ void* flecs_sparse_ensure_fast(
     return DATA(page->data, sparse->size, offset);
 }
 
-void* flecs_sparse_remove_fast(
+bool flecs_sparse_remove_fast(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -450,9 +450,10 @@ void* flecs_sparse_remove_fast(
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
-    ecs_sparse_page_t *page = flecs_sparse_get_page(sparse, FLECS_SPARSE_PAGE(index));
+    ecs_sparse_page_t *page = flecs_sparse_get_page(
+        sparse, FLECS_SPARSE_PAGE(index));
     if (!page || !page->sparse) {
-        return NULL;
+        return false;
     }
 
     flecs_sparse_strip_generation(&index);
@@ -471,10 +472,10 @@ void* flecs_sparse_remove_fast(
         }
 
         /* Reset memory to zero on remove */
-        return DATA(page->data, sparse->size, offset);
+        return true;
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
-        return NULL;
+        return false;
     }
 }
 

@@ -138,20 +138,39 @@ void flecs_component_init_sparse(
     ecs_world_t *world,
     ecs_component_record_t *cdr)
 {
-    if (!cdr->sparse) {
-        if (cdr->flags & EcsIdIsSparse) {
-            ecs_assert(!(cdr->flags & EcsIdIsUnion), ECS_CONSTRAINT_VIOLATED,
-                "cannot mix union and sparse traits");
-            cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
-            if (cdr->type_info) {
-                flecs_sparse_init(cdr->sparse, NULL, NULL, cdr->type_info->size);
-            } else {
-                flecs_sparse_init(cdr->sparse, NULL, NULL, 0);
+    if (!ecs_id_is_wildcard(cdr->id)) {
+        if (!cdr->sparse) {
+            if (cdr->flags & EcsIdIsSparse) {
+                ecs_assert(!(cdr->flags & EcsIdIsUnion), ECS_CONSTRAINT_VIOLATED,
+                    "cannot mix union and sparse traits");
+                cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
+                if (cdr->type_info) {
+                    flecs_sparse_init(cdr->sparse, NULL, NULL, cdr->type_info->size);
+                } else {
+                    flecs_sparse_init(cdr->sparse, NULL, NULL, 0);
+                }
+            } else
+            if (cdr->flags & EcsIdIsUnion) {
+                cdr->sparse = flecs_walloc_t(world, ecs_switch_t);
+                flecs_switch_init(cdr->sparse, &world->allocator);
             }
-        } else
-        if (cdr->flags & EcsIdIsUnion) {
-            cdr->sparse = flecs_walloc_t(world, ecs_switch_t);
-            flecs_switch_init(cdr->sparse, &world->allocator);
+        }
+
+    } else if (ECS_IS_PAIR(cdr->id)) {
+        if (cdr->flags & EcsIdDontFragment) {
+            if (cdr->sparse) {
+                ecs_assert(flecs_sparse_count(cdr->sparse) == 0,
+                    ECS_INTERNAL_ERROR, NULL);
+                flecs_sparse_fini(cdr->sparse);
+            } else {
+                cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
+            }
+
+            if (cdr->flags & EcsIdExclusive) {
+                flecs_sparse_init_t(cdr->sparse, NULL, NULL, ecs_entity_t);
+            } else {
+                flecs_sparse_init_t(cdr->sparse, NULL, NULL, ecs_type_t);
+            }
         }
     }
 }
@@ -163,6 +182,7 @@ void flecs_component_record_init_dont_fragment(
     if (world->cdr_non_fragmenting_head) {
         world->cdr_non_fragmenting_head->non_fragmenting.prev = cdr;
     }
+
     cdr->non_fragmenting.next = world->cdr_non_fragmenting_head;
     world->cdr_non_fragmenting_head = cdr;
 
@@ -170,26 +190,14 @@ void flecs_component_record_init_dont_fragment(
         world->non_fragmenting[cdr->id] = true;
     }
 
-    if (cdr->flags & EcsIdExclusive) {
-        flecs_component_record_init_exclusive(world, cdr);
-    }
+    flecs_component_init_sparse(world, cdr);
 }
 
 void flecs_component_record_init_exclusive(
     ecs_world_t *world,
     ecs_component_record_t *cdr)
 {
-    if (!(cdr->flags & EcsIdDontFragment)) {
-        return;
-    }
-
-    if (!ecs_id_is_wildcard(cdr->id)) {
-        return;
-    }
-
-    cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
-
-    flecs_sparse_init(cdr->sparse, NULL, NULL, ECS_SIZEOF(ecs_entity_t));
+    flecs_component_init_sparse(world, cdr);
 }
 
 static
@@ -827,4 +835,3 @@ const ecs_table_record_t* flecs_component_next(
 {
     return flecs_table_cache_next(iter, ecs_table_record_t);
 }
- 

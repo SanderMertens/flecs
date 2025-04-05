@@ -347,6 +347,12 @@ void flecs_type_add(
     ecs_type_t *type,
     ecs_id_t add);
 
+/* Remove from existing type */
+void flecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t remove);
+
 /** Copy type. */
 ecs_type_t flecs_type_copy(
     ecs_world_t *world,
@@ -8979,8 +8985,18 @@ ecs_entity_t ecs_get_target(
                 }
 
                 return *tgt;
-            }
+            } else {
+                ecs_type_t *type = flecs_component_sparse_get(cdr, entity);
+                if (!type) {
+                    return 0;
+                }
 
+                if (index >= type->count) {
+                    return 0;
+                }
+
+                return type->array[index];
+            }
         }
 
         if (cdr->flags & EcsIdOnInstantiateInherit) {
@@ -31247,7 +31263,7 @@ void* flecs_sparse_ensure_fast(
     return DATA(page->data, sparse->size, offset);
 }
 
-void* flecs_sparse_remove_fast(
+bool flecs_sparse_remove_fast(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -31256,9 +31272,10 @@ void* flecs_sparse_remove_fast(
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
-    ecs_sparse_page_t *page = flecs_sparse_get_page(sparse, FLECS_SPARSE_PAGE(index));
+    ecs_sparse_page_t *page = flecs_sparse_get_page(
+        sparse, FLECS_SPARSE_PAGE(index));
     if (!page || !page->sparse) {
-        return NULL;
+        return false;
     }
 
     flecs_sparse_strip_generation(&index);
@@ -31277,10 +31294,10 @@ void* flecs_sparse_remove_fast(
         }
 
         /* Reset memory to zero on remove */
-        return DATA(page->data, sparse->size, offset);
+        return true;
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
-        return NULL;
+        return false;
     }
 }
 
@@ -36246,20 +36263,39 @@ void flecs_component_init_sparse(
     ecs_world_t *world,
     ecs_component_record_t *cdr)
 {
-    if (!cdr->sparse) {
-        if (cdr->flags & EcsIdIsSparse) {
-            ecs_assert(!(cdr->flags & EcsIdIsUnion), ECS_CONSTRAINT_VIOLATED,
-                "cannot mix union and sparse traits");
-            cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
-            if (cdr->type_info) {
-                flecs_sparse_init(cdr->sparse, NULL, NULL, cdr->type_info->size);
-            } else {
-                flecs_sparse_init(cdr->sparse, NULL, NULL, 0);
+    if (!ecs_id_is_wildcard(cdr->id)) {
+        if (!cdr->sparse) {
+            if (cdr->flags & EcsIdIsSparse) {
+                ecs_assert(!(cdr->flags & EcsIdIsUnion), ECS_CONSTRAINT_VIOLATED,
+                    "cannot mix union and sparse traits");
+                cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
+                if (cdr->type_info) {
+                    flecs_sparse_init(cdr->sparse, NULL, NULL, cdr->type_info->size);
+                } else {
+                    flecs_sparse_init(cdr->sparse, NULL, NULL, 0);
+                }
+            } else
+            if (cdr->flags & EcsIdIsUnion) {
+                cdr->sparse = flecs_walloc_t(world, ecs_switch_t);
+                flecs_switch_init(cdr->sparse, &world->allocator);
             }
-        } else
-        if (cdr->flags & EcsIdIsUnion) {
-            cdr->sparse = flecs_walloc_t(world, ecs_switch_t);
-            flecs_switch_init(cdr->sparse, &world->allocator);
+        }
+
+    } else if (ECS_IS_PAIR(cdr->id)) {
+        if (cdr->flags & EcsIdDontFragment) {
+            if (cdr->sparse) {
+                ecs_assert(flecs_sparse_count(cdr->sparse) == 0,
+                    ECS_INTERNAL_ERROR, NULL);
+                flecs_sparse_fini(cdr->sparse);
+            } else {
+                cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
+            }
+
+            if (cdr->flags & EcsIdExclusive) {
+                flecs_sparse_init_t(cdr->sparse, NULL, NULL, ecs_entity_t);
+            } else {
+                flecs_sparse_init_t(cdr->sparse, NULL, NULL, ecs_type_t);
+            }
         }
     }
 }
@@ -36271,6 +36307,7 @@ void flecs_component_record_init_dont_fragment(
     if (world->cdr_non_fragmenting_head) {
         world->cdr_non_fragmenting_head->non_fragmenting.prev = cdr;
     }
+
     cdr->non_fragmenting.next = world->cdr_non_fragmenting_head;
     world->cdr_non_fragmenting_head = cdr;
 
@@ -36278,26 +36315,14 @@ void flecs_component_record_init_dont_fragment(
         world->non_fragmenting[cdr->id] = true;
     }
 
-    if (cdr->flags & EcsIdExclusive) {
-        flecs_component_record_init_exclusive(world, cdr);
-    }
+    flecs_component_init_sparse(world, cdr);
 }
 
 void flecs_component_record_init_exclusive(
     ecs_world_t *world,
     ecs_component_record_t *cdr)
 {
-    if (!(cdr->flags & EcsIdDontFragment)) {
-        return;
-    }
-
-    if (!ecs_id_is_wildcard(cdr->id)) {
-        return;
-    }
-
-    cdr->sparse = flecs_walloc_t(world, ecs_sparse_t);
-
-    flecs_sparse_init(cdr->sparse, NULL, NULL, ECS_SIZEOF(ecs_entity_t));
+    flecs_component_init_sparse(world, cdr);
 }
 
 static
@@ -36935,7 +36960,7 @@ const ecs_table_record_t* flecs_component_next(
 {
     return flecs_table_cache_next(iter, ecs_table_record_t);
 }
- 
+
 
 static
 ecs_entity_index_page_t* flecs_entity_index_ensure_page(
@@ -37404,14 +37429,6 @@ void* flecs_component_sparse_get(
 }
 
 static
-bool flecs_component_sparse_is_exclusive_dontfragment(
-    ecs_component_record_t *cdr)
-{
-    return (cdr->flags & (EcsIdExclusive|EcsIdDontFragment)) == 
-        (EcsIdExclusive|EcsIdDontFragment);
-}
-
-static
 ecs_entity_t flecs_component_sparse_remove_intern(
     ecs_world_t *world,
     ecs_component_record_t *cdr,
@@ -37457,6 +37474,50 @@ ecs_entity_t flecs_component_sparse_remove_intern(
     return entity;
 }
 
+static
+void flecs_component_sparse_dont_fragment_pair_remove(
+    ecs_world_t *world,
+    ecs_component_record_t *cdr,
+    ecs_entity_t entity)
+{
+    ecs_component_record_t *parent = cdr->pair->parent;
+    ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!parent->sparse) {
+        /* It's not the relationship that's non-fragmenting, but the target */
+        return;
+    }
+
+    ecs_entity_t tgt = ecs_pair_second(world, cdr->id);
+    ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_type_t *type = flecs_sparse_get_any_t(
+        parent->sparse, ecs_type_t, entity);
+    if (!type) {
+        return;
+    }
+
+    ecs_assert(type->count > 0, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_type_remove(world, type, tgt);
+
+    if (!type->count) {
+        flecs_sparse_remove_fast(parent->sparse, 0, entity);
+    }
+}
+
+static
+void flecs_component_sparse_dont_fragment_exclusive_remove(
+    ecs_component_record_t *cdr,
+    ecs_entity_t entity)
+{
+    ecs_component_record_t *parent = cdr->pair->parent;
+    ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(parent->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_sparse_remove_fast(
+        parent->sparse, ECS_SIZEOF(ecs_entity_t), entity);
+}
+
 void flecs_component_sparse_remove(
     ecs_world_t *world,
     ecs_component_record_t *cdr,
@@ -37465,16 +37526,65 @@ void flecs_component_sparse_remove(
 {
     ecs_entity_t entity = 
         flecs_component_sparse_remove_intern(world, cdr, table, row);
-    if (entity) {
-        if (flecs_component_sparse_is_exclusive_dontfragment(cdr)) {
-            ecs_component_record_t *parent = cdr->pair->parent;
-            ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(parent->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            flecs_sparse_remove_fast(
-                parent->sparse, ECS_SIZEOF(ecs_entity_t), entity);
+    if (entity) {
+        ecs_flags32_t flags = cdr->flags;
+        if (flags & EcsIdDontFragment) {
+            if (ECS_IS_PAIR(cdr->id)) {
+                if (flags & EcsIdExclusive) {
+                    flecs_component_sparse_dont_fragment_exclusive_remove(
+                        cdr, entity);
+                } else {
+                    flecs_component_sparse_dont_fragment_pair_remove(
+                        world, cdr, entity);
+                }
+            }
         }
     }
+}
+
+static
+void flecs_component_sparse_dont_fragment_pair_insert(
+    ecs_world_t *world,
+    ecs_component_record_t *cdr,
+    ecs_entity_t entity)
+{
+    ecs_component_record_t *parent = cdr->pair->parent;
+    
+    ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!parent->sparse) {
+        /* It's not the relationship that's non-fragmenting, but the target */
+        return;
+    }
+
+    ecs_type_t *type = flecs_sparse_ensure_fast_t(
+        parent->sparse, ecs_type_t, entity);
+    flecs_type_add(world, type, ecs_pair_second(world, cdr->id));
+}
+
+static
+void flecs_component_sparse_dont_fragment_exclusive_insert(
+    ecs_world_t *world,
+    ecs_component_record_t *cdr,
+    ecs_table_t *table,
+    int32_t row,
+    ecs_entity_t entity)
+{
+    ecs_component_record_t *parent = cdr->pair->parent;
+    ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(parent->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_id_t component_id = cdr->id;
+    ecs_entity_t tgt, *tgt_ptr = flecs_sparse_ensure_fast_t(
+        parent->sparse, ecs_entity_t, entity);
+    if (tgt_ptr && (tgt = *tgt_ptr)) {
+        ecs_component_record_t *other = flecs_components_get(world,
+            ecs_pair(ECS_PAIR_FIRST(component_id), tgt));
+        ecs_assert(other != NULL, ECS_INTERNAL_ERROR, NULL);
+        flecs_component_sparse_remove(world, other, table, row);
+    }
+
+    *tgt_ptr = ECS_PAIR_SECOND(component_id);
 }
 
 void* flecs_component_sparse_insert(
@@ -37489,23 +37599,19 @@ void* flecs_component_sparse_insert(
     ecs_entity_t entity = ecs_table_entities(table)[row];
     void *ptr = flecs_sparse_insert(cdr->sparse, 0, entity);
 
-    if (flecs_component_sparse_is_exclusive_dontfragment(cdr)) {
-        ecs_component_record_t *parent = cdr->pair->parent;
-        ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(parent->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_entity_t tgt, *tgt_ptr = flecs_sparse_ensure_fast_t(
-            parent->sparse, ecs_entity_t, entity);
-        if (tgt_ptr && (tgt = *tgt_ptr)) {
-            ecs_component_record_t *other = flecs_components_get(world,
-                ecs_pair(ECS_PAIR_FIRST(cdr->id), tgt));
-            ecs_assert(other != NULL, ECS_INTERNAL_ERROR, NULL);
-            flecs_component_sparse_remove(world, other, table, row);
+    ecs_id_t component_id = cdr->id;
+    if (ECS_IS_PAIR(component_id)) {
+        ecs_flags32_t flags = cdr->flags;
+        if (flags & EcsIdDontFragment) {
+            if (flags & EcsIdExclusive) {
+                flecs_component_sparse_dont_fragment_exclusive_insert(
+                    world, cdr, table, row, entity);
+            } else {
+                flecs_component_sparse_dont_fragment_pair_insert(
+                    world, cdr, entity);
+            }
         }
-
-        *tgt_ptr = ECS_PAIR_SECOND(cdr->id);
     }
-
 
     if (!ptr) {
         return NULL;
@@ -37532,7 +37638,7 @@ void* flecs_component_sparse_insert(
     }
 
     flecs_invoke_hook(world, table, cdr, tr, 1, row, 
-        entity, cdr->id, ti, EcsOnAdd, on_add);
+        entity, component_id, ti, EcsOnAdd, on_add);
 
     return ptr;
 }
@@ -40591,6 +40697,21 @@ void flecs_type_add(
 {
     ecs_type_t new_type;
     int res = flecs_type_new_with(world, &new_type, type, add);
+    if (res != -1) {
+        flecs_type_free(world, type);
+        type->array = new_type.array;
+        type->count = new_type.count;
+    }
+}
+
+/* Remove from type */
+void flecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t remove)
+{
+    ecs_type_t new_type;
+    int res = flecs_type_new_without(world, &new_type, type, remove);
     if (res != -1) {
         flecs_type_free(world, type);
         type->array = new_type.array;
@@ -75708,8 +75829,7 @@ bool flecs_query_sparse_with_exclusive(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
-    bool not,
-    ecs_id_t id)
+    bool not)
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
 
@@ -75748,7 +75868,7 @@ bool flecs_query_sparse_with_wildcard(
         if (cdr->flags & EcsIdExclusive) {
             op_ctx->cdr = cdr;
             op_ctx->exclusive = true;
-            return flecs_query_sparse_with_exclusive(op, false, ctx, not, id);
+            return flecs_query_sparse_with_exclusive(op, false, ctx, not);
         }
 
         if (ECS_PAIR_FIRST(id) == EcsWildcard) {
@@ -75760,7 +75880,7 @@ bool flecs_query_sparse_with_wildcard(
         }
     } else {
         if (op_ctx->exclusive) {
-            return flecs_query_sparse_with_exclusive(op, true, ctx, not, id);
+            return flecs_query_sparse_with_exclusive(op, true, ctx, not);
         }
         with_redo = true;
         goto next_select;

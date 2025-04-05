@@ -86,7 +86,7 @@ void flecs_sparse_remove(
 
 /** Remove an element without liveliness checking */
 FLECS_DBG_API
-void* flecs_sparse_remove_fast(
+bool flecs_sparse_remove_fast(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index);

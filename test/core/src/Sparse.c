@@ -2812,6 +2812,24 @@ void Sparse_target_1_pair(void) {
     test_uint(TgtB, ecs_get_target(world, e2, Rel, 0));
     test_uint(0, ecs_get_target(world, e2, Rel, 1));
 
+    ecs_remove_pair(world, e1, Rel, TgtB);
+    test_uint(TgtA, ecs_get_target(world, e1, Rel, 0));
+    test_uint(0, ecs_get_target(world, e1, Rel, 1));
+    test_assert(ecs_has_pair(world, e1, Rel, TgtA));
+
+    ecs_remove_pair(world, e1, Rel, TgtA);
+    test_uint(0, ecs_get_target(world, e1, Rel, 0));
+    test_assert(!ecs_has_pair(world, e1, Rel, TgtA));
+
+    ecs_remove_pair(world, e2, Rel, TgtA);
+    test_uint(TgtB, ecs_get_target(world, e2, Rel, 0));
+    test_uint(0, ecs_get_target(world, e2, Rel, 1));
+    test_assert(ecs_has_pair(world, e2, Rel, TgtB));
+
+    ecs_remove_pair(world, e2, Rel, TgtB);
+    test_uint(0, ecs_get_target(world, e2, Rel, 0));
+    test_assert(!ecs_has_pair(world, e2, Rel, TgtB));
+
     ecs_fini(world);
 }
 
