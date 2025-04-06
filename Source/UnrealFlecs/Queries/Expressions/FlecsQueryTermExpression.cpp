@@ -21,7 +21,7 @@ void FFlecsQueryTermExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder
 				const FFlecsEntityHandle ScriptStructEntity = InWorld->ObtainComponentTypeStruct(Struct);
 				solid_check(ScriptStructEntity.IsValid());
 				
-				InQueryBuilder.with(ScriptStructEntity.GetEntity());
+				InQueryBuilder.with(ScriptStructEntity);
 			}
 		break;
 		case EFlecsQueryInputType::Entity:
@@ -44,7 +44,7 @@ void FFlecsQueryTermExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder
 				const FFlecsEntityHandle TagEntity = InWorld->GetTagEntity(Tag);
 				solid_check(TagEntity.IsValid());
 				
-				InQueryBuilder.with(TagEntity.GetEntity());
+				InQueryBuilder.with(TagEntity);
 			}
 		break;
 	}

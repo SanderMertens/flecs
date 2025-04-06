@@ -14,7 +14,7 @@ void FFlecsQuerySrcExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder<
 	{
 		case EFlecsQuerySrcType::Entity:
 			{
-				InQueryBuilder.src(Entity.GetEntity());
+				InQueryBuilder.src(Entity);
 			}
 			break;
 		case EFlecsQuerySrcType::String:

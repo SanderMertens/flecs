@@ -1006,7 +1006,7 @@ public:
 	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
 	NO_DISCARD SOLID_INLINE TActual GetPair() const
 	{
-		return GetEntity().get<TFirst, TSecond>();
+		return *GetEntity().get<TFirst, TSecond>();
 	}
 
 	template <typename TFirst, typename TActual = TFirst>
