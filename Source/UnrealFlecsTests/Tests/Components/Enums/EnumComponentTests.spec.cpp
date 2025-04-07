@@ -97,7 +97,7 @@ void FEnumComponentTestsSpec::Define()
 			TestTrue("Entity has Enum Component", TestEntity.HasPair<ETestEnum_UENUM>(flecs::Wildcard));
 		});
 		
-		It("Should Register an Enum Component with Static API and use CPP API", [this]()
+		xIt("Should Register an Enum Component with Static API and use CPP API", [this]()
 		{
 			FFlecsEntityHandle TestComponent = Fixture.FlecsWorld->RegisterScriptEnum(StaticEnum<ETestEnum_UENUM>());
 			

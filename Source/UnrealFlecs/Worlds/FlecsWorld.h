@@ -1669,6 +1669,7 @@ public:
 		{
 			ScriptEnumComponent = World.component(StringCast<char>(*ScriptEnum->GetName()).Get());
 			solid_check(ScriptEnumComponent.is_valid());
+			
 			ScriptEnumComponent.set_symbol(StringCast<char>(*ScriptEnum->GetName()).Get());
 			ScriptEnumComponent.set<flecs::Component>(
 				{ .size = sizeof(uint8), .alignment = alignof(uint8) });
@@ -1686,7 +1687,8 @@ public:
 					continue;
 				}
 				
-				ScriptEnumComponent.constant<uint8>(StringCast<char>(*EnumValueName).Get(), EnumValue);
+				ScriptEnumComponent.constant<uint8>(StringCast<char>(*EnumValueName).Get(),
+					EnumValue);
 			}
 
 			if (!flecs::_::g_type_to_impl_data.contains(std::string(EnumNameCStr)))
