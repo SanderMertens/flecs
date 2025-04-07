@@ -161,7 +161,7 @@ typedef struct ecs_cmd_t {
     ecs_cmd_kind_t kind;             /* Command kind */
     int32_t next_for_entity;         /* Next operation for entity */    
     ecs_id_t id;                     /* (Component) id */
-    ecs_component_record_t *cdr;            /* component record (only for set/mut/emplace) */
+    ecs_component_record_t *cr;            /* component record (only for set/mut/emplace) */
     ecs_cmd_entry_t *entry;
     ecs_entity_t entity;             /* Entity id */
 
@@ -248,7 +248,7 @@ typedef struct ecs_monitor_set_t {
 
 /* Data stored for id marked for deletion */
 typedef struct ecs_marked_id_t {
-    ecs_component_record_t *cdr;
+    ecs_component_record_t *cr;
     ecs_id_t id;
     ecs_entity_t action;             /* Set explicitly for delete_with, remove_all */
     bool delete_id;

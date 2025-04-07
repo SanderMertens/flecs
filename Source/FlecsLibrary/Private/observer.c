@@ -76,9 +76,9 @@ void flecs_inc_observer_count(
 
         ecs_flags32_t flags = flecs_id_flag_for_event(event);
         if (flags) {
-            ecs_component_record_t *cdr = flecs_components_get(world, id);
-            if (cdr) {
-                cdr->flags |= flags;
+            ecs_component_record_t *cr = flecs_components_get(world, id);
+            if (cr) {
+                cr->flags |= flags;
             }
         }
     } else if (result == 0) {
@@ -90,9 +90,9 @@ void flecs_inc_observer_count(
 
         ecs_flags32_t flags = flecs_id_flag_for_event(event);
         if (flags) {
-            ecs_component_record_t *cdr = flecs_components_get(world, id);
-            if (cdr) {
-                cdr->flags &= ~flags;
+            ecs_component_record_t *cr = flecs_components_get(world, id);
+            if (cr) {
+                cr->flags &= ~flags;
             }
         }
 
@@ -892,8 +892,8 @@ int flecs_multi_observer_init(
             term->oper = EcsAnd;
             for (ti = 0; ti < ti_count; ti ++) {
                 ecs_id_t ti_id = ti_ids[ti];
-                ecs_component_record_t *cdr = flecs_components_get(world, ti_id);
-                if (cdr->flags & EcsIdOnInstantiateDontInherit) {
+                ecs_component_record_t *cr = flecs_components_get(world, ti_id);
+                if (cr->flags & EcsIdOnInstantiateDontInherit) {
                     continue;
                 }
 

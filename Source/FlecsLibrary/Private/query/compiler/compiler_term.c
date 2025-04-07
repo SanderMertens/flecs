@@ -1169,8 +1169,8 @@ int flecs_query_compile_term(
 
         for (i = 0; i < count; i ++) {
             ecs_id_t ti_id = ti_ids[i];
-            ecs_component_record_t *cdr = flecs_components_get(world, ti_id);
-            if (!(cdr->flags & EcsIdOnInstantiateDontInherit)) {
+            ecs_component_record_t *cr = flecs_components_get(world, ti_id);
+            if (!(cr->flags & EcsIdOnInstantiateDontInherit)) {
                 break;
             }
         }

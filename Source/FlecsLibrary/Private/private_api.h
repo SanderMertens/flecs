@@ -268,7 +268,7 @@ int32_t flecs_search_w_idr(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t *id_out,
-    ecs_component_record_t *cdr);
+    ecs_component_record_t *cr);
 
 int32_t flecs_search_relation_w_idr(
     const ecs_world_t *world,
@@ -280,12 +280,12 @@ int32_t flecs_search_relation_w_idr(
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out,
-    ecs_component_record_t *cdr);
+    ecs_component_record_t *cr);
 
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    const ecs_component_record_t *cdr,
+    const ecs_component_record_t *cr,
     ecs_id_t id);
 
 int ecs_term_finalize(
