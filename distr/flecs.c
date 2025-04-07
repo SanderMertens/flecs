@@ -54790,7 +54790,7 @@ static
 void win_cond_free(
     ecs_os_cond_t c) 
 {
-    (void)c;
+    ecs_os_free((ecs_os_cond_t)(uintptr_t)c);
 }
 
 static 
