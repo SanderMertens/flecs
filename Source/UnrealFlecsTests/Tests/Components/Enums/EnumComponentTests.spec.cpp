@@ -86,6 +86,28 @@ void FEnumComponentTestsSpec::Define()
 			TestTrue("Entity has Enum Component", TestEntity.HasPair<ETestEnum_UENUM>(flecs::Wildcard));
 		});
 
+		It("Should Register an Enum Component with CPP API and use Static API", [this]()
+		{
+			FFlecsEntityHandle TestComponent = Fixture.FlecsWorld->RegisterComponentType<ETestEnum_UENUM>();
+
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add(StaticEnum<ETestEnum_UENUM>(), static_cast<int64>(ETestEnum_UENUM::One));
+			
+			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum_UENUM>()));
+			TestTrue("Entity has Enum Component", TestEntity.HasPair<ETestEnum_UENUM>(flecs::Wildcard));
+		});
+		
+		It("Should Register an Enum Component with Static API and use CPP API", [this]()
+		{
+			FFlecsEntityHandle TestComponent = Fixture.FlecsWorld->RegisterScriptEnum(StaticEnum<ETestEnum_UENUM>());
+			
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add<ETestEnum_UENUM>(ETestEnum_UENUM::One);
+			
+			TestTrue("Entity has Enum Component", TestEntity.HasPair<ETestEnum_UENUM>(flecs::Wildcard));
+			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum_UENUM>()));
+		});
+
 		It("Should Remove an Enum Component using CPP API", [this]()
 		{
 			FFlecsEntityHandle TestComponent = Fixture.FlecsWorld->RegisterComponentType<ETestEnum_UENUM>();
