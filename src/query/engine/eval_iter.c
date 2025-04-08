@@ -283,7 +283,7 @@ void flecs_query_validate_final_fields(
         return;
     }
 
-    if (!world->idr_isa_wildcard) {
+    if (!world->cr_isa_wildcard) {
         return;
     }
 
