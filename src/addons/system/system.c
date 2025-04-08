@@ -138,8 +138,8 @@ ecs_entity_t flecs_run_intern(
     flecs_stage_set_system(stage, old_system);
 
     if (measure_time) {
-        ecs_time_t time_start;
-        ecs_os_get_time(&time_start);
+        ecs_time_t time_end;
+        ecs_os_get_time(&time_end);
 
         /* Ensure vector has enough space for all threads */
         if (!ecs_vec_count(&system_data->time_spent_per_thread)) {
@@ -153,7 +153,7 @@ ecs_entity_t flecs_run_intern(
 
         /* Get pointer to thread-specific timing slot */
         ecs_ftime_t *thread_time = ecs_vec_get_t(&system_data->time_spent_per_thread, ecs_ftime_t, stage_index);
-        *thread_time += (ecs_ftime_t)ecs_time_measure(&time_start);
+        *thread_time += (ecs_ftime_t)ecs_time_measure(&time_end);
 
         /* Update total time */
         system_data->time_spent_total = 0;
