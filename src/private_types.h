@@ -298,13 +298,13 @@ struct ecs_world_t {
     ecs_map_t type_info;             /* map<type_id, type_info_t> */
 
     /* -- Cached handle to id records -- */
-    ecs_component_record_t *idr_wildcard;
-    ecs_component_record_t *idr_wildcard_wildcard;
-    ecs_component_record_t *idr_any;
-    ecs_component_record_t *idr_isa_wildcard;
-    ecs_component_record_t *idr_childof_0;
-    ecs_component_record_t *idr_childof_wildcard;
-    ecs_component_record_t *idr_identifier_name;
+    ecs_component_record_t *cr_wildcard;
+    ecs_component_record_t *cr_wildcard_wildcard;
+    ecs_component_record_t *cr_any;
+    ecs_component_record_t *cr_isa_wildcard;
+    ecs_component_record_t *cr_childof_0;
+    ecs_component_record_t *cr_childof_wildcard;
+    ecs_component_record_t *cr_identifier_name;
 
     /* -- Mixins -- */
     ecs_world_t *self;

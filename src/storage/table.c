@@ -389,7 +389,7 @@ void flecs_table_init(
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_t *records = &world->store.records;
     ecs_vec_reset_t(a, records, ecs_table_record_t);
-    ecs_component_record_t *cr, *childof_idr = NULL;
+    ecs_component_record_t *cr, *childof_cr = NULL;
 
     int32_t last_id = -1; /* Track last regular (non-pair) id */
     int32_t first_pair = -1; /* Track the first pair in the table */
@@ -506,14 +506,14 @@ void flecs_table_init(
             if (r != ECS_PAIR_FIRST(dst_id)) { /* New relationship, new record */
                 tr = ecs_vec_get_t(records, ecs_table_record_t, dst_i);
 
-                ecs_component_record_t *p_idr = (ecs_component_record_t*)tr->hdr.cache;
+                ecs_component_record_t *p_cr = (ecs_component_record_t*)tr->hdr.cache;
                 r = ECS_PAIR_FIRST(dst_id);
                 if (r == EcsChildOf) {
-                    childof_idr = p_idr;
+                    childof_cr = p_cr;
                 }
 
-                ecs_assert(p_idr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-                cr = p_idr->pair->parent; /* (R, *) */
+                ecs_assert(p_cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+                cr = p_cr->pair->parent; /* (R, *) */
                 ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 tr = ecs_vec_append_t(a, records, ecs_table_record_t);
@@ -543,20 +543,20 @@ void flecs_table_init(
     /* Lastly, add records for all-wildcard ids */
     if (last_id >= 0) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-        tr->hdr.cache = (ecs_table_cache_t*)world->idr_wildcard;
+        tr->hdr.cache = (ecs_table_cache_t*)world->cr_wildcard;
         tr->index = 0;
         tr->count = flecs_ito(int16_t, last_id + 1);
     }
     if (last_pair - first_pair) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-        tr->hdr.cache = (ecs_table_cache_t*)world->idr_wildcard_wildcard;
+        tr->hdr.cache = (ecs_table_cache_t*)world->cr_wildcard_wildcard;
         tr->index = flecs_ito(int16_t, first_pair);
         tr->count = flecs_ito(int16_t, last_pair - first_pair);
     }
     if (!has_childof) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-        childof_idr = world->idr_childof_0;
-        tr->hdr.cache = (ecs_table_cache_t*)childof_idr;
+        childof_cr = world->cr_childof_0;
+        tr->hdr.cache = (ecs_table_cache_t*)childof_cr;
         tr->index = -1; /* The table doesn't have a (ChildOf, 0) component */
         tr->count = 0;
     }
@@ -612,7 +612,7 @@ void flecs_table_init(
     }
 
     /* Initialize event flags for any record */
-    table->flags |= world->idr_any->flags & EcsIdEventMask;
+    table->flags |= world->cr_any->flags & EcsIdEventMask;
 
     table->component_map = flecs_wcalloc_n(
         world, int16_t, FLECS_HI_COMPONENT_ID);
@@ -627,9 +627,9 @@ void flecs_table_init(
     flecs_table_init_data(world, table);
 
     if (table->flags & EcsTableHasName) {
-        ecs_assert(childof_idr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(childof_cr != NULL, ECS_INTERNAL_ERROR, NULL);
         table->_->name_index = 
-            flecs_component_name_index_ensure(world, childof_idr);
+            flecs_component_name_index_ensure(world, childof_cr);
         ecs_assert(table->_->name_index != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 

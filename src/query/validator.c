@@ -778,10 +778,10 @@ int flecs_term_finalize(
     if (cr) {
         id_flags = cr->flags;
     } else if (ECS_IS_PAIR(term->id)) {
-        ecs_component_record_t *wc_idr = flecs_components_get(
+        ecs_component_record_t *wc_cr = flecs_components_get(
             world, ecs_pair(ECS_PAIR_FIRST(term->id), EcsWildcard));
-        if (wc_idr) {
-            id_flags = wc_idr->flags;
+        if (wc_cr) {
+            id_flags = wc_cr->flags;
         }
     }
 
