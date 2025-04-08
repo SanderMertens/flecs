@@ -68,12 +68,9 @@ void flecs_system_stats_get(
 {
     bool success = ecs_system_stats_get(world, res, stats);
     if (!success) {
-        // System no longer exists, zero out the stats
+        // System no longer exists, set timing to 0
         ecs_system_stats_t *s = stats;
-        
-        // Zero out the time_spent metric instead of time_spent_total
-        ECS_COUNTER_RECORD(&s->time_spent, s->t, 0);
-        
+        s->time_spent_total = 0;
         if (s->thread_time_spent_array) {
             // Clean up the thread timing array if it exists
             ecs_system_stats_fini(s);
