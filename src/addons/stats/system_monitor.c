@@ -16,6 +16,7 @@ void flecs_system_monitor_dtor(EcsSystemStats *ptr) {
     ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
     while (ecs_map_next(&it)) {
         ecs_system_stats_t *stats = ecs_map_ptr(&it);
+        ecs_system_stats_fini(stats);
         ecs_os_free(stats);
     }
     ecs_map_fini(&ptr->stats);
@@ -65,7 +66,16 @@ void flecs_system_stats_get(
     ecs_entity_t res, 
     void *stats) 
 {
-    ecs_system_stats_get(world, res, stats);
+    bool success = ecs_system_stats_get(world, res, stats);
+    if (!success) {
+        // System no longer exists, set timing to 0
+        ecs_system_stats_t *s = stats;
+        s->time_spent_total = 0;
+        if (s->thread_time_spent_array) {
+            // Clean up the thread timing array if it exists
+            ecs_system_stats_fini(s);
+        }
+    }
 }
 
 static
@@ -92,6 +102,13 @@ void flecs_system_stats_repeat_last(
     ecs_system_stats_repeat_last(stats);
 }
 
+static
+void flecs_system_stats_fini_wrapper(
+    void *stats)
+{
+    ecs_system_stats_fini(stats);
+}
+
 void FlecsSystemMonitorImport(
     ecs_world_t *world)
 {
@@ -111,6 +128,7 @@ void FlecsSystemMonitorImport(
         .reduce_last = flecs_system_stats_reduce_last,
         .repeat_last = flecs_system_stats_repeat_last,
         .set_t = flecs_system_stats_set_t,
+        .fini = flecs_system_stats_fini_wrapper,
         .stats_size = ECS_SIZEOF(ecs_system_stats_t),
         .monitor_component_id = ecs_id(EcsSystemStats),
         .query_component_id = EcsSystem
