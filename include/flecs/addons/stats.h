@@ -338,6 +338,11 @@ void ecs_system_stats_copy_last(
     ecs_system_stats_t *dst,
     const ecs_system_stats_t *src);
 
+/** Cleanup resources of statistics */
+FLECS_API
+void ecs_system_stats_fini(
+    ecs_system_stats_t *stats);
+
 /** Get pipeline statistics.
  * Obtain statistics for the provided pipeline.
  *
