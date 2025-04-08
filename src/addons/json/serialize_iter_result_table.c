@@ -352,7 +352,7 @@ bool flecs_json_serialize_table_inherited_type(
     }
 
     const ecs_table_record_t *tr = flecs_component_get_table(
-        world->idr_isa_wildcard, table);
+        world->cr_isa_wildcard, table);
     ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL); /* Table has IsA flag */
 
     int32_t i, start = tr->index, end = start + tr->count;

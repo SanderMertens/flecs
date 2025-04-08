@@ -538,63 +538,63 @@ void Internals_component_record_has_table(void) {
     ecs_table_t *table_3 = ecs_table_add_id(world, table_2, Tag);
     test_assert(table_3 != NULL);
 
-    ecs_component_record_t *pos_cdr = flecs_components_get(world, ecs_id(Position));
-    ecs_component_record_t *vel_cdr = flecs_components_get(world, ecs_id(Velocity));
-    ecs_component_record_t *tag_cdr = flecs_components_get(world, Tag);
-    test_assert(pos_cdr != NULL);
-    test_assert(vel_cdr != NULL);
-    test_assert(tag_cdr != NULL);
+    ecs_component_record_t *pos_cr = flecs_components_get(world, ecs_id(Position));
+    ecs_component_record_t *vel_cr = flecs_components_get(world, ecs_id(Velocity));
+    ecs_component_record_t *tag_cr = flecs_components_get(world, Tag);
+    test_assert(pos_cr != NULL);
+    test_assert(vel_cr != NULL);
+    test_assert(tag_cr != NULL);
 
     {
-        const ecs_table_record_t *tr = flecs_component_get_table(pos_cdr, table_1);
+        const ecs_table_record_t *tr = flecs_component_get_table(pos_cr, table_1);
         test_assert(tr != NULL);
         test_int(tr->column, 0);
         test_int(tr->index, 0);
         test_int(tr->count, 1);
         test_assert(tr->hdr.table == table_1);
     } {
-        const ecs_table_record_t *tr = flecs_component_get_table(vel_cdr, table_1);
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cr, table_1);
         test_assert(tr == NULL);
     } {
-        const ecs_table_record_t *tr = flecs_component_get_table(vel_cdr, table_1);
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cr, table_1);
         test_assert(tr == NULL);
     }
 
     {
-        const ecs_table_record_t *tr = flecs_component_get_table(pos_cdr, table_2);
+        const ecs_table_record_t *tr = flecs_component_get_table(pos_cr, table_2);
         test_assert(tr != NULL);
         test_int(tr->column, 0);
         test_int(tr->index, 0);
         test_int(tr->count, 1);
         test_assert(tr->hdr.table == table_2);
     } {
-        const ecs_table_record_t *tr = flecs_component_get_table(vel_cdr, table_2);
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cr, table_2);
         test_assert(tr != NULL);
         test_int(tr->column, 1);
         test_int(tr->index, 1);
         test_int(tr->count, 1);
         test_assert(tr->hdr.table == table_2);
     } {
-        const ecs_table_record_t *tr = flecs_component_get_table(tag_cdr, table_2);
+        const ecs_table_record_t *tr = flecs_component_get_table(tag_cr, table_2);
         test_assert(tr == NULL);
     }
 
     {
-        const ecs_table_record_t *tr = flecs_component_get_table(pos_cdr, table_3);
+        const ecs_table_record_t *tr = flecs_component_get_table(pos_cr, table_3);
         test_assert(tr != NULL);
         test_int(tr->column, 0);
         test_int(tr->index, 0);
         test_int(tr->count, 1);
         test_assert(tr->hdr.table == table_3);
     } {
-        const ecs_table_record_t *tr = flecs_component_get_table(vel_cdr, table_3);
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cr, table_3);
         test_assert(tr != NULL);
         test_int(tr->column, 1);
         test_int(tr->index, 1);
         test_int(tr->count, 1);
         test_assert(tr->hdr.table == table_3);
     } {
-        const ecs_table_record_t *tr = flecs_component_get_table(tag_cdr, table_3);
+        const ecs_table_record_t *tr = flecs_component_get_table(tag_cr, table_3);
         test_assert(tr != NULL);
         test_int(tr->column, -1);
         test_int(tr->index, 2);
@@ -619,11 +619,11 @@ void Internals_component_record_iter_tables(void) {
     ecs_table_t *table_3 = ecs_table_add_id(world, table_2, Tag);
     test_assert(table_3 != NULL);
 
-    ecs_component_record_t *pos_cdr = flecs_components_get(world, ecs_id(Position));
-    test_assert(pos_cdr != NULL);
+    ecs_component_record_t *pos_cr = flecs_components_get(world, ecs_id(Position));
+    test_assert(pos_cr != NULL);
 
     ecs_table_cache_iter_t it;
-    if (flecs_component_iter(pos_cdr, &it)) {
+    if (flecs_component_iter(pos_cr, &it)) {
         const ecs_table_record_t *tr;
 
         tr = flecs_component_next(&it);

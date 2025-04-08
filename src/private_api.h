@@ -264,13 +264,13 @@ void flecs_colorize_buf(
     bool enable_colors,
     ecs_strbuf_t *buf);
 
-int32_t flecs_search_w_idr(
+int32_t flecs_search_w_cr(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t *id_out,
     ecs_component_record_t *cr);
 
-int32_t flecs_search_relation_w_idr(
+int32_t flecs_search_relation_w_cr(
     const ecs_world_t *world,
     const ecs_table_t *table,
     int32_t offset,
