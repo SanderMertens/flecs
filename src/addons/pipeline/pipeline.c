@@ -654,7 +654,7 @@ void flecs_run_pipeline(
 
             /* Add time to current operation's time */
             if (pq->cur_op) {
-                pq->cur_op->time_spent += time_spent;
+                pq->cur_op->time_spent += (double)time_spent;
             }
         }
 
@@ -676,7 +676,7 @@ void flecs_run_pipeline(
 
             ecs_readonly_end(world);
             if (measure_time) {
-                pq->cur_op->time_spent += ecs_time_measure(&mt);
+                pq->cur_op->time_spent += (double)ecs_time_measure(&mt);
             }
         }
 
