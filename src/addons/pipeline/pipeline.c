@@ -642,12 +642,20 @@ void flecs_run_pipeline(
             ecs_time_measure(&st);
         }
 
-        const int32_t i = flecs_run_pipeline_ops(
+        int32_t i = flecs_run_pipeline_ops(
             world, stage, stage_index, stage_count, delta_time);
 
         if (measure_time) {
             /* Don't include merge time in system time */
-            world->info.system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
+            ecs_ftime_t time_spent = (ecs_ftime_t)ecs_time_measure(&st);
+
+            /* Add time to total system time */
+            world->info.system_time_total += time_spent;
+
+            /* Add time to current operation's time */
+            if (pq->cur_op) {
+                pq->cur_op->time_spent += time_spent;
+            }
         }
 
         if (op_multi_threaded) {

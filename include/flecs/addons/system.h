@@ -149,8 +149,11 @@ typedef struct ecs_system_t {
     /** Callback to free run ctx. */
     ecs_ctx_free_t run_ctx_free;
 
-    /** Time spent on running system */
-    ecs_ftime_t time_spent;
+    /** Time spent on running system per thread */
+    ecs_vec_t time_spent_per_thread;  /* ecs_ftime_t */
+
+    /** Total time spent on running system across all threads */
+    ecs_ftime_t time_spent_total;
 
     /** Time passed since last invocation */
     ecs_ftime_t time_passed;

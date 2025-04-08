@@ -138,7 +138,29 @@ ecs_entity_t flecs_run_intern(
     flecs_stage_set_system(stage, old_system);
 
     if (measure_time) {
-        system_data->time_spent += (ecs_ftime_t)ecs_time_measure(&time_start);
+        ecs_time_t time_start;
+        ecs_os_get_time(&time_start);
+
+        /* Ensure vector has enough space for all threads */
+        if (!ecs_vec_count(&system_data->time_spent_per_thread)) {
+            ecs_vec_init_t(NULL, &system_data->time_spent_per_thread, ecs_ftime_t, stage_count);
+            int i;
+            for (i = 0; i < stage_count; i++) {
+                ecs_ftime_t *t = ecs_vec_get_t(&system_data->time_spent_per_thread, ecs_ftime_t, i);
+                *t = 0;
+            }
+        }
+
+        /* Get pointer to thread-specific timing slot */
+        ecs_ftime_t *thread_time = ecs_vec_get_t(&system_data->time_spent_per_thread, ecs_ftime_t, stage_index);
+        *thread_time += (ecs_ftime_t)ecs_time_measure(&time_start);
+
+        /* Update total time */
+        system_data->time_spent_total = 0;
+        int i;
+        for (i = 0; i < ecs_vec_count(&system_data->time_spent_per_thread); i++) {
+            system_data->time_spent_total += *(ecs_ftime_t*)ecs_vec_get_t(&system_data->time_spent_per_thread, ecs_ftime_t, i);
+        }
     }
 
     flecs_defer_end(world, stage);
@@ -194,6 +216,9 @@ void flecs_system_fini(ecs_system_t *sys) {
     if (sys->run_ctx_free) {
         sys->run_ctx_free(sys->run_ctx);
     }
+
+    /* Free per-thread timing vector */
+    ecs_vec_fini_t(NULL, &sys->time_spent_per_thread, ecs_ftime_t);
 
     /* Safe cast, type owns name */
     ecs_os_free(ECS_CONST_CAST(char*, sys->name));
@@ -303,6 +328,10 @@ ecs_entity_t ecs_system_init(
         system->immediate = desc->immediate;
 
         system->name = ecs_get_path(world, entity);
+
+        /* Initialize per-thread timing vector */
+        ecs_vec_init_t(NULL, &system->time_spent_per_thread, ecs_ftime_t, 0);
+        system->time_spent_total = 0;
 
         if (flecs_system_init_timer(world, entity, desc)) {
             ecs_delete(world, entity);

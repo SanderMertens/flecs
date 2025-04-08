@@ -181,12 +181,15 @@ typedef struct ecs_query_stats_t {
 /** Statistics for a single system (use ecs_system_stats_get()) */
 typedef struct ecs_system_stats_t {
     int64_t first_;
-    ecs_metric_t time_spent;       /**< Time spent processing a system */
-    int64_t last_;
-
-    bool task;                     /**< Is system a task */
-
     ecs_query_stats_t query;
+    ecs_metric_t time_spent;       /**< Time spent processing a system */
+    ecs_metric_t thread_time_spent; /**< Time spent processing per thread */
+    ecs_metric_t *thread_time_spent_array; /**< Array of per-thread timing metrics */
+    int32_t thread_time_spent_array_count; /**< Size of thread_time_spent_array */
+    int32_t thread_count;          /**< Number of threads used */
+    bool task;                     /**< Is system a task */
+    int32_t t;                     /**< Current time */
+    int64_t last_;
 } ecs_system_stats_t;
 
 /** Statistics for sync point */
@@ -408,6 +411,12 @@ void ecs_metric_copy(
     ecs_metric_t *m,
     int32_t dst,
     int32_t src);
+
+/** Repeat last measurement in next slot */
+FLECS_API
+void ecs_metric_repeat_last(
+    ecs_metric_t *m,
+    int32_t t);
 
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsStats);        /**< Flecs stats module. */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldStats);     /**< Component id for EcsWorldStats. */
