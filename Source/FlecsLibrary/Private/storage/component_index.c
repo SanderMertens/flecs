@@ -64,13 +64,13 @@ void flecs_insert_id_elem(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_id_t wildcard,
-    ecs_component_record_t *widr)
+    ecs_component_record_t *wcr)
 {
     ecs_assert(ecs_id_is_wildcard(wildcard), ECS_INTERNAL_ERROR, NULL);
-    if (!widr) {
-        widr = flecs_components_ensure(world, wildcard);
+    if (!wcr) {
+        wcr = flecs_components_ensure(world, wildcard);
     }
-    ecs_assert(widr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(wcr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_pair_id_record_t *pair = cr->pair;
     ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -78,14 +78,14 @@ void flecs_insert_id_elem(
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
         ecs_assert(ECS_PAIR_FIRST(wildcard) != EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_component_elem_insert(widr, cr, &pair->first);
+        flecs_component_elem_insert(wcr, cr, &pair->first);
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_component_elem_insert(widr, cr, &pair->second);
+        flecs_component_elem_insert(wcr, cr, &pair->second);
 
         if (cr->flags & EcsIdTraversable) {
-            flecs_component_elem_insert(widr, cr, &pair->trav);
+            flecs_component_elem_insert(wcr, cr, &pair->trav);
         }
     }
 }
@@ -195,7 +195,7 @@ ecs_component_record_t* flecs_component_new(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_component_record_t *cr, *idr_t = NULL;
+    ecs_component_record_t *cr, *cr_t = NULL;
     ecs_id_t hash = flecs_component_hash(id);
     cr = flecs_bcalloc_w_dbg_info(
         &world->allocators.id_record, "ecs_component_record_t");
@@ -305,18 +305,18 @@ ecs_component_record_t* flecs_component_new(
 
         if (!is_wildcard && (rel != EcsFlag)) {
             /* Inherit flags from (relationship, *) record */
-            ecs_component_record_t *idr_r = flecs_components_ensure(
+            ecs_component_record_t *cr_r = flecs_components_ensure(
                 world, ecs_pair(rel, EcsWildcard));
-            cr->pair->parent = idr_r;
-            cr->flags = idr_r->flags;
+            cr->pair->parent = cr_r;
+            cr->flags = cr_r->flags;
 
             /* If pair is not a wildcard, append it to wildcard lists. These 
              * allow for quickly enumerating all relationships for an object, 
              * or all objects for a relationship. */
-            flecs_insert_id_elem(world, cr, ecs_pair(rel, EcsWildcard), idr_r);
+            flecs_insert_id_elem(world, cr, ecs_pair(rel, EcsWildcard), cr_r);
 
-            idr_t = flecs_components_ensure(world, ecs_pair(EcsWildcard, tgt));
-            flecs_insert_id_elem(world, cr, ecs_pair(EcsWildcard, tgt), idr_t);
+            cr_t = flecs_components_ensure(world, ecs_pair(EcsWildcard, tgt));
+            flecs_insert_id_elem(world, cr, ecs_pair(EcsWildcard, tgt), cr_t);
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
@@ -371,7 +371,7 @@ ecs_component_record_t* flecs_component_new(
             flecs_record_add_flag(tgt_r, EcsEntityIsTraversable);
 
             /* Add reference to (*, tgt) component record to entity record */
-            tgt_r->cr = idr_t;
+            tgt_r->cr = cr_t;
         }
 
         /* If second element of pair determines the type, check if the pair 
@@ -532,11 +532,11 @@ ecs_component_record_t* flecs_components_get(
 {
     flecs_poly_assert(world, ecs_world_t);
     if (id == ecs_pair(EcsIsA, EcsWildcard)) {
-        return world->idr_isa_wildcard;
+        return world->cr_isa_wildcard;
     } else if (id == ecs_pair(EcsChildOf, EcsWildcard)) {
-        return world->idr_childof_wildcard;
+        return world->cr_childof_wildcard;
     } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
-        return world->idr_identifier_name;
+        return world->cr_identifier_name;
     }
 
     ecs_id_t hash = flecs_component_hash(id);
@@ -647,11 +647,11 @@ void flecs_components_init(
     ecs_world_t *world)
 {
     /* Cache often used id records on world */
-    world->idr_wildcard = flecs_components_ensure(world, EcsWildcard);
-    world->idr_wildcard_wildcard = flecs_components_ensure(world, 
+    world->cr_wildcard = flecs_components_ensure(world, EcsWildcard);
+    world->cr_wildcard_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsWildcard, EcsWildcard));
-    world->idr_any = flecs_components_ensure(world, EcsAny);
-    world->idr_isa_wildcard = flecs_components_ensure(world, 
+    world->cr_any = flecs_components_ensure(world, EcsAny);
+    world->cr_isa_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsIsA, EcsWildcard));
 }
 

@@ -106,7 +106,7 @@ ecs_trav_down_t* flecs_query_up_find_next_traversable(
         /* Get down cache entry for traversable entity */
         bool match_empty = (q->flags & EcsQueryMatchEmptyTables) != 0;
         impl->down = flecs_query_get_down_cache(ctx, &impl->cache, 
-            impl->trav, entity, impl->idr_with, self, match_empty);
+            impl->trav, entity, impl->cr_with, self, match_empty);
         impl->cache_elem = -1;
     }
 
@@ -139,15 +139,15 @@ bool flecs_query_up_select(
     impl->trav = q->terms[op->term_index].trav;
 
     /* Reuse component record from previous iteration if possible*/
-    if (!impl->idr_trav) {
-        impl->idr_trav = flecs_components_get(ctx->world, 
+    if (!impl->cr_trav) {
+        impl->cr_trav = flecs_components_get(ctx->world, 
             ecs_pair(impl->trav, EcsWildcard));
     }
 
     /* If component record is not found, or if it doesn't have any tables, revert to
      * iterating owned components (no traversal) */
-    if (!impl->idr_trav || 
-        !flecs_table_cache_count(&impl->idr_trav->cache))
+    if (!impl->cr_trav || 
+        !flecs_table_cache_count(&impl->cr_trav->cache))
     {
         if (!self) {
             /* If operation does not match owned components, return false */
@@ -170,8 +170,8 @@ bool flecs_query_up_select(
         impl->with = flecs_query_op_get_id(op, ctx);
 
         /* Get component record for component to match */
-        impl->idr_with = flecs_components_get(ctx->world, impl->with);
-        if (!impl->idr_with) {
+        impl->cr_with = flecs_components_get(ctx->world, impl->with);
+        if (!impl->cr_with) {
             /* If component record does not exist, there can't be any results */
             return false;
         }
@@ -278,13 +278,13 @@ bool flecs_query_up_with(
     }
 
     impl->trav = q->terms[op->term_index].trav;
-    if (!impl->idr_trav) {
-        impl->idr_trav = flecs_components_get(ctx->world, 
+    if (!impl->cr_trav) {
+        impl->cr_trav = flecs_components_get(ctx->world, 
             ecs_pair(impl->trav, EcsWildcard));
     }
 
-    if (!impl->idr_trav || 
-        !flecs_table_cache_count(&impl->idr_trav->cache))
+    if (!impl->cr_trav || 
+        !flecs_table_cache_count(&impl->cr_trav->cache))
     {
         /* If there are no tables with traversable relationship, there are no
          * matches. */
@@ -294,10 +294,10 @@ bool flecs_query_up_with(
     if (!redo) {
         impl->trav = q->terms[op->term_index].trav;
         impl->with = flecs_query_op_get_id(op, ctx);
-        impl->idr_with = flecs_components_get(ctx->world, impl->with);
+        impl->cr_with = flecs_components_get(ctx->world, impl->with);
 
         /* If component record for component doesn't exist, there are no matches */
-        if (!impl->idr_with) {
+        if (!impl->cr_with) {
             return false;
         }
 
@@ -314,8 +314,8 @@ bool flecs_query_up_with(
          * the entity on which the component was found, with additional metadata
          * on where it is stored. */
         ecs_trav_up_t *up = flecs_query_get_up_cache(ctx, &impl->cache, 
-            range.table, impl->with, impl->trav, impl->idr_with,
-            impl->idr_trav);
+            range.table, impl->with, impl->trav, impl->cr_with,
+            impl->cr_trav);
 
         if (!up) {
             /* Component is not reachable from table */

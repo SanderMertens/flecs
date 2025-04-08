@@ -833,7 +833,7 @@ void flecs_add_overrides_for_base(
 
     if (flags & EcsTableHasIsA) {
         const ecs_table_record_t *tr = flecs_component_get_table(
-            world->idr_isa_wildcard, base_table);
+            world->cr_isa_wildcard, base_table);
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t i = tr->index, end = i + tr->count;
         for (; i != end; i ++) {
@@ -845,7 +845,7 @@ void flecs_add_overrides_for_base(
 static
 void flecs_add_with_property(
     ecs_world_t *world,
-    ecs_component_record_t *idr_with_wildcard,
+    ecs_component_record_t *cr_with_wildcard,
     ecs_type_t *dst_type,
     ecs_entity_t r,
     ecs_entity_t o)
@@ -858,7 +858,7 @@ void flecs_add_with_property(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     
     const ecs_table_record_t *tr = flecs_component_get_table(
-        idr_with_wildcard, table);
+        cr_with_wildcard, table);
     if (tr) {
         int32_t i = tr->index, end = i + tr->count;
         ecs_id_t *ids = table->type.array;
@@ -873,7 +873,7 @@ void flecs_add_with_property(
             }
 
             flecs_type_add(world, dst_type, a);
-            flecs_add_with_property(world, idr_with_wildcard, dst_type, ra, o);
+            flecs_add_with_property(world, cr_with_wildcard, dst_type, ra, o);
         }
     }
 
@@ -931,10 +931,10 @@ ecs_table_t* flecs_find_table_with(
     }
 
     if (cr->flags & EcsIdWith) {
-        ecs_component_record_t *idr_with_wildcard = flecs_components_get(world,
+        ecs_component_record_t *cr_with_wildcard = flecs_components_get(world,
             ecs_pair(EcsWith, EcsWildcard));
         /* If id has With property, add targets to type */
-        flecs_add_with_property(world, idr_with_wildcard, &dst_type, r, o);
+        flecs_add_with_property(world, cr_with_wildcard, &dst_type, r, o);
     }
 
     return flecs_table_ensure(world, &dst_type, true, node);
