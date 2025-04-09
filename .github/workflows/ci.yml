@@ -871,7 +871,7 @@ jobs:
           bake/bake setup
 
       - name: build flecs
-        run: bake/bake --strict --trace
+        run: bake/bake --strict
 
       - name: test core
         run: bake/bake run test/core -- -j 8

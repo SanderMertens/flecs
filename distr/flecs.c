@@ -78715,8 +78715,35 @@ int flecs_value_unary(
 
 #define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
 
-#define ECS_BOP(left, right, result, op, R, T)\
+#define ECS_BOP_DO(left, right, result, op, R, T)\
     ECS_VALUE_GET(result, R) = (R)(ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T))
+
+#define ECS_BOP(left, right, result, op, R, T)\
+    if ((result)->type == ecs_id(ecs_u64_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_u64_t, T);\
+    } else if ((result)->type == ecs_id(ecs_u32_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_u32_t, T);\
+    } else if ((result)->type == ecs_id(ecs_u16_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_u16_t, T);\
+    } else if ((result)->type == ecs_id(ecs_u8_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_u8_t, T);\
+    } else if ((result)->type == ecs_id(ecs_i64_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_i64_t, T);\
+    } else if ((result)->type == ecs_id(ecs_i32_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_i32_t, T);\
+    } else if ((result)->type == ecs_id(ecs_i16_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_i16_t, T);\
+    } else if ((result)->type == ecs_id(ecs_i8_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_i8_t, T);\
+    } else if ((result)->type == ecs_id(ecs_f64_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_f64_t, T);\
+    } else if ((result)->type == ecs_id(ecs_f32_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_f32_t, T);\
+    } else if ((result)->type == ecs_id(ecs_char_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_char_t, T);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
 
 #define ECS_BOP_COND(left, right, result, op, R, T)\
     ECS_VALUE_GET(result, ecs_bool_t) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)
@@ -81755,12 +81782,14 @@ int flecs_expr_type_for_operator(
     const EcsPrimitive *ltype_ptr = ecs_get(world, left->type, EcsPrimitive);
     const EcsPrimitive *rtype_ptr = ecs_get(world, right->type, EcsPrimitive);
     if (!ltype_ptr || !rtype_ptr) {
-        /* Only primitives, bitmask constants and enums are allowed */
-        if (left->type == right->type) {
-            if (ecs_get(world, left->type, EcsBitmask) != NULL) {
-                *operand_type = left->type;
-                goto done;
-            }
+        if (ecs_get(world, left->type, EcsBitmask) != NULL) {
+            *operand_type = ecs_id(ecs_u32_t);
+            goto done;
+        }
+
+        if (ecs_get(world, right->type, EcsBitmask) != NULL) {
+            *operand_type = ecs_id(ecs_u32_t);
+            goto done;
         }
 
         {
@@ -82398,8 +82427,8 @@ int flecs_expr_identifier_visit_type(
        (type_ptr->kind == EcsEnumType || type_ptr->kind == EcsBitmaskType)) 
     {
         /* If the requested type is an enum or bitmask, use cursor to resolve 
-        * identifier to correct type constant. This lets us type 'Red' in places
-        * where we expect a value of type Color, instead of Color.Red. */
+         * identifier to correct type constant. This lets us type 'Red' in places
+         * where we expect a value of type Color, instead of Color.Red. */
         node->node.type = type;
         if (flecs_expr_constant_identifier_visit_type(script, node)) {
             goto error;
@@ -82979,10 +83008,22 @@ int flecs_expr_match_visit_type(
      * because the compare operation executed by the match evaluation code isn't
      * implemented for enums. */
     ecs_entity_t expr_type = node->expr->type;
-    const EcsEnum *ptr = ecs_get(script->world, expr_type, EcsEnum);
-    if (ptr) {
-        node->expr = (ecs_expr_node_t*)
-            flecs_expr_cast(script, node->expr, ptr->underlying_type);
+    {
+        const EcsEnum *ptr = ecs_get(script->world, expr_type, EcsEnum);
+        if (ptr) {
+            node->expr = (ecs_expr_node_t*)
+                flecs_expr_cast(script, node->expr, ptr->underlying_type);
+        }
+    }
+
+    /* Do the same for bitmasks */
+    {
+        const EcsBitmask *ptr = ecs_get(script->world, expr_type, EcsBitmask);
+        if (ptr) {
+            /* For now bitmasks are always u32s */
+            node->expr = (ecs_expr_node_t*)
+                flecs_expr_cast(script, node->expr, ecs_id(ecs_u32_t));
+        }
     }
 
     /* Make sure that case values match the input type */
