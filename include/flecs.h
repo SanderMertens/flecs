@@ -344,6 +344,7 @@
 #include "flecs/datastructures/allocator.h"        /* Allocator */
 #include "flecs/datastructures/strbuf.h"           /* String builder */
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
+#include "flecs/storage/storage.h"                 /* Pluggable storage API */
 
 #ifdef __cplusplus
 extern "C" {

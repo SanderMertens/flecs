@@ -134,6 +134,10 @@ struct ecs_table_t {
                                       *  - count(T)..count(C): column -> type index
                                       */
 
+    /* Custom storage components */
+    ecs_entity_t *custom_storage_components; /* Components with custom storage */
+    int32_t custom_storage_count;    /* Number of components with custom storage */
+    
     ecs_table__t *_;                 /* Infrequently accessed table metadata */
 };
 

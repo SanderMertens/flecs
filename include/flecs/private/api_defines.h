@@ -469,4 +469,9 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 }
 #endif
 
+#define EcsTableHasOnTableEmpty        (1u << 20u)
+
+/** Does table contain components with custom storage */
+#define EcsTableHasCustomStorage        (1u << 21u)
+
 #endif

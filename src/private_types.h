@@ -21,6 +21,12 @@
 #include "flecs/datastructures/bitset.h"
 #include "storage/table.h"
 
+/* Custom storage record forward declaration */
+typedef struct ecs_storage_record_t ecs_storage_record_t;
+
+/* Include the private storage header */
+#include "storage/custom_storage.h"
+
 /* Used in id records to keep track of entities used with id flags */
 extern const ecs_entity_t EcsFlag;
 
@@ -264,6 +270,9 @@ typedef struct ecs_store_t {
 
     /* Table lookup by hash */
     ecs_hashmap_t table_map;         /* hashmap<ecs_type_t, ecs_table_t*> */
+
+    /* Custom storage lookup */
+    ecs_hashmap_t *storages;         /* hashmap<ecs_entity_t, ecs_storage_record_t*> */
 
     /* Root table */
     ecs_table_t root;
