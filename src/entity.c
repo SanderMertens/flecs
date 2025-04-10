@@ -3357,17 +3357,17 @@ ecs_entity_t ecs_clone(
                 .array = &id,
                 .count = 1
             };
-            flecs_notify_on_set(world, dst_table, row, 1, &set_type, true);
+            flecs_notify_on_set_ids(world, dst_table, row, 1, &set_type);
 
             int32_t type_id = ecs_table_column_to_type_index(src_table, i);
-            ecs_id_t id = src_table->type.array[type_id];
+            ecs_id_t id_src = src_table->type.array[type_id];
 
-            void *dst_ptr = ecs_get_mut_id(world, dst, id);
+            void *dst_ptr = ecs_get_mut_id(world, dst, id_src);
             if (!dst_ptr) {
                 continue;
             }
 
-            const void *src_ptr = ecs_get_id(world, src, id);
+            const void *src_ptr = ecs_get_id(world, src, id_src);
             const ecs_type_info_t *ti = src_table->data.columns[i].ti;
             if (ti->hooks.copy) {
                 ti->hooks.copy(dst_ptr, src_ptr, 1, ti);
@@ -3375,7 +3375,7 @@ ecs_entity_t ecs_clone(
                 ecs_os_memcpy(dst_ptr, src_ptr, ti->size);
             }
 
-            flecs_notify_on_set(world, dst_table, row, 1, id, true);
+            flecs_notify_on_set(world, dst_table, row, 1, id_src, true);
         }
 
         if (dst_table->flags & EcsTableHasSparse) {
@@ -3650,21 +3650,6 @@ const void* ecs_record_get_id(
     }
 
     ecs_table_t *table = record->table;
-    ecs_id_record_t *idr = record->idr;
-    ecs_id_t real_id = 0;
-
-    if (idr) {
-        real_id = record->idr->id;
-        if (record->idr->flags & EcsIdHasOnWithWildcard) {
-            switch (real_id) {
-            case EcsAdd:
-                return NULL;
-            default:
-                id = real_id;
-                break;
-            }
-        }
-    }
 
     /* Check if table has custom storage for this component */
     if (table->flags & EcsTableHasCustomStorage) {
@@ -3687,10 +3672,10 @@ const void* ecs_record_get_id(
             }
         }
     }
-    
-    /* If no custom storage or not a component with custom storage, use default */
+
+    /* Default behavior: retrieve component from table */
     struct { int32_t min_depth, max_depth; } r = { .min_depth = 0, .max_depth = 0 };
-    int32_t column = flecs_search_relation_w_idr(
+    int32_t column = flecs_search_relation_w_cr(
         world, table, 0, id, 0, 0, 0, 0, 0, 0);
     
     if (column == -1) {

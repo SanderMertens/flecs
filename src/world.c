@@ -2496,7 +2496,7 @@ void flecs_fini_world(
 
     /* After this point no more user code is invoked */
     flecs_entities_fini(world);
-    flecs_fini_id_records(world);
+    flecs_fini_roots(world);
     flecs_fini_type_info(world);
     flecs_observable_fini(&world->observable);
     flecs_name_index_fini(&world->aliases);
