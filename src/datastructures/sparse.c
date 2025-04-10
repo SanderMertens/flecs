@@ -566,14 +566,6 @@ bool flecs_sparse_is_alive(
         return false;
     }
 
-    uint64_t gen = flecs_sparse_strip_generation(&index);
-    uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
-    uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
-
-    if (cur_gen != gen) {
-        return false;
-    }
-
     ecs_assert(dense == page->sparse[offset], ECS_INTERNAL_ERROR, NULL);
     return true;
 }
