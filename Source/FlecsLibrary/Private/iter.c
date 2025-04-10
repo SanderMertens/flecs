@@ -120,8 +120,6 @@ void* ecs_field_w_size(
         "use ecs_field_at to access fields for sparse components");
     (void)cr;
 
-    ecs_os_perf_trace_push("flecs.field.w_size");
-
     ecs_entity_t src = it->sources[index];
     ecs_table_t *table;
     int32_t row;
@@ -152,10 +150,8 @@ void* ecs_field_w_size(
         size = (size_t)column->ti->size;
     }
 
-    ecs_os_perf_trace_pop("flecs.field.w_size");
     return ECS_ELEM(column->data, (ecs_size_t)size, row);
 error:
-    ecs_os_perf_trace_pop("flecs.field.w_size");
     return NULL;
 }
 
@@ -184,9 +180,6 @@ void* ecs_field_at_w_size(
         cr = (ecs_component_record_t*)tr->hdr.cache;
     }
 
-    ecs_os_perf_trace_push("flecs.field.at_w_size");
-    
-    ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
     ecs_assert((cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field to access fields for non-sparse components");
     ecs_assert(it->row_fields & (1ull << index), ECS_INTERNAL_ERROR, NULL);
@@ -196,10 +189,8 @@ void* ecs_field_at_w_size(
         src = ecs_table_entities(it->table)[row + it->offset];
     }
 
-    ecs_os_perf_trace_pop("flecs.field.at_w_size");
     return flecs_sparse_get_any(cr->sparse, flecs_uto(int32_t, size), src);
 error:
-    ecs_os_perf_trace_pop("flecs.field.at_w_size");
     return NULL;
 }
 
@@ -359,8 +350,6 @@ char* ecs_iter_str(
         return NULL;
     }
 
-    ecs_os_perf_trace_push("flecs.iter_str");
-
     ecs_world_t *world = it->world;
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     int8_t i;
@@ -437,7 +426,6 @@ char* ecs_iter_str(
         }
     }
 
-    ecs_os_perf_trace_pop("flecs.iter_str");
     return ecs_strbuf_get(&buf);
 }
 
@@ -511,8 +499,6 @@ ecs_entity_t ecs_iter_get_var(
         "variable index %d out of bounds", var_id);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_os_perf_trace_push("flecs.iter_get_var");
-
     ecs_var_t *var = &it->variables[var_id];
     ecs_entity_t e = var->entity;
     if (!e) {
@@ -531,10 +517,8 @@ ecs_entity_t ecs_iter_get_var(
         ecs_assert(ecs_is_valid(it->real_world, e), ECS_INTERNAL_ERROR, NULL);
     }
 
-    ecs_os_perf_trace_pop("flecs.iter_get_var");
     return e;
 error:
-    ecs_os_perf_trace_pop("flecs.iter_get_var");
     return 0;
 }
 
@@ -596,8 +580,6 @@ ecs_table_range_t ecs_iter_get_var_as_range(
         "variable index %d out of bounds", var_id);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_os_perf_trace_push("flecs.iter_get_var_as_range");
-
     ecs_table_range_t result = { 0 };
 
     ecs_var_t *var = &it->variables[var_id];
@@ -625,10 +607,8 @@ ecs_table_range_t ecs_iter_get_var_as_range(
         }
     }
 
-    ecs_os_perf_trace_pop("flecs.iter_get_var_as_range");
     return result;
 error:
-    ecs_os_perf_trace_pop("flecs.iter_get_var_as_range");
     return (ecs_table_range_t){0};
 }
 
@@ -647,8 +627,6 @@ void ecs_iter_set_var(
     ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER,
         "cannot constrain variable while iterating");
     ecs_check(it->variables != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_os_perf_trace_push("flecs.iter_set_var");
 
     ecs_var_t *var = &it->variables[var_id];
     var->entity = entity;
@@ -670,7 +648,6 @@ void ecs_iter_set_var(
     flecs_query_iter_constrain(it);
 
 error:
-    ecs_os_perf_trace_pop("flecs.iter_set_var");
     return;
 }
 
@@ -703,8 +680,6 @@ void ecs_iter_set_var_as_range(
     ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_OPERATION, 
         "cannot set query variables while iterating");
 
-    ecs_os_perf_trace_push("flecs.iter_set_var_as_range");
-
     ecs_var_t *var = &it->variables[var_id];
     var->range = *range;
 
@@ -721,7 +696,6 @@ void ecs_iter_set_var_as_range(
     flecs_query_iter_constrain(it);
 
 error:
-    ecs_os_perf_trace_pop("flecs.iter_set_var_as_range");
     return;
 }
 
@@ -775,8 +749,6 @@ bool ecs_page_next(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_page_next, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_os_perf_trace_push("flecs.page_next");
 
     ecs_iter_t *chain_it = it->chain_it;
 
@@ -836,7 +808,6 @@ bool ecs_page_next(
     } while (it->count == 0);
 
 yield:
-    ecs_os_perf_trace_pop("flecs.page_next");
     return true;
 
 done:
@@ -845,7 +816,6 @@ done:
 
 depleted:
 error:
-    ecs_os_perf_trace_pop("flecs.page_next");
     return false;
 }
 
@@ -884,8 +854,6 @@ bool ecs_worker_next(
     ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_worker_next, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_os_perf_trace_push("flecs.worker_next");
-
     ecs_iter_t *chain_it = it->chain_it;
     ecs_worker_iter_t *iter = &it->priv_.iter.worker;
     int32_t res_count = iter->count, res_index = iter->index;
@@ -893,7 +861,6 @@ bool ecs_worker_next(
 
     do {
         if (!ecs_iter_next(chain_it)) {
-            ecs_os_perf_trace_pop("flecs.worker_next");
             return false;
         }
 
@@ -916,13 +883,11 @@ bool ecs_worker_next(
 
         if (!per_worker && it->table == NULL) {
             if (res_index == 0) {
-                ecs_os_perf_trace_pop("flecs.worker_next");
                 return true;
             } else {
                 // chained iterator was not yet cleaned up
                 // since it returned true from ecs_iter_next, so clean it up here.
                 ecs_iter_fini(chain_it);
-                ecs_os_perf_trace_pop("flecs.worker_next");
                 return false;
             }
         }
@@ -934,9 +899,7 @@ bool ecs_worker_next(
 
     it->entities = &(ecs_table_entities(it->table)[it->offset]);
 
-    ecs_os_perf_trace_pop("flecs.worker_next");
     return true;
 error:
-    ecs_os_perf_trace_pop("flecs.worker_next");
     return false;
 }
