@@ -78,13 +78,13 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
 FLECS_DBG_API
 void flecs_hashmap_set_(
     ecs_hashmap_t *map,
-    ecs_size_t key_size,
-    void *key,
-    ecs_size_t value_size,
+    size_t key_size,
+    const void *key,
+    size_t value_size,
     const void *value);
 
-#define flecs_hashmap_set(map, key, value)\
-    flecs_hashmap_set_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(*value), value)
+#define flecs_hashmap_set(map, key, key_size, value, value_size)\
+    flecs_hashmap_set_(map, key_size, key, value_size, value)
 
 FLECS_DBG_API
 void flecs_hashmap_remove_(

@@ -157,9 +157,9 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
 
 void flecs_hashmap_set_(
     ecs_hashmap_t *map,
-    ecs_size_t key_size,
-    void *key,
-    ecs_size_t value_size,
+    size_t key_size,
+    const void *key,
+    size_t value_size,
     const void *value)
 {
     void *value_ptr = flecs_hashmap_ensure_(map, key_size, key, value_size).value;

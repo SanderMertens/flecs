@@ -3,14 +3,15 @@
  * @brief Implementation for pluggable storage API.
  */
 
-#include "private_api.h"
+#include "../private_api.h"
+#include "flecs.h"
 
 /* Component storage index */
 static
 ecs_hashmap_t* get_storage_map(
     const ecs_world_t *world)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     
     /* Get or create storage map if it doesn't exist yet */
     world = ecs_get_world(world);
@@ -20,8 +21,8 @@ ecs_hashmap_t* get_storage_map(
         ecs_world_t *mutable_world = ECS_CONST_CAST(ecs_world_t*, world);
         mutable_world->store.storages = storage_map = 
             ecs_os_calloc_t(ecs_hashmap_t);
-        ecs_hashmap_init(storage_map, ecs_entity_t, ecs_storage_record_t*, 
-            ECS_COMPONENT_MAX_ID);
+        flecs_hashmap_init_(storage_map, sizeof(ecs_entity_t), sizeof(ecs_storage_record_t*),
+            0, NULL, NULL);
     }
     
     return storage_map;
@@ -69,7 +70,7 @@ void ecs_set_storage_hooks(
     }
     
     /* Register storage with component */
-    ecs_hashmap_insert(storage_map, component, &sr);
+    flecs_hashmap_set(storage_map, &component, sizeof(ecs_entity_t), &sr, sizeof(ecs_storage_record_t*));
 }
 
 /* Legacy function for backward compatibility */
@@ -105,8 +106,8 @@ void* ecs_get_storage(
     
     /* Get storage record */
     ecs_hashmap_t *storage_map = get_storage_map(world);
-    ecs_storage_record_t **sr_ptr = ecs_hashmap_get(
-        storage_map, component, ecs_storage_record_t*);
+    ecs_storage_record_t **sr_ptr = flecs_hashmap_get(
+        storage_map, &component, ecs_storage_record_t*);
     
     if (!sr_ptr) {
         return NULL;
@@ -126,11 +127,11 @@ void flecs_storage_fini(
 
     ecs_map_iter_t it = ecs_map_iter(&storage_map->impl);
     while (ecs_map_next(&it)) {
-        ecs_storage_record_t *sr = ecs_map_value(&it, ecs_storage_record_t*);
+        ecs_storage_record_t *sr = *(ecs_storage_record_t**)ecs_map_value(&it);
         storage_record_free(sr);
     }
 
-    ecs_hashmap_fini(storage_map);
+    flecs_hashmap_fini(storage_map);
     ecs_os_free(storage_map);
     world->store.storages = NULL;
 }
@@ -149,16 +150,9 @@ void flecs_storage_table_create(
     ecs_type_t type = table->type;
     for (int i = 0; i < type.count; i++) {
         ecs_id_t id = type.array[i];
-        
-        /* Only apply custom storage to components, not to tags or relationships */
-        if (ECS_HAS_ROLE(id, PAIR)) {
-            /* Skip pairs */
-            continue;
-        }
-        
         /* Check if component has custom storage */
-        ecs_storage_record_t **sr_ptr = ecs_hashmap_get(
-            storage_map, id, ecs_storage_record_t*);
+        ecs_storage_record_t **sr_ptr = flecs_hashmap_get(
+            storage_map, &id, ecs_storage_record_t*);
         
         if (sr_ptr) {
             /* Mark table as having custom storage */

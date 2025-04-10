@@ -79,6 +79,8 @@ extern "C" {
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 17) 
 #define EcsIdHasOnSet                  (1u << 18)
+#define EcsIdHasOnWithWildcard         (1u << 19) /* New flag for wildcard handling */
+#define EcsAdd                         (1u << 20) /* New flag for add operations */
 #define EcsIdHasOnTableCreate          (1u << 21)
 #define EcsIdHasOnTableDelete          (1u << 22)
 #define EcsIdIsSparse                  (1u << 23)

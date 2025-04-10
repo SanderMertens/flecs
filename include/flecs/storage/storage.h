@@ -10,6 +10,10 @@
 extern "C" {
 #endif
 
+/* Forward declarations for types used in this header */
+typedef struct ecs_world_t ecs_world_t;
+typedef uint64_t ecs_entity_t;
+
 /** Storage hooks type that stores callback functions for custom storages. */
 typedef struct ecs_storage_hooks_t {
     /** Initialize the storage for a component type. 
