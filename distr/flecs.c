@@ -31664,31 +31664,6 @@ void* flecs_sparse_get(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     (void)size;
-
-    ecs_sparse_page_t *page = ecs_vec_get_t(&sparse->pages, ecs_sparse_page_t, FLECS_SPARSE_PAGE(index));
-    int32_t offset = FLECS_SPARSE_OFFSET(index);
-    int32_t dense = page->sparse[offset];
-    ecs_assert(dense != 0, ECS_INTERNAL_ERROR, NULL);
-
-    uint64_t gen = flecs_sparse_strip_generation(&index);
-    uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
-    uint64_t cur_gen = dense_array[dense] & ECS_GENERATION_MASK;
-    (void)cur_gen; (void)gen;
-
-    ecs_assert(cur_gen == gen, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(dense == page->sparse[offset], ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(dense < sparse->count, ECS_INTERNAL_ERROR, NULL);
-    return DATA(page->data, sparse->size, offset);
-}
-
-void* flecs_sparse_get(
-    const ecs_sparse_t *sparse,
-    ecs_size_t size,
-    uint64_t index)
-{
-    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
-    (void)size;
     
     flecs_sparse_strip_generation(&index);
     ecs_sparse_page_t *page = flecs_sparse_get_page(sparse, FLECS_SPARSE_PAGE(index));
@@ -31707,7 +31682,7 @@ void* flecs_sparse_get(
     return DATA(page->data, sparse->size, offset);
 }
 
-bool flecs_sparse_has_any(
+bool flecs_sparse_has(
     const ecs_sparse_t *sparse,
     uint64_t id)
 {
@@ -37702,7 +37677,7 @@ bool flecs_component_sparse_has(
                         continue;
                     }
 
-                    if (flecs_sparse_has_any(cur->sparse, entity)) {
+                    if (flecs_sparse_has(cur->sparse, entity)) {
                         return true;
                     }
                 }
@@ -37717,7 +37692,7 @@ bool flecs_component_sparse_has(
                         continue;
                     }
 
-                    if (flecs_sparse_has_any(cur->sparse, entity)) {
+                    if (flecs_sparse_has(cur->sparse, entity)) {
                         return true;
                     }
                 }
@@ -37730,7 +37705,7 @@ bool flecs_component_sparse_has(
     } else {
         ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
-        return flecs_sparse_has_any(cr->sparse, entity);
+        return flecs_sparse_has(cr->sparse, entity);
     }
 }
 
@@ -76167,7 +76142,7 @@ next:
         result = ptr != NULL;
         *ptr_out = ptr;
     } else {
-        result = flecs_sparse_has_any(op_ctx->sparse, e);
+        result = flecs_sparse_has(op_ctx->sparse, e);
     }
 
     if (not) {
@@ -79023,7 +78998,7 @@ ecs_trav_up_t* flecs_trav_table_up(
 
     ecs_type_t type = table->type;
     if (cr_with->flags & EcsIdDontFragment) {
-        if (flecs_sparse_has_any(cr_with->sparse, src)) {
+        if (flecs_sparse_has(cr_with->sparse, src)) {
             up->src = src;
             up->tr = NULL;
             up->id = cr_with->id;

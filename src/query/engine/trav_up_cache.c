@@ -85,7 +85,7 @@ ecs_trav_up_t* flecs_trav_table_up(
 
     ecs_type_t type = table->type;
     if (cr_with->flags & EcsIdDontFragment) {
-        if (flecs_sparse_has_any(cr_with->sparse, src)) {
+        if (flecs_sparse_has(cr_with->sparse, src)) {
             up->src = src;
             up->tr = NULL;
             up->id = cr_with->id;

@@ -1455,19 +1455,8 @@ FLECS_DBG_API
 int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse);
 
-/** Get element by (sparse) id. The returned pointer is stable for the duration
- * of the sparse set, as it is stored in the sparse array. */
-FLECS_DBG_API
-void* flecs_sparse_get(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);
-
-#define flecs_sparse_get_t(sparse, T, index)\
-    ECS_CAST(T*, flecs_sparse_get(sparse, ECS_SIZEOF(T), index))
-
 /** Check if sparse set has id */
-bool flecs_sparse_has_any(
+bool flecs_sparse_has(
     const ecs_sparse_t *sparse,
     uint64_t id);
 

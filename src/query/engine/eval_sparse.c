@@ -73,7 +73,7 @@ next:
         result = ptr != NULL;
         *ptr_out = ptr;
     } else {
-        result = flecs_sparse_has_any(op_ctx->sparse, e);
+        result = flecs_sparse_has(op_ctx->sparse, e);
     }
 
     if (not) {

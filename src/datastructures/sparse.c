@@ -634,7 +634,7 @@ void* flecs_sparse_get(
     return DATA(page->data, sparse->size, offset);
 }
 
-bool flecs_sparse_has_any(
+bool flecs_sparse_has(
     const ecs_sparse_t *sparse,
     uint64_t id)
 {

@@ -19,7 +19,7 @@ bool flecs_component_sparse_has(
                         continue;
                     }
 
-                    if (flecs_sparse_has_any(cur->sparse, entity)) {
+                    if (flecs_sparse_has(cur->sparse, entity)) {
                         return true;
                     }
                 }
@@ -34,7 +34,7 @@ bool flecs_component_sparse_has(
                         continue;
                     }
 
-                    if (flecs_sparse_has_any(cur->sparse, entity)) {
+                    if (flecs_sparse_has(cur->sparse, entity)) {
                         return true;
                     }
                 }
@@ -47,7 +47,7 @@ bool flecs_component_sparse_has(
     } else {
         ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
-        return flecs_sparse_has_any(cr->sparse, entity);
+        return flecs_sparse_has(cr->sparse, entity);
     }
 }
 

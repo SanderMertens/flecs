@@ -114,7 +114,7 @@ int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse);
 
 /** Check if sparse set has id */
-bool flecs_sparse_has_any(
+bool flecs_sparse_has(
     const ecs_sparse_t *sparse,
     uint64_t id);
 
