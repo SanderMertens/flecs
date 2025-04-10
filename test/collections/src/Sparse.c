@@ -205,21 +205,21 @@ void Sparse_remove_all(void) {
 
     flecs_sparse_remove_t(sp, int, 0);
     test_int(flecs_sparse_count(sp), 2);
-    test_assert(flecs_sparse_try_t(sp, int, 0) == NULL);
-    test_assert(flecs_sparse_try_t(sp, int, 1) == elem2);
-    test_assert(flecs_sparse_try_t(sp, int, 2) == elem3);
+    test_assert(flecs_sparse_t(sp, int, 0) == NULL);
+    test_assert(flecs_sparse_t(sp, int, 1) == elem2);
+    test_assert(flecs_sparse_t(sp, int, 2) == elem3);
 
     flecs_sparse_remove_t(sp, int, 1);
     test_int(flecs_sparse_count(sp), 1);
-    test_assert(flecs_sparse_try_t(sp, int, 0) == NULL);
-    test_assert(flecs_sparse_try_t(sp, int, 1) == NULL);
-    test_assert(flecs_sparse_try_t(sp, int, 2) == elem3);    
+    test_assert(flecs_sparse_t(sp, int, 0) == NULL);
+    test_assert(flecs_sparse_t(sp, int, 1) == NULL);
+    test_assert(flecs_sparse_t(sp, int, 2) == elem3);    
 
     flecs_sparse_remove_t(sp, int, 2);
     test_int(flecs_sparse_count(sp), 0);
-    test_assert(flecs_sparse_try_t(sp, int, 0) == NULL);
-    test_assert(flecs_sparse_try_t(sp, int, 1) == NULL);
-    test_assert(flecs_sparse_try_t(sp, int, 2) == NULL);    
+    test_assert(flecs_sparse_t(sp, int, 0) == NULL);
+    test_assert(flecs_sparse_t(sp, int, 1) == NULL);
+    test_assert(flecs_sparse_t(sp, int, 2) == NULL);    
 
     flecs_sparse_free(sp);
 }
@@ -364,7 +364,7 @@ void Sparse_try_low_after_ensure_high(void) {
     int *ptr_1 = flecs_sparse_insert_t(sp, int, 5000);
     test_assert(ptr_1 != NULL);
 
-    int *ptr_2 = flecs_sparse_try_t(sp, int, 100);
+    int *ptr_2 = flecs_sparse_t(sp, int, 100);
     test_assert(ptr_2 == NULL);
 
     flecs_sparse_free(sp);

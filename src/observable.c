@@ -58,7 +58,7 @@ ecs_event_record_t* flecs_event_record_get(
     else if (event == EcsWildcard) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_wildcard);
 
     /* User events */
-    return flecs_sparse_try_t(&o->events, ecs_event_record_t, event);
+    return flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
 }
 
 ecs_event_record_t* flecs_event_record_ensure(
