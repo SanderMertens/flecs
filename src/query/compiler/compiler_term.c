@@ -19,8 +19,6 @@ ecs_var_id_t flecs_query_find_var_id(
             if (query->pub.flags & EcsQueryHasTableThisVar) {
                 return 0;
             } else {
-                printf("VARNONE\n");
-                flecs_dump_backtrace(stdout);
                 return EcsVarNone;
             }
         }
@@ -838,7 +836,7 @@ bool flecs_query_select_all(
         term->oper == EcsNotFrom || pred_match) 
     {
         ecs_query_op_t match_any = {0};
-        match_any.kind = EcsAnd;
+        match_any.kind = EcsQueryAll;
         match_any.flags = EcsQueryIsSelf | (EcsQueryIsEntity << EcsQueryFirst);
         match_any.flags |= (EcsQueryIsVar << EcsQuerySrc);
         match_any.src = op->src;
@@ -1113,6 +1111,21 @@ void flecs_query_set_op_kind(
                 op->kind = EcsQueryUnionEqSelfUp;
             }
         }
+    } else if (term->flags_ & EcsTermDontFragment) {
+        if (op->kind == EcsQueryAnd) {
+            op->kind = EcsQuerySparse;
+            if (term->oper == EcsNot) {
+                op->kind = EcsQuerySparseNot;
+            }
+        } else {
+            op->kind = EcsQuerySparseWith;
+        }
+
+        if ((term->src.id & trav_flags) == EcsUp) {
+            op->kind = EcsQuerySparseUp;
+        } else if ((term->src.id & trav_flags) == (EcsSelf|EcsUp)) {
+            op->kind = EcsQuerySparseSelfUp;
+        }
     } else {
         if ((term->src.id & trav_flags) == EcsUp) {
             op->kind = EcsQueryUp;
@@ -1120,6 +1133,14 @@ void flecs_query_set_op_kind(
             op->kind = EcsQuerySelfUp;
         } else if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op->kind = EcsQueryAndAny;
+        } else if (ECS_IS_PAIR(term->id) && 
+            ECS_PAIR_FIRST(term->id) == EcsWildcard) 
+        {
+            if (op->kind == EcsQueryAnd) {
+                op->kind = EcsQueryAndWcTgt;
+            } else {
+                op->kind = EcsQueryWithWcTgt;
+            }
         }
     }
 }
@@ -1175,8 +1196,8 @@ int flecs_query_compile_term(
 
         for (i = 0; i < count; i ++) {
             ecs_id_t ti_id = ti_ids[i];
-            ecs_id_record_t *idr = flecs_id_record_get(world, ti_id);
-            if (!(idr->flags & EcsIdOnInstantiateDontInherit)) {
+            ecs_component_record_t *cr = flecs_components_get(world, ti_id);
+            if (!(cr->flags & EcsIdOnInstantiateDontInherit)) {
                 break;
             }
         }
@@ -1223,6 +1244,9 @@ int flecs_query_compile_term(
     flecs_query_set_op_kind(&op, term, src_is_var);
 
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
+    if (op.kind == EcsQuerySparseNot) {
+        is_not = false;
+    }
 
     /* Save write state at start of term so we can use it to reliably track
      * variables got written by this term. */
@@ -1320,7 +1344,7 @@ int flecs_query_compile_term(
     } else if (!src_written && term->id == EcsAny && op.kind == EcsQueryAndAny) {
         /* Lookup variables ($var.child_name) are always written */
         if (!src_is_lookup) {
-            op.kind = EcsQueryOnlyAny; /* Uses Any (_) id record */
+            op.kind = EcsQueryAll; /* Uses Any (_) component record */
         }
     }
 

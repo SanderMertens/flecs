@@ -38,8 +38,8 @@ typedef struct ecs_json_value_ser_ctx_t {
 
 /* Cached data for serializer */
 typedef struct ecs_json_ser_ctx_t {
-    ecs_id_record_t *idr_doc_name;
-    ecs_id_record_t *idr_doc_color;
+    ecs_component_record_t *cr_doc_name;
+    ecs_component_record_t *cr_doc_color;
     ecs_json_value_ser_ctx_t value_ctx[64];
 } ecs_json_ser_ctx_t;
 

@@ -74,7 +74,6 @@
 #endif
 
 /* Always included, if disabled functions are replaced with dummy macros */
-#include "flecs/private/journal.h"
 #include "flecs/addons/log.h"
 
 /* Handle addon dependencies that need declarations to be visible in header */
@@ -217,7 +216,7 @@
 #ifdef FLECS_NO_OS_API_IMPL
 #error "FLECS_NO_OS_API_IMPL failed: OS_API_IMPL is required by other addons"
 #endif
-#include "../private/os_api_impl.h"
+#include "../addons/os_api_impl.h"
 #endif
 
 #ifdef FLECS_MODULE

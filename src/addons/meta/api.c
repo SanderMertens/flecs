@@ -217,7 +217,13 @@ ecs_entity_t ecs_enum_init(
         ut_is_unsigned = true;
     }
 
-    ecs_set(world, t, EcsEnum, { .underlying_type = underlying });
+    ecs_vec_t ordered_constants;
+    ecs_vec_init_t(NULL, &ordered_constants, ecs_enum_constant_t, 0);
+
+    ecs_set(world, t, EcsEnum, { 
+        .underlying_type = underlying, 
+        .ordered_constants = ordered_constants
+    });
 
     ecs_entity_t old_scope = ecs_set_scope(world, t);
 
@@ -299,7 +305,12 @@ ecs_entity_t ecs_bitmask_init(
         t = ecs_new_low_id(world);
     }
 
-    ecs_add(world, t, EcsBitmask);
+    ecs_vec_t ordered_constants;
+    ecs_vec_init_t(NULL, &ordered_constants, ecs_bitmask_constant_t, 0);
+
+    ecs_set(world, t, EcsBitmask, { 
+        .ordered_constants = ordered_constants
+    });
 
     ecs_entity_t old_scope = ecs_set_scope(world, t);
 
@@ -426,9 +437,7 @@ ecs_entity_t ecs_struct_init(
             goto error;
         }
 
-        ecs_entity_t m = ecs_entity(world, {
-            .name = m_desc->name
-        });
+        ecs_entity_t m = ecs_new_from_path(world, t, m_desc->name);
 
         ecs_set(world, m, EcsMember, {
             .type = m_desc->type, 

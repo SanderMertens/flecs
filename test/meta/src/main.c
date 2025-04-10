@@ -104,6 +104,8 @@ void RuntimeTypes_move(void);
 void RuntimeTypes_move_illegal(void);
 void RuntimeTypes_copy(void);
 void RuntimeTypes_copy_illegal(void);
+void RuntimeTypes_cmp_illegal(void);
+void RuntimeTypes_equals_illegal(void);
 void RuntimeTypes_trivial_array(void);
 void RuntimeTypes_array_ctor(void);
 void RuntimeTypes_array_ctor_illegal(void);
@@ -113,8 +115,10 @@ void RuntimeTypes_array_move(void);
 void RuntimeTypes_array_move_illegal(void);
 void RuntimeTypes_array_copy(void);
 void RuntimeTypes_array_copy_illegal(void);
+void RuntimeTypes_array_cmp_illegal(void);
 void RuntimeTypes_vector_lifecycle(void);
 void RuntimeTypes_vector_lifecycle_trivial_type(void);
+void RuntimeTypes_vector_cmp_illegal(void);
 void RuntimeTypes_opaque(void);
 void RuntimeTypes_struct_with_ints(void);
 void RuntimeTypes_struct_with_strings(void);
@@ -1033,6 +1037,55 @@ void Misc_unit_from_suspend_defer(void);
 void Misc_unit_prefix_from_suspend_defer(void);
 void Misc_quantity_from_suspend_defer(void);
 
+// Testsuite 'PrimitiveCompare'
+void PrimitiveCompare_bool(void);
+void PrimitiveCompare_char(void);
+void PrimitiveCompare_byte(void);
+void PrimitiveCompare_u8(void);
+void PrimitiveCompare_u16(void);
+void PrimitiveCompare_u32(void);
+void PrimitiveCompare_u64(void);
+void PrimitiveCompare_uptr(void);
+void PrimitiveCompare_i8(void);
+void PrimitiveCompare_i16(void);
+void PrimitiveCompare_i32(void);
+void PrimitiveCompare_i64(void);
+void PrimitiveCompare_iptr(void);
+void PrimitiveCompare_f32(void);
+void PrimitiveCompare_f64(void);
+void PrimitiveCompare_entity(void);
+void PrimitiveCompare_id(void);
+void PrimitiveCompare_string(void);
+void PrimitiveCompare_const_string(void);
+
+// Testsuite 'RttCompare'
+void RttCompare_struct_with_ints(void);
+void RttCompare_struct_with_strings(void);
+void RttCompare_struct_with_opaque(void);
+void RttCompare_nested_struct_with_strings(void);
+void RttCompare_struct_with_array_of_strings(void);
+void RttCompare_struct_with_array_of_array_of_strings(void);
+void RttCompare_struct_with_vector_of_ints(void);
+void RttCompare_struct_with_vector_of_strings(void);
+void RttCompare_nested_struct_with_vector_of_ints(void);
+void RttCompare_nested_struct_with_vector_of_strings(void);
+void RttCompare_array_of_ints(void);
+void RttCompare_array_of_strings(void);
+void RttCompare_array_of_struct_with_ints(void);
+void RttCompare_array_of_struct_with_strings(void);
+void RttCompare_array_of_struct_with_opaques(void);
+void RttCompare_array_of_array_of_strings(void);
+void RttCompare_array_of_array_of_struct_with_strings(void);
+void RttCompare_array_of_vectors_of_ints(void);
+void RttCompare_array_of_vectors_of_strings(void);
+void RttCompare_array_of_opaque(void);
+void RttCompare_vector_of_ints(void);
+void RttCompare_vector_of_strings(void);
+void RttCompare_vector_of_struct_with_ints(void);
+void RttCompare_vector_of_struct_with_strings(void);
+void RttCompare_vector_of_arrays_of_strings(void);
+void RttCompare_vector_of_opaque(void);
+
 bake_test_case PrimitiveTypes_testcases[] = {
     {
         "bool",
@@ -1400,6 +1453,14 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_copy_illegal
     },
     {
+        "cmp_illegal",
+        RuntimeTypes_cmp_illegal
+    },
+    {
+        "equals_illegal",
+        RuntimeTypes_equals_illegal
+    },
+    {
         "trivial_array",
         RuntimeTypes_trivial_array
     },
@@ -1436,12 +1497,20 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_array_copy_illegal
     },
     {
+        "array_cmp_illegal",
+        RuntimeTypes_array_cmp_illegal
+    },
+    {
         "vector_lifecycle",
         RuntimeTypes_vector_lifecycle
     },
     {
         "vector_lifecycle_trivial_type",
         RuntimeTypes_vector_lifecycle_trivial_type
+    },
+    {
+        "vector_cmp_illegal",
+        RuntimeTypes_vector_cmp_illegal
     },
     {
         "opaque",
@@ -5028,6 +5097,192 @@ bake_test_case Misc_testcases[] = {
     }
 };
 
+bake_test_case PrimitiveCompare_testcases[] = {
+    {
+        "bool",
+        PrimitiveCompare_bool
+    },
+    {
+        "char",
+        PrimitiveCompare_char
+    },
+    {
+        "byte",
+        PrimitiveCompare_byte
+    },
+    {
+        "u8",
+        PrimitiveCompare_u8
+    },
+    {
+        "u16",
+        PrimitiveCompare_u16
+    },
+    {
+        "u32",
+        PrimitiveCompare_u32
+    },
+    {
+        "u64",
+        PrimitiveCompare_u64
+    },
+    {
+        "uptr",
+        PrimitiveCompare_uptr
+    },
+    {
+        "i8",
+        PrimitiveCompare_i8
+    },
+    {
+        "i16",
+        PrimitiveCompare_i16
+    },
+    {
+        "i32",
+        PrimitiveCompare_i32
+    },
+    {
+        "i64",
+        PrimitiveCompare_i64
+    },
+    {
+        "iptr",
+        PrimitiveCompare_iptr
+    },
+    {
+        "f32",
+        PrimitiveCompare_f32
+    },
+    {
+        "f64",
+        PrimitiveCompare_f64
+    },
+    {
+        "entity",
+        PrimitiveCompare_entity
+    },
+    {
+        "id",
+        PrimitiveCompare_id
+    },
+    {
+        "string",
+        PrimitiveCompare_string
+    },
+    {
+        "const_string",
+        PrimitiveCompare_const_string
+    }
+};
+
+bake_test_case RttCompare_testcases[] = {
+    {
+        "struct_with_ints",
+        RttCompare_struct_with_ints
+    },
+    {
+        "struct_with_strings",
+        RttCompare_struct_with_strings
+    },
+    {
+        "struct_with_opaque",
+        RttCompare_struct_with_opaque
+    },
+    {
+        "nested_struct_with_strings",
+        RttCompare_nested_struct_with_strings
+    },
+    {
+        "struct_with_array_of_strings",
+        RttCompare_struct_with_array_of_strings
+    },
+    {
+        "struct_with_array_of_array_of_strings",
+        RttCompare_struct_with_array_of_array_of_strings
+    },
+    {
+        "struct_with_vector_of_ints",
+        RttCompare_struct_with_vector_of_ints
+    },
+    {
+        "struct_with_vector_of_strings",
+        RttCompare_struct_with_vector_of_strings
+    },
+    {
+        "nested_struct_with_vector_of_ints",
+        RttCompare_nested_struct_with_vector_of_ints
+    },
+    {
+        "nested_struct_with_vector_of_strings",
+        RttCompare_nested_struct_with_vector_of_strings
+    },
+    {
+        "array_of_ints",
+        RttCompare_array_of_ints
+    },
+    {
+        "array_of_strings",
+        RttCompare_array_of_strings
+    },
+    {
+        "array_of_struct_with_ints",
+        RttCompare_array_of_struct_with_ints
+    },
+    {
+        "array_of_struct_with_strings",
+        RttCompare_array_of_struct_with_strings
+    },
+    {
+        "array_of_struct_with_opaques",
+        RttCompare_array_of_struct_with_opaques
+    },
+    {
+        "array_of_array_of_strings",
+        RttCompare_array_of_array_of_strings
+    },
+    {
+        "array_of_array_of_struct_with_strings",
+        RttCompare_array_of_array_of_struct_with_strings
+    },
+    {
+        "array_of_vectors_of_ints",
+        RttCompare_array_of_vectors_of_ints
+    },
+    {
+        "array_of_vectors_of_strings",
+        RttCompare_array_of_vectors_of_strings
+    },
+    {
+        "array_of_opaque",
+        RttCompare_array_of_opaque
+    },
+    {
+        "vector_of_ints",
+        RttCompare_vector_of_ints
+    },
+    {
+        "vector_of_strings",
+        RttCompare_vector_of_strings
+    },
+    {
+        "vector_of_struct_with_ints",
+        RttCompare_vector_of_struct_with_ints
+    },
+    {
+        "vector_of_struct_with_strings",
+        RttCompare_vector_of_struct_with_strings
+    },
+    {
+        "vector_of_arrays_of_strings",
+        RttCompare_vector_of_arrays_of_strings
+    },
+    {
+        "vector_of_opaque",
+        RttCompare_vector_of_opaque
+    }
+};
+
 
 static bake_test_suite suites[] = {
     {
@@ -5055,7 +5310,7 @@ static bake_test_suite suites[] = {
         "RuntimeTypes",
         NULL,
         NULL,
-        47,
+        51,
         RuntimeTypes_testcases
     },
     {
@@ -5176,9 +5431,23 @@ static bake_test_suite suites[] = {
         NULL,
         40,
         Misc_testcases
+    },
+    {
+        "PrimitiveCompare",
+        NULL,
+        NULL,
+        19,
+        PrimitiveCompare_testcases
+    },
+    {
+        "RttCompare",
+        NULL,
+        NULL,
+        26,
+        RttCompare_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 21);
+    return bake_test_run("meta", argc, argv, suites, 23);
 }

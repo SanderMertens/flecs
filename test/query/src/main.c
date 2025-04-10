@@ -690,7 +690,6 @@ void Basic_ref_fields_up_src(void);
 void Basic_ref_fields_self_up_src(void);
 void Basic_0_src_match_nothing(void);
 void Basic_0_terms_match_nothing(void);
-void Basic_any_record(void);
 void Basic_pair_rel_any_record(void);
 void Basic_pair_tgt_any_record(void);
 void Basic_pair_any_any_record(void);
@@ -1099,12 +1098,19 @@ void Operators_only_optional(void);
 void Operators_only_optional_component(void);
 void Operators_not_after_fixed_src(void);
 void Operators_optional_after_fixed_src(void);
-void Operators_root_entities_empty(void);
+void Operators_root_entities_no_user_entities(void);
 void Operators_root_entities(void);
 void Operators_root_entities_w_children(void);
 void Operators_root_entities_w_optional_children(void);
 void Operators_core_entities_w_optional_children(void);
 void Operators_root_entities_w_not_children(void);
+void Operators_root_entities_empty(void);
+void Operators_root_entities_empty_w_childof_0(void);
+void Operators_root_entities_empty_w_optional(void);
+void Operators_root_entities_empty_w_optional_childof_0(void);
+void Operators_optional_w_root_entities_empty(void);
+void Operators_not_w_root_entities_empty(void);
+void Operators_written_root_entities_empty(void);
 void Operators_core_entities_w_not_children(void);
 void Operators_1_ent_src_not(void);
 void Operators_1_ent_src_not_pair(void);
@@ -1947,10 +1953,14 @@ void Toggle_toggle_0_src(void);
 void Sparse_setup(void);
 void Sparse_1_fixed_sparse(void);
 void Sparse_1_fixed_sparse_none(void);
+void Sparse_1_fixed_sparse_self(void);
+void Sparse_1_fixed_sparse_self_up(void);
+void Sparse_1_fixed_sparse_up(void);
 void Sparse_1_this_sparse_simple(void);
 void Sparse_1_this_sparse(void);
 void Sparse_1_this_sparse_none(void);
 void Sparse_1_this_sparse_written(void);
+void Sparse_1_this_sparse_written_partial(void);
 void Sparse_1_this_sparse_written_none(void);
 void Sparse_1_var_sparse(void);
 void Sparse_1_var_sparse_none(void);
@@ -1972,6 +1982,86 @@ void Sparse_sparse_pair_first(void);
 void Sparse_sparse_pair_second(void);
 void Sparse_sparse_pair_first_after_query(void);
 void Sparse_sparse_pair_second_after_query(void);
+
+// Testsuite 'DontFragment'
+void DontFragment_setup(void);
+void DontFragment_1_fixed_sparse(void);
+void DontFragment_1_fixed_sparse_none(void);
+void DontFragment_1_fixed_sparse_self(void);
+void DontFragment_1_fixed_sparse_self_up(void);
+void DontFragment_1_fixed_sparse_up(void);
+void DontFragment_1_this_sparse_simple(void);
+void DontFragment_1_this_sparse(void);
+void DontFragment_1_this_sparse_none(void);
+void DontFragment_1_this_sparse_written(void);
+void DontFragment_1_this_sparse_written_partial(void);
+void DontFragment_1_this_sparse_written_none(void);
+void DontFragment_1_var_sparse(void);
+void DontFragment_1_var_sparse_none(void);
+void DontFragment_1_var_sparse_written(void);
+void DontFragment_1_var_sparse_written_none(void);
+void DontFragment_2_sparse_simple(void);
+void DontFragment_2_sparse(void);
+void DontFragment_2_sparse_and_regular(void);
+void DontFragment_2_regular_and_sparse(void);
+void DontFragment_1_sparse_self(void);
+void DontFragment_1_sparse_up(void);
+void DontFragment_1_sparse_self_up(void);
+void DontFragment_1_sparse_written_self(void);
+void DontFragment_1_sparse_written_up(void);
+void DontFragment_1_sparse_written_self_up(void);
+void DontFragment_1_fixed_sparse_not(void);
+void DontFragment_1_this_sparse_not(void);
+void DontFragment_1_var_sparse_not(void);
+void DontFragment_1_this_sparse_written_not(void);
+void DontFragment_1_var_sparse_written_not(void);
+void DontFragment_sparse_0_src_only_term(void);
+void DontFragment_sparse_0_src(void);
+void DontFragment_sparse_pair_first(void);
+void DontFragment_sparse_pair_second(void);
+void DontFragment_sparse_pair_first_after_query(void);
+void DontFragment_sparse_pair_second_after_query(void);
+void DontFragment_ignore_prefab_disabled(void);
+void DontFragment_match_prefab_ignore_disabled(void);
+void DontFragment_ignore_prefab_match_disabled(void);
+void DontFragment_match_prefab_disabled(void);
+void DontFragment_1_fixed_sparse_second_wildcard(void);
+void DontFragment_1_this_sparse_second_wildcard(void);
+void DontFragment_1_var_sparse_second_wildcard(void);
+void DontFragment_1_this_sparse_written_second_wildcard(void);
+void DontFragment_1_var_sparse_written_second_wildcard(void);
+void DontFragment_1_fixed_sparse_first_wildcard(void);
+void DontFragment_1_fixed_sparse_first_wildcard_mixed(void);
+void DontFragment_1_this_sparse_first_wildcard(void);
+void DontFragment_1_this_sparse_first_wildcard_mixed(void);
+void DontFragment_1_this_sparse_written_first_wildcard_mixed(void);
+void DontFragment_1_this_sparse_first_wildcard_simple(void);
+void DontFragment_1_var_sparse_first_wildcard(void);
+void DontFragment_1_var_sparse_first_wildcard_mixed(void);
+void DontFragment_1_this_sparse_written_first_wildcard(void);
+void DontFragment_1_var_sparse_written_first_wildcard(void);
+void DontFragment_1_fixed_exclusive(void);
+void DontFragment_1_fixed_exclusive_second_wildcard(void);
+void DontFragment_1_this_exclusive(void);
+void DontFragment_1_this_exclusive_second_wildcard(void);
+void DontFragment_1_var_exclusive(void);
+void DontFragment_1_var_exclusive_second_wildcard(void);
+void DontFragment_1_this_written_exclusive(void);
+void DontFragment_1_this_written_exclusive_second_wildcard(void);
+void DontFragment_1_var_written_exclusive(void);
+void DontFragment_1_var_written_exclusive_second_wildcard(void);
+void DontFragment_this_wildcard_wildcard_pair(void);
+void DontFragment_this_rel_var_w_component(void);
+void DontFragment_this_tgt_var_w_component(void);
+void DontFragment_this_wc_rel_var_w_component(void);
+void DontFragment_this_wc_tgt_var_w_component(void);
+void DontFragment_this_written_wildcard_wildcard_pair(void);
+void DontFragment_this_written_component_wildcard_wildcard_pair(void);
+void DontFragment_this_written_wc_rel_var_w_component(void);
+void DontFragment_this_written_wc_tgt_var_w_component(void);
+void DontFragment_this_written_rel_var_w_component(void);
+void DontFragment_this_written_tgt_var_w_component(void);
+void DontFragment_add_to_self_while_iterate(void);
 
 // Testsuite 'Union'
 void Union_setup(void);
@@ -2166,6 +2256,8 @@ void QueryStr_pred_eq_name(void);
 void QueryStr_pred_neq_name(void);
 void QueryStr_pred_eq_m(void);
 void QueryStr_pred_neq_m(void);
+void QueryStr_not_childof_any(void);
+void QueryStr_childof_0(void);
 
 bake_test_case Validator_testcases[] = {
     {
@@ -4870,10 +4962,6 @@ bake_test_case Basic_testcases[] = {
         Basic_0_terms_match_nothing
     },
     {
-        "any_record",
-        Basic_any_record
-    },
-    {
         "pair_rel_any_record",
         Basic_pair_rel_any_record
     },
@@ -6474,8 +6562,8 @@ bake_test_case Operators_testcases[] = {
         Operators_optional_after_fixed_src
     },
     {
-        "root_entities_empty",
-        Operators_root_entities_empty
+        "root_entities_no_user_entities",
+        Operators_root_entities_no_user_entities
     },
     {
         "root_entities",
@@ -6496,6 +6584,34 @@ bake_test_case Operators_testcases[] = {
     {
         "root_entities_w_not_children",
         Operators_root_entities_w_not_children
+    },
+    {
+        "root_entities_empty",
+        Operators_root_entities_empty
+    },
+    {
+        "root_entities_empty_w_childof_0",
+        Operators_root_entities_empty_w_childof_0
+    },
+    {
+        "root_entities_empty_w_optional",
+        Operators_root_entities_empty_w_optional
+    },
+    {
+        "root_entities_empty_w_optional_childof_0",
+        Operators_root_entities_empty_w_optional_childof_0
+    },
+    {
+        "optional_w_root_entities_empty",
+        Operators_optional_w_root_entities_empty
+    },
+    {
+        "not_w_root_entities_empty",
+        Operators_not_w_root_entities_empty
+    },
+    {
+        "written_root_entities_empty",
+        Operators_written_root_entities_empty
     },
     {
         "core_entities_w_not_children",
@@ -9773,6 +9889,18 @@ bake_test_case Sparse_testcases[] = {
         Sparse_1_fixed_sparse_none
     },
     {
+        "1_fixed_sparse_self",
+        Sparse_1_fixed_sparse_self
+    },
+    {
+        "1_fixed_sparse_self_up",
+        Sparse_1_fixed_sparse_self_up
+    },
+    {
+        "1_fixed_sparse_up",
+        Sparse_1_fixed_sparse_up
+    },
+    {
         "1_this_sparse_simple",
         Sparse_1_this_sparse_simple
     },
@@ -9787,6 +9915,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "1_this_sparse_written",
         Sparse_1_this_sparse_written
+    },
+    {
+        "1_this_sparse_written_partial",
+        Sparse_1_this_sparse_written_partial
     },
     {
         "1_this_sparse_written_none",
@@ -9871,6 +10003,317 @@ bake_test_case Sparse_testcases[] = {
     {
         "sparse_pair_second_after_query",
         Sparse_sparse_pair_second_after_query
+    }
+};
+
+bake_test_case DontFragment_testcases[] = {
+    {
+        "1_fixed_sparse",
+        DontFragment_1_fixed_sparse
+    },
+    {
+        "1_fixed_sparse_none",
+        DontFragment_1_fixed_sparse_none
+    },
+    {
+        "1_fixed_sparse_self",
+        DontFragment_1_fixed_sparse_self
+    },
+    {
+        "1_fixed_sparse_self_up",
+        DontFragment_1_fixed_sparse_self_up
+    },
+    {
+        "1_fixed_sparse_up",
+        DontFragment_1_fixed_sparse_up
+    },
+    {
+        "1_this_sparse_simple",
+        DontFragment_1_this_sparse_simple
+    },
+    {
+        "1_this_sparse",
+        DontFragment_1_this_sparse
+    },
+    {
+        "1_this_sparse_none",
+        DontFragment_1_this_sparse_none
+    },
+    {
+        "1_this_sparse_written",
+        DontFragment_1_this_sparse_written
+    },
+    {
+        "1_this_sparse_written_partial",
+        DontFragment_1_this_sparse_written_partial
+    },
+    {
+        "1_this_sparse_written_none",
+        DontFragment_1_this_sparse_written_none
+    },
+    {
+        "1_var_sparse",
+        DontFragment_1_var_sparse
+    },
+    {
+        "1_var_sparse_none",
+        DontFragment_1_var_sparse_none
+    },
+    {
+        "1_var_sparse_written",
+        DontFragment_1_var_sparse_written
+    },
+    {
+        "1_var_sparse_written_none",
+        DontFragment_1_var_sparse_written_none
+    },
+    {
+        "2_sparse_simple",
+        DontFragment_2_sparse_simple
+    },
+    {
+        "2_sparse",
+        DontFragment_2_sparse
+    },
+    {
+        "2_sparse_and_regular",
+        DontFragment_2_sparse_and_regular
+    },
+    {
+        "2_regular_and_sparse",
+        DontFragment_2_regular_and_sparse
+    },
+    {
+        "1_sparse_self",
+        DontFragment_1_sparse_self
+    },
+    {
+        "1_sparse_up",
+        DontFragment_1_sparse_up
+    },
+    {
+        "1_sparse_self_up",
+        DontFragment_1_sparse_self_up
+    },
+    {
+        "1_sparse_written_self",
+        DontFragment_1_sparse_written_self
+    },
+    {
+        "1_sparse_written_up",
+        DontFragment_1_sparse_written_up
+    },
+    {
+        "1_sparse_written_self_up",
+        DontFragment_1_sparse_written_self_up
+    },
+    {
+        "1_fixed_sparse_not",
+        DontFragment_1_fixed_sparse_not
+    },
+    {
+        "1_this_sparse_not",
+        DontFragment_1_this_sparse_not
+    },
+    {
+        "1_var_sparse_not",
+        DontFragment_1_var_sparse_not
+    },
+    {
+        "1_this_sparse_written_not",
+        DontFragment_1_this_sparse_written_not
+    },
+    {
+        "1_var_sparse_written_not",
+        DontFragment_1_var_sparse_written_not
+    },
+    {
+        "sparse_0_src_only_term",
+        DontFragment_sparse_0_src_only_term
+    },
+    {
+        "sparse_0_src",
+        DontFragment_sparse_0_src
+    },
+    {
+        "sparse_pair_first",
+        DontFragment_sparse_pair_first
+    },
+    {
+        "sparse_pair_second",
+        DontFragment_sparse_pair_second
+    },
+    {
+        "sparse_pair_first_after_query",
+        DontFragment_sparse_pair_first_after_query
+    },
+    {
+        "sparse_pair_second_after_query",
+        DontFragment_sparse_pair_second_after_query
+    },
+    {
+        "ignore_prefab_disabled",
+        DontFragment_ignore_prefab_disabled
+    },
+    {
+        "match_prefab_ignore_disabled",
+        DontFragment_match_prefab_ignore_disabled
+    },
+    {
+        "ignore_prefab_match_disabled",
+        DontFragment_ignore_prefab_match_disabled
+    },
+    {
+        "match_prefab_disabled",
+        DontFragment_match_prefab_disabled
+    },
+    {
+        "1_fixed_sparse_second_wildcard",
+        DontFragment_1_fixed_sparse_second_wildcard
+    },
+    {
+        "1_this_sparse_second_wildcard",
+        DontFragment_1_this_sparse_second_wildcard
+    },
+    {
+        "1_var_sparse_second_wildcard",
+        DontFragment_1_var_sparse_second_wildcard
+    },
+    {
+        "1_this_sparse_written_second_wildcard",
+        DontFragment_1_this_sparse_written_second_wildcard
+    },
+    {
+        "1_var_sparse_written_second_wildcard",
+        DontFragment_1_var_sparse_written_second_wildcard
+    },
+    {
+        "1_fixed_sparse_first_wildcard",
+        DontFragment_1_fixed_sparse_first_wildcard
+    },
+    {
+        "1_fixed_sparse_first_wildcard_mixed",
+        DontFragment_1_fixed_sparse_first_wildcard_mixed
+    },
+    {
+        "1_this_sparse_first_wildcard",
+        DontFragment_1_this_sparse_first_wildcard
+    },
+    {
+        "1_this_sparse_first_wildcard_mixed",
+        DontFragment_1_this_sparse_first_wildcard_mixed
+    },
+    {
+        "1_this_sparse_written_first_wildcard_mixed",
+        DontFragment_1_this_sparse_written_first_wildcard_mixed
+    },
+    {
+        "1_this_sparse_first_wildcard_simple",
+        DontFragment_1_this_sparse_first_wildcard_simple
+    },
+    {
+        "1_var_sparse_first_wildcard",
+        DontFragment_1_var_sparse_first_wildcard
+    },
+    {
+        "1_var_sparse_first_wildcard_mixed",
+        DontFragment_1_var_sparse_first_wildcard_mixed
+    },
+    {
+        "1_this_sparse_written_first_wildcard",
+        DontFragment_1_this_sparse_written_first_wildcard
+    },
+    {
+        "1_var_sparse_written_first_wildcard",
+        DontFragment_1_var_sparse_written_first_wildcard
+    },
+    {
+        "1_fixed_exclusive",
+        DontFragment_1_fixed_exclusive
+    },
+    {
+        "1_fixed_exclusive_second_wildcard",
+        DontFragment_1_fixed_exclusive_second_wildcard
+    },
+    {
+        "1_this_exclusive",
+        DontFragment_1_this_exclusive
+    },
+    {
+        "1_this_exclusive_second_wildcard",
+        DontFragment_1_this_exclusive_second_wildcard
+    },
+    {
+        "1_var_exclusive",
+        DontFragment_1_var_exclusive
+    },
+    {
+        "1_var_exclusive_second_wildcard",
+        DontFragment_1_var_exclusive_second_wildcard
+    },
+    {
+        "1_this_written_exclusive",
+        DontFragment_1_this_written_exclusive
+    },
+    {
+        "1_this_written_exclusive_second_wildcard",
+        DontFragment_1_this_written_exclusive_second_wildcard
+    },
+    {
+        "1_var_written_exclusive",
+        DontFragment_1_var_written_exclusive
+    },
+    {
+        "1_var_written_exclusive_second_wildcard",
+        DontFragment_1_var_written_exclusive_second_wildcard
+    },
+    {
+        "this_wildcard_wildcard_pair",
+        DontFragment_this_wildcard_wildcard_pair
+    },
+    {
+        "this_rel_var_w_component",
+        DontFragment_this_rel_var_w_component
+    },
+    {
+        "this_tgt_var_w_component",
+        DontFragment_this_tgt_var_w_component
+    },
+    {
+        "this_wc_rel_var_w_component",
+        DontFragment_this_wc_rel_var_w_component
+    },
+    {
+        "this_wc_tgt_var_w_component",
+        DontFragment_this_wc_tgt_var_w_component
+    },
+    {
+        "this_written_wildcard_wildcard_pair",
+        DontFragment_this_written_wildcard_wildcard_pair
+    },
+    {
+        "this_written_component_wildcard_wildcard_pair",
+        DontFragment_this_written_component_wildcard_wildcard_pair
+    },
+    {
+        "this_written_wc_rel_var_w_component",
+        DontFragment_this_written_wc_rel_var_w_component
+    },
+    {
+        "this_written_wc_tgt_var_w_component",
+        DontFragment_this_written_wc_tgt_var_w_component
+    },
+    {
+        "this_written_rel_var_w_component",
+        DontFragment_this_written_rel_var_w_component
+    },
+    {
+        "this_written_tgt_var_w_component",
+        DontFragment_this_written_tgt_var_w_component
+    },
+    {
+        "add_to_self_while_iterate",
+        DontFragment_add_to_self_while_iterate
     }
 };
 
@@ -10623,6 +11066,14 @@ bake_test_case QueryStr_testcases[] = {
     {
         "pred_neq_m",
         QueryStr_pred_neq_m
+    },
+    {
+        "not_childof_any",
+        QueryStr_not_childof_any
+    },
+    {
+        "childof_0",
+        QueryStr_childof_0
     }
 };
 
@@ -10678,6 +11129,10 @@ const char* Sparse_cache_kind_param[] = {"default", "auto"};
 bake_test_param Sparse_params[] = {
     {"cache_kind", (char**)Sparse_cache_kind_param, 2}
 };
+const char* DontFragment_cache_kind_param[] = {"default", "auto"};
+bake_test_param DontFragment_params[] = {
+    {"cache_kind", (char**)DontFragment_cache_kind_param, 2}
+};
 const char* Union_cache_kind_param[] = {"default", "auto"};
 bake_test_param Union_params[] = {
     {"cache_kind", (char**)Union_cache_kind_param, 2}
@@ -10711,7 +11166,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        236,
+        235,
         Basic_testcases,
         1,
         Basic_params
@@ -10745,7 +11200,7 @@ static bake_test_suite suites[] = {
         "Operators",
         Operators_setup,
         NULL,
-        152,
+        159,
         Operators_testcases,
         1,
         Operators_params
@@ -10850,10 +11305,19 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        27,
+        31,
         Sparse_testcases,
         1,
         Sparse_params
+    },
+    {
+        "DontFragment",
+        DontFragment_setup,
+        NULL,
+        77,
+        DontFragment_testcases,
+        1,
+        DontFragment_params
     },
     {
         "Union",
@@ -10882,11 +11346,11 @@ static bake_test_suite suites[] = {
         "QueryStr",
         NULL,
         NULL,
-        33,
+        35,
         QueryStr_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("query", argc, argv, suites, 25);
+    return bake_test_run("query", argc, argv, suites, 26);
 }

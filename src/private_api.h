@@ -8,13 +8,15 @@
 
 #include "private_types.h"
 #include "storage/table_cache.h"
-#include "storage/id_index.h"
+#include "storage/component_index.h"
+#include "storage/sparse_storage.h"
 #include "query/query.h"
 #include "observable.h"
 #include "iter.h"
 #include "poly.h"
 #include "stage.h"
 #include "world.h"
+#include "journal.h"
 #include "datastructures/name_index.h"
 
 
@@ -81,8 +83,15 @@ void flecs_notify_on_set(
     ecs_table_t *table,
     int32_t row,
     int32_t count,
-    ecs_type_t *type,
+    ecs_id_t id,
     bool owned);
+
+void flecs_notify_on_set_ids(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    ecs_type_t *type);
 
 int32_t flecs_relation_depth(
     const ecs_world_t *world,
@@ -106,12 +115,13 @@ void* flecs_get_base_component(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
-    ecs_id_record_t *table_index,
+    ecs_component_record_t *table_index,
     int32_t recur_depth);
 
 void flecs_invoke_hook(
     ecs_world_t *world,
     ecs_table_t *table,
+    const ecs_component_record_t *cr,
     const ecs_table_record_t *tr,
     int32_t count,
     int32_t row,
@@ -126,6 +136,11 @@ void flecs_add_ids(
     ecs_entity_t entity,
     ecs_id_t *ids,
     int32_t count);
+
+void flecs_entity_remove_non_fragmenting(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_record_t *r);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Query API
@@ -275,13 +290,13 @@ void flecs_colorize_buf(
     bool enable_colors,
     ecs_strbuf_t *buf);
 
-int32_t flecs_search_w_idr(
+int32_t flecs_search_w_cr(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t *id_out,
-    ecs_id_record_t *idr);
+    ecs_component_record_t *cr);
 
-int32_t flecs_search_relation_w_idr(
+int32_t flecs_search_relation_w_cr(
     const ecs_world_t *world,
     const ecs_table_t *table,
     int32_t offset,
@@ -291,12 +306,12 @@ int32_t flecs_search_relation_w_idr(
     ecs_entity_t *subject_out,
     ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out,
-    ecs_id_record_t *idr);
+    ecs_component_record_t *cr);
 
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    const ecs_id_record_t *idr,
+    const ecs_component_record_t *cr,
     ecs_id_t id);
 
 int ecs_term_finalize(

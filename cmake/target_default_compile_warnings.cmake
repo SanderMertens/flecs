@@ -2,7 +2,16 @@ function(target_default_compile_warnings_c THIS)
 
     if (FLECS_STRICT)
 
-        if (CMAKE_C_COMPILER_ID STREQUAL "Clang"
+        if (EMSCRIPTEN)
+            # Less strict warnings for emscripten builds
+            target_compile_options(${THIS} PRIVATE
+                -Wall -Wextra
+                -Wno-shadow
+                -Wno-unused-parameter
+                -Wno-missing-field-initializers
+                -Wno-strict-prototypes)
+
+        elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang"
                 OR CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
 
             target_compile_options(${THIS} PRIVATE

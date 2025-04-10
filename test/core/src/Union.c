@@ -719,7 +719,8 @@ void Union_remove_case(void) {
     test_assert( !ecs_has_pair(world, e, Movement, Jumping));
     test_uint(ecs_get_target(world, e, Movement, 0), 0);
 
-    test_assert(ecs_get_type(world, e) == NULL);
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     ecs_fini(world);
 }
@@ -1245,7 +1246,8 @@ void Union_same_table_after_change(void) {
     
     ecs_remove_pair(world, e, Movement, EcsWildcard);
     test_assert(ecs_get_table(world, e) != table);
-    test_assert(ecs_get_table(world, e) == NULL);
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     ecs_fini(world);
 }

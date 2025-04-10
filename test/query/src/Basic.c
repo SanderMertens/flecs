@@ -2285,10 +2285,11 @@ void Basic_this_src_w_any(void) {
     });
 
     ecs_entity_t e1 = ecs_new_w_pair(world, Rel, Tgt);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     ecs_entity_t prev = 0;
-    int32_t count = 0, e1_matched = 0;
+    int32_t count = 0, e1_matched = 0, e2_matched = 0;
     while (ecs_query_next(&it)) {
         test_assert(it.count > 0);
         test_assert(!prev || prev != it.entities[0]);
@@ -2296,11 +2297,15 @@ void Basic_this_src_w_any(void) {
         if (it.entities[0] == e1) {
             e1_matched ++;
         }
+        if (it.entities[0] == e2) {
+            e2_matched ++;
+        }
         count ++;
     }
 
     test_assert(count > 0);
     test_int(e1_matched, 1);
+    test_int(e2_matched, 1);
 
     ecs_query_fini(r);
 
@@ -11033,55 +11038,6 @@ void Basic_0_terms_match_nothing(void) {
 
     test_assert(q != NULL);
     test_assert(q->flags & EcsQueryMatchNothing);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
-void Basic_any_record(void) {
-    test_quarantine("25 Sept 2024");
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TAG(world, RelX);
-    ECS_TAG(world, RelY);
-    ECS_TAG(world, TgtA);
-    ECS_TAG(world, TgtB);
-    ECS_TAG(world, TgtC);
-
-    ecs_query_t *q = ecs_query(world, {
-        .expr = "_",
-        .cache_kind = cache_kind
-    });
-
-    test_assert(q != NULL);
-
-    ecs_entity_t e = ecs_new(world);
-    ecs_add(world, e, Position);
-    ecs_add_pair(world, e, RelX, TgtA);
-    ecs_add_pair(world, e, RelX, TgtB);
-    ecs_add_pair(world, e, RelX, TgtC);
-    ecs_add_pair(world, e, RelY, TgtA);
-    ecs_add_pair(world, e, RelY, TgtB);
-
-    bool matched = false;
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    while (ecs_query_next(&it)) {
-        if (it.count == 1 && it.entities[0] == e) {
-            test_uint(EcsWildcard, ecs_field_id(&it, 0));
-            const ecs_table_record_t *tr = it.trs[0];
-            test_assert(tr != NULL);
-            test_int(tr->index, 0);
-            test_int(tr->column, -1);
-            test_int(tr->count, 6);
-            matched = true;
-        }
-    }
-
-    test_bool(true, matched);
 
     ecs_query_fini(q);
 

@@ -597,7 +597,7 @@ void Enum_remove_enum(void) {
     auto e = ecs.entity().add(StandardEnum::Green);
     test_assert(e.has(StandardEnum::Green));
 
-    e.remove<StandardEnum>();
+    e.remove<StandardEnum>(flecs::Wildcard);
     test_assert(!e.has(StandardEnum::Green));
 }
 
@@ -1590,7 +1590,7 @@ void Enum_enum_w_one_constant_index_of(void) {
     test_int(one_type.index_by_value(0), 0);
 }
 
-void Enum_runtime_type_constant_u8_template() {
+void Enum_runtime_type_constant_u8_template(void) {
     flecs::world ecs;
 
     auto comp = ecs.component("TestEnumConstant");
@@ -1616,4 +1616,40 @@ void Enum_runtime_type_constant_u8_template() {
     test_true(val_first != nullptr && *val_first == 1);
     test_true(val_second != nullptr && *val_second == 2);
     test_true(val_third != nullptr && *val_third == 3);
+}
+
+enum ThreadTest {
+    A, B, C, D, E, F, G, H, I, J
+};
+
+void* thread_cb(void* arg) {
+    flecs::world ecs;
+
+    ecs.component<ThreadTest>();
+
+    flecs::entity e = ecs.entity().add(ThreadTest::B);
+    test_assert(e.has(ThreadTest::B));
+
+    e.add(ThreadTest::J);
+    test_assert(!e.has(ThreadTest::B));
+    test_assert(e.has(ThreadTest::J));
+
+    return NULL;
+}
+
+void Enum_multithreaded_enum_registration(void) {
+    ecs_os_init();
+
+    ecs_os_thread_t *threads = ecs_os_malloc_n(ecs_os_thread_t, 100);
+
+    for (int i = 0; i < 100; i ++) {
+        threads[i] = ecs_os_thread_new(thread_cb, NULL);
+        test_assert(threads[i]);
+    }
+
+    for (int i = 0; i < 100; i ++) {
+        ecs_os_thread_join(threads[i]);
+    }
+
+    ecs_os_free(threads);
 }

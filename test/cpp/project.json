@@ -300,7 +300,9 @@
                 "set_pair_second_invalid_type",
                 "get_ref_pair_second_invalid_type",
                 "iter_type",
-                "iter_empty_type"
+                "iter_empty_type",
+                "untyped_component_use_low_id",
+                "add_remove_enum_component"
             ]
         }, {
             "id": "Pairs",
@@ -429,7 +431,8 @@
                 "enum_u16",
                 "enum_u32",
                 "enum_u64",
-                "runtime_type_constant_u8_template"
+                "runtime_type_constant_u8_template",
+                "multithreaded_enum_registration"
             ]
         }, {
             "id": "Union",
@@ -611,12 +614,25 @@
                 "run_shared",
                 "run_optional",
                 "run_sparse",
+                "run_sparse_w_with",
+                "run_dont_fragment",
+                "run_dont_fragment_w_with",
+                "run_dont_fragment_add",
+                "run_dont_fragment_add_remove",
+                "run_dont_fragment_set",
                 "each",
                 "each_const",
                 "each_shared",
                 "each_optional",
                 "each_sparse",
+                "each_sparse_w_with",
                 "each_sparse_many",
+                "each_dont_fragment",
+                "each_dont_fragment_w_with",
+                "each_dont_fragment_many",
+                "each_dont_fragment_add",
+                "each_dont_fragment_add_remove",
+                "each_dont_fragment_set",
                 "signature",
                 "signature_const",
                 "signature_shared",
@@ -781,6 +797,8 @@
                 "relation_w_predicate_wildcard",
                 "add_pair_w_rel_type",
                 "template_term",
+                "typed_term_at",
+                "typed_term_at_indexed",
                 "explicit_subject_w_id",
                 "explicit_subject_w_type",
                 "explicit_object_w_id",
@@ -896,7 +914,9 @@
                 "each_w_const_field_w_fixed_src",
                 "each_w_const_field_at_w_fixed_src",
                 "each_w_untyped_field_w_fixed_src",
-                "each_w_untyped_field_at_w_fixed_src"
+                "each_w_untyped_field_at_w_fixed_src",
+                "singleton_pair",
+                "query_w_this_second"
             ]
         }, {
             "id": "SystemBuilder",
@@ -1082,7 +1102,22 @@
                 "sparse_component",
                 "count_in_add_hook",
                 "count_in_remove_hook",
-                "set_multiple_hooks"
+                "set_multiple_hooks",
+                "compare_WithGreaterThan",
+                "compare_WithLessThan",
+                "compare_WithLessAndGreaterThan",
+                "compare_WithEqualsAndGreaterThan",
+                "compare_WithEqualsAndLessThan",
+                "compare_WithEqualsOnly",
+                "compare_WithoutOperators",
+                "compare_uint8_Enum",
+                "compare_uint16_Enum",
+                "compare_uint32_Enum",
+                "compare_uint64_Enum",
+                "compare_int8_Enum",
+                "compare_int16_Enum",
+                "compare_int32_Enum",
+                "compare_int64_Enum"
             ]
         }, {
             "id": "Refs",
@@ -1095,6 +1130,8 @@
                 "ref_before_set",
                 "non_const_ref",
                 "pair_ref",
+                "pair_ref_w_pair_type",
+                "pair_ref_w_pair_type_second",
                 "pair_ref_w_entity",
                 "pair_ref_second",
                 "from_stage",
@@ -1107,7 +1144,10 @@
                 "bool_operator",
                 "base_type",
                 "empty_base_type",
-                "get_component"
+                "get_component",
+                "untyped_get_ref_by_method",
+                "untyped_pair_ref",
+                "untyped_runtime_component_ref"
             ]
         }, {
             "id": "Module",
@@ -1134,7 +1174,8 @@
                 "rename_namespace_nested",
                 "rename_reparent_root_module",
                 "no_recycle_after_rename_reparent",
-                "reimport_after_delete"
+                "reimport_after_delete",
+                "component_name_w_module_name"
             ]
         }, {
             "id": "ImplicitComponents",
@@ -1327,7 +1368,8 @@
                 "add_remove_singleton_pair_R_T",
                 "add_remove_singleton_pair_R_t",
                 "add_remove_singleton_pair_r_t",
-                "get_target"
+                "get_target",
+                "singleton_enum"
             ]
         }, {
             "id": "Misc",
@@ -1431,6 +1473,8 @@
                 "ser_deser_std_vector_int",
                 "ser_deser_std_vector_std_string",
                 "ser_deser_type_w_std_string_std_vector_std_string",
+                "std_vector_random_access",
+                "struct_random_access",
                 "ser_deser_flecs_entity",
                 "world_ser_deser_flecs_entity",
                 "new_world_ser_deser_flecs_entity",

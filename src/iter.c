@@ -115,10 +115,10 @@ void* ecs_field_w_size(
         return NULL;
     }
 
-    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-    ecs_assert(!(idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
+    ecs_assert(!(cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field_at to access fields for sparse components");
-    (void)idr;
+    (void)cr;
 
     ecs_entity_t src = it->sources[index];
     ecs_table_t *table;
@@ -171,14 +171,16 @@ void* ecs_field_at_w_size(
         !ecs_field_size(it, index),
             ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
 
+    ecs_component_record_t *cr = NULL;
     const ecs_table_record_t *tr = it->trs[index];
     if (!tr) {
-        ecs_assert(!ecs_field_is_set(it, index), ECS_INTERNAL_ERROR, NULL);
-        return NULL;
+        cr = flecs_components_get(it->real_world, it->ids[index]);
+        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        cr = (ecs_component_record_t*)tr->hdr.cache;
     }
 
-    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-    ecs_assert((idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_assert((cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field to access fields for non-sparse components");
     ecs_assert(it->row_fields & (1ull << index), ECS_INTERNAL_ERROR, NULL);
 
@@ -187,7 +189,7 @@ void* ecs_field_at_w_size(
         src = ecs_table_entities(it->table)[row + it->offset];
     }
 
-    return flecs_sparse_get_any(idr->sparse, flecs_uto(int32_t, size), src);
+    return flecs_sparse_get_any(cr->sparse, flecs_uto(int32_t, size), src);
 error:
     return NULL;
 }
@@ -198,8 +200,11 @@ bool ecs_field_is_readonly(
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
         "operation invalid before calling next()");
-    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER,
-        "operation only valid for query iterators");
+
+    if (!it->query) {
+        return false;
+    }
+
     ecs_check(it->query->terms != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
         "invalid field index %d", index);

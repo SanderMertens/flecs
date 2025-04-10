@@ -566,14 +566,14 @@ ecs_entity_t ecs_alert_init(
             alert->id = desc->id;
         }
 
-        ecs_id_record_t *idr = flecs_id_record_ensure(world, alert->id);
-        ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (!idr->type_info) {
+        ecs_component_record_t *cr = flecs_components_ensure(world, alert->id);
+        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!cr->type_info) {
             ecs_err("ecs_alert_desc_t::id must be a component");
             goto error;
         }
 
-        ecs_entity_t type = idr->type_info->component;
+        ecs_entity_t type = cr->type_info->component;
         if (type != ecs_get_parent(world, desc->member)) {
             char *type_name = ecs_get_path(world, type);
             ecs_err("member '%s' is not a member of '%s'", 
@@ -613,7 +613,7 @@ ecs_entity_t ecs_alert_init(
         }
 
         alert->offset = member->offset;
-        alert->size = idr->type_info->size;
+        alert->size = cr->type_info->size;
         alert->kind = pr->kind;
         alert->ranges = ecs_ref_init(world, desc->member, EcsMemberRanges);
         alert->var_id = var_id;

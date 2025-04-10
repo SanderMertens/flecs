@@ -1844,7 +1844,7 @@ void Validator_validate_double_init(void) {
     test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_desc_t desc = {0};
-    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, FLECS_TERM_COUNT_MAX);
+    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, q_1->term_count);
     ecs_query_t *q_2 = ecs_query_init(world, &desc);
     test_assert(q_2 != NULL);
 
@@ -1879,7 +1879,7 @@ void Validator_validate_double_init_w_expr(void) {
     test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_desc_t desc = {0};
-    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, FLECS_TERM_COUNT_MAX);
+    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, q_1->term_count);
     ecs_query_t *q_2 = ecs_query_init(world, &desc);
     test_assert(q_2 != NULL);
 
@@ -1914,7 +1914,7 @@ void Validator_validate_double_init_w_expr_optional(void) {
     test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_desc_t desc = {0};
-    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, FLECS_TERM_COUNT_MAX);
+    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, q_1->term_count);
     ecs_query_t *q_2 = ecs_query_init(world, &desc);
     test_assert(q_2 != NULL);
 

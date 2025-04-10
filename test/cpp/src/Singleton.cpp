@@ -329,3 +329,32 @@ void Singleton_get_target(void) {
         test_assert(p == entities[i]);
     }
 }
+
+enum Color {
+    Red, Green, Blue
+};
+
+void Singleton_singleton_enum(void) {
+    flecs::world world;
+
+    world.set<Color>(Blue);
+    test_assert(world.has<Color>());
+
+    {
+        const Color *c = world.get<Color>();
+        test_assert(c != nullptr);
+        test_assert(*c == Blue);
+    }
+
+    world.set<Color>(Green);
+    test_assert(world.has<Color>());
+
+    {
+        const Color *c = world.get<Color>();
+        test_assert(c != nullptr);
+        test_assert(*c == Green);
+    }
+
+    world.remove<Color>();
+    test_assert(!world.has<Color>());
+}

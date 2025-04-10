@@ -75,6 +75,10 @@ void New_w_Count_bulk_init_empty(void) {
     test_assert(ecs_is_alive(world, entities[1]));
     test_assert(ecs_is_alive(world, entities[2]));
 
+    test_assert(ecs_get_table(world, entities[0]) != NULL);
+    test_assert(ecs_get_table(world, entities[1]) != NULL);
+    test_assert(ecs_get_table(world, entities[2]) != NULL);
+
     ecs_fini(world);
 }
 

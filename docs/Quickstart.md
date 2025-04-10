@@ -1276,6 +1276,7 @@ Queries are the main mechanism for finding and iterating through entities. Queri
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
+    
 ```c
 ecs_query_t *q = ecs_query(world, {
     .terms = {
