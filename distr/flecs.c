@@ -31217,8 +31217,10 @@ uint64_t flecs_sparse_create_id(
     uint64_t id = flecs_sparse_inc_id(sparse);
     flecs_sparse_grow_dense(sparse);
 
-    ecs_sparse_page_t *page = flecs_sparse_get_or_create_page(sparse, FLECS_SPARSE_PAGE(id));
-    ecs_assert(page->sparse[FLECS_SPARSE_OFFSET(id)] == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_sparse_page_t *page = flecs_sparse_get_or_create_page(
+        sparse, FLECS_SPARSE_PAGE(id));
+    ecs_assert(page->sparse[FLECS_SPARSE_OFFSET(id)] == 0, 
+        ECS_INTERNAL_ERROR, NULL);
     
     uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
     flecs_sparse_assign_index(page, dense_array, id, dense);
@@ -31253,7 +31255,8 @@ void* flecs_sparse_get_sparse(
     uint64_t id)
 {
     uint64_t index = (uint32_t)id;
-    ecs_sparse_page_t *page = flecs_sparse_get_page(sparse, FLECS_SPARSE_PAGE(index));
+    ecs_sparse_page_t *page = flecs_sparse_get_page(
+        sparse, FLECS_SPARSE_PAGE(index));
     if (!page || !page->sparse) {
         return NULL;
     }
@@ -31382,7 +31385,8 @@ void* flecs_sparse_insert(
     (void)size;
 
     uint64_t index = (uint32_t)id;
-    ecs_sparse_page_t *page = flecs_sparse_get_or_create_page(sparse, FLECS_SPARSE_PAGE(index));
+    ecs_sparse_page_t *page = flecs_sparse_get_or_create_page(
+        sparse, FLECS_SPARSE_PAGE(index));
     int32_t offset = FLECS_SPARSE_OFFSET(index);
     int32_t dense = page->sparse[offset];
 
@@ -31421,12 +31425,13 @@ void* flecs_sparse_insert(
             /* If there are unused elements in the list, move the first unused
              * element to the end of the list */
             uint64_t unused = dense_array[count];
-            ecs_sparse_page_t *unused_page = flecs_sparse_get_or_create_page(sparse, FLECS_SPARSE_PAGE(unused));
-            flecs_sparse_assign_index(unused_page, dense_array, unused, dense_count);
+            ecs_sparse_page_t *unused_page = flecs_sparse_get_or_create_page(
+                sparse, FLECS_SPARSE_PAGE(unused));
+            flecs_sparse_assign_index(
+                unused_page, dense_array, unused, dense_count);
         }
 
         flecs_sparse_assign_index(page, dense_array, index, count);
-        dense_array[count] = id;
     }
 
     return DATA(page->data, sparse->size, offset);
@@ -31443,7 +31448,8 @@ void* flecs_sparse_ensure_fast(
     (void)size;
 
     uint32_t index = (uint32_t)id;
-    ecs_sparse_page_t *page = flecs_sparse_get_or_create_page(sparse, FLECS_SPARSE_PAGE(index));
+    ecs_sparse_page_t *page = flecs_sparse_get_or_create_page(
+        sparse, FLECS_SPARSE_PAGE(index));
     int32_t offset = FLECS_SPARSE_OFFSET(index);
     int32_t dense = page->sparse[offset];
     int32_t count = sparse->count;
@@ -31493,8 +31499,10 @@ bool flecs_sparse_remove(
         }
 
         /* Reset memory to zero on remove */
-        void *ptr = DATA(page->data, sparse->size, offset);
-        ecs_os_memset(ptr, 0, size);
+        if (sparse->size) {
+            void *ptr = DATA(page->data, sparse->size, offset);
+            ecs_os_memset(ptr, 0, size);
+        }
 
         /* Reset memory to zero on remove */
         return true;
@@ -31517,14 +31525,16 @@ void* flecs_sparse_get_dense(
     dense_index ++;
 
     uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
-    return flecs_sparse_get_sparse(sparse, dense_index, dense_array[dense_index]);
+    return flecs_sparse_get_sparse(
+        sparse, dense_index, dense_array[dense_index]);
 }
 
 bool flecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
     uint64_t id)
 {
-    ecs_sparse_page_t *page = flecs_sparse_get_page(sparse, FLECS_SPARSE_PAGE(id));
+    ecs_sparse_page_t *page = flecs_sparse_get_page(
+        sparse, FLECS_SPARSE_PAGE(id));
     if (!page || !page->sparse) {
         return false;
     }
@@ -31549,7 +31559,8 @@ void* flecs_sparse_get(
     (void)size;
     
     uint64_t index = (uint32_t)id;
-    ecs_sparse_page_t *page = flecs_sparse_get_page(sparse, FLECS_SPARSE_PAGE(index));
+    ecs_sparse_page_t *page = flecs_sparse_get_page(
+        sparse, FLECS_SPARSE_PAGE(index));
     if (!page || !page->sparse) {
         return NULL;
     }
