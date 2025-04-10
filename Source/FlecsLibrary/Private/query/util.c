@@ -176,13 +176,15 @@ const char* flecs_query_op_str(
     switch(kind) {
     case EcsQueryAll:            return "all       ";
     case EcsQueryAnd:            return "and       ";
-    case EcsQueryAndAny:         return "andany    ";
+    case EcsQueryAndAny:         return "and_any   ";
+    case EcsQueryAndWcTgt:       return "and_wct   ";
     case EcsQueryTriv:           return "triv      ";
     case EcsQueryCache:          return "cache     ";
     case EcsQueryIsCache:        return "xcache    ";
     case EcsQueryUp:             return "up        ";
     case EcsQuerySelfUp:         return "selfup    ";
     case EcsQueryWith:           return "with      ";
+    case EcsQueryWithWcTgt:      return "with_wct  ";
     case EcsQueryTrav:           return "trav      ";
     case EcsQueryAndFrom:        return "andfrom   ";
     case EcsQueryOrFrom:         return "orfrom    ";
@@ -214,6 +216,11 @@ const char* flecs_query_op_str(
     case EcsQueryUnionNeq:       return "unionneq  ";
     case EcsQueryUnionEqUp:      return "union_up  ";
     case EcsQueryUnionEqSelfUp:  return "union_sup ";
+    case EcsQuerySparse:         return "spars     ";
+    case EcsQuerySparseWith:     return "spars_w   ";
+    case EcsQuerySparseNot:      return "spars_not ";
+    case EcsQuerySparseSelfUp:   return "spars_sup ";
+    case EcsQuerySparseUp:       return "spars_up  ";
     case EcsQueryLookup:         return "lookup    ";
     case EcsQuerySetVars:        return "setvars   ";
     case EcsQuerySetThis:        return "setthis   ";

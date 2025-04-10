@@ -70,6 +70,9 @@ struct ecs_component_record_t {
     /* Pair data */
     ecs_pair_id_record_t *pair;
 
+    /* All non-fragmenting ids */
+    ecs_id_record_elem_t non_fragmenting;
+
     /* Refcount */
     int32_t refcount;
 
@@ -144,5 +147,18 @@ void flecs_component_init_sparse(
 ecs_flags32_t flecs_id_flags_get(
     ecs_world_t *world,
     ecs_id_t id);
+
+/* Delete entities in sparse storage */
+void flecs_component_delete_sparse(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+void flecs_component_record_init_dont_fragment(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+void flecs_component_record_init_exclusive(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
 
 #endif

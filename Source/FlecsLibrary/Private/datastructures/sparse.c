@@ -48,11 +48,15 @@ ecs_sparse_page_t* flecs_sparse_page_new(
     /* Initialize the data array with zero's to guarantee that data is 
      * always initialized. When an entry is removed, data is reset back to
      * zero. Initialize now, as this can take advantage of calloc. */
-    result->data = a ? flecs_calloc(a, sparse->size * FLECS_SPARSE_PAGE_SIZE)
-                     : ecs_os_calloc(sparse->size * FLECS_SPARSE_PAGE_SIZE);
+    if (sparse->size) {
+        result->data = a ? flecs_calloc(a, sparse->size * FLECS_SPARSE_PAGE_SIZE)
+                        : ecs_os_calloc(sparse->size * FLECS_SPARSE_PAGE_SIZE);
+        ecs_assert(result->data != NULL, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        result->data = NULL;
+    }
 
     ecs_assert(result->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(result->data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     return result;
 }
@@ -99,7 +103,8 @@ ecs_sparse_page_t* flecs_sparse_get_or_create_page(
 {
     ecs_sparse_page_t *page = flecs_sparse_get_page(sparse, page_index);
     if (page && page->sparse) {
-        ecs_assert(page->data != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(!sparse->size || page->data != NULL, 
+            ECS_INTERNAL_ERROR, NULL);
         return page;
     }
 
@@ -343,7 +348,7 @@ uint64_t flecs_sparse_last_id(
     return dense_array[sparse->count - 1];
 }
 
-void* flecs_sparse_ensure(
+void* flecs_sparse_insert(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -373,7 +378,8 @@ void* flecs_sparse_ensure(
             /* Set dense element to new generation */
             ecs_vec_first_t(&sparse->dense, uint64_t)[dense] = index | gen;
         } else {
-            /* Dense is already alive, nothing to be done */
+            /* Already inserted */
+            return NULL;
         }
 
         /* Ensure provided generation matches current. Only allow mismatching
@@ -442,7 +448,7 @@ void* flecs_sparse_ensure_fast(
     return DATA(page->data, sparse->size, offset);
 }
 
-void* flecs_sparse_remove_fast(
+bool flecs_sparse_remove_fast(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index)
@@ -451,9 +457,10 @@ void* flecs_sparse_remove_fast(
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
-    ecs_sparse_page_t *page = flecs_sparse_get_page(sparse, FLECS_SPARSE_PAGE(index));
+    ecs_sparse_page_t *page = flecs_sparse_get_page(
+        sparse, FLECS_SPARSE_PAGE(index));
     if (!page || !page->sparse) {
-        return NULL;
+        return false;
     }
 
     flecs_sparse_strip_generation(&index);
@@ -472,13 +479,12 @@ void* flecs_sparse_remove_fast(
         }
 
         /* Reset memory to zero on remove */
-        return DATA(page->data, sparse->size, offset);
+        return true;
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
-        return NULL;
+        return false;
     }
 }
-
 
 void flecs_sparse_remove(
     ecs_sparse_t *sparse,
@@ -655,6 +661,23 @@ void* flecs_sparse_get_any(
 
     ecs_assert(dense == page->sparse[offset], ECS_INTERNAL_ERROR, NULL);
     return DATA(page->data, sparse->size, offset);
+}
+
+bool flecs_sparse_has_any(
+    const ecs_sparse_t *sparse,
+    uint64_t id)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    
+    flecs_sparse_strip_generation(&id);
+    ecs_sparse_page_t *page = flecs_sparse_get_page(sparse, FLECS_SPARSE_PAGE(id));
+    if (!page || !page->sparse) {
+        return false;
+    }
+
+    int32_t offset = FLECS_SPARSE_OFFSET(id);
+    int32_t dense = page->sparse[offset];
+    return dense && (dense < sparse->count);
 }
 
 int32_t flecs_sparse_count(

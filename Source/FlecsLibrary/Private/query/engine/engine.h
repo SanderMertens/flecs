@@ -218,6 +218,36 @@ bool flecs_query_union_self_up(
     const ecs_query_run_ctx_t *ctx);
 
 
+/* Sparse evaluation */
+
+bool flecs_query_sparse(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_sparse_select(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    ecs_flags32_t table_mask);
+
+bool flecs_query_sparse_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool not);
+
+bool flecs_query_sparse_up(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_sparse_self_up(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+
 /* Toggle evaluation*/
 
 bool flecs_query_toggle(
@@ -293,7 +323,8 @@ typedef enum ecs_query_up_select_trav_kind_t {
 typedef enum ecs_query_up_select_kind_t {
     FlecsQueryUpSelectDefault,
     FlecsQueryUpSelectId,
-    FlecsQueryUpSelectUnion
+    FlecsQueryUpSelectUnion,
+    FlecsQueryUpSelectSparse
 } ecs_query_up_select_kind_t;
 
 bool flecs_query_up_select(

@@ -306,6 +306,9 @@ struct ecs_world_t {
     ecs_component_record_t *cr_childof_wildcard;
     ecs_component_record_t *cr_identifier_name;
 
+    /* Head of list that points to all non-fragmenting component ids */
+    ecs_component_record_t *cr_non_fragmenting_head;
+
     /* -- Mixins -- */
     ecs_world_t *self;
     ecs_observable_t observable;
@@ -316,6 +319,9 @@ struct ecs_world_t {
     /* Array of table versions used with component refs to determine if the 
      * cached pointer is still valid. */
     uint32_t table_version[ECS_TABLE_VERSION_ARRAY_SIZE];
+
+    /* Array for checking if components can be looked up trivially */
+    bool non_fragmenting[FLECS_HI_COMPONENT_ID];
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;

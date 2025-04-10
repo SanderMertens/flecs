@@ -45,12 +45,14 @@ typedef enum {
     EcsQueryAll,            /* Yield all tables */
     EcsQueryAnd,            /* And operator: find or match id against variable source */
     EcsQueryAndAny,         /* And operator with support for matching Any src/id */
+    EcsQueryAndWcTgt,       /* And operator for (*, T) queries */
     EcsQueryTriv,           /* Trivial search (batches multiple terms) */
     EcsQueryCache,          /* Cached search */
     EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
     EcsQueryUp,             /* Up traversal */
     EcsQuerySelfUp,         /* Self|up traversal */
     EcsQueryWith,           /* Match id against fixed or variable source */
+    EcsQueryWithWcTgt,      /* Match (*, T) id against fixed or variable source */
     EcsQueryTrav,           /* Support for transitive/reflexive queries */
     EcsQueryAndFrom,        /* AndFrom operator */
     EcsQueryOrFrom,         /* OrFrom operator */
@@ -82,6 +84,11 @@ typedef enum {
     EcsQueryUnionNeq,       /* Evaluate union relationship */
     EcsQueryUnionEqUp,      /* Evaluate union relationship w/up traversal */
     EcsQueryUnionEqSelfUp,  /* Evaluate union relationship w/self|up traversal */
+    EcsQuerySparse,         /* Evaluate sparse component */
+    EcsQuerySparseNot,      /* Evaluate sparse component with not operator */
+    EcsQuerySparseSelfUp,
+    EcsQuerySparseUp,
+    EcsQuerySparseWith,     /* Evaluate sparse component against fixed or variable source */
     EcsQueryLookup,         /* Lookup relative to variable */
     EcsQuerySetVars,        /* Populate it.sources from variables */
     EcsQuerySetThis,        /* Populate This entity variable */
@@ -138,6 +145,7 @@ typedef struct {
     ecs_table_cache_iter_t it;
     int16_t column;
     int16_t remaining;
+    bool non_fragmenting;
 } ecs_query_and_ctx_t;
 
 /* Union context */
@@ -149,6 +157,21 @@ typedef struct {
     ecs_entity_t tgt;
     int32_t row;
 } ecs_query_union_ctx_t;
+
+/* Sparse context */
+typedef struct {
+    ecs_query_and_ctx_t and_; /* For mixed sparse/non-sparse results */
+
+    ecs_sparse_t *sparse;
+    ecs_table_range_t range;
+    int32_t cur;
+    bool self;
+    bool exclusive;
+
+    ecs_component_record_t *cr;
+    ecs_table_range_t prev_range;
+    int32_t prev_cur;
+} ecs_query_sparse_ctx_t;
 
 /* Down traversal cache (for resolving up queries w/unknown source) */
 typedef struct {
@@ -198,6 +221,7 @@ typedef struct {
     union {
         ecs_query_and_ctx_t and;
         ecs_query_union_ctx_t union_;
+        ecs_query_sparse_ctx_t sparse_;
     } is;
 
     /* Indirection because otherwise the ctx struct gets too large */
@@ -309,6 +333,7 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_membereq_ctx_t membereq;
         ecs_query_toggle_ctx_t toggle;
         ecs_query_union_ctx_t union_;
+        ecs_query_sparse_ctx_t sparse;
     } is;
 } ecs_query_op_ctx_t;
 

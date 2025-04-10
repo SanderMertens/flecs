@@ -86,7 +86,7 @@ void flecs_sparse_remove(
 
 /** Remove an element without liveliness checking */
 FLECS_DBG_API
-void* flecs_sparse_remove_fast(
+bool flecs_sparse_remove_fast(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index);
@@ -124,6 +124,11 @@ void* flecs_sparse_get(
 #define flecs_sparse_get_t(sparse, T, index)\
     ECS_CAST(T*, flecs_sparse_get(sparse, ECS_SIZEOF(T), index))
 
+/** Check if sparse set has id */
+bool flecs_sparse_has_any(
+    const ecs_sparse_t *sparse,
+    uint64_t id);
+
 /** Same as flecs_sparse_get, but doesn't assert if id is not alive. */
 FLECS_DBG_API
 void* flecs_sparse_try(
@@ -146,13 +151,13 @@ void* flecs_sparse_get_any(
 
 /** Get or create element by (sparse) id. */
 FLECS_DBG_API
-void* flecs_sparse_ensure(
+void* flecs_sparse_insert(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t id);
 
-#define flecs_sparse_ensure_t(sparse, T, index)\
-    ECS_CAST(T*, flecs_sparse_ensure(sparse, ECS_SIZEOF(T), index))
+#define flecs_sparse_insert_t(sparse, T, index)\
+    ECS_CAST(T*, flecs_sparse_insert(sparse, ECS_SIZEOF(T), index))
 
 /** Fast version of ensure, no liveliness checking */
 FLECS_DBG_API

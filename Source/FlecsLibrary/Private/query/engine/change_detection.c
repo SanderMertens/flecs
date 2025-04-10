@@ -404,6 +404,11 @@ void flecs_query_mark_fields_dirty(
             }
         }
 
+        const ecs_table_record_t *tr = it->trs[i];
+        if (!tr) {
+            continue; /* Non-fragmenting component */
+        }
+
         int32_t type_index = it->trs[i]->index;
         ecs_assert(type_index >= 0, ECS_INTERNAL_ERROR, NULL);
         

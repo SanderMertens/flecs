@@ -287,6 +287,9 @@ typedef struct EcsEnum {
 
     /** Populated from child entities with Constant component */
     ecs_map_t constants; /**< map<i32_t, ecs_enum_constant_t> */
+
+    /** Stores the constants in registration order */
+    ecs_vec_t ordered_constants; /**< vector<ecs_enum_constants_t> */
 } EcsEnum;
 
 /** Type that describes an bitmask constant */
@@ -308,6 +311,8 @@ typedef struct ecs_bitmask_constant_t {
 typedef struct EcsBitmask {
     /* Populated from child entities with Constant component */
     ecs_map_t constants; /**< map<u32_t, ecs_bitmask_constant_t> */
+    /** Stores the constants in registration order */
+    ecs_vec_t ordered_constants; /**< vector<ecs_bitmask_constants_t>  */
 } EcsBitmask;
 
 /** Component added to array type entities */

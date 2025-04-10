@@ -94,34 +94,35 @@ const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 54;
 
 /* Storage */
 const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 55;
-const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 56;
+const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 56;
+const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 57;
 
 /* Misc */
-const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 57;
+const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 58;
 
 /* Builtin predicate ids (used by query engine) */
-const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 58;
-const ecs_entity_t EcsPredMatch =                   FLECS_HI_COMPONENT_ID + 59;
-const ecs_entity_t EcsPredLookup =                  FLECS_HI_COMPONENT_ID + 60;
-const ecs_entity_t EcsScopeOpen =                   FLECS_HI_COMPONENT_ID + 61;
-const ecs_entity_t EcsScopeClose =                  FLECS_HI_COMPONENT_ID + 62;
+const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 59;
+const ecs_entity_t EcsPredMatch =                   FLECS_HI_COMPONENT_ID + 60;
+const ecs_entity_t EcsPredLookup =                  FLECS_HI_COMPONENT_ID + 61;
+const ecs_entity_t EcsScopeOpen =                   FLECS_HI_COMPONENT_ID + 62;
+const ecs_entity_t EcsScopeClose =                  FLECS_HI_COMPONENT_ID + 63;
 
 /* Systems */
-const ecs_entity_t EcsMonitor =                     FLECS_HI_COMPONENT_ID + 63;
-const ecs_entity_t EcsEmpty =                       FLECS_HI_COMPONENT_ID + 64;
-const ecs_entity_t ecs_id(EcsPipeline) =            FLECS_HI_COMPONENT_ID + 65;
-const ecs_entity_t EcsOnStart =                     FLECS_HI_COMPONENT_ID + 66;
-const ecs_entity_t EcsPreFrame =                    FLECS_HI_COMPONENT_ID + 67;
-const ecs_entity_t EcsOnLoad =                      FLECS_HI_COMPONENT_ID + 68;
-const ecs_entity_t EcsPostLoad =                    FLECS_HI_COMPONENT_ID + 69;
-const ecs_entity_t EcsPreUpdate =                   FLECS_HI_COMPONENT_ID + 70;
-const ecs_entity_t EcsOnUpdate =                    FLECS_HI_COMPONENT_ID + 71;
-const ecs_entity_t EcsOnValidate =                  FLECS_HI_COMPONENT_ID + 72;
-const ecs_entity_t EcsPostUpdate =                  FLECS_HI_COMPONENT_ID + 73;
-const ecs_entity_t EcsPreStore =                    FLECS_HI_COMPONENT_ID + 74;
-const ecs_entity_t EcsOnStore =                     FLECS_HI_COMPONENT_ID + 75;
-const ecs_entity_t EcsPostFrame =                   FLECS_HI_COMPONENT_ID + 76;
-const ecs_entity_t EcsPhase =                       FLECS_HI_COMPONENT_ID + 77;
+const ecs_entity_t EcsMonitor =                     FLECS_HI_COMPONENT_ID + 64;
+const ecs_entity_t EcsEmpty =                       FLECS_HI_COMPONENT_ID + 65;
+const ecs_entity_t ecs_id(EcsPipeline) =            FLECS_HI_COMPONENT_ID + 66;
+const ecs_entity_t EcsOnStart =                     FLECS_HI_COMPONENT_ID + 67;
+const ecs_entity_t EcsPreFrame =                    FLECS_HI_COMPONENT_ID + 68;
+const ecs_entity_t EcsOnLoad =                      FLECS_HI_COMPONENT_ID + 69;
+const ecs_entity_t EcsPostLoad =                    FLECS_HI_COMPONENT_ID + 70;
+const ecs_entity_t EcsPreUpdate =                   FLECS_HI_COMPONENT_ID + 71;
+const ecs_entity_t EcsOnUpdate =                    FLECS_HI_COMPONENT_ID + 72;
+const ecs_entity_t EcsOnValidate =                  FLECS_HI_COMPONENT_ID + 73;
+const ecs_entity_t EcsPostUpdate =                  FLECS_HI_COMPONENT_ID + 74;
+const ecs_entity_t EcsPreStore =                    FLECS_HI_COMPONENT_ID + 75;
+const ecs_entity_t EcsOnStore =                     FLECS_HI_COMPONENT_ID + 76;
+const ecs_entity_t EcsPostFrame =                   FLECS_HI_COMPONENT_ID + 77;
+const ecs_entity_t EcsPhase =                       FLECS_HI_COMPONENT_ID + 78;
 
 /* Meta primitive components (don't use low ids to save id space) */
 #ifdef FLECS_META
@@ -648,6 +649,7 @@ void flecs_fini_root_tables(
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
+
             if (table->flags & EcsTableHasBuiltins) {
                 continue; /* Query out modules */
             }
@@ -657,7 +659,7 @@ void flecs_fini_root_tables(
 
             if (fini_targets) {
                 /* Only delete entities that are used as pair target. Iterate
-                * backwards to minimize moving entities around in table. */
+                 * backwards to minimize moving entities around in table. */
                 for (i = count - 1; i >= 0; i --) {
                     ecs_record_t *r = flecs_entities_get(world, entities[i]);
                     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -674,13 +676,13 @@ void flecs_fini_root_tables(
                 }
             } else {
                 /* Delete remaining entities that are not in use (added to another
-                * entity). This limits table moves during cleanup and delays
-                * cleanup of tags. */
+                 * entity). This limits table moves during cleanup and delays
+                 * cleanup of tags. */
                 for (i = count - 1; i >= 0; i --) {
                     ecs_record_t *r = flecs_entities_get(world, entities[i]);
                     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                     ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
-                    if (!ECS_RECORD_TO_ROW_FLAGS(r->row)) {
+                    if (!(ECS_RECORD_TO_ROW_FLAGS(r->row) & ~EcsEntityHasDontFragment)) {
                         ecs_delete(world, entities[i]);
                         queue_size++;                     
                         /* Flush the queue before it grows too big: */                     

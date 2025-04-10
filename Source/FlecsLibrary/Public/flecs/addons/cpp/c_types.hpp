@@ -156,6 +156,7 @@ static const flecs::entity_t Symbol = EcsSymbol;
 
 /* Storage */
 static const flecs::entity_t Sparse = EcsSparse;
+static const flecs::entity_t DontFragment = EcsDontFragment;
 static const flecs::entity_t Union = EcsUnion;
 
 /* Builtin predicates for comparing entity ids in queries. */

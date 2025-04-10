@@ -30,6 +30,8 @@ bool flecs_query_up_select_table(
                 impl->with, 0);
         } else if (kind == FlecsQueryUpSelectUnion) {
             result = flecs_query_union_select(op, redo, ctx);
+        } else if (kind == FlecsQueryUpSelectSparse) {
+            result = flecs_query_sparse_select(op, redo, ctx, 0);
         } else {
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
         }
@@ -159,6 +161,8 @@ bool flecs_query_up_select(
             return flecs_query_select(op, redo, ctx);
         } else if (kind == FlecsQueryUpSelectUnion) {
             return flecs_query_union_select(op, redo, ctx);
+        } else if (kind == FlecsQueryUpSelectSparse) {
+            return flecs_query_sparse_select(op, redo, ctx, 0);
         } else {
             /* Invalid select kind */
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
