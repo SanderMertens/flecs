@@ -155,7 +155,7 @@ int32_t flecs_type_search_relation(
 
             if (dont_fragment) {
                 r = -1;
-                if (flecs_sparse_get_any(cr->sparse, 0, obj) != NULL) {
+                if (flecs_sparse_get(cr->sparse, 0, obj) != NULL) {
                     r = -2;
                 }
             } else {

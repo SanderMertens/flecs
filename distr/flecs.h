@@ -1483,13 +1483,13 @@ void* flecs_sparse_try(
 
 /** Like get_sparse, but don't care whether element is alive or not. */
 FLECS_DBG_API
-void* flecs_sparse_get_any(
+void* flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t id);
 
-#define flecs_sparse_get_any_t(sparse, T, index)\
-    ECS_CAST(T*, flecs_sparse_get_any(sparse, ECS_SIZEOF(T), index))
+#define flecs_sparse_get_t(sparse, T, index)\
+    ECS_CAST(T*, flecs_sparse_get(sparse, ECS_SIZEOF(T), index))
 
 /** Get or create element by (sparse) id. */
 FLECS_DBG_API

@@ -58,7 +58,7 @@ void* flecs_component_sparse_get(
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
-    return flecs_sparse_get_any(cr->sparse, 0, entity);
+    return flecs_sparse_get(cr->sparse, 0, entity);
 }
 
 static
@@ -81,7 +81,7 @@ ecs_entity_t flecs_component_sparse_remove_intern(
         return 0;
     }
 
-    void *ptr = flecs_sparse_get_any(cr->sparse, 0, entity);
+    void *ptr = flecs_sparse_get(cr->sparse, 0, entity);
     if (!ptr) {
         return 0;
     }
@@ -123,7 +123,7 @@ void flecs_component_sparse_dont_fragment_pair_remove(
     ecs_entity_t tgt = ecs_pair_second(world, cr->id);
     ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_type_t *type = flecs_sparse_get_any_t(
+    ecs_type_t *type = flecs_sparse_get_t(
         parent->sparse, ecs_type_t, entity);
     if (!type) {
         return;
