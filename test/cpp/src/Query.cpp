@@ -865,6 +865,178 @@ void Query_run_sparse_w_with(void) {
     test_int(p->y, 22);
 }
 
+void Query_run_dont_fragment(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::DontFragment);
+    world.component<Velocity>();
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position, Velocity>();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto v = it.field<Velocity>(1);
+
+            for (auto i : it) {
+                auto& p = it.field_at<Position>(0, i);
+                p.x += v[i].x;
+                p.y += v[i].y;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void Query_run_dont_fragment_w_with(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::DontFragment);
+    world.component<Velocity>();
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query_builder()
+        .with<Position>()
+        .with<Velocity>()
+        .build();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto v = it.field<Velocity>(1);
+
+            for (auto i : it) {
+                auto& p = it.field_at<Position>(0, i);
+                p.x += v[i].x;
+                p.y += v[i].y;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void Query_run_dont_fragment_add(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            for (auto i : it) {
+                flecs::entity e = it.entity(i);
+                e.add<Velocity>();
+                test_assert(e.has<Velocity>());
+
+                auto& p = it.field_at<Position>(0, i);
+                p.x += 1;
+                p.y += 2;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    const Velocity *v = entity.get<Velocity>();
+    test_assert(v != nullptr);
+}
+
+void Query_run_dont_fragment_add_remove(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            for (auto i : it) {
+                flecs::entity e = it.entity(i);
+                e.add<Velocity>();
+                test_assert(e.has<Velocity>());
+
+                e.remove<Velocity>();
+                test_assert(!e.has<Velocity>());
+
+                auto& p = it.field_at<Position>(0, i);
+                p.x += 1;
+                p.y += 2;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    const Velocity *v = entity.get<Velocity>();
+    test_assert(v == nullptr);
+}
+
+void Query_run_dont_fragment_set(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            for (auto i : it) {
+                flecs::entity e = it.entity(i);
+                e.set<Velocity>({1, 2});
+                test_assert(e.has<Velocity>());
+                {
+                    const Velocity *v = e.get<Velocity>();
+                    test_int(v->x, 1);
+                    test_int(v->y, 2);
+                }
+
+                auto& p = it.field_at<Position>(0, i);
+                p.x += 1;
+                p.y += 2;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    const Velocity *v = entity.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
 void Query_each(void) {
     flecs::world world;
 
@@ -1087,6 +1259,185 @@ void Query_each_sparse_many(void) {
         test_int(v->x, i);
         test_int(v->y, i);
     }
+}
+
+void Query_each_dont_fragment(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::DontFragment);
+    world.component<Velocity>();
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position, Velocity>();
+
+    q.each([](Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void Query_each_dont_fragment_w_with(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::DontFragment);
+    world.component<Velocity>();
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query_builder()
+        .with<Position>()
+        .with<Velocity>()
+        .build();
+
+    q.each([](flecs::iter& it, size_t row) {
+        Position& p = it.field_at<Position>(0, row);
+        Velocity& v = it.field_at<Velocity>(1, row);
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void Query_each_dont_fragment_many(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::DontFragment);
+    world.component<Velocity>();
+    
+    std::vector<flecs::entity> entities;
+
+    for (int i = 0; i < 2000; i ++) {
+        entities.push_back(world.entity()
+            .set<Position>({
+                static_cast<float>(10 + i), 
+                static_cast<float>(20 + i)
+            })
+            .set<Velocity>({
+                static_cast<float>(i), 
+                static_cast<float>(i)
+            }));
+    }
+
+    auto q = world.query<Position, Velocity>();
+
+    q.each([](Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    for (int i = 0; i < 2000; i ++) {
+        flecs::entity e = entities[i];
+        const Position *p = e.get<Position>();
+        test_int(p->x, 10 + i * 2);
+        test_int(p->y, 20 + i * 2);
+        const Velocity *v = e.get<Velocity>();
+        test_int(v->x, i);
+        test_int(v->y, i);
+    }
+}
+
+void Query_each_dont_fragment_add(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.each([](flecs::entity e, Position& p) {
+        e.add<Velocity>();
+        test_assert(e.has<Velocity>());
+
+        p.x += 1;
+        p.y += 2;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    test_assert(entity.has<Velocity>());
+}
+
+void Query_each_dont_fragment_add_remove(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.each([](flecs::entity e, Position& p) {
+        e.add<Velocity>();
+        test_assert(e.has<Velocity>());
+
+        e.remove<Velocity>();
+        test_assert(!e.has<Velocity>());
+
+        p.x += 1;
+        p.y += 2;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    test_assert(!entity.has<Velocity>());
+}
+
+void Query_each_dont_fragment_set(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.each([](flecs::entity e, Position& p) {
+        e.set<Velocity>({1, 2});
+        test_assert(e.has<Velocity>());
+        {
+            const Velocity *v = e.get<Velocity>();
+            test_assert(v != nullptr);
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+        }
+
+        p.x += 1;
+        p.y += 2;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    const Velocity *v = entity.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
 }
 
 // Generic lambdas are a C++14 feature.

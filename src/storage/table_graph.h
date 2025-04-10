@@ -57,6 +57,28 @@ typedef struct ecs_graph_node_t {
     ecs_graph_edge_hdr_t refs;
 } ecs_graph_node_t;
 
+/** Add to existing type */
+void flecs_type_add(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t add);
+
+/* Remove from existing type */
+void flecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t remove);
+
+/** Copy type. */
+ecs_type_t flecs_type_copy(
+    ecs_world_t *world,
+    const ecs_type_t *src);
+
+/** Free type. */
+void flecs_type_free(
+    ecs_world_t *world,
+    ecs_type_t *type);
+
 /* Find table by adding id to current table */
 ecs_table_t *flecs_table_traverse_add(
     ecs_world_t *world,

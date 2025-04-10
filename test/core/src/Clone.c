@@ -322,6 +322,7 @@ void Clone_1_component_w_lifecycle(void) {
     p->y = 2;
 
     ecs_entity_t e2 = ecs_clone(world, 0, e1, true);
+
     /* Test for leaks. Only 2 position objects should be alive */
     test_int(2, ctor_position - dtor_position);
     test_assert(e2 != 0);

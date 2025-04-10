@@ -114,6 +114,7 @@ struct ecs_data_t {
     int32_t size;
 };
 
+
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
  * entity has a set of components not previously observed before. When a new
@@ -127,9 +128,9 @@ struct ecs_table_t {
 
     ecs_data_t data;                 /* Component storage */
     ecs_graph_node_t node;           /* Graph node */
-    
-    int32_t *dirty_state;            /* Keep track of changes in columns */
+
     int16_t *component_map;          /* Get column for component id */
+    int32_t *dirty_state;            /* Keep track of changes in columns */
     int16_t *column_map;             /* Map type index <-> column
                                       *  - 0..count(T):        type index -> column
                                       *  - count(T)..count(C): column -> type index
@@ -143,16 +144,6 @@ void flecs_table_init(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *from);
-
-/** Copy type. */
-ecs_type_t flecs_type_copy(
-    ecs_world_t *world,
-    const ecs_type_t *src);
-
-/** Free type. */
-void flecs_type_free(
-    ecs_world_t *world,
-    ecs_type_t *type);
 
 /** Find or create table for a set of components */
 ecs_table_t* flecs_table_find_or_create(

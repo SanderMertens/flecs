@@ -219,7 +219,9 @@ void flecs_query_iter_fini_ctx(
         case EcsQueryUp:
         case EcsQuerySelfUp:
         case EcsQueryUnionEqUp:
-        case EcsQueryUnionEqSelfUp: {
+        case EcsQueryUnionEqSelfUp:
+        case EcsQuerySparseUp:
+        case EcsQuerySparseSelfUp: {
             ecs_query_up_ctx_t *op_ctx = &ctx[i].is.up;
             ecs_query_up_impl_t *impl = op_ctx->impl;
             if (impl) {

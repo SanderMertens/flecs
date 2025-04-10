@@ -591,6 +591,11 @@ void Query_run_shared(void);
 void Query_run_optional(void);
 void Query_run_sparse(void);
 void Query_run_sparse_w_with(void);
+void Query_run_dont_fragment(void);
+void Query_run_dont_fragment_w_with(void);
+void Query_run_dont_fragment_add(void);
+void Query_run_dont_fragment_add_remove(void);
+void Query_run_dont_fragment_set(void);
 void Query_each(void);
 void Query_each_const(void);
 void Query_each_shared(void);
@@ -598,6 +603,12 @@ void Query_each_optional(void);
 void Query_each_sparse(void);
 void Query_each_sparse_w_with(void);
 void Query_each_sparse_many(void);
+void Query_each_dont_fragment(void);
+void Query_each_dont_fragment_w_with(void);
+void Query_each_dont_fragment_many(void);
+void Query_each_dont_fragment_add(void);
+void Query_each_dont_fragment_add_remove(void);
+void Query_each_dont_fragment_set(void);
 void Query_signature(void);
 void Query_signature_const(void);
 void Query_signature_shared(void);
@@ -3760,6 +3771,26 @@ bake_test_case Query_testcases[] = {
         Query_run_sparse_w_with
     },
     {
+        "run_dont_fragment",
+        Query_run_dont_fragment
+    },
+    {
+        "run_dont_fragment_w_with",
+        Query_run_dont_fragment_w_with
+    },
+    {
+        "run_dont_fragment_add",
+        Query_run_dont_fragment_add
+    },
+    {
+        "run_dont_fragment_add_remove",
+        Query_run_dont_fragment_add_remove
+    },
+    {
+        "run_dont_fragment_set",
+        Query_run_dont_fragment_set
+    },
+    {
         "each",
         Query_each
     },
@@ -3786,6 +3817,30 @@ bake_test_case Query_testcases[] = {
     {
         "each_sparse_many",
         Query_each_sparse_many
+    },
+    {
+        "each_dont_fragment",
+        Query_each_dont_fragment
+    },
+    {
+        "each_dont_fragment_w_with",
+        Query_each_dont_fragment_w_with
+    },
+    {
+        "each_dont_fragment_many",
+        Query_each_dont_fragment_many
+    },
+    {
+        "each_dont_fragment_add",
+        Query_each_dont_fragment_add
+    },
+    {
+        "each_dont_fragment_add_remove",
+        Query_each_dont_fragment_add_remove
+    },
+    {
+        "each_dont_fragment_set",
+        Query_each_dont_fragment_set
     },
     {
         "signature",
@@ -7288,7 +7343,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        125,
+        136,
         Query_testcases
     },
     {
