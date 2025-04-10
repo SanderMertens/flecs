@@ -379,7 +379,7 @@ typedef uint64_t ecs_id_t;
  * and a counter used to track entity liveliness in the upper 32 bits. When an
  * id is recycled, its generation count is increased. This causes recycled ids
  * to be very large (>4 billion), which is normal. */
-typedef ecs_id_t ecs_entity_t;
+// typedef ecs_id_t ecs_entity_t;
 
 /** A type is a list of (component) ids.
  * Types are used to communicate the "type" of an entity. In most type systems a
@@ -423,7 +423,7 @@ typedef struct {
  * and deleted with different components, registered in different order. To
  * ensure isolation between tests, the C++ API has a `flecs::reset` function
  * that forces the API to ignore the old component ids. */
-typedef struct ecs_world_t ecs_world_t;
+// typedef struct ecs_world_t ecs_world_t;
 
 /** A stage enables modification while iterating and from multiple threads */
 typedef struct ecs_stage_t ecs_stage_t;

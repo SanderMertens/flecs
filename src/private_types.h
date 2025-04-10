@@ -21,9 +21,6 @@
 #include "flecs/datastructures/bitset.h"
 #include "storage/table.h"
 
-/* Custom storage record forward declaration */
-typedef struct ecs_storage_record_t ecs_storage_record_t;
-
 /* Include the private storage header */
 #include "storage/custom_storage.h"
 
