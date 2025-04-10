@@ -1,0 +1,1490 @@
+[
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/alerts.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/alerts.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/alerts.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/alerts.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/app.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/app.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/app.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/app.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/doc.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/doc.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/doc.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/doc.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/flecs_cpp.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/flecs_cpp.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/flecs_cpp.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/flecs_cpp.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/http.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/http.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/http.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/http.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/journal.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/journal.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/journal.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/journal.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/deserialize.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/deserialize.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/deserialize.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/deserialize.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/deserialize_value.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/deserialize_value.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/deserialize_value.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/deserialize_value.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/json.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/json.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/json.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/json.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/serialize_entity.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_entity.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_entity.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/serialize_entity.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/serialize_field_info.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_field_info.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_field_info.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/serialize_field_info.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/serialize_iter.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/serialize_iter.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/serialize_iter_result.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/serialize_iter_result.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/serialize_iter_result_query.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result_query.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result_query.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/serialize_iter_result_query.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/serialize_iter_result_table.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result_table.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result_table.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/serialize_iter_result_table.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/serialize_query_info.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_query_info.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_query_info.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/serialize_query_info.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/serialize_type_info.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_type_info.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_type_info.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/serialize_type_info.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/serialize_value.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_value.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_value.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/serialize_value.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/json/serialize_world.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_world.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_world.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/json/serialize_world.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/log.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/log.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/log.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/log.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/meta/api.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/api.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/api.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/meta/api.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/meta/c_utils.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/c_utils.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/c_utils.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/meta/c_utils.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/meta/cursor.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/cursor.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/cursor.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/meta/cursor.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/meta/definitions.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/definitions.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/definitions.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/meta/definitions.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/meta/meta.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/meta.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/meta.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/meta/meta.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/meta/rtt_lifecycle.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/rtt_lifecycle.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/rtt_lifecycle.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/meta/rtt_lifecycle.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/meta/serialized.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/serialized.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/serialized.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/meta/serialized.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/metrics.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/metrics.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/metrics.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/metrics.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/module.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/module.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/module.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/module.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/os_api_impl/os_api_impl.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/os_api_impl/os_api_impl.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/os_api_impl/os_api_impl.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/os_api_impl/os_api_impl.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/parser/tokenizer.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/parser/tokenizer.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/parser/tokenizer.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/parser/tokenizer.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/pipeline/pipeline.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/pipeline/pipeline.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/pipeline/pipeline.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/pipeline/pipeline.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/pipeline/worker.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/pipeline/worker.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/pipeline/worker.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/pipeline/worker.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/query_dsl/parser.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/query_dsl/parser.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/query_dsl/parser.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/query_dsl/parser.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/rest.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/rest.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/rest.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/rest.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/ast.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/ast.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/ast.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/ast.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/expr/ast.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/ast.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/ast.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/expr/ast.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/expr/parser.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/parser.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/parser.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/expr/parser.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/expr/stack.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/stack.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/stack.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/expr/stack.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/expr/util.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/util.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/util.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/expr/util.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/expr/visit_eval.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_eval.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_eval.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/expr/visit_eval.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/expr/visit_fold.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_fold.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_fold.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/expr/visit_fold.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/expr/visit_free.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_free.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_free.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/expr/visit_free.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/expr/visit_to_str.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_to_str.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_to_str.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/expr/visit_to_str.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/expr/visit_type.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_type.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_type.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/expr/visit_type.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/function.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/function.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/function.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/function.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/functions_builtin.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/functions_builtin.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/functions_builtin.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/functions_builtin.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/functions_math.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/functions_math.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/functions_math.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/functions_math.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/parser.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/parser.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/parser.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/parser.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/script.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/script.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/script.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/script.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/serialize.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/serialize.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/serialize.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/serialize.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/template.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/template.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/template.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/template.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/vars.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/vars.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/vars.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/vars.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/visit.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/visit.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/visit.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/visit.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/visit_check.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/visit_check.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/visit_check.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/visit_check.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/visit_eval.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/visit_eval.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/visit_eval.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/visit_eval.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/visit_free.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/visit_free.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/visit_free.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/visit_free.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/script/visit_to_str.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/visit_to_str.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/visit_to_str.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/script/visit_to_str.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/stats/monitor.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/monitor.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/monitor.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/stats/monitor.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/stats/pipeline_monitor.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/pipeline_monitor.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/pipeline_monitor.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/stats/pipeline_monitor.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/stats/stats.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/stats.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/stats.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/stats/stats.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/stats/system_monitor.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/system_monitor.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/system_monitor.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/stats/system_monitor.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/stats/world_monitor.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/world_monitor.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/world_monitor.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/stats/world_monitor.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/stats/world_summary.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/world_summary.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/world_summary.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/stats/world_summary.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/system/system.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/system/system.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/system/system.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/system/system.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/timer.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/timer.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/timer.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/timer.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/addons/units.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/units.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/units.c",
+  "output": "CMakeFiles/flecs.dir/src/addons/units.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/bootstrap.c.o -c /home/sambit/git_repos/flecs-solve/src/bootstrap.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/bootstrap.c",
+  "output": "CMakeFiles/flecs.dir/src/bootstrap.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/allocator.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/allocator.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/allocator.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/allocator.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/bitset.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/bitset.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/bitset.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/bitset.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/block_allocator.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/block_allocator.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/block_allocator.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/block_allocator.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/hash.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/hash.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/hash.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/hash.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/hashmap.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/hashmap.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/hashmap.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/hashmap.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/map.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/map.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/map.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/map.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/name_index.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/name_index.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/name_index.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/name_index.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/sparse.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/sparse.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/sparse.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/sparse.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/stack_allocator.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/stack_allocator.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/stack_allocator.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/stack_allocator.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/strbuf.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/strbuf.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/strbuf.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/strbuf.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/switch_list.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/switch_list.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/switch_list.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/switch_list.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/datastructures/vec.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/vec.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/vec.c",
+  "output": "CMakeFiles/flecs.dir/src/datastructures/vec.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/each.c.o -c /home/sambit/git_repos/flecs-solve/src/each.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/each.c",
+  "output": "CMakeFiles/flecs.dir/src/each.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/entity.c.o -c /home/sambit/git_repos/flecs-solve/src/entity.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/entity.c",
+  "output": "CMakeFiles/flecs.dir/src/entity.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/entity_name.c.o -c /home/sambit/git_repos/flecs-solve/src/entity_name.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/entity_name.c",
+  "output": "CMakeFiles/flecs.dir/src/entity_name.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/id.c.o -c /home/sambit/git_repos/flecs-solve/src/id.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/id.c",
+  "output": "CMakeFiles/flecs.dir/src/id.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/iter.c.o -c /home/sambit/git_repos/flecs-solve/src/iter.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/iter.c",
+  "output": "CMakeFiles/flecs.dir/src/iter.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/misc.c.o -c /home/sambit/git_repos/flecs-solve/src/misc.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/misc.c",
+  "output": "CMakeFiles/flecs.dir/src/misc.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/observable.c.o -c /home/sambit/git_repos/flecs-solve/src/observable.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/observable.c",
+  "output": "CMakeFiles/flecs.dir/src/observable.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/observer.c.o -c /home/sambit/git_repos/flecs-solve/src/observer.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/observer.c",
+  "output": "CMakeFiles/flecs.dir/src/observer.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/os_api.c.o -c /home/sambit/git_repos/flecs-solve/src/os_api.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/os_api.c",
+  "output": "CMakeFiles/flecs.dir/src/os_api.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/poly.c.o -c /home/sambit/git_repos/flecs-solve/src/poly.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/poly.c",
+  "output": "CMakeFiles/flecs.dir/src/poly.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/api.c.o -c /home/sambit/git_repos/flecs-solve/src/query/api.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/api.c",
+  "output": "CMakeFiles/flecs.dir/src/query/api.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/compiler/compiler.c.o -c /home/sambit/git_repos/flecs-solve/src/query/compiler/compiler.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/compiler/compiler.c",
+  "output": "CMakeFiles/flecs.dir/src/query/compiler/compiler.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/compiler/compiler_term.c.o -c /home/sambit/git_repos/flecs-solve/src/query/compiler/compiler_term.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/compiler/compiler_term.c",
+  "output": "CMakeFiles/flecs.dir/src/query/compiler/compiler_term.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/cache.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/cache.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/cache.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/cache.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/cache_iter.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/cache_iter.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/cache_iter.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/cache_iter.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/cache_order_by.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/cache_order_by.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/cache_order_by.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/cache_order_by.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/change_detection.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/change_detection.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/change_detection.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/change_detection.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/eval.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/eval.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/eval_iter.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_iter.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_iter.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/eval_iter.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/eval_member.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_member.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_member.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/eval_member.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/eval_pred.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_pred.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_pred.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/eval_pred.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/eval_sparse.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_sparse.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_sparse.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/eval_sparse.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/eval_toggle.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_toggle.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_toggle.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/eval_toggle.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/eval_trav.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_trav.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_trav.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/eval_trav.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/eval_union.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_union.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_union.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/eval_union.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/eval_up.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_up.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_up.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/eval_up.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/eval_utils.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_utils.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_utils.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/eval_utils.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/trav_cache.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/trav_cache.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/trav_cache.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/trav_cache.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/trav_down_cache.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/trav_down_cache.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/trav_down_cache.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/trav_down_cache.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/trav_up_cache.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/trav_up_cache.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/trav_up_cache.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/trav_up_cache.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/engine/trivial_iter.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/trivial_iter.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/trivial_iter.c",
+  "output": "CMakeFiles/flecs.dir/src/query/engine/trivial_iter.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/util.c.o -c /home/sambit/git_repos/flecs-solve/src/query/util.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/util.c",
+  "output": "CMakeFiles/flecs.dir/src/query/util.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/query/validator.c.o -c /home/sambit/git_repos/flecs-solve/src/query/validator.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/validator.c",
+  "output": "CMakeFiles/flecs.dir/src/query/validator.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/search.c.o -c /home/sambit/git_repos/flecs-solve/src/search.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/search.c",
+  "output": "CMakeFiles/flecs.dir/src/search.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/stage.c.o -c /home/sambit/git_repos/flecs-solve/src/stage.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/stage.c",
+  "output": "CMakeFiles/flecs.dir/src/stage.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/storage/component_index.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/component_index.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/component_index.c",
+  "output": "CMakeFiles/flecs.dir/src/storage/component_index.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/storage/entity_index.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/entity_index.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/entity_index.c",
+  "output": "CMakeFiles/flecs.dir/src/storage/entity_index.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/storage/sparse_storage.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/sparse_storage.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/sparse_storage.c",
+  "output": "CMakeFiles/flecs.dir/src/storage/sparse_storage.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/storage/storage.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/storage.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/storage.c",
+  "output": "CMakeFiles/flecs.dir/src/storage/storage.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/storage/table.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/table.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/table.c",
+  "output": "CMakeFiles/flecs.dir/src/storage/table.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/storage/table_cache.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/table_cache.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/table_cache.c",
+  "output": "CMakeFiles/flecs.dir/src/storage/table_cache.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/storage/table_graph.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/table_graph.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/table_graph.c",
+  "output": "CMakeFiles/flecs.dir/src/storage/table_graph.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/value.c.o -c /home/sambit/git_repos/flecs-solve/src/value.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/value.c",
+  "output": "CMakeFiles/flecs.dir/src/value.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_EXPORTS -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs.dir/src/world.c.o -c /home/sambit/git_repos/flecs-solve/src/world.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/world.c",
+  "output": "CMakeFiles/flecs.dir/src/world.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/alerts.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/alerts.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/alerts.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/alerts.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/app.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/app.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/app.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/app.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/doc.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/doc.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/doc.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/doc.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/flecs_cpp.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/flecs_cpp.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/flecs_cpp.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/flecs_cpp.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/http.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/http.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/http.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/http.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/journal.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/journal.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/journal.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/journal.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/deserialize.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/deserialize.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/deserialize.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/deserialize.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/deserialize_value.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/deserialize_value.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/deserialize_value.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/deserialize_value.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/json.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/json.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/json.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/json.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/serialize_entity.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_entity.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_entity.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/serialize_entity.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/serialize_field_info.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_field_info.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_field_info.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/serialize_field_info.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/serialize_iter.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/serialize_iter.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/serialize_iter_result.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/serialize_iter_result.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/serialize_iter_result_query.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result_query.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result_query.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/serialize_iter_result_query.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/serialize_iter_result_table.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result_table.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_iter_result_table.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/serialize_iter_result_table.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/serialize_query_info.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_query_info.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_query_info.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/serialize_query_info.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/serialize_type_info.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_type_info.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_type_info.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/serialize_type_info.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/serialize_value.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_value.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_value.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/serialize_value.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/json/serialize_world.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/json/serialize_world.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/json/serialize_world.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/json/serialize_world.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/log.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/log.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/log.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/log.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/meta/api.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/api.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/api.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/meta/api.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/meta/c_utils.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/c_utils.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/c_utils.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/meta/c_utils.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/meta/cursor.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/cursor.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/cursor.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/meta/cursor.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/meta/definitions.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/definitions.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/definitions.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/meta/definitions.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/meta/meta.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/meta.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/meta.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/meta/meta.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/meta/rtt_lifecycle.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/rtt_lifecycle.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/rtt_lifecycle.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/meta/rtt_lifecycle.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/meta/serialized.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/meta/serialized.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/meta/serialized.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/meta/serialized.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/metrics.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/metrics.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/metrics.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/metrics.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/module.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/module.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/module.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/module.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/os_api_impl/os_api_impl.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/os_api_impl/os_api_impl.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/os_api_impl/os_api_impl.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/os_api_impl/os_api_impl.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/parser/tokenizer.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/parser/tokenizer.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/parser/tokenizer.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/parser/tokenizer.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/pipeline/pipeline.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/pipeline/pipeline.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/pipeline/pipeline.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/pipeline/pipeline.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/pipeline/worker.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/pipeline/worker.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/pipeline/worker.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/pipeline/worker.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/query_dsl/parser.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/query_dsl/parser.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/query_dsl/parser.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/query_dsl/parser.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/rest.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/rest.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/rest.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/rest.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/ast.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/ast.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/ast.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/ast.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/expr/ast.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/ast.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/ast.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/expr/ast.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/expr/parser.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/parser.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/parser.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/expr/parser.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/expr/stack.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/stack.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/stack.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/expr/stack.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/expr/util.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/util.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/util.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/expr/util.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/expr/visit_eval.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_eval.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_eval.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/expr/visit_eval.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/expr/visit_fold.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_fold.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_fold.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/expr/visit_fold.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/expr/visit_free.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_free.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_free.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/expr/visit_free.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/expr/visit_to_str.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_to_str.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_to_str.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/expr/visit_to_str.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/expr/visit_type.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_type.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/expr/visit_type.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/expr/visit_type.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/function.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/function.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/function.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/function.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/functions_builtin.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/functions_builtin.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/functions_builtin.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/functions_builtin.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/functions_math.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/functions_math.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/functions_math.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/functions_math.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/parser.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/parser.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/parser.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/parser.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/script.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/script.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/script.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/script.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/serialize.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/serialize.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/serialize.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/serialize.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/template.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/template.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/template.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/template.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/vars.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/vars.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/vars.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/vars.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/visit.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/visit.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/visit.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/visit.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/visit_check.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/visit_check.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/visit_check.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/visit_check.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/visit_eval.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/visit_eval.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/visit_eval.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/visit_eval.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/visit_free.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/visit_free.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/visit_free.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/visit_free.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/script/visit_to_str.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/script/visit_to_str.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/script/visit_to_str.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/script/visit_to_str.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/stats/monitor.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/monitor.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/monitor.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/stats/monitor.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/stats/pipeline_monitor.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/pipeline_monitor.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/pipeline_monitor.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/stats/pipeline_monitor.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/stats/stats.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/stats.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/stats.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/stats/stats.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/stats/system_monitor.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/system_monitor.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/system_monitor.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/stats/system_monitor.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/stats/world_monitor.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/world_monitor.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/world_monitor.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/stats/world_monitor.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/stats/world_summary.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/stats/world_summary.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/stats/world_summary.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/stats/world_summary.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/system/system.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/system/system.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/system/system.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/system/system.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/timer.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/timer.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/timer.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/timer.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/addons/units.c.o -c /home/sambit/git_repos/flecs-solve/src/addons/units.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/addons/units.c",
+  "output": "CMakeFiles/flecs_static.dir/src/addons/units.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/bootstrap.c.o -c /home/sambit/git_repos/flecs-solve/src/bootstrap.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/bootstrap.c",
+  "output": "CMakeFiles/flecs_static.dir/src/bootstrap.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/allocator.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/allocator.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/allocator.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/allocator.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/bitset.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/bitset.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/bitset.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/bitset.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/block_allocator.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/block_allocator.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/block_allocator.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/block_allocator.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/hash.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/hash.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/hash.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/hash.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/hashmap.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/hashmap.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/hashmap.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/hashmap.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/map.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/map.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/map.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/map.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/name_index.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/name_index.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/name_index.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/name_index.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/sparse.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/sparse.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/sparse.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/sparse.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/stack_allocator.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/stack_allocator.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/stack_allocator.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/stack_allocator.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/strbuf.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/strbuf.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/strbuf.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/strbuf.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/switch_list.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/switch_list.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/switch_list.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/switch_list.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/datastructures/vec.c.o -c /home/sambit/git_repos/flecs-solve/src/datastructures/vec.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/datastructures/vec.c",
+  "output": "CMakeFiles/flecs_static.dir/src/datastructures/vec.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/each.c.o -c /home/sambit/git_repos/flecs-solve/src/each.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/each.c",
+  "output": "CMakeFiles/flecs_static.dir/src/each.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/entity.c.o -c /home/sambit/git_repos/flecs-solve/src/entity.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/entity.c",
+  "output": "CMakeFiles/flecs_static.dir/src/entity.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/entity_name.c.o -c /home/sambit/git_repos/flecs-solve/src/entity_name.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/entity_name.c",
+  "output": "CMakeFiles/flecs_static.dir/src/entity_name.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/id.c.o -c /home/sambit/git_repos/flecs-solve/src/id.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/id.c",
+  "output": "CMakeFiles/flecs_static.dir/src/id.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/iter.c.o -c /home/sambit/git_repos/flecs-solve/src/iter.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/iter.c",
+  "output": "CMakeFiles/flecs_static.dir/src/iter.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/misc.c.o -c /home/sambit/git_repos/flecs-solve/src/misc.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/misc.c",
+  "output": "CMakeFiles/flecs_static.dir/src/misc.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/observable.c.o -c /home/sambit/git_repos/flecs-solve/src/observable.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/observable.c",
+  "output": "CMakeFiles/flecs_static.dir/src/observable.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/observer.c.o -c /home/sambit/git_repos/flecs-solve/src/observer.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/observer.c",
+  "output": "CMakeFiles/flecs_static.dir/src/observer.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/os_api.c.o -c /home/sambit/git_repos/flecs-solve/src/os_api.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/os_api.c",
+  "output": "CMakeFiles/flecs_static.dir/src/os_api.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/poly.c.o -c /home/sambit/git_repos/flecs-solve/src/poly.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/poly.c",
+  "output": "CMakeFiles/flecs_static.dir/src/poly.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/api.c.o -c /home/sambit/git_repos/flecs-solve/src/query/api.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/api.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/api.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/compiler/compiler.c.o -c /home/sambit/git_repos/flecs-solve/src/query/compiler/compiler.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/compiler/compiler.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/compiler/compiler.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/compiler/compiler_term.c.o -c /home/sambit/git_repos/flecs-solve/src/query/compiler/compiler_term.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/compiler/compiler_term.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/compiler/compiler_term.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/cache.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/cache.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/cache.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/cache.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/cache_iter.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/cache_iter.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/cache_iter.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/cache_iter.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/cache_order_by.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/cache_order_by.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/cache_order_by.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/cache_order_by.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/change_detection.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/change_detection.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/change_detection.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/change_detection.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/eval.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/eval.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/eval_iter.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_iter.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_iter.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/eval_iter.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/eval_member.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_member.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_member.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/eval_member.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/eval_pred.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_pred.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_pred.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/eval_pred.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/eval_sparse.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_sparse.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_sparse.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/eval_sparse.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/eval_toggle.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_toggle.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_toggle.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/eval_toggle.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/eval_trav.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_trav.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_trav.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/eval_trav.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/eval_union.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_union.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_union.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/eval_union.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/eval_up.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_up.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_up.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/eval_up.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/eval_utils.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/eval_utils.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/eval_utils.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/eval_utils.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/trav_cache.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/trav_cache.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/trav_cache.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/trav_cache.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/trav_down_cache.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/trav_down_cache.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/trav_down_cache.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/trav_down_cache.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/trav_up_cache.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/trav_up_cache.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/trav_up_cache.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/trav_up_cache.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/engine/trivial_iter.c.o -c /home/sambit/git_repos/flecs-solve/src/query/engine/trivial_iter.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/engine/trivial_iter.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/engine/trivial_iter.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/util.c.o -c /home/sambit/git_repos/flecs-solve/src/query/util.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/util.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/util.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/query/validator.c.o -c /home/sambit/git_repos/flecs-solve/src/query/validator.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/query/validator.c",
+  "output": "CMakeFiles/flecs_static.dir/src/query/validator.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/search.c.o -c /home/sambit/git_repos/flecs-solve/src/search.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/search.c",
+  "output": "CMakeFiles/flecs_static.dir/src/search.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/stage.c.o -c /home/sambit/git_repos/flecs-solve/src/stage.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/stage.c",
+  "output": "CMakeFiles/flecs_static.dir/src/stage.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/storage/component_index.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/component_index.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/component_index.c",
+  "output": "CMakeFiles/flecs_static.dir/src/storage/component_index.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/storage/entity_index.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/entity_index.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/entity_index.c",
+  "output": "CMakeFiles/flecs_static.dir/src/storage/entity_index.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/storage/sparse_storage.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/sparse_storage.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/sparse_storage.c",
+  "output": "CMakeFiles/flecs_static.dir/src/storage/sparse_storage.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/storage/storage.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/storage.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/storage.c",
+  "output": "CMakeFiles/flecs_static.dir/src/storage/storage.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/storage/table.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/table.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/table.c",
+  "output": "CMakeFiles/flecs_static.dir/src/storage/table.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/storage/table_cache.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/table_cache.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/table_cache.c",
+  "output": "CMakeFiles/flecs_static.dir/src/storage/table_cache.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/storage/table_graph.c.o -c /home/sambit/git_repos/flecs-solve/src/storage/table_graph.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/storage/table_graph.c",
+  "output": "CMakeFiles/flecs_static.dir/src/storage/table_graph.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/value.c.o -c /home/sambit/git_repos/flecs-solve/src/value.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/value.c",
+  "output": "CMakeFiles/flecs_static.dir/src/value.c.o"
+},
+{
+  "directory": "/home/sambit/git_repos/flecs-solve/build",
+  "command": "/usr/bin/clang -Dflecs_STATIC -I/home/sambit/git_repos/flecs-solve/include -g -std=gnu99 -fPIC -fvisibility=hidden -o CMakeFiles/flecs_static.dir/src/world.c.o -c /home/sambit/git_repos/flecs-solve/src/world.c",
+  "file": "/home/sambit/git_repos/flecs-solve/src/world.c",
+  "output": "CMakeFiles/flecs_static.dir/src/world.c.o"
+}
+]
