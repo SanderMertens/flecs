@@ -74,22 +74,15 @@ FLECS_DBG_API
 uint64_t flecs_sparse_new_id(
     ecs_sparse_t *sparse);
 
-/** Remove an element */
+/** Remove an element without liveliness checking */
 FLECS_DBG_API
-void flecs_sparse_remove(
+bool flecs_sparse_remove(
     ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
+    ecs_size_t size,
     uint64_t id);
 
 #define flecs_sparse_remove_t(sparse, T, id)\
     flecs_sparse_remove(sparse, ECS_SIZEOF(T), id)
-
-/** Remove an element without liveliness checking */
-FLECS_DBG_API
-bool flecs_sparse_remove_fast(
-    ecs_sparse_t *sparse,
-    ecs_size_t size,
-    uint64_t index);
 
 /** Test if id is alive, which requires the generation count to match. */
 FLECS_DBG_API
@@ -113,8 +106,12 @@ FLECS_DBG_API
 int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse);
 
-/** Get element by (sparse) id. The returned pointer is stable for the duration
- * of the sparse set, as it is stored in the sparse array. */
+/** Check if sparse set has id */
+bool flecs_sparse_has(
+    const ecs_sparse_t *sparse,
+    uint64_t id);
+
+/** Like get_sparse, but don't care whether element is alive or not. */
 FLECS_DBG_API
 void* flecs_sparse_get(
     const ecs_sparse_t *sparse,
@@ -123,31 +120,6 @@ void* flecs_sparse_get(
 
 #define flecs_sparse_get_t(sparse, T, index)\
     ECS_CAST(T*, flecs_sparse_get(sparse, ECS_SIZEOF(T), index))
-
-/** Check if sparse set has id */
-bool flecs_sparse_has_any(
-    const ecs_sparse_t *sparse,
-    uint64_t id);
-
-/** Same as flecs_sparse_get, but doesn't assert if id is not alive. */
-FLECS_DBG_API
-void* flecs_sparse_try(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);
-
-#define flecs_sparse_try_t(sparse, T, index)\
-    ECS_CAST(T*, flecs_sparse_try(sparse, ECS_SIZEOF(T), index))
-
-/** Like get_sparse, but don't care whether element is alive or not. */
-FLECS_DBG_API
-void* flecs_sparse_get_any(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);
-
-#define flecs_sparse_get_any_t(sparse, T, index)\
-    ECS_CAST(T*, flecs_sparse_get_any(sparse, ECS_SIZEOF(T), index))
 
 /** Get or create element by (sparse) id. */
 FLECS_DBG_API

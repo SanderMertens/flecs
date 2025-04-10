@@ -189,7 +189,7 @@ void* ecs_field_at_w_size(
         src = ecs_table_entities(it->table)[row + it->offset];
     }
 
-    return flecs_sparse_get_any(cr->sparse, flecs_uto(int32_t, size), src);
+    return flecs_sparse_get(cr->sparse, flecs_uto(int32_t, size), src);
 error:
     return NULL;
 }
