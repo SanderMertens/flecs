@@ -424,7 +424,7 @@ void Plan_3_trivial_plan_w_any(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      " 
     LINE " 1. [ 0,  2]  triv        {0,1}"
-    LINE " 2. [ 1,  3]  andany      $[this]           (ChildOf, $_'1)"
+    LINE " 2. [ 1,  3]  and_any     $[this]           (ChildOf, $_'1)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -519,7 +519,7 @@ void Plan_3_trivial_plan_w_any_component(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      " 
     LINE " 1. [ 0,  2]  triv        {0,1}"
-    LINE " 2. [ 1,  3]  andany      $[this]           (ChildOf, $_'1)"
+    LINE " 2. [ 1,  3]  and_any     $[this]           (ChildOf, $_'1)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -2139,7 +2139,7 @@ void Plan_pair_first_wildcard(void) {
     ecs_log_enable_colors(false);
 
     const char *expect = 
-    HEAD " 0. [-1,  1]  and         $[this]           ($*'1, Tgt)"
+    HEAD " 0. [-1,  1]  and_wct     $[this]           ($*'1, Tgt)"
     LINE " 1. [ 0,  2]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -2166,7 +2166,7 @@ void Plan_pair_first_wildcard_cached(void) {
     ecs_log_enable_colors(false);
 
     const char *expect = 
-    HEAD " 0. [-1,  1]  xcache      "
+    HEAD " 0. [-1,  1]  and_wct     $[this]           ($*'1, Tgt)"
     LINE " 1. [ 0,  2]  yield       "
     LINE "";    
     char *plan = ecs_query_plan(r);

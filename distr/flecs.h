@@ -398,6 +398,7 @@ extern "C" {
 #define EcsEntityIsId                 (1u << 31)
 #define EcsEntityIsTarget             (1u << 30)
 #define EcsEntityIsTraversable        (1u << 29)
+#define EcsEntityHasDontFragment      (1u << 28)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -438,7 +439,9 @@ extern "C" {
 #define EcsIdHasOnTableCreate          (1u << 21)
 #define EcsIdHasOnTableDelete          (1u << 22)
 #define EcsIdIsSparse                  (1u << 23)
-#define EcsIdIsUnion                   (1u << 24)
+#define EcsIdDontFragment              (1u << 24)
+#define EcsIdMatchDontFragment         (1u << 25) /* For (*, T) wildcards */
+#define EcsIdIsUnion                   (1u << 26)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
         EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion)
@@ -533,6 +536,7 @@ extern "C" {
 #define EcsTermIsSparse               (1u << 12)
 #define EcsTermIsUnion                (1u << 13)
 #define EcsTermIsOr                   (1u << 14)
+#define EcsTermDontFragment         (1u << 15)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -578,9 +582,11 @@ extern "C" {
 #define EcsTableHasOnTableCreate       (1u << 21u)
 #define EcsTableHasOnTableDelete       (1u << 22u)
 #define EcsTableHasSparse              (1u << 23u)
-#define EcsTableHasUnion               (1u << 24u)
+#define EcsTableHasDontFragment        (1u << 24u)
+#define EcsTableOverrideDontFragment   (1u << 25u)
+#define EcsTableHasUnion               (1u << 26u)
 
-#define EcsTableHasTraversable         (1u << 26u)
+#define EcsTableHasTraversable         (1u << 27u)
 #define EcsTableMarkedForDelete        (1u << 30u)
 
 /* Composite table flags */
@@ -1422,7 +1428,7 @@ void flecs_sparse_remove(
 
 /** Remove an element without liveliness checking */
 FLECS_DBG_API
-void* flecs_sparse_remove_fast(
+bool flecs_sparse_remove_fast(
     ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t index);
@@ -1460,6 +1466,11 @@ void* flecs_sparse_get(
 #define flecs_sparse_get_t(sparse, T, index)\
     ECS_CAST(T*, flecs_sparse_get(sparse, ECS_SIZEOF(T), index))
 
+/** Check if sparse set has id */
+bool flecs_sparse_has_any(
+    const ecs_sparse_t *sparse,
+    uint64_t id);
+
 /** Same as flecs_sparse_get, but doesn't assert if id is not alive. */
 FLECS_DBG_API
 void* flecs_sparse_try(
@@ -1482,13 +1493,13 @@ void* flecs_sparse_get_any(
 
 /** Get or create element by (sparse) id. */
 FLECS_DBG_API
-void* flecs_sparse_ensure(
+void* flecs_sparse_insert(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t id);
 
-#define flecs_sparse_ensure_t(sparse, T, index)\
-    ECS_CAST(T*, flecs_sparse_ensure(sparse, ECS_SIZEOF(T), index))
+#define flecs_sparse_insert_t(sparse, T, index)\
+    ECS_CAST(T*, flecs_sparse_insert(sparse, ECS_SIZEOF(T), index))
 
 /** Fast version of ensure, no liveliness checking */
 FLECS_DBG_API
@@ -5568,6 +5579,9 @@ FLECS_API extern const ecs_entity_t EcsPanic;
 
 /** Mark component as sparse */
 FLECS_API extern const ecs_entity_t EcsSparse;
+
+/** Mark component as non-fragmenting */
+FLECS_API extern const ecs_entity_t EcsDontFragment;
 
 /** Mark relationship as union */
 FLECS_API extern const ecs_entity_t EcsUnion;
@@ -17678,6 +17692,7 @@ static const flecs::entity_t Symbol = EcsSymbol;
 
 /* Storage */
 static const flecs::entity_t Sparse = EcsSparse;
+static const flecs::entity_t DontFragment = EcsDontFragment;
 static const flecs::entity_t Union = EcsUnion;
 
 /* Builtin predicates for comparing entity ids in queries. */

@@ -1111,6 +1111,21 @@ void flecs_query_set_op_kind(
                 op->kind = EcsQueryUnionEqSelfUp;
             }
         }
+    } else if (term->flags_ & EcsTermDontFragment) {
+        if (op->kind == EcsQueryAnd) {
+            op->kind = EcsQuerySparse;
+            if (term->oper == EcsNot) {
+                op->kind = EcsQuerySparseNot;
+            }
+        } else {
+            op->kind = EcsQuerySparseWith;
+        }
+
+        if ((term->src.id & trav_flags) == EcsUp) {
+            op->kind = EcsQuerySparseUp;
+        } else if ((term->src.id & trav_flags) == (EcsSelf|EcsUp)) {
+            op->kind = EcsQuerySparseSelfUp;
+        }
     } else {
         if ((term->src.id & trav_flags) == EcsUp) {
             op->kind = EcsQueryUp;
@@ -1118,6 +1133,14 @@ void flecs_query_set_op_kind(
             op->kind = EcsQuerySelfUp;
         } else if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op->kind = EcsQueryAndAny;
+        } else if (ECS_IS_PAIR(term->id) && 
+            ECS_PAIR_FIRST(term->id) == EcsWildcard) 
+        {
+            if (op->kind == EcsQueryAnd) {
+                op->kind = EcsQueryAndWcTgt;
+            } else {
+                op->kind = EcsQueryWithWcTgt;
+            }
         }
     }
 }
@@ -1221,6 +1244,9 @@ int flecs_query_compile_term(
     flecs_query_set_op_kind(&op, term, src_is_var);
 
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
+    if (op.kind == EcsQuerySparseNot) {
+        is_not = false;
+    }
 
     /* Save write state at start of term so we can use it to reliably track
      * variables got written by this term. */

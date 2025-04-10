@@ -80,6 +80,149 @@ void Sparse_1_fixed_sparse_none(void) {
     ecs_fini(world);
 }
 
+void Sparse_1_fixed_sparse_self(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add_id(world, base, EcsPrefab);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
+    ecs_add_pair(world, ent, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(ent|self)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, ent, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(ent, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Sparse_1_fixed_sparse_self_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add_id(world, base, EcsPrefab);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
+    ecs_add_pair(world, ent, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(ent|self|up IsA)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(base, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, ent, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(ent, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Sparse_1_fixed_sparse_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(ent|up IsA)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, ent, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add_id(world, base, EcsPrefab);
+    ecs_add_pair(world, ent, EcsIsA, base);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, base, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(base, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Sparse_1_this_sparse(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -255,6 +398,51 @@ void Sparse_1_this_sparse_written(void) {
         Position *p = ecs_field_at(&it, Position, 1, 2);
         test_assert(p != NULL);
         test_int(p->x, 50); test_int(p->y, 60);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Sparse_1_this_sparse_written_partial(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo, Position",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+    
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+    test_bool(true, !!(q->row_fields & (1llu << 1)));
+
+    ecs_entity_t e1 = ecs_insert(world, {Foo}, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, {Foo}, ecs_value(Position, {30, 40}));
+    ecs_insert(world, {Foo});
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(2, it.count);
+    test_uint(e1, it.entities[0]);
+    {
+        Position *p = ecs_field_at(&it, Position, 1, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    test_uint(e2, it.entities[1]);
+    {
+        Position *p = ecs_field_at(&it, Position, 1, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 30); test_int(p->y, 40);
     }
 
     test_bool(false, ecs_query_next(&it));
@@ -958,7 +1146,7 @@ void Sparse_1_sparse_written_self(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
 
-    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
     ecs_query_t *q = ecs_query(world, {

@@ -209,6 +209,12 @@ bool flecs_set_id_flag(
         if (flag == EcsIdIsSparse) {
             flecs_component_init_sparse(world, cr);
         }
+        if (flag == EcsIdDontFragment) {
+            flecs_component_record_init_dont_fragment(world, cr);
+        }
+        if (flag == EcsIdExclusive) {
+            flecs_component_record_init_exclusive(world, cr);
+        }
         return true;
     }
     return false;
@@ -804,6 +810,7 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, EcsRelationship);
     flecs_bootstrap_make_alive(world, EcsTarget);
     flecs_bootstrap_make_alive(world, EcsSparse);
+    flecs_bootstrap_make_alive(world, EcsDontFragment);
     flecs_bootstrap_make_alive(world, EcsUnion);
     flecs_bootstrap_make_alive(world, EcsObserver);
     flecs_bootstrap_make_alive(world, EcsPairIsTag);
@@ -931,6 +938,7 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsOnDeleteTarget);
     flecs_bootstrap_trait(world, EcsOnInstantiate);
     flecs_bootstrap_trait(world, EcsSparse);
+    flecs_bootstrap_trait(world, EcsDontFragment);
     flecs_bootstrap_trait(world, EcsUnion);
 
     flecs_bootstrap_tag(world, EcsRemove);
@@ -1072,6 +1080,15 @@ void flecs_bootstrap(
         .ctx = &sparse_trait
     });
 
+    static ecs_on_trait_ctx_t dont_fragment_trait = { EcsIdDontFragment, 0 };
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsDontFragment }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_trait,
+        .ctx = &dont_fragment_trait
+    });
+
     static ecs_on_trait_ctx_t union_trait = { EcsIdIsUnion, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsUnion }},
@@ -1165,6 +1182,9 @@ void flecs_bootstrap(
 
     /* Transitive relationships are always Traversable */
     ecs_add_pair(world, EcsTransitive, EcsWith, EcsTraversable);
+
+    /* DontFragment components are always sparse */
+    ecs_add_pair(world, EcsDontFragment, EcsWith, EcsSparse);
 
     /* DontInherit components */
     ecs_add_pair(world, EcsPrefab, EcsOnInstantiate, EcsDontInherit);

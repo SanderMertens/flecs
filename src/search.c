@@ -98,8 +98,9 @@ int32_t flecs_type_search_relation(
     ecs_type_t type = table->type;
     ecs_id_t *ids = type.array;
     int32_t count = type.count;
+    bool dont_fragment = cr->flags & EcsIdDontFragment;
 
-    if (self) {
+    if (self && !dont_fragment) {
         if (offset) {
             int32_t r = flecs_type_offset_search(offset, id, ids, count, id_out);
             if (r != -1) {
@@ -151,9 +152,16 @@ int32_t flecs_type_search_relation(
             ecs_table_t *tgt_table = rec->table;
             ecs_assert(tgt_table != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(tgt_table != table, ECS_CYCLE_DETECTED, NULL);
-            
-            r = flecs_type_search_relation(world, tgt_table, 0, id, cr, 
-                rel, cr_r, true, subject_out, id_out, tr_out);
+
+            if (dont_fragment) {
+                r = -1;
+                if (flecs_sparse_get_any(cr->sparse, 0, obj) != NULL) {
+                    r = -2;
+                }
+            } else {
+                r = flecs_type_search_relation(world, tgt_table, 0, id, cr, 
+                    rel, cr_r, true, subject_out, id_out, tr_out);
+            }
             if (r != -1) {
                 if (subject_out && !subject_out[0]) {
                     subject_out[0] = ecs_get_alive(world, obj);

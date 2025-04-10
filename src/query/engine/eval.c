@@ -366,6 +366,78 @@ bool flecs_query_and_any(
 }
 
 static
+bool flecs_query_and_wctgt(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    if (!redo) {
+        op_ctx->non_fragmenting = false;
+    }
+    
+    bool sparse_redo = true;
+
+    if (!op_ctx->non_fragmenting) {
+        bool result = flecs_query_and(op, redo, ctx);
+        if (result) {
+            return true;
+        }
+
+        ecs_component_record_t *cr = op_ctx->cr;
+
+        if (!cr) {
+            return false;
+        }
+
+        if (!(cr->flags & EcsIdMatchDontFragment) && 
+             (cr->id != ecs_pair(EcsWildcard, EcsWildcard))) 
+        {
+            return false;
+        }
+
+        op_ctx->non_fragmenting = true;
+        sparse_redo = false;
+    }
+
+    return flecs_query_sparse(op, sparse_redo, ctx);
+}
+
+static
+bool flecs_query_with_wctgt(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    if (!redo) {
+        op_ctx->non_fragmenting = false;
+    }
+    
+    bool sparse_redo = true;
+
+    if (!op_ctx->non_fragmenting) {
+        bool result = flecs_query_with(op, redo, ctx);
+        if (result) {
+            return true;
+        }
+
+        if (!op_ctx->cr) {
+            return false;
+        }
+
+        if (!(op_ctx->cr->flags & EcsIdMatchDontFragment)) {
+            return false;
+        }
+
+        op_ctx->non_fragmenting = true;
+        sparse_redo = false;
+    }
+
+    return flecs_query_sparse_with(op, sparse_redo, ctx, false);
+}
+
+static
 bool flecs_query_triv(
     const ecs_query_op_t *op,
     bool redo,
@@ -1392,12 +1464,14 @@ bool flecs_query_dispatch(
     case EcsQueryAll: return flecs_query_all(op, redo, ctx);
     case EcsQueryAnd: return flecs_query_and(op, redo, ctx);
     case EcsQueryAndAny: return flecs_query_and_any(op, redo, ctx);
+    case EcsQueryAndWcTgt: return flecs_query_and_wctgt(op, redo, ctx);
     case EcsQueryTriv: return flecs_query_triv(op, redo, ctx);
     case EcsQueryCache: return flecs_query_cache(op, redo, ctx);
     case EcsQueryIsCache: return flecs_query_is_cache(op, redo, ctx);
     case EcsQueryUp: return flecs_query_up(op, redo, ctx);
     case EcsQuerySelfUp: return flecs_query_self_up(op, redo, ctx);
     case EcsQueryWith: return flecs_query_with(op, redo, ctx);
+    case EcsQueryWithWcTgt: return flecs_query_with_wctgt(op, redo, ctx);
     case EcsQueryTrav: return flecs_query_trav(op, redo, ctx);
     case EcsQueryAndFrom: return flecs_query_and_from(op, redo, ctx);
     case EcsQueryNotFrom: return flecs_query_not_from(op, redo, ctx);
@@ -1429,6 +1503,11 @@ bool flecs_query_dispatch(
     case EcsQueryUnionNeq: return flecs_query_union_neq(op, redo, ctx);
     case EcsQueryUnionEqUp: return flecs_query_union_up(op, redo, ctx);
     case EcsQueryUnionEqSelfUp: return flecs_query_union_self_up(op, redo, ctx);
+    case EcsQuerySparse: return flecs_query_sparse(op, redo, ctx);
+    case EcsQuerySparseWith: return flecs_query_sparse_with(op, redo, ctx, false);
+    case EcsQuerySparseNot: return flecs_query_sparse_with(op, redo, ctx, true);
+    case EcsQuerySparseSelfUp: return flecs_query_sparse_self_up(op, redo, ctx);
+    case EcsQuerySparseUp: return flecs_query_sparse_up(op, redo, ctx);
     case EcsQueryLookup: return flecs_query_lookup(op, redo, ctx);
     case EcsQuerySetVars: return flecs_query_setvars(op, redo, ctx);
     case EcsQuerySetThis: return flecs_query_setthis(op, redo, ctx);

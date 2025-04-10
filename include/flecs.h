@@ -1854,6 +1854,9 @@ FLECS_API extern const ecs_entity_t EcsPanic;
 /** Mark component as sparse */
 FLECS_API extern const ecs_entity_t EcsSparse;
 
+/** Mark component as non-fragmenting */
+FLECS_API extern const ecs_entity_t EcsDontFragment;
+
 /** Mark relationship as union */
 FLECS_API extern const ecs_entity_t EcsUnion;
 

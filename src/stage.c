@@ -389,22 +389,22 @@ void* flecs_defer_set(
     void *existing = NULL;
     ecs_table_t *table = NULL;
     if (cr) {
-        /* Entity can only have existing component if component record exists */
-        ecs_record_t *r = flecs_entities_get(world, entity);
-        table = r->table;
-        if (r && table) {
-            const ecs_table_record_t *tr = flecs_component_get_table(
-                cr, table);
-            if (tr) {
-                if (tr->column != -1) {
-                    /* Entity has the component */
-                    existing = table->data.columns[tr->column].data;
-                    existing = ECS_ELEM(existing, size, 
-                        ECS_RECORD_TO_ROW(r->row));
-                } else {
-                    ecs_assert(cr->flags & EcsIdIsSparse, 
-                        ECS_NOT_A_COMPONENT, NULL);
-                    existing = flecs_sparse_get_any(cr->sparse, 0, entity);
+        /* Entity can only have existing component if id record exists */
+        if (cr->flags & EcsIdIsSparse) {
+            existing = flecs_sparse_get_any(cr->sparse, 0, entity);
+        } else {
+            ecs_record_t *r = flecs_entities_get(world, entity);
+            table = r->table;
+            if (r && table) {
+                const ecs_table_record_t *tr = flecs_component_get_table(
+                    cr, table);
+                if (tr) {
+                    if (tr->column != -1) {
+                        /* Entity has the component */
+                        existing = table->data.columns[tr->column].data;
+                        existing = ECS_ELEM(existing, size, 
+                            ECS_RECORD_TO_ROW(r->row));
+                    }
                 }
             }
         }
@@ -490,6 +490,7 @@ void* flecs_defer_set(
         cmd = flecs_cmd_new(stage);
     }
 
+    
     if (!existing) {
         /* If component didn't exist yet, insert command that will create it */
         cmd->kind = cmd_kind;

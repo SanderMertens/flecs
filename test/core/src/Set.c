@@ -806,3 +806,19 @@ void Set_emplace_existing_w_check(void) {
 
     ecs_fini(world);
 }
+
+void Set_emplace_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_new(world);
+
+    Position *p = ecs_emplace_pair(world, e, Position, Tgt, NULL);
+    test_assert(p != NULL);
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), Tgt));
+    test_assert(p == ecs_get_pair(world, e, Position, Tgt));
+
+    ecs_fini(world);
+}
