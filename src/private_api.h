@@ -155,12 +155,12 @@ void flecs_query_apply_iter_flags(
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Storage hooks */
-/* void flecs_storage_fini(
+void flecs_storage_fini(
     ecs_world_t *world);
 
 void flecs_storage_table_create(
     ecs_world_t *world,
-    ecs_table_t *table); */
+    ecs_table_t *table);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Safe(r) integer casting

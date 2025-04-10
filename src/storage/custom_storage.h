@@ -19,9 +19,9 @@ typedef struct ecs_storage_record_t {
     void *storage;             /* User storage pointer */
 } ecs_storage_record_t;
 
-/* These functions are used for creating tables with custom storage */
+/*//These functions are used for creating tables with custom storage
 void flecs_storage_fini(ecs_world_t *world);
-void flecs_storage_table_create(ecs_world_t *world, ecs_table_t *table);
+void flecs_storage_table_create(ecs_world_t *world, ecs_table_t *table); */
 
 /**
  * @brief Legacy custom storage interface.

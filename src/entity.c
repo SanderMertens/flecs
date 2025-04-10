@@ -1730,7 +1730,6 @@ bool ecs_commit(
         "commit cannot be called on stage or while world is deferred");
 
     ecs_table_t *src_table = NULL;
-    int is_trav = 0;
     if (!record) {
         record = flecs_entities_get(world, entity);
         src_table = record->table;
@@ -3674,7 +3673,6 @@ const void* ecs_record_get_id(
     }
 
     /* Default behavior: retrieve component from table */
-    struct { int32_t min_depth, max_depth; } r = { .min_depth = 0, .max_depth = 0 };
     int32_t column = flecs_search_relation_w_cr(
         world, table, 0, id, 0, 0, 0, 0, 0, 0);
     
