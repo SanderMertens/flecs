@@ -3181,7 +3181,7 @@ typedef struct ecs_storage_hooks_t {
      * @return Pointer to the component data.
      */
     void* (*get)(
-        ecs_world_t *world,
+        const ecs_world_t *world,
         ecs_entity_t component,
         ecs_entity_t entity,
         void *storage);

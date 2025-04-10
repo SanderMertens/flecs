@@ -3664,7 +3664,7 @@ const void* ecs_record_get_id(
                     if (sr_ptr && (*sr_ptr)->hooks.get) {
                         /* Call the get function of the custom storage */
                         return (*sr_ptr)->hooks.get(
-                            (ecs_world_t*)world, id, record->row + 1, (*sr_ptr)->storage);
+                            world, id, ECS_RECORD_TO_ROW(record->row) + 1, (*sr_ptr)->storage);
                     }
                 }
                 break;

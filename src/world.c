@@ -13,7 +13,7 @@ const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =                                   1;
 const ecs_entity_t ecs_id(EcsIdentifier) =                                  2;
-const ecs_entity_t ecs_id(EcsPoly) =                                        3;
+const ecs_entity_t ecs_id(EcsPoly) =                                         3;
 
 /* Poly target components */
 const ecs_entity_t EcsQuery =                                               5;
@@ -2451,64 +2451,6 @@ void flecs_component_ids_set(
     ecs_vec_set_min_count_zeromem_t(
         &world->allocator, &world->component_ids, ecs_entity_t, index + 1);
     ecs_vec_get_t(&world->component_ids, ecs_entity_t, index)[0] = component;
-}
-
-void flecs_fini_world(
-    ecs_world_t *world)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    
-    /* Call storage finalizer */
-    flecs_storage_fini(world);
-    
-    /* Delete root entities first using regular APIs. This ensures that cleanup
-     * policies get a chance to execute. */
-    flecs_fini_roots(world);
-
-    /* Set world to quit mode */
-    world->flags |= EcsWorldFini;
-
-    /* Run fini actions (callbacks registered with ecs_atfini) */
-    flecs_fini_actions(world);
-
-    /* Operations invoked during OnRemove/destructors are deferred and
-     * will be discarded after world cleanup */
-    flecs_defer_begin(world, world->stages[0]);
-
-    /* Run OnRemove actions for components while the store is still
-     * unmodified by cleanup. */
-    flecs_fini_unset_tables(world);
-
-    /* This will destroy all entities and components. */
-    flecs_fini_store(world);
-
-    /* Purge deferred operations from the queue. This discards operations but
-     * makes sure that any resources in the queue are freed */
-    flecs_defer_purge(world, world->stages[0]);
-
-    /* Cleanup world ctx and binding_ctx */
-    if (world->ctx_free) {
-        world->ctx_free(world->ctx);
-    }
-    if (world->binding_ctx_free) {
-        world->binding_ctx_free(world->binding_ctx);
-    }
-
-    /* After this point no more user code is invoked */
-    flecs_entities_fini(world);
-    flecs_fini_roots(world);
-    flecs_fini_type_info(world);
-    flecs_observable_fini(&world->observable);
-    flecs_name_index_fini(&world->aliases);
-    flecs_name_index_fini(&world->symbols);
-    ecs_set_stage_count(world, 0);
-    ecs_vec_fini_t(&world->allocator, &world->component_ids, ecs_id_t);
-
-    /* Free world allocators */
-    flecs_world_allocators_fini(world);
-
-    /* Free the world itself */
-    flecs_poly_free(world, ecs_world_t);
 }
 
 void ecs_shrink(

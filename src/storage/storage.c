@@ -87,7 +87,7 @@ void ecs_register_custom_storage(
     ecs_storage_hooks_t hooks = {
         .init = storage->init,
         .fini = storage->fini,
-        .get = (void*(*)(ecs_world_t*, ecs_entity_t, ecs_entity_t, void*))storage->get,
+        .get = (void*(*)(const ecs_world_t*, ecs_entity_t, ecs_entity_t, void*))storage->get,
         .set = (void(*)(ecs_world_t*, ecs_entity_t, ecs_entity_t, const void*, void*))storage->set,
         .remove = (void(*)(ecs_world_t*, ecs_entity_t, ecs_entity_t, void*))storage->remove
     };
@@ -160,7 +160,10 @@ void flecs_storage_table_create(
             
             /* Add component to list of components with custom storage */
             if (!table->custom_storage_components) {
-                table->custom_storage_components = ecs_os_malloc(sizeof(ecs_entity_t) * (type.count + 1));
+                ecs_size_t count = type.count + 1;
+                ecs_size_t elem_size = (ecs_size_t)sizeof(ecs_entity_t);
+                ecs_size_t alloc_size = elem_size * count;
+                table->custom_storage_components = ecs_os_malloc(alloc_size);
                 table->custom_storage_count = 0;
             }
             

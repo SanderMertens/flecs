@@ -162,7 +162,7 @@ void flecs_hashmap_set_(
     size_t value_size,
     const void *value)
 {
-    void *value_ptr = flecs_hashmap_ensure_(map, key_size, key, value_size).value;
+    void *value_ptr = flecs_hashmap_ensure_(map, (ecs_size_t)key_size, key, (ecs_size_t)value_size).value;
     ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_os_memcpy(value_ptr, value, value_size);
 }
