@@ -3351,15 +3351,22 @@ ecs_entity_t ecs_clone(
         int32_t row = ECS_RECORD_TO_ROW(dst_r->row);
         int32_t i, count = src_table->column_count;
         for (i = 0; i < count; i ++) {
-            int32_t type_id = ecs_table_column_to_type_index(src_table, i);
-            ecs_id_t id = src_table->type.array[type_id];
+            ecs_id_t id = flecs_column_id(dst_table, i);
+            ecs_type_t set_type = {
+                .array = &id,
+                .count = 1
+            };
+            flecs_notify_on_set_ids(world, dst_table, row, 1, &set_type);
 
-            void *dst_ptr = ecs_get_mut_id(world, dst, id);
+            int32_t type_id = ecs_table_column_to_type_index(src_table, i);
+            ecs_id_t id_src = src_table->type.array[type_id];
+
+            void *dst_ptr = ecs_get_mut_id(world, dst, id_src);
             if (!dst_ptr) {
                 continue;
             }
 
-            const void *src_ptr = ecs_get_id(world, src, id);
+            const void *src_ptr = ecs_get_id(world, src, id_src);
             const ecs_type_info_t *ti = src_table->data.columns[i].ti;
             if (ti->hooks.copy) {
                 ti->hooks.copy(dst_ptr, src_ptr, 1, ti);
@@ -3367,7 +3374,7 @@ ecs_entity_t ecs_clone(
                 ecs_os_memcpy(dst_ptr, src_ptr, ti->size);
             }
 
-            flecs_notify_on_set(world, dst_table, row, 1, id, true);
+            flecs_notify_on_set(world, dst_table, row, 1, id_src, true);
         }
 
         if (dst_table->flags & EcsTableHasSparse) {
@@ -3628,13 +3635,56 @@ error:
 }
 
 const void* ecs_record_get_id(
-    const ecs_world_t *stage,
-    const ecs_record_t *r,
+    const ecs_world_t *world,
+    const ecs_record_t *record,
     ecs_id_t id)
 {
-    const ecs_world_t *world = ecs_get_world(stage);
-    ecs_component_record_t *cr = flecs_components_get(world, id);
-    return flecs_get_component(r->table, ECS_RECORD_TO_ROW(r->row), cr);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(record != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
+    if (!record->table) {
+        return NULL;
+    }
+
+    ecs_table_t *table = record->table;
+
+    /* Check if table has custom storage for this component */
+    if (table->flags & EcsTableHasCustomStorage) {
+        for (int i = 0; i < table->custom_storage_count; i++) {
+            ecs_entity_t component = table->custom_storage_components[i];
+            if (component == id) {
+                /* Get the storage record for this component */
+                ecs_hashmap_t *storage_map = world->store.storages;
+                if (storage_map) {
+                    ecs_storage_record_t **sr_ptr = flecs_hashmap_get(
+                        storage_map, &id, ecs_storage_record_t*);
+                    
+                    if (sr_ptr && (*sr_ptr)->hooks.get) {
+                        /* Call the get function of the custom storage */
+                        return (*sr_ptr)->hooks.get(
+                            world, id, ECS_RECORD_TO_ROW(record->row) + 1, (*sr_ptr)->storage);
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    /* Default behavior: retrieve component from table */
+    int32_t column = flecs_search_relation_w_cr(
+        world, table, 0, id, 0, 0, 0, 0, 0, 0);
+    
+    if (column == -1) {
+        return NULL;
+    }
+
+    if (column < 0) {
+        return flecs_get_base_component(world, table, id, 0, 0);
+    }
+
+    return ecs_record_get_by_column(record, column, sizeof(void*));
 }
 
 bool ecs_record_has_id(
@@ -3699,9 +3749,9 @@ void ecs_ref_update(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ref != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ref->entity != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ref->id != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ref->record != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref->entity != 0, ECS_INVALID_PARAMETER, "ref not initialized");
+    ecs_check(ref->id != 0, ECS_INVALID_PARAMETER, "ref not initialized");
+    ecs_check(ref->record != NULL, ECS_INVALID_PARAMETER, "ref not initialized");
 
     if (ref->table_version_fast == flecs_get_table_version_fast(world, ref->table_id)) {
         return;
@@ -3883,7 +3933,7 @@ void flecs_set_id_copy(
 {
     if (flecs_defer_cmd(stage)) {
         flecs_defer_set(world, stage, EcsCmdSet, entity, id, 
-            flecs_utosize(size), ptr, NULL);
+            flecs_utosize(size), ptr, NULL); // Fix argument order
         return;
     }
 
@@ -3958,7 +4008,40 @@ void ecs_set_id(
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
+    
+    /* Check if component has custom storage */
+    if (!flecs_defer_set(world, stage, EcsCmdSet, entity, id, 
+            flecs_utosize(size), ECS_CONST_CAST(void*, ptr), NULL))
+    {
+        ecs_record_t *r = flecs_entities_get(world, entity);
+        ecs_table_t *table = r->table;
+        
+        /* Check if table has custom storage for this component */
+        if (table && (table->flags & EcsTableHasCustomStorage)) {
+            for (int i = 0; i < table->custom_storage_count; i++) {
+                ecs_entity_t component = table->custom_storage_components[i];
+                if (component == id) {
+                    /* Get the storage record for this component */
+                    ecs_hashmap_t *storage_map = world->store.storages;
+                    if (storage_map) {
+                        ecs_storage_record_t **sr_ptr = flecs_hashmap_get(
+                            storage_map, &id, ecs_storage_record_t*);
+                        
+                        if (sr_ptr && (*sr_ptr)->hooks.set) {
+                            /* Call the set function of the custom storage */
+                            (*sr_ptr)->hooks.set(
+                                world, id, entity, ptr, (*sr_ptr)->storage);
+                            flecs_defer_end(world, stage);
+                            return;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
 
+    /* If no custom storage or not a component with custom storage, use default implementation */
     /* Safe to cast away const: function won't modify if move arg is false */
     flecs_set_id_copy(world, stage, entity, id, size, 
         ECS_CONST_CAST(void*, ptr));
@@ -4147,7 +4230,7 @@ bool ecs_owns_id(
     world = ecs_get_world(world);
 
     ecs_record_t *r = flecs_entities_get_any(world, entity);
-    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r != NULL, ECS_INVALID_PARAMETER, NULL); // Fix error code
     ecs_table_t *table = r->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
