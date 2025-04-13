@@ -970,6 +970,178 @@ void Query_run_sparse_w_with(void) {
 	test_int(p->y, 22);
 }
 
+void Query_run_dont_fragment(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::DontFragment);
+    world.component<Velocity>();
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position, Velocity>();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto v = it.field<Velocity>(1);
+
+            for (auto i : it) {
+                auto& p = it.field_at<Position>(0, i);
+                p.x += v[i].x;
+                p.y += v[i].y;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void Query_run_dont_fragment_w_with(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::DontFragment);
+    world.component<Velocity>();
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query_builder()
+        .with<Position>()
+        .with<Velocity>()
+        .build();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto v = it.field<Velocity>(1);
+
+            for (auto i : it) {
+                auto& p = it.field_at<Position>(0, i);
+                p.x += v[i].x;
+                p.y += v[i].y;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void Query_run_dont_fragment_add(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            for (auto i : it) {
+                flecs::entity e = it.entity(i);
+                e.add<Velocity>();
+                test_assert(e.has<Velocity>());
+
+                auto& p = it.field_at<Position>(0, i);
+                p.x += 1;
+                p.y += 2;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    const Velocity *v = entity.get<Velocity>();
+    test_assert(v != nullptr);
+}
+
+void Query_run_dont_fragment_add_remove(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            for (auto i : it) {
+                flecs::entity e = it.entity(i);
+                e.add<Velocity>();
+                test_assert(e.has<Velocity>());
+
+                e.remove<Velocity>();
+                test_assert(!e.has<Velocity>());
+
+                auto& p = it.field_at<Position>(0, i);
+                p.x += 1;
+                p.y += 2;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    const Velocity *v = entity.get<Velocity>();
+    test_assert(v == nullptr);
+}
+
+void Query_run_dont_fragment_set(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            for (auto i : it) {
+                flecs::entity e = it.entity(i);
+                e.set<Velocity>({1, 2});
+                test_assert(e.has<Velocity>());
+                {
+                    const Velocity *v = e.get<Velocity>();
+                    test_int(v->x, 1);
+                    test_int(v->y, 2);
+                }
+
+                auto& p = it.field_at<Position>(0, i);
+                p.x += 1;
+                p.y += 2;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    const Velocity *v = entity.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
 void Query_each(void) {
 	flecs::world world;
 	RegisterTestTypeComponents(world);
@@ -1197,6 +1369,185 @@ void Query_each_sparse_many(void) {
 	}
 }
 
+void Query_each_dont_fragment(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::DontFragment);
+    world.component<Velocity>();
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position, Velocity>();
+
+    q.each([](Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void Query_each_dont_fragment_w_with(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::DontFragment);
+    world.component<Velocity>();
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query_builder()
+        .with<Position>()
+        .with<Velocity>()
+        .build();
+
+    q.each([](flecs::iter& it, size_t row) {
+        Position& p = it.field_at<Position>(0, row);
+        Velocity& v = it.field_at<Velocity>(1, row);
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void Query_each_dont_fragment_many(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::DontFragment);
+    world.component<Velocity>();
+    
+    std::vector<flecs::entity> entities;
+
+    for (int i = 0; i < 2000; i ++) {
+        entities.push_back(world.entity()
+            .set<Position>({
+                static_cast<float>(10 + i), 
+                static_cast<float>(20 + i)
+            })
+            .set<Velocity>({
+                static_cast<float>(i), 
+                static_cast<float>(i)
+            }));
+    }
+
+    auto q = world.query<Position, Velocity>();
+
+    q.each([](Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    for (int i = 0; i < 2000; i ++) {
+        flecs::entity e = entities[i];
+        const Position *p = e.get<Position>();
+        test_int(p->x, 10 + i * 2);
+        test_int(p->y, 20 + i * 2);
+        const Velocity *v = e.get<Velocity>();
+        test_int(v->x, i);
+        test_int(v->y, i);
+    }
+}
+
+void Query_each_dont_fragment_add(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.each([](flecs::entity e, Position& p) {
+        e.add<Velocity>();
+        test_assert(e.has<Velocity>());
+
+        p.x += 1;
+        p.y += 2;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    test_assert(entity.has<Velocity>());
+}
+
+void Query_each_dont_fragment_add_remove(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.each([](flecs::entity e, Position& p) {
+        e.add<Velocity>();
+        test_assert(e.has<Velocity>());
+
+        e.remove<Velocity>();
+        test_assert(!e.has<Velocity>());
+
+        p.x += 1;
+        p.y += 2;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    test_assert(!entity.has<Velocity>());
+}
+
+void Query_each_dont_fragment_set(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    auto entity = world.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position>();
+
+    q.each([](flecs::entity e, Position& p) {
+        e.set<Velocity>({1, 2});
+        test_assert(e.has<Velocity>());
+        {
+            const Velocity *v = e.get<Velocity>();
+            test_assert(v != nullptr);
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+        }
+
+        p.x += 1;
+        p.y += 2;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    const Velocity *v = entity.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
 void Query_each_generic(void) {
 	flecs::world world;
 	RegisterTestTypeComponents(world);
@@ -1210,7 +1561,6 @@ void Query_each_generic(void) {
 
 void Query_signature(void) {
 	flecs::world world;
-	RegisterTestTypeComponents(world);
 
 	world.component<Position>();
 	world.component<Velocity>();
@@ -1719,6 +2069,7 @@ void Query_each_pair_type(void) {
 	RegisterTestTypeComponents(ecs);
 	ecs.component<Eats>();
 	ecs.component<Apples>();
+	ecs.component<Pears>();
 
 	auto e1 = ecs.entity()
 		.set<EatsApples>({10});
@@ -1748,6 +2099,7 @@ void Query_iter_pair_type(void) {
 	RegisterTestTypeComponents(ecs);
 	ecs.component<Eats>();
 	ecs.component<Apples>();
+	ecs.component<Pears>();
 
 	auto e1 = ecs.entity()
 		.set<EatsApples>({10});
@@ -1783,6 +2135,7 @@ void Query_term_pair_type(void) {
 	RegisterTestTypeComponents(ecs);
 	ecs.component<Eats>();
 	ecs.component<Apples>();
+	ecs.component<Pears>();
 
 	auto e1 = ecs.entity()
 		.set<EatsApples>({10});
@@ -1923,6 +2276,7 @@ void Query_iter_no_comps_2_comps(void) {
 
 void Query_iter_no_comps_no_comps(void) {
 	flecs::world ecs;
+	RegisterTestTypeComponents(ecs);
 
 	ecs.entity().add<Velocity>();
 	ecs.entity().add<Position>();
@@ -1946,6 +2300,7 @@ void Query_iter_no_comps_no_comps(void) {
 void Query_each_pair_object(void) {
 	flecs::world ecs;
 	RegisterTestTypeComponents(ecs);
+	
 	ecs.component<Begin>();
 	ecs.component<End>();
 	ecs.component<Event>();
@@ -3481,6 +3836,11 @@ END_DEFINE_SPEC(FFlecsQueryTestsSpec);
                 "run_optional",
                 "run_sparse",
                 "run_sparse_w_with",
+				"run_dont_fragment",
+				"run_dont_fragment_w_with",
+				"run_dont_fragment_add",
+				"run_dont_fragment_add_remove",
+				"run_dont_fragment_set",
                 "each",
                 "each_const",
                 "each_shared",
@@ -3488,6 +3848,12 @@ END_DEFINE_SPEC(FFlecsQueryTestsSpec);
                 "each_sparse",
                 "each_sparse_w_with",
                 "each_sparse_many",
+				"each_dont_fragment",
+				"each_dont_fragment_w_with",
+				"each_dont_fragment_many",
+				"each_dont_fragment_add",
+				"each_dont_fragment_add_remove",
+				"each_dont_fragment_set",
                 "signature",
                 "signature_const",
                 "signature_shared",
@@ -3584,11 +3950,88 @@ END_DEFINE_SPEC(FFlecsQueryTestsSpec);
 
 void FFlecsQueryTestsSpec::Define()
 {
-	It("Query_query_iter_w_func_no_ptr", [&]() { Query_query_iter_w_func_no_ptr(); });
+	It("Query_term_each_component", [&]() { Query_term_each_component(); });
+	It("Query_term_each_tag", [&]() { Query_term_each_tag(); });
+	It("Query_term_each_id", [&]() { Query_term_each_id(); });
+	It("Query_term_each_pair_type", [&]() { Query_term_each_pair_type(); });
+	It("Query_term_each_pair_id", [&]() { Query_term_each_pair_id(); });
+	It("Query_term_each_pair_relation_wildcard", [&]() { Query_term_each_pair_relation_wildcard(); });
+	It("Query_term_each_pair_object_wildcard", [&]() { Query_term_each_pair_object_wildcard(); });
+	It("Query_term_get_id", [&]() { Query_term_get_id(); });
+	It("Query_term_get_subj", [&]() { Query_term_get_subj(); });
+	It("Query_term_get_pred", [&]() { Query_term_get_pred(); });
+	It("Query_term_get_obj", [&]() { Query_term_get_obj(); });
+	It("Query_set_this_var", [&]() { Query_set_this_var(); });
+	It("Query_run", [&]() { Query_run(); });
+	It("Query_run_const", [&]() { Query_run_const(); });
+	It("Query_run_shared", [&]() { Query_run_shared(); });
+	It("Query_run_optional", [&]() { Query_run_optional(); });
+	It("Query_run_sparse", [&]() { Query_run_sparse(); });
+	It("Query_run_sparse_w_with", [&]() { Query_run_sparse_w_with(); });
+	It("Query_run_dont_fragment", [&]() { Query_run_dont_fragment(); });
+	It("Query_run_dont_fragment_w_with", [&]() { Query_run_dont_fragment_w_with(); });
+	It("Query_run_dont_fragment_add", [&]() { Query_run_dont_fragment_add(); });
+	It("Query_run_dont_fragment_add_remove", [&]() { Query_run_dont_fragment_add_remove(); });
+	It("Query_run_dont_fragment_set", [&]() { Query_run_dont_fragment_set(); });
+	It("Query_each", [&]() { Query_each(); });
+	It("Query_each_const", [&]() { Query_each_const(); });
+	It("Query_each_shared", [&]() { Query_each_shared(); });
+	It("Query_each_optional", [&]() { Query_each_optional(); });
+	It("Query_each_sparse", [&]() { Query_each_sparse(); });
+	It("Query_each_sparse_w_with", [&]() { Query_each_sparse_w_with(); });
+	It("Query_each_sparse_many", [&]() { Query_each_sparse_many(); });
+	It("Query_each_dont_fragment", [&]() { Query_each_dont_fragment(); });
+	It("Query_each_dont_fragment_w_with", [&]() { Query_each_dont_fragment_w_with(); });
+	It("Query_each_dont_fragment_many", [&]() { Query_each_dont_fragment_many(); });
+	It("Query_each_dont_fragment_add", [&]() { Query_each_dont_fragment_add(); });
+	It("Query_each_dont_fragment_add_remove", [&]() { Query_each_dont_fragment_add_remove(); });
+	It("Query_each_dont_fragment_set", [&]() { Query_each_dont_fragment_set(); });
+	It("Query_signature", [&]() { Query_signature(); });
+	It("Query_signature_const", [&]() { Query_signature_const(); });
+	It("Query_signature_shared", [&]() { Query_signature_shared(); });
+	It("Query_signature_optional", [&]() { Query_signature_optional(); });
+	It("Query_query_single_pair", [&]() { Query_query_single_pair(); });
+	It("Query_tag_w_each", [&]() { Query_tag_w_each(); });
+	It("Query_shared_tag_w_each", [&]() { Query_shared_tag_w_each(); });
+	It("Query_sort_by", [&]() { Query_sort_by(); });
+	It("Query_changed", [&]() { Query_changed(); });
+	It("Query_default_ctor", [&]() { Query_default_ctor(); });
+	It("Query_default_ctor_no_assign", [&]() { Query_default_ctor_no_assign(); });
+	It("Query_expr_w_template", [&]() { Query_expr_w_template(); });
+	It("Query_query_type_w_template", [&]() { Query_query_type_w_template(); });
+	It("Query_compare_term_id", [&]() { Query_compare_term_id(); });
+	It("Query_inspect_terms", [&]() { Query_inspect_terms(); });
+	It("Query_inspect_terms_w_each", [&]() { Query_inspect_terms_w_each(); });
+	It("Query_inspect_terms_w_expr", [&]() { Query_inspect_terms_w_expr(); });
+	It("Query_comp_to_str", [&]() { Query_comp_to_str(); });
+	It("Query_pair_to_str", [&]() { Query_pair_to_str(); });
+	It("Query_oper_not_to_str", [&]() { Query_oper_not_to_str(); });
+	It("Query_oper_optional_to_str", [&]() { Query_oper_optional_to_str(); });
+	It("Query_oper_or_to_str", [&]() { Query_oper_or_to_str(); });
+	It("Query_each_pair_type", [&]() { Query_each_pair_type(); });
+	It("Query_iter_pair_type", [&]() { Query_iter_pair_type(); });
+	It("Query_term_pair_type", [&]() { Query_term_pair_type(); });
+	It("Query_each_no_entity_1_comp", [&]() { Query_each_no_entity_1_comp(); });
+	It("Query_each_no_entity_2_comps", [&]() { Query_each_no_entity_2_comps(); });
+	It("Query_iter_no_comps_1_comp", [&]() { Query_iter_no_comps_1_comp(); });
+	It("Query_iter_no_comps_2_comps", [&]() { Query_iter_no_comps_2_comps(); });
+	It("Query_iter_no_comps_no_comps", [&]() { Query_iter_no_comps_no_comps(); });
+	It("Query_each_pair_object", [&]() { Query_each_pair_object(); });
+	It("Query_iter_pair_object", [&]() { Query_iter_pair_object(); });
+	It("Query_iter_query_in_system", [&]() { Query_iter_query_in_system(); });
+	It("Query_iter_type", [&]() { Query_iter_type(); });
+	It("Query_instanced_query_w_singleton_each", [&]() { Query_instanced_query_w_singleton_each(); });
+	It("Query_instanced_query_w_base_each", [&]() { Query_instanced_query_w_base_each(); });
+	It("Query_instanced_query_w_singleton_iter", [&]() { Query_instanced_query_w_singleton_iter(); });
+	It("Query_instanced_query_w_base_iter", [&]() { Query_instanced_query_w_base_iter(); });
+	It("Query_query_each_from_component", [&]() { Query_query_each_from_component(); });
+	It("Query_query_iter_from_component", [&]() { Query_query_iter_from_component(); });
+	It("Query_query_each_w_func_ptr", [&]() { Query_query_each_w_func_ptr(); });
 	It("Query_query_iter_w_func_ptr", [&]() { Query_query_iter_w_func_ptr(); });
 	It("Query_query_each_w_func_no_ptr", [&]() { Query_query_each_w_func_no_ptr(); });
-	It("Query_query_each_w_func_ptr", [&]() { Query_query_each_w_func_ptr(); });
+	It("Query_query_iter_w_func_no_ptr", [&]() { Query_query_iter_w_func_no_ptr(); });
 	It("Query_query_each_w_iter", [&]() { Query_query_each_w_iter(); });
+	It("Query_each_w_iter_no_this", [&]() { Query_each_w_iter_no_this(); });
 	It("Query_field_at_from_each_w_iter", [&]() { Query_field_at_from_each_w_iter(); });
 	It("Query_field_at_T_from_each_w_iter", [&]() { Query_field_at_T_from_each_w_iter(); });
 	It("Query_field_at_const_T_from_each_w_iter", [&]() { Query_field_at_const_T_from_each_w_iter(); });
