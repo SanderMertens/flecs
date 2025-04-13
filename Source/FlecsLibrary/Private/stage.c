@@ -37,7 +37,7 @@ ecs_cmd_t* flecs_cmd_new_batched(
     ecs_entity_t e)
 {
     ecs_vec_t *cmds = &stage->cmd->queue;
-    ecs_cmd_entry_t *entry = flecs_sparse_get_any_t(
+    ecs_cmd_entry_t *entry = flecs_sparse_get_t(
         &stage->cmd->entries, ecs_cmd_entry_t, e);
 
     int32_t cur = ecs_vec_count(cmds);
@@ -391,7 +391,7 @@ void* flecs_defer_set(
     if (cr) {
         /* Entity can only have existing component if id record exists */
         if (cr->flags & EcsIdIsSparse) {
-            existing = flecs_sparse_get_any(cr->sparse, 0, entity);
+            existing = flecs_sparse_get(cr->sparse, 0, entity);
         } else {
             ecs_record_t *r = flecs_entities_get(world, entity);
             table = r->table;

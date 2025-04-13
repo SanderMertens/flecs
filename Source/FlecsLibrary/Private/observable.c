@@ -58,7 +58,7 @@ ecs_event_record_t* flecs_event_record_get(
     else if (event == EcsWildcard) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_wildcard);
 
     /* User events */
-    return flecs_sparse_try_t(&o->events, ecs_event_record_t, event);
+    return flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
 }
 
 ecs_event_record_t* flecs_event_record_ensure(
@@ -71,7 +71,7 @@ ecs_event_record_t* flecs_event_record_ensure(
     if (er) {
         return er;
     }
-    er = flecs_sparse_get_any_t(&o->events, ecs_event_record_t, event);
+    er = flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
     if (!er) {
         er = flecs_sparse_insert_t(&o->events, ecs_event_record_t, event);
     }
@@ -1340,7 +1340,7 @@ repeat_event:
                     if (base_column != -1) {
                         /* Base found with component */
                         if (cr->flags & EcsIdIsSparse) {
-                            override_ptr = flecs_sparse_get_any(
+                            override_ptr = flecs_sparse_get(
                                 cr->sparse, 0, base);
                         } else {
                             ecs_table_t *base_table = base_tr->hdr.table;

@@ -793,7 +793,7 @@ void flecs_entity_remove_non_fragmenting(
     while (cur) {
         ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
         if (cur->sparse && !(ecs_id_is_wildcard(cur->id))) {
-            void *ptr = flecs_sparse_get_any(cur->sparse, 0, e);
+            void *ptr = flecs_sparse_get(cur->sparse, 0, e);
             if (ptr) {
                 ecs_type_t type = { .count = 1, .array = &cur->id };
 
@@ -3389,7 +3389,7 @@ ecs_entity_t ecs_clone(
         while (cur) {
             ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
             if (cur->sparse) {
-                void *src_ptr = flecs_sparse_get_any(cur->sparse, 0, src);
+                void *src_ptr = flecs_sparse_get(cur->sparse, 0, src);
                 if (src_ptr) {
                     ecs_set_id(world, dst, cur->id, 0, src_ptr);
                 }

@@ -19,7 +19,7 @@ bool flecs_component_sparse_has(
                         continue;
                     }
 
-                    if (flecs_sparse_has_any(cur->sparse, entity)) {
+                    if (flecs_sparse_has(cur->sparse, entity)) {
                         return true;
                     }
                 }
@@ -34,7 +34,7 @@ bool flecs_component_sparse_has(
                         continue;
                     }
 
-                    if (flecs_sparse_has_any(cur->sparse, entity)) {
+                    if (flecs_sparse_has(cur->sparse, entity)) {
                         return true;
                     }
                 }
@@ -47,7 +47,7 @@ bool flecs_component_sparse_has(
     } else {
         ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
-        return flecs_sparse_has_any(cr->sparse, entity);
+        return flecs_sparse_has(cr->sparse, entity);
     }
 }
 
@@ -58,7 +58,7 @@ void* flecs_component_sparse_get(
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
-    return flecs_sparse_get_any(cr->sparse, 0, entity);
+    return flecs_sparse_get(cr->sparse, 0, entity);
 }
 
 static
@@ -75,13 +75,13 @@ ecs_entity_t flecs_component_sparse_remove_intern(
     const ecs_type_info_t *ti = cr->type_info;
 
     if (!ti) {
-        if (flecs_sparse_remove_fast(cr->sparse, 0, entity)) {
+        if (flecs_sparse_remove(cr->sparse, 0, entity)) {
             return entity;
         }
         return 0;
     }
 
-    void *ptr = flecs_sparse_get_any(cr->sparse, 0, entity);
+    void *ptr = flecs_sparse_get(cr->sparse, 0, entity);
     if (!ptr) {
         return 0;
     }
@@ -102,7 +102,7 @@ ecs_entity_t flecs_component_sparse_remove_intern(
         dtor(ptr, 1, ti);
     }
 
-    flecs_sparse_remove_fast(cr->sparse, 0, entity);
+    flecs_sparse_remove(cr->sparse, 0, entity);
 
     return entity;
 }
@@ -123,7 +123,7 @@ void flecs_component_sparse_dont_fragment_pair_remove(
     ecs_entity_t tgt = ecs_pair_second(world, cr->id);
     ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_type_t *type = flecs_sparse_get_any_t(
+    ecs_type_t *type = flecs_sparse_get_t(
         parent->sparse, ecs_type_t, entity);
     if (!type) {
         return;
@@ -134,7 +134,7 @@ void flecs_component_sparse_dont_fragment_pair_remove(
     flecs_type_remove(world, type, tgt);
 
     if (!type->count) {
-        flecs_sparse_remove_fast(parent->sparse, 0, entity);
+        flecs_sparse_remove(parent->sparse, 0, entity);
     }
 }
 
@@ -147,7 +147,7 @@ void flecs_component_sparse_dont_fragment_exclusive_remove(
     ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(parent->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    flecs_sparse_remove_fast(
+    flecs_sparse_remove(
         parent->sparse, ECS_SIZEOF(ecs_entity_t), entity);
 }
 

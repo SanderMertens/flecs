@@ -281,7 +281,7 @@ int flecs_json_serialize_table_components(
                 continue;
             }
             ecs_entity_t e = ecs_table_entities(table)[row];
-            ptr = flecs_sparse_get_any(cr->sparse, 0, e);
+            ptr = flecs_sparse_get(cr->sparse, 0, e);
             ti = cr->type_info;
         }
 
