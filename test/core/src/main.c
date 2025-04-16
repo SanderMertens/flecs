@@ -453,6 +453,7 @@ void Sparse_add_remove_tag(void);
 void Sparse_add_remove_pair(void);
 void Sparse_add_remove_pair_tag(void);
 void Sparse_add_remove_twice_w_hooks(void);
+void Sparse_remove_after_add_non_sparse(void);
 void Sparse_get_mut(void);
 void Sparse_ensure(void);
 void Sparse_ensure_twice_w_hooks(void);
@@ -4147,6 +4148,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "add_remove_twice_w_hooks",
         Sparse_add_remove_twice_w_hooks
+    },
+    {
+        "remove_after_add_non_sparse",
+        Sparse_remove_after_add_non_sparse
     },
     {
         "get_mut",
@@ -11931,7 +11936,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        130,
+        131,
         Sparse_testcases,
         1,
         Sparse_params
