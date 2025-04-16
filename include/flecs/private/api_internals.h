@@ -39,6 +39,16 @@ struct ecs_table_record_t {
     int16_t column;                            /**< First column index where id occurs */
 };
 
+/** Type that contains information about which components got added/removed on
+ * a table edge. */
+typedef struct ecs_table_diff_t {
+    ecs_type_t added;                /* Components added between tables */
+    ecs_type_t removed;              /* Components removed between tables */
+    ecs_flags32_t added_flags;
+    ecs_flags32_t removed_flags;
+} ecs_table_diff_t;
+
+
 /** Find record for entity. 
  * An entity record contains the table and row for the entity.
  * 
@@ -277,6 +287,23 @@ typedef struct ecs_table_records_t {
 FLECS_API
 ecs_table_records_t flecs_table_records(
     ecs_table_t* table);
+
+/** Find table by adding id to current table. 
+ * Same as ecs_table_add_id, but with additional diff parameter that contains
+ * information about the traversed edge.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param id_ptr Pointer to component id to add.
+ * @param diff Information about traversed edge (out parameter).
+ * @return The table that was traversed to.
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_table_t *flecs_table_traverse_add(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t *id_ptr,
+    ecs_table_diff_t *diff);
 
 #ifdef __cplusplus
 }

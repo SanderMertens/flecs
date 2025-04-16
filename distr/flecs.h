@@ -4429,6 +4429,16 @@ struct ecs_table_record_t {
     int16_t column;                            /**< First column index where id occurs */
 };
 
+/** Type that contains information about which components got added/removed on
+ * a table edge. */
+typedef struct ecs_table_diff_t {
+    ecs_type_t added;                /* Components added between tables */
+    ecs_type_t removed;              /* Components removed between tables */
+    ecs_flags32_t added_flags;
+    ecs_flags32_t removed_flags;
+} ecs_table_diff_t;
+
+
 /** Find record for entity. 
  * An entity record contains the table and row for the entity.
  * 
@@ -4667,6 +4677,23 @@ typedef struct ecs_table_records_t {
 FLECS_API
 ecs_table_records_t flecs_table_records(
     ecs_table_t* table);
+
+/** Find table by adding id to current table. 
+ * Same as ecs_table_add_id, but with additional diff parameter that contains
+ * information about the traversed edge.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param id_ptr Pointer to component id to add.
+ * @param diff Information about traversed edge (out parameter).
+ * @return The table that was traversed to.
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_table_t *flecs_table_traverse_add(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t *id_ptr,
+    ecs_table_diff_t *diff);
 
 #ifdef __cplusplus
 }
@@ -27664,11 +27691,6 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         ArrayType& ptrs) 
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (!ecs_table_column_count(table) && 
-            !ecs_table_has_flags(table, EcsTableHasSparse)) 
-        {
-            return false;
-        }
 
         /* table_index_of needs real world */
         const flecs::world_t *real_world = ecs_get_world(world);
@@ -27782,8 +27804,45 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         return elem;
     }
 
+    struct InvokeCtx {
+        InvokeCtx(flecs::table_t *table_arg) : table(table_arg) { }
+        flecs::table_t *table;
+        size_t component_count = 0;
+        IdArray added = {};
+    };
+
+    static int invoke_add(
+        flecs::world& w,
+        flecs::entity_t entity, 
+        flecs::id_t component_id,
+        InvokeCtx& ctx) 
+    {
+        ecs_table_diff_t diff;
+        flecs::table_t *next = flecs_table_traverse_add(
+            w, ctx.table, &component_id, &diff);
+        if (next != ctx.table) {
+            ctx.added[ctx.component_count] = component_id;
+            ctx.component_count ++;
+        } else {
+            if (diff.added_flags & EcsTableHasDontFragment) {
+                w.entity(entity).add(component_id);
+
+                ctx.added[ctx.component_count] = component_id;
+                ctx.component_count ++;
+            }
+        }
+
+        ctx.table = next;
+
+        return 0;
+    }
+
     template <typename Func>
-    static bool invoke_ensure(world_t *world, entity_t id, const Func& func) {
+    static bool invoke_ensure(
+        world_t *world, 
+        entity_t id, 
+        const Func& func) 
+    {
         flecs::world w(world);
 
         ArrayType ptrs;
@@ -27805,27 +27864,21 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
                 table = r->table;
             }
 
-            // Find destination table that has all components
-            ecs_table_t *prev = table, *next;
-            size_t elem = 0;
-            IdArray added;
-
             // Iterate components, only store added component ids in added array
+            InvokeCtx ctx(table);
             DummyArray dummy_before ({ (
-                next = ecs_table_add_id(world, prev, w.id<Args>()),
-                elem = store_added(added, elem, prev, next, w.id<Args>()),
-                prev = next, 0
+                invoke_add(w, id, w.id<Args>(), ctx)
             )... });
 
             (void)dummy_before;
 
             // If table is different, move entity straight to it
-            if (table != next) {
+            if (table != ctx.table) {
                 ecs_type_t ids;
-                ids.array = added.ptr();
-                ids.count = static_cast<ecs_size_t>(elem);
-                ecs_commit(world, id, r, next, &ids, NULL);
-                table = next;
+                ids.array = ctx.added.ptr();
+                ids.count = static_cast<ecs_size_t>(ctx.component_count);
+                ecs_commit(world, id, r, ctx.table, &ids, NULL);
+                table = ctx.table;
             }
 
             if (!get_ptrs(w, id, r, table, ptrs)) {

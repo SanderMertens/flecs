@@ -3777,12 +3777,16 @@ void* ecs_emplace_id(
     if (cr->flags & EcsIdDontFragment) {
         void *ptr = flecs_component_sparse_get(cr, entity);
         if (ptr) {
-            *is_new = false;
+            if (is_new) {
+                *is_new = false;
+            }
             flecs_defer_end(world, stage);
             return ptr;
         }
 
-        *is_new = true;
+        if (is_new) {
+            *is_new = true;
+        }
         is_new = NULL;
     }
 

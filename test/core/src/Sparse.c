@@ -397,6 +397,33 @@ void Sparse_remove_after_add_non_sparse(void) {
     ecs_fini(world);
 }
 
+void Sparse_remove_after_add_non_sparse_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tgt);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, ecs_id(Position), Tgt);
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), Tgt));
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_add(world, e, Velocity);
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), Tgt));
+    test_assert(ecs_has(world, e, Velocity));
+
+    ecs_remove_pair(world, e, ecs_id(Position), Tgt);
+    test_assert(!ecs_has_pair(world, e, ecs_id(Position), Tgt));
+    test_assert(ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
 void Sparse_get(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -568,6 +595,24 @@ void Sparse_emplace_twice_w_hooks(void) {
     test_int(position_dtor_invoked, 1);
     test_int(position_on_add_invoked, 1);
     test_int(position_on_remove_invoked, 1);
+}
+
+void Sparse_emplace_no_is_new(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    Position *p = ecs_emplace(world, e, Position, NULL);
+    test_assert(NULL != p);
+
+    test_assert(p == ecs_get(world, e, Position));
+
+    ecs_fini(world);
 }
 
 void Sparse_set(void) {

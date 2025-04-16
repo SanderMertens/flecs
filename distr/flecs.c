@@ -303,13 +303,6 @@ typedef struct ecs_table_diff_builder_t {
     ecs_flags32_t removed_flags;
 } ecs_table_diff_builder_t;
 
-typedef struct ecs_table_diff_t {
-    ecs_type_t added;                /* Components added between tables */
-    ecs_type_t removed;              /* Components removed between tables */
-    ecs_flags32_t added_flags;
-    ecs_flags32_t removed_flags;
-} ecs_table_diff_t;
-
 /** Edge linked list (used to keep track of incoming edges) */
 typedef struct ecs_graph_edge_hdr_t {
     struct ecs_graph_edge_hdr_t *prev;
@@ -362,13 +355,6 @@ ecs_type_t flecs_type_copy(
 void flecs_type_free(
     ecs_world_t *world,
     ecs_type_t *type);
-
-/* Find table by adding id to current table */
-ecs_table_t *flecs_table_traverse_add(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t *id_ptr,
-    ecs_table_diff_t *diff);
 
 /* Find table by removing id from current table */
 ecs_table_t *flecs_table_traverse_remove(
@@ -8632,12 +8618,16 @@ void* ecs_emplace_id(
     if (cr->flags & EcsIdDontFragment) {
         void *ptr = flecs_component_sparse_get(cr, entity);
         if (ptr) {
-            *is_new = false;
+            if (is_new) {
+                *is_new = false;
+            }
             flecs_defer_end(world, stage);
             return ptr;
         }
 
-        *is_new = true;
+        if (is_new) {
+            *is_new = true;
+        }
         is_new = NULL;
     }
 
@@ -41660,8 +41650,14 @@ ecs_table_t* flecs_find_table_without(
     if (ECS_IS_PAIR(without)) {
         ecs_entity_t r = ECS_PAIR_FIRST(without);
         cr = flecs_components_get(world, ecs_pair(r, EcsWildcard));
-        if (cr && cr->flags & EcsIdIsUnion) {
-            without = ecs_pair(r, EcsUnion);
+        if (cr) {
+            if (cr->flags & EcsIdIsUnion) {
+                without = ecs_pair(r, EcsUnion);
+            } else if (cr->flags & EcsIdDontFragment) {
+                node->flags |= EcsTableHasDontFragment;
+                /* Component doesn't fragment tables */
+                return node;
+            }
         }
     } else {
         cr = flecs_components_get(world, without);
