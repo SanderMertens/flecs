@@ -460,6 +460,7 @@ void Sparse_ensure(void);
 void Sparse_ensure_twice_w_hooks(void);
 void Sparse_emplace(void);
 void Sparse_emplace_twice_w_hooks(void);
+void Sparse_emplace_no_is_new(void);
 void Sparse_set(void);
 void Sparse_clone(void);
 void Sparse_clone_w_value(void);
@@ -4177,6 +4178,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "emplace_twice_w_hooks",
         Sparse_emplace_twice_w_hooks
+    },
+    {
+        "emplace_no_is_new",
+        Sparse_emplace_no_is_new
     },
     {
         "set",
@@ -11941,7 +11946,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        132,
+        133,
         Sparse_testcases,
         1,
         Sparse_params
