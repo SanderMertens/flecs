@@ -483,6 +483,7 @@
                 "add_remove_pair",
                 "add_remove_pair_tag",
                 "add_remove_twice_w_hooks",
+                "remove_after_add_non_sparse",
                 "get_mut",
                 "ensure",
                 "ensure_twice_w_hooks",

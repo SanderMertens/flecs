@@ -371,6 +371,32 @@ void Sparse_add_remove_twice_w_hooks(void) {
     ecs_fini(world);
 }
 
+void Sparse_remove_after_add_non_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add(world, e, Position);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_add(world, e, Velocity);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
 void Sparse_get(void) {
     ecs_world_t *world = ecs_mini();
 

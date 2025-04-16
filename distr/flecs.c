@@ -41666,6 +41666,7 @@ ecs_table_t* flecs_find_table_without(
     } else {
         cr = flecs_components_get(world, without);
         if (cr && cr->flags & EcsIdDontFragment) {
+            node->flags |= EcsTableHasDontFragment;
             /* Component doesn't fragment tables */
             return node;
         }
