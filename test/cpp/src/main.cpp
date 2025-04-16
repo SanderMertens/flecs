@@ -283,6 +283,8 @@ void Entity_const_entity_set_doc(void);
 void Entity_set_sparse(void);
 void Entity_insert_1_sparse(void);
 void Entity_insert_2_w_1_sparse(void);
+void Entity_insert_1_dont_fragment(void);
+void Entity_insert_2_w_1_dont_fragment(void);
 void Entity_emplace_sparse(void);
 void Entity_override_sparse(void);
 void Entity_delete_w_override_sparse(void);
@@ -2577,6 +2579,14 @@ bake_test_case Entity_testcases[] = {
     {
         "insert_2_w_1_sparse",
         Entity_insert_2_w_1_sparse
+    },
+    {
+        "insert_1_dont_fragment",
+        Entity_insert_1_dont_fragment
+    },
+    {
+        "insert_2_w_1_dont_fragment",
+        Entity_insert_2_w_1_dont_fragment
     },
     {
         "emplace_sparse",
@@ -7287,7 +7297,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        282,
+        284,
         Entity_testcases
     },
     {
