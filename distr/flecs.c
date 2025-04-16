@@ -41660,8 +41660,14 @@ ecs_table_t* flecs_find_table_without(
     if (ECS_IS_PAIR(without)) {
         ecs_entity_t r = ECS_PAIR_FIRST(without);
         cr = flecs_components_get(world, ecs_pair(r, EcsWildcard));
-        if (cr && cr->flags & EcsIdIsUnion) {
-            without = ecs_pair(r, EcsUnion);
+        if (cr) {
+            if (cr->flags & EcsIdIsUnion) {
+                without = ecs_pair(r, EcsUnion);
+            } else if (cr->flags & EcsIdDontFragment) {
+                node->flags |= EcsTableHasDontFragment;
+                /* Component doesn't fragment tables */
+                return node;
+            }
         }
     } else {
         cr = flecs_components_get(world, without);
