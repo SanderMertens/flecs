@@ -478,6 +478,11 @@ bool ecs_query_has_table(
     flecs_poly_assert(q, ecs_query_t);
     ecs_check(q->flags & EcsQueryMatchThis, ECS_INVALID_PARAMETER, NULL);
 
+    if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+        q->eval_count ++;
+        return false;
+    }
+
     *it = ecs_query_iter(q->world, q);
     ecs_iter_set_var_as_table(it, 0, table);
     return ecs_query_next(it);
@@ -492,15 +497,23 @@ bool ecs_query_has_range(
 {
     flecs_poly_assert(q, ecs_query_t);
 
+    ecs_table_t *table = range->table;
+
     if (q->flags & EcsQueryMatchThis) {
-        if (range->table) {
-            if ((range->offset + range->count) > ecs_table_count(range->table)) {
+        if (table) {
+            if ((range->offset + range->count) > ecs_table_count(table)) {
                 return false;
             }
         }
     }
 
+    if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+        q->eval_count ++;
+        return false;
+    }
+
     *it = ecs_query_iter(q->world, q);
+
     if (q->flags & EcsQueryMatchThis) {
         ecs_iter_set_var_as_range(it, 0, range);
     }

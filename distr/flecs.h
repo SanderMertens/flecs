@@ -35,7 +35,7 @@
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
 #define FLECS_VERSION_MINOR 0  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 5  /**< Flecs patch version. */
+#define FLECS_VERSION_PATCH 6  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
@@ -3562,6 +3562,7 @@ struct ecs_query_t {
     int32_t *sizes;             /**< Component sizes. Indexed by field */
     ecs_id_t *ids;              /**< Component ids. Indexed by field */
 
+    uint64_t bloom_filter;      /**< Bitmask used to quickly discard tables */
     ecs_flags32_t flags;        /**< Query flags */
     int8_t var_count;           /**< Number of query variables */
     int8_t term_count;          /**< Number of query terms */

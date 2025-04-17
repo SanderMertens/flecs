@@ -522,6 +522,7 @@ struct ecs_table_t {
     ecs_flags32_t flags;             /* Flags for testing table properties */
     int16_t column_count;            /* Number of components (excluding tags) */
     uint16_t version;                /* Version of table */
+    uint64_t bloom_filter;           /* For quick matching with queries */
     ecs_type_t type;                 /* Vector with component ids */
 
     ecs_data_t data;                 /* Component storage */
@@ -669,6 +670,14 @@ ecs_bitset_t* flecs_table_get_toggle(
 ecs_id_t flecs_column_id(
     ecs_table_t *table,
     int32_t column_index);
+
+uint64_t flecs_table_bloom_filter_add(
+    uint64_t filter,
+    uint64_t value);
+
+bool flecs_table_bloom_filter_test(
+    const ecs_table_t *table,
+    uint64_t filter);
 
 #endif
 
@@ -33566,6 +33575,11 @@ bool ecs_query_has_table(
     flecs_poly_assert(q, ecs_query_t);
     ecs_check(q->flags & EcsQueryMatchThis, ECS_INVALID_PARAMETER, NULL);
 
+    if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+        q->eval_count ++;
+        return false;
+    }
+
     *it = ecs_query_iter(q->world, q);
     ecs_iter_set_var_as_table(it, 0, table);
     return ecs_query_next(it);
@@ -33580,15 +33594,23 @@ bool ecs_query_has_range(
 {
     flecs_poly_assert(q, ecs_query_t);
 
+    ecs_table_t *table = range->table;
+
     if (q->flags & EcsQueryMatchThis) {
-        if (range->table) {
-            if ((range->offset + range->count) > ecs_table_count(range->table)) {
+        if (table) {
+            if ((range->offset + range->count) > ecs_table_count(table)) {
                 return false;
             }
         }
     }
 
+    if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+        q->eval_count ++;
+        return false;
+    }
+
     *it = ecs_query_iter(q->world, q);
+
     if (q->flags & EcsQueryMatchThis) {
         ecs_iter_set_var_as_range(it, 0, range);
     }
@@ -35923,6 +35945,14 @@ int flecs_query_finalize_terms(
                 if (!(term->flags_ & EcsTermIsTrivial)) {
                     break;
                 }
+
+                if ((term->src.id & EcsTraverseFlags) == EcsSelf) {
+                    if (!ecs_id_is_wildcard(term->id)) {
+                        
+                        q->bloom_filter = flecs_table_bloom_filter_add(
+                            q->bloom_filter, term->id);
+                    }
+                }
             }
 
             if (term_count && (i == term_count)) {
@@ -36183,7 +36213,12 @@ bool flecs_query_finalize_simple(
 
         if (trivial) {
             term->flags_ |= EcsTermIsTrivial;
-            trivial_count ++;
+            trivial_count ++;            
+
+            if ((term->src.id & EcsTraverseFlags) == EcsSelf) {
+                q->bloom_filter = flecs_table_bloom_filter_add(
+                    q->bloom_filter, id);
+            }
         }
     }
 
@@ -38378,6 +38413,10 @@ void flecs_table_init(
         } else if (first_role == -1 && !ECS_IS_PAIR(dst_id)) {
             first_role = dst_i;
         }
+
+        /* Build bloom filter for table */
+        table->bloom_filter = 
+            flecs_table_bloom_filter_add(table->bloom_filter, dst_id);
     }
 
     /* The easy part: initialize a record for every id in the type */
@@ -38531,6 +38570,9 @@ void flecs_table_init(
         tr->hdr.cache = (ecs_table_cache_t*)childof_cr;
         tr->index = -1; /* The table doesn't have a (ChildOf, 0) component */
         tr->count = 0;
+
+        table->bloom_filter = flecs_table_bloom_filter_add(
+            table->bloom_filter, ecs_pair(EcsChildOf, 0));
     }
 
     /* Now that all records have been added, copy them to array */
@@ -40474,6 +40516,21 @@ ecs_table_records_t flecs_table_records(
         .array = table->_->records, 
         .count = table->_->record_count 
     };
+}
+
+uint64_t flecs_table_bloom_filter_add(
+    uint64_t filter,
+    uint64_t value)
+{
+    filter |= 1llu << (value % 64);
+    return filter;
+}
+
+bool flecs_table_bloom_filter_test(
+    const ecs_table_t *table,
+    uint64_t filter)
+{
+    return (table->bloom_filter & filter) == filter;
 }
 
 /**
@@ -71657,6 +71714,10 @@ bool flecs_query_cache_match_table(
     ecs_query_cache_table_t *qt = NULL;
     ecs_query_t *q = cache->query;
 
+    if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+        return false;
+    }
+
     /* Iterate uncached query for table to check if it matches. If this is a
      * wildcard query, a table can match multiple times. */
     ecs_iter_t it = flecs_query_iter(world, q);
@@ -79154,6 +79215,8 @@ bool flecs_query_trivial_search(
         return false;
     }
 
+    uint64_t q_filter = q->bloom_filter;
+
     do {
         const ecs_table_record_t *tr = flecs_table_cache_next(
             &op_ctx->it, ecs_table_record_t);
@@ -79163,6 +79226,10 @@ bool flecs_query_trivial_search(
 
         ecs_table_t *table = tr->hdr.table;
         if (table->flags & (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)) {
+            continue;
+        }
+
+        if (!flecs_table_bloom_filter_test(table, q_filter)) {
             continue;
         }
 
@@ -79213,6 +79280,8 @@ bool flecs_query_is_trivial_search(
         return false;
     }
 
+    uint64_t q_filter = q->bloom_filter;
+
 next:
     {
         const ecs_table_record_t *tr = flecs_table_cache_next(
@@ -79223,6 +79292,10 @@ next:
 
         ecs_table_t *table = tr->hdr.table;
         if (table->flags & (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)) {
+            goto next;
+        }
+
+        if (!flecs_table_bloom_filter_test(table, q_filter)) {
             goto next;
         }
 
@@ -79267,6 +79340,10 @@ bool flecs_query_trivial_test(
         ecs_table_t *table = it->table;
         ecs_assert(table != NULL, ECS_INVALID_OPERATION,
             "the variable set on the iterator is missing a table");
+
+        if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+            return false;
+        }
 
         for (t = 0; t < term_count; t ++) {
             if (!(term_set & (1llu << t))) {
