@@ -4206,6 +4206,24 @@ void flecs_component_ids_set(
     ecs_entity_t id);
 
 
+/** Check if current thread has exclusive access to world.
+ * This operation checks if the current thread is allowed to access the world.
+ * The operation is called by internal functions before mutating the world, and
+ * will panic if the current thread does not have exclusive access to the world.
+ * 
+ * Exclusive access is controlled by the ecs_exclusive_access_begin() and
+ * ecs_exclusive_access_end() operations.
+ * 
+ * This operation is public so that it shows up in stack traces, but code such
+ * as language bindings or wrappers could also use it to verify that the world
+ * is accessed from the correct thread.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void flecs_check_exclusive_world_access(
+    const ecs_world_t *world);
+
 /** Calculate offset from address */
 #ifdef __cplusplus
 #define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))
@@ -6425,6 +6443,42 @@ FLECS_API
 ecs_id_t ecs_make_pair(
     ecs_entity_t first,
     ecs_entity_t second);
+
+/** Begin exclusive thread access.
+ * This operation ensures that only the thread from which this operation is 
+ * called can mutate the world. Attempts to mutate the world from other threads
+ * will panic. 
+ * 
+ * ecs_exclusive_access_begin() must be called in pairs with 
+ * ecs_exclusive_access_end(). Calling ecs_exclusive_access_begin() from another
+ * thread without first calling ecs_exclusive_access_end() will panic.
+ * 
+ * This operation should only be called once per thread. Calling it multiple 
+ * times for the same thread will cause a panic.
+ * 
+ * Note that this feature only works in builds where asserts are enabled. The
+ * feature requires the OS API thread_self_ callback to be set.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_exclusive_access_begin(
+    ecs_world_t *world);
+
+/** End exclusive thread access.
+ * This operation should be called after ecs_exclusive_access_begin(). After
+ * calling this operation other threads are no longer prevented from mutating
+ * the world.
+ * 
+ * This operation must be called from the same thread that called
+ * ecs_exclusive_access_begin(). Calling it from a different thread will cause
+ * a panic.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_exclusive_access_end(
+    ecs_world_t *world);
 
 /** @} */
 
@@ -22675,6 +22729,22 @@ struct world {
     */
     void shrink() const {
         ecs_shrink(world_);
+    }
+
+    /** Begin exclusive access
+     * 
+     * @see ecs_exclusive_access_begin()
+     */
+    void exclusive_access_begin() {
+        ecs_exclusive_access_begin(world_);
+    }
+
+    /** End exclusive access
+     * 
+     * @see ecs_exclusive_access_end()
+     */
+    void exclusive_access_end() {
+        ecs_exclusive_access_end(world_);
     }
 
 /**

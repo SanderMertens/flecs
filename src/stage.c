@@ -138,6 +138,7 @@ bool flecs_defer_begin(
 {
     flecs_poly_assert(world, ecs_world_t);
     flecs_poly_assert(stage, ecs_stage_t);
+    flecs_check_exclusive_world_access(world);
     (void)world;
     if (stage->defer < 0) return false;
     return (++ stage->defer) == 1;
