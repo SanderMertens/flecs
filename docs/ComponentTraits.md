@@ -1733,15 +1733,18 @@ world.component::<Position>().add_trait::<flecs::DontFragment>();
 </ul>
 </div>
 
-A limitation of components with the `DontFragment` trait is that their ids do not show up in the entity type (obtained by `ecs_get_type` / `entity::type`).
+Components with the `DontFragment` trait have the following limitations:
+- They don't show up in types (obtained by `ecs_get_type` / `entity::type`)
+- Monitors don't trigger on `DontFragment` components. The reason for this is that monitors compare the previous table with the current table of an entity to determine if an entity started matching, and `DontFragment` components aren't part of the table.
 
 Support for `DontFragment` is currently experimental and there are a number of temporary limitations:
-- `target_for` does not yet work for.
+- `target_for` does not yet work for `DontFragment` components.
 - `DontFragment` components are not serialized yet to JSON (and don't show up in the explorer).
 - `Or`, `Optional`, `AndFrom` and `NotFrom` operators are not yet supported.
 - `Not` operators are only supported for non-wildcard terms.
 - Component inheritance and transitivity are not yet supported.
 - Queries for `DontFragment` components may run slower than necessary.
+- The `flecs::Any` wildcard does not yet work
 
 What does work:
 - ECS operations (`add`, `remove`, `get`, `get_mut`, `ensure`, `emplace`, `set`, `delete`).
