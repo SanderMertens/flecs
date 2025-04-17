@@ -2125,3 +2125,38 @@ void World_world_init_fini_log_all(void) {
 
     test_assert(true);
 }
+
+void World_exclusive_access_self_mutate(void) {
+    flecs::world ecs;
+
+    ecs.exclusive_access_begin();
+
+    flecs::entity e = ecs.entity();
+
+    e.add<Position>();
+    test_assert(e.has<Position>());
+
+    ecs.exclusive_access_end();
+}
+
+void* thread_exclusive_access_other_fini(void *arg) {
+    flecs::world *world = static_cast<flecs::world*>(arg);
+    test_expect_abort();
+    world->entity();
+    return NULL;
+}
+
+void World_exclusive_access_other_mutate(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.exclusive_access_begin();
+
+    ecs_os_thread_t thr = 
+        ecs_os_thread_new(thread_exclusive_access_other_fini, &ecs);
+
+    ecs_os_thread_join(thr);
+
+    test_assert(false); // should not get here
+}

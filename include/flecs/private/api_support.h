@@ -290,6 +290,24 @@ void flecs_component_ids_set(
     ecs_entity_t id);
 
 
+/** Check if current thread has exclusive access to world.
+ * This operation checks if the current thread is allowed to access the world.
+ * The operation is called by internal functions before mutating the world, and
+ * will panic if the current thread does not have exclusive access to the world.
+ * 
+ * Exclusive access is controlled by the ecs_exclusive_access_begin() and
+ * ecs_exclusive_access_end() operations.
+ * 
+ * This operation is public so that it shows up in stack traces, but code such
+ * as language bindings or wrappers could also use it to verify that the world
+ * is accessed from the correct thread.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void flecs_check_exclusive_world_access(
+    const ecs_world_t *world);
+
 /** Calculate offset from address */
 #ifdef __cplusplus
 #define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))

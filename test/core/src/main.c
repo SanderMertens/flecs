@@ -2077,6 +2077,36 @@ void World_init_shrink_twice_fini(void);
 void World_init_create_delete_entities_shrink_fini(void);
 void World_init_create_delete_random_1_entities_shrink_fini(void);
 void World_init_create_delete_random_2_entities_shrink_fini(void);
+void World_exclusive_access_self(void);
+void World_exclusive_access_self_world_fini(void);
+void World_exclusive_access_begin_twice(void);
+void World_exclusive_access_end_without_begin(void);
+void World_exclusive_access_mismatching_begin(void);
+void World_exclusive_access_mismatching_end(void);
+void World_exclusive_access_other_new(void);
+void World_exclusive_access_other_world_new_low_id(void);
+void World_exclusive_access_other_delete(void);
+void World_exclusive_access_other_clear(void);
+void World_exclusive_access_other_add(void);
+void World_exclusive_access_other_add_existing(void);
+void World_exclusive_access_other_remove(void);
+void World_exclusive_access_other_remove_non_existing(void);
+void World_exclusive_access_other_set(void);
+void World_exclusive_access_other_set_existing(void);
+void World_exclusive_access_other_ensure(void);
+void World_exclusive_access_other_ensure_existing(void);
+void World_exclusive_access_other_ensure_modified(void);
+void World_exclusive_access_other_ensure_modified_existing(void);
+void World_exclusive_access_other_emplace(void);
+void World_exclusive_access_other_emplace_existing(void);
+void World_exclusive_access_other_defer_begin(void);
+void World_exclusive_access_other_defer_end(void);
+void World_exclusive_access_other_create_query(void);
+void World_exclusive_access_other_create_cached_query(void);
+void World_exclusive_access_other_create_table(void);
+void World_exclusive_access_other_register_component(void);
+void World_exclusive_access_other_world_fini(void);
+void World_exclusive_access_other_world_bulk_init(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -10490,6 +10520,126 @@ bake_test_case World_testcases[] = {
     {
         "init_create_delete_random_2_entities_shrink_fini",
         World_init_create_delete_random_2_entities_shrink_fini
+    },
+    {
+        "exclusive_access_self",
+        World_exclusive_access_self
+    },
+    {
+        "exclusive_access_self_world_fini",
+        World_exclusive_access_self_world_fini
+    },
+    {
+        "exclusive_access_begin_twice",
+        World_exclusive_access_begin_twice
+    },
+    {
+        "exclusive_access_end_without_begin",
+        World_exclusive_access_end_without_begin
+    },
+    {
+        "exclusive_access_mismatching_begin",
+        World_exclusive_access_mismatching_begin
+    },
+    {
+        "exclusive_access_mismatching_end",
+        World_exclusive_access_mismatching_end
+    },
+    {
+        "exclusive_access_other_new",
+        World_exclusive_access_other_new
+    },
+    {
+        "exclusive_access_other_world_new_low_id",
+        World_exclusive_access_other_world_new_low_id
+    },
+    {
+        "exclusive_access_other_delete",
+        World_exclusive_access_other_delete
+    },
+    {
+        "exclusive_access_other_clear",
+        World_exclusive_access_other_clear
+    },
+    {
+        "exclusive_access_other_add",
+        World_exclusive_access_other_add
+    },
+    {
+        "exclusive_access_other_add_existing",
+        World_exclusive_access_other_add_existing
+    },
+    {
+        "exclusive_access_other_remove",
+        World_exclusive_access_other_remove
+    },
+    {
+        "exclusive_access_other_remove_non_existing",
+        World_exclusive_access_other_remove_non_existing
+    },
+    {
+        "exclusive_access_other_set",
+        World_exclusive_access_other_set
+    },
+    {
+        "exclusive_access_other_set_existing",
+        World_exclusive_access_other_set_existing
+    },
+    {
+        "exclusive_access_other_ensure",
+        World_exclusive_access_other_ensure
+    },
+    {
+        "exclusive_access_other_ensure_existing",
+        World_exclusive_access_other_ensure_existing
+    },
+    {
+        "exclusive_access_other_ensure_modified",
+        World_exclusive_access_other_ensure_modified
+    },
+    {
+        "exclusive_access_other_ensure_modified_existing",
+        World_exclusive_access_other_ensure_modified_existing
+    },
+    {
+        "exclusive_access_other_emplace",
+        World_exclusive_access_other_emplace
+    },
+    {
+        "exclusive_access_other_emplace_existing",
+        World_exclusive_access_other_emplace_existing
+    },
+    {
+        "exclusive_access_other_defer_begin",
+        World_exclusive_access_other_defer_begin
+    },
+    {
+        "exclusive_access_other_defer_end",
+        World_exclusive_access_other_defer_end
+    },
+    {
+        "exclusive_access_other_create_query",
+        World_exclusive_access_other_create_query
+    },
+    {
+        "exclusive_access_other_create_cached_query",
+        World_exclusive_access_other_create_cached_query
+    },
+    {
+        "exclusive_access_other_create_table",
+        World_exclusive_access_other_create_table
+    },
+    {
+        "exclusive_access_other_register_component",
+        World_exclusive_access_other_register_component
+    },
+    {
+        "exclusive_access_other_world_fini",
+        World_exclusive_access_other_world_fini
+    },
+    {
+        "exclusive_access_other_world_bulk_init",
+        World_exclusive_access_other_world_bulk_init
     }
 };
 
@@ -12116,7 +12266,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        75,
+        105,
         World_testcases
     },
     {

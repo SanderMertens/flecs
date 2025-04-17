@@ -1015,6 +1015,7 @@ struct ecs_world_t {
     int32_t workers_waiting;         /* Number of workers waiting on sync */
     ecs_pipeline_state_t* pq;        /* Pointer to the pipeline for the workers to execute */
     bool workers_use_task_api;       /* Workers are short-lived tasks, not long-running threads */
+    ecs_os_thread_id_t exclusive_access; /* If set, world can only be mutated by thread */
 
     /* -- Time management -- */
     ecs_time_t world_start_time;     /* Timestamp of simulation start */
@@ -5114,6 +5115,8 @@ ecs_entity_t flecs_new_id(
 {
     flecs_poly_assert(world, ecs_world_t);
 
+    flecs_check_exclusive_world_access(world);
+
     /* It is possible that the world passed to this function is a stage, so
      * make sure we have the actual world. Cast away const since this is one of
      * the few functions that may modify the world while it is in readonly mode,
@@ -6661,6 +6664,8 @@ ecs_entity_t ecs_new_low_id(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
+    flecs_check_exclusive_world_access(world);
+
     if (world->flags & EcsWorldReadonly) {
         /* Can't issue new comp id while iterating when in multithreaded mode */
         ecs_check(ecs_get_stage_count(world) <= 1,
@@ -7251,6 +7256,8 @@ const ecs_entity_t* ecs_bulk_init(
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
         "ecs_bulk_desc_t was not initialized to zero");
+
+    flecs_check_exclusive_world_access(world);
 
     const ecs_entity_t *entities = desc->entities;
     int32_t count = desc->count;
@@ -10275,6 +10282,8 @@ bool flecs_defer_end(
 {
     flecs_poly_assert(world, ecs_world_t);
     flecs_poly_assert(stage, ecs_stage_t);
+
+    flecs_check_exclusive_world_access(world);
 
     if (stage->defer < 0) {
         /* Defer suspending makes it possible to do operations on the storage
@@ -17071,6 +17080,7 @@ bool flecs_defer_begin(
 {
     flecs_poly_assert(world, ecs_world_t);
     flecs_poly_assert(stage, ecs_stage_t);
+    flecs_check_exclusive_world_access(world);
     (void)world;
     if (stage->defer < 0) return false;
     return (++ stage->defer) == 1;
@@ -18103,6 +18113,7 @@ error:
  * @brief World-level API.
  */
 
+#include <inttypes.h>
 
 /* Id flags */
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
@@ -20576,6 +20587,53 @@ void ecs_shrink(
     for (i = 0; i < world->stage_count; i ++) {
         ecs_stage_shrink(world->stages[i]);
     }
+}
+
+void ecs_exclusive_access_begin(
+    ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_assert(!world->exclusive_access, ECS_INVALID_OPERATION,
+        "cannot begin exclusive access: world already in exclusive mode");
+
+    world->exclusive_access = ecs_os_thread_self();
+}
+
+void ecs_exclusive_access_end(
+    ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_assert(world->exclusive_access != 0, ECS_INVALID_OPERATION,
+        "cannot end exclusive access: world is not in exclusive mode");
+
+    ecs_os_thread_id_t thr_self = ecs_os_thread_self();
+    (void)thr_self;
+
+    ecs_assert(world->exclusive_access == thr_self, ECS_INVALID_OPERATION,
+        "cannot end exclusive access from thread that does not have exclusive access");
+
+    world->exclusive_access = 0;
+}
+
+void flecs_check_exclusive_world_access(
+    const ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (!world->exclusive_access) {
+        return; /* Exclusive access is not enabled */
+    }
+
+    ecs_os_thread_id_t thr_self = ecs_os_thread_self();
+    (void)thr_self;
+
+    ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+        ECS_INVALID_OPERATION,
+        "invalid access to world by thread %" PRIu64 " "
+            "(thread %" PRIu64 " has exclusive access)",
+                thr_self, world->exclusive_access);
 }
 
 /**
@@ -33409,6 +33467,9 @@ ecs_query_t* ecs_query_init(
 {
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = flecs_stage_from_world(&world);
+
+    flecs_check_exclusive_world_access(world);
+
     ecs_query_impl_t *result = flecs_bcalloc(&stage->allocators.query_impl);
     flecs_poly_init(result, ecs_query_t);
     
@@ -41198,6 +41259,8 @@ ecs_table_t *flecs_table_new(
     flecs_hashmap_result_t table_elem,
     ecs_table_t *prev)
 {
+    flecs_check_exclusive_world_access(world);
+
     ecs_os_perf_trace_push("flecs.table.create");
 
     ecs_table_t *result = flecs_sparse_add_t(&world->store.tables, ecs_table_t);
