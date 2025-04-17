@@ -72,6 +72,8 @@ bool flecs_query_trivial_search(
         return false;
     }
 
+    uint64_t q_filter = q->bloom_filter;
+
     do {
         const ecs_table_record_t *tr = flecs_table_cache_next(
             &op_ctx->it, ecs_table_record_t);
@@ -81,6 +83,10 @@ bool flecs_query_trivial_search(
 
         ecs_table_t *table = tr->hdr.table;
         if (table->flags & (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)) {
+            continue;
+        }
+
+        if (!flecs_table_bloom_filter_test(table, q_filter)) {
             continue;
         }
 
@@ -131,6 +137,8 @@ bool flecs_query_is_trivial_search(
         return false;
     }
 
+    uint64_t q_filter = q->bloom_filter;
+
 next:
     {
         const ecs_table_record_t *tr = flecs_table_cache_next(
@@ -141,6 +149,10 @@ next:
 
         ecs_table_t *table = tr->hdr.table;
         if (table->flags & (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)) {
+            goto next;
+        }
+
+        if (!flecs_table_bloom_filter_test(table, q_filter)) {
             goto next;
         }
 
@@ -185,6 +197,10 @@ bool flecs_query_trivial_test(
         ecs_table_t *table = it->table;
         ecs_assert(table != NULL, ECS_INVALID_OPERATION,
             "the variable set on the iterator is missing a table");
+
+        if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+            return false;
+        }
 
         for (t = 0; t < term_count; t ++) {
             if (!(term_set & (1llu << t))) {
