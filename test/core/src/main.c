@@ -648,6 +648,7 @@ void Hierarchies_path_core_w_empty_prefix(void);
 void Hierarchies_path_this_w_empty_prefix(void);
 void Hierarchies_path_wildcard_w_empty_prefix(void);
 void Hierarchies_path_any_w_empty_prefix(void);
+void Hierarchies_path_w_buf(void);
 void Hierarchies_rel_path_from_root(void);
 void Hierarchies_rel_path_from_self(void);
 void Hierarchies_rel_path_depth_1(void);
@@ -4946,6 +4947,10 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "path_any_w_empty_prefix",
         Hierarchies_path_any_w_empty_prefix
+    },
+    {
+        "path_w_buf",
+        Hierarchies_path_w_buf
     },
     {
         "rel_path_from_root",
@@ -12112,7 +12117,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        106,
+        107,
         Hierarchies_testcases
     },
     {

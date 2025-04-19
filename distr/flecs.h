@@ -7697,6 +7697,7 @@ char* ecs_get_path_w_sep(
  *
  * @see ecs_get_path_w_sep()
  */
+FLECS_API
 void ecs_get_path_w_sep_buf(
     const ecs_world_t *world,
     ecs_entity_t parent,

@@ -235,6 +235,19 @@ void Hierarchies_path_any_w_empty_prefix(void) {
     ecs_fini(world);
 }
 
+void Hierarchies_path_w_buf(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    ecs_get_path_w_sep_buf(world, 0, ecs_id(EcsComponent), ".", 0, &buf, false);
+    char *path = ecs_strbuf_get(&buf);
+    test_str(path, "Component");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
 void Hierarchies_rel_path_from_root(void) {
     ecs_world_t *world = ecs_mini();
 

@@ -682,6 +682,7 @@
                 "path_this_w_empty_prefix",
                 "path_wildcard_w_empty_prefix",
                 "path_any_w_empty_prefix",
+                "path_w_buf",
                 "rel_path_from_root",
                 "rel_path_from_self",
                 "rel_path_depth_1",
