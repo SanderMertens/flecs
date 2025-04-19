@@ -2081,28 +2081,6 @@ void World_exclusive_access_self_mutate(void) {
     ecs.exclusive_access_end();
 }
 
-void* thread_exclusive_access_other_fini(void *arg) {
-    flecs::world *world = static_cast<flecs::world*>(arg);
-    test_expect_abort();
-    world->entity();
-    return NULL;
-}
-
-void World_exclusive_access_other_mutate(void) {
-    install_test_abort();
-
-    flecs::world ecs;
-
-    ecs.exclusive_access_begin();
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_fini, &ecs);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
 END_DEFINE_SPEC(FFlecsWorldTestsSpec);
 
 /* "id": "World",
@@ -2216,7 +2194,7 @@ END_DEFINE_SPEC(FFlecsWorldTestsSpec);
                 "copy_world",
                 "fini_reentrancy",
                 "fini_copy_move_assign",
-                "
+                "exclusive_access_self_mutate",
             ]*/
 
 void FFlecsWorldTestsSpec::Define()
@@ -2327,6 +2305,7 @@ void FFlecsWorldTestsSpec::Define()
     It("copy_world", [this]() { World_copy_world(); });
     It("fini_reentrancy", [this]() { World_fini_reentrancy(); });
     It("fini_copy_move_assign", [this]() { World_fini_copy_move_assign(); });
+    It("exclusive_access_self_mutate", [this]() { World_exclusive_access_self_mutate(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS

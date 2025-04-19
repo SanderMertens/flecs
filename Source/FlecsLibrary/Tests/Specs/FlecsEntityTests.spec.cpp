@@ -4838,6 +4838,48 @@ void Entity_insert_2_w_1_sparse(void) {
 	test_int(v->y, 2);
 }
 
+void Entity_insert_1_dont_fragment(void) {
+	flecs::world world;
+
+	world.component<Velocity>().add(flecs::DontFragment);
+
+	flecs::entity e = world.entity().insert([](Velocity& v) {
+		v.x = 1;
+		v.y = 2;
+	});
+
+	test_assert(e.has<Velocity>());
+
+	const Velocity *v = e.get<Velocity>();
+	test_int(v->x, 1);
+	test_int(v->y, 2);
+}
+
+void Entity_insert_2_w_1_dont_fragment(void) {
+	flecs::world world;
+
+	world.component<Position>();
+	world.component<Velocity>().add(flecs::DontFragment);
+
+	flecs::entity e = world.entity().insert([](Position& p, Velocity& v) {
+		p.x = 10;
+		p.y = 20;
+		v.x = 1;
+		v.y = 2;
+	});
+
+	test_assert(e.has<Position>());
+	test_assert(e.has<Velocity>());
+
+	const Position *p = e.get<Position>();
+	test_int(p->x, 10);
+	test_int(p->y, 20);
+
+	const Velocity *v = e.get<Velocity>();
+	test_int(v->x, 1);
+	test_int(v->y, 2);
+}
+
 void Entity_emplace_sparse(void) {
 	flecs::world world;
 
@@ -5234,6 +5276,8 @@ END_DEFINE_SPEC(FFlecsEntityTestsSpec);
                 "set_sparse",
                 "insert_1_sparse",
                 "insert_2_w_1_sparse",
+                "insert_1_dont_fragment",
+                "insert_2_w_1_dont_fragment",
                 "emplace_sparse",
                 "override_sparse",
                 "delete_w_override_sparse",
@@ -5509,6 +5553,8 @@ void FFlecsEntityTestsSpec::Define()
 	It("Entity_set_sparse", [&]() { Entity_set_sparse(); });
 	It("Entity_insert_1_sparse", [&]() { Entity_insert_1_sparse(); });
 	It("Entity_insert_2_w_1_sparse", [&]() { Entity_insert_2_w_1_sparse(); });
+	It("Entity_insert_1_dont_fragment", [&]() { Entity_insert_1_dont_fragment(); });
+	It("Entity_insert_2_w_1_dont_fragment", [&]() { Entity_insert_2_w_1_dont_fragment(); });
 	It("Entity_emplace_sparse", [&]() { Entity_emplace_sparse(); });
 	It("Entity_override_sparse", [&]() { Entity_override_sparse(); });
 	It("Entity_delete_w_override_sparse", [&]() { Entity_delete_w_override_sparse(); });
