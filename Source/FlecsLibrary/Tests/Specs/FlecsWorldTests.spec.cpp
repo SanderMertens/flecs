@@ -2070,6 +2070,7 @@ void World_fini_copy_move_assign(void) {
 
 void World_exclusive_access_self_mutate(void) {
     flecs::world ecs;
+    ecs.component<Position>();
 
     ecs.exclusive_access_begin();
 
