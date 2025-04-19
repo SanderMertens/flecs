@@ -124,6 +124,7 @@ struct ecs_table_t {
     ecs_flags32_t flags;             /* Flags for testing table properties */
     int16_t column_count;            /* Number of components (excluding tags) */
     uint16_t version;                /* Version of table */
+    uint64_t bloom_filter;           /* For quick matching with queries */
     ecs_type_t type;                 /* Vector with component ids */
 
     ecs_data_t data;                 /* Component storage */
@@ -271,5 +272,13 @@ ecs_bitset_t* flecs_table_get_toggle(
 ecs_id_t flecs_column_id(
     ecs_table_t *table,
     int32_t column_index);
+
+uint64_t flecs_table_bloom_filter_add(
+    uint64_t filter,
+    uint64_t value);
+
+bool flecs_table_bloom_filter_test(
+    const ecs_table_t *table,
+    uint64_t filter);
 
 #endif

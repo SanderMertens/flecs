@@ -609,6 +609,10 @@ bool flecs_query_cache_match_table(
     ecs_query_cache_table_t *qt = NULL;
     ecs_query_t *q = cache->query;
 
+    if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+        return false;
+    }
+
     /* Iterate uncached query for table to check if it matches. If this is a
      * wildcard query, a table can match multiple times. */
     ecs_iter_t it = flecs_query_iter(world, q);
