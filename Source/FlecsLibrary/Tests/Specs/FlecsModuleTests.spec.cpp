@@ -281,6 +281,9 @@ void Module_dtor_on_fini(void) {
     {
         flecs::world ecs;
 
+        module_ctor_invoked = 0;
+        module_dtor_invoked = 0;
+
         test_int(module_ctor_invoked, 0);
         test_int(module_dtor_invoked, 0);
 
