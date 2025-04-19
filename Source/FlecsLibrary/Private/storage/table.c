@@ -406,6 +406,10 @@ void flecs_table_init(
         } else if (first_role == -1 && !ECS_IS_PAIR(dst_id)) {
             first_role = dst_i;
         }
+
+        /* Build bloom filter for table */
+        table->bloom_filter = 
+            flecs_table_bloom_filter_add(table->bloom_filter, dst_id);
     }
 
     /* The easy part: initialize a record for every id in the type */
@@ -559,6 +563,9 @@ void flecs_table_init(
         tr->hdr.cache = (ecs_table_cache_t*)childof_cr;
         tr->index = -1; /* The table doesn't have a (ChildOf, 0) component */
         tr->count = 0;
+
+        table->bloom_filter = flecs_table_bloom_filter_add(
+            table->bloom_filter, ecs_pair(EcsChildOf, 0));
     }
 
     /* Now that all records have been added, copy them to array */
@@ -2553,4 +2560,19 @@ ecs_table_records_t flecs_table_records(
         .array = table->_->records, 
         .count = table->_->record_count 
     };
+}
+
+uint64_t flecs_table_bloom_filter_add(
+    uint64_t filter,
+    uint64_t value)
+{
+    filter |= 1llu << (value % 64);
+    return filter;
+}
+
+bool flecs_table_bloom_filter_test(
+    const ecs_table_t *table,
+    uint64_t filter)
+{
+    return (table->bloom_filter & filter) == filter;
 }
