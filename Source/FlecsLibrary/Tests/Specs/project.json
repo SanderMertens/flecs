@@ -291,6 +291,8 @@
                 "set_sparse",
                 "insert_1_sparse",
                 "insert_2_w_1_sparse",
+                "insert_1_dont_fragment",
+                "insert_2_w_1_dont_fragment",
                 "emplace_sparse",
                 "override_sparse",
                 "delete_w_override_sparse",
@@ -1344,7 +1346,9 @@
                 "copy_world",
                 "fini_reentrancy",
                 "fini_copy_move_assign",
-                "world_init_fini_log_all"
+                "world_init_fini_log_all",
+                "exclusive_access_self_mutate",
+                "exclusive_access_other_mutate"
             ]
         }, {
             "id": "Singleton",

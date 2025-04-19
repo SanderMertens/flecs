@@ -273,6 +273,8 @@ ecs_entity_t flecs_new_id(
 {
     flecs_poly_assert(world, ecs_world_t);
 
+    flecs_check_exclusive_world_access(world);
+
     /* It is possible that the world passed to this function is a stage, so
      * make sure we have the actual world. Cast away const since this is one of
      * the few functions that may modify the world while it is in readonly mode,
@@ -1819,6 +1821,8 @@ ecs_entity_t ecs_new_low_id(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
+    flecs_check_exclusive_world_access(world);
+
     if (world->flags & EcsWorldReadonly) {
         /* Can't issue new comp id while iterating when in multithreaded mode */
         ecs_check(ecs_get_stage_count(world) <= 1,
@@ -2409,6 +2413,8 @@ const ecs_entity_t* ecs_bulk_init(
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
         "ecs_bulk_desc_t was not initialized to zero");
+
+    flecs_check_exclusive_world_access(world);
 
     const ecs_entity_t *entities = desc->entities;
     int32_t count = desc->count;
@@ -3776,12 +3782,16 @@ void* ecs_emplace_id(
     if (cr->flags & EcsIdDontFragment) {
         void *ptr = flecs_component_sparse_get(cr, entity);
         if (ptr) {
-            *is_new = false;
+            if (is_new) {
+                *is_new = false;
+            }
             flecs_defer_end(world, stage);
             return ptr;
         }
 
-        *is_new = true;
+        if (is_new) {
+            *is_new = true;
+        }
         is_new = NULL;
     }
 
@@ -5429,6 +5439,8 @@ bool flecs_defer_end(
 {
     flecs_poly_assert(world, ecs_world_t);
     flecs_poly_assert(stage, ecs_stage_t);
+
+    flecs_check_exclusive_world_access(world);
 
     if (stage->defer < 0) {
         /* Defer suspending makes it possible to do operations on the storage

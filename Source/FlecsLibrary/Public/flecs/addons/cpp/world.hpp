@@ -1190,6 +1190,22 @@ struct world {
         ecs_shrink(world_);
     }
 
+    /** Begin exclusive access
+     * 
+     * @see ecs_exclusive_access_begin()
+     */
+    void exclusive_access_begin() {
+        ecs_exclusive_access_begin(world_);
+    }
+
+    /** End exclusive access
+     * 
+     * @see ecs_exclusive_access_end()
+     */
+    void exclusive_access_end() {
+        ecs_exclusive_access_end(world_);
+    }
+
 #   include "mixins/id/mixin.inl"
 #   include "mixins/component/mixin.inl"
 #   include "mixins/entity/mixin.inl"

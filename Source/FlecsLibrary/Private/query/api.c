@@ -379,6 +379,9 @@ ecs_query_t* ecs_query_init(
 {
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = flecs_stage_from_world(&world);
+
+    flecs_check_exclusive_world_access(world);
+
     ecs_query_impl_t *result = flecs_bcalloc(&stage->allocators.query_impl);
     flecs_poly_init(result, ecs_query_t);
     

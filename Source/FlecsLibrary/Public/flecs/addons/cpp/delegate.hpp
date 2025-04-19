@@ -268,7 +268,7 @@ struct each_delegate : public delegate {
 
     // Static function to call for component on_add hook
     static void run_add(ecs_iter_t *iter) {
-        const component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
             iter->callback_ctx);
         iter->callback_ctx = ctx->on_add;
         run(iter);
@@ -276,7 +276,7 @@ struct each_delegate : public delegate {
 
     // Static function to call for component on_remove hook
     static void run_remove(ecs_iter_t *iter) {
-        const component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
             iter->callback_ctx);
         iter->callback_ctx = ctx->on_remove;
         run(iter);
@@ -284,7 +284,7 @@ struct each_delegate : public delegate {
 
     // Static function to call for component on_set hook
     static void run_set(ecs_iter_t *iter) {
-        const component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
             iter->callback_ctx);
         iter->callback_ctx = ctx->on_set;
         run(iter);
@@ -415,8 +415,8 @@ private:
     {
         ECS_TABLE_LOCK(iter->world, iter->table);
 
-        const ecs_world_t *world = iter->world;
-        const size_t count = static_cast<size_t>(iter->count);
+        ecs_world_t *world = iter->world;
+        size_t count = static_cast<size_t>(iter->count);
         flecs::entity result;
 
         for (size_t i = 0; i < count; i ++) {
@@ -491,7 +491,7 @@ private:
             count = 1;
         }
 
-        [[maybe_unused]] flecs::iter it(iter);
+        flecs::iter it(iter);
         flecs::entity result;
 
         ECS_TABLE_LOCK(iter->world, iter->table);
@@ -666,11 +666,6 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         ArrayType& ptrs) 
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (!ecs_table_column_count(table) && 
-            !ecs_table_has_flags(table, EcsTableHasSparse)) 
-        {
-            return false;
-        }
 
         /* table_index_of needs real world */
         const flecs::world_t *real_world = ecs_get_world(world);
@@ -687,7 +682,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
 
         /* Get pointers for columns for entity */
         size_t i = 0;
-        for (const int32_t column : columns) {
+        for (int32_t column : columns) {
             if (column == -1) {
                 /* Component could be sparse */
                 void *ptr = ecs_get_mut_id(world, e, ids[i]);
@@ -729,7 +724,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         }
 
         ArrayType ptrs;
-        const bool has_components = get_ptrs(world, e, r, table, ptrs);
+        bool has_components = get_ptrs(world, e, r, table, ptrs);
         if (has_components) {
             invoke_callback(func, 0, ptrs);
         }
@@ -752,7 +747,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         }
 
         ArrayType ptrs;
-        const bool has_components = get_ptrs(world, e, r, table, ptrs);
+        bool has_components = get_ptrs(world, e, r, table, ptrs);
         if (has_components) {
             invoke_callback(func, 0, ptrs);
         }
@@ -784,9 +779,46 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         return elem;
     }
 
+    struct InvokeCtx {
+        InvokeCtx(flecs::table_t *table_arg) : table(table_arg) { }
+        flecs::table_t *table;
+        size_t component_count = 0;
+        IdArray added = {};
+    };
+
+    static int invoke_add(
+        flecs::world& w,
+        flecs::entity_t entity, 
+        flecs::id_t component_id,
+        InvokeCtx& ctx) 
+    {
+        ecs_table_diff_t diff;
+        flecs::table_t *next = flecs_table_traverse_add(
+            w, ctx.table, &component_id, &diff);
+        if (next != ctx.table) {
+            ctx.added[ctx.component_count] = component_id;
+            ctx.component_count ++;
+        } else {
+            if (diff.added_flags & EcsTableHasDontFragment) {
+                w.entity(entity).add(component_id);
+
+                ctx.added[ctx.component_count] = component_id;
+                ctx.component_count ++;
+            }
+        }
+
+        ctx.table = next;
+
+        return 0;
+    }
+
     template <typename Func>
-    static bool invoke_ensure(world_t *world, entity_t id, const Func& func) {
-        const flecs::world w(world);
+    static bool invoke_ensure(
+        world_t *world, 
+        entity_t id, 
+        const Func& func) 
+    {
+        flecs::world w(world);
 
         ArrayType ptrs;
         ecs_table_t *table = NULL;
@@ -807,27 +839,21 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
                 table = r->table;
             }
 
-            // Find destination table that has all components
-            ecs_table_t *prev = table, *next;
-            size_t elem = 0;
-            IdArray added;
-
             // Iterate components, only store added component ids in added array
+            InvokeCtx ctx(table);
             DummyArray dummy_before ({ (
-                next = ecs_table_add_id(world, prev, w.id<Args>()),
-                elem = store_added(added, elem, prev, next, w.id<Args>()),
-                prev = next, 0
+                invoke_add(w, id, w.id<Args>(), ctx)
             )... });
 
             (void)dummy_before;
 
             // If table is different, move entity straight to it
-            if (table != next) {
+            if (table != ctx.table) {
                 ecs_type_t ids;
-                ids.array = added.ptr();
-                ids.count = static_cast<ecs_size_t>(elem);
-                ecs_commit(world, id, r, next, &ids, NULL);
-                table = next;
+                ids.array = ctx.added.ptr();
+                ids.count = static_cast<ecs_size_t>(ctx.component_count);
+                ecs_commit(world, id, r, ctx.table, &ids, NULL);
+                table = ctx.table;
             }
 
             if (!get_ptrs(w, id, r, table, ptrs)) {

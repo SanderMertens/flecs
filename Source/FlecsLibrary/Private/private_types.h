@@ -363,6 +363,7 @@ struct ecs_world_t {
     int32_t workers_waiting;         /* Number of workers waiting on sync */
     ecs_pipeline_state_t* pq;        /* Pointer to the pipeline for the workers to execute */
     bool workers_use_task_api;       /* Workers are short-lived tasks, not long-running threads */
+    ecs_os_thread_id_t exclusive_access; /* If set, world can only be mutated by thread */
 
     /* -- Time management -- */
     ecs_time_t world_start_time;     /* Timestamp of simulation start */

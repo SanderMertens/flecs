@@ -19,13 +19,6 @@ typedef struct ecs_table_diff_builder_t {
     ecs_flags32_t removed_flags;
 } ecs_table_diff_builder_t;
 
-typedef struct ecs_table_diff_t {
-    ecs_type_t added;                /* Components added between tables */
-    ecs_type_t removed;              /* Components removed between tables */
-    ecs_flags32_t added_flags;
-    ecs_flags32_t removed_flags;
-} ecs_table_diff_t;
-
 /** Edge linked list (used to keep track of incoming edges) */
 typedef struct ecs_graph_edge_hdr_t {
     struct ecs_graph_edge_hdr_t *prev;
@@ -78,13 +71,6 @@ ecs_type_t flecs_type_copy(
 void flecs_type_free(
     ecs_world_t *world,
     ecs_type_t *type);
-
-/* Find table by adding id to current table */
-ecs_table_t *flecs_table_traverse_add(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t *id_ptr,
-    ecs_table_diff_t *diff);
 
 /* Find table by removing id from current table */
 ecs_table_t *flecs_table_traverse_remove(

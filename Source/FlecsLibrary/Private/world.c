@@ -4,6 +4,7 @@
  */
 
 #include "private_api.h"
+#include <inttypes.h>
 
 /* Id flags */
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
@@ -2478,4 +2479,51 @@ void ecs_shrink(
     for (i = 0; i < world->stage_count; i ++) {
         ecs_stage_shrink(world->stages[i]);
     }
+}
+
+void ecs_exclusive_access_begin(
+    ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_assert(!world->exclusive_access, ECS_INVALID_OPERATION,
+        "cannot begin exclusive access: world already in exclusive mode");
+
+    world->exclusive_access = ecs_os_thread_self();
+}
+
+void ecs_exclusive_access_end(
+    ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_assert(world->exclusive_access != 0, ECS_INVALID_OPERATION,
+        "cannot end exclusive access: world is not in exclusive mode");
+
+    ecs_os_thread_id_t thr_self = ecs_os_thread_self();
+    (void)thr_self;
+
+    ecs_assert(world->exclusive_access == thr_self, ECS_INVALID_OPERATION,
+        "cannot end exclusive access from thread that does not have exclusive access");
+
+    world->exclusive_access = 0;
+}
+
+void flecs_check_exclusive_world_access(
+    const ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (!world->exclusive_access) {
+        return; /* Exclusive access is not enabled */
+    }
+
+    ecs_os_thread_id_t thr_self = ecs_os_thread_self();
+    (void)thr_self;
+
+    ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+        ECS_INVALID_OPERATION,
+        "invalid access to world by thread %" PRIu64 " "
+            "(thread %" PRIu64 " has exclusive access)",
+                thr_self, world->exclusive_access);
 }
