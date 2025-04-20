@@ -21,3 +21,14 @@ enum class ETestEnum_UENUM : uint8
 	Two,
 	Three
 }; // enum class ETestEnum
+
+UENUM()
+enum class ETestEnum_SparseUENUM : uint8
+{
+	None,
+	One,
+	Two,
+	Three,
+	Five = 5,
+	Ten = 10,
+}; // enum class ETestEnum

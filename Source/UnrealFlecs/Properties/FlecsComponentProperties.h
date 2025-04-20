@@ -91,7 +91,7 @@ public:
 					else \
 					{ \
 						FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties( \
-						#Name, nullptr, sizeof(Name), alignof(Name), RegistrationFunction); \
+							#Name, nullptr, sizeof(Name), alignof(Name), RegistrationFunction); \
 					} \
 				}); \
 			} \

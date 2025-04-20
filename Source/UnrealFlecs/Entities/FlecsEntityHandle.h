@@ -857,6 +857,17 @@ public:
 		GetEntity().add(InFirst, GetTagEntity(InSecond));
 	}
 
+	SOLID_INLINE void AddPair(const FFlecsId InFirst, UEnum* InSecond, const int64 InValue) const
+	{
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(InSecond);
+		solid_check(EnumEntity.IsValid());
+		solid_check(EnumEntity.IsEnum());
+
+		const FFlecsId EnumConstant = EnumEntity.Lookup(InSecond->GetNameStringByValue(InValue));
+		
+		AddPair(EnumEntity, EnumConstant);
+	}
+
 	SOLID_INLINE void AddPair(const FFlecsId InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().add(InFirst, InSecond);
@@ -1244,7 +1255,18 @@ public:
 	}
 
 	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
+	
 	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeEnum(const UEnum* EnumType) const;
+
+	template <typename TEnumUnderlying = uint64>
+	NO_DISCARD FFlecsEntityHandle ObtainEnumConstant(UEnum* EnumType, const TEnumUnderlying InValue) const
+	{
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
+		solid_check(EnumEntity.IsValid());
+		solid_check(EnumEntity.IsEnum());
+
+		return EnumEntity.Lookup(EnumType->GetNameStringByValue(static_cast<int64>(InValue)));
+	}
 
 	SOLID_INLINE void AddPrefab(const FFlecsId InPrefab) const
 	{

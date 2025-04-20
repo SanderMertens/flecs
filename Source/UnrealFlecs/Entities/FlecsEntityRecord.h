@@ -26,6 +26,7 @@ enum class EFlecsPairNodeType : uint8
 	ScriptStruct = 0,
 	EntityHandle = 1,
 	FGameplayTag = 2,
+	//ScriptEnum = 3,
 }; // enum class EFlecsPairNodeType
 
 USTRUCT(BlueprintType)
@@ -40,9 +41,9 @@ struct UNREALFLECS_API FFlecsRecordPairSlot
 		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::ScriptStruct", EditConditionHides))
 	FInstancedStruct PairScriptStruct;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
-		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::ScriptEnum", EditConditionHides))
-	FSolidEnumSelector PairScriptEnum;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
+	//	meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::ScriptEnum", EditConditionHides))
+	//FSolidEnumSelector PairScriptEnum;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Tree",
 		meta = (EditCondition = "PairNodeType == EFlecsPairNodeType::EntityHandle", EditConditionHides))

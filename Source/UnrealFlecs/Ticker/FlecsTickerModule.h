@@ -28,6 +28,9 @@ public:
 		return "Flecs Ticker Module";
 	}
 
+	UPROPERTY()
+	bool bUsePhysicsTick = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ticker",
 		meta = (Units = "Hz", ClampMin = "1", ClampMax = "240", EditCondition = "!bUsePhysicsTick"))
 	int64 TickerRate = 60;
