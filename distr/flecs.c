@@ -9130,7 +9130,28 @@ ecs_entity_t ecs_get_parent(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    return ecs_get_target(world, entity, EcsChildOf, 0);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *table = r->table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_component_record_t *cr = world->cr_childof_wildcard;
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
+    if (!tr) {
+        return 0;
+    }
+
+    ecs_entity_t id = table->type.array[tr->index];
+    return flecs_entities_get_alive(world, ECS_PAIR_SECOND(id));
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_get_target_for_id(
