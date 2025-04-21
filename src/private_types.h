@@ -33,9 +33,6 @@ extern const ecs_entity_t EcsFlag;
 /* The number of table versions to split tables across */
 #define ECS_TABLE_VERSION_ARRAY_SIZE (ECS_TABLE_VERSION_ARRAY_BITMASK + 1)
 
-/* Magic number for a flecs object */
-#define ECS_OBJECT_MAGIC (0x6563736f)
-
 /* Tags associated with poly for (Poly, tag) components */
 #define ecs_world_t_tag     invalid
 #define ecs_stage_t_tag     invalid
@@ -101,6 +98,7 @@ typedef struct ecs_world_allocators_t {
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
     ecs_block_allocator_t id_record;
+    ecs_block_allocator_t pair_id_record;
     ecs_block_allocator_t id_record_chunk;
     ecs_block_allocator_t table_diff;
     ecs_block_allocator_t sparse_chunk;
@@ -121,6 +119,7 @@ typedef struct ecs_stage_allocators_t {
 
 /** Types for deferred operations */
 typedef enum ecs_cmd_kind_t {
+    EcsCmdNew,
     EcsCmdClone,
     EcsCmdBulkNew,
     EcsCmdAdd,
@@ -162,7 +161,7 @@ typedef struct ecs_cmd_t {
     ecs_cmd_kind_t kind;             /* Command kind */
     int32_t next_for_entity;         /* Next operation for entity */    
     ecs_id_t id;                     /* (Component) id */
-    ecs_id_record_t *idr;            /* Id record (only for set/mut/emplace) */
+    ecs_component_record_t *cr;            /* component record (only for set/mut/emplace) */
     ecs_cmd_entry_t *entry;
     ecs_entity_t entity;             /* Entity id */
 
@@ -249,7 +248,7 @@ typedef struct ecs_monitor_set_t {
 
 /* Data stored for id marked for deletion */
 typedef struct ecs_marked_id_t {
-    ecs_id_record_t *idr;
+    ecs_component_record_t *cr;
     ecs_id_t id;
     ecs_entity_t action;             /* Set explicitly for delete_with, remove_all */
     bool delete_id;
@@ -294,18 +293,21 @@ struct ecs_world_t {
     ecs_header_t hdr;
 
     /* --  Type metadata -- */
-    ecs_id_record_t **id_index_lo;
-    ecs_map_t id_index_hi;           /* map<id, ecs_id_record_t*> */
+    ecs_component_record_t **id_index_lo;
+    ecs_map_t id_index_hi;           /* map<id, ecs_component_record_t*> */
     ecs_map_t type_info;             /* map<type_id, type_info_t> */
 
     /* -- Cached handle to id records -- */
-    ecs_id_record_t *idr_wildcard;
-    ecs_id_record_t *idr_wildcard_wildcard;
-    ecs_id_record_t *idr_any;
-    ecs_id_record_t *idr_isa_wildcard;
-    ecs_id_record_t *idr_childof_0;
-    ecs_id_record_t *idr_childof_wildcard;
-    ecs_id_record_t *idr_identifier_name;
+    ecs_component_record_t *cr_wildcard;
+    ecs_component_record_t *cr_wildcard_wildcard;
+    ecs_component_record_t *cr_any;
+    ecs_component_record_t *cr_isa_wildcard;
+    ecs_component_record_t *cr_childof_0;
+    ecs_component_record_t *cr_childof_wildcard;
+    ecs_component_record_t *cr_identifier_name;
+
+    /* Head of list that points to all non-fragmenting component ids */
+    ecs_component_record_t *cr_non_fragmenting_head;
 
     /* -- Mixins -- */
     ecs_world_t *self;
@@ -317,6 +319,9 @@ struct ecs_world_t {
     /* Array of table versions used with component refs to determine if the 
      * cached pointer is still valid. */
     uint32_t table_version[ECS_TABLE_VERSION_ARRAY_SIZE];
+
+    /* Array for checking if components can be looked up trivially */
+    bool non_fragmenting[FLECS_HI_COMPONENT_ID];
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;
@@ -358,6 +363,7 @@ struct ecs_world_t {
     int32_t workers_waiting;         /* Number of workers waiting on sync */
     ecs_pipeline_state_t* pq;        /* Pointer to the pipeline for the workers to execute */
     bool workers_use_task_api;       /* Workers are short-lived tasks, not long-running threads */
+    ecs_os_thread_id_t exclusive_access; /* If set, world can only be mutated by thread */
 
     /* -- Time management -- */
     ecs_time_t world_start_time;     /* Timestamp of simulation start */

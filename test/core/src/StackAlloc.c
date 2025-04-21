@@ -7,7 +7,7 @@ void StackAlloc_init_fini(void) {
     ecs_stack_t stack = {0};
     flecs_stack_init(&stack);
 
-    test_int(stack.tail_page->sp, 0);
+    test_assert(stack.tail_page == NULL);
     test_assert(stack.tail_page == stack.first);
 
     flecs_stack_fini(&stack);

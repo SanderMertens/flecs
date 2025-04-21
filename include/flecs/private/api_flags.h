@@ -42,10 +42,11 @@ extern "C" {
 #define EcsEntityIsId                 (1u << 31)
 #define EcsEntityIsTarget             (1u << 30)
 #define EcsEntityIsTraversable        (1u << 29)
+#define EcsEntityHasDontFragment      (1u << 28)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Id flags (used by ecs_id_record_t::flags)
+//// Id flags (used by ecs_component_record_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
 #define EcsIdOnDeleteRemove            (1u << 0)
@@ -82,7 +83,9 @@ extern "C" {
 #define EcsIdHasOnTableCreate          (1u << 21)
 #define EcsIdHasOnTableDelete          (1u << 22)
 #define EcsIdIsSparse                  (1u << 23)
-#define EcsIdIsUnion                   (1u << 24)
+#define EcsIdDontFragment              (1u << 24)
+#define EcsIdMatchDontFragment         (1u << 25) /* For (*, T) wildcards */
+#define EcsIdIsUnion                   (1u << 26)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
         EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion)
@@ -177,19 +180,22 @@ extern "C" {
 #define EcsTermIsSparse               (1u << 12)
 #define EcsTermIsUnion                (1u << 13)
 #define EcsTermIsOr                   (1u << 14)
+#define EcsTermDontFragment         (1u << 15)
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Observer flags (used by ecs_observer_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsObserverIsMulti             (1u << 1u)  /* Does observer have multiple terms */
-#define EcsObserverIsMonitor           (1u << 2u)  /* Is observer a monitor */
-#define EcsObserverIsDisabled          (1u << 3u)  /* Is observer entity disabled */
-#define EcsObserverIsParentDisabled    (1u << 4u)  /* Is module parent of observer disabled  */
-#define EcsObserverBypassQuery         (1u << 5u)  /* Don't evaluate query for multi-component observer*/
-#define EcsObserverYieldOnCreate       (1u << 6u)  /* Yield matching entities when creating observer */
-#define EcsObserverYieldOnDelete       (1u << 7u)  /* Yield matching entities when deleting observer */
+#define EcsObserverMatchPrefab         (1u << 1u)  /* Same as query*/
+#define EcsObserverMatchDisabled       (1u << 2u)  /* Same as query*/
+#define EcsObserverIsMulti             (1u << 3u)  /* Does observer have multiple terms */
+#define EcsObserverIsMonitor           (1u << 4u)  /* Is observer a monitor */
+#define EcsObserverIsDisabled          (1u << 5u)  /* Is observer entity disabled */
+#define EcsObserverIsParentDisabled    (1u << 6u)  /* Is module parent of observer disabled  */
+#define EcsObserverBypassQuery         (1u << 7u)  /* Don't evaluate query for multi-component observer*/
+#define EcsObserverYieldOnCreate       (1u << 8u)  /* Yield matching entities when creating observer */
+#define EcsObserverYieldOnDelete       (1u << 9u)  /* Yield matching entities when deleting observer */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,9 +226,11 @@ extern "C" {
 #define EcsTableHasOnTableCreate       (1u << 21u)
 #define EcsTableHasOnTableDelete       (1u << 22u)
 #define EcsTableHasSparse              (1u << 23u)
-#define EcsTableHasUnion               (1u << 24u)
+#define EcsTableHasDontFragment        (1u << 24u)
+#define EcsTableOverrideDontFragment   (1u << 25u)
+#define EcsTableHasUnion               (1u << 26u)
 
-#define EcsTableHasTraversable         (1u << 26u)
+#define EcsTableHasTraversable         (1u << 27u)
 #define EcsTableMarkedForDelete        (1u << 30u)
 
 /* Composite table flags */

@@ -138,8 +138,35 @@ int flecs_value_unary(
 
 #define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
 
-#define ECS_BOP(left, right, result, op, R, T)\
+#define ECS_BOP_DO(left, right, result, op, R, T)\
     ECS_VALUE_GET(result, R) = (R)(ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T))
+
+#define ECS_BOP(left, right, result, op, R, T)\
+    if ((result)->type == ecs_id(ecs_u64_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_u64_t, T);\
+    } else if ((result)->type == ecs_id(ecs_u32_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_u32_t, T);\
+    } else if ((result)->type == ecs_id(ecs_u16_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_u16_t, T);\
+    } else if ((result)->type == ecs_id(ecs_u8_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_u8_t, T);\
+    } else if ((result)->type == ecs_id(ecs_i64_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_i64_t, T);\
+    } else if ((result)->type == ecs_id(ecs_i32_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_i32_t, T);\
+    } else if ((result)->type == ecs_id(ecs_i16_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_i16_t, T);\
+    } else if ((result)->type == ecs_id(ecs_i8_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_i8_t, T);\
+    } else if ((result)->type == ecs_id(ecs_f64_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_f64_t, T);\
+    } else if ((result)->type == ecs_id(ecs_f32_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_f32_t, T);\
+    } else if ((result)->type == ecs_id(ecs_char_t)) { \
+        ECS_BOP_DO(left, right, result, op, ecs_char_t, T);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
 
 #define ECS_BOP_COND(left, right, result, op, R, T)\
     ECS_VALUE_GET(result, ecs_bool_t) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)

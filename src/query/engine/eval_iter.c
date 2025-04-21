@@ -219,12 +219,19 @@ void flecs_query_iter_fini_ctx(
         case EcsQueryUp:
         case EcsQuerySelfUp:
         case EcsQueryUnionEqUp:
-        case EcsQueryUnionEqSelfUp: {
-            ecs_trav_up_cache_t *cache = &ctx[i].is.up.cache;
-            if (cache->dir == EcsTravDown) {
-                flecs_query_down_cache_fini(a, cache);
-            } else {
-                flecs_query_up_cache_fini(cache);
+        case EcsQueryUnionEqSelfUp:
+        case EcsQuerySparseUp:
+        case EcsQuerySparseSelfUp: {
+            ecs_query_up_ctx_t *op_ctx = &ctx[i].is.up;
+            ecs_query_up_impl_t *impl = op_ctx->impl;
+            if (impl) {
+                ecs_trav_up_cache_t *cache = &impl->cache;
+                if (cache->dir == EcsTravDown) {
+                    flecs_query_down_cache_fini(a, cache);
+                } else {
+                    flecs_query_up_cache_fini(cache);
+                }
+                flecs_free_t(a, ecs_query_up_impl_t, impl);
             }
             break;
         }
@@ -278,7 +285,7 @@ void flecs_query_validate_final_fields(
         return;
     }
 
-    if (!world->idr_isa_wildcard) {
+    if (!world->cr_isa_wildcard) {
         return;
     }
 
@@ -300,7 +307,7 @@ void flecs_query_validate_final_fields(
             continue;
         }
 
-        if (flecs_id_record_get(world, ecs_pair(EcsIsA, id))) {
+        if (flecs_components_get(world, ecs_pair(EcsIsA, id))) {
             char *query_str = ecs_query_str(q);
             char *id_str = ecs_id_str(world, id);
             ecs_abort(ECS_INVALID_OPERATION, 

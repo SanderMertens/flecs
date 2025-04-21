@@ -4793,6 +4793,48 @@ void Entity_insert_2_w_1_sparse(void) {
     test_int(v->y, 2);
 }
 
+void Entity_insert_1_dont_fragment(void) {
+    flecs::world world;
+
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    flecs::entity e = world.entity().insert([](Velocity& v) {
+        v.x = 1;
+        v.y = 2;
+    });
+
+    test_assert(e.has<Velocity>());
+
+    const Velocity *v = e.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void Entity_insert_2_w_1_dont_fragment(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::DontFragment);
+
+    flecs::entity e = world.entity().insert([](Position& p, Velocity& v) {
+        p.x = 10;
+        p.y = 20;
+        v.x = 1;
+        v.y = 2;
+    });
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = e.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
 void Entity_emplace_sparse(void) {
     flecs::world world;
 
@@ -4935,5 +4977,44 @@ void Entity_iter_empty_type(void) {
     }
 
     test_int(count, 0);
+}
+
+void Entity_untyped_component_use_low_id(void) {
+    flecs::world world;
+    
+    flecs::untyped_component c = world.component("test_low_id_comp");
+    test_assert(c.is_valid());
+    test_assert(c < FLECS_HI_COMPONENT_ID);
+}
+
+enum Color {
+    Red, Green, Blue
+};
+
+void Entity_add_remove_enum_component(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    e.set<Color>(Blue);
+    test_assert(e.has<Color>());
+
+    {
+        const Color *c = e.get<Color>();
+        test_assert(c != nullptr);
+        test_assert(*c == Blue);
+    }
+
+    e.set<Color>(Green);
+    test_assert(e.has<Color>());
+
+    {
+        const Color *c = e.get<Color>();
+        test_assert(c != nullptr);
+        test_assert(*c == Green);
+    }
+
+    e.remove<Color>();
+    test_assert(!e.has<Color>());
 }
 

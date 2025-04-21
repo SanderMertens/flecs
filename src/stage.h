@@ -18,6 +18,10 @@ bool flecs_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
+bool flecs_defer_new(
+    ecs_stage_t *stage,
+    ecs_entity_t entity);
+
 bool flecs_defer_modified(
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -111,5 +115,8 @@ void flecs_commands_init(
 void flecs_commands_fini(
     ecs_stage_t *stage,
     ecs_commands_t *cmd);
+
+void ecs_stage_shrink(
+    ecs_stage_t *stage);
 
 #endif

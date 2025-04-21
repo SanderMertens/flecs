@@ -1647,6 +1647,8 @@ When compared to regular relationships, union relationships have some difference
 - Removing a union relationship removes any target, even if the specified target is different
 - Union relationships cannot have data
 
+Support for the `Union` trait will be deprececated soon and replaced by exclusive `DontFragment` relationships.
+
 ## Sparse trait
 The `Sparse` trait configures a component to use sparse storage. Sparse components are stored outside of tables, which means they do not have to be moved. Sparse components are also guaranteed to have stable pointers, which means that a component pointer is not invalidated when an entity moves to a new table. ECS operations and queries work as expected with sparse components.
 
@@ -1690,6 +1692,66 @@ world.component::<Position>().add_trait::<flecs::Sparse>();
 </li>
 </ul>
 </div>
+
+## DontFragment trait (EXPERIMENTAL)
+The `DontFragment` trait uses the same sparse storage as the `Sparse` trait, but does not fragment tables. This can be desirable especially if a component or relationship is very sparse (e.g. it is only added to a few entities) as this would otherwise result in many tables that only contain a small number of entities.
+
+The following code example shows how to mark a component as `DontFragment`:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_COMPONENT(world, Position);
+ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+world.component<Position>().add(flecs::DontFragment);
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+ecs.Component<Position>().Entity
+    .Add(Ecs.DontFragment);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world.component::<Position>().add_trait::<flecs::DontFragment>();
+```
+
+</li>
+</ul>
+</div>
+
+Components with the `DontFragment` trait have the following limitations:
+- They don't show up in types (obtained by `ecs_get_type` / `entity::type`)
+- Monitors don't trigger on `DontFragment` components. The reason for this is that monitors compare the previous table with the current table of an entity to determine if an entity started matching, and `DontFragment` components aren't part of the table.
+
+Support for `DontFragment` is currently experimental and there are a number of temporary limitations:
+- `target_for` does not yet work for `DontFragment` components.
+- `DontFragment` components are not serialized yet to JSON (and don't show up in the explorer).
+- `Or`, `Optional`, `AndFrom` and `NotFrom` operators are not yet supported.
+- `Not` operators are only supported for non-wildcard terms.
+- Component inheritance and transitivity are not yet supported.
+- Queries for `DontFragment` components may run slower than necessary.
+- The `flecs::Any` wildcard does not yet work
+
+What does work:
+- ECS operations (`add`, `remove`, `get`, `get_mut`, `ensure`, `emplace`, `set`, `delete`).
+- Relationships (including `Exclusive` relationships).
+- Simple component queries.
+- Wildcard queries.
+- Queries with variables.
 
 ## Symmetric trait
 The `Symmetric` trait enforces that when a relationship `(R, Y)` is added to entity `X`, the relationship `(R, X)` will be added to entity `Y`. The reverse is also true, if relationship `(R, Y)` is removed from `X`, relationship `(R, X)` will be removed from `Y`.

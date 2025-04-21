@@ -126,7 +126,7 @@ void Union_switch_enum_type(void) {
     test_assert(e.has<Color>(flecs::Wildcard));
     test_assert(e.table() == table);
 
-    e.remove<Color>();
+    e.remove<Color>(flecs::Wildcard);
     test_assert(!e.has(Red));
     test_assert(!e.has(Green));
     test_assert(!e.has(Blue));

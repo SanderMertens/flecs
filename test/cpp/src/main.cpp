@@ -283,6 +283,8 @@ void Entity_const_entity_set_doc(void);
 void Entity_set_sparse(void);
 void Entity_insert_1_sparse(void);
 void Entity_insert_2_w_1_sparse(void);
+void Entity_insert_1_dont_fragment(void);
+void Entity_insert_2_w_1_dont_fragment(void);
 void Entity_emplace_sparse(void);
 void Entity_override_sparse(void);
 void Entity_delete_w_override_sparse(void);
@@ -293,6 +295,8 @@ void Entity_set_pair_second_invalid_type(void);
 void Entity_get_ref_pair_second_invalid_type(void);
 void Entity_iter_type(void);
 void Entity_iter_empty_type(void);
+void Entity_untyped_component_use_low_id(void);
+void Entity_add_remove_enum_component(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -418,6 +422,7 @@ void Enum_enum_u16(void);
 void Enum_enum_u32(void);
 void Enum_enum_u64(void);
 void Enum_runtime_type_constant_u8_template(void);
+void Enum_multithreaded_enum_registration(void);
 
 // Testsuite 'Union'
 void Union_add_case(void);
@@ -587,12 +592,25 @@ void Query_run_const(void);
 void Query_run_shared(void);
 void Query_run_optional(void);
 void Query_run_sparse(void);
+void Query_run_sparse_w_with(void);
+void Query_run_dont_fragment(void);
+void Query_run_dont_fragment_w_with(void);
+void Query_run_dont_fragment_add(void);
+void Query_run_dont_fragment_add_remove(void);
+void Query_run_dont_fragment_set(void);
 void Query_each(void);
 void Query_each_const(void);
 void Query_each_shared(void);
 void Query_each_optional(void);
 void Query_each_sparse(void);
+void Query_each_sparse_w_with(void);
 void Query_each_sparse_many(void);
+void Query_each_dont_fragment(void);
+void Query_each_dont_fragment_w_with(void);
+void Query_each_dont_fragment_many(void);
+void Query_each_dont_fragment_add(void);
+void Query_each_dont_fragment_add_remove(void);
+void Query_each_dont_fragment_set(void);
 void Query_signature(void);
 void Query_signature_const(void);
 void Query_signature_shared(void);
@@ -752,6 +770,8 @@ void QueryBuilder_relation_w_object_wildcard(void);
 void QueryBuilder_relation_w_predicate_wildcard(void);
 void QueryBuilder_add_pair_w_rel_type(void);
 void QueryBuilder_template_term(void);
+void QueryBuilder_typed_term_at(void);
+void QueryBuilder_typed_term_at_indexed(void);
 void QueryBuilder_explicit_subject_w_id(void);
 void QueryBuilder_explicit_subject_w_type(void);
 void QueryBuilder_explicit_object_w_id(void);
@@ -869,6 +889,7 @@ void QueryBuilder_each_w_const_field_at_w_fixed_src(void);
 void QueryBuilder_each_w_untyped_field_w_fixed_src(void);
 void QueryBuilder_each_w_untyped_field_at_w_fixed_src(void);
 void QueryBuilder_singleton_pair(void);
+void QueryBuilder_query_w_this_second(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -1049,6 +1070,21 @@ void ComponentLifecycle_sparse_component(void);
 void ComponentLifecycle_count_in_add_hook(void);
 void ComponentLifecycle_count_in_remove_hook(void);
 void ComponentLifecycle_set_multiple_hooks(void);
+void ComponentLifecycle_compare_WithGreaterThan(void);
+void ComponentLifecycle_compare_WithLessThan(void);
+void ComponentLifecycle_compare_WithLessAndGreaterThan(void);
+void ComponentLifecycle_compare_WithEqualsAndGreaterThan(void);
+void ComponentLifecycle_compare_WithEqualsAndLessThan(void);
+void ComponentLifecycle_compare_WithEqualsOnly(void);
+void ComponentLifecycle_compare_WithoutOperators(void);
+void ComponentLifecycle_compare_uint8_Enum(void);
+void ComponentLifecycle_compare_uint16_Enum(void);
+void ComponentLifecycle_compare_uint32_Enum(void);
+void ComponentLifecycle_compare_uint64_Enum(void);
+void ComponentLifecycle_compare_int8_Enum(void);
+void ComponentLifecycle_compare_int16_Enum(void);
+void ComponentLifecycle_compare_int32_Enum(void);
+void ComponentLifecycle_compare_int64_Enum(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -1059,6 +1095,8 @@ void Refs_ref_after_set(void);
 void Refs_ref_before_set(void);
 void Refs_non_const_ref(void);
 void Refs_pair_ref(void);
+void Refs_pair_ref_w_pair_type(void);
+void Refs_pair_ref_w_pair_type_second(void);
 void Refs_pair_ref_w_entity(void);
 void Refs_pair_ref_second(void);
 void Refs_from_stage(void);
@@ -1072,6 +1110,9 @@ void Refs_bool_operator(void);
 void Refs_base_type(void);
 void Refs_empty_base_type(void);
 void Refs_get_component(void);
+void Refs_untyped_get_ref_by_method(void);
+void Refs_untyped_pair_ref(void);
+void Refs_untyped_runtime_component_ref(void);
 
 // Testsuite 'Module'
 void Module_import(void);
@@ -1097,6 +1138,7 @@ void Module_rename_namespace_nested(void);
 void Module_rename_reparent_root_module(void);
 void Module_no_recycle_after_rename_reparent(void);
 void Module_reimport_after_delete(void);
+void Module_component_name_w_module_name(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -1260,6 +1302,8 @@ void World_copy_world(void);
 void World_fini_reentrancy(void);
 void World_fini_copy_move_assign(void);
 void World_world_init_fini_log_all(void);
+void World_exclusive_access_self_mutate(void);
+void World_exclusive_access_other_mutate(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -1282,6 +1326,7 @@ void Singleton_add_remove_singleton_pair_R_T(void);
 void Singleton_add_remove_singleton_pair_R_t(void);
 void Singleton_add_remove_singleton_pair_r_t(void);
 void Singleton_get_target(void);
+void Singleton_singleton_enum(void);
 
 // Testsuite 'Misc'
 void Misc_setup(void);
@@ -1381,6 +1426,8 @@ void Meta_ser_deser_std_string(void);
 void Meta_ser_deser_std_vector_int(void);
 void Meta_ser_deser_std_vector_std_string(void);
 void Meta_ser_deser_type_w_std_string_std_vector_std_string(void);
+void Meta_std_vector_random_access(void);
+void Meta_struct_random_access(void);
 void Meta_ser_deser_flecs_entity(void);
 void Meta_world_ser_deser_flecs_entity(void);
 void Meta_new_world_ser_deser_flecs_entity(void);
@@ -2536,6 +2583,14 @@ bake_test_case Entity_testcases[] = {
         Entity_insert_2_w_1_sparse
     },
     {
+        "insert_1_dont_fragment",
+        Entity_insert_1_dont_fragment
+    },
+    {
+        "insert_2_w_1_dont_fragment",
+        Entity_insert_2_w_1_dont_fragment
+    },
+    {
         "emplace_sparse",
         Entity_emplace_sparse
     },
@@ -2574,6 +2629,14 @@ bake_test_case Entity_testcases[] = {
     {
         "iter_empty_type",
         Entity_iter_empty_type
+    },
+    {
+        "untyped_component_use_low_id",
+        Entity_untyped_component_use_low_id
+    },
+    {
+        "add_remove_enum_component",
+        Entity_add_remove_enum_component
     }
 };
 
@@ -3064,6 +3127,10 @@ bake_test_case Enum_testcases[] = {
     {
         "runtime_type_constant_u8_template",
         Enum_runtime_type_constant_u8_template
+    },
+    {
+        "multithreaded_enum_registration",
+        Enum_multithreaded_enum_registration
     }
 };
 
@@ -3712,6 +3779,30 @@ bake_test_case Query_testcases[] = {
         Query_run_sparse
     },
     {
+        "run_sparse_w_with",
+        Query_run_sparse_w_with
+    },
+    {
+        "run_dont_fragment",
+        Query_run_dont_fragment
+    },
+    {
+        "run_dont_fragment_w_with",
+        Query_run_dont_fragment_w_with
+    },
+    {
+        "run_dont_fragment_add",
+        Query_run_dont_fragment_add
+    },
+    {
+        "run_dont_fragment_add_remove",
+        Query_run_dont_fragment_add_remove
+    },
+    {
+        "run_dont_fragment_set",
+        Query_run_dont_fragment_set
+    },
+    {
         "each",
         Query_each
     },
@@ -3732,8 +3823,36 @@ bake_test_case Query_testcases[] = {
         Query_each_sparse
     },
     {
+        "each_sparse_w_with",
+        Query_each_sparse_w_with
+    },
+    {
         "each_sparse_many",
         Query_each_sparse_many
+    },
+    {
+        "each_dont_fragment",
+        Query_each_dont_fragment
+    },
+    {
+        "each_dont_fragment_w_with",
+        Query_each_dont_fragment_w_with
+    },
+    {
+        "each_dont_fragment_many",
+        Query_each_dont_fragment_many
+    },
+    {
+        "each_dont_fragment_add",
+        Query_each_dont_fragment_add
+    },
+    {
+        "each_dont_fragment_add_remove",
+        Query_each_dont_fragment_add_remove
+    },
+    {
+        "each_dont_fragment_set",
+        Query_each_dont_fragment_set
     },
     {
         "signature",
@@ -4363,6 +4482,14 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_template_term
     },
     {
+        "typed_term_at",
+        QueryBuilder_typed_term_at
+    },
+    {
+        "typed_term_at_indexed",
+        QueryBuilder_typed_term_at_indexed
+    },
+    {
         "explicit_subject_w_id",
         QueryBuilder_explicit_subject_w_id
     },
@@ -4829,6 +4956,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "singleton_pair",
         QueryBuilder_singleton_pair
+    },
+    {
+        "query_w_this_second",
+        QueryBuilder_query_w_this_second
     }
 };
 
@@ -5534,6 +5665,66 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "set_multiple_hooks",
         ComponentLifecycle_set_multiple_hooks
+    },
+    {
+        "compare_WithGreaterThan",
+        ComponentLifecycle_compare_WithGreaterThan
+    },
+    {
+        "compare_WithLessThan",
+        ComponentLifecycle_compare_WithLessThan
+    },
+    {
+        "compare_WithLessAndGreaterThan",
+        ComponentLifecycle_compare_WithLessAndGreaterThan
+    },
+    {
+        "compare_WithEqualsAndGreaterThan",
+        ComponentLifecycle_compare_WithEqualsAndGreaterThan
+    },
+    {
+        "compare_WithEqualsAndLessThan",
+        ComponentLifecycle_compare_WithEqualsAndLessThan
+    },
+    {
+        "compare_WithEqualsOnly",
+        ComponentLifecycle_compare_WithEqualsOnly
+    },
+    {
+        "compare_WithoutOperators",
+        ComponentLifecycle_compare_WithoutOperators
+    },
+    {
+        "compare_uint8_Enum",
+        ComponentLifecycle_compare_uint8_Enum
+    },
+    {
+        "compare_uint16_Enum",
+        ComponentLifecycle_compare_uint16_Enum
+    },
+    {
+        "compare_uint32_Enum",
+        ComponentLifecycle_compare_uint32_Enum
+    },
+    {
+        "compare_uint64_Enum",
+        ComponentLifecycle_compare_uint64_Enum
+    },
+    {
+        "compare_int8_Enum",
+        ComponentLifecycle_compare_int8_Enum
+    },
+    {
+        "compare_int16_Enum",
+        ComponentLifecycle_compare_int16_Enum
+    },
+    {
+        "compare_int32_Enum",
+        ComponentLifecycle_compare_int32_Enum
+    },
+    {
+        "compare_int64_Enum",
+        ComponentLifecycle_compare_int64_Enum
     }
 };
 
@@ -5569,6 +5760,14 @@ bake_test_case Refs_testcases[] = {
     {
         "pair_ref",
         Refs_pair_ref
+    },
+    {
+        "pair_ref_w_pair_type",
+        Refs_pair_ref_w_pair_type
+    },
+    {
+        "pair_ref_w_pair_type_second",
+        Refs_pair_ref_w_pair_type_second
     },
     {
         "pair_ref_w_entity",
@@ -5621,6 +5820,18 @@ bake_test_case Refs_testcases[] = {
     {
         "get_component",
         Refs_get_component
+    },
+    {
+        "untyped_get_ref_by_method",
+        Refs_untyped_get_ref_by_method
+    },
+    {
+        "untyped_pair_ref",
+        Refs_untyped_pair_ref
+    },
+    {
+        "untyped_runtime_component_ref",
+        Refs_untyped_runtime_component_ref
     }
 };
 
@@ -5716,6 +5927,10 @@ bake_test_case Module_testcases[] = {
     {
         "reimport_after_delete",
         Module_reimport_after_delete
+    },
+    {
+        "component_name_w_module_name",
+        Module_component_name_w_module_name
     }
 };
 
@@ -6353,6 +6568,14 @@ bake_test_case World_testcases[] = {
     {
         "world_init_fini_log_all",
         World_world_init_fini_log_all
+    },
+    {
+        "exclusive_access_self_mutate",
+        World_exclusive_access_self_mutate
+    },
+    {
+        "exclusive_access_other_mutate",
+        World_exclusive_access_other_mutate
     }
 };
 
@@ -6436,6 +6659,10 @@ bake_test_case Singleton_testcases[] = {
     {
         "get_target",
         Singleton_get_target
+    },
+    {
+        "singleton_enum",
+        Singleton_singleton_enum
     }
 };
 
@@ -6820,6 +7047,14 @@ bake_test_case Meta_testcases[] = {
         Meta_ser_deser_type_w_std_string_std_vector_std_string
     },
     {
+        "std_vector_random_access",
+        Meta_std_vector_random_access
+    },
+    {
+        "struct_random_access",
+        Meta_struct_random_access
+    },
+    {
         "ser_deser_flecs_entity",
         Meta_ser_deser_flecs_entity
     },
@@ -7072,7 +7307,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        280,
+        284,
         Entity_testcases
     },
     {
@@ -7086,7 +7321,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        51,
+        52,
         Enum_testcases
     },
     {
@@ -7128,14 +7363,14 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        123,
+        136,
         Query_testcases
     },
     {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        173,
+        176,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params
@@ -7158,21 +7393,21 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        89,
+        104,
         ComponentLifecycle_testcases
     },
     {
         "Refs",
         NULL,
         NULL,
-        21,
+        26,
         Refs_testcases
     },
     {
         "Module",
         NULL,
         NULL,
-        23,
+        24,
         Module_testcases
     },
     {
@@ -7193,14 +7428,14 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        117,
+        119,
         World_testcases
     },
     {
         "Singleton",
         NULL,
         NULL,
-        20,
+        21,
         Singleton_testcases
     },
     {
@@ -7214,7 +7449,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        61,
+        63,
         Meta_testcases
     },
     {

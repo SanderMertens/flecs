@@ -35,21 +35,21 @@ void* ecs_table_cache_get(
 #define flecs_table_cache_count(cache) (cache)->tables.count
 
 bool flecs_table_cache_iter(
-    ecs_table_cache_t *cache,
+    const ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out);
 
 bool flecs_table_cache_empty_iter(
-    ecs_table_cache_t *cache,
+    const ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out);
 
 bool flecs_table_cache_all_iter(
-    ecs_table_cache_t *cache,
+    const ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out);
 
-ecs_table_cache_hdr_t* flecs_table_cache_next_(
+const ecs_table_cache_hdr_t* flecs_table_cache_next_(
     ecs_table_cache_iter_t *it);
 
 #define flecs_table_cache_next(it, T)\
-    (ECS_CAST(T*, flecs_table_cache_next_(it)))
+    (ECS_CONST_CAST(T*, flecs_table_cache_next_(it)))
 
 #endif

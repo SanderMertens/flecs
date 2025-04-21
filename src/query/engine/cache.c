@@ -563,7 +563,8 @@ ecs_query_cache_table_t* flecs_query_cache_table_insert(
         qt->table_id = 0;
     }
 
-    ecs_table_cache_insert(&cache->cache, table, &qt->hdr);
+    ecs_table_cache_insert(&cache->cache, table, 
+        ECS_CONST_CAST(ecs_table_cache_hdr_t*, &qt->hdr));
 
     return qt;
 }
@@ -607,6 +608,10 @@ bool flecs_query_cache_match_table(
 
     ecs_query_cache_table_t *qt = NULL;
     ecs_query_t *q = cache->query;
+
+    if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+        return false;
+    }
 
     /* Iterate uncached query for table to check if it matches. If this is a
      * wildcard query, a table can match multiple times. */
@@ -795,7 +800,8 @@ void flecs_query_cache_unmatch_table(
         elem = ecs_table_cache_get(&cache->cache, table);
     }
     if (elem) {
-        ecs_table_cache_remove(&cache->cache, elem->table_id, &elem->hdr);
+        ecs_table_cache_remove(&cache->cache, elem->table_id, 
+            ECS_CONST_CAST(ecs_table_cache_hdr_t*, &elem->hdr));
         flecs_query_cache_table_free(cache, elem);
     }
 }
@@ -1237,7 +1243,7 @@ ecs_query_cache_t* flecs_query_cache_init(
         /* ecs_query_init could have moved away resources from the terms array
          * in the descriptor, so use the terms array from the query. */
         ecs_os_memcpy_n(observer_desc.query.terms, q->terms, 
-            ecs_term_t, FLECS_TERM_COUNT_MAX);
+            ecs_term_t, q->term_count);
         observer_desc.query.expr = NULL; /* Already parsed */
 
         result->observer = flecs_observer_init(world, entity, &observer_desc);

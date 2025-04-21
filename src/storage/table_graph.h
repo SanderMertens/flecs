@@ -19,13 +19,6 @@ typedef struct ecs_table_diff_builder_t {
     ecs_flags32_t removed_flags;
 } ecs_table_diff_builder_t;
 
-typedef struct ecs_table_diff_t {
-    ecs_type_t added;                /* Components added between tables */
-    ecs_type_t removed;              /* Components removed between tables */
-    ecs_flags32_t added_flags;
-    ecs_flags32_t removed_flags;
-} ecs_table_diff_t;
-
 /** Edge linked list (used to keep track of incoming edges) */
 typedef struct ecs_graph_edge_hdr_t {
     struct ecs_graph_edge_hdr_t *prev;
@@ -57,12 +50,27 @@ typedef struct ecs_graph_node_t {
     ecs_graph_edge_hdr_t refs;
 } ecs_graph_node_t;
 
-/* Find table by adding id to current table */
-ecs_table_t *flecs_table_traverse_add(
+/** Add to existing type */
+void flecs_type_add(
     ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t *id_ptr,
-    ecs_table_diff_t *diff);
+    ecs_type_t *type,
+    ecs_id_t add);
+
+/* Remove from existing type */
+void flecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t remove);
+
+/** Copy type. */
+ecs_type_t flecs_type_copy(
+    ecs_world_t *world,
+    const ecs_type_t *src);
+
+/** Free type. */
+void flecs_type_free(
+    ecs_world_t *world,
+    ecs_type_t *type);
 
 /* Find table by removing id from current table */
 ecs_table_t *flecs_table_traverse_remove(

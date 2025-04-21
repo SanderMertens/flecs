@@ -27,10 +27,9 @@ bool flecs_path_append(
 
     if (child && ecs_is_alive(world, child)) {
         ecs_record_t *r = flecs_entities_get(world, child);
-        bool hasName = false;
-        if (r && r->table) {
-            hasName = r->table->flags & EcsTableHasName;
-        }
+        ecs_assert(r != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+        bool hasName = r->table->flags & EcsTableHasName;
 
         if (hasName) {
             cur = ecs_get_target(world, child, EcsChildOf, 0);
@@ -401,7 +400,11 @@ ecs_entity_t ecs_lookup_child(
     }
 
     ecs_id_t pair = ecs_childof(parent);
-    ecs_hashmap_t *index = flecs_id_name_index_get(world, pair);
+    ecs_component_record_t *cr = flecs_components_get(world, pair);
+    ecs_hashmap_t *index = NULL;
+    if (cr) {
+        index = flecs_component_name_index_get(world, cr);
+    }
     if (index) {
         return flecs_name_index_find(index, name, 0, 0);
     } else {

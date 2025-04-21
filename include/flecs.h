@@ -33,7 +33,7 @@
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
 #define FLECS_VERSION_MINOR 0  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 4  /**< Flecs patch version. */
+#define FLECS_VERSION_PATCH 5  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
@@ -171,6 +171,12 @@
  */
 // #define FLECS_CPP_NO_ENUM_REFLECTION
 
+/** @def FLECS_NO_ALWAYS_INLINE
+ * When set, this will prevent functions from being annotated with always_inline
+ * which can improve performance at the cost of increased binary footprint.
+ */
+// #define FLECS_NO_ALWAYS_INLINE
+
 /** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
  * Without any addons Flecs is just a minimal ECS storage, but addons add
@@ -234,9 +240,9 @@
 #ifdef FLECS_LOW_FOOTPRINT
 #define FLECS_HI_COMPONENT_ID (16)
 #define FLECS_HI_ID_RECORD_ID (16)
-#define FLECS_SPARSE_PAGE_BITS (4)
 #define FLECS_ENTITY_PAGE_BITS (6)
 #define FLECS_USE_OS_ALLOC
+#define FLECS_DEFAULT_TO_UNCACHED_QUERIES
 #endif
 
 /** @def FLECS_HI_COMPONENT_ID
@@ -255,7 +261,7 @@
 
 /** @def FLECS_HI_ID_RECORD_ID
  * This constant can be used to balance between performance and memory
- * utilization. The constant is used to determine the size of the id record
+ * utilization. The constant is used to determine the size of the component record
  * lookup array. Id values that fall outside of this range use a regular map
  * lookup, which is slower but more memory efficient.
  */
@@ -275,7 +281,7 @@
 /** @def FLECS_ENTITY_PAGE_BITS
  * Same as FLECS_SPARSE_PAGE_BITS, but for the entity index. */
 #ifndef FLECS_ENTITY_PAGE_BITS
-#define FLECS_ENTITY_PAGE_BITS (12)
+#define FLECS_ENTITY_PAGE_BITS (10)
 #endif
 
 /** @def FLECS_USE_OS_ALLOC
@@ -484,7 +490,7 @@ typedef struct ecs_type_info_t ecs_type_info_t;
 typedef struct ecs_record_t ecs_record_t;
 
 /** Information about a (component) id, such as type info and tables with the id */
-typedef struct ecs_id_record_t ecs_id_record_t;
+typedef struct ecs_component_record_t ecs_component_record_t;
 
 /** A poly object.
  * A poly (short for polymorph) object is an object that has a variable list of
@@ -512,37 +518,12 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 
 /** Header for ecs_poly_t objects. */
 typedef struct ecs_header_t {
-    int32_t magic;              /**< Magic number verifying it's a flecs object */
     int32_t type;               /**< Magic number indicating which type of flecs object */
     int32_t refcount;           /**< Refcount, to enable RAII handles */
     ecs_mixins_t *mixins;       /**< Table with offsets to (optional) mixins */
 } ecs_header_t;
 
-/** Record for entity index */
-struct ecs_record_t {
-    ecs_id_record_t *idr;       /**< Id record to (*, entity) for target entities */
-    ecs_table_t *table;         /**< Identifies a type (and table) in world */
-    uint32_t row;               /**< Table row of the entity */
-    int32_t dense;              /**< Index in dense array of entity index */    
-};
-
-/** Header for table cache elements. */
-typedef struct ecs_table_cache_hdr_t {
-    struct ecs_table_cache_t *cache;  /**< Table cache of element. Of type ecs_id_record_t* for component index elements. */
-    ecs_table_t *table;               /**< Table associated with element. */
-    struct ecs_table_cache_hdr_t *prev, *next; /**< Next/previous elements for id in table cache. */
-} ecs_table_cache_hdr_t;
-
-/** Metadata describing where a component id is stored in a table.
- * This type is used as element type for the component index table cache. One
- * record exists per table/component in the table. Only records for wildcard ids
- * can have a count > 1. */
-typedef struct ecs_table_record_t {
-    ecs_table_cache_hdr_t hdr;  /**< Table cache header */
-    int16_t index;              /**< First type index where id occurs in table */
-    int16_t count;              /**< Number of times id occurs in table */
-    int16_t column;             /**< First column index where id occurs */
-} ecs_table_record_t;
+typedef struct ecs_table_record_t ecs_table_record_t;
 
 /** @} */
 
@@ -670,6 +651,18 @@ typedef void (*ecs_move_t)(
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
+    const ecs_type_info_t *type_info);
+
+/** Compare hook to compare component instances */
+typedef int (*ecs_cmp_t)(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info);
+
+/** Equals operator hook */
+typedef bool (*ecs_equals_t)(
+    const void *a_ptr,
+    const void *b_ptr,
     const ecs_type_info_t *type_info);
 
 /** Destructor function for poly objects. */
@@ -819,10 +812,11 @@ struct ecs_term_t {
 struct ecs_query_t {
     ecs_header_t hdr;           /**< Object header */
 
-    ecs_term_t terms[FLECS_TERM_COUNT_MAX]; /**< Query terms */
-    int32_t sizes[FLECS_TERM_COUNT_MAX]; /**< Component sizes. Indexed by field */
-    ecs_id_t ids[FLECS_TERM_COUNT_MAX]; /**< Component ids. Indexed by field */
+    ecs_term_t *terms;          /**< Query terms */
+    int32_t *sizes;             /**< Component sizes. Indexed by field */
+    ecs_id_t *ids;              /**< Component ids. Indexed by field */
 
+    uint64_t bloom_filter;      /**< Bitmask used to quickly discard tables */
     ecs_flags32_t flags;        /**< Query flags */
     int8_t var_count;           /**< Number of query variables */
     int8_t term_count;          /**< Number of query terms */
@@ -890,38 +884,44 @@ struct ecs_observer_t {
  */
 
 /* Flags that can be used to check which hooks a type has set */
-#define ECS_TYPE_HOOK_CTOR                   (1 << 0)
-#define ECS_TYPE_HOOK_DTOR                   (1 << 1)
-#define ECS_TYPE_HOOK_COPY                   (1 << 2)
-#define ECS_TYPE_HOOK_MOVE                   (1 << 3)
-#define ECS_TYPE_HOOK_COPY_CTOR              (1 << 4)
-#define ECS_TYPE_HOOK_MOVE_CTOR              (1 << 5)
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         (1 << 6)
-#define ECS_TYPE_HOOK_MOVE_DTOR              (1 << 7)
+#define ECS_TYPE_HOOK_CTOR                   ECS_CAST(ecs_flags32_t, 1 << 0)
+#define ECS_TYPE_HOOK_DTOR                   ECS_CAST(ecs_flags32_t, 1 << 1)
+#define ECS_TYPE_HOOK_COPY                   ECS_CAST(ecs_flags32_t, 1 << 2)
+#define ECS_TYPE_HOOK_MOVE                   ECS_CAST(ecs_flags32_t, 1 << 3)
+#define ECS_TYPE_HOOK_COPY_CTOR              ECS_CAST(ecs_flags32_t, 1 << 4)
+#define ECS_TYPE_HOOK_MOVE_CTOR              ECS_CAST(ecs_flags32_t, 1 << 5)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         ECS_CAST(ecs_flags32_t, 1 << 6)
+#define ECS_TYPE_HOOK_MOVE_DTOR              ECS_CAST(ecs_flags32_t, 1 << 7)
+#define ECS_TYPE_HOOK_CMP                    ECS_CAST(ecs_flags32_t, 1 << 8)
+#define ECS_TYPE_HOOK_EQUALS                 ECS_CAST(ecs_flags32_t, 1 << 9)
+
 
 /* Flags that can be used to set/check which hooks of a type are invalid */
-#define ECS_TYPE_HOOK_CTOR_ILLEGAL           (1 << 8)
-#define ECS_TYPE_HOOK_DTOR_ILLEGAL           (1 << 9)
-#define ECS_TYPE_HOOK_COPY_ILLEGAL           (1 << 10)
-#define ECS_TYPE_HOOK_MOVE_ILLEGAL           (1 << 11)
-#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      (1 << 12)
-#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      (1 << 13)
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL (1 << 14)
-#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      (1 << 15)
+#define ECS_TYPE_HOOK_CTOR_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 10)
+#define ECS_TYPE_HOOK_DTOR_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 12)
+#define ECS_TYPE_HOOK_COPY_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 13)
+#define ECS_TYPE_HOOK_MOVE_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 14)
+#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 15)
+#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 16)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL ECS_CAST(ecs_flags32_t, 1 << 17)
+#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 18)
+#define ECS_TYPE_HOOK_CMP_ILLEGAL            ECS_CAST(ecs_flags32_t, 1 << 19)
+#define ECS_TYPE_HOOK_EQUALS_ILLEGAL         ECS_CAST(ecs_flags32_t, 1 << 20)
+
 
 /* All valid hook flags */
 #define ECS_TYPE_HOOKS (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|\
     ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_COPY_CTOR|\
     ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|\
-    ECS_TYPE_HOOK_MOVE_DTOR)
+    ECS_TYPE_HOOK_MOVE_DTOR|ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS)
 
 /* All invalid hook flags */
 #define ECS_TYPE_HOOKS_ILLEGAL (ECS_TYPE_HOOK_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_DTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|\
-    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL)
-
+    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_CMP_ILLEGAL|\
+    ECS_TYPE_HOOK_EQUALS_ILLEGAL)
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
     ecs_xtor_t dtor;            /**< dtor */
@@ -946,11 +946,18 @@ struct ecs_type_hooks_t {
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
 
+    /** Compare hook */
+    ecs_cmp_t cmp;
+
+    /** Equals hook */
+    ecs_equals_t equals;
+
     /** Hook flags.
      * Indicates which hooks are set for the type, and which hooks are illegal.
      * When an ILLEGAL flag is set when calling ecs_set_hooks() a hook callback
      * will be set that panics when called. */
     ecs_flags32_t flags;
+    
 
     /** Callback that is invoked when an instance of a component is added. This
      * callback is invoked before triggers are invoked. */
@@ -990,6 +997,7 @@ struct ecs_type_info_t {
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
 #include "flecs/datastructures/hashmap.h"   /* Hashmap */
+#include "flecs/private/api_internals.h"    /* Supporting API functions */
 
 /** Utility to hold a value of a dynamic type. */
 typedef struct ecs_value_t {
@@ -1847,6 +1855,9 @@ FLECS_API extern const ecs_entity_t EcsPanic;
 /** Mark component as sparse */
 FLECS_API extern const ecs_entity_t EcsSparse;
 
+/** Mark component as non-fragmenting */
+FLECS_API extern const ecs_entity_t EcsDontFragment;
+
 /** Mark relationship as union */
 FLECS_API extern const ecs_entity_t EcsUnion;
 
@@ -2536,6 +2547,24 @@ void ecs_dim(
     ecs_world_t *world,
     int32_t entity_count);
 
+/** Free unused memory.
+ * This operation frees allocated memory that is no longer in use by the world.
+ * Examples of allocations that get cleaned up are:
+ * - Unused pages in the entity index
+ * - Component columns
+ * - Empty tables
+ * 
+ * Flecs uses allocators internally for speeding up allocations. Allocators are
+ * not evaluated by this function, which means that the memory reported by the
+ * OS may not go down. For this reason, this function is most effective when
+ * combined with FLECS_USE_OS_ALLOC, which disables internal allocators.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_shrink(
+    ecs_world_t *world);
+
 /** Set a range for issuing new entity ids.
  * This function constrains the entity identifiers returned by ecs_new_w() to the
  * specified range. This operation can be used to ensure that multiple processes
@@ -2699,6 +2728,42 @@ FLECS_API
 ecs_id_t ecs_make_pair(
     ecs_entity_t first,
     ecs_entity_t second);
+
+/** Begin exclusive thread access.
+ * This operation ensures that only the thread from which this operation is 
+ * called can mutate the world. Attempts to mutate the world from other threads
+ * will panic. 
+ * 
+ * ecs_exclusive_access_begin() must be called in pairs with 
+ * ecs_exclusive_access_end(). Calling ecs_exclusive_access_begin() from another
+ * thread without first calling ecs_exclusive_access_end() will panic.
+ * 
+ * This operation should only be called once per thread. Calling it multiple 
+ * times for the same thread will cause a panic.
+ * 
+ * Note that this feature only works in builds where asserts are enabled. The
+ * feature requires the OS API thread_self_ callback to be set.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_exclusive_access_begin(
+    ecs_world_t *world);
+
+/** End exclusive thread access.
+ * This operation should be called after ecs_exclusive_access_begin(). After
+ * calling this operation other threads are no longer prevented from mutating
+ * the world.
+ * 
+ * This operation must be called from the same thread that called
+ * ecs_exclusive_access_begin(). Calling it from a different thread will cause
+ * a panic.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_exclusive_access_end(
+    ecs_world_t *world);
 
 /** @} */
 
@@ -3115,7 +3180,7 @@ bool ecs_is_enabled_id(
  * @see ecs_get_mut_id()
  */
 FLECS_API
-const void* ecs_get_id(
+FLECS_ALWAYS_INLINE const void* ecs_get_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -3132,7 +3197,7 @@ const void* ecs_get_id(
  * @return The component pointer, NULL if the entity does not have the component.
  */
 FLECS_API
-void* ecs_get_mut_id(
+FLECS_ALWAYS_INLINE void* ecs_get_mut_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -3218,164 +3283,6 @@ FLECS_API
 void ecs_ref_update(
     const ecs_world_t *world,
     ecs_ref_t *ref);
-
-/** Find record for entity. 
- * An entity record contains the table and row for the entity.
- * 
- * @param world The world.
- * @param entity The entity.
- * @return The record, NULL if the entity does not exist.
- */
-FLECS_API
-ecs_record_t* ecs_record_find(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Begin exclusive write access to entity.
- * This operation provides safe exclusive access to the components of an entity
- * without the overhead of deferring operations.
- *
- * When this operation is called simultaneously for the same entity more than
- * once it will throw an assert. Note that for this to happen, asserts must be
- * enabled. It is up to the application to ensure that access is exclusive, for
- * example by using a read-write mutex.
- *
- * Exclusive access is enforced at the table level, so only one entity can be
- * exclusively accessed per table. The exclusive access check is thread safe.
- *
- * This operation must be followed up with ecs_write_end().
- *
- * @param world The world.
- * @param entity The entity.
- * @return A record to the entity.
- */
-FLECS_API
-ecs_record_t* ecs_write_begin(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** End exclusive write access to entity.
- * This operation ends exclusive access, and must be called after
- * ecs_write_begin().
- *
- * @param record Record to the entity.
- */
-FLECS_API
-void ecs_write_end(
-    ecs_record_t *record);
-
-/** Begin read access to entity.
- * This operation provides safe read access to the components of an entity.
- * Multiple simultaneous reads are allowed per entity.
- *
- * This operation ensures that code attempting to mutate the entity's table will
- * throw an assert. Note that for this to happen, asserts must be enabled. It is
- * up to the application to ensure that this does not happen, for example by
- * using a read-write mutex.
- *
- * This operation does *not* provide the same guarantees as a read-write mutex,
- * as it is possible to call ecs_read_begin() after calling ecs_write_begin(). It is
- * up to application has to ensure that this does not happen.
- *
- * This operation must be followed up with ecs_read_end().
- *
- * @param world The world.
- * @param entity The entity.
- * @return A record to the entity.
- */
-FLECS_API
-const ecs_record_t* ecs_read_begin(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** End read access to entity.
- * This operation ends read access, and must be called after ecs_read_begin().
- *
- * @param record Record to the entity.
- */
-FLECS_API
-void ecs_read_end(
-    const ecs_record_t *record);
-
-/** Get entity corresponding with record.
- * This operation only works for entities that are not empty.
- *
- * @param record The record for which to obtain the entity id.
- * @return The entity id for the record.
- */
-FLECS_API
-ecs_entity_t ecs_record_get_entity(
-    const ecs_record_t *record);
-
-/** Get component from entity record.
- * This operation returns a pointer to a component for the entity
- * associated with the provided record. For safe access to the component, obtain
- * the record with ecs_read_begin() or ecs_write_begin().
- *
- * Obtaining a component from a record is faster than obtaining it from the
- * entity handle, as it reduces the number of lookups required.
- *
- * @param world The world.
- * @param record Record to the entity.
- * @param id The (component) id.
- * @return Pointer to component, or NULL if entity does not have the component.
- *
- * @see ecs_record_ensure_id()
- */
-FLECS_API
-const void* ecs_record_get_id(
-    const ecs_world_t *world,
-    const ecs_record_t *record,
-    ecs_id_t id);
-
-/** Same as ecs_record_get_id(), but returns a mutable pointer.
- * For safe access to the component, obtain the record with ecs_write_begin().
- *
- * @param world The world.
- * @param record Record to the entity.
- * @param id The (component) id.
- * @return Pointer to component, or NULL if entity does not have the component.
- */
-FLECS_API
-void* ecs_record_ensure_id(
-    ecs_world_t *world,
-    ecs_record_t *record,
-    ecs_id_t id);
-
-/** Test if entity for record has a (component) id.
- *
- * @param world The world.
- * @param record Record to the entity.
- * @param id The (component) id.
- * @return Whether the entity has the component.
- */
-FLECS_API
-bool ecs_record_has_id(
-    ecs_world_t *world,
-    const ecs_record_t *record,
-    ecs_id_t id);
-
-/** Get component pointer from column/record. 
- * This returns a pointer to the component using a table column index. The
- * table's column index can be found with ecs_table_get_column_index().
- * 
- * Usage:
- * @code
- * ecs_record_t *r = ecs_record_find(world, entity);
- * int32_t column = ecs_table_get_column_index(world, table, ecs_id(Position));
- * Position *ptr = ecs_record_get_by_column(r, column, sizeof(Position));
- * @endcode
- * 
- * @param record The record.
- * @param column The column index in the entity's table.
- * @param size The component size.
- * @return The component pointer.
- */
-FLECS_API
-void* ecs_record_get_by_column(
-    const ecs_record_t *record,
-    int32_t column,
-    size_t size);
 
 /** Emplace a component.
  * Emplace is similar to ecs_ensure_id() except that the component constructor
@@ -3703,7 +3610,7 @@ char* ecs_entity_str(
  * @see ecs_owns_id()
  */
 FLECS_API
-bool ecs_has_id(
+FLECS_ALWAYS_INLINE bool ecs_has_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -3719,7 +3626,7 @@ bool ecs_has_id(
  * @return True if the entity has the id, false if not.
  */
 FLECS_API
-bool ecs_owns_id(
+FLECS_ALWAYS_INLINE bool ecs_owns_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -4047,6 +3954,7 @@ char* ecs_get_path_w_sep(
  *
  * @see ecs_get_path_w_sep()
  */
+FLECS_API
 void ecs_get_path_w_sep_buf(
     const ecs_world_t *world,
     ecs_entity_t parent,

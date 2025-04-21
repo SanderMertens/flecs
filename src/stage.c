@@ -37,7 +37,7 @@ ecs_cmd_t* flecs_cmd_new_batched(
     ecs_entity_t e)
 {
     ecs_vec_t *cmds = &stage->cmd->queue;
-    ecs_cmd_entry_t *entry = flecs_sparse_get_any_t(
+    ecs_cmd_entry_t *entry = flecs_sparse_get_t(
         &stage->cmd->entries, ecs_cmd_entry_t, e);
 
     int32_t cur = ecs_vec_count(cmds);
@@ -138,6 +138,7 @@ bool flecs_defer_begin(
 {
     flecs_poly_assert(world, ecs_world_t);
     flecs_poly_assert(stage, ecs_stage_t);
+    flecs_check_exclusive_world_access(world);
     (void)world;
     if (stage->defer < 0) return false;
     return (++ stage->defer) == 1;
@@ -154,13 +155,28 @@ bool flecs_defer_cmd(
     return false;
 }
 
+bool flecs_defer_new(
+    ecs_stage_t *stage,
+    ecs_entity_t entity)
+{
+    if (flecs_defer_cmd(stage)) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
+        if (cmd) {
+            cmd->kind = EcsCmdNew;
+            cmd->entity = entity;
+        }
+        return true;
+    }
+    return false; 
+}
+
 bool flecs_defer_modified(
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_id_t id)
 {
     if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
         if (cmd) {
             cmd->kind = EcsCmdModified;
             cmd->id = id;
@@ -338,26 +354,26 @@ void* flecs_defer_set(
 
     /* Find type info for id */
     const ecs_type_info_t *ti = NULL;
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (!idr) {
-        /* If idr doesn't exist yet, create it but only if the 
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (!cr) {
+        /* If cr doesn't exist yet, create it but only if the 
          * application is not multithreaded. */
         if (world->flags & EcsWorldMultiThreaded) {
             ti = ecs_get_type_info(world, id);
         } else {
             /* When not in multi threaded mode, it's safe to find or 
-             * create the id record. */
-            idr = flecs_id_record_ensure(world, id);
-            ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+             * create the component record. */
+            cr = flecs_components_ensure(world, id);
+            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
             
-            /* Get type_info from id record. We could have called 
+            /* Get type_info from component record. We could have called 
              * ecs_get_type_info directly, but since this function can be
-             * expensive for pairs, creating the id record ensures we can
+             * expensive for pairs, creating the component record ensures we can
              * find the type_info quickly for subsequent operations. */
-            ti = idr->type_info;
+            ti = cr->type_info;
         }
     } else {
-        ti = idr->type_info;
+        ti = cr->type_info;
     }
 
     /* If the id isn't associated with a type, we can't set anything */
@@ -373,23 +389,23 @@ void* flecs_defer_set(
      * component of a prefab. */
     void *existing = NULL;
     ecs_table_t *table = NULL;
-    if (idr) {
+    if (cr) {
         /* Entity can only have existing component if id record exists */
-        ecs_record_t *r = flecs_entities_get(world, entity);
-        table = r->table;
-        if (r && table) {
-            const ecs_table_record_t *tr = flecs_id_record_get_table(
-                idr, table);
-            if (tr) {
-                if (tr->column != -1) {
-                    /* Entity has the component */
-                    existing = table->data.columns[tr->column].data;
-                    existing = ECS_ELEM(existing, size, 
-                        ECS_RECORD_TO_ROW(r->row));
-                } else {
-                    ecs_assert(idr->flags & EcsIdIsSparse, 
-                        ECS_NOT_A_COMPONENT, NULL);
-                    existing = flecs_sparse_get_any(idr->sparse, 0, entity);
+        if (cr->flags & EcsIdIsSparse) {
+            existing = flecs_sparse_get(cr->sparse, 0, entity);
+        } else {
+            ecs_record_t *r = flecs_entities_get(world, entity);
+            table = r->table;
+            if (r && table) {
+                const ecs_table_record_t *tr = flecs_component_get_table(
+                    cr, table);
+                if (tr) {
+                    if (tr->column != -1) {
+                        /* Entity has the component */
+                        existing = table->data.columns[tr->column].data;
+                        existing = ECS_ELEM(existing, size, 
+                            ECS_RECORD_TO_ROW(r->row));
+                    }
                 }
             }
         }
@@ -433,7 +449,7 @@ void* flecs_defer_set(
             /* Check if entity inherits component */
             void *base = NULL;
             if (table && (table->flags & EcsTableHasIsA)) {
-                base = flecs_get_base_component(world, table, id, idr, 0);
+                base = flecs_get_base_component(world, table, id, cr, 0);
             }
 
             if (!base) {
@@ -475,11 +491,12 @@ void* flecs_defer_set(
         cmd = flecs_cmd_new(stage);
     }
 
+    
     if (!existing) {
         /* If component didn't exist yet, insert command that will create it */
         cmd->kind = cmd_kind;
         cmd->id = id;
-        cmd->idr = idr;
+        cmd->cr = cr;
         cmd->entity = entity;
         cmd->is._1.size = size;
         cmd->is._1.value = cmd_value;
@@ -895,6 +912,15 @@ bool ecs_stage_is_readonly(
     }
 
     return false;
+}
+
+void ecs_stage_shrink(
+    ecs_stage_t *stage)
+{
+    flecs_sparse_shrink(&stage->cmd_stack[0].entries);
+    flecs_sparse_shrink(&stage->cmd_stack[1].entries);
+    ecs_vec_reclaim_t(&stage->allocator, &stage->cmd_stack[0].queue, ecs_cmd_t);
+    ecs_vec_reclaim_t(&stage->allocator, &stage->cmd_stack[1].queue, ecs_cmd_t);
 }
 
 bool ecs_is_deferred(

@@ -6640,7 +6640,7 @@ void Observer_wildcard_propagate_w_other_table(void) {
         .callback = Observer_dummy
     });
 
-    ecs_observer(world, {
+    ecs_entity_t o = ecs_observer(world, {
         .query.terms = {{ ecs_pair(rel, EcsWildcard) }},
         .events = {EcsWildcard},
         .callback = Observer_w_other_table,
@@ -6656,6 +6656,8 @@ void Observer_wildcard_propagate_w_other_table(void) {
     ecs_add_pair(world, parent, rel, tgt_1);
 
     test_int(ctx_parent.invoked, 1);
+
+    ecs_delete(world, o);
 
     ecs_fini(world);
 }
@@ -9048,7 +9050,7 @@ void Observer_get_filter(void) {
 
     ecs_entity_t o = ecs_observer(world, {
         .query.terms = {
-            { .id = ecs_id(Position) }
+            { .id = ecs_id(Position), .src.id = EcsSelf|EcsUp }
         },
         .callback = Observer,
         .events = { EcsOnAdd },

@@ -36,9 +36,9 @@ bool flecs_json_serialize_table_type_info(
     int32_t i, type_count = table->type.count;
     for (i = 0; i < type_count; i ++) {
         const ecs_table_record_t *tr = &table->_->records[i];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
         ecs_id_t id = table->type.array[i];
-        if (!(idr->flags & EcsIdIsSparse) && 
+        if (!(cr->flags & EcsIdIsSparse) && 
              (!table->column_map || (table->column_map[i] == -1))) 
         {
             continue;
@@ -50,7 +50,7 @@ bool flecs_json_serialize_table_type_info(
             }
         }
 
-        const ecs_type_info_t *ti = idr->type_info;
+        const ecs_type_info_t *ti = cr->type_info;
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
         flecs_json_next(buf);
@@ -97,14 +97,14 @@ bool flecs_json_serialize_table_tags(
         }
 
         const ecs_table_record_t *tr = &trs[f];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
 
         if (src_table) {
-            if (!(idr->flags & EcsIdOnInstantiateInherit)) {
+            if (!(cr->flags & EcsIdOnInstantiateInherit)) {
                 continue;
             }
         }
-        if (idr->flags & EcsIdIsSparse) {
+        if (cr->flags & EcsIdIsSparse) {
             continue;
         }
 
@@ -164,14 +164,14 @@ bool flecs_json_serialize_table_pairs(
         }
 
         const ecs_table_record_t *tr = &trs[f];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
 
         if (src_table) {
-            if (!(idr->flags & EcsIdOnInstantiateInherit)) {
+            if (!(cr->flags & EcsIdOnInstantiateInherit)) {
                 continue;
             }
         }
-        if (idr->flags & EcsIdIsSparse) {
+        if (cr->flags & EcsIdIsSparse) {
             continue;
         }
 
@@ -262,10 +262,10 @@ int flecs_json_serialize_table_components(
 
         void *ptr;
         const ecs_table_record_t *tr = &table->_->records[i];
-        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
 
         if (src_table) {
-            if (!(idr->flags & EcsIdOnInstantiateInherit)) {
+            if (!(cr->flags & EcsIdOnInstantiateInherit)) {
                 continue;
             }
         }
@@ -277,12 +277,12 @@ int flecs_json_serialize_table_components(
             ti = column->ti;
             ptr = ECS_ELEM(column->data, ti->size, row);
         } else {
-            if (!(idr->flags & EcsIdIsSparse)) {
+            if (!(cr->flags & EcsIdIsSparse)) {
                 continue;
             }
             ecs_entity_t e = ecs_table_entities(table)[row];
-            ptr = flecs_sparse_get_any(idr->sparse, 0, e);
-            ti = idr->type_info;
+            ptr = flecs_sparse_get(cr->sparse, 0, e);
+            ti = cr->type_info;
         }
 
         if (!ptr) {
@@ -351,8 +351,8 @@ bool flecs_json_serialize_table_inherited_type(
         return false;
     }
 
-    const ecs_table_record_t *tr = flecs_id_record_get_table(
-        world->idr_isa_wildcard, table);
+    const ecs_table_record_t *tr = flecs_component_get_table(
+        world->cr_isa_wildcard, table);
     ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL); /* Table has IsA flag */
 
     int32_t i, start = tr->index, end = start + tr->count;

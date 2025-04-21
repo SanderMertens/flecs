@@ -62,8 +62,11 @@ void flecs_script_with_set_count(
         ecs_value_t *val = ecs_vec_get_t(&v->r->with, ecs_value_t, i);
         ecs_type_info_t *ti = ecs_vec_get_t(
             &v->r->with_type_info, ecs_type_info_t*, i)[0];
-        if (ti && ti->hooks.dtor) {
-            ti->hooks.dtor(val->ptr, 1, ti);
+        if (ti) {
+            if (ti->hooks.dtor) {
+                ti->hooks.dtor(val->ptr, 1, ti);
+            }
+            flecs_stack_free(val->ptr, ti->size);
         }
     }
 
@@ -108,16 +111,16 @@ const ecs_type_info_t* flecs_script_get_type_info(
     void *node,
     ecs_id_t id)
 {
-    ecs_id_record_t *idr = flecs_id_record_ensure(v->world, id);
-    if (!idr) {
+    ecs_component_record_t *cr = flecs_components_ensure(v->world, id);
+    if (!cr) {
         goto error;
     }
 
-    if (!idr->type_info) {
+    if (!cr->type_info) {
         goto error;
     }
 
-    return idr->type_info;
+    return cr->type_info;
 error:
     {
         char *idstr = ecs_id_str(v->world, id);

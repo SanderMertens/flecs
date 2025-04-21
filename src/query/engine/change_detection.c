@@ -127,12 +127,12 @@ bool flecs_query_get_fixed_monitor(
             continue; /* Entity is empty, nothing to track */
         }
 
-        ecs_id_record_t *idr = flecs_id_record_get(world, term->id);
-        if (!idr) {
+        ecs_component_record_t *cr = flecs_components_get(world, term->id);
+        if (!cr) {
             continue; /* If id doesn't exist, entity can't have it */
         }
 
-        ecs_table_record_t *tr = flecs_id_record_get_table(idr, r->table);
+        const ecs_table_record_t *tr = flecs_component_get_table(cr, r->table);
         if (!tr) {
             continue; /* Entity doesn't have the component */
         }
@@ -387,6 +387,11 @@ void flecs_query_mark_fields_dirty(
                  * default to readonly */
                 continue;
             }
+        }
+
+        const ecs_table_record_t *tr = it->trs[i];
+        if (!tr) {
+            continue; /* Non-fragmenting component */
         }
 
         int32_t type_index = it->trs[i]->index;
