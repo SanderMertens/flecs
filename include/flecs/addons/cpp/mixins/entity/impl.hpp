@@ -82,7 +82,7 @@ inline flecs::entity entity_view::target_for(flecs::entity_t relationship) const
 }
 
 inline flecs::entity entity_view::parent() const {
-    return target(flecs::ChildOf);
+    return flecs::entity(world_, ecs_get_parent(world_, id_));
 }
 
 inline flecs::entity entity_view::mut(const flecs::world& stage) const {
