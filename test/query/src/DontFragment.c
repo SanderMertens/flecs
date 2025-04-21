@@ -1627,6 +1627,95 @@ void DontFragment_1_var_sparse_written_not(void) {
     ecs_fini(world);
 }
 
+void DontFragment_1_sparse_component_unused(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_sparse_tag_unused(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new(world);
+    
+    ecs_add_id(world, tag, EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ tag }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_sparse_pair_wildcard_unused(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new(world);
+    
+    ecs_add_id(world, tag, EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair(tag, EcsWildcard) }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_sparse_pair_unused(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new(world);
+    ecs_entity_t tgt = ecs_new(world);
+    
+    ecs_add_id(world, tag, EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair(tag, tgt) }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void DontFragment_sparse_0_src_only_term(void) {
     ecs_world_t *world = ecs_mini();
 

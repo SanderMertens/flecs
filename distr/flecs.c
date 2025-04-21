@@ -76117,7 +76117,10 @@ bool flecs_query_sparse_init_sparse(
     ecs_query_sparse_ctx_t *op_ctx,
     ecs_component_record_t *cr)
 {
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!cr) {
+        return false;
+    }
+
     ecs_assert(cr->flags & EcsIdDontFragment, ECS_INTERNAL_ERROR, NULL);
 
     op_ctx->sparse = cr->sparse;

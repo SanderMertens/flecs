@@ -2015,6 +2015,10 @@ void DontFragment_1_this_sparse_not(void);
 void DontFragment_1_var_sparse_not(void);
 void DontFragment_1_this_sparse_written_not(void);
 void DontFragment_1_var_sparse_written_not(void);
+void DontFragment_1_sparse_component_unused(void);
+void DontFragment_1_sparse_tag_unused(void);
+void DontFragment_1_sparse_pair_wildcard_unused(void);
+void DontFragment_1_sparse_pair_unused(void);
 void DontFragment_sparse_0_src_only_term(void);
 void DontFragment_sparse_0_src(void);
 void DontFragment_sparse_pair_first(void);
@@ -10128,6 +10132,22 @@ bake_test_case DontFragment_testcases[] = {
         DontFragment_1_var_sparse_written_not
     },
     {
+        "1_sparse_component_unused",
+        DontFragment_1_sparse_component_unused
+    },
+    {
+        "1_sparse_tag_unused",
+        DontFragment_1_sparse_tag_unused
+    },
+    {
+        "1_sparse_pair_wildcard_unused",
+        DontFragment_1_sparse_pair_wildcard_unused
+    },
+    {
+        "1_sparse_pair_unused",
+        DontFragment_1_sparse_pair_unused
+    },
+    {
         "sparse_0_src_only_term",
         DontFragment_sparse_0_src_only_term
     },
@@ -11314,7 +11334,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        77,
+        81,
         DontFragment_testcases,
         1,
         DontFragment_params
