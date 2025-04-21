@@ -180,6 +180,38 @@ void FEnumComponentTestsSpec::Define()
 			TestTrue("Entity has Enum Component", TestEntity.HasPair<ETestEnum_SparseUENUM>(flecs::Wildcard));
 			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum_SparseUENUM>()));
 		});
+
+		It("Should Remove an Enum Component using Static API with Sparse UENUM", [this]()
+		{
+			FFlecsEntityHandle TestComponent = Fixture.FlecsWorld->RegisterScriptEnum(StaticEnum<ETestEnum_SparseUENUM>());
+			
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add(StaticEnum<ETestEnum_SparseUENUM>(), static_cast<int64>(ETestEnum_SparseUENUM::Five));
+			
+			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum_SparseUENUM>()));
+			TestTrue("Entity has Enum Component", TestEntity.HasPair<ETestEnum_SparseUENUM>(flecs::Wildcard));
+			
+			TestEntity.Remove(StaticEnum<ETestEnum_SparseUENUM>());
+			
+			TestFalse("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum_SparseUENUM>()));
+			TestFalse("Entity has Enum Component", TestEntity.HasPair<ETestEnum_SparseUENUM>(flecs::Wildcard));
+		});
+
+		It("Should Remove an Enum Component using CPP API with Sparse UENUM", [this]()
+		{
+			FFlecsEntityHandle TestComponent = Fixture.FlecsWorld->RegisterComponentType<ETestEnum_SparseUENUM>();
+			
+			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add<ETestEnum_SparseUENUM>(ETestEnum_SparseUENUM::Five);
+			
+			TestTrue("Entity has Enum Component", TestEntity.HasPair<ETestEnum_SparseUENUM>(flecs::Wildcard));
+			TestTrue("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum_SparseUENUM>()));
+			
+			TestEntity.RemovePair<ETestEnum_SparseUENUM>(flecs::Wildcard);
+
+			TestFalse("Entity has Enum Component", TestEntity.Has(StaticEnum<ETestEnum_SparseUENUM>()));
+			TestFalse("Entity has Enum Component", TestEntity.HasPair<ETestEnum_SparseUENUM>(flecs::Wildcard));
+		});
 	});
 }
 
