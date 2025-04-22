@@ -38366,7 +38366,7 @@ void flecs_storage_fini(
 
     ecs_map_iter_t it = ecs_map_iter(&storage_map->impl);
     while (ecs_map_next(&it)) {
-        ecs_storage_record_t *sr = *(ecs_storage_record_t**)ecs_map_value(&it);
+        ecs_storage_record_t *sr = *(ecs_storage_record_t**)&it.res[1];
         storage_record_free(sr);
     }
 
