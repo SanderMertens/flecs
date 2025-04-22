@@ -442,9 +442,11 @@ extern "C" {
 #define EcsIdDontFragment              (1u << 24)
 #define EcsIdMatchDontFragment         (1u << 25) /* For (*, T) wildcards */
 #define EcsIdIsUnion                   (1u << 26)
+#define EcsIdOrderedChildren           (1u << 28)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
-        EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion)
+        EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion|\
+        EcsIdOrderedChildren)
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
@@ -587,6 +589,7 @@ extern "C" {
 #define EcsTableHasUnion               (1u << 26u)
 
 #define EcsTableHasTraversable         (1u << 27u)
+#define EcsTableHasOrderedChildren     (1u << 28u)
 #define EcsTableMarkedForDelete        (1u << 30u)
 
 /* Composite table flags */
@@ -5572,6 +5575,9 @@ FLECS_API extern const ecs_entity_t EcsDependsOn;
 
 /** Used to express a slot (used with prefab inheritance) */
 FLECS_API extern const ecs_entity_t EcsSlotOf;
+
+/** Tag that when added to a parent ensures stable order of ecs_children result. */
+FLECS_API extern const ecs_entity_t EcsOrderedChildren;
 
 /** Tag added to module entities */
 FLECS_API extern const ecs_entity_t EcsModule;
@@ -17775,6 +17781,9 @@ static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
 static const flecs::entity_t DependsOn = EcsDependsOn;
 static const flecs::entity_t SlotOf = EcsSlotOf;
+
+/* Misc */
+static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
 
 /* Builtin identifiers */
 static const flecs::entity_t Name = EcsName;

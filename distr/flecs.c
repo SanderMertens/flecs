@@ -4131,6 +4131,25 @@ void flecs_disable_module(ecs_iter_t *it) {
     }
 }
 
+static
+void flecs_register_ordered_children(ecs_iter_t *it) {
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t parent = it->entities[i];
+        const ecs_component_record_t *cr = flecs_components_ensure(
+            it->world, ecs_childof(parent));
+        if (cr->cache.tables.count != 0) {
+            char *str = ecs_id_str(it->world, ecs_childof(parent));
+            ecs_throw(ECS_INVALID_OPERATION, "cannot add OrderedChildren trait:"
+                " (ChildOf, %s) already in use", str);
+            ecs_os_free(str);
+        }
+        ecs_assert(cr->flags & EcsIdOrderedChildren, ECS_INTERNAL_ERROR, NULL);
+    }
+error:
+    return;
+}
+
 /* -- Bootstrapping -- */
 
 #define flecs_bootstrap_builtin_t(world, table, name)\
@@ -4539,6 +4558,8 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsInherit);
     flecs_bootstrap_tag(world, EcsDontInherit);
 
+    flecs_bootstrap_tag(world, EcsOrderedChildren);
+
     /* Builtin predicates */
     flecs_bootstrap_tag(world, EcsPredEq);
     flecs_bootstrap_tag(world, EcsPredMatch);
@@ -4686,6 +4707,13 @@ void flecs_bootstrap(
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
         .ctx = &union_trait
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsOrderedChildren }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_ordered_children
     });
 
     /* Entities used as slot are marked as exclusive to ensure a slot can always
@@ -18924,22 +18952,23 @@ const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 45;
 const ecs_entity_t EcsOnTableDelete =               FLECS_HI_COMPONENT_ID + 46;
 
 /* Timers */
-const ecs_entity_t ecs_id(EcsTickSource) =          FLECS_HI_COMPONENT_ID + 49;
-const ecs_entity_t ecs_id(EcsTimer) =               FLECS_HI_COMPONENT_ID + 50;
-const ecs_entity_t ecs_id(EcsRateFilter) =          FLECS_HI_COMPONENT_ID + 51;
+const ecs_entity_t ecs_id(EcsTickSource) =          FLECS_HI_COMPONENT_ID + 47;
+const ecs_entity_t ecs_id(EcsTimer) =               FLECS_HI_COMPONENT_ID + 48;
+const ecs_entity_t ecs_id(EcsRateFilter) =          FLECS_HI_COMPONENT_ID + 49;
 
 /* Actions */
-const ecs_entity_t EcsRemove =                      FLECS_HI_COMPONENT_ID + 52;
-const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 53;
-const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 54;
+const ecs_entity_t EcsRemove =                      FLECS_HI_COMPONENT_ID + 50;
+const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 51;
+const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 52;
 
 /* Storage */
-const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 55;
-const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 56;
-const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 57;
+const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 53;
+const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 54;
+const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 55;
 
 /* Misc */
-const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 58;
+const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 56;
+const ecs_entity_t EcsOrderedChildren =               FLECS_HI_COMPONENT_ID + 57;
 
 /* Builtin predicate ids (used by query engine) */
 const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 59;
@@ -36710,6 +36739,13 @@ ecs_component_record_t* flecs_component_new(
             }
             if (ecs_has_id(world, tgt, EcsDontFragment)) {
                 cr->flags |= EcsIdDontFragment;
+            }
+        }
+
+        /* Check if we should keep a list of ordered children for parent */
+        if (rel == EcsChildOf) {
+            if (ecs_has_id(world, tgt, EcsOrderedChildren)) {
+                cr->flags |= EcsIdOrderedChildren;
             }
         }
 
@@ -71820,9 +71856,11 @@ bool flecs_query_cache_match_table(
     ecs_query_cache_table_t *qt = NULL;
     ecs_query_t *q = cache->query;
 
+#ifndef FLECS_SANITIZE
     if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
         return false;
     }
+#endif
 
     /* Iterate uncached query for table to check if it matches. If this is a
      * wildcard query, a table can match multiple times. */
@@ -71841,6 +71879,14 @@ bool flecs_query_cache_match_table(
             cache, qt, table);
         flecs_query_cache_set_table_match(cache, qm, &it);
     }
+
+#ifdef FLECS_SANITIZE
+    /* Sanity check to make sure bloom filter is correct */
+    if (qt != NULL) {
+        ecs_assert(flecs_table_bloom_filter_test(table, q->bloom_filter),
+            ECS_INTERNAL_ERROR, NULL);
+    }
+#endif
 
     return qt != NULL;
 }

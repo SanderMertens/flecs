@@ -1796,6 +1796,9 @@ FLECS_API extern const ecs_entity_t EcsDependsOn;
 /** Used to express a slot (used with prefab inheritance) */
 FLECS_API extern const ecs_entity_t EcsSlotOf;
 
+/** Tag that when added to a parent ensures stable order of ecs_children result. */
+FLECS_API extern const ecs_entity_t EcsOrderedChildren;
+
 /** Tag added to module entities */
 FLECS_API extern const ecs_entity_t EcsModule;
 
