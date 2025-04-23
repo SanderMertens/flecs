@@ -31590,6 +31590,66 @@ bool flecs_sparse_remove(
     }
 }
 
+static
+uint64_t flecs_sparse_inc_gen(
+    uint64_t index)
+{
+    /* When an index is deleted, its generation is increased so that we can do
+     * liveliness checking while recycling ids */
+    return ECS_GENERATION_INC(index);
+}
+
+bool flecs_sparse_remove_w_gen(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t id)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
+
+    ecs_sparse_page_t *page = flecs_sparse_get_page(
+        sparse, FLECS_SPARSE_PAGE(id));
+    if (!page || !page->sparse) {
+        return false;
+    }
+
+    uint64_t index = (uint32_t)id;
+    int32_t offset = FLECS_SPARSE_OFFSET(index);
+    int32_t dense = page->sparse[offset];
+
+    if (dense) {
+        /* Increase generation */
+        uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
+        ecs_assert(dense_array[dense] == id, ECS_INVALID_PARAMETER, NULL);
+        dense_array[dense] = flecs_sparse_inc_gen(index);
+
+        int32_t count = sparse->count;
+        if (dense == (count - 1)) {
+            /* If dense is the last used element, simply decrease count */
+            sparse->count --;
+        } else if (dense < count) {
+            /* If element is alive, move it to unused elements */
+            flecs_sparse_swap_dense(sparse, page, dense, count - 1);
+            sparse->count --;
+        } else {
+            return false;
+        }
+
+        /* Reset memory to zero on remove */
+        if (sparse->size) {
+            void *ptr = DATA(page->data, sparse->size, offset);
+            ecs_os_memset(ptr, 0, size);
+        }
+
+        /* Reset memory to zero on remove */
+        return true;
+    } else {
+        /* Element is not paired and thus not alive, nothing to be done */
+        return false;
+    }
+}
+
 void* flecs_sparse_get_dense(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -39094,7 +39154,7 @@ void flecs_table_fini(
     if (!(world->flags & EcsWorldFini)) {
         ecs_assert(!is_root, ECS_INTERNAL_ERROR, NULL);
         flecs_table_free_type(world, table);
-        flecs_sparse_remove_t(
+        flecs_sparse_remove_w_gen_t(
             &world->store.tables, ecs_table_t, table->id);
     }
 
@@ -40537,6 +40597,12 @@ ecs_table_records_t flecs_table_records(
         .array = table->_->records, 
         .count = table->_->record_count 
     };
+}
+
+uint64_t flecs_table_id(
+    ecs_table_t* table)
+{
+    return table->id;    
 }
 
 uint64_t flecs_table_bloom_filter_add(

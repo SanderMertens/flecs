@@ -846,7 +846,8 @@
                 "get_ref_w_low_id_tag",
                 "get_ref_w_low_id_tag_after_add",
                 "get_nonexisting",
-                "aba_table"
+                "aba_table",
+                "recycled_table"
             ]
         }, {
             "id": "Delete",
