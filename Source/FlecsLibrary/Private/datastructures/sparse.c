@@ -500,7 +500,7 @@ bool flecs_sparse_remove_w_gen(
         /* Increase generation */
         uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
         ecs_assert(dense_array[dense] == id, ECS_INVALID_PARAMETER, NULL);
-        dense_array[dense] = flecs_sparse_inc_gen(index);
+        dense_array[dense] = flecs_sparse_inc_gen(id);
 
         int32_t count = sparse->count;
         if (dense == (count - 1)) {

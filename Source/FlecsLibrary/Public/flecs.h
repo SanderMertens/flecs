@@ -258,7 +258,7 @@
  * operations. Component ids that fall outside of this range use a regular map
  * lookup, which is slower but more memory efficient. */
 #ifndef FLECS_HI_COMPONENT_ID
-#define FLECS_HI_COMPONENT_ID (2048)
+#define FLECS_HI_COMPONENT_ID (512)
 #endif
 
 /** @def FLECS_HI_ID_RECORD_ID
@@ -268,7 +268,7 @@
  * lookup, which is slower but more memory efficient.
  */
 #ifndef FLECS_HI_ID_RECORD_ID
-#define FLECS_HI_ID_RECORD_ID (4096)
+#define FLECS_HI_ID_RECORD_ID (2048)
 #endif
 
 /** @def FLECS_SPARSE_PAGE_BITS
@@ -277,13 +277,13 @@
  * determines the page size, which is (1 << bits).
  * Lower values decrease memory utilization, at the cost of more allocations. */
 #ifndef FLECS_SPARSE_PAGE_BITS
-#define FLECS_SPARSE_PAGE_BITS (12)
+#define FLECS_SPARSE_PAGE_BITS (6)
 #endif
 
 /** @def FLECS_ENTITY_PAGE_BITS
  * Same as FLECS_SPARSE_PAGE_BITS, but for the entity index. */
 #ifndef FLECS_ENTITY_PAGE_BITS
-#define FLECS_ENTITY_PAGE_BITS (12)
+#define FLECS_ENTITY_PAGE_BITS (10)
 #endif
 
 /** @def FLECS_USE_OS_ALLOC
