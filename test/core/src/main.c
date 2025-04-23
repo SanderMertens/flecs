@@ -806,6 +806,7 @@ void Reference_get_ref_w_low_id_tag_after_add(void);
 void Reference_get_nonexisting(void);
 void Reference_aba_table(void);
 void Reference_recycled_table(void);
+void Reference_recycled_table_twice(void);
 
 // Testsuite 'Delete'
 void Delete_setup(void);
@@ -5552,6 +5553,10 @@ bake_test_case Reference_testcases[] = {
     {
         "recycled_table",
         Reference_recycled_table
+    },
+    {
+        "recycled_table_twice",
+        Reference_recycled_table_twice
     }
 };
 
@@ -12150,7 +12155,7 @@ static bake_test_suite suites[] = {
         "Reference",
         Reference_setup,
         NULL,
-        21,
+        22,
         Reference_testcases
     },
     {
