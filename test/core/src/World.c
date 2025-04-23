@@ -1134,7 +1134,25 @@ void World_delete_empty_tables_after_mini(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *info = ecs_get_world_info(world);
-    int32_t empty_table_count = info->table_count;
+    int32_t old_table_count = info->table_count;
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = EcsAny }},
+        .flags = EcsQueryMatchEmptyTables
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    int32_t empty_table_count = 0;
+    while (ecs_query_next(&it)) {
+        if (!ecs_table_count(it.table)) {
+            empty_table_count ++;
+        }
+    }
+
+    ecs_query_fini(q);
+
+    empty_table_count --; // correct for root table
 
     int32_t deleted;
     deleted = ecs_delete_empty_tables(world, 
@@ -1143,14 +1161,32 @@ void World_delete_empty_tables_after_mini(void) {
 
     deleted = ecs_delete_empty_tables(world, 
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1}); /* Delete */
-    test_assert(deleted != 0);
-    test_int(info->table_count + deleted, empty_table_count);
+    test_assert(deleted == empty_table_count);
+    test_int(info->table_count + deleted, old_table_count);
 
     ecs_fini(world);
 }
 
 void World_delete_empty_tables_after_init(void) {
     ecs_world_t *world = ecs_init();
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = EcsAny }},
+        .flags = EcsQueryMatchEmptyTables
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    int32_t empty_table_count = 0;
+    while (ecs_query_next(&it)) {
+        if (!ecs_table_count(it.table)) {
+            empty_table_count ++;
+        }
+    }
+
+    ecs_query_fini(q);
+
+    empty_table_count --; // correct for root table
 
     int32_t deleted;
     deleted = ecs_delete_empty_tables(world, 
@@ -1159,7 +1195,7 @@ void World_delete_empty_tables_after_init(void) {
 
     deleted = ecs_delete_empty_tables(world, 
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 }); /* Delete */
-    test_assert(deleted != 0);
+    test_assert(deleted == empty_table_count);
 
     ecs_fini(world);
 }
@@ -1178,8 +1214,9 @@ void World_delete_1000_empty_tables(void) {
         ecs_add_id(world, e, ecs_new(world));
     }
 
-    ecs_run_aperiodic(world, 0);
     test_int(info->table_count, old_table_count + 1000 + 1);
+
+    ecs_delete(world, e);
 
     int32_t deleted;
     deleted = ecs_delete_empty_tables(world, 

@@ -185,23 +185,23 @@ void Each_each_root_entities(void) {
 
     ecs_entity_t e1 = ecs_new_w(world, Foo);
 
+    bool e1_found = false, Foo_found = false, Flecs_found = false;
+    int32_t count = 0;
+
     ecs_iter_t it = ecs_each_pair(world, EcsChildOf, 0);
-    test_bool(true, ecs_iter_next(&it));
-    test_int(1, it.count);
-    test_uint(Foo, it.entities[0]);
-    test_bool(true, ecs_field_is_set(&it, 0));
+    while (ecs_iter_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            e1_found |= it.entities[i] == e1;
+            Foo_found |= it.entities[i] == Foo;
+            Flecs_found |= it.entities[i] == EcsFlecs;
+            count ++;
+        }
+    }
 
-    test_bool(true, ecs_iter_next(&it));
-    test_int(1, it.count);
-    test_uint(EcsFlecs, it.entities[0]);
-    test_bool(true, ecs_field_is_set(&it, 0));
-
-    test_bool(true, ecs_iter_next(&it));
-    test_int(1, it.count);
-    test_uint(e1, it.entities[0]);
-    test_bool(true, ecs_field_is_set(&it, 0));
-
-    test_bool(false, ecs_iter_next(&it));
+    test_assert(e1_found);
+    test_assert(Foo_found);
+    test_assert(Flecs_found);
+    test_int(count, 3);
 
     ecs_fini(world);
 }
@@ -213,23 +213,23 @@ void Each_each_empty_root_entities(void) {
 
     ecs_entity_t e1 = ecs_new(world);
 
+    bool e1_found = false, Foo_found = false, Flecs_found = false;
+    int32_t count = 0;
+
     ecs_iter_t it = ecs_each_pair(world, EcsChildOf, 0);
-    test_bool(true, ecs_iter_next(&it));
-    test_int(1, it.count);
-    test_uint(e1, it.entities[0]);
-    test_bool(true, ecs_field_is_set(&it, 0));
+    while (ecs_iter_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            e1_found |= it.entities[i] == e1;
+            Foo_found |= it.entities[i] == Foo;
+            Flecs_found |= it.entities[i] == EcsFlecs;
+            count ++;
+        }
+    }
 
-    test_bool(true, ecs_iter_next(&it));
-    test_int(1, it.count);
-    test_uint(Foo, it.entities[0]);
-    test_bool(true, ecs_field_is_set(&it, 0));
-
-    test_bool(true, ecs_iter_next(&it));
-    test_int(1, it.count);
-    test_uint(EcsFlecs, it.entities[0]);
-    test_bool(true, ecs_field_is_set(&it, 0));
-
-    test_bool(false, ecs_iter_next(&it));
+    test_assert(e1_found);
+    test_assert(Foo_found);
+    test_assert(Flecs_found);
+    test_int(count, 3);
 
     ecs_fini(world);
 }
