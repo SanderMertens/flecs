@@ -3652,23 +3652,29 @@ const void* ecs_record_get_id(
 
     /* Check if table has custom storage for this component */
     if (table->flags & EcsTableHasCustomStorage) {
+        // Check if the specific 'id' has custom storage registered for this table
+        bool has_custom = false;
         for (int i = 0; i < table->custom_storage_count; i++) {
-            ecs_entity_t component = table->custom_storage_components[i];
-            if (component == id) {
-                /* Get the storage record for this component */
-                ecs_hashmap_t *storage_map = world->store.storages;
-                if (storage_map) {
-                    ecs_storage_record_t **sr_ptr = flecs_hashmap_get(
-                        storage_map, &id, ecs_storage_record_t*);
-                    
-                    if (sr_ptr && (*sr_ptr)->hooks.get) {
-                        /* Call the get function of the custom storage */
-                        return (*sr_ptr)->hooks.get(
-                            world, id, ECS_RECORD_TO_ROW(record->row) + 1, (*sr_ptr)->storage);
-                    }
-                }
+            if (table->custom_storage_components[i] == id) {
+                has_custom = true;
                 break;
             }
+        }
+
+        if (has_custom) {
+            // Get the storage record for the component 'id'
+            ecs_hashmap_t *storage_map = world->store.storages; // Access storage map directly
+            ecs_storage_record_t **sr_ptr = flecs_hashmap_get(
+                storage_map, &id, ecs_storage_record_t*);
+
+            if (sr_ptr && (*sr_ptr)->hooks.get) {
+                // Get the entity ID from the record
+                ecs_entity_t entity = ecs_record_get_entity(record);
+                // Call the custom storage get hook
+                return (*sr_ptr)->hooks.get(
+                    world, id, entity, (*sr_ptr)->storage); // Pass entity ID
+            }
+            // Fall through if no get hook or storage record found
         }
     }
 
@@ -3677,14 +3683,30 @@ const void* ecs_record_get_id(
         world, table, 0, id, 0, 0, 0, 0, 0, 0);
     
     if (column == -1) {
-        return NULL;
+        // Component not found directly in the table
+        // Check for base components or sparse components
+        ecs_component_record_t *cr = flecs_components_get(world, id);
+        if (!cr) {
+            return NULL; // ID doesn't exist
+        }
+        if (cr->flags & EcsIdIsSparse) {
+            ecs_entity_t entity = ecs_record_get_entity(record);
+            return flecs_component_sparse_get(cr, entity);
+        }
+        return flecs_get_base_component(world, table, id, cr, 0);
     }
 
-    if (column < 0) {
-        return flecs_get_base_component(world, table, id, 0, 0);
+    // Component found in table storage
+    ecs_component_record_t *cr = (ecs_component_record_t*)table->_->records[column].hdr.cache;
+    if (cr->flags & EcsIdIsSparse) {
+        // This case should ideally be handled by flecs_search_relation_w_cr returning -1?
+        // If it can be hit, we need the entity ID.
+        ecs_entity_t entity = ecs_record_get_entity(record);
+        return flecs_component_sparse_get(cr, entity);
     }
 
-    return ecs_record_get_by_column(record, column, sizeof(void*));
+    // Regular component in table column
+    return ecs_record_get_by_column(record, table->_->records[column].column, sizeof(void*));
 }
 
 bool ecs_record_has_id(
