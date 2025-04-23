@@ -288,6 +288,16 @@ FLECS_API
 ecs_table_records_t flecs_table_records(
     ecs_table_t* table);
 
+/** Get table id. 
+ * This operation returns a unique numerical identifier for a table.
+ * 
+ * @param table The table.
+ * @return The table records for the table.
+ */
+FLECS_API
+uint64_t flecs_table_id(
+    ecs_table_t* table);
+
 /** Find table by adding id to current table. 
  * Same as ecs_table_add_id, but with additional diff parameter that contains
  * information about the traversed edge.
