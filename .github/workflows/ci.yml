@@ -1104,11 +1104,12 @@ jobs:
           bake/bake setup
 
       - name: build flecs
-        run: bake --cfg sanitize -D FLECS_LOW_FOOTPRINT
+        run: bake -D FLECS_LOW_FOOTPRINT
 
       - name: run tests
         run: |
-          bake run test/core --cfg sanitize -- -j 8
+          bake test/core -D FLECS_LOW_FOOTPRINT
+          bake run test/core -- -j 8
 
   test-cmake:
     needs: [ build-linux, build-macos ]
