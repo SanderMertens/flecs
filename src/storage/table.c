@@ -1066,7 +1066,7 @@ void flecs_table_fini(
     if (!(world->flags & EcsWorldFini)) {
         ecs_assert(!is_root, ECS_INTERNAL_ERROR, NULL);
         flecs_table_free_type(world, table);
-        flecs_sparse_remove_t(
+        flecs_sparse_remove_w_gen_t(
             &world->store.tables, ecs_table_t, table->id);
     }
 
@@ -2509,6 +2509,12 @@ ecs_table_records_t flecs_table_records(
         .array = table->_->records, 
         .count = table->_->record_count 
     };
+}
+
+uint64_t flecs_table_id(
+    ecs_table_t* table)
+{
+    return table->id;    
 }
 
 uint64_t flecs_table_bloom_filter_add(
