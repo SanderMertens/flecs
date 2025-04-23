@@ -2051,6 +2051,12 @@ void On_V(ecs_iter_t *it) {
 }
 
 void SingleThreadStaging_match_table_created_w_new_in_progress(void) {
+#ifdef FLECS_LOW_FOOTPRINT
+    /* System queries default to uncached, which means scheduling can't track
+     * whether queries are empty. */
+    test_assert(true);
+    return;
+#endif
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2060,6 +2066,8 @@ void SingleThreadStaging_match_table_created_w_new_in_progress(void) {
     ECS_SYSTEM(world, On_V, EcsOnUpdate, Velocity);
 
     ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_log_set_level(1);
 
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
