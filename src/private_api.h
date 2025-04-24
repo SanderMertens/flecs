@@ -78,21 +78,6 @@ void flecs_notify_on_remove(
     int32_t count,
     const ecs_table_diff_t *diff);
 
-void flecs_notify_on_set(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t row,
-    int32_t count,
-    ecs_id_t id,
-    bool owned);
-
-void flecs_notify_on_set_ids(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t row,
-    int32_t count,
-    ecs_type_t *type);
-
 int32_t flecs_relation_depth(
     const ecs_world_t *world,
     ecs_entity_t r,
@@ -106,9 +91,7 @@ typedef struct ecs_instantiate_ctx_t {
 void flecs_instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
-    ecs_table_t *table,
-    int32_t row,
-    int32_t count,
+    ecs_entity_t instance,
     const ecs_instantiate_ctx_t *ctx);
 
 void* flecs_get_base_component(
