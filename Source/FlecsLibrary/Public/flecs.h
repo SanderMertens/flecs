@@ -6090,7 +6090,7 @@ FLECS_API
 void ecs_table_clear_entities(
     ecs_world_t* world,
     ecs_table_t* table);
-    
+
 /** @} */
 
 /**

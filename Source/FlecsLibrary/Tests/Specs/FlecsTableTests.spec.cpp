@@ -470,6 +470,114 @@ void Table_get_T_enum(void) {
     test_int(n[2], Number::Three);
 }
 
+void Table_get_size(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity().set<Position>({10, 20});
+    ecs.entity().set<Position>({20, 30});
+    ecs.entity().set<Position>({30, 40});
+
+    flecs::table table = e.table();
+    test_int(table.count(), 3);
+    test_int(table.size(), 4);
+}
+
+void Table_get_entities(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity().set<Position>({10, 20});
+    flecs::entity e2 = ecs.entity().set<Position>({20, 30});
+    flecs::entity e3 = ecs.entity().set<Position>({30, 40});
+
+    flecs::table table = e1.table();
+    const flecs::entity_t *entities = table.entities();
+    test_assert(entities != NULL);
+    test_uint(entities[0], e1);
+    test_uint(entities[1], e2);
+    test_uint(entities[2], e3);
+}
+
+void Table_get_records(void) {
+    flecs::world ecs;
+
+    flecs::entity parent = ecs.entity();
+    flecs::entity e = ecs.entity()
+        .child_of(parent)
+        .set<Position>({10, 20});
+
+    flecs::table table = e.table();
+    const flecs::table_records_t records = table.records();
+    test_int(records.count, 6);
+    {
+        const flecs::table_record_t *tr = &records.array[0];
+        flecs::component_record_t *cr = flecs_table_record_get_component(tr);
+        test_assert(cr != nullptr);
+        test_uint(flecs_component_get_id(cr), ecs.component<Position>());
+    }
+    {
+        const flecs::table_record_t *tr = &records.array[1];
+        flecs::component_record_t *cr = flecs_table_record_get_component(tr);
+        test_assert(cr != nullptr);
+        test_uint(flecs_component_get_id(cr), ecs.pair(flecs::ChildOf, parent));
+    }
+}
+
+void Table_unlock(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set<Position>({10, 20});
+
+    flecs::entity e2 = ecs.entity();
+        
+    flecs::table table = e1.table();
+    table.lock();
+    table.unlock();
+
+    e2.set<Position>({20, 30});
+    test_assert(e2.has<Position>());
+}
+
+void Table_has_flags(void) {
+    flecs::world ecs;
+
+    flecs::entity parent = ecs.entity();
+    flecs::entity e1 = ecs.entity()
+        .child_of(parent)
+        .set<Position>({10, 20});
+        
+    flecs::table table = e1.table();
+
+    test_assert(!table.has_flags(EcsTableIsComplex));
+    test_assert(table.has_flags(EcsTableHasPairs));
+    test_assert(table.has_flags(EcsTableHasChildOf));
+    test_assert(!table.has_flags(EcsTableHasIsA));
+}
+
+void Table_clear_entities(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set<Position>({10, 20});
+    flecs::entity e2 = ecs.entity()
+        .set<Position>({30, 40});
+
+    test_assert(e1.is_alive());
+    test_assert(e2.is_alive());
+        
+    flecs::table table = e1.table();
+    test_int(table.count(), 2);
+    test_int(table.size(), 2);
+
+    table.clear_entities();
+
+    test_assert(!e1.is_alive());
+    test_assert(!e2.is_alive());
+
+    test_int(table.count(), 0);
+    test_int(table.size(), 2);
+}
+
 END_DEFINE_SPEC(FFlecsTableTestsSpec);
 
 /*"id": "Table",
