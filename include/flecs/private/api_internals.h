@@ -223,6 +223,15 @@ FLECS_ALWAYS_INLINE ecs_component_record_t* flecs_components_get(
     const ecs_world_t *world,
     ecs_id_t id);
 
+/** Get component id from component record.
+ * 
+ * @param cr The component record.
+ * @return The component id.
+ */
+FLECS_API
+ecs_id_t flecs_component_get_id(
+    const ecs_component_record_t *cr);
+
 /** Find table record for component record.
  * This operation returns the table record for the table/component record if it
  * exists. If the record exists, it means the table has the component.
@@ -287,6 +296,15 @@ typedef struct ecs_table_records_t {
 FLECS_API
 ecs_table_records_t flecs_table_records(
     ecs_table_t* table);
+
+/** Get component record from table record.
+ * 
+ * @param tr The table record.
+ * @return The component record.
+ */
+FLECS_API
+ecs_component_record_t* flecs_table_record_get_component(
+    const ecs_table_record_t *tr);
 
 /** Get table id. 
  * This operation returns a unique numerical identifier for a table.

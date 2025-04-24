@@ -865,3 +865,10 @@ const ecs_table_record_t* flecs_component_next(
 {
     return flecs_table_cache_next(iter, ecs_table_record_t);
 }
+
+ecs_id_t flecs_component_get_id(
+    const ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INVALID_PARAMETER, NULL);
+    return cr->id;
+}
