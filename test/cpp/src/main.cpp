@@ -1481,6 +1481,14 @@ void Table_range_get_pair_R_T(void);
 void Table_get_depth(void);
 void Table_get_depth_w_type(void);
 void Table_iter_type(void);
+void Table_get_size(void);
+void Table_get_entities(void);
+void Table_get_records(void);
+void Table_get_id(void);
+void Table_lock(void);
+void Table_unlock(void);
+void Table_has_flags(void);
+void Table_clear_entities(void);
 
 // Testsuite 'Doc'
 void Doc_set_brief(void);
@@ -7260,6 +7268,38 @@ bake_test_case Table_testcases[] = {
     {
         "iter_type",
         Table_iter_type
+    },
+    {
+        "get_size",
+        Table_get_size
+    },
+    {
+        "get_entities",
+        Table_get_entities
+    },
+    {
+        "get_records",
+        Table_get_records
+    },
+    {
+        "get_id",
+        Table_get_id
+    },
+    {
+        "lock",
+        Table_lock
+    },
+    {
+        "unlock",
+        Table_unlock
+    },
+    {
+        "has_flags",
+        Table_has_flags
+    },
+    {
+        "clear_entities",
+        Table_clear_entities
     }
 };
 
@@ -7456,7 +7496,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        32,
+        40,
         Table_testcases
     },
     {

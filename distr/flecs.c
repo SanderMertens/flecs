@@ -37314,6 +37314,13 @@ const ecs_table_record_t* flecs_component_next(
     return flecs_table_cache_next(iter, ecs_table_record_t);
 }
 
+ecs_id_t flecs_component_get_id(
+    const ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INVALID_PARAMETER, NULL);
+    return cr->id;
+}
+
 
 static
 ecs_entity_index_page_t* flecs_entity_index_ensure_page(
@@ -40553,6 +40560,21 @@ int32_t flecs_table_observed_count(
     return table->_->traversable_count;
 }
 
+uint64_t flecs_table_bloom_filter_add(
+    uint64_t filter,
+    uint64_t value)
+{
+    filter |= 1llu << (value % 64);
+    return filter;
+}
+
+bool flecs_table_bloom_filter_test(
+    const ecs_table_t *table,
+    uint64_t filter)
+{
+    return (table->bloom_filter & filter) == filter;
+}
+
 void* ecs_record_get_by_column(
     const ecs_record_t *r,
     int32_t index,
@@ -40599,25 +40621,16 @@ ecs_table_records_t flecs_table_records(
     };
 }
 
+ecs_component_record_t* flecs_table_record_get_component(
+    const ecs_table_record_t *tr)
+{
+    return (ecs_component_record_t*)tr->hdr.cache;
+}
+
 uint64_t flecs_table_id(
     ecs_table_t* table)
 {
     return table->id;    
-}
-
-uint64_t flecs_table_bloom_filter_add(
-    uint64_t filter,
-    uint64_t value)
-{
-    filter |= 1llu << (value % 64);
-    return filter;
-}
-
-bool flecs_table_bloom_filter_test(
-    const ecs_table_t *table,
-    uint64_t filter)
-{
-    return (table->bloom_filter & filter) == filter;
 }
 
 /**
