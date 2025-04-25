@@ -2067,8 +2067,6 @@ void SingleThreadStaging_match_table_created_w_new_in_progress(void) {
 
     ecs_insert(world, ecs_value(Position, {10, 20}));
 
-    ecs_log_set_level(1);
-
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
     ecs_progress(world, 1);
