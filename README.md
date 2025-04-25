@@ -186,7 +186,7 @@ The following language bindings have been developed with Flecs! Note that these 
 ## Android Build
 
 - download NDK
-- check the cmake preset file and run a commond like below:
+- check the cmake preset file and run a command like below:
 
 ```cmd
 cmake -S. -Bbuild_android -GNinja --preset=Android
