@@ -181,4 +181,4 @@ The following language bindings have been developed with Flecs! Note that these 
   - [sro5h/flecs-luajit](https://github.com/sro5h/flecs-luajit)
   - [flecs-hub/flecs-lua](https://github.com/flecs-hub/flecs-lua)
 - Clojure
-  - [vybe-flecs](https://github.com/pfeodrippe/vybe)
+  - [vybe-flecs](https://vybegame.dev/vybe-flecs)

@@ -177,8 +177,8 @@ let world = World::new();
 <li><b class="tab-title">Clojure</b>
 
 ```clojure
-;; The dependency for this binding is at https://clojars.org/io.github.pfeodrippe/vybe-flecs, 
-;; code at https://github.com/pfeodrippe/vybe
+;; The dependency for this binding is at https://clojars.org/io.github.pfeodrippe/vybe-flecs,
+;; code at https://github.com/pfeodrippe/vybe, see also https://vybegame.dev/vybe-flecs
 
 ;; Require a higher-level binding and a lower-level one.
 (require '[vybe.flecs :as vf])
