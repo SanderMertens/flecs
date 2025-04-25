@@ -5,6 +5,7 @@
 #include <cpp/bake_config.h>
 #include <string>
 #include <vector>
+#include <stddef.h>
 
 struct Position {
     float x;

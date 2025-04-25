@@ -7,7 +7,6 @@
 #define FLECS_PARSER_H
 
 #include "../../private_api.h"
-#include <ctype.h>
 
 typedef struct ecs_script_impl_t ecs_script_impl_t;
 typedef struct ecs_script_scope_t ecs_script_scope_t;

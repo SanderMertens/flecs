@@ -8,7 +8,6 @@
  */
 
 #include "private_api.h"
-#include <ctype.h>
 #include <time.h>
 
 void ecs_os_api_impl(ecs_os_api_t *api);

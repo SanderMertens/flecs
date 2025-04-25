@@ -1,4 +1,5 @@
 #include <script_run.h>
+#include <stdio.h>
 
 /* This example shows how to run a script once. To see how to parse a script and
  * run it multiple times, see the script_parse_eval example. */

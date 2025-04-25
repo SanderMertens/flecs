@@ -212,7 +212,7 @@ bool flecs_poly_is_(
     return hdr->type == type;    
 }
 
-ecs_observable_t* ecs_get_observable(
+ecs_observable_t* flecs_get_observable(
     const ecs_poly_t *poly)
 {
     return (ecs_observable_t*)assert_mixin(poly, EcsMixinObservable);
@@ -233,7 +233,7 @@ ecs_entity_t ecs_get_entity(
     return *(ecs_entity_t*)assert_mixin(poly, EcsMixinEntity);
 }
 
-flecs_poly_dtor_t* ecs_get_dtor(
+flecs_poly_dtor_t* flecs_get_dtor(
     const ecs_poly_t *poly)
 {
     return (flecs_poly_dtor_t*)assert_mixin(poly, EcsMixinDtor);

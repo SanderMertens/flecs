@@ -46,80 +46,6 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
     src->length = 0;
 })
 
-static
-void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
-    EcsIdentifier *ptr = ecs_field(it, EcsIdentifier, 0);
-    
-    ecs_world_t *world = it->real_world;
-    ecs_entity_t evt = it->event;
-    ecs_id_t evt_id = it->event_id;
-    ecs_entity_t kind = ECS_PAIR_SECOND(evt_id); /* Name, Symbol, Alias */
-    ecs_id_t pair = ecs_childof(0);
-    ecs_hashmap_t *index = NULL;
-
-    if (kind == EcsSymbol) {
-        index = &world->symbols;
-    } else if (kind == EcsAlias) {
-        index = &world->aliases;
-    } else if (kind == EcsName) {
-        ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_search(world, it->table, ecs_childof(EcsWildcard), &pair);
-        ecs_assert(pair != 0, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_component_record_t *cr = flecs_components_get(world, pair);
-        if (evt == EcsOnSet) {
-            index = flecs_component_name_index_ensure(world, cr);
-        } else {
-            index = flecs_component_name_index_get(world, cr);
-        }
-    }
-
-    int i, count = it->count;
-
-    for (i = 0; i < count; i ++) {
-        EcsIdentifier *cur = &ptr[i];
-        uint64_t hash;
-        ecs_size_t len;
-        const char *name = cur->value;
-
-        if (cur->index && cur->index != index) {
-            /* If index doesn't match up, the value must have been copied from
-             * another entity, so reset index & cached index hash */
-            cur->index = NULL;
-            cur->index_hash = 0;
-        }
-
-        if (cur->value && (evt == EcsOnSet)) {
-            len = cur->length = ecs_os_strlen(name);
-            hash = cur->hash = flecs_hash(name, len);
-        } else {
-            len = cur->length = 0;
-            hash = cur->hash = 0;
-            cur->index = NULL;
-        }
-
-        if (index) {
-            uint64_t index_hash = cur->index_hash;
-            ecs_entity_t e = it->entities[i];
-
-            if (hash != index_hash) {
-                if (index_hash) {
-                    flecs_name_index_remove(index, e, index_hash);
-                }
-                if (hash) {
-                    flecs_name_index_ensure(index, e, name, len, hash);
-                    cur->index_hash = hash;
-                    cur->index = index;
-                }
-            } else {
-                /* Name didn't change, but the string could have been 
-                 * reallocated. Make sure name index points to correct string */
-                flecs_name_index_update_name(index, e, hash, name);
-            }
-        }
-    }
-}
-
 
 /* -- Poly component -- */
 
@@ -131,7 +57,7 @@ static ECS_COPY(EcsPoly, dst, src, {
 
 static ECS_MOVE(EcsPoly, dst, src, {
     if (dst->poly && (dst->poly != src->poly)) {
-        flecs_poly_dtor_t *dtor = ecs_get_dtor(dst->poly);
+        flecs_poly_dtor_t *dtor = flecs_get_dtor(dst->poly);
         ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
         dtor[0](dst->poly);
     }
@@ -142,7 +68,7 @@ static ECS_MOVE(EcsPoly, dst, src, {
 
 static ECS_DTOR(EcsPoly, ptr, {
     if (ptr->poly) {
-        flecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
+        flecs_poly_dtor_t *dtor = flecs_get_dtor(ptr->poly);
         ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
         dtor[0](ptr->poly);
     }
@@ -1214,7 +1140,7 @@ void flecs_bootstrap(
     ecs_add_pair(world, EcsDependsOn, EcsOnInstantiate, EcsInherit);
     
     /* Run bootstrap functions for other parts of the code */
-    flecs_bootstrap_hierarchy(world);
+    flecs_bootstrap_entity_name(world);
 
     /* Register constant tag */
     ecs_component(world, {

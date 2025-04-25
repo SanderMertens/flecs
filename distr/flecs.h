@@ -771,6 +771,7 @@ extern "C" {
 #include <assert.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdlib.h>
 
 /* Non-standard but required. If not provided by platform, add manually. */
 #include <stdint.h>
@@ -2367,10 +2368,6 @@ int32_t ecs_strbuf_written(
  * @{
  */
 
-#include <stdarg.h>
-#include <errno.h>
-#include <stdio.h>
-
 #if defined(ECS_TARGET_WINDOWS)
 #include <malloc.h>
 #elif defined(ECS_TARGET_FREEBSD)
@@ -2681,7 +2678,7 @@ typedef struct ecs_os_api_t {
 
     ecs_flags32_t flags_;                          /**< OS API flags */
 
-    FILE *log_out_;                                /**< File used for logging output 
+    void *log_out_;                                /**< File used for logging output (type is FILE*)
                                                     * (hint, log_ decides where to write) */
 } ecs_os_api_t;
 
@@ -15943,8 +15940,6 @@ void FlecsDocImport(
  * @{
  */
 
-#include <stddef.h>
-
 #ifndef FLECS_MODULE
 #define FLECS_MODULE
 #endif
@@ -17953,7 +17948,6 @@ struct always_false {
 
 } // namespace flecs
 
-#include <stdlib.h>
 /**
  * @file addons/cpp/utils/array.hpp
  * @brief Array class.
@@ -18227,7 +18221,6 @@ struct string_view : string {
  * and their names. This is used to automatically register enum constants.
  */
 
-#include <string.h>
 #include <limits>
 
 // 126, so that FLECS_ENUM_MAX_COUNT is 127 which is the largest value 
@@ -19866,8 +19859,6 @@ struct cursor {
  */
 
 #pragma once
-
-#include <stdio.h>
 
 namespace flecs {
 
@@ -28065,9 +28056,6 @@ using delegate = _::each_delegate<typename std::decay<Func>::type, Args...>;
 
 #pragma once
 
-#include <ctype.h>
-#include <stdio.h>
-
 /**
  * @defgroup cpp_components Components
  * @ingroup cpp_core
@@ -30200,8 +30188,6 @@ inline flecs::untyped_component world::component(Args &&... args) const {
  */
 
 #pragma once
-
-#include <stdio.h>
 
 namespace flecs {
 namespace _ {

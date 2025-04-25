@@ -119,4 +119,14 @@ void flecs_table_edges_add_flags(
     ecs_id_t id,
     ecs_flags32_t flags);
 
+ecs_table_t* flecs_find_table_add(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_table_diff_builder_t *diff);
+
+void flecs_table_hashmap_init(
+    ecs_world_t *world,
+    ecs_hashmap_t *hm);    
+
 #endif

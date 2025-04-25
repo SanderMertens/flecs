@@ -158,3 +158,146 @@ ecs_id_t ecs_id_from_str(
         "ecs_id_from_str requires FLECS_QUERY_DSL addon");
 #endif
 }
+
+const char* ecs_id_flag_str(
+    ecs_entity_t entity)
+{
+    if (ECS_HAS_ID_FLAG(entity, PAIR)) {
+        return "PAIR";
+    } else
+    if (ECS_HAS_ID_FLAG(entity, TOGGLE)) {
+        return "TOGGLE";
+    } else
+    if (ECS_HAS_ID_FLAG(entity, AUTO_OVERRIDE)) {
+        return "AUTO_OVERRIDE";
+    } else {
+        return "UNKNOWN";
+    }
+}
+
+void ecs_id_str_buf(
+    const ecs_world_t *world,
+    ecs_id_t id,
+    ecs_strbuf_t *buf)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
+    if (ECS_HAS_ID_FLAG(id, TOGGLE)) {
+        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_TOGGLE));
+        ecs_strbuf_appendch(buf, '|');
+    }
+
+    if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
+        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_AUTO_OVERRIDE));
+        ecs_strbuf_appendch(buf, '|');
+    }
+
+    if (ECS_HAS_ID_FLAG(id, PAIR)) {
+        ecs_entity_t rel = ECS_PAIR_FIRST(id);
+        ecs_entity_t obj = ECS_PAIR_SECOND(id);
+
+        ecs_entity_t e;
+        if ((e = ecs_get_alive(world, rel))) {
+            rel = e;
+        }
+        if ((e = ecs_get_alive(world, obj))) {
+            obj = e;
+        }
+
+        ecs_strbuf_appendch(buf, '(');
+        ecs_get_path_w_sep_buf(world, 0, rel, NULL, NULL, buf, false);
+        ecs_strbuf_appendch(buf, ',');
+        ecs_get_path_w_sep_buf(world, 0, obj, NULL, NULL, buf, false);
+        ecs_strbuf_appendch(buf, ')');
+    } else {
+        ecs_entity_t e = id & ECS_COMPONENT_MASK;
+        ecs_get_path_w_sep_buf(world, 0, e, NULL, NULL, buf, false);
+    }
+
+error:
+    return;
+}
+
+char* ecs_id_str(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_id_str_buf(world, id, &buf);
+    return ecs_strbuf_get(&buf);
+}
+
+ecs_id_t ecs_make_pair(
+    ecs_entity_t relationship,
+    ecs_entity_t target)
+{
+    ecs_assert(!ECS_IS_PAIR(relationship) && !ECS_IS_PAIR(target), 
+        ECS_INVALID_PARAMETER, "cannot create nested pairs");
+    return ecs_pair(relationship, target);
+}
+
+bool ecs_id_is_tag(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (ecs_id_is_wildcard(id)) {
+        /* If id is a wildcard, we can't tell if it's a tag or not, except
+         * when the relationship part of a pair has the Tag property */
+        if (ECS_HAS_ID_FLAG(id, PAIR)) {
+            if (ECS_PAIR_FIRST(id) != EcsWildcard) {
+                ecs_entity_t rel = ecs_pair_first(world, id);
+                if (ecs_is_valid(world, rel)) {
+                    if (ecs_has_id(world, rel, EcsPairIsTag)) {
+                        return true;
+                    }
+                } else {
+                    /* During bootstrap it's possible that not all ids are valid
+                     * yet. Using ecs_get_typeid will ensure correct values are
+                     * returned for only those components initialized during
+                     * bootstrap, while still asserting if another invalid id
+                     * is provided. */
+                    if (ecs_get_typeid(world, id) == 0) {
+                        return true;
+                    }
+                }
+            } else {
+                /* If relationship is wildcard id is not guaranteed to be a tag */
+            }
+        }
+    } else {
+        if (ecs_get_typeid(world, id) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+ecs_entity_t ecs_get_typeid(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+    if (ti) {
+        ecs_assert(ti->component != 0, ECS_INTERNAL_ERROR, NULL);
+        return ti->component;
+    }
+error:
+    return 0;
+}
+
+bool ecs_id_in_use(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (!cr) {
+        return false;
+    }
+
+    return (flecs_table_cache_count(&cr->cache) != 0);
+}

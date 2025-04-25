@@ -1202,7 +1202,7 @@ void flecs_emit(
         .flags = desc->flags | EcsIterIsValid
     };
 
-    ecs_observable_t *observable = ecs_get_observable(desc->observable);
+    ecs_observable_t *observable = flecs_get_observable(desc->observable);
     ecs_check(observable != NULL, ECS_INVALID_PARAMETER, NULL);
 
     /* Event records contain all observers for a specific event. In addition to

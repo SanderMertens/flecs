@@ -83,3 +83,24 @@ bool ecs_children_next(
 {
     return ecs_each_next(it);
 }
+
+int32_t ecs_count_id(
+    const ecs_world_t *world,
+    ecs_entity_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!id) {
+        return 0;
+    }
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_each_id(world, id);
+    while (ecs_each_next(&it)) {
+        count += it.count;
+    }
+
+    return count;
+error:
+    return 0;
+}

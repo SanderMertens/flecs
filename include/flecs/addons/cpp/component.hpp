@@ -5,9 +5,6 @@
 
 #pragma once
 
-#include <ctype.h>
-#include <stdio.h>
-
 /**
  * @defgroup cpp_components Components
  * @ingroup cpp_core

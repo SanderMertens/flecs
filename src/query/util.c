@@ -443,11 +443,6 @@ char* ecs_query_plan_w_profile(
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
     flecs_query_plan_w_profile(q, it, &buf);
-    // ecs_query_impl_t *impl = flecs_query_impl(q);
-    // if (impl->cache) {
-    //     ecs_strbuf_appendch(&buf, '\n');
-    //     flecs_query_plan_w_profile(impl->cache->query, it, &buf);
-    // }
 
 #ifdef FLECS_LOG
     char *str = ecs_strbuf_get(&buf);
@@ -699,55 +694,6 @@ char* ecs_query_str(
     return ecs_strbuf_get(&buf);
 error:
     return NULL;
-}
-
-int32_t flecs_query_pivot_term(
-    const ecs_world_t *world,
-    const ecs_query_t *query)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    const ecs_term_t *terms = query->terms;
-    int32_t i, term_count = query->term_count;
-    int32_t pivot_term = -1, min_count = -1, self_pivot_term = -1;
-
-    for (i = 0; i < term_count; i ++) {
-        const ecs_term_t *term = &terms[i];
-        ecs_id_t id = term->id;
-
-        if ((term->oper != EcsAnd) || (i && (term[-1].oper == EcsOr))) {
-            continue;
-        }
-
-        if (!ecs_term_match_this(term)) {
-            continue;
-        }
-
-        ecs_component_record_t *cr = flecs_components_get(world, id);
-        if (!cr) {
-            /* If one of the terms does not match with any data, iterator 
-             * should not return anything */
-            return -2; /* -2 indicates query doesn't match anything */
-        }
-
-        int32_t table_count = flecs_table_cache_count(&cr->cache);
-        if (min_count == -1 || table_count < min_count) {
-            min_count = table_count;
-            pivot_term = i;
-            if ((term->src.id & EcsTraverseFlags) == EcsSelf) {
-                self_pivot_term = i;
-            }
-        }
-    }
-
-    if (self_pivot_term != -1) {
-        pivot_term = self_pivot_term;
-    }
-
-    return pivot_term;
-error:
-    return -2;
 }
 
 void flecs_query_apply_iter_flags(

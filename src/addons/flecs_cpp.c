@@ -4,7 +4,6 @@
  */
 
 #include "../private_api.h"
-#include <ctype.h>
 
 /* Utilities for C++ API */
 

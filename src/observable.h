@@ -1,6 +1,6 @@
 /**
  * @file observable.h
- * @brief Functions for sending events.
+ * @brief Functions for emitting events.
  */
 
 #ifndef FLECS_OBSERVABLE_H
@@ -48,55 +48,68 @@ typedef struct ecs_observer_impl_t {
 
 #define flecs_observer_impl(observer) (ECS_CONST_CAST(ecs_observer_impl_t*, observer))
 
+/* Get event record (all observers for an event). */
 ecs_event_record_t* flecs_event_record_get(
     const ecs_observable_t *o,
     ecs_entity_t event);
 
+/* Get or create event record. */
 ecs_event_record_t* flecs_event_record_ensure(
     ecs_observable_t *o,
     ecs_entity_t event);
 
+/* Get event id record (all observers for an event/component). */
 ecs_event_id_record_t* flecs_event_id_record_get(
     const ecs_event_record_t *er,
     ecs_id_t id);
 
+/* Get or create event id record. */
 ecs_event_id_record_t* flecs_event_id_record_ensure(
     ecs_world_t *world,
     ecs_event_record_t *er,
     ecs_id_t id);
 
+/* Remove event id record. */
 void flecs_event_id_record_remove(
     ecs_event_record_t *er,
     ecs_id_t id);
 
+/* Initialize observable (typically the world). */
 void flecs_observable_init(
     ecs_observable_t *observable);
 
+/* Free observable. */
 void flecs_observable_fini(
     ecs_observable_t *observable);
 
+/* Check if any observers exist for event/component. */
 bool flecs_observers_exist(
     ecs_observable_t *observable,
     ecs_id_t id,
     ecs_entity_t event);
 
+/* Initialize observer. */
 ecs_observer_t* flecs_observer_init(
     ecs_world_t *world,
     ecs_entity_t entity,
     const ecs_observer_desc_t *desc);
 
+/* Free observer. */
 void flecs_observer_fini(
     ecs_observer_t *observer);
 
+/* Emit event. */
 void flecs_emit( 
     ecs_world_t *world,
     ecs_world_t *stage,
     ecs_flags64_t *set_mask,
     ecs_event_desc_t *desc);
 
+/* Default function to set in iter::next */
 bool flecs_default_next_callback(
     ecs_iter_t *it);
 
+/* Invoke observers. */
 void flecs_observers_invoke(
     ecs_world_t *world,
     ecs_map_t *observers,
@@ -104,12 +117,14 @@ void flecs_observers_invoke(
     ecs_table_t *table,
     ecs_entity_t trav);
 
+/* Invalidate reachable cache. */
 void flecs_emit_propagate_invalidate(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t offset,
     int32_t count);
 
+/* Set bit indicating that observer is disabled. */
 void flecs_observer_set_disable_bit(
     ecs_world_t *world,
     ecs_entity_t e,
