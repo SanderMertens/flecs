@@ -1,8 +1,10 @@
 ﻿
 #if WITH_AUTOMATION_TESTS
 
+#include "FlecsUObjectComponentTestObject.h"
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 BEGIN_DEFINE_SPEC(FUObjectTestsSpec,
                   "Flecs.Components.UObjectComponent",
@@ -15,8 +17,6 @@ END_DEFINE_SPEC(FUObjectTestsSpec);
 void FUObjectTestsSpec::Define()
 {
 	FLECS_FIXTURE_LIFECYCLE(Fixture);
-
-	
 }
 
 #endif // WITH_AUTOMATION_TESTS

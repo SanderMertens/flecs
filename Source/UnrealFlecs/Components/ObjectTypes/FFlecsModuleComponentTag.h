@@ -7,7 +7,7 @@
 #include "FFlecsModuleComponentTag.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsModuleComponentTag
+struct UNREALFLECS_API FFlecsModuleComponentTag : public FFlecsUObjectTag
 {
 	GENERATED_BODY()
 }; // struct FFlecsModuleComponentTag

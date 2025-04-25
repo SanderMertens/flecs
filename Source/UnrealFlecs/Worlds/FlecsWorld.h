@@ -206,11 +206,14 @@ public:
 		RegisterComponentType<FFlecsBeginPlay>();
 
 		RegisterComponentType<FFlecsUObjectComponent>();
-		RegisterComponentType<FFlecsActorComponentTag>();
-		RegisterComponentType<FFlecsModuleComponentTag>();
-		RegisterComponentType<FFlecsSceneComponentTag>();
+		
 		RegisterComponentType<FFlecsUObjectTag>();
-		RegisterComponentType<FFlecsActorTag>();
+		
+		RegisterComponentType<FFlecsActorTag>().is_a<FFlecsUObjectTag>();
+		RegisterComponentType<FFlecsActorComponentTag>().is_a<FFlecsUObjectTag>();
+		RegisterComponentType<FFlecsModuleComponentTag>().is_a<FFlecsUObjectTag>();
+		
+		RegisterComponentType<FFlecsSceneComponentTag>().is_a<FFlecsActorComponentTag>();
 
 		RegisterComponentType<FFlecsModuleComponent>();
 		RegisterComponentType<FFlecsModuleInitEvent>();

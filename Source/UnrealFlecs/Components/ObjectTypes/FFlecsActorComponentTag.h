@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FFlecsUObjectTag.h"
 #include "Properties/FlecsComponentProperties.h"
 #include "FFlecsActorComponentTag.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsActorComponentTag
+struct UNREALFLECS_API FFlecsActorComponentTag : public FFlecsUObjectTag
 {
 	GENERATED_BODY()
 }; // struct FFlecsActorComponentTag

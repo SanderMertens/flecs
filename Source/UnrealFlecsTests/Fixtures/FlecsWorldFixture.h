@@ -16,19 +16,19 @@ UNLOG_CATEGORY(LogFlecsTests);
 class UNREALFLECSTESTS_API FFlecsTestFixture
 {
 public:
-	TWeakObjectPtr<UWorld> TestWorld = nullptr;
-	TWeakObjectPtr<UFlecsWorldSubsystem> WorldSubsystem = nullptr;
-	TWeakObjectPtr<UFlecsWorld> FlecsWorld = nullptr;
+	TStrongObjectPtr<UWorld> TestWorld = nullptr;
+	TStrongObjectPtr<UFlecsWorldSubsystem> WorldSubsystem = nullptr;
+	TStrongObjectPtr<UFlecsWorld> FlecsWorld = nullptr;
 
 	void SetUp(const TArray<UObject*>& InModules = {})
 	{
-		TestWorld = UWorld::CreateWorld(EWorldType::Game, false, TEXT("FlecsTestWorld"));
+		TestWorld = TStrongObjectPtr(UWorld::CreateWorld(EWorldType::Game, false, TEXT("FlecsTestWorld")));
 		check(TestWorld.IsValid());
 
 		FWorldContext& WorldContext = GEngine->CreateNewWorldContext(EWorldType::Game);
 		WorldContext.SetCurrentWorld(TestWorld.Get());
 
-		WorldSubsystem = TestWorld->GetSubsystem<UFlecsWorldSubsystem>();
+		WorldSubsystem = TStrongObjectPtr(TestWorld->GetSubsystem<UFlecsWorldSubsystem>());
 		check(WorldSubsystem.IsValid());
 
 		// Create world settings
@@ -36,7 +36,7 @@ public:
 		WorldSettings.WorldName = TEXT("TestWorld");
 		WorldSettings.Modules = InModules;
 
-		FlecsWorld = WorldSubsystem->CreateWorld(TEXT("TestWorld"), WorldSettings);
+		FlecsWorld = TStrongObjectPtr(WorldSubsystem->CreateWorld(TEXT("TestWorld"), WorldSettings));
 
 		TestWorld->InitializeActorsForPlay(FURL());
 		TestWorld->BeginPlay();

@@ -472,6 +472,7 @@ void Table_get_T_enum(void) {
 
 void Table_get_size(void) {
     flecs::world ecs;
+    ecs.component<Position>();
 
     flecs::entity e = ecs.entity().set<Position>({10, 20});
     ecs.entity().set<Position>({20, 30});
@@ -484,6 +485,7 @@ void Table_get_size(void) {
 
 void Table_get_entities(void) {
     flecs::world ecs;
+    ecs.component<Position>();
 
     flecs::entity e1 = ecs.entity().set<Position>({10, 20});
     flecs::entity e2 = ecs.entity().set<Position>({20, 30});
@@ -499,6 +501,7 @@ void Table_get_entities(void) {
 
 void Table_get_records(void) {
     flecs::world ecs;
+    ecs.component<Position>();
 
     flecs::entity parent = ecs.entity();
     flecs::entity e = ecs.entity()
@@ -524,6 +527,7 @@ void Table_get_records(void) {
 
 void Table_unlock(void) {
     flecs::world ecs;
+    ecs.component<Position>();
 
     flecs::entity e1 = ecs.entity()
         .set<Position>({10, 20});
@@ -540,6 +544,7 @@ void Table_unlock(void) {
 
 void Table_has_flags(void) {
     flecs::world ecs;
+    ecs.component<Position>();
 
     flecs::entity parent = ecs.entity();
     flecs::entity e1 = ecs.entity()
@@ -556,6 +561,7 @@ void Table_has_flags(void) {
 
 void Table_clear_entities(void) {
     flecs::world ecs;
+    ecs.component<Position>();
 
     flecs::entity e1 = ecs.entity()
         .set<Position>({10, 20});
@@ -613,7 +619,14 @@ END_DEFINE_SPEC(FFlecsTableTestsSpec);
 "range_get_pair_R_T",
 "get_depth",
 "get_depth_w_type",
-"iter_type"
+"iter_type",
+"get_size"
+"get_entities",
+"get_records",
+"unlock",
+"has_flags",
+"clear_entities"
+
 ]*/
 
 void FFlecsTableTestsSpec::Define()
@@ -639,6 +652,12 @@ void FFlecsTableTestsSpec::Define()
     It("Table_get_depth_w_type", [&]() { Table_get_depth_w_type(); });
     It("Table_iter_type", [&]() { Table_iter_type(); });
     It("Table_get_T_type_enum", [&]() { Table_get_T_enum(); });
+    It("Table_get_size", [&]() { Table_get_size(); });
+    It("Table_get_entities", [&]() { Table_get_entities(); });
+    It("Table_get_records", [&]() { Table_get_records(); });
+    It("Table_unlock", [&]() { Table_unlock(); });
+    It("Table_has_flags", [&]() { Table_has_flags(); });
+    It("Table_clear_entities", [&]() { Table_clear_entities(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS

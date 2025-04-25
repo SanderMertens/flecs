@@ -7,7 +7,7 @@
 #include "FFlecsSceneComponentTag.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsSceneComponentTag
+struct UNREALFLECS_API FFlecsSceneComponentTag : public FFlecsActorComponentTag
 {
 	GENERATED_BODY()
 }; // struct FFlecsSceneComponentTag

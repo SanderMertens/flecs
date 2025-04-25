@@ -6,6 +6,8 @@
 #include "Entities/FlecsEntityHandle.h"
 #include "FlecsComponentCollectionObject.generated.h"
 
+class UFlecsWorld;
+
 UCLASS(Abstract, BlueprintType, Blueprintable, EditInlineNew)
 class UNREALFLECS_API UFlecsComponentCollectionObject : public UObject
 {

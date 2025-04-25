@@ -504,12 +504,14 @@ void System_copy_name_on_create(void) {
     RegisterTestTypeComponents(world);
 
     char name[6];
-    strcpy(name, "Hello");
+    
+    std::strcpy(name, "Hello");
 
     auto system_1 = world.system<Position>(name)
         .run([](flecs::iter& it) { while (it.next()) {} });
 
-    strcpy(name, "World");
+    std::strcpy(name, "World");
+    
     auto system_2 = world.system<Position>(name)
         .run([](flecs::iter& it) { while (it.next()) {} });
 
