@@ -9,7 +9,6 @@
  */
 
 #include "private_api.h"
-#include <stddef.h>
 
 /* Utility macros to enforce consistency when initializing iterator fields */
 

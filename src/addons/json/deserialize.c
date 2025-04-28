@@ -6,7 +6,6 @@
 #include "../../private_api.h"
 #include "json.h"
 #include "../query_dsl/query_dsl.h"
-#include <ctype.h>
 
 #ifdef FLECS_JSON
 

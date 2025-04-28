@@ -126,7 +126,6 @@ error:
         char *idstr = ecs_id_str(v->world, id);
         flecs_script_eval_error(v, node, 
             "cannot set value of '%s': not a component", idstr);
-        flecs_dump_backtrace(stdout);
         ecs_os_free(idstr);
     }
     return NULL;

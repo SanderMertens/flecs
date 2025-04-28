@@ -7,8 +7,6 @@
 
 #ifdef FLECS_LOG
 
-#include <ctype.h>
-
 void flecs_colorize_buf(
     char *msg,
     bool enable_colors,

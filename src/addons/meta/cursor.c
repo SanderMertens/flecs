@@ -5,7 +5,6 @@
 
 #include "meta.h"
 #include <inttypes.h>
-#include <ctype.h>
 
 #ifdef FLECS_META
 #ifdef FLECS_QUERY_DSL

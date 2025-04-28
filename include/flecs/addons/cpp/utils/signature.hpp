@@ -5,8 +5,6 @@
 
 #pragma once
 
-#include <stdio.h>
-
 namespace flecs {
 namespace _ {
 

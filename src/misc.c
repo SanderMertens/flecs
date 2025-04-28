@@ -2,10 +2,11 @@
  * @file misc.c
  * @brief Miscellaneous functions.
  */
+ 
+#include <time.h>
+#include <errno.h>
 
 #include "private_api.h"
-#include <time.h>
-#include <ctype.h>
 
 #ifndef FLECS_NDEBUG
 static int64_t flecs_s_min[] = { 
@@ -131,14 +132,6 @@ int flecs_id_qsort_cmp(const void *a, const void *b) {
     ecs_id_t id_a = *(const ecs_id_t*)a;
     ecs_id_t id_b = *(const ecs_id_t*)b;
     return (id_a > id_b) - (id_a < id_b);
-}
-
-uint64_t flecs_string_hash(
-    const void *ptr)
-{
-    const ecs_hashed_string_t *str = ptr;
-    ecs_assert(str->hash != 0, ECS_INTERNAL_ERROR, NULL);
-    return str->hash;
 }
 
 char* flecs_vasprintf(

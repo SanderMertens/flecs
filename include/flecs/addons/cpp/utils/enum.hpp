@@ -6,7 +6,6 @@
  * and their names. This is used to automatically register enum constants.
  */
 
-#include <string.h>
 #include <limits>
 
 // 126, so that FLECS_ENUM_MAX_COUNT is 127 which is the largest value 

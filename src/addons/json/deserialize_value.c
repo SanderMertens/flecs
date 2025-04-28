@@ -6,7 +6,6 @@
 #include "../../private_api.h"
 #include "json.h"
 #include "../script/script.h"
-#include <ctype.h>
 
 #ifdef FLECS_JSON
 

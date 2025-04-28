@@ -4,7 +4,6 @@
  */
 
 #include "../private_api.h"
-#include <ctype.h>
 
 #ifdef FLECS_QUERY_DSL
 #include "../addons/query_dsl/query_dsl.h"
@@ -672,7 +671,6 @@ int flecs_term_verify(
     return 0;
 }
 
-static
 int flecs_term_finalize(
     const ecs_world_t *world,
     ecs_term_t *term,
@@ -1079,16 +1077,6 @@ bool ecs_term_match_0(
     const ecs_term_t *term)
 {
     return (!ECS_TERM_REF_ID(&term->src) && (term->src.id & EcsIsEntity));
-}
-
-int ecs_term_finalize(
-    const ecs_world_t *world,
-    ecs_term_t *term)
-{
-    ecs_query_validator_ctx_t ctx = {0};
-    ctx.world = world;
-    ctx.term = term;
-    return flecs_term_finalize(world, term, &ctx);
 }
 
 static
