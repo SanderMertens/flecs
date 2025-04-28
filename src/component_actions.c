@@ -67,6 +67,27 @@ void flecs_invoke_hook(
     world->stages[0]->defer = defer;
 }
 
+static
+void flecs_on_reparent(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_t *other_table,
+    int32_t row,
+    int32_t count)
+{    
+    flecs_reparent_name_index(world, other_table, table, row, count);
+}
+
+static
+void flecs_on_unparent(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count)
+{
+    flecs_unparent_name_index(world, table, row, count);
+}
+
 bool flecs_sparse_on_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -263,6 +284,10 @@ void flecs_notify_on_add(
             return;
         }
 
+        if (diff_flags & EcsTableEdgeReparent) {
+            flecs_on_reparent(world, table, other_table, row, count);
+        }
+
         if (sparse && (diff_flags & EcsTableHasSparse)) {
             if (flecs_sparse_on_add(world, table, row, count, added, construct)) {
                 diff_flags |= EcsTableHasOnAdd;
@@ -314,6 +339,10 @@ void flecs_notify_on_remove(
             diff->removed_flags|(table->flags & EcsTableHasTraversable);
         if (!diff_flags) {
             return;
+        }
+
+        if (diff_flags & EcsTableEdgeReparent) {
+            flecs_on_unparent(world, table, row, count);
         }
 
         if (diff_flags & EcsTableHasUnion) {

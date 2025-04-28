@@ -243,8 +243,6 @@ void flecs_move_entity(
     flecs_notify_on_add(world, dst_table, src_table, dst_row, 1, diff, 
         evt_flags, 0, ctor, true);
 
-    flecs_update_name_index(world, src_table, dst_table, dst_row);
-
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
 error:
     return;

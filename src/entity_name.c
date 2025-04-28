@@ -407,11 +407,43 @@ void ecs_on_set(EcsIdentifier)(
     }
 }
 
-void flecs_update_name_index(
+static
+void flecs_reparent_name_index_intern(
+    ecs_world_t *world,
+    const ecs_entity_t *entities,
+    ecs_hashmap_t *src_index,
+    ecs_hashmap_t *dst_index,
+    EcsIdentifier *names,
+    int32_t count) 
+{
+    
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = entities[i];
+        EcsIdentifier *name = &names[i];
+
+        uint64_t index_hash = name->index_hash;
+        if (index_hash) {
+            flecs_name_index_remove(src_index, e, index_hash);
+        }
+    
+        const char *name_str = name->value;
+        if (name_str) {
+            ecs_assert(name->hash != 0, ECS_INTERNAL_ERROR, NULL);
+    
+            flecs_name_index_ensure(
+                dst_index, e, name_str, name->length, name->hash);
+            name->index = dst_index;
+        }
+    }
+}
+
+void flecs_reparent_name_index(
     ecs_world_t *world,
     ecs_table_t *src, 
     ecs_table_t *dst, 
-    int32_t offset) 
+    int32_t offset,
+    int32_t count) 
 {
     ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -430,24 +462,38 @@ void flecs_update_name_index(
         return;
     }
 
-    EcsIdentifier *name = ecs_table_get_pair(world, 
+    EcsIdentifier *names = ecs_table_get_pair(world, 
         dst, EcsIdentifier, EcsName, offset);
-    ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t e = ecs_table_entities(dst)[offset];
+    flecs_reparent_name_index_intern(world, &ecs_table_entities(dst)[offset],
+        src_index, dst_index, names, count);
 
-    uint64_t index_hash = name->index_hash;
-    if (index_hash) {
-        flecs_name_index_remove(src_index, e, index_hash);
+}
+
+void flecs_unparent_name_index(
+    ecs_world_t *world,
+    ecs_table_t *src,
+    int32_t offset,
+    int32_t count) 
+{
+    if (!(src->flags & EcsTableHasName)) {
+        return;
     }
-    const char *name_str = name->value;
-    if (name_str) {
-        ecs_assert(name->hash != 0, ECS_INTERNAL_ERROR, NULL);
 
-        flecs_name_index_ensure(
-            dst_index, e, name_str, name->length, name->hash);
-        name->index = dst_index;
-    }
+    ecs_hashmap_t *src_index = src->_->name_index;
+
+    ecs_component_record_t *cr = world->cr_childof_0;
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_hashmap_t *dst_index = cr->pair->name_index;
+    ecs_assert(dst_index != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    EcsIdentifier *names = ecs_table_get_pair(world, 
+        src, EcsIdentifier, EcsName, offset);
+    ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_reparent_name_index_intern(world, &ecs_table_entities(src)[offset],
+        src_index, dst_index, names, count);
 }
 
 /* Public functions */

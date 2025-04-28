@@ -234,6 +234,7 @@ extern "C" {
 
 #define EcsTableHasTraversable         (1u << 27u)
 #define EcsTableHasOrderedChildren     (1u << 28u)
+#define EcsTableEdgeReparent           (1u << 29u)
 #define EcsTableMarkedForDelete        (1u << 30u)
 
 /* Composite table flags */
