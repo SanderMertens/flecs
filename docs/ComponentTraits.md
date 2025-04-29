@@ -1021,6 +1021,110 @@ Queries must be aware of (potential) inheritance relationships when they are cre
 
 If a query was not aware of inheritance relationships at creation time and one or more of the components in the query were inherited from, query iteration will fail in debug mode.
 
+## OrderedChildren trait
+The `OrderedChildren` trait can be added to entities to indicate that creation order or a custom order should be preserved. 
+
+When this trait is added to a parent, the entity ids returned by the `ecs_children` / `entity::children` operations will be in creation or custom order. Children of a parent with the `OrderedChildren` trait are guaranteed to be returned in a single result.
+
+The trait does not affect the order in which entities are returned by queries.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t parent = ecs_new(world);
+ecs_add_id(world, parent, EcsOrderedChildren);
+
+ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
+ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
+ecs_entity_t child_3 = ecs_new_w_pair(world, EcsChildOf, parent);
+
+// Adding/removing components usually changes the order in which children are
+// iterated, but with the OrderedChildren trait order is preserved.
+ecs_set(world, child_2, Position, {10, 20});
+
+ecs_iter_t it = ecs_children(world, parent);
+while (ecs_children_next(&it)) {
+    // it.table will be set to NULL when iterating ordered children.
+    for (int i = 0; i < it.count; i ++) {
+        ecs_entity_t e = it.entities[i];
+        // i == 0: child_1
+        // i == 1: child_2
+        // i == 2: child_3
+    }
+}
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity parent = world.entity().add(flecs::OrderedChildren);
+
+flecs::entity child_1 = world.entity().child_of(parent);
+flecs::entity child_2 = world.entity().child_of(parent);
+flecs::entity child_3 = world.entity().child_of(parent);
+
+// Adding/removing components usually changes the order in which children are
+// iterated, but with the OrderedChildren trait order is preserved.
+child_2.set(Position{10, 20});
+
+parent.children([](flecs::entity child) {
+    // 1st result: child_1
+    // 2nd result: child_2
+    // 3rd result: child_3
+});
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity parent = world.Entity().Add(Ecs.OrderedChildren);
+
+Entity child_1 = world.Entity().ChildOf(parent);
+Entity child_2 = world.Entity().ChildOf(parent);
+Entity child_3 = world.Entity().ChildOf(parent);
+
+// Adding/removing components usually changes the order in which children are
+// iterated, but with the OrderedChildren trait order is preserved.
+child_2.Set<Position>(new(10, 20));
+
+parent.Children((Entity child) => {
+    // 1st result: child_1
+    // 2nd result: child_2
+    // 3rd result: child_3
+});
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let parent = world.entity().add_trait::<flecs::OrderedChildren>();
+
+let child_1 = world.entity().child_of_id(parent);
+let child_2 = world.entity().child_of_id(parent);
+let child_3 = world.entity().child_of_id(parent);
+
+// Adding/removing components usually changes the order in which children are
+// iterated, but with the OrderedChildren trait order is preserved.
+child_2.set(Position{10, 20});
+
+parent.each_child(|child| {
+    // 1st result: child_1
+    // 2nd result: child_2
+    // 3rd result: child_3
+});
+```
+
+</li>
+</ul>
+</div>
+
+The stored order can be modified by an application with the `ecs_set_child_order` / `entity::set_child_order` operation.
+
 ## OnInstantiate trait
 The `OnInstantiate` trait configures the behavior of components when an entity is instantiated from another entity (usually a prefab). Instantiation happens when an `IsA` pair is added to an entity.
 

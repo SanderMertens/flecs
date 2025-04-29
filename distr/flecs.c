@@ -344,6 +344,243 @@ const uint64_t* flecs_entity_index_ids(
 #endif
 
 /**
+ * @file storage/table_cache.h
+ * @brief Data structure for fast table iteration/lookups.
+ */
+
+#ifndef FLECS_TABLE_CACHE_H_
+#define FLECS_TABLE_CACHE_H_
+
+/** Linked list of tables in table cache */
+typedef struct ecs_table_cache_list_t {
+    ecs_table_cache_hdr_t *first;
+    ecs_table_cache_hdr_t *last;
+    int32_t count;
+} ecs_table_cache_list_t;
+
+/** Table cache */
+typedef struct ecs_table_cache_t {
+    ecs_map_t index; /* <table_id, T*> */
+    ecs_table_cache_list_t tables;
+} ecs_table_cache_t;
+
+void ecs_table_cache_init(
+    ecs_world_t *world,
+    ecs_table_cache_t *cache);
+
+void ecs_table_cache_fini(
+    ecs_table_cache_t *cache);
+
+void ecs_table_cache_insert(
+    ecs_table_cache_t *cache,
+    const ecs_table_t *table,
+    ecs_table_cache_hdr_t *result);
+
+void ecs_table_cache_replace(
+    ecs_table_cache_t *cache,
+    const ecs_table_t *table,
+    ecs_table_cache_hdr_t *elem);
+
+void* ecs_table_cache_remove(
+    ecs_table_cache_t *cache,
+    uint64_t table_id,
+    ecs_table_cache_hdr_t *elem);
+
+void* ecs_table_cache_get(
+    const ecs_table_cache_t *cache,
+    const ecs_table_t *table);
+
+#define flecs_table_cache_count(cache) (cache)->tables.count
+
+bool flecs_table_cache_iter(
+    const ecs_table_cache_t *cache,
+    ecs_table_cache_iter_t *out);
+
+bool flecs_table_cache_empty_iter(
+    const ecs_table_cache_t *cache,
+    ecs_table_cache_iter_t *out);
+
+bool flecs_table_cache_all_iter(
+    const ecs_table_cache_t *cache,
+    ecs_table_cache_iter_t *out);
+
+const ecs_table_cache_hdr_t* flecs_table_cache_next_(
+    ecs_table_cache_iter_t *it);
+
+#define flecs_table_cache_next(it, T)\
+    (ECS_CONST_CAST(T*, flecs_table_cache_next_(it)))
+
+#endif
+
+/**
+ * @file storage/component_index.h
+ * @brief Index for (amongst others) looking up tables by component id.
+ */
+
+#ifndef FLECS_COMPONENT_INDEX_H
+#define FLECS_COMPONENT_INDEX_H
+
+/* Linked list of id records */
+typedef struct ecs_id_record_elem_t {
+    struct ecs_component_record_t *prev, *next;
+} ecs_id_record_elem_t;
+
+typedef struct ecs_reachable_elem_t {
+    const ecs_table_record_t *tr;
+    ecs_record_t *record;
+    ecs_entity_t src;
+    ecs_id_t id;
+#ifndef NDEBUG
+    ecs_table_t *table;
+#endif
+} ecs_reachable_elem_t;
+
+typedef struct ecs_reachable_cache_t {
+    int32_t generation;
+    int32_t current;
+    ecs_vec_t ids; /* vec<reachable_elem_t> */
+} ecs_reachable_cache_t;
+
+/* Component index data that just applies to pairs */
+typedef struct ecs_pair_record_t {
+    /* Name lookup index (currently only used for ChildOf pairs) */
+    ecs_hashmap_t *name_index;
+
+    /* Vector with ordered children */
+    ecs_vec_t ordered_children;
+
+    /* Lists for all id records that match a pair wildcard. The wildcard id
+     * record is at the head of the list. */
+    ecs_id_record_elem_t first;   /* (R, *) */
+    ecs_id_record_elem_t second;  /* (*, T) */
+    ecs_id_record_elem_t trav;    /* (*, T) with only traversable relationships */
+
+    /* Parent component record. For pair records the parent is the (R, *) record. */
+    ecs_component_record_t *parent;
+
+    /* Cache for finding components that are reachable through a relationship */
+    ecs_reachable_cache_t reachable;
+} ecs_pair_record_t;
+
+/* Payload for id index which contains all data structures for an id. */
+struct ecs_component_record_t {
+    /* Cache with all tables that contain the id. Must be first member. */
+    ecs_table_cache_t cache; /* table_cache<ecs_table_record_t> */
+
+    /* Component id of record */
+    ecs_id_t id;
+
+    /* Flags for id */
+    ecs_flags32_t flags;
+
+#ifdef FLECS_DEBUG_INFO
+    /* String representation of id (used for debug visualization) */
+    char *str;
+#endif
+
+    /* Cached pointer to type info for id, if id contains data. */
+    const ecs_type_info_t *type_info;
+
+    /* Storage for sparse components or union relationships */
+    void *sparse;
+
+    /* Pair data */
+    ecs_pair_record_t *pair;
+
+    /* All non-fragmenting ids */
+    ecs_id_record_elem_t non_fragmenting;
+
+    /* Refcount */
+    int32_t refcount;
+
+    /* Keep alive count. This count must be 0 when the component record is deleted. If
+     * it is not 0, an application attempted to delete an id that was still
+     * queried for. */
+    int32_t keep_alive;
+};
+
+/* Bootstrap cached id records */
+void flecs_components_init(
+    ecs_world_t *world);
+
+/* Cleanup all id records in world */
+void flecs_components_fini(
+    ecs_world_t *world);
+
+/* Ensure component record for id */
+ecs_component_record_t* flecs_components_ensure(
+    ecs_world_t *world,
+    ecs_id_t id);
+
+/* Increase refcount of component record */
+void flecs_component_claim(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+/* Decrease refcount of component record, delete if 0 */
+int32_t flecs_component_release(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+/* Release all empty tables in component record */
+void flecs_component_release_tables(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+/* Set (component) type info for component record */
+bool flecs_component_set_type_info(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    const ecs_type_info_t *ti);
+
+/* Return next (R, *) record */
+ecs_component_record_t* flecs_component_first_next(
+    ecs_component_record_t *cr);
+
+/* Return next (*, T) record */
+ecs_component_record_t* flecs_component_second_next(
+    ecs_component_record_t *cr);
+
+/* Return next traversable (*, T) record */
+ecs_component_record_t* flecs_component_trav_next(
+    ecs_component_record_t *cr);
+
+/* Ensure name index for component record */
+ecs_hashmap_t* flecs_component_name_index_ensure(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+/* Get name index for component record */
+ecs_hashmap_t* flecs_component_name_index_get(
+    const ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+/* Init sparse storage */
+void flecs_component_init_sparse(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+/* Return flags for matching component records */
+ecs_flags32_t flecs_id_flags_get(
+    ecs_world_t *world,
+    ecs_id_t id);
+
+/* Delete entities in sparse storage */
+void flecs_component_delete_sparse(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+void flecs_component_record_init_dont_fragment(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+void flecs_component_record_init_exclusive(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+#endif
+
+/**
  * @file storage/table.h
  * @brief Table storage implementation.
  */
@@ -563,7 +800,7 @@ typedef struct ecs_table__t {
     ecs_bitset_t *bs_columns;        /* Bitset columns */
 
     struct ecs_table_record_t *records; /* Array with table records */
-    ecs_hashmap_t *name_index;       /* Cached pointer to name index */
+    ecs_pair_record_t *childof_r;       /* ChildOf pair data */
 
 #ifdef FLECS_DEBUG_INFO
     /* Fields used for debug visualization */
@@ -761,240 +998,6 @@ bool flecs_table_bloom_filter_test(
 #endif
 
 /**
- * @file storage/table_cache.h
- * @brief Data structure for fast table iteration/lookups.
- */
-
-#ifndef FLECS_TABLE_CACHE_H_
-#define FLECS_TABLE_CACHE_H_
-
-/** Linked list of tables in table cache */
-typedef struct ecs_table_cache_list_t {
-    ecs_table_cache_hdr_t *first;
-    ecs_table_cache_hdr_t *last;
-    int32_t count;
-} ecs_table_cache_list_t;
-
-/** Table cache */
-typedef struct ecs_table_cache_t {
-    ecs_map_t index; /* <table_id, T*> */
-    ecs_table_cache_list_t tables;
-} ecs_table_cache_t;
-
-void ecs_table_cache_init(
-    ecs_world_t *world,
-    ecs_table_cache_t *cache);
-
-void ecs_table_cache_fini(
-    ecs_table_cache_t *cache);
-
-void ecs_table_cache_insert(
-    ecs_table_cache_t *cache,
-    const ecs_table_t *table,
-    ecs_table_cache_hdr_t *result);
-
-void ecs_table_cache_replace(
-    ecs_table_cache_t *cache,
-    const ecs_table_t *table,
-    ecs_table_cache_hdr_t *elem);
-
-void* ecs_table_cache_remove(
-    ecs_table_cache_t *cache,
-    uint64_t table_id,
-    ecs_table_cache_hdr_t *elem);
-
-void* ecs_table_cache_get(
-    const ecs_table_cache_t *cache,
-    const ecs_table_t *table);
-
-#define flecs_table_cache_count(cache) (cache)->tables.count
-
-bool flecs_table_cache_iter(
-    const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out);
-
-bool flecs_table_cache_empty_iter(
-    const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out);
-
-bool flecs_table_cache_all_iter(
-    const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out);
-
-const ecs_table_cache_hdr_t* flecs_table_cache_next_(
-    ecs_table_cache_iter_t *it);
-
-#define flecs_table_cache_next(it, T)\
-    (ECS_CONST_CAST(T*, flecs_table_cache_next_(it)))
-
-#endif
-
-/**
- * @file storage/component_index.h
- * @brief Index for (amongst others) looking up tables by component id.
- */
-
-#ifndef FLECS_COMPONENT_INDEX_H
-#define FLECS_COMPONENT_INDEX_H
-
-/* Linked list of id records */
-typedef struct ecs_id_record_elem_t {
-    struct ecs_component_record_t *prev, *next;
-} ecs_id_record_elem_t;
-
-typedef struct ecs_reachable_elem_t {
-    const ecs_table_record_t *tr;
-    ecs_record_t *record;
-    ecs_entity_t src;
-    ecs_id_t id;
-#ifndef NDEBUG
-    ecs_table_t *table;
-#endif
-} ecs_reachable_elem_t;
-
-typedef struct ecs_reachable_cache_t {
-    int32_t generation;
-    int32_t current;
-    ecs_vec_t ids; /* vec<reachable_elem_t> */
-} ecs_reachable_cache_t;
-
-/* Component index data that just applies to pairs */
-typedef struct ecs_pair_id_record_t {
-    /* Name lookup index (currently only used for ChildOf pairs) */
-    ecs_hashmap_t *name_index;
-
-    /* Lists for all id records that match a pair wildcard. The wildcard id
-     * record is at the head of the list. */
-    ecs_id_record_elem_t first;   /* (R, *) */
-    ecs_id_record_elem_t second;  /* (*, T) */
-    ecs_id_record_elem_t trav;    /* (*, T) with only traversable relationships */
-
-    /* Parent component record. For pair records the parent is the (R, *) record. */
-    ecs_component_record_t *parent;
-
-    /* Cache for finding components that are reachable through a relationship */
-    ecs_reachable_cache_t reachable;
-} ecs_pair_id_record_t;
-
-/* Payload for id index which contains all data structures for an id. */
-struct ecs_component_record_t {
-    /* Cache with all tables that contain the id. Must be first member. */
-    ecs_table_cache_t cache; /* table_cache<ecs_table_record_t> */
-
-    /* Component id of record */
-    ecs_id_t id;
-
-    /* Flags for id */
-    ecs_flags32_t flags;
-
-#ifdef FLECS_DEBUG_INFO
-    /* String representation of id (used for debug visualization) */
-    char *str;
-#endif
-
-    /* Cached pointer to type info for id, if id contains data. */
-    const ecs_type_info_t *type_info;
-
-    /* Storage for sparse components or union relationships */
-    void *sparse;
-
-    /* Pair data */
-    ecs_pair_id_record_t *pair;
-
-    /* All non-fragmenting ids */
-    ecs_id_record_elem_t non_fragmenting;
-
-    /* Refcount */
-    int32_t refcount;
-
-    /* Keep alive count. This count must be 0 when the component record is deleted. If
-     * it is not 0, an application attempted to delete an id that was still
-     * queried for. */
-    int32_t keep_alive;
-};
-
-/* Bootstrap cached id records */
-void flecs_components_init(
-    ecs_world_t *world);
-
-/* Cleanup all id records in world */
-void flecs_components_fini(
-    ecs_world_t *world);
-
-/* Ensure component record for id */
-ecs_component_record_t* flecs_components_ensure(
-    ecs_world_t *world,
-    ecs_id_t id);
-
-/* Increase refcount of component record */
-void flecs_component_claim(
-    ecs_world_t *world,
-    ecs_component_record_t *cr);
-
-/* Decrease refcount of component record, delete if 0 */
-int32_t flecs_component_release(
-    ecs_world_t *world,
-    ecs_component_record_t *cr);
-
-/* Release all empty tables in component record */
-void flecs_component_release_tables(
-    ecs_world_t *world,
-    ecs_component_record_t *cr);
-
-/* Set (component) type info for component record */
-bool flecs_component_set_type_info(
-    ecs_world_t *world,
-    ecs_component_record_t *cr,
-    const ecs_type_info_t *ti);
-
-/* Return next (R, *) record */
-ecs_component_record_t* flecs_component_first_next(
-    ecs_component_record_t *cr);
-
-/* Return next (*, T) record */
-ecs_component_record_t* flecs_component_second_next(
-    ecs_component_record_t *cr);
-
-/* Return next traversable (*, T) record */
-ecs_component_record_t* flecs_component_trav_next(
-    ecs_component_record_t *cr);
-
-/* Ensure name index for component record */
-ecs_hashmap_t* flecs_component_name_index_ensure(
-    ecs_world_t *world,
-    ecs_component_record_t *cr);
-
-/* Get name index for component record */
-ecs_hashmap_t* flecs_component_name_index_get(
-    const ecs_world_t *world,
-    ecs_component_record_t *cr);
-
-/* Init sparse storage */
-void flecs_component_init_sparse(
-    ecs_world_t *world,
-    ecs_component_record_t *cr);
-
-/* Return flags for matching component records */
-ecs_flags32_t flecs_id_flags_get(
-    ecs_world_t *world,
-    ecs_id_t id);
-
-/* Delete entities in sparse storage */
-void flecs_component_delete_sparse(
-    ecs_world_t *world,
-    ecs_component_record_t *cr);
-
-void flecs_component_record_init_dont_fragment(
-    ecs_world_t *world,
-    ecs_component_record_t *cr);
-
-void flecs_component_record_init_exclusive(
-    ecs_world_t *world,
-    ecs_component_record_t *cr);
-
-#endif
-
-/**
  * @file storage/sparse_storage.h
  * @brief Sparse component storage.
  */
@@ -1031,6 +1034,48 @@ void flecs_component_sparse_remove(
 void flecs_component_sparse_remove_all(
     ecs_world_t *world,
     ecs_component_record_t *cr);
+
+#endif
+
+/**
+ * @file storage/ordered_children.h
+ * @brief Storage for ordered list of entity (child) ids.
+ */
+
+#ifndef FLECS_ORDERED_CHILDREN_H
+#define FLECS_ORDERED_CHILDREN_H
+
+/* Initialize ordered children storage. */
+void flecs_ordered_children_init(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+/* Free ordered children storage. */
+void flecs_ordered_children_fini(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+/* Reparent entities in ordered children storage. */
+void flecs_ordered_children_reparent(
+    ecs_world_t *world,
+    const ecs_table_t *src,
+    const ecs_table_t *dst,
+    int32_t row,
+    int32_t count);
+
+/* Unparent entities in ordered children storage. */
+void flecs_ordered_children_unparent(
+    ecs_world_t *world,
+    const ecs_table_t *src,
+    int32_t row,
+    int32_t count);
+
+/* Reorder entities in ordered children storage. */
+void flecs_ordered_children_reorder(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    const ecs_entity_t *children,
+    int32_t child_count);
 
 #endif
 
@@ -4200,9 +4245,10 @@ void flecs_bootstrap_builtin(
     name_col[index].length = name_length;
     name_col[index].hash = name_hash;
     name_col[index].index_hash = 0;
-    name_col[index].index = table->_->name_index;
-    flecs_name_index_ensure(
-        table->_->name_index, entity, name, name_length, name_hash);
+
+    ecs_hashmap_t *name_index = table->_->childof_r->name_index;
+    name_col[index].index = name_index;
+    flecs_name_index_ensure(name_index, entity, name, name_length, name_hash);
 
     EcsIdentifier *symbol_col = columns[2].data;
     symbol_col[index].value = ecs_os_strdup(symbol);
@@ -5860,6 +5906,9 @@ bool flecs_defer_end(
 
                 /* A negative index indicates the first command for an entity */
                 if (merge_to_world && (cmd->next_for_entity < 0)) {
+                    diff.added_flags = 0;
+                    diff.removed_flags = 0;
+
                     /* Batch commands for entity to limit archetype moves */
                     if (is_alive) {
                         flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
@@ -6210,6 +6259,7 @@ void flecs_on_reparent(
     int32_t count)
 {    
     flecs_reparent_name_index(world, other_table, table, row, count);
+    flecs_ordered_children_reparent(world, other_table, table, row, count);
 }
 
 static
@@ -6220,6 +6270,7 @@ void flecs_on_unparent(
     int32_t count)
 {
     flecs_unparent_name_index(world, table, row, count);
+    flecs_ordered_children_unparent(world, table, row, count);
 }
 
 bool flecs_sparse_on_add(
@@ -6475,7 +6526,7 @@ void flecs_notify_on_remove(
             return;
         }
 
-        if (diff_flags & EcsTableEdgeReparent) {
+        if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
             flecs_on_unparent(world, table, row, count);
         }
 
@@ -6643,6 +6694,31 @@ void flecs_notify_on_set(
  */
 
 
+static
+bool flecs_each_component_record(
+    ecs_iter_t *it,
+    ecs_component_record_t *cr,
+    ecs_id_t id)
+{
+    ecs_check(id != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(id == cr->id, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_each_iter_t *each_iter = &it->priv_.iter.each;
+    each_iter->ids = id;
+    each_iter->sizes = 0;
+    if (cr->type_info) {
+        each_iter->sizes = cr->type_info->size;
+    }
+
+    each_iter->sources = 0;
+    each_iter->trs = NULL;
+    flecs_table_cache_iter((ecs_table_cache_t*)cr, &each_iter->it);
+
+    return true;
+error:
+    return false;
+}
+
 ecs_iter_t ecs_each_id(
     const ecs_world_t *stage,
     ecs_id_t id)
@@ -6664,16 +6740,9 @@ ecs_iter_t ecs_each_id(
         return it;
     }
 
-    ecs_each_iter_t *each_iter = &it.priv_.iter.each;
-    each_iter->ids = id;
-    each_iter->sizes = 0;
-    if (cr->type_info) {
-        each_iter->sizes = cr->type_info->size;
+    if (!flecs_each_component_record(&it, cr, id)) {
+        return (ecs_iter_t){0};
     }
-
-    each_iter->sources = 0;
-    each_iter->trs = NULL;
-    flecs_table_cache_iter((ecs_table_cache_t*)cr, &each_iter->it);
 
     return it;
 error:
@@ -6709,16 +6778,64 @@ bool ecs_each_next(
     }
 }
 
+static
+bool flecs_children_next_ordered(
+    ecs_iter_t *it)
+{
+    return ecs_children_next(it);
+}
+
 ecs_iter_t ecs_children(
     const ecs_world_t *stage,
     ecs_entity_t parent)
 {
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
+
+    ecs_iter_t it = {
+        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
+        .world = ECS_CONST_CAST(ecs_world_t*, stage),
+        .field_count = 1,
+        .next = ecs_children_next
+    };
+
+    ecs_component_record_t *cr = flecs_components_get(
+        world, ecs_childof(parent));
+    if (!cr) {
+        return (ecs_iter_t){0};
+    }
+
+    if (cr->flags & EcsIdOrderedChildren) {
+        ecs_vec_t *v = &cr->pair->ordered_children;
+        it.entities = ecs_vec_first_t(v, ecs_entity_t);
+        it.count = ecs_vec_count(v);
+        it.next = flecs_children_next_ordered;
+        return it;
+    }
+
     return ecs_each_id(stage, ecs_childof(parent));
+error:
+    return (ecs_iter_t){0};
 }
 
 bool ecs_children_next(
     ecs_iter_t *it)
 {
+    if (it->next == NULL) {
+        return false;
+    }
+
+    if (it->next == flecs_children_next_ordered) {
+        if (!it->count) {
+            return false;
+        }
+
+        it->next = NULL; /* Only return once with ordered children vector */
+
+        return true;
+    }
+
     return ecs_each_next(it);
 }
 
@@ -6944,8 +7061,6 @@ ecs_entity_t flecs_new_id(
     ecs_assert(!unsafe_world->info.max_id || 
         ecs_entity_t_lo(entity) <= unsafe_world->info.max_id, 
         ECS_OUT_OF_RANGE, NULL);
-
-    flecs_journal(unsafe_world, EcsJournalNew, entity, 0, 0);
 
     return entity;
 }
@@ -7431,6 +7546,8 @@ void flecs_add_to_root_table(
     ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
     flecs_new_entity(world, e, r, &world->store.root, &diff, false, 0);
     ecs_assert(r->table == &world->store.root, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_journal(world, EcsJournalNew, e, 0, 0);
 }
 
 
@@ -9090,6 +9207,31 @@ error:
     return false;
 }
 
+void ecs_set_child_order(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const ecs_entity_t *children,
+    int32_t child_count)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(children == NULL || child_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(children != NULL || !child_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(world->flags & EcsWorldMultiThreaded), 
+        ECS_INVALID_OPERATION, NULL);
+
+    flecs_stage_from_world(&world);
+
+    flecs_check_exclusive_world_access(world);
+
+    ecs_component_record_t *cr = flecs_components_get(
+        world, ecs_childof(parent));
+
+    flecs_ordered_children_reorder(world, cr, children, child_count);
+
+error:
+    return;
+}
+
 bool ecs_has_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -9714,6 +9856,7 @@ error:
     return NULL;
 }
 
+
 /**
  * @file entity_name.c
  * @brief Functions for working with named entities.
@@ -10124,14 +10267,12 @@ void ecs_on_set(EcsIdentifier)(
 
 static
 void flecs_reparent_name_index_intern(
-    ecs_world_t *world,
     const ecs_entity_t *entities,
     ecs_hashmap_t *src_index,
     ecs_hashmap_t *dst_index,
     EcsIdentifier *names,
     int32_t count) 
 {
-    
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
@@ -10144,6 +10285,11 @@ void flecs_reparent_name_index_intern(
     
         const char *name_str = name->value;
         if (name_str) {
+            if (name->hash == 0) {
+                name->length = ecs_os_strlen(name_str);
+                name->hash = flecs_hash(name_str, name->length);
+            }
+
             ecs_assert(name->hash != 0, ECS_INTERNAL_ERROR, NULL);
     
             flecs_name_index_ensure(
@@ -10169,11 +10315,19 @@ void flecs_reparent_name_index(
         return;
     }
 
-    ecs_hashmap_t *src_index = src->_->name_index;
-    ecs_hashmap_t *dst_index = dst->_->name_index;
-    if ((src_index == dst_index) || (!src_index && !dst_index)) {
-        /* If the name index didn't change, the entity still has the same parent
-         * so nothing needs to be done. */
+    ecs_pair_record_t *src_pair = src->_->childof_r;
+    ecs_pair_record_t *dst_pair = dst->_->childof_r;
+
+    /* Reparenting should only get triggered when an entity changed parent */
+    ecs_assert(src_pair != dst_pair, ECS_INTERNAL_ERROR, NULL);
+
+    /* Even when an entity has no parent, it's still in the root scope */
+    ecs_assert(src_pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(dst_pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_hashmap_t *src_index = src_pair->name_index;
+    ecs_hashmap_t *dst_index = dst_pair->name_index;
+    if ((!src_index && !dst_index)) {
         return;
     }
 
@@ -10181,7 +10335,7 @@ void flecs_reparent_name_index(
         dst, EcsIdentifier, EcsName, offset);
     ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    flecs_reparent_name_index_intern(world, &ecs_table_entities(dst)[offset],
+    flecs_reparent_name_index_intern(&ecs_table_entities(dst)[offset],
         src_index, dst_index, names, count);
 
 }
@@ -10196,7 +10350,8 @@ void flecs_unparent_name_index(
         return;
     }
 
-    ecs_hashmap_t *src_index = src->_->name_index;
+    ecs_assert(src->_->childof_r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_hashmap_t *src_index = src->_->childof_r->name_index;
 
     ecs_component_record_t *cr = world->cr_childof_0;
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -10207,7 +10362,7 @@ void flecs_unparent_name_index(
         src, EcsIdentifier, EcsName, offset);
     ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    flecs_reparent_name_index_intern(world, &ecs_table_entities(src)[offset],
+    flecs_reparent_name_index_intern(&ecs_table_entities(src)[offset],
         src_index, dst_index, names, count);
 }
 
@@ -10717,9 +10872,14 @@ ecs_entity_t flecs_set_identifier(
         flecs_defer_path(stage, 0, entity, name);
     }
 
-    ecs_os_strset(&ptr->value, name);
+    char *old = ptr->value;
+    ptr->value = ecs_os_strdup(name);
+
     ecs_modified_pair(world, entity, ecs_id(EcsIdentifier), tag);
-    
+
+    /* Free old name after updating name index in on_set handler. */
+    ecs_os_free(old);
+
     return entity;
 error:
     return 0;
@@ -19656,7 +19816,7 @@ void flecs_world_allocators_init(
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
     flecs_ballocator_init_t(&a->id_record, ecs_component_record_t);
-    flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_id_record_t);
+    flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_record_t);
     flecs_ballocator_init_n(&a->id_record_chunk, ecs_component_record_t, FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
@@ -33127,6 +33287,25 @@ void ecs_vec_remove_last(
     v->count --;
 }
 
+void ecs_vec_remove_ordered(
+    ecs_vec_t *v,
+    ecs_size_t size,
+    int32_t index)
+{
+    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index < v->count, ECS_OUT_OF_RANGE, NULL);
+
+    int32_t new_count = --v->count;
+    if (index == new_count) {
+        return;
+    }
+
+    ecs_os_memmove(
+        ECS_ELEM(v->array, size, index),
+        ECS_ELEM(v->array, size, index + 1),
+        size * (new_count - index));
+}
+
 int32_t ecs_vec_count(
     const ecs_vec_t *v)
 {
@@ -36441,7 +36620,7 @@ void flecs_insert_id_elem(
     }
     ecs_assert(wcr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_pair_id_record_t *pair = cr->pair;
+    ecs_pair_record_t *pair = cr->pair;
     ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
@@ -36466,7 +36645,7 @@ void flecs_remove_id_elem(
 {
     ecs_assert(ecs_id_is_wildcard(wildcard), ECS_INTERNAL_ERROR, NULL);
 
-    ecs_pair_id_record_t *pair = cr->pair;
+    ecs_pair_record_t *pair = cr->pair;
     ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
@@ -36654,8 +36833,10 @@ ecs_component_record_t* flecs_component_new(
     ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
     if (is_pair) {
         cr->pair = flecs_bcalloc_w_dbg_info(
-            &world->allocators.pair_id_record, "ecs_pair_id_record_t");
+            &world->allocators.pair_id_record, "ecs_pair_record_t");
         cr->pair->reachable.current = -1;
+
+        flecs_ordered_children_init(world, cr);
 
         rel = ECS_PAIR_FIRST(id);
         rel = flecs_entities_get_alive(world, rel);
@@ -36950,11 +37131,12 @@ void flecs_component_free(
     ecs_table_cache_fini(&cr->cache);
 
     if (cr->pair) {
+        flecs_ordered_children_fini(world, cr);
         flecs_name_index_free(cr->pair->name_index);
         ecs_vec_fini_t(&world->allocator, &cr->pair->reachable.ids, 
             ecs_reachable_elem_t);
         flecs_bfree_w_dbg_info(&world->allocators.pair_id_record, 
-                cr->pair, "ecs_pair_id_record_t");
+                cr->pair, "ecs_pair_record_t");
     }
 
     ecs_id_t hash = flecs_component_hash(id);
@@ -37652,6 +37834,160 @@ const uint64_t* flecs_entity_index_ids(
     const ecs_entity_index_t *index)
 {
     return ecs_vec_get_t(&index->dense, uint64_t, 1);
+}
+
+
+void flecs_ordered_children_init(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_vec_init_t(
+        &world->allocator, &cr->pair->ordered_children, ecs_entity_t, 0);
+}
+
+void flecs_ordered_children_fini(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_vec_fini_t(
+        &world->allocator, &cr->pair->ordered_children, ecs_entity_t);
+}
+
+static
+void flecs_ordered_entities_append(
+    ecs_world_t *world,
+    ecs_pair_record_t *pair,
+    ecs_entity_t e)
+{
+    ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_vec_append_t(
+        &world->allocator, &pair->ordered_children, ecs_entity_t)[0] = e;
+}
+
+static
+void flecs_ordered_entities_remove(
+    ecs_pair_record_t *pair,
+    ecs_entity_t e)
+{
+    ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_vec_t *vec = &pair->ordered_children;
+    int32_t i, count = ecs_vec_count(vec);
+    ecs_entity_t *entities = ecs_vec_first_t(vec, ecs_entity_t);
+
+    for (i = 0; i < count; i ++) {
+        if (entities[i] == e) {
+            ecs_vec_remove_ordered_t(vec, ecs_entity_t, i);
+        }
+    }
+}
+
+static
+void flecs_ordered_entities_unparent_internal(
+    const ecs_table_t *table,
+    const ecs_table_t *entities_table,
+    int32_t row,
+    int32_t count)
+{
+    if (table->flags & EcsTableHasOrderedChildren) {
+        ecs_pair_record_t *pair = table->_->childof_r;
+        const ecs_entity_t *entities = ecs_table_entities(entities_table);
+        int32_t i = row, end = row + count;
+        for (; i < end; i ++) {
+            ecs_entity_t e = entities[i];
+            flecs_ordered_entities_remove(pair, e);
+        }
+    }
+}
+
+void flecs_ordered_children_reparent(
+    ecs_world_t *world,
+    const ecs_table_t *src,
+    const ecs_table_t *dst,
+    int32_t row,
+    int32_t count)
+{
+    flecs_ordered_entities_unparent_internal(src, dst, row, count);
+
+    if (dst->flags & EcsTableHasOrderedChildren) {
+        ecs_pair_record_t *pair = dst->_->childof_r;
+        const ecs_entity_t *entities = ecs_table_entities(dst);
+        int32_t i = row, end = row + count;
+        for (; i < end; i ++) {
+            ecs_entity_t e = entities[i];
+            flecs_ordered_entities_append(world, pair, e);
+        }
+    }
+}
+
+void flecs_ordered_children_unparent(
+    ecs_world_t *world,
+    const ecs_table_t *src,
+    int32_t row,
+    int32_t count)
+{
+    (void)world;
+    flecs_ordered_entities_unparent_internal(src, src, row, count);
+}
+
+void flecs_ordered_children_reorder(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    const ecs_entity_t *children,
+    int32_t child_count)
+{
+    (void)world;
+
+    ecs_check(cr != NULL, ECS_INVALID_PARAMETER, 
+        "ecs_set_child_order is only allowed for parents with the "
+        "OrderedChildren trait");
+
+    ecs_check(cr->flags & EcsIdOrderedChildren, ECS_INVALID_PARAMETER, 
+        "ecs_set_child_order is only allowed for parents with the "
+        "OrderedChildren trait");
+
+    ecs_vec_t *vec = &cr->pair->ordered_children;
+    ecs_entity_t *parent_children = ecs_vec_first_t(vec, ecs_entity_t);
+    int32_t parent_child_count = ecs_vec_count(vec);
+    ecs_check(parent_child_count == child_count, ECS_INVALID_PARAMETER,
+        "children provided to set_child_order must match existing children");
+    (void)parent_child_count;
+
+    if (parent_children == children) {
+        return; /* Application is passing the existing children array. */
+    }
+
+    ecs_check(children != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(parent_children != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    #ifdef FLECS_DEBUG
+    /* Make sure that the provided child ids equal the existing children */
+    int i, j;
+    for (i = 0; i < child_count; i ++) {
+        ecs_entity_t child = parent_children[i];
+        for (j = 0; j < child_count; j ++) {
+            ecs_entity_t child_arg = children[j];
+            if (child == child_arg) {
+                break;
+            }
+        }
+
+        if (j == child_count) {
+            char *child_path = ecs_get_path(world, child);
+            ecs_throw(ECS_INVALID_PARAMETER, 
+                "children provided to set_child_order must match existing "
+                "children (child '%s' is missing in provided children vector)",
+                child_path);
+            ecs_os_free(child_path);
+        }
+    }
+    #endif
+
+    /* The actual operation. */
+    ecs_os_memcpy_n(parent_children, children, ecs_entity_t, child_count);
+error:
+    return;
 }
 
 
@@ -38537,6 +38873,8 @@ void flecs_table_init(
                 r = ECS_PAIR_FIRST(dst_id);
                 if (r == EcsChildOf) {
                     childof_cr = p_cr;
+                    ecs_assert(childof_cr->pair != NULL, 
+                        ECS_INTERNAL_ERROR, NULL);
                 }
 
                 ecs_assert(p_cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -38656,12 +38994,17 @@ void flecs_table_init(
     table->version = 1;
     flecs_table_init_data(world, table);
 
+    /* If the table doesn't have an explicit ChildOf pair, it will be in the
+     * root which is registered with the (ChildOf, 0) index. */
+    ecs_assert(childof_cr != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (table->flags & EcsTableHasName) {
-        ecs_assert(childof_cr != NULL, ECS_INTERNAL_ERROR, NULL);
-        table->_->name_index = 
-            flecs_component_name_index_ensure(world, childof_cr);
-        ecs_assert(table->_->name_index != NULL, ECS_INTERNAL_ERROR, NULL);
+        flecs_component_name_index_ensure(world, childof_cr);
+        ecs_assert(childof_cr->pair->name_index != NULL, 
+            ECS_INTERNAL_ERROR, NULL);
     }
+
+    table->_->childof_r = childof_cr->pair;
 
     if (table->flags & EcsTableHasOnTableCreate) {
         flecs_table_emit(world, table, EcsOnTableCreate);

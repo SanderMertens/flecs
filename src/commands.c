@@ -998,6 +998,9 @@ bool flecs_defer_end(
 
                 /* A negative index indicates the first command for an entity */
                 if (merge_to_world && (cmd->next_for_entity < 0)) {
+                    diff.added_flags = 0;
+                    diff.removed_flags = 0;
+
                     /* Batch commands for entity to limit archetype moves */
                     if (is_alive) {
                         flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);

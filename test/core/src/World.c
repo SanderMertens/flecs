@@ -1737,10 +1737,14 @@ void World_fini_queue_overflow(void) {
     /* Create a large amount of entities. A number greater than 16777216,
      2^30 / sizeof(ecs_cmd_t) would overflow the command queue vector */
 
+    printf("init\n");
+
     ecs_bulk_init(world, &(ecs_bulk_desc_t) {
         .count = 17000000,
         .ids = { ecs_isa(prefab) }
     });
+
+    printf("fini\n");
 
     /* on world fini, all entities must be destroyed in batches. */
     ecs_fini(world);

@@ -529,9 +529,10 @@ void flecs_bootstrap_builtin(
     name_col[index].length = name_length;
     name_col[index].hash = name_hash;
     name_col[index].index_hash = 0;
-    name_col[index].index = table->_->name_index;
-    flecs_name_index_ensure(
-        table->_->name_index, entity, name, name_length, name_hash);
+
+    ecs_hashmap_t *name_index = table->_->childof_r->name_index;
+    name_col[index].index = name_index;
+    flecs_name_index_ensure(name_index, entity, name, name_length, name_hash);
 
     EcsIdentifier *symbol_col = columns[2].data;
     symbol_col[index].value = ecs_os_strdup(symbol);

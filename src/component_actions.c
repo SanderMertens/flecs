@@ -76,6 +76,7 @@ void flecs_on_reparent(
     int32_t count)
 {    
     flecs_reparent_name_index(world, other_table, table, row, count);
+    flecs_ordered_children_reparent(world, other_table, table, row, count);
 }
 
 static
@@ -86,6 +87,7 @@ void flecs_on_unparent(
     int32_t count)
 {
     flecs_unparent_name_index(world, table, row, count);
+    flecs_ordered_children_unparent(world, table, row, count);
 }
 
 bool flecs_sparse_on_add(
@@ -341,7 +343,7 @@ void flecs_notify_on_remove(
             return;
         }
 
-        if (diff_flags & EcsTableEdgeReparent) {
+        if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
             flecs_on_unparent(world, table, row, count);
         }
 

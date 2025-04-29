@@ -136,6 +136,19 @@ void Hierarchies_tree_iter_2_tables(void) {
     ecs_fini(world);
 }
 
+void Hierarchies_tree_iter_parent_0(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_iter_t it = ecs_children(world, 0);
+    test_assert( ecs_children_next(&it) == true);
+    test_int( it.count, 1);
+    test_int(it.entities[0], EcsFlecs);
+
+    test_assert( !ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
 void Hierarchies_path_depth_0(void) {
     ecs_world_t *world = ecs_mini();
 

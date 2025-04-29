@@ -673,6 +673,7 @@
                 "tree_iter_empty",
                 "tree_iter_1_table",
                 "tree_iter_2_tables",
+                "tree_iter_parent_0",
                 "path_depth_0",
                 "path_depth_1",
                 "path_depth_2",
@@ -772,6 +773,38 @@
                 "lookup_after_delete_from_parent",
                 "defer_batch_remove_name_w_add_childof",
                 "defer_batch_remove_childof_w_add_name"
+            ]
+        }, {
+            "id": "OrderedChildren",
+            "testcases": [
+                "iter_no_children",
+                "children_1_table",
+                "children_2_tables",
+                "children_1_table_delete",
+                "children_1_table_clear",
+                "children_1_table_remove_parent",
+                "children_1_table_remove_wildcard",
+                "children_1_table_reparent",
+                "children_1_table_reparent_ordered",
+                "children_2_tables_delete",
+                "children_2_tables_clear",
+                "children_2_tables_remove_parent",
+                "children_2_tables_remove_wildcard",
+                "children_2_tables_reparent",
+                "children_2_tables_reparent_ordered",
+                "delete_parent",
+                "delete_with_parent",
+                "delete_with_tag_all_children",
+                "delete_with_tag_some_children",
+                "add_ordered_children_after_in_use",
+                "change_order_no_children",
+                "change_order_mismatching_child_count",
+                "change_order_mismatching_child_id",
+                "change_order_double_child_id",
+                "change_order_null_children_nonzero_count",
+                "change_order_not_null_children_zero_count",
+                "change_order_on_parent_without_ordered_children",
+                "change_order"
             ]
         }, {
             "id": "Has",
@@ -2386,7 +2419,10 @@
                 "batched_cmd_w_component_init",
                 "deep_command_nesting",
                 "ensure_from_2_stages",
-                "batch_w_old_and_recycled_id"
+                "batch_w_old_and_recycled_id",
+                "batch_w_two_named_entities_one_reparent",
+                "batch_w_two_named_entities_one_reparent_w_remove",
+                "batch_new_w_parent_w_name"
             ]
         }, {
             "id": "SingleThreadStaging",

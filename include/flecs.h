@@ -2960,6 +2960,30 @@ void ecs_delete_with(
     ecs_world_t *world,
     ecs_id_t id);
 
+/** Set child order for parent with OrderedChildren.
+ * If the parent has the OrderedChildren trait, the order of the children 
+ * will be updated to the order in the specified children array. The operation
+ * will fail if the parent does not have the OrderedChildren trait.
+ * 
+ * This operation always takes place immediately, and is not deferred. When the 
+ * operation is called from a multithreaded system it will fail.
+ * 
+ * The reason for not deferring this operation is that by the time the deferred
+ * command would be executed, the children of the parent could have been changed
+ * which would cause the operation to fail.
+ * 
+ * @param world The world.
+ * @param parent The parent.
+ * @param children An array with children.
+ * @param child_count The number of children in the provided array.
+ */
+FLECS_API
+void ecs_set_child_order(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const ecs_entity_t *children,
+    int32_t child_count);
+
 /** @} */
 
 /**
@@ -4487,10 +4511,14 @@ bool ecs_each_next(
     ecs_iter_t *it);
 
 /** Iterate children of parent.
- * Equivalent to:
+ * This operation is usually equivalent to doing:
  * @code
  * ecs_iter_t it = ecs_each_id(world, ecs_pair(EcsChildOf, parent));
  * @endcode
+ * 
+ * The only exception is when the parent has the EcsOrderedChildren trait, in
+ * which case this operation will return a single result with the ordered 
+ * child entity ids.
  * 
  * @param world The world.
  * @param parent The parent.

@@ -409,14 +409,12 @@ void ecs_on_set(EcsIdentifier)(
 
 static
 void flecs_reparent_name_index_intern(
-    ecs_world_t *world,
     const ecs_entity_t *entities,
     ecs_hashmap_t *src_index,
     ecs_hashmap_t *dst_index,
     EcsIdentifier *names,
     int32_t count) 
 {
-    
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
@@ -429,6 +427,11 @@ void flecs_reparent_name_index_intern(
     
         const char *name_str = name->value;
         if (name_str) {
+            if (name->hash == 0) {
+                name->length = ecs_os_strlen(name_str);
+                name->hash = flecs_hash(name_str, name->length);
+            }
+
             ecs_assert(name->hash != 0, ECS_INTERNAL_ERROR, NULL);
     
             flecs_name_index_ensure(
@@ -454,11 +457,19 @@ void flecs_reparent_name_index(
         return;
     }
 
-    ecs_hashmap_t *src_index = src->_->name_index;
-    ecs_hashmap_t *dst_index = dst->_->name_index;
-    if ((src_index == dst_index) || (!src_index && !dst_index)) {
-        /* If the name index didn't change, the entity still has the same parent
-         * so nothing needs to be done. */
+    ecs_pair_record_t *src_pair = src->_->childof_r;
+    ecs_pair_record_t *dst_pair = dst->_->childof_r;
+
+    /* Reparenting should only get triggered when an entity changed parent */
+    ecs_assert(src_pair != dst_pair, ECS_INTERNAL_ERROR, NULL);
+
+    /* Even when an entity has no parent, it's still in the root scope */
+    ecs_assert(src_pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(dst_pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_hashmap_t *src_index = src_pair->name_index;
+    ecs_hashmap_t *dst_index = dst_pair->name_index;
+    if ((!src_index && !dst_index)) {
         return;
     }
 
@@ -466,7 +477,7 @@ void flecs_reparent_name_index(
         dst, EcsIdentifier, EcsName, offset);
     ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    flecs_reparent_name_index_intern(world, &ecs_table_entities(dst)[offset],
+    flecs_reparent_name_index_intern(&ecs_table_entities(dst)[offset],
         src_index, dst_index, names, count);
 
 }
@@ -481,7 +492,8 @@ void flecs_unparent_name_index(
         return;
     }
 
-    ecs_hashmap_t *src_index = src->_->name_index;
+    ecs_assert(src->_->childof_r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_hashmap_t *src_index = src->_->childof_r->name_index;
 
     ecs_component_record_t *cr = world->cr_childof_0;
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -492,7 +504,7 @@ void flecs_unparent_name_index(
         src, EcsIdentifier, EcsName, offset);
     ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    flecs_reparent_name_index_intern(world, &ecs_table_entities(src)[offset],
+    flecs_reparent_name_index_intern(&ecs_table_entities(src)[offset],
         src_index, dst_index, names, count);
 }
 
@@ -1002,9 +1014,14 @@ ecs_entity_t flecs_set_identifier(
         flecs_defer_path(stage, 0, entity, name);
     }
 
-    ecs_os_strset(&ptr->value, name);
+    char *old = ptr->value;
+    ptr->value = ecs_os_strdup(name);
+
     ecs_modified_pair(world, entity, ecs_id(EcsIdentifier), tag);
-    
+
+    /* Free old name after updating name index in on_set handler. */
+    ecs_os_free(old);
+
     return entity;
 error:
     return 0;
