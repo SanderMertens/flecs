@@ -42,10 +42,16 @@ macro(add_flecs_target TARGET CONFIG)
 
     target_default_compile_options_c(${TARGET})
     target_default_compile_warnings_c(${TARGET})
-
     if(WIN32)
         target_link_libraries(${TARGET} wsock32 ws2_32)
     endif()
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+        target_include_directories(${TARGET} PRIVATE  
+        "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/include/")  
+        message(STATUS "building Android project...")
+    endif()
+
     if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         target_link_libraries(${TARGET} pthread)
     endif()
