@@ -6,116 +6,89 @@
 #ifndef FLECS_STAGE_H
 #define FLECS_STAGE_H
 
-/* Post-frame merge actions */
+/* Stage level allocators are for operations that can be multithreaded */
+typedef struct ecs_stage_allocators_t {
+    ecs_stack_t iter_stack;
+    ecs_stack_t deser_stack;
+    ecs_block_allocator_t cmd_entry_chunk;
+    ecs_block_allocator_t query_impl;
+    ecs_block_allocator_t query_cache;
+} ecs_stage_allocators_t;
+
+/** A stage is a context that allows for safely using the API from multiple 
+ * threads. Stage pointers can be passed to the world argument of API 
+ * operations, which causes the operation to be ran on the stage instead of the
+ * world. The features provided by a stage are:
+ * 
+ *  - A command queue for deferred ECS operations and events
+ *  - Thread specific allocators
+ *  - Thread specific world state (like current scope, with, current system)
+ *  - Thread specific buffers for preventing allocations
+ */
+struct ecs_stage_t {
+    ecs_header_t hdr;
+
+    /* Unique id that identifies the stage */
+    int32_t id;
+
+    /* Zero if not deferred, positive if deferred, negative if suspended */
+    int32_t defer;
+
+    /* Command queue */
+    ecs_commands_t *cmd;
+    ecs_commands_t cmd_stack[2];     /* Two so we can flush one & populate the other */
+    bool cmd_flushing;               /* Ensures only one defer_end call flushes */
+
+    /* Thread context */
+    ecs_world_t *thread_ctx;         /* Points to stage when a thread stage */
+    ecs_world_t *world;              /* Reference to world */
+    ecs_os_thread_t thread;          /* Thread handle (0 if no threading is used) */
+
+    /* One-shot actions to be executed after the merge */
+    ecs_vec_t post_frame_actions;
+
+    /* Namespacing */
+    ecs_entity_t scope;              /* Entity of current scope */
+    ecs_entity_t with;               /* Id to add by default to new entities */
+    ecs_entity_t base;               /* Currently instantiated top-level base */
+    const ecs_entity_t *lookup_path; /* Search path used by lookup operations */
+
+    /* Running system */
+    ecs_entity_t system;
+
+    /* Thread specific allocators */
+    ecs_stage_allocators_t allocators;
+    ecs_allocator_t allocator;
+
+    /* Caches for query creation */
+    ecs_vec_t variables;
+    ecs_vec_t operations;
+
+#ifdef FLECS_SCRIPT
+    /* Thread specific runtime for script execution */
+    ecs_script_runtime_t *runtime;
+#endif
+};
+
+/* Post-frame merge actions. */
 void flecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage);  
 
-bool flecs_defer_cmd(
-    ecs_stage_t *stage);
-
-bool flecs_defer_begin(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
-bool flecs_defer_new(
-    ecs_stage_t *stage,
-    ecs_entity_t entity);
-
-bool flecs_defer_modified(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_entity_t component);
-
-bool flecs_defer_clone(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_entity_t src,
-    bool clone_value);
-
-bool flecs_defer_bulk_new(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    int32_t count,
-    ecs_id_t id,
-    const ecs_entity_t **ids_out);
-
-bool flecs_defer_path(
-    ecs_stage_t *stage,
-    ecs_entity_t parent,
-    ecs_entity_t entity,
-    const char *name);
-
-bool flecs_defer_delete(
-    ecs_stage_t *stage,
-    ecs_entity_t entity);
-
-bool flecs_defer_clear(
-    ecs_stage_t *stage,
-    ecs_entity_t entity);
-
-bool flecs_defer_on_delete_action(
-    ecs_stage_t *stage,
-    ecs_id_t id,
-    ecs_entity_t action);
-
-bool flecs_defer_enable(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_entity_t component,
-    bool enable);    
-
-bool flecs_defer_add(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_id_t id);
-
-bool flecs_defer_remove(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_id_t id);
-
-void* flecs_defer_set(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_cmd_kind_t op_kind,
-    ecs_entity_t entity,
-    ecs_entity_t component,
-    ecs_size_t size,
-    void *value,
-    bool *is_new);
-
-bool flecs_defer_end(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
-bool flecs_defer_purge(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
-void flecs_enqueue(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_event_desc_t *desc);
-
+/* Set system id for debugging which system inserted which commands. */
 ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
     ecs_entity_t system);
 
+/* Get allocator from stage/world. */
 ecs_allocator_t* flecs_stage_get_allocator(
     ecs_world_t *world);
 
+/* Get stack allocator from stage/world. */
 ecs_stack_t* flecs_stage_get_stack_allocator(
     ecs_world_t *world);
 
-void flecs_commands_init(    
-    ecs_stage_t *stage,
-    ecs_commands_t *cmd);
-
-void flecs_commands_fini(
-    ecs_stage_t *stage,
-    ecs_commands_t *cmd);
-
+/* Shrink memory for stage data structures. */
 void ecs_stage_shrink(
     ecs_stage_t *stage);
 

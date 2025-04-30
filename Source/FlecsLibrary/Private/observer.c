@@ -9,7 +9,6 @@
  */
 
 #include "private_api.h"
-#include <stddef.h>
 
 static
 ecs_entity_t flecs_get_observer_event(
@@ -1055,7 +1054,7 @@ ecs_observer_t* flecs_observer_init(
 
     ecs_observable_t *observable = desc->observable;
     if (!observable) {
-        observable = ecs_get_observable(world);
+        observable = flecs_get_observable(world);
     }
 
     o->run = desc->run;

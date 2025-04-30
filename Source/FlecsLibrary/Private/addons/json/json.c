@@ -4,7 +4,6 @@
  */
 
 #include "json.h"
-#include <ctype.h>
 
 #ifdef FLECS_JSON
 

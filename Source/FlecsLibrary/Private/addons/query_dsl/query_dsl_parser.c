@@ -684,7 +684,11 @@ const char* flecs_id_parse(
         return NULL;
     }
 
-    if (ecs_term_finalize(world, &term)) {
+    ecs_query_validator_ctx_t ctx = {0};
+    ctx.world = world;
+    ctx.term = &term;
+
+    if (flecs_term_finalize(world, &term, &ctx)) {
         return NULL;
     }
 

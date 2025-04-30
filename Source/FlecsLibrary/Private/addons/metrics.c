@@ -315,7 +315,7 @@ static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
 
         ecs_id_metric_ctx_t *ctx = mi[i].ctx;
         ecs_component_record_t *cr = ctx->cr;
-        if (flecs_search_w_cr(world, table, NULL, cr) != -1) {
+        if (ecs_search(world, table, cr->id, NULL) != -1) {
             if (!counter) {
                 m[i].value = 1.0;
             } else {
@@ -365,7 +365,7 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
 
         ecs_component_record_t *cr = ctx->cr;
         ecs_id_t id;
-        if (flecs_search_w_cr(world, mtable, &id, cr) == -1) {
+        if (ecs_search(world, mtable, cr->id, &id) == -1) {
             ecs_delete(it->world, it->entities[i]);
             continue;
         }

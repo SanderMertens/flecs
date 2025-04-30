@@ -6,19 +6,43 @@
 #ifndef FLECS_PRIVATE_H
 #define FLECS_PRIVATE_H
 
-#include "private_types.h"
+#ifndef __MACH__
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif
+#endif
+
+#include <ctype.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stddef.h>
+
+#include "flecs.h"
+#include "flecs/datastructures/bitset.h"
+#include "datastructures/name_index.h"
+#include "storage/entity_index.h"
+#include "storage/table.h"
 #include "storage/table_cache.h"
 #include "storage/component_index.h"
 #include "storage/sparse_storage.h"
 #include "query/query.h"
+#include "component_actions.h"
+#include "entity_name.h"
+#include "commands.h"
+#include "entity.h"
+#include "instantiate.h"
 #include "observable.h"
 #include "iter.h"
 #include "poly.h"
 #include "stage.h"
 #include "world.h"
-#include "journal.h"
-#include "datastructures/name_index.h"
+#include "addons/journal.h"
 
+/* Used in id records to keep track of entities used with id flags */
+extern const ecs_entity_t EcsFlag;
+
+/* Scope for flecs internals, like observers used for builtin features */
+extern const ecs_entity_t EcsFlecsInternals;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Bootstrap API
@@ -46,92 +70,6 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, name)\
     ecs_add_id(world, name, EcsTrait)
 
-
-/* Bootstrap functions for other parts in the code */
-void flecs_bootstrap_hierarchy(ecs_world_t *world);
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Entity API
-////////////////////////////////////////////////////////////////////////////////
-
-/* Mark an entity as being watched. This is used to trigger automatic rematching
- * when entities used in system expressions change their components. */
-void flecs_add_flag(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    uint32_t flag);
-
-void flecs_record_add_flag(
-    ecs_record_t *record,
-    uint32_t flag);
-
-ecs_entity_t flecs_get_oneof(
-    const ecs_world_t *world,
-    ecs_entity_t e);
-
-void flecs_notify_on_remove(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_table_t *other_table,
-    int32_t row,
-    int32_t count,
-    const ecs_table_diff_t *diff);
-
-int32_t flecs_relation_depth(
-    const ecs_world_t *world,
-    ecs_entity_t r,
-    const ecs_table_t *table);
-
-typedef struct ecs_instantiate_ctx_t {
-    ecs_entity_t root_prefab;
-    ecs_entity_t root_instance;
-} ecs_instantiate_ctx_t;
-
-void flecs_instantiate(
-    ecs_world_t *world,
-    ecs_entity_t base,
-    ecs_entity_t instance,
-    const ecs_instantiate_ctx_t *ctx);
-
-void* flecs_get_base_component(
-    const ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t id,
-    ecs_component_record_t *table_index,
-    int32_t recur_depth);
-
-void flecs_invoke_hook(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    const ecs_component_record_t *cr,
-    const ecs_table_record_t *tr,
-    int32_t count,
-    int32_t row,
-    const ecs_entity_t *entities,
-    ecs_id_t id,
-    const ecs_type_info_t *ti,
-    ecs_entity_t event,
-    ecs_iter_action_t hook);
-
-void flecs_add_ids(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t *ids,
-    int32_t count);
-
-void flecs_entity_remove_non_fragmenting(
-    ecs_world_t *world,
-    ecs_entity_t e,
-    ecs_record_t *r);
-
-////////////////////////////////////////////////////////////////////////////////
-//// Query API
-////////////////////////////////////////////////////////////////////////////////
-
-void flecs_query_apply_iter_flags(
-    ecs_iter_t *it,
-    const ecs_query_t *query);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Safe(r) integer casting
@@ -191,35 +129,19 @@ uint64_t flecs_ito_(
 #define flecs_itoi16(value) flecs_ito(int16_t, (value))
 #define flecs_itoi32(value) flecs_ito(int32_t, (value))
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Generate 64bit hash from buffer. */
 uint64_t flecs_hash(
-    const void *data,
-    ecs_size_t length);
-
-uint64_t flecs_wyhash(
     const void *data,
     ecs_size_t length);
 
 /* Get next power of 2 */
 int32_t flecs_next_pow_of_2(
     int32_t n);
-
-/* Convert 64bit value to ecs_record_t type. ecs_record_t is stored as 64bit int in the
- * entity index */
-ecs_record_t flecs_to_row(
-    uint64_t value);
-
-/* Get 64bit integer from ecs_record_t */
-uint64_t flecs_from_row(
-    ecs_record_t record);
-
-/* Convert a symbol name to an entity name by removing the prefix */
-const char* flecs_name_from_symbol(
-    ecs_world_t *world,
-    const char *type_name);
 
 /* Compare function for entity ids used for order_by */
 int flecs_entity_compare(
@@ -237,9 +159,11 @@ int flecs_id_qsort_cmp(
 char* flecs_load_from_file(
     const char *filename);
 
+/* Test whether entity name is an entity id (starts with a #). */
 bool flecs_name_is_id(
     const char *name);
 
+/* Convert entity name to entity id. */
 ecs_entity_t flecs_name_to_id(
     const char *name);
 
@@ -249,48 +173,21 @@ char * ecs_ftoa(
     char * buf, 
     int precision);
 
-uint64_t flecs_string_hash(
-    const void *ptr);
-
-void flecs_table_hashmap_init(
-    ecs_world_t *world,
-    ecs_hashmap_t *hm);
-
+/* Replace #[color] tokens with terminal color symbols. */
 void flecs_colorize_buf(
     char *msg,
     bool enable_colors,
     ecs_strbuf_t *buf);
 
-int32_t flecs_search_w_cr(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t *id_out,
-    ecs_component_record_t *cr);
-
-int32_t flecs_search_relation_w_cr(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    int32_t offset,
-    ecs_id_t id,
-    ecs_entity_t rel,
-    ecs_flags64_t flags,
-    ecs_entity_t *subject_out,
-    ecs_id_t *id_out,
-    struct ecs_table_record_t **tr_out,
-    ecs_component_record_t *cr);
-
+/* Check whether id can be inherited. */
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
     const ecs_component_record_t *cr,
     ecs_id_t id);
 
-int ecs_term_finalize(
-    const ecs_world_t *world,
-    ecs_term_t *term);
-
-int32_t flecs_query_pivot_term(
-    const ecs_world_t *world,
-    const ecs_query_t *query);
+/* Cleanup type info data. */
+void flecs_fini_type_info(
+    ecs_world_t *world);
 
 #endif

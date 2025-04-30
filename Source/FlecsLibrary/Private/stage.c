@@ -18,69 +18,6 @@
 #include "private_api.h"
 
 static
-ecs_cmd_t* flecs_cmd_new(
-    ecs_stage_t *stage)
-{
-    ecs_cmd_t *cmd = ecs_vec_append_t(&stage->allocator, &stage->cmd->queue, 
-        ecs_cmd_t);
-    cmd->is._1.value = NULL;
-    cmd->id = 0;
-    cmd->next_for_entity = 0;
-    cmd->entry = NULL;
-    cmd->system = stage->system;
-    return cmd;
-}
-
-static
-ecs_cmd_t* flecs_cmd_new_batched(
-    ecs_stage_t *stage, 
-    ecs_entity_t e)
-{
-    ecs_vec_t *cmds = &stage->cmd->queue;
-    ecs_cmd_entry_t *entry = flecs_sparse_get_t(
-        &stage->cmd->entries, ecs_cmd_entry_t, e);
-
-    int32_t cur = ecs_vec_count(cmds);
-    ecs_cmd_t *cmd = flecs_cmd_new(stage);
-    bool is_new = false;
-    if (entry) {
-        if (entry->first == -1) {
-            /* Existing but invalidated entry */
-            entry->first = cur;
-            cmd->entry = entry;
-        } else {
-            int32_t last = entry->last;
-            ecs_cmd_t *arr = ecs_vec_first_t(cmds, ecs_cmd_t);
-            if (arr[last].entity == e) {
-                ecs_cmd_t *last_op = &arr[last];
-                last_op->next_for_entity = cur;
-                if (last == entry->first) {
-                    /* Flip sign bit so flush logic can tell which command
-                    * is the first for an entity */
-                    last_op->next_for_entity *= -1;
-                }
-            } else {
-                /* Entity with different version was in the same queue. Discard
-                 * the old entry and create a new one. */
-                is_new = true;
-            }
-        }
-    } else {
-        is_new = true;
-    }
-
-    if (is_new) {
-        cmd->entry = entry = flecs_sparse_ensure_fast_t(
-            &stage->cmd->entries, ecs_cmd_entry_t, e);
-        entry->first = cur;
-    }
-
-    entry->last = cur;
-
-    return cmd;
-}
-
-static
 void flecs_stage_merge(
     ecs_world_t *world)
 {
@@ -132,456 +69,6 @@ void flecs_stage_merge(
     ecs_log_pop_3();
 }
 
-bool flecs_defer_begin(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    flecs_poly_assert(stage, ecs_stage_t);
-    flecs_check_exclusive_world_access(world);
-    (void)world;
-    if (stage->defer < 0) return false;
-    return (++ stage->defer) == 1;
-}
-
-bool flecs_defer_cmd(
-    ecs_stage_t *stage)
-{
-    if (stage->defer) {
-        return (stage->defer > 0);
-    }
-
-    stage->defer ++;
-    return false;
-}
-
-bool flecs_defer_new(
-    ecs_stage_t *stage,
-    ecs_entity_t entity)
-{
-    if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage);
-        if (cmd) {
-            cmd->kind = EcsCmdNew;
-            cmd->entity = entity;
-        }
-        return true;
-    }
-    return false; 
-}
-
-bool flecs_defer_modified(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_id_t id)
-{
-    if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage);
-        if (cmd) {
-            cmd->kind = EcsCmdModified;
-            cmd->id = id;
-            cmd->entity = entity;
-        }
-        return true;
-    }
-    return false;
-}
-
-bool flecs_defer_clone(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_entity_t src,
-    bool clone_value)
-{   
-    if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage);
-        cmd->kind = EcsCmdClone;
-        cmd->id = src;
-        cmd->entity = entity;
-        cmd->is._1.clone_value = clone_value;
-        return true;
-    }
-    return false;   
-}
-
-bool flecs_defer_path(
-    ecs_stage_t *stage,
-    ecs_entity_t parent,
-    ecs_entity_t entity,
-    const char *name)
-{
-    if (stage->defer > 0) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage);
-        cmd->kind = EcsCmdPath;
-        cmd->entity = entity;
-        cmd->id = parent;
-        cmd->is._1.value = ecs_os_strdup(name);
-        return true;
-    }
-    return false;
-}
-
-bool flecs_defer_delete(
-    ecs_stage_t *stage,
-    ecs_entity_t entity)
-{
-    if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage);
-        cmd->kind = EcsCmdDelete;
-        cmd->entity = entity;
-        return true;
-    }
-    return false;
-}
-
-bool flecs_defer_clear(
-    ecs_stage_t *stage,
-    ecs_entity_t entity)
-{
-    if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
-        cmd->kind = EcsCmdClear;
-        cmd->entity = entity;
-        return true;
-    }
-    return false;
-}
-
-bool flecs_defer_on_delete_action(
-    ecs_stage_t *stage,
-    ecs_id_t id,
-    ecs_entity_t action)
-{
-    if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage);
-        cmd->kind = EcsCmdOnDeleteAction;
-        cmd->id = id;
-        cmd->entity = action;
-        return true;
-    }
-    return false;
-}
-
-bool flecs_defer_enable(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_id_t id,
-    bool enable)
-{
-    if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage);
-        cmd->kind = enable ? EcsCmdEnable : EcsCmdDisable;
-        cmd->entity = entity;
-        cmd->id = id;
-        return true;
-    }
-    return false;
-}
-
-bool flecs_defer_bulk_new(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    int32_t count,
-    ecs_id_t id,
-    const ecs_entity_t **ids_out)
-{
-    if (flecs_defer_cmd(stage)) {
-        ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
-
-        /* Use ecs_new_id as this is thread safe */
-        int i;
-        for (i = 0; i < count; i ++) {
-            ids[i] = ecs_new(world);
-        }
-
-        *ids_out = ids;
-
-        /* Store data in op */
-        ecs_cmd_t *cmd = flecs_cmd_new(stage);
-        cmd->kind = EcsCmdBulkNew;
-        cmd->id = id;
-        cmd->is._n.entities = ids;
-        cmd->is._n.count = count;
-        cmd->entity = 0;
-        return true;
-    }
-    return false;
-}
-
-bool flecs_defer_add(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_id_t id)
-{
-    if (flecs_defer_cmd(stage)) {
-        ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
-        cmd->kind = EcsCmdAdd;
-        cmd->id = id;
-        cmd->entity = entity;
-        return true;
-    }
-    return false;
-}
-
-bool flecs_defer_remove(
-    ecs_stage_t *stage,
-    ecs_entity_t entity,
-    ecs_id_t id)
-{
-    if (flecs_defer_cmd(stage)) {
-        ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity); 
-        cmd->kind = EcsCmdRemove;
-        cmd->id = id;
-        cmd->entity = entity;
-        return true;
-    }
-    return false;
-}
-
-void* flecs_defer_set(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_cmd_kind_t cmd_kind,
-    ecs_entity_t entity,
-    ecs_id_t id,
-    ecs_size_t size,
-    void *value,
-    bool *is_new)
-{
-    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
-
-    /* Find type info for id */
-    const ecs_type_info_t *ti = NULL;
-    ecs_component_record_t *cr = flecs_components_get(world, id);
-    if (!cr) {
-        /* If cr doesn't exist yet, create it but only if the 
-         * application is not multithreaded. */
-        if (world->flags & EcsWorldMultiThreaded) {
-            ti = ecs_get_type_info(world, id);
-        } else {
-            /* When not in multi threaded mode, it's safe to find or 
-             * create the component record. */
-            cr = flecs_components_ensure(world, id);
-            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-            
-            /* Get type_info from component record. We could have called 
-             * ecs_get_type_info directly, but since this function can be
-             * expensive for pairs, creating the component record ensures we can
-             * find the type_info quickly for subsequent operations. */
-            ti = cr->type_info;
-        }
-    } else {
-        ti = cr->type_info;
-    }
-
-    /* If the id isn't associated with a type, we can't set anything */
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
-        "provided component is not a type");
-
-    /* Make sure the size of the value equals the type size */
-    ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER,
-        "mismatching size specified for component in ensure/emplace/set");
-    size = ti->size;
-
-    /* Find existing component. Make sure it's owned, so that we won't use the
-     * component of a prefab. */
-    void *existing = NULL;
-    ecs_table_t *table = NULL;
-    if (cr) {
-        /* Entity can only have existing component if id record exists */
-        if (cr->flags & EcsIdIsSparse) {
-            existing = flecs_sparse_get(cr->sparse, 0, entity);
-        } else {
-            ecs_record_t *r = flecs_entities_get(world, entity);
-            table = r->table;
-            if (r && table) {
-                const ecs_table_record_t *tr = flecs_component_get_table(
-                    cr, table);
-                if (tr) {
-                    if (tr->column != -1) {
-                        /* Entity has the component */
-                        existing = table->data.columns[tr->column].data;
-                        existing = ECS_ELEM(existing, size, 
-                            ECS_RECORD_TO_ROW(r->row));
-                    }
-                }
-            }
-        }
-    }
-
-    /* Get existing value from storage */
-    void *cmd_value = existing;
-    bool emplace = cmd_kind == EcsCmdEmplace;
-
-    /* If the component does not yet exist, create a temporary value. This is
-     * necessary so we can store a component value in the deferred command,
-     * without adding the component to the entity which is not allowed in 
-     * deferred mode. */
-    if (!existing) {
-        ecs_stack_t *stack = &stage->cmd->stack;
-        cmd_value = flecs_stack_alloc(stack, size, ti->alignment);
-
-        /* If the component doesn't yet exist, construct it and move the 
-         * provided value into the component, if provided. Don't construct if
-         * this is an emplace operation, in which case the application is
-         * responsible for constructing. */
-        if (value) {
-            if (emplace) {
-                ecs_move_t move = ti->hooks.move_ctor;
-                if (move) {
-                    move(cmd_value, value, 1, ti);
-                } else {
-                    ecs_os_memcpy(cmd_value, value, size);
-                }
-            } else {
-                ecs_copy_t copy = ti->hooks.copy_ctor;
-                if (copy) {
-                    copy(cmd_value, value, 1, ti);
-                } else {
-                    ecs_os_memcpy(cmd_value, value, size);
-                }
-            }
-        } else if (!emplace) {
-            /* If the command is not an emplace, construct the temp storage */
-
-            /* Check if entity inherits component */
-            void *base = NULL;
-            if (table && (table->flags & EcsTableHasIsA)) {
-                base = flecs_get_base_component(world, table, id, cr, 0);
-            }
-
-            if (!base) {
-                /* Normal ctor */
-                ecs_xtor_t ctor = ti->hooks.ctor;
-                if (ctor) {
-                    ctor(cmd_value, 1, ti);
-                }
-            } else {
-                /* Override */
-                ecs_copy_t copy = ti->hooks.copy_ctor;
-                if (copy) {
-                    copy(cmd_value, base, 1, ti);
-                } else {
-                    ecs_os_memcpy(cmd_value, base, size);
-                }
-            }
-        }
-    } else if (value) {
-        /* If component exists and value is provided, copy */
-        ecs_copy_t copy = ti->hooks.copy;
-        if (copy) {
-            copy(existing, value, 1, ti);
-        } else {
-            ecs_os_memcpy(existing, value, size);
-        }
-    }
-
-    if (!cmd) {
-        /* If cmd is NULL, entity was already deleted. Check if we need to
-         * insert a command into the queue. */
-        if (!ti->hooks.dtor) {
-            /* If temporary memory does not need to be destructed, it'll get 
-             * freed when the stack allocator is reset. This prevents us
-             * from having to insert a command when the entity was 
-             * already deleted. */
-            return cmd_value;
-        }
-        cmd = flecs_cmd_new(stage);
-    }
-
-    
-    if (!existing) {
-        /* If component didn't exist yet, insert command that will create it */
-        cmd->kind = cmd_kind;
-        cmd->id = id;
-        cmd->cr = cr;
-        cmd->entity = entity;
-        cmd->is._1.size = size;
-        cmd->is._1.value = cmd_value;
-
-        if (is_new) {
-            *is_new = true;
-        }
-    } else {
-        /* If component already exists, still insert an Add command to ensure
-         * that any preceding remove commands won't remove the component. If the
-         * operation is a set, also insert a Modified command. */
-        if (cmd_kind == EcsCmdSet) {
-            cmd->kind = EcsCmdAddModified; 
-        } else {
-            cmd->kind = EcsCmdAdd;
-        }
-        cmd->id = id;
-        cmd->entity = entity;
-
-        if (is_new) {
-            *is_new = false;
-        }
-    }
-
-    return cmd_value;
-error:
-    return NULL;
-}
-
-void flecs_enqueue(
-    ecs_world_t *world,
-    ecs_stage_t *stage,
-    ecs_event_desc_t *desc)
-{
-    ecs_cmd_t *cmd = flecs_cmd_new(stage);
-    cmd->kind = EcsCmdEvent;
-    cmd->entity = desc->entity;
-
-    ecs_stack_t *stack = &stage->cmd->stack;
-    ecs_event_desc_t *desc_cmd = flecs_stack_alloc_t(stack, ecs_event_desc_t);
-    ecs_os_memcpy_t(desc_cmd, desc, ecs_event_desc_t);
-
-    if (desc->ids && desc->ids->count != 0) {
-        ecs_type_t *type_cmd = flecs_stack_alloc_t(stack, ecs_type_t);
-        int32_t id_count = desc->ids->count;
-        type_cmd->count = id_count;
-        type_cmd->array = flecs_stack_alloc_n(stack, ecs_id_t, id_count);
-        ecs_os_memcpy_n(type_cmd->array, desc->ids->array, ecs_id_t, id_count);
-        desc_cmd->ids = type_cmd;
-    } else {
-        desc_cmd->ids = NULL;
-    }
-
-    cmd->is._1.value = desc_cmd;
-    cmd->is._1.size = ECS_SIZEOF(ecs_event_desc_t);
-
-    if (desc->param || desc->const_param) {
-        ecs_assert(!(desc->const_param && desc->param), ECS_INVALID_PARAMETER, 
-            "cannot set param and const_param at the same time");
-
-        const ecs_type_info_t *ti = ecs_get_type_info(world, desc->event);
-        ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, 
-            "can only enqueue events with data for events that are components");
-
-        void *param_cmd = flecs_stack_alloc(stack, ti->size, ti->alignment);
-        ecs_assert(param_cmd != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (desc->param) {
-            if (ti->hooks.move_ctor) {
-                ti->hooks.move_ctor(param_cmd, desc->param, 1, ti);
-            } else {
-                ecs_os_memcpy(param_cmd, desc->param, ti->size);
-            }
-        } else {
-            if (ti->hooks.copy_ctor) {
-                ti->hooks.copy_ctor(param_cmd, desc->const_param, 1, ti);
-            } else {
-                ecs_os_memcpy(param_cmd, desc->const_param, ti->size);
-            }
-        }
-
-        desc_cmd->param = param_cmd;
-        desc_cmd->const_param = NULL;
-    }
-}
-
 void flecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage)
@@ -594,28 +81,6 @@ void flecs_stage_merge_post_frame(
     }
 
     ecs_vec_clear(&stage->post_frame_actions);
-}
-
-void flecs_commands_init(
-    ecs_stage_t *stage,
-    ecs_commands_t *cmd)
-{
-    flecs_stack_init(&cmd->stack);
-    ecs_vec_init_t(&stage->allocator, &cmd->queue, ecs_cmd_t, 0);
-    flecs_sparse_init_t(&cmd->entries, &stage->allocator,
-        &stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t);
-}
-
-void flecs_commands_fini(
-    ecs_stage_t *stage,
-    ecs_commands_t *cmd)
-{
-    /* Make sure stage has no unmerged data */
-    ecs_assert(ecs_vec_count(&cmd->queue) == 0, ECS_INTERNAL_ERROR, NULL);
-
-    flecs_stack_fini(&cmd->stack);
-    ecs_vec_fini_t(&stage->allocator, &cmd->queue, ecs_cmd_t);
-    flecs_sparse_fini(&cmd->entries);
 }
 
 ecs_entity_t flecs_stage_set_system(
@@ -876,6 +341,89 @@ void ecs_readonly_end(
     flecs_stage_merge(world);
 error:
     return;
+}
+
+ecs_world_t* flecs_suspend_readonly(
+    const ecs_world_t *stage_world,
+    ecs_suspend_readonly_state_t *state)
+{
+    ecs_assert(stage_world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
+
+    bool is_readonly = ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
+    ecs_world_t *temp_world = world;
+    ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
+
+    if (!is_readonly && !stage->defer) {
+        state->is_readonly = false;
+        state->is_deferred = false;
+        return world;
+    }
+
+    ecs_dbg_3("suspending readonly mode");
+
+    /* Cannot suspend when running with multiple threads */
+    ecs_assert(!(world->flags & EcsWorldReadonly) ||
+        !(world->flags & EcsWorldMultiThreaded), 
+            ECS_INVALID_WHILE_READONLY, NULL);
+
+    state->is_readonly = is_readonly;
+    state->is_deferred = stage->defer != 0;
+    state->cmd_flushing = stage->cmd_flushing;
+
+    /* Silence readonly checks */
+    world->flags &= ~EcsWorldReadonly;
+    stage->cmd_flushing = false;
+
+    /* Hack around safety checks (this ought to look ugly) */
+    state->defer_count = stage->defer;
+    state->cmd_stack[0] = stage->cmd_stack[0];
+    state->cmd_stack[1] = stage->cmd_stack[1];
+    state->cmd = stage->cmd;
+
+    flecs_commands_init(stage, &stage->cmd_stack[0]);
+    flecs_commands_init(stage, &stage->cmd_stack[1]);
+    stage->cmd = &stage->cmd_stack[0];
+
+    state->scope = stage->scope;
+    state->with = stage->with;
+    stage->defer = 0;
+
+    return world;
+}
+
+void flecs_resume_readonly(
+    ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_world_t *temp_world = world;
+    ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
+
+    if (state->is_readonly || state->is_deferred) {
+        ecs_dbg_3("resuming readonly mode");
+
+        ecs_run_aperiodic(world, 0);
+
+        /* Restore readonly state / defer count */
+        ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
+        stage->defer = state->defer_count;
+        stage->cmd_flushing = state->cmd_flushing;
+        flecs_commands_fini(stage, &stage->cmd_stack[0]);
+        flecs_commands_fini(stage, &stage->cmd_stack[1]);
+        stage->cmd_stack[0] = state->cmd_stack[0];
+        stage->cmd_stack[1] = state->cmd_stack[1];
+        stage->cmd = state->cmd;
+        
+        stage->scope = state->scope;
+        stage->with = state->with;
+    }
 }
 
 void ecs_merge(

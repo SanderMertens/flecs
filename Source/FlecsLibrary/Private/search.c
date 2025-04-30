@@ -189,47 +189,6 @@ int32_t flecs_type_search_relation(
     return -1;
 }
 
-int32_t flecs_search_relation_w_cr(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    int32_t offset,
-    ecs_id_t id,
-    ecs_entity_t rel,
-    ecs_flags64_t flags,
-    ecs_entity_t *subject_out,
-    ecs_id_t *id_out,
-    struct ecs_table_record_t **tr_out,
-    ecs_component_record_t *cr)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
-
-    flags = flags ? flags : (EcsSelf|EcsUp);
-
-    if (!cr) {
-        cr = flecs_components_get(world, id);
-        if (!cr) {
-            return -1;
-        }
-    }
-
-    if (subject_out) subject_out[0] = 0;
-    if (!(flags & EcsUp)) {
-        if (offset) {
-            return ecs_search_offset(world, table, offset, id, id_out);
-        } else {
-            return flecs_type_search(
-                table, cr, table->type.array, id_out, tr_out);
-        }
-    }
-
-    int32_t result = flecs_type_search_relation(world, table, offset, id, cr, 
-        ecs_pair(rel, EcsWildcard), NULL, flags & EcsSelf, subject_out, 
-            id_out, tr_out);
-
-    return result;
-}
-
 int32_t ecs_search_relation(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -261,20 +220,6 @@ int32_t ecs_search_relation(
             id_out, tr_out);
 
     return result;
-}
-
-int32_t flecs_search_w_cr(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t *id_out,
-    ecs_component_record_t *cr)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    (void)world;
-
-    ecs_type_t type = table->type;
-    ecs_id_t *ids = type.array;
-    return flecs_type_search(table, cr, ids, id_out, 0);
 }
 
 int32_t ecs_search(

@@ -4,7 +4,6 @@
  */
 
 #include "../private_api.h"
-#include <ctype.h>
 
 /* Placeholder arrays for queries that only have $this variable */
 ecs_query_var_t flecs_this_array = {

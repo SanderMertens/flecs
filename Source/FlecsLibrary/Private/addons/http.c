@@ -35,6 +35,7 @@
  */
 
 #include "../private_api.h"
+#include <errno.h>
 
 #ifdef FLECS_HTTP
 

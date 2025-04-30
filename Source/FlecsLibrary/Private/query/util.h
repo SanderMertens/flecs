@@ -14,6 +14,12 @@ typedef struct {
     int32_t term_index;
 } ecs_query_validator_ctx_t;
 
+/* Fill out all term fields, check for consistency. */
+int flecs_term_finalize(
+    const ecs_world_t *world,
+    ecs_term_t *term,
+    ecs_query_validator_ctx_t *ctx);
+
 /* Convert integer to label */
 ecs_query_lbl_t flecs_itolbl(
     int64_t val);
@@ -79,3 +85,8 @@ void flecs_term_to_buf(
     const ecs_term_t *term,
     ecs_strbuf_t *buf,
     int32_t t);
+
+/* Apply iterator flags from query */
+void flecs_query_apply_iter_flags(
+    ecs_iter_t *it,
+    const ecs_query_t *query);
