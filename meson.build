@@ -101,6 +101,7 @@ flecs_src = files(
     'src/datastructures/vec.c',
     'src/storage/component_index.c',
     'src/storage/entity_index.c',
+    'src/storage/ordered_children.c',
     'src/storage/sparse_storage.c',
     'src/storage/table.c',
     'src/storage/table_cache.c',

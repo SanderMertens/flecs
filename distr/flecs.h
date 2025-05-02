@@ -442,9 +442,11 @@ extern "C" {
 #define EcsIdDontFragment              (1u << 24)
 #define EcsIdMatchDontFragment         (1u << 25) /* For (*, T) wildcards */
 #define EcsIdIsUnion                   (1u << 26)
+#define EcsIdOrderedChildren           (1u << 28)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
-        EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion)
+        EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion|\
+        EcsIdOrderedChildren)
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
@@ -587,6 +589,8 @@ extern "C" {
 #define EcsTableHasUnion               (1u << 26u)
 
 #define EcsTableHasTraversable         (1u << 27u)
+#define EcsTableHasOrderedChildren     (1u << 28u)
+#define EcsTableEdgeReparent           (1u << 29u)
 #define EcsTableMarkedForDelete        (1u << 30u)
 
 /* Composite table flags */
@@ -596,7 +600,7 @@ extern "C" {
 #define EcsTableHasRemoveActions (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
 #define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion)
 #define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse | EcsTableHasUnion)
-#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion)
+#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion | EcsTableHasOrderedChildren)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Aperiodic action flags (used by ecs_run_aperiodic)
@@ -1212,6 +1216,15 @@ void ecs_vec_remove(
 
 #define ecs_vec_remove_t(vec, T, elem) \
     ecs_vec_remove(vec, ECS_SIZEOF(T), elem)
+
+FLECS_API
+void ecs_vec_remove_ordered(
+    ecs_vec_t *v,
+    ecs_size_t size,
+    int32_t index);
+
+#define ecs_vec_remove_ordered_t(vec, T, elem) \
+    ecs_vec_remove_ordered(vec, ECS_SIZEOF(T), elem)
 
 FLECS_API
 void ecs_vec_remove_last(
@@ -5573,6 +5586,9 @@ FLECS_API extern const ecs_entity_t EcsDependsOn;
 /** Used to express a slot (used with prefab inheritance) */
 FLECS_API extern const ecs_entity_t EcsSlotOf;
 
+/** Tag that when added to a parent ensures stable order of ecs_children result. */
+FLECS_API extern const ecs_entity_t EcsOrderedChildren;
+
 /** Tag added to module entities */
 FLECS_API extern const ecs_entity_t EcsModule;
 
@@ -6733,6 +6749,30 @@ FLECS_API
 void ecs_delete_with(
     ecs_world_t *world,
     ecs_id_t id);
+
+/** Set child order for parent with OrderedChildren.
+ * If the parent has the OrderedChildren trait, the order of the children 
+ * will be updated to the order in the specified children array. The operation
+ * will fail if the parent does not have the OrderedChildren trait.
+ * 
+ * This operation always takes place immediately, and is not deferred. When the 
+ * operation is called from a multithreaded system it will fail.
+ * 
+ * The reason for not deferring this operation is that by the time the deferred
+ * command would be executed, the children of the parent could have been changed
+ * which would cause the operation to fail.
+ * 
+ * @param world The world.
+ * @param parent The parent.
+ * @param children An array with children.
+ * @param child_count The number of children in the provided array.
+ */
+FLECS_API
+void ecs_set_child_order(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const ecs_entity_t *children,
+    int32_t child_count);
 
 /** @} */
 
@@ -8261,10 +8301,14 @@ bool ecs_each_next(
     ecs_iter_t *it);
 
 /** Iterate children of parent.
- * Equivalent to:
+ * This operation is usually equivalent to doing:
  * @code
  * ecs_iter_t it = ecs_each_id(world, ecs_pair(EcsChildOf, parent));
  * @endcode
+ * 
+ * The only exception is when the parent has the EcsOrderedChildren trait, in
+ * which case this operation will return a single result with the ordered 
+ * child entity ids.
  * 
  * @param world The world.
  * @param parent The parent.
@@ -17776,6 +17820,9 @@ static const flecs::entity_t ChildOf = EcsChildOf;
 static const flecs::entity_t DependsOn = EcsDependsOn;
 static const flecs::entity_t SlotOf = EcsSlotOf;
 
+/* Misc */
+static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
+
 /* Builtin identifiers */
 static const flecs::entity_t Name = EcsName;
 static const flecs::entity_t Symbol = EcsSymbol;
@@ -24502,9 +24549,16 @@ struct entity_view : public id {
 
         flecs::world world(world_);
 
-        ecs_iter_t it = ecs_each_id(world_, ecs_pair(rel, id_));
-        while (ecs_each_next(&it)) {
-            _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
+        if (rel == flecs::ChildOf) {
+            ecs_iter_t it = ecs_children(world_, id_);
+            while (ecs_children_next(&it)) {
+                _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
+            }
+        } else {
+            ecs_iter_t it = ecs_each_id(world_, ecs_pair(rel, id_));
+            while (ecs_each_next(&it)) {
+                _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
+            }
         }
     }
 
@@ -27075,6 +27129,16 @@ struct entity : entity_builder<entity>
      */
     void destruct() const {
         ecs_delete(world_, id_);
+    }
+
+    /** Set child order.
+     * Changes the order of children as returned by entity::children(). Only 
+     * applicableo to entities with the flecs::OrderedChildren trait.
+     * 
+     * @see ecs_set_child_order()
+     */
+    void set_child_order(flecs::entity_t *children, int32_t child_count) const {
+        ecs_set_child_order(world_, id_, children, child_count);
     }
 
     /** Return entity as entity_view.

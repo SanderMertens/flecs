@@ -639,6 +639,7 @@ void Hierarchies_get_object_from_0(void);
 void Hierarchies_tree_iter_empty(void);
 void Hierarchies_tree_iter_1_table(void);
 void Hierarchies_tree_iter_2_tables(void);
+void Hierarchies_tree_iter_parent_0(void);
 void Hierarchies_path_depth_0(void);
 void Hierarchies_path_depth_1(void);
 void Hierarchies_path_depth_2(void);
@@ -738,6 +739,36 @@ void Hierarchies_lookup_after_delete_from_root(void);
 void Hierarchies_lookup_after_delete_from_parent(void);
 void Hierarchies_defer_batch_remove_name_w_add_childof(void);
 void Hierarchies_defer_batch_remove_childof_w_add_name(void);
+
+// Testsuite 'OrderedChildren'
+void OrderedChildren_iter_no_children(void);
+void OrderedChildren_children_1_table(void);
+void OrderedChildren_children_2_tables(void);
+void OrderedChildren_children_1_table_delete(void);
+void OrderedChildren_children_1_table_clear(void);
+void OrderedChildren_children_1_table_remove_parent(void);
+void OrderedChildren_children_1_table_remove_wildcard(void);
+void OrderedChildren_children_1_table_reparent(void);
+void OrderedChildren_children_1_table_reparent_ordered(void);
+void OrderedChildren_children_2_tables_delete(void);
+void OrderedChildren_children_2_tables_clear(void);
+void OrderedChildren_children_2_tables_remove_parent(void);
+void OrderedChildren_children_2_tables_remove_wildcard(void);
+void OrderedChildren_children_2_tables_reparent(void);
+void OrderedChildren_children_2_tables_reparent_ordered(void);
+void OrderedChildren_delete_parent(void);
+void OrderedChildren_delete_with_parent(void);
+void OrderedChildren_delete_with_tag_all_children(void);
+void OrderedChildren_delete_with_tag_some_children(void);
+void OrderedChildren_add_ordered_children_after_in_use(void);
+void OrderedChildren_change_order_no_children(void);
+void OrderedChildren_change_order_mismatching_child_count(void);
+void OrderedChildren_change_order_mismatching_child_id(void);
+void OrderedChildren_change_order_double_child_id(void);
+void OrderedChildren_change_order_null_children_nonzero_count(void);
+void OrderedChildren_change_order_not_null_children_zero_count(void);
+void OrderedChildren_change_order_on_parent_without_ordered_children(void);
+void OrderedChildren_change_order(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -2301,6 +2332,9 @@ void Commands_batched_cmd_w_component_init(void);
 void Commands_deep_command_nesting(void);
 void Commands_ensure_from_2_stages(void);
 void Commands_batch_w_old_and_recycled_id(void);
+void Commands_batch_w_two_named_entities_one_reparent(void);
+void Commands_batch_w_two_named_entities_one_reparent_w_remove(void);
+void Commands_batch_new_w_parent_w_name(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -4915,6 +4949,10 @@ bake_test_case Hierarchies_testcases[] = {
         Hierarchies_tree_iter_2_tables
     },
     {
+        "tree_iter_parent_0",
+        Hierarchies_tree_iter_parent_0
+    },
+    {
         "path_depth_0",
         Hierarchies_path_depth_0
     },
@@ -5309,6 +5347,121 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "defer_batch_remove_childof_w_add_name",
         Hierarchies_defer_batch_remove_childof_w_add_name
+    }
+};
+
+bake_test_case OrderedChildren_testcases[] = {
+    {
+        "iter_no_children",
+        OrderedChildren_iter_no_children
+    },
+    {
+        "children_1_table",
+        OrderedChildren_children_1_table
+    },
+    {
+        "children_2_tables",
+        OrderedChildren_children_2_tables
+    },
+    {
+        "children_1_table_delete",
+        OrderedChildren_children_1_table_delete
+    },
+    {
+        "children_1_table_clear",
+        OrderedChildren_children_1_table_clear
+    },
+    {
+        "children_1_table_remove_parent",
+        OrderedChildren_children_1_table_remove_parent
+    },
+    {
+        "children_1_table_remove_wildcard",
+        OrderedChildren_children_1_table_remove_wildcard
+    },
+    {
+        "children_1_table_reparent",
+        OrderedChildren_children_1_table_reparent
+    },
+    {
+        "children_1_table_reparent_ordered",
+        OrderedChildren_children_1_table_reparent_ordered
+    },
+    {
+        "children_2_tables_delete",
+        OrderedChildren_children_2_tables_delete
+    },
+    {
+        "children_2_tables_clear",
+        OrderedChildren_children_2_tables_clear
+    },
+    {
+        "children_2_tables_remove_parent",
+        OrderedChildren_children_2_tables_remove_parent
+    },
+    {
+        "children_2_tables_remove_wildcard",
+        OrderedChildren_children_2_tables_remove_wildcard
+    },
+    {
+        "children_2_tables_reparent",
+        OrderedChildren_children_2_tables_reparent
+    },
+    {
+        "children_2_tables_reparent_ordered",
+        OrderedChildren_children_2_tables_reparent_ordered
+    },
+    {
+        "delete_parent",
+        OrderedChildren_delete_parent
+    },
+    {
+        "delete_with_parent",
+        OrderedChildren_delete_with_parent
+    },
+    {
+        "delete_with_tag_all_children",
+        OrderedChildren_delete_with_tag_all_children
+    },
+    {
+        "delete_with_tag_some_children",
+        OrderedChildren_delete_with_tag_some_children
+    },
+    {
+        "add_ordered_children_after_in_use",
+        OrderedChildren_add_ordered_children_after_in_use
+    },
+    {
+        "change_order_no_children",
+        OrderedChildren_change_order_no_children
+    },
+    {
+        "change_order_mismatching_child_count",
+        OrderedChildren_change_order_mismatching_child_count
+    },
+    {
+        "change_order_mismatching_child_id",
+        OrderedChildren_change_order_mismatching_child_id
+    },
+    {
+        "change_order_double_child_id",
+        OrderedChildren_change_order_double_child_id
+    },
+    {
+        "change_order_null_children_nonzero_count",
+        OrderedChildren_change_order_null_children_nonzero_count
+    },
+    {
+        "change_order_not_null_children_zero_count",
+        OrderedChildren_change_order_not_null_children_zero_count
+    },
+    {
+        "change_order_on_parent_without_ordered_children",
+        OrderedChildren_change_order_on_parent_without_ordered_children
+    },
+    {
+        "change_order",
+        OrderedChildren_change_order
     }
 };
 
@@ -11400,6 +11553,18 @@ bake_test_case Commands_testcases[] = {
     {
         "batch_w_old_and_recycled_id",
         Commands_batch_w_old_and_recycled_id
+    },
+    {
+        "batch_w_two_named_entities_one_reparent",
+        Commands_batch_w_two_named_entities_one_reparent
+    },
+    {
+        "batch_w_two_named_entities_one_reparent_w_remove",
+        Commands_batch_w_two_named_entities_one_reparent_w_remove
+    },
+    {
+        "batch_new_w_parent_w_name",
+        Commands_batch_new_w_parent_w_name
     }
 };
 
@@ -12127,8 +12292,15 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        107,
+        108,
         Hierarchies_testcases
+    },
+    {
+        "OrderedChildren",
+        NULL,
+        NULL,
+        28,
+        OrderedChildren_testcases
     },
     {
         "Has",
@@ -12302,7 +12474,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        155,
+        158,
         Commands_testcases
     },
     {
@@ -12357,5 +12529,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("core", argc, argv, suites, 46);
+    return bake_test_run("core", argc, argv, suites, 47);
 }
