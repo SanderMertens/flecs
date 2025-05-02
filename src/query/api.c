@@ -180,6 +180,12 @@ int flecs_query_create_cache(
         return -1;
     }
 
+    if (q->cache_kind != EcsQueryCacheNone) {
+        flecs_check_exclusive_world_access_write(impl->pub.real_world);
+    } else {
+        flecs_check_exclusive_world_access_read(impl->pub.real_world);
+    }
+
     if ((q->cache_kind != EcsQueryCacheNone) && !q->entity) {
         /* Cached queries need an entity handle for observer components */
         q->entity = ecs_new(q->world);
@@ -379,8 +385,6 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    flecs_check_exclusive_world_access(world);
-
     ecs_query_impl_t *result = flecs_bcalloc(&stage->allocators.query_impl);
     flecs_poly_init(result, ecs_query_t);
     
@@ -388,6 +392,8 @@ ecs_query_t* ecs_query_init(
     ecs_entity_t entity = const_desc->entity;
 
     if (entity) {
+        flecs_check_exclusive_world_access_write(world);
+
         /* Remove existing query if entity has one */
         bool deferred = false;
         if (ecs_is_deferred(world)) {
