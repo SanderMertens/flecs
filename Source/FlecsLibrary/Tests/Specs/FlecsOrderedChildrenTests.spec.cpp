@@ -1,4 +1,13 @@
-#include <cpp.h>
+#if WITH_AUTOMATION_TESTS && defined(FLECS_TESTS)
+
+#include "Misc/AutomationTest.h"
+#include "flecs.h"
+#include "Bake/FlecsTestUtils.h"
+#include "Bake/FlecsTestTypes.h"
+
+BEGIN_DEFINE_SPEC(FFlecsOrderedChildrenTestsSpec,
+                   "FlecsLibrary.OrderedChildren",
+                   EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter);
 
 void OrderedChildren_iter_no_children(void) {
     flecs::world world;
@@ -15,6 +24,7 @@ void OrderedChildren_iter_no_children(void) {
 
 void OrderedChildren_children_1_table(void) {
     flecs::world world;
+    world.component<Position>();
 
     flecs::entity parent = world.entity().add(flecs::OrderedChildren);
     flecs::entity child_a = world.entity().child_of(parent).add<Position>();
@@ -33,6 +43,7 @@ void OrderedChildren_children_1_table(void) {
 
 void OrderedChildren_children_2_tables(void) {
     flecs::world world;
+    RegisterTestTypeComponents(world);
 
     flecs::entity parent = world.entity().add(flecs::OrderedChildren);
     flecs::entity child_a = world.entity().child_of(parent).add<Position>();
@@ -51,6 +62,7 @@ void OrderedChildren_children_2_tables(void) {
 
 void OrderedChildren_set_child_order(void) {
     flecs::world world;
+    world.component<Position>();
 
     flecs::entity parent = world.entity().add(flecs::OrderedChildren);
     flecs::entity child_a = world.entity().child_of(parent).add<Position>();
@@ -82,3 +94,27 @@ void OrderedChildren_set_child_order(void) {
         test_assert(v[2] == child_b);
     }
 }
+
+END_DEFINE_SPEC(FFlecsOrderedChildrenTestsSpec);
+
+/*{
+"id": "OrderedChildren",
+"testcases": [
+"iter_no_children",
+"children_1_table",
+"children_2_tables",
+"set_child_order"
+]*/
+
+void FFlecsOrderedChildrenTestsSpec::Define()
+{
+    It("iter_no_children", [this]() { OrderedChildren_iter_no_children(); });
+    It("children_1_table", [this]() { OrderedChildren_children_1_table(); });
+    It("children_2_tables", [this]() { OrderedChildren_children_2_tables(); });
+    It("set_child_order", [this]() { OrderedChildren_set_child_order(); });
+}
+
+
+
+
+#endif // WITH_AUTOMATION_TESTS && defined(FLECS_TESTS)
