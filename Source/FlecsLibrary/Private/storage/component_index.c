@@ -72,7 +72,7 @@ void flecs_insert_id_elem(
     }
     ecs_assert(wcr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_pair_id_record_t *pair = cr->pair;
+    ecs_pair_record_t *pair = cr->pair;
     ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
@@ -97,7 +97,7 @@ void flecs_remove_id_elem(
 {
     ecs_assert(ecs_id_is_wildcard(wildcard), ECS_INTERNAL_ERROR, NULL);
 
-    ecs_pair_id_record_t *pair = cr->pair;
+    ecs_pair_record_t *pair = cr->pair;
     ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ECS_PAIR_SECOND(wildcard) == EcsWildcard) {
@@ -285,8 +285,10 @@ ecs_component_record_t* flecs_component_new(
     ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
     if (is_pair) {
         cr->pair = flecs_bcalloc_w_dbg_info(
-            &world->allocators.pair_id_record, "ecs_pair_id_record_t");
+            &world->allocators.pair_id_record, "ecs_pair_record_t");
         cr->pair->reachable.current = -1;
+
+        flecs_ordered_children_init(world, cr);
 
         rel = ECS_PAIR_FIRST(id);
         rel = flecs_entities_get_alive(world, rel);
@@ -453,6 +455,13 @@ ecs_component_record_t* flecs_component_new(
             }
         }
 
+        /* Check if we should keep a list of ordered children for parent */
+        if (rel == EcsChildOf) {
+            if (ecs_has_id(world, tgt, EcsOrderedChildren)) {
+                cr->flags |= EcsIdOrderedChildren;
+            }
+        }
+
         /* Mark (*, tgt) record with HasDontFragment so that queries can quickly
          * detect if there are any non-fragmenting records to consider for a
          * (*, tgt) query. */
@@ -574,11 +583,12 @@ void flecs_component_free(
     ecs_table_cache_fini(&cr->cache);
 
     if (cr->pair) {
+        flecs_ordered_children_fini(world, cr);
         flecs_name_index_free(cr->pair->name_index);
         ecs_vec_fini_t(&world->allocator, &cr->pair->reachable.ids, 
             ecs_reachable_elem_t);
         flecs_bfree_w_dbg_info(&world->allocators.pair_id_record, 
-                cr->pair, "ecs_pair_id_record_t");
+                cr->pair, "ecs_pair_record_t");
     }
 
     ecs_id_t hash = flecs_component_hash(id);

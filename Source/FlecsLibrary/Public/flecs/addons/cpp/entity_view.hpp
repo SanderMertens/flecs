@@ -212,9 +212,16 @@ struct entity_view : public id {
 
         flecs::world world(world_);
 
-        ecs_iter_t it = ecs_each_id(world_, ecs_pair(rel, id_));
-        while (ecs_each_next(&it)) {
-            _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
+        if (rel == flecs::ChildOf) {
+            ecs_iter_t it = ecs_children(world_, id_);
+            while (ecs_children_next(&it)) {
+                _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
+            }
+        } else {
+            ecs_iter_t it = ecs_each_id(world_, ecs_pair(rel, id_));
+            while (ecs_each_next(&it)) {
+                _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
+            }
         }
     }
 

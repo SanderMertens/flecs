@@ -86,7 +86,7 @@ typedef struct ecs_table__t {
     ecs_bitset_t *bs_columns;        /* Bitset columns */
 
     struct ecs_table_record_t *records; /* Array with table records */
-    ecs_hashmap_t *name_index;       /* Cached pointer to name index */
+    ecs_pair_record_t *childof_r;       /* ChildOf pair data */
 
 #ifdef FLECS_DEBUG_INFO
     /* Fields used for debug visualization */

@@ -514,6 +514,8 @@ void flecs_table_init(
                 r = ECS_PAIR_FIRST(dst_id);
                 if (r == EcsChildOf) {
                     childof_cr = p_cr;
+                    ecs_assert(childof_cr->pair != NULL, 
+                        ECS_INTERNAL_ERROR, NULL);
                 }
 
                 ecs_assert(p_cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -633,12 +635,17 @@ void flecs_table_init(
     table->version = 1;
     flecs_table_init_data(world, table);
 
+    /* If the table doesn't have an explicit ChildOf pair, it will be in the
+     * root which is registered with the (ChildOf, 0) index. */
+    ecs_assert(childof_cr != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (table->flags & EcsTableHasName) {
-        ecs_assert(childof_cr != NULL, ECS_INTERNAL_ERROR, NULL);
-        table->_->name_index = 
-            flecs_component_name_index_ensure(world, childof_cr);
-        ecs_assert(table->_->name_index != NULL, ECS_INTERNAL_ERROR, NULL);
+        flecs_component_name_index_ensure(world, childof_cr);
+        ecs_assert(childof_cr->pair->name_index != NULL, 
+            ECS_INTERNAL_ERROR, NULL);
     }
+
+    table->_->childof_r = childof_cr->pair;
 
     if (table->flags & EcsTableHasOnTableCreate) {
         flecs_table_emit(world, table, EcsOnTableCreate);

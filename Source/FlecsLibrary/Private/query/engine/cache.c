@@ -617,9 +617,11 @@ bool flecs_query_cache_match_table(
     ecs_query_cache_table_t *qt = NULL;
     ecs_query_t *q = cache->query;
 
+#ifndef FLECS_SANITIZE
     if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
         return false;
     }
+#endif
 
     /* Iterate uncached query for table to check if it matches. If this is a
      * wildcard query, a table can match multiple times. */
@@ -638,6 +640,14 @@ bool flecs_query_cache_match_table(
             cache, qt, table);
         flecs_query_cache_set_table_match(cache, qm, &it);
     }
+
+#ifdef FLECS_SANITIZE
+    /* Sanity check to make sure bloom filter is correct */
+    if (qt != NULL) {
+        ecs_assert(flecs_table_bloom_filter_test(table, q->bloom_filter),
+            ECS_INTERNAL_ERROR, NULL);
+    }
+#endif
 
     return qt != NULL;
 }

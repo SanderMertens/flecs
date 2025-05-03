@@ -307,6 +307,14 @@
                 "add_remove_enum_component"
             ]
         }, {
+            "id": "OrderedChildren",
+            "testcases": [
+                "iter_no_children",
+                "children_1_table",
+                "children_2_tables",
+                "set_child_order"
+            ]
+        }, {
             "id": "Pairs",
             "testcases": [
                 "add_component_pair",

@@ -170,8 +170,6 @@ ecs_entity_t flecs_new_id(
         ecs_entity_t_lo(entity) <= unsafe_world->info.max_id, 
         ECS_OUT_OF_RANGE, NULL);
 
-    flecs_journal(unsafe_world, EcsJournalNew, entity, 0, 0);
-
     return entity;
 }
 
@@ -242,8 +240,6 @@ void flecs_move_entity(
 
     flecs_notify_on_add(world, dst_table, src_table, dst_row, 1, diff, 
         evt_flags, 0, ctor, true);
-
-    flecs_update_name_index(world, src_table, dst_table, dst_row);
 
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
 error:
@@ -657,6 +653,8 @@ void flecs_add_to_root_table(
     ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
     flecs_new_entity(world, e, r, &world->store.root, &diff, false, 0);
     ecs_assert(r->table == &world->store.root, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_journal(world, EcsJournalNew, e, 0, 0);
 }
 
 
@@ -2316,6 +2314,31 @@ error:
     return false;
 }
 
+void ecs_set_child_order(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const ecs_entity_t *children,
+    int32_t child_count)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(children == NULL || child_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(children != NULL || !child_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(world->flags & EcsWorldMultiThreaded), 
+        ECS_INVALID_OPERATION, NULL);
+
+    flecs_stage_from_world(&world);
+
+    flecs_check_exclusive_world_access(world);
+
+    ecs_component_record_t *cr = flecs_components_get(
+        world, ecs_childof(parent));
+
+    flecs_ordered_children_reorder(world, cr, children, child_count);
+
+error:
+    return;
+}
+
 bool ecs_has_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -2939,3 +2962,4 @@ char* ecs_entity_str(
 error:
     return NULL;
 }
+

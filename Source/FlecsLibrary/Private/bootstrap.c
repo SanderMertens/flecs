@@ -467,6 +467,25 @@ void flecs_disable_module(ecs_iter_t *it) {
     }
 }
 
+static
+void flecs_register_ordered_children(ecs_iter_t *it) {
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t parent = it->entities[i];
+        const ecs_component_record_t *cr = flecs_components_ensure(
+            it->world, ecs_childof(parent));
+        if (cr->cache.tables.count != 0) {
+            char *str = ecs_id_str(it->world, ecs_childof(parent));
+            ecs_throw(ECS_INVALID_OPERATION, "cannot add OrderedChildren trait:"
+                " (ChildOf, %s) already in use", str);
+            ecs_os_free(str);
+        }
+        ecs_assert(cr->flags & EcsIdOrderedChildren, ECS_INTERNAL_ERROR, NULL);
+    }
+error:
+    return;
+}
+
 /* -- Bootstrapping -- */
 
 #define flecs_bootstrap_builtin_t(world, table, name)\
@@ -510,9 +529,10 @@ void flecs_bootstrap_builtin(
     name_col[index].length = name_length;
     name_col[index].hash = name_hash;
     name_col[index].index_hash = 0;
-    name_col[index].index = table->_->name_index;
-    flecs_name_index_ensure(
-        table->_->name_index, entity, name, name_length, name_hash);
+
+    ecs_hashmap_t *name_index = table->_->childof_r->name_index;
+    name_col[index].index = name_index;
+    flecs_name_index_ensure(name_index, entity, name, name_length, name_hash);
 
     EcsIdentifier *symbol_col = columns[2].data;
     symbol_col[index].value = ecs_os_strdup(symbol);
@@ -878,6 +898,8 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsInherit);
     flecs_bootstrap_tag(world, EcsDontInherit);
 
+    flecs_bootstrap_tag(world, EcsOrderedChildren);
+
     /* Builtin predicates */
     flecs_bootstrap_tag(world, EcsPredEq);
     flecs_bootstrap_tag(world, EcsPredMatch);
@@ -1034,6 +1056,13 @@ void flecs_bootstrap(
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
         .ctx = &union_trait
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsOrderedChildren }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_ordered_children
     });
 
     /* Entities used as slot are marked as exclusive to ensure a slot can always

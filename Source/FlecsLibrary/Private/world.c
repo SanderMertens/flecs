@@ -84,22 +84,23 @@ const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 45;
 const ecs_entity_t EcsOnTableDelete =               FLECS_HI_COMPONENT_ID + 46;
 
 /* Timers */
-const ecs_entity_t ecs_id(EcsTickSource) =          FLECS_HI_COMPONENT_ID + 49;
-const ecs_entity_t ecs_id(EcsTimer) =               FLECS_HI_COMPONENT_ID + 50;
-const ecs_entity_t ecs_id(EcsRateFilter) =          FLECS_HI_COMPONENT_ID + 51;
+const ecs_entity_t ecs_id(EcsTickSource) =          FLECS_HI_COMPONENT_ID + 47;
+const ecs_entity_t ecs_id(EcsTimer) =               FLECS_HI_COMPONENT_ID + 48;
+const ecs_entity_t ecs_id(EcsRateFilter) =          FLECS_HI_COMPONENT_ID + 49;
 
 /* Actions */
-const ecs_entity_t EcsRemove =                      FLECS_HI_COMPONENT_ID + 52;
-const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 53;
-const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 54;
+const ecs_entity_t EcsRemove =                      FLECS_HI_COMPONENT_ID + 50;
+const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 51;
+const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 52;
 
 /* Storage */
-const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 55;
-const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 56;
-const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 57;
+const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 53;
+const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 54;
+const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 55;
 
 /* Misc */
-const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 58;
+const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 56;
+const ecs_entity_t EcsOrderedChildren =               FLECS_HI_COMPONENT_ID + 57;
 
 /* Builtin predicate ids (used by query engine) */
 const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 59;
@@ -710,7 +711,7 @@ void flecs_world_allocators_init(
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
     flecs_ballocator_init_t(&a->id_record, ecs_component_record_t);
-    flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_id_record_t);
+    flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_record_t);
     flecs_ballocator_init_n(&a->id_record_chunk, ecs_component_record_t, FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
