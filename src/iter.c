@@ -69,11 +69,11 @@ void flecs_iter_init(
 void ecs_iter_fini(
     ecs_iter_t *it)
 {
-    ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
-
     if (it->fini) {
         it->fini(it);
     }
+
+    ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
 
     ecs_world_t *world = it->world;
     if (!world) {
