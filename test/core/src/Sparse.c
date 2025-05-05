@@ -2243,6 +2243,12 @@ void Position_add_observer(ecs_iter_t *it) {
 }
 
 static
+void Foo_observer(ecs_iter_t *it) {
+    probe_iter(it);
+    test_int(it->count, 1);
+}
+
+static
 void Position_set_observer(ecs_iter_t *it) {
     probe_iter(it);
     test_int(it->count, 1);
@@ -2278,6 +2284,36 @@ void Sparse_on_add_observer(void) {
     test_uint(ctx.event, EcsOnAdd);
     test_uint(ctx.e[0], e);
     test_uint(ctx.c[0][0], ecs_id(Position));
+
+    ecs_fini(world);
+}
+
+void Sparse_on_add_observer_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, Foo, EcsSparse);
+    if (!fragment) ecs_add_id(world, Foo, EcsDontFragment);
+
+    Probe ctx = {0};
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = Foo }},
+        .events = {EcsOnAdd},
+        .callback = Foo_observer,
+        .ctx = &ctx
+    });
+
+    test_int(ctx.invoked, 0);
+    ecs_entity_t e = ecs_new_w(world, Foo);
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_uint(ctx.event, EcsOnAdd);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.c[0][0], Foo);
 
     ecs_fini(world);
 }
@@ -2510,6 +2546,39 @@ void Sparse_on_remove_observer_fini(void) {
     test_uint(ctx.event, EcsOnRemove);
     test_uint(ctx.e[0], e);
     test_uint(ctx.c[0][0], ecs_id(Position));
+}
+
+void Sparse_on_remove_observer_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, Foo, EcsSparse);
+    if (!fragment) ecs_add_id(world, Foo, EcsDontFragment);
+
+    Probe ctx = {0};
+    
+    ecs_observer(world, {
+        .query.terms = {{ .id = Foo }},
+        .events = {EcsOnRemove},
+        .callback = Foo_observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Foo);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_uint(ctx.event, EcsOnRemove);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.c[0][0], Foo);
+
+    ecs_fini(world);
 }
 
 void Sparse_on_set_after_remove_override(void) {
