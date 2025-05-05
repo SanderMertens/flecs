@@ -1767,7 +1767,8 @@
                 "query_changed_after_count",
                 "staged_query_w_shared_inout_field",
                 "staged_query_w_fixed_inout_field",
-                "staged_query_w_fixed_inout_field_read"
+                "staged_query_w_fixed_inout_field_read",
+                "simple_write_query"
             ]
         }, {
             "id": "GroupBy",
