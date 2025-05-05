@@ -1744,6 +1744,7 @@ void Observer_2_children_w_deferred_set(void);
 void Observer_on_add_on_set_w_not_term(void);
 void Observer_on_add_on_set_w_not_2_terms(void);
 void Observer_observer_w_vars(void);
+void Observer_observer_w_invalid_expr(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -9362,6 +9363,10 @@ bake_test_case Observer_testcases[] = {
         Observer_observer_w_vars
     },
     {
+        "observer_w_invalid_expr",
+        Observer_observer_w_invalid_expr
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -12864,7 +12869,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        239,
+        240,
         Observer_testcases
     },
     {
