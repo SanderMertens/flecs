@@ -90,7 +90,7 @@ bool flecs_defer_begin(
 {
     flecs_poly_assert(world, ecs_world_t);
     flecs_poly_assert(stage, ecs_stage_t);
-    flecs_check_exclusive_world_access(world);
+    flecs_check_exclusive_world_access_write(world);
     (void)world;
     if (stage->defer < 0) return false;
     return (++ stage->defer) == 1;
@@ -942,7 +942,7 @@ bool flecs_defer_end(
     flecs_poly_assert(world, ecs_world_t);
     flecs_poly_assert(stage, ecs_stage_t);
 
-    flecs_check_exclusive_world_access(world);
+    flecs_check_exclusive_world_access_write(world);
 
     if (stage->defer < 0) {
         /* Defer suspending makes it possible to do operations on the storage

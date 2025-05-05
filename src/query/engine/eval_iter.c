@@ -330,6 +330,14 @@ ecs_iter_t flecs_query_iter(
     ecs_query_iter_t *qit = &it.priv_.iter.query;
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
 
+#ifdef FLECS_DEBUG
+    if (q->write_fields) {
+        flecs_check_exclusive_world_access_write(q->real_world);
+    } else {
+        flecs_check_exclusive_world_access_read(q->real_world);
+    }
+#endif
+
     flecs_query_validate_final_fields(q);
     
     flecs_poly_assert(q, ecs_query_t);

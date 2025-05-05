@@ -1658,6 +1658,9 @@ bool flecs_query_finalize_simple(
     term_count = i;
     ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
 
+    /* All fields are InOut */
+    q->write_fields = (1u << term_count) - 1;
+
     /* Simple query that only queries for component ids */
 
     /* Populate terms */

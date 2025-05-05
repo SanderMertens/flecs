@@ -2111,36 +2111,127 @@ void World_init_shrink_twice_fini(void);
 void World_init_create_delete_entities_shrink_fini(void);
 void World_init_create_delete_random_1_entities_shrink_fini(void);
 void World_init_create_delete_random_2_entities_shrink_fini(void);
-void World_exclusive_access_self(void);
-void World_exclusive_access_self_world_fini(void);
-void World_exclusive_access_begin_twice(void);
-void World_exclusive_access_end_without_begin(void);
-void World_exclusive_access_mismatching_begin(void);
-void World_exclusive_access_mismatching_end(void);
-void World_exclusive_access_other_new(void);
-void World_exclusive_access_other_world_new_low_id(void);
-void World_exclusive_access_other_delete(void);
-void World_exclusive_access_other_clear(void);
-void World_exclusive_access_other_add(void);
-void World_exclusive_access_other_add_existing(void);
-void World_exclusive_access_other_remove(void);
-void World_exclusive_access_other_remove_non_existing(void);
-void World_exclusive_access_other_set(void);
-void World_exclusive_access_other_set_existing(void);
-void World_exclusive_access_other_ensure(void);
-void World_exclusive_access_other_ensure_existing(void);
-void World_exclusive_access_other_ensure_modified(void);
-void World_exclusive_access_other_ensure_modified_existing(void);
-void World_exclusive_access_other_emplace(void);
-void World_exclusive_access_other_emplace_existing(void);
-void World_exclusive_access_other_defer_begin(void);
-void World_exclusive_access_other_defer_end(void);
-void World_exclusive_access_other_create_query(void);
-void World_exclusive_access_other_create_cached_query(void);
-void World_exclusive_access_other_create_table(void);
-void World_exclusive_access_other_register_component(void);
-void World_exclusive_access_other_world_fini(void);
-void World_exclusive_access_other_world_bulk_init(void);
+
+// Testsuite 'ExclusiveAccess'
+void ExclusiveAccess_self(void);
+void ExclusiveAccess_self_world_fini(void);
+void ExclusiveAccess_begin_twice(void);
+void ExclusiveAccess_end_without_begin(void);
+void ExclusiveAccess_mismatching_begin(void);
+void ExclusiveAccess_mismatching_end(void);
+void ExclusiveAccess_lock_world(void);
+void ExclusiveAccess_fini_while_locked_world(void);
+void ExclusiveAccess_fini_while_locked_world_unlocked(void);
+void ExclusiveAccess_other_new(void);
+void ExclusiveAccess_other_world_new_low_id(void);
+void ExclusiveAccess_other_delete(void);
+void ExclusiveAccess_other_clear(void);
+void ExclusiveAccess_other_add(void);
+void ExclusiveAccess_other_add_existing(void);
+void ExclusiveAccess_other_remove(void);
+void ExclusiveAccess_other_remove_non_existing(void);
+void ExclusiveAccess_other_set(void);
+void ExclusiveAccess_other_set_existing(void);
+void ExclusiveAccess_other_ensure(void);
+void ExclusiveAccess_other_ensure_existing(void);
+void ExclusiveAccess_other_ensure_modified(void);
+void ExclusiveAccess_other_ensure_modified_existing(void);
+void ExclusiveAccess_other_emplace(void);
+void ExclusiveAccess_other_emplace_existing(void);
+void ExclusiveAccess_other_defer_begin(void);
+void ExclusiveAccess_other_defer_end(void);
+void ExclusiveAccess_other_create_query(void);
+void ExclusiveAccess_other_create_mut_query(void);
+void ExclusiveAccess_other_create_cached_query(void);
+void ExclusiveAccess_other_create_table(void);
+void ExclusiveAccess_other_register_component(void);
+void ExclusiveAccess_other_each(void);
+void ExclusiveAccess_other_iter_query(void);
+void ExclusiveAccess_other_iter_mut_query(void);
+void ExclusiveAccess_other_iter_cached_query(void);
+void ExclusiveAccess_other_iter_mut_cached_query(void);
+void ExclusiveAccess_other_iter_children(void);
+void ExclusiveAccess_other_world_fini(void);
+void ExclusiveAccess_other_world_bulk_init(void);
+void ExclusiveAccess_other_world_get(void);
+void ExclusiveAccess_other_world_get_mut(void);
+void ExclusiveAccess_other_world_get_target(void);
+void ExclusiveAccess_other_world_get_target_for(void);
+void ExclusiveAccess_other_world_get_parent(void);
+void ExclusiveAccess_other_world_ref_init(void);
+void ExclusiveAccess_other_world_ref_get(void);
+void ExclusiveAccess_other_world_has(void);
+void ExclusiveAccess_other_world_owns(void);
+void ExclusiveAccess_other_disable_component(void);
+void ExclusiveAccess_other_is_component_enabled(void);
+void ExclusiveAccess_other_set_child_order(void);
+void ExclusiveAccess_other_get_depth(void);
+void ExclusiveAccess_other_is_valid(void);
+void ExclusiveAccess_other_is_alive(void);
+void ExclusiveAccess_other_get_alive(void);
+void ExclusiveAccess_other_make_alive(void);
+void ExclusiveAccess_other_exists(void);
+void ExclusiveAccess_other_set_version(void);
+void ExclusiveAccess_other_get_table(void);
+void ExclusiveAccess_other_get_type(void);
+void ExclusiveAccess_other_get_name(void);
+void ExclusiveAccess_other_get_path(void);
+void ExclusiveAccess_locked_new(void);
+void ExclusiveAccess_locked_world_new_low_id(void);
+void ExclusiveAccess_locked_delete(void);
+void ExclusiveAccess_locked_clear(void);
+void ExclusiveAccess_locked_add(void);
+void ExclusiveAccess_locked_add_existing(void);
+void ExclusiveAccess_locked_remove(void);
+void ExclusiveAccess_locked_remove_non_existing(void);
+void ExclusiveAccess_locked_set(void);
+void ExclusiveAccess_locked_set_existing(void);
+void ExclusiveAccess_locked_ensure(void);
+void ExclusiveAccess_locked_ensure_existing(void);
+void ExclusiveAccess_locked_ensure_modified(void);
+void ExclusiveAccess_locked_ensure_modified_existing(void);
+void ExclusiveAccess_locked_emplace(void);
+void ExclusiveAccess_locked_emplace_existing(void);
+void ExclusiveAccess_locked_defer_begin(void);
+void ExclusiveAccess_locked_defer_end(void);
+void ExclusiveAccess_locked_create_query(void);
+void ExclusiveAccess_locked_create_mut_query(void);
+void ExclusiveAccess_locked_create_cached_query(void);
+void ExclusiveAccess_locked_create_table(void);
+void ExclusiveAccess_locked_register_component(void);
+void ExclusiveAccess_locked_each(void);
+void ExclusiveAccess_locked_iter_query(void);
+void ExclusiveAccess_locked_iter_mut_query(void);
+void ExclusiveAccess_locked_iter_cached_query(void);
+void ExclusiveAccess_locked_iter_mut_cached_query(void);
+void ExclusiveAccess_locked_iter_children(void);
+void ExclusiveAccess_locked_world_fini(void);
+void ExclusiveAccess_locked_world_bulk_init(void);
+void ExclusiveAccess_locked_world_get(void);
+void ExclusiveAccess_locked_world_get_mut(void);
+void ExclusiveAccess_locked_world_get_target(void);
+void ExclusiveAccess_locked_world_get_target_for(void);
+void ExclusiveAccess_locked_world_get_parent(void);
+void ExclusiveAccess_locked_world_ref_init(void);
+void ExclusiveAccess_locked_world_ref_get(void);
+void ExclusiveAccess_locked_world_has(void);
+void ExclusiveAccess_locked_world_owns(void);
+void ExclusiveAccess_locked_disable_component(void);
+void ExclusiveAccess_locked_is_component_enabled(void);
+void ExclusiveAccess_locked_set_child_order(void);
+void ExclusiveAccess_locked_get_depth(void);
+void ExclusiveAccess_locked_is_valid(void);
+void ExclusiveAccess_locked_is_alive(void);
+void ExclusiveAccess_locked_get_alive(void);
+void ExclusiveAccess_locked_make_alive(void);
+void ExclusiveAccess_locked_exists(void);
+void ExclusiveAccess_locked_set_version(void);
+void ExclusiveAccess_locked_get_table(void);
+void ExclusiveAccess_locked_get_type(void);
+void ExclusiveAccess_locked_get_name(void);
+void ExclusiveAccess_locked_get_path(void);
+void ExclusiveAccess_other_w_name_read(void);
+void ExclusiveAccess_other_w_name_write(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -10688,126 +10779,485 @@ bake_test_case World_testcases[] = {
     {
         "init_create_delete_random_2_entities_shrink_fini",
         World_init_create_delete_random_2_entities_shrink_fini
+    }
+};
+
+bake_test_case ExclusiveAccess_testcases[] = {
+    {
+        "self",
+        ExclusiveAccess_self
     },
     {
-        "exclusive_access_self",
-        World_exclusive_access_self
+        "self_world_fini",
+        ExclusiveAccess_self_world_fini
     },
     {
-        "exclusive_access_self_world_fini",
-        World_exclusive_access_self_world_fini
+        "begin_twice",
+        ExclusiveAccess_begin_twice
     },
     {
-        "exclusive_access_begin_twice",
-        World_exclusive_access_begin_twice
+        "end_without_begin",
+        ExclusiveAccess_end_without_begin
     },
     {
-        "exclusive_access_end_without_begin",
-        World_exclusive_access_end_without_begin
+        "mismatching_begin",
+        ExclusiveAccess_mismatching_begin
     },
     {
-        "exclusive_access_mismatching_begin",
-        World_exclusive_access_mismatching_begin
+        "mismatching_end",
+        ExclusiveAccess_mismatching_end
     },
     {
-        "exclusive_access_mismatching_end",
-        World_exclusive_access_mismatching_end
+        "lock_world",
+        ExclusiveAccess_lock_world
     },
     {
-        "exclusive_access_other_new",
-        World_exclusive_access_other_new
+        "fini_while_locked_world",
+        ExclusiveAccess_fini_while_locked_world
     },
     {
-        "exclusive_access_other_world_new_low_id",
-        World_exclusive_access_other_world_new_low_id
+        "fini_while_locked_world_unlocked",
+        ExclusiveAccess_fini_while_locked_world_unlocked
     },
     {
-        "exclusive_access_other_delete",
-        World_exclusive_access_other_delete
+        "other_new",
+        ExclusiveAccess_other_new
     },
     {
-        "exclusive_access_other_clear",
-        World_exclusive_access_other_clear
+        "other_world_new_low_id",
+        ExclusiveAccess_other_world_new_low_id
     },
     {
-        "exclusive_access_other_add",
-        World_exclusive_access_other_add
+        "other_delete",
+        ExclusiveAccess_other_delete
     },
     {
-        "exclusive_access_other_add_existing",
-        World_exclusive_access_other_add_existing
+        "other_clear",
+        ExclusiveAccess_other_clear
     },
     {
-        "exclusive_access_other_remove",
-        World_exclusive_access_other_remove
+        "other_add",
+        ExclusiveAccess_other_add
     },
     {
-        "exclusive_access_other_remove_non_existing",
-        World_exclusive_access_other_remove_non_existing
+        "other_add_existing",
+        ExclusiveAccess_other_add_existing
     },
     {
-        "exclusive_access_other_set",
-        World_exclusive_access_other_set
+        "other_remove",
+        ExclusiveAccess_other_remove
     },
     {
-        "exclusive_access_other_set_existing",
-        World_exclusive_access_other_set_existing
+        "other_remove_non_existing",
+        ExclusiveAccess_other_remove_non_existing
     },
     {
-        "exclusive_access_other_ensure",
-        World_exclusive_access_other_ensure
+        "other_set",
+        ExclusiveAccess_other_set
     },
     {
-        "exclusive_access_other_ensure_existing",
-        World_exclusive_access_other_ensure_existing
+        "other_set_existing",
+        ExclusiveAccess_other_set_existing
     },
     {
-        "exclusive_access_other_ensure_modified",
-        World_exclusive_access_other_ensure_modified
+        "other_ensure",
+        ExclusiveAccess_other_ensure
     },
     {
-        "exclusive_access_other_ensure_modified_existing",
-        World_exclusive_access_other_ensure_modified_existing
+        "other_ensure_existing",
+        ExclusiveAccess_other_ensure_existing
     },
     {
-        "exclusive_access_other_emplace",
-        World_exclusive_access_other_emplace
+        "other_ensure_modified",
+        ExclusiveAccess_other_ensure_modified
     },
     {
-        "exclusive_access_other_emplace_existing",
-        World_exclusive_access_other_emplace_existing
+        "other_ensure_modified_existing",
+        ExclusiveAccess_other_ensure_modified_existing
     },
     {
-        "exclusive_access_other_defer_begin",
-        World_exclusive_access_other_defer_begin
+        "other_emplace",
+        ExclusiveAccess_other_emplace
     },
     {
-        "exclusive_access_other_defer_end",
-        World_exclusive_access_other_defer_end
+        "other_emplace_existing",
+        ExclusiveAccess_other_emplace_existing
     },
     {
-        "exclusive_access_other_create_query",
-        World_exclusive_access_other_create_query
+        "other_defer_begin",
+        ExclusiveAccess_other_defer_begin
     },
     {
-        "exclusive_access_other_create_cached_query",
-        World_exclusive_access_other_create_cached_query
+        "other_defer_end",
+        ExclusiveAccess_other_defer_end
     },
     {
-        "exclusive_access_other_create_table",
-        World_exclusive_access_other_create_table
+        "other_create_query",
+        ExclusiveAccess_other_create_query
     },
     {
-        "exclusive_access_other_register_component",
-        World_exclusive_access_other_register_component
+        "other_create_mut_query",
+        ExclusiveAccess_other_create_mut_query
     },
     {
-        "exclusive_access_other_world_fini",
-        World_exclusive_access_other_world_fini
+        "other_create_cached_query",
+        ExclusiveAccess_other_create_cached_query
     },
     {
-        "exclusive_access_other_world_bulk_init",
-        World_exclusive_access_other_world_bulk_init
+        "other_create_table",
+        ExclusiveAccess_other_create_table
+    },
+    {
+        "other_register_component",
+        ExclusiveAccess_other_register_component
+    },
+    {
+        "other_each",
+        ExclusiveAccess_other_each
+    },
+    {
+        "other_iter_query",
+        ExclusiveAccess_other_iter_query
+    },
+    {
+        "other_iter_mut_query",
+        ExclusiveAccess_other_iter_mut_query
+    },
+    {
+        "other_iter_cached_query",
+        ExclusiveAccess_other_iter_cached_query
+    },
+    {
+        "other_iter_mut_cached_query",
+        ExclusiveAccess_other_iter_mut_cached_query
+    },
+    {
+        "other_iter_children",
+        ExclusiveAccess_other_iter_children
+    },
+    {
+        "other_world_fini",
+        ExclusiveAccess_other_world_fini
+    },
+    {
+        "other_world_bulk_init",
+        ExclusiveAccess_other_world_bulk_init
+    },
+    {
+        "other_world_get",
+        ExclusiveAccess_other_world_get
+    },
+    {
+        "other_world_get_mut",
+        ExclusiveAccess_other_world_get_mut
+    },
+    {
+        "other_world_get_target",
+        ExclusiveAccess_other_world_get_target
+    },
+    {
+        "other_world_get_target_for",
+        ExclusiveAccess_other_world_get_target_for
+    },
+    {
+        "other_world_get_parent",
+        ExclusiveAccess_other_world_get_parent
+    },
+    {
+        "other_world_ref_init",
+        ExclusiveAccess_other_world_ref_init
+    },
+    {
+        "other_world_ref_get",
+        ExclusiveAccess_other_world_ref_get
+    },
+    {
+        "other_world_has",
+        ExclusiveAccess_other_world_has
+    },
+    {
+        "other_world_owns",
+        ExclusiveAccess_other_world_owns
+    },
+    {
+        "other_disable_component",
+        ExclusiveAccess_other_disable_component
+    },
+    {
+        "other_is_component_enabled",
+        ExclusiveAccess_other_is_component_enabled
+    },
+    {
+        "other_set_child_order",
+        ExclusiveAccess_other_set_child_order
+    },
+    {
+        "other_get_depth",
+        ExclusiveAccess_other_get_depth
+    },
+    {
+        "other_is_valid",
+        ExclusiveAccess_other_is_valid
+    },
+    {
+        "other_is_alive",
+        ExclusiveAccess_other_is_alive
+    },
+    {
+        "other_get_alive",
+        ExclusiveAccess_other_get_alive
+    },
+    {
+        "other_make_alive",
+        ExclusiveAccess_other_make_alive
+    },
+    {
+        "other_exists",
+        ExclusiveAccess_other_exists
+    },
+    {
+        "other_set_version",
+        ExclusiveAccess_other_set_version
+    },
+    {
+        "other_get_table",
+        ExclusiveAccess_other_get_table
+    },
+    {
+        "other_get_type",
+        ExclusiveAccess_other_get_type
+    },
+    {
+        "other_get_name",
+        ExclusiveAccess_other_get_name
+    },
+    {
+        "other_get_path",
+        ExclusiveAccess_other_get_path
+    },
+    {
+        "locked_new",
+        ExclusiveAccess_locked_new
+    },
+    {
+        "locked_world_new_low_id",
+        ExclusiveAccess_locked_world_new_low_id
+    },
+    {
+        "locked_delete",
+        ExclusiveAccess_locked_delete
+    },
+    {
+        "locked_clear",
+        ExclusiveAccess_locked_clear
+    },
+    {
+        "locked_add",
+        ExclusiveAccess_locked_add
+    },
+    {
+        "locked_add_existing",
+        ExclusiveAccess_locked_add_existing
+    },
+    {
+        "locked_remove",
+        ExclusiveAccess_locked_remove
+    },
+    {
+        "locked_remove_non_existing",
+        ExclusiveAccess_locked_remove_non_existing
+    },
+    {
+        "locked_set",
+        ExclusiveAccess_locked_set
+    },
+    {
+        "locked_set_existing",
+        ExclusiveAccess_locked_set_existing
+    },
+    {
+        "locked_ensure",
+        ExclusiveAccess_locked_ensure
+    },
+    {
+        "locked_ensure_existing",
+        ExclusiveAccess_locked_ensure_existing
+    },
+    {
+        "locked_ensure_modified",
+        ExclusiveAccess_locked_ensure_modified
+    },
+    {
+        "locked_ensure_modified_existing",
+        ExclusiveAccess_locked_ensure_modified_existing
+    },
+    {
+        "locked_emplace",
+        ExclusiveAccess_locked_emplace
+    },
+    {
+        "locked_emplace_existing",
+        ExclusiveAccess_locked_emplace_existing
+    },
+    {
+        "locked_defer_begin",
+        ExclusiveAccess_locked_defer_begin
+    },
+    {
+        "locked_defer_end",
+        ExclusiveAccess_locked_defer_end
+    },
+    {
+        "locked_create_query",
+        ExclusiveAccess_locked_create_query
+    },
+    {
+        "locked_create_mut_query",
+        ExclusiveAccess_locked_create_mut_query
+    },
+    {
+        "locked_create_cached_query",
+        ExclusiveAccess_locked_create_cached_query
+    },
+    {
+        "locked_create_table",
+        ExclusiveAccess_locked_create_table
+    },
+    {
+        "locked_register_component",
+        ExclusiveAccess_locked_register_component
+    },
+    {
+        "locked_each",
+        ExclusiveAccess_locked_each
+    },
+    {
+        "locked_iter_query",
+        ExclusiveAccess_locked_iter_query
+    },
+    {
+        "locked_iter_mut_query",
+        ExclusiveAccess_locked_iter_mut_query
+    },
+    {
+        "locked_iter_cached_query",
+        ExclusiveAccess_locked_iter_cached_query
+    },
+    {
+        "locked_iter_mut_cached_query",
+        ExclusiveAccess_locked_iter_mut_cached_query
+    },
+    {
+        "locked_iter_children",
+        ExclusiveAccess_locked_iter_children
+    },
+    {
+        "locked_world_fini",
+        ExclusiveAccess_locked_world_fini
+    },
+    {
+        "locked_world_bulk_init",
+        ExclusiveAccess_locked_world_bulk_init
+    },
+    {
+        "locked_world_get",
+        ExclusiveAccess_locked_world_get
+    },
+    {
+        "locked_world_get_mut",
+        ExclusiveAccess_locked_world_get_mut
+    },
+    {
+        "locked_world_get_target",
+        ExclusiveAccess_locked_world_get_target
+    },
+    {
+        "locked_world_get_target_for",
+        ExclusiveAccess_locked_world_get_target_for
+    },
+    {
+        "locked_world_get_parent",
+        ExclusiveAccess_locked_world_get_parent
+    },
+    {
+        "locked_world_ref_init",
+        ExclusiveAccess_locked_world_ref_init
+    },
+    {
+        "locked_world_ref_get",
+        ExclusiveAccess_locked_world_ref_get
+    },
+    {
+        "locked_world_has",
+        ExclusiveAccess_locked_world_has
+    },
+    {
+        "locked_world_owns",
+        ExclusiveAccess_locked_world_owns
+    },
+    {
+        "locked_disable_component",
+        ExclusiveAccess_locked_disable_component
+    },
+    {
+        "locked_is_component_enabled",
+        ExclusiveAccess_locked_is_component_enabled
+    },
+    {
+        "locked_set_child_order",
+        ExclusiveAccess_locked_set_child_order
+    },
+    {
+        "locked_get_depth",
+        ExclusiveAccess_locked_get_depth
+    },
+    {
+        "locked_is_valid",
+        ExclusiveAccess_locked_is_valid
+    },
+    {
+        "locked_is_alive",
+        ExclusiveAccess_locked_is_alive
+    },
+    {
+        "locked_get_alive",
+        ExclusiveAccess_locked_get_alive
+    },
+    {
+        "locked_make_alive",
+        ExclusiveAccess_locked_make_alive
+    },
+    {
+        "locked_exists",
+        ExclusiveAccess_locked_exists
+    },
+    {
+        "locked_set_version",
+        ExclusiveAccess_locked_set_version
+    },
+    {
+        "locked_get_table",
+        ExclusiveAccess_locked_get_table
+    },
+    {
+        "locked_get_type",
+        ExclusiveAccess_locked_get_type
+    },
+    {
+        "locked_get_name",
+        ExclusiveAccess_locked_get_name
+    },
+    {
+        "locked_get_path",
+        ExclusiveAccess_locked_get_path
+    },
+    {
+        "other_w_name_read",
+        ExclusiveAccess_other_w_name_read
+    },
+    {
+        "other_w_name_write",
+        ExclusiveAccess_other_w_name_write
     }
 };
 
@@ -12453,8 +12903,15 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        105,
+        75,
         World_testcases
+    },
+    {
+        "ExclusiveAccess",
+        NULL,
+        NULL,
+        119,
+        ExclusiveAccess_testcases
     },
     {
         "WorldInfo",
@@ -12529,5 +12986,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("core", argc, argv, suites, 47);
+    return bake_test_run("core", argc, argv, suites, 48);
 }
