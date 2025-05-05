@@ -6347,7 +6347,7 @@ bool flecs_dont_fragment_on_remove(
             const ecs_entity_t *entities = ecs_table_entities(table);
             for (j = 0; j < count; j ++) {
                 ecs_entity_t e = entities[row + j];
-                if (flecs_component_sparse_get(cr, e)) {
+                if (flecs_component_sparse_has(cr, e)) {
                     return true;
                 }
             }
@@ -14362,6 +14362,8 @@ repeat_event:
         ecs_flags32_t cr_flags = cr->flags;
         dont_fragment = cr_flags & EcsIdDontFragment;
 
+        ti = cr->type_info;
+
         /* Check if this id is a pair of an traversable relationship. If so, we 
          * may have to forward ids from the pair's target. */
         if ((can_forward && is_pair) || id_can_override) {
@@ -14405,7 +14407,6 @@ repeat_event:
 
             if (id_can_override && !(cr_flags & EcsIdOnInstantiateDontInherit)) {
                 /* Initialize overridden components with value from base */
-                ti = cr->type_info;
                 if (ti) {
                     int32_t base_column = ecs_search_relation(world, table, 
                         0, id, EcsIsA, EcsUp, &base, NULL, &base_tr);
@@ -14494,11 +14495,11 @@ repeat_event:
 
         if (count) {
             storage_i = tr->column;
-            bool is_sparse = cr->flags & EcsIdIsSparse;
 
-            if (!ecs_id_is_wildcard(id) && (storage_i != -1 || is_sparse)) {
+            if (!ecs_id_is_wildcard(id) && (storage_i != -1 || ti)) {
+                bool is_sparse = cr->flags & EcsIdIsSparse;
+                ecs_size_t size = ti->size;
                 void *ptr;
-                ecs_size_t size = cr->type_info->size;
 
                 if (is_sparse) {
                     ecs_assert(count == 1, ECS_UNSUPPORTED, 
