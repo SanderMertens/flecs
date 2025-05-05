@@ -1703,6 +1703,8 @@ void ChangeDetection_staged_query_w_shared_inout_field(void);
 void ChangeDetection_staged_query_w_fixed_inout_field(void);
 void ChangeDetection_staged_query_w_fixed_inout_field_read(void);
 void ChangeDetection_simple_write_query(void);
+void ChangeDetection_change_detection_w_early_out(void);
+void ChangeDetection_change_detection_w_early_out_skip(void);
 
 // Testsuite 'GroupBy'
 void GroupBy_group_by(void);
@@ -8924,6 +8926,14 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "simple_write_query",
         ChangeDetection_simple_write_query
+    },
+    {
+        "change_detection_w_early_out",
+        ChangeDetection_change_detection_w_early_out
+    },
+    {
+        "change_detection_w_early_out_skip",
+        ChangeDetection_change_detection_w_early_out_skip
     }
 };
 
@@ -11298,7 +11308,7 @@ static bake_test_suite suites[] = {
         "ChangeDetection",
         NULL,
         NULL,
-        38,
+        40,
         ChangeDetection_testcases
     },
     {

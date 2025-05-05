@@ -11770,11 +11770,11 @@ void flecs_iter_init(
 void ecs_iter_fini(
     ecs_iter_t *it)
 {
-    ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
-
     if (it->fini) {
         it->fini(it);
     }
+
+    ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
 
     ecs_world_t *world = it->world;
     if (!world) {
@@ -15177,6 +15177,7 @@ void flecs_multi_observer_invoke(
             /* The target table matches but the entity hasn't moved to it yet. 
              * Now match the not_query, which will populate the iterator with
              * data from the table the entity is still stored in. */
+            user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
             ecs_iter_fini(&user_it);
             match = ecs_query_has_table(impl->not_query, prev_table, &user_it);
 
@@ -15200,6 +15201,9 @@ void flecs_multi_observer_invoke(
         if (impl->flags & EcsObserverIsMonitor) {
             ecs_iter_t table_it;
             if (ecs_query_has_table(o->query, prev_table, &table_it)) {
+                /* Prevent change detection on fini */
+                user_it.flags |= EcsIterSkip;
+                table_it.flags |= EcsIterSkip;
                 ecs_iter_fini(&table_it);
                 ecs_iter_fini(&user_it);
                 goto done;
@@ -15241,6 +15245,7 @@ void flecs_multi_observer_invoke(
             user_it.callback(&user_it);
         }
 
+        user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
         ecs_iter_fini(&user_it);
 
         ecs_table_unlock(it->world, table);
@@ -75994,6 +75999,26 @@ void flecs_query_iter_constrain(
     }
 }
 
+static
+void flecs_query_change_detection(
+    ecs_iter_t *it,
+    ecs_query_iter_t *qit,
+    ecs_query_impl_t *impl)
+{
+    /* Change detection */
+    if (!(it->flags & EcsIterSkip)) {
+        /* Mark table columns that are written to dirty */
+        flecs_query_mark_fields_dirty(impl, it);
+        if (qit->prev) {
+            if (impl->pub.flags & EcsQueryHasMonitor) {
+                /* If this query uses change detection, synchronize the
+                    * monitor for the iterated table with the query */
+                flecs_query_sync_match_monitor(impl, qit->prev);
+            }
+        }
+    }
+}
+
 bool ecs_query_next(
     ecs_iter_t *it)
 {
@@ -76008,18 +76033,7 @@ bool ecs_query_next(
 
     bool redo = it->flags & EcsIterIsValid;
     if (redo) {
-        /* Change detection */
-        if (!(it->flags & EcsIterSkip)) {
-            /* Mark table columns that are written to dirty */
-            flecs_query_mark_fields_dirty(impl, it);
-            if (qit->prev) {
-                if (ctx.query->pub.flags & EcsQueryHasMonitor) {
-                    /* If this query uses change detection, synchronize the
-                     * monitor for the iterated table with the query */
-                    flecs_query_sync_match_monitor(impl, qit->prev);
-                }
-            }
-        }
+        flecs_query_change_detection(it, qit, impl);
     }
 
     it->flags &= ~(EcsIterSkip);
@@ -76079,6 +76093,8 @@ bool ecs_query_next(
         flecs_query_update_fixed_monitor(
             ECS_CONST_CAST(ecs_query_impl_t*, ctx.query));
     }
+
+    it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
     return false;
@@ -76143,6 +76159,10 @@ void flecs_query_iter_fini(
     flecs_poly_assert(qit->query, ecs_query_t);
     int32_t op_count = flecs_query_impl(qit->query)->op_count;
     int32_t var_count = flecs_query_impl(qit->query)->var_count;
+
+    if (it->flags & EcsIterIsValid) {
+        flecs_query_change_detection(it, qit, flecs_query_impl(qit->query));
+    }
 
 #ifdef FLECS_DEBUG
     if (it->flags & EcsIterProfile) {
