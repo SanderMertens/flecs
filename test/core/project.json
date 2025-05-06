@@ -605,7 +605,11 @@
                 "on_delete_sparse_panic",
                 "on_delete_target_sparse_remove",
                 "on_delete_target_sparse_delete",
-                "on_delete_target_sparse_panic"
+                "on_delete_target_sparse_panic",
+                "delete_relationship",
+                "delete_parent_of_relationship",
+                "delete_exclusive_relationship",
+                "delete_parent_of_exclusive_relationship"
             ]
         }, {
             "id": "Union",

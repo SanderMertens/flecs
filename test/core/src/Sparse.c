@@ -4494,3 +4494,115 @@ void Sparse_on_delete_target_sparse_panic(void) {
     test_expect_abort();
     ecs_delete(world, tgt);
 }
+
+void Sparse_delete_relationship(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_add_pair(world, e, Rel, TgtB);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_delete(world, Rel);
+
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void Sparse_delete_parent_of_relationship(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_pair(world, Rel, EcsChildOf, parent);
+
+    ecs_entity_t e = ecs_new(world);
+    
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_add_pair(world, e, Rel, TgtB);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_delete(world, parent);
+
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void Sparse_delete_exclusive_relationship(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ecs_add_id(world, Rel, EcsExclusive);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_add_pair(world, e, Rel, TgtB);
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_delete(world, Rel);
+
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void Sparse_delete_parent_of_exclusive_relationship(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ecs_add_id(world, Rel, EcsExclusive);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_pair(world, Rel, EcsChildOf, parent);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_add_pair(world, e, Rel, TgtB);
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_delete(world, parent);
+
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_fini(world);
+}

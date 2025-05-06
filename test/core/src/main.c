@@ -576,6 +576,10 @@ void Sparse_on_delete_sparse_panic(void);
 void Sparse_on_delete_target_sparse_remove(void);
 void Sparse_on_delete_target_sparse_delete(void);
 void Sparse_on_delete_target_sparse_panic(void);
+void Sparse_delete_relationship(void);
+void Sparse_delete_parent_of_relationship(void);
+void Sparse_delete_exclusive_relationship(void);
+void Sparse_delete_parent_of_exclusive_relationship(void);
 
 // Testsuite 'Union'
 void Union_add(void);
@@ -4803,6 +4807,22 @@ bake_test_case Sparse_testcases[] = {
     {
         "on_delete_target_sparse_panic",
         Sparse_on_delete_target_sparse_panic
+    },
+    {
+        "delete_relationship",
+        Sparse_delete_relationship
+    },
+    {
+        "delete_parent_of_relationship",
+        Sparse_delete_parent_of_relationship
+    },
+    {
+        "delete_exclusive_relationship",
+        Sparse_delete_exclusive_relationship
+    },
+    {
+        "delete_parent_of_exclusive_relationship",
+        Sparse_delete_parent_of_exclusive_relationship
     }
 };
 
@@ -12741,7 +12761,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        135,
+        139,
         Sparse_testcases,
         1,
         Sparse_params
