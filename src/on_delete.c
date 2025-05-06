@@ -203,12 +203,14 @@ void flecs_id_mark_for_delete(
         ecs_component_record_t *cur = cr;
         if (ECS_PAIR_SECOND(id) == EcsWildcard) {
             while ((cur = flecs_component_first_next(cur))) {
+                cur->flags |= EcsIdMarkedForDelete;
                 flecs_update_monitors_for_delete(world, cur->id);
             }
         } else {
             ecs_assert(ECS_PAIR_FIRST(id) == EcsWildcard, 
                 ECS_INTERNAL_ERROR, NULL);
             while ((cur = flecs_component_second_next(cur))) {
+                cur->flags |= EcsIdMarkedForDelete;
                 flecs_update_monitors_for_delete(world, cur->id);
             }
         }

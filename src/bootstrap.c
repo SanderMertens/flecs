@@ -151,6 +151,11 @@ bool flecs_unset_id_flag(
     ecs_component_record_t *cr, 
     ecs_flags32_t flag)
 {
+    if (cr->flags & EcsIdMarkedForDelete) {
+        /* Don't change flags for record that's about to be deleted */
+        return false;
+    }
+
     if ((cr->flags & flag)) {
         cr->flags &= ~flag;
         return true;
