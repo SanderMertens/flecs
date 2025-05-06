@@ -105,6 +105,26 @@ void flecs_query_iter_constrain(
     ecs_os_perf_trace_pop("flecs.query.iter.constrain");
 }
 
+static
+void flecs_query_change_detection(
+    ecs_iter_t *it,
+    ecs_query_iter_t *qit,
+    ecs_query_impl_t *impl)
+{
+    /* Change detection */
+    if (!(it->flags & EcsIterSkip)) {
+        /* Mark table columns that are written to dirty */
+        flecs_query_mark_fields_dirty(impl, it);
+        if (qit->prev) {
+            if (impl->pub.flags & EcsQueryHasMonitor) {
+                /* If this query uses change detection, synchronize the
+                    * monitor for the iterated table with the query */
+                flecs_query_sync_match_monitor(impl, qit->prev);
+            }
+        }
+    }
+}
+
 bool ecs_query_next(
     ecs_iter_t *it)
 {
@@ -121,18 +141,7 @@ bool ecs_query_next(
 
     const bool redo = it->flags & EcsIterIsValid;
     if (redo) {
-        /* Change detection */
-        if (!(it->flags & EcsIterSkip)) {
-            /* Mark table columns that are written to dirty */
-            flecs_query_mark_fields_dirty(impl, it);
-            if (qit->prev) {
-                if (ctx.query->pub.flags & EcsQueryHasMonitor) {
-                    /* If this query uses change detection, synchronize the
-                     * monitor for the iterated table with the query */
-                    flecs_query_sync_match_monitor(impl, qit->prev);
-                }
-            }
-        }
+        flecs_query_change_detection(it, qit, impl);
     }
 
     it->flags &= ~(EcsIterSkip);
@@ -192,6 +201,8 @@ bool ecs_query_next(
         flecs_query_update_fixed_monitor(
             ECS_CONST_CAST(ecs_query_impl_t*, ctx.query));
     }
+
+    it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
     ecs_os_perf_trace_pop("flecs.query.next");
@@ -258,6 +269,10 @@ void flecs_query_iter_fini(
     flecs_poly_assert(qit->query, ecs_query_t);
     int32_t op_count = flecs_query_impl(qit->query)->op_count;
     int32_t var_count = flecs_query_impl(qit->query)->var_count;
+
+    if (it->flags & EcsIterIsValid) {
+        flecs_query_change_detection(it, qit, flecs_query_impl(qit->query));
+    }
 
 #ifdef FLECS_DEBUG
     if (it->flags & EcsIterProfile) {
@@ -337,6 +352,14 @@ ecs_iter_t flecs_query_iter(
     ecs_iter_t it = {0};
     ecs_query_iter_t *qit = &it.priv_.iter.query;
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
+
+#ifdef FLECS_DEBUG
+    if (q->write_fields) {
+        flecs_check_exclusive_world_access_write(q->real_world);
+    } else {
+        flecs_check_exclusive_world_access_read(q->real_world);
+    }
+#endif
 
     flecs_query_validate_final_fields(q);
     

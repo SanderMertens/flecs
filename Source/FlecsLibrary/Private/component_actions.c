@@ -161,7 +161,7 @@ bool flecs_dont_fragment_on_remove(
             const ecs_entity_t *entities = ecs_table_entities(table);
             for (j = 0; j < count; j ++) {
                 ecs_entity_t e = entities[row + j];
-                if (flecs_component_sparse_get(cr, e)) {
+                if (flecs_component_sparse_has(cr, e)) {
                     return true;
                 }
             }

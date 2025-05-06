@@ -1480,7 +1480,9 @@ void flecs_component_ids_set(
     ecs_vec_get_t(&world->component_ids, ecs_entity_t, index)[0] = component;
 }
 
-void flecs_check_exclusive_world_access(
+#ifdef FLECS_DEBUG
+
+void flecs_check_exclusive_world_access_write(
     const ecs_world_t *world)
 {
     flecs_poly_assert(world, ecs_world_t);
@@ -1492,12 +1494,61 @@ void flecs_check_exclusive_world_access(
     ecs_os_thread_id_t thr_self = ecs_os_thread_self();
     (void)thr_self;
 
-    ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
-        ECS_INVALID_OPERATION,
-        "invalid access to world by thread %" PRIu64 " "
-            "(thread %" PRIu64 " has exclusive access)",
-                thr_self, world->exclusive_access);
+    if (world->exclusive_access == UINT64_MAX) {
+        ecs_throw(ECS_ACCESS_VIOLATION,
+            "invalid access: world is locked for write operations");
+    } else 
+    if (world->exclusive_thread_name) {
+        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+            ECS_ACCESS_VIOLATION,
+            "invalid access to world by thread %" PRIu64 ": "
+                "thread %" PRIu64 " (%s) has exclusive access",
+                    thr_self, world->exclusive_access,
+                    world->exclusive_thread_name);
+    } else {
+        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+            ECS_ACCESS_VIOLATION,
+            "invalid access to world by thread %" PRIu64 ": "
+                "thread %" PRIu64 " has exclusive access",
+                    thr_self, world->exclusive_access);
+    }
+error:
+    return;
 }
+
+void flecs_check_exclusive_world_access_read(
+    const ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (!world->exclusive_access) {
+        return; /* Exclusive access is not enabled */
+    }
+
+    if (world->exclusive_access == UINT64_MAX) {
+        return; /* World is locked, so read access is allowed */
+    }
+
+    ecs_os_thread_id_t thr_self = ecs_os_thread_self();
+    (void)thr_self;
+
+    if (world->exclusive_thread_name) {
+        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+            ECS_ACCESS_VIOLATION,
+            "invalid access to world by thread %" PRIu64 ": "
+                "(thread %" PRIu64 " (%s) has exclusive access)",
+                    thr_self, world->exclusive_access,
+                    world->exclusive_thread_name);
+    } else {
+        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+            ECS_ACCESS_VIOLATION,
+            "invalid access to world by thread %" PRIu64 ": "
+                "thread %" PRIu64 " has exclusive access",
+                    thr_self, world->exclusive_access);
+    }
+}
+
+#endif
 
 static
 void flecs_process_empty_queries(
@@ -1662,20 +1713,40 @@ void ecs_shrink(
 }
 
 void ecs_exclusive_access_begin(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    const char *thread_name)
 {
     flecs_poly_assert(world, ecs_world_t);
 
+    /* If world was locked, one thread can get exclusive access */
+    if (world->exclusive_access == UINT64_MAX) {
+        world->exclusive_access = 0;
+    }
+
     ecs_assert(!world->exclusive_access, ECS_INVALID_OPERATION,
-        "cannot begin exclusive access: world already in exclusive mode");
+        "cannot begin exclusive access: world already in exclusive mode "
+        "by thread %" PRIu64 " (%s)", 
+        world->exclusive_access, 
+        world->exclusive_thread_name 
+            ? world->exclusive_thread_name 
+            : "no thread name");
 
     world->exclusive_access = ecs_os_thread_self();
+    world->exclusive_thread_name = thread_name;
 }
 
 void ecs_exclusive_access_end(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    bool lock_world)
 {
     flecs_poly_assert(world, ecs_world_t);
+
+    /* If the world is locked (not exclusively accessed by a specific thread)
+     * this allows for unlocking the world without first calling access_begin */
+    if (world->exclusive_access == UINT64_MAX) {
+        world->exclusive_access = 0;
+        return;
+    }
 
     ecs_assert(world->exclusive_access != 0, ECS_INVALID_OPERATION,
         "cannot end exclusive access: world is not in exclusive mode");
@@ -1686,7 +1757,13 @@ void ecs_exclusive_access_end(
     ecs_assert(world->exclusive_access == thr_self, ECS_INVALID_OPERATION,
         "cannot end exclusive access from thread that does not have exclusive access");
 
-    world->exclusive_access = 0;
+    if (!lock_world) {
+        world->exclusive_access = 0;
+    } else {
+        /* Prevent any mutations on the world */
+        world->exclusive_access = UINT64_MAX;
+        world->exclusive_thread_name = "locked world";
+    }
 }
 
 ecs_entity_t ecs_set_with(

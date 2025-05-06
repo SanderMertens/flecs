@@ -556,7 +556,7 @@ ecs_table_t *flecs_table_new(
     flecs_hashmap_result_t table_elem,
     ecs_table_t *prev)
 {
-    flecs_check_exclusive_world_access(world);
+    flecs_check_exclusive_world_access_write(world);
 
     ecs_os_perf_trace_push("flecs.table.create");
 

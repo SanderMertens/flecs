@@ -39,6 +39,8 @@ ecs_iter_t ecs_each_id(
 
     const ecs_world_t *world = ecs_get_world(stage);
 
+    flecs_check_exclusive_world_access_write(world);
+
     ecs_iter_t it = {
         .real_world = ECS_CONST_CAST(ecs_world_t*, world),
         .world = ECS_CONST_CAST(ecs_world_t*, stage),
@@ -103,6 +105,8 @@ ecs_iter_t ecs_children(
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_world_t *world = ecs_get_world(stage);
+
+    flecs_check_exclusive_world_access_read(world);
 
     ecs_iter_t it = {
         .real_world = ECS_CONST_CAST(ecs_world_t*, world),

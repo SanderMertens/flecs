@@ -2813,12 +2813,16 @@ ecs_id_t ecs_make_pair(
 
 /** Begin exclusive thread access.
  * This operation ensures that only the thread from which this operation is 
- * called can mutate the world. Attempts to mutate the world from other threads
- * will panic. 
+ * called can access the world. Attempts to access the world from other threads
+ * will panic.
  * 
  * ecs_exclusive_access_begin() must be called in pairs with 
  * ecs_exclusive_access_end(). Calling ecs_exclusive_access_begin() from another
  * thread without first calling ecs_exclusive_access_end() will panic.
+ * 
+ * A thread name can be provided to the function to improve debug messages. The
+ * function does not(!) copy the thread name, which means the memory for the 
+ * name must remain alive for as long as the thread has exclusive access.
  * 
  * This operation should only be called once per thread. Calling it multiple 
  * times for the same thread will cause a panic.
@@ -2827,25 +2831,39 @@ ecs_id_t ecs_make_pair(
  * feature requires the OS API thread_self_ callback to be set.
  * 
  * @param world The world.
+ * @param thread_name Name of the thread obtaining exclusive access.
  */
 FLECS_API
 void ecs_exclusive_access_begin(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    const char *thread_name);
 
 /** End exclusive thread access.
  * This operation should be called after ecs_exclusive_access_begin(). After
  * calling this operation other threads are no longer prevented from mutating
  * the world.
  * 
+ * When "lock_world" is set to true, no thread will be able to mutate the world
+ * until ecs_exclusive_access_begin is called again. While the world is locked
+ * only readonly operations are allowed. For example, ecs_get_id() is allowed,
+ * but ecs_get_mut_id() is not allowed.
+ * 
+ * A locked world can be unlocked by calling ecs_exclusive_access_end again with
+ * lock_world set to false. Note that this only works for locked worlds, if\
+ * ecs_exclusive_access_end() is called on a world that has exclusive thread 
+ * access from a different thread, a panic will happen.
+ * 
  * This operation must be called from the same thread that called
  * ecs_exclusive_access_begin(). Calling it from a different thread will cause
  * a panic.
  * 
  * @param world The world.
+ * @param lock_world When true, any mutations on the world will be blocked.
  */
 FLECS_API
 void ecs_exclusive_access_end(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    bool lock_world);
 
 /** @} */
 

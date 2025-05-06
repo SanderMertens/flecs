@@ -142,7 +142,7 @@ ecs_entity_t flecs_new_id(
 {
     flecs_poly_assert(world, ecs_world_t);
 
-    flecs_check_exclusive_world_access(world);
+    flecs_check_exclusive_world_access_write(world);
 
     /* It is possible that the world passed to this function is a stage, so
      * make sure we have the actual world. Cast away const since this is one of
@@ -716,7 +716,7 @@ ecs_entity_t ecs_new_low_id(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    flecs_check_exclusive_world_access(world);
+    flecs_check_exclusive_world_access_write(world);
 
     if (world->flags & EcsWorldReadonly) {
         /* Can't issue new comp id while iterating when in multithreaded mode */
@@ -1309,7 +1309,7 @@ const ecs_entity_t* ecs_bulk_init(
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
         "ecs_bulk_desc_t was not initialized to zero");
 
-    flecs_check_exclusive_world_access(world);
+    flecs_check_exclusive_world_access_write(world);
 
     const ecs_entity_t *entities = desc->entities;
     int32_t count = desc->count;
@@ -1834,6 +1834,8 @@ void* ecs_get_mut_id(
 
     world = ecs_get_world(world);
 
+    flecs_check_exclusive_world_access_write(world);
+
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_assert(r != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -2328,7 +2330,7 @@ void ecs_set_child_order(
 
     flecs_stage_from_world(&world);
 
-    flecs_check_exclusive_world_access(world);
+    flecs_check_exclusive_world_access_write(world);
 
     ecs_component_record_t *cr = flecs_components_get(
         world, ecs_childof(parent));
@@ -2636,6 +2638,7 @@ int32_t ecs_get_depth(
     ecs_entity_t rel)
 {
     ecs_check(ecs_is_valid(world, rel), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER, 
         "cannot safely determine depth for relationship that is not acyclic "
             "(add Acyclic property to relationship)");
@@ -2655,6 +2658,11 @@ bool ecs_is_valid(
     ecs_entity_t entity)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    #ifdef FLECS_DEBUG
+    world = ecs_get_world(world);
+    flecs_check_exclusive_world_access_read(world);
+    #endif
 
     /* 0 is not a valid entity id */
     if (!entity) {
@@ -2697,6 +2705,8 @@ bool ecs_is_alive(
 
     world = ecs_get_world(world);
 
+    flecs_check_exclusive_world_access_read(world);
+
     return flecs_entities_is_alive(world, entity);
 error:
     return false;
@@ -2714,6 +2724,8 @@ ecs_entity_t ecs_get_alive(
 
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
+
+    flecs_check_exclusive_world_access_read(world);
 
     if (flecs_entities_is_alive(world, entity)) {
         return entity;
@@ -2744,6 +2756,8 @@ void ecs_make_alive(
 
     /* Const cast is safe, function checks for threading */
     world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
+
+    flecs_check_exclusive_world_access_write(world);
 
     /* The entity index can be mutated while in staged/readonly mode, as long as
      * the world is not multithreaded. */
@@ -2823,6 +2837,8 @@ bool ecs_exists(
 
     world = ecs_get_world(world);
 
+    flecs_check_exclusive_world_access_read(world);
+
     return flecs_entities_exists(world, entity);
 error:
     return false;
@@ -2837,6 +2853,8 @@ void ecs_set_version(
         "cannot change entity generation when world is in readonly mode");
     ecs_assert(!(ecs_is_deferred(world)), ECS_INVALID_OPERATION, 
         "cannot change entity generation while world is deferred");
+
+    flecs_check_exclusive_world_access_write(world);
 
     flecs_entities_make_alive(world, entity_with_generation);
 
@@ -2858,6 +2876,8 @@ ecs_table_t* ecs_get_table(
     ecs_check(ecs_is_valid(world, entity), ECS_INVALID_PARAMETER, NULL);
     
     world = ecs_get_world(world);
+
+    flecs_check_exclusive_world_access_read(world);
 
     ecs_record_t *record = flecs_entities_get(world, entity);
     ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
