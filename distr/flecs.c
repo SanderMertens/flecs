@@ -15669,6 +15669,7 @@ ecs_observer_t* flecs_observer_init(
 
     flecs_poly_init(impl, ecs_observer_t);
     ecs_observer_t *o = &impl->pub;
+    o->world = world;
     impl->dtor = flecs_observer_poly_fini;
 
     /* Make writeable copy of query desc so that we can set name. This will
@@ -15856,7 +15857,11 @@ ecs_entity_t ecs_observer_init(
 
     EcsPoly *poly = flecs_poly_bind(world, entity, ecs_observer_t);
     if (!poly->poly) {
-        ecs_observer_t *o = flecs_observer_init(world, entity, desc);
+        ecs_observer_t *o = flecs_observer_init(world, entity, desc);\
+        if (!o) {
+            goto error;
+        }
+
         ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
         poly->poly = o;
 
@@ -15951,6 +15956,7 @@ void flecs_observer_fini(
 {
     ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_world_t *world = o->world;
+
     flecs_poly_assert(world, ecs_world_t);
     ecs_observer_impl_t *impl = flecs_observer_impl(o);
 

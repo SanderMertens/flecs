@@ -1811,6 +1811,7 @@
                 "on_add_on_set_w_not_term",
                 "on_add_on_set_w_not_2_terms",
                 "observer_w_vars",
+                "observer_w_invalid_expr",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",
