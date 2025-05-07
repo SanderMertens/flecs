@@ -4220,8 +4220,11 @@ void Prefab_slot_has_union(void) {
     test_assert(inst_slot != 0);
     test_assert(base_slot != 0);
 
-    test_assert( ecs_has_id(world, base_slot, EcsUnion));
-    test_assert( !ecs_has_id(world, inst_slot, EcsUnion));
+    test_assert( ecs_has_id(world, base_slot, EcsExclusive));
+    test_assert( ecs_has_id(world, base_slot, EcsDontFragment));
+
+    test_assert( !ecs_has_id(world, inst_slot, EcsExclusive));
+    test_assert( !ecs_has_id(world, inst_slot, EcsDontFragment));
 
     ecs_fini(world);
 }
@@ -4316,6 +4319,53 @@ void Prefab_base_slot_override(void) {
     path = ecs_get_path(world, beam);
     test_str(path, "inst.Beam");
     ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Prefab_has_slot_after_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t slot = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add_pair(world, slot, EcsSlotOf, p);
+    ecs_add(world, slot, Foo);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t inst_slot = ecs_get_target(world, inst, slot, 0);
+    test_assert(inst_slot != 0);
+    test_assert(ecs_has(world, inst_slot, Foo));
+
+    ecs_delete(world, inst);
+    ecs_make_alive(world, inst);
+
+    test_assert(!ecs_has_pair(world, inst, slot, inst_slot));
+    test_assert(ecs_get_target(world, inst, slot, 0) == 0);
+
+    ecs_fini(world);
+}
+
+void Prefab_has_slot_after_clear(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t slot = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add_pair(world, slot, EcsSlotOf, p);
+    ecs_add(world, slot, Foo);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t inst_slot = ecs_get_target(world, inst, slot, 0);
+    test_assert(inst_slot != 0);
+    test_assert(ecs_has(world, inst_slot, Foo));
+
+    ecs_clear(world, inst);
+
+    test_assert(!ecs_has_pair(world, inst, slot, inst_slot));
+    test_assert(ecs_get_target(world, inst, slot, 0) == 0);
 
     ecs_fini(world);
 }
@@ -5375,6 +5425,246 @@ void Prefab_instantiate_w_union_while_defer_suspended(void) {
     test_assert(ecs_has_pair(world, inst, Rel, TgtA));
     test_assert(!ecs_has_pair(world, inst, Rel, TgtB));
     test_assert(ecs_get_target(world, inst, Rel, 0) == TgtA);
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_w_slot_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t slot = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add_pair(world, slot, EcsSlotOf, p);
+    ecs_add(world, slot, Foo);
+
+    ecs_defer_begin(world);
+    
+    ecs_defer_suspend(world);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t inst_slot = ecs_get_target(world, inst, slot, 0);
+    test_assert(inst_slot != 0);
+    test_assert(ecs_has(world, inst_slot, Foo));
+
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(ecs_get_target(world, inst, slot, 0) == inst_slot);
+    test_assert(ecs_has(world, inst_slot, Foo));
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_w_sparse_component_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    {
+        const Position *p = ecs_get(world, inst, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, inst, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_w_sparse_tag_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ecs_add_id(world, Foo, EcsSparse);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, p, Foo);
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has(world, inst, Foo));
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, inst, Foo));
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_w_sparse_pair_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set_pair(world, p, Position, Tgt, {10, 20});
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    {
+        const Position *p = ecs_get_pair(world, inst, Position, Tgt);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get_pair(world, inst, Position, Tgt);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_w_sparse_pair_tag_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Tgt);
+    ecs_add_id(world, Foo, EcsSparse);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, p, Foo, Tgt);
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has_pair(world, inst, Foo, Tgt));
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_pair(world, inst, Foo, Tgt));
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_w_non_fragmenting_component_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    {
+        const Position *p = ecs_get(world, inst, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, inst, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_w_non_fragmenting_tag_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, p, Foo);
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has(world, inst, Foo));
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, inst, Foo));
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_w_non_fragmenting_pair_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set_pair(world, p, Position, Tgt, {10, 20});
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    {
+        const Position *p = ecs_get_pair(world, inst, Position, Tgt);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get_pair(world, inst, Position, Tgt);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_instantiate_w_non_fragmenting_pair_tag_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Tgt);
+    ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, p, Foo, Tgt);
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has_pair(world, inst, Foo, Tgt));
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_pair(world, inst, Foo, Tgt));
 
     ecs_fini(world);
 }
