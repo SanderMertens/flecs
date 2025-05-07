@@ -536,6 +536,8 @@ void Sparse_exclusive_pair_w_hooks(void);
 void Sparse_target_1_pair(void);
 void Sparse_target_2_pairs(void);
 void Sparse_target_exclusive_pair(void);
+void Sparse_target_exclusive_pair_after_change(void);
+void Sparse_target_exclusive_pair_after_add_same(void);
 void Sparse_target_from_base(void);
 void Sparse_target_for_base(void);
 void Sparse_target_for_self_sparse_component(void);
@@ -569,6 +571,18 @@ void Sparse_defer_batched_emplace_w_modified_existing(void);
 void Sparse_defer_batched_set_existing(void);
 void Sparse_defer_batched_set_remove(void);
 void Sparse_defer_batched_set_remove_existing(void);
+void Sparse_defer_batched_add(void);
+void Sparse_defer_batched_add_pair(void);
+void Sparse_defer_batched_add_exclusive_pair(void);
+void Sparse_defer_batched_add_tag(void);
+void Sparse_defer_batched_add_pair_tag(void);
+void Sparse_defer_batched_add_exclusive_pair_tag(void);
+void Sparse_defer_batched_remove(void);
+void Sparse_defer_batched_remove_pair(void);
+void Sparse_defer_batched_remove_exclusive_pair(void);
+void Sparse_defer_batched_remove_tag(void);
+void Sparse_defer_batched_remove_pair_tag(void);
+void Sparse_defer_batched_remove_exclusive_pair_tag(void);
 void Sparse_dont_fragment_trait_without_sparse_trait(void);
 void Sparse_on_delete_sparse_remove(void);
 void Sparse_on_delete_sparse_delete(void);
@@ -4649,6 +4663,14 @@ bake_test_case Sparse_testcases[] = {
         Sparse_target_exclusive_pair
     },
     {
+        "target_exclusive_pair_after_change",
+        Sparse_target_exclusive_pair_after_change
+    },
+    {
+        "target_exclusive_pair_after_add_same",
+        Sparse_target_exclusive_pair_after_add_same
+    },
+    {
         "target_from_base",
         Sparse_target_from_base
     },
@@ -4779,6 +4801,54 @@ bake_test_case Sparse_testcases[] = {
     {
         "defer_batched_set_remove_existing",
         Sparse_defer_batched_set_remove_existing
+    },
+    {
+        "defer_batched_add",
+        Sparse_defer_batched_add
+    },
+    {
+        "defer_batched_add_pair",
+        Sparse_defer_batched_add_pair
+    },
+    {
+        "defer_batched_add_exclusive_pair",
+        Sparse_defer_batched_add_exclusive_pair
+    },
+    {
+        "defer_batched_add_tag",
+        Sparse_defer_batched_add_tag
+    },
+    {
+        "defer_batched_add_pair_tag",
+        Sparse_defer_batched_add_pair_tag
+    },
+    {
+        "defer_batched_add_exclusive_pair_tag",
+        Sparse_defer_batched_add_exclusive_pair_tag
+    },
+    {
+        "defer_batched_remove",
+        Sparse_defer_batched_remove
+    },
+    {
+        "defer_batched_remove_pair",
+        Sparse_defer_batched_remove_pair
+    },
+    {
+        "defer_batched_remove_exclusive_pair",
+        Sparse_defer_batched_remove_exclusive_pair
+    },
+    {
+        "defer_batched_remove_tag",
+        Sparse_defer_batched_remove_tag
+    },
+    {
+        "defer_batched_remove_pair_tag",
+        Sparse_defer_batched_remove_pair_tag
+    },
+    {
+        "defer_batched_remove_exclusive_pair_tag",
+        Sparse_defer_batched_remove_exclusive_pair_tag
     },
     {
         "dont_fragment_trait_without_sparse_trait",
@@ -12761,7 +12831,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        139,
+        153,
         Sparse_testcases,
         1,
         Sparse_params

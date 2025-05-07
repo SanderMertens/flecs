@@ -5736,7 +5736,7 @@ void flecs_cmd_batch_for_entity(
 
     /* If destination table has new sparse components, make sure they're created
      * for the entity. */
-    if ((table->flags & EcsTableHasSparse) && added.count) {
+    if ((table->flags & (EcsTableHasSparse|EcsTableHasDontFragment)) && added.count) {
         flecs_sparse_on_add(
             world, table, ECS_RECORD_TO_ROW(r->row), 1, &added, true);
     }
@@ -38388,14 +38388,20 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
     ecs_entity_t tgt, *tgt_ptr = flecs_sparse_ensure_fast_t(
         parent->sparse, ecs_entity_t, entity);
     ecs_assert(tgt_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if ((tgt = *tgt_ptr)) {
         ecs_component_record_t *other = flecs_components_get(world,
             ecs_pair(ECS_PAIR_FIRST(component_id), tgt));
         ecs_assert(other != NULL, ECS_INTERNAL_ERROR, NULL);
-        flecs_component_sparse_remove(world, other, table, row);
+        if (other != cr) {
+            flecs_component_sparse_remove_intern(world, other, table, row);
+        }
     }
 
     *tgt_ptr = ECS_PAIR_SECOND(component_id);
+
+    ecs_assert(flecs_sparse_has(parent->sparse, entity), 
+        ECS_INTERNAL_ERROR, NULL);
 }
 
 void* flecs_component_sparse_insert(
