@@ -90,6 +90,20 @@ When building for emscripten, add the following command line options to the `emc
 -s EXPORT_NAME="my_app"
 ```
 
+## Android(cmake)
+
+When building for Android, you should:
+
+- download NDK
+- check the cmake preset file and update the `cacheVariables` as you like
+- run a command like below:
+
+```cmd
+cmake -S. -Bbuild_android -GNinja --preset=Android
+```
+
+Then run command `ninja` in `build_android` directory to start build.
+
 ### Addons
 Flecs has a modular architecture that makes it easy to only build the features you really need. By default all addons are built. To customize a build, first define `FLECS_CUSTOM_BUILD`, then add defines for the addons you need. For example:
 
