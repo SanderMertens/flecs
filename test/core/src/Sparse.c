@@ -1090,6 +1090,67 @@ void Sparse_get_mut_after_remove(void) {
     ecs_fini(world);
 }
 
+void Sparse_has_tag_after_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, Foo, EcsSparse);
+    if (!fragment) ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    test_bool(false, ecs_has(world, e, Foo));
+
+    ecs_add(world, e, Foo);
+    test_bool(true, ecs_has(world, e, Foo));
+
+    ecs_remove(world, e, Foo);
+    test_bool(false, ecs_has(world, e, Foo));
+
+    ecs_fini(world);
+}
+
+void Sparse_has_tag_after_clear(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, Foo, EcsSparse);
+    if (!fragment) ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    test_bool(false, ecs_has(world, e, Foo));
+
+    ecs_add(world, e, Foo);
+    test_bool(true, ecs_has(world, e, Foo));
+
+    ecs_clear(world, e);
+    test_bool(false, ecs_has(world, e, Foo));
+
+    ecs_fini(world);
+}
+
+void Sparse_has_tag_after_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, Foo, EcsSparse);
+    if (!fragment) ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    test_bool(false, ecs_has(world, e, Foo));
+
+    ecs_add(world, e, Foo);
+    test_bool(true, ecs_has(world, e, Foo));
+
+    ecs_delete(world, e);
+    ecs_make_alive(world, e);
+    test_bool(false, ecs_has(world, e, Foo));
+
+    ecs_fini(world);
+}
+
 void Sparse_sparse_w_hole(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1328,6 +1389,7 @@ void Sparse_override_component_2_lvls(void) {
     ecs_entity_t base_base = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_entity_t e = ecs_new(world);
+
     ecs_add_pair(world, e, EcsIsA, base_base);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_owns(world, e, Position));
@@ -1385,6 +1447,54 @@ void Sparse_override_pair(void) {
     ecs_remove_pair(world, e, Rel, TgtA);
     test_assert(!ecs_owns_pair(world, e, Rel, TgtA));
     test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+
+    ecs_fini(world);
+}
+
+void Sparse_has_override_after_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, Foo, EcsSparse);
+    if (!fragment) ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add(world, base, Foo);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_owns(world, e, Foo));
+
+    ecs_delete(world, e);
+    ecs_make_alive(world, e);
+
+    test_assert(!ecs_has(world, e, Foo));
+
+    ecs_fini(world);
+}
+
+void Sparse_has_override_after_clear(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, Foo, EcsSparse);
+    if (!fragment) ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add(world, base, Foo);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_owns(world, e, Foo));
+
+    ecs_clear(world, e);
+
+    test_assert(!ecs_owns(world, e, Foo));
+    test_assert(!ecs_has(world, e, Foo));
 
     ecs_fini(world);
 }

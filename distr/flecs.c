@@ -2392,6 +2392,15 @@ bool flecs_sparse_on_add(
     const ecs_type_t *added,
     bool construct);
 
+/* Add action for single sparse component. */
+bool flecs_sparse_on_add_cr(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    ecs_component_record_t *cr,
+    bool construct,
+    void **ptr_out);
+
 /* Run add actions for components added to entity. */
 void flecs_notify_on_add(
     ecs_world_t *world,
@@ -4020,7 +4029,8 @@ static
 void flecs_register_slot_of(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
-        ecs_add_id(it->world, it->entities[i], EcsUnion);
+        ecs_add_id(it->world, it->entities[i], EcsDontFragment);
+        ecs_add_id(it->world, it->entities[i], EcsExclusive);
     }
 }
 
@@ -4870,6 +4880,8 @@ void flecs_bootstrap(
     ecs_add_pair(world, ecs_id(EcsComponent), EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsOnDelete, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsUnion, EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, EcsExclusive, EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, EcsDontFragment, EcsOnInstantiate, EcsDontInherit);
 
     /* Acyclic/Traversable components */
     ecs_add_id(world, EcsIsA, EcsTraversable);
@@ -6281,6 +6293,45 @@ void flecs_on_unparent(
     flecs_ordered_children_unparent(world, table, row, count);
 }
 
+bool flecs_sparse_on_add_cr(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    ecs_component_record_t *cr,
+    bool construct,
+    void **ptr_out)
+{
+    bool is_new = false;
+
+    if (cr && cr->flags & EcsIdIsSparse) {
+        void *result = NULL;
+        int32_t sparse_count = flecs_sparse_count(cr->sparse);
+
+        if (construct) {
+            result = flecs_component_sparse_insert(
+                world, cr, table, row);
+        } else {
+            result = flecs_component_sparse_emplace(
+                world, cr, table, row);
+        }
+
+        if (ptr_out)  {
+            *ptr_out = result;
+        }
+
+        if (cr->flags & EcsIdDontFragment) {
+            is_new = sparse_count != flecs_sparse_count(cr->sparse);
+            if (is_new) {
+                const ecs_entity_t *entities = ecs_table_entities(table);
+                ecs_record_t *r = flecs_entities_get(world, entities[row]);
+                r->row |= EcsEntityHasDontFragment;
+            }
+        }
+    }
+
+    return is_new;
+}
+
 bool flecs_sparse_on_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -6295,21 +6346,10 @@ bool flecs_sparse_on_add(
     for (i = 0; i < added->count; i ++) {
         ecs_id_t id = added->array[i];
         ecs_component_record_t *cr = flecs_components_get(world, id);
-        
-        if (cr && cr->flags & EcsIdIsSparse) {
-            int32_t sparse_count = flecs_sparse_count(cr->sparse);
 
-            for (j = 0; j < count; j ++) {
-                if (construct) {
-                    flecs_component_sparse_insert(world, cr, table, row + j);
-                } else {
-                    flecs_component_sparse_emplace(world, cr, table, row + j);
-                }
-            }
-
-            if (cr->flags & EcsIdDontFragment) {
-                is_new |= sparse_count != flecs_sparse_count(cr->sparse);
-            }
+        for (j = 0; j < count; j ++) {
+            is_new |= flecs_sparse_on_add_cr(
+                world, table, row + j, cr, construct, NULL);
         }
     }
 
@@ -6379,8 +6419,7 @@ void flecs_entity_remove_non_fragmenting(
     while (cur) {
         ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
         if (cur->sparse && !(ecs_id_is_wildcard(cur->id))) {
-            void *ptr = flecs_sparse_get(cur->sparse, 0, e);
-            if (ptr) {
+            if (flecs_sparse_has(cur->sparse, e)) {
                 ecs_type_t type = { .count = 1, .array = &cur->id };
 
                 flecs_emit(world, world, 0, &(ecs_event_desc_t) {
@@ -6484,15 +6523,6 @@ void flecs_notify_on_add(
         if (sparse && (diff_flags & EcsTableHasSparse)) {
             if (flecs_sparse_on_add(world, table, row, count, added, construct)) {
                 diff_flags |= EcsTableHasOnAdd;
-            }
-
-            if (diff_flags & EcsTableHasDontFragment) {
-                int32_t i;
-                const ecs_entity_t *entities = ecs_table_entities(table);
-                for (i = row; i < (row + count); i ++) {
-                    ecs_record_t *r = flecs_entities_get(world, entities[i]);
-                    r->row |= EcsEntityHasDontFragment;
-                }
             }
         }
 
@@ -11269,7 +11299,15 @@ void flecs_instantiate_slot(
 {
     if (base == slot_of) {
         /* Instance inherits from slot_of, add slot to instance */
-        ecs_add_pair(world, instance, slot, child);
+        ecs_component_record_t *cr = flecs_components_ensure(
+            world, ecs_pair(slot, child));
+        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_record_t *r = flecs_entities_get(world, instance);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        flecs_sparse_on_add_cr(world, 
+            r->table, ECS_RECORD_TO_ROW(r->row), cr, true, NULL);
     } else {
         /* Slot is registered for other prefab, travel hierarchy
          * upwards to find instance that inherits from slot_of */
@@ -11621,15 +11659,20 @@ void flecs_instantiate_dont_fragment(
             if (flecs_component_sparse_has(cur, base)) {
                 void *base_ptr = flecs_component_sparse_get(cur, base);
                 const ecs_type_info_t *ti = cur->type_info;
+
+                ecs_record_t *r = flecs_entities_get(world, instance);
+
+                void *ptr = NULL;
+                flecs_sparse_on_add_cr(world, 
+                    r->table, ECS_RECORD_TO_ROW(r->row), cur, true, &ptr);
+
                 if (ti) {
-                    void *ptr = ecs_ensure_id(world, instance, cur->id);
+                    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
                     if (ti->hooks.copy) {
                         ti->hooks.copy(ptr, base_ptr, 1, ti);
                     } else {
                         ecs_os_memcpy(ptr, base_ptr, ti->size);
                     }
-                } else {
-                    ecs_add_id(world, instance, cur->id);
                 }
             }
         }

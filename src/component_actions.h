@@ -28,6 +28,15 @@ bool flecs_sparse_on_add(
     const ecs_type_t *added,
     bool construct);
 
+/* Add action for single sparse component. */
+bool flecs_sparse_on_add_cr(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    ecs_component_record_t *cr,
+    bool construct,
+    void **ptr_out);
+
 /* Run add actions for components added to entity. */
 void flecs_notify_on_add(
     ecs_world_t *world,

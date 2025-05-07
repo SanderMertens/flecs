@@ -1843,8 +1843,6 @@ void Trigger_on_add_superset_childof(void) {
 
     ecs_os_zeromem(&ctx);
 
-    return;
-
     ecs_add(world, e, TagA);
 
     test_int(ctx.invoked, 0);

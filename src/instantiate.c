@@ -16,7 +16,15 @@ void flecs_instantiate_slot(
 {
     if (base == slot_of) {
         /* Instance inherits from slot_of, add slot to instance */
-        ecs_add_pair(world, instance, slot, child);
+        ecs_component_record_t *cr = flecs_components_ensure(
+            world, ecs_pair(slot, child));
+        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_record_t *r = flecs_entities_get(world, instance);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        flecs_sparse_on_add_cr(world, 
+            r->table, ECS_RECORD_TO_ROW(r->row), cr, true, NULL);
     } else {
         /* Slot is registered for other prefab, travel hierarchy
          * upwards to find instance that inherits from slot_of */
@@ -368,15 +376,20 @@ void flecs_instantiate_dont_fragment(
             if (flecs_component_sparse_has(cur, base)) {
                 void *base_ptr = flecs_component_sparse_get(cur, base);
                 const ecs_type_info_t *ti = cur->type_info;
+
+                ecs_record_t *r = flecs_entities_get(world, instance);
+
+                void *ptr = NULL;
+                flecs_sparse_on_add_cr(world, 
+                    r->table, ECS_RECORD_TO_ROW(r->row), cur, true, &ptr);
+
                 if (ti) {
-                    void *ptr = ecs_ensure_id(world, instance, cur->id);
+                    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
                     if (ti->hooks.copy) {
                         ti->hooks.copy(ptr, base_ptr, 1, ti);
                     } else {
                         ecs_os_memcpy(ptr, base_ptr, ti->size);
                     }
-                } else {
-                    ecs_add_id(world, instance, cur->id);
                 }
             }
         }

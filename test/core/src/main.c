@@ -480,6 +480,9 @@ void Sparse_has_after_remove(void);
 void Sparse_has_after_clear(void);
 void Sparse_get_after_remove(void);
 void Sparse_get_mut_after_remove(void);
+void Sparse_has_tag_after_remove(void);
+void Sparse_has_tag_after_clear(void);
+void Sparse_has_tag_after_delete(void);
 void Sparse_sparse_w_hole(void);
 void Sparse_record_get(void);
 void Sparse_has_inherited(void);
@@ -492,6 +495,8 @@ void Sparse_override_component(void);
 void Sparse_override_component_2_lvls(void);
 void Sparse_override_tag(void);
 void Sparse_override_pair(void);
+void Sparse_has_override_after_delete(void);
+void Sparse_has_override_after_clear(void);
 void Sparse_dont_override_inherited(void);
 void Sparse_delete_w_override_component(void);
 void Sparse_delete_w_override_on_remove_isa(void);
@@ -2013,6 +2018,8 @@ void Prefab_2_instances_w_slots_same_table(void);
 void Prefab_slot_has_union(void);
 void Prefab_slot_override(void);
 void Prefab_base_slot_override(void);
+void Prefab_has_slot_after_delete(void);
+void Prefab_has_slot_after_clear(void);
 void Prefab_override_twice_w_add(void);
 void Prefab_override_twice_w_set(void);
 void Prefab_auto_override_copy_once(void);
@@ -2054,6 +2061,15 @@ void Prefab_defer_instantiate_and_set_inherit_and_override(void);
 void Prefab_defer_instantiate_and_set_inherit_and_new(void);
 void Prefab_instantiate_while_defer_suspended(void);
 void Prefab_instantiate_w_union_while_defer_suspended(void);
+void Prefab_instantiate_w_slot_while_defer_suspended(void);
+void Prefab_instantiate_w_sparse_component_while_defer_suspended(void);
+void Prefab_instantiate_w_sparse_tag_while_defer_suspended(void);
+void Prefab_instantiate_w_sparse_pair_while_defer_suspended(void);
+void Prefab_instantiate_w_sparse_pair_tag_while_defer_suspended(void);
+void Prefab_instantiate_w_non_fragmenting_component_while_defer_suspended(void);
+void Prefab_instantiate_w_non_fragmenting_tag_while_defer_suspended(void);
+void Prefab_instantiate_w_non_fragmenting_pair_while_defer_suspended(void);
+void Prefab_instantiate_w_non_fragmenting_pair_tag_while_defer_suspended(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -4439,6 +4455,18 @@ bake_test_case Sparse_testcases[] = {
         Sparse_get_mut_after_remove
     },
     {
+        "has_tag_after_remove",
+        Sparse_has_tag_after_remove
+    },
+    {
+        "has_tag_after_clear",
+        Sparse_has_tag_after_clear
+    },
+    {
+        "has_tag_after_delete",
+        Sparse_has_tag_after_delete
+    },
+    {
         "sparse_w_hole",
         Sparse_sparse_w_hole
     },
@@ -4485,6 +4513,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "override_pair",
         Sparse_override_pair
+    },
+    {
+        "has_override_after_delete",
+        Sparse_has_override_after_delete
+    },
+    {
+        "has_override_after_clear",
+        Sparse_has_override_after_clear
     },
     {
         "dont_override_inherited",
@@ -10419,6 +10455,14 @@ bake_test_case Prefab_testcases[] = {
         Prefab_base_slot_override
     },
     {
+        "has_slot_after_delete",
+        Prefab_has_slot_after_delete
+    },
+    {
+        "has_slot_after_clear",
+        Prefab_has_slot_after_clear
+    },
+    {
         "override_twice_w_add",
         Prefab_override_twice_w_add
     },
@@ -10581,6 +10625,42 @@ bake_test_case Prefab_testcases[] = {
     {
         "instantiate_w_union_while_defer_suspended",
         Prefab_instantiate_w_union_while_defer_suspended
+    },
+    {
+        "instantiate_w_slot_while_defer_suspended",
+        Prefab_instantiate_w_slot_while_defer_suspended
+    },
+    {
+        "instantiate_w_sparse_component_while_defer_suspended",
+        Prefab_instantiate_w_sparse_component_while_defer_suspended
+    },
+    {
+        "instantiate_w_sparse_tag_while_defer_suspended",
+        Prefab_instantiate_w_sparse_tag_while_defer_suspended
+    },
+    {
+        "instantiate_w_sparse_pair_while_defer_suspended",
+        Prefab_instantiate_w_sparse_pair_while_defer_suspended
+    },
+    {
+        "instantiate_w_sparse_pair_tag_while_defer_suspended",
+        Prefab_instantiate_w_sparse_pair_tag_while_defer_suspended
+    },
+    {
+        "instantiate_w_non_fragmenting_component_while_defer_suspended",
+        Prefab_instantiate_w_non_fragmenting_component_while_defer_suspended
+    },
+    {
+        "instantiate_w_non_fragmenting_tag_while_defer_suspended",
+        Prefab_instantiate_w_non_fragmenting_tag_while_defer_suspended
+    },
+    {
+        "instantiate_w_non_fragmenting_pair_while_defer_suspended",
+        Prefab_instantiate_w_non_fragmenting_pair_while_defer_suspended
+    },
+    {
+        "instantiate_w_non_fragmenting_pair_tag_while_defer_suspended",
+        Prefab_instantiate_w_non_fragmenting_pair_tag_while_defer_suspended
     }
 };
 
@@ -12831,7 +12911,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        153,
+        158,
         Sparse_testcases,
         1,
         Sparse_params
@@ -13001,7 +13081,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        160,
+        171,
         Prefab_testcases
     },
     {
