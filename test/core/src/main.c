@@ -1800,6 +1800,7 @@ void ObserverOnSet_on_set_after_remove_override_isa_before_add(void);
 void ObserverOnSet_on_set_w_override_after_delete(void);
 void ObserverOnSet_on_set_w_override_after_clear(void);
 void ObserverOnSet_on_set_w_override_after_delete_w_ecs_init(void);
+void ObserverOnSet_on_set_w_2_overrides(void);
 void ObserverOnSet_no_set_after_remove_base(void);
 void ObserverOnSet_un_set_after_remove(void);
 void ObserverOnSet_un_set_after_remove_base(void);
@@ -9616,6 +9617,10 @@ bake_test_case ObserverOnSet_testcases[] = {
         ObserverOnSet_on_set_w_override_after_delete_w_ecs_init
     },
     {
+        "on_set_w_2_overrides",
+        ObserverOnSet_on_set_w_2_overrides
+    },
+    {
         "no_set_after_remove_base",
         ObserverOnSet_no_set_after_remove_base
     },
@@ -13046,7 +13051,7 @@ static bake_test_suite suites[] = {
         "ObserverOnSet",
         NULL,
         NULL,
-        26,
+        27,
         ObserverOnSet_testcases
     },
     {
