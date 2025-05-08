@@ -937,19 +937,83 @@ void OrderedChildren_delete_with_tag_some_children(void) {
     ecs_fini(world);
 }
 
-void OrderedChildren_add_ordered_children_after_in_use(void) {
-    install_test_abort();
-
+void OrderedChildren_add_remove_ordered_children_after_in_use(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
 
     ecs_entity_t parent = ecs_new(world);
 
-    ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, parent);
 
-    test_expect_abort();
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e2, Bar);
+    ecs_add(world, e3, Foo);
+
     ecs_add_id(world, parent, EcsOrderedChildren);
+
+    {
+        ecs_iter_t it = ecs_children(world, parent);
+        test_bool(true, ecs_children_next(&it));
+        test_assert(it.table == NULL);
+        test_int(3, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e3, it.entities[1]);
+        test_uint(e2, it.entities[2]);
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    ecs_entity_t children[] = {e1, e2, e3};
+
+    ecs_set_child_order(world, parent, children, 3);
+
+    {
+        ecs_iter_t it = ecs_children(world, parent);
+        test_bool(true, ecs_children_next(&it));
+        test_assert(it.table == NULL);
+        test_int(3, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
+        test_uint(e3, it.entities[2]);
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    ecs_remove_id(world, parent, EcsOrderedChildren);
+
+    {
+        ecs_iter_t it = ecs_children(world, parent);
+        test_bool(true, ecs_children_next(&it));
+        test_int(2, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e3, it.entities[1]);
+
+        test_bool(true, ecs_children_next(&it));
+        test_int(1, it.count);
+        test_uint(e2, it.entities[0]);
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_add_remove_ordered_children_no_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_remove_id(world, parent, EcsOrderedChildren);
+
+    ecs_fini(world);
+
+    test_assert(true);
 }
 
 void OrderedChildren_change_order_no_children(void) {
