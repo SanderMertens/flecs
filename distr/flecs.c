@@ -1055,6 +1055,15 @@ void flecs_ordered_children_fini(
     ecs_world_t *world,
     ecs_component_record_t *cr);
 
+/* Populate ordered children storage with existing children. */
+void flecs_ordered_children_populate(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+/* Clear ordered children storage. */
+void flecs_ordered_children_clear(
+    ecs_component_record_t *cr);
+
 /* Reparent entities in ordered children storage. */
 void flecs_ordered_children_reparent(
     ecs_world_t *world,
@@ -4204,20 +4213,28 @@ void flecs_disable_module(ecs_iter_t *it) {
 static
 void flecs_register_ordered_children(ecs_iter_t *it) {
     int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t parent = it->entities[i];
-        const ecs_component_record_t *cr = flecs_components_ensure(
-            it->world, ecs_childof(parent));
-        if (cr->cache.tables.count != 0) {
-            char *str = ecs_id_str(it->world, ecs_childof(parent));
-            ecs_throw(ECS_INVALID_OPERATION, "cannot add OrderedChildren trait:"
-                " (ChildOf, %s) already in use", str);
-            ecs_os_free(str);
+    if (it->event == EcsOnAdd) {
+        for (i = 0; i < it->count; i ++) {
+            ecs_entity_t parent = it->entities[i];
+            ecs_component_record_t *cr = flecs_components_ensure(
+                it->world, ecs_childof(parent));
+            if (!(cr->flags & EcsIdOrderedChildren)) {
+                flecs_ordered_children_populate(it->world, cr);
+                cr->flags |= EcsIdOrderedChildren;
+            }
         }
-        ecs_assert(cr->flags & EcsIdOrderedChildren, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        ecs_assert(it->event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
+        for (i = 0; i < it->count; i ++) {
+            ecs_entity_t parent = it->entities[i];
+            ecs_component_record_t *cr = flecs_components_get(
+                it->world, ecs_childof(parent));
+            if (cr && (cr->flags & EcsIdOrderedChildren)) {
+                flecs_ordered_children_clear(cr);
+                cr->flags &= ~EcsIdOrderedChildren;
+            }
+        }
     }
-error:
-    return;
 }
 
 /* -- Bootstrapping -- */
@@ -4783,7 +4800,7 @@ void flecs_bootstrap(
     ecs_observer(world, {
         .query.terms = {{ .id = EcsOrderedChildren }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnAdd},
+        .events = {EcsOnAdd,  EcsOnRemove},
         .callback = flecs_register_ordered_children
     });
 
@@ -38065,6 +38082,37 @@ void flecs_ordered_children_fini(
 {
     ecs_vec_fini_t(
         &world->allocator, &cr->pair->ordered_children, ecs_entity_t);
+}
+
+void flecs_ordered_children_populate(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{    
+    ecs_vec_t *v = &cr->pair->ordered_children;
+    ecs_assert(ecs_vec_count(v) == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_iter_t it = ecs_each_id(world, cr->id);
+    while (ecs_each_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            ecs_vec_append_t(
+                &world->allocator, v, ecs_entity_t)[0] = it.entities[i];
+        }
+    }
+}
+
+void flecs_ordered_children_clear(
+    ecs_component_record_t *cr)
+{    
+    ecs_vec_t *v = &cr->pair->ordered_children;
+    ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_vec_clear(v);
 }
 
 static

@@ -785,7 +785,8 @@ void OrderedChildren_delete_parent(void);
 void OrderedChildren_delete_with_parent(void);
 void OrderedChildren_delete_with_tag_all_children(void);
 void OrderedChildren_delete_with_tag_some_children(void);
-void OrderedChildren_add_ordered_children_after_in_use(void);
+void OrderedChildren_add_remove_ordered_children_after_in_use(void);
+void OrderedChildren_add_remove_ordered_children_no_children(void);
 void OrderedChildren_change_order_no_children(void);
 void OrderedChildren_change_order_mismatching_child_count(void);
 void OrderedChildren_change_order_mismatching_child_id(void);
@@ -5657,8 +5658,12 @@ bake_test_case OrderedChildren_testcases[] = {
         OrderedChildren_delete_with_tag_some_children
     },
     {
-        "add_ordered_children_after_in_use",
-        OrderedChildren_add_ordered_children_after_in_use
+        "add_remove_ordered_children_after_in_use",
+        OrderedChildren_add_remove_ordered_children_after_in_use
+    },
+    {
+        "add_remove_ordered_children_no_children",
+        OrderedChildren_add_remove_ordered_children_no_children
     },
     {
         "change_order_no_children",
@@ -12939,7 +12944,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        28,
+        29,
         OrderedChildren_testcases
     },
     {

@@ -16,6 +16,15 @@ void flecs_ordered_children_fini(
     ecs_world_t *world,
     ecs_component_record_t *cr);
 
+/* Populate ordered children storage with existing children. */
+void flecs_ordered_children_populate(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
+/* Clear ordered children storage. */
+void flecs_ordered_children_clear(
+    ecs_component_record_t *cr);
+
 /* Reparent entities in ordered children storage. */
 void flecs_ordered_children_reparent(
     ecs_world_t *world,

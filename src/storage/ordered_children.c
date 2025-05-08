@@ -16,6 +16,37 @@ void flecs_ordered_children_fini(
         &world->allocator, &cr->pair->ordered_children, ecs_entity_t);
 }
 
+void flecs_ordered_children_populate(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{    
+    ecs_vec_t *v = &cr->pair->ordered_children;
+    ecs_assert(ecs_vec_count(v) == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_iter_t it = ecs_each_id(world, cr->id);
+    while (ecs_each_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            ecs_vec_append_t(
+                &world->allocator, v, ecs_entity_t)[0] = it.entities[i];
+        }
+    }
+}
+
+void flecs_ordered_children_clear(
+    ecs_component_record_t *cr)
+{    
+    ecs_vec_t *v = &cr->pair->ordered_children;
+    ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_vec_clear(v);
+}
+
 static
 void flecs_ordered_entities_append(
     ecs_world_t *world,
