@@ -584,6 +584,61 @@ void ObserverOnSet_on_set_w_override_after_delete_w_ecs_init(void) {
     ecs_fini(world);
 }
 
+static
+void OnSetPosVel(ecs_iter_t *it) {
+    probe_iter(it);
+
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
+
+    test_assert(p != NULL);
+    test_assert(v != NULL);
+
+    test_int(it->count, 1);
+
+    test_int(p->x, 10); test_int(p->y, 20);
+    test_int(v->x, 1); test_int(v->y, 2);
+}
+
+void ObserverOnSet_on_set_w_2_overrides(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base, Position, {10, 20});
+    ecs_set(world, base, Velocity, {1, 2});
+
+    Probe ctx = { 0 };
+    ecs_set_ctx(world, &ctx, NULL);
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity) }
+        },
+        .events = {EcsOnSet},
+        .callback = OnSetPosVel
+    });
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
+    test_int(ctx.invoked, 1);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
 void ObserverOnSet_no_set_after_remove_base(void) {
     ecs_world_t *world = ecs_mini();
 

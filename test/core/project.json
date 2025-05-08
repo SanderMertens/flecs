@@ -1869,6 +1869,7 @@
                 "on_set_w_override_after_delete",
                 "on_set_w_override_after_clear",
                 "on_set_w_override_after_delete_w_ecs_init",
+                "on_set_w_2_overrides",
                 "no_set_after_remove_base",
                 "un_set_after_remove",
                 "un_set_after_remove_base",
