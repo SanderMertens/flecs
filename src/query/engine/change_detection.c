@@ -221,13 +221,11 @@ bool flecs_query_check_cache_monitor(
         return true;
     }
 
-    ecs_table_cache_iter_t it;
-    if (flecs_table_cache_all_iter(&cache->cache, &it)) {
-        ecs_query_cache_table_t *qt;
-        while ((qt = flecs_table_cache_next(&it, ecs_query_cache_table_t))) {
-            if (flecs_query_check_table_monitor(impl, qt, -1)) {
-                return true;
-            }
+    ecs_map_iter_t it = ecs_map_iter(&cache->tables);
+    while (ecs_map_next(&it)) {
+        ecs_query_cache_table_t *qt = ecs_map_ptr(&it);
+        if (flecs_query_check_table_monitor(impl, qt, -1)) {
+            return true;
         }
     }
 

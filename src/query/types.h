@@ -443,7 +443,6 @@ struct ecs_query_cache_table_match_t {
 
 /** Table record type for query table cache. A query only has one per table. */
 typedef struct ecs_query_cache_table_t {
-    const ecs_table_cache_hdr_t hdr;       /* Header for ecs_table_cache_t */
     ecs_query_cache_table_match_t *first;  /* List with matches for table */
     ecs_query_cache_table_match_t *last;   /* Last discovered match for table */
     int32_t rematch_count;           /* Track whether table was rematched */
@@ -484,7 +483,7 @@ typedef struct ecs_query_cache_t {
     ecs_observer_t *observer;
 
     /* Tables matched with query */
-    ecs_table_cache_t cache;
+    ecs_map_t tables;
 
     /* Linked list with all matched non-empty tables, in iteration order */
     ecs_query_cache_table_list_t list;

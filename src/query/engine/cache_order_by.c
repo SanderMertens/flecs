@@ -273,12 +273,12 @@ void flecs_query_cache_sort_tables(
     bool tables_sorted = false;
 
     ecs_component_record_t *cr = flecs_components_get(world, order_by);
-    ecs_table_cache_iter_t it;
-    ecs_query_cache_table_t *qt;
-    flecs_table_cache_all_iter(&cache->cache, &it);
+    ecs_map_iter_t it = ecs_map_iter(&cache->tables);
 
-    while ((qt = flecs_table_cache_next(&it, ecs_query_cache_table_t))) {
-        ecs_table_t *table = qt->hdr.table;
+    while (ecs_map_next(&it)) {
+        ecs_query_cache_table_t *qt = ecs_map_ptr(&it);
+        ecs_assert(qt->first != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_table_t *table = qt->first->table;
         bool dirty = false;
 
         if (flecs_query_check_table_monitor(impl, qt, 0)) {
