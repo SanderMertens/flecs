@@ -565,11 +565,7 @@ ecs_query_cache_table_t* flecs_query_cache_table_insert(
     ecs_table_t *table)
 {
     ecs_query_cache_table_t *qt = flecs_bcalloc(&world->allocators.query_table);
-    if (table) {
-        qt->table_id = table->id;
-    } else {
-        qt->table_id = 0;
-    }
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_cache_insert(&cache->cache, table, 
         ECS_CONST_CAST(ecs_table_cache_hdr_t*, &qt->hdr));
@@ -820,7 +816,7 @@ void flecs_query_cache_unmatch_table(
         elem = ecs_table_cache_get(&cache->cache, table);
     }
     if (elem) {
-        ecs_table_cache_remove(&cache->cache, elem->table_id, 
+        ecs_table_cache_remove(&cache->cache, table->id,
             ECS_CONST_CAST(ecs_table_cache_hdr_t*, &elem->hdr));
         flecs_query_cache_table_free(cache, elem);
     }

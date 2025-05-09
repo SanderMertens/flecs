@@ -446,7 +446,6 @@ typedef struct ecs_query_cache_table_t {
     const ecs_table_cache_hdr_t hdr;       /* Header for ecs_table_cache_t */
     ecs_query_cache_table_match_t *first;  /* List with matches for table */
     ecs_query_cache_table_match_t *last;   /* Last discovered match for table */
-    uint64_t table_id;
     int32_t rematch_count;           /* Track whether table was rematched */
 } ecs_query_cache_table_t;
 

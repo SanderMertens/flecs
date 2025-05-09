@@ -301,7 +301,8 @@ static
 void flecs_register_slot_of(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
-        ecs_add_id(it->world, it->entities[i], EcsUnion);
+        ecs_add_id(it->world, it->entities[i], EcsDontFragment);
+        ecs_add_id(it->world, it->entities[i], EcsExclusive);
     }
 }
 
@@ -475,20 +476,28 @@ void flecs_disable_module(ecs_iter_t *it) {
 static
 void flecs_register_ordered_children(ecs_iter_t *it) {
     int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t parent = it->entities[i];
-        const ecs_component_record_t *cr = flecs_components_ensure(
-            it->world, ecs_childof(parent));
-        if (cr->cache.tables.count != 0) {
-            char *str = ecs_id_str(it->world, ecs_childof(parent));
-            ecs_throw(ECS_INVALID_OPERATION, "cannot add OrderedChildren trait:"
-                " (ChildOf, %s) already in use", str);
-            ecs_os_free(str);
+    if (it->event == EcsOnAdd) {
+        for (i = 0; i < it->count; i ++) {
+            ecs_entity_t parent = it->entities[i];
+            ecs_component_record_t *cr = flecs_components_ensure(
+                it->world, ecs_childof(parent));
+            if (!(cr->flags & EcsIdOrderedChildren)) {
+                flecs_ordered_children_populate(it->world, cr);
+                cr->flags |= EcsIdOrderedChildren;
+            }
         }
-        ecs_assert(cr->flags & EcsIdOrderedChildren, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        ecs_assert(it->event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
+        for (i = 0; i < it->count; i ++) {
+            ecs_entity_t parent = it->entities[i];
+            ecs_component_record_t *cr = flecs_components_get(
+                it->world, ecs_childof(parent));
+            if (cr && (cr->flags & EcsIdOrderedChildren)) {
+                flecs_ordered_children_clear(cr);
+                cr->flags &= ~EcsIdOrderedChildren;
+            }
+        }
     }
-error:
-    return;
 }
 
 /* -- Bootstrapping -- */
@@ -1066,7 +1075,7 @@ void flecs_bootstrap(
     ecs_observer(world, {
         .query.terms = {{ .id = EcsOrderedChildren }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnAdd},
+        .events = {EcsOnAdd,  EcsOnRemove},
         .callback = flecs_register_ordered_children
     });
 
@@ -1163,6 +1172,8 @@ void flecs_bootstrap(
     ecs_add_pair(world, ecs_id(EcsComponent), EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsOnDelete, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsUnion, EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, EcsExclusive, EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, EcsDontFragment, EcsOnInstantiate, EcsDontInherit);
 
     /* Acyclic/Traversable components */
     ecs_add_id(world, EcsIsA, EcsTraversable);
