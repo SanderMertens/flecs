@@ -22,8 +22,8 @@ void flecs_query_cache_notify(
 
 /* Get cache entry for table */
 ecs_query_cache_table_t* flecs_query_cache_get_table(
-    ecs_query_cache_t *query,
-    ecs_table_t *table);
+    const ecs_query_cache_t *query,
+    const ecs_table_t *table);
 
 /* Sort tables (order_by implementation) */
 void flecs_query_cache_sort_tables(

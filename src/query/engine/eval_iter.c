@@ -409,7 +409,7 @@ ecs_iter_t flecs_query_iter(
             if (ecs_vec_count(&cache->table_slices)) {
                 qit->node = ecs_vec_first(&cache->table_slices);
                 qit->last = ecs_vec_last_t(
-                    &cache->table_slices, ecs_query_cache_table_match_t);
+                    &cache->table_slices, ecs_query_cache_match_t);
             }
         }
 
