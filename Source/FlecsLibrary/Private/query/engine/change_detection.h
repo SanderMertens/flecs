@@ -8,7 +8,7 @@
 /* Synchronize cache monitor with table dirty state */
 void flecs_query_sync_match_monitor(
     ecs_query_impl_t *impl,
-    ecs_query_cache_table_match_t *match);
+    ecs_query_cache_match_t *match);
 
 /* Mark iterated out fields dirty */
 void flecs_query_mark_fields_dirty(

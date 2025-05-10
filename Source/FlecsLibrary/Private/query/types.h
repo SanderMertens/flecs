@@ -419,12 +419,12 @@ struct ecs_query_impl_t {
 /* Query cache types */
 
 /** Table match data.
- * Each table matched by the query is represented by an ecs_query_cache_table_match_t
+ * Each table matched by the query is represented by an ecs_query_cache_match_t
  * instance, which are linked together in a list. A table may match a query
  * multiple times (due to wildcard queries) with different columns being matched
  * by the query. */
-struct ecs_query_cache_table_match_t {
-    ecs_query_cache_table_match_t *next, *prev;
+struct ecs_query_cache_match_t {
+    ecs_query_cache_match_t *next, *prev;
     ecs_table_t *table;              /* The current table. */
     int32_t offset;                  /* Starting point in table  */
     int32_t count;                   /* Number of entities to iterate in table */
@@ -437,22 +437,22 @@ struct ecs_query_cache_table_match_t {
     uint64_t group_id;               /* Value used to organize tables in groups */
     int32_t *monitor;                /* Used to monitor table for changes */
 
-    /* Next match in cache for same table (includes empty tables) */
-    ecs_query_cache_table_match_t *next_match;
+    /* Next match in cache for same table. Can only be not null for queries 
+     * with wildcards. */
+    ecs_query_cache_match_t *next_match;
 };
 
 /** Table record type for query table cache. A query only has one per table. */
 typedef struct ecs_query_cache_table_t {
-    const ecs_table_cache_hdr_t hdr;       /* Header for ecs_table_cache_t */
-    ecs_query_cache_table_match_t *first;  /* List with matches for table */
-    ecs_query_cache_table_match_t *last;   /* Last discovered match for table */
+    ecs_query_cache_match_t *first;  /* List with matches for table */
+    ecs_query_cache_match_t *last;   /* Last discovered match for table */
     int32_t rematch_count;           /* Track whether table was rematched */
 } ecs_query_cache_table_t;
 
 /** Points to the beginning & ending of a query group */
 typedef struct ecs_query_cache_table_list_t {
-    ecs_query_cache_table_match_t *first;
-    ecs_query_cache_table_match_t *last;
+    ecs_query_cache_match_t *first;
+    ecs_query_cache_match_t *last;
     ecs_query_group_info_t info;
 } ecs_query_cache_table_list_t;
 
@@ -484,7 +484,7 @@ typedef struct ecs_query_cache_t {
     ecs_observer_t *observer;
 
     /* Tables matched with query */
-    ecs_table_cache_t cache;
+    ecs_map_t tables;
 
     /* Linked list with all matched non-empty tables, in iteration order */
     ecs_query_cache_table_list_t list;
