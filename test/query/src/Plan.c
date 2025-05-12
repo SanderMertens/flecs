@@ -1987,10 +1987,7 @@ void Plan_cache_2_or(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  xcache      "
-    LINE " 1. [ 0,  2]  yield       "
-    LINE "";
+    const char *expect = NULL;
     char *plan = ecs_query_plan(r);
 
     test_str(expect, plan);
@@ -2022,10 +2019,7 @@ void Plan_cache_2_or_w_not(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  xcache      "
-    LINE " 1. [ 0,  2]  yield       "
-    LINE "";
+    const char *expect = NULL;
     char *plan = ecs_query_plan(r);
 
     test_str(expect, plan);
@@ -2219,10 +2213,7 @@ void Plan_pair_second_wildcard_cached(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  xcache      "
-    LINE " 1. [ 0,  2]  yield       "
-    LINE "";
+    const char *expect = NULL;
     char *plan = ecs_query_plan(r);
 
     test_str(expect, plan);
@@ -2517,10 +2508,7 @@ void Plan_cached_isa_tgt_w_self_second(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  xcache      "
-    LINE " 1. [ 0,  2]  yield       "
-    LINE "";
+    const char *expect = NULL;
     char *plan = ecs_query_plan(q);
 
     test_str(expect, plan);
@@ -2573,10 +2561,7 @@ void Plan_cached_isa_tgt_w_self_second_no_expr(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  xcache      "
-    LINE " 1. [ 0,  2]  yield       "
-    LINE "";
+    const char *expect = NULL;
     char *plan = ecs_query_plan(q);
 
     test_str(expect, plan);

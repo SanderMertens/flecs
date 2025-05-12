@@ -2229,6 +2229,22 @@ void OrderByEntireTable_sort_not_term(void);
 void OrderByEntireTable_sort_or_term(void);
 void OrderByEntireTable_sort_optional_term(void);
 
+// Testsuite 'TrivialIter'
+void TrivialIter_uncached_trivial_search(void);
+void TrivialIter_uncached_trivial_test(void);
+void TrivialIter_cached_trivial_search(void);
+void TrivialIter_cached_trivial_test(void);
+void TrivialIter_cached_trivial_search_w_up(void);
+void TrivialIter_cached_trivial_test_w_up(void);
+void TrivialIter_cached_trivial_search_w_not_operator(void);
+void TrivialIter_cached_trivial_test_w_not_operator(void);
+void TrivialIter_cached_trivial_search_w_or_operator(void);
+void TrivialIter_cached_trivial_test_w_or_operator(void);
+void TrivialIter_cached_trivial_search_w_optional_operator(void);
+void TrivialIter_cached_trivial_test_w_optional_operator(void);
+void TrivialIter_cached_trivial_search_w_wildcard(void);
+void TrivialIter_cached_trivial_test_w_wildcard(void);
+
 // Testsuite 'QueryStr'
 void QueryStr_one_term(void);
 void QueryStr_one_term_w_inout(void);
@@ -10969,6 +10985,65 @@ bake_test_case OrderByEntireTable_testcases[] = {
     }
 };
 
+bake_test_case TrivialIter_testcases[] = {
+    {
+        "uncached_trivial_search",
+        TrivialIter_uncached_trivial_search
+    },
+    {
+        "uncached_trivial_test",
+        TrivialIter_uncached_trivial_test
+    },
+    {
+        "cached_trivial_search",
+        TrivialIter_cached_trivial_search
+    },
+    {
+        "cached_trivial_test",
+        TrivialIter_cached_trivial_test
+    },
+    {
+        "cached_trivial_search_w_up",
+        TrivialIter_cached_trivial_search_w_up
+    },
+    {
+        "cached_trivial_test_w_up",
+        TrivialIter_cached_trivial_test_w_up
+    },
+    {
+        "cached_trivial_search_w_not_operator",
+        TrivialIter_cached_trivial_search_w_not_operator
+    },
+    {
+        "cached_trivial_test_w_not_operator",
+        TrivialIter_cached_trivial_test_w_not_operator
+    },
+    {
+        "cached_trivial_search_w_or_operator",
+        TrivialIter_cached_trivial_search_w_or_operator
+    },
+    {
+        "cached_trivial_test_w_or_operator",
+        TrivialIter_cached_trivial_test_w_or_operator
+    },
+    {
+        "cached_trivial_search_w_optional_operator",
+        TrivialIter_cached_trivial_search_w_optional_operator
+    },
+    {
+        "cached_trivial_test_w_optional_operator",
+        TrivialIter_cached_trivial_test_w_optional_operator
+    },
+    {
+        "cached_trivial_search_w_wildcard",
+        TrivialIter_cached_trivial_search_w_wildcard
+    },
+    {
+        "cached_trivial_test_w_wildcard",
+        TrivialIter_cached_trivial_test_w_wildcard
+    }
+};
+
 bake_test_case QueryStr_testcases[] = {
     {
         "one_term",
@@ -11378,6 +11453,13 @@ static bake_test_suite suites[] = {
         OrderByEntireTable_testcases
     },
     {
+        "TrivialIter",
+        NULL,
+        NULL,
+        14,
+        TrivialIter_testcases
+    },
+    {
         "QueryStr",
         NULL,
         NULL,
@@ -11387,5 +11469,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("query", argc, argv, suites, 26);
+    return bake_test_run("query", argc, argv, suites, 27);
 }

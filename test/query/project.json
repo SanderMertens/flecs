@@ -2327,6 +2327,24 @@
                 "sort_optional_term"
             ]
         }, {
+            "id": "TrivialIter",
+            "testcases": [
+                "uncached_trivial_search",
+                "uncached_trivial_test",
+                "cached_trivial_search",
+                "cached_trivial_test",
+                "cached_trivial_search_w_up",
+                "cached_trivial_test_w_up",
+                "cached_trivial_search_w_not_operator",
+                "cached_trivial_test_w_not_operator",
+                "cached_trivial_search_w_or_operator",
+                "cached_trivial_test_w_or_operator",
+                "cached_trivial_search_w_optional_operator",
+                "cached_trivial_test_w_optional_operator",
+                "cached_trivial_search_w_wildcard",
+                "cached_trivial_test_w_wildcard"
+            ]
+        }, {
             "id": "QueryStr",
             "testcases": [
                 "one_term",

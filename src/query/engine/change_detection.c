@@ -84,7 +84,7 @@ bool flecs_query_get_match_monitor(
 
     match->monitor = monitor;
 
-    impl->pub.flags |= EcsQueryHasMonitor;
+    impl->pub.flags |= EcsQueryHasChangeDetection;
 
     return true;
 }
@@ -453,7 +453,7 @@ void flecs_query_sync_match_monitor(
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!match->monitor) {
-        if (impl->pub.flags & EcsQueryHasMonitor) {
+        if (impl->pub.flags & EcsQueryHasChangeDetection) {
             flecs_query_get_match_monitor(impl, match);
         } else {
             return;
@@ -515,7 +515,7 @@ bool ecs_query_changed(
      * cached/cacheable and don't have a fixed source, since that requires 
      * storing state per result, which doesn't happen for uncached queries. */
     if (impl->cache) {
-        if (!(impl->pub.flags & EcsQueryHasMonitor)) {
+        if (!(impl->pub.flags & EcsQueryHasChangeDetection)) {
             flecs_query_init_query_monitors(impl);
         }
 
