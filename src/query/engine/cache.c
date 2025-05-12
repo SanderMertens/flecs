@@ -1248,6 +1248,17 @@ ecs_query_cache_t* flecs_query_cache_init(
         goto error;
     }
 
+    /* Set flag for trivial caches which allows for faster iteration */
+    if ((q->flags & EcsQueryIsTrivial) && (q->flags & EcsQueryMatchOnlySelf) &&
+       !(q->flags & EcsQueryMatchWildcards))
+    {
+        if (!const_desc->order_by && !const_desc->group_by && 
+            !const_desc->order_by_callback && !const_desc->group_by_callback) 
+        {
+            q->flags |= EcsQueryTrivialCache;
+        }
+    }
+
     /* The uncached query used to populate the cache always matches empty 
      * tables. This flag determines whether the empty tables are stored 
      * separately in the cache or are treated as regular tables. This is only

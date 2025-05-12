@@ -1777,6 +1777,9 @@ bool flecs_query_is_cache_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo);
 
+bool flecs_query_is_trivial_cache_search(
+    const ecs_query_run_ctx_t *ctx);
+
 /**
  * @file query/engine/change_detection.h
  * @brief Query change detection functions.
@@ -70165,13 +70168,14 @@ int flecs_query_compile(
      * trivial queries use trivial iterators that don't use query ops. */
     bool needs_plan = true;
     ecs_flags32_t flags = query->pub.flags;
-    ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
-    if ((flags & trivial_flags) == trivial_flags) {
-        if (query->cache) {
-            if (flags & EcsQueryIsCacheable) {
-                needs_plan = false;                
-            }
-        } else {
+    
+    if (query->cache) {
+        if (flags & EcsQueryIsCacheable) {
+            needs_plan = false;
+        }
+    } else {
+        ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
+        if ((flags & trivial_flags) == trivial_flags) {
             if (!(flags & EcsQueryMatchWildcards)) {
                 needs_plan = false;
             }
@@ -73198,6 +73202,17 @@ ecs_query_cache_t* flecs_query_cache_init(
         goto error;
     }
 
+    /* Set flag for trivial caches which allows for faster iteration */
+    if ((q->flags & EcsQueryIsTrivial) && (q->flags & EcsQueryMatchOnlySelf) &&
+       !(q->flags & EcsQueryMatchWildcards))
+    {
+        if (!const_desc->order_by && !const_desc->group_by && 
+            !const_desc->order_by_callback && !const_desc->group_by_callback) 
+        {
+            q->flags |= EcsQueryTrivialCache;
+        }
+    }
+
     /* The uncached query used to populate the cache always matches empty 
      * tables. This flag determines whether the empty tables are stored 
      * separately in the cache or are treated as regular tables. This is only
@@ -73404,7 +73419,7 @@ void flecs_query_update_node_up_trs(
 static
 ecs_query_cache_match_t* flecs_query_cache_next(
     const ecs_query_run_ctx_t *ctx,
-    bool match_empty)
+    bool always_match_empty)
 {
     ecs_iter_t *it = ctx->it;
     ecs_query_iter_t *qit = &it->priv_.iter.query;
@@ -73421,8 +73436,8 @@ ecs_query_cache_match_t* flecs_query_cache_next(
             qit->prev = node;
             if (node) {
                 if (!ecs_table_count(node->table)) {
-                    if (!match_empty) {
-                        if (ctx->query->pub.flags & EcsQueryHasMonitor) {
+                    if (!(always_match_empty || (it->flags & EcsIterMatchEmptyTables))) {
+                        if (ctx->query->pub.flags & EcsQueryHasChangeDetection) {
                             flecs_query_sync_match_monitor(
                                 flecs_query_impl(qit->query), node);
                         }
@@ -73430,6 +73445,43 @@ ecs_query_cache_match_t* flecs_query_cache_next(
                     }
                 }
             }
+            return node;
+        }
+    }
+
+    return NULL;
+}
+
+static
+ecs_query_cache_match_t* flecs_query_trivial_cache_next(
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_iter_t *it = ctx->it;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
+
+    repeat: {
+        ecs_query_cache_match_t *node = qit->node;
+        ecs_query_cache_match_t *prev = qit->prev;
+
+        if (prev != qit->last) {
+            ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
+            qit->node = node->next;
+            qit->prev = node;
+
+            ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_table_t *table = it->table = node->table;
+            int32_t count = it->count = ecs_table_count(table);
+
+            if (!count) {
+                if (!(it->flags & EcsIterMatchEmptyTables)) {
+                    goto repeat;
+                }
+            }
+
+            it->entities = ecs_table_entities(table);
+            it->trs = node->trs;
+
             return node;
         }
     }
@@ -73494,8 +73546,7 @@ void flecs_query_cache_init_mapped_fields(
 bool flecs_query_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_cache_match_t *node = flecs_query_cache_next(ctx,
-        ctx->query->pub.flags & EcsQueryMatchEmptyTables);
+    ecs_query_cache_match_t *node = flecs_query_cache_next(ctx, false);
     if (!node) {
         return false;
     }
@@ -73513,8 +73564,7 @@ bool flecs_query_cache_search(
 bool flecs_query_is_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_cache_match_t *node = flecs_query_cache_next(ctx,
-        ctx->query->pub.flags & EcsQueryMatchEmptyTables);
+    ecs_query_cache_match_t *node = flecs_query_cache_next(ctx, false);
     if (!node) {
         return false;
     }
@@ -73529,6 +73579,13 @@ bool flecs_query_is_cache_search(
     flecs_query_update_node_up_trs(ctx, node);
 
     return true;
+}
+
+/* Iterate cache for query that's entirely cached */
+bool flecs_query_is_trivial_cache_search(
+    const ecs_query_run_ctx_t *ctx)
+{
+    return flecs_query_trivial_cache_next(ctx) != NULL;
 }
 
 /* Test if query that is entirely cached matches constrained $this */
@@ -73987,7 +74044,7 @@ bool flecs_query_get_match_monitor(
 
     match->monitor = monitor;
 
-    impl->pub.flags |= EcsQueryHasMonitor;
+    impl->pub.flags |= EcsQueryHasChangeDetection;
 
     return true;
 }
@@ -74356,7 +74413,7 @@ void flecs_query_sync_match_monitor(
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!match->monitor) {
-        if (impl->pub.flags & EcsQueryHasMonitor) {
+        if (impl->pub.flags & EcsQueryHasChangeDetection) {
             flecs_query_get_match_monitor(impl, match);
         } else {
             return;
@@ -74418,7 +74475,7 @@ bool ecs_query_changed(
      * cached/cacheable and don't have a fixed source, since that requires 
      * storing state per result, which doesn't happen for uncached queries. */
     if (impl->cache) {
-        if (!(impl->pub.flags & EcsQueryHasMonitor)) {
+        if (!(impl->pub.flags & EcsQueryHasChangeDetection)) {
             flecs_query_init_query_monitors(impl);
         }
 
@@ -76124,42 +76181,53 @@ void flecs_query_iter_constrain(
     /* Figure out whether this query can utilize specialized iterator modes for
      * improved performance. */
     ecs_flags32_t flags = q->flags;
+    ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
     ecs_query_cache_t *cache = query->cache;
-    if (flags & EcsQueryIsTrivial) {
-        if ((flags & EcsQueryMatchOnlySelf)) {
-            if (it_written) {
-                /* When we're testing against an entity or table, set the $this
-                 * variable in advance since it won't change later on. This 
-                 * initializes it.count, it.entities and it.table. */
-                flecs_query_set_iter_this(it, &ctx);
 
-                if (!cache) {
-                    if (!(flags & EcsQueryMatchWildcards)) {
-                        it->flags |= EcsIterTrivialTest;
-                    }
-                } else if (flags & EcsQueryIsCacheable) {
-                    it->flags |= EcsIterTrivialTest|EcsIterTrivialCached;
-                }
-            } else {
-                if (!cache) {
-                    if (!(flags & EcsQueryMatchWildcards)) {
-                        it->flags |= EcsIterTrivialSearch;
-                    }
-                } else if (flags & EcsQueryIsCacheable) {
-                    if (!cache->order_by_callback) {
-                        it->flags |= EcsIterTrivialSearch|EcsIterTrivialCached;
-                    }
+    if (it_written) {
+        /* When we're testing against an entity or table, set the $this
+         * variable in advance since it won't change later on. This 
+         * initializes it.count, it.entities and it.table. */
+        flecs_query_set_iter_this(it, &ctx);
+
+        if (!cache) {
+            if ((flags & (trivial_flags)) == trivial_flags) {
+                if (!(flags & EcsQueryMatchWildcards)) {
+                    it->flags |= EcsIterTrivialTest;
                 }
             }
-
-            /* If we're using a specialized iterator mode, make sure to 
-             * initialize static component ids. Usually this is the first 
-             * instruction of a query plan, but because we're not running the
-             * query plan when using a specialized iterator mode, manually call
-             * the operation on iterator init. */
-            flecs_query_setids(NULL, false, &ctx);
+        } else if (flags & EcsQueryIsCacheable) {
+            it->flags |= EcsIterTrivialTest|EcsIterCached;
+        }
+    } else {
+        if (!cache) { 
+            if ((flags & (trivial_flags)) == trivial_flags) {
+                if (!(flags & EcsQueryMatchWildcards)) {
+                    it->flags |= EcsIterTrivialSearch;
+                }
+            }
+        } else if (flags & EcsQueryIsCacheable) {
+            if (!cache->order_by_callback) {
+                if (cache->query->flags & EcsQueryTrivialCache && 
+                    !(query->pub.flags & EcsQueryHasChangeDetection))
+                {
+                    it->flags |= EcsIterTrivialSearch|EcsIterTrivialCached;
+                    it->ids = cache->query->ids;
+                    it->sources = cache->sources;
+                    it->set_fields = flecs_uto(uint32_t, (1llu << it->field_count) - 1);
+                } else {
+                    it->flags |= EcsIterTrivialSearch|EcsIterCached;
+                }
+            }
         }
     }
+
+    /* If we're using a specialized iterator mode, make sure to 
+     * initialize static component ids. Usually this is the first 
+     * instruction of a query plan, but because we're not running the
+     * query plan when using a specialized iterator mode, manually call
+     * the operation on iterator init. */
+    flecs_query_setids(NULL, false, &ctx);
 }
 
 static
@@ -76173,9 +76241,9 @@ void flecs_query_change_detection(
         /* Mark table columns that are written to dirty */
         flecs_query_mark_fields_dirty(impl, it);
         if (qit->prev) {
-            if (impl->pub.flags & EcsQueryHasMonitor) {
+            if (impl->pub.flags & EcsQueryHasChangeDetection) {
                 /* If this query uses change detection, synchronize the
-                    * monitor for the iterated table with the query */
+                 * monitor for the iterated table with the query */
                 flecs_query_sync_match_monitor(impl, qit->prev);
             }
         }
@@ -76212,12 +76280,21 @@ bool ecs_query_next(
      * tests a single table or table range against the query. */
 
     if (it->flags & EcsIterTrivialCached) {
+        /* Trivial cache iterator. Only supported for search */
+        ecs_assert(it->flags & EcsIterTrivialSearch, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
+        if (flecs_query_is_trivial_cache_search(&ctx)) {
+            return true;
+        }
+    } else if (it->flags & EcsIterCached) {
         /* Cached iterator modes */
         if (it->flags & EcsIterTrivialSearch) {
+            ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
             if (flecs_query_is_cache_search(&ctx)) {
                 goto trivial_search_yield;
             }
         } else if (it->flags & EcsIterTrivialTest) {
+            ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
             if (flecs_query_is_cache_test(&ctx, redo)) {
                 goto yield;
             }
@@ -76225,11 +76302,13 @@ bool ecs_query_next(
     } else {
         /* Uncached iterator modes */
         if (it->flags & EcsIterTrivialSearch) {
+            ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_query_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
             if (flecs_query_is_trivial_search(&ctx, op_ctx, redo)) {
                 goto yield;
             }
         } else if (it->flags & EcsIterTrivialTest) {
+            ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
             int32_t fields = ctx.query->pub.term_count;
             ecs_flags64_t mask = (2llu << (fields - 1)) - 1;
             if (flecs_query_trivial_test(&ctx, redo, mask)) {
@@ -76459,6 +76538,10 @@ ecs_iter_t flecs_query_iter(
     qit->query = q;
     qit->query_vars = impl->vars;
     qit->ops = impl->ops;
+
+    if (q->flags & EcsQueryMatchEmptyTables) {
+        it.flags |= EcsIterMatchEmptyTables;
+    }
 
     ecs_query_cache_t *cache = impl->cache;
     if (cache) {

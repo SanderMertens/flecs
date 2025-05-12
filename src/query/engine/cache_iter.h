@@ -22,3 +22,6 @@ bool flecs_query_cache_test(
 bool flecs_query_is_cache_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo);
+
+bool flecs_query_is_trivial_cache_search(
+    const ecs_query_run_ctx_t *ctx);

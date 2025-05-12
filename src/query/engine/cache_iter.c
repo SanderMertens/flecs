@@ -44,7 +44,7 @@ void flecs_query_update_node_up_trs(
 static
 ecs_query_cache_match_t* flecs_query_cache_next(
     const ecs_query_run_ctx_t *ctx,
-    bool match_empty)
+    bool always_match_empty)
 {
     ecs_iter_t *it = ctx->it;
     ecs_query_iter_t *qit = &it->priv_.iter.query;
@@ -61,8 +61,8 @@ ecs_query_cache_match_t* flecs_query_cache_next(
             qit->prev = node;
             if (node) {
                 if (!ecs_table_count(node->table)) {
-                    if (!match_empty) {
-                        if (ctx->query->pub.flags & EcsQueryHasMonitor) {
+                    if (!(always_match_empty || (it->flags & EcsIterMatchEmptyTables))) {
+                        if (ctx->query->pub.flags & EcsQueryHasChangeDetection) {
                             flecs_query_sync_match_monitor(
                                 flecs_query_impl(qit->query), node);
                         }
@@ -70,6 +70,43 @@ ecs_query_cache_match_t* flecs_query_cache_next(
                     }
                 }
             }
+            return node;
+        }
+    }
+
+    return NULL;
+}
+
+static
+ecs_query_cache_match_t* flecs_query_trivial_cache_next(
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_iter_t *it = ctx->it;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
+
+    repeat: {
+        ecs_query_cache_match_t *node = qit->node;
+        ecs_query_cache_match_t *prev = qit->prev;
+
+        if (prev != qit->last) {
+            ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
+            qit->node = node->next;
+            qit->prev = node;
+
+            ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_table_t *table = it->table = node->table;
+            int32_t count = it->count = ecs_table_count(table);
+
+            if (!count) {
+                if (!(it->flags & EcsIterMatchEmptyTables)) {
+                    goto repeat;
+                }
+            }
+
+            it->entities = ecs_table_entities(table);
+            it->trs = node->trs;
+
             return node;
         }
     }
@@ -134,8 +171,7 @@ void flecs_query_cache_init_mapped_fields(
 bool flecs_query_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_cache_match_t *node = flecs_query_cache_next(ctx,
-        ctx->query->pub.flags & EcsQueryMatchEmptyTables);
+    ecs_query_cache_match_t *node = flecs_query_cache_next(ctx, false);
     if (!node) {
         return false;
     }
@@ -153,8 +189,7 @@ bool flecs_query_cache_search(
 bool flecs_query_is_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_cache_match_t *node = flecs_query_cache_next(ctx,
-        ctx->query->pub.flags & EcsQueryMatchEmptyTables);
+    ecs_query_cache_match_t *node = flecs_query_cache_next(ctx, false);
     if (!node) {
         return false;
     }
@@ -169,6 +204,13 @@ bool flecs_query_is_cache_search(
     flecs_query_update_node_up_trs(ctx, node);
 
     return true;
+}
+
+/* Iterate cache for query that's entirely cached */
+bool flecs_query_is_trivial_cache_search(
+    const ecs_query_run_ctx_t *ctx)
+{
+    return flecs_query_trivial_cache_next(ctx) != NULL;
 }
 
 /* Test if query that is entirely cached matches constrained $this */

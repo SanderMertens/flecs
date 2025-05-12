@@ -47,8 +47,8 @@ void query_flags_to_str(uint64_t value) {
     if (value & EcsQueryHasNonThisOutTerms) {
         printf("EcsQueryHasNonThisOutTerms|");
     }
-    if (value & EcsQueryHasMonitor) {
-        printf("EcsQueryHasMonitor|");
+    if (value & EcsQueryHasChangeDetection) {
+        printf("EcsQueryHasChangeDetection|");
     }
     if (value & EcsQueryIsTrivial) {
         printf("EcsQueryIsTrivial|");
