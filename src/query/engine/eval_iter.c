@@ -11,7 +11,7 @@ void flecs_query_iter_run_ctx_init(
     ecs_query_run_ctx_t *ctx)
 {
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, qit->query);
+    ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
     ctx->world = it->real_world;
     ctx->query = impl;
     ctx->it = it;
@@ -139,7 +139,7 @@ bool ecs_query_next(
     ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, qit->query);
+    ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
     ecs_query_run_ctx_t ctx;
     flecs_query_iter_run_ctx_init(it, &ctx);
     const ecs_query_op_t *ops = qit->ops;
@@ -237,7 +237,7 @@ void flecs_query_iter_fini_ctx(
     ecs_iter_t *it,
     ecs_query_iter_t *qit)
 {
-    const ecs_query_impl_t *query = flecs_query_impl(qit->query);
+    const ecs_query_impl_t *query = flecs_query_impl(it->query);
     int32_t i, count = query->op_count;
     ecs_query_op_t *ops = query->ops;
     ecs_query_op_ctx_t *ctx = qit->op_ctx;
@@ -279,18 +279,19 @@ void flecs_query_iter_fini(
     ecs_iter_t *it)
 {
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_assert(qit->query != NULL, ECS_INTERNAL_ERROR, NULL);
-    flecs_poly_assert(qit->query, ecs_query_t);
-    int32_t op_count = flecs_query_impl(qit->query)->op_count;
-    int32_t var_count = flecs_query_impl(qit->query)->var_count;
+    const ecs_query_t *q = it->query;
+    ecs_assert(q != NULL, ECS_INTERNAL_ERROR, NULL);
+    flecs_poly_assert(q, ecs_query_t);
+    int32_t op_count = flecs_query_impl(q)->op_count;
+    int32_t var_count = flecs_query_impl(q)->var_count;
 
     if (it->flags & EcsIterIsValid) {
-        flecs_query_change_detection(it, qit, flecs_query_impl(qit->query));
+        flecs_query_change_detection(it, qit, flecs_query_impl(q));
     }
 
 #ifdef FLECS_DEBUG
     if (it->flags & EcsIterProfile) {
-        char *str = ecs_query_plan_w_profile(qit->query, it);
+        char *str = ecs_query_plan_w_profile(q, it);
         printf("%s\n", str);
         ecs_os_free(str);
     }
@@ -306,7 +307,7 @@ void flecs_query_iter_fini(
     qit->vars = NULL;
     qit->written = NULL;
     qit->op_ctx = NULL;
-    qit->query = NULL;
+    it->query = NULL;
 }
 
 static
@@ -417,7 +418,6 @@ ecs_iter_t flecs_query_iter(
         flecs_iter_cache_sources |
         flecs_iter_cache_ptrs);
 
-    qit->query = q;
     qit->query_vars = impl->vars;
     qit->ops = impl->ops;
 
@@ -458,10 +458,6 @@ ecs_iter_t flecs_query_iter(
     for (i = 1; i < var_count; i ++) {
         qit->vars[i].entity = EcsWildcard;
     }
-
-    it.variables = qit->vars;
-    it.variable_count = impl->pub.var_count;
-    it.variable_names = impl->pub.vars;
 
     /* Set flags for unconstrained query iteration. Can be reinitialized when
      * variables are constrained on iterator. */

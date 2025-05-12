@@ -1020,7 +1020,10 @@
                 "2_trivial_1_any_component",
                 "first_invalid_var_name_and_id",
                 "src_invalid_var_name_and_id",
-                "second_invalid_var_name_and_id"
+                "second_invalid_var_name_and_id",
+                "get_vars_from_chained_iter",
+                "set_var_from_chained_iter",
+                "set_var_range_from_chained_iter"
             ]
         }, {
             "id": "Operators",
@@ -1786,7 +1789,8 @@
                 "group_by_w_deleted_group_id",
                 "group_by_callbacks",
                 "group_by_default_action",
-                "group_table_count"
+                "group_table_count",
+                "get_group_from_chained_iter"
             ]
         }, {
             "id": "MemberTarget",

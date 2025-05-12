@@ -116,14 +116,12 @@ typedef struct ecs_query_op_profile_t {
 
 /** Query iterator */
 typedef struct ecs_query_iter_t {
-    const ecs_query_t *query;
     struct ecs_var_t *vars;               /* Variable storage */
     const struct ecs_query_var_t *query_vars;
     const struct ecs_query_op_t *ops;
     struct ecs_query_op_ctx_t *op_ctx;    /* Operation-specific state */
     ecs_query_cache_match_t *node, *prev, *last; /* For cached iteration */
     uint64_t *written;
-    int32_t skip_count;
 
     ecs_query_op_profile_t *profile;
 

@@ -437,7 +437,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                         /* If a message was already generated, only regenerate if
                         * query has multiple variables. Variable values could have 
                         * changed, this ensures the message remains up to date. */
-                        generate_message = rit.variable_count > 1;
+                        generate_message = ecs_iter_get_var_count(&rit) > 1;
                     }
                 }
 

@@ -56,7 +56,6 @@ ecs_query_cache_match_t* flecs_query_cache_next(
         if (prev != qit->last) {
             ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
             ctx->vars[0].range.table = node->table;
-            it->group_id = node->group_id;
             qit->node = node->next;
             qit->prev = node;
             if (node) {
@@ -64,7 +63,7 @@ ecs_query_cache_match_t* flecs_query_cache_next(
                     if (!(always_match_empty || (it->flags & EcsIterMatchEmptyTables))) {
                         if (ctx->query->pub.flags & EcsQueryHasChangeDetection) {
                             flecs_query_sync_match_monitor(
-                                flecs_query_impl(qit->query), node);
+                                flecs_query_impl(it->query), node);
                         }
                         goto repeat;
                     }
@@ -92,8 +91,6 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
             ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
             qit->node = node->next;
             qit->prev = node;
-
-            ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
 
             ecs_table_t *table = it->table = node->table;
             int32_t count = it->count = ecs_table_count(table);

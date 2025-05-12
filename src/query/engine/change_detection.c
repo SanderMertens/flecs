@@ -534,8 +534,7 @@ bool ecs_iter_changed(
     ecs_check(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_query_impl_t *impl = flecs_query_impl(qit->query);
+    ecs_query_impl_t *impl = flecs_query_impl(it->query);
     ecs_query_t *q = &impl->pub;
 
     /* First check for changes for terms with fixed sources, if query has any */

@@ -11831,7 +11831,6 @@ void flecs_iter_init(
     INIT_CACHE(it, stack, fields, ids, ecs_id_t, it->field_count);
     INIT_CACHE(it, stack, fields, sources, ecs_entity_t, it->field_count);
     INIT_CACHE(it, stack, fields, trs, ecs_table_record_t*, it->field_count);
-    INIT_CACHE(it, stack, fields, variables, ecs_var_t, it->variable_count);
 }
 
 void ecs_iter_fini(
@@ -11851,7 +11850,6 @@ void ecs_iter_fini(
     FINI_CACHE(it, ids, ecs_id_t, it->field_count);
     FINI_CACHE(it, sources, ecs_entity_t, it->field_count);
     FINI_CACHE(it, trs, ecs_table_record_t*, it->field_count);
-    FINI_CACHE(it, variables, ecs_var_t, it->variable_count);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
@@ -12151,16 +12149,18 @@ char* ecs_iter_str(
         ecs_strbuf_list_pop(&buf, "\n");
     }
 
-    if (it->variable_count && it->variable_names) {
+    int32_t var_count = ecs_iter_get_var_count(it);
+
+    if (var_count) {
         int32_t actual_count = 0;
-        for (i = 0; i < it->variable_count; i ++) {
-            const char *var_name = it->variable_names[i];
+        for (i = 0; i < var_count; i ++) {
+            const char *var_name = ecs_iter_get_var_name(it, i);
             if (!var_name || var_name[0] == '_' || !strcmp(var_name, "this")) {
                 /* Skip anonymous variables */
                 continue;
             }
 
-            ecs_var_t var = it->variables[i];
+            ecs_var_t var = ecs_iter_get_vars(it)[i];
             if (!var.entity) {
                 /* Skip table variables */
                 continue;
@@ -12262,11 +12262,11 @@ ecs_entity_t ecs_iter_get_var(
 {
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
         "invalid variable index %d", var_id);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER,
+    ecs_check(var_id < ecs_iter_get_var_count(it), ECS_INVALID_PARAMETER,
         "variable index %d out of bounds", var_id);
-    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_iter_get_vars(it) != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_var_t *var = &it->variables[var_id];
+    ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     ecs_entity_t e = var->entity;
     if (!e) {
         ecs_table_t *table = var->range.table;
@@ -12295,11 +12295,11 @@ ecs_table_t* ecs_iter_get_var_as_table(
 {
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
         "invalid variable index %d", var_id);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+    ecs_check(var_id < ecs_iter_get_var_count(it), ECS_INVALID_PARAMETER, 
         "variable index %d out of bounds", var_id);
-    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_iter_get_vars(it) != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_var_t *var = &it->variables[var_id];
+    ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     ecs_table_t *table = var->range.table;
     if (!table && !var_id) {
         table = it->table;
@@ -12343,13 +12343,13 @@ ecs_table_range_t ecs_iter_get_var_as_range(
 {
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
         "invalid variable index %d", var_id);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+    ecs_check(var_id < ecs_iter_get_var_count(it), ECS_INVALID_PARAMETER, 
         "variable index %d out of bounds", var_id);
-    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_iter_get_vars(it) != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_table_range_t result = { 0 };
 
-    ecs_var_t *var = &it->variables[var_id];
+    ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     ecs_table_t *table = var->range.table;
     if (!table && !var_id) {
         table = it->table;
@@ -12379,23 +12379,80 @@ error:
     return (ecs_table_range_t){0};
 }
 
+char* ecs_iter_get_var_name(
+    const ecs_iter_t *it,
+    int32_t var_id)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (var_id == 0) {
+        return "this";
+    }
+
+    const ecs_query_t *query = it->query;
+    ecs_check(query != NULL, ECS_INVALID_PARAMETER,
+        "can only obtain variable name for iterators that iterate query");
+    ecs_check(var_id < query->var_count, ECS_INVALID_PARAMETER,
+        "variable index out of range for query");
+
+    return query->vars[var_id];
+error:
+    return NULL;
+}
+
+int32_t ecs_iter_get_var_count(
+    const ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (it->query) {
+        return it->query->var_count;
+    }
+
+    return 1;
+error:
+    return 0;
+}
+
+ecs_var_t* ecs_iter_get_vars(
+    const ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (!it->query) {
+        return NULL;
+    }
+
+    if (it->chain_it) {
+        return ecs_iter_get_vars(it->chain_it);
+    }
+
+    return it->priv_.iter.query.vars;
+error:
+    return NULL;
+}
+
 void ecs_iter_set_var(
     ecs_iter_t *it,
     int32_t var_id,
     ecs_entity_t entity)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (it->chain_it) {
+        ecs_iter_set_var(it->chain_it, var_id, entity);
+        return;
+    }
+
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
         "invalid variable index %d", var_id);
     ecs_check(var_id < FLECS_QUERY_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+    ecs_check(var_id < ecs_iter_get_var_count(it), ECS_INVALID_PARAMETER, 
         "variable index %d out of bounds", var_id);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER,
         "cannot constrain variable while iterating");
-    ecs_check(it->variables != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(ecs_iter_get_vars(it) != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_var_t *var = &it->variables[var_id];
+    ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     var->entity = entity;
 
     ecs_record_t *r = flecs_entities_get(it->real_world, entity);
@@ -12433,9 +12490,15 @@ void ecs_iter_set_var_as_range(
     const ecs_table_range_t *range)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (it->chain_it) {
+        ecs_iter_set_var_as_range(it->chain_it, var_id, range);
+        return;
+    }
+
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
         "invalid variable index %d", var_id);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+    ecs_check(var_id < ecs_iter_get_var_count(it), ECS_INVALID_PARAMETER, 
         "variable index %d out of bounds", var_id);
     ecs_check(range != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(range->table != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -12447,7 +12510,7 @@ void ecs_iter_set_var_as_range(
     ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_OPERATION, 
         "cannot set query variables while iterating");
 
-    ecs_var_t *var = &it->variables[var_id];
+    ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     var->range = *range;
 
     if (range->count == 1) {
@@ -12470,7 +12533,32 @@ bool ecs_iter_var_is_constrained(
     ecs_iter_t *it,
     int32_t var_id)
 {
+    if (it->chain_it) {
+        return ecs_iter_var_is_constrained(it->chain_it, var_id);
+    }
+
     return (it->constrained_vars & (flecs_uto(uint64_t, 1 << var_id))) != 0;
+}
+
+uint64_t ecs_iter_get_group(
+    ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (it->chain_it) {
+        return ecs_iter_get_group(it->chain_it);
+    }
+
+    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, 
+        "ecs_iter_get_group must be called on iterator that iterates a query");
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
+    ecs_check(qit->prev != NULL, ECS_INVALID_PARAMETER,
+        "ecs_iter_get_group must be called on iterator that iterates a cached "
+        "query (query is uncached)");
+
+    return qit->prev->group_id;
+error:
+    return 0;
 }
 
 static
@@ -21480,7 +21568,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                         /* If a message was already generated, only regenerate if
                         * query has multiple variables. Variable values could have 
                         * changed, this ensures the message remains up to date. */
-                        generate_message = rit.variable_count > 1;
+                        generate_message = ecs_iter_get_var_count(&rit) > 1;
                     }
                 }
 
@@ -46581,15 +46669,19 @@ bool flecs_json_serialize_vars(
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
-    char **variable_names = it->variable_names;
-    int32_t var_count = it->variable_count;
+    if (!it->query) {
+        return 0;
+    }
+
+    char **variable_names = it->query->vars;
+    int32_t var_count = it->query->var_count;
     int32_t actual_count = 0;
 
     for (int i = 1; i < var_count; i ++) {
         const char *var_name = variable_names[i];
         if (flecs_json_skip_variable(var_name)) continue;
 
-        ecs_entity_t var = it->variables[i].entity;
+        ecs_entity_t var = ecs_iter_get_vars(it)[i].entity;
         if (!var) {
             /* Can't happen, but not the place of the serializer to complain */
             continue;
@@ -46648,7 +46740,7 @@ int flecs_json_serialize_matches(
                     }
 
                     ecs_iter_t qit = ecs_query_iter(world, q);
-                    if (!qit.variables) {
+                    if (!ecs_iter_get_vars(&qit)) {
                         ecs_iter_fini(&qit);
                         continue;
                     }
@@ -64357,36 +64449,39 @@ void ecs_script_vars_from_iter(
 
     /* Set variables for query variables */
     {
-        int32_t i, var_count = it->variable_count;
-        for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
-            const ecs_entity_t *e_ptr = NULL;
-            ecs_var_t *query_var = &it->variables[i];
-            if (query_var->entity) {
-                e_ptr = &query_var->entity;
-            } else {
-                ecs_table_range_t *range = &query_var->range;
-                if (range->count == 1) {
-                    const ecs_entity_t *entities = 
-                        ecs_table_entities(range->table);
-                    e_ptr = &entities[range->offset];
+        if (it->query) {
+            char **variable_names = it->query->vars;
+            int32_t i, var_count = ecs_iter_get_var_count(it);
+            for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
+                const ecs_entity_t *e_ptr = NULL;
+                ecs_var_t *query_var = &ecs_iter_get_vars(it)[i];
+                if (query_var->entity) {
+                    e_ptr = &query_var->entity;
+                } else {
+                    ecs_table_range_t *range = &query_var->range;
+                    if (range->count == 1) {
+                        const ecs_entity_t *entities = 
+                            ecs_table_entities(range->table);
+                        e_ptr = &entities[range->offset];
+                    }
                 }
-            }
-            if (!e_ptr) {
-                continue;
-            }
+                if (!e_ptr) {
+                    continue;
+                }
 
-            ecs_script_var_t *var = ecs_script_vars_lookup(
-                vars, it->variable_names[i]);
-            if (!var) {
-                var = ecs_script_vars_declare(vars, it->variable_names[i]);
-                var->value.type = ecs_id(ecs_entity_t);
-            } else {
-                ecs_check(var->value.type == ecs_id(ecs_entity_t), 
-                    ECS_INVALID_PARAMETER, NULL);
-            }
+                ecs_script_var_t *var = ecs_script_vars_lookup(
+                    vars, variable_names[i]);
+                if (!var) {
+                    var = ecs_script_vars_declare(vars, variable_names[i]);
+                    var->value.type = ecs_id(ecs_entity_t);
+                } else {
+                    ecs_check(var->value.type == ecs_id(ecs_entity_t), 
+                        ECS_INVALID_PARAMETER, NULL);
+                }
 
-            /* Safe, variable value will never be written */
-            var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, e_ptr);
+                /* Safe, variable value will never be written */
+                var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, e_ptr);
+            }
         }
     }
 
@@ -73319,7 +73414,7 @@ void ecs_iter_set_group(
         "cannot set group during iteration");
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_query_impl_t *q = flecs_query_impl(qit->query);
+    ecs_query_impl_t *q = flecs_query_impl(it->query);
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_poly_assert(q, ecs_query_t);
     ecs_query_cache_t *cache = q->cache;
@@ -73431,7 +73526,6 @@ ecs_query_cache_match_t* flecs_query_cache_next(
         if (prev != qit->last) {
             ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
             ctx->vars[0].range.table = node->table;
-            it->group_id = node->group_id;
             qit->node = node->next;
             qit->prev = node;
             if (node) {
@@ -73439,7 +73533,7 @@ ecs_query_cache_match_t* flecs_query_cache_next(
                     if (!(always_match_empty || (it->flags & EcsIterMatchEmptyTables))) {
                         if (ctx->query->pub.flags & EcsQueryHasChangeDetection) {
                             flecs_query_sync_match_monitor(
-                                flecs_query_impl(qit->query), node);
+                                flecs_query_impl(it->query), node);
                         }
                         goto repeat;
                     }
@@ -73467,8 +73561,6 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
             ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
             qit->node = node->next;
             qit->prev = node;
-
-            ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
 
             ecs_table_t *table = it->table = node->table;
             int32_t count = it->count = ecs_table_count(table);
@@ -74494,8 +74586,7 @@ bool ecs_iter_changed(
     ecs_check(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_query_impl_t *impl = flecs_query_impl(qit->query);
+    ecs_query_impl_t *impl = flecs_query_impl(it->query);
     ecs_query_t *q = &impl->pub;
 
     /* First check for changes for terms with fixed sources, if query has any */
@@ -76129,7 +76220,7 @@ void flecs_query_iter_run_ctx_init(
     ecs_query_run_ctx_t *ctx)
 {
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, qit->query);
+    ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
     ctx->world = it->real_world;
     ctx->query = impl;
     ctx->it = it;
@@ -76257,7 +76348,7 @@ bool ecs_query_next(
     ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, qit->query);
+    ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
     ecs_query_run_ctx_t ctx;
     flecs_query_iter_run_ctx_init(it, &ctx);
     const ecs_query_op_t *ops = qit->ops;
@@ -76355,7 +76446,7 @@ void flecs_query_iter_fini_ctx(
     ecs_iter_t *it,
     ecs_query_iter_t *qit)
 {
-    const ecs_query_impl_t *query = flecs_query_impl(qit->query);
+    const ecs_query_impl_t *query = flecs_query_impl(it->query);
     int32_t i, count = query->op_count;
     ecs_query_op_t *ops = query->ops;
     ecs_query_op_ctx_t *ctx = qit->op_ctx;
@@ -76397,18 +76488,19 @@ void flecs_query_iter_fini(
     ecs_iter_t *it)
 {
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_assert(qit->query != NULL, ECS_INTERNAL_ERROR, NULL);
-    flecs_poly_assert(qit->query, ecs_query_t);
-    int32_t op_count = flecs_query_impl(qit->query)->op_count;
-    int32_t var_count = flecs_query_impl(qit->query)->var_count;
+    const ecs_query_t *q = it->query;
+    ecs_assert(q != NULL, ECS_INTERNAL_ERROR, NULL);
+    flecs_poly_assert(q, ecs_query_t);
+    int32_t op_count = flecs_query_impl(q)->op_count;
+    int32_t var_count = flecs_query_impl(q)->var_count;
 
     if (it->flags & EcsIterIsValid) {
-        flecs_query_change_detection(it, qit, flecs_query_impl(qit->query));
+        flecs_query_change_detection(it, qit, flecs_query_impl(q));
     }
 
 #ifdef FLECS_DEBUG
     if (it->flags & EcsIterProfile) {
-        char *str = ecs_query_plan_w_profile(qit->query, it);
+        char *str = ecs_query_plan_w_profile(q, it);
         printf("%s\n", str);
         ecs_os_free(str);
     }
@@ -76424,7 +76516,7 @@ void flecs_query_iter_fini(
     qit->vars = NULL;
     qit->written = NULL;
     qit->op_ctx = NULL;
-    qit->query = NULL;
+    it->query = NULL;
 }
 
 static
@@ -76535,7 +76627,6 @@ ecs_iter_t flecs_query_iter(
         flecs_iter_cache_sources |
         flecs_iter_cache_ptrs);
 
-    qit->query = q;
     qit->query_vars = impl->vars;
     qit->ops = impl->ops;
 
@@ -76576,10 +76667,6 @@ ecs_iter_t flecs_query_iter(
     for (i = 1; i < var_count; i ++) {
         qit->vars[i].entity = EcsWildcard;
     }
-
-    it.variables = qit->vars;
-    it.variable_count = impl->pub.var_count;
-    it.variable_names = impl->pub.vars;
 
     /* Set flags for unconstrained query iteration. Can be reinitialized when
      * variables are constrained on iterator. */

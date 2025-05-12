@@ -1365,7 +1365,7 @@ void ecs_iter_set_group(
         "cannot set group during iteration");
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_query_impl_t *q = flecs_query_impl(qit->query);
+    ecs_query_impl_t *q = flecs_query_impl(it->query);
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_poly_assert(q, ecs_query_t);
     ecs_query_cache_t *cache = q->cache;
