@@ -26,7 +26,7 @@ void flecs_query_cache_compute_group_id(
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (cache->group_by_callback) {
-        ecs_table_t *table = match->table;
+        ecs_table_t *table = match->base.table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         match->group_id = flecs_query_cache_get_group_id(cache, table);
@@ -176,8 +176,8 @@ void flecs_query_cache_create_group(
         ecs_query_cache_match_t *query_first = cache->list.first;
         if (query_first) {
             /* If this is not the first match for the query, insert before it */
-            match->next = query_first;
-            query_first->prev = match;
+            match->base.next = query_first;
+            query_first->base.prev = match;
             cache->list.first = match;
         } else {
             /* If this is the first match of the query, initialize its list */
@@ -190,14 +190,14 @@ void flecs_query_cache_create_group(
         ecs_assert(cache->list.last != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* This group should appear after another group */
-        ecs_query_cache_match_t *insert_before = insert_after->next;
+        ecs_query_cache_match_t *insert_before = insert_after->base.next;
         if (match != insert_after) {
-            match->prev = insert_after;
+            match->base.prev = insert_after;
         }
-        insert_after->next = match;
-        match->next = insert_before;
+        insert_after->base.next = match;
+        match->base.next = insert_before;
         if (insert_before) {
-            insert_before->prev = match;
+            insert_before->base.prev = match;
         } else {
             ecs_assert(cache->list.last == insert_after, 
                 ECS_INTERNAL_ERROR, NULL);
@@ -240,8 +240,8 @@ void flecs_query_cache_remove_table_node(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *match)
 {
-    ecs_query_cache_match_t *prev = match->prev;
-    ecs_query_cache_match_t *next = match->next;
+    ecs_query_cache_match_t *prev = match->base.prev;
+    ecs_query_cache_match_t *next = match->base.next;
 
     ecs_assert(prev != match, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(next != match, ECS_INTERNAL_ERROR, NULL);
@@ -264,10 +264,10 @@ void flecs_query_cache_remove_table_node(
         ECS_INTERNAL_ERROR, NULL);
 
     if (prev) {
-        prev->next = next;
+        prev->base.next = next;
     }
     if (next) {
-        next->prev = prev;
+        next->base.prev = prev;
     }
 
     ecs_assert(list->info.table_count > 0, ECS_INTERNAL_ERROR, NULL);
@@ -319,8 +319,8 @@ void flecs_query_cache_remove_table_node(
         }
     }
 
-    match->prev = NULL;
-    match->next = NULL;
+    match->base.prev = NULL;
+    match->base.next = NULL;
 
     cache->match_count ++;
 }
@@ -332,7 +332,7 @@ void flecs_query_cache_insert_table_node(
     ecs_query_cache_match_t *match)
 {
     /* Node should not be part of an existing list */
-    ecs_assert(match->prev == NULL && match->next == NULL, 
+    ecs_assert(match->base.prev == NULL && match->base.next == NULL, 
         ECS_INTERNAL_ERROR, NULL);
 
     /* If this is the first match, activate system */
@@ -351,14 +351,14 @@ void flecs_query_cache_insert_table_node(
         ecs_assert(list->first != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_query_cache_match_t *last = list->last;
-        ecs_query_cache_match_t *last_next = last->next;
+        ecs_query_cache_match_t *last_next = last->base.next;
 
-        match->prev = last;
-        match->next = last_next;
-        last->next = match;
+        match->base.prev = last;
+        match->base.next = last_next;
+        last->base.next = match;
 
         if (last_next) {
-            last_next->prev = match;
+            last_next->base.prev = match;
         }
 
         list->last = match;
@@ -389,16 +389,16 @@ void flecs_query_cache_insert_table_node(
     cache->list.info.table_count ++;
     cache->match_count ++;
 
-    ecs_assert(match->prev != match, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(match->next != match, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(match->base.prev != match, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(match->base.next != match, ECS_INTERNAL_ERROR, NULL);
 
     ecs_assert(list->first != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(list->last != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(list->last == match, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cache->list.first != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cache->list.last != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cache->list.first->prev == NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cache->list.last->next == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cache->list.first->base.prev == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cache->list.last->base.next == NULL, ECS_INTERNAL_ERROR, NULL);
 }
 
 static
@@ -452,7 +452,7 @@ int32_t flecs_query_cache_entity_count(
     ecs_map_iter_t it = ecs_map_iter(&cache->tables);
     while (ecs_map_next(&it)) {
         ecs_query_cache_table_t *qt = ecs_map_ptr(&it);
-        result += ecs_table_count(qt->first->table);
+        result += ecs_table_count(qt->first->base.table);
     }
 
     return result;
@@ -502,7 +502,7 @@ void flecs_query_cache_table_match_free(
     ecs_world_t *world = cache->query->world;
 
     for (cur = first; cur != NULL; cur = next) {
-        flecs_bfree(&cache->allocators.pointers, ECS_CONST_CAST(void*, cur->trs));
+        flecs_bfree(&cache->allocators.pointers, ECS_CONST_CAST(void*, cur->base.trs));
 
         if (cur->ids != cache->query->ids) {
             flecs_bfree(&cache->allocators.ids, cur->ids);
@@ -516,8 +516,8 @@ void flecs_query_cache_table_match_free(
             flecs_bfree(&cache->allocators.pointers, cur->tables);
         }
 
-        if (cur->monitor) {
-            flecs_bfree(&cache->allocators.monitors, cur->monitor);
+        if (cur->base.monitor) {
+            flecs_bfree(&cache->allocators.monitors, cur->base.monitor);
         }
 
         flecs_query_cache_remove_table_node(cache, cur);
@@ -548,7 +548,7 @@ void flecs_query_cache_unmatch_table(
     }
 
     if (elem) {
-        ecs_assert(table_id == elem->first->table->id, 
+        ecs_assert(table_id == elem->first->base.table->id, 
             ECS_INTERNAL_ERROR, NULL);
         ecs_map_remove(&cache->tables, table_id);
         flecs_query_cache_table_free(cache, elem);
@@ -580,8 +580,8 @@ ecs_query_cache_match_t* flecs_query_cache_add_table_match(
     ecs_query_cache_match_t *qm = flecs_query_cache_cache_add(
         cache->query->world, qt);
     
-    qm->table = table;
-    qm->trs = flecs_balloc(&cache->allocators.pointers);
+    qm->base.table = table;
+    qm->base.trs = flecs_balloc(&cache->allocators.pointers);
 
     /* Insert match to iteration list if table is not empty */
     flecs_query_cache_insert_table_node(cache, qm);
@@ -601,7 +601,7 @@ void flecs_query_cache_set_table_match(
     ecs_assert(field_count > 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Reset resources in case this is an existing record */
-    ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->trs), 
+    ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->base.trs), 
         it->trs, ecs_table_record_t*, field_count);
 
     /* Find out whether to store result-specific ids array or fixed array */

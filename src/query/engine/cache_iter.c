@@ -30,7 +30,7 @@ void flecs_query_update_node_up_trs(
                 if (r->table != node->tables[f]) {
                     ecs_component_record_t *cr = flecs_components_get(
                         ctx->world, q->ids[f]);
-                    const ecs_table_record_t *tr = node->trs[f] = 
+                    const ecs_table_record_t *tr = node->base.trs[f] = 
                         flecs_component_get_table(cr, r->table);
                     ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
                     ctx->it->trs[field_map ? field_map[f] : f] = tr;
@@ -55,11 +55,11 @@ ecs_query_cache_match_t* flecs_query_cache_next(
 
         if (prev != qit->last) {
             ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
-            ctx->vars[0].range.table = node->table;
-            qit->node = node->next;
+            ctx->vars[0].range.table = node->base.table;
+            qit->node = node->base.next;
             qit->prev = node;
             if (node) {
-                if (!ecs_table_count(node->table)) {
+                if (!ecs_table_count(node->base.table)) {
                     if (!(always_match_empty || (it->flags & EcsIterMatchEmptyTables))) {
                         if (ctx->query->pub.flags & EcsQueryHasChangeDetection) {
                             flecs_query_sync_match_monitor(
@@ -89,10 +89,10 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
 
         if (prev != qit->last) {
             ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
-            qit->node = node->next;
+            qit->node = node->base.next;
             qit->prev = node;
 
-            ecs_table_t *table = it->table = node->table;
+            ecs_table_t *table = it->table = node->base.table;
             int32_t count = it->count = ecs_table_count(table);
 
             if (!count) {
@@ -102,7 +102,7 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
             }
 
             it->entities = ecs_table_entities(table);
-            it->trs = node->trs;
+            it->trs = node->base.trs;
 
             return node;
         }
@@ -151,7 +151,7 @@ void flecs_query_cache_init_mapped_fields(
 
     for (i = 0; i < field_count; i ++) {
         int8_t field_index = field_map[i];
-        it->trs[field_index] = node->trs[i];
+        it->trs[field_index] = node->base.trs[i];
 
         it->ids[field_index] = node->ids[i];
         it->sources[field_index] = node->sources[i];
@@ -192,7 +192,7 @@ bool flecs_query_is_cache_search(
     }
 
     ecs_iter_t *it = ctx->it;
-    it->trs = node->trs;
+    it->trs = node->base.trs;
     it->ids = node->ids;
     it->sources = node->sources;
     it->set_fields = node->set_fields;
@@ -237,7 +237,7 @@ bool flecs_query_is_cache_test(
     }
 
     ecs_iter_t *it = ctx->it;
-    it->trs = node->trs;
+    it->trs = node->base.trs;
     it->ids = node->ids;
     it->sources = node->sources;
 

@@ -102,9 +102,9 @@ void flecs_query_cache_build_sorted_table_range(
 
     sort_helper_t *helper = flecs_alloc_n(
         &world->allocator, sort_helper_t, table_count);
-    ecs_query_cache_match_t *cur, *end = list->last->next;
-    for (cur = list->first; cur != end; cur = cur->next) {
-        ecs_table_t *table = cur->table;
+    ecs_query_cache_match_t *cur, *end = list->last->base.next;
+    for (cur = list->first; cur != end; cur = cur->base.next) {
+        ecs_table_t *table = cur->base.table;
 
         if (ecs_table_count(table) == 0) {
             continue;
@@ -116,7 +116,7 @@ void flecs_query_cache_build_sorted_table_range(
             ecs_size_t size = cache->query->sizes[field];
             ecs_entity_t src = cur->sources[field];
             if (src == 0) {
-                int32_t column_index = cur->trs[field]->column;
+                int32_t column_index = cur->base.trs[field]->column;
                 ecs_column_t *column = &table->data.columns[column_index];
                 helper[to_sort].ptr = column->data;
                 helper[to_sort].elem_size = size;
@@ -193,7 +193,7 @@ void flecs_query_cache_build_sorted_table_range(
         }
 
         sort_helper_t *cur_helper = &helper[min];
-        if (!cur || cur->trs != cur_helper->match->trs) {
+        if (!cur || cur->base.trs != cur_helper->match->base.trs) {
             cur = ecs_vec_append_t(NULL, &cache->table_slices, 
                 ecs_query_cache_match_t);
             *cur = *(cur_helper->match);
@@ -211,13 +211,13 @@ void flecs_query_cache_build_sorted_table_range(
     int32_t i, count = ecs_vec_count(&cache->table_slices);    
     ecs_query_cache_match_t *nodes = ecs_vec_first(&cache->table_slices);
     for (i = 0; i < count; i ++) {
-        nodes[i].prev = &nodes[i - 1];
-        nodes[i].next = &nodes[i + 1];
+        nodes[i].base.prev = &nodes[i - 1];
+        nodes[i].base.next = &nodes[i + 1];
     }
 
     if (nodes) {
-        nodes[0].prev = NULL;
-        nodes[i - 1].next = NULL;
+        nodes[0].base.prev = NULL;
+        nodes[i - 1].base.next = NULL;
     }
 
 done:
@@ -244,7 +244,7 @@ void flecs_query_cache_build_sorted_tables(
                 flecs_query_cache_build_sorted_table_range(cache, list);
 
                 /* Find next group to sort */
-                cur = list->last->next;
+                cur = list->last->base.next;
             } while (cur);
         }
     } else {
@@ -278,7 +278,7 @@ void flecs_query_cache_sort_tables(
     while (ecs_map_next(&it)) {
         ecs_query_cache_table_t *qt = ecs_map_ptr(&it);
         ecs_assert(qt->first != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_table_t *table = qt->first->table;
+        ecs_table_t *table = qt->first->base.table;
         bool dirty = false;
 
         if (flecs_query_check_table_monitor(impl, qt, 0)) {

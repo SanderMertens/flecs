@@ -423,19 +423,23 @@ struct ecs_query_impl_t {
  * instance, which are linked together in a list. A table may match a query
  * multiple times (due to wildcard queries) with different columns being matched
  * by the query. */
-struct ecs_query_cache_match_t {
+typedef struct ecs_query_cache_triv_match_t {
     ecs_query_cache_match_t *next, *prev;
     ecs_table_t *table;              /* The current table. */
+    const ecs_table_record_t **trs;  /* Information about where to find field in table */
+    int32_t *monitor;                /* Used to monitor table for changes */
+} ecs_query_cache_triv_match_t;
+
+struct ecs_query_cache_match_t {
+    ecs_query_cache_triv_match_t base;
     int32_t offset;                  /* Starting point in table  */
     int32_t count;                   /* Number of entities to iterate in table */
-    const ecs_table_record_t **trs;  /* Information about where to find field in table */
     ecs_id_t *ids;                   /* Resolved (component) ids for current table */
     ecs_entity_t *sources;           /* Subjects (sources) of ids */
     ecs_table_t **tables;            /* Tables for fields with non-$this source */
     ecs_termset_t set_fields;        /* Fields that are set */
     ecs_termset_t up_fields;         /* Fields that are matched through traversal */
     uint64_t group_id;               /* Value used to organize tables in groups */
-    int32_t *monitor;                /* Used to monitor table for changes */
 
     /* Next match in cache for same table. Can only be not null for queries 
      * with wildcards. */

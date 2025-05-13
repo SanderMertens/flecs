@@ -1523,19 +1523,23 @@ struct ecs_query_impl_t {
  * instance, which are linked together in a list. A table may match a query
  * multiple times (due to wildcard queries) with different columns being matched
  * by the query. */
-struct ecs_query_cache_match_t {
+typedef struct ecs_query_cache_triv_match_t {
     ecs_query_cache_match_t *next, *prev;
     ecs_table_t *table;              /* The current table. */
+    const ecs_table_record_t **trs;  /* Information about where to find field in table */
+    int32_t *monitor;                /* Used to monitor table for changes */
+} ecs_query_cache_triv_match_t;
+
+struct ecs_query_cache_match_t {
+    ecs_query_cache_triv_match_t base;
     int32_t offset;                  /* Starting point in table  */
     int32_t count;                   /* Number of entities to iterate in table */
-    const ecs_table_record_t **trs;  /* Information about where to find field in table */
     ecs_id_t *ids;                   /* Resolved (component) ids for current table */
     ecs_entity_t *sources;           /* Subjects (sources) of ids */
     ecs_table_t **tables;            /* Tables for fields with non-$this source */
     ecs_termset_t set_fields;        /* Fields that are set */
     ecs_termset_t up_fields;         /* Fields that are matched through traversal */
     uint64_t group_id;               /* Value used to organize tables in groups */
-    int32_t *monitor;                /* Used to monitor table for changes */
 
     /* Next match in cache for same table. Can only be not null for queries 
      * with wildcards. */
@@ -72075,7 +72079,7 @@ void flecs_query_cache_compute_group_id(
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (cache->group_by_callback) {
-        ecs_table_t *table = match->table;
+        ecs_table_t *table = match->base.table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         match->group_id = flecs_query_cache_get_group_id(cache, table);
@@ -72225,8 +72229,8 @@ void flecs_query_cache_create_group(
         ecs_query_cache_match_t *query_first = cache->list.first;
         if (query_first) {
             /* If this is not the first match for the query, insert before it */
-            match->next = query_first;
-            query_first->prev = match;
+            match->base.next = query_first;
+            query_first->base.prev = match;
             cache->list.first = match;
         } else {
             /* If this is the first match of the query, initialize its list */
@@ -72239,14 +72243,14 @@ void flecs_query_cache_create_group(
         ecs_assert(cache->list.last != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* This group should appear after another group */
-        ecs_query_cache_match_t *insert_before = insert_after->next;
+        ecs_query_cache_match_t *insert_before = insert_after->base.next;
         if (match != insert_after) {
-            match->prev = insert_after;
+            match->base.prev = insert_after;
         }
-        insert_after->next = match;
-        match->next = insert_before;
+        insert_after->base.next = match;
+        match->base.next = insert_before;
         if (insert_before) {
-            insert_before->prev = match;
+            insert_before->base.prev = match;
         } else {
             ecs_assert(cache->list.last == insert_after, 
                 ECS_INTERNAL_ERROR, NULL);
@@ -72289,8 +72293,8 @@ void flecs_query_cache_remove_table_node(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *match)
 {
-    ecs_query_cache_match_t *prev = match->prev;
-    ecs_query_cache_match_t *next = match->next;
+    ecs_query_cache_match_t *prev = match->base.prev;
+    ecs_query_cache_match_t *next = match->base.next;
 
     ecs_assert(prev != match, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(next != match, ECS_INTERNAL_ERROR, NULL);
@@ -72313,10 +72317,10 @@ void flecs_query_cache_remove_table_node(
         ECS_INTERNAL_ERROR, NULL);
 
     if (prev) {
-        prev->next = next;
+        prev->base.next = next;
     }
     if (next) {
-        next->prev = prev;
+        next->base.prev = prev;
     }
 
     ecs_assert(list->info.table_count > 0, ECS_INTERNAL_ERROR, NULL);
@@ -72368,8 +72372,8 @@ void flecs_query_cache_remove_table_node(
         }
     }
 
-    match->prev = NULL;
-    match->next = NULL;
+    match->base.prev = NULL;
+    match->base.next = NULL;
 
     cache->match_count ++;
 }
@@ -72381,7 +72385,7 @@ void flecs_query_cache_insert_table_node(
     ecs_query_cache_match_t *match)
 {
     /* Node should not be part of an existing list */
-    ecs_assert(match->prev == NULL && match->next == NULL, 
+    ecs_assert(match->base.prev == NULL && match->base.next == NULL, 
         ECS_INTERNAL_ERROR, NULL);
 
     /* If this is the first match, activate system */
@@ -72400,14 +72404,14 @@ void flecs_query_cache_insert_table_node(
         ecs_assert(list->first != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_query_cache_match_t *last = list->last;
-        ecs_query_cache_match_t *last_next = last->next;
+        ecs_query_cache_match_t *last_next = last->base.next;
 
-        match->prev = last;
-        match->next = last_next;
-        last->next = match;
+        match->base.prev = last;
+        match->base.next = last_next;
+        last->base.next = match;
 
         if (last_next) {
-            last_next->prev = match;
+            last_next->base.prev = match;
         }
 
         list->last = match;
@@ -72438,16 +72442,16 @@ void flecs_query_cache_insert_table_node(
     cache->list.info.table_count ++;
     cache->match_count ++;
 
-    ecs_assert(match->prev != match, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(match->next != match, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(match->base.prev != match, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(match->base.next != match, ECS_INTERNAL_ERROR, NULL);
 
     ecs_assert(list->first != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(list->last != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(list->last == match, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cache->list.first != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cache->list.last != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cache->list.first->prev == NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cache->list.last->next == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cache->list.first->base.prev == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cache->list.last->base.next == NULL, ECS_INTERNAL_ERROR, NULL);
 }
 
 static
@@ -72501,7 +72505,7 @@ int32_t flecs_query_cache_entity_count(
     ecs_map_iter_t it = ecs_map_iter(&cache->tables);
     while (ecs_map_next(&it)) {
         ecs_query_cache_table_t *qt = ecs_map_ptr(&it);
-        result += ecs_table_count(qt->first->table);
+        result += ecs_table_count(qt->first->base.table);
     }
 
     return result;
@@ -72551,7 +72555,7 @@ void flecs_query_cache_table_match_free(
     ecs_world_t *world = cache->query->world;
 
     for (cur = first; cur != NULL; cur = next) {
-        flecs_bfree(&cache->allocators.pointers, ECS_CONST_CAST(void*, cur->trs));
+        flecs_bfree(&cache->allocators.pointers, ECS_CONST_CAST(void*, cur->base.trs));
 
         if (cur->ids != cache->query->ids) {
             flecs_bfree(&cache->allocators.ids, cur->ids);
@@ -72565,8 +72569,8 @@ void flecs_query_cache_table_match_free(
             flecs_bfree(&cache->allocators.pointers, cur->tables);
         }
 
-        if (cur->monitor) {
-            flecs_bfree(&cache->allocators.monitors, cur->monitor);
+        if (cur->base.monitor) {
+            flecs_bfree(&cache->allocators.monitors, cur->base.monitor);
         }
 
         flecs_query_cache_remove_table_node(cache, cur);
@@ -72597,7 +72601,7 @@ void flecs_query_cache_unmatch_table(
     }
 
     if (elem) {
-        ecs_assert(table_id == elem->first->table->id, 
+        ecs_assert(table_id == elem->first->base.table->id, 
             ECS_INTERNAL_ERROR, NULL);
         ecs_map_remove(&cache->tables, table_id);
         flecs_query_cache_table_free(cache, elem);
@@ -72629,8 +72633,8 @@ ecs_query_cache_match_t* flecs_query_cache_add_table_match(
     ecs_query_cache_match_t *qm = flecs_query_cache_cache_add(
         cache->query->world, qt);
     
-    qm->table = table;
-    qm->trs = flecs_balloc(&cache->allocators.pointers);
+    qm->base.table = table;
+    qm->base.trs = flecs_balloc(&cache->allocators.pointers);
 
     /* Insert match to iteration list if table is not empty */
     flecs_query_cache_insert_table_node(cache, qm);
@@ -72650,7 +72654,7 @@ void flecs_query_cache_set_table_match(
     ecs_assert(field_count > 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Reset resources in case this is an existing record */
-    ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->trs), 
+    ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->base.trs), 
         it->trs, ecs_table_record_t*, field_count);
 
     /* Find out whether to store result-specific ids array or fixed array */
@@ -73500,7 +73504,7 @@ void flecs_query_update_node_up_trs(
                 if (r->table != node->tables[f]) {
                     ecs_component_record_t *cr = flecs_components_get(
                         ctx->world, q->ids[f]);
-                    const ecs_table_record_t *tr = node->trs[f] = 
+                    const ecs_table_record_t *tr = node->base.trs[f] = 
                         flecs_component_get_table(cr, r->table);
                     ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
                     ctx->it->trs[field_map ? field_map[f] : f] = tr;
@@ -73525,11 +73529,11 @@ ecs_query_cache_match_t* flecs_query_cache_next(
 
         if (prev != qit->last) {
             ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
-            ctx->vars[0].range.table = node->table;
-            qit->node = node->next;
+            ctx->vars[0].range.table = node->base.table;
+            qit->node = node->base.next;
             qit->prev = node;
             if (node) {
-                if (!ecs_table_count(node->table)) {
+                if (!ecs_table_count(node->base.table)) {
                     if (!(always_match_empty || (it->flags & EcsIterMatchEmptyTables))) {
                         if (ctx->query->pub.flags & EcsQueryHasChangeDetection) {
                             flecs_query_sync_match_monitor(
@@ -73559,10 +73563,10 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
 
         if (prev != qit->last) {
             ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
-            qit->node = node->next;
+            qit->node = node->base.next;
             qit->prev = node;
 
-            ecs_table_t *table = it->table = node->table;
+            ecs_table_t *table = it->table = node->base.table;
             int32_t count = it->count = ecs_table_count(table);
 
             if (!count) {
@@ -73572,7 +73576,7 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
             }
 
             it->entities = ecs_table_entities(table);
-            it->trs = node->trs;
+            it->trs = node->base.trs;
 
             return node;
         }
@@ -73621,7 +73625,7 @@ void flecs_query_cache_init_mapped_fields(
 
     for (i = 0; i < field_count; i ++) {
         int8_t field_index = field_map[i];
-        it->trs[field_index] = node->trs[i];
+        it->trs[field_index] = node->base.trs[i];
 
         it->ids[field_index] = node->ids[i];
         it->sources[field_index] = node->sources[i];
@@ -73662,7 +73666,7 @@ bool flecs_query_is_cache_search(
     }
 
     ecs_iter_t *it = ctx->it;
-    it->trs = node->trs;
+    it->trs = node->base.trs;
     it->ids = node->ids;
     it->sources = node->sources;
     it->set_fields = node->set_fields;
@@ -73707,7 +73711,7 @@ bool flecs_query_is_cache_test(
     }
 
     ecs_iter_t *it = ctx->it;
-    it->trs = node->trs;
+    it->trs = node->base.trs;
     it->ids = node->ids;
     it->sources = node->sources;
 
@@ -73819,9 +73823,9 @@ void flecs_query_cache_build_sorted_table_range(
 
     sort_helper_t *helper = flecs_alloc_n(
         &world->allocator, sort_helper_t, table_count);
-    ecs_query_cache_match_t *cur, *end = list->last->next;
-    for (cur = list->first; cur != end; cur = cur->next) {
-        ecs_table_t *table = cur->table;
+    ecs_query_cache_match_t *cur, *end = list->last->base.next;
+    for (cur = list->first; cur != end; cur = cur->base.next) {
+        ecs_table_t *table = cur->base.table;
 
         if (ecs_table_count(table) == 0) {
             continue;
@@ -73833,7 +73837,7 @@ void flecs_query_cache_build_sorted_table_range(
             ecs_size_t size = cache->query->sizes[field];
             ecs_entity_t src = cur->sources[field];
             if (src == 0) {
-                int32_t column_index = cur->trs[field]->column;
+                int32_t column_index = cur->base.trs[field]->column;
                 ecs_column_t *column = &table->data.columns[column_index];
                 helper[to_sort].ptr = column->data;
                 helper[to_sort].elem_size = size;
@@ -73910,7 +73914,7 @@ void flecs_query_cache_build_sorted_table_range(
         }
 
         sort_helper_t *cur_helper = &helper[min];
-        if (!cur || cur->trs != cur_helper->match->trs) {
+        if (!cur || cur->base.trs != cur_helper->match->base.trs) {
             cur = ecs_vec_append_t(NULL, &cache->table_slices, 
                 ecs_query_cache_match_t);
             *cur = *(cur_helper->match);
@@ -73928,13 +73932,13 @@ void flecs_query_cache_build_sorted_table_range(
     int32_t i, count = ecs_vec_count(&cache->table_slices);    
     ecs_query_cache_match_t *nodes = ecs_vec_first(&cache->table_slices);
     for (i = 0; i < count; i ++) {
-        nodes[i].prev = &nodes[i - 1];
-        nodes[i].next = &nodes[i + 1];
+        nodes[i].base.prev = &nodes[i - 1];
+        nodes[i].base.next = &nodes[i + 1];
     }
 
     if (nodes) {
-        nodes[0].prev = NULL;
-        nodes[i - 1].next = NULL;
+        nodes[0].base.prev = NULL;
+        nodes[i - 1].base.next = NULL;
     }
 
 done:
@@ -73961,7 +73965,7 @@ void flecs_query_cache_build_sorted_tables(
                 flecs_query_cache_build_sorted_table_range(cache, list);
 
                 /* Find next group to sort */
-                cur = list->last->next;
+                cur = list->last->base.next;
             } while (cur);
         }
     } else {
@@ -73995,7 +73999,7 @@ void flecs_query_cache_sort_tables(
     while (ecs_map_next(&it)) {
         ecs_query_cache_table_t *qt = ecs_map_ptr(&it);
         ecs_assert(qt->first != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_table_t *table = qt->first->table;
+        ecs_table_t *table = qt->first->base.table;
         bool dirty = false;
 
         if (flecs_query_check_table_monitor(impl, qt, 0)) {
@@ -74073,7 +74077,7 @@ void flecs_query_get_column_for_field(
     ecs_assert(field < q->field_count, ECS_INTERNAL_ERROR, NULL);
     (void)q;
 
-    const ecs_table_record_t *tr = match->trs[field];
+    const ecs_table_record_t *tr = match->base.trs[field];
     ecs_table_t *table = tr->hdr.table;
     int32_t column = tr->column;
 
@@ -74089,7 +74093,7 @@ bool flecs_query_get_match_monitor(
     ecs_query_cache_match_t *match)
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (match->monitor) {
+    if (match->base.monitor) {
         return false;
     }
 
@@ -74134,7 +74138,7 @@ bool flecs_query_get_match_monitor(
         monitor[field + 1] = 0;
     }
 
-    match->monitor = monitor;
+    match->base.monitor = monitor;
 
     impl->pub.flags |= EcsQueryHasChangeDetection;
 
@@ -74231,7 +74235,7 @@ bool flecs_query_check_match_monitor_term(
         return true;
     }
 
-    int32_t *monitor = match->monitor;
+    int32_t *monitor = match->base.monitor;
     int32_t state = monitor[field];
     if (state == -1) {
         return false;
@@ -74239,7 +74243,7 @@ bool flecs_query_check_match_monitor_term(
 
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_table_t *table = match->table;
+    ecs_table_t *table = match->base.table;
     if (table) {
         int32_t *dirty_state = flecs_table_get_dirty_state(
             cache->query->world, table);
@@ -74294,7 +74298,7 @@ void flecs_query_init_query_monitors(
         ecs_query_cache_match_t *cur = cache->list.first;
 
         /* Ensure each match has a monitor */
-        for (; cur != NULL; cur = cur->next) {
+        for (; cur != NULL; cur = cur->base.next) {
             ecs_query_cache_match_t *match = 
                 (ecs_query_cache_match_t*)cur;
             flecs_query_get_match_monitor(impl, match);
@@ -74316,8 +74320,8 @@ bool flecs_query_check_match_monitor(
 
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t *monitor = match->monitor;
-    ecs_table_t *table = match->table;
+    int32_t *monitor = match->base.monitor;
+    ecs_table_t *table = match->base.table;
     int32_t *dirty_state = NULL;
     if (table) {
         dirty_state = flecs_table_get_dirty_state(
@@ -74332,7 +74336,7 @@ bool flecs_query_check_match_monitor(
     ecs_world_t *world = query->world;
     int32_t i, field_count = query->field_count;
     ecs_entity_t *sources = match->sources;
-    const ecs_table_record_t **trs = it ? it->trs : match->trs;
+    const ecs_table_record_t **trs = it ? it->trs : match->base.trs;
     ecs_flags64_t set_fields = it ? it->set_fields : match->set_fields;
     
     ecs_assert(trs != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -74382,9 +74386,9 @@ bool flecs_query_check_table_monitor(
     ecs_query_cache_table_t *table,
     int32_t field)
 {
-    ecs_query_cache_match_t *cur, *end = table->last->next;
+    ecs_query_cache_match_t *cur, *end = table->last->base.next;
 
-    for (cur = table->first; cur != end; cur = cur->next) {
+    for (cur = table->first; cur != end; cur = cur->base.next) {
         ecs_query_cache_match_t *match = 
             (ecs_query_cache_match_t*)cur;
         if (field == -1) {
@@ -74504,7 +74508,7 @@ void flecs_query_sync_match_monitor(
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (!match->monitor) {
+    if (!match->base.monitor) {
         if (impl->pub.flags & EcsQueryHasChangeDetection) {
             flecs_query_get_match_monitor(impl, match);
         } else {
@@ -74514,8 +74518,8 @@ void flecs_query_sync_match_monitor(
 
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t *monitor = match->monitor;
-    ecs_table_t *table = match->table;
+    int32_t *monitor = match->base.monitor;
+    ecs_table_t *table = match->base.table;
     if (table) {
         int32_t *dirty_state = flecs_table_get_dirty_state(
             cache->query->world, table);

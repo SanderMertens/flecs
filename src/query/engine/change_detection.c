@@ -21,7 +21,7 @@ void flecs_query_get_column_for_field(
     ecs_assert(field < q->field_count, ECS_INTERNAL_ERROR, NULL);
     (void)q;
 
-    const ecs_table_record_t *tr = match->trs[field];
+    const ecs_table_record_t *tr = match->base.trs[field];
     ecs_table_t *table = tr->hdr.table;
     int32_t column = tr->column;
 
@@ -37,7 +37,7 @@ bool flecs_query_get_match_monitor(
     ecs_query_cache_match_t *match)
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (match->monitor) {
+    if (match->base.monitor) {
         return false;
     }
 
@@ -82,7 +82,7 @@ bool flecs_query_get_match_monitor(
         monitor[field + 1] = 0;
     }
 
-    match->monitor = monitor;
+    match->base.monitor = monitor;
 
     impl->pub.flags |= EcsQueryHasChangeDetection;
 
@@ -179,7 +179,7 @@ bool flecs_query_check_match_monitor_term(
         return true;
     }
 
-    int32_t *monitor = match->monitor;
+    int32_t *monitor = match->base.monitor;
     int32_t state = monitor[field];
     if (state == -1) {
         return false;
@@ -187,7 +187,7 @@ bool flecs_query_check_match_monitor_term(
 
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_table_t *table = match->table;
+    ecs_table_t *table = match->base.table;
     if (table) {
         int32_t *dirty_state = flecs_table_get_dirty_state(
             cache->query->world, table);
@@ -242,7 +242,7 @@ void flecs_query_init_query_monitors(
         ecs_query_cache_match_t *cur = cache->list.first;
 
         /* Ensure each match has a monitor */
-        for (; cur != NULL; cur = cur->next) {
+        for (; cur != NULL; cur = cur->base.next) {
             ecs_query_cache_match_t *match = 
                 (ecs_query_cache_match_t*)cur;
             flecs_query_get_match_monitor(impl, match);
@@ -264,8 +264,8 @@ bool flecs_query_check_match_monitor(
 
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t *monitor = match->monitor;
-    ecs_table_t *table = match->table;
+    int32_t *monitor = match->base.monitor;
+    ecs_table_t *table = match->base.table;
     int32_t *dirty_state = NULL;
     if (table) {
         dirty_state = flecs_table_get_dirty_state(
@@ -280,7 +280,7 @@ bool flecs_query_check_match_monitor(
     ecs_world_t *world = query->world;
     int32_t i, field_count = query->field_count;
     ecs_entity_t *sources = match->sources;
-    const ecs_table_record_t **trs = it ? it->trs : match->trs;
+    const ecs_table_record_t **trs = it ? it->trs : match->base.trs;
     ecs_flags64_t set_fields = it ? it->set_fields : match->set_fields;
     
     ecs_assert(trs != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -330,9 +330,9 @@ bool flecs_query_check_table_monitor(
     ecs_query_cache_table_t *table,
     int32_t field)
 {
-    ecs_query_cache_match_t *cur, *end = table->last->next;
+    ecs_query_cache_match_t *cur, *end = table->last->base.next;
 
-    for (cur = table->first; cur != end; cur = cur->next) {
+    for (cur = table->first; cur != end; cur = cur->base.next) {
         ecs_query_cache_match_t *match = 
             (ecs_query_cache_match_t*)cur;
         if (field == -1) {
@@ -452,7 +452,7 @@ void flecs_query_sync_match_monitor(
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (!match->monitor) {
+    if (!match->base.monitor) {
         if (impl->pub.flags & EcsQueryHasChangeDetection) {
             flecs_query_get_match_monitor(impl, match);
         } else {
@@ -462,8 +462,8 @@ void flecs_query_sync_match_monitor(
 
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t *monitor = match->monitor;
-    ecs_table_t *table = match->table;
+    int32_t *monitor = match->base.monitor;
+    ecs_table_t *table = match->base.table;
     if (table) {
         int32_t *dirty_state = flecs_table_get_dirty_state(
             cache->query->world, table);
