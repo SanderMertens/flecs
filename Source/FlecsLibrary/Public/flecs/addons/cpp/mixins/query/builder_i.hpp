@@ -35,6 +35,11 @@ struct query_builder_i : term_builder_i<Base> {
         return cache_kind(flecs::QueryCacheAuto);
     }
 
+    Base& detect_changes() {
+        desc_->flags |= EcsQueryDetectChanges;
+        return *this;
+    }
+
     Base& expr(const char *expr) {
         ecs_check(expr_count_ == 0, ECS_INVALID_OPERATION,
             "query_builder::expr() called more than once");

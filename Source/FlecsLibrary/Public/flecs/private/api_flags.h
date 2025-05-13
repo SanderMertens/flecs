@@ -115,18 +115,20 @@ extern "C" {
 
 #define EcsIterIsValid                 (1u << 0u)  /* Does iterator contain valid result */
 #define EcsIterNoData                  (1u << 1u)  /* Does iterator provide (component) data */
-#define EcsIterNoResults               (1u << 3u)  /* Iterator has no results */
+#define EcsIterNoResults               (1u << 2u)  /* Iterator has no results */
+#define EcsIterMatchEmptyTables        (1u << 3u)  /* Match empty tables */
 #define EcsIterIgnoreThis              (1u << 4u)  /* Only evaluate non-this terms */
 #define EcsIterHasCondSet              (1u << 6u)  /* Does iterator have conditionally set fields */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this) */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query */
-#define EcsIterCacheSearch             (1u << 15u) /* Cache search */
+#define EcsIterCached                  (1u << 15u) /* Cached query */
 #define EcsIterFixedInChangeComputed   (1u << 16u) /* Change detection for fixed in terms is done */
 #define EcsIterFixedInChanged          (1u << 17u) /* Fixed in terms changed */
 #define EcsIterSkip                    (1u << 18u) /* Result was skipped for change detection */
 #define EcsIterCppEach                 (1u << 19u) /* Uses C++ 'each' iterator */
+
 
 /* Same as event flags */
 #define EcsIterTableOnly               (1u << 20u)  /* Result only populates table */
@@ -156,13 +158,14 @@ extern "C" {
 #define EcsQueryHasRefs               (1u << 19u) /* Query has terms with static source */
 #define EcsQueryHasOutTerms           (1u << 20u) /* Query has [out] terms */
 #define EcsQueryHasNonThisOutTerms    (1u << 21u) /* Query has [out] terms with no $this source */
-#define EcsQueryHasMonitor            (1u << 22u) /* Query has monitor for change detection */
+#define EcsQueryHasChangeDetection    (1u << 22u) /* Query has monitor for change detection */
 #define EcsQueryIsTrivial             (1u << 23u) /* Query can use trivial evaluation function */
 #define EcsQueryHasCacheable          (1u << 24u) /* Query has cacheable terms */
 #define EcsQueryIsCacheable           (1u << 25u) /* All terms of query are cacheable */
 #define EcsQueryHasTableThisVar       (1u << 26u) /* Does query have $this table var */
 #define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does query cache empty tables */
-#define EcsQueryNested                (1u << 28u) /* Query created by a query (for observer, cache) */
+#define EcsQueryTrivialCache          (1u << 28u) /* Trivial cache (no wildcards, traversal, order_by, group_by, change detection) */
+#define EcsQueryNested                (1u << 29u) /* Query created by a query (for observer, cache) */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -182,7 +185,7 @@ extern "C" {
 #define EcsTermIsSparse               (1u << 12)
 #define EcsTermIsUnion                (1u << 13)
 #define EcsTermIsOr                   (1u << 14)
-#define EcsTermDontFragment         (1u << 15)
+#define EcsTermDontFragment           (1u << 15)
 
 
 ////////////////////////////////////////////////////////////////////////////////

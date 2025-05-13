@@ -851,13 +851,14 @@ int flecs_query_compile(
      * trivial queries use trivial iterators that don't use query ops. */
     bool needs_plan = true;
     ecs_flags32_t flags = query->pub.flags;
-    ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
-    if ((flags & trivial_flags) == trivial_flags) {
-        if (query->cache) {
-            if (flags & EcsQueryIsCacheable) {
-                needs_plan = false;                
-            }
-        } else {
+    
+    if (query->cache) {
+        if (flags & EcsQueryIsCacheable) {
+            needs_plan = false;
+        }
+    } else {
+        ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
+        if ((flags & trivial_flags) == trivial_flags) {
             if (!(flags & EcsQueryMatchWildcards)) {
                 needs_plan = false;
             }

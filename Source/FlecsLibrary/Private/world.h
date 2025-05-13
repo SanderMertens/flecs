@@ -18,6 +18,7 @@ typedef struct ecs_world_allocators_t {
     ecs_map_params_t query_table_list;
     ecs_block_allocator_t query_table;
     ecs_block_allocator_t query_table_match;
+    ecs_block_allocator_t query_triv_table_match;
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
     ecs_block_allocator_t id_record;

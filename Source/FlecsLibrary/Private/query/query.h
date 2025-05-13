@@ -41,3 +41,4 @@ ecs_iter_t flecs_query_iter(
 /* Internal function for initializing an iterator after vars are constrained */
 void flecs_query_iter_constrain(
     ecs_iter_t *it);
+
