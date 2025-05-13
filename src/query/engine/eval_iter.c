@@ -79,7 +79,17 @@ void flecs_query_iter_constrain(
                 }
             }
         } else if (flags & EcsQueryIsCacheable) {
-            it->flags |= EcsIterTrivialTest|EcsIterCached;
+            if (!cache->order_by_callback && 
+                (cache->query->flags & EcsQueryTrivialCache && 
+                 !(query->pub.flags & EcsQueryHasChangeDetection))) 
+            {
+                it->flags |= EcsIterTrivialTest|EcsIterTrivialCached;
+                it->ids = cache->query->ids;
+                it->sources = cache->sources;
+                it->set_fields = flecs_uto(uint32_t, (1llu << it->field_count) - 1);
+            } else {
+                it->flags |= EcsIterTrivialTest|EcsIterCached;
+            }
         }
     } else {
         if (!cache) { 
@@ -89,17 +99,16 @@ void flecs_query_iter_constrain(
                 }
             }
         } else if (flags & EcsQueryIsCacheable) {
-            if (!cache->order_by_callback) {
-                if (cache->query->flags & EcsQueryTrivialCache && 
-                    !(query->pub.flags & EcsQueryHasChangeDetection))
-                {
-                    it->flags |= EcsIterTrivialSearch|EcsIterTrivialCached;
-                    it->ids = cache->query->ids;
-                    it->sources = cache->sources;
-                    it->set_fields = flecs_uto(uint32_t, (1llu << it->field_count) - 1);
-                } else {
-                    it->flags |= EcsIterTrivialSearch|EcsIterCached;
-                }
+            if (!cache->order_by_callback && 
+                (cache->query->flags & EcsQueryTrivialCache && 
+                 !(query->pub.flags & EcsQueryHasChangeDetection))) 
+            {
+                it->flags |= EcsIterTrivialSearch|EcsIterTrivialCached;
+                it->ids = cache->query->ids;
+                it->sources = cache->sources;
+                it->set_fields = flecs_uto(uint32_t, (1llu << it->field_count) - 1);
+            } else {
+                it->flags |= EcsIterTrivialSearch|EcsIterCached;
             }
         }
     }
@@ -140,6 +149,8 @@ bool ecs_query_next(
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
+    ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_query_run_ctx_t ctx;
     flecs_query_iter_run_ctx_init(it, &ctx);
     const ecs_query_op_t *ops = qit->ops;
@@ -163,10 +174,16 @@ bool ecs_query_next(
 
     if (it->flags & EcsIterTrivialCached) {
         /* Trivial cache iterator. Only supported for search */
-        ecs_assert(it->flags & EcsIterTrivialSearch, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
-        if (flecs_query_is_trivial_cache_search(&ctx)) {
-            return true;
+
+        if (it->flags & EcsIterTrivialSearch) {
+            if (flecs_query_is_trivial_cache_search(&ctx)) {
+                return true;
+            }
+        } else if (it->flags & EcsIterTrivialTest) {
+            if (flecs_query_is_trivial_cache_test(&ctx, redo)) {
+                return true;
+            }
         }
     } else if (it->flags & EcsIterCached) {
         /* Cached iterator modes */

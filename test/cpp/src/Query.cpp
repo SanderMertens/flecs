@@ -1749,7 +1749,7 @@ void Query_changed(void) {
     auto e = world.entity().set<Position>({1, 0});
 
     auto q = world.query_builder<const Position>()
-        .cached()
+        .detect_changes()
         .build();
 
     auto q_w = world.query<Position>();
@@ -2963,7 +2963,7 @@ void Query_change_tracking(void) {
 
     auto qw = w.query<Position>();
     auto qr = w.query_builder<const Position>()
-        .cached()
+        .detect_changes()
         .build();
 
     auto e1 = w.entity().add<Tag>().set<Position>({10, 20});

@@ -611,7 +611,7 @@ error:
     return (ecs_table_range_t){0};
 }
 
-char* ecs_iter_get_var_name(
+const char* ecs_iter_get_var_name(
     const ecs_iter_t *it,
     int32_t var_id)
 {
@@ -788,7 +788,11 @@ uint64_t ecs_iter_get_group(
         "ecs_iter_get_group must be called on iterator that iterates a cached "
         "query (query is uncached)");
 
-    return qit->prev->group_id;
+    ecs_check(!flecs_query_has_trivial_cache(it->query), ECS_INVALID_PARAMETER,
+        "ecs_iter_get_group must be called on iterator that iterates a query "
+        "that uses group_by");
+
+    return qit->prev->_group_id;
 error:
     return 0;
 }

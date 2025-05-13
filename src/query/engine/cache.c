@@ -5,6 +5,12 @@
 
 #include "../../private_api.h"
 
+bool flecs_query_cache_is_trivial(
+    ecs_query_cache_t *cache)
+{
+    return (cache->query->flags & EcsQueryTrivialCache) != 0;
+}
+
 static
 uint64_t flecs_query_cache_get_group_id(
     ecs_query_cache_t *cache,
@@ -29,9 +35,9 @@ void flecs_query_cache_compute_group_id(
         ecs_table_t *table = match->base.table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        match->group_id = flecs_query_cache_get_group_id(cache, table);
-    } else {
-        match->group_id = 0;
+        match->_group_id = flecs_query_cache_get_group_id(cache, table);
+    } else if (!flecs_query_cache_is_trivial(cache)) {
+        match->_group_id = 0;
     }
 }
 
@@ -164,7 +170,8 @@ void flecs_query_cache_create_group(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *match)
 {
-    uint64_t group_id = match->group_id;
+    ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INTERNAL_ERROR, NULL);
+    uint64_t group_id = match->_group_id;
 
     /* If query has grouping enabled & this is a new/empty group, find
      * the insertion point for the group */
@@ -215,7 +222,7 @@ ecs_query_cache_table_list_t* flecs_query_cache_get_node_list(
     ecs_query_cache_match_t *match)
 {
     if (cache->group_by_callback) {
-        return flecs_query_cache_get_group(cache, match->group_id);
+        return flecs_query_cache_get_group(cache, match->_group_id);
     } else {
         return &cache->list;
     }
@@ -228,7 +235,7 @@ ecs_query_cache_table_list_t* flecs_query_cache_ensure_node_list(
     ecs_query_cache_match_t *match)
 {
     if (cache->group_by_callback) {
-        return flecs_query_cache_ensure_group(cache, match->group_id);
+        return flecs_query_cache_ensure_group(cache, match->_group_id);
     } else {
         return &cache->list;
     }
@@ -274,7 +281,7 @@ void flecs_query_cache_remove_table_node(
     list->info.table_count --;
 
     if (cache->group_by_callback) {
-        uint64_t group_id = match->group_id;
+        uint64_t group_id = match->_group_id;
 
         /* Make sure query.list is updated if this is the first or last group */
         if (cache->list.first == match) {
@@ -293,17 +300,17 @@ void flecs_query_cache_remove_table_node(
         list->info.match_count ++;
 
         /* Make sure group list only contains nodes that belong to the group */
-        if (prev && prev->group_id != group_id) {
+        if (prev && prev->_group_id != group_id) {
             /* The previous node belonged to another group */
             prev = next;
         }
-        if (next && next->group_id != group_id) {
+        if (next && next->_group_id != group_id) {
             /* The next node belonged to another group */
             next = prev;
         }
 
         /* Do check again, in case both prev & next belonged to another group */
-        if ((!prev && !next) || (prev && prev->group_id != group_id)) {
+        if ((!prev && !next) || (prev && prev->_group_id != group_id)) {
             /* There are no more matches left in this group */
             flecs_query_cache_remove_group(cache, group_id);
             list = NULL;
@@ -404,17 +411,27 @@ void flecs_query_cache_insert_table_node(
 static
 ecs_query_cache_match_t* flecs_query_cache_cache_add(
     ecs_world_t *world,
+    ecs_query_cache_t *cache,
     ecs_query_cache_table_t *elem)
 {
-    ecs_query_cache_match_t *result = 
-        flecs_bcalloc(&world->allocators.query_table_match);
+    ecs_query_cache_match_t *result;
+    bool is_trivial = flecs_query_cache_is_trivial(cache);
+    if (is_trivial) {
+        result = flecs_bcalloc(&world->allocators.query_triv_table_match);
+    } else {
+        result = flecs_bcalloc(&world->allocators.query_table_match);
+    }
 
     if (!elem->first) {
         elem->first = result;
         elem->last = result;
     } else {
         ecs_assert(elem->last != NULL, ECS_INTERNAL_ERROR, NULL);
-        elem->last->next_match = result;
+
+        if (!is_trivial) {
+            elem->last->_next_match = result;
+        }
+
         elem->last = result;
     }
 
@@ -500,31 +517,38 @@ void flecs_query_cache_table_match_free(
 {
     ecs_query_cache_match_t *cur, *next;
     ecs_world_t *world = cache->query->world;
+    bool trivial_cache = flecs_query_cache_is_trivial(cache);
 
     for (cur = first; cur != NULL; cur = next) {
         flecs_bfree(&cache->allocators.pointers, ECS_CONST_CAST(void*, cur->base.trs));
 
-        if (cur->ids != cache->query->ids) {
-            flecs_bfree(&cache->allocators.ids, cur->ids);
-        }
+        if (!trivial_cache) {
+            if (cur->_ids != cache->query->ids) {
+                flecs_bfree(&cache->allocators.ids, cur->_ids);
+            }
 
-        if (cur->sources != cache->sources) {
-            flecs_bfree(&cache->allocators.ids, cur->sources);
-        }
+            if (cur->_sources != cache->sources) {
+                flecs_bfree(&cache->allocators.ids, cur->_sources);
+            }
 
-        if (cur->tables) {
-            flecs_bfree(&cache->allocators.pointers, cur->tables);
-        }
+            if (cur->_tables) {
+                flecs_bfree(&cache->allocators.pointers, cur->_tables);
+            }
 
-        if (cur->base.monitor) {
-            flecs_bfree(&cache->allocators.monitors, cur->base.monitor);
+            if (cur->_monitor) {
+                flecs_bfree(&cache->allocators.monitors, cur->_monitor);
+            }
         }
 
         flecs_query_cache_remove_table_node(cache, cur);
 
-        next = cur->next_match;
-
-        flecs_bfree(&world->allocators.query_table_match, cur);
+        if (!trivial_cache) {
+            next = cur->_next_match;
+            flecs_bfree(&world->allocators.query_table_match, cur);
+        } else {
+            next = NULL;
+            flecs_bfree(&world->allocators.query_triv_table_match, cur);
+        } 
     }
 }
 
@@ -578,7 +602,7 @@ ecs_query_cache_match_t* flecs_query_cache_add_table_match(
     /* Add match for table. One table can have more than one match, if
      * the query contains wildcards. */
     ecs_query_cache_match_t *qm = flecs_query_cache_cache_add(
-        cache->query->world, qt);
+        cache->query->world, cache, qt);
     
     qm->base.table = table;
     qm->base.trs = flecs_balloc(&cache->allocators.pointers);
@@ -612,15 +636,19 @@ void flecs_query_cache_set_table_match(
         }
     }
 
-    if (i != field_count) {
-        if (qm->ids == ids || !qm->ids) {
-            qm->ids = flecs_balloc(&cache->allocators.ids);
-        }
-        ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, field_count);
-    } else {
-        if (qm->ids != ids) {
-            flecs_bfree(&cache->allocators.ids, qm->ids);
-            qm->ids = ids;
+    bool trivial_cache = flecs_query_cache_is_trivial(cache);
+
+    if (!trivial_cache) {
+        if (i != field_count) {
+            if (qm->_ids == ids || !qm->_ids) {
+                qm->_ids = flecs_balloc(&cache->allocators.ids);
+            }
+            ecs_os_memcpy_n(qm->_ids, it->ids, ecs_id_t, field_count);
+        } else {
+            if (qm->_ids != ids) {
+                flecs_bfree(&cache->allocators.ids, qm->_ids);
+                qm->_ids = ids;
+            }
         }
     }
 
@@ -631,32 +659,38 @@ void flecs_query_cache_set_table_match(
         }
     }
 
-    if (i != field_count) {
-        if (qm->sources == cache->sources || !qm->sources) {
-            qm->sources = flecs_balloc(&cache->allocators.ids);
-        }
-        ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, field_count);
-        if (!qm->tables) {
-            qm->tables = flecs_balloc(&cache->allocators.pointers);
-        }
-        for (i = 0; i < field_count; i ++) {
-            if (it->trs[i]) {
-                qm->tables[i] = it->trs[i]->hdr.table;
+    if (!trivial_cache) {
+        if (i != field_count) {
+            if (qm->_sources == cache->sources || !qm->_sources) {
+                qm->_sources = flecs_balloc(&cache->allocators.ids);
+            }
+            ecs_os_memcpy_n(qm->_sources, it->sources, ecs_entity_t, field_count);
+            if (!qm->_tables) {
+                qm->_tables = flecs_balloc(&cache->allocators.pointers);
+            }
+            for (i = 0; i < field_count; i ++) {
+                if (it->trs[i]) {
+                    qm->_tables[i] = it->trs[i]->hdr.table;
+                }
+            }
+        } else {
+            if (qm->_sources != cache->sources) {
+                flecs_bfree(&cache->allocators.ids, qm->_sources);
+                qm->_sources = cache->sources;
+            }
+            if (qm->_tables) {
+                flecs_bfree(&cache->allocators.pointers, qm->_tables);
+                qm->_tables = NULL;
             }
         }
-    } else {
-        if (qm->sources != cache->sources) {
-            flecs_bfree(&cache->allocators.ids, qm->sources);
-            qm->sources = cache->sources;
-        }
-        if (qm->tables) {
-            flecs_bfree(&cache->allocators.pointers, qm->tables);
-            qm->tables = NULL;
-        }
-    }
 
-    qm->set_fields = it->set_fields;
-    qm->up_fields = it->up_fields;
+        qm->_set_fields = it->set_fields;
+        qm->_up_fields = it->up_fields;
+    } else {
+        /* If this is a trivial cache, we shouldn't have any fields with 
+         * non-$this sources */
+        ecs_assert(i == field_count, ECS_INTERNAL_ERROR, NULL);
+    }
 }
 
 /** Populate query cache with tables */
@@ -860,6 +894,9 @@ void flecs_query_cache_rematch_tables(
     ecs_query_cache_match_t *qm = NULL;
     ecs_query_cache_t *cache = impl->cache;
 
+    /* Queries with trivial caches can't trigger rematching */
+    ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INTERNAL_ERROR, NULL);
+
     if (cache->monitor_generation == world->monitor_generation) {
         return;
     }
@@ -881,9 +918,9 @@ void flecs_query_cache_rematch_tables(
 
     while (ecs_query_next(&it)) {
         if ((table != it.table) || (!it.table && !qt)) {
-            if (qm && qm->next_match) {
-                flecs_query_cache_table_match_free(cache, qm->next_match);
-                qm->next_match = NULL;
+            if (qm && qm->_next_match) {
+                flecs_query_cache_table_match_free(cache, qm->_next_match);
+                qm->_next_match = NULL;
             }
 
             table = it.table;
@@ -896,7 +933,7 @@ void flecs_query_cache_rematch_tables(
         if (!qm) {
             qm = qt->first;
         } else {
-            qm = qm->next_match;
+            qm = qm->_next_match;
         }
 
         if (!qm) {
@@ -906,7 +943,7 @@ void flecs_query_cache_rematch_tables(
         flecs_query_cache_set_table_match(cache, qm, &it);
 
         if (table && cache->group_by_callback) {
-            if (flecs_query_cache_get_group_id(cache, table) != qm->group_id) {
+            if (flecs_query_cache_get_group_id(cache, table) != qm->_group_id) {
                 /* Update table group */
                 flecs_query_cache_remove_table_node(cache, qm);
                 flecs_query_cache_insert_table_node(cache, qm);
@@ -914,9 +951,9 @@ void flecs_query_cache_rematch_tables(
         }
     }
 
-    if (qm && qm->next_match) {
-        flecs_query_cache_table_match_free(cache, qm->next_match);
-        qm->next_match = NULL;
+    if (qm && qm->_next_match) {
+        flecs_query_cache_table_match_free(cache, qm->_next_match);
+        qm->_next_match = NULL;
     }
 
     /* Iterate all tables in cache, remove ones that weren't just matched */
@@ -1225,7 +1262,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     desc.ctx = NULL;
     desc.binding_ctx = NULL;
     desc.ctx_free = NULL;
-    desc.binding_ctx_free = NULL;    
+    desc.binding_ctx_free = NULL;
 
     ecs_query_cache_t *result = flecs_bcalloc(&stage->allocators.query_cache);
     result->entity = entity;
@@ -1249,13 +1286,17 @@ ecs_query_cache_t* flecs_query_cache_init(
     }
 
     /* Set flag for trivial caches which allows for faster iteration */
-    if ((q->flags & EcsQueryIsTrivial) && (q->flags & EcsQueryMatchOnlySelf) &&
-       !(q->flags & EcsQueryMatchWildcards))
-    {
-        if (!const_desc->order_by && !const_desc->group_by && 
-            !const_desc->order_by_callback && !const_desc->group_by_callback) 
+    if (impl->pub.flags & EcsQueryIsCacheable) {
+        if ((q->flags & EcsQueryIsTrivial) && (q->flags & EcsQueryMatchOnlySelf) &&
+        !(q->flags & EcsQueryMatchWildcards))
         {
-            q->flags |= EcsQueryTrivialCache;
+            if (!const_desc->order_by && !const_desc->group_by && 
+                !const_desc->order_by_callback && 
+                !const_desc->group_by_callback &&
+                !(const_desc->flags & EcsQueryDetectChanges))
+            {
+                q->flags |= EcsQueryTrivialCache;
+            }
         }
     }
 
@@ -1353,6 +1394,15 @@ ecs_query_cache_t* flecs_query_cache_init(
     return result;
 error:
     return NULL;
+}
+
+bool flecs_query_has_trivial_cache(
+    const ecs_query_t *query)
+{
+    if (flecs_query_impl(query)->cache) {
+        return flecs_query_cache_is_trivial(flecs_query_impl(query)->cache);
+    }
+    return false;
 }
 
 void ecs_iter_set_group(

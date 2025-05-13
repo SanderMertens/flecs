@@ -541,7 +541,7 @@ extern "C" {
 #define EcsTermIsSparse               (1u << 12)
 #define EcsTermIsUnion                (1u << 13)
 #define EcsTermIsOr                   (1u << 14)
-#define EcsTermDontFragment         (1u << 15)
+#define EcsTermDontFragment           (1u << 15)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5010,6 +5010,18 @@ struct ecs_iter_t {
  */
 #define EcsQueryTableOnly             (1u << 7u)
 
+/** Enable change detection for query.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * 
+ * Adding this flag makes it possible to use ecs_query_changed() and 
+ * ecs_iter_changed() with the query. Change detection requires the query to be
+ * cached. If cache_kind is left to the default value, this flag will cause it
+ * to default to EcsQueryCacheAuto.
+ * 
+ * \ingroup queries
+ */
+#define EcsQueryDetectChanges         (1u << 8u)
+
 
 /** Used with ecs_query_init().
  * 
@@ -9066,7 +9078,7 @@ ecs_entity_t ecs_iter_get_var(
  * @return The variable name.
  */
 FLECS_API
-char* ecs_iter_get_var_name(
+const char* ecs_iter_get_var_name(
     const ecs_iter_t *it,
     int32_t var_id);
 
@@ -31070,6 +31082,11 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& cached() {
         return cache_kind(flecs::QueryCacheAuto);
+    }
+
+    Base& detect_changes() {
+        desc_->flags |= EcsQueryDetectChanges;
+        return *this;
     }
 
     Base& expr(const char *expr) {

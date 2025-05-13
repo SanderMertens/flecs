@@ -423,27 +423,28 @@ struct ecs_query_impl_t {
  * instance, which are linked together in a list. A table may match a query
  * multiple times (due to wildcard queries) with different columns being matched
  * by the query. */
-typedef struct ecs_query_cache_triv_match_t {
+typedef struct ecs_query_triv_cache_match_t {
     ecs_query_cache_match_t *next, *prev;
     ecs_table_t *table;              /* The current table. */
     const ecs_table_record_t **trs;  /* Information about where to find field in table */
-    int32_t *monitor;                /* Used to monitor table for changes */
-} ecs_query_cache_triv_match_t;
+} ecs_query_triv_cache_match_t;
 
 struct ecs_query_cache_match_t {
-    ecs_query_cache_triv_match_t base;
-    int32_t offset;                  /* Starting point in table  */
-    int32_t count;                   /* Number of entities to iterate in table */
-    ecs_id_t *ids;                   /* Resolved (component) ids for current table */
-    ecs_entity_t *sources;           /* Subjects (sources) of ids */
-    ecs_table_t **tables;            /* Tables for fields with non-$this source */
-    ecs_termset_t set_fields;        /* Fields that are set */
-    ecs_termset_t up_fields;         /* Fields that are matched through traversal */
-    uint64_t group_id;               /* Value used to organize tables in groups */
+    ecs_query_triv_cache_match_t base;
+    int32_t _offset;                  /* Starting point in table  */
+    int32_t _count;                   /* Number of entities to iterate in table */
+    ecs_id_t *_ids;                   /* Resolved (component) ids for current table */
+    ecs_entity_t *_sources;           /* Subjects (sources) of ids */
+    ecs_table_t **_tables;            /* Tables for fields with non-$this source */
+    ecs_termset_t _set_fields;        /* Fields that are set */
+    ecs_termset_t _up_fields;         /* Fields that are matched through traversal */
+    uint64_t _group_id;               /* Value used to organize tables in groups */
+
+    int32_t *_monitor;                /* Used to monitor table for changes */
 
     /* Next match in cache for same table. Can only be not null for queries 
      * with wildcards. */
-    ecs_query_cache_match_t *next_match;
+    ecs_query_cache_match_t *_next_match;
 };
 
 /** Table record type for query table cache. A query only has one per table. */

@@ -114,7 +114,7 @@ void flecs_query_cache_build_sorted_table_range(
             const ecs_term_t *term = &cache->query->terms[order_by_term];
             int32_t field = term->field_index;
             ecs_size_t size = cache->query->sizes[field];
-            ecs_entity_t src = cur->sources[field];
+            ecs_entity_t src = cur->_sources[field];
             if (src == 0) {
                 int32_t column_index = cur->base.trs[field]->column;
                 ecs_column_t *column = &table->data.columns[column_index];
@@ -197,10 +197,10 @@ void flecs_query_cache_build_sorted_table_range(
             cur = ecs_vec_append_t(NULL, &cache->table_slices, 
                 ecs_query_cache_match_t);
             *cur = *(cur_helper->match);
-            cur->offset = cur_helper->row;
-            cur->count = 1;
+            cur->_offset = cur_helper->row;
+            cur->_count = 1;
         } else {
-            cur->count ++;
+            cur->_count ++;
         }
 
         cur_helper->row ++;
@@ -235,7 +235,7 @@ void flecs_query_cache_build_sorted_tables(
         if (cur) {
             do {
                 /* Find list for current group */
-                uint64_t group_id = cur->group_id;
+                uint64_t group_id = cur->_group_id;
                 ecs_query_cache_table_list_t *list = ecs_map_get_deref(
                     &cache->groups, ecs_query_cache_table_list_t, group_id);
                 ecs_assert(list != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -291,7 +291,7 @@ void flecs_query_cache_sort_tables(
                 ecs_query_cache_match_t *cur, *next;
                 for (cur = qt->first; cur != NULL; cur = next) {
                     flecs_query_sync_match_monitor(impl, cur);
-                    next = cur->next_match;
+                    next = cur->_next_match;
                 }
             }
         }

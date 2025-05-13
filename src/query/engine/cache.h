@@ -40,3 +40,10 @@ int32_t flecs_query_cache_table_count(
 /* Return number of entities in cache (requires iterating tables) */
 int32_t flecs_query_cache_entity_count(
     const ecs_query_cache_t *cache);
+
+bool flecs_query_cache_is_trivial(
+    ecs_query_cache_t *cache);
+
+/* Return whether query has trivial cache */
+bool flecs_query_has_trivial_cache(
+    const ecs_query_t *query);

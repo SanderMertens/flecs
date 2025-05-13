@@ -37,12 +37,17 @@ bool flecs_query_get_match_monitor(
     ecs_query_cache_match_t *match)
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (match->base.monitor) {
-        return false;
-    }
 
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+    bool is_trivial = flecs_query_cache_is_trivial(cache);
+    ecs_assert(!is_trivial, ECS_INVALID_OPERATION, 
+        "query was not created with change detection enabled");
+
+    if (match->_monitor) {
+        return false;
+    }
+
     int32_t *monitor = flecs_balloc(&cache->allocators.monitors);
     monitor[0] = 0;
 
@@ -70,8 +75,10 @@ bool flecs_query_get_match_monitor(
         }
 
         /* Don't track fields that aren't set */
-        if (!(match->set_fields & (1llu << field))) {
-            continue;
+        if (!is_trivial) {
+            if (!(match->_set_fields & (1llu << field))) {
+                continue;
+            }
         }
 
         flecs_query_get_column_for_field(q, match, field, &tc);
@@ -82,7 +89,7 @@ bool flecs_query_get_match_monitor(
         monitor[field + 1] = 0;
     }
 
-    match->base.monitor = monitor;
+    match->_monitor = monitor;
 
     impl->pub.flags |= EcsQueryHasChangeDetection;
 
@@ -175,18 +182,21 @@ bool flecs_query_check_match_monitor_term(
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_query_cache_t *cache = impl->cache;
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INVALID_OPERATION, 
+        "query was not created with change detection enabled");
+
     if (flecs_query_get_match_monitor(impl, match)) {
         return true;
     }
 
-    int32_t *monitor = match->base.monitor;
+    int32_t *monitor = match->_monitor;
     int32_t state = monitor[field];
     if (state == -1) {
         return false;
     }
 
-    ecs_query_cache_t *cache = impl->cache;
-    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *table = match->base.table;
     if (table) {
         int32_t *dirty_state = flecs_table_get_dirty_state(
@@ -258,13 +268,16 @@ bool flecs_query_check_match_monitor(
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_query_cache_t *cache = impl->cache;
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INVALID_OPERATION, 
+        "query was not created with change detection enabled");
+
     if (flecs_query_get_match_monitor(impl, match)) {
         return true;
     }
 
-    ecs_query_cache_t *cache = impl->cache;
-    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t *monitor = match->base.monitor;
+    int32_t *monitor = match->_monitor;
     ecs_table_t *table = match->base.table;
     int32_t *dirty_state = NULL;
     if (table) {
@@ -278,11 +291,25 @@ bool flecs_query_check_match_monitor(
 
     const ecs_query_t *query = cache->query;
     ecs_world_t *world = query->world;
-    int32_t i, field_count = query->field_count;
-    ecs_entity_t *sources = match->sources;
+    int32_t i, field_count = query->field_count; 
     const ecs_table_record_t **trs = it ? it->trs : match->base.trs;
-    ecs_flags64_t set_fields = it ? it->set_fields : match->set_fields;
-    
+    bool trivial_cache = flecs_query_cache_is_trivial(cache);
+
+    ecs_entity_t *sources = NULL;
+    ecs_flags64_t set_fields = 0;
+
+    if (it) {
+        set_fields = it->set_fields;
+    } else if (!trivial_cache) {
+        set_fields = match->_set_fields;
+    } else {
+        set_fields = (1llu << field_count) - 1;
+    }
+
+    if (!trivial_cache) {
+        sources = match->_sources;
+    }
+
     ecs_assert(trs != NULL, ECS_INTERNAL_ERROR, NULL);
 
     for (i = 0; i < field_count; i ++) {
@@ -296,7 +323,7 @@ bool flecs_query_check_match_monitor(
         }
 
         int32_t column = trs[i]->column;
-        ecs_entity_t src = sources[i];
+        ecs_entity_t src = sources ? sources[i] : 0;
         if (!src) {
             if (column >= 0) {
                 /* owned component */
@@ -310,8 +337,13 @@ bool flecs_query_check_match_monitor(
             }
         }
 
+        if (trivial_cache) {
+            continue;
+        }
+
         /* Component from non-this source */
-        ecs_entity_t fixed_src = match->sources[i];
+        ecs_assert(match->_sources != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t fixed_src = match->_sources[i];
         ecs_table_t *src_table = ecs_get_table(world, fixed_src);
         ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t *src_dirty_state = flecs_table_get_dirty_state(
@@ -452,7 +484,12 @@ void flecs_query_sync_match_monitor(
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (!match->base.monitor) {
+    ecs_query_cache_t *cache = impl->cache;
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INVALID_OPERATION, 
+        "query was not created with change detection enabled");
+
+    if (!match->_monitor) {
         if (impl->pub.flags & EcsQueryHasChangeDetection) {
             flecs_query_get_match_monitor(impl, match);
         } else {
@@ -460,9 +497,7 @@ void flecs_query_sync_match_monitor(
         }
     }
 
-    ecs_query_cache_t *cache = impl->cache;
-    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t *monitor = match->base.monitor;
+    int32_t *monitor = match->_monitor;
     ecs_table_t *table = match->base.table;
     if (table) {
         int32_t *dirty_state = flecs_table_get_dirty_state(
