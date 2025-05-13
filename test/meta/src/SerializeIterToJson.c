@@ -1854,8 +1854,8 @@ void SerializeIterToJson_serialize_paged_iterator_w_vars(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     ecs_iter_t pit = ecs_page_iter(&it, 1, 3);
 
-    test_assert(var < pit.variable_count);
-    test_json("Var", pit.variable_names[var]);
+    test_assert(var < ecs_iter_get_var_count(&pit));
+    test_json("Var", ecs_iter_get_var_name(&pit, var));
 
     test_bool(true, ecs_page_next(&pit));
     test_int(2, pit.count);

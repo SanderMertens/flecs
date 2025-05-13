@@ -24,15 +24,19 @@ bool flecs_json_serialize_vars(
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
-    char **variable_names = it->variable_names;
-    int32_t var_count = it->variable_count;
+    if (!it->query) {
+        return 0;
+    }
+
+    char **variable_names = it->query->vars;
+    int32_t var_count = it->query->var_count;
     int32_t actual_count = 0;
 
     for (int i = 1; i < var_count; i ++) {
         const char *var_name = variable_names[i];
         if (flecs_json_skip_variable(var_name)) continue;
 
-        ecs_entity_t var = it->variables[i].entity;
+        ecs_entity_t var = ecs_iter_get_vars(it)[i].entity;
         if (!var) {
             /* Can't happen, but not the place of the serializer to complain */
             continue;
@@ -91,7 +95,7 @@ int flecs_json_serialize_matches(
                     }
 
                     ecs_iter_t qit = ecs_query_iter(world, q);
-                    if (!qit.variables) {
+                    if (!ecs_iter_get_vars(&qit)) {
                         ecs_iter_fini(&qit);
                         continue;
                     }

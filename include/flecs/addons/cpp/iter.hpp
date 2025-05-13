@@ -354,7 +354,7 @@ public:
 
     /* Return group id for current table (grouped queries only) */
     uint64_t group_id() const {
-        return iter_->group_id;
+        return ecs_iter_get_group(iter_);
     }
 
     /** Get value of variable by id.

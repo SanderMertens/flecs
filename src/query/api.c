@@ -72,8 +72,9 @@ int flecs_query_set_caching_policy(
     const ecs_query_desc_t *desc)
 {
     ecs_query_cache_kind_t kind = desc->cache_kind;
-    bool group_order_by = desc->group_by || desc->group_by_callback || 
-            desc->order_by || desc->order_by_callback;
+    bool require_caching = desc->group_by || desc->group_by_callback || 
+            desc->order_by || desc->order_by_callback || 
+            (desc->flags & EcsQueryDetectChanges);
 
     /* If the query has a Cascade term it'll use group_by */
     int32_t i, term_count = impl->pub.term_count;
@@ -81,13 +82,13 @@ int flecs_query_set_caching_policy(
     for (i = 0; i < term_count; i ++) {
         const ecs_term_t *term = &terms[i];
         if (term->src.id & EcsCascade) {
-            group_order_by = true;
+            require_caching = true;
             break;
         }
     }
 
 #ifdef FLECS_DEFAULT_TO_UNCACHED_QUERIES
-    if (kind == EcsQueryCacheDefault && !group_order_by) {
+    if (kind == EcsQueryCacheDefault && !require_caching) {
         kind = EcsQueryCacheNone;
     }
 #endif
@@ -95,7 +96,7 @@ int flecs_query_set_caching_policy(
     /* If caching policy is default, try to pick a policy that does the right
      * thing in most cases. */
     if (kind == EcsQueryCacheDefault) {
-        if (desc->entity || group_order_by) {
+        if (desc->entity || require_caching) {
             /* If the query is created with an entity handle (typically 
              * indicating that the query is named or belongs to a system) the
              * chance is very high that the query will be reused, so enable
@@ -114,8 +115,9 @@ int flecs_query_set_caching_policy(
     /* Don't cache query, even if it has cacheable terms */
     if (kind == EcsQueryCacheNone) {
         impl->pub.cache_kind = EcsQueryCacheNone;
-        if (group_order_by && !(impl->pub.flags & EcsQueryNested)) {
-            ecs_err("cannot create uncached query with group_by/order_by");
+        if (require_caching && !(impl->pub.flags & EcsQueryNested)) {
+            ecs_err("cannot create uncached query with "
+                "group_by/order_by/change detection");
             return -1;
         }
         return 0;
@@ -147,7 +149,7 @@ int flecs_query_set_caching_policy(
              * if the cacheable part of the query contains not just not/optional
              * terms, as this would build a cache that contains all tables. */
             int32_t not_optional_terms = 0, cacheable_terms = 0;
-            if (!group_order_by) {
+            if (!require_caching) {
                 for (i = 0; i < term_count; i ++) {
                     const ecs_term_t *term = &terms[i];
                     if (term->flags_ & EcsTermIsCacheable) {
@@ -159,7 +161,7 @@ int flecs_query_set_caching_policy(
                 }
             }
 
-            if (group_order_by || cacheable_terms != not_optional_terms) {
+            if (require_caching || cacheable_terms != not_optional_terms) {
                 impl->pub.cache_kind = EcsQueryCacheAuto;
             } else {
                 impl->pub.cache_kind = EcsQueryCacheNone;

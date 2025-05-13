@@ -85,7 +85,7 @@ void TrivialIter_cached_trivial_test(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_set_var(&it, 0, e);
     test_assert(it.flags & EcsIterTrivialTest);
-    test_assert(it.flags & EcsIterCached);
+    test_assert(it.flags & EcsIterTrivialCached);
     test_assert(!(it.flags & EcsIterTrivialSearch));
     ecs_iter_fini(&it);
 

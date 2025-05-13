@@ -991,6 +991,9 @@ void Variables_2_trivial_1_any_component(void);
 void Variables_first_invalid_var_name_and_id(void);
 void Variables_src_invalid_var_name_and_id(void);
 void Variables_second_invalid_var_name_and_id(void);
+void Variables_get_vars_from_chained_iter(void);
+void Variables_set_var_from_chained_iter(void);
+void Variables_set_var_range_from_chained_iter(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -1719,6 +1722,7 @@ void GroupBy_group_by_w_deleted_group_id(void);
 void GroupBy_group_by_callbacks(void);
 void GroupBy_group_by_default_action(void);
 void GroupBy_group_table_count(void);
+void GroupBy_get_group_from_chained_iter(void);
 
 // Testsuite 'MemberTarget'
 void MemberTarget_setup(void);
@@ -6164,6 +6168,18 @@ bake_test_case Variables_testcases[] = {
     {
         "second_invalid_var_name_and_id",
         Variables_second_invalid_var_name_and_id
+    },
+    {
+        "get_vars_from_chained_iter",
+        Variables_get_vars_from_chained_iter
+    },
+    {
+        "set_var_from_chained_iter",
+        Variables_set_var_from_chained_iter
+    },
+    {
+        "set_var_range_from_chained_iter",
+        Variables_set_var_range_from_chained_iter
     }
 };
 
@@ -9001,6 +9017,10 @@ bake_test_case GroupBy_testcases[] = {
     {
         "group_table_count",
         GroupBy_group_table_count
+    },
+    {
+        "get_group_from_chained_iter",
+        GroupBy_get_group_from_chained_iter
     }
 };
 
@@ -11301,7 +11321,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        189,
+        192,
         Variables_testcases,
         1,
         Variables_params
@@ -11390,7 +11410,7 @@ static bake_test_suite suites[] = {
         "GroupBy",
         NULL,
         NULL,
-        12,
+        13,
         GroupBy_testcases
     },
     {

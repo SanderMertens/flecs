@@ -60,14 +60,17 @@ void GroupBy_group_by(void) {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
+    test_uint(ecs_iter_get_group(&it), TagA);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e2);
+    test_uint(ecs_iter_get_group(&it), TagB);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
-    test_int(it.entities[0], e1);    
+    test_int(it.entities[0], e1);
+    test_uint(ecs_iter_get_group(&it), TagC);
 
     test_bool(ecs_query_next(&it), false);
 
@@ -203,13 +206,13 @@ void GroupBy_group_by_iter_one(void) {
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
     test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
-    test_uint(TgtB, it.group_id);
+    test_uint(TgtB, ecs_iter_get_group(&it));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
     test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
-    test_uint(TgtB, it.group_id);
+    test_uint(TgtB, ecs_iter_get_group(&it));
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -250,13 +253,13 @@ void GroupBy_group_by_iter_one_all_groups(void) {
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
     test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
-    test_uint(TgtB, it.group_id);
+    test_uint(TgtB, ecs_iter_get_group(&it));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
     test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
-    test_uint(TgtB, it.group_id);
+    test_uint(TgtB, ecs_iter_get_group(&it));
     test_bool(false, ecs_query_next(&it));
 
     it = ecs_query_iter(world, q);
@@ -266,13 +269,13 @@ void GroupBy_group_by_iter_one_all_groups(void) {
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
     test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
-    test_uint(TgtA, it.group_id);
+    test_uint(TgtA, ecs_iter_get_group(&it));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
     test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
-    test_uint(TgtA, it.group_id);
+    test_uint(TgtA, ecs_iter_get_group(&it));
     test_bool(false, ecs_query_next(&it));
 
     it = ecs_query_iter(world, q);
@@ -282,13 +285,13 @@ void GroupBy_group_by_iter_one_all_groups(void) {
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
     test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
-    test_uint(TgtC, it.group_id);
+    test_uint(TgtC, ecs_iter_get_group(&it));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
     test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
-    test_uint(TgtC, it.group_id);
+    test_uint(TgtC, ecs_iter_get_group(&it));
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -501,8 +504,8 @@ void GroupBy_group_by_callbacks(void) {
     test_int(2, it.count);
     test_uint(e1, it.entities[0]);
     test_uint(e2, it.entities[1]);
-    test_uint(tgt_a, it.group_id);
-    const ecs_query_group_info_t *gi = ecs_query_get_group_info(q, it.group_id);
+    test_uint(tgt_a, ecs_iter_get_group(&it));
+    const ecs_query_group_info_t *gi = ecs_query_get_group_info(q, ecs_iter_get_group(&it));
     test_assert(gi != NULL);
     test_assert(gi->ctx != NULL);
     test_uint(tgt_a, *(uint64_t*)gi->ctx);
@@ -510,8 +513,8 @@ void GroupBy_group_by_callbacks(void) {
     test_assert(ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(tgt_b, it.group_id);
-    gi = ecs_query_get_group_info(q, it.group_id);
+    test_uint(tgt_b, ecs_iter_get_group(&it));
+    gi = ecs_query_get_group_info(q, ecs_iter_get_group(&it));
     test_assert(gi != NULL);
     test_assert(gi->ctx != NULL);
     test_uint(tgt_b, *(uint64_t*)gi->ctx);
@@ -555,19 +558,19 @@ void GroupBy_group_by_default_action(void) {
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
     test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
-    test_uint(TgtA, it.group_id);
+    test_uint(TgtA, ecs_iter_get_group(&it));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
     test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
-    test_uint(TgtB, it.group_id);
+    test_uint(TgtB, ecs_iter_get_group(&it));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
     test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
-    test_uint(TgtC, it.group_id);
+    test_uint(TgtC, ecs_iter_get_group(&it));
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -666,6 +669,44 @@ void GroupBy_group_table_count(void) {
     gi_b = ecs_query_get_group_info(q, TgtB);
     test_assert(gi_a == NULL);
     test_assert(gi_b == NULL);
+
+    ecs_fini(world);
+}
+
+void GroupBy_get_group_from_chained_iter(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagX);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{TagX}},
+        .group_by_callback = group_by_first_id
+    });
+
+    ecs_entity_t e1 = ecs_new_w(world, TagX);
+    ecs_entity_t e2 = ecs_new_w(world, TagX);
+    ecs_entity_t e3 = ecs_new_w(world, TagX);
+
+    ecs_add_id(world, e1, TagC);
+    ecs_add_id(world, e2, TagB);
+    ecs_add_id(world, e3, TagA);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_t pit = ecs_page_iter(&it, 0, 2);
+    test_bool(ecs_page_next(&pit), true);
+    test_int(pit.count, 1);
+    test_int(pit.entities[0], e3);
+    test_uint(ecs_iter_get_group(&pit), TagA);
+
+    test_bool(ecs_page_next(&pit), true);
+    test_int(pit.count, 1);
+    test_int(pit.entities[0], e2);
+    test_uint(ecs_iter_get_group(&pit), TagB);
+
+    test_bool(ecs_page_next(&pit), false);
 
     ecs_fini(world);
 }

@@ -9,7 +9,8 @@ void ChangeDetection_query_changed_after_new(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -43,7 +44,8 @@ void ChangeDetection_query_changed_after_delete(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -74,7 +76,8 @@ void ChangeDetection_query_changed_after_add(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -105,7 +108,8 @@ void ChangeDetection_query_changed_after_remove(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -137,7 +141,8 @@ void ChangeDetection_query_changed_after_set(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -170,7 +175,8 @@ void ChangeDetection_query_change_after_modified(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -210,7 +216,8 @@ void ChangeDetection_query_change_after_out_system(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -246,13 +253,15 @@ void ChangeDetection_query_change_after_out_query_no_data_flag(void) {
 
     ecs_query_t *q_write = ecs_query(world, {
         .expr = "[inout] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q_write != NULL);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -297,7 +306,8 @@ void ChangeDetection_query_change_after_in_system(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -331,7 +341,8 @@ void ChangeDetection_query_change_after_modified_out_term(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position, [out] Velocity",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -376,7 +387,8 @@ void ChangeDetection_query_change_check_iter(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     test_assert(q != NULL);
@@ -456,7 +468,8 @@ void ChangeDetection_query_change_check_iter_after_skip_read(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -498,12 +511,14 @@ void ChangeDetection_query_change_check_iter_after_skip_write(void) {
 
     ecs_query_t *qw = ecs_query(world, {
         .expr = "[out] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -552,7 +567,8 @@ void ChangeDetection_query_change_parent_term(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position(up)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     test_assert(q != NULL);
@@ -591,7 +607,8 @@ void ChangeDetection_query_change_prefab_term(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position(up IsA)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -628,7 +645,8 @@ void ChangeDetection_query_change_parent_term_w_tag(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position(up), ?Prefab",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -666,7 +684,8 @@ void ChangeDetection_query_change_prefab_term_w_tag(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position(up IsA)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     test_bool(true, ecs_query_changed(q));
@@ -708,7 +727,8 @@ void ChangeDetection_query_changed_w_or(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position, TagA || TagB, [in] Velocity",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
 
@@ -760,7 +780,8 @@ void ChangeDetection_query_changed_or(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "TagA, [in] Position || [in] Velocity, TagB",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
 
@@ -805,7 +826,8 @@ void ChangeDetection_query_changed_tag(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "TagA",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     
@@ -832,7 +854,8 @@ void ChangeDetection_query_changed_no_source(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "TagA, [out] TagB()",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     
@@ -859,7 +882,8 @@ void ChangeDetection_query_changed_no_source_component(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position, [out] Velocity()",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     
@@ -886,7 +910,8 @@ void ChangeDetection_query_changed_w_not_out(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position, [out] !Velocity",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
     
@@ -912,7 +937,8 @@ void ChangeDetection_query_changed_w_singleton(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position, Velocity($)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     test_bool(true, ecs_query_changed(q));
@@ -978,7 +1004,8 @@ void ChangeDetection_query_changed_w_only_singleton(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position($)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     {
@@ -1017,7 +1044,8 @@ void ChangeDetection_query_changed_w_only_singleton_after_set(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position($)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     {
@@ -1069,7 +1097,8 @@ void ChangeDetection_query_changed_w_only_singleton_after_out_term(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position($)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     ecs_query_t *q_write = ecs_query(world, {
@@ -1134,7 +1163,8 @@ void ChangeDetection_query_changed_w_only_singleton_after_singleton_out_term(voi
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position($)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     ecs_query_t *q_write = ecs_query(world, {
@@ -1200,7 +1230,8 @@ void ChangeDetection_query_changed_w_only_parent(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position(up)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     {
@@ -1242,7 +1273,8 @@ void ChangeDetection_query_changed_w_only_parent_after_set(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position(up)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     {
@@ -1298,7 +1330,8 @@ void ChangeDetection_query_changed_w_only_parent_after_out_term(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position(up)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     ecs_query_t *q_write = ecs_query(world, {
@@ -1368,7 +1401,8 @@ void ChangeDetection_query_changed_w_only_parent_after_parent_out_term(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position(up)",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
 
     ecs_query_t *q_write = ecs_query(world, {
@@ -1437,13 +1471,15 @@ void ChangeDetection_query_change_w_optional(void) {
 
     ecs_query_t *q_read = ecs_query(world, {
         .expr = "[in] Position, [in] Velocity",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q_read != NULL);
 
     ecs_query_t *q_write = ecs_query(world, {
         .expr = "[in] Position, [in] Velocity, [out] ?Mass",
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q_write != NULL);
 
@@ -1490,7 +1526,8 @@ void ChangeDetection_query_changed_after_count(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = foo, .inout = EcsIn }},
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(q != NULL);
 
@@ -1531,7 +1568,8 @@ void ChangeDetection_staged_query_w_shared_inout_field(void) {
 
     ecs_query_t *qr = ecs_query(world, {
         .terms = {{ ecs_id(Position), .inout = EcsIn }},
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(qr != NULL);
 
@@ -1594,7 +1632,8 @@ void ChangeDetection_staged_query_w_fixed_inout_field(void) {
 
     ecs_query_t *qr = ecs_query(world, {
         .terms = {{ ecs_id(Position), .inout = EcsIn }},
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(qr != NULL);
 
@@ -1661,7 +1700,8 @@ void ChangeDetection_staged_query_w_fixed_inout_field_read(void) {
             { ecs_id(Position), .src.id = e, .inout = EcsIn },
             { ecs_id(Position), .inout = EcsIn }
         },
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(qr != NULL);
 
@@ -1721,7 +1761,8 @@ void ChangeDetection_simple_write_query(void) {
             { ecs_id(Position), .src.id = e, .inout = EcsIn },
             { ecs_id(Position), .inout = EcsIn }
         },
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(qr != NULL);
 
@@ -1776,7 +1817,8 @@ void ChangeDetection_change_detection_w_early_out(void) {
             { ecs_id(Position), .src.id = e, .inout = EcsIn },
             { ecs_id(Position), .inout = EcsIn }
         },
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(qr != NULL);
 
@@ -1832,7 +1874,8 @@ void ChangeDetection_change_detection_w_early_out_skip(void) {
             { ecs_id(Position), .src.id = e, .inout = EcsIn },
             { ecs_id(Position), .inout = EcsIn }
         },
-        .cache_kind = EcsQueryCacheAuto
+        .cache_kind = EcsQueryCacheAuto,
+        .flags = EcsQueryDetectChanges
     });
     test_assert(qr != NULL);
 

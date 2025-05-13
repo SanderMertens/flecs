@@ -7518,6 +7518,7 @@ void Basic_match_empty_tables_w_wildcard_delete_tables(void) {
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
         test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
+
         test_bool( ecs_query_next(&it), false);
     }
 
