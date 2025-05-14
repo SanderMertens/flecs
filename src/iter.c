@@ -101,7 +101,9 @@ void* ecs_field_w_size(
         "invalid field index %d", index);
     ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
         "field index %d out of bounds", index);
-    ecs_check(!size || ecs_field_size(it, index) == size || 
+    ecs_check(size != 0, ECS_INVALID_PARAMETER, 
+        "missing size for field %d", index);
+    ecs_check(ecs_field_size(it, index) == size || 
         !ecs_field_size(it, index),
             ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
     (void)size;
@@ -142,10 +144,6 @@ void* ecs_field_w_size(
     ecs_assert((row < table->data.count) ||
         (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
             ECS_INTERNAL_ERROR, NULL);
-
-    if (!size) {
-        size = (size_t)column->ti->size;
-    }
 
     return ECS_ELEM(column->data, (ecs_size_t)size, row);
 error:
