@@ -1708,6 +1708,30 @@ void ChangeDetection_staged_query_w_fixed_inout_field_read(void);
 void ChangeDetection_simple_write_query(void);
 void ChangeDetection_change_detection_w_early_out(void);
 void ChangeDetection_change_detection_w_early_out_skip(void);
+void ChangeDetection_mark_dirty_w_uncached_trivial_search(void);
+void ChangeDetection_mark_dirty_w_uncached_trivial_test(void);
+void ChangeDetection_mark_dirty_w_uncached_w_up_search(void);
+void ChangeDetection_mark_dirty_w_uncached_w_up_test(void);
+void ChangeDetection_mark_dirty_w_uncached_w_fixed_search(void);
+void ChangeDetection_mark_dirty_w_uncached_w_fixed_test(void);
+void ChangeDetection_mark_dirty_w_uncached_w_wildcard_search(void);
+void ChangeDetection_mark_dirty_w_uncached_w_wildcard_test(void);
+void ChangeDetection_mark_dirty_w_cached_trivial_search(void);
+void ChangeDetection_mark_dirty_w_cached_trivial_test(void);
+void ChangeDetection_mark_dirty_w_cached_w_up_search(void);
+void ChangeDetection_mark_dirty_w_cached_w_up_test(void);
+void ChangeDetection_mark_dirty_w_cached_w_fixed_search(void);
+void ChangeDetection_mark_dirty_w_cached_w_fixed_test(void);
+void ChangeDetection_mark_dirty_w_cached_w_wildcard_search(void);
+void ChangeDetection_mark_dirty_w_cached_w_wildcard_test(void);
+void ChangeDetection_detect_w_trivial_search(void);
+void ChangeDetection_detect_w_trivial_test(void);
+void ChangeDetection_detect_w_up_search(void);
+void ChangeDetection_detect_w_up_test(void);
+void ChangeDetection_detect_w_fixed_search(void);
+void ChangeDetection_detect_w_fixed_test(void);
+void ChangeDetection_detect_w_wildcard_search(void);
+void ChangeDetection_detect_w_wildcard_test(void);
 
 // Testsuite 'GroupBy'
 void GroupBy_group_by(void);
@@ -8966,6 +8990,102 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "change_detection_w_early_out_skip",
         ChangeDetection_change_detection_w_early_out_skip
+    },
+    {
+        "mark_dirty_w_uncached_trivial_search",
+        ChangeDetection_mark_dirty_w_uncached_trivial_search
+    },
+    {
+        "mark_dirty_w_uncached_trivial_test",
+        ChangeDetection_mark_dirty_w_uncached_trivial_test
+    },
+    {
+        "mark_dirty_w_uncached_w_up_search",
+        ChangeDetection_mark_dirty_w_uncached_w_up_search
+    },
+    {
+        "mark_dirty_w_uncached_w_up_test",
+        ChangeDetection_mark_dirty_w_uncached_w_up_test
+    },
+    {
+        "mark_dirty_w_uncached_w_fixed_search",
+        ChangeDetection_mark_dirty_w_uncached_w_fixed_search
+    },
+    {
+        "mark_dirty_w_uncached_w_fixed_test",
+        ChangeDetection_mark_dirty_w_uncached_w_fixed_test
+    },
+    {
+        "mark_dirty_w_uncached_w_wildcard_search",
+        ChangeDetection_mark_dirty_w_uncached_w_wildcard_search
+    },
+    {
+        "mark_dirty_w_uncached_w_wildcard_test",
+        ChangeDetection_mark_dirty_w_uncached_w_wildcard_test
+    },
+    {
+        "mark_dirty_w_cached_trivial_search",
+        ChangeDetection_mark_dirty_w_cached_trivial_search
+    },
+    {
+        "mark_dirty_w_cached_trivial_test",
+        ChangeDetection_mark_dirty_w_cached_trivial_test
+    },
+    {
+        "mark_dirty_w_cached_w_up_search",
+        ChangeDetection_mark_dirty_w_cached_w_up_search
+    },
+    {
+        "mark_dirty_w_cached_w_up_test",
+        ChangeDetection_mark_dirty_w_cached_w_up_test
+    },
+    {
+        "mark_dirty_w_cached_w_fixed_search",
+        ChangeDetection_mark_dirty_w_cached_w_fixed_search
+    },
+    {
+        "mark_dirty_w_cached_w_fixed_test",
+        ChangeDetection_mark_dirty_w_cached_w_fixed_test
+    },
+    {
+        "mark_dirty_w_cached_w_wildcard_search",
+        ChangeDetection_mark_dirty_w_cached_w_wildcard_search
+    },
+    {
+        "mark_dirty_w_cached_w_wildcard_test",
+        ChangeDetection_mark_dirty_w_cached_w_wildcard_test
+    },
+    {
+        "detect_w_trivial_search",
+        ChangeDetection_detect_w_trivial_search
+    },
+    {
+        "detect_w_trivial_test",
+        ChangeDetection_detect_w_trivial_test
+    },
+    {
+        "detect_w_up_search",
+        ChangeDetection_detect_w_up_search
+    },
+    {
+        "detect_w_up_test",
+        ChangeDetection_detect_w_up_test
+    },
+    {
+        "detect_w_fixed_search",
+        ChangeDetection_detect_w_fixed_search
+    },
+    {
+        "detect_w_fixed_test",
+        ChangeDetection_detect_w_fixed_test
+    },
+    {
+        "detect_w_wildcard_search",
+        ChangeDetection_detect_w_wildcard_search
+    },
+    {
+        "detect_w_wildcard_test",
+        ChangeDetection_detect_w_wildcard_test
     }
 };
 
@@ -11403,7 +11523,7 @@ static bake_test_suite suites[] = {
         "ChangeDetection",
         NULL,
         NULL,
-        40,
+        64,
         ChangeDetection_testcases
     },
     {

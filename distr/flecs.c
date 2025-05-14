@@ -11887,7 +11887,9 @@ void* ecs_field_w_size(
         "invalid field index %d", index);
     ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
         "field index %d out of bounds", index);
-    ecs_check(!size || ecs_field_size(it, index) == size || 
+    ecs_check(size != 0, ECS_INVALID_PARAMETER, 
+        "missing size for field %d", index);
+    ecs_check(ecs_field_size(it, index) == size || 
         !ecs_field_size(it, index),
             ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
     (void)size;
@@ -11928,10 +11930,6 @@ void* ecs_field_w_size(
     ecs_assert((row < table->data.count) ||
         (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
             ECS_INTERNAL_ERROR, NULL);
-
-    if (!size) {
-        size = (size_t)column->ti->size;
-    }
 
     return ECS_ELEM(column->data, (ecs_size_t)size, row);
 error:
@@ -67423,7 +67421,7 @@ void MonitorStats(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
     ecs_monitor_stats_ctx_t *ctx = it->ctx;
 
-    EcsStatsHeader *hdr = ecs_field_w_size(it, 0, 0);
+    EcsStatsHeader *hdr = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
 
     ecs_ftime_t elapsed = hdr->elapsed;
     hdr->elapsed += it->delta_time;
@@ -67513,8 +67511,8 @@ static
 void ReduceStats(ecs_iter_t *it) {
     ecs_reduce_stats_ctx_t *ctx = it->ctx;
 
-    void *dst = ecs_field_w_size(it, 0, 0);
-    void *src = ecs_field_w_size(it, 0, 1);
+    void *dst = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
+    void *src = ecs_field_w_size(it, ecs_field_size(it, 1), 1);
 
     dst = ECS_OFFSET_T(dst, EcsStatsHeader);
     src = ECS_OFFSET_T(src, EcsStatsHeader);
@@ -74709,6 +74707,13 @@ bool ecs_query_changed(
     ecs_assert(q->cache_kind != EcsQueryCacheNone, ECS_INVALID_OPERATION, 
         "change detection is only supported on cached queries");
 
+    if (q->read_fields & q->fixed_fields) {
+        if (!impl->monitor) {
+            /* Create change monitor for fixed fields */
+            flecs_query_get_fixed_monitor(impl, false);
+        }
+    }
+
     /* If query reads terms with fixed sources, check those first as that's 
      * cheaper than checking entries in the cache. */
     if (impl->monitor) {
@@ -76446,7 +76451,8 @@ void flecs_query_iter_constrain(
                 (cache->query->flags & EcsQueryTrivialCache && 
                  !(query->pub.flags & EcsQueryHasChangeDetection))) 
             {
-                it->flags |= EcsIterTrivialTest|EcsIterTrivialCached;
+                it->flags |= EcsIterTrivialTest|EcsIterTrivialCached|
+                    EcsIterTrivialChangeDetection;
                 it->ids = cache->query->ids;
                 it->sources = cache->sources;
                 it->set_fields = flecs_uto(uint32_t, (1llu << it->field_count) - 1);
@@ -76458,7 +76464,8 @@ void flecs_query_iter_constrain(
         if (!cache) { 
             if ((flags & (trivial_flags)) == trivial_flags) {
                 if (!(flags & EcsQueryMatchWildcards)) {
-                    it->flags |= EcsIterTrivialSearch;
+                    it->flags |= EcsIterTrivialSearch|
+                        EcsIterTrivialChangeDetection;
                 }
             }
         } else if (flags & EcsQueryIsCacheable) {
@@ -76466,7 +76473,8 @@ void flecs_query_iter_constrain(
                 (cache->query->flags & EcsQueryTrivialCache && 
                  !(query->pub.flags & EcsQueryHasChangeDetection))) 
             {
-                it->flags |= EcsIterTrivialSearch|EcsIterTrivialCached;
+                it->flags |= EcsIterTrivialSearch|EcsIterTrivialCached|
+                    EcsIterTrivialChangeDetection;
                 it->ids = cache->query->ids;
                 it->sources = cache->sources;
                 it->set_fields = flecs_uto(uint32_t, (1llu << it->field_count) - 1);
@@ -76504,6 +76512,19 @@ void flecs_query_change_detection(
     }
 }
 
+static
+void flecs_query_self_change_detection(
+    ecs_iter_t *it,
+    ecs_query_iter_t *qit,
+    ecs_query_impl_t *impl)
+{
+    if (!it->table->dirty_state) {
+        return;
+    }
+
+    flecs_query_change_detection(it, qit, impl);
+}
+
 bool ecs_query_next(
     ecs_iter_t *it)
 {
@@ -76520,7 +76541,11 @@ bool ecs_query_next(
 
     bool redo = it->flags & EcsIterIsValid;
     if (redo) {
-        flecs_query_change_detection(it, qit, impl);
+        if (it->flags & EcsIterTrivialChangeDetection) {
+            flecs_query_self_change_detection(it, qit, impl);
+        } else {
+            flecs_query_change_detection(it, qit, impl);
+        }
     }
 
     it->flags &= ~(EcsIterSkip);
@@ -76565,12 +76590,14 @@ bool ecs_query_next(
         /* Uncached iterator modes */
         if (it->flags & EcsIterTrivialSearch) {
             ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
+
             ecs_query_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
             if (flecs_query_is_trivial_search(&ctx, op_ctx, redo)) {
                 goto yield;
             }
         } else if (it->flags & EcsIterTrivialTest) {
             ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
+
             int32_t fields = ctx.query->pub.term_count;
             ecs_flags64_t mask = (2llu << (fields - 1)) - 1;
             if (flecs_query_trivial_test(&ctx, redo, mask)) {

@@ -538,6 +538,13 @@ bool ecs_query_changed(
     ecs_assert(q->cache_kind != EcsQueryCacheNone, ECS_INVALID_OPERATION, 
         "change detection is only supported on cached queries");
 
+    if (q->read_fields & q->fixed_fields) {
+        if (!impl->monitor) {
+            /* Create change monitor for fixed fields */
+            flecs_query_get_fixed_monitor(impl, false);
+        }
+    }
+
     /* If query reads terms with fixed sources, check those first as that's 
      * cheaper than checking entries in the cache. */
     if (impl->monitor) {

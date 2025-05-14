@@ -1579,7 +1579,7 @@ void Cached_query_iter_10_components(void) {
 
     int i;
     for (i = 0; i < 10; i ++) {
-        CompA *ptr = ecs_field_w_size(&it, 0, i);
+        CompA *ptr = ecs_field_w_size(&it, sizeof(CompA), i);
         test_assert(ptr != NULL);
         test_int(ptr[0].v, 10);
     }
@@ -1599,7 +1599,7 @@ void Cached_query_iter_10_components(void) {
     test_int(ecs_field_id(&it, 9), ecs_id(CompJ));
 
     for (i = 0; i < 10; i ++) {
-        CompA *ptr = ecs_field_w_size(&it, 0, i);
+        CompA *ptr = ecs_field_w_size(&it, sizeof(CompA), i);
         test_assert(ptr != NULL);
         test_int(ptr[0].v, 10);
     }
@@ -1702,7 +1702,7 @@ void Cached_2_terms_1_filter(void) {
     test_assert(it.sizes != NULL);
     test_assert(it.trs != NULL);
 
-    test_assert(ecs_field_w_size(&it, 0, 1) != NULL);
+    test_assert(ecs_field_w_size(&it, sizeof(Velocity), 1) != NULL);
 
     test_bool(ecs_query_next(&it), false);
 
@@ -1747,7 +1747,7 @@ void Cached_3_terms_2_filter(void) {
     test_assert(it.sizes != NULL);
     test_assert(it.trs != NULL);
 
-    test_assert(ecs_field_w_size(&it, 0, 2) != NULL);
+    test_assert(ecs_field_w_size(&it, sizeof(Mass), 2) != NULL);
 
     test_bool(ecs_query_next(&it), false);
 
