@@ -29,8 +29,6 @@ void flecs_query_iter_constrain(
     flecs_query_iter_run_ctx_init(it, &ctx);
     ecs_assert(ctx.written != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_os_perf_trace_push("flecs.query.iter.constrain");
-
     const ecs_query_impl_t *query = ctx.query;
     const ecs_query_t *q = &query->pub;
     ecs_flags64_t it_written = it->constrained_vars;
@@ -121,10 +119,6 @@ void flecs_query_iter_constrain(
      * query plan when using a specialized iterator mode, manually call
      * the operation on iterator init. */
     flecs_query_setids(NULL, false, &ctx);
-}
-    }
-
-    ecs_os_perf_trace_pop("flecs.query.iter.constrain");
 }
 
 static
