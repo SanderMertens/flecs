@@ -1561,18 +1561,6 @@ typedef struct ecs_query_cache_table_list_t {
     ecs_query_group_info_t info;
 } ecs_query_cache_table_list_t;
 
-/* Query event type for notifying queries of world events */
-typedef enum ecs_query_cache_eventkind_t {
-    EcsQueryTableMatch,
-    EcsQueryTableRematch,
-    EcsQueryTableUnmatch,
-} ecs_query_cache_eventkind_t;
-
-typedef struct ecs_query_cache_event_t {
-    ecs_query_cache_eventkind_t kind;
-    ecs_table_t *table;
-} ecs_query_cache_event_t;
-
 /* Query level block allocators have sizes that depend on query field count */
 typedef struct ecs_query_cache_allocators_t {
     ecs_block_allocator_t pointers;
@@ -1730,12 +1718,6 @@ ecs_query_cache_t* flecs_query_cache_init(
 /* Destroy query cache */
 void flecs_query_cache_fini(
     ecs_query_impl_t *impl);
-
-/* Notify query cache of event (separate from query observer) */
-void flecs_query_cache_notify(
-    ecs_world_t *world,
-    ecs_query_t *q,
-    ecs_query_cache_event_t *event);
 
 /* Get cache entry for table */
 ecs_query_cache_table_t* flecs_query_cache_get_table(
@@ -2389,6 +2371,11 @@ ecs_iter_t flecs_query_iter(
 /* Internal function for initializing an iterator after vars are constrained */
 void flecs_query_iter_constrain(
     ecs_iter_t *it);
+
+/* Rematch query after cache could have been invalidated */
+void flecs_query_rematch(
+    ecs_world_t *world,
+    ecs_query_t *q);
 
 
 /**
@@ -19770,9 +19757,7 @@ void flecs_eval_component_monitor(
         for (i = 0; i < count; i ++) {
             ecs_query_t *q = elems[i];
             flecs_poly_assert(q, ecs_query_t);
-            flecs_query_cache_notify(world, q, &(ecs_query_cache_event_t) {
-                .kind = EcsQueryTableRematch
-            });
+            flecs_query_rematch(world, q);
         }
     }
 
@@ -72952,11 +72937,9 @@ error:
     return -1;
 }
 
-/* Rematch system with tables after a change happened to a watched entity */
-static
-void flecs_query_cache_rematch_tables(
+void flecs_query_rematch(
     ecs_world_t *world,
-    ecs_query_impl_t *impl)
+    ecs_query_t *q)
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_allocator_t *a = &world->allocator;
@@ -72965,7 +72948,9 @@ void flecs_query_cache_rematch_tables(
     ecs_table_t *table = NULL;
     ecs_query_cache_table_t *qt = NULL;
     ecs_query_cache_match_t *qm = NULL;
+    ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_cache_t *cache = impl->cache;
+    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Queries with trivial caches can't trigger rematching */
     ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INTERNAL_ERROR, NULL);
@@ -73059,31 +73044,6 @@ void flecs_query_cache_rematch_tables(
 }
 
 /* -- Private API -- */
-
-void flecs_query_cache_notify(
-    ecs_world_t *world,
-    ecs_query_t *q,
-    ecs_query_cache_event_t *event)
-{
-    flecs_poly_assert(q, ecs_query_t);
-    ecs_query_impl_t *impl = flecs_query_impl(q);
-    ecs_query_cache_t *cache = impl->cache;
-
-    switch(event->kind) {
-    case EcsQueryTableMatch:
-        /* Creation of new table */
-        flecs_query_cache_match_table(world, cache, event->table);
-        break;
-    case EcsQueryTableUnmatch:
-        /* Deletion of table */
-        flecs_query_cache_unmatch_table(cache, event->table->id, NULL);
-        break;
-    case EcsQueryTableRematch:
-        /* Rematch tables of query */
-        flecs_query_cache_rematch_tables(world, impl);
-        break;
-    }
-}
 
 static
 int flecs_query_cache_order_by(

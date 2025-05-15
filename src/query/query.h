@@ -42,3 +42,8 @@ ecs_iter_t flecs_query_iter(
 void flecs_query_iter_constrain(
     ecs_iter_t *it);
 
+/* Rematch query after cache could have been invalidated */
+void flecs_query_rematch(
+    ecs_world_t *world,
+    ecs_query_t *q);
+
