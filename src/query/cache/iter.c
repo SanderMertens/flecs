@@ -1,6 +1,6 @@
 /**
- * @file query/engine/cache_iter.c
- * @brief Compile query term.
+ * @file query/cache/iter.c
+ * @brief Cache iterator functions.
  */
 
 #include "../../private_api.h"

@@ -1,6 +1,6 @@
 /**
- * @file query/engine/change_detection.c
- * @brief Compile query term.
+ * @file query/cache/change_detection.c
+ * @brief Query change detection implementation.
  */
 
 #include "../../private_api.h"
