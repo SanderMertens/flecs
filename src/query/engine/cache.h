@@ -14,12 +14,6 @@ ecs_query_cache_t* flecs_query_cache_init(
 void flecs_query_cache_fini(
     ecs_query_impl_t *impl);
 
-/* Notify query cache of event (separate from query observer) */
-void flecs_query_cache_notify(
-    ecs_world_t *world,
-    ecs_query_t *q,
-    ecs_query_cache_event_t *event);
-
 /* Get cache entry for table */
 ecs_query_cache_table_t* flecs_query_cache_get_table(
     const ecs_query_cache_t *query,

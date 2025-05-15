@@ -407,9 +407,7 @@ void flecs_eval_component_monitor(
         for (i = 0; i < count; i ++) {
             ecs_query_t *q = elems[i];
             flecs_poly_assert(q, ecs_query_t);
-            flecs_query_cache_notify(world, q, &(ecs_query_cache_event_t) {
-                .kind = EcsQueryTableRematch
-            });
+            flecs_query_rematch(world, q);
         }
     }
 

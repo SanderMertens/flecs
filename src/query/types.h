@@ -461,18 +461,6 @@ typedef struct ecs_query_cache_table_list_t {
     ecs_query_group_info_t info;
 } ecs_query_cache_table_list_t;
 
-/* Query event type for notifying queries of world events */
-typedef enum ecs_query_cache_eventkind_t {
-    EcsQueryTableMatch,
-    EcsQueryTableRematch,
-    EcsQueryTableUnmatch,
-} ecs_query_cache_eventkind_t;
-
-typedef struct ecs_query_cache_event_t {
-    ecs_query_cache_eventkind_t kind;
-    ecs_table_t *table;
-} ecs_query_cache_event_t;
-
 /* Query level block allocators have sizes that depend on query field count */
 typedef struct ecs_query_cache_allocators_t {
     ecs_block_allocator_t pointers;
