@@ -4,6 +4,7 @@
  */
 
 #include "compiler/compiler.h"
+#include "cache/cache.h"
 #include "engine/engine.h"
 #include "util.h"
 

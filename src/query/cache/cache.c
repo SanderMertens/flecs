@@ -1,5 +1,5 @@
 /**
- * @file query/engine/cache.c
+ * @file query/cache/cache.c
  * @brief Cached query implementation.
  */
 
