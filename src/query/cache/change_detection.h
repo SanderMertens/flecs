@@ -16,7 +16,7 @@ void flecs_query_mark_fields_dirty(
 /* Compare cache monitor with table dirty state to detect changes */
 bool flecs_query_check_table_monitor(
     ecs_query_impl_t *impl,
-    ecs_query_cache_table_t *table,
+    ecs_query_cache_match_t *qm,
     int32_t term);
 
 /* Mark out fields with fixed source dirty */

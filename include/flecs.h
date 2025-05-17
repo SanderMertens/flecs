@@ -1504,6 +1504,7 @@ typedef struct ecs_world_info_t {
 
 /** Type that contains information about a query group. */
 typedef struct ecs_query_group_info_t {
+    uint64_t id;
     int32_t match_count;  /**< How often tables have been matched/unmatched */
     int32_t table_count;  /**< Number of tables in group */
     void *ctx;            /**< Group context, returned by on_group_create */

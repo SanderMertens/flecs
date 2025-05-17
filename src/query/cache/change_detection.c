@@ -231,13 +231,28 @@ bool flecs_query_check_cache_monitor(
         return true;
     }
 
-    ecs_map_iter_t it = ecs_map_iter(&cache->tables);
-    while (ecs_map_next(&it)) {
-        ecs_query_cache_table_t *qt = ecs_map_ptr(&it);
-        if (flecs_query_check_table_monitor(impl, qt, -1)) {
-            return true;
+    const ecs_query_cache_group_t *cur = &cache->default_group;
+    do {
+        int32_t i, count = ecs_vec_count(&cur->tables);
+        for (i = 0; i < count; i ++) {
+            ecs_query_cache_match_t *qm = 
+                ecs_vec_get_t(&cur->tables, ecs_query_cache_match_t, i);
+            if (flecs_query_check_table_monitor(impl, qm, -1)) {
+                return true;
+            }
+
+            if (qm->wildcard_matches) {
+                ecs_query_cache_match_t *wc_qms = 
+                    ecs_vec_first(qm->wildcard_matches);
+                int32_t j, wc_count = ecs_vec_count(qm->wildcard_matches);
+                for (j = 0; j < wc_count; j ++) {
+                    if (flecs_query_check_table_monitor(impl, &wc_qms[j], -1)) {
+                        return true;
+                    }
+                }
+            }
         }
-    }
+    } while ((cur = cur->next));
 
     return false;
 }
@@ -249,14 +264,24 @@ void flecs_query_init_query_monitors(
     /* Change monitor for cache */
     ecs_query_cache_t *cache = impl->cache;
     if (cache) {
-        ecs_query_cache_match_t *cur = cache->list.first;
+        const ecs_query_cache_group_t *cur = &cache->default_group;
+        do {
+            int32_t i, count = ecs_vec_count(&cur->tables);
+            for (i = 0; i < count; i ++) {
+                ecs_query_cache_match_t *qm = 
+                    ecs_vec_get_t(&cur->tables, ecs_query_cache_match_t, i);
+                flecs_query_get_match_monitor(impl, qm);
 
-        /* Ensure each match has a monitor */
-        for (; cur != NULL; cur = cur->base.next) {
-            ecs_query_cache_match_t *match = 
-                (ecs_query_cache_match_t*)cur;
-            flecs_query_get_match_monitor(impl, match);
-        }
+                if (qm->wildcard_matches) {
+                    ecs_query_cache_match_t *wc_qms = 
+                        ecs_vec_first(qm->wildcard_matches);
+                    int32_t j, wc_count = ecs_vec_count(qm->wildcard_matches);
+                    for (j = 0; j < wc_count; j ++) {
+                        flecs_query_get_match_monitor(impl, &wc_qms[j]);
+                    }
+                }
+            }
+        } while ((cur = cur->next));
     }
 }
 
@@ -356,25 +381,42 @@ bool flecs_query_check_match_monitor(
     return false;
 }
 
+static
+bool flecs_query_check_table_monitor_match(
+    ecs_query_impl_t *impl,
+    ecs_query_cache_match_t *qm,
+    int32_t field)
+{
+    if (field == -1) {
+        if (flecs_query_check_match_monitor(impl, qm, NULL)) {
+            return true;
+        }
+    } else {
+        if (flecs_query_check_match_monitor_term(impl, qm, field)) {
+            return true;
+        } 
+    }
+
+    return false;
+}
+
 /* Check if any term for matched table has changed */
 bool flecs_query_check_table_monitor(
     ecs_query_impl_t *impl,
-    ecs_query_cache_table_t *table,
+    ecs_query_cache_match_t *qm,
     int32_t field)
 {
-    ecs_query_cache_match_t *cur, *end = table->last->base.next;
+    if (flecs_query_check_table_monitor_match(impl, qm, field)) {
+        return true;
+    }
 
-    for (cur = table->first; cur != end; cur = cur->base.next) {
-        ecs_query_cache_match_t *match = 
-            (ecs_query_cache_match_t*)cur;
-        if (field == -1) {
-            if (flecs_query_check_match_monitor(impl, match, NULL)) {
+    if (qm->wildcard_matches) {
+        ecs_query_cache_match_t *wc_qms = ecs_vec_first(qm->wildcard_matches);
+        int32_t i, count = ecs_vec_count(qm->wildcard_matches);
+        for (i = 0; i < count; i ++) {
+            if (flecs_query_check_table_monitor_match(impl, &wc_qms[i], field)) {
                 return true;
             }
-        } else {
-            if (flecs_query_check_match_monitor_term(impl, match, field)) {
-                return true;
-            } 
         }
     }
 
@@ -597,7 +639,7 @@ bool ecs_iter_changed(
     /* If query has a cache, check for changes in current matched result */
     if (impl->cache) {
         ecs_query_cache_match_t *qm = 
-            (ecs_query_cache_match_t*)it->priv_.iter.query.prev;
+            (ecs_query_cache_match_t*)it->priv_.iter.query.elem;
         ecs_check(qm != NULL, ECS_INVALID_PARAMETER, NULL);
         return flecs_query_check_match_monitor(impl, qm, it);
     }

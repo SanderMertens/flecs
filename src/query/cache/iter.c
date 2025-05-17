@@ -43,6 +43,30 @@ void flecs_query_update_node_up_trs(
     }
 }
 
+void flecs_query_cache_iter_init(
+    ecs_iter_t *it,
+    ecs_query_iter_t *qit,
+    ecs_query_impl_t *impl)
+{
+    ecs_query_cache_t *cache = impl->cache;
+    if (!cache) {
+        return;
+    }
+
+    qit->group = &cache->default_group;
+    qit->tables = &cache->default_group.tables;
+    qit->all_tables = qit->tables;
+    qit->cur = 0;
+
+    if (cache->order_by_callback) {
+        flecs_query_cache_sort_tables(it->real_world, impl);
+        qit->tables = &cache->table_slices;
+        qit->group = NULL;
+    }
+
+    cache->prev_match_count = cache->match_count;
+}
+
 static
 ecs_query_cache_match_t* flecs_query_cache_next(
     const ecs_query_run_ctx_t *ctx,
@@ -52,30 +76,73 @@ ecs_query_cache_match_t* flecs_query_cache_next(
     ecs_query_iter_t *qit = &it->priv_.iter.query;
 
     repeat: {
-        ecs_query_cache_match_t *node = qit->node;
-        ecs_query_cache_match_t *prev = qit->prev;
-
-        if (prev != qit->last) {
-            ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
-            ctx->vars[0].range.table = node->base.table;
-            qit->node = node->base.next;
-            qit->prev = node;
-            if (node) {
-                if (!ecs_table_count(node->base.table)) {
-                    if (!(always_match_empty || (it->flags & EcsIterMatchEmptyTables))) {
-                        if (ctx->query->pub.flags & EcsQueryHasChangeDetection) {
-                            flecs_query_sync_match_monitor(
-                                flecs_query_impl(it->query), node);
-                        }
-                        goto repeat;
-                    }
+        if (qit->cur == ecs_vec_count(qit->tables)) {
+            /* We're iterating the table vector of the group */
+            if (qit->tables == qit->all_tables) {
+                /* Check whether we're only returning a single result */
+                if (qit->return_single) {
+                    return NULL;
                 }
-            }
-            return node;
-        }
-    }
+                
+                /* If a group is set, we might have to iterate multiple */
+                ecs_query_cache_group_t *group = qit->group;
+                if (!group) {
+                    return NULL;
+                }
 
-    return NULL;
+                /* Check if this was the last group to iterate */
+                qit->group = group->next;
+                if (!qit->group) {
+                    return NULL;
+                }
+
+                /* Prepare iterator for the next group */
+                qit->all_tables = qit->tables = &qit->group->tables;
+                qit->cur = 0;
+
+                ecs_assert(ecs_vec_count(qit->tables) != 0, 
+                    ECS_INTERNAL_ERROR, NULL);
+                
+            /* We're iterating a wildcard table vector */
+            } else {
+                qit->tables = qit->all_tables;
+                qit->cur = qit->all_cur;
+                goto repeat;
+            }
+        }
+
+        /* Get currently iterated cache element */
+        ecs_query_cache_match_t *qm = 
+            ecs_vec_get_t(qit->tables, ecs_query_cache_match_t, qit->cur);
+
+        /* Check if table is empty and whether we need to skip it */
+        ecs_table_t *table = qm->base.table;
+        if (!ecs_table_count(table)) {
+            if (!(always_match_empty || (it->flags & EcsIterMatchEmptyTables))) {
+                if (ctx->query->pub.flags & EcsQueryHasChangeDetection) {
+                    flecs_query_sync_match_monitor(
+                        flecs_query_impl(it->query), qm);
+                }
+                qit->cur ++;
+                goto repeat;
+            }
+        }
+
+        qit->elem = qm;
+    
+        /* If there are multiple matches for table iterate those first. */
+        if (qm->wildcard_matches) {
+            qit->tables = qm->wildcard_matches;
+            qit->all_cur = qit->cur + 1;
+            qit->cur = 0;
+        } else {
+            qit->cur ++;
+        }
+
+        ctx->vars[0].range.table = table;
+
+        return qm;
+    }
 }
 
 static
@@ -86,31 +153,28 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
     ecs_query_iter_t *qit = &it->priv_.iter.query;
 
     repeat: {
-        ecs_query_cache_match_t *node = qit->node;
-        ecs_query_cache_match_t *prev = qit->prev;
-
-        if (prev != qit->last) {
-            ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
-            qit->node = node->base.next;
-            qit->prev = node;
-
-            ecs_table_t *table = it->table = node->base.table;
-            int32_t count = it->count = ecs_table_count(table);
-
-            if (!count) {
-                if (!(it->flags & EcsIterMatchEmptyTables)) {
-                    goto repeat;
-                }
-            }
-
-            it->entities = ecs_table_entities(table);
-            it->trs = node->base.trs;
-
-            return node;
+        if (qit->cur == ecs_vec_count(qit->tables)) {
+            return NULL;
         }
-    }
 
-    return NULL;
+        qit->cur ++;
+
+        ecs_query_triv_cache_match_t *qm = ecs_vec_get_t(
+            qit->tables, ecs_query_triv_cache_match_t, qit->cur);
+        ecs_table_t *table = it->table = qm->table;
+        int32_t count = it->count = ecs_table_count(table);
+
+        if (!count) {
+            if (!(it->flags & EcsIterMatchEmptyTables)) {
+                goto repeat;
+            }
+        }
+
+        it->entities = ecs_table_entities(table);
+        it->trs = qm->trs;
+
+        return qit->elem = (ecs_query_cache_match_t*)qm;
+    }
 }
 
 static
@@ -132,12 +196,13 @@ ecs_query_cache_match_t* flecs_query_test(
         }
 
         ecs_query_iter_t *qit = &it->priv_.iter.query;
-        qit->prev = NULL;
-        qit->node = qt->first;
-        qit->last = qt->last;
+        ecs_assert(qt->group != NULL, ECS_INTERNAL_ERROR, NULL);
+        qit->tables = &qt->group->tables;
+        qit->cur = qt->index;
+        qit->return_single = true; /* Don't match next table */
     }
 
-    return flecs_query_cache_next(ctx, true);
+    return flecs_query_cache_next(ctx, true /* always match empty */);
 }
 
 static
@@ -273,16 +338,15 @@ bool flecs_query_is_trivial_cache_test(
         ecs_assert(table != NULL, ECS_INVALID_OPERATION, 
             "the variable set on the iterator is missing a table");
 
-        ecs_query_cache_table_t *qt = flecs_query_cache_get_table(
-            ctx->query->cache, table);
+        ecs_query_cache_t *cache = ctx->query->cache;
+        ecs_query_cache_table_t *qt = flecs_query_cache_get_table(cache, table);
         if (!qt) {
             return false;
         }
 
-        /* Trivial queries can only have a single match per table */
-        ecs_assert(qt->first == qt->last, ECS_INTERNAL_ERROR, NULL);
-
-        it->trs = qt->first->base.trs;
+        ecs_query_cache_match_t *qm = 
+            flecs_query_cache_match_from_table(cache, qt);
+        it->trs = qm->base.trs;
         return true;
     }
 

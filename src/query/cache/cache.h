@@ -11,7 +11,6 @@
  * multiple times (due to wildcard queries) with different columns being matched
  * by the query. */
 typedef struct ecs_query_triv_cache_match_t {
-    ecs_query_cache_match_t *next, *prev;
     ecs_table_t *table;              /* The current table. */
     const ecs_table_record_t **trs;  /* Information about where to find field in table */
 } ecs_query_triv_cache_match_t;
@@ -26,27 +25,25 @@ struct ecs_query_cache_match_t {
     ecs_termset_t _set_fields;        /* Fields that are set */
     ecs_termset_t _up_fields;         /* Fields that are matched through traversal */
     uint64_t _group_id;               /* Value used to organize tables in groups */
-
     int32_t *_monitor;                /* Used to monitor table for changes */
+    int32_t rematch_count;            /* Track whether table was rematched */
 
-    /* Next match in cache for same table. Can only be not null for queries 
-     * with wildcards. */
-    ecs_query_cache_match_t *_next_match;
+    /* Additional matches for table. Possible if query has wildcards. */
+    ecs_vec_t *wildcard_matches;
+};
+
+/** Query group */
+struct ecs_query_cache_group_t {
+    ecs_vec_t tables;                 /* vec<ecs_query_cache_match_t> */
+    ecs_query_group_info_t info;
+    ecs_query_cache_group_t *next;
 };
 
 /** Table record type for query table cache. A query only has one per table. */
 typedef struct ecs_query_cache_table_t {
-    ecs_query_cache_match_t *first;  /* List with matches for table */
-    ecs_query_cache_match_t *last;   /* Last discovered match for table */
-    int32_t rematch_count;           /* Track whether table was rematched */
+    ecs_query_cache_group_t *group;
+    int32_t index;                    /* Index into group->tables */
 } ecs_query_cache_table_t;
-
-/** Points to the beginning & ending of a query group */
-typedef struct ecs_query_cache_table_list_t {
-    ecs_query_cache_match_t *first;
-    ecs_query_cache_match_t *last;
-    ecs_query_group_info_t info;
-} ecs_query_cache_table_list_t;
 
 /* Query level block allocators have sizes that depend on query field count */
 typedef struct ecs_query_cache_allocators_t {
@@ -66,11 +63,11 @@ typedef struct ecs_query_cache_t {
     /* Tables matched with query */
     ecs_map_t tables;
 
-    /* Linked list with all matched non-empty tables, in iteration order */
-    ecs_query_cache_table_list_t list;
-
-    /* Contains head/tail to nodes of query groups (if group_by is used) */
+    /* Query groups, if group_by is used */
     ecs_map_t groups;
+
+    /* Default query group */
+    ecs_query_cache_group_t default_group;
 
     /* Table sorting */
     ecs_entity_t order_by;
@@ -116,11 +113,6 @@ ecs_query_cache_t* flecs_query_cache_init(
 void flecs_query_cache_fini(
     ecs_query_impl_t *impl);
 
-/* Get cache entry for table */
-ecs_query_cache_table_t* flecs_query_cache_get_table(
-    const ecs_query_cache_t *query,
-    const ecs_table_t *table);
-
 /* Sort tables (order_by implementation) */
 void flecs_query_cache_sort_tables(
     ecs_world_t *world,
@@ -138,11 +130,16 @@ int32_t flecs_query_cache_entity_count(
     const ecs_query_cache_t *cache);
 
 bool flecs_query_cache_is_trivial(
-    ecs_query_cache_t *cache);
+    const ecs_query_cache_t *cache);
+
+ecs_size_t flecs_query_cache_elem_size(
+    const ecs_query_cache_t *cache);
 
 /* Return whether query has trivial cache */
 bool flecs_query_has_trivial_cache(
     const ecs_query_t *query);
 
 #include "iter.h"
+#include "group.h"
+#include "match.h"
 #include "change_detection.h"

@@ -26,6 +26,9 @@ typedef struct ecs_data_t ecs_data_t;
 /* Cached query table data */
 typedef struct ecs_query_cache_match_t ecs_query_cache_match_t;
 
+/* Cached query group */
+typedef struct ecs_query_cache_group_t ecs_query_cache_group_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,17 +119,24 @@ typedef struct ecs_query_op_profile_t {
 
 /** Query iterator */
 typedef struct ecs_query_iter_t {
-    struct ecs_var_t *vars;               /* Variable storage */
-    const struct ecs_query_var_t *query_vars;
-    const struct ecs_query_op_t *ops;
-    struct ecs_query_op_ctx_t *op_ctx;    /* Operation-specific state */
-    ecs_query_cache_match_t *node, *prev, *last; /* For cached iteration */
+    struct ecs_var_t *vars;                   /* Variable storage */
+    const struct ecs_query_var_t *query_vars; /* Query variable metadata */
+    const struct ecs_query_op_t *ops;         /* Query plan operations */
+    struct ecs_query_op_ctx_t *op_ctx;        /* Operation-specific state */
     uint64_t *written;
+
+    /* Cached iteration */
+    ecs_query_cache_group_t *group;           /* Currently iterated group */
+    ecs_vec_t *tables;                        /* vec<ecs_query_cache_match_t> */
+    ecs_vec_t *all_tables;                    /* vec<ecs_query_cache_match_t> */
+    ecs_query_cache_match_t *elem;            /* Current element */
+    int32_t cur, all_cur;
 
     ecs_query_op_profile_t *profile;
 
     int16_t op;
     int16_t sp;
+    bool return_single;
 } ecs_query_iter_t;
 
 /* Bits for tracking whether a cache was used/whether the array was allocated.

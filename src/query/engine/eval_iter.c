@@ -134,11 +134,11 @@ void flecs_query_change_detection(
     if (!(it->flags & EcsIterSkip)) {
         /* Mark table columns that are written to dirty */
         flecs_query_mark_fields_dirty(impl, it);
-        if (qit->prev) {
+        if (qit->elem) {
             if (impl->pub.flags & EcsQueryHasChangeDetection) {
                 /* If this query uses change detection, synchronize the
                  * monitor for the iterated table with the query */
-                flecs_query_sync_match_monitor(impl, qit->prev);
+                flecs_query_sync_match_monitor(impl, qit->elem);
             }
         }
     }
@@ -464,22 +464,7 @@ ecs_iter_t flecs_query_iter(
         it.flags |= EcsIterMatchEmptyTables;
     }
 
-    ecs_query_cache_t *cache = impl->cache;
-    if (cache) {
-        qit->node = cache->list.first;
-        qit->last = cache->list.last;
-
-        if (cache->order_by_callback && cache->list.info.table_count) {
-            flecs_query_cache_sort_tables(it.real_world, impl);
-            if (ecs_vec_count(&cache->table_slices)) {
-                qit->node = ecs_vec_first(&cache->table_slices);
-                qit->last = ecs_vec_last_t(
-                    &cache->table_slices, ecs_query_cache_match_t);
-            }
-        }
-
-        cache->prev_match_count = cache->match_count;
-    }
+    flecs_query_cache_iter_init(&it, qit, impl);
 
     if (var_count) {
         qit->vars = flecs_iter_calloc_n(&it, ecs_var_t, var_count);

@@ -782,15 +782,11 @@ uint64_t ecs_iter_get_group(
     ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, 
         "ecs_iter_get_group must be called on iterator that iterates a query");
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_check(qit->prev != NULL, ECS_INVALID_PARAMETER,
+    ecs_check(qit->group != NULL, ECS_INVALID_PARAMETER,
         "ecs_iter_get_group must be called on iterator that iterates a cached "
         "query (query is uncached)");
 
-    ecs_check(!flecs_query_has_trivial_cache(it->query), ECS_INVALID_PARAMETER,
-        "ecs_iter_get_group must be called on iterator that iterates a query "
-        "that uses group_by");
-
-    return qit->prev->_group_id;
+    return qit->group->info.id;
 error:
     return 0;
 }
