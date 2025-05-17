@@ -166,6 +166,7 @@ void Cascade_parent_cascade(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e3);
     test_uint(it.sources[0], e0);
+
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);

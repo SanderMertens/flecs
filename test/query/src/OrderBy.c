@@ -2229,8 +2229,35 @@ void OrderBy_order_empty_table_only(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_assert(ecs_query_next(&it));
-    test_int(it.count, 0);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void OrderBy_order_empty_table_only_2_tables(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    // Create empty tables
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_delete(world, e1);
+
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_delete(world, e2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position",
+        .order_by = ecs_id(Position),
+        .order_by_callback = compare_position,
+        .flags = EcsQueryMatchEmptyTables
+    });
+
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&it));
 
     ecs_query_fini(q);

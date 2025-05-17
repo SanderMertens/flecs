@@ -5,6 +5,11 @@
 
 #include "../types.h"
 
+void flecs_query_cache_iter_init(
+    ecs_iter_t *it,
+    ecs_query_iter_t *qit,
+    ecs_query_impl_t *impl);
+
 /* Cache search */
 bool flecs_query_cache_search(
     const ecs_query_run_ctx_t *ctx);

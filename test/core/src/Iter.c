@@ -2305,7 +2305,7 @@ void Iter_interleaved_iter(void) {
     /* Bit of whitebox testing, check whether the stack cursor is restored to
      * its original position after the 2nd iterator is done */
     ecs_iter_t it_1 = ecs_query_iter(world, f);
-    ecs_stack_cursor_t cursor = *it_1.priv_.cache.stack_cursor;
+    ecs_stack_cursor_t cursor = *it_1.priv_.stack_cursor;
     ecs_iter_t it_2 = ecs_query_iter(world, f);
 
     test_bool(true, ecs_query_next(&it_1));
@@ -2322,8 +2322,8 @@ void Iter_interleaved_iter(void) {
     test_bool(false, ecs_query_next(&it_2));
 
     it_1 = ecs_query_iter(world, f);
-    test_assert(it_1.priv_.cache.stack_cursor->page == cursor.page);
-    test_assert(it_1.priv_.cache.stack_cursor->sp == cursor.sp);
+    test_assert(it_1.priv_.stack_cursor->page == cursor.page);
+    test_assert(it_1.priv_.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it_1);
 
     ecs_query_fini(f);
@@ -2341,12 +2341,12 @@ void Iter_iter_restore_stack_iter(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, f);
-    ecs_stack_cursor_t cursor = *it.priv_.cache.stack_cursor;
+    ecs_stack_cursor_t cursor = *it.priv_.stack_cursor;
     ecs_iter_fini(&it);
 
     it = ecs_query_iter(world, f);
-    test_assert(it.priv_.cache.stack_cursor->page == cursor.page);
-    test_assert(it.priv_.cache.stack_cursor->sp == cursor.sp);
+    test_assert(it.priv_.stack_cursor->page == cursor.page);
+    test_assert(it.priv_.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
     ecs_query_fini(f);

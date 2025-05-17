@@ -4091,7 +4091,7 @@ void Toggle_this_sort(void) {
 }
 
 void Toggle_this_table_move_2_from_3(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);

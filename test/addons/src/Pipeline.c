@@ -1707,15 +1707,15 @@ void Pipeline_stack_allocator_after_progress(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, f);
-    ecs_stack_cursor_t cursor = *it.priv_.cache.stack_cursor;
+    ecs_stack_cursor_t cursor = *it.priv_.stack_cursor;
     ecs_iter_fini(&it);
 
     ecs_progress(world, 1);
     test_int(sys_a_invoked, 1);
 
     it = ecs_query_iter(world, f);
-    test_assert(it.priv_.cache.stack_cursor->page == cursor.page);
-    test_assert(it.priv_.cache.stack_cursor->sp == cursor.sp);
+    test_assert(it.priv_.stack_cursor->page == cursor.page);
+    test_assert(it.priv_.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
     ecs_query_fini(f);
@@ -1737,7 +1737,7 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, f);
-    ecs_stack_cursor_t cursor = *it.priv_.cache.stack_cursor;
+    ecs_stack_cursor_t cursor = *it.priv_.stack_cursor;
     ecs_iter_fini(&it);
 
     ecs_progress(world, 1);
@@ -1745,8 +1745,8 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change(void) {
     test_int(sys_b_invoked, 1);
 
     it = ecs_query_iter(world, f);
-    test_assert(it.priv_.cache.stack_cursor->page == cursor.page);
-    test_assert(it.priv_.cache.stack_cursor->sp == cursor.sp);
+    test_assert(it.priv_.stack_cursor->page == cursor.page);
+    test_assert(it.priv_.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
     ecs_enable(world, SysB, false);
@@ -1756,8 +1756,8 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change(void) {
     test_int(sys_b_invoked, 1);
 
     it = ecs_query_iter(world, f);
-    test_assert(it.priv_.cache.stack_cursor->page == cursor.page);
-    test_assert(it.priv_.cache.stack_cursor->sp == cursor.sp);
+    test_assert(it.priv_.stack_cursor->page == cursor.page);
+    test_assert(it.priv_.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
     ecs_query_fini(f);

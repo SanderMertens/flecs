@@ -8951,7 +8951,7 @@ void Traversal_match_empty_table_up_written_isa(void) {
 }
 
 void Traversal_up_after_add_batched_to_parent(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -8990,7 +8990,7 @@ void Traversal_up_after_add_batched_to_parent(void) {
 }
 
 void Traversal_up_component_after_parent_table_change(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
@@ -9067,7 +9067,7 @@ void Traversal_up_component_after_parent_table_change(void) {
 }
 
 void Traversal_up_component_w_singleton_after_parent_table_change(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -9162,7 +9162,7 @@ void Traversal_up_component_w_singleton_after_parent_table_change(void) {
 }
 
 void Traversal_up_component_w_var_after_parent_table_change(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -9314,7 +9314,7 @@ void Traversal_up_component_w_var_after_parent_table_change(void) {
 }
 
 void Traversal_test_up_component_after_parent_table_change(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
@@ -9405,7 +9405,7 @@ void Traversal_test_up_component_after_parent_table_change(void) {
 }
 
 void Traversal_test_up_component_w_singleton_after_parent_table_change(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -9514,7 +9514,7 @@ void Traversal_test_up_component_w_singleton_after_parent_table_change(void) {
 }
 
 void Traversal_up_component_after_parent_table_change_no_data(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
@@ -9575,7 +9575,7 @@ void Traversal_up_component_after_parent_table_change_no_data(void) {
 }
 
 void Traversal_up_component_w_singleton_after_parent_table_change_no_data(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -9648,7 +9648,7 @@ void Traversal_up_component_w_singleton_after_parent_table_change_no_data(void) 
 }
 
 void Traversal_up_component_w_var_after_parent_table_change_no_data(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -9756,7 +9756,7 @@ void Traversal_up_component_w_var_after_parent_table_change_no_data(void) {
 }
 
 void Traversal_test_up_component_after_parent_table_change_no_data(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
@@ -9829,7 +9829,7 @@ void Traversal_test_up_component_after_parent_table_change_no_data(void) {
 }
 
 void Traversal_test_up_component_w_singleton_after_parent_table_change_no_data(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -9914,7 +9914,7 @@ void Traversal_test_up_component_w_singleton_after_parent_table_change_no_data(v
 }
 
 void Traversal_this_up_childof_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
@@ -9953,7 +9953,7 @@ void Traversal_this_up_childof_isa_childof(void) {
 }
 
 void Traversal_this_up_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
@@ -9989,7 +9989,7 @@ void Traversal_this_up_isa_childof(void) {
 }
 
 void Traversal_this_up_isa_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
@@ -10028,7 +10028,7 @@ void Traversal_this_up_isa_isa_childof(void) {
 }
 
 void Traversal_this_up_isa_childof_isa(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
@@ -10067,7 +10067,7 @@ void Traversal_this_up_isa_childof_isa(void) {
 }
 
 void Traversal_this_up_isa_childof_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
@@ -10109,7 +10109,7 @@ void Traversal_this_up_isa_childof_isa_childof(void) {
 }
 
 void Traversal_this_self_up_childof_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
@@ -10153,7 +10153,7 @@ void Traversal_this_self_up_childof_isa_childof(void) {
 }
 
 void Traversal_this_self_up_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
@@ -10194,7 +10194,7 @@ void Traversal_this_self_up_isa_childof(void) {
 }
 
 void Traversal_this_self_up_isa_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
@@ -10238,7 +10238,7 @@ void Traversal_this_self_up_isa_isa_childof(void) {
 }
 
 void Traversal_this_self_up_isa_childof_isa(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
@@ -10282,7 +10282,7 @@ void Traversal_this_self_up_isa_childof_isa(void) {
 }
 
 void Traversal_this_self_up_isa_childof_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
@@ -10329,7 +10329,7 @@ void Traversal_this_self_up_isa_childof_isa_childof(void) {
 }
 
 void Traversal_this_written_up_childof_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -10366,7 +10366,7 @@ void Traversal_this_written_up_childof_isa_childof(void) {
 }
 
 void Traversal_this_written_up_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -10405,7 +10405,7 @@ void Traversal_this_written_up_isa_childof(void) {
 }
 
 void Traversal_this_written_up_isa_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -10447,7 +10447,7 @@ void Traversal_this_written_up_isa_isa_childof(void) {
 }
 
 void Traversal_this_written_up_isa_childof_isa(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -10484,7 +10484,7 @@ void Traversal_this_written_up_isa_childof_isa(void) {
 }
 
 void Traversal_this_written_up_isa_childof_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -10524,7 +10524,7 @@ void Traversal_this_written_up_isa_childof_isa_childof(void) {
 }
 
 void Traversal_this_written_self_up_childof_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -10561,7 +10561,7 @@ void Traversal_this_written_self_up_childof_isa_childof(void) {
 }
 
 void Traversal_this_written_self_up_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -10600,7 +10600,7 @@ void Traversal_this_written_self_up_isa_childof(void) {
 }
 
 void Traversal_this_written_self_up_isa_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -10641,7 +10641,7 @@ void Traversal_this_written_self_up_isa_isa_childof(void) {
 }
 
 void Traversal_this_written_self_up_isa_childof_isa(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -10678,7 +10678,7 @@ void Traversal_this_written_self_up_isa_childof_isa(void) {
 }
 
 void Traversal_this_written_self_up_isa_childof_isa_childof(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);

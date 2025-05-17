@@ -118,6 +118,10 @@ struct ecs_world_t {
      * cached pointer is still valid. */
     uint32_t table_version[ECS_TABLE_VERSION_ARRAY_SIZE];
 
+    /* Same as table_version, but only increases after the column pointers of
+     * a table change. */
+    uint32_t table_column_version[ECS_TABLE_VERSION_ARRAY_SIZE];
+
     /* Array for checking if components can be looked up trivially */
     bool non_fragmenting[FLECS_HI_COMPONENT_ID];
 
@@ -265,8 +269,18 @@ void flecs_increment_table_version(
     ecs_world_t *world,
     ecs_table_t *table);
 
+/* Same as flecs_increment_table_version, but for column version. */
+void flecs_increment_table_column_version(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
 /* Get table version. */
 uint32_t flecs_get_table_version_fast(
+    const ecs_world_t *world,
+    const uint64_t table_id);
+
+/* Get table version for column pointer validation. */
+uint32_t flecs_get_table_column_version(
     const ecs_world_t *world,
     const uint64_t table_id);
 

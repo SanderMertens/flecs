@@ -11,42 +11,38 @@
  * multiple times (due to wildcard queries) with different columns being matched
  * by the query. */
 typedef struct ecs_query_triv_cache_match_t {
-    ecs_query_cache_match_t *next, *prev;
     ecs_table_t *table;              /* The current table. */
-    const ecs_table_record_t **trs;  /* Information about where to find field in table */
+    const ecs_table_record_t **trs;  /* Information about where to find field in table. */
+    void **ptrs;                     /* Cached column pointers for match. */
+    uint32_t table_version;          /* Used to check if pointers need to be revalidated. */
 } ecs_query_triv_cache_match_t;
 
 struct ecs_query_cache_match_t {
     ecs_query_triv_cache_match_t base;
-    int32_t _offset;                  /* Starting point in table  */
-    int32_t _count;                   /* Number of entities to iterate in table */
-    ecs_id_t *_ids;                   /* Resolved (component) ids for current table */
-    ecs_entity_t *_sources;           /* Subjects (sources) of ids */
-    ecs_table_t **_tables;            /* Tables for fields with non-$this source */
-    ecs_termset_t _set_fields;        /* Fields that are set */
-    ecs_termset_t _up_fields;         /* Fields that are matched through traversal */
-    uint64_t _group_id;               /* Value used to organize tables in groups */
+    int32_t _offset;                  /* Starting point in table . */
+    int32_t _count;                   /* Number of entities to iterate in table. */
+    ecs_id_t *_ids;                   /* Resolved (component) ids for current table. */
+    ecs_entity_t *_sources;           /* Subjects (sources) of ids. */
+    ecs_table_t **_tables;            /* Tables for fields with non-$this source. */
+    ecs_termset_t _set_fields;        /* Fields that are set. */
+    ecs_termset_t _up_fields;         /* Fields that are matched through traversal. */
+    int32_t *_monitor;                /* Used to monitor table for changes. */
+    int32_t rematch_count;            /* Track whether table was rematched. */
+    ecs_vec_t *wildcard_matches;      /* Additional matches for table for wildcard queries. */
+};
 
-    int32_t *_monitor;                /* Used to monitor table for changes */
-
-    /* Next match in cache for same table. Can only be not null for queries 
-     * with wildcards. */
-    ecs_query_cache_match_t *_next_match;
+/** Query group */
+struct ecs_query_cache_group_t {
+    ecs_vec_t tables;                 /* vec<ecs_query_cache_match_t> */
+    ecs_query_group_info_t info;      /* Group info available to application. */
+    ecs_query_cache_group_t *next;    /* Next group to iterate (only set for queries with group_by). */
 };
 
 /** Table record type for query table cache. A query only has one per table. */
 typedef struct ecs_query_cache_table_t {
-    ecs_query_cache_match_t *first;  /* List with matches for table */
-    ecs_query_cache_match_t *last;   /* Last discovered match for table */
-    int32_t rematch_count;           /* Track whether table was rematched */
+    ecs_query_cache_group_t *group;   /* Group the table is added to. */
+    int32_t index;                    /* Index into group->tables. */
 } ecs_query_cache_table_t;
-
-/** Points to the beginning & ending of a query group */
-typedef struct ecs_query_cache_table_list_t {
-    ecs_query_cache_match_t *first;
-    ecs_query_cache_match_t *last;
-    ecs_query_group_info_t info;
-} ecs_query_cache_table_list_t;
 
 /* Query level block allocators have sizes that depend on query field count */
 typedef struct ecs_query_cache_allocators_t {
@@ -66,11 +62,14 @@ typedef struct ecs_query_cache_t {
     /* Tables matched with query */
     ecs_map_t tables;
 
-    /* Linked list with all matched non-empty tables, in iteration order */
-    ecs_query_cache_table_list_t list;
-
-    /* Contains head/tail to nodes of query groups (if group_by is used) */
+    /* Query groups, if group_by is used */
     ecs_map_t groups;
+
+    /* Default query group */
+    ecs_query_cache_group_t default_group;
+
+    /* Groups in iteration order */
+    ecs_query_cache_group_t *first_group;
 
     /* Table sorting */
     ecs_entity_t order_by;
@@ -95,33 +94,25 @@ typedef struct ecs_query_cache_t {
     int32_t prev_match_count;        /* Track if sorting is needed */
     int32_t rematch_count;           /* Track which tables were added during rematch */
     
-    ecs_entity_t entity;
+    ecs_entity_t entity;             /* Entity associated with query */
 
     /* Zero'd out sources array, used for results that only match on $this */
     ecs_entity_t *sources;
 
-    /* Map field indices from cache to query */
+    /* Map field indices from cache query to actual query */
     int8_t *field_map;
 
     /* Query-level allocators */
     ecs_query_cache_allocators_t allocators;
 } ecs_query_cache_t;
 
-/* Create query cache */
 ecs_query_cache_t* flecs_query_cache_init(
     ecs_query_impl_t *impl,
     const ecs_query_desc_t *desc);
 
-/* Destroy query cache */
 void flecs_query_cache_fini(
     ecs_query_impl_t *impl);
 
-/* Get cache entry for table */
-ecs_query_cache_table_t* flecs_query_cache_get_table(
-    const ecs_query_cache_t *query,
-    const ecs_table_t *table);
-
-/* Sort tables (order_by implementation) */
 void flecs_query_cache_sort_tables(
     ecs_world_t *world,
     ecs_query_impl_t *impl);
@@ -129,20 +120,13 @@ void flecs_query_cache_sort_tables(
 void flecs_query_cache_build_sorted_tables(
     ecs_query_cache_t *cache);
 
-/* Return number of tables in cache */
-int32_t flecs_query_cache_table_count(
-    ecs_query_cache_t *cache);
-
-/* Return number of entities in cache (requires iterating tables) */
-int32_t flecs_query_cache_entity_count(
+bool flecs_query_cache_is_trivial(
     const ecs_query_cache_t *cache);
 
-bool flecs_query_cache_is_trivial(
-    ecs_query_cache_t *cache);
-
-/* Return whether query has trivial cache */
-bool flecs_query_has_trivial_cache(
-    const ecs_query_t *query);
+ecs_size_t flecs_query_cache_elem_size(
+    const ecs_query_cache_t *cache);
 
 #include "iter.h"
+#include "group.h"
+#include "match.h"
 #include "change_detection.h"
