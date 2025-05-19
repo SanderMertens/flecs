@@ -113,6 +113,12 @@ typedef struct ecs_pipeline_desc_t {
      * pipeline query works.
     */
     ecs_query_desc_t query;
+
+    /** The pipeline query's phase term (optional).
+     * If non-zero, the source entity of this term will be considered a "phase"
+     * for the purposes of performance tracing.
+     */
+    int8_t query_phase_term;
 } ecs_pipeline_desc_t;
 
 /** Create a custom pipeline.

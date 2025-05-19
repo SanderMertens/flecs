@@ -24,12 +24,17 @@ struct ecs_pipeline_state_t {
     ecs_vec_t ops;              /* Pipeline schedule */
     ecs_vec_t systems;          /* Vector with system ids */
 
+    ecs_vec_t phase_offsets;    /* Vector of offsets into phase_names (for perf tracing) */
+    ecs_vec_t phase_names;      /* Vector with phase names (for perf tracing) */
+
     ecs_entity_t last_system;   /* Last system ran by pipeline */
     ecs_component_record_t *cr_inactive; /* Cached record for quick inactive test */
     int32_t match_count;        /* Used to track of rebuild is necessary */
     int32_t rebuild_count;      /* Number of pipeline rebuilds */
     ecs_iter_t *iters;          /* Iterator for worker(s) */
     int32_t iter_count;
+
+    int8_t query_phase_term;    /* Pipeline query phase term if != 0 (for perf tracing) */
 
     /* Members for continuing pipeline iteration after pipeline rebuild */
     ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
