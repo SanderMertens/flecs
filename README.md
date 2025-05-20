@@ -174,7 +174,6 @@ The following language bindings have been developed with Flecs! Note that these 
 - Rust:
   - [Flecs-Rust](https://github.com/Indra-db/Flecs-Rust)
   - [flecs-polyglot](https://github.com/flecs-hub/flecs-polyglot)
-  - [flecs-rs](https://github.com/jazzay/flecs-rs)
 - Zig:
   - [zig-gamedev/zflecs](https://github.com/zig-gamedev/zflecs)
 - Lua:
