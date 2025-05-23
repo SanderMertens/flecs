@@ -71,6 +71,7 @@ void flecs_query_cache_match_set(
     ecs_assert(field_count > 0, ECS_INTERNAL_ERROR, NULL);
 
     qm->base.table = it->table;
+    qm->base.set_fields = it->set_fields;
 
     if (!qm->base.ptrs) {
         qm->base.ptrs = flecs_balloc(&cache->allocators.pointers);
@@ -144,7 +145,6 @@ void flecs_query_cache_match_set(
             }
         }
 
-        qm->_set_fields = it->set_fields;
         qm->_up_fields = it->up_fields;
     } else {
         /* If this is a trivial cache, we shouldn't have any fields with 

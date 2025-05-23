@@ -8115,6 +8115,14 @@ FLECS_API
 bool ecs_id_is_wildcard(
     ecs_id_t id);
 
+/** Utility to check if id is an any wildcard.
+ * 
+ * @param id The id.
+ * @return True if id is an any wildcard or a pair containing an any wildcard.
+ */
+bool ecs_id_is_any(
+    ecs_id_t id);
+
 /** Utility to check if id is valid.
  * A valid id is an id that can be added to an entity. Invalid ids are:
  * - ids that contain wildcards
