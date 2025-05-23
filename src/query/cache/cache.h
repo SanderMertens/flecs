@@ -15,6 +15,7 @@ typedef struct ecs_query_triv_cache_match_t {
     const ecs_table_record_t **trs;  /* Information about where to find field in table. */
     void **ptrs;                     /* Cached column pointers for match. */
     uint32_t table_version;          /* Used to check if pointers need to be revalidated. */
+    ecs_termset_t set_fields;        /* Fields that are set (used by fields with Optional/Not). */
 } ecs_query_triv_cache_match_t;
 
 struct ecs_query_cache_match_t {
@@ -24,7 +25,6 @@ struct ecs_query_cache_match_t {
     ecs_id_t *_ids;                   /* Resolved (component) ids for current table. */
     ecs_entity_t *_sources;           /* Subjects (sources) of ids. */
     ecs_table_t **_tables;            /* Tables for fields with non-$this source. */
-    ecs_termset_t _set_fields;        /* Fields that are set. */
     ecs_termset_t _up_fields;         /* Fields that are matched through traversal. */
     int32_t *_monitor;                /* Used to monitor table for changes. */
     int32_t rematch_count;            /* Track whether table was rematched. */

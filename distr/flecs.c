@@ -1610,6 +1610,7 @@ typedef struct ecs_query_triv_cache_match_t {
     const ecs_table_record_t **trs;  /* Information about where to find field in table. */
     void **ptrs;                     /* Cached column pointers for match. */
     uint32_t table_version;          /* Used to check if pointers need to be revalidated. */
+    ecs_termset_t set_fields;        /* Fields that are set (used by fields with Optional/Not). */
 } ecs_query_triv_cache_match_t;
 
 struct ecs_query_cache_match_t {
@@ -1619,7 +1620,6 @@ struct ecs_query_cache_match_t {
     ecs_id_t *_ids;                   /* Resolved (component) ids for current table. */
     ecs_entity_t *_sources;           /* Subjects (sources) of ids. */
     ecs_table_t **_tables;            /* Tables for fields with non-$this source. */
-    ecs_termset_t _set_fields;        /* Fields that are set. */
     ecs_termset_t _up_fields;         /* Fields that are matched through traversal. */
     int32_t *_monitor;                /* Used to monitor table for changes. */
     int32_t rematch_count;            /* Track whether table was rematched. */
@@ -11136,6 +11136,24 @@ bool ecs_id_is_wildcard(
 
     return (first == EcsWildcard) || (second == EcsWildcard) ||
            (first == EcsAny) || (second == EcsAny);
+}
+
+bool ecs_id_is_any(
+    ecs_id_t id)
+{
+    if (id == EcsAny) {
+        return true;
+    }
+
+    bool is_pair = ECS_IS_PAIR(id);
+    if (!is_pair) {
+        return false;
+    }
+
+    ecs_entity_t first = ECS_PAIR_FIRST(id);
+    ecs_entity_t second = ECS_PAIR_SECOND(id);
+
+    return (first == EcsAny) || (second == EcsAny);
 }
 
 bool ecs_id_is_valid(
@@ -35318,22 +35336,6 @@ int flecs_term_ref_lookup(
 }
 
 static
-ecs_id_t flecs_wildcard_to_any(ecs_id_t id) {
-    ecs_id_t flags = id & EcsTermRefFlags;
-    
-    if (ECS_IS_PAIR(id)) {
-        ecs_entity_t first = ECS_PAIR_FIRST(id);
-        ecs_entity_t second = ECS_PAIR_SECOND(id);
-        if (first == EcsWildcard) id = ecs_pair(EcsAny, second);
-        if (second == EcsWildcard) id = ecs_pair(ECS_PAIR_FIRST(id), EcsAny);
-    } else if ((id & ~EcsTermRefFlags) == EcsWildcard) {
-        id = EcsAny;
-    }
-
-    return id | flags;
-}
-
-static
 int flecs_term_refs_finalize(
     const ecs_world_t *world,
     ecs_term_t *term,
@@ -35410,19 +35412,6 @@ int flecs_term_refs_finalize(
     /* If source is wildcard, term won't return any data */
     if ((src->id & EcsIsVariable) && ecs_id_is_wildcard(ECS_TERM_REF_ID(src))) {
         term->inout = EcsInOutNone;
-    }
-
-    /* If operator is Not, automatically convert wildcard queries to any */
-    if (term->oper == EcsNot) {
-        if (ECS_TERM_REF_ID(first) == EcsWildcard) {
-            first->id = EcsAny | ECS_TERM_REF_FLAGS(first);
-        }
-
-        if (ECS_TERM_REF_ID(second) == EcsWildcard) {
-            second->id = EcsAny | ECS_TERM_REF_FLAGS(second);
-        }
-
-        term->id = flecs_wildcard_to_any(term->id);
     }
 
     return 0;
@@ -36088,7 +36077,9 @@ int flecs_term_finalize(
         if (second->id & EcsIsVariable) {
             if (!ecs_id_is_wildcard(second_id) || second_id == EcsAny) {
                 trivial_term = false;
-                cacheable_term = false;
+                if (term->oper != EcsNot || second_id != EcsAny) {
+                    cacheable_term = false;
+                }
             }
         }
     }
@@ -36331,7 +36322,9 @@ int flecs_query_finalize_terms(
         term->field_index = flecs_ito(int8_t, field_count - 1);
 
         if (ecs_id_is_wildcard(term->id)) {
-            q->flags |= EcsQueryMatchWildcards;
+            if (term->oper != EcsNot || ecs_id_is_any(term->id)) {
+                q->flags |= EcsQueryMatchWildcards;
+            }
         } else if (!(term->flags_ & EcsTermIsOr)) {
             ECS_TERMSET_SET(q->static_id_fields, 1u << term->field_index);
         }
@@ -70179,8 +70172,16 @@ ecs_query_cache_t* flecs_query_cache_init(
 
     /* Set flag for trivial caches which allows for faster iteration */
     if (impl->pub.flags & EcsQueryIsCacheable) {
-        if ((q->flags & EcsQueryIsTrivial) && (q->flags & EcsQueryMatchOnlySelf) &&
-        !(q->flags & EcsQueryMatchWildcards))
+        /* Trivial caches may only contain And/Not operators. */
+        int32_t t, count = q->term_count;
+        for (t = 0; t < count; t ++) {
+            if (q->terms[t].oper != EcsAnd && q->terms[t].oper != EcsNot) {
+                break;
+            }
+        }
+
+        if ((t == count) && (q->flags & EcsQueryMatchOnlySelf) &&
+           !(q->flags & EcsQueryMatchWildcards))
         {
             if (!const_desc->order_by && !const_desc->group_by && 
                 !const_desc->order_by_callback && 
@@ -70371,7 +70372,7 @@ bool flecs_query_get_match_monitor(
 
         /* Don't track fields that aren't set */
         if (!is_trivial) {
-            if (!(match->_set_fields & (1llu << field))) {
+            if (!(match->base.set_fields & (1llu << field))) {
                 continue;
             }
         }
@@ -70625,7 +70626,7 @@ bool flecs_query_check_match_monitor(
     if (it) {
         set_fields = it->set_fields;
     } else if (!trivial_cache) {
-        set_fields = match->_set_fields;
+        set_fields = match->base.set_fields;
     } else {
         set_fields = (1llu << field_count) - 1;
     }
@@ -71385,7 +71386,7 @@ void flecs_query_update_node_up_trs(
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INTERNAL_ERROR, NULL);
 
-    ecs_termset_t fields = node->_up_fields & node->_set_fields;
+    ecs_termset_t fields = node->_up_fields & node->base.set_fields;
     if (fields) {
         const ecs_query_t *q = cache->query;
         int32_t f, field_count = q->field_count;
@@ -71598,6 +71599,7 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
 
         it->entities = ecs_table_entities(table);
         it->trs = qm->trs;
+        it->set_fields = qm->set_fields;
 
         return qit->elem = (ecs_query_cache_match_t*)qm;
     }
@@ -71661,7 +71663,7 @@ void flecs_query_cache_init_mapped_fields(
         ecs_termset_t bit = (ecs_termset_t)(1u << i);
         ecs_termset_t field_bit = (ecs_termset_t)(1u << field_index);
 
-        ECS_TERMSET_COND(it->set_fields, field_bit, node->_set_fields & bit);
+        ECS_TERMSET_COND(it->set_fields, field_bit, node->base.set_fields & bit);
         ECS_TERMSET_COND(it->up_fields, field_bit, node->_up_fields & bit);
     }
 }
@@ -71703,7 +71705,7 @@ bool flecs_query_is_cache_search(
     it->trs = node->base.trs;
     it->ids = node->_ids;
     it->sources = node->_sources;
-    it->set_fields = node->_set_fields;
+    it->set_fields = node->base.set_fields;
     it->up_fields = node->_up_fields;
 
     flecs_query_update_node_up_trs(ctx, node);
@@ -71782,6 +71784,7 @@ bool flecs_query_is_trivial_cache_test(
         ecs_query_cache_match_t *qm = 
             flecs_query_cache_match_from_table(cache, qt);
         it->trs = qm->base.trs;
+        it->set_fields = qm->base.set_fields;
         return true;
     }
 
@@ -71860,6 +71863,7 @@ void flecs_query_cache_match_set(
     ecs_assert(field_count > 0, ECS_INTERNAL_ERROR, NULL);
 
     qm->base.table = it->table;
+    qm->base.set_fields = it->set_fields;
 
     if (!qm->base.ptrs) {
         qm->base.ptrs = flecs_balloc(&cache->allocators.pointers);
@@ -71933,7 +71937,6 @@ void flecs_query_cache_match_set(
             }
         }
 
-        qm->_set_fields = it->set_fields;
         qm->_up_fields = it->up_fields;
     } else {
         /* If this is a trivial cache, we shouldn't have any fields with 

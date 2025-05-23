@@ -77,7 +77,7 @@ bool flecs_query_get_match_monitor(
 
         /* Don't track fields that aren't set */
         if (!is_trivial) {
-            if (!(match->_set_fields & (1llu << field))) {
+            if (!(match->base.set_fields & (1llu << field))) {
                 continue;
             }
         }
@@ -331,7 +331,7 @@ bool flecs_query_check_match_monitor(
     if (it) {
         set_fields = it->set_fields;
     } else if (!trivial_cache) {
-        set_fields = match->_set_fields;
+        set_fields = match->base.set_fields;
     } else {
         set_fields = (1llu << field_count) - 1;
     }

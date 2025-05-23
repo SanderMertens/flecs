@@ -604,8 +604,16 @@ ecs_query_cache_t* flecs_query_cache_init(
 
     /* Set flag for trivial caches which allows for faster iteration */
     if (impl->pub.flags & EcsQueryIsCacheable) {
-        if ((q->flags & EcsQueryIsTrivial) && (q->flags & EcsQueryMatchOnlySelf) &&
-        !(q->flags & EcsQueryMatchWildcards))
+        /* Trivial caches may only contain And/Not operators. */
+        int32_t t, count = q->term_count;
+        for (t = 0; t < count; t ++) {
+            if (q->terms[t].oper != EcsAnd && q->terms[t].oper != EcsNot) {
+                break;
+            }
+        }
+
+        if ((t == count) && (q->flags & EcsQueryMatchOnlySelf) &&
+           !(q->flags & EcsQueryMatchWildcards))
         {
             if (!const_desc->order_by && !const_desc->group_by && 
                 !const_desc->order_by_callback && 

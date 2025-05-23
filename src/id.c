@@ -96,6 +96,24 @@ bool ecs_id_is_wildcard(
            (first == EcsAny) || (second == EcsAny);
 }
 
+bool ecs_id_is_any(
+    ecs_id_t id)
+{
+    if (id == EcsAny) {
+        return true;
+    }
+
+    bool is_pair = ECS_IS_PAIR(id);
+    if (!is_pair) {
+        return false;
+    }
+
+    ecs_entity_t first = ECS_PAIR_FIRST(id);
+    ecs_entity_t second = ECS_PAIR_SECOND(id);
+
+    return (first == EcsAny) || (second == EcsAny);
+}
+
 bool ecs_id_is_valid(
     const ecs_world_t *world,
     ecs_id_t id)

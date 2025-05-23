@@ -19,7 +19,7 @@ void flecs_query_update_node_up_trs(
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INTERNAL_ERROR, NULL);
 
-    ecs_termset_t fields = node->_up_fields & node->_set_fields;
+    ecs_termset_t fields = node->_up_fields & node->base.set_fields;
     if (fields) {
         const ecs_query_t *q = cache->query;
         int32_t f, field_count = q->field_count;
@@ -232,6 +232,7 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
 
         it->entities = ecs_table_entities(table);
         it->trs = qm->trs;
+        it->set_fields = qm->set_fields;
 
         return qit->elem = (ecs_query_cache_match_t*)qm;
     }
@@ -295,7 +296,7 @@ void flecs_query_cache_init_mapped_fields(
         ecs_termset_t bit = (ecs_termset_t)(1u << i);
         ecs_termset_t field_bit = (ecs_termset_t)(1u << field_index);
 
-        ECS_TERMSET_COND(it->set_fields, field_bit, node->_set_fields & bit);
+        ECS_TERMSET_COND(it->set_fields, field_bit, node->base.set_fields & bit);
         ECS_TERMSET_COND(it->up_fields, field_bit, node->_up_fields & bit);
     }
 }
@@ -337,7 +338,7 @@ bool flecs_query_is_cache_search(
     it->trs = node->base.trs;
     it->ids = node->_ids;
     it->sources = node->_sources;
-    it->set_fields = node->_set_fields;
+    it->set_fields = node->base.set_fields;
     it->up_fields = node->_up_fields;
 
     flecs_query_update_node_up_trs(ctx, node);
@@ -416,6 +417,7 @@ bool flecs_query_is_trivial_cache_test(
         ecs_query_cache_match_t *qm = 
             flecs_query_cache_match_from_table(cache, qt);
         it->trs = qm->base.trs;
+        it->set_fields = qm->base.set_fields;
         return true;
     }
 

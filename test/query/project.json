@@ -823,7 +823,11 @@
                 "cached_isa_tgt_w_self_second_no_expr",
                 "cached_w_not_and_uncacheable",
                 "cached_w_optional_and_uncacheable",
-                "cached_w_not_optional_and_uncacheable"
+                "cached_w_not_optional_and_uncacheable",
+                "cached_w_not",
+                "cached_w_not_wildcard",
+                "cached_w_not_simple",
+                "cached_w_not_wildcard_simple"
             ]
         }, {
             "id": "Variables",
@@ -929,6 +933,8 @@
                 "3_set_src_this_w_component_tag_uncacheable_component",
                 "3_set_src_this_w_component_component_uncacheable_component",
                 "2_set_src_this_w_wildcard",
+                "2_set_src_this_w_not",
+                "3_set_src_this_w_not_wildcard",
                 "1_src_this_var_as_entity",
                 "1_src_this_var_as_table",
                 "1_src_this_var_as_table_range",
@@ -2383,6 +2389,8 @@
                 "cached_trivial_test_w_up",
                 "cached_trivial_search_w_not_operator",
                 "cached_trivial_test_w_not_operator",
+                "cached_trivial_search_w_not_wildcard_operator",
+                "cached_trivial_test_w_not_wildcard_operator",
                 "cached_trivial_search_w_or_operator",
                 "cached_trivial_test_w_or_operator",
                 "cached_trivial_search_w_optional_operator",
