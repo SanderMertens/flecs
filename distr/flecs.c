@@ -69595,7 +69595,7 @@ void FlecsSystemImport(
  * that meets the following criteria:
  * - The query doesn't have any wildcards
  * - The query doesn't use relationship traversal
- * - The query doesn't use operators other than And
+ * - The query doesn't use operators other than And, Not or Optional
  * - The cached query and actual query have the same terms
  * 
  * A trivial cache has to store much less data for each cached element, and uses
