@@ -48,6 +48,7 @@
 - [Demistifying Queries Part 2 (E9)](https://www.youtube.com/watch?v=4KZGkT9MqHI)
 - [Flecs Systems (E10)](https://www.youtube.com/watch?v=gXzgO6unZkI)
 - [Observing Changes (E11)](https://www.youtube.com/watch?v=XaZOmWoSKfQ)
+- [One to Rule Them All (singletons, E12)](https://www.youtube.com/watch?v=IpuZIFcaUBU)
 
 (Shoutout to [jellycake222](https://www.youtube.com/@jellycake222) for making the awesome tutorial series <3!)
 
