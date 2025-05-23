@@ -3037,7 +3037,7 @@ void Union_query_2_cases_2_types(void) {
 }
 
 void Union_query_after_remove(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3157,7 +3157,7 @@ int compare_position(ecs_entity_t e1, const void *ptr1, ecs_entity_t e2, const v
 }
 
 void Union_sort(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -3202,7 +3202,7 @@ void Union_sort(void) {
 }
 
 void Union_query_recycled_tags(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
 
@@ -3243,7 +3243,7 @@ void Union_query_recycled_tags(void) {
 }
 
 void Union_query_single_case(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3289,7 +3289,7 @@ void Union_query_single_case(void) {
 }
 
 void Union_match_switch_on_base_instance(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3323,7 +3323,7 @@ void Union_match_switch_on_base_instance(void) {
 }
 
 void Union_switch_w_bitset_query(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3381,7 +3381,7 @@ void Union_switch_w_bitset_query(void) {
 }
 
 void Union_switch_w_bitset_query_inv(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3436,7 +3436,7 @@ void Union_switch_w_bitset_query_inv(void) {
 }
 
 void Union_switch_w_bitset_query_2_elems(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3505,7 +3505,7 @@ void Union_switch_w_bitset_query_2_elems(void) {
 }
 
 void Union_switch_w_bitset_query_2_elems_skip(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3574,7 +3574,7 @@ void Union_switch_w_bitset_query_2_elems_skip(void) {
 }
 
 void Union_switch_w_bitset_query_elems_interleaved(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3651,7 +3651,7 @@ void Union_switch_w_bitset_query_elems_interleaved(void) {
 }
 
 void Union_switch_w_bitset_query_elems_interleaved_2_types(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3838,7 +3838,7 @@ void Union_remove_wildcard(void) {
 }
 
 void Union_component_relation(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);

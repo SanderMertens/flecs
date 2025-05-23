@@ -152,8 +152,8 @@ void AggregateStats(ecs_iter_t *it) {
     ecs_aggregate_stats_ctx_t *ctx = it->ctx;
     int32_t interval = ctx->interval;
 
-    EcsStatsHeader *dst_hdr = ecs_field_w_size(it, 0, 0);
-    EcsStatsHeader *src_hdr = ecs_field_w_size(it, 0, 1);
+    EcsStatsHeader *dst_hdr = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
+    EcsStatsHeader *src_hdr = ecs_field_w_size(it, ecs_field_size(it, 1), 1);
 
     void *dst = ECS_OFFSET_T(dst_hdr, EcsStatsHeader);
     void *src = ECS_OFFSET_T(src_hdr, EcsStatsHeader);

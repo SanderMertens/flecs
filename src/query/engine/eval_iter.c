@@ -76,6 +76,7 @@ void flecs_query_iter_constrain(
             if ((flags & (trivial_flags)) == trivial_flags) {
                 if (!(flags & EcsQueryMatchWildcards)) {
                     it->flags |= EcsIterTrivialTest;
+                    flecs_query_setids(NULL, false, &ctx);
                 }
             }
         } else if (flags & EcsQueryIsCacheable) {
@@ -98,6 +99,7 @@ void flecs_query_iter_constrain(
                 if (!(flags & EcsQueryMatchWildcards)) {
                     it->flags |= EcsIterTrivialSearch|
                         EcsIterTrivialChangeDetection;
+                    flecs_query_setids(NULL, false, &ctx);
                 }
             }
         } else if (flags & EcsQueryIsCacheable) {
@@ -115,13 +117,6 @@ void flecs_query_iter_constrain(
             }
         }
     }
-
-    /* If we're using a specialized iterator mode, make sure to 
-     * initialize static component ids. Usually this is the first 
-     * instruction of a query plan, but because we're not running the
-     * query plan when using a specialized iterator mode, manually call
-     * the operation on iterator init. */
-    flecs_query_setids(NULL, false, &ctx);
 }
 
 static
@@ -134,11 +129,11 @@ void flecs_query_change_detection(
     if (!(it->flags & EcsIterSkip)) {
         /* Mark table columns that are written to dirty */
         flecs_query_mark_fields_dirty(impl, it);
-        if (qit->prev) {
+        if (qit->elem) {
             if (impl->pub.flags & EcsQueryHasChangeDetection) {
                 /* If this query uses change detection, synchronize the
                  * monitor for the iterated table with the query */
-                flecs_query_sync_match_monitor(impl, qit->prev);
+                flecs_query_sync_match_monitor(impl, qit->elem);
             }
         }
     }
@@ -169,7 +164,6 @@ bool ecs_query_next(
 
     ecs_query_run_ctx_t ctx;
     flecs_query_iter_run_ctx_init(it, &ctx);
-    const ecs_query_op_t *ops = qit->ops;
 
     bool redo = it->flags & EcsIterIsValid;
     if (redo) {
@@ -236,6 +230,8 @@ bool ecs_query_next(
                 goto yield;
             }
         } else {
+            const ecs_query_op_t *ops = qit->ops;
+
             /* Default iterator mode. This enters the query VM dispatch loop. */
             if (flecs_query_run_until(
                 redo, &ctx, ops, -1, qit->op, impl->op_count - 1)) 
@@ -451,11 +447,7 @@ ecs_iter_t flecs_query_iter(
     it.up_fields = 0;
     flecs_query_apply_iter_flags(&it, q);
 
-    flecs_iter_init(it.world, &it, 
-        flecs_iter_cache_ids |
-        flecs_iter_cache_trs |
-        flecs_iter_cache_sources |
-        flecs_iter_cache_ptrs);
+    flecs_iter_init(it.world, &it, !impl->cache || !(q->flags & EcsQueryIsCacheable));
 
     qit->query_vars = impl->vars;
     qit->ops = impl->ops;
@@ -464,22 +456,7 @@ ecs_iter_t flecs_query_iter(
         it.flags |= EcsIterMatchEmptyTables;
     }
 
-    ecs_query_cache_t *cache = impl->cache;
-    if (cache) {
-        qit->node = cache->list.first;
-        qit->last = cache->list.last;
-
-        if (cache->order_by_callback && cache->list.info.table_count) {
-            flecs_query_cache_sort_tables(it.real_world, impl);
-            if (ecs_vec_count(&cache->table_slices)) {
-                qit->node = ecs_vec_first(&cache->table_slices);
-                qit->last = ecs_vec_last_t(
-                    &cache->table_slices, ecs_query_cache_match_t);
-            }
-        }
-
-        cache->prev_match_count = cache->match_count;
-    }
+    flecs_query_cache_iter_init(&it, qit, impl);
 
     if (var_count) {
         qit->vars = flecs_iter_calloc_n(&it, ecs_var_t, var_count);

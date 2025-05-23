@@ -1722,6 +1722,7 @@
                 "match_query_expr_from_scope",
                 "query_long_or_w_ref",
                 "query_w_pair_id_and_subj",
+                "rematch_after_delete_overridden_tag",
                 "rematch_after_delete_inherited_tag",
                 "rematch_after_delete_rel_of_inherited_pair",
                 "rematch_after_delete_obj_of_inherited_pair",
@@ -1729,7 +1730,16 @@
                 "rematch_empty_table_w_superset",
                 "2_self_up_terms_new_tables",
                 "this_self_up_childof_pair_new_tables",
-                "up_w_delete_table_and_move_parent"
+                "up_w_delete_table_and_move_parent",
+                "it_ptrs",
+                "it_ptrs_after_column_resize",
+                "it_ptrs_after_column_merge",
+                "it_ptrs_after_column_shrink",
+                "it_ptrs_w_wildcard",
+                "it_ptrs_w_up",
+                "test_it_ptrs",
+                "test_it_ptrs_w_wildcard",
+                "test_it_ptrs_w_up"
             ]
         }, {
             "id": "ChangeDetection",
@@ -1797,7 +1807,10 @@
                 "detect_w_fixed_search",
                 "detect_w_fixed_test",
                 "detect_w_wildcard_search",
-                "detect_w_wildcard_test"
+                "detect_w_wildcard_test",
+                "detect_w_group_by",
+                "detect_w_cascade",
+                "detect_w_cascade_desc"
             ]
         }, {
             "id": "GroupBy",
@@ -1814,7 +1827,11 @@
                 "group_by_callbacks",
                 "group_by_default_action",
                 "group_table_count",
-                "get_group_from_chained_iter"
+                "get_group_from_chained_iter",
+                "group_by_recreate_group_after_rematch",
+                "group_by_recreate_one_group_after_rematch",
+                "group_by_recreate_two_groups_after_rematch",
+                "group_by_move_to_group_after_rematch"
             ]
         }, {
             "id": "MemberTarget",
@@ -2311,7 +2328,8 @@
                 "sort_or_term",
                 "sort_optional_term",
                 "order_empty_table",
-                "order_empty_table_only"
+                "order_empty_table_only",
+                "order_empty_table_only_2_tables"
             ]
         }, {
             "id": "OrderByEntireTable",

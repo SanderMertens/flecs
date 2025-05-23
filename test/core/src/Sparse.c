@@ -1152,7 +1152,7 @@ void Sparse_has_tag_after_delete(void) {
 }
 
 void Sparse_sparse_w_hole(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

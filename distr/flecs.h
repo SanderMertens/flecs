@@ -3791,6 +3791,9 @@ typedef struct ecs_data_t ecs_data_t;
 /* Cached query table data */
 typedef struct ecs_query_cache_match_t ecs_query_cache_match_t;
 
+/* Cached query group */
+typedef struct ecs_query_cache_group_t ecs_query_cache_group_t;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
@@ -3842,7 +3845,6 @@ struct ecs_ref_t {
     void *ptr;                   /* Cached component pointer */
 };
 
-
 /* Page-iterator specific data */
 typedef struct ecs_page_iter_t {
     int32_t offset;
@@ -3881,35 +3883,24 @@ typedef struct ecs_query_op_profile_t {
 
 /** Query iterator */
 typedef struct ecs_query_iter_t {
-    struct ecs_var_t *vars;               /* Variable storage */
-    const struct ecs_query_var_t *query_vars;
-    const struct ecs_query_op_t *ops;
-    struct ecs_query_op_ctx_t *op_ctx;    /* Operation-specific state */
-    ecs_query_cache_match_t *node, *prev, *last; /* For cached iteration */
+    struct ecs_var_t *vars;                   /* Variable storage */
+    const struct ecs_query_var_t *query_vars; /* Query variable metadata */
+    const struct ecs_query_op_t *ops;         /* Query plan operations */
+    struct ecs_query_op_ctx_t *op_ctx;        /* Operation-specific state */
     uint64_t *written;
+
+    /* Cached iteration */
+    ecs_query_cache_group_t *group;           /* Currently iterated group */
+    ecs_vec_t *tables;                        /* Currently iterated table vector (vec<ecs_query_cache_match_t>) */
+    ecs_vec_t *all_tables;                    /* Different from .tables if iterating wildcard matches (vec<ecs_query_cache_match_t>) */
+    ecs_query_cache_match_t *elem;            /* Current cache entry */
+    int32_t cur, all_cur;                     /* Indices into tables & all_tables */
 
     ecs_query_op_profile_t *profile;
 
-    int16_t op;
-    int16_t sp;
+    int16_t op;                               /* Currently iterated query plan operation (index into ops) */
+    bool iter_single_group;
 } ecs_query_iter_t;
-
-/* Bits for tracking whether a cache was used/whether the array was allocated.
- * Used by flecs_iter_init, flecs_iter_validate and ecs_iter_fini. 
- * Constants are named to enable easy macro substitution. */
-#define flecs_iter_cache_ids           (1u << 0u)
-#define flecs_iter_cache_trs           (1u << 1u)
-#define flecs_iter_cache_sources       (1u << 2u)
-#define flecs_iter_cache_ptrs          (1u << 3u)
-#define flecs_iter_cache_variables     (1u << 4u)
-#define flecs_iter_cache_all           (255)
-
-/* Inline iterator arrays to prevent allocations for small array sizes */
-typedef struct ecs_iter_cache_t {
-    ecs_stack_cursor_t *stack_cursor; /* Stack cursor to restore to */
-    ecs_flags8_t used;       /* For which fields is the cache used */
-    ecs_flags8_t allocated;  /* Which fields are allocated */
-} ecs_iter_cache_t;
 
 /* Private iterator data. Used by iterator implementations to keep track of
  * progress & to provide builtin storage. */
@@ -3922,7 +3913,7 @@ typedef struct ecs_iter_private_t {
     } iter;                       /* Iterator specific data */
 
     void *entity_iter;            /* Query applied after matching a table */
-    ecs_iter_cache_t cache;       /* Inline arrays to reduce allocations */
+    ecs_stack_cursor_t *stack_cursor; /* Stack cursor to restore to */
 } ecs_iter_private_t;
 
 /* Data structures that store the command queue */
@@ -4929,11 +4920,12 @@ struct ecs_iter_t {
     int32_t offset;               /**< Offset relative to current table */
     int32_t count;                /**< Number of entities to iterate */
     const ecs_entity_t *entities; /**< Entity identifiers */
+    void **ptrs;                  /**< Component pointers. If not set or if it's NULL for a field, use it.trs. */
+    const ecs_table_record_t **trs; /**< Info on where to find field in table */
     const ecs_size_t *sizes;      /**< Component sizes */
     ecs_table_t *table;           /**< Current table */
     ecs_table_t *other_table;     /**< Prev or next table when adding/removing */
     ecs_id_t *ids;                /**< (Component) ids */
-    const ecs_table_record_t **trs; /**< Info on where to find field in table */
     ecs_entity_t *sources;        /**< Entity on which the id was matched (0 if same as entities) */
     ecs_flags64_t constrained_vars; /**< Bitset that marks constrained variables */
     ecs_termset_t set_fields;     /**< Fields that are set */
@@ -5291,6 +5283,7 @@ typedef struct ecs_world_info_t {
 
 /** Type that contains information about a query group. */
 typedef struct ecs_query_group_info_t {
+    uint64_t id;
     int32_t match_count;  /**< How often tables have been matched/unmatched */
     int32_t table_count;  /**< Number of tables in group */
     void *ctx;            /**< Group context, returned by on_group_create */

@@ -3435,7 +3435,7 @@ void Basic_1_any_src(void) {
 }
 
 void Basic_1_any_src_component(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
@@ -3474,7 +3474,7 @@ void Basic_1_any_src_component(void) {
 }
 
 void Basic_1_any_src_component_w_this_component(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -3989,7 +3989,7 @@ void Basic_1_any_src_w_pair_rel_this(void) {
 }
 
 void Basic_1_any_src_any_tgt_w_rel_fixed(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, TgtA);
@@ -4043,7 +4043,7 @@ void Basic_1_any_src_any_tgt_w_rel_fixed(void) {
 }
 
 void Basic_1_any_src_any_rel_w_tgt_fixed(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -4097,7 +4097,7 @@ void Basic_1_any_src_any_rel_w_tgt_fixed(void) {
 }
 
 void Basic_1_any_src_w_childof_pair_any_tgt(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, TgtA);
@@ -4125,7 +4125,7 @@ void Basic_1_any_src_w_childof_pair_any_tgt(void) {
 }
 
 void Basic_1_any_src_empty(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
 
@@ -4166,7 +4166,7 @@ void Basic_1_any_src_empty(void) {
 }
 
 void Basic_1_any_src_pair_tgt_wildcard_empty(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, TgtA);
@@ -4245,7 +4245,7 @@ void Basic_1_any_src_pair_tgt_wildcard_empty(void) {
 }
 
 void Basic_1_any_src_pair_rel_wildcard_empty(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -4324,7 +4324,7 @@ void Basic_1_any_src_pair_rel_wildcard_empty(void) {
 }
 
 void Basic_1_any_src_any_tgt_w_rel_fixed_empty(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, TgtA);
@@ -4375,7 +4375,7 @@ void Basic_1_any_src_any_tgt_w_rel_fixed_empty(void) {
 }
 
 void Basic_1_any_src_any_rel_w_tgt_fixed_empty(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
@@ -4426,7 +4426,7 @@ void Basic_1_any_src_any_rel_w_tgt_fixed_empty(void) {
 }
 
 void Basic_1_any_src_pair_w_tag_query_empty(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, TgtA);
@@ -4473,7 +4473,7 @@ void Basic_1_any_src_pair_w_tag_query_empty(void) {
 }
 
 void Basic_1_any_src_tag_w_pair_query_empty(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
 
@@ -10653,7 +10653,7 @@ void Basic_match_new_empty_w_order_by(void) {
 }
 
 void Basic_match_empty_w_bitset(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
@@ -10705,7 +10705,7 @@ void Basic_match_empty_w_bitset(void) {
 }
 
 void Basic_default_query_flags(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);

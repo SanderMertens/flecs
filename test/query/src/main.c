@@ -1658,6 +1658,7 @@ void Cached_rematch_after_add_to_recycled_parent(void);
 void Cached_match_query_expr_from_scope(void);
 void Cached_query_long_or_w_ref(void);
 void Cached_query_w_pair_id_and_subj(void);
+void Cached_rematch_after_delete_overridden_tag(void);
 void Cached_rematch_after_delete_inherited_tag(void);
 void Cached_rematch_after_delete_rel_of_inherited_pair(void);
 void Cached_rematch_after_delete_obj_of_inherited_pair(void);
@@ -1666,6 +1667,15 @@ void Cached_rematch_empty_table_w_superset(void);
 void Cached_2_self_up_terms_new_tables(void);
 void Cached_this_self_up_childof_pair_new_tables(void);
 void Cached_up_w_delete_table_and_move_parent(void);
+void Cached_it_ptrs(void);
+void Cached_it_ptrs_after_column_resize(void);
+void Cached_it_ptrs_after_column_merge(void);
+void Cached_it_ptrs_after_column_shrink(void);
+void Cached_it_ptrs_w_wildcard(void);
+void Cached_it_ptrs_w_up(void);
+void Cached_test_it_ptrs(void);
+void Cached_test_it_ptrs_w_wildcard(void);
+void Cached_test_it_ptrs_w_up(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -1732,6 +1742,9 @@ void ChangeDetection_detect_w_fixed_search(void);
 void ChangeDetection_detect_w_fixed_test(void);
 void ChangeDetection_detect_w_wildcard_search(void);
 void ChangeDetection_detect_w_wildcard_test(void);
+void ChangeDetection_detect_w_group_by(void);
+void ChangeDetection_detect_w_cascade(void);
+void ChangeDetection_detect_w_cascade_desc(void);
 
 // Testsuite 'GroupBy'
 void GroupBy_group_by(void);
@@ -1747,6 +1760,10 @@ void GroupBy_group_by_callbacks(void);
 void GroupBy_group_by_default_action(void);
 void GroupBy_group_table_count(void);
 void GroupBy_get_group_from_chained_iter(void);
+void GroupBy_group_by_recreate_group_after_rematch(void);
+void GroupBy_group_by_recreate_one_group_after_rematch(void);
+void GroupBy_group_by_recreate_two_groups_after_rematch(void);
+void GroupBy_group_by_move_to_group_after_rematch(void);
 
 // Testsuite 'MemberTarget'
 void MemberTarget_setup(void);
@@ -2217,6 +2234,7 @@ void OrderBy_sort_or_term(void);
 void OrderBy_sort_optional_term(void);
 void OrderBy_order_empty_table(void);
 void OrderBy_order_empty_table_only(void);
+void OrderBy_order_empty_table_only_2_tables(void);
 
 // Testsuite 'OrderByEntireTable'
 void OrderByEntireTable_sort_by_component(void);
@@ -8797,6 +8815,10 @@ bake_test_case Cached_testcases[] = {
         Cached_query_w_pair_id_and_subj
     },
     {
+        "rematch_after_delete_overridden_tag",
+        Cached_rematch_after_delete_overridden_tag
+    },
+    {
         "rematch_after_delete_inherited_tag",
         Cached_rematch_after_delete_inherited_tag
     },
@@ -8827,6 +8849,42 @@ bake_test_case Cached_testcases[] = {
     {
         "up_w_delete_table_and_move_parent",
         Cached_up_w_delete_table_and_move_parent
+    },
+    {
+        "it_ptrs",
+        Cached_it_ptrs
+    },
+    {
+        "it_ptrs_after_column_resize",
+        Cached_it_ptrs_after_column_resize
+    },
+    {
+        "it_ptrs_after_column_merge",
+        Cached_it_ptrs_after_column_merge
+    },
+    {
+        "it_ptrs_after_column_shrink",
+        Cached_it_ptrs_after_column_shrink
+    },
+    {
+        "it_ptrs_w_wildcard",
+        Cached_it_ptrs_w_wildcard
+    },
+    {
+        "it_ptrs_w_up",
+        Cached_it_ptrs_w_up
+    },
+    {
+        "test_it_ptrs",
+        Cached_test_it_ptrs
+    },
+    {
+        "test_it_ptrs_w_wildcard",
+        Cached_test_it_ptrs_w_wildcard
+    },
+    {
+        "test_it_ptrs_w_up",
+        Cached_test_it_ptrs_w_up
     }
 };
 
@@ -9086,6 +9144,18 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "detect_w_wildcard_test",
         ChangeDetection_detect_w_wildcard_test
+    },
+    {
+        "detect_w_group_by",
+        ChangeDetection_detect_w_group_by
+    },
+    {
+        "detect_w_cascade",
+        ChangeDetection_detect_w_cascade
+    },
+    {
+        "detect_w_cascade_desc",
+        ChangeDetection_detect_w_cascade_desc
     }
 };
 
@@ -9141,6 +9211,22 @@ bake_test_case GroupBy_testcases[] = {
     {
         "get_group_from_chained_iter",
         GroupBy_get_group_from_chained_iter
+    },
+    {
+        "group_by_recreate_group_after_rematch",
+        GroupBy_group_by_recreate_group_after_rematch
+    },
+    {
+        "group_by_recreate_one_group_after_rematch",
+        GroupBy_group_by_recreate_one_group_after_rematch
+    },
+    {
+        "group_by_recreate_two_groups_after_rematch",
+        GroupBy_group_by_recreate_two_groups_after_rematch
+    },
+    {
+        "group_by_move_to_group_after_rematch",
+        GroupBy_group_by_move_to_group_after_rematch
     }
 };
 
@@ -10971,6 +11057,10 @@ bake_test_case OrderBy_testcases[] = {
     {
         "order_empty_table_only",
         OrderBy_order_empty_table_only
+    },
+    {
+        "order_empty_table_only_2_tables",
+        OrderBy_order_empty_table_only_2_tables
     }
 };
 
@@ -11516,21 +11606,21 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        88,
+        98,
         Cached_testcases
     },
     {
         "ChangeDetection",
         NULL,
         NULL,
-        64,
+        67,
         ChangeDetection_testcases
     },
     {
         "GroupBy",
         NULL,
         NULL,
-        13,
+        17,
         GroupBy_testcases
     },
     {
@@ -11582,7 +11672,7 @@ static bake_test_suite suites[] = {
         "OrderBy",
         NULL,
         NULL,
-        44,
+        45,
         OrderBy_testcases
     },
     {

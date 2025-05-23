@@ -10836,7 +10836,7 @@ void Variables_lookup_neq_var(void) {
 }
 
 void Variables_lookup_unresolved_dependent(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
     ecs_query_t *r = ecs_query(world, {

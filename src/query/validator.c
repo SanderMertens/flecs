@@ -1903,7 +1903,9 @@ int flecs_query_finalize_query(
      * token buffer which simplifies memory management & reduces allocations. */
     flecs_query_populate_tokens(flecs_query_impl(q));
 
+    #ifndef FLECS_SANITIZE
 done:
+    #endif
     flecs_query_copy_arrays(q);
     return 0;
 error:
