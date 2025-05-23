@@ -827,7 +827,11 @@
                 "cached_w_not",
                 "cached_w_not_wildcard",
                 "cached_w_not_simple",
-                "cached_w_not_wildcard_simple"
+                "cached_w_not_wildcard_simple",
+                "cached_w_optional",
+                "cached_w_optional_wildcard",
+                "cached_w_optional_simple",
+                "cached_w_optional_wildcard_simple"
             ]
         }, {
             "id": "Variables",
@@ -935,6 +939,8 @@
                 "2_set_src_this_w_wildcard",
                 "2_set_src_this_w_not",
                 "3_set_src_this_w_not_wildcard",
+                "2_set_src_this_w_optional",
+                "3_set_src_this_w_optional_wildcard",
                 "1_src_this_var_as_entity",
                 "1_src_this_var_as_table",
                 "1_src_this_var_as_table_range",
@@ -2395,6 +2401,8 @@
                 "cached_trivial_test_w_or_operator",
                 "cached_trivial_search_w_optional_operator",
                 "cached_trivial_test_w_optional_operator",
+                "cached_trivial_search_w_optional_wildcard_operator",
+                "cached_trivial_test_w_optional_wildcard_operator",
                 "cached_trivial_search_w_wildcard",
                 "cached_trivial_test_w_wildcard"
             ]

@@ -70175,7 +70175,7 @@ ecs_query_cache_t* flecs_query_cache_init(
         /* Trivial caches may only contain And/Not operators. */
         int32_t t, count = q->term_count;
         for (t = 0; t < count; t ++) {
-            if (q->terms[t].oper != EcsAnd && q->terms[t].oper != EcsNot) {
+            if (q->terms[t].oper != EcsAnd && q->terms[t].oper != EcsNot && q->terms[t].oper != EcsOptional) {
                 break;
             }
         }
@@ -71755,6 +71755,7 @@ bool flecs_query_is_cache_test(
     it->trs = node->base.trs;
     it->ids = node->_ids;
     it->sources = node->_sources;
+    it->set_fields = node->base.set_fields;
 
     flecs_query_update_node_up_trs(ctx, node);
 

@@ -388,6 +388,7 @@ bool flecs_query_is_cache_test(
     it->trs = node->base.trs;
     it->ids = node->_ids;
     it->sources = node->_sources;
+    it->set_fields = node->base.set_fields;
 
     flecs_query_update_node_up_trs(ctx, node);
 

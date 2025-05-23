@@ -607,7 +607,7 @@ ecs_query_cache_t* flecs_query_cache_init(
         /* Trivial caches may only contain And/Not operators. */
         int32_t t, count = q->term_count;
         for (t = 0; t < count; t ++) {
-            if (q->terms[t].oper != EcsAnd && q->terms[t].oper != EcsNot) {
+            if (q->terms[t].oper != EcsAnd && q->terms[t].oper != EcsNot && q->terms[t].oper != EcsOptional) {
                 break;
             }
         }

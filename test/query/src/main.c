@@ -803,6 +803,10 @@ void Plan_cached_w_not(void);
 void Plan_cached_w_not_wildcard(void);
 void Plan_cached_w_not_simple(void);
 void Plan_cached_w_not_wildcard_simple(void);
+void Plan_cached_w_optional(void);
+void Plan_cached_w_optional_wildcard(void);
+void Plan_cached_w_optional_simple(void);
+void Plan_cached_w_optional_wildcard_simple(void);
 
 // Testsuite 'Variables'
 void Variables_setup(void);
@@ -905,6 +909,8 @@ void Variables_3_set_src_this_w_component_component_uncacheable_component(void);
 void Variables_2_set_src_this_w_wildcard(void);
 void Variables_2_set_src_this_w_not(void);
 void Variables_3_set_src_this_w_not_wildcard(void);
+void Variables_2_set_src_this_w_optional(void);
+void Variables_3_set_src_this_w_optional_wildcard(void);
 void Variables_1_src_this_var_as_entity(void);
 void Variables_1_src_this_var_as_table(void);
 void Variables_1_src_this_var_as_table_range(void);
@@ -2296,6 +2302,8 @@ void TrivialIter_cached_trivial_search_w_or_operator(void);
 void TrivialIter_cached_trivial_test_w_or_operator(void);
 void TrivialIter_cached_trivial_search_w_optional_operator(void);
 void TrivialIter_cached_trivial_test_w_optional_operator(void);
+void TrivialIter_cached_trivial_search_w_optional_wildcard_operator(void);
+void TrivialIter_cached_trivial_test_w_optional_wildcard_operator(void);
 void TrivialIter_cached_trivial_search_w_wildcard(void);
 void TrivialIter_cached_trivial_test_w_wildcard(void);
 
@@ -5475,6 +5483,22 @@ bake_test_case Plan_testcases[] = {
     {
         "cached_w_not_wildcard_simple",
         Plan_cached_w_not_wildcard_simple
+    },
+    {
+        "cached_w_optional",
+        Plan_cached_w_optional
+    },
+    {
+        "cached_w_optional_wildcard",
+        Plan_cached_w_optional_wildcard
+    },
+    {
+        "cached_w_optional_simple",
+        Plan_cached_w_optional_simple
+    },
+    {
+        "cached_w_optional_wildcard_simple",
+        Plan_cached_w_optional_wildcard_simple
     }
 };
 
@@ -5874,6 +5898,14 @@ bake_test_case Variables_testcases[] = {
     {
         "3_set_src_this_w_not_wildcard",
         Variables_3_set_src_this_w_not_wildcard
+    },
+    {
+        "2_set_src_this_w_optional",
+        Variables_2_set_src_this_w_optional
+    },
+    {
+        "3_set_src_this_w_optional_wildcard",
+        Variables_3_set_src_this_w_optional_wildcard
     },
     {
         "1_src_this_var_as_entity",
@@ -11305,6 +11337,14 @@ bake_test_case TrivialIter_testcases[] = {
         TrivialIter_cached_trivial_test_w_optional_operator
     },
     {
+        "cached_trivial_search_w_optional_wildcard_operator",
+        TrivialIter_cached_trivial_search_w_optional_wildcard_operator
+    },
+    {
+        "cached_trivial_test_w_optional_wildcard_operator",
+        TrivialIter_cached_trivial_test_w_optional_wildcard_operator
+    },
+    {
         "cached_trivial_search_w_wildcard",
         TrivialIter_cached_trivial_search_w_wildcard
     },
@@ -11564,14 +11604,14 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        83,
+        87,
         Plan_testcases
     },
     {
         "Variables",
         Variables_setup,
         NULL,
-        194,
+        196,
         Variables_testcases,
         1,
         Variables_params
@@ -11726,7 +11766,7 @@ static bake_test_suite suites[] = {
         "TrivialIter",
         NULL,
         NULL,
-        16,
+        18,
         TrivialIter_testcases
     },
     {

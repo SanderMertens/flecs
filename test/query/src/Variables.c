@@ -5750,6 +5750,181 @@ void Variables_3_set_src_this_w_not_wildcard(void) {
     ecs_fini(ecs);
 }
 
+void Variables_2_set_src_this_w_optional(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity), .oper = EcsOptional }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    /* ecs_entity_t e1 = */ ecs_insert(ecs, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {30, 40}));
+    ecs_set(ecs, e3, Velocity, {3, 4});
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 0);
+        test_int(p[0].x, 20);
+        test_int(p[0].y, 30);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        Position *p = ecs_field(&it, Position, 0);
+        test_int(p[0].x, 30);
+        test_int(p[0].y, 40);
+        Velocity *v = ecs_field(&it, Velocity, 1);
+        test_int(v[0].x, 3);
+        test_int(v[0].y, 4);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_optional_wildcard(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+    ECS_TAG(ecs, Likes);
+    ECS_TAG(ecs, Apples);
+    ECS_TAG(ecs, Pears);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity), .oper = EcsOptional },
+            { .id = ecs_pair(Likes, EcsWildcard) }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {30, 40}));
+    ecs_set(ecs, e3, Velocity, {3, 4});
+
+    ecs_add_pair(ecs, e1, Likes, Apples);
+    ecs_add_pair(ecs, e2, Likes, Apples);
+    ecs_add_pair(ecs, e3, Likes, Apples);
+
+    ecs_add_pair(ecs, e1, Likes, Pears);
+    ecs_add_pair(ecs, e2, Likes, Pears);
+    ecs_add_pair(ecs, e3, Likes, Pears);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+
+        {
+            test_bool(true, ecs_query_next(&it));
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e2);
+            Position *p = ecs_field(&it, Position, 0);
+            test_int(p[0].x, 20);
+            test_int(p[0].y, 30);
+            test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+            test_uint(ecs_pair(Likes, Apples), ecs_field_id(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+        }
+        {
+            test_bool(true, ecs_query_next(&it));
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e2);
+            Position *p = ecs_field(&it, Position, 0);
+            test_int(p[0].x, 20);
+            test_int(p[0].y, 30);
+            test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+            test_uint(ecs_pair(Likes, Pears), ecs_field_id(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+        }
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+
+        {
+            test_bool(true, ecs_query_next(&it));
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e3);
+            Position *p = ecs_field(&it, Position, 0);
+            test_int(p[0].x, 30);
+            test_int(p[0].y, 40);
+            Velocity *v = ecs_field(&it, Velocity, 1);
+            test_int(v[0].x, 3);
+            test_int(v[0].y, 4);
+            test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+            test_uint(ecs_pair(Likes, Apples), ecs_field_id(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+        }
+        {
+            test_bool(true, ecs_query_next(&it));
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e3);
+            Position *p = ecs_field(&it, Position, 0);
+            test_int(p[0].x, 30);
+            test_int(p[0].y, 40);
+            Velocity *v = ecs_field(&it, Velocity, 1);
+            test_int(v[0].x, 3);
+            test_int(v[0].y, 4);
+            test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+            test_uint(ecs_pair(Likes, Pears), ecs_field_id(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+        }
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
 void Variables_3_set_src_this_w_uncacheable_tag_tag_tag(void) {
     ecs_world_t* ecs = ecs_mini();
 
