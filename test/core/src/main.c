@@ -1149,7 +1149,9 @@ void Lookup_lookup_path_65_chars(void);
 void Singleton_add_singleton(void);
 void Singleton_remove_singleton(void);
 void Singleton_set_get_singleton(void);
+void Singleton_get_mut_singleton(void);
 void Singleton_ensure_singleton(void);
+void Singleton_emplace_singleton(void);
 void Singleton_singleton_system(void);
 
 // Testsuite 'Clone'
@@ -7048,8 +7050,16 @@ bake_test_case Singleton_testcases[] = {
         Singleton_set_get_singleton
     },
     {
+        "get_mut_singleton",
+        Singleton_get_mut_singleton
+    },
+    {
         "ensure_singleton",
         Singleton_ensure_singleton
+    },
+    {
+        "emplace_singleton",
+        Singleton_emplace_singleton
     },
     {
         "singleton_system",
@@ -13014,7 +13024,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        5,
+        7,
         Singleton_testcases
     },
     {

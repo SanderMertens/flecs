@@ -47,6 +47,21 @@ void Singleton_set_get_singleton(void) {
     ecs_fini(world);
 }
 
+void Singleton_get_mut_singleton(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_singleton_set(world, Position, {10, 20});
+    
+    Position *p = ecs_singleton_get_mut(world, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
 void Singleton_ensure_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -60,6 +75,31 @@ void Singleton_ensure_singleton(void) {
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Singleton_emplace_singleton(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    bool is_new = false;
+    {
+        Position *p = ecs_singleton_emplace(world, Position, &is_new);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+        test_assert(is_new);
+    }
+
+    {
+        Position *p = ecs_singleton_emplace(world, Position, &is_new);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_assert(!is_new);
+    }
 
     ecs_fini(world);
 }

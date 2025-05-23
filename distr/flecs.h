@@ -10606,6 +10606,9 @@ int ecs_value_move_ctor(
 #define ecs_singleton_get(world, comp)\
     ecs_get(world, ecs_id(comp), comp)
 
+#define ecs_singleton_get_mut(world, comp)\
+    ecs_get_mut(world, ecs_id(comp), comp)
+
 #define ecs_singleton_set_ptr(world, comp, ptr)\
     ecs_set_ptr(world, ecs_id(comp), comp, ptr)
 
@@ -10614,6 +10617,9 @@ int ecs_value_move_ctor(
 
 #define ecs_singleton_ensure(world, comp)\
     ecs_ensure(world, ecs_id(comp), comp)
+
+#define ecs_singleton_emplace(world, comp, is_new)\
+    ecs_emplace(world, ecs_id(comp), comp, is_new)
 
 #define ecs_singleton_modified(world, comp)\
     ecs_modified(world, ecs_id(comp), comp)

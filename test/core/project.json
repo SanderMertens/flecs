@@ -1206,7 +1206,9 @@
                 "add_singleton",
                 "remove_singleton",
                 "set_get_singleton",
+                "get_mut_singleton",
                 "ensure_singleton",
+                "emplace_singleton",
                 "singleton_system"
             ]
         }, {
