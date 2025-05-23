@@ -23,12 +23,11 @@ int main(int, char *[]) {
     ecs.component<Dirty>().add(flecs::OnInstantiate, flecs::Inherit);
 
     // Create a query that just reads a component. We'll use this query for
-    // change tracking. Change tracking for a query is automatically enabled
-    // when query::changed() is called.
+    // change tracking.
     // Each query has its own private dirty state which is reset only when the
     // query is iterated.
     flecs::query<const Position> q_read = ecs.query_builder<const Position>()
-        .cached()
+        .detect_changes()
         .build();
 
     // Create a query that writes the component based on a Dirty state.
