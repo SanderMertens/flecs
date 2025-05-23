@@ -44,15 +44,17 @@ void flecs_invoke_hook(
         tr = &dummy_tr;
     }
 
-    flecs_iter_init(world, &it, flecs_iter_cache_all);
+    ecs_entity_t dummy_src = 0;
+
     it.world = world;
     it.real_world = world;
     it.table = table;
-    it.trs[0] = tr;
+    it.trs = &tr;
     it.row_fields = !!(((ecs_component_record_t*)tr->hdr.cache)->flags & EcsIdIsSparse);
     it.ref_fields = it.row_fields;
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
-    it.ids[0] = id;
+    it.ids = &id;
+    it.sources = &dummy_src;
     it.event = event;
     it.event_id = id;
     it.ctx = ti->hooks.ctx;
@@ -62,7 +64,6 @@ void flecs_invoke_hook(
     it.flags = EcsIterIsValid;
 
     hook(&it);
-    ecs_iter_fini(&it);
 
     world->stages[0]->defer = defer;
 }

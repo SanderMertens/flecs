@@ -10,7 +10,7 @@
 void flecs_iter_init(
     const ecs_world_t *world,
     ecs_iter_t *it,
-    ecs_flags8_t fields);
+    bool alloc_resources);
 
 /* Deinitialize iterator. */
 void flecs_iter_free(

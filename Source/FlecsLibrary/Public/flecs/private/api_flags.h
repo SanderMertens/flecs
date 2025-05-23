@@ -118,6 +118,7 @@ extern "C" {
 #define EcsIterNoResults               (1u << 2u)  /* Iterator has no results */
 #define EcsIterMatchEmptyTables        (1u << 3u)  /* Match empty tables */
 #define EcsIterIgnoreThis              (1u << 4u)  /* Only evaluate non-this terms */
+#define EcsIterTrivialChangeDetection  (1u << 5u)
 #define EcsIterHasCondSet              (1u << 6u)  /* Does iterator have conditionally set fields */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode */

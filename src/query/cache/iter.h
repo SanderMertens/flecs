@@ -1,9 +1,14 @@
 /**
- * @file query/engine/cache_iter.h
+ * @file query/cache/iter.h
  * @brief Cache iterator functions.
  */
 
 #include "../types.h"
+
+void flecs_query_cache_iter_init(
+    ecs_iter_t *it,
+    ecs_query_iter_t *qit,
+    ecs_query_impl_t *impl);
 
 /* Cache search */
 bool flecs_query_cache_search(

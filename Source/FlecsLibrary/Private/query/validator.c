@@ -211,22 +211,6 @@ int flecs_term_ref_lookup(
 }
 
 static
-ecs_id_t flecs_wildcard_to_any(ecs_id_t id) {
-    ecs_id_t flags = id & EcsTermRefFlags;
-    
-    if (ECS_IS_PAIR(id)) {
-        ecs_entity_t first = ECS_PAIR_FIRST(id);
-        ecs_entity_t second = ECS_PAIR_SECOND(id);
-        if (first == EcsWildcard) id = ecs_pair(EcsAny, second);
-        if (second == EcsWildcard) id = ecs_pair(ECS_PAIR_FIRST(id), EcsAny);
-    } else if ((id & ~EcsTermRefFlags) == EcsWildcard) {
-        id = EcsAny;
-    }
-
-    return id | flags;
-}
-
-static
 int flecs_term_refs_finalize(
     const ecs_world_t *world,
     ecs_term_t *term,
@@ -303,19 +287,6 @@ int flecs_term_refs_finalize(
     /* If source is wildcard, term won't return any data */
     if ((src->id & EcsIsVariable) && ecs_id_is_wildcard(ECS_TERM_REF_ID(src))) {
         term->inout = EcsInOutNone;
-    }
-
-    /* If operator is Not, automatically convert wildcard queries to any */
-    if (term->oper == EcsNot) {
-        if (ECS_TERM_REF_ID(first) == EcsWildcard) {
-            first->id = EcsAny | ECS_TERM_REF_FLAGS(first);
-        }
-
-        if (ECS_TERM_REF_ID(second) == EcsWildcard) {
-            second->id = EcsAny | ECS_TERM_REF_FLAGS(second);
-        }
-
-        term->id = flecs_wildcard_to_any(term->id);
     }
 
     return 0;
@@ -981,7 +952,9 @@ int flecs_term_finalize(
         if (second->id & EcsIsVariable) {
             if (!ecs_id_is_wildcard(second_id) || second_id == EcsAny) {
                 trivial_term = false;
-                cacheable_term = false;
+                if (term->oper != EcsNot || second_id != EcsAny) {
+                    cacheable_term = false;
+                }
             }
         }
     }
@@ -1224,7 +1197,9 @@ int flecs_query_finalize_terms(
         term->field_index = flecs_ito(int8_t, field_count - 1);
 
         if (ecs_id_is_wildcard(term->id)) {
-            q->flags |= EcsQueryMatchWildcards;
+            if (term->oper != EcsNot || ecs_id_is_any(term->id)) {
+                q->flags |= EcsQueryMatchWildcards;
+            }
         } else if (!(term->flags_ & EcsTermIsOr)) {
             ECS_TERMSET_SET(q->static_id_fields, 1u << term->field_index);
         }
@@ -1903,7 +1878,9 @@ int flecs_query_finalize_query(
      * token buffer which simplifies memory management & reduces allocations. */
     flecs_query_populate_tokens(flecs_query_impl(q));
 
+    #ifndef FLECS_SANITIZE
 done:
+    #endif
     flecs_query_copy_arrays(q);
     return 0;
 error:

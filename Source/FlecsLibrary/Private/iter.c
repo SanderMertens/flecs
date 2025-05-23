@@ -14,17 +14,6 @@
 
 /* If term count is smaller than cache size, initialize with inline array,
  * otherwise allocate. */
-#define INIT_CACHE(it, stack, fields, f, T, count)\
-    if (!it->f && (fields & flecs_iter_cache_##f) && count) {\
-        it->f = flecs_stack_calloc_n(stack, T, count);\
-        it->priv_.cache.used |= flecs_iter_cache_##f;\
-    }
-
-/* If array is allocated, free it when finalizing the iterator */
-#define FINI_CACHE(it, f, T, count)\
-    if (it->priv_.cache.used & flecs_iter_cache_##f) {\
-        flecs_stack_free_n((void*)it->f, T, count);\
-    }
 
 void* flecs_iter_calloc(
     ecs_iter_t *it,
@@ -47,7 +36,7 @@ void flecs_iter_free(
 void flecs_iter_init(
     const ecs_world_t *world,
     ecs_iter_t *it,
-    ecs_flags8_t fields)
+    bool alloc_resources)
 {
     ecs_assert(!ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
         ECS_INTERNAL_ERROR, NULL);
@@ -56,13 +45,19 @@ void flecs_iter_init(
         ECS_CONST_CAST(ecs_world_t**, &world));
     ecs_stack_t *stack = &stage->allocators.iter_stack;
 
-    it->priv_.cache.used = 0;
-    it->priv_.cache.allocated = 0;
-    it->priv_.cache.stack_cursor = flecs_stack_get_cursor(stack);
+    it->priv_.stack_cursor = flecs_stack_get_cursor(stack);
 
-    INIT_CACHE(it, stack, fields, ids, ecs_id_t, it->field_count);
-    INIT_CACHE(it, stack, fields, sources, ecs_entity_t, it->field_count);
-    INIT_CACHE(it, stack, fields, trs, ecs_table_record_t*, it->field_count);
+    if (alloc_resources && it->field_count) {
+        ecs_assert(it->ids == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(it->sources == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(it->trs == NULL, ECS_INTERNAL_ERROR, NULL);
+
+        it->ids = flecs_stack_calloc_n(stack, ecs_id_t, it->field_count);
+        it->sources = flecs_stack_calloc_n(
+            stack, ecs_entity_t, it->field_count);
+        it->trs = flecs_stack_calloc_n(
+            stack, ecs_table_record_t*, it->field_count);
+    }
 }
 
 void ecs_iter_fini(
@@ -79,13 +74,18 @@ void ecs_iter_fini(
         return;
     }
 
-    FINI_CACHE(it, ids, ecs_id_t, it->field_count);
-    FINI_CACHE(it, sources, ecs_entity_t, it->field_count);
-    FINI_CACHE(it, trs, ecs_table_record_t*, it->field_count);
+    /* Make sure arrays are below stack page size, which means they don't have
+     * to get freed explicitly. */
+    ecs_assert(ECS_SIZEOF(ecs_id_t) * it->field_count < FLECS_STACK_PAGE_SIZE,
+        ECS_UNSUPPORTED, NULL);
+    ecs_assert(ECS_SIZEOF(ecs_entity_t) * it->field_count < FLECS_STACK_PAGE_SIZE,
+        ECS_UNSUPPORTED, NULL);
+    ecs_assert(ECS_SIZEOF(ecs_table_record_t*) * it->field_count < FLECS_STACK_PAGE_SIZE,
+        ECS_UNSUPPORTED, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
-        it->priv_.cache.stack_cursor);
+        it->priv_.stack_cursor);
 }
 
 /* --- Public API --- */
@@ -101,10 +101,28 @@ void* ecs_field_w_size(
         "invalid field index %d", index);
     ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
         "field index %d out of bounds", index);
-    ecs_check(!size || ecs_field_size(it, index) == size || 
+    ecs_check(size != 0, ECS_INVALID_PARAMETER, 
+        "missing size for field %d", index);
+    ecs_check(ecs_field_size(it, index) == size || 
         !ecs_field_size(it, index),
             ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
     (void)size;
+
+    if (it->ptrs && !it->offset) {
+        void *ptr = it->ptrs[index];
+        if (ptr) {
+#ifdef FLECS_DEBUG
+            /* Make sure that address in ptrs array is the same as what this 
+             * function would have returned if no ptrs array was set. */
+            void **temp_ptrs = it->ptrs;
+            ECS_CONST_CAST(ecs_iter_t*, it)->ptrs = NULL;
+            ecs_assert(ptr == ecs_field_w_size(it, size, index), 
+                ECS_INTERNAL_ERROR, NULL);
+            ECS_CONST_CAST(ecs_iter_t*, it)->ptrs = temp_ptrs;
+#endif
+            return ptr;
+        }
+    }
 
     const ecs_table_record_t *tr = it->trs[index];
     if (!tr) {
@@ -142,10 +160,6 @@ void* ecs_field_w_size(
     ecs_assert((row < table->data.count) ||
         (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
             ECS_INTERNAL_ERROR, NULL);
-
-    if (!size) {
-        size = (size_t)column->ti->size;
-    }
 
     return ECS_ELEM(column->data, (ecs_size_t)size, row);
 error:
@@ -784,15 +798,11 @@ uint64_t ecs_iter_get_group(
     ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, 
         "ecs_iter_get_group must be called on iterator that iterates a query");
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_check(qit->prev != NULL, ECS_INVALID_PARAMETER,
+    ecs_check(qit->group != NULL, ECS_INVALID_PARAMETER,
         "ecs_iter_get_group must be called on iterator that iterates a cached "
         "query (query is uncached)");
 
-    ecs_check(!flecs_query_has_trivial_cache(it->query), ECS_INVALID_PARAMETER,
-        "ecs_iter_get_group must be called on iterator that iterates a query "
-        "that uses group_by");
-
-    return qit->prev->_group_id;
+    return qit->group->info.id;
 error:
     return 0;
 }
@@ -818,7 +828,7 @@ ecs_iter_t ecs_page_iter(
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
-    result.priv_.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
+    result.priv_.stack_cursor = NULL; /* Don't copy allocator cursor */
 
     result.priv_.iter.page = (ecs_page_iter_t){
         .offset = offset,
@@ -923,7 +933,7 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
-    result.priv_.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
+    result.priv_.stack_cursor = NULL; /* Don't copy allocator cursor */
     
     result.priv_.iter.worker = (ecs_worker_iter_t){
         .index = index,

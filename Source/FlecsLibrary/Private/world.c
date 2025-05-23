@@ -410,9 +410,7 @@ void flecs_eval_component_monitor(
         for (i = 0; i < count; i ++) {
             ecs_query_t *q = elems[i];
             flecs_poly_assert(q, ecs_query_t);
-            flecs_query_cache_notify(world, q, &(ecs_query_cache_event_t) {
-                .kind = EcsQueryTableRematch
-            });
+            flecs_query_rematch(world, q);
         }
     }
 
@@ -892,6 +890,9 @@ ecs_world_t *ecs_mini(void) {
     ecs_set_os_api_impl();
 #endif
     ecs_os_init();
+
+    ecs_assert(ECS_ALIGNOF(ecs_query_triv_cache_match_t) == 
+               ECS_ALIGNOF(ecs_query_cache_match_t), ECS_INTERNAL_ERROR, NULL);
 
     ecs_trace("#[bold]bootstrapping world");
     ecs_log_push();
@@ -1409,8 +1410,6 @@ void flecs_increment_table_version(
 
     world->table_version[table->id & ECS_TABLE_VERSION_ARRAY_BITMASK] ++;
     table->version ++;
-
-    return;
 }
 
 uint32_t flecs_get_table_version_fast(
@@ -1419,6 +1418,29 @@ uint32_t flecs_get_table_version_fast(
 {
     flecs_poly_assert(world, ecs_world_t);
     return world->table_version[table_id & ECS_TABLE_VERSION_ARRAY_BITMASK];
+}
+
+void flecs_increment_table_column_version(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t index = table->id & ECS_TABLE_VERSION_ARRAY_BITMASK;
+    world->table_column_version[index] ++;
+    if (world->table_column_version[index] == UINT32_MAX) {
+        /* Skip sentinel value */
+        world->table_column_version[index] = 0;
+    }
+}
+
+uint32_t flecs_get_table_column_version(
+    const ecs_world_t *world,
+    const uint64_t table_id)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    return world->table_column_version[table_id & ECS_TABLE_VERSION_ARRAY_BITMASK];
 }
 
 static int32_t flecs_component_ids_last_index = 0;
