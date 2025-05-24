@@ -3497,7 +3497,7 @@ void BuiltinPredicates_3_or_w_eq_lookup_var(void) {
 }
 
 void BuiltinPredicates_2_or_w_eq_this(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Bar);

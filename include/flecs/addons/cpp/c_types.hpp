@@ -27,6 +27,9 @@ using query_group_info_t = ecs_query_group_info_t;
 using observer_t = ecs_observer_t;
 using iter_t = ecs_iter_t;
 using ref_t = ecs_ref_t;
+using table_record_t = ecs_table_record_t;
+using table_records_t = ecs_table_records_t;
+using component_record_t = ecs_component_record_t;
 using type_info_t = ecs_type_info_t;
 using type_hooks_t = ecs_type_hooks_t;
 using flags32_t = ecs_flags32_t;
@@ -148,6 +151,9 @@ static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
 static const flecs::entity_t DependsOn = EcsDependsOn;
 static const flecs::entity_t SlotOf = EcsSlotOf;
+
+/* Misc */
+static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
 
 /* Builtin identifiers */
 static const flecs::entity_t Name = EcsName;

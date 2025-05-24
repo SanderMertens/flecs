@@ -4756,3 +4756,84 @@ void Commands_batch_w_old_and_recycled_id(void) {
 
     ecs_fini(world);
 }
+
+void Commands_batch_w_two_named_entities_one_reparent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "a" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "b" });
+
+    ecs_defer_begin(world);
+
+    ecs_add_pair(world, e1, EcsChildOf, parent); // to trigger reparenting
+    ecs_add(world, e1, Position); // to create batch
+
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity); // to create batch
+
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_pair(world, e1, EcsChildOf, parent));
+    test_assert(ecs_has(world, e1, Position));
+
+    test_assert(ecs_has(world, e2, Position));
+    test_assert(ecs_has(world, e2, Velocity));
+
+    ecs_fini(world);
+}
+
+void Commands_batch_w_two_named_entities_one_reparent_w_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "a" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "b" });
+
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_defer_begin(world);
+
+    ecs_remove_pair(world, e1, EcsChildOf, parent); // to trigger reparenting
+    ecs_add(world, e1, Position); // to create batch
+
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity); // to create batch
+
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has_pair(world, e1, EcsChildOf, parent));
+    test_assert(ecs_has(world, e1, Position));
+
+    test_assert(ecs_has(world, e2, Position));
+    test_assert(ecs_has(world, e2, Velocity));
+
+    ecs_fini(world);
+}
+
+void Commands_batch_new_w_parent_w_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_set_name(world, e, "Foo");
+
+    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
+    test_assert(ecs_get_name(world, e) == NULL);
+
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_pair(world, e, EcsChildOf, parent));
+    test_str(ecs_get_name(world, e), "Foo");
+
+    ecs_fini(world);
+}

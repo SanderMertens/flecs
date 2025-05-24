@@ -3,9 +3,6 @@
  * @brief Query engine functions.
  */
 
-#include "cache.h"
-#include "cache_iter.h"
-#include "change_detection.h"
 #include "trav_cache.h"
 #include "trivial_iter.h"
 

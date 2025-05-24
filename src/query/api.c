@@ -4,7 +4,6 @@
  */
 
 #include "../private_api.h"
-#include <ctype.h>
 
 /* Placeholder arrays for queries that only have $this variable */
 ecs_query_var_t flecs_this_array = {
@@ -73,8 +72,9 @@ int flecs_query_set_caching_policy(
     const ecs_query_desc_t *desc)
 {
     ecs_query_cache_kind_t kind = desc->cache_kind;
-    bool group_order_by = desc->group_by || desc->group_by_callback || 
-            desc->order_by || desc->order_by_callback;
+    bool require_caching = desc->group_by || desc->group_by_callback || 
+            desc->order_by || desc->order_by_callback || 
+            (desc->flags & EcsQueryDetectChanges);
 
     /* If the query has a Cascade term it'll use group_by */
     int32_t i, term_count = impl->pub.term_count;
@@ -82,13 +82,13 @@ int flecs_query_set_caching_policy(
     for (i = 0; i < term_count; i ++) {
         const ecs_term_t *term = &terms[i];
         if (term->src.id & EcsCascade) {
-            group_order_by = true;
+            require_caching = true;
             break;
         }
     }
 
 #ifdef FLECS_DEFAULT_TO_UNCACHED_QUERIES
-    if (kind == EcsQueryCacheDefault && !group_order_by) {
+    if (kind == EcsQueryCacheDefault && !require_caching) {
         kind = EcsQueryCacheNone;
     }
 #endif
@@ -96,7 +96,7 @@ int flecs_query_set_caching_policy(
     /* If caching policy is default, try to pick a policy that does the right
      * thing in most cases. */
     if (kind == EcsQueryCacheDefault) {
-        if (desc->entity || group_order_by) {
+        if (desc->entity || require_caching) {
             /* If the query is created with an entity handle (typically 
              * indicating that the query is named or belongs to a system) the
              * chance is very high that the query will be reused, so enable
@@ -115,8 +115,9 @@ int flecs_query_set_caching_policy(
     /* Don't cache query, even if it has cacheable terms */
     if (kind == EcsQueryCacheNone) {
         impl->pub.cache_kind = EcsQueryCacheNone;
-        if (group_order_by && !(impl->pub.flags & EcsQueryNested)) {
-            ecs_err("cannot create uncached query with group_by/order_by");
+        if (require_caching && !(impl->pub.flags & EcsQueryNested)) {
+            ecs_err("cannot create uncached query with "
+                "group_by/order_by/change detection");
             return -1;
         }
         return 0;
@@ -148,7 +149,7 @@ int flecs_query_set_caching_policy(
              * if the cacheable part of the query contains not just not/optional
              * terms, as this would build a cache that contains all tables. */
             int32_t not_optional_terms = 0, cacheable_terms = 0;
-            if (!group_order_by) {
+            if (!require_caching) {
                 for (i = 0; i < term_count; i ++) {
                     const ecs_term_t *term = &terms[i];
                     if (term->flags_ & EcsTermIsCacheable) {
@@ -160,7 +161,7 @@ int flecs_query_set_caching_policy(
                 }
             }
 
-            if (group_order_by || cacheable_terms != not_optional_terms) {
+            if (require_caching || cacheable_terms != not_optional_terms) {
                 impl->pub.cache_kind = EcsQueryCacheAuto;
             } else {
                 impl->pub.cache_kind = EcsQueryCacheNone;
@@ -179,6 +180,12 @@ int flecs_query_create_cache(
     ecs_query_t *q = &impl->pub;
     if (flecs_query_set_caching_policy(impl, desc)) {
         return -1;
+    }
+
+    if (q->cache_kind != EcsQueryCacheNone) {
+        flecs_check_exclusive_world_access_write(impl->pub.real_world);
+    } else {
+        flecs_check_exclusive_world_access_read(impl->pub.real_world);
     }
 
     if ((q->cache_kind != EcsQueryCacheNone) && !q->entity) {
@@ -380,8 +387,6 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    flecs_check_exclusive_world_access(world);
-
     ecs_query_impl_t *result = flecs_bcalloc(&stage->allocators.query_impl);
     flecs_poly_init(result, ecs_query_t);
     
@@ -389,6 +394,8 @@ ecs_query_t* ecs_query_init(
     ecs_entity_t entity = const_desc->entity;
 
     if (entity) {
+        flecs_check_exclusive_world_access_write(world);
+
         /* Remove existing query if entity has one */
         bool deferred = false;
         if (ecs_is_deferred(world)) {
@@ -586,5 +593,70 @@ const ecs_query_t* ecs_query_get(
     } else {
         flecs_poly_assert(poly_comp->poly, ecs_query_t);
         return poly_comp->poly;
+    }
+}
+
+void ecs_iter_set_group(
+    ecs_iter_t *it,
+    uint64_t group_id)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER, 
+        "cannot set group during iteration");
+
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
+    ecs_query_impl_t *q = flecs_query_impl(it->query);
+    ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_poly_assert(q, ecs_query_t);
+    ecs_query_cache_t *cache = q->cache;
+    ecs_check(cache != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    static ecs_vec_t empty_table = {0};
+
+    ecs_query_cache_group_t *group = flecs_query_cache_get_group(
+        cache, group_id);
+    if (!group) {
+        qit->tables = &empty_table; /* Dummy table to indicate empty result */
+        qit->cur = 0;
+        qit->group = NULL;
+        qit->iter_single_group = true;
+        return;
+    }
+
+    qit->tables = &group->tables;
+    qit->cur = 0;
+    qit->group = group;
+    qit->iter_single_group = true; /* Prevent iterating next group */
+    
+error:
+    return;
+}
+
+const ecs_query_group_info_t* ecs_query_get_group_info(
+    const ecs_query_t *query,
+    uint64_t group_id)
+{
+    flecs_poly_assert(query, ecs_query_t);
+    ecs_query_cache_group_t *node = flecs_query_cache_get_group(
+        flecs_query_impl(query)->cache, group_id);
+    if (!node) {
+        return NULL;
+    }
+    
+    return &node->info;
+}
+
+void* ecs_query_get_group_ctx(
+    const ecs_query_t *query,
+    uint64_t group_id)
+{
+    flecs_poly_assert(query, ecs_query_t);
+    const ecs_query_group_info_t *info = ecs_query_get_group_info(
+        query, group_id);
+    if (!info) {
+        return NULL;
+    } else {
+        return info->ctx;
     }
 }

@@ -17,7 +17,8 @@
  */
 
 #include "../private_api.h"
-#include <math.h>
+
+#include <math.h> // isnan, isinf
 
 /**
  *  stm32tpl --  STM32 C++ Template Peripheral Library

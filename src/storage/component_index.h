@@ -28,9 +28,12 @@ typedef struct ecs_reachable_cache_t {
 } ecs_reachable_cache_t;
 
 /* Component index data that just applies to pairs */
-typedef struct ecs_pair_id_record_t {
+typedef struct ecs_pair_record_t {
     /* Name lookup index (currently only used for ChildOf pairs) */
     ecs_hashmap_t *name_index;
+
+    /* Vector with ordered children */
+    ecs_vec_t ordered_children;
 
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
@@ -43,7 +46,7 @@ typedef struct ecs_pair_id_record_t {
 
     /* Cache for finding components that are reachable through a relationship */
     ecs_reachable_cache_t reachable;
-} ecs_pair_id_record_t;
+} ecs_pair_record_t;
 
 /* Payload for id index which contains all data structures for an id. */
 struct ecs_component_record_t {
@@ -68,7 +71,7 @@ struct ecs_component_record_t {
     void *sparse;
 
     /* Pair data */
-    ecs_pair_id_record_t *pair;
+    ecs_pair_record_t *pair;
 
     /* All non-fragmenting ids */
     ecs_id_record_elem_t non_fragmenting;

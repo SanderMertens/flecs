@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 
   ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, Velocity);
 
-  ecs_entity_t e = ecs_insert(ecs, 
+  ecs_entity_t e = ecs_insert(ecs,
     ecs_value(Position, {10, 20}),
     ecs_value(Velocity, {1, 2}));
 
@@ -174,9 +174,10 @@ The following language bindings have been developed with Flecs! Note that these 
 - Rust:
   - [Flecs-Rust](https://github.com/Indra-db/Flecs-Rust)
   - [flecs-polyglot](https://github.com/flecs-hub/flecs-polyglot)
-  - [flecs-rs](https://github.com/jazzay/flecs-rs)
 - Zig:
   - [zig-gamedev/zflecs](https://github.com/zig-gamedev/zflecs)
 - Lua:
   - [sro5h/flecs-luajit](https://github.com/sro5h/flecs-luajit)
   - [flecs-hub/flecs-lua](https://github.com/flecs-hub/flecs-lua)
+- Clojure
+  - [vybe-flecs](https://vybegame.dev/vybe-flecs)

@@ -10097,3 +10097,19 @@ void Observer_observer_w_vars(void) {
 
     ecs_fini(world);
 }
+
+void Observer_observer_w_invalid_expr(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.expr = "Blah",
+        .events = {EcsOnAdd},
+        .callback = Observer
+    });
+
+    test_assert(o == 0);
+
+    ecs_fini(world);
+}

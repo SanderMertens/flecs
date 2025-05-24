@@ -84,22 +84,23 @@ const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 45;
 const ecs_entity_t EcsOnTableDelete =               FLECS_HI_COMPONENT_ID + 46;
 
 /* Timers */
-const ecs_entity_t ecs_id(EcsTickSource) =          FLECS_HI_COMPONENT_ID + 49;
-const ecs_entity_t ecs_id(EcsTimer) =               FLECS_HI_COMPONENT_ID + 50;
-const ecs_entity_t ecs_id(EcsRateFilter) =          FLECS_HI_COMPONENT_ID + 51;
+const ecs_entity_t ecs_id(EcsTickSource) =          FLECS_HI_COMPONENT_ID + 47;
+const ecs_entity_t ecs_id(EcsTimer) =               FLECS_HI_COMPONENT_ID + 48;
+const ecs_entity_t ecs_id(EcsRateFilter) =          FLECS_HI_COMPONENT_ID + 49;
 
 /* Actions */
-const ecs_entity_t EcsRemove =                      FLECS_HI_COMPONENT_ID + 52;
-const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 53;
-const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 54;
+const ecs_entity_t EcsRemove =                      FLECS_HI_COMPONENT_ID + 50;
+const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 51;
+const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 52;
 
 /* Storage */
-const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 55;
-const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 56;
-const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 57;
+const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 53;
+const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 54;
+const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 55;
 
 /* Misc */
-const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 58;
+const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 56;
+const ecs_entity_t EcsOrderedChildren =               FLECS_HI_COMPONENT_ID + 57;
 
 /* Builtin predicate ids (used by query engine) */
 const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 59;
@@ -337,8 +338,6 @@ ecs_entity_t EcsUri;
     ecs_entity_t EcsUriFile;
 #endif
 
-/* -- Private functions -- */
-
 ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world)
 {
@@ -372,89 +371,6 @@ ecs_stage_t* flecs_stage_from_world(
 
     *world_ptr = ((ecs_stage_t*)world)->world;
     return ECS_CONST_CAST(ecs_stage_t*, world);
-}
-
-ecs_world_t* flecs_suspend_readonly(
-    const ecs_world_t *stage_world,
-    ecs_suspend_readonly_state_t *state)
-{
-    ecs_assert(stage_world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_world_t *world =
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
-    flecs_poly_assert(world, ecs_world_t);
-
-    bool is_readonly = ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
-    ecs_world_t *temp_world = world;
-    ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
-
-    if (!is_readonly && !stage->defer) {
-        state->is_readonly = false;
-        state->is_deferred = false;
-        return world;
-    }
-
-    ecs_dbg_3("suspending readonly mode");
-
-    /* Cannot suspend when running with multiple threads */
-    ecs_assert(!(world->flags & EcsWorldReadonly) ||
-        !(world->flags & EcsWorldMultiThreaded), 
-            ECS_INVALID_WHILE_READONLY, NULL);
-
-    state->is_readonly = is_readonly;
-    state->is_deferred = stage->defer != 0;
-    state->cmd_flushing = stage->cmd_flushing;
-
-    /* Silence readonly checks */
-    world->flags &= ~EcsWorldReadonly;
-    stage->cmd_flushing = false;
-
-    /* Hack around safety checks (this ought to look ugly) */
-    state->defer_count = stage->defer;
-    state->cmd_stack[0] = stage->cmd_stack[0];
-    state->cmd_stack[1] = stage->cmd_stack[1];
-    state->cmd = stage->cmd;
-
-    flecs_commands_init(stage, &stage->cmd_stack[0]);
-    flecs_commands_init(stage, &stage->cmd_stack[1]);
-    stage->cmd = &stage->cmd_stack[0];
-
-    state->scope = stage->scope;
-    state->with = stage->with;
-    stage->defer = 0;
-
-    return world;
-}
-
-void flecs_resume_readonly(
-    ecs_world_t *world,
-    ecs_suspend_readonly_state_t *state)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_world_t *temp_world = world;
-    ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
-
-    if (state->is_readonly || state->is_deferred) {
-        ecs_dbg_3("resuming readonly mode");
-
-        ecs_run_aperiodic(world, 0);
-
-        /* Restore readonly state / defer count */
-        ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
-        stage->defer = state->defer_count;
-        stage->cmd_flushing = state->cmd_flushing;
-        flecs_commands_fini(stage, &stage->cmd_stack[0]);
-        flecs_commands_fini(stage, &stage->cmd_stack[1]);
-        stage->cmd_stack[0] = state->cmd_stack[0];
-        stage->cmd_stack[1] = state->cmd_stack[1];
-        stage->cmd = state->cmd;
-        
-        stage->scope = state->scope;
-        stage->with = state->with;
-    }
 }
 
 /* Evaluate component monitor. If a monitored entity changed it will have set a
@@ -491,15 +407,14 @@ void flecs_eval_component_monitor(
         for (i = 0; i < count; i ++) {
             ecs_query_t *q = elems[i];
             flecs_poly_assert(q, ecs_query_t);
-            flecs_query_cache_notify(world, q, &(ecs_query_cache_event_t) {
-                .kind = EcsQueryTableRematch
-            });
+            flecs_query_rematch(world, q);
         }
     }
 
     ecs_os_perf_trace_pop("flecs.component_monitor.eval");
 }
 
+static
 void flecs_monitor_mark_dirty(
     ecs_world_t *world,
     ecs_entity_t id)
@@ -577,6 +492,42 @@ void flecs_monitor_unregister(
     if (!ecs_map_count(monitors)) {
         ecs_map_fini(monitors);
     }
+}
+
+/* Updating component monitors is a relatively expensive operation that only
+ * happens for entities that are monitored. The approach balances the amount of
+ * processing between the operation on the entity vs the amount of work that
+ * needs to be done to rematch queries, as a simple brute force approach does
+ * not scale when there are many tables / queries. Therefore we need to do a bit
+ * of bookkeeping that is more intelligent than simply flipping a flag */
+static
+void flecs_update_component_monitor_w_array(
+    ecs_world_t *world,
+    ecs_type_t *ids)
+{
+    if (!ids) {
+        return;
+    }
+
+    int i;
+    for (i = 0; i < ids->count; i ++) {
+        ecs_entity_t id = ids->array[i];
+        if (ECS_HAS_ID_FLAG(id, PAIR)) {
+            flecs_monitor_mark_dirty(world, 
+                ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
+        }
+
+        flecs_monitor_mark_dirty(world, id);
+    }
+}
+
+void flecs_update_component_monitors(
+    ecs_world_t *world,
+    ecs_type_t *added,
+    ecs_type_t *removed)
+{
+    flecs_update_component_monitor_w_array(world, added);
+    flecs_update_component_monitor_w_array(world, removed);
 }
 
 static
@@ -751,11 +702,12 @@ void flecs_world_allocators_init(
     ecs_map_params_init(&a->query_table_list, &world->allocator);
 
     flecs_ballocator_init_t(&a->query_table, ecs_query_cache_table_t);
-    flecs_ballocator_init_t(&a->query_table_match, ecs_query_cache_table_match_t);
+    flecs_ballocator_init_t(&a->query_table_match, ecs_query_cache_match_t);
+    flecs_ballocator_init_t(&a->query_triv_table_match, ecs_query_triv_cache_match_t);
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
     flecs_ballocator_init_t(&a->id_record, ecs_component_record_t);
-    flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_id_record_t);
+    flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_record_t);
     flecs_ballocator_init_n(&a->id_record_chunk, ecs_component_record_t, FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
@@ -773,6 +725,7 @@ void flecs_world_allocators_fini(
     ecs_map_params_fini(&a->query_table_list);
     flecs_ballocator_fini(&a->query_table);
     flecs_ballocator_fini(&a->query_table_match);
+    flecs_ballocator_fini(&a->query_triv_table_match);
     flecs_ballocator_fini(&a->graph_edge_lo);
     flecs_ballocator_fini(&a->graph_edge);
     flecs_ballocator_fini(&a->id_record);
@@ -934,6 +887,9 @@ ecs_world_t *ecs_mini(void) {
     ecs_set_os_api_impl();
 #endif
     ecs_os_init();
+
+    ecs_assert(ECS_ALIGNOF(ecs_query_triv_cache_match_t) == 
+               ECS_ALIGNOF(ecs_query_cache_match_t), ECS_INTERNAL_ERROR, NULL);
 
     ecs_trace("#[bold]bootstrapping world");
     ecs_log_push();
@@ -1117,444 +1073,6 @@ void flecs_notify_tables(
     }
 }
 
-void flecs_default_ctor(
-    void *ptr, 
-    int32_t count, 
-    const ecs_type_info_t *ti)
-{
-    ecs_os_memset(ptr, 0, ti->size * count);
-}
-
-static
-void flecs_default_copy_ctor(void *dst_ptr, const void *src_ptr,
-    int32_t count, const ecs_type_info_t *ti)
-{
-    const ecs_type_hooks_t *cl = &ti->hooks;
-    cl->ctor(dst_ptr, count, ti);
-    cl->copy(dst_ptr, src_ptr, count, ti);
-}
-
-static
-void flecs_default_move_ctor(void *dst_ptr, void *src_ptr,
-    int32_t count, const ecs_type_info_t *ti)
-{
-    const ecs_type_hooks_t *cl = &ti->hooks;
-    cl->ctor(dst_ptr, count, ti);
-    cl->move(dst_ptr, src_ptr, count, ti);
-}
-
-static
-void flecs_default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
-    int32_t count, const ecs_type_info_t *ti)
-{
-    const ecs_type_hooks_t *cl = &ti->hooks;
-    cl->ctor(dst_ptr, count, ti);
-    cl->move(dst_ptr, src_ptr, count, ti);
-    cl->dtor(src_ptr, count, ti);
-}
-
-static
-void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
-    int32_t count, const ecs_type_info_t *ti)
-{
-    const ecs_type_hooks_t *cl = &ti->hooks;
-    cl->move_ctor(dst_ptr, src_ptr, count, ti);
-    cl->dtor(src_ptr, count, ti);
-}
-
-static
-void flecs_default_move(void *dst_ptr, void *src_ptr,
-    int32_t count, const ecs_type_info_t *ti)
-{
-    const ecs_type_hooks_t *cl = &ti->hooks;
-    cl->move(dst_ptr, src_ptr, count, ti);
-}
-
-static
-void flecs_default_dtor(void *dst_ptr, void *src_ptr,
-    int32_t count, const ecs_type_info_t *ti)
-{
-    /* When there is no move, destruct the destination component & memcpy the
-     * component to dst. The src component does not have to be destructed when
-     * a component has a trivial move. */
-    const ecs_type_hooks_t *cl = &ti->hooks;
-    cl->dtor(dst_ptr, count, ti);
-    ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
-}
-
-static
-void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
-    int32_t count, const ecs_type_info_t *ti)
-{
-    /* If a component has a move, the move will take care of memcpying the data
-     * and destroying any data in dst. Because this is not a trivial move, the
-     * src component must also be destructed. */
-    const ecs_type_hooks_t *cl = &ti->hooks;
-    cl->move(dst_ptr, src_ptr, count, ti);
-    cl->dtor(src_ptr, count, ti);
-}
-
-static
-bool flecs_default_equals(const void *a_ptr, const void *b_ptr, const ecs_type_info_t* ti) {
-    return ti->hooks.cmp(a_ptr, b_ptr, ti) == 0;
-}
-
-ECS_NORETURN static
-void flecs_ctor_illegal(
-    void * dst,
-    int32_t count,
-    const ecs_type_info_t *ti) {
-    (void)dst; /* silence unused warning */
-    (void)count;
-    ecs_abort(ECS_INVALID_OPERATION, "invalid constructor for %s", ti->name);
-}
-
-ECS_NORETURN static
-void flecs_dtor_illegal(
-    void *dst,
-    int32_t count,
-    const ecs_type_info_t *ti) {
-    (void)dst; /* silence unused warning */
-    (void)count;
-    ecs_abort(ECS_INVALID_OPERATION, "invalid destructor for %s", ti->name);
-}
-
-ECS_NORETURN static
-void flecs_copy_illegal(
-    void *dst,
-    const void *src,
-    int32_t count,
-    const ecs_type_info_t *ti)
-{
-    (void)dst; /* silence unused warning */
-    (void)src; 
-    (void)count;
-    ecs_abort(ECS_INVALID_OPERATION, "invalid copy assignment for %s", ti->name);
-}
-
-ECS_NORETURN static
-void flecs_move_illegal(
-    void * dst,
-    void * src,
-    int32_t count,
-    const ecs_type_info_t *ti) {
-    (void)dst; /* silence unused warning */
-    (void)src;
-    (void)count;
-    ecs_abort(ECS_INVALID_OPERATION, "invalid move assignment for %s", ti->name);
-}
-
-ECS_NORETURN static
-void flecs_copy_ctor_illegal(
-    void *dst,
-    const void *src,
-    int32_t count,
-    const ecs_type_info_t *ti)
-{
-    (void)dst; /* silence unused warning */
-    (void)src;
-    (void)count;
-    ecs_abort(ECS_INVALID_OPERATION, "invalid copy construct for %s", ti->name);
-}
-
-ECS_NORETURN static
-void flecs_move_ctor_illegal(
-    void *dst,
-    void *src,
-    int32_t count,
-    const ecs_type_info_t *ti)
-{
-    (void)dst; /* silence unused warning */
-    (void)src;
-    (void)count;
-    ecs_abort(ECS_INVALID_OPERATION, "invalid move construct for %s", ti->name);
-}
-
-ECS_NORETURN static
-int flecs_comp_illegal(
-    const void *dst,
-    const void *src,
-    const ecs_type_info_t *ti)
-{
-    (void)dst; /* silence unused warning */
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "invalid compare hook for %s", ti->name);
-}
-
-ECS_NORETURN static
-bool flecs_equals_illegal(
-    const void *dst,
-    const void *src,
-    const ecs_type_info_t *ti)
-{
-    (void)dst; /* silence unused warning */
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "invalid equals hook for %s", ti->name);
-}
-
-void ecs_set_hooks_id(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    const ecs_type_hooks_t *h)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    /* TODO: Refactor to enforce flags consistency: */
-    ecs_flags32_t flags = h->flags;
-    flags &= ~((ecs_flags32_t)ECS_TYPE_HOOKS);
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL && 
-        h->ctor != NULL && 
-        h->ctor != flecs_ctor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both ctor hook and illegal flag");
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL && 
-        h->dtor != NULL && 
-        h->dtor != flecs_dtor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both dtor hook and illegal flag");
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_COPY_ILLEGAL && 
-        h->copy != NULL && 
-        h->copy != flecs_copy_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both copy hook and illegal flag");
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL && 
-        h->move != NULL && 
-        h->move != flecs_move_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both move hook and illegal flag");
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL && 
-        h->copy_ctor != NULL && 
-        h->copy_ctor != flecs_copy_ctor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both copy ctor hook and illegal flag");
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL && 
-        h->move_ctor != NULL && 
-        h->move_ctor != flecs_move_ctor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both move ctor hook and illegal flag");
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL && 
-        h->ctor_move_dtor != NULL && 
-        h->ctor_move_dtor != flecs_move_ctor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both ctor move dtor hook and illegal flag");
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL && 
-        h->move_dtor != NULL && 
-        h->move_dtor != flecs_move_ctor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both move dtor hook and illegal flag");
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_CMP_ILLEGAL && 
-        h->cmp != NULL && 
-        h->cmp != flecs_comp_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both compare hook and illegal flag");
-
-    ecs_check(!(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL && 
-        h->equals != NULL && 
-        h->equals != flecs_equals_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both equals hook and illegal flag");
-
-
-    flecs_stage_from_world(&world);
-
-    /* Ensure that no tables have yet been created for the component */
-    ecs_check( ecs_id_in_use(world, component) == false,
-        ECS_ALREADY_IN_USE, ecs_get_name(world, component));
-    ecs_check( ecs_id_in_use(world, ecs_pair(component, EcsWildcard)) == false,
-        ECS_ALREADY_IN_USE, ecs_get_name(world, component));
-
-    ecs_type_info_t *ti = flecs_type_info_ensure(world, component);
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_check(!ti->component || ti->component == component,
-        ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-
-    if (!ti->size) {
-        const EcsComponent *component_ptr = ecs_get(
-            world, component, EcsComponent);
-
-        /* Cannot register lifecycle actions for things that aren't a component */
-        ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, 
-            "provided entity is not a component");
-        ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER,
-            "cannot register type hooks for type with size 0");
-
-        ti->size = component_ptr->size;
-        ti->alignment = component_ptr->alignment;
-    }
-
-    if (h->ctor) ti->hooks.ctor = h->ctor;
-    if (h->dtor) ti->hooks.dtor = h->dtor;
-    if (h->copy) ti->hooks.copy = h->copy;
-    if (h->move) ti->hooks.move = h->move;
-    if (h->copy_ctor) ti->hooks.copy_ctor = h->copy_ctor;
-    if (h->move_ctor) ti->hooks.move_ctor = h->move_ctor;
-    if (h->ctor_move_dtor) ti->hooks.ctor_move_dtor = h->ctor_move_dtor;
-    if (h->move_dtor) ti->hooks.move_dtor = h->move_dtor;
-    if (h->cmp) ti->hooks.cmp = h->cmp;
-    if (h->equals) ti->hooks.equals = h->equals;
-
-    if (h->on_add) ti->hooks.on_add = h->on_add;
-    if (h->on_remove) ti->hooks.on_remove = h->on_remove;
-    if (h->on_set) ti->hooks.on_set = h->on_set;
-
-    if (h->ctx) ti->hooks.ctx = h->ctx;
-    if (h->binding_ctx) ti->hooks.binding_ctx = h->binding_ctx;
-    if (h->lifecycle_ctx) ti->hooks.lifecycle_ctx = h->lifecycle_ctx;
-    if (h->ctx_free) ti->hooks.ctx_free = h->ctx_free;
-    if (h->binding_ctx_free) ti->hooks.binding_ctx_free = h->binding_ctx_free;
-    if (h->lifecycle_ctx_free) ti->hooks.lifecycle_ctx_free = h->lifecycle_ctx_free;
-
-    /* If no constructor is set, invoking any of the other lifecycle actions
-     * is not safe as they will potentially access uninitialized memory. For
-     * ease of use, if no constructor is specified, set a default one that
-     * initializes the component to 0. */
-    if (!h->ctor && (h->dtor || h->copy || h->move)) {
-        ti->hooks.ctor = flecs_default_ctor;   
-    }
-
-    /* Set default copy ctor, move ctor and merge */
-    if (!h->copy_ctor) {
-        if(flags & ECS_TYPE_HOOK_COPY_ILLEGAL || flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) {
-            flags |= ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL;
-        } else if(h->copy) {
-            ti->hooks.copy_ctor = flecs_default_copy_ctor;
-        }
-    }
-
-    if (!h->move_ctor) {
-        if(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL || flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) {
-            flags |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
-        } else if (h->move) {
-            ti->hooks.move_ctor = flecs_default_move_ctor;
-        }
-    }
-
-    if (!h->ctor_move_dtor) {
-        ecs_flags32_t illegal_check = 0;
-        if (h->move) {
-            illegal_check |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
-            if (h->dtor) {
-                illegal_check |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
-                if (h->move_ctor) {
-                    illegal_check |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
-                    /* If an explicit move ctor has been set, use callback
-                     * that uses the move ctor vs. using a ctor+move */
-                    ti->hooks.ctor_move_dtor = flecs_default_move_ctor_w_dtor;
-                } else {
-                    illegal_check |= ECS_TYPE_HOOK_CTOR_ILLEGAL;
-                    /* If no explicit move_ctor has been set, use
-                     * combination of ctor + move + dtor */
-                    ti->hooks.ctor_move_dtor = flecs_default_ctor_w_move_w_dtor;
-                }
-            } else {
-                illegal_check |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
-                /* If no dtor has been set, this is just a move ctor */
-                ti->hooks.ctor_move_dtor = ti->hooks.move_ctor;
-            }
-        } else {
-            /* If move is not set but move_ctor and dtor is, we can still set
-             * ctor_move_dtor. */
-            if (h->move_ctor) {
-                illegal_check |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
-                if (h->dtor) {
-                    illegal_check |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
-                    ti->hooks.ctor_move_dtor = flecs_default_move_ctor_w_dtor;
-                } else {
-                    ti->hooks.ctor_move_dtor = ti->hooks.move_ctor;
-                }
-            }
-        }
-        if(flags & illegal_check) {
-            flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
-        }
-    }
-
-    if (!h->move_dtor) {
-        ecs_flags32_t illegal_check = 0;
-        if (h->move) {
-            illegal_check |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
-            if (h->dtor) {
-                illegal_check |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
-                ti->hooks.move_dtor = flecs_default_move_w_dtor;
-            } else {
-                ti->hooks.move_dtor = flecs_default_move;
-            }
-        } else {
-            if (h->dtor) {
-                illegal_check |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
-                ti->hooks.move_dtor = flecs_default_dtor;
-            }
-        }
-        if(flags & illegal_check) {
-            flags |= ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
-        }
-    }
-
-    if(!h->cmp) {
-        flags |= ECS_TYPE_HOOK_CMP_ILLEGAL;
-    }
-
-    if (!h->equals || h->equals == flecs_equals_illegal) {
-        if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
-            flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
-        } else {
-            ti->hooks.equals = flecs_default_equals;
-            flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
-        }
-    }
-
-    ti->hooks.flags = flags;
-
-    if (ti->hooks.ctor) ti->hooks.flags |= ECS_TYPE_HOOK_CTOR;
-    if (ti->hooks.dtor) ti->hooks.flags |= ECS_TYPE_HOOK_DTOR;
-    if (ti->hooks.move) ti->hooks.flags |= ECS_TYPE_HOOK_MOVE;
-    if (ti->hooks.move_ctor) ti->hooks.flags |= ECS_TYPE_HOOK_MOVE_CTOR;
-    if (ti->hooks.ctor_move_dtor) ti->hooks.flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR;
-    if (ti->hooks.move_dtor) ti->hooks.flags |= ECS_TYPE_HOOK_MOVE_DTOR;
-    if (ti->hooks.copy) ti->hooks.flags |= ECS_TYPE_HOOK_COPY;
-    if (ti->hooks.copy_ctor) ti->hooks.flags |= ECS_TYPE_HOOK_COPY_CTOR;
-    if (ti->hooks.cmp) ti->hooks.flags |= ECS_TYPE_HOOK_CMP;
-    if (ti->hooks.equals) ti->hooks.flags |= ECS_TYPE_HOOK_EQUALS;
-
-    if(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) ti->hooks.ctor = flecs_ctor_illegal;
-    if(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) ti->hooks.dtor = flecs_dtor_illegal;
-    if(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ti->hooks.copy = flecs_copy_illegal;
-    if(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) ti->hooks.move = flecs_move_illegal;
-    if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) ti->hooks.cmp = flecs_comp_illegal;
-    if(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) ti->hooks.equals = flecs_equals_illegal;
-
-    if(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL) {
-        ti->hooks.copy_ctor = flecs_copy_ctor_illegal;
-    }
-
-    if(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL) {
-        ti->hooks.move_ctor = flecs_move_ctor_illegal;
-    }
-
-    if(ti->hooks.flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL) {
-        ti->hooks.ctor_move_dtor = flecs_move_ctor_illegal;
-    }
-
-    if(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL) {
-        ti->hooks.move_dtor = flecs_move_ctor_illegal;
-    }
-
-
-error:
-    return;
-}
-
-const ecs_type_hooks_t* ecs_get_hooks_id(
-    const ecs_world_t *world,
-    ecs_entity_t id)
-{
-    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
-    if (ti) {
-        return &ti->hooks;
-    }
-    return NULL;
-}
-
 void ecs_atfini(
     ecs_world_t *world,
     ecs_fini_action_t action,
@@ -1621,20 +1139,6 @@ void flecs_fini_actions(
     }
 
     ecs_vec_fini_t(NULL, &world->fini_actions, ecs_action_elem_t);
-}
-
-/* Cleanup remaining type info elements */
-static
-void flecs_fini_type_info(
-    ecs_world_t *world)
-{
-    ecs_map_iter_t it = ecs_map_iter(&world->type_info);
-    while (ecs_map_next(&it)) {
-        ecs_type_info_t *ti = ecs_map_ptr(&it);
-        flecs_type_info_fini(ti);
-        ecs_os_free(ti);
-    }
-    ecs_map_fini(&world->type_info);
 }
 
 ecs_entity_t flecs_get_oneof(
@@ -1903,8 +1407,6 @@ void flecs_increment_table_version(
 
     world->table_version[table->id & ECS_TABLE_VERSION_ARRAY_BITMASK] ++;
     table->version ++;
-
-    return;
 }
 
 uint32_t flecs_get_table_version_fast(
@@ -1915,334 +1417,159 @@ uint32_t flecs_get_table_version_fast(
     return world->table_version[table_id & ECS_TABLE_VERSION_ARRAY_BITMASK];
 }
 
-const ecs_type_info_t* flecs_type_info_get(
+void flecs_increment_table_column_version(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t index = table->id & ECS_TABLE_VERSION_ARRAY_BITMASK;
+    world->table_column_version[index] ++;
+    if (world->table_column_version[index] == UINT32_MAX) {
+        /* Skip sentinel value */
+        world->table_column_version[index] = 0;
+    }
+}
+
+uint32_t flecs_get_table_column_version(
     const ecs_world_t *world,
-    ecs_entity_t component)
-{
-    flecs_poly_assert(world, ecs_world_t);   
-
-    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!(component & ECS_ID_FLAGS_MASK), ECS_INTERNAL_ERROR, NULL);
-
-    return ecs_map_get_deref(&world->type_info, ecs_type_info_t, component);
-}
-
-ecs_type_info_t* flecs_type_info_ensure(
-    ecs_world_t *world,
-    ecs_entity_t component)
+    const uint64_t table_id)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
+    return world->table_column_version[table_id & ECS_TABLE_VERSION_ARRAY_BITMASK];
+}
 
-    const ecs_type_info_t *ti = flecs_type_info_get(world, component);
-    ecs_type_info_t *ti_mut = NULL;
-    if (!ti) {
-        ti_mut = ecs_map_ensure_alloc_t(
-            &world->type_info, ecs_type_info_t, component);
-        ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
-        ti_mut->component = component;
+static int32_t flecs_component_ids_last_index = 0;
+
+int32_t flecs_component_ids_index_get(void) {
+    if (ecs_os_api.ainc_) {
+        return ecs_os_ainc(&flecs_component_ids_last_index);
     } else {
-        ti_mut = ECS_CONST_CAST(ecs_type_info_t*, ti);
+        return ++ flecs_component_ids_last_index;
     }
-
-    if (!ti_mut->name) {
-        const char *sym = ecs_get_symbol(world, component);
-        if (sym) {
-            ti_mut->name = ecs_os_strdup(sym);
-        } else {
-            const char *name = ecs_get_name(world, component);
-            if (name) {
-                ti_mut->name = ecs_os_strdup(name);
-            }
-        }
-    }
-
-    return ti_mut;
 }
 
-bool flecs_type_info_init_id(
-    ecs_world_t *world,
-    ecs_entity_t component,
-    ecs_size_t size,
-    ecs_size_t alignment,
-    const ecs_type_hooks_t *li)
+ecs_entity_t flecs_component_ids_get(
+    const ecs_world_t *stage_world, 
+    int32_t index)
 {
-    bool changed = false;
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
 
-    flecs_entities_ensure(world, component);
-
-    ecs_type_info_t *ti = NULL;
-    if (!size || !alignment) {
-        ecs_assert(size == 0 && alignment == 0,
-            ECS_INVALID_COMPONENT_SIZE, NULL);
-        ecs_assert(li == NULL, ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        ecs_map_remove_free(&world->type_info, component);
-    } else {
-        ti = flecs_type_info_ensure(world, component);
-        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        changed |= ti->size != size;
-        changed |= ti->alignment != alignment;
-        ti->size = size;
-        ti->alignment = alignment;
-        if (li) {
-            ecs_set_hooks_id(world, component, li);
-        }
+    if (index >= ecs_vec_count(&world->component_ids)) {
+        return 0;
     }
 
-    /* Set type info for component record of component */
-    ecs_component_record_t *cr = flecs_components_ensure(world, component);
-    changed |= flecs_component_set_type_info(world, cr, ti);
-    bool is_tag = cr->flags & EcsIdTag;
-
-    /* All id records with component as relationship inherit type info */
-    cr = flecs_components_ensure(world, ecs_pair(component, EcsWildcard));
-    do {
-        if (is_tag) {
-            changed |= flecs_component_set_type_info(world, cr, NULL);
-        } else if (ti) {
-            changed |= flecs_component_set_type_info(world, cr, ti);
-        } else if ((cr->type_info != NULL) &&
-            (cr->type_info->component == component))
-        {
-            changed |= flecs_component_set_type_info(world, cr, NULL);
-        }
-    } while ((cr = flecs_component_first_next(cr)));
-
-    /* All non-tag id records with component as object inherit type info,
-     * if relationship doesn't have type info */
-    cr = flecs_components_ensure(world, ecs_pair(EcsWildcard, component));
-    do {
-        if (!(cr->flags & EcsIdTag) && !cr->type_info) {
-            changed |= flecs_component_set_type_info(world, cr, ti);
-        }
-    } while ((cr = flecs_component_first_next(cr)));
-
-    /* Type info of (*, component) should always point to component */
-    ecs_assert(flecs_components_get(world, ecs_pair(EcsWildcard, component))->
-        type_info == ti, ECS_INTERNAL_ERROR, NULL);
-
-    return changed;
+    return ecs_vec_get_t(
+        &world->component_ids, ecs_entity_t, index)[0];
 }
 
-void flecs_type_info_fini(
-    ecs_type_info_t *ti)
+ecs_entity_t flecs_component_ids_get_alive(
+    const ecs_world_t *stage_world, 
+    int32_t index)
 {
-    if (ti->hooks.ctx_free) {
-        ti->hooks.ctx_free(ti->hooks.ctx);
-    }
-    if (ti->hooks.binding_ctx_free) {
-        ti->hooks.binding_ctx_free(ti->hooks.binding_ctx);
-    }
-    if (ti->hooks.lifecycle_ctx_free) {
-        ti->hooks.lifecycle_ctx_free(ti->hooks.lifecycle_ctx);
-    }
-    if (ti->name) {
-        /* Safe to cast away const, world has ownership over string */
-        ecs_os_free(ECS_CONST_CAST(char*, ti->name));
-        ti->name = NULL;
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (index >= ecs_vec_count(&world->component_ids)) {
+        return 0;
     }
 
-    ti->size = 0;
-    ti->alignment = 0;
+    ecs_entity_t result = ecs_vec_get_t(
+        &world->component_ids, ecs_entity_t, index)[0];
+    if (!flecs_entities_is_alive(world, result)) {
+        return 0;
+    }
+
+    return result;
 }
 
-void flecs_type_info_free(
-    ecs_world_t *world,
+void flecs_component_ids_set(
+    ecs_world_t *stage_world, 
+    int32_t index,
     ecs_entity_t component)
 {
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
     flecs_poly_assert(world, ecs_world_t);
 
-    if (world->flags & EcsWorldQuit) {
-        /* If world is in the final teardown stages, cleanup policies are no
-         * longer applied and it can't be guaranteed that a component is not
-         * deleted before entities that use it. The remaining type info elements
-         * will be deleted after the store is finalized. */
-        return;
-    }
-
-    ecs_type_info_t *ti = ecs_map_get_deref(
-        &world->type_info, ecs_type_info_t, component);
-    if (ti) {
-        flecs_type_info_fini(ti);
-        ecs_map_remove_free(&world->type_info, component);
-    }
+    ecs_vec_set_min_count_zeromem_t(
+        &world->allocator, &world->component_ids, ecs_entity_t, index + 1);
+    ecs_vec_get_t(&world->component_ids, ecs_entity_t, index)[0] = component;
 }
 
-static
-ecs_ftime_t flecs_insert_sleep(
-    ecs_world_t *world,
-    ecs_time_t *stop)
-{
-    flecs_poly_assert(world, ecs_world_t);  
+#ifdef FLECS_DEBUG
 
-    ecs_time_t start = *stop, now = start;
-    ecs_ftime_t delta_time = (ecs_ftime_t)ecs_time_measure(stop);
-
-    if (ECS_EQZERO(world->info.target_fps)) {
-        return delta_time;
-    }
-
-    ecs_os_perf_trace_push("flecs.insert_sleep");
-
-    ecs_ftime_t target_delta_time =
-        ((ecs_ftime_t)1.0 / (ecs_ftime_t)world->info.target_fps);
-
-    /* Calculate the time we need to sleep by taking the measured delta from the
-     * previous frame, and subtracting it from target_delta_time. */
-    ecs_ftime_t sleep = target_delta_time - delta_time;
-
-    /* Pick a sleep interval that is 4 times smaller than the time one frame
-     * should take. */
-    ecs_ftime_t sleep_time = sleep / (ecs_ftime_t)4.0;
-
-    do {
-        /* Only call sleep when sleep_time is not 0. On some platforms, even
-         * a sleep with a timeout of 0 can cause stutter. */
-        if (ECS_NEQZERO(sleep_time)) {
-            ecs_sleepf((double)sleep_time);
-        }
-
-        now = start;
-        delta_time = (ecs_ftime_t)ecs_time_measure(&now);
-    } while ((target_delta_time - delta_time) >
-        (sleep_time / (ecs_ftime_t)2.0));
-
-    ecs_os_perf_trace_pop("flecs.insert_sleep");
-
-    *stop = now;
-    return delta_time;
-}
-
-static
-ecs_ftime_t flecs_start_measure_frame(
-    ecs_world_t *world,
-    ecs_ftime_t user_delta_time)
-{
-    flecs_poly_assert(world, ecs_world_t);  
-
-    ecs_ftime_t delta_time = 0;
-
-    if ((world->flags & EcsWorldMeasureFrameTime) ||
-        (ECS_EQZERO(user_delta_time)))
-    {
-        ecs_time_t t = world->frame_start_time;
-        do {
-            if (world->frame_start_time.nanosec || world->frame_start_time.sec){
-                delta_time = flecs_insert_sleep(world, &t);
-            } else {
-                ecs_time_measure(&t);
-                if (ECS_NEQZERO(world->info.target_fps)) {
-                    delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
-                } else {
-                    /* Best guess */
-                    delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0;
-
-                    if (ECS_EQZERO(delta_time)) {
-                        delta_time = user_delta_time;
-                        break;
-                    }
-                }
-            }
-
-        /* Keep trying while delta_time is zero */
-        } while (ECS_EQZERO(delta_time));
-
-        world->frame_start_time = t;
-
-        /* Keep track of total time passed in world */
-        world->info.world_time_total_raw += (double)delta_time;
-    }
-
-    return (ecs_ftime_t)delta_time;
-}
-
-static
-void flecs_stop_measure_frame(
-    ecs_world_t* world)
-{
-    flecs_poly_assert(world, ecs_world_t);  
-
-    if (world->flags & EcsWorldMeasureFrameTime) {
-        ecs_time_t t = world->frame_start_time;
-        world->info.frame_time_total += (ecs_ftime_t)ecs_time_measure(&t);
-    }
-}
-
-ecs_ftime_t ecs_frame_begin(
-    ecs_world_t *world,
-    ecs_ftime_t user_delta_time)
+void flecs_check_exclusive_world_access_write(
+    const ecs_world_t *world)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
-        "cannot begin frame while world is in readonly mode");
-    ecs_check(!(world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION, 
-        "cannot begin frame while frame is already in progress");
-    ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(), 
-        ECS_MISSING_OS_API, "get_time");
 
-    /* Start measuring total frame time */
-    ecs_ftime_t delta_time = flecs_start_measure_frame(world, user_delta_time);
-    if (ECS_EQZERO(user_delta_time)) {
-        user_delta_time = delta_time;
+    if (!world->exclusive_access) {
+        return; /* Exclusive access is not enabled */
     }
 
-    world->info.delta_time_raw = user_delta_time;
-    world->info.delta_time = user_delta_time * world->info.time_scale;
+    ecs_os_thread_id_t thr_self = ecs_os_thread_self();
+    (void)thr_self;
 
-    /* Keep track of total scaled time passed in world */
-    world->info.world_time_total += (double)world->info.delta_time;
-
-    /* Command buffer capturing */
-    world->on_commands_active = world->on_commands;
-    world->on_commands = NULL;
-
-    world->on_commands_ctx_active = world->on_commands_ctx;
-    world->on_commands_ctx = NULL;
-
-    ecs_run_aperiodic(world, 0);
-
-    world->flags |= EcsWorldFrameInProgress;
-
-    return world->info.delta_time;
-error:
-    return (ecs_ftime_t)0;
-}
-
-void ecs_frame_end(
-    ecs_world_t *world)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
-        "cannot end frame while world is in readonly mode");
-    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION, 
-        "cannot end frame while frame is not in progress");
-
-    world->info.frame_count_total ++;
-    
-    int32_t i, count = world->stage_count;
-    for (i = 0; i < count; i ++) {
-        flecs_stage_merge_post_frame(world, world->stages[i]);
+    if (world->exclusive_access == UINT64_MAX) {
+        ecs_throw(ECS_ACCESS_VIOLATION,
+            "invalid access: world is locked for write operations");
+    } else 
+    if (world->exclusive_thread_name) {
+        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+            ECS_ACCESS_VIOLATION,
+            "invalid access to world by thread %" PRIu64 ": "
+                "thread %" PRIu64 " (%s) has exclusive access",
+                    thr_self, world->exclusive_access,
+                    world->exclusive_thread_name);
+    } else {
+        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+            ECS_ACCESS_VIOLATION,
+            "invalid access to world by thread %" PRIu64 ": "
+                "thread %" PRIu64 " has exclusive access",
+                    thr_self, world->exclusive_access);
     }
-
-    flecs_stop_measure_frame(world);
-
-    /* Reset command handler each frame */
-    world->on_commands_active = NULL;
-    world->on_commands_ctx_active = NULL;
-
-    world->flags &= ~EcsWorldFrameInProgress;
-    
 error:
     return;
 }
 
-void flecs_delete_table(
-    ecs_world_t *world,
-    ecs_table_t *table)
+void flecs_check_exclusive_world_access_read(
+    const ecs_world_t *world)
 {
-    flecs_poly_assert(world, ecs_world_t); 
-    flecs_table_fini(world, table);
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (!world->exclusive_access) {
+        return; /* Exclusive access is not enabled */
+    }
+
+    if (world->exclusive_access == UINT64_MAX) {
+        return; /* World is locked, so read access is allowed */
+    }
+
+    ecs_os_thread_id_t thr_self = ecs_os_thread_self();
+    (void)thr_self;
+
+    if (world->exclusive_thread_name) {
+        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+            ECS_ACCESS_VIOLATION,
+            "invalid access to world by thread %" PRIu64 ": "
+                "(thread %" PRIu64 " (%s) has exclusive access)",
+                    thr_self, world->exclusive_access,
+                    world->exclusive_thread_name);
+    } else {
+        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+            ECS_ACCESS_VIOLATION,
+            "invalid access to world by thread %" PRIu64 ": "
+                "thread %" PRIu64 " has exclusive access",
+                    thr_self, world->exclusive_access);
+    }
 }
+
+#endif
 
 static
 void flecs_process_empty_queries(
@@ -2279,18 +1606,6 @@ void flecs_process_empty_queries(
     }
 
     flecs_defer_end(world, world->stages[0]);
-}
-
-bool ecs_id_in_use(
-    const ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_component_record_t *cr = flecs_components_get(world, id);
-    if (!cr) {
-        return false;
-    }
-
-    return (flecs_table_cache_count(&cr->cache) != 0);
 }
 
 void ecs_run_aperiodic(
@@ -2393,67 +1708,6 @@ ecs_flags32_t ecs_world_get_flags(
     }
 }
 
-static int32_t flecs_component_ids_last_index = 0;
-
-int32_t flecs_component_ids_index_get(void) {
-    if (ecs_os_api.ainc_) {
-        return ecs_os_ainc(&flecs_component_ids_last_index);
-    } else {
-        return ++ flecs_component_ids_last_index;
-    }
-}
-
-ecs_entity_t flecs_component_ids_get(
-    const ecs_world_t *stage_world, 
-    int32_t index)
-{
-    ecs_world_t *world =
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (index >= ecs_vec_count(&world->component_ids)) {
-        return 0;
-    }
-
-    return ecs_vec_get_t(
-        &world->component_ids, ecs_entity_t, index)[0];
-}
-
-ecs_entity_t flecs_component_ids_get_alive(
-    const ecs_world_t *stage_world, 
-    int32_t index)
-{
-    ecs_world_t *world =
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (index >= ecs_vec_count(&world->component_ids)) {
-        return 0;
-    }
-
-    ecs_entity_t result = ecs_vec_get_t(
-        &world->component_ids, ecs_entity_t, index)[0];
-    if (!flecs_entities_is_alive(world, result)) {
-        return 0;
-    }
-
-    return result;
-}
-
-void flecs_component_ids_set(
-    ecs_world_t *stage_world, 
-    int32_t index,
-    ecs_entity_t component)
-{
-    ecs_world_t *world =
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
-    flecs_poly_assert(world, ecs_world_t);
-
-    ecs_vec_set_min_count_zeromem_t(
-        &world->allocator, &world->component_ids, ecs_entity_t, index + 1);
-    ecs_vec_get_t(&world->component_ids, ecs_entity_t, index)[0] = component;
-}
-
 void ecs_shrink(
     ecs_world_t *world)
 {
@@ -2481,20 +1735,40 @@ void ecs_shrink(
 }
 
 void ecs_exclusive_access_begin(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    const char *thread_name)
 {
     flecs_poly_assert(world, ecs_world_t);
 
+    /* If world was locked, one thread can get exclusive access */
+    if (world->exclusive_access == UINT64_MAX) {
+        world->exclusive_access = 0;
+    }
+
     ecs_assert(!world->exclusive_access, ECS_INVALID_OPERATION,
-        "cannot begin exclusive access: world already in exclusive mode");
+        "cannot begin exclusive access: world already in exclusive mode "
+        "by thread %" PRIu64 " (%s)", 
+        world->exclusive_access, 
+        world->exclusive_thread_name 
+            ? world->exclusive_thread_name 
+            : "no thread name");
 
     world->exclusive_access = ecs_os_thread_self();
+    world->exclusive_thread_name = thread_name;
 }
 
 void ecs_exclusive_access_end(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    bool lock_world)
 {
     flecs_poly_assert(world, ecs_world_t);
+
+    /* If the world is locked (not exclusively accessed by a specific thread)
+     * this allows for unlocking the world without first calling access_begin */
+    if (world->exclusive_access == UINT64_MAX) {
+        world->exclusive_access = 0;
+        return;
+    }
 
     ecs_assert(world->exclusive_access != 0, ECS_INVALID_OPERATION,
         "cannot end exclusive access: world is not in exclusive mode");
@@ -2505,24 +1779,34 @@ void ecs_exclusive_access_end(
     ecs_assert(world->exclusive_access == thr_self, ECS_INVALID_OPERATION,
         "cannot end exclusive access from thread that does not have exclusive access");
 
-    world->exclusive_access = 0;
+    if (!lock_world) {
+        world->exclusive_access = 0;
+    } else {
+        /* Prevent any mutations on the world */
+        world->exclusive_access = UINT64_MAX;
+        world->exclusive_thread_name = "locked world";
+    }
 }
 
-void flecs_check_exclusive_world_access(
+ecs_entity_t ecs_set_with(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_id_t prev = stage->with;
+    stage->with = id;
+    return prev;
+error:
+    return 0;
+}
+
+ecs_id_t ecs_get_with(
     const ecs_world_t *world)
 {
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (!world->exclusive_access) {
-        return; /* Exclusive access is not enabled */
-    }
-
-    ecs_os_thread_id_t thr_self = ecs_os_thread_self();
-    (void)thr_self;
-
-    ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
-        ECS_INVALID_OPERATION,
-        "invalid access to world by thread %" PRIu64 " "
-            "(thread %" PRIu64 " has exclusive access)",
-                thr_self, world->exclusive_access);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
+    return stage->with;
+error:
+    return 0;
 }

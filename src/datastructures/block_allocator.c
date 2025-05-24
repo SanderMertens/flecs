@@ -99,6 +99,7 @@ void flecs_ballocator_fini(
     ecs_block_allocator_t *ba)
 {
     ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
+    (void)ba;
 
 #ifndef FLECS_USE_OS_ALLOC
 #ifdef FLECS_SANITIZE

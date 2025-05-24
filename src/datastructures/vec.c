@@ -301,6 +301,25 @@ void ecs_vec_remove_last(
     v->count --;
 }
 
+void ecs_vec_remove_ordered(
+    ecs_vec_t *v,
+    ecs_size_t size,
+    int32_t index)
+{
+    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index < v->count, ECS_OUT_OF_RANGE, NULL);
+
+    int32_t new_count = --v->count;
+    if (index == new_count) {
+        return;
+    }
+
+    ecs_os_memmove(
+        ECS_ELEM(v->array, size, index),
+        ECS_ELEM(v->array, size, index + 1),
+        size * (new_count - index));
+}
+
 int32_t ecs_vec_count(
     const ecs_vec_t *v)
 {

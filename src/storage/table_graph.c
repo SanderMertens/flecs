@@ -543,7 +543,7 @@ ecs_table_t *flecs_table_new(
     flecs_hashmap_result_t table_elem,
     ecs_table_t *prev)
 {
-    flecs_check_exclusive_world_access(world);
+    flecs_check_exclusive_world_access_write(world);
 
     ecs_os_perf_trace_push("flecs.table.create");
 
@@ -670,8 +670,11 @@ void flecs_compute_table_diff(
 {
     ecs_type_t node_type = node->type;
     ecs_type_t next_type = next->type;
+    bool childof = false;
 
-    if (ECS_IS_PAIR(id)) {
+    if (ECS_IS_PAIR(id)) { 
+        childof = ECS_PAIR_FIRST(id) ==  EcsChildOf;
+
         ecs_component_record_t *cr = flecs_components_get(world, ecs_pair(
             ECS_PAIR_FIRST(id), EcsWildcard));
         if (cr->flags & EcsIdIsUnion) {
@@ -723,7 +726,7 @@ void flecs_compute_table_diff(
     int32_t added_count = 0;
     int32_t removed_count = 0;
     ecs_flags32_t added_flags = 0, removed_flags = 0;
-    bool trivial_edge = !ECS_HAS_RELATION(id, EcsIsA);
+    bool trivial_edge = !ECS_HAS_RELATION(id, EcsIsA) && !childof;
 
     /* First do a scan to see how big the diff is, so we don't have to realloc
      * or alloc more memory than required. */
@@ -794,6 +797,7 @@ void flecs_compute_table_diff(
     for (; i_next < next_count; i_next ++) {
         flecs_diff_insert_added(world, builder, ids_next[i_next]);
     }
+
     for (; i_node < node_count; i_node ++) {
         flecs_diff_insert_removed(world, builder, ids_node[i_node]);
     }
@@ -803,6 +807,15 @@ void flecs_compute_table_diff(
     flecs_table_diff_build(world, builder, diff, added_offset, removed_offset);
     diff->added_flags = added_flags;
     diff->removed_flags = removed_flags;
+
+    if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsChildOf) {
+        if (added_count) {
+            diff->added_flags |= EcsTableEdgeReparent;
+        } else {
+            ecs_assert(removed_count != 0, ECS_INTERNAL_ERROR, NULL);
+            diff->removed_flags |= EcsTableEdgeReparent;
+        }
+    }
 
     ecs_assert(diff->added.count == added_count, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(diff->removed.count == removed_count, ECS_INTERNAL_ERROR, NULL);
@@ -1349,6 +1362,21 @@ void flecs_table_clear_edges(
     table_node->remove.hi = NULL;
 
     ecs_log_pop_1();
+}
+
+ecs_table_t* flecs_find_table_add(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_table_diff_builder_t *diff)
+{
+    ecs_table_diff_t temp_diff = ECS_TABLE_DIFF_INIT;
+    table = flecs_table_traverse_add(world, table, &id, &temp_diff);
+    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_table_diff_build_append_table(world, diff, &temp_diff);
+    return table;
+error:
+    return NULL;
 }
 
 /* Public convenience functions for traversing table graph */

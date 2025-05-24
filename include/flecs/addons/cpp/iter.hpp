@@ -354,7 +354,7 @@ public:
 
     /* Return group id for current table (grouped queries only) */
     uint64_t group_id() const {
-        return iter_->group_id;
+        return ecs_iter_get_group(iter_);
     }
 
     /** Get value of variable by id.
@@ -481,13 +481,13 @@ private:
         }
 
         return flecs::untyped_field(
-            ecs_field_w_size(iter_, 0, index), size, count, is_shared);
+            ecs_field_w_size(iter_, size, index), size, count, is_shared);
     }
 
     flecs::untyped_field get_unchecked_field_at(int8_t index, size_t row) const {
         size_t size = ecs_field_size(iter_, index);
         return flecs::untyped_field(
-            ecs_field_at_w_size(iter_, 0, index, static_cast<int32_t>(row)), 
+            ecs_field_at_w_size(iter_, size, index, static_cast<int32_t>(row)), 
                 size, 1, false);
     }
 

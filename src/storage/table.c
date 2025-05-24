@@ -514,6 +514,8 @@ void flecs_table_init(
                 r = ECS_PAIR_FIRST(dst_id);
                 if (r == EcsChildOf) {
                     childof_cr = p_cr;
+                    ecs_assert(childof_cr->pair != NULL, 
+                        ECS_INTERNAL_ERROR, NULL);
                 }
 
                 ecs_assert(p_cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -633,12 +635,17 @@ void flecs_table_init(
     table->version = 1;
     flecs_table_init_data(world, table);
 
+    /* If the table doesn't have an explicit ChildOf pair, it will be in the
+     * root which is registered with the (ChildOf, 0) index. */
+    ecs_assert(childof_cr != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (table->flags & EcsTableHasName) {
-        ecs_assert(childof_cr != NULL, ECS_INTERNAL_ERROR, NULL);
-        table->_->name_index = 
-            flecs_component_name_index_ensure(world, childof_cr);
-        ecs_assert(table->_->name_index != NULL, ECS_INTERNAL_ERROR, NULL);
+        flecs_component_name_index_ensure(world, childof_cr);
+        ecs_assert(childof_cr->pair->name_index != NULL, 
+            ECS_INTERNAL_ERROR, NULL);
     }
+
+    table->_->childof_r = childof_cr->pair;
 
     if (table->flags & EcsTableHasOnTableCreate) {
         flecs_table_emit(world, table, EcsOnTableCreate);
@@ -1066,7 +1073,7 @@ void flecs_table_fini(
     if (!(world->flags & EcsWorldFini)) {
         ecs_assert(!is_root, ECS_INTERNAL_ERROR, NULL);
         flecs_table_free_type(world, table);
-        flecs_sparse_remove_t(
+        flecs_sparse_remove_w_gen_t(
             &world->store.tables, ecs_table_t, table->id);
     }
 
@@ -1397,6 +1404,9 @@ int32_t flecs_table_grow_data(
     /* If the table is monitored indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);
 
+    /* Mark columns as potentially reallocated */
+    flecs_increment_table_column_version(world, table);
+
     /* Return index of first added entity */
     return count;
 }
@@ -1449,6 +1459,7 @@ int32_t flecs_table_append(
  
     /* If the table is monitored indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);
+    flecs_increment_table_column_version(world, table);
     ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Fast path: no switch columns, no lifecycle actions */
@@ -1561,7 +1572,7 @@ void flecs_table_delete(
     }     
 
     /* If the table is monitored indicate that there has been a change */
-    flecs_table_mark_table_dirty(world, table, 0);    
+    flecs_table_mark_table_dirty(world, table, 0);
 
     /* Destruct component data */
     ecs_column_t *columns = table->data.columns;
@@ -1819,6 +1830,8 @@ bool flecs_table_shrink(
     table->data.count = v_entities.count;
     table->data.size = v_entities.size;
     table->data.entities = v_entities.array;
+
+    flecs_increment_table_column_version(world, table);
 
     flecs_table_check_sanity(world, table);
 
@@ -2104,6 +2117,9 @@ void flecs_table_merge_data(
     /* Mark entity column as dirty */
     flecs_table_mark_table_dirty(world, dst_table, 0);
 
+    /* Mark columns as potentially reallocated */
+    flecs_increment_table_column_version(world, dst_table);
+
     dst_table->data.entities = dst_entities.array;
     dst_table->data.count = dst_entities.count;
     dst_table->data.size = dst_entities.size;
@@ -2214,6 +2230,49 @@ ecs_id_t flecs_column_id(
 {
     int32_t type_index = table->column_map[table->type.count + column_index];
     return table->type.array[type_index];
+}
+
+int32_t flecs_table_observed_count(
+    const ecs_table_t *table)
+{
+    return table->_->traversable_count;
+}
+
+uint64_t flecs_table_bloom_filter_add(
+    uint64_t filter,
+    uint64_t value)
+{
+    filter |= 1llu << (value % 64);
+    return filter;
+}
+
+bool flecs_table_bloom_filter_test(
+    const ecs_table_t *table,
+    uint64_t filter)
+{
+    return (table->bloom_filter & filter) == filter;
+}
+
+
+ecs_table_records_t flecs_table_records(
+    ecs_table_t* table)
+{
+    return (ecs_table_records_t){ 
+        .array = table->_->records, 
+        .count = table->_->record_count 
+    };
+}
+
+ecs_component_record_t* flecs_table_record_get_component(
+    const ecs_table_record_t *tr)
+{
+    return (ecs_component_record_t*)tr->hdr.cache;
+}
+
+uint64_t flecs_table_id(
+    ecs_table_t* table)
+{
+    return table->id;    
 }
 
 /* -- Public API -- */
@@ -2459,12 +2518,6 @@ void ecs_table_swap_rows(
     flecs_table_swap(world, table, row_1, row_2);
 }
 
-int32_t flecs_table_observed_count(
-    const ecs_table_t *table)
-{
-    return table->_->traversable_count;
-}
-
 void* ecs_record_get_by_column(
     const ecs_record_t *r,
     int32_t index,
@@ -2502,26 +2555,13 @@ error:
     return NULL;
 }
 
-ecs_table_records_t flecs_table_records(
-    ecs_table_t* table)
+char* ecs_table_str(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
 {
-    return (ecs_table_records_t){ 
-        .array = table->_->records, 
-        .count = table->_->record_count 
-    };
-}
-
-uint64_t flecs_table_bloom_filter_add(
-    uint64_t filter,
-    uint64_t value)
-{
-    filter |= 1llu << (value % 64);
-    return filter;
-}
-
-bool flecs_table_bloom_filter_test(
-    const ecs_table_t *table,
-    uint64_t filter)
-{
-    return (table->bloom_filter & filter) == filter;
+    if (table) {
+        return ecs_type_str(world, &table->type);
+    } else {
+        return NULL;
+    }
 }

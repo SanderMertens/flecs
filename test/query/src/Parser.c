@@ -5141,7 +5141,7 @@ void Parser_neq_wildcard(void) {
     test_first(terms[0], EcsPredEq, EcsSelf|EcsIsEntity);
     test_uint(terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_str(terms[0].src.name, NULL);
-    test_uint(terms[0].second.id, EcsAny|EcsSelf|EcsIsVariable);
+    test_uint(terms[0].second.id, EcsWildcard|EcsSelf|EcsIsVariable);
     test_str(terms[0].second.name, NULL);
     test_int(terms[0].oper, EcsNot);
 
@@ -6728,11 +6728,11 @@ void Parser_not_wildcard(void) {
 
     test_int(q->term_count, 1);
     test_int(q->field_count, 1);
-    test_uint(q->terms[0].id, EcsAny);
+    test_uint(q->terms[0].id, EcsWildcard);
     test_int(q->terms[0].oper, EcsNot);
     test_int(q->terms[0].inout, EcsInOutNone);
     test_int(q->terms[0].field_index, 0);
-    test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].first.id, EcsWildcard|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].trav, 0);
 

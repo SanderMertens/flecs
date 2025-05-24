@@ -1139,16 +1139,17 @@ struct ecs_iter_t {
     ecs_world_t *real_world;      /**< Actual world. Never points to a stage. */
 
     /* Matched data */
+    int32_t offset;               /**< Offset relative to current table */
+    int32_t count;                /**< Number of entities to iterate */
     const ecs_entity_t *entities; /**< Entity identifiers */
+    void **ptrs;                  /**< Component pointers. If not set or if it's NULL for a field, use it.trs. */
+    const ecs_table_record_t **trs; /**< Info on where to find field in table */
     const ecs_size_t *sizes;      /**< Component sizes */
     ecs_table_t *table;           /**< Current table */
     ecs_table_t *other_table;     /**< Prev or next table when adding/removing */
     ecs_id_t *ids;                /**< (Component) ids */
-    ecs_var_t *variables;         /**< Values of variables (if any) */
-    const ecs_table_record_t **trs; /**< Info on where to find field in table */
     ecs_entity_t *sources;        /**< Entity on which the id was matched (0 if same as entities) */
     ecs_flags64_t constrained_vars; /**< Bitset that marks constrained variables */
-    uint64_t group_id;            /**< Group id for table, if group_by is used */
     ecs_termset_t set_fields;     /**< Fields that are set */
     ecs_termset_t ref_fields;     /**< Bitset with fields that aren't component arrays */
     ecs_termset_t row_fields;     /**< Fields that must be obtained with field_at */
@@ -1165,9 +1166,7 @@ struct ecs_iter_t {
     int8_t term_index;            /**< Index of term that emitted an event.
                                    * This field will be set to the 'index' field
                                    * of an observer term. */
-    int8_t variable_count;        /**< Number of variables for query */
     const ecs_query_t *query;     /**< Query being evaluated */
-    char **variable_names;        /**< Names of variables (if any) */
 
     /* Context */
     void *param;                  /**< Param passed to ecs_run */
@@ -1182,8 +1181,6 @@ struct ecs_iter_t {
 
     /* Iterator counters */
     int32_t frame_offset;         /**< Offset relative to start of iteration */
-    int32_t offset;               /**< Offset relative to current table */
-    int32_t count;                /**< Number of entities to iterate */
 
     /* Misc */
     ecs_flags32_t flags;          /**< Iterator flags */
@@ -1227,6 +1224,18 @@ struct ecs_iter_t {
  * \ingroup queries
  */
 #define EcsQueryTableOnly             (1u << 7u)
+
+/** Enable change detection for query.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * 
+ * Adding this flag makes it possible to use ecs_query_changed() and 
+ * ecs_iter_changed() with the query. Change detection requires the query to be
+ * cached. If cache_kind is left to the default value, this flag will cause it
+ * to default to EcsQueryCacheAuto.
+ * 
+ * \ingroup queries
+ */
+#define EcsQueryDetectChanges         (1u << 8u)
 
 
 /** Used with ecs_query_init().
@@ -1496,6 +1505,7 @@ typedef struct ecs_world_info_t {
 
 /** Type that contains information about a query group. */
 typedef struct ecs_query_group_info_t {
+    uint64_t id;
     int32_t match_count;  /**< How often tables have been matched/unmatched */
     int32_t table_count;  /**< Number of tables in group */
     void *ctx;            /**< Group context, returned by on_group_create */
@@ -1795,6 +1805,9 @@ FLECS_API extern const ecs_entity_t EcsDependsOn;
 
 /** Used to express a slot (used with prefab inheritance) */
 FLECS_API extern const ecs_entity_t EcsSlotOf;
+
+/** Tag that when added to a parent ensures stable order of ecs_children result. */
+FLECS_API extern const ecs_entity_t EcsOrderedChildren;
 
 /** Tag added to module entities */
 FLECS_API extern const ecs_entity_t EcsModule;
@@ -2731,12 +2744,16 @@ ecs_id_t ecs_make_pair(
 
 /** Begin exclusive thread access.
  * This operation ensures that only the thread from which this operation is 
- * called can mutate the world. Attempts to mutate the world from other threads
- * will panic. 
+ * called can access the world. Attempts to access the world from other threads
+ * will panic.
  * 
  * ecs_exclusive_access_begin() must be called in pairs with 
  * ecs_exclusive_access_end(). Calling ecs_exclusive_access_begin() from another
  * thread without first calling ecs_exclusive_access_end() will panic.
+ * 
+ * A thread name can be provided to the function to improve debug messages. The
+ * function does not(!) copy the thread name, which means the memory for the 
+ * name must remain alive for as long as the thread has exclusive access.
  * 
  * This operation should only be called once per thread. Calling it multiple 
  * times for the same thread will cause a panic.
@@ -2745,25 +2762,39 @@ ecs_id_t ecs_make_pair(
  * feature requires the OS API thread_self_ callback to be set.
  * 
  * @param world The world.
+ * @param thread_name Name of the thread obtaining exclusive access.
  */
 FLECS_API
 void ecs_exclusive_access_begin(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    const char *thread_name);
 
 /** End exclusive thread access.
  * This operation should be called after ecs_exclusive_access_begin(). After
  * calling this operation other threads are no longer prevented from mutating
  * the world.
  * 
+ * When "lock_world" is set to true, no thread will be able to mutate the world
+ * until ecs_exclusive_access_begin is called again. While the world is locked
+ * only readonly operations are allowed. For example, ecs_get_id() is allowed,
+ * but ecs_get_mut_id() is not allowed.
+ * 
+ * A locked world can be unlocked by calling ecs_exclusive_access_end again with
+ * lock_world set to false. Note that this only works for locked worlds, if\
+ * ecs_exclusive_access_end() is called on a world that has exclusive thread 
+ * access from a different thread, a panic will happen.
+ * 
  * This operation must be called from the same thread that called
  * ecs_exclusive_access_begin(). Calling it from a different thread will cause
  * a panic.
  * 
  * @param world The world.
+ * @param lock_world When true, any mutations on the world will be blocked.
  */
 FLECS_API
 void ecs_exclusive_access_end(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    bool lock_world);
 
 /** @} */
 
@@ -2956,6 +2987,30 @@ FLECS_API
 void ecs_delete_with(
     ecs_world_t *world,
     ecs_id_t id);
+
+/** Set child order for parent with OrderedChildren.
+ * If the parent has the OrderedChildren trait, the order of the children 
+ * will be updated to the order in the specified children array. The operation
+ * will fail if the parent does not have the OrderedChildren trait.
+ * 
+ * This operation always takes place immediately, and is not deferred. When the 
+ * operation is called from a multithreaded system it will fail.
+ * 
+ * The reason for not deferring this operation is that by the time the deferred
+ * command would be executed, the children of the parent could have been changed
+ * which would cause the operation to fail.
+ * 
+ * @param world The world.
+ * @param parent The parent.
+ * @param children An array with children.
+ * @param child_count The number of children in the provided array.
+ */
+FLECS_API
+void ecs_set_child_order(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const ecs_entity_t *children,
+    int32_t child_count);
 
 /** @} */
 
@@ -4261,6 +4316,14 @@ FLECS_API
 bool ecs_id_is_wildcard(
     ecs_id_t id);
 
+/** Utility to check if id is an any wildcard.
+ * 
+ * @param id The id.
+ * @return True if id is an any wildcard or a pair containing an any wildcard.
+ */
+bool ecs_id_is_any(
+    ecs_id_t id);
+
 /** Utility to check if id is valid.
  * A valid id is an id that can be added to an entity. Invalid ids are:
  * - ids that contain wildcards
@@ -4484,10 +4547,14 @@ bool ecs_each_next(
     ecs_iter_t *it);
 
 /** Iterate children of parent.
- * Equivalent to:
+ * This operation is usually equivalent to doing:
  * @code
  * ecs_iter_t it = ecs_each_id(world, ecs_pair(EcsChildOf, parent));
  * @endcode
+ * 
+ * The only exception is when the parent has the EcsOrderedChildren trait, in
+ * which case this operation will return a single result with the ordered 
+ * child entity ids.
  * 
  * @param world The world.
  * @param parent The parent.
@@ -5207,6 +5274,35 @@ ecs_entity_t ecs_iter_get_var(
     ecs_iter_t *it,
     int32_t var_id);
 
+/** Get variable name.
+ * 
+ * @param it The iterator.
+ * @param var_id The variable index.
+ * @return The variable name.
+ */
+FLECS_API
+const char* ecs_iter_get_var_name(
+    const ecs_iter_t *it,
+    int32_t var_id);
+
+/** Get number of variables. 
+ * 
+ * @param it The iterator.
+ * @return The number of variables.
+*/
+FLECS_API
+int32_t ecs_iter_get_var_count(
+    const ecs_iter_t *it);
+
+/** Get variable array.
+ * 
+ * @param it The iterator.
+ * @return The variable array (if any).
+ */
+FLECS_API
+ecs_var_t* ecs_iter_get_vars(
+    const ecs_iter_t *it);
+
 /** Get value of iterator variable as table.
  * A variable can be interpreted as table if it is set as table range with
  * both offset and count set to 0, or if offset is 0 and count matches the
@@ -5258,6 +5354,21 @@ FLECS_API
 bool ecs_iter_var_is_constrained(
     ecs_iter_t *it,
     int32_t var_id);
+
+/** Return the group id for the currently iterated result.
+ * This operation returns the group id for queries that use group_by. If this
+ * operation is called on an iterator that is not iterating a query that uses
+ * group_by it will fail.
+ * 
+ * For queries that use cascade, this operation will return the hierarchy depth
+ * of the currently iterated result.
+ * 
+ * @param it The iterator.
+ * @return The group id of the currently iterated result.
+ */
+FLECS_API
+uint64_t ecs_iter_get_group(
+    ecs_iter_t *it);
 
 /** Returns whether current iterator result has changed.
  * This operation must be used in combination with a query that supports change
@@ -6002,7 +6113,7 @@ FLECS_API
 void ecs_table_clear_entities(
     ecs_world_t* world,
     ecs_table_t* table);
-    
+
 /** @} */
 
 /**

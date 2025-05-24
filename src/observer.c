@@ -9,7 +9,6 @@
  */
 
 #include "private_api.h"
-#include <stddef.h>
 
 static
 ecs_entity_t flecs_get_observer_event(
@@ -495,6 +494,7 @@ void flecs_multi_observer_invoke(
             /* The target table matches but the entity hasn't moved to it yet. 
              * Now match the not_query, which will populate the iterator with
              * data from the table the entity is still stored in. */
+            user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
             ecs_iter_fini(&user_it);
             match = ecs_query_has_table(impl->not_query, prev_table, &user_it);
 
@@ -518,6 +518,9 @@ void flecs_multi_observer_invoke(
         if (impl->flags & EcsObserverIsMonitor) {
             ecs_iter_t table_it;
             if (ecs_query_has_table(o->query, prev_table, &table_it)) {
+                /* Prevent change detection on fini */
+                user_it.flags |= EcsIterSkip;
+                table_it.flags |= EcsIterSkip;
                 ecs_iter_fini(&table_it);
                 ecs_iter_fini(&user_it);
                 goto done;
@@ -559,6 +562,7 @@ void flecs_multi_observer_invoke(
             user_it.callback(&user_it);
         }
 
+        user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
         ecs_iter_fini(&user_it);
 
         ecs_table_unlock(it->world, table);
@@ -981,6 +985,7 @@ ecs_observer_t* flecs_observer_init(
 
     flecs_poly_init(impl, ecs_observer_t);
     ecs_observer_t *o = &impl->pub;
+    o->world = world;
     impl->dtor = flecs_observer_poly_fini;
 
     /* Make writeable copy of query desc so that we can set name. This will
@@ -990,22 +995,23 @@ ecs_observer_t* flecs_observer_init(
     query_desc.entity = 0;
     query_desc.cache_kind = EcsQueryCacheNone;
 
-    ecs_query_t dummy_query, *query = NULL;
-
-    /* Temporary arrays for dummy query */
-    ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
-    ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};
-    ecs_id_t ids[FLECS_TERM_COUNT_MAX] = {0};
-    dummy_query = (ecs_query_t){
-        .terms = terms,
-        .sizes = sizes,
-        .ids = ids
-    };
+    ecs_query_t *query = NULL;
     
     /* Only do optimization when not in sanitized mode. This ensures that the
      * behavior is consistent between observers with and without queries, as
      * both paths will be exercised in unit tests. */
 #ifndef FLECS_SANITIZE
+    /* Temporary arrays for dummy query */
+    ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
+    ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};
+    ecs_id_t ids[FLECS_TERM_COUNT_MAX] = {0};
+
+    ecs_query_t dummy_query = {
+        .terms = terms,
+        .sizes = sizes,
+        .ids = ids
+    };
+
     if (desc->events[0] != EcsMonitor) {
         if (flecs_query_finalize_simple(world, &dummy_query, &query_desc)) {
             bool trivial_observer = (dummy_query.term_count == 1) && 
@@ -1052,7 +1058,7 @@ ecs_observer_t* flecs_observer_init(
 
     ecs_observable_t *observable = desc->observable;
     if (!observable) {
-        observable = ecs_get_observable(world);
+        observable = flecs_get_observable(world);
     }
 
     o->run = desc->run;
@@ -1168,7 +1174,11 @@ ecs_entity_t ecs_observer_init(
 
     EcsPoly *poly = flecs_poly_bind(world, entity, ecs_observer_t);
     if (!poly->poly) {
-        ecs_observer_t *o = flecs_observer_init(world, entity, desc);
+        ecs_observer_t *o = flecs_observer_init(world, entity, desc);\
+        if (!o) {
+            goto error;
+        }
+
         ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
         poly->poly = o;
 
@@ -1263,6 +1273,7 @@ void flecs_observer_fini(
 {
     ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_world_t *world = o->world;
+
     flecs_poly_assert(world, ecs_world_t);
     ecs_observer_impl_t *impl = flecs_observer_impl(o);
 

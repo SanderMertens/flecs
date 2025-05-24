@@ -298,6 +298,12 @@ void Entity_iter_empty_type(void);
 void Entity_untyped_component_use_low_id(void);
 void Entity_add_remove_enum_component(void);
 
+// Testsuite 'OrderedChildren'
+void OrderedChildren_iter_no_children(void);
+void OrderedChildren_children_1_table(void);
+void OrderedChildren_children_2_tables(void);
+void OrderedChildren_set_child_order(void);
+
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
 void Pairs_add_tag_pair(void);
@@ -1481,6 +1487,14 @@ void Table_range_get_pair_R_T(void);
 void Table_get_depth(void);
 void Table_get_depth_w_type(void);
 void Table_iter_type(void);
+void Table_get_size(void);
+void Table_get_entities(void);
+void Table_get_records(void);
+void Table_get_id(void);
+void Table_lock(void);
+void Table_unlock(void);
+void Table_has_flags(void);
+void Table_clear_entities(void);
 
 // Testsuite 'Doc'
 void Doc_set_brief(void);
@@ -2637,6 +2651,25 @@ bake_test_case Entity_testcases[] = {
     {
         "add_remove_enum_component",
         Entity_add_remove_enum_component
+    }
+};
+
+bake_test_case OrderedChildren_testcases[] = {
+    {
+        "iter_no_children",
+        OrderedChildren_iter_no_children
+    },
+    {
+        "children_1_table",
+        OrderedChildren_children_1_table
+    },
+    {
+        "children_2_tables",
+        OrderedChildren_children_2_tables
+    },
+    {
+        "set_child_order",
+        OrderedChildren_set_child_order
     }
 };
 
@@ -7260,6 +7293,38 @@ bake_test_case Table_testcases[] = {
     {
         "iter_type",
         Table_iter_type
+    },
+    {
+        "get_size",
+        Table_get_size
+    },
+    {
+        "get_entities",
+        Table_get_entities
+    },
+    {
+        "get_records",
+        Table_get_records
+    },
+    {
+        "get_id",
+        Table_get_id
+    },
+    {
+        "lock",
+        Table_lock
+    },
+    {
+        "unlock",
+        Table_unlock
+    },
+    {
+        "has_flags",
+        Table_has_flags
+    },
+    {
+        "clear_entities",
+        Table_clear_entities
     }
 };
 
@@ -7309,6 +7374,13 @@ static bake_test_suite suites[] = {
         NULL,
         284,
         Entity_testcases
+    },
+    {
+        "OrderedChildren",
+        NULL,
+        NULL,
+        4,
+        OrderedChildren_testcases
     },
     {
         "Pairs",
@@ -7456,7 +7528,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        32,
+        40,
         Table_testcases
     },
     {
@@ -7469,5 +7541,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp", argc, argv, suites, 24);
+    return bake_test_run("cpp", argc, argv, suites, 25);
 }

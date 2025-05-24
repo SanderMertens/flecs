@@ -5637,6 +5637,294 @@ void Variables_2_set_src_this_w_wildcard(void) {
     ecs_fini(ecs);
 }
 
+void Variables_2_set_src_this_w_not(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity), .oper = EcsNot }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    /* ecs_entity_t e1 = */ ecs_insert(ecs, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {20, 30}));
+    /* ecs_entity_t e3 = */ ecs_insert(ecs, ecs_value(Position, {30, 40}));
+
+    ecs_iter_t it = ecs_query_iter(ecs, q);
+    ecs_iter_set_var(&it, 0, e2);
+
+    {
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 0);
+        test_int(p[0].x, 20);
+        test_int(p[0].y, 30);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_not_wildcard(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+    ECS_TAG(ecs, Likes);
+    ECS_TAG(ecs, Apples);
+    ECS_TAG(ecs, Pears);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity), .oper = EcsNot },
+            { .id = ecs_pair(Likes, EcsWildcard) }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {30, 40}));
+
+    ecs_add_pair(ecs, e1, Likes, Apples);
+    ecs_add_pair(ecs, e2, Likes, Apples);
+    ecs_add_pair(ecs, e3, Likes, Apples);
+
+    ecs_add_pair(ecs, e1, Likes, Pears);
+    ecs_add_pair(ecs, e2, Likes, Pears);
+    ecs_add_pair(ecs, e3, Likes, Pears);
+
+    ecs_iter_t it = ecs_query_iter(ecs, q);
+    ecs_iter_set_var(&it, 0, e2);
+
+    {
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 0);
+        test_int(p[0].x, 20);
+        test_int(p[0].y, 30);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, Apples), ecs_field_id(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+    }
+    {
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 0);
+        test_int(p[0].x, 20);
+        test_int(p[0].y, 30);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(Likes, Pears), ecs_field_id(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_2_set_src_this_w_optional(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity), .oper = EcsOptional }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    /* ecs_entity_t e1 = */ ecs_insert(ecs, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {30, 40}));
+    ecs_set(ecs, e3, Velocity, {3, 4});
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 0);
+        test_int(p[0].x, 20);
+        test_int(p[0].y, 30);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        Position *p = ecs_field(&it, Position, 0);
+        test_int(p[0].x, 30);
+        test_int(p[0].y, 40);
+        Velocity *v = ecs_field(&it, Velocity, 1);
+        test_int(v[0].x, 3);
+        test_int(v[0].y, 4);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_optional_wildcard(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+    ECS_TAG(ecs, Likes);
+    ECS_TAG(ecs, Apples);
+    ECS_TAG(ecs, Pears);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity), .oper = EcsOptional },
+            { .id = ecs_pair(Likes, EcsWildcard) }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {30, 40}));
+    ecs_set(ecs, e3, Velocity, {3, 4});
+
+    ecs_add_pair(ecs, e1, Likes, Apples);
+    ecs_add_pair(ecs, e2, Likes, Apples);
+    ecs_add_pair(ecs, e3, Likes, Apples);
+
+    ecs_add_pair(ecs, e1, Likes, Pears);
+    ecs_add_pair(ecs, e2, Likes, Pears);
+    ecs_add_pair(ecs, e3, Likes, Pears);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+
+        {
+            test_bool(true, ecs_query_next(&it));
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e2);
+            Position *p = ecs_field(&it, Position, 0);
+            test_int(p[0].x, 20);
+            test_int(p[0].y, 30);
+            test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+            test_uint(ecs_pair(Likes, Apples), ecs_field_id(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+        }
+        {
+            test_bool(true, ecs_query_next(&it));
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e2);
+            Position *p = ecs_field(&it, Position, 0);
+            test_int(p[0].x, 20);
+            test_int(p[0].y, 30);
+            test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+            test_uint(ecs_pair(Likes, Pears), ecs_field_id(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+        }
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+
+        {
+            test_bool(true, ecs_query_next(&it));
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e3);
+            Position *p = ecs_field(&it, Position, 0);
+            test_int(p[0].x, 30);
+            test_int(p[0].y, 40);
+            Velocity *v = ecs_field(&it, Velocity, 1);
+            test_int(v[0].x, 3);
+            test_int(v[0].y, 4);
+            test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+            test_uint(ecs_pair(Likes, Apples), ecs_field_id(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+        }
+        {
+            test_bool(true, ecs_query_next(&it));
+            test_int(it.count, 1);
+            test_uint(it.entities[0], e3);
+            Position *p = ecs_field(&it, Position, 0);
+            test_int(p[0].x, 30);
+            test_int(p[0].y, 40);
+            Velocity *v = ecs_field(&it, Velocity, 1);
+            test_int(v[0].x, 3);
+            test_int(v[0].y, 4);
+            test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+            test_uint(ecs_pair(Likes, Pears), ecs_field_id(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 2));
+        }
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
 void Variables_3_set_src_this_w_uncacheable_tag_tag_tag(void) {
     ecs_world_t* ecs = ecs_mini();
 
@@ -8820,8 +9108,8 @@ void Variables_parse_0_var(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("", ecs_query_args_parse(q, &it, ""));
-    test_uint(it.variables[x_var].entity, EcsWildcard);
-    test_uint(it.variables[y_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -8847,8 +9135,8 @@ void Variables_parse_1_var(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("", ecs_query_args_parse(q, &it, "x:e1"));
-    test_uint(it.variables[x_var].entity, e1);
-    test_uint(it.variables[y_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, e1);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -8875,8 +9163,8 @@ void Variables_parse_2_vars(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("", ecs_query_args_parse(q, &it, "x:e1,y:e2"));
-    test_uint(it.variables[x_var].entity, e1);
-    test_uint(it.variables[y_var].entity, e2);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, e1);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, e2);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -8900,8 +9188,8 @@ void Variables_parse_0_var_paren(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("", ecs_query_args_parse(q, &it, "()"));
-    test_uint(it.variables[x_var].entity, EcsWildcard);
-    test_uint(it.variables[y_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -8927,8 +9215,8 @@ void Variables_parse_1_var_paren(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("", ecs_query_args_parse(q, &it, "(x:e1)"));
-    test_uint(it.variables[x_var].entity, e1);
-    test_uint(it.variables[y_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, e1);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -8955,8 +9243,8 @@ void Variables_parse_2_vars_paren(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("", ecs_query_args_parse(q, &it, "(x:e1,y:e2)"));
-    test_uint(it.variables[x_var].entity, e1);
-    test_uint(it.variables[y_var].entity, e2);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, e1);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, e2);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -8982,8 +9270,8 @@ void Variables_parse_1_vars_w_path(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("", ecs_query_args_parse(q, &it, "x:parent.e1"));
-    test_uint(it.variables[x_var].entity, e1);
-    test_uint(it.variables[y_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, e1);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -9079,8 +9367,8 @@ void Variables_parse_0_var_w_spaces(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("", ecs_query_args_parse(q, &it, "  "));
-    test_uint(it.variables[x_var].entity, EcsWildcard);
-    test_uint(it.variables[y_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -9106,8 +9394,8 @@ void Variables_parse_1_var_w_spaces(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("", ecs_query_args_parse(q, &it, "  x  :  e1  "));
-    test_uint(it.variables[x_var].entity, e1);
-    test_uint(it.variables[y_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, e1);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -9134,8 +9422,8 @@ void Variables_parse_2_vars_w_spaces(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("", ecs_query_args_parse(q, &it, "  x  :  e1  ,  y  :  e2  "));
-    test_uint(it.variables[x_var].entity, e1);
-    test_uint(it.variables[y_var].entity, e2);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, e1);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, e2);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -9159,8 +9447,8 @@ void Variables_parse_0_var_paren_w_spaces(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("  ", ecs_query_args_parse(q, &it, "  (  )  "));
-    test_uint(it.variables[x_var].entity, EcsWildcard);
-    test_uint(it.variables[y_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -9186,8 +9474,8 @@ void Variables_parse_1_var_paren_w_spaces(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("  ", ecs_query_args_parse(q, &it, "  (  x  :  e1  )  "));
-    test_uint(it.variables[x_var].entity, e1);
-    test_uint(it.variables[y_var].entity, EcsWildcard);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, e1);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -9214,8 +9502,8 @@ void Variables_parse_2_vars_paren_w_spaces(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_str("  ", ecs_query_args_parse(q, &it, "  (  x  :  e1  ,  y  :  e2  )  "));
-    test_uint(it.variables[x_var].entity, e1);
-    test_uint(it.variables[y_var].entity, e2);
+    test_uint(ecs_iter_get_vars(&it)[x_var].entity, e1);
+    test_uint(ecs_iter_get_vars(&it)[y_var].entity, e2);
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -10836,7 +11124,7 @@ void Variables_lookup_neq_var(void) {
 }
 
 void Variables_lookup_unresolved_dependent(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
     ecs_query_t *r = ecs_query(world, {
@@ -11557,6 +11845,144 @@ void Variables_second_invalid_var_name_and_id(void) {
     });
 
     test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Variables_get_vars_from_chained_iter(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Rel($this, $x)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add_pair(world, e, Rel, TgtA);
+    ecs_add_pair(world, e, Rel, TgtB);
+    ecs_add_pair(world, e, Rel, TgtC);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_t pit = ecs_page_iter(&it, 0, 2);
+
+    test_bool(true, ecs_page_next(&pit));
+    test_int(1, pit.count);
+    test_uint(e, pit.entities[0]);
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&pit, 0));
+    test_assert(ecs_iter_get_vars(&pit) != NULL);
+    test_uint(TgtA, ecs_iter_get_var(&pit, x_var));
+    test_str("x", ecs_iter_get_var_name(&pit, x_var));
+
+    test_bool(true, ecs_page_next(&pit));
+    test_int(1, pit.count);
+    test_uint(e, pit.entities[0]);
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&pit, 0));
+    test_assert(ecs_iter_get_vars(&pit) != NULL);
+    test_uint(TgtB, ecs_iter_get_var(&pit, x_var));
+    test_str("x", ecs_iter_get_var_name(&pit, x_var));
+
+    test_bool(false, ecs_page_next(&pit));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_set_var_from_chained_iter(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Rel($this, $x)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Rel, TgtA);
+    ecs_add_pair(world, e, Rel, TgtB);
+    ecs_add_pair(world, e, Rel, TgtC);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_t pit = ecs_page_iter(&it, 0, 2);
+
+    test_bool(false, ecs_iter_var_is_constrained(&pit, x_var));
+    ecs_iter_set_var(&pit, x_var, TgtB);
+    test_bool(true, ecs_iter_var_is_constrained(&pit, x_var));
+
+    test_bool(true, ecs_page_next(&pit));
+    test_int(1, pit.count);
+    test_uint(e, pit.entities[0]);
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&pit, 0));
+    test_assert(ecs_iter_get_vars(&pit) != NULL);
+    test_uint(TgtB, ecs_iter_get_var(&pit, x_var));
+    test_str("x", ecs_iter_get_var_name(&pit, x_var));
+
+    test_bool(false, ecs_page_next(&pit));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_set_var_range_from_chained_iter(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA($this)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, TagA);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, TagA);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e3, TagB);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_t pit = ecs_page_iter(&it, 1, 2);
+
+    test_bool(false, ecs_iter_var_is_constrained(&pit, 0));
+    ecs_iter_set_var_as_table(&pit, 0, ecs_get_table(world, e1));
+    test_bool(true, ecs_iter_var_is_constrained(&pit, 0));
+
+    test_bool(true, ecs_page_next(&pit));
+    test_int(1, pit.count);
+    test_uint(e2, pit.entities[0]);
+    test_uint(TagA, ecs_field_id(&pit, 0));
+    test_assert(ecs_iter_get_vars(&pit) != NULL);
+
+    test_bool(false, ecs_page_next(&pit));
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

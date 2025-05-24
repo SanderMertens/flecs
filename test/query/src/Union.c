@@ -310,16 +310,6 @@ void Union_1_this_union_wildcard(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
-    test_uint(e2, it.entities[0]);
-    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(e1, it.entities[0]);
-    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
     test_uint(e6, it.entities[0]);
     test_uint(ecs_pair(Movement, Sitting), ecs_field_id(&it, 0));
 
@@ -337,6 +327,17 @@ void Union_1_this_union_wildcard(void) {
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
     test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
+
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -491,18 +492,6 @@ void Union_1_this_union_tgt_var(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
-    test_uint(e2, it.entities[0]);
-    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
-    test_uint(Walking, ecs_iter_get_var(&it, x_var));
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(e1, it.entities[0]);
-    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
-    test_uint(Walking, ecs_iter_get_var(&it, x_var));
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
     test_uint(e6, it.entities[0]);
     test_uint(ecs_pair(Movement, Sitting), ecs_field_id(&it, 0));
     test_uint(Sitting, ecs_iter_get_var(&it, x_var));
@@ -524,6 +513,18 @@ void Union_1_this_union_tgt_var(void) {
     test_uint(e3, it.entities[0]);
     test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 0));
     test_uint(Running, ecs_iter_get_var(&it, x_var));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
+    test_uint(Walking, ecs_iter_get_var(&it, x_var));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
+    test_uint(Walking, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -725,18 +726,6 @@ void Union_1_var_union_wildcard(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
-    test_uint(e2, ecs_field_src(&it, 0));
-    test_uint(e2, ecs_iter_get_var(&it, y_var));
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(0, it.count);
-    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
-    test_uint(e1, ecs_field_src(&it, 0));
-    test_uint(e1, ecs_iter_get_var(&it, y_var));
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(0, it.count);
     test_uint(ecs_pair(Movement, Sitting), ecs_field_id(&it, 0));
     test_uint(e6, ecs_field_src(&it, 0));
     test_uint(e6, ecs_iter_get_var(&it, y_var));
@@ -758,6 +747,18 @@ void Union_1_var_union_wildcard(void) {
     test_uint(ecs_pair(Movement, Running), ecs_field_id(&it, 0));
     test_uint(e3, ecs_field_src(&it, 0));
     test_uint(e3, ecs_iter_get_var(&it, y_var));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
+    test_uint(e2, ecs_field_src(&it, 0));
+    test_uint(e2, ecs_iter_get_var(&it, y_var));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
+    test_uint(e1, ecs_field_src(&it, 0));
+    test_uint(e1, ecs_iter_get_var(&it, y_var));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -931,20 +932,6 @@ void Union_1_var_union_tgt_var(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
-    test_uint(e2, ecs_field_src(&it, 0));
-    test_uint(Walking, ecs_iter_get_var(&it, x_var));
-    test_uint(e2, ecs_iter_get_var(&it, y_var));
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(0, it.count);
-    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
-    test_uint(e1, ecs_field_src(&it, 0));
-    test_uint(Walking, ecs_iter_get_var(&it, x_var));
-    test_uint(e1, ecs_iter_get_var(&it, y_var));
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(0, it.count);
     test_uint(ecs_pair(Movement, Sitting), ecs_field_id(&it, 0));
     test_uint(e6, ecs_field_src(&it, 0));
     test_uint(Sitting, ecs_iter_get_var(&it, x_var));
@@ -970,6 +957,20 @@ void Union_1_var_union_tgt_var(void) {
     test_uint(e3, ecs_field_src(&it, 0));
     test_uint(Running, ecs_iter_get_var(&it, x_var));
     test_uint(e3, ecs_iter_get_var(&it, y_var));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
+    test_uint(e2, ecs_field_src(&it, 0));
+    test_uint(Walking, ecs_iter_get_var(&it, x_var));
+    test_uint(e2, ecs_iter_get_var(&it, y_var));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
+    test_uint(e1, ecs_field_src(&it, 0));
+    test_uint(Walking, ecs_iter_get_var(&it, x_var));
+    test_uint(e1, ecs_iter_get_var(&it, y_var));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -3036,7 +3037,7 @@ void Union_query_2_cases_2_types(void) {
 }
 
 void Union_query_after_remove(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3156,7 +3157,7 @@ int compare_position(ecs_entity_t e1, const void *ptr1, ecs_entity_t e2, const v
 }
 
 void Union_sort(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -3201,7 +3202,7 @@ void Union_sort(void) {
 }
 
 void Union_query_recycled_tags(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
 
@@ -3242,7 +3243,7 @@ void Union_query_recycled_tags(void) {
 }
 
 void Union_query_single_case(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3288,7 +3289,7 @@ void Union_query_single_case(void) {
 }
 
 void Union_match_switch_on_base_instance(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3322,7 +3323,7 @@ void Union_match_switch_on_base_instance(void) {
 }
 
 void Union_switch_w_bitset_query(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3380,7 +3381,7 @@ void Union_switch_w_bitset_query(void) {
 }
 
 void Union_switch_w_bitset_query_inv(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3435,7 +3436,7 @@ void Union_switch_w_bitset_query_inv(void) {
 }
 
 void Union_switch_w_bitset_query_2_elems(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3504,7 +3505,7 @@ void Union_switch_w_bitset_query_2_elems(void) {
 }
 
 void Union_switch_w_bitset_query_2_elems_skip(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3573,7 +3574,7 @@ void Union_switch_w_bitset_query_2_elems_skip(void) {
 }
 
 void Union_switch_w_bitset_query_elems_interleaved(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3650,7 +3651,7 @@ void Union_switch_w_bitset_query_elems_interleaved(void) {
 }
 
 void Union_switch_w_bitset_query_elems_interleaved_2_types(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -3837,7 +3838,7 @@ void Union_remove_wildcard(void) {
 }
 
 void Union_component_relation(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
@@ -4083,12 +4084,6 @@ void Union_up(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     
     test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 2);
-    test_int(it.entities[0], e1);
-    test_int(it.entities[1], e2);
-    test_uint(it.ids[0], ecs_pair(SwX, TagA));
-
-    test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_int(it.entities[0], e3);
     test_uint(it.ids[0], ecs_pair(SwX, TagB));
@@ -4097,6 +4092,12 @@ void Union_up(void) {
     test_int(it.count, 1);
     test_int(it.entities[0], e4);
     test_uint(it.ids[0], ecs_pair(SwX, TagB));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.entities[0], e1);
+    test_int(it.entities[1], e2);
+    test_uint(it.ids[0], ecs_pair(SwX, TagA));
 
     test_bool(ecs_query_next(&it), false);
 
@@ -4133,30 +4134,30 @@ void Union_self_up(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
-    test_int(it.entities[0], b1);
-    test_uint(it.ids[0], ecs_pair(SwX, TagA));
-
-    test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 2);
-    test_int(it.entities[0], e1);
-    test_int(it.entities[1], e2);
-    test_uint(it.ids[0], ecs_pair(SwX, TagA));
-
-    test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
     test_int(it.entities[0], e4);
+    test_int(it.count, 1);
     test_uint(it.ids[0], ecs_pair(SwX, TagC));
 
     test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
     test_int(it.entities[0], b2);
+    test_int(it.count, 1);
     test_uint(it.ids[0], ecs_pair(SwX, TagB));
 
     test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
     test_int(it.entities[0], e3);
+    test_int(it.count, 1);
     test_uint(it.ids[0], ecs_pair(SwX, TagB));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.entities[0], b1);
+    test_int(it.count, 1);
+    test_uint(it.ids[0], ecs_pair(SwX, TagA));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.entities[0], e1);
+    test_int(it.entities[1], e2);
+    test_int(it.count, 2);
+    test_uint(it.ids[0], ecs_pair(SwX, TagA));
 
     test_bool(ecs_query_next(&it), false);
 
@@ -4348,6 +4349,11 @@ void Union_new_union_table(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Running));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
     test_uint(it.entities[0], e3);
     test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
 
@@ -4355,11 +4361,6 @@ void Union_new_union_table(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
     test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(it.count, 1);
-    test_uint(it.entities[0], e2);
-    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Running));
 
     test_bool(false, ecs_query_next(&it));
 

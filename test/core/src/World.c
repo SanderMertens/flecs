@@ -1134,7 +1134,25 @@ void World_delete_empty_tables_after_mini(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *info = ecs_get_world_info(world);
-    int32_t empty_table_count = info->table_count;
+    int32_t old_table_count = info->table_count;
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = EcsAny }},
+        .flags = EcsQueryMatchEmptyTables
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    int32_t empty_table_count = 0;
+    while (ecs_query_next(&it)) {
+        if (!ecs_table_count(it.table)) {
+            empty_table_count ++;
+        }
+    }
+
+    ecs_query_fini(q);
+
+    empty_table_count --; // correct for root table
 
     int32_t deleted;
     deleted = ecs_delete_empty_tables(world, 
@@ -1143,14 +1161,32 @@ void World_delete_empty_tables_after_mini(void) {
 
     deleted = ecs_delete_empty_tables(world, 
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1}); /* Delete */
-    test_assert(deleted != 0);
-    test_int(info->table_count + deleted, empty_table_count);
+    test_assert(deleted == empty_table_count);
+    test_int(info->table_count + deleted, old_table_count);
 
     ecs_fini(world);
 }
 
 void World_delete_empty_tables_after_init(void) {
     ecs_world_t *world = ecs_init();
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = EcsAny }},
+        .flags = EcsQueryMatchEmptyTables
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    int32_t empty_table_count = 0;
+    while (ecs_query_next(&it)) {
+        if (!ecs_table_count(it.table)) {
+            empty_table_count ++;
+        }
+    }
+
+    ecs_query_fini(q);
+
+    empty_table_count --; // correct for root table
 
     int32_t deleted;
     deleted = ecs_delete_empty_tables(world, 
@@ -1159,7 +1195,7 @@ void World_delete_empty_tables_after_init(void) {
 
     deleted = ecs_delete_empty_tables(world, 
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 }); /* Delete */
-    test_assert(deleted != 0);
+    test_assert(deleted == empty_table_count);
 
     ecs_fini(world);
 }
@@ -1178,8 +1214,9 @@ void World_delete_1000_empty_tables(void) {
         ecs_add_id(world, e, ecs_new(world));
     }
 
-    ecs_run_aperiodic(world, 0);
     test_int(info->table_count, old_table_count + 1000 + 1);
+
+    ecs_delete(world, e);
 
     int32_t deleted;
     deleted = ecs_delete_empty_tables(world, 
@@ -2011,712 +2048,4 @@ void World_init_create_delete_random_2_entities_shrink_fini(void) {
     ecs_os_free(delete);
 
     ecs_fini(world);
-}
-
-void World_exclusive_access_self(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_entity_t e = ecs_new(world);
-    test_assert(ecs_is_alive(world, e));
-
-    ecs_add(world, e, Position);
-    test_assert(ecs_has(world, e, Position));
-
-    ecs_add(world, e, Velocity);
-    test_assert(ecs_has(world, e, Velocity));
-
-    ecs_remove(world, e, Velocity);
-    test_assert(!ecs_has(world, e, Velocity));
-
-    ecs_clear(world, e);
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-
-    ecs_delete(world, e);
-    test_assert(!ecs_is_alive(world, e));
-
-    ecs_defer_begin(world);
-
-    e = ecs_new(world);
-    test_assert(ecs_is_alive(world, e));
-
-    ecs_add(world, e, Position);
-    test_assert(!ecs_has(world, e, Position));
-
-    ecs_defer_end(world);
-
-    test_assert(ecs_has(world, e, Position));
-
-    ecs_exclusive_access_end(world);
-
-    ecs_fini(world);
-}
-
-void World_exclusive_access_self_world_fini(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_fini(world);
-
-    test_assert(true);
-}
-
-void World_exclusive_access_begin_twice(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    test_expect_abort();
-    ecs_exclusive_access_begin(world);
-}
-
-void World_exclusive_access_end_without_begin(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    test_expect_abort();
-    ecs_exclusive_access_end(world);
-}
-
-void* thread_exclusive_access_mismatching_begin(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_exclusive_access_begin(world);
-    return NULL;
-}
-
-void World_exclusive_access_mismatching_begin(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_mismatching_begin, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_mismatching_end(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_exclusive_access_end(world);
-    return NULL;
-}
-
-void World_exclusive_access_mismatching_end(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_mismatching_end, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_new(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_new(world);
-    return NULL;
-}
-
-void World_exclusive_access_other_new(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_new, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_new_low_id(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_new_low_id(world);
-    return NULL;
-}
-
-void World_exclusive_access_other_world_new_low_id(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_new_low_id, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-static ecs_entity_t thr_entity = 0;
-static ecs_id_t thr_component = 0;
-
-void* thread_exclusive_access_other_delete(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_delete(world, thr_entity);
-    return NULL;
-}
-
-void World_exclusive_access_other_delete(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_delete, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_clear(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_clear(world, thr_entity);
-    return NULL;
-}
-
-void World_exclusive_access_other_clear(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_clear, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_add(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_add_id(world, thr_entity, thr_component);
-    return NULL;
-}
-
-void World_exclusive_access_other_add(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_add, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void World_exclusive_access_other_add_existing(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_add(world, thr_entity, Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_add, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_remove(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_remove_id(world, thr_entity, thr_component);
-    return NULL;
-}
-
-void World_exclusive_access_other_remove(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_add(world, thr_entity, Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_remove, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void World_exclusive_access_other_remove_non_existing(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_remove, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_set(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    Position p = {10, 20};
-    ecs_set_id(world, thr_entity, thr_component, 0, &p);
-    return NULL;
-}
-
-void World_exclusive_access_other_set(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_set, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void World_exclusive_access_other_set_existing(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_add(world, thr_entity, Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_set, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_ensure(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_ensure_id(world, thr_entity, thr_component);
-    return NULL;
-}
-
-void World_exclusive_access_other_ensure(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_ensure, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void World_exclusive_access_other_ensure_existing(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_add(world, thr_entity, Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_ensure, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_ensure_modified(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_ensure_modified_id(world, thr_entity, thr_component);
-    return NULL;
-}
-
-void World_exclusive_access_other_ensure_modified(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_ensure_modified, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void World_exclusive_access_other_ensure_modified_existing(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_add(world, thr_entity, Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_ensure_modified, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_emplace(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    bool is_new;
-    ecs_emplace_id(world, thr_entity, thr_component, &is_new);
-    return NULL;
-}
-
-void World_exclusive_access_other_emplace(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_emplace, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void World_exclusive_access_other_emplace_existing(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_add(world, thr_entity, Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_emplace, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_defer_begin(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_defer_begin(world);
-    return NULL;
-}
-
-void World_exclusive_access_other_defer_begin(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_defer_begin, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_defer_end(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_defer_end(world);
-    return NULL;
-}
-
-void World_exclusive_access_other_defer_end(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_defer_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_defer_end, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_create_query(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_query(world, {
-        .terms = {{ thr_component }}
-    });
-    return NULL;
-}
-
-void World_exclusive_access_other_create_query(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    thr_component = ecs_id(Position);
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_create_query, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_create_cached_query(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_query(world, {
-        .terms = {{ thr_component }}, 
-        .cache_kind = EcsQueryCacheAll 
-    });
-
-    return NULL;
-}
-
-void World_exclusive_access_other_create_cached_query(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    thr_component = ecs_id(Position);
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_create_cached_query, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_create_table(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_table_find(world, &thr_component, 1);
-    return NULL;
-}
-
-void World_exclusive_access_other_create_table(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    thr_component = ecs_id(Position);
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_create_table, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_register_component(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ECS_COMPONENT(world, Position);
-    return NULL;
-}
-
-void World_exclusive_access_other_register_component(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_register_component, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_fini(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_fini(world);
-    return NULL;
-}
-
-void World_exclusive_access_other_world_fini(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_fini, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void* thread_exclusive_access_other_bulk_init(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_bulk_init(world, &(ecs_bulk_desc_t) {
-        .count = 3
-    });
-    return NULL;
-}
-
-void World_exclusive_access_other_world_bulk_init(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ecs_exclusive_access_begin(world);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_bulk_init, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
 }

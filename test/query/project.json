@@ -823,7 +823,15 @@
                 "cached_isa_tgt_w_self_second_no_expr",
                 "cached_w_not_and_uncacheable",
                 "cached_w_optional_and_uncacheable",
-                "cached_w_not_optional_and_uncacheable"
+                "cached_w_not_optional_and_uncacheable",
+                "cached_w_not",
+                "cached_w_not_wildcard",
+                "cached_w_not_simple",
+                "cached_w_not_wildcard_simple",
+                "cached_w_optional",
+                "cached_w_optional_wildcard",
+                "cached_w_optional_simple",
+                "cached_w_optional_wildcard_simple"
             ]
         }, {
             "id": "Variables",
@@ -929,6 +937,10 @@
                 "3_set_src_this_w_component_tag_uncacheable_component",
                 "3_set_src_this_w_component_component_uncacheable_component",
                 "2_set_src_this_w_wildcard",
+                "2_set_src_this_w_not",
+                "3_set_src_this_w_not_wildcard",
+                "2_set_src_this_w_optional",
+                "3_set_src_this_w_optional_wildcard",
                 "1_src_this_var_as_entity",
                 "1_src_this_var_as_table",
                 "1_src_this_var_as_table_range",
@@ -1020,7 +1032,10 @@
                 "2_trivial_1_any_component",
                 "first_invalid_var_name_and_id",
                 "src_invalid_var_name_and_id",
-                "second_invalid_var_name_and_id"
+                "second_invalid_var_name_and_id",
+                "get_vars_from_chained_iter",
+                "set_var_from_chained_iter",
+                "set_var_range_from_chained_iter"
             ]
         }, {
             "id": "Operators",
@@ -1719,6 +1734,7 @@
                 "match_query_expr_from_scope",
                 "query_long_or_w_ref",
                 "query_w_pair_id_and_subj",
+                "rematch_after_delete_overridden_tag",
                 "rematch_after_delete_inherited_tag",
                 "rematch_after_delete_rel_of_inherited_pair",
                 "rematch_after_delete_obj_of_inherited_pair",
@@ -1726,7 +1742,16 @@
                 "rematch_empty_table_w_superset",
                 "2_self_up_terms_new_tables",
                 "this_self_up_childof_pair_new_tables",
-                "up_w_delete_table_and_move_parent"
+                "up_w_delete_table_and_move_parent",
+                "it_ptrs",
+                "it_ptrs_after_column_resize",
+                "it_ptrs_after_column_merge",
+                "it_ptrs_after_column_shrink",
+                "it_ptrs_w_wildcard",
+                "it_ptrs_w_up",
+                "test_it_ptrs",
+                "test_it_ptrs_w_wildcard",
+                "test_it_ptrs_w_up"
             ]
         }, {
             "id": "ChangeDetection",
@@ -1767,7 +1792,37 @@
                 "query_changed_after_count",
                 "staged_query_w_shared_inout_field",
                 "staged_query_w_fixed_inout_field",
-                "staged_query_w_fixed_inout_field_read"
+                "staged_query_w_fixed_inout_field_read",
+                "simple_write_query",
+                "change_detection_w_early_out",
+                "change_detection_w_early_out_skip",
+                "mark_dirty_w_uncached_trivial_search",
+                "mark_dirty_w_uncached_trivial_test",
+                "mark_dirty_w_uncached_w_up_search",
+                "mark_dirty_w_uncached_w_up_test",
+                "mark_dirty_w_uncached_w_fixed_search",
+                "mark_dirty_w_uncached_w_fixed_test",
+                "mark_dirty_w_uncached_w_wildcard_search",
+                "mark_dirty_w_uncached_w_wildcard_test",
+                "mark_dirty_w_cached_trivial_search",
+                "mark_dirty_w_cached_trivial_test",
+                "mark_dirty_w_cached_w_up_search",
+                "mark_dirty_w_cached_w_up_test",
+                "mark_dirty_w_cached_w_fixed_search",
+                "mark_dirty_w_cached_w_fixed_test",
+                "mark_dirty_w_cached_w_wildcard_search",
+                "mark_dirty_w_cached_w_wildcard_test",
+                "detect_w_trivial_search",
+                "detect_w_trivial_test",
+                "detect_w_up_search",
+                "detect_w_up_test",
+                "detect_w_fixed_search",
+                "detect_w_fixed_test",
+                "detect_w_wildcard_search",
+                "detect_w_wildcard_test",
+                "detect_w_group_by",
+                "detect_w_cascade",
+                "detect_w_cascade_desc"
             ]
         }, {
             "id": "GroupBy",
@@ -1783,7 +1838,12 @@
                 "group_by_w_deleted_group_id",
                 "group_by_callbacks",
                 "group_by_default_action",
-                "group_table_count"
+                "group_table_count",
+                "get_group_from_chained_iter",
+                "group_by_recreate_group_after_rematch",
+                "group_by_recreate_one_group_after_rematch",
+                "group_by_recreate_two_groups_after_rematch",
+                "group_by_move_to_group_after_rematch"
             ]
         }, {
             "id": "MemberTarget",
@@ -2280,7 +2340,8 @@
                 "sort_or_term",
                 "sort_optional_term",
                 "order_empty_table",
-                "order_empty_table_only"
+                "order_empty_table_only",
+                "order_empty_table_only_2_tables"
             ]
         }, {
             "id": "OrderByEntireTable",
@@ -2322,6 +2383,28 @@
                 "sort_not_term",
                 "sort_or_term",
                 "sort_optional_term"
+            ]
+        }, {
+            "id": "TrivialIter",
+            "testcases": [
+                "uncached_trivial_search",
+                "uncached_trivial_test",
+                "cached_trivial_search",
+                "cached_trivial_test",
+                "cached_trivial_search_w_up",
+                "cached_trivial_test_w_up",
+                "cached_trivial_search_w_not_operator",
+                "cached_trivial_test_w_not_operator",
+                "cached_trivial_search_w_not_wildcard_operator",
+                "cached_trivial_test_w_not_wildcard_operator",
+                "cached_trivial_search_w_or_operator",
+                "cached_trivial_test_w_or_operator",
+                "cached_trivial_search_w_optional_operator",
+                "cached_trivial_test_w_optional_operator",
+                "cached_trivial_search_w_optional_wildcard_operator",
+                "cached_trivial_test_w_optional_wildcard_operator",
+                "cached_trivial_search_w_wildcard",
+                "cached_trivial_test_w_wildcard"
             ]
         }, {
             "id": "QueryStr",

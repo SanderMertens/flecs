@@ -4,6 +4,7 @@
 /* This generated file contains includes for project dependencies */
 #include <meta/bake_config.h>
 #include <stdio.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {

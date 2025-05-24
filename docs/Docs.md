@@ -47,10 +47,14 @@
 - [Demistifying Queries Part 1 (E8)](https://www.youtube.com/watch?v=PKvCpUO55yw&t=216s)
 - [Demistifying Queries Part 2 (E9)](https://www.youtube.com/watch?v=4KZGkT9MqHI)
 - [Flecs Systems (E10)](https://www.youtube.com/watch?v=gXzgO6unZkI)
+- [Observing Changes (E11)](https://www.youtube.com/watch?v=XaZOmWoSKfQ)
+- [One to Rule Them All (singletons, E12)](https://www.youtube.com/watch?v=IpuZIFcaUBU)
 
 (Shoutout to [jellycake222](https://www.youtube.com/@jellycake222) for making the awesome tutorial series <3!)
 
-## Demos
+## Open Source Projects
+- [Extermination Shock Source](https://github.com/Wizard-Of-Chaos/ExShock_code)
+- [ECS Survivors Source](https://github.com/ptidejteam/ecs-survivors)
 - [Playground (Flecs Script)](https://www.flecs.dev/explorer/?host=flecs_explorer.wasm)
 - [Tower Defense (C++)](https://github.com/SanderMertens/tower_defense)
 - [City (C)](https://github.com/flecs-hub/city)
@@ -72,7 +76,6 @@
 ### Resources provided by the community
 Some of these are quite old, and might contain information that is out of date!
 
-- [Extermination Shock Source](https://github.com/Wizard-Of-Chaos/ExShock_code)
 - [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
 - [Tower defense example](https://gist.github.com/oldmanauz/b4ced44737bf9d248233538fa06a989e)
 - [Unreal + Flecs example](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)

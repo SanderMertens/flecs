@@ -363,6 +363,16 @@ struct entity : entity_builder<entity>
         ecs_delete(world_, id_);
     }
 
+    /** Set child order.
+     * Changes the order of children as returned by entity::children(). Only 
+     * applicableo to entities with the flecs::OrderedChildren trait.
+     * 
+     * @see ecs_set_child_order()
+     */
+    void set_child_order(flecs::entity_t *children, int32_t child_count) const {
+        ecs_set_child_order(world_, id_, children, child_count);
+    }
+
     /** Return entity as entity_view.
      * This returns an entity_view instance for the entity which is a readonly
      * version of the entity class.

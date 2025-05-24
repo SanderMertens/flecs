@@ -1192,18 +1192,20 @@ struct world {
 
     /** Begin exclusive access
      * 
+     * @param thread_name Optional thread name for improved debug messages.
      * @see ecs_exclusive_access_begin()
      */
-    void exclusive_access_begin() {
-        ecs_exclusive_access_begin(world_);
+    void exclusive_access_begin(const char *thread_name = nullptr) {
+        ecs_exclusive_access_begin(world_, thread_name);
     }
 
     /** End exclusive access
      * 
+     * @param lock_world Lock world for all threads, allow readonly operations.
      * @see ecs_exclusive_access_end()
      */
-    void exclusive_access_end() {
-        ecs_exclusive_access_end(world_);
+    void exclusive_access_end(bool lock_world = false) {
+        ecs_exclusive_access_end(world_, lock_world);
     }
 
 #   include "mixins/id/mixin.inl"

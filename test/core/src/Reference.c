@@ -539,3 +539,71 @@ void Reference_aba_table(void) {
   
   ecs_fini(world);
 }
+
+void Reference_recycled_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_ref_t r = ecs_ref_init(world, e, Position);
+    test_int(ecs_ref_get(world, &r, Position)->x, 10);
+    test_int(ecs_ref_get(world, &r, Position)->y, 20);
+
+    ecs_remove(world, e, Velocity);
+
+    ecs_delete_with(world, ecs_id(Velocity)); // deletes table
+
+    ecs_set(world, e, Mass, {100}); // move to new table w/recycled id
+
+    test_int(ecs_ref_get(world, &r, Position)->x, 10);
+    test_int(ecs_ref_get(world, &r, Position)->y, 20);
+
+    ecs_fini(world);
+}
+
+void Reference_recycled_table_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_ref_t r = ecs_ref_init(world, e, Position);
+    test_int(ecs_ref_get(world, &r, Position)->x, 10);
+    test_int(ecs_ref_get(world, &r, Position)->y, 20);
+
+    ecs_remove(world, e, Velocity);
+
+    ecs_delete_with(world, ecs_id(Velocity)); // deletes table
+
+    ecs_set(world, e, Mass, {100}); // move to new table w/recycled id
+
+    test_int(ecs_ref_get(world, &r, Position)->x, 10);
+    test_int(ecs_ref_get(world, &r, Position)->y, 20);
+
+    ecs_remove(world, e, Mass);
+    ecs_delete_with(world, ecs_id(Mass));
+    ecs_add(world, e, Foo);
+
+    uint64_t table_id = r.table_id;
+
+    test_int(ecs_ref_get(world, &r, Position)->x, 10);
+    test_int(ecs_ref_get(world, &r, Position)->y, 20);
+
+    test_assert(table_id != r.table_id);
+
+    ecs_fini(world);
+}
