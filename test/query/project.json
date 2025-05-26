@@ -1843,7 +1843,8 @@
                 "group_by_recreate_group_after_rematch",
                 "group_by_recreate_one_group_after_rematch",
                 "group_by_recreate_two_groups_after_rematch",
-                "group_by_move_to_group_after_rematch"
+                "group_by_move_to_group_after_rematch",
+                "group_by_childof"
             ]
         }, {
             "id": "MemberTarget",
