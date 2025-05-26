@@ -1716,6 +1716,107 @@ void DontFragment_1_sparse_pair_unused(void) {
     ecs_fini(world);
 }
 
+void DontFragment_2_this_written_sparse_component_unused(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_COMPONENT(world, Position);
+    
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo }, { ecs_id(Position) }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_new_w(world, Foo);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_2_this_written_sparse_tag_unused(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    
+    ecs_add_id(world, Bar, EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo }, { Bar }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_new_w(world, Foo);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_2_this_written_sparse_pair_wildcard_unused(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ecs_entity_t tag = ecs_new(world);
+    
+    ecs_add_id(world, tag, EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo }, { ecs_pair(tag, EcsWildcard) }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_new_w(world, Foo);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_2_this_written_sparse_pair_unused(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ecs_entity_t tag = ecs_new(world);
+    ecs_entity_t tgt = ecs_new(world);
+    
+    ecs_add_id(world, tag, EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo }, { ecs_pair(tag, tgt) }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_new_w(world, Foo);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void DontFragment_sparse_0_src_only_term(void) {
     ecs_world_t *world = ecs_mini();
 
