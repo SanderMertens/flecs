@@ -1128,3 +1128,62 @@ void GroupBy_group_by_move_to_group_after_rematch(void) {
 
     ecs_fini(world);
 }
+
+void GroupBy_group_by_childof(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+
+    ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_add_pair(world, e3, EcsChildOf, e2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Tag }
+        },
+        .group_by = EcsChildOf
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, e1);
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e2, it.entities[0]);
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(e1, ecs_iter_get_group(&it));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, e2);
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e3, it.entities[0]);
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(e2, ecs_iter_get_group(&it));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_group(&it, e3);
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+
+
+
+
+    ecs_fini(world);
+}

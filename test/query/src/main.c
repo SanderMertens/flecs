@@ -1776,6 +1776,7 @@ void GroupBy_group_by_recreate_group_after_rematch(void);
 void GroupBy_group_by_recreate_one_group_after_rematch(void);
 void GroupBy_group_by_recreate_two_groups_after_rematch(void);
 void GroupBy_group_by_move_to_group_after_rematch(void);
+void GroupBy_group_by_childof(void);
 
 // Testsuite 'MemberTarget'
 void MemberTarget_setup(void);
@@ -9291,6 +9292,10 @@ bake_test_case GroupBy_testcases[] = {
     {
         "group_by_move_to_group_after_rematch",
         GroupBy_group_by_move_to_group_after_rematch
+    },
+    {
+        "group_by_childof",
+        GroupBy_group_by_childof
     }
 };
 
@@ -11700,7 +11705,7 @@ static bake_test_suite suites[] = {
         "GroupBy",
         NULL,
         NULL,
-        17,
+        18,
         GroupBy_testcases
     },
     {

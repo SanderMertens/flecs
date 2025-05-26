@@ -618,6 +618,7 @@ void ecs_iter_set_group(
         cache, group_id);
     if (!group) {
         qit->tables = &empty_table; /* Dummy table to indicate empty result */
+        qit->all_tables = &empty_table;
         qit->cur = 0;
         qit->group = NULL;
         qit->iter_single_group = true;
@@ -625,6 +626,7 @@ void ecs_iter_set_group(
     }
 
     qit->tables = &group->tables;
+    qit->all_tables = &group->tables;
     qit->cur = 0;
     qit->group = group;
     qit->iter_single_group = true; /* Prevent iterating next group */
