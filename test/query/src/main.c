@@ -1168,6 +1168,9 @@ void Operators_or_from_existing_and_new_table(void);
 void Operators_or_w_wildcard(void);
 void Operators_or_w_component_and_tag(void);
 void Operators_or_w_tag_and_component(void);
+void Operators_not_isa_wildcard(void);
+void Operators_not_transitive_rel_wildcard(void);
+void Operators_not_reflexive_rel_wildcard(void);
 
 // Testsuite 'Transitive'
 void Transitive_1_fact_0_lvl_true(void);
@@ -6926,6 +6929,18 @@ bake_test_case Operators_testcases[] = {
     {
         "or_w_tag_and_component",
         Operators_or_w_tag_and_component
+    },
+    {
+        "not_isa_wildcard",
+        Operators_not_isa_wildcard
+    },
+    {
+        "not_transitive_rel_wildcard",
+        Operators_not_transitive_rel_wildcard
+    },
+    {
+        "not_reflexive_rel_wildcard",
+        Operators_not_reflexive_rel_wildcard
     }
 };
 
@@ -11625,7 +11640,7 @@ static bake_test_suite suites[] = {
         "Operators",
         Operators_setup,
         NULL,
-        159,
+        162,
         Operators_testcases,
         1,
         Operators_params

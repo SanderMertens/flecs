@@ -9940,3 +9940,108 @@ void Operators_or_w_tag_and_component(void) {
 
     ecs_fini(world);
 }
+
+void Operators_not_isa_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_add_pair(world, e2, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Foo },
+            { ecs_pair(EcsIsA, EcsWildcard), .oper = EcsNot }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(EcsIsA, EcsWildcard), ecs_field_id(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_not_transitive_rel_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Rel);
+
+    ecs_add_id(world, Rel, EcsTransitive);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_add_pair(world, e2, Rel, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Foo },
+            { ecs_pair(Rel, EcsWildcard), .oper = EcsNot }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, EcsWildcard), ecs_field_id(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_not_reflexive_rel_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Rel);
+
+    ecs_add_id(world, Rel, EcsReflexive);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_add_pair(world, e2, Rel, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Foo },
+            { ecs_pair(Rel, EcsWildcard), .oper = EcsNot }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, EcsWildcard), ecs_field_id(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

@@ -35992,12 +35992,14 @@ int flecs_term_finalize(
                 if (!((second_flags & EcsTraverseFlags) == EcsSelf)) {
                     if (!((src->id & EcsIsVariable) && (src_id == EcsAny))) {
                         if (!((second->id & EcsIsVariable) && (second_id == EcsAny))) {
-                            if (ecs_table_has_id(world, first_table, EcsTransitive)) {
-                                term->flags_ |= EcsTermTransitive;
-                            }
+                            if (!((second_id == EcsWildcard) && (term->oper == EcsNot))) {
+                                if (ecs_table_has_id(world, first_table, EcsTransitive)) {
+                                    term->flags_ |= EcsTermTransitive;
+                                }
 
-                            if (ecs_table_has_id(world, first_table, EcsReflexive)) {
-                                term->flags_ |= EcsTermReflexive;
+                                if (ecs_table_has_id(world, first_table, EcsReflexive)) {
+                                    term->flags_ |= EcsTermReflexive;
+                                }
                             }
                         }
                     }
