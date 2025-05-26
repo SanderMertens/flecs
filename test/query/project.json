@@ -1202,7 +1202,10 @@
                 "or_from_existing_and_new_table",
                 "or_w_wildcard",
                 "or_w_component_and_tag",
-                "or_w_tag_and_component"
+                "or_w_tag_and_component",
+                "not_isa_wildcard",
+                "not_transitive_rel_wildcard",
+                "not_reflexive_rel_wildcard"
             ]
         }, {
             "id": "Transitive",
