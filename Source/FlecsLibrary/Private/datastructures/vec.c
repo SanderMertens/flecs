@@ -151,11 +151,19 @@ void ecs_vec_reclaim(
     int32_t count = v->count;
     if (count < v->size) {
         if (count) {
+            /* Don't use realloc as it can return the same size buffer when the
+             * new size is smaller than the existing size, which defeats the
+             * purpose of reclaim. */
             if (allocator) {
-                v->array = flecs_realloc(
-                    allocator, size * count, size * v->size, v->array);
+                void *new_array = flecs_alloc(allocator, count * size);
+                ecs_os_memcpy(new_array, v->array, size * count);
+                flecs_free(allocator, v->size * size, v->array);
+                v->array = new_array;
             } else {
-                v->array = ecs_os_realloc(v->array, size * count);
+                void *new_array = ecs_os_malloc(size * count);
+                ecs_os_memcpy(new_array, v->array, size * count);
+                ecs_os_free(v->array);
+                v->array = new_array;
             }
             v->size = count;
         } else {
