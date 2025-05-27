@@ -24763,11 +24763,12 @@ int ecs_http_server_request(
 
     int32_t len = method_len + req_len + content_length_len + body_len + 
         http_ver_len;
+
+    len += 3;
+
     if (len >= 1024) {
         reqstr = ecs_os_malloc(len);
     }
-
-    len += 3;
 
     char *ptr = reqstr;
     ecs_os_memcpy(ptr, method, method_len); ptr += method_len;

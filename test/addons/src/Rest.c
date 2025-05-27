@@ -645,3 +645,44 @@ void Rest_escape_backslash(void) {
 
     ecs_fini(world);
 }
+
+void Rest_request_small_buffer_plus_one(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main.flecs", .sep = "/" }),
+        .code = ""
+    });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    const char *payload = 
+        "e0_0 { }; e0_1 { }; e0_2 { }; e0_3 { }; e0_4 { }; e0_5 { }; e0_6 { }; e0_7 { }; e0_8 { }; e0_9 { };\n"
+        "e1_0 { }; e1_1 { }; e1_2 { }; e1_3 { }; e1_4 { }; e1_5 { }; e1_6 { }; e1_7 { }; e1_8 { }; e1_9 { };\n"
+        "e2_0 { }; e2_1 { }; e2_2 { }; e2_3 { }; e2_4 { }; e2_5 { }; e2_6 { }; e2_7 { }; e2_8 { }; e2_9 { };\n"
+        "e3_0 { }; e3_1 { }; e3_2 { }; e3_3 { }; e3_4 { }; e3_5 { }; e3_6 { }; e3_7 { }; e3_8 { }; e3_9 { };\n"
+        "e4_0 { }; e4_1 { }; e4_2 { }; e4_3 { }; e4_4 { }; e4_5 { }; e4_6 { }; e4_7 { }; e4_8 { }; e4_9 { };\n"
+        "e5_0 { }; e5_1 { }; e5_2 { }; e5_3 { }; e5_4 { }; e5_5 { }; e5_6 { }; e5_7 { }; e5_8 { }; e5_9 { };\n"
+        "e6_0 { }; e6_1 { }; e6_2 { }; e6_3 { }; e6_4 { }; e6_5 { }; e6_6 { }; e6_7 { }; e6_8 { }; e6_9 { };\n"
+        "e7_0 { }; e7_1 { }; e7_2 { }; e7_3 { }; e7_4 { }; e7_5 { }; e7_6 { }; e7_7 { }; e7_8 { }; e7_9 { };\n"
+        "e8_0 { }; e8_1 { }; e8_2 { }; e8_3 { }; e8_4 { }; e8_5 { }; e8_6 { }; e8_7 { }; e8_8 { }; e8_9 { };\n"
+        "e9_0 { }; e9_1 { }; e9_2 { }; e9_3 { }; e9_4 {}; e9_5 {}; e9_6 {};\n";
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        ecs_log_set_level(-4);
+        test_int(0, ecs_http_server_request(srv, "PUT",
+            "/script/main.flecs",
+            payload, &reply));
+        test_int(reply.code, 200);
+        char *reply_str = ecs_strbuf_get(&reply.body);
+        test_assert(reply_str == NULL);
+    }
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
