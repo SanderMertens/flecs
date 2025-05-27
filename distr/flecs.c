@@ -77946,7 +77946,9 @@ bool flecs_query_sparse_with_id(
 
     if (!redo) {
         ecs_component_record_t *cr = flecs_components_get(ctx->world, id);
-        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!cr) {
+            return false;
+        }
 
         op_ctx->sparse = cr->sparse;
         if (!op_ctx->sparse) {
@@ -78015,7 +78017,9 @@ bool flecs_query_sparse_with_wildcard(
             op_ctx->cr = cr->pair->first.next;
         }
 
-        ecs_assert(op_ctx->cr != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!op_ctx->cr) {
+            return false;
+        }
     } else {
         if (op_ctx->exclusive) {
             return flecs_query_sparse_with_exclusive(op, true, ctx, not);
