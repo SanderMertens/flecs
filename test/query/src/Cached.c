@@ -4162,10 +4162,22 @@ void Cached_it_ptrs_w_up(void) {
     ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_set(world, e3, Position, {50, 60});
 
+    /* Make sure realloc happens */
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        ecs_entity_t x = ecs_new_w_pair(world, EcsChildOf, p);
+        ecs_set(world, x, Position, {1, 1});
+
+        if (ecs_get(world, e1, Position) != ptr) {
+            break;
+        }
+    }
+
+    test_assert(i != 1000);
+
     {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
-        test_int(3, it.count);
         Position *p = ecs_field(&it, Position, 0);
         test_assert(p == ecs_get(world, e1, Position));
         test_assert(&p[1] == ecs_get(world, e2, Position));
