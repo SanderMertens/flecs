@@ -2006,12 +2006,15 @@ void ExclusiveAccess_locked_create_cached_query(void) {
 static
 void* thread_exclusive_access_other_iter_query_locked(void *arg) {
     ecs_world_t *world = arg;
-    ecs_iter_t it = ecs_query_iter(world, thr_query);
-    ecs_iter_fini(&it);
+    test_expect_abort(); // Iterator requires stack allocator from stage
+    ecs_query_iter(world, thr_query);
+    // ecs_iter_fini(&it); 
     return NULL;
 }
 
 void ExclusiveAccess_locked_iter_query(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2060,6 +2063,8 @@ void ExclusiveAccess_locked_iter_mut_query(void) {
 }
 
 void ExclusiveAccess_locked_iter_cached_query(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
