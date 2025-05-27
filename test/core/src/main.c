@@ -2467,6 +2467,7 @@ void Commands_batch_w_old_and_recycled_id(void);
 void Commands_batch_w_two_named_entities_one_reparent(void);
 void Commands_batch_w_two_named_entities_one_reparent_w_remove(void);
 void Commands_batch_new_w_parent_w_name(void);
+void Commands_enable_component_from_stage(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -12220,6 +12221,10 @@ bake_test_case Commands_testcases[] = {
     {
         "batch_new_w_parent_w_name",
         Commands_batch_new_w_parent_w_name
+    },
+    {
+        "enable_component_from_stage",
+        Commands_enable_component_from_stage
     }
 };
 
@@ -13136,7 +13141,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        158,
+        159,
         Commands_testcases
     },
     {

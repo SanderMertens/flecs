@@ -2555,7 +2555,8 @@
                 "batch_w_old_and_recycled_id",
                 "batch_w_two_named_entities_one_reparent",
                 "batch_w_two_named_entities_one_reparent_w_remove",
-                "batch_new_w_parent_w_name"
+                "batch_new_w_parent_w_name",
+                "enable_component_from_stage"
             ]
         }, {
             "id": "SingleThreadStaging",
