@@ -4837,3 +4837,30 @@ void Commands_batch_new_w_parent_w_name(void) {
 
     ecs_fini(world);
 }
+
+void Commands_enable_component_from_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    ecs_set_stage_count(world, 2);
+    ecs_world_t *s = ecs_get_stage(world, 1);
+
+    test_bool(true, ecs_is_enabled(world, e, Position));
+
+    ecs_defer_begin(s);
+
+    ecs_enable_component(s, e, Position, false);
+
+    test_bool(true, ecs_is_enabled(world, e, Position));
+
+    ecs_defer_end(s);
+
+    test_bool(false, ecs_is_enabled(world, e, Position));
+
+    ecs_fini(world);
+}
