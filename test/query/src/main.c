@@ -1691,6 +1691,7 @@ void Cached_it_ptrs_w_up(void);
 void Cached_test_it_ptrs(void);
 void Cached_test_it_ptrs_w_wildcard(void);
 void Cached_test_it_ptrs_w_up(void);
+void Cached_match_count_after_rematch(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -8969,6 +8970,10 @@ bake_test_case Cached_testcases[] = {
     {
         "test_it_ptrs_w_up",
         Cached_test_it_ptrs_w_up
+    },
+    {
+        "match_count_after_rematch",
+        Cached_match_count_after_rematch
     }
 };
 
@@ -11726,7 +11731,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        98,
+        99,
         Cached_testcases
     },
     {

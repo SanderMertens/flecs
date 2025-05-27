@@ -4317,3 +4317,42 @@ void Cached_test_it_ptrs_w_up(void) {
 
     ecs_fini(world);
 }
+
+void Cached_match_count_after_rematch(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t p = ecs_new_w(world, Position);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c, it.entities[0]);
+        test_uint(p, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    int32_t match_count = ecs_query_match_count(q);
+    ecs_remove(world, p, Position);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    test_assert(match_count != ecs_query_match_count(q));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

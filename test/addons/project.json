@@ -114,7 +114,8 @@
                 "disable_component_from_immediate_system",
                 "run_w_empty_query",
                 "run_w_0_src_query",
-                "inout_none_after_write"
+                "inout_none_after_write",
+                "empty_pipeline_after_disable_phase"
             ]
         }, {
             "id": "SystemMisc",
