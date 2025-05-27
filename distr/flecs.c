@@ -72119,6 +72119,7 @@ void flecs_query_rematch(
     ecs_os_perf_trace_push("flecs.query.rematch");
 
     cache->monitor_generation = world->monitor_generation;
+    cache->match_count ++;
 
     world->info.rematch_count_total ++;
     int32_t rematch_count = ++ cache->rematch_count;

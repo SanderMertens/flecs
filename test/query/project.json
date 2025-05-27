@@ -1754,7 +1754,8 @@
                 "it_ptrs_w_up",
                 "test_it_ptrs",
                 "test_it_ptrs_w_wildcard",
-                "test_it_ptrs_w_up"
+                "test_it_ptrs_w_up",
+                "match_count_after_rematch"
             ]
         }, {
             "id": "ChangeDetection",

@@ -3336,3 +3336,36 @@ void Pipeline_inout_none_after_write(void) {
 
     ecs_fini(world);
 }
+
+void Pipeline_empty_pipeline_after_disable_phase(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_IMPORT(world, FlecsPipeline);
+
+    ecs_entity_t CustomPhase = ecs_new_w_id(world, EcsPhase);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids(ecs_pair(EcsDependsOn, CustomPhase))
+        }),
+        .callback = SysA
+    });
+
+    ecs_enable(world,  CustomPhase, false);
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 0);
+
+    ecs_enable(world,  CustomPhase, true);
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_enable(world,  CustomPhase, false);
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_enable(world,  CustomPhase, true);
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 2);
+
+    ecs_fini(world);
+}
