@@ -31,7 +31,6 @@
 #ifdef FLECS_SANITIZE
 static
 void flecs_table_check_sanity(
-    ecs_world_t *world,
     ecs_table_t *table) 
 {
     int32_t i, count = ecs_table_count(table);
@@ -91,7 +90,7 @@ void flecs_table_check_sanity(
         (table->flags & EcsTableHasTraversable), ECS_INTERNAL_ERROR, NULL);
 }
 #else
-#define flecs_table_check_sanity(world, table)
+#define flecs_table_check_sanity(table)
 #endif
 
 /* Set flags for type hooks so table operations can quickly check whether a
@@ -1452,7 +1451,7 @@ int32_t flecs_table_append(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
 
-    flecs_table_check_sanity(world, table);
+    flecs_table_check_sanity(table);
 
     ecs_os_perf_trace_push("flecs.table.append");
 
@@ -1529,7 +1528,7 @@ int32_t flecs_table_append(
         flecs_bitset_addn(bs, 1);
     }
 
-    flecs_table_check_sanity(world, table);
+    flecs_table_check_sanity(table);
 
     ecs_os_perf_trace_pop("flecs.table.append");
     return count;
@@ -1563,7 +1562,7 @@ void flecs_table_delete(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
 
-    flecs_table_check_sanity(world, table);
+    flecs_table_check_sanity(table);
 
     ecs_os_perf_trace_push("flecs.table.delete");
 
@@ -1606,7 +1605,7 @@ void flecs_table_delete(
 
         table->data.count --;
 
-        flecs_table_check_sanity(world, table);
+        flecs_table_check_sanity(table);
         ecs_os_perf_trace_pop("flecs.table.delete");
         return;
     }
@@ -1671,8 +1670,8 @@ void flecs_table_delete(
     table->data.count --;
 
     ecs_os_perf_trace_pop("flecs.table.delete");
-
-    flecs_table_check_sanity(world, table);
+    
+    flecs_table_check_sanity(table);
 }
 
 /* Move operation for tables that don't have any complex logic */
@@ -1726,13 +1725,13 @@ void flecs_table_move(
     ecs_assert(src_index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(dst_index >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    flecs_table_check_sanity(world, dst_table);
-    flecs_table_check_sanity(world, src_table);
+    flecs_table_check_sanity(dst_table);
+    flecs_table_check_sanity(src_table);
 
     if (!((dst_table->flags | src_table->flags) & EcsTableIsComplex)) {
         flecs_table_fast_move(dst_table, dst_index, src_table, src_index);
-        flecs_table_check_sanity(world, dst_table);
-        flecs_table_check_sanity(world, src_table);
+        flecs_table_check_sanity(dst_table);
+        flecs_table_check_sanity(src_table);
         return;
     }
 
@@ -1802,8 +1801,8 @@ void flecs_table_move(
             &src_entity, src_index, 1, use_move_dtor);
     }
 
-    flecs_table_check_sanity(world, dst_table);
-    flecs_table_check_sanity(world, src_table);
+    flecs_table_check_sanity(dst_table);
+    flecs_table_check_sanity(src_table);
 }
 
 /* Append n entities to table */
@@ -1815,11 +1814,11 @@ int32_t flecs_table_appendn(
 {
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
 
-    flecs_table_check_sanity(world, table);
+    flecs_table_check_sanity(table);
     int32_t cur_count = ecs_table_count(table);
     int32_t result = flecs_table_grow_data(
         world, table, to_add, cur_count + to_add, ids);
-    flecs_table_check_sanity(world, table);
+    flecs_table_check_sanity(table);
 
     return result;
 }
@@ -1833,7 +1832,7 @@ bool flecs_table_shrink(
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
     (void)world;
 
-    flecs_table_check_sanity(world, table);
+    flecs_table_check_sanity(table);
 
     ecs_os_perf_trace_push("flecs.table.shrink");
 
@@ -1857,8 +1856,8 @@ bool flecs_table_shrink(
     flecs_increment_table_column_version(world, table);
 
     ecs_os_perf_trace_pop("flecs.table.shrink");
-
-    flecs_table_check_sanity(world, table);
+    
+    flecs_table_check_sanity(table);
 
     return has_payload;
 }
@@ -1896,7 +1895,7 @@ void flecs_table_swap(
     ecs_assert(row_1 >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(row_2 >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    flecs_table_check_sanity(world, table);
+    flecs_table_check_sanity(table);
     
     if (row_1 == row_2) {
         return;
@@ -1931,7 +1930,7 @@ void flecs_table_swap(
 
     ecs_column_t *columns = table->data.columns;
     if (!columns) {
-        flecs_table_check_sanity(world, table);
+        flecs_table_check_sanity(table);
         ecs_os_perf_trace_pop("flecs.table.swap");
         return;
     }
@@ -1972,9 +1971,8 @@ void flecs_table_swap(
         }
     }
 
+    flecs_table_check_sanity(table);
     ecs_os_perf_trace_pop("flecs.table.swap");
-
-    flecs_table_check_sanity(world, table);
 }
 
 static
@@ -2172,8 +2170,8 @@ void flecs_table_merge(
     ecs_assert(!src_table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
     ecs_assert(!dst_table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
 
-    flecs_table_check_sanity(world, src_table);
-    flecs_table_check_sanity(world, dst_table);
+    flecs_table_check_sanity(src_table);
+    flecs_table_check_sanity(dst_table);
 
     ecs_os_perf_trace_push("flecs.table.merge");
 
@@ -2198,11 +2196,11 @@ void flecs_table_merge(
         flecs_table_traversable_add(src_table, -src_table->_->traversable_count);
         ecs_assert(src_table->_->traversable_count == 0, ECS_INTERNAL_ERROR, NULL);
     }
-
+    
     ecs_os_perf_trace_pop("flecs.table.merge");
 
-    flecs_table_check_sanity(world, src_table);
-    flecs_table_check_sanity(world, dst_table);
+    flecs_table_check_sanity(src_table);
+    flecs_table_check_sanity(dst_table);
 }
 
 /* Internal mechanism for propagating information to tables */

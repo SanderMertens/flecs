@@ -2255,7 +2255,7 @@ void ecs_enable_id(
         "add CanToggle trait to component");
 
     ecs_entity_t bs_id = id | ECS_TOGGLE;
-    ecs_add_id(world, entity, bs_id);
+    ecs_add_id((ecs_world_t*)stage, entity, bs_id);
 
     if (flecs_defer_enable(stage, entity, id, enable)) {
         return;
