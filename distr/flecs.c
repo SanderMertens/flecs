@@ -62901,17 +62901,27 @@ void ecs_script_clear(
     if (!instance) {
         ecs_delete_with(world, ecs_pair_t(EcsScript, script));
     } else {
-        ecs_defer_begin(world);
+        ecs_vec_t to_delete = {0};
+        ecs_vec_init_t(&world->allocator, &to_delete, ecs_entity_t, 0);
+
         ecs_iter_t it = ecs_children(world, instance);
         while (ecs_children_next(&it)) {
             if (ecs_table_has_id(world, it.table, ecs_pair(EcsScriptTemplate, script))) {
                 int32_t i, count = it.count;
                 for (i = 0; i < count; i ++) {
-                    ecs_delete(world, it.entities[i]);
+                    ecs_vec_append_t(
+                        &world->allocator, &to_delete, ecs_entity_t)[0] = 
+                            it.entities[i];
                 }
             }
         }
-        ecs_defer_end(world);
+
+        ecs_entity_t *to_delete_ids = ecs_vec_first(&to_delete);
+        int32_t i, count = ecs_vec_count(&to_delete);
+        for (i = 0; i < count; i ++) {
+            ecs_delete(world, to_delete_ids[i]);
+        }
+        ecs_vec_fini_t(&world->allocator, &to_delete, ecs_entity_t);
     }
 }
 
