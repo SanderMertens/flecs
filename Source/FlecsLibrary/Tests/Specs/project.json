@@ -1127,7 +1127,8 @@
                 "compare_int8_Enum",
                 "compare_int16_Enum",
                 "compare_int32_Enum",
-                "compare_int64_Enum"
+                "compare_int64_Enum",
+                "move_ctor_no_default_ctor"
             ]
         }, {
             "id": "Refs",
