@@ -291,8 +291,6 @@ void RuntimeTypes_ctor_illegal(void) {
 
     /* TestStruct should have an illegal constructor too: */
     test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL);
-    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
-    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_struct_ti->hooks.dtor == NULL);
@@ -463,7 +461,6 @@ void RuntimeTypes_move_illegal(void) {
 
     /* TestStruct should have an illegal move hook too: */
     test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_ILLEGAL);
-    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_struct_ti->hooks.ctor != NULL);
@@ -552,9 +549,8 @@ void RuntimeTypes_copy_illegal(void) {
      * TestStruct's copy and copy ctor should be set to illegal as well. */
     const ecs_type_info_t *test_struct_ti = define_test_struct(world);
 
-    /* TestStruct should have an illegal copy and copy ctor hook too: */
+    /* TestStruct should have an illegal copy: */
     test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_COPY_ILLEGAL);
-    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_struct_ti->hooks.ctor != NULL);
@@ -921,8 +917,6 @@ void RuntimeTypes_array_ctor_illegal(void) {
 
     /* test_arr should have an illegal constructor too: */
     test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL);
-    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
-    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_arr_ti->hooks.dtor == NULL);
@@ -1124,7 +1118,6 @@ void RuntimeTypes_array_move_illegal(void) {
 
     /* test_arr should have an illegal move hook too: */
     test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_ILLEGAL);
-    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_arr_ti->hooks.ctor != NULL);
@@ -1230,7 +1223,6 @@ void RuntimeTypes_array_copy_illegal(void) {
 
     /* test_arr should have an illegal copy hook too: */
     test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_COPY_ILLEGAL);
-    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_arr_ti->hooks.ctor != NULL);

@@ -3625,8 +3625,6 @@ void ComponentLifecycle_illegal_move_ctor(void) {
 }
 
 void ComponentLifecycle_illegal_move_and_ctor(void) {
-    install_test_abort();
-
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3639,11 +3637,9 @@ void ComponentLifecycle_illegal_move_and_ctor(void) {
     test_assert(ti != NULL);
     test_assert(ti->hooks.ctor != NULL);
     test_assert(ti->hooks.move != NULL);
-    test_assert(ti->hooks.move_ctor != NULL);
 
-    /* Make sure hook panics */
-    test_expect_abort();
-    ti->hooks.move_ctor(&(Position){10, 20}, &(Position){10, 20}, 1, ti);
+    /* Trivial move ctor hook allowed */
+    test_assert(ti->hooks.move_ctor == NULL);
 
     ecs_fini(world);
 }
@@ -3671,8 +3667,6 @@ void ComponentLifecycle_illegal_copy_ctor(void) {
 }
 
 void ComponentLifecycle_illegal_copy_and_ctor(void) {
-    install_test_abort();
-
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3685,11 +3679,9 @@ void ComponentLifecycle_illegal_copy_and_ctor(void) {
     test_assert(ti != NULL);
     test_assert(ti->hooks.ctor != NULL);
     test_assert(ti->hooks.copy != NULL);
-    test_assert(ti->hooks.copy_ctor != NULL);
 
-    /* Make sure hook panics */
-    test_expect_abort();
-    ti->hooks.copy_ctor(&(Position){10, 20}, &(Position){10, 20}, 1, ti);
+    /* Trivial copy ctor hook allowed */
+    test_assert(ti->hooks.copy_ctor == NULL);
 
     ecs_fini(world);
 }
