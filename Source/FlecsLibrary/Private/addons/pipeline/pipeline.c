@@ -17,7 +17,7 @@ void flecs_pipeline_free(
         ecs_world_t *world = p->query->world;
         ecs_allocator_t *a = &world->allocator;
         ecs_vec_fini_t(a, &p->ops, ecs_pipeline_op_t);
-        ecs_vec_fini_t(a, &p->systems, ecs_entity_t);
+        ecs_vec_fini_t(a, &p->systems, ecs_system_t*);
         ecs_os_free(p->iters);
         ecs_query_fini(p->query);
         ecs_os_free(p);
@@ -279,7 +279,7 @@ bool flecs_pipeline_build(
     ecs_map_init(&ws.wildcard_ids, a);
 
     ecs_vec_reset_t(a, &pq->ops, ecs_pipeline_op_t);
-    ecs_vec_reset_t(a, &pq->systems, ecs_entity_t);
+    ecs_vec_reset_t(a, &pq->systems, ecs_system_t*);
 
     bool multi_threaded = false;
     bool immediate = false;
@@ -362,8 +362,7 @@ bool flecs_pipeline_build(
             /* Don't increase count for inactive systems, as they are ignored by
              * the query used to run the pipeline. */
             if (is_active) {
-                ecs_vec_append_t(a, &pq->systems, ecs_entity_t)[0] = 
-                    it.entities[i];
+                ecs_vec_append_t(a, &pq->systems, ecs_system_t*)[0] = sys;
                 if (!op->count) {
                     op->multi_threaded = multi_threaded;
                     op->immediate = immediate;
@@ -396,12 +395,12 @@ bool flecs_pipeline_build(
 
         int32_t i, count = ecs_vec_count(&pq->systems);
         int32_t op_index = 0, ran_since_merge = 0;
-        ecs_entity_t *systems = ecs_vec_first_t(&pq->systems, ecs_entity_t);
+        ecs_system_t **systems = ecs_vec_first_t(&pq->systems, ecs_system_t*);
         for (i = 0; i < count; i ++) {
-            ecs_entity_t system = systems[i];
-            const EcsPoly *poly = ecs_get_pair(world, system, EcsPoly, EcsSystem);
-            flecs_poly_assert(poly->poly, ecs_system_t);
-            ecs_system_t *sys = (ecs_system_t*)poly->poly;
+            ecs_system_t *sys = systems[i];
+            ecs_entity_t system = sys->query->entity;
+            ecs_assert(system != 0, ECS_INTERNAL_ERROR, NULL);
+            (void)system;
 
 #ifdef FLECS_LOG_1
             char *path = ecs_get_path(world, system);
@@ -555,14 +554,11 @@ int32_t flecs_run_pipeline_ops(
     ecs_assert(!stage_index || op->multi_threaded, ECS_INTERNAL_ERROR, NULL);
 
     int32_t count = ecs_vec_count(&pq->systems);
-    ecs_entity_t* systems = ecs_vec_first_t(&pq->systems, ecs_entity_t);
+    ecs_system_t **systems = ecs_vec_first_t(&pq->systems, ecs_system_t*);
     int32_t ran_since_merge = i - op->offset;
 
     for (; i < count; i++) {
-        ecs_entity_t system = systems[i];
-        const EcsPoly* poly = ecs_get_pair(world, system, EcsPoly, EcsSystem);
-        flecs_poly_assert(poly->poly, ecs_system_t);
-        ecs_system_t* sys = (ecs_system_t*)poly->poly;
+        ecs_system_t* sys = systems[i];
 
         /* Keep track of the last frame for which the system has ran, so we
          * know from where to resume the schedule in case the schedule
@@ -578,7 +574,7 @@ int32_t flecs_run_pipeline_ops(
             s = stage;
         }
 
-        flecs_run_intern(world, s, system, sys, stage_index,
+        flecs_run_intern(world, s, sys->query->entity, sys, stage_index,
             stage_count, delta_time, NULL);
 
         ecs_os_linc(&world->info.systems_ran_frame);
@@ -632,6 +628,8 @@ void flecs_run_pipeline(
 
         if (!immediate) {
             ecs_readonly_begin(world, multi_threaded);
+        } else {
+            flecs_defer_begin(world, stage);
         }
 
         ECS_BIT_COND(world->flags, EcsWorldMultiThreaded, op_multi_threaded);
@@ -675,6 +673,8 @@ void flecs_run_pipeline(
             if (measure_time) {
                 pq->cur_op->time_spent += ecs_time_measure(&mt);
             }
+        } else {
+            flecs_defer_end(world, stage);
         }
 
         /* Store the current state of the schedule after we synchronized the
