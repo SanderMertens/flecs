@@ -4219,6 +4219,16 @@ void flecs_component_ids_set(
     int32_t index,
     ecs_entity_t id);
 
+/** Query iterator function for trivially cached queries.
+ * This operation can be called if an iterator matches the conditions for 
+ * trivial iteration:
+ * 
+ * @param it The query iterator.
+ * @return Whether the query has more results.
+ */
+FLECS_API
+bool flecs_query_trivial_cached_next(
+    ecs_iter_t *it);
 
 #ifdef FLECS_DEBUG
 /** Check if current thread has exclusive access to world.
@@ -27540,6 +27550,16 @@ struct each_delegate : public delegate {
         self->invoke(iter);
     }
 
+    // Static function that can be used as callback for systems/triggers. 
+    // Different from run() in that it loops the iterator.
+    static void run_each(ecs_iter_t *iter) {
+        auto self = static_cast<const each_delegate*>(iter->run_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        while (iter->next(iter)) {
+            self->invoke(iter);
+        }
+    }
+
     // Create instance of delegate
     static each_delegate* make(const Func& func) {
         return FLECS_NEW(each_delegate)(func);
@@ -31911,6 +31931,17 @@ public:
         return T(world_, &desc_);
     }
 
+    template <typename Func>
+    T run_each(Func&& func) {
+        using Delegate = typename _::each_delegate<
+            typename std::decay<Func>::type, Components...>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        desc_.run = Delegate::run_each;
+        desc_.run_ctx = ctx;
+        desc_.run_ctx_free = _::free_obj<Delegate>;
+        return T(world_, &desc_);
+    }
+
 protected:
     flecs::world_t* world_v() override { return world_; }
     TDesc desc_;
@@ -32530,6 +32561,9 @@ struct system_builder final : _::system_builder_base<Components...> {
         ecs_add_id(world, this->desc_.entity, flecs::OnUpdate);
 #endif
     }
+
+    template <typename Func>
+    system each(Func&& func);
 };
 
 }
@@ -32714,6 +32748,14 @@ inline void system_init(flecs::world& world) {
 }
 
 } // namespace _
+
+template <typename ... Components>
+template <typename Func>
+inline system system_builder<Components...>::each(Func&& func) {
+    // Faster version of each() that iterates the query on the C++ side.
+    return this->run_each(FLECS_FWD(func));
+}
+
 } // namespace flecs
 
 #endif

@@ -64,6 +64,17 @@ public:
         return T(world_, &desc_);
     }
 
+    template <typename Func>
+    T run_each(Func&& func) {
+        using Delegate = typename _::each_delegate<
+            typename std::decay<Func>::type, Components...>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        desc_.run = Delegate::run_each;
+        desc_.run_ctx = ctx;
+        desc_.run_ctx_free = _::free_obj<Delegate>;
+        return T(world_, &desc_);
+    }
+
 protected:
     flecs::world_t* world_v() override { return world_; }
     TDesc desc_;

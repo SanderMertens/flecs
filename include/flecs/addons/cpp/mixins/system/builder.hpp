@@ -32,6 +32,9 @@ struct system_builder final : _::system_builder_base<Components...> {
         ecs_add_id(world, this->desc_.entity, flecs::OnUpdate);
 #endif
     }
+
+    template <typename Func>
+    system each(Func&& func);
 };
 
 }

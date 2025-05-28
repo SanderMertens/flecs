@@ -28588,7 +28588,7 @@ void ecs_system_activate(
     const ecs_system_t *system_data);
 
 /* Internal function to run a system */
-ecs_entity_t flecs_run_intern(
+ecs_entity_t flecs_run_system(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t system,
@@ -58874,7 +58874,7 @@ int32_t flecs_run_pipeline_ops(
             s = stage;
         }
 
-        flecs_run_intern(world, s, sys->query->entity, sys, stage_index,
+        flecs_run_system(world, s, sys->query->entity, sys, stage_index,
             stage_count, delta_time, NULL);
 
         ecs_os_linc(&world->info.systems_ran_frame);
@@ -69174,7 +69174,7 @@ ecs_mixins_t ecs_system_t_mixins = {
 
 /* -- Public API -- */
 
-ecs_entity_t flecs_run_intern(
+ecs_entity_t flecs_run_system(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t system,
@@ -69267,13 +69267,22 @@ ecs_entity_t flecs_run_intern(
             run(it);
             ecs_iter_fini(&qit);
         } else {
+            if (it == &qit && (qit.flags & EcsIterTrivialCached)) {
+                it->next = flecs_query_trivial_cached_next;
+            }
             run(it);
         }
     } else {
         if (system_data->query->term_count) {
             if (it == &qit) {
-                while (ecs_query_next(&qit)) {
-                    action(&qit);
+                if (qit.flags & EcsIterTrivialCached) {
+                    while (flecs_query_trivial_cached_next(&qit)) {
+                        action(&qit);
+                    }
+                } else {
+                    while (ecs_query_next(&qit)) {
+                        action(&qit);
+                    }
                 }
             } else {
                 while (ecs_iter_next(it)) {
@@ -69312,7 +69321,7 @@ ecs_entity_t ecs_run_worker(
     ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_defer_begin(world, stage);
-    ecs_entity_t result = flecs_run_intern(
+    ecs_entity_t result = flecs_run_system(
         world, stage, system, system_data, stage_index, stage_count, 
         delta_time, param);
     flecs_defer_end(world, stage);
@@ -69329,7 +69338,7 @@ ecs_entity_t ecs_run(
     ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_defer_begin(world, stage);
-    ecs_entity_t result = flecs_run_intern(
+    ecs_entity_t result = flecs_run_system(
         world, stage, system, system_data, 0, 0, delta_time, param);
     flecs_defer_end(world, stage);
     return result;
@@ -76974,6 +76983,43 @@ trivial_search_yield:
 
 yield:
     return true;
+}
+
+bool flecs_query_trivial_cached_next(
+    ecs_iter_t *it)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
+    ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
+    ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_query_run_ctx_t ctx;
+    flecs_query_iter_run_ctx_init(it, &ctx);
+
+    bool redo = it->flags & EcsIterIsValid;
+    if (redo) {
+        flecs_query_self_change_detection(it, qit, impl);
+    }
+
+    it->flags &= ~(EcsIterSkip);
+    it->flags |= EcsIterIsValid;
+    it->frame_offset += it->count;
+
+    ecs_assert(it->flags & EcsIterTrivialCached, ECS_INVALID_OPERATION,
+        "query does not have trivial cache, use ecs_query_next instead");
+    ecs_assert(it->flags & EcsIterTrivialSearch, ECS_INVALID_OPERATION,
+        "iterator has constrained variables, use ecs_query_next instead");
+    ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (flecs_query_is_trivial_cache_search(&ctx)) {
+        return true;
+    }
+
+    it->flags |= EcsIterSkip; /* Prevent change detection on fini */
+
+    ecs_iter_fini(it);
+    return false;
 }
 
 static
