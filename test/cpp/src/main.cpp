@@ -1091,6 +1091,7 @@ void ComponentLifecycle_compare_int8_Enum(void);
 void ComponentLifecycle_compare_int16_Enum(void);
 void ComponentLifecycle_compare_int32_Enum(void);
 void ComponentLifecycle_compare_int64_Enum(void);
+void ComponentLifecycle_move_ctor_no_default_ctor(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -5758,6 +5759,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "compare_int64_Enum",
         ComponentLifecycle_compare_int64_Enum
+    },
+    {
+        "move_ctor_no_default_ctor",
+        ComponentLifecycle_move_ctor_no_default_ctor
     }
 };
 
@@ -7465,7 +7470,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        104,
+        105,
         ComponentLifecycle_testcases
     },
     {

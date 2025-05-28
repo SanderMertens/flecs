@@ -2850,3 +2850,27 @@ void ComponentLifecycle_compare_int64_Enum(void) {
     test_assert(equals(ecs, component, &a, &c));
     test_assert(equals(ecs, component, &b, &b));
 }
+
+struct NonDefaultConstructible {
+    NonDefaultConstructible(int x) : x{x} {}
+    int x;
+};
+
+void ComponentLifecycle_move_ctor_no_default_ctor(void) {
+    flecs::world world;
+    flecs::entity e1 = world.entity().emplace<NonDefaultConstructible>(1);
+    flecs::entity e2 = world.entity().emplace<NonDefaultConstructible>(2);
+    e1.add<Tag>();
+    test_assert(e1.has<Tag>());
+
+    {
+        const NonDefaultConstructible *ptr = e1.get<NonDefaultConstructible>();
+        test_assert(ptr != nullptr);
+        test_int(ptr->x, 1);
+    }
+    {
+        const NonDefaultConstructible *ptr = e2.get<NonDefaultConstructible>();
+        test_assert(ptr != nullptr);
+        test_int(ptr->x, 2);
+    }
+}
