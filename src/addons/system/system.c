@@ -19,7 +19,7 @@ ecs_mixins_t ecs_system_t_mixins = {
 
 /* -- Public API -- */
 
-ecs_entity_t flecs_run_intern(
+ecs_entity_t flecs_run_system(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t system,
@@ -112,13 +112,22 @@ ecs_entity_t flecs_run_intern(
             run(it);
             ecs_iter_fini(&qit);
         } else {
+            if (it == &qit && (qit.flags & EcsIterTrivialCached)) {
+                it->next = flecs_query_trivial_cached_next;
+            }
             run(it);
         }
     } else {
         if (system_data->query->term_count) {
             if (it == &qit) {
-                while (ecs_query_next(&qit)) {
-                    action(&qit);
+                if (qit.flags & EcsIterTrivialCached) {
+                    while (flecs_query_trivial_cached_next(&qit)) {
+                        action(&qit);
+                    }
+                } else {
+                    while (ecs_query_next(&qit)) {
+                        action(&qit);
+                    }
                 }
             } else {
                 while (ecs_iter_next(it)) {
@@ -157,7 +166,7 @@ ecs_entity_t ecs_run_worker(
     ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_defer_begin(world, stage);
-    ecs_entity_t result = flecs_run_intern(
+    ecs_entity_t result = flecs_run_system(
         world, stage, system, system_data, stage_index, stage_count, 
         delta_time, param);
     flecs_defer_end(world, stage);
@@ -174,7 +183,7 @@ ecs_entity_t ecs_run(
     ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_defer_begin(world, stage);
-    ecs_entity_t result = flecs_run_intern(
+    ecs_entity_t result = flecs_run_system(
         world, stage, system, system_data, 0, 0, delta_time, param);
     flecs_defer_end(world, stage);
     return result;

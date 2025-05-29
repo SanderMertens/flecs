@@ -127,4 +127,12 @@ inline void system_init(flecs::world& world) {
 }
 
 } // namespace _
+
+template <typename ... Components>
+template <typename Func>
+inline system system_builder<Components...>::each(Func&& func) {
+    // Faster version of each() that iterates the query on the C++ side.
+    return this->run_each(FLECS_FWD(func));
+}
+
 } // namespace flecs
