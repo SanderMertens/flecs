@@ -3267,8 +3267,6 @@ typedef struct ecs_world_allocators_t {
     ecs_map_params_t ptr;
     ecs_map_params_t query_table_list;
     ecs_block_allocator_t query_table;
-    ecs_block_allocator_t query_table_match;
-    ecs_block_allocator_t query_triv_table_match;
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
     ecs_block_allocator_t id_record;
@@ -20117,8 +20115,6 @@ void flecs_world_allocators_init(
     ecs_map_params_init(&a->query_table_list, &world->allocator);
 
     flecs_ballocator_init_t(&a->query_table, ecs_query_cache_table_t);
-    flecs_ballocator_init_t(&a->query_table_match, ecs_query_cache_match_t);
-    flecs_ballocator_init_t(&a->query_triv_table_match, ecs_query_triv_cache_match_t);
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
     flecs_ballocator_init_t(&a->id_record, ecs_component_record_t);
@@ -20139,8 +20135,6 @@ void flecs_world_allocators_fini(
     ecs_map_params_fini(&a->ptr);
     ecs_map_params_fini(&a->query_table_list);
     flecs_ballocator_fini(&a->query_table);
-    flecs_ballocator_fini(&a->query_table_match);
-    flecs_ballocator_fini(&a->query_triv_table_match);
     flecs_ballocator_fini(&a->graph_edge_lo);
     flecs_ballocator_fini(&a->graph_edge);
     flecs_ballocator_fini(&a->id_record);
