@@ -133,17 +133,6 @@ ecs_entity_t flecs_get_delete_action(
 }
 
 static
-void flecs_update_monitors_for_delete(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    flecs_update_component_monitors(world, NULL, &(ecs_type_t){
-        .array = (ecs_id_t[]){id},
-        .count = 1
-    });
-}
-
-static
 void flecs_id_mark_for_delete(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -194,24 +183,42 @@ void flecs_id_mark_for_delete(
         }
     }
 
-    /* Signal query cache monitors */
-    flecs_update_monitors_for_delete(world, id);
-
-    /* If id is a wildcard pair, update cache monitors for non-wildcard ids */
+    /* Flag component records for deletion */
     if (ecs_id_is_wildcard(id)) {
         ecs_assert(ECS_HAS_ID_FLAG(id, PAIR), ECS_INTERNAL_ERROR, NULL);
         ecs_component_record_t *cur = cr;
         if (ECS_PAIR_SECOND(id) == EcsWildcard) {
             while ((cur = flecs_component_first_next(cur))) {
                 cur->flags |= EcsIdMarkedForDelete;
-                flecs_update_monitors_for_delete(world, cur->id);
             }
         } else {
+            /* Iterating all pairs for relationship target */
             ecs_assert(ECS_PAIR_FIRST(id) == EcsWildcard, 
                 ECS_INTERNAL_ERROR, NULL);
             while ((cur = flecs_component_second_next(cur))) {
                 cur->flags |= EcsIdMarkedForDelete;
-                flecs_update_monitors_for_delete(world, cur->id);
+
+                /* If relationship is traversable and is removed upon deletion
+                 * of a target, we may have to rematch queries. If a query 
+                 * matched for example (IsA, A) -> (IsA, B) -> Position, and 
+                 * B is deleted, Position would no longer be reachable from 
+                 * tables that have (IsA, B). */
+                if (cur->flags & EcsIdTraversable) {
+                    /* If tables with (R, target) are deleted anyway we don't
+                     * need to rematch. Since this will happen recursively it is
+                     * guaranteed that queries cannot have tables that reached a
+                     * component through the deleted entity. */
+                    if (!(cur->flags & EcsIdOnDeleteTargetDelete)) {
+                        /* Only bother if tables have relationship. */
+                        if (ecs_map_count(&cur->cache.index)) {
+                            flecs_update_component_monitors(world, NULL, 
+                                &(ecs_type_t){
+                                    .array = (ecs_id_t[]){cur->id},
+                                    .count = 1
+                                });
+                        }
+                    }
+                }
             }
         }
     }
@@ -371,9 +378,9 @@ void flecs_on_delete_clear_sparse(
             continue;
         }
 
-        if (cur->flags & EcsIdOnDeleteObjectDelete) {
+        if (cur->flags & EcsIdOnDeleteTargetDelete) {
             flecs_component_delete_sparse(world, cur);
-        } else if (cur->flags & EcsIdOnDeleteObjectPanic) {
+        } else if (cur->flags & EcsIdOnDeleteTargetPanic) {
             char *id_str = ecs_id_str(world, cur->id);
             ecs_err("(OnDelete, Panic) constraint violated while "
                 "deleting %s", id_str);

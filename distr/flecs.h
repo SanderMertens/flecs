@@ -411,12 +411,12 @@ extern "C" {
 #define EcsIdOnDeleteMask\
     (EcsIdOnDeletePanic|EcsIdOnDeleteRemove|EcsIdOnDeleteDelete)
 
-#define EcsIdOnDeleteObjectRemove      (1u << 3)
-#define EcsIdOnDeleteObjectDelete      (1u << 4)
-#define EcsIdOnDeleteObjectPanic       (1u << 5)
-#define EcsIdOnDeleteObjectMask\
-    (EcsIdOnDeleteObjectPanic|EcsIdOnDeleteObjectRemove|\
-        EcsIdOnDeleteObjectDelete)
+#define EcsIdOnDeleteTargetRemove      (1u << 3)
+#define EcsIdOnDeleteTargetDelete      (1u << 4)
+#define EcsIdOnDeleteTargetPanic       (1u << 5)
+#define EcsIdOnDeleteTargetMask\
+    (EcsIdOnDeleteTargetPanic|EcsIdOnDeleteTargetRemove|\
+        EcsIdOnDeleteTargetDelete)
 
 #define EcsIdOnInstantiateOverride     (1u << 6)
 #define EcsIdOnInstantiateInherit      (1u << 7)

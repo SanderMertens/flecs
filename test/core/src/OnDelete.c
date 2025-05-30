@@ -5,9 +5,9 @@ void OnDelete_flags(void) {
     ecs_flags32_t f_delete = EcsIdOnDeleteDelete;
     ecs_flags32_t f_throw = EcsIdOnDeletePanic;
 
-    ecs_flags32_t f_obj_remove = EcsIdOnDeleteObjectRemove;
-    ecs_flags32_t f_obj_delete = EcsIdOnDeleteObjectDelete;
-    ecs_flags32_t f_obj_throw = EcsIdOnDeleteObjectPanic;
+    ecs_flags32_t f_obj_remove = EcsIdOnDeleteTargetRemove;
+    ecs_flags32_t f_obj_delete = EcsIdOnDeleteTargetDelete;
+    ecs_flags32_t f_obj_throw = EcsIdOnDeleteTargetPanic;
 
     test_int(ECS_ID_ON_DELETE(f_remove), EcsRemove);
     test_int(ECS_ID_ON_DELETE(f_delete), EcsDelete);
