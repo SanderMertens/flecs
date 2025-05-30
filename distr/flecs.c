@@ -4046,7 +4046,7 @@ void flecs_register_on_delete_object(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_id_flag_for_relation(it, EcsOnDeleteTarget, 
         ECS_ID_ON_DELETE_TARGET_FLAG(ECS_PAIR_SECOND(id)),
-        EcsIdOnDeleteObjectMask,
+        EcsIdOnDeleteTargetMask,
         EcsEntityIsId);  
 }
 
@@ -4348,13 +4348,13 @@ ecs_table_t* flecs_bootstrap_component_table(
     /* Before creating table, manually set flags for ChildOf/Identifier, as this
      * can no longer be done after they are in use. */
     ecs_component_record_t *cr = flecs_components_ensure(world, EcsChildOf);
-    cr->flags |= EcsIdOnDeleteObjectDelete | EcsIdOnInstantiateDontInherit |
+    cr->flags |= EcsIdOnDeleteTargetDelete | EcsIdOnInstantiateDontInherit |
         EcsIdTraversable | EcsIdTag;
 
     /* Initialize id records cached on world */
     world->cr_childof_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, EcsWildcard));
-    world->cr_childof_wildcard->flags |= EcsIdOnDeleteObjectDelete | 
+    world->cr_childof_wildcard->flags |= EcsIdOnDeleteTargetDelete | 
         EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdTag | EcsIdExclusive;
     cr = flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsWildcard));
     cr->flags |= EcsIdOnInstantiateDontInherit;
@@ -5905,14 +5905,24 @@ void flecs_cmd_batch_for_entity(
         add_diff.added = added;
         add_diff.added_flags = diff->added_flags;
 
+        if (r->row & EcsEntityIsTraversable) {
+            /* Update monitors since we didn't do this in flecs_commit. Do this
+             * before calling flecs_notify_on_add() since this can trigger 
+             * prefab instantiation logic. When that happens, prefab children
+             * can be created for this instance which would mean that the table
+             * count of r->cr would always be >0.
+             * Since those tables are new, we don't have to invoke component 
+             * monitors since queries will have correctly matched them. */
+            ecs_assert(r->cr != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (ecs_map_count(&r->cr->cache.index)) {
+                flecs_update_component_monitors(world, &added, NULL);
+            }
+        }
+
         flecs_defer_begin(world, world->stages[0]);
         flecs_notify_on_add(world, r->table, start_table,
             ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, set_mask, true, false);
         flecs_defer_end(world, world->stages[0]);
-        if (r->row & EcsEntityIsTraversable) {
-            /* Update monitors since we didn't do this in flecs_commit. */
-            flecs_update_component_monitors(world, &added, NULL);
-        }
     }
 
     diff->added.array = added.array;
@@ -16433,17 +16443,6 @@ ecs_entity_t flecs_get_delete_action(
 }
 
 static
-void flecs_update_monitors_for_delete(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    flecs_update_component_monitors(world, NULL, &(ecs_type_t){
-        .array = (ecs_id_t[]){id},
-        .count = 1
-    });
-}
-
-static
 void flecs_id_mark_for_delete(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -16494,24 +16493,42 @@ void flecs_id_mark_for_delete(
         }
     }
 
-    /* Signal query cache monitors */
-    flecs_update_monitors_for_delete(world, id);
-
-    /* If id is a wildcard pair, update cache monitors for non-wildcard ids */
+    /* Flag component records for deletion */
     if (ecs_id_is_wildcard(id)) {
         ecs_assert(ECS_HAS_ID_FLAG(id, PAIR), ECS_INTERNAL_ERROR, NULL);
         ecs_component_record_t *cur = cr;
         if (ECS_PAIR_SECOND(id) == EcsWildcard) {
             while ((cur = flecs_component_first_next(cur))) {
                 cur->flags |= EcsIdMarkedForDelete;
-                flecs_update_monitors_for_delete(world, cur->id);
             }
         } else {
+            /* Iterating all pairs for relationship target */
             ecs_assert(ECS_PAIR_FIRST(id) == EcsWildcard, 
                 ECS_INTERNAL_ERROR, NULL);
             while ((cur = flecs_component_second_next(cur))) {
                 cur->flags |= EcsIdMarkedForDelete;
-                flecs_update_monitors_for_delete(world, cur->id);
+
+                /* If relationship is traversable and is removed upon deletion
+                 * of a target, we may have to rematch queries. If a query 
+                 * matched for example (IsA, A) -> (IsA, B) -> Position, and 
+                 * B is deleted, Position would no longer be reachable from 
+                 * tables that have (IsA, B). */
+                if (cur->flags & EcsIdTraversable) {
+                    /* If tables with (R, target) are deleted anyway we don't
+                     * need to rematch. Since this will happen recursively it is
+                     * guaranteed that queries cannot have tables that reached a
+                     * component through the deleted entity. */
+                    if (!(cur->flags & EcsIdOnDeleteTargetDelete)) {
+                        /* Only bother if tables have relationship. */
+                        if (ecs_map_count(&cur->cache.index)) {
+                            flecs_update_component_monitors(world, NULL, 
+                                &(ecs_type_t){
+                                    .array = (ecs_id_t[]){cur->id},
+                                    .count = 1
+                                });
+                        }
+                    }
+                }
             }
         }
     }
@@ -16671,9 +16688,9 @@ void flecs_on_delete_clear_sparse(
             continue;
         }
 
-        if (cur->flags & EcsIdOnDeleteObjectDelete) {
+        if (cur->flags & EcsIdOnDeleteTargetDelete) {
             flecs_component_delete_sparse(world, cur);
-        } else if (cur->flags & EcsIdOnDeleteObjectPanic) {
+        } else if (cur->flags & EcsIdOnDeleteTargetPanic) {
             char *id_str = ecs_id_str(world, cur->id);
             ecs_err("(OnDelete, Panic) constraint violated while "
                 "deleting %s", id_str);
@@ -19925,6 +19942,7 @@ void flecs_update_component_monitor_w_array(
     int i;
     for (i = 0; i < ids->count; i ++) {
         ecs_entity_t id = ids->array[i];
+
         if (ECS_HAS_ID_FLAG(id, PAIR)) {
             flecs_monitor_mark_dirty(world, 
                 ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
@@ -37968,7 +37986,8 @@ ecs_record_t* flecs_entity_index_get(
     uint64_t entity)
 {
     ecs_record_t *r = flecs_entity_index_get_any(index, entity);
-    ecs_assert(r->dense < index->alive_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(r->dense < index->alive_count, ECS_INVALID_PARAMETER, 
+            "entity is not alive");
     ecs_assert(ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0] == entity,
         ECS_INVALID_PARAMETER, "mismatching liveliness generation for entity");
     return r;

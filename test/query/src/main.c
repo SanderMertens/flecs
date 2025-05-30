@@ -1692,6 +1692,13 @@ void Cached_test_it_ptrs(void);
 void Cached_test_it_ptrs_w_wildcard(void);
 void Cached_test_it_ptrs_w_up(void);
 void Cached_match_count_after_rematch(void);
+void Cached_no_rematch_after_parent_delete(void);
+void Cached_no_rematch_after_parent_create(void);
+void Cached_no_rematch_after_batched_parent_create(void);
+void Cached_no_rematch_after_instantiate(void);
+void Cached_no_rematch_after_batched_instantiate(void);
+void Cached_rematch_after_delete_base_of_base(void);
+void Cached_rematch_after_delete_first_base_of_base(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -8974,6 +8981,34 @@ bake_test_case Cached_testcases[] = {
     {
         "match_count_after_rematch",
         Cached_match_count_after_rematch
+    },
+    {
+        "no_rematch_after_parent_delete",
+        Cached_no_rematch_after_parent_delete
+    },
+    {
+        "no_rematch_after_parent_create",
+        Cached_no_rematch_after_parent_create
+    },
+    {
+        "no_rematch_after_batched_parent_create",
+        Cached_no_rematch_after_batched_parent_create
+    },
+    {
+        "no_rematch_after_instantiate",
+        Cached_no_rematch_after_instantiate
+    },
+    {
+        "no_rematch_after_batched_instantiate",
+        Cached_no_rematch_after_batched_instantiate
+    },
+    {
+        "rematch_after_delete_base_of_base",
+        Cached_rematch_after_delete_base_of_base
+    },
+    {
+        "rematch_after_delete_first_base_of_base",
+        Cached_rematch_after_delete_first_base_of_base
     }
 };
 
@@ -11731,7 +11766,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        99,
+        106,
         Cached_testcases
     },
     {

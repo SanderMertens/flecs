@@ -918,14 +918,24 @@ void flecs_cmd_batch_for_entity(
         add_diff.added = added;
         add_diff.added_flags = diff->added_flags;
 
+        if (r->row & EcsEntityIsTraversable) {
+            /* Update monitors since we didn't do this in flecs_commit. Do this
+             * before calling flecs_notify_on_add() since this can trigger 
+             * prefab instantiation logic. When that happens, prefab children
+             * can be created for this instance which would mean that the table
+             * count of r->cr would always be >0.
+             * Since those tables are new, we don't have to invoke component 
+             * monitors since queries will have correctly matched them. */
+            ecs_assert(r->cr != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (ecs_map_count(&r->cr->cache.index)) {
+                flecs_update_component_monitors(world, &added, NULL);
+            }
+        }
+
         flecs_defer_begin(world, world->stages[0]);
         flecs_notify_on_add(world, r->table, start_table,
             ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, set_mask, true, false);
         flecs_defer_end(world, world->stages[0]);
-        if (r->row & EcsEntityIsTraversable) {
-            /* Update monitors since we didn't do this in flecs_commit. */
-            flecs_update_component_monitors(world, &added, NULL);
-        }
     }
 
     diff->added.array = added.array;

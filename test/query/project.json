@@ -1755,7 +1755,14 @@
                 "test_it_ptrs",
                 "test_it_ptrs_w_wildcard",
                 "test_it_ptrs_w_up",
-                "match_count_after_rematch"
+                "match_count_after_rematch",
+                "no_rematch_after_parent_delete",
+                "no_rematch_after_parent_create",
+                "no_rematch_after_batched_parent_create",
+                "no_rematch_after_instantiate",
+                "no_rematch_after_batched_instantiate",
+                "rematch_after_delete_base_of_base",
+                "rematch_after_delete_first_base_of_base"
             ]
         }, {
             "id": "ChangeDetection",

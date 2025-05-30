@@ -512,6 +512,7 @@ void flecs_update_component_monitor_w_array(
     int i;
     for (i = 0; i < ids->count; i ++) {
         ecs_entity_t id = ids->array[i];
+
         if (ECS_HAS_ID_FLAG(id, PAIR)) {
             flecs_monitor_mark_dirty(world, 
                 ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));

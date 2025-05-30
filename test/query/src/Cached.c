@@ -4356,3 +4356,277 @@ void Cached_match_count_after_rematch(void) {
 
     ecs_fini(world);
 }
+
+void Cached_no_rematch_after_parent_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p1 = ecs_new_w(world, Position);
+    ecs_new_w_pair(world, EcsChildOf, p1);
+
+    ecs_entity_t p2 = ecs_new_w(world, Position);
+    ecs_new_w_pair(world, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
+    test_int(info->rematch_count_total, 0);
+    
+    ecs_delete(world, p1);
+    { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
+    test_int(info->rematch_count_total, 0);
+
+    ecs_delete(world, p2);
+    { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
+    test_int(info->rematch_count_total, 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_no_rematch_after_parent_create(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p1 = ecs_new_w(world, Position);
+    ecs_new_w_pair(world, EcsChildOf, p1);
+
+    ecs_entity_t p2 = ecs_new_w(world, Position);
+    ecs_new_w_pair(world, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
+    test_int(info->rematch_count_total, 0);
+    
+    ecs_entity_t p3 = ecs_new_w(world, Position);
+    ecs_new_w_pair(world, EcsChildOf, p3);
+
+    { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
+    test_int(info->rematch_count_total, 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_no_rematch_after_batched_parent_create(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t p1 = ecs_new_w(world, Position);
+    ecs_new_w_pair(world, EcsChildOf, p1);
+
+    ecs_entity_t p2 = ecs_new_w(world, Position);
+    ecs_new_w_pair(world, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
+    test_int(info->rematch_count_total, 0);
+    
+    ecs_defer_begin(world);
+    ecs_entity_t p3 = ecs_new_w(world, Position);
+    ecs_add(world, p3, Velocity);
+    ecs_new_w_pair(world, EcsChildOf, p3);
+    ecs_defer_end(world);
+
+    { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
+    test_int(info->rematch_count_total, 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_no_rematch_after_instantiate(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, base, Position);
+    ecs_new_w_pair(world, EcsChildOf, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
+    test_int(info->rematch_count_total, 0);
+    
+    ecs_new_w_pair(world, EcsIsA, base);
+
+    { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
+    test_int(info->rematch_count_total, 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_no_rematch_after_batched_instantiate(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, base, Position);
+    ecs_new_w_pair(world, EcsChildOf, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
+    test_int(info->rematch_count_total, 0);
+    
+    ecs_defer_begin(world);
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_add(world, i, Velocity);
+    ecs_defer_end(world);
+
+    { ecs_iter_t it = ecs_query_iter(world, q); ecs_iter_fini(&it); }
+    test_int(info->rematch_count_total, 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_rematch_after_delete_base_of_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base_base_1 = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base_base_1, Position, {10, 20});
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, base, EcsIsA, base_base_1);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(inst, it.entities[0]);
+        test_uint(base_base_1, ecs_field_src(&it, 0));
+        {
+            Position *p = ecs_field(&it, Position, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 10);
+            test_int(p->y, 20);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete(world, base_base_1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_rematch_after_delete_first_base_of_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base_base_1 = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base_base_1, Position, {10, 20});
+
+    ecs_entity_t base_base_2 = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base_base_2, Position, {20, 30});
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, base, EcsIsA, base_base_1);
+    ecs_add_pair(world, base, EcsIsA, base_base_2);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(inst, it.entities[0]);
+        test_uint(base_base_1, ecs_field_src(&it, 0));
+        {
+            Position *p = ecs_field(&it, Position, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 10);
+            test_int(p->y, 20);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete(world, base_base_1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(inst, it.entities[0]);
+        test_uint(base_base_2, ecs_field_src(&it, 0));
+        {
+            Position *p = ecs_field(&it, Position, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 20);
+            test_int(p->y, 30);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
