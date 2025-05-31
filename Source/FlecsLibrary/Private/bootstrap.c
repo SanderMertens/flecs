@@ -267,7 +267,7 @@ void flecs_register_on_delete_object(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_id_flag_for_relation(it, EcsOnDeleteTarget, 
         ECS_ID_ON_DELETE_TARGET_FLAG(ECS_PAIR_SECOND(id)),
-        EcsIdOnDeleteObjectMask,
+        EcsIdOnDeleteTargetMask,
         EcsEntityIsId);  
 }
 
@@ -569,13 +569,13 @@ ecs_table_t* flecs_bootstrap_component_table(
     /* Before creating table, manually set flags for ChildOf/Identifier, as this
      * can no longer be done after they are in use. */
     ecs_component_record_t *cr = flecs_components_ensure(world, EcsChildOf);
-    cr->flags |= EcsIdOnDeleteObjectDelete | EcsIdOnInstantiateDontInherit |
+    cr->flags |= EcsIdOnDeleteTargetDelete | EcsIdOnInstantiateDontInherit |
         EcsIdTraversable | EcsIdTag;
 
     /* Initialize id records cached on world */
     world->cr_childof_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, EcsWildcard));
-    world->cr_childof_wildcard->flags |= EcsIdOnDeleteObjectDelete | 
+    world->cr_childof_wildcard->flags |= EcsIdOnDeleteTargetDelete | 
         EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdTag | EcsIdExclusive;
     cr = flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsWildcard));
     cr->flags |= EcsIdOnInstantiateDontInherit;

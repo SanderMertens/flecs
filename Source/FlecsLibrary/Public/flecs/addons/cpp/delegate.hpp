@@ -256,6 +256,16 @@ struct each_delegate : public delegate {
         self->invoke(iter);
     }
 
+    // Static function that can be used as callback for systems/triggers. 
+    // Different from run() in that it loops the iterator.
+    static void run_each(ecs_iter_t *iter) {
+        auto self = static_cast<const each_delegate*>(iter->run_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        while (iter->next(iter)) {
+            self->invoke(iter);
+        }
+    }
+
     // Create instance of delegate
     static each_delegate* make(const Func& func) {
         return FLECS_NEW(each_delegate)(func);

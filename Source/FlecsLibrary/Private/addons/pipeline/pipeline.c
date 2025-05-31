@@ -574,7 +574,7 @@ int32_t flecs_run_pipeline_ops(
             s = stage;
         }
 
-        flecs_run_intern(world, s, sys->query->entity, sys, stage_index,
+        flecs_run_system(world, s, sys->query->entity, sys, stage_index,
             stage_count, delta_time, NULL);
 
         ecs_os_linc(&world->info.systems_ran_frame);

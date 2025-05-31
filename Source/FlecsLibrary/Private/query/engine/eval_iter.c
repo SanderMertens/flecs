@@ -271,6 +271,43 @@ yield:
     return true;
 }
 
+bool flecs_query_trivial_cached_next(
+    ecs_iter_t *it)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
+    ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
+    ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_query_run_ctx_t ctx;
+    flecs_query_iter_run_ctx_init(it, &ctx);
+
+    bool redo = it->flags & EcsIterIsValid;
+    if (redo) {
+        flecs_query_self_change_detection(it, qit, impl);
+    }
+
+    it->flags &= ~(EcsIterSkip);
+    it->flags |= EcsIterIsValid;
+    it->frame_offset += it->count;
+
+    ecs_assert(it->flags & EcsIterTrivialCached, ECS_INVALID_OPERATION,
+        "query does not have trivial cache, use ecs_query_next instead");
+    ecs_assert(it->flags & EcsIterTrivialSearch, ECS_INVALID_OPERATION,
+        "iterator has constrained variables, use ecs_query_next instead");
+    ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (flecs_query_is_trivial_cache_search(&ctx)) {
+        return true;
+    }
+
+    it->flags |= EcsIterSkip; /* Prevent change detection on fini */
+
+    ecs_iter_fini(it);
+    return false;
+}
+
 static
 void flecs_query_iter_fini_ctx(
     ecs_iter_t *it,
