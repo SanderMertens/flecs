@@ -10,13 +10,14 @@ UFlecsTransformModule::UFlecsTransformModule()
 {
 }
 
-void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
+void UFlecsTransformModule::InitializeModule(
+	TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
 	InWorld->RegisterComponentType<FFlecsLocationComponent>();
 	InWorld->RegisterComponentType<FFlecsRotationComponent>();
 	InWorld->RegisterComponentType<FFlecsScaleComponent>();
 }
 
-void UFlecsTransformModule::DeinitializeModule(UFlecsWorld* InWorld)
+void UFlecsTransformModule::DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld)
 {
 }

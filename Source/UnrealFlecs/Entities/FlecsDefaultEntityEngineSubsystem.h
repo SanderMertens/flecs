@@ -2,9 +2,10 @@
 
 #pragma once
 
+#include "flecs.h"
+
 #include "CoreMinimal.h"
 #include "FlecsDefaultEntitiesDeveloperSettings.h"
-#include "flecs.h"
 
 struct UNREALFLECS_API FFlecsDefaultEntityEngine final
 {

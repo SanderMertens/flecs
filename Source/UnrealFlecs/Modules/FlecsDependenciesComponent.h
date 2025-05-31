@@ -4,8 +4,9 @@
 
 #include <functional>
 
-#include "CoreMinimal.h"
 #include "flecs.h"
+
+#include "CoreMinimal.h"
 #include "Properties/FlecsComponentProperties.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "FlecsDependenciesComponent.generated.h"

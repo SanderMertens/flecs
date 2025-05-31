@@ -1,9 +1,10 @@
 ﻿
 #if WITH_AUTOMATION_TESTS
 
+#include "flecs.h"
+
 #include "Misc/AutomationTest.h"
 #include "HAL/PlatformProcess.h"
-#include "flecs.h"
 #include "Worlds/FlecsOSAPI.h"
 
 BEGIN_DEFINE_SPEC(FFlecsOSApiTestsSpec,

@@ -18,8 +18,8 @@ class UNREALFLECS_API UFlecsTickerModule final : public UFlecsModuleObject, publ
 public:
 	UFlecsTickerModule(const FObjectInitializer& InObjectInitializer);
 
-	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
-	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
+	virtual void InitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
+	virtual void DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld) override;
 
 	virtual void ProgressModule(double InDeltaTime) override;
 

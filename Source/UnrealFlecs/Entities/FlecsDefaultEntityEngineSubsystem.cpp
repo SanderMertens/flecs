@@ -69,8 +69,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 		DefaultEntityOptions.Add(Entity.name().c_str(), Entity.id());
 	});
 	
-	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
-	solid_check(IsValid(Settings));
+	MAYBE_UNUSED TSolidNonNullPtr Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
 
 	// @TODO: If we ever add back adding default entities in Developer Settings
 	/*#if WITH_EDITOR

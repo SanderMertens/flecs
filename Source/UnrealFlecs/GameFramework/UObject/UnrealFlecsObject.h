@@ -18,7 +18,7 @@ public:
 	UUnrealFlecsObject();
 	UUnrealFlecsObject(const FObjectInitializer& ObjectInitializer);
 
-	void InitializeFlecsObject(UFlecsWorld* InFlecsWorld);
+	void InitializeFlecsObject(TSolidNonNullPtr<UFlecsWorld> InFlecsWorld);
 	
 	// Inheriting class can override this if they want to customize their Entity creation
 	virtual FFlecsEntityHandle CreateObjectEntity();

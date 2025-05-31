@@ -5,8 +5,9 @@
 // ReSharper disable CppMemberFunctionMayBeStatic
 #pragma once
 
-#include "CoreMinimal.h"
 #include "flecs.h"
+
+#include "CoreMinimal.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
@@ -19,6 +20,7 @@
 #include "Engine/AssetManager.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
+#include "SolidMacros/Types/SolidNonNullPtr.h"
 #include "Entities/FlecsId.h"
 #include "Logs/FlecsCategories.h"
 #include "Modules/FlecsDependenciesComponent.h"
@@ -339,7 +341,10 @@ public:
 			ObjectDestructionComponentQuery.each([](flecs::iter& Iter, size_t IterIndex)
 			{
 				FFlecsEntityHandle InEntity = Iter.entity(IterIndex);
-				FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(0, IterIndex);
+				
+				const FFlecsUObjectComponent& InUObjectComponent
+					= Iter.field_at<FFlecsUObjectComponent>(0, IterIndex);
+				
 				if (!InUObjectComponent.IsValid())
 				{
 					UN_LOGF(LogFlecsWorld, Log,
@@ -570,7 +575,8 @@ public:
 	 * @tparam TModule The module class
 	 */
 	template <Solid::TStaticClassConcept TModule, typename TFunction>
-	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(UObject* InModuleObject, TFunction&& InFunction)
+	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(
+		const TSolidNonNullPtr<UObject> InModuleObject, TFunction&& InFunction)
 	{
 		RegisterModuleDependency(InModuleObject, TModule::StaticClass(),
 			[InFunction = std::forward<TFunction>(InFunction)]
@@ -589,10 +595,10 @@ public:
 	 * @param InFunction The function to call when the dependency is imported
 	 */
 	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(
-		const UObject* InModuleObject, const TSubclassOf<UFlecsModuleInterface>& InDependencyClass,
+		const TSolidNonNullPtr<const UObject> InModuleObject,
+		const TSubclassOf<UFlecsModuleInterface>& InDependencyClass,
 		const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& InFunction)
 	{
-		solid_check(IsValid(InModuleObject));
 		solid_check(InModuleObject->Implements<UFlecsModuleInterface>());
 
 		solid_checkf(IsModuleImported(InModuleObject->GetClass()), TEXT("Module %s is not imported"),
@@ -881,15 +887,6 @@ public:
 		InModule->ImportModule(World);
 	}
 	
-	FORCEINLINE_DEBUGGABLE void ImportModule(UObject* InModule)
-	{
-		solid_checkf(IsValid(InModule), TEXT("Module is nullptr"));
-		solid_checkf(InModule->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
-			TEXT("Module %s does not implement UFlecsModuleInterface"), *InModule->GetName());
-		
-		CastChecked<IFlecsModuleInterface>(InModule)->ImportModule(World);
-	}
-	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE bool IsModuleImported(const TSubclassOf<UObject> InModule) const
 	{
@@ -940,7 +937,7 @@ public:
 	}
 
 	template <Solid::TStaticClassConcept T>
-	NO_DISCARD FORCEINLINE_DEBUGGABLE T* GetModule() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE TSolidNonNullPtr<T> GetModule() const
 	{
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity<T>();
 		return ModuleEntity.GetPairPtr<FFlecsUObjectComponent, FFlecsModuleComponentTag>()->GetObjectChecked<T>();
@@ -1536,7 +1533,7 @@ public:
 							solid_check(Ptr != nullptr);
 							solid_check(TypeInfo->hooks.ctx != nullptr);
 
-							UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+							const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
 							solid_check(IsValid(ScriptStruct));
 
 							ScriptStruct->InitializeStruct(Ptr, Count);
@@ -1555,7 +1552,7 @@ public:
 							solid_check(Ptr != nullptr);
 							solid_check(TypeInfo->hooks.ctx != nullptr);
 
-							UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+							const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
 							solid_check(IsValid(ScriptStruct));
 
 							ScriptStruct->DestroyStruct(Ptr, Count);
@@ -1573,7 +1570,7 @@ public:
 						solid_check(Dst != nullptr);
 						solid_check(TypeInfo->hooks.ctx != nullptr);
 
-						UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+						const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
 						solid_check(IsValid(ScriptStruct));
 
 						ScriptStruct->CopyScriptStruct(Dst, Src, Count);
@@ -1586,7 +1583,7 @@ public:
 						solid_check(Dst != nullptr);
 						solid_check(TypeInfo->hooks.ctx != nullptr);
 
-						UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+						const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
 						solid_check(IsValid(ScriptStruct));
 
 						ScriptStruct->CopyScriptStruct(Dst, Src, Count);
@@ -1602,7 +1599,7 @@ public:
 							solid_check(Ptr2 != nullptr);
 							solid_check(TypeInfo->hooks.ctx != nullptr);
 
-							UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+							const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
 							solid_check(IsValid(ScriptStruct));
 
 							return ScriptStruct->CompareScriptStruct(Ptr1, Ptr2, PPF_DeepComparison);
@@ -1670,13 +1667,11 @@ public:
 		return RegisterComponentEnumType(ScriptEnum);
 	}
 	
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentEnumType(const UEnum* ScriptEnum) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentEnumType(TSolidNonNullPtr<const UEnum> ScriptEnum) const
 	{
-		solid_check(IsValid(ScriptEnum));
-
 		const FFlecsEntityHandle OldScope = ClearScope();
 
-		solid_checkf(!TypeMapComponent->ScriptEnumMap.contains(ScriptEnum),
+		solid_checkf(!TypeMapComponent->ScriptEnumMap.contains(ScriptEnum.Get()),
 			TEXT("Script enum %s is already registered"), *ScriptEnum->GetName());
 
 		flecs::untyped_component ScriptEnumComponent;
@@ -1729,7 +1724,7 @@ public:
 			TypeMapComponent->ScriptEnumMap.emplace(ScriptEnum, ScriptEnumComponent);
 		});
 
-		ScriptEnumComponent.set<FFlecsScriptEnumComponent>({ ScriptEnum });
+		ScriptEnumComponent.set<FFlecsScriptEnumComponent>(FFlecsScriptEnumComponent{ ScriptEnum.Get() });
 
 		SetScope(OldScope);
 		return ScriptEnumComponent;
@@ -1918,7 +1913,9 @@ public:
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
 	{
 		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
-		return LookupEntity(StringCast<char>(*Tag.GetTagName().ToString()).Get(), ".", ".");
+		return LookupEntity(
+			StringCast<char>(*Tag.GetTagName().ToString()).Get(),
+			".", ".");
 	}
 
 	template <typename T>

@@ -2,9 +2,10 @@
 
 #pragma once
 
+#include "flecs.h"
+
 #include "CoreMinimal.h"
 #include "FlecsQueryExpression.h"
-#include "flecs.h"
 #include "Queries/Enums/FlecsQueryOperators.h"
 #include "FlecsOperQueryExpression.generated.h"
 

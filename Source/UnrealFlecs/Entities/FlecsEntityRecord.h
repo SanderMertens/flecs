@@ -147,7 +147,8 @@ struct UNREALFLECS_API FFlecsRecordPair
 				{
 					case EFlecsPairNodeType::ScriptStruct:
 						{
-							InEntityHandle.SetPairSecond(First.EntityHandle, Second.PairScriptStruct.GetScriptStruct(),
+							InEntityHandle.SetPairSecond(First.EntityHandle,
+								Second.PairScriptStruct.GetScriptStruct(),
 								Second.PairScriptStruct.GetMemory());
 						}
 					break;
@@ -170,7 +171,8 @@ struct UNREALFLECS_API FFlecsRecordPair
 				{
 					case EFlecsPairNodeType::ScriptStruct:
 						{
-							InEntityHandle.SetPairSecond(First.GameplayTag, Second.PairScriptStruct.GetScriptStruct(),
+							InEntityHandle.SetPairSecond(First.GameplayTag,
+								Second.PairScriptStruct.GetScriptStruct(),
 								Second.PairScriptStruct.GetMemory());
 						}
 					break;
@@ -291,7 +293,9 @@ public:
 			InEntityHandle.SetName(Name);
 		}
 
-		for (const auto& [NodeType, ScriptStruct, ScriptEnum, EntityHandle, GameplayTag, Pair] : Components)
+		for (const auto&
+			[NodeType, ScriptStruct, ScriptEnum,
+				EntityHandle, GameplayTag, Pair] : Components)
 		{
 			switch (NodeType)
 			{

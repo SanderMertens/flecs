@@ -16,7 +16,8 @@ void FFlecsQueryTermExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder
 		case EFlecsQueryInputType::ScriptStruct:
 			{
 				const UScriptStruct* Struct = InputType.ScriptStruct;
-				solid_checkf(IsValid(Struct), TEXT("Invalid ScriptStruct provided for query term expression"));
+				solid_checkf(IsValid(Struct),
+					TEXT("Invalid ScriptStruct provided for query term expression"));
 				
 				const FFlecsEntityHandle ScriptStructEntity = InWorld->ObtainComponentTypeStruct(Struct);
 				solid_check(ScriptStructEntity.IsValid());

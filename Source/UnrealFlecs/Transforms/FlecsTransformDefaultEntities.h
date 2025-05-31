@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "flecs.h"
+
+#include "CoreMinimal.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 
 // Gets the closest Entity with FGlobalTransform

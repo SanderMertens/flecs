@@ -5,8 +5,9 @@
 
 #include <functional>
 
-#include "CoreMinimal.h"
 #include "flecs.h"
+
+#include "CoreMinimal.h"
 #include "FlecsArchetype.h"
 #include "FlecsId.h"
 #include "GameplayTagContainer.h"

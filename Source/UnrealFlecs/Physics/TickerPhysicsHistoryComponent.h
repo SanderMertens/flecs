@@ -2,9 +2,10 @@
 
 #pragma once
 
+#include "flecs.h"
+
 #include "CoreMinimal.h"
 #include "Properties/FlecsComponentProperties.h"
-#include "flecs.h"
 #include "TickerPhysicsHistoryComponent.generated.h"
 
 USTRUCT()

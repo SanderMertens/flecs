@@ -8,8 +8,9 @@
 #include <thread>
 #include <unordered_map>
 
-#include "CoreMinimal.h"
 #include "flecs.h"
+
+#include "CoreMinimal.h"
 #include "FlecsWorld.h"
 #include "FlecsWorldInfoSettings.h"
 #include "FlecsWorldSettingsAsset.h"
@@ -27,9 +28,9 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "FlecsWorldSubsystem.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldCreated, UFlecsWorld*);
-DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldBeginPlay, UWorld*);
-DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldDestroyed, UFlecsWorld*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldCreated, TSolidNonNullPtr<UFlecsWorld>);
+DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldBeginPlay, TSolidNonNullPtr<UWorld>);
+DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldDestroyed, TSolidNonNullPtr<UFlecsWorld>);
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsystem
@@ -55,10 +56,11 @@ public:
 		SetTickableTickType(ETickableTickType::Always);
 
 		solid_check(IsValid(GetWorld()->GetWorldSettings()));
-		checkf(GetWorld()->GetWorldSettings()->IsA<AFlecsWorldSettings>(),
+		solid_checkf(GetWorld()->GetWorldSettings()->IsA<AFlecsWorldSettings>(),
 			TEXT("World settings must be of type AFlecsWorldSettings"));
 
-		const AFlecsWorldSettings* SettingsActor = CastChecked<AFlecsWorldSettings>(GetWorld()->GetWorldSettings());
+		const TSolidNonNullPtr<const AFlecsWorldSettings> SettingsActor
+			= CastChecked<AFlecsWorldSettings>(GetWorld()->GetWorldSettings());
 
 		if (const UFlecsWorldSettingsAsset* SettingsAsset = SettingsActor->DefaultWorld)
 		{
@@ -155,7 +157,7 @@ public:
 
 		DefaultWorld->InitializeSystems();
 
-		RegisterAllGameplayTags(DefaultWorld);
+		RegisterAllGameplayTags(DefaultWorld.Get());
 		
 		for (const FFlecsDefaultMetaEntity& DefaultEntity : DefaultEntities)
 		{
@@ -183,9 +185,8 @@ public:
 
 		DefaultWorld->WorldStart();
 
-		for (UObject* Module : Settings.Modules)
+		for (TSolidNonNullPtr<UObject> Module : Settings.Modules)
 		{
-			solid_check(IsValid(Module));
 			solid_check(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()));
 			
 			DefaultWorld->ImportModule(Module);
@@ -193,9 +194,8 @@ public:
 
 		#if WITH_EDITOR
 
-		for (UObject* Module : Settings.EditorModules)
+		for (TSolidNonNullPtr<UObject> Module : Settings.EditorModules)
 		{
-			solid_checkf(IsValid(Module), TEXT("Module is not valid!"));
 			solid_checkf(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
 				TEXT("Module %s does not implement UFlecsModuleInterface"), *Module->GetName());
 			
@@ -204,7 +204,7 @@ public:
 
 		#endif // WITH_EDITOR
 		
-		OnWorldCreatedDelegate.Broadcast(DefaultWorld);
+		OnWorldCreatedDelegate.Broadcast(DefaultWorld.Get());
 		
 		return DefaultWorld;
 	}
@@ -274,7 +274,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UFlecsWorld> DefaultWorld;
 
-	void RegisterAllGameplayTags(const UFlecsWorld* InFlecsWorld)
+	void RegisterAllGameplayTags(const TSolidNonNullPtr<const UFlecsWorld> InFlecsWorld)
 	{
 		FGameplayTagContainer AllTags;
 		UGameplayTagsManager::Get().RequestAllGameplayTags(AllTags, false);

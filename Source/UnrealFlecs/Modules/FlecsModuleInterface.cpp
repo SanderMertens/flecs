@@ -64,7 +64,7 @@ void IFlecsModuleInterface::DeinitializeModule_Internal()
 
 	if (World.IsValid())
 	{
-		UFlecsWorld* FlecsWorld = World.Get();
+		const TSolidNonNullPtr<UFlecsWorld> FlecsWorld = World.Get();
 		
 		DeinitializeModule(FlecsWorld);
 		Execute_BP_DeinitializeModule(_getUObject(), FlecsWorld);
@@ -74,15 +74,15 @@ void IFlecsModuleInterface::DeinitializeModule_Internal()
 		"Deinitialized module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }
 
-void IFlecsModuleInterface::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
+void IFlecsModuleInterface::InitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
 }
 
-void IFlecsModuleInterface::WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld)
+void IFlecsModuleInterface::WorldBeginPlay(TSolidNonNullPtr<UFlecsWorld> InWorld, TSolidNonNullPtr<UWorld> InGameWorld)
 {
 }
 
-void IFlecsModuleInterface::DeinitializeModule(UFlecsWorld* InWorld)
+void IFlecsModuleInterface::DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld)
 {
 }
 

@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "flecs.h"
+
+#include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsQueryOperators.generated.h"
 

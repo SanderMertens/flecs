@@ -6,9 +6,8 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsPrefabObject)
 
-void UFlecsPrefabObject::CreatePrefab(UFlecsWorld* InWorld)
+void UFlecsPrefabObject::CreatePrefab(const TSolidNonNullPtr<UFlecsWorld> InWorld)
 {
-	solid_checkf(IsValid(InWorld), TEXT("World is not valid!"));
 	FlecsWorld = InWorld;
 
 	PrefabEntityHandle = InWorld->CreatePrefab(PrefabName);

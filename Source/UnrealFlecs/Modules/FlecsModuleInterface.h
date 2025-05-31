@@ -3,8 +3,9 @@
 // ReSharper disable IdentifierTypo
 #pragma once
 
-#include "CoreMinimal.h"
 #include "flecs.h"
+
+#include "CoreMinimal.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "Interfaces/FlecsEntityInterface.h"
 #include "SolidMacros/Macros.h"
@@ -32,17 +33,17 @@ public:
 	
 	void DeinitializeModule_Internal();
 
-	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity);
+	virtual void InitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity);
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs | Modules", meta = (DisplayName = "Initialize Module"))
 	void BP_InitializeModule(UFlecsWorld* InWorld);
 
-	virtual void WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld);
+	virtual void WorldBeginPlay(TSolidNonNullPtr<UFlecsWorld> InWorld, TSolidNonNullPtr<UWorld> InGameWorld);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs | Modules", meta = (DisplayName = "World Begin Play"))
 	void BP_WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld);
 
-	virtual void DeinitializeModule(UFlecsWorld* InWorld);
+	virtual void DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs | Modules", meta = (DisplayName = "Deinitialize Module"))
 	void BP_DeinitializeModule(UFlecsWorld* InWorld);
