@@ -123,7 +123,7 @@ struct UNREALFLECS_API FFlecsRecordPair
 						{
 							if (PairValueType == EFlecsValuePairType::First)
 							{
-								InEntityHandle.SetPair(First.PairScriptStruct.GetScriptStruct(),
+								InEntityHandle.SetPairFirst(First.PairScriptStruct.GetScriptStruct(),
 									First.PairScriptStruct.GetMemory(), Second.PairScriptStruct.GetScriptStruct());
 							}
 						}
@@ -147,7 +147,6 @@ struct UNREALFLECS_API FFlecsRecordPair
 				{
 					case EFlecsPairNodeType::ScriptStruct:
 						{
-							InEntityHandle.AddPair(First.EntityHandle, Second.PairScriptStruct.GetScriptStruct());
 							InEntityHandle.SetPairSecond(First.EntityHandle, Second.PairScriptStruct.GetScriptStruct(),
 								Second.PairScriptStruct.GetMemory());
 						}
@@ -171,7 +170,6 @@ struct UNREALFLECS_API FFlecsRecordPair
 				{
 					case EFlecsPairNodeType::ScriptStruct:
 						{
-							InEntityHandle.AddPair(First.GameplayTag, Second.PairScriptStruct.GetScriptStruct());
 							InEntityHandle.SetPairSecond(First.GameplayTag, Second.PairScriptStruct.GetScriptStruct(),
 								Second.PairScriptStruct.GetMemory());
 						}

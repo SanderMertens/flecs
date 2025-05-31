@@ -1,6 +1,5 @@
 ﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
-
 #if WITH_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
@@ -178,6 +177,108 @@ void FEntityBasicTestsSpec::Define()
 			TestEqual("Deserialized entity value should be 42",
 				DeserializedEntity.Get<FTestComponent>().Value, 42);
 		});
+	});
+
+	Describe("Entity Pairs", [this]()
+	{
+		It("Should create an entity with a pair", [this]()
+		{
+			FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
+			FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
+			
+			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			
+			EntityHandle.AddPair(FirstEntity, SecondEntity);
+			TestTrue("Entity should have a pair",
+				EntityHandle.HasPair(FirstEntity, SecondEntity));
+		});
+
+		It("Should create an entity with a pair and then remove it", [this]()
+		{
+			FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
+			FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
+			
+			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			
+			EntityHandle.AddPair(FirstEntity, SecondEntity);
+			TestTrue("Entity should have a pair",
+				EntityHandle.HasPair(FirstEntity, SecondEntity));
+			
+			EntityHandle.RemovePair(FirstEntity, SecondEntity);
+			TestFalse("Entity should not have a pair",
+				EntityHandle.HasPair(FirstEntity, SecondEntity));
+		});
+
+		It("Should create an entity with multiple pairs", [this]()
+		{
+			FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
+			FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
+			FFlecsEntityHandle ThirdEntity = Fixture.FlecsWorld->CreateEntity(TEXT("ThirdEntity"));
+			
+			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			
+			EntityHandle.AddPair(FirstEntity, SecondEntity);
+			EntityHandle.AddPair(FirstEntity, ThirdEntity);
+			
+			TestTrue("Entity should have a pair with First and Second",
+				EntityHandle.HasPair(FirstEntity, SecondEntity));
+			TestTrue("Entity should have a pair with First and Third",
+				EntityHandle.HasPair(FirstEntity, ThirdEntity));
+		});
+
+		It("Should create an entity with a pair that has a component in the first of the pair (with data)",
+			[this]()
+		{
+			struct FTestPairComponent
+			{
+				int32 Value;
+			};
+
+			Fixture.FlecsWorld->RegisterComponentType<FTestPairComponent>()
+				.member<int32>("Value");
+				
+			FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
+			
+			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			
+			EntityHandle.SetPairFirst<FTestPairComponent>(SecondEntity, { .Value = 100 });
+
+			TestTrue("Entity should have a pair with SecondEntity without data",
+				EntityHandle.HasPair<FTestPairComponent>(SecondEntity));
+			TestFalse("Entity should not have a pair with SecondEntity",
+				EntityHandle.HasPairSecond<FTestPairComponent>(SecondEntity));
+			TestEqual("Entity pair component value should be 100", 
+				EntityHandle.GetPair<FTestPairComponent>(SecondEntity).Value, 100);
+		});
+
+		It("Should create an entity with a pair that has a component in the second of the pair (with data)",
+			[this]()
+		{
+			struct FTestPairComponent
+			{
+				int32 Value;
+			};
+
+			Fixture.FlecsWorld->RegisterComponentType<FTestPairComponent>()
+				.member<int32>("Value");
+				
+				
+			FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
+			
+			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			
+			EntityHandle.SetPairSecond<FTestPairComponent>(FirstEntity, { .Value = 200 });
+
+			TestTrue("Entity should have a pair with FirstEntity without data",
+				EntityHandle.HasPairSecond<FTestPairComponent>(FirstEntity));
+			TestFalse("Entity should not have a pair with FirstEntity",
+				EntityHandle.HasPair<FTestPairComponent>(FirstEntity));
+			TestEqual("Entity pair component value should be 200", 
+				EntityHandle.GetPairSecond<FTestPairComponent>(FirstEntity).Value, 200);
+		});
+
+		
+		
 	});
 }
 

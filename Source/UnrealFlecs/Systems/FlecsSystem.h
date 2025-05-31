@@ -39,7 +39,8 @@ public:
 	}
 	
 	template <typename ...TComponents>
-	NO_DISCARD FORCEINLINE static flecs::system_builder<TComponents...> CreateSystem(flecs::world& InWorld, const TCHAR* InName)
+	NO_DISCARD FORCEINLINE static flecs::system_builder<TComponents...> CreateSystem(
+		flecs::world& InWorld, const TCHAR* InName)
 	{
 		return InWorld.system<TComponents...>(StringCast<char>(InName).Get());
 	}

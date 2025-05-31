@@ -22,7 +22,8 @@ FFlecsDefaultEntityEngine::~FFlecsDefaultEntityEngine()
 	}
 }
 
-flecs::entity FFlecsDefaultEntityEngine::CreateDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity, flecs::world& World)
+flecs::entity FFlecsDefaultEntityEngine::CreateDefaultEntity(
+	const FFlecsDefaultMetaEntity& DefaultEntity, flecs::world& World)
 {
 	flecs::entity Entity = World.make_alive(DefaultEntity.EntityId);
 	Entity.set_name(StringCast<char>(*DefaultEntity.EntityName).Get());
@@ -71,6 +72,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
 	solid_check(IsValid(Settings));
 
+	// @TODO: If we ever add back adding default entities in Developer Settings
 	/*#if WITH_EDITOR
 	
 	Settings->OnSettingChanged().AddLambda([this](UObject* Object, FPropertyChangedEvent& Event)

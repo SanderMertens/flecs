@@ -38,7 +38,7 @@ public:
         Query = InWorld.query<TArgs...>(InName);
     }
 
-    FFlecsQuery(UFlecsWorld* InFlecsWorld, const FString& InName, const FFlecsQueryDefinition& InDefinition);
+    FFlecsQuery(const TSolidNonNullPtr<UFlecsWorld> InFlecsWorld, const FString& InName, const FFlecsQueryDefinition& InDefinition);
 
     NO_DISCARD FORCEINLINE bool HasChanged() const
     {

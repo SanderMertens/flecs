@@ -27,7 +27,7 @@ void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 			ModuleEntity = FlecsWorld->CreateEntity(Execute_GetModuleName(_getUObject()));
 			
 			ModuleEntity.Add(flecs::Module);
-			ModuleEntity.SetPair<FFlecsUObjectComponent, FFlecsModuleComponentTag>(FFlecsUObjectComponent{ _getUObject() });
+			ModuleEntity.SetPairFirst<FFlecsUObjectComponent, FFlecsModuleComponentTag>(FFlecsUObjectComponent{ _getUObject() });
 			
 			ModuleEntity.Set<FFlecsModuleComponent>({ _getUObject()->GetClass() });
 		});

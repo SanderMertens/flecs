@@ -982,6 +982,10 @@ public:
 		World.defer<TFunction>(std::forward<TFunction>(Function));
 	}
 
+	/**
+	 * @brief End or Suspend the defer state and execute the lambda function.
+	 * @param bEndDefer If true, the defer state will be ended after the function is executed, otherwise it will be suspended and resumed after the function is executed.
+	 */
 	template <typename TFunction>
 	FORCEINLINE_DEBUGGABLE void DeferEndLambda(TFunction&& Function, const bool bEndDefer = false) const
 	{
@@ -1035,7 +1039,7 @@ public:
 	}
 
 	template <typename TFunction>
-	FORCEINLINE_DEBUGGABLE void WithScoped(FFlecsId InId, TFunction&& Function) const
+	FORCEINLINE_DEBUGGABLE void WithScoped(const FFlecsId InId, TFunction&& Function) const
 	{
 		World.with(InId, std::forward<TFunction>(Function));
 	}
@@ -1248,6 +1252,18 @@ public:
 	{
 		World.children(std::forward<FunctionType>(Function));
 	}
+
+	template <typename T, typename FunctionType>
+	FORCEINLINE_DEBUGGABLE void ForEachChild(FunctionType&& Function) const
+	{
+		World.children<T>(std::forward<FunctionType>(Function));
+	}
+
+	template <typename FunctionType>
+	FORCEINLINE_DEBUGGABLE void ForEachChild(const FFlecsId& InRelationId, FunctionType&& Function) const
+	{
+		World.children(InRelationId, std::forward<FunctionType>(Function));
+	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE void SetThreads(const int32 InThreadCount) const
@@ -1345,9 +1361,9 @@ public:
 		return HasScriptEnum(StaticEnum<T>());
 	}
 	
-	void RegisterMemberProperties(const UStruct* InStruct, const FFlecsEntityHandle& InEntity) const
+	void RegisterMemberProperties(
+		const TSolidNonNullPtr<const UStruct> InStruct, const FFlecsEntityHandle& InEntity) const
 	{
-		solid_checkf(IsValid(InStruct), TEXT("Struct is nullptr"));
 		solid_checkf(InEntity.IsValid(), TEXT("Entity is nullptr"));
 		
 		flecs::untyped_component UntypedComponent = InEntity.GetUntypedComponent_Unsafe();
@@ -1790,7 +1806,8 @@ public:
 		return Component;
 	}
 	
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentType(const UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentType(
+		const TSolidNonNullPtr<const UScriptStruct> ScriptStruct) const
 	{
 		if (HasScriptStruct(ScriptStruct))
 		{
@@ -1803,55 +1820,30 @@ public:
 	template <typename T>
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeStruct() const
 	{
-		#ifdef FLECS_CPP_NO_AUTO_REGISTRATION
 		solid_checkf(World.is_valid(flecs::_::type<T>::id(World)),
 			TEXT("Component %hs is not registered"), nameof(T).data());
 		return World.component<T>();
-		#else
-		return World.component<T>();
-		#endif // FLECS_CPP_NO_AUTO_REGISTRATION
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeStruct(
+		const UScriptStruct* ScriptStruct) const
 	{
-		#ifndef FLECS_CPP_NO_AUTO_REGISTRATION
+		solid_check(IsValid(ScriptStruct));
 		
-		if (HasScriptStruct(ScriptStruct))
-		{
-			return GetScriptStructEntity(ScriptStruct);
-		}
-
-		return RegisterScriptStruct(ScriptStruct);
-		
-		#else
-
 		solid_checkf(HasScriptStruct(ScriptStruct), TEXT("Script struct %s is not registered"),
 			*ScriptStruct->GetStructCPPName());
 		return GetScriptStructEntity(ScriptStruct);
-
-		#endif // !FLECS_CPP_NO_AUTO_REGISTRATION
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeEnum(const UEnum* ScriptEnum) const
 	{
-		#ifndef FLECS_CPP_NO_AUTO_REGISTRATION
+		solid_check(IsValid(ScriptEnum));
 		
-		if (HasScriptEnum(ScriptEnum))
-		{
-			return GetScriptEnumEntity(ScriptEnum);
-		}
-
-		return RegisterScriptEnum(ScriptEnum);
-		
-		#else
-
 		solid_checkf(HasScriptEnum(ScriptEnum), TEXT("Script enum %s is not registered"),
 			*ScriptEnum->GetName());
 		return GetScriptEnumEntity(ScriptEnum);
-
-		#endif // !FLECS_CPP_NO_AUTO_REGISTRATION
 	}
 
 	template <typename ...TComponents>

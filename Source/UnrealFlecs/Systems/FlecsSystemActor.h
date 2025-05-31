@@ -14,6 +14,7 @@ class UNREALFLECS_API AFlecsSystemActor : public AActor, public IFlecsSystemInte
 	GENERATED_BODY()
 
 public:
+	AFlecsSystemActor();
 	AFlecsSystemActor(const FObjectInitializer& ObjectInitializer);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs", meta = (ExposeOnSpawn = true))

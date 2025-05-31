@@ -10,13 +10,12 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityHandle)
 
-FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const UFlecsWorld* InWorld)
+FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const TSolidNonNullPtr<const UFlecsWorld> InWorld)
 {
-    solid_checkf(::IsValid(InWorld), TEXT("Flecs World not found"));
     return flecs::entity::null(InWorld->World);
 }
 
-FFlecsEntityHandle::FFlecsEntityHandle(const UFlecsWorld* InWorld, const FFlecsId InEntity)
+FFlecsEntityHandle::FFlecsEntityHandle(const TSolidNonNullPtr<const UFlecsWorld> InWorld, const FFlecsId InEntity)
 {
     SetEntity(flecs::entity(InWorld->World, InEntity));
 }
@@ -47,15 +46,14 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
     return true;
 }
 
-FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptStruct* StructType) const
+FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(
+    const TSolidNonNullPtr<const UScriptStruct> StructType) const
 {
-    solid_checkf(::IsValid(StructType), TEXT("Struct type is not valid"));
     return GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
 }
 
-FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeEnum(const UEnum* EnumType) const
+FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeEnum(const TSolidNonNullPtr<const UEnum> EnumType) const
 {
-    solid_checkf(::IsValid(EnumType), TEXT("Enum type is not valid"));
     return GetFlecsWorld()->ObtainComponentTypeEnum(EnumType);
 }
 
@@ -68,6 +66,7 @@ void FFlecsEntityHandle::AddCollection(UObject* Collection) const
 
 FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) const
 {
+    solid_checkf(InTag.IsValid(), TEXT("Invalid GameplayTag provided for GetTagEntity"));
     return GetFlecsWorld()->GetTagEntity(InTag);
 }
 
