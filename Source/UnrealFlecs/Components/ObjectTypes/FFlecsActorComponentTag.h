@@ -13,7 +13,8 @@ struct UNREALFLECS_API FFlecsActorComponentTag : public FFlecsUObjectTag
 	GENERATED_BODY()
 }; // struct FFlecsActorComponentTag
 
-REGISTER_FLECS_COMPONENT(FFlecsActorComponentTag, [](flecs::world InWorld, flecs::untyped_component InComponent)
+REGISTER_FLECS_COMPONENT(FFlecsActorComponentTag,
+	[](flecs::world InWorld, flecs::untyped_component InComponent)
 	{
 		InComponent.add(flecs::Target);
 	});
