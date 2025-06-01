@@ -49,14 +49,15 @@ void UFlecsPhysicsModule::WorldBeginPlay(TSolidNonNullPtr<UFlecsWorld> InWorld, 
 
 	InWorld->RegisterModuleDependency<UFlecsTickerModule>
 		(this, [this](
-				MAYBE_UNUSED UFlecsTickerModule* InModuleObject,
-				UFlecsWorld* InFlecsWorld,
+				MAYBE_UNUSED TSolidNonNullPtr<UFlecsTickerModule> InModuleObject,
+				TSolidNonNullPtr<UFlecsWorld> InFlecsWorld,
 				MAYBE_UNUSED FFlecsEntityHandle& InTickerEntity)
 		{
+			solid_check(Scene);
+			
 			InFlecsWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
 
-			const UFlecsTickerModule* TickerModule = InFlecsWorld->GetModule<UFlecsTickerModule>();
-			solid_check(IsValid(TickerModule));
+			const TSolidNonNullPtr<UFlecsTickerModule> TickerModule = InFlecsWorld->GetModule<UFlecsTickerModule>();
 			
 			Scene->GetSolver()->EnableAsyncMode(1.0 / static_cast<double>(TickerModule->GetTickerRate()));
 			Scene->GetSolver()->SetIsDeterministic(true);

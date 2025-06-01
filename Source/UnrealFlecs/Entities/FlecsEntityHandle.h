@@ -25,6 +25,7 @@ class UFlecsWorld;
  * A handle for managing flecs entities in Unreal Engine with added blueprint support.
  * The structure provides several utility functions to interact with flecs entities,
  * including validation, component addition/removal, and direct data access.
+ * This must be used with a valid `UFlecsWorld` instance to function correctly.
  */
 USTRUCT(BlueprintType, meta = (DisableSplitPin))
 struct alignas(8) UNREALFLECS_API FFlecsEntityHandle

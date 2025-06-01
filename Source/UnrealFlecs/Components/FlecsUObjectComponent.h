@@ -5,6 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
+#include "SolidMacros/Types/SolidNonNullPtr.h"
 #include "UObject/Object.h"
 #include "Properties/FlecsComponentProperties.h"
 #include "FlecsUObjectComponent.generated.h"
@@ -41,14 +42,14 @@ public:
         return Cast<T>(GetObject());
     }
 
-    NO_DISCARD FORCEINLINE UObject* GetObjectChecked() const
+    NO_DISCARD FORCEINLINE TSolidNonNullPtr<UObject> GetObjectChecked() const
     {
         solid_checkf(IsValid(), TEXT("Object is not valid!"));
-        return Object.Get();
+        return Object;
     }
 
     template <Solid::TStaticClassConcept T>
-    NO_DISCARD FORCEINLINE T* GetObjectChecked() const
+    NO_DISCARD FORCEINLINE TSolidNonNullPtr<T> GetObjectChecked() const
     {
         return CastChecked<T>(GetObject());
     }
@@ -65,7 +66,7 @@ public:
         return Object->IsA<T>();
     }
     
-    NO_DISCARD FORCEINLINE bool IsA(const UClass* InClass) const
+    NO_DISCARD FORCEINLINE bool IsA(const TSolidNonNullPtr<UClass> InClass) const
     {
         return Object->IsA(InClass);
     }

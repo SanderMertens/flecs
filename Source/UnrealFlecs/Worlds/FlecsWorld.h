@@ -95,7 +95,7 @@ public:
 		if (!GIsAutomationTesting)
 		{
 		#endif // WITH_AUTOMATION_TESTS
-		InitializeAssetRegistry();
+			InitializeAssetRegistry();
 		#if WITH_AUTOMATION_TESTS
 		}
 		#endif // WITH_AUTOMATION_TESTS
@@ -317,6 +317,7 @@ public:
 						
 						const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get().
 							GetComponentProperties(StructSymbolCStr);
+						solid_check(Properties);
 
 						std::invoke(Properties->RegistrationFunction, Iter.world(), InUntypedComponent);
 					}
@@ -330,26 +331,23 @@ public:
 				});
 			});
 
-		ObjectDestructionComponentQuery = World.query_builder("UObjectDestructionComponentQuery")
-			.with<FFlecsUObjectComponent>(flecs::Wildcard)
-			.term_at(0).second(flecs::Wildcard)
+		ObjectDestructionComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectDestructionComponentQuery")
+			.term_at(0).second(flecs::Wildcard) // FFlecsUObjectComponent
 			.cached()
 			.build();
 
 		FCoreUObjectDelegates::GarbageCollectComplete.AddWeakLambda(this, [this]
 		{
-			ObjectDestructionComponentQuery.each([](flecs::iter& Iter, size_t IterIndex)
+			ObjectDestructionComponentQuery.each(
+				[](flecs::entity InEntity, const FFlecsUObjectComponent& InUObjectComponent)
 			{
-				FFlecsEntityHandle InEntity = Iter.entity(IterIndex);
-				
-				const FFlecsUObjectComponent& InUObjectComponent
-					= Iter.field_at<FFlecsUObjectComponent>(0, IterIndex);
-				
+				const FFlecsEntityHandle EntityHandle = InEntity;
+					
 				if (!InUObjectComponent.IsValid())
 				{
 					UN_LOGF(LogFlecsWorld, Log,
-						"Entity Garbage Collected: %s", StringCast<char>(*InEntity.GetName()).Get());
-					InEntity.Destroy();
+						"Entity Garbage Collected: %s", StringCast<char>(*EntityHandle.GetName()).Get());
+					EntityHandle.Destroy();
 				}
 			});
 		});
@@ -362,21 +360,20 @@ public:
 			.cached()
 			.build();
 
-		CreateObserver(TEXT("AddModuleComponentObserver"))
-			.with<FFlecsModuleComponent>()
-			.with<FFlecsUObjectComponent, FFlecsModuleComponentTag>().filter()
-			.event(flecs::OnAdd)
+		CreateObserver<const FFlecsUObjectComponent>("AddModuleComponentObserver")
+			.term_at(0).second<FFlecsModuleComponentTag>().filter() // FFlecsUObjectComponent
+			.with<FFlecsModuleComponent>().event(flecs::OnAdd)
 			.yield_existing()
-			.each([this](flecs::iter Iter, size_t IterIndex)
+			.each([this](flecs::entity InEntity, const FFlecsUObjectComponent& InUObjectComponent)
 			{
-				const FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, IterIndex);
+				const TSolidNonNullPtr<UObject> ObjectPtr = InUObjectComponent.GetObjectChecked();
+
+				UN_LOGF(LogFlecsWorld, Log,
+					"Module component %s added", *ObjectPtr->GetName());
 				
-				UN_LOGF(LogFlecsWorld, Log, "Module component %s added",
-                    *InUObjectComponent.GetObjectChecked()->GetName());
-				
-				if (InUObjectComponent.GetObjectChecked()->Implements<UFlecsModuleProgressInterface>())
+				if (ObjectPtr->Implements<UFlecsModuleProgressInterface>())
 				{
-					ProgressModules.Add(InUObjectComponent.GetObjectChecked());
+					ProgressModules.Add(ObjectPtr);
 					UN_LOGF(LogFlecsWorld, Log, "Progress module %s added",
 						*InUObjectComponent.GetObjectChecked()->GetName());
 				}
@@ -448,7 +445,8 @@ public:
 					DependenciesComponentQuery.run([InModuleComponent, ModuleEntity, this, InUObjectComponent]
 						(flecs::iter& DependenciesIter)
 					{
-						UnlockIter_Internal(DependenciesIter, [this, InModuleComponent, ModuleEntity, InUObjectComponent]
+						UnlockIter_Internal(DependenciesIter,
+							[this, InModuleComponent, ModuleEntity, InUObjectComponent]
 							(flecs::iter& DependenciesIter, size_t DependenciesIndex)
 						{
 							const FFlecsEntityHandle InEntity = DependenciesIter.entity(DependenciesIndex);
@@ -458,7 +456,10 @@ public:
 							
 							if (DependenciesComponent.Dependencies.contains(InModuleComponent.ModuleClass))
 							{
-								const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& Function
+								const std::function<void(
+									TSolidNonNullPtr<UObject>,
+									TSolidNonNullPtr<UFlecsWorld>,
+									FFlecsEntityHandle)>& Function
 									= DependenciesComponent.Dependencies.at(InModuleComponent.ModuleClass);
 
 								InEntity.AddPair(flecs::DependsOn, ModuleEntity);
@@ -470,14 +471,12 @@ public:
 				});
 			});
 
-		CreateObserver(TEXT("RemoveModuleComponentObserver"))
+		CreateObserver<FFlecsUObjectComponent>(TEXT("RemoveModuleComponentObserver"))
 			.event(flecs::OnRemove)
 			.with<FFlecsModuleComponent>().inout_none()
-			.with<FFlecsUObjectComponent>().second(flecs::Wildcard).filter()
-			.each([this](flecs::iter& Iter, const size_t IterIndex)
+			.term_at(0).second(flecs::Wildcard).filter() // FFlecsUObjectComponent
+			.each([this](flecs::entity InEntity, const FFlecsUObjectComponent& InUObjectComponent)
 			{
-				const FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, IterIndex);
-				
 				for (int32 Index = ProgressModules.Num(); Index > 0; --Index)
 				{
 					const UObject* Module = ProgressModules[Index - 1].GetObject();
@@ -523,7 +522,7 @@ public:
 				Streamable.RequestAsyncLoad(AssetPtr.ToSoftObjectPath(),
 					FStreamableDelegate::CreateLambda([this, AssetPtr]()
 					{
-						if (UFlecsPrimaryDataAsset* LoadedAsset = AssetPtr.Get())
+						if LIKELY_IF(UFlecsPrimaryDataAsset* LoadedAsset = AssetPtr.Get())
 						{
 							RegisterFlecsAsset(LoadedAsset);
 						}
@@ -543,8 +542,7 @@ public:
 			{
 				TSoftObjectPtr<UFlecsPrimaryDataAsset> NewAsset(InAssetData.ToSoftObjectPath());
 				FStreamableManager& LocalStreamable = UAssetManager::GetStreamableManager();
-				LocalStreamable.RequestAsyncLoad(
-					NewAsset.ToSoftObjectPath(),
+				LocalStreamable.RequestAsyncLoad(NewAsset.ToSoftObjectPath(),
 					FStreamableDelegate::CreateLambda([this, NewAsset]()
 					{
 						if (UFlecsPrimaryDataAsset* LoadedAsset = NewAsset.Get())
@@ -575,14 +573,16 @@ public:
 	 * @tparam TModule The module class
 	 */
 	template <Solid::TStaticClassConcept TModule, typename TFunction>
-	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(
-		const TSolidNonNullPtr<UObject> InModuleObject, TFunction&& InFunction)
+	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(const TSolidNonNullPtr<UObject> InModuleObject,
+	                                                     TFunction&& InFunction)
 	{
 		RegisterModuleDependency(InModuleObject, TModule::StaticClass(),
 			[InFunction = std::forward<TFunction>(InFunction)]
-			(UObject* InDependencyObject, UFlecsWorld* InWorld, FFlecsEntityHandle InDependencyEntity)
+				(const TSolidNonNullPtr<UObject> InDependencyObject,
+				TSolidNonNullPtr<UFlecsWorld> InWorld,
+				FFlecsEntityHandle InDependencyEntity)
 			{
-				std::invoke(InFunction, CastChecked<TModule>(InDependencyObject), InWorld, InDependencyEntity);
+				std::invoke(InFunction, CastChecked<TModule>(InDependencyObject.Get()), InWorld, InDependencyEntity);
 			});
 	}
 
@@ -597,12 +597,13 @@ public:
 	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(
 		const TSolidNonNullPtr<const UObject> InModuleObject,
 		const TSubclassOf<UFlecsModuleInterface>& InDependencyClass,
-		const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& InFunction)
+		const std::function<void(TSolidNonNullPtr<UObject>, TSolidNonNullPtr<UFlecsWorld>, FFlecsEntityHandle)>& InFunction)
 	{
 		solid_check(InModuleObject->Implements<UFlecsModuleInterface>());
 
-		solid_checkf(IsModuleImported(InModuleObject->GetClass()), TEXT("Module %s is not imported"),
-			*InModuleObject->GetClass()->GetName());
+		solid_checkf(IsModuleImported(InModuleObject->GetClass()),
+			TEXT("Module %s is not imported"),
+				*InModuleObject->GetClass()->GetName());
 
 		FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModuleObject->GetClass());
 		solid_check(ModuleEntity.IsValid());
@@ -617,10 +618,9 @@ public:
 		if (IsModuleImported(InDependencyClass))
 		{
 			const FFlecsEntityHandle DependencyEntity = GetModuleEntity(InDependencyClass);
-			UObject* DependencyModuleObject = GetModule(InDependencyClass);
+			TSolidNonNullPtr<UObject> DependencyModuleObject = GetModule(InDependencyClass);
 
 			solid_check(DependencyEntity.IsValid());
-			solid_check(IsValid(DependencyModuleObject));
 
 			ModuleEntity.AddPair(flecs::DependsOn, DependencyEntity);
 			std::invoke(InFunction, DependencyModuleObject, this, DependencyEntity);
@@ -701,7 +701,9 @@ public:
 		return Entity;
 	}
 
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord, const FFlecsId InId) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecordWithId(
+		const FFlecsEntityRecord& InRecord,
+		const FFlecsId InId) const
 	{
 		const FFlecsEntityHandle Entity = CreateEntityWithId(InId);
 		InRecord.ApplyRecordToEntity(Entity);
@@ -711,12 +713,14 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World",
 		meta = (AdvancedDisplay = "Separator, RootSeparator, bRecursive"))
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle LookupEntity(const FString& Name,
-		const FString& Separator = "::", const FString& RootSeparator = "::", const bool bRecursive = true) const
+	                                                       const FString& Separator = "::",
+	                                                       const FString& RootSeparator = "::",
+	                                                       const bool bRecursive = true) const
 	{
 		return World.lookup(StringCast<char>(*Name).Get(),
-			StringCast<char>(*Separator).Get(),
-			StringCast<char>(*RootSeparator).Get(),
-			bRecursive);
+		                    StringCast<char>(*Separator).Get(),
+		                    StringCast<char>(*RootSeparator).Get(),
+		                    bRecursive);
 	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -1191,6 +1195,11 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE void PreallocateEntities(const int32 InEntityCount) const
 	{
+		if UNLIKELY_IF(ensureAlwaysMsgf(InEntityCount > 0, TEXT("Entity count must be greater than 0")))
+		{
+			return;
+		}
+		
 		World.dim(InEntityCount);
 	}
 
@@ -1209,12 +1218,15 @@ public:
 	 * @param Function The function to invoke
 	 */
 	template <typename FunctionType>
-	FORCEINLINE_DEBUGGABLE void SetEntityRange(const FFlecsId InMin, const FFlecsId InMax, const bool bEnforceEntityRange, FunctionType&& Function) const
+	FORCEINLINE_DEBUGGABLE void SetEntityRange(const FFlecsId InMin, const FFlecsId InMax,
+	                                           const bool bEnforceEntityRange,
+	                                           FunctionType&& Function) const
 	{
 		const int32 OldMin = static_cast<int32>(ecs_get_world_info(World.c_ptr())->min_id);
 		const int32 OldMax = static_cast<int32>(ecs_get_world_info(World.c_ptr())->max_id);
 		
 		World.set_entity_range(InMin, InMax);
+		
 		EnforceEntityRange(bEnforceEntityRange);
 		std::invoke(std::forward<FunctionType>(Function));
 		EnforceEntityRange(false);
@@ -1357,15 +1369,16 @@ public:
 	{
 		return HasScriptEnum(StaticEnum<T>());
 	}
-	
-	void RegisterMemberProperties(
-		const TSolidNonNullPtr<const UStruct> InStruct, const FFlecsEntityHandle& InEntity) const
+
+	void RegisterMemberProperties(const TSolidNonNullPtr<const UStruct> InStruct,
+	                              const FFlecsEntityHandle& InEntity) const
 	{
 		solid_checkf(InEntity.IsValid(), TEXT("Entity is nullptr"));
 		
 		flecs::untyped_component UntypedComponent = InEntity.GetUntypedComponent_Unsafe();
 
-		for (TFieldIterator<FProperty> PropertyIt(InStruct, EFieldIterationFlags::IncludeSuper); PropertyIt; ++PropertyIt)
+		for (TFieldIterator<FProperty> PropertyIt(InStruct, EFieldIterationFlags::IncludeSuper);
+			PropertyIt; ++PropertyIt)
 		{
 			FProperty* Property = *PropertyIt;
 			solid_checkf(Property != nullptr, TEXT("Property is nullptr"));
@@ -1503,14 +1516,17 @@ public:
 		{
 			ScriptStructComponent = World.component(StructNameCStr);
 			solid_check(ScriptStructComponent.is_valid());
+			
 			ScriptStructComponent.set_symbol(StructNameCStr);
 			
 			const TFieldIterator<FProperty> PropertyIt(ScriptStruct);
 			const bool bIsTag = ScriptStruct->GetStructureSize() <= 1 && !PropertyIt;
 			
 			ScriptStructComponent.set<flecs::Component>(
-			{ .size = bIsTag ? 0 : ScriptStruct->GetStructureSize(),
-				.alignment = bIsTag ? 0 : ScriptStruct->GetMinAlignment() });
+			{
+						.size = bIsTag ? 0 : ScriptStruct->GetStructureSize(),
+						.alignment = bIsTag ? 0 : ScriptStruct->GetMinAlignment()
+					});
 
 			if (!bIsTag)
 			{
@@ -1641,7 +1657,7 @@ public:
 			RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
 		});
 
-		ScriptStructComponent.set<FFlecsScriptStructComponent>({ ScriptStruct });
+		ScriptStructComponent.set<FFlecsScriptStructComponent>(FFlecsScriptStructComponent{ ScriptStruct });
 
 		SetScope(OldScope);
 		return ScriptStructComponent;
@@ -1685,8 +1701,13 @@ public:
 			solid_check(ScriptEnumComponent.is_valid());
 			
 			ScriptEnumComponent.set_symbol(StringCast<char>(*ScriptEnum->GetName()).Get());
+			
 			ScriptEnumComponent.set<flecs::Component>(
-				{ .size = sizeof(uint8), .alignment = alignof(uint8) });
+				{
+							.size = sizeof(uint8),
+							.alignment = alignof(uint8)
+						});
+			
 			ScriptEnumComponent.set<flecs::Enum>(flecs::Enum{ .underlying_type = flecs::U8 });
 
 			const int32 EnumCount = ScriptEnum->NumEnums();
@@ -1884,6 +1905,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE void RunPipeline(const FFlecsId InPipeline, const double DeltaTime = 0.0) const
 	{
+		solid_checkf(InPipeline.IsValid(), TEXT("Pipeline is not valid"));
+		solid_checkf(GetEntity(InPipeline).IsAlive(), TEXT("Pipeline entity is not alive"));
 		World.run_pipeline(InPipeline, DeltaTime);
 	}
 
@@ -1913,9 +1936,9 @@ public:
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
 	{
 		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
-		return LookupEntity(
-			StringCast<char>(*Tag.GetTagName().ToString()).Get(),
-			".", ".");
+		return LookupEntity(StringCast<char>(*Tag.GetTagName().ToString()).Get(),
+		                    ".",
+		                    ".");
 	}
 
 	template <typename T>
@@ -1975,7 +1998,8 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreatePrefabWithRecord(const FFlecsEntityRecord& InRecord, const FString& Name = "") const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreatePrefabWithRecord(const FFlecsEntityRecord& InRecord,
+	                                                                 const FString& Name = "") const
 	{
 		const FFlecsEntityHandle Prefab = World.prefab(StringCast<char>(*Name).Get());
 		solid_checkf(Prefab.IsPrefab(), TEXT("Entity is not a prefab"));
@@ -2004,6 +2028,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE void DestroyPrefab(const FFlecsEntityHandle& InPrefab) const
 	{
+		solid_checkf(InPrefab.IsValid(), TEXT("Prefab entity is not valid"));
 		InPrefab.Destroy();
 	}
 
@@ -2014,15 +2039,15 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ClearScope() const
+	FORCEINLINE_DEBUGGABLE FFlecsId ClearScope() const
 	{
 		return World.set_scope(0);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle SetScope(const FFlecsEntityHandle& InScope) const
+	FORCEINLINE_DEBUGGABLE FFlecsId SetScope(const FFlecsId InScope) const
 	{
-		return World.set_scope(InScope.GetEntity());
+		return World.set_scope(InScope);
 	}
 
 	template <typename T>
@@ -2091,7 +2116,7 @@ public:
 	TArray<TObjectPtr<UFlecsPrimaryDataAsset>> FlecsPrimaryDataAssets;
 
 	flecs::query<FFlecsModuleComponent> ModuleComponentQuery;
-	flecs::query<> ObjectDestructionComponentQuery;
+	flecs::query<FFlecsUObjectComponent> ObjectDestructionComponentQuery;
 	flecs::query<FFlecsDependenciesComponent> DependenciesComponentQuery;
 
 	FFlecsTypeMapComponent* TypeMapComponent;
