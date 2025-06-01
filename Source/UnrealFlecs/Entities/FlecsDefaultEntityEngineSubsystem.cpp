@@ -14,22 +14,21 @@ FFlecsDefaultEntityEngine::FFlecsDefaultEntityEngine()
 
 FFlecsDefaultEntityEngine::~FFlecsDefaultEntityEngine()
 {
-	if LIKELY_IF(DefaultEntityWorld)
+	if LIKELY_IF(DefaultEntityWorld.IsValid())
 	{
 		DefaultEntityQuery.~query();
-		delete DefaultEntityWorld;
-		DefaultEntityWorld = nullptr;
 	}
 }
 
 flecs::entity FFlecsDefaultEntityEngine::CreateDefaultEntity(
-	const FFlecsDefaultMetaEntity& DefaultEntity, flecs::world& World)
+	const FFlecsDefaultMetaEntity& DefaultEntity, const flecs::world& World)
 {
 	flecs::entity Entity = World.make_alive(DefaultEntity.EntityId);
 	Entity.set_name(StringCast<char>(*DefaultEntity.EntityName).Get());
 	
 	if LIKELY_IF(ensureAlwaysMsgf(DefaultEntityFunctions.contains(DefaultEntity.EntityId),
-		TEXT("Default entity %s does not have a function registered for it"), *DefaultEntity.EntityName))
+		TEXT("Default entity %s does not have a function registered for it"),
+		*DefaultEntity.EntityName))
 	{
 		std::invoke(DefaultEntityFunctions.at(DefaultEntity.EntityId), Entity);
 	}
@@ -44,7 +43,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 		return;
 	}
 
-	DefaultEntityWorld = new flecs::world();
+	DefaultEntityWorld = MakeUnique<flecs::world>();
 	
 	DefaultEntityWorld->progress();
 	

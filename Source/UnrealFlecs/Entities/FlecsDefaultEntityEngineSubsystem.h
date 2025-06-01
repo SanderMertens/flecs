@@ -21,8 +21,10 @@ struct UNREALFLECS_API FFlecsDefaultEntityEngine final
 public:
 	FFlecsDefaultEntityEngine();
 	~FFlecsDefaultEntityEngine();
+	
+	void Initialize();
 
-	flecs::entity CreateDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity, flecs::world& World);
+	flecs::entity CreateDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity, const flecs::world& World);
 	
 	FFlecsId AddDefaultEntity(FFlecsDefaultMetaEntity DefaultEntity);
 	
@@ -33,12 +35,11 @@ public:
 	std::vector<FFlecsDefaultMetaEntity> AddedDefaultEntities;
 	std::vector<FFlecsDefaultMetaEntity> CodeAddedDefaultEntities;
 	
-	flecs::world* DefaultEntityWorld = nullptr;
+	TUniquePtr<flecs::world> DefaultEntityWorld;
 	flecs::query<> DefaultEntityQuery;
 
 	bool bIsInitialized = false;
 	
-	void Initialize();
 }; // struct FFlecsDefaultEntityEngine
 
 #define DECLARE_DEFAULT_ENTITY(DefaultEntityName) \

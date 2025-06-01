@@ -13,7 +13,7 @@ class UNREALFLECS_API UFlecsGameFrameworkModule final : public UFlecsModuleObjec
 
 public:
 	virtual void InitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
-	virtual void DeinitializeModule(TSolidNonNullPtr<UFlecsWorld>  InWorld) override;
+	virtual void DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld) override;
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override
 	{

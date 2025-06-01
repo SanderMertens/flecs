@@ -1671,7 +1671,7 @@ public:
 	{
 		const FFlecsEntityHandle OldScope = ClearScope();
 
-		solid_checkf(!TypeMapComponent->ScriptEnumMap.contains(ScriptEnum.Get()),
+		solid_checkf(!TypeMapComponent->ScriptEnumMap.contains(FFlecsScriptEnumComponent(ScriptEnum)),
 			TEXT("Script enum %s is already registered"), *ScriptEnum->GetName());
 
 		flecs::untyped_component ScriptEnumComponent;
