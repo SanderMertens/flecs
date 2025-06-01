@@ -1381,7 +1381,7 @@ public:
 			PropertyIt; ++PropertyIt)
 		{
 			FProperty* Property = *PropertyIt;
-			solid_checkf(Property != nullptr, TEXT("Property is nullptr"));
+			solid_check(Property);
 
 			const char* PropertyNameCStr = StringCast<char>(*Property->GetName()).Get();
 				
@@ -1714,7 +1714,9 @@ public:
 			
 			for (int32 EnumIndex = 0; EnumIndex < EnumCount; ++EnumIndex)
 			{
-				const int32 EnumValue = ScriptEnum->GetValueByIndex(EnumIndex);
+				const int64 EnumValue = ScriptEnum->GetValueByIndex(EnumIndex);
+				solid_check(EnumValue >= 0);
+				
 				const FString EnumValueName = ScriptEnum->GetNameStringByIndex(EnumIndex);
 
 				if (ScriptEnum->GetMaxEnumValue() == EnumValue)
@@ -1723,7 +1725,7 @@ public:
 				}
 				
 				ScriptEnumComponent.constant<uint8>(StringCast<char>(*EnumValueName).Get(),
-					EnumValue);
+					static_cast<uint8>(EnumValue));
 			}
 
 			if (!flecs::_::g_type_to_impl_data.contains(std::string(EnumNameCStr)))
@@ -1739,9 +1741,10 @@ public:
 
 			solid_check(flecs::_::g_type_to_impl_data.contains(std::string(EnumNameCStr)));
 			
-			auto& [s_index, s_size, s_alignment, s_allow_tag] = flecs::_::g_type_to_impl_data.at(std::string(EnumNameCStr));
+			auto& [s_index, s_size, s_alignment, s_allow_tag]
+				= flecs::_::g_type_to_impl_data.at(std::string(EnumNameCStr));
+			
 			flecs_component_ids_set(World, s_index, ScriptEnumComponent);
-
 			TypeMapComponent->ScriptEnumMap.emplace(ScriptEnum, ScriptEnumComponent);
 		});
 

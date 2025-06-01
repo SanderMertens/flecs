@@ -26,11 +26,13 @@ NO_DISCARD FORCEINLINE static int flecs_entity_compare(
 }
 
 NO_DISCARD FORCEINLINE static int flecs_priority_compare(
-	const flecs::entity_t InEntityA, 
-	const flecs::SystemPriority* InPtrA, 
-	const flecs::entity_t InEntityB, 
+	const flecs::entity_t InEntityA,
+	const flecs::SystemPriority* InPtrA,
+	const flecs::entity_t InEntityB,
 	const flecs::SystemPriority* InPtrB) 
 {
+	check(InPtrA && InPtrB);
+	
 	if (InPtrA->value == InPtrB->value)
 	{
 		return flecs_entity_compare(InEntityA, InEntityB);
@@ -46,14 +48,14 @@ UFlecsTickerModule::UFlecsTickerModule(const FObjectInitializer& InObjectInitial
 {
 }
 
-void UFlecsTickerModule::InitializeModule(
-	const TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity)
+void UFlecsTickerModule::InitializeModule(const TSolidNonNullPtr<UFlecsWorld> InWorld,
+                                          const FFlecsEntityHandle& InModuleEntity)
 {
 	InWorld->RegisterComponentType<FFlecsTickerComponent>();
 	InWorld->AddSingleton<FFlecsTickerComponent>();
 
 	TickerComponentPtr = InWorld->GetSingletonPtr<FFlecsTickerComponent>();
-	solid_checkf(TickerComponentPtr, TEXT("TickerComponentRef is not valid!"));
+	solid_check(TickerComponentPtr);
 
 	MainPipeline = InWorld->CreatePipeline()
 		.with(flecs::System)
@@ -107,7 +109,8 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 		solid_check(TickerComponentPtr);
 		++TickerComponentPtr->TickId;
 		SET_DWORD_STAT(STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, TickerComponentPtr->TickId);
-		
+
+		solid_checkf(TickerPipeline.IsValid(), TEXT("TickerPipeline is not valid!"));
 		FlecsWorld->RunPipeline(TickerPipeline, TickerInterval);
 	}
 }

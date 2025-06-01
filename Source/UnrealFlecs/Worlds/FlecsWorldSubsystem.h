@@ -224,6 +224,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE UFlecsWorld* GetDefaultWorldStatic(const UObject* WorldContextObject)
 	{
+		solid_checkf(IsValid(WorldContextObject), TEXT("WorldContextObject is not valid!"));
+		
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)->
 			GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld;
 	}
@@ -231,6 +233,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE bool HasValidFlecsWorldStatic(const UObject* WorldContextObject)
 	{
+		solid_checkf(IsValid(WorldContextObject), TEXT("WorldContextObject is not valid!"));
+		
 		if (GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
 		{
 			return IsValid(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)

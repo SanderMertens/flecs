@@ -11,6 +11,7 @@
 #include "CoreMinimal.h"
 #include "Standard/robin_hood.h"
 #include "SolidMacros/Macros.h"
+#include "Types/SolidNonNullPtr.h"
 #include "Unlog/Unlog.h"
 
 namespace UnrealFlecs
@@ -21,7 +22,7 @@ namespace UnrealFlecs
 struct UNREALFLECS_API FFlecsComponentProperties
 {
 	std::string Name;
-	UScriptStruct* Struct = nullptr;
+	TWeakObjectPtr<UScriptStruct> Struct;
 
 	uint32 Size = 1;
 	uint16 Alignment = 1;
@@ -42,15 +43,18 @@ public:
 	}
 
 	FORCEINLINE void RegisterComponentProperties(const std::string& Name,
-		UScriptStruct* Struct,
-		const uint32 Size, const uint16 Alignment,
-		const UnrealFlecs::FlecsComponentFunctionPtr& RegistrationFunction)
+	                                             const TSolidNonNullPtr<UScriptStruct> Struct,
+	                                             const uint32 Size, const uint16 Alignment,
+	                                             const UnrealFlecs::FlecsComponentFunctionPtr& RegistrationFunction)
 	{
 		UNLOG_CATEGORY_SCOPED(LogFlecsComponentProperties);
+
+		solid_checkf(!Name.empty(), TEXT("Component properties name is empty!"));
 		
 		ComponentProperties[Name] = FFlecsComponentProperties
 		{
-			.Name = Name, .Struct = Struct,
+			.Name = Name,
+			.Struct = Struct,
 			.Size = Size, .Alignment = Alignment,
 			.RegistrationFunction = RegistrationFunction
 		};
