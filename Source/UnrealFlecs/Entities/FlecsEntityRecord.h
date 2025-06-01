@@ -440,7 +440,8 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	{
 		solid_checkf(InEntityHandle.IsValid(), TEXT("Entity Handle is not valid"));
 
-		for (const auto& [NodeType, ScriptStruct, ScriptEnum, EntityHandle, GameplayTag, Pair] : Components)
+		for (const auto& [NodeType, ScriptStruct, ScriptEnum,
+			EntityHandle, GameplayTag, Pair] : Components)
 		{
 			switch (NodeType)
 			{
@@ -480,6 +481,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		{
 			FFlecsEntityHandle NewEntityHandle = InEntityHandle
 				.GetEntity().world().entity(StringCast<char>(*SubEntity.Name).Get());
+			
 			NewEntityHandle.SetParent(InEntityHandle);
 			
 			SubEntity.ApplyRecordToEntity(NewEntityHandle);
