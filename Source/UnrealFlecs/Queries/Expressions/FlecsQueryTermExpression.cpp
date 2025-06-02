@@ -40,7 +40,8 @@ void FFlecsQueryTermExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder
 		case EFlecsQueryInputType::GameplayTag:
 			{
 				const FGameplayTag Tag = InputType.Tag;
-				solid_checkf(Tag.IsValid(), TEXT("Invalid GameplayTag provided for query term expression"));
+				solid_checkf(Tag.IsValid(),
+					TEXT("Invalid GameplayTag provided for query term expression"));
 				
 				const FFlecsEntityHandle TagEntity = InWorld->GetTagEntity(Tag);
 				solid_check(TagEntity.IsValid());

@@ -22,8 +22,9 @@
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 #include "GameFramework/GameStateBase.h"
 #include "General/FlecsDeveloperSettings.h"
-#include "SolidMacros/Concepts/SolidConcepts.h"
-#include "SolidMacros/Standard/Hashing.h"
+#include "Modules/FlecsModuleSetDataAsset.h"
+#include "Concepts/SolidConcepts.h"
+#include "Standard/Hashing.h"
 #include "Standard/robin_hood.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "FlecsWorldSubsystem.generated.h"
@@ -176,6 +177,7 @@ public:
 		{
 			const IConsoleVariable* TaskThreads = ConsoleManager.FindConsoleVariable(TEXT("Flecs.TaskThreadCount"));
 			solid_checkf(TaskThreads, TEXT("TaskThreads console variable not found!"));
+			
 			DefaultWorld->SetTaskThreads(TaskThreads->GetInt());
 		}
 		else
@@ -192,6 +194,12 @@ public:
 			DefaultWorld->ImportModule(Module);
 		}
 
+		for (const TSolidNonNullPtr<UFlecsModuleSetDataAsset> ModuleSet : Settings.ModuleSets)
+		{
+			ModuleSet->ImportModules(DefaultWorld);
+		}
+		
+
 		#if WITH_EDITOR
 
 		for (TSolidNonNullPtr<UObject> Module : Settings.EditorModules)
@@ -200,6 +208,11 @@ public:
 				TEXT("Module %s does not implement UFlecsModuleInterface"), *Module->GetName());
 			
 			DefaultWorld->ImportModule(Module);
+		}
+
+		for (const TSolidNonNullPtr<UFlecsModuleSetDataAsset> ModuleSet : Settings.EditorModuleSets)
+		{
+			ModuleSet->ImportModules(DefaultWorld);
 		}
 
 		#endif // WITH_EDITOR
@@ -224,7 +237,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE UFlecsWorld* GetDefaultWorldStatic(const UObject* WorldContextObject)
 	{
-		solid_checkf(IsValid(WorldContextObject), TEXT("WorldContextObject is not valid!"));
+		solid_check(IsValid(WorldContextObject));
 		
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)->
 			GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld;
@@ -233,7 +246,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE bool HasValidFlecsWorldStatic(const UObject* WorldContextObject)
 	{
-		solid_checkf(IsValid(WorldContextObject), TEXT("WorldContextObject is not valid!"));
+		solid_check(IsValid(WorldContextObject));
 		
 		if (GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
 		{

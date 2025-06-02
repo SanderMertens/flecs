@@ -7,6 +7,8 @@
 #include "Standard/Hashing.h"
 #include "FlecsWorldInfoSettings.generated.h"
 
+class UFlecsModuleSetDataAsset;
+
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsWorldSettingsInfo
 {
@@ -40,15 +42,21 @@ public:
     UPROPERTY(EditAnywhere, Category = "Flecs")
     FString WorldName;
 
-    UPROPERTY(EditAnywhere, Instanced, Category = "Flecs",
+    UPROPERTY(EditAnywhere, Instanced, Category = "Flecs | Modules",
         meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
     TArray<TObjectPtr<UObject>> Modules;
 
+    UPROPERTY(EditAnywhere, Category = "Flecs | Modules")
+    TArray<TObjectPtr<UFlecsModuleSetDataAsset>> ModuleSets;
+
     #if WITH_EDITORONLY_DATA
 
-    UPROPERTY(EditAnywhere, Instanced, Category = "Flecs",
+    UPROPERTY(EditAnywhere, Instanced, Category = "Flecs | Editor Modules",
          meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
     TArray<TObjectPtr<UObject>> EditorModules;
+
+    UPROPERTY(EditAnywhere, Category = "Flecs | Editor Modules")
+    TArray<TObjectPtr<UFlecsModuleSetDataAsset>> EditorModuleSets;
 
     #endif // WITH_EDITORONLY_DATA
     

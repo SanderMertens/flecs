@@ -5,7 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
-#include "SolidMacros/Types/SolidNonNullPtr.h"
+#include "Types/SolidNonNullPtr.h"
 #include "UObject/Object.h"
 #include "Properties/FlecsComponentProperties.h"
 #include "FlecsUObjectComponent.generated.h"

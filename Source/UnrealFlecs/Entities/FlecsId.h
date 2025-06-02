@@ -6,7 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
-#include "SolidMacros/Standard/Hashing.h"
+#include "Standard/Hashing.h"
 #include "FlecsId.generated.h"
 
 USTRUCT(BlueprintType)

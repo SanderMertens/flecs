@@ -19,8 +19,8 @@
 #include "Components/ObjectTypes/FlecsActorTag.h"
 #include "Engine/AssetManager.h"
 #include "Entities/FlecsEntityRecord.h"
-#include "SolidMacros/Concepts/SolidConcepts.h"
-#include "SolidMacros/Types/SolidNonNullPtr.h"
+#include "Concepts/SolidConcepts.h"
+#include "Types/SolidNonNullPtr.h"
 #include "Entities/FlecsId.h"
 #include "Logs/FlecsCategories.h"
 #include "Modules/FlecsDependenciesComponent.h"
@@ -627,10 +627,8 @@ public:
 		}
 	}
 
-	FORCEINLINE_DEBUGGABLE void RegisterFlecsAsset(UFlecsPrimaryDataAsset* InAsset)
+	FORCEINLINE_DEBUGGABLE void RegisterFlecsAsset(TSolidNonNullPtr<UFlecsPrimaryDataAsset> InAsset)
 	{
-		solid_checkf(IsValid(InAsset), TEXT("Asset is nullptr"));
-
 		if (!InAsset->ShouldSpawn())
 		{
 			return;
@@ -642,10 +640,8 @@ public:
 		InAsset->OnEntityCreated(AssetEntity, this);
 	}
 
-	FORCEINLINE_DEBUGGABLE void UnregisterFlecsAsset(UFlecsPrimaryDataAsset* InAsset)
+	FORCEINLINE_DEBUGGABLE void UnregisterFlecsAsset(TSolidNonNullPtr<UFlecsPrimaryDataAsset> InAsset)
 	{
-		solid_checkf(IsValid(InAsset), TEXT("Asset is nullptr"));
-
 		const FFlecsEntityHandle AssetEntity = LookupEntity(InAsset->GetPrimaryAssetId().ToString());
 		
 		if (!AssetEntity.IsValid())
@@ -681,8 +677,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithId(const FFlecsId InId) const
 	{
-		solid_checkf(!World.is_alive(InId), TEXT("Entity %s is not alive"), *InId.ToString());
-		return World.make_alive(InId);
+		solid_checkf(!IsAlive(InId), TEXT("Entity with ID %s is already alive"), *InId.ToString());
+		return MakeAlive(InId);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -692,18 +688,16 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecord(
-		const FFlecsEntityRecord& InRecord,
-		const FString& Name = "") const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord,
+	                                                                 const FString& Name = "") const
 	{
 		const FFlecsEntityHandle Entity = CreateEntity(Name);
 		InRecord.ApplyRecordToEntity(Entity);
 		return Entity;
 	}
 
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecordWithId(
-		const FFlecsEntityRecord& InRecord,
-		const FFlecsId InId) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord,
+	                                                                       const FFlecsId InId) const
 	{
 		const FFlecsEntityHandle Entity = CreateEntityWithId(InId);
 		InRecord.ApplyRecordToEntity(Entity);
@@ -894,7 +888,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE bool IsModuleImported(const TSubclassOf<UObject> InModule) const
 	{
-		solid_checkf(IsValid(InModule), TEXT("Module is nullptr"));
+		solid_check(IsValid(InModule));
 		
 		const flecs::entity ModuleEntity = ModuleComponentQuery
 			.find([&InModule](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
@@ -914,7 +908,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule) const
 	{
-		solid_checkf(IsValid(InModule), TEXT("Module is nullptr"));
+		solid_check(IsValid(InModule));
 		
 		const flecs::entity ModuleEntity = ModuleComponentQuery
 			.find([&InModule](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
@@ -934,7 +928,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE UObject* GetModule(const TSubclassOf<UObject> InModule) const
 	{
-		solid_checkf(IsValid(InModule), TEXT("Module is nullptr"));
+		solid_check(IsValid(InModule));
 		
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModule);
 		return ModuleEntity.GetPairPtr<FFlecsUObjectComponent, FFlecsModuleComponentTag>()->GetObjectChecked();
@@ -1133,6 +1127,12 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	FORCEINLINE_DEBUGGABLE bool IsAlive(const FFlecsId InId) const
+	{
+		return World.is_alive(InId);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetEntity(const FFlecsId InId) const
 	{
 		return World.get_alive(InId);
@@ -1301,7 +1301,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE bool HasScriptStruct(const UScriptStruct* ScriptStruct) const
 	{
-		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
+		solid_check(IsValid(ScriptStruct));
 		
 		if (TypeMapComponent->ScriptStructMap.contains(ScriptStruct))
 		{
@@ -1315,7 +1315,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE bool HasScriptEnum(const UEnum* ScriptEnum) const
 	{
-		solid_checkf(IsValid(ScriptEnum), TEXT("ScriptEnum is nullptr"));
+		solid_check(IsValid(ScriptEnum));
 		
 		if (TypeMapComponent->ScriptEnumMap.contains(ScriptEnum))
 		{
@@ -1329,17 +1329,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetScriptStructEntity(const UScriptStruct* ScriptStruct) const
 	{
-		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
+		solid_check(IsValid(ScriptStruct));
 		
 		const FFlecsId Component = TypeMapComponent->ScriptStructMap.at(ScriptStruct);
-		solid_checkf(ecs_is_valid(World.c_ptr(), Component), TEXT("Entity is not alive"));
+		solid_checkf(IsAlive(Component), TEXT("Entity is not alive"));
+		
 		return FFlecsEntityHandle(World, Component);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetScriptEnumEntity(const UEnum* ScriptEnum) const
 	{
-		solid_checkf(IsValid(ScriptEnum), TEXT("ScriptEnum is nullptr"));
+		solid_check(IsValid(ScriptEnum));
 		
 		const FFlecsId Component = TypeMapComponent->ScriptEnumMap.at(ScriptEnum);
 		solid_checkf(ecs_is_valid(World.c_ptr(), Component), TEXT("Entity is not alive"));
@@ -1845,13 +1846,12 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeStruct(
-		const UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* ScriptStruct) const
 	{
 		solid_check(IsValid(ScriptStruct));
+		solid_checkf(HasScriptStruct(ScriptStruct),
+			TEXT("Script struct %s is not registered"), *ScriptStruct->GetStructCPPName());
 		
-		solid_checkf(HasScriptStruct(ScriptStruct), TEXT("Script struct %s is not registered"),
-			*ScriptStruct->GetStructCPPName());
 		return GetScriptStructEntity(ScriptStruct);
 	}
 
@@ -1859,9 +1859,9 @@ public:
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeEnum(const UEnum* ScriptEnum) const
 	{
 		solid_check(IsValid(ScriptEnum));
+		solid_checkf(HasScriptEnum(ScriptEnum),
+			TEXT("Script enum %s is not registered"), *ScriptEnum->GetName());
 		
-		solid_checkf(HasScriptEnum(ScriptEnum), TEXT("Script enum %s is not registered"),
-			*ScriptEnum->GetName());
 		return GetScriptEnumEntity(ScriptEnum);
 	}
 
@@ -1909,7 +1909,7 @@ public:
 	FORCEINLINE_DEBUGGABLE void RunPipeline(const FFlecsId InPipeline, const double DeltaTime = 0.0) const
 	{
 		solid_checkf(InPipeline.IsValid(), TEXT("Pipeline is not valid"));
-		solid_checkf(GetEntity(InPipeline).IsAlive(), TEXT("Pipeline entity is not alive"));
+		solid_checkf(IsAlive(InPipeline), TEXT("Pipeline entity is not alive"));
 		World.run_pipeline(InPipeline, DeltaTime);
 	}
 
@@ -1953,7 +1953,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE void EnableType(UScriptStruct* ScriptStruct) const
 	{
-		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
+		solid_check(IsValid(ScriptStruct));
 		
 		ObtainComponentTypeStruct(ScriptStruct).Enable();
 	}
@@ -1967,7 +1967,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE void DisableType(UScriptStruct* ScriptStruct) const
 	{
-		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
+		solid_check(IsValid(ScriptStruct));
 		
 		ObtainComponentTypeStruct(ScriptStruct).Disable();
 	}
@@ -1981,7 +1981,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE bool IsTypeEnabled(UScriptStruct* ScriptStruct) const
 	{
-		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
+		solid_check(IsValid(ScriptStruct));
 		
 		return ObtainComponentTypeStruct(ScriptStruct).IsEnabled();
 	}
@@ -1995,7 +1995,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE void ToggleType(UScriptStruct* ScriptStruct) const
 	{
-		solid_checkf(IsValid(ScriptStruct), TEXT("Script struct is nullptr"));
+		solid_check(IsValid(ScriptStruct));
 		
 		ObtainComponentTypeStruct(ScriptStruct).Toggle();
 	}
