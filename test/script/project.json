@@ -323,7 +323,11 @@
                 "component_w_assign_add",
                 "component_w_assign_mul",
                 "opaque_struct_component",
-                "opaque_string_component"
+                "opaque_string_component",
+                "add_component_w_invalid_ctor",
+                "add_component_pair_w_invalid_ctor",
+                "add_component_as_tag_w_invalid_ctor",
+                "add_component_as_tag_pair_w_invalid_ctor"
             ]
         }, {
             "id": "Template",

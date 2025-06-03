@@ -681,16 +681,53 @@ ecs_entity_t flecs_script_get_src(
 }
 
 static
+bool flecs_script_can_default_ctor(
+    ecs_world_t *world,
+    ecs_id_t component)
+{
+    /* Check if tag is a component, and if so, if it can be default 
+     * constructed. */
+    ecs_entity_t type = ecs_get_typeid(world, component);
+    if (type) {
+        const ecs_type_info_t *ti = ecs_get_type_info(world, type);
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static
 int flecs_script_eval_tag(
     ecs_script_eval_visitor_t *v,
     ecs_script_tag_t *node)
 {
+    bool resolved = node->id.eval != 0;
+
     if (flecs_script_eval_id(v, node, &node->id)) {
         return -1;
     }
 
+    if (!resolved) {
+        if (!flecs_script_can_default_ctor(v->world, node->id.eval)) {
+            if (node->id.second) {
+                flecs_script_eval_error(v, node, 
+                    "cannot add (%s, %s), "
+                    "type is not default constructible",
+                    node->id.first, node->id.second);
+            } else {
+                flecs_script_eval_error(v, node, 
+                    "cannot add %s, "
+                    "type is not default constructible",
+                    node->id.first);
+            }
+            return -1;
+        }
+    }
+
     if (v->is_with_scope) {
-        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        flecs_script_eval_error(v, node, "invalid component in with scope");
         return -1;
     }
 
@@ -718,8 +755,27 @@ int flecs_script_eval_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_component_t *node)
 {
+    bool resolved = node->id.eval != 0;
+
     if (flecs_script_eval_id(v, node, &node->id)) {
         return -1;
+    }
+
+    if (!resolved) {
+        if (!flecs_script_can_default_ctor(v->world, node->id.eval)) {
+            if (node->id.second) {
+                flecs_script_eval_error(v, node, 
+                    "cannot add (%s, %s), "
+                    "type is not default constructible",
+                    node->id.first, node->id.second);
+            } else {
+                flecs_script_eval_error(v, node, 
+                    "cannot add %s, "
+                    "type is not default constructible",
+                    node->id.first);
+            }
+            return -1;
+        }
     }
 
     if (!v->entity) {

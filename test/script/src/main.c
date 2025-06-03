@@ -320,6 +320,10 @@ void Eval_component_w_assign_add(void);
 void Eval_component_w_assign_mul(void);
 void Eval_opaque_struct_component(void);
 void Eval_opaque_string_component(void);
+void Eval_add_component_w_invalid_ctor(void);
+void Eval_add_component_pair_w_invalid_ctor(void);
+void Eval_add_component_as_tag_w_invalid_ctor(void);
+void Eval_add_component_as_tag_pair_w_invalid_ctor(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -2200,6 +2204,22 @@ bake_test_case Eval_testcases[] = {
     {
         "opaque_string_component",
         Eval_opaque_string_component
+    },
+    {
+        "add_component_w_invalid_ctor",
+        Eval_add_component_w_invalid_ctor
+    },
+    {
+        "add_component_pair_w_invalid_ctor",
+        Eval_add_component_pair_w_invalid_ctor
+    },
+    {
+        "add_component_as_tag_w_invalid_ctor",
+        Eval_add_component_as_tag_w_invalid_ctor
+    },
+    {
+        "add_component_as_tag_pair_w_invalid_ctor",
+        Eval_add_component_as_tag_pair_w_invalid_ctor
     }
 };
 
@@ -4709,7 +4729,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        311,
+        315,
         Eval_testcases
     },
     {

@@ -10529,3 +10529,89 @@ void Eval_opaque_string_component(void) {
 
     ecs_fini(world);
 }
+
+void Eval_add_component_w_invalid_ctor(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_add_component_pair_w_invalid_ctor(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (Position, Tgt): {10, 20}"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_add_component_as_tag_w_invalid_ctor(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Position"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_add_component_as_tag_pair_w_invalid_ctor(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (Position, Tgt)"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
