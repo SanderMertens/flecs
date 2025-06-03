@@ -14578,8 +14578,16 @@ repeat_event:
         ecs_component_record_t *cr = NULL;
         const ecs_type_info_t *ti = NULL;
         ecs_id_t id = id_array[i];
-        ecs_assert(id == EcsAny || !ecs_id_is_wildcard(id), 
-            ECS_INVALID_PARAMETER, "cannot emit wildcard ids");
+
+        /* If id is wildcard this could be a remove(Rel, *) call for a 
+         * DontFragment component (for regular components this gets handled by
+         * the table graph which returns a vector with removed ids).
+         * This will be handled at a higher level than flecs_emit, so we can 
+         * ignore the wildcard */
+        if (id != EcsAny && ecs_id_is_wildcard(id)) {
+            continue;
+        }
+
         int32_t ider_i, ider_count = 0;
         bool is_pair = ECS_IS_PAIR(id);
         void *override_ptr = NULL;
@@ -38667,13 +38675,49 @@ void flecs_component_sparse_remove(
     ecs_table_t *table,
     int32_t row)
 {
+    ecs_id_t id = cr->id;
+    ecs_flags32_t flags = cr->flags;
+    bool dont_fragment = flags & EcsIdDontFragment;
+
+    /* If id is a wildcard, remove entity from all matching ids. */
+    if (dont_fragment && ecs_id_is_wildcard(cr->id)) {
+        /* A wildcard by itself can't be marked sparse so must be a pair. */
+        ecs_assert(ECS_IS_PAIR(id), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
+            ECS_UNSUPPORTED,
+            "remove(*, T) not supported for DontFragment targets");
+        ecs_entity_t entity = ecs_table_entities(table)[row];
+        ecs_component_record_t *cur = cr;
+        while ((cur = flecs_component_first_next(cur))) {
+            if (flecs_component_sparse_has(cur, entity)) {
+                ecs_type_t type = {
+                    .array = &cur->id,
+                    .count = 1
+                };
+
+                flecs_emit(world, world, 0, &(ecs_event_desc_t) {
+                    .event = EcsOnRemove,
+                    .ids = &type,
+                    .table = table,
+                    .other_table = NULL,
+                    .offset = row,
+                    .count = 1,
+                    .observable = world
+                });
+
+                flecs_component_sparse_remove(world, cur, table, row);
+            }
+        }
+
+        return;
+    }
+
     ecs_entity_t entity = 
         flecs_component_sparse_remove_intern(world, cr, table, row);
 
     if (entity) {
-        ecs_flags32_t flags = cr->flags;
-        if (flags & EcsIdDontFragment) {
-            if (ECS_IS_PAIR(cr->id)) {
+        if (dont_fragment) {
+            if (ECS_IS_PAIR(id)) {
                 if (flags & EcsIdExclusive) {
                     flecs_component_sparse_dont_fragment_exclusive_remove(
                         cr, entity);
@@ -38781,6 +38825,21 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
             ecs_pair(ECS_PAIR_FIRST(component_id), tgt));
         ecs_assert(other != NULL, ECS_INTERNAL_ERROR, NULL);
         if (other != cr) {
+            ecs_type_t type = {
+                .array = &other->id,
+                .count = 1
+            };
+
+            flecs_emit(world, world, 0, &(ecs_event_desc_t) {
+                .event = EcsOnRemove,
+                .ids = &type,
+                .table = table,
+                .other_table = NULL,
+                .offset = row,
+                .count = 1,
+                .observable = world
+            });
+
             flecs_component_sparse_remove_intern(world, other, table, row);
         }
     }
@@ -41867,8 +41926,14 @@ int flecs_type_new_filtered(
     }
 
     dst->count = w;
+
     if (w != count) {
-        dst->array = flecs_wrealloc_n(world, ecs_id_t, w, count, dst->array);
+        if (w) {
+            dst->array = flecs_wrealloc_n(world, ecs_id_t, w, count, dst->array);
+        } else {
+            flecs_wfree_n(world, ecs_id_t, count, dst->array);
+            dst->array = NULL;
+        }
     }
 
     return 0;

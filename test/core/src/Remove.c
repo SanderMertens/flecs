@@ -171,3 +171,82 @@ void Remove_not_added(void) {
 
     ecs_fini(world);
 }
+
+void Remove_remove_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    test_assert(e != 0);
+
+    ecs_remove_id(world, e, EcsWildcard);
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+void Remove_remove_some_wildcard_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    test_assert(e != 0);
+    ecs_add_pair(world, e, RelX, TgtA);
+    ecs_add_pair(world, e, RelX, TgtB);
+    ecs_add_pair(world, e, RelY, TgtA);
+
+    ecs_remove_pair(world, e, RelX, EcsWildcard);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has_pair(world, e, RelX, TgtA));
+    test_assert(!ecs_has_pair(world, e, RelX, TgtB));
+    test_assert(ecs_has_pair(world, e, RelY, TgtA));
+
+    ecs_fini(world);
+}
+
+void Remove_remove_all_tgt_wildcard_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(e != 0);
+    ecs_add_pair(world, e, RelX, TgtA);
+    ecs_add_pair(world, e, RelX, TgtB);
+
+    ecs_remove_pair(world, e, RelX, EcsWildcard);
+    test_assert(!ecs_has_pair(world, e, RelX, TgtA));
+    test_assert(!ecs_has_pair(world, e, RelX, TgtB));
+
+    ecs_fini(world);
+}
+
+void Remove_remove_all_rel_wildcard_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(e != 0);
+    ecs_add_pair(world, e, RelX, Tgt);
+    ecs_add_pair(world, e, RelY, Tgt);
+
+    ecs_remove_pair(world, e, EcsWildcard, Tgt);
+    test_assert(!ecs_has_pair(world, e, RelX, Tgt));
+    test_assert(!ecs_has_pair(world, e, RelX, Tgt));
+
+    ecs_fini(world);
+}

@@ -1272,8 +1272,16 @@ repeat_event:
         ecs_component_record_t *cr = NULL;
         const ecs_type_info_t *ti = NULL;
         ecs_id_t id = id_array[i];
-        ecs_assert(id == EcsAny || !ecs_id_is_wildcard(id), 
-            ECS_INVALID_PARAMETER, "cannot emit wildcard ids");
+
+        /* If id is wildcard this could be a remove(Rel, *) call for a 
+         * DontFragment component (for regular components this gets handled by
+         * the table graph which returns a vector with removed ids).
+         * This will be handled at a higher level than flecs_emit, so we can 
+         * ignore the wildcard */
+        if (id != EcsAny && ecs_id_is_wildcard(id)) {
+            continue;
+        }
+
         int32_t ider_i, ider_count = 0;
         bool is_pair = ECS_IS_PAIR(id);
         void *override_ptr = NULL;

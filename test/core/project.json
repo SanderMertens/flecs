@@ -451,7 +451,11 @@
                 "2_again",
                 "2_overlap",
                 "1_from_empty",
-                "not_added"
+                "not_added",
+                "remove_wildcard",
+                "remove_some_wildcard_pair",
+                "remove_all_tgt_wildcard_pair",
+                "remove_all_rel_wildcard_pair"
             ]
         }, {
             "id": "GlobalComponentIds",
@@ -485,6 +489,11 @@
                 "add_remove_twice_w_hooks",
                 "remove_after_add_non_sparse",
                 "remove_after_add_non_sparse_pair",
+                "remove_pair_wildcard_rel",
+                "remove_pair_wildcard_tgt",
+                "remove_pair_wildcard_tgt_exclusive",
+                "remove_pair_wildcard_tgt_w_observer",
+                "remove_pair_wildcard_tgt_exclusive_w_observer",
                 "get_mut",
                 "ensure",
                 "ensure_twice_w_hooks",
@@ -568,6 +577,7 @@
                 "exclusive_pair",
                 "exclusive_pair_w_data",
                 "exclusive_pair_w_hooks",
+                "exclusive_pair_w_observers",
                 "target_1_pair",
                 "target_2_pairs",
                 "target_exclusive_pair",
