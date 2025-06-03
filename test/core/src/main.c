@@ -429,6 +429,10 @@ void Remove_2_again(void);
 void Remove_2_overlap(void);
 void Remove_1_from_empty(void);
 void Remove_not_added(void);
+void Remove_remove_wildcard(void);
+void Remove_remove_some_wildcard_pair(void);
+void Remove_remove_all_tgt_wildcard_pair(void);
+void Remove_remove_all_rel_wildcard_pair(void);
 
 // Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
@@ -455,6 +459,11 @@ void Sparse_add_remove_pair_tag(void);
 void Sparse_add_remove_twice_w_hooks(void);
 void Sparse_remove_after_add_non_sparse(void);
 void Sparse_remove_after_add_non_sparse_pair(void);
+void Sparse_remove_pair_wildcard_rel(void);
+void Sparse_remove_pair_wildcard_tgt(void);
+void Sparse_remove_pair_wildcard_tgt_exclusive(void);
+void Sparse_remove_pair_wildcard_tgt_w_observer(void);
+void Sparse_remove_pair_wildcard_tgt_exclusive_w_observer(void);
 void Sparse_get_mut(void);
 void Sparse_ensure(void);
 void Sparse_ensure_twice_w_hooks(void);
@@ -538,6 +547,7 @@ void Sparse_sparse_relationship_second(void);
 void Sparse_exclusive_pair(void);
 void Sparse_exclusive_pair_w_data(void);
 void Sparse_exclusive_pair_w_hooks(void);
+void Sparse_exclusive_pair_w_observers(void);
 void Sparse_target_1_pair(void);
 void Sparse_target_2_pairs(void);
 void Sparse_target_exclusive_pair(void);
@@ -4268,6 +4278,22 @@ bake_test_case Remove_testcases[] = {
     {
         "not_added",
         Remove_not_added
+    },
+    {
+        "remove_wildcard",
+        Remove_remove_wildcard
+    },
+    {
+        "remove_some_wildcard_pair",
+        Remove_remove_some_wildcard_pair
+    },
+    {
+        "remove_all_tgt_wildcard_pair",
+        Remove_remove_all_tgt_wildcard_pair
+    },
+    {
+        "remove_all_rel_wildcard_pair",
+        Remove_remove_all_rel_wildcard_pair
     }
 };
 
@@ -4358,6 +4384,26 @@ bake_test_case Sparse_testcases[] = {
     {
         "remove_after_add_non_sparse_pair",
         Sparse_remove_after_add_non_sparse_pair
+    },
+    {
+        "remove_pair_wildcard_rel",
+        Sparse_remove_pair_wildcard_rel
+    },
+    {
+        "remove_pair_wildcard_tgt",
+        Sparse_remove_pair_wildcard_tgt
+    },
+    {
+        "remove_pair_wildcard_tgt_exclusive",
+        Sparse_remove_pair_wildcard_tgt_exclusive
+    },
+    {
+        "remove_pair_wildcard_tgt_w_observer",
+        Sparse_remove_pair_wildcard_tgt_w_observer
+    },
+    {
+        "remove_pair_wildcard_tgt_exclusive_w_observer",
+        Sparse_remove_pair_wildcard_tgt_exclusive_w_observer
     },
     {
         "get_mut",
@@ -4690,6 +4736,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "exclusive_pair_w_hooks",
         Sparse_exclusive_pair_w_hooks
+    },
+    {
+        "exclusive_pair_w_observers",
+        Sparse_exclusive_pair_w_observers
     },
     {
         "target_1_pair",
@@ -12922,7 +12972,7 @@ static bake_test_suite suites[] = {
         "Remove",
         NULL,
         NULL,
-        10,
+        14,
         Remove_testcases
     },
     {
@@ -12936,7 +12986,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        158,
+        164,
         Sparse_testcases,
         1,
         Sparse_params
