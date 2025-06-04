@@ -182,8 +182,14 @@ int flecs_type_new_filtered(
     }
 
     dst->count = w;
+
     if (w != count) {
-        dst->array = flecs_wrealloc_n(world, ecs_id_t, w, count, dst->array);
+        if (w) {
+            dst->array = flecs_wrealloc_n(world, ecs_id_t, w, count, dst->array);
+        } else {
+            flecs_wfree_n(world, ecs_id_t, count, dst->array);
+            dst->array = NULL;
+        }
     }
 
     return 0;
