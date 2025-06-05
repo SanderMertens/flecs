@@ -488,8 +488,11 @@ void flecs_json_string_escape(
     ecs_strbuf_t *buf,
     const char *value)
 {
-    ecs_assert(value, ECS_INTERNAL_ERROR, NULL);
-    
+    if (!value) {
+        ecs_strbuf_appendlit(buf, "null");
+        return;
+    }
+
     ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
     if (length == ecs_os_strlen(value)) {
         ecs_strbuf_appendch(buf, '"');
