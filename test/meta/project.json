@@ -769,7 +769,8 @@
                 "serialize_auto_override_fullpath",
                 "serialize_auto_override_pair_fullpath",
                 "serialize_toggle",
-                "serialize_toggle_pair"
+                "serialize_toggle_pair",
+                "serialize_null_doc_name"
             ]
         }, {
             "id": "SerializeIterToJson",
@@ -838,6 +839,7 @@
                 "serialize_vars_for_query",
                 "serialize_var_labels_for_query",
                 "serialize_null_doc_name",
+                "serialize_overwrite_null_doc_name",
                 "serialize_rule_w_optional",
                 "serialize_rule_w_optional_component",
                 "serialize_entity_w_flecs_core_parent",

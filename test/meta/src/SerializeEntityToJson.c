@@ -2143,3 +2143,17 @@ void SerializeEntityToJson_serialize_toggle_pair(void) {
 
     ecs_fini(world);
 }
+
+void SerializeEntityToJson_serialize_null_doc_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_pair(world, e, EcsDocDescription, EcsName, { NULL });
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"#535\", \"components\":{\"(flecs.doc.Description,flecs.core.Name)\":{\"value\":null}}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
