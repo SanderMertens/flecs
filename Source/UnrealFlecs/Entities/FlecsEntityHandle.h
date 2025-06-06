@@ -14,7 +14,7 @@
 #include "SolidMacros/Macros.h"
 #include "StructUtils/InstancedStruct.h"
 #include "Types/SolidEnumSelector.h"
-#include "Types/SolidNonNullPtr.h"
+#include "Types/SolidNotNull.h"
 #include "FlecsEntityHandle.generated.h"
 
 class UFlecsWorld;
@@ -47,7 +47,7 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 		return FFlecsEntityHandle(flecs::entity::null());
 	}
 
-	NO_DISCARD static FFlecsEntityHandle GetNullHandle(const TSolidNonNullPtr<const UFlecsWorld> InWorld);
+	NO_DISCARD static FFlecsEntityHandle GetNullHandle(const TSolidNotNull<const UFlecsWorld*> InWorld);
 
 public:
 	FFlecsEntityHandle() = default;
@@ -66,7 +66,7 @@ public:
 		Entity = flecs::entity(InWorld, InEntity);
 	}
 
-	FFlecsEntityHandle(const TSolidNonNullPtr<const UFlecsWorld> InWorld, const FFlecsId InEntity);
+	FFlecsEntityHandle(const TSolidNotNull<const UFlecsWorld*> InWorld, const FFlecsId InEntity);
 
 	FFlecsEntityHandle(const flecs::world_t* InWorld, const FFlecsId InEntity);
 	
@@ -1030,7 +1030,7 @@ public:
 	}
 
 	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE TActual GetPair(const TSolidNonNullPtr<UScriptStruct> InSecond) const
+	SOLID_INLINE TActual GetPair(const TSolidNotNull<UScriptStruct*> InSecond) const
 	{
 		return GetPair<TFirst>(ObtainComponentTypeStruct(InSecond));
 	}
@@ -1302,9 +1302,9 @@ public:
 			StringCast<char>(*InitialSeparator).Get()));
 	}
 
-	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const TSolidNonNullPtr<const UScriptStruct> StructType) const;
+	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const TSolidNotNull<const UScriptStruct*> StructType) const;
 	
-	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeEnum(const TSolidNonNullPtr<const UEnum> EnumType) const;
+	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeEnum(const TSolidNotNull<const UEnum*> EnumType) const;
 
 	template <typename TEnumUnderlying = uint64>
 	NO_DISCARD FFlecsEntityHandle ObtainEnumConstant(UEnum* EnumType, const TEnumUnderlying InValue) const

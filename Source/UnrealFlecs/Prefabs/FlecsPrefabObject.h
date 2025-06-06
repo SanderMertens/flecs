@@ -16,7 +16,7 @@ class UNREALFLECS_API UFlecsPrefabObject : public UObject, public IFlecsEntityIn
 	GENERATED_BODY()
 
 public:
-	void CreatePrefab(TSolidNonNullPtr<UFlecsWorld> InWorld);
+	void CreatePrefab(TSolidNotNull<UFlecsWorld*> InWorld);
 	
 	virtual void OnPrefabCreated(const FFlecsEntityHandle& InPrefab) {}
 

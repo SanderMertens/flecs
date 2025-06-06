@@ -8,7 +8,7 @@ FFlecsQueryVarExpression::FFlecsQueryVarExpression() : Super(false /* bInAllowsC
 {
 }
 
-void FFlecsQueryVarExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const
+void FFlecsQueryVarExpression::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const
 {
 	InQueryBuilder.var(StringCast<char>(*VarName).Get());
 }

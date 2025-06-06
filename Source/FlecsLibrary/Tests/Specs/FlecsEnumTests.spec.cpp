@@ -1,7 +1,8 @@
 ﻿#if WITH_AUTOMATION_TESTS && defined(FLECS_TESTS)
 
-#include "Misc/AutomationTest.h"
 #include "flecs.h"
+
+#include "Misc/AutomationTest.h"
 #include "Bake/FlecsTestUtils.h"
 #include "Bake/FlecsTestTypes.h"
 

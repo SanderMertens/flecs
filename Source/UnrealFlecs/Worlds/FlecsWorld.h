@@ -20,13 +20,13 @@
 #include "Engine/AssetManager.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "Concepts/SolidConcepts.h"
-#include "Types/SolidNonNullPtr.h"
 #include "Entities/FlecsId.h"
 #include "Logs/FlecsCategories.h"
 #include "Modules/FlecsDependenciesComponent.h"
 #include "Modules/FlecsModuleInitEvent.h"
 #include "Modules/FlecsModuleInterface.h"
 #include "Modules/FlecsModuleProgressInterface.h"
+#include "Pipelines/FlecsGameLoopInterface.h"
 #include "Prefabs/FlecsPrefabAsset.h"
 #include "UObject/PropertyIterator.h"
 #include "FlecsWorld.generated.h"
@@ -95,7 +95,7 @@ public:
 		if (!GIsAutomationTesting)
 		{
 		#endif // WITH_AUTOMATION_TESTS
-			InitializeAssetRegistry();
+			//InitializeAssetRegistry();
 		#if WITH_AUTOMATION_TESTS
 		}
 		#endif // WITH_AUTOMATION_TESTS
@@ -366,7 +366,7 @@ public:
 			.yield_existing()
 			.each([this](flecs::entity InEntity, const FFlecsUObjectComponent& InUObjectComponent)
 			{
-				const TSolidNonNullPtr<UObject> ObjectPtr = InUObjectComponent.GetObjectChecked();
+				const TSolidNotNull<UObject*> ObjectPtr = InUObjectComponent.GetObjectChecked();
 
 				UN_LOGF(LogFlecsWorld, Log,
 					"Module component %s added", *ObjectPtr->GetName());
@@ -457,8 +457,8 @@ public:
 							if (DependenciesComponent.Dependencies.contains(InModuleComponent.ModuleClass))
 							{
 								const std::function<void(
-									TSolidNonNullPtr<UObject>,
-									TSolidNonNullPtr<UFlecsWorld>,
+									TSolidNotNull<UObject*>,
+									TSolidNotNull<UFlecsWorld*>,
 									FFlecsEntityHandle)>& Function
 									= DependenciesComponent.Dependencies.at(InModuleComponent.ModuleClass);
 
@@ -496,7 +496,7 @@ public:
 			});
 	}
 
-	void InitializeAssetRegistry()
+	/*void InitializeAssetRegistry()
 	{
 		const FAssetRegistryModule& AssetRegistryModule
 			= FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
@@ -562,7 +562,7 @@ public:
 				UnregisterFlecsAsset(RemovedAsset);
 			}
 		});
-	}
+	}*/
 
 	/**
 	 * @brief Asynchronously Register a module dependency,
@@ -573,13 +573,13 @@ public:
 	 * @tparam TModule The module class
 	 */
 	template <Solid::TStaticClassConcept TModule, typename TFunction>
-	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(const TSolidNonNullPtr<UObject> InModuleObject,
+	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(const TSolidNotNull<UObject*> InModuleObject,
 	                                                     TFunction&& InFunction)
 	{
 		RegisterModuleDependency(InModuleObject, TModule::StaticClass(),
 			[InFunction = std::forward<TFunction>(InFunction)]
-				(const TSolidNonNullPtr<UObject> InDependencyObject,
-				TSolidNonNullPtr<UFlecsWorld> InWorld,
+				(const TSolidNotNull<UObject*> InDependencyObject,
+				TSolidNotNull<UFlecsWorld*> InWorld,
 				FFlecsEntityHandle InDependencyEntity)
 			{
 				std::invoke(InFunction, CastChecked<TModule>(InDependencyObject.Get()), InWorld, InDependencyEntity);
@@ -595,15 +595,14 @@ public:
 	 * @param InFunction The function to call when the dependency is imported
 	 */
 	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(
-		const TSolidNonNullPtr<const UObject> InModuleObject,
+		const TSolidNotNull<const UObject*> InModuleObject,
 		const TSubclassOf<UFlecsModuleInterface>& InDependencyClass,
-		const std::function<void(TSolidNonNullPtr<UObject>, TSolidNonNullPtr<UFlecsWorld>, FFlecsEntityHandle)>& InFunction)
+		const std::function<void(TSolidNotNull<UObject*>, TSolidNotNull<UFlecsWorld*>, FFlecsEntityHandle)>& InFunction)
 	{
 		solid_check(InModuleObject->Implements<UFlecsModuleInterface>());
 
 		solid_checkf(IsModuleImported(InModuleObject->GetClass()),
-			TEXT("Module %s is not imported"),
-				*InModuleObject->GetClass()->GetName());
+			TEXT("Module %s is not imported"), *InModuleObject->GetClass()->GetName());
 
 		FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModuleObject->GetClass());
 		solid_check(ModuleEntity.IsValid());
@@ -618,7 +617,7 @@ public:
 		if (IsModuleImported(InDependencyClass))
 		{
 			const FFlecsEntityHandle DependencyEntity = GetModuleEntity(InDependencyClass);
-			TSolidNonNullPtr<UObject> DependencyModuleObject = GetModule(InDependencyClass);
+			TSolidNotNull<UObject*> DependencyModuleObject = GetModule(InDependencyClass);
 
 			solid_check(DependencyEntity.IsValid());
 
@@ -627,7 +626,7 @@ public:
 		}
 	}
 
-	FORCEINLINE_DEBUGGABLE void RegisterFlecsAsset(TSolidNonNullPtr<UFlecsPrimaryDataAsset> InAsset)
+	/*FORCEINLINE_DEBUGGABLE void RegisterFlecsAsset(TSolidNotNull<UFlecsPrimaryDataAsset*> InAsset)
 	{
 		if (!InAsset->ShouldSpawn())
 		{
@@ -640,21 +639,21 @@ public:
 		InAsset->OnEntityCreated(AssetEntity, this);
 	}
 
-	FORCEINLINE_DEBUGGABLE void UnregisterFlecsAsset(TSolidNonNullPtr<UFlecsPrimaryDataAsset> InAsset)
+	FORCEINLINE_DEBUGGABLE void UnregisterFlecsAsset(TSolidNotNull<UFlecsPrimaryDataAsset*> InAsset)
 	{
 		const FFlecsEntityHandle AssetEntity = LookupEntity(InAsset->GetPrimaryAssetId().ToString());
 		
 		if (!AssetEntity.IsValid())
 		{
-			UN_LOGF(LogFlecsWorld, Log, "Asset entity %s not found",
-				*InAsset->GetPrimaryAssetId().ToString());
+			UN_LOGF(LogFlecsWorld, Log,
+				"Asset entity %s not found", *InAsset->GetPrimaryAssetId().ToString());
 			return;
 		}
 		
 		InAsset->OnEntityDestroyed(AssetEntity, this);
 		FlecsPrimaryDataAssets.Remove(InAsset);
 		AssetEntity.Destroy();
-	}
+	}*/
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE void Reset()
@@ -776,7 +775,8 @@ public:
 		return World.has<T>();
 	}
 
-	template <typename T UE_REQUIRES(std::is_copy_constructible<T>::value)>
+	template <typename T
+		UE_REQUIRES(std::is_copy_constructible<T>::value)>
 	NO_DISCARD FORCEINLINE_DEBUGGABLE T GetSingleton() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
@@ -879,10 +879,16 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void ImportModule(const TScriptInterface<IFlecsModuleInterface> InModule)
+	FORCEINLINE_DEBUGGABLE void ImportModule(const TScriptInterface<IFlecsModuleInterface>& InModule)
 	{
-		solid_checkf(IsValid(InModule.GetObject()), TEXT("Module is nullptr"));
-		InModule->ImportModule(World);
+		solid_checkf(InModule, TEXT("Module is nullptr"));
+
+		const UObject* TemplateModuleObject = InModule.GetObject();
+
+		TSolidNotNull<UObject*> NewModuleObject = DuplicateObject(TemplateModuleObject, this);
+		ImportedModules.Add(NewModuleObject);
+		
+		ImportedModules.Last()->ImportModule(World);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
@@ -935,7 +941,7 @@ public:
 	}
 
 	template <Solid::TStaticClassConcept T>
-	NO_DISCARD FORCEINLINE_DEBUGGABLE TSolidNonNullPtr<T> GetModule() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE TSolidNotNull<T*> GetModule() const
 	{
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity<T>();
 		return ModuleEntity.GetPairPtr<FFlecsUObjectComponent, FFlecsModuleComponentTag>()->GetObjectChecked<T>();
@@ -1045,10 +1051,10 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE bool Progress(const double DeltaTime = 0.0)
+	FORCEINLINE_DEBUGGABLE bool ProgressGameLoop(const double DeltaTime = 0.0)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_FlecsWorldProgress);
-
+		
 		{
 			SCOPE_CYCLE_COUNTER(STAT_FlecsWorldProgressModule);
 			
@@ -1058,7 +1064,14 @@ public:
 				Module->ProgressModule(DeltaTime);
 			}
 		}
-		
+
+		solid_check(GameLoopInterface);
+		return GameLoopInterface->Progress(DeltaTime, this);
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	FORCEINLINE_DEBUGGABLE bool Progress(const double DeltaTime = 0.0)
+	{
 		return World.progress(DeltaTime);
 	}
 
@@ -1195,7 +1208,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE void PreallocateEntities(const int32 InEntityCount) const
 	{
-		if UNLIKELY_IF(ensureAlwaysMsgf(InEntityCount > 0, TEXT("Entity count must be greater than 0")))
+		if UNLIKELY_IF(ensureAlwaysMsgf(InEntityCount > 0,
+			TEXT("Entity count must be greater than 0")))
 		{
 			return;
 		}
@@ -1371,7 +1385,7 @@ public:
 		return HasScriptEnum(StaticEnum<T>());
 	}
 
-	void RegisterMemberProperties(const TSolidNonNullPtr<const UStruct> InStruct,
+	void RegisterMemberProperties(const TSolidNotNull<const UStruct*> InStruct,
 	                              const FFlecsEntityHandle& InEntity) const
 	{
 		solid_checkf(InEntity.IsValid(), TEXT("Entity is nullptr"));
@@ -1684,7 +1698,7 @@ public:
 		return RegisterComponentEnumType(ScriptEnum);
 	}
 	
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentEnumType(TSolidNonNullPtr<const UEnum> ScriptEnum) const
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentEnumType(TSolidNotNull<const UEnum*> ScriptEnum) const
 	{
 		const FFlecsEntityHandle OldScope = ClearScope();
 
@@ -1827,7 +1841,7 @@ public:
 	}
 	
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentType(
-		const TSolidNonNullPtr<const UScriptStruct> ScriptStruct) const
+		const TSolidNotNull<const UScriptStruct*> ScriptStruct) const
 	{
 		if (HasScriptStruct(ScriptStruct))
 		{
@@ -2111,6 +2125,12 @@ public:
 	}
 	
 	flecs::world World;
+
+	UPROPERTY()
+	TScriptInterface<IFlecsGameLoopInterface> GameLoopInterface;
+
+	UPROPERTY()
+	TArray<TScriptInterface<IFlecsModuleInterface>> ImportedModules;
 
 	UPROPERTY()
 	TArray<TScriptInterface<IFlecsModuleProgressInterface>> ProgressModules;

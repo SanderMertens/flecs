@@ -10,12 +10,12 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityHandle)
 
-FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const TSolidNonNullPtr<const UFlecsWorld> InWorld)
+FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const TSolidNotNull<const UFlecsWorld*> InWorld)
 {
     return flecs::entity::null(InWorld->World);
 }
 
-FFlecsEntityHandle::FFlecsEntityHandle(const TSolidNonNullPtr<const UFlecsWorld> InWorld, const FFlecsId InEntity)
+FFlecsEntityHandle::FFlecsEntityHandle(const TSolidNotNull<const UFlecsWorld*> InWorld, const FFlecsId InEntity)
 {
     SetEntity(flecs::entity(InWorld->World, InEntity));
 }
@@ -46,13 +46,12 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
     return true;
 }
 
-FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(
-    const TSolidNonNullPtr<const UScriptStruct> StructType) const
+FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const TSolidNotNull<const UScriptStruct*> StructType) const
 {
     return GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
 }
 
-FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeEnum(const TSolidNonNullPtr<const UEnum> EnumType) const
+FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeEnum(const TSolidNotNull<const UEnum*> EnumType) const
 {
     return GetFlecsWorld()->ObtainComponentTypeEnum(EnumType);
 }

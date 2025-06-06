@@ -19,8 +19,8 @@ struct alignas(64) UNREALFLECS_API FFlecsDependenciesComponent
 	GENERATED_BODY()
 
 public:
-	robin_hood::unordered_flat_map<UClass*, std::function<void(TSolidNonNullPtr<UObject>,
-	                                                           TSolidNonNullPtr<UFlecsWorld>,
+	robin_hood::unordered_flat_map<UClass*, std::function<void(TSolidNotNull<UObject*>,
+	                                                           TSolidNotNull<UFlecsWorld*>,
 	                                                           FFlecsEntityHandle)>> Dependencies;
 }; // struct FFlecsDependenciesComponent
 

@@ -8,7 +8,7 @@ FFlecsQuerySrcExpression::FFlecsQuerySrcExpression() : Super(false /* bInAllowsC
 {
 }
 
-void FFlecsQuerySrcExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const
+void FFlecsQuerySrcExpression::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const
 {
 	switch (SrcType)
 	{

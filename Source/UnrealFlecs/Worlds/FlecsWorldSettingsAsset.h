@@ -14,17 +14,14 @@ class UNREALFLECS_API UFlecsWorldSettingsAsset : public UDataAsset
 	GENERATED_BODY()
 
 public:
-	UFlecsWorldSettingsAsset()
-	{
-		WorldSettings.WorldName = "DefaultFlecsWorld";
-	}
+	UFlecsWorldSettingsAsset();
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	FFlecsWorldSettingsInfo WorldSettings;
 
 	#if WITH_EDITOR
 
-	//virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) override;
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
 
 	#endif // WITH_EDITOR
 

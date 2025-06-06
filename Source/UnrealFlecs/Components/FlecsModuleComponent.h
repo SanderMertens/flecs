@@ -13,7 +13,7 @@ struct UNREALFLECS_API FFlecsModuleComponent
 
 	FORCEINLINE FFlecsModuleComponent() = default;
 
-	FORCEINLINE FFlecsModuleComponent(const TSubclassOf<UObject>& InModuleClass)
+	FORCEINLINE FFlecsModuleComponent(const TSubclassOf<UObject> InModuleClass)
 		: ModuleClass(InModuleClass)
 	{
 	}

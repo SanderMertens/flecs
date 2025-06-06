@@ -194,6 +194,7 @@ struct FOSApiInitializer
 			{
 				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
 				delete Wrapper->Mutex;
+				Wrapper->Mutex = nullptr;
 				delete Wrapper;
 			}
 		};

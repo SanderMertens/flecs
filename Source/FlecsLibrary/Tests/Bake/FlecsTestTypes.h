@@ -4,8 +4,9 @@
 
 #if WITH_AUTOMATION_TESTS
 
-#include "CoreMinimal.h"
 #include "flecs.h"
+
+#include "CoreMinimal.h"
 #include "FlecsTestUtils.h"
 
 namespace test {

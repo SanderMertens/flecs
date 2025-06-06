@@ -5,6 +5,7 @@
 #include "FlecsDefaultEntitiesDeveloperSettings.h"
 #include "Unlog/Unlog.h"
 #include "Worlds/FlecsWorldSubsystem.h"
+#include "Types/SolidNotNull.h"
 
 FFlecsDefaultEntityEngine FFlecsDefaultEntityEngine::Instance;
 
@@ -68,7 +69,8 @@ void FFlecsDefaultEntityEngine::Initialize()
 		DefaultEntityOptions.Add(Entity.name().c_str(), Entity.id());
 	});
 	
-	MAYBE_UNUSED TSolidNonNullPtr Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
+	//MAYBE_UNUSED TSolidNotNull<UFlecsDefaultEntitiesDeveloperSettings*> Settings
+	//	= GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
 
 	// @TODO: If we ever add back adding default entities in Developer Settings
 	/*#if WITH_EDITOR

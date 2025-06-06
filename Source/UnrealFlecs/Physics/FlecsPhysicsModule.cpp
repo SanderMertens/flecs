@@ -18,12 +18,12 @@ DECLARE_CYCLE_STAT(TEXT("FlecsPhysicsModule::ResimulationHandlers"),
 	STAT_FlecsPhysicsModule_ResimulationHandlers, STATGROUP_FlecsPhysicsModule);
 
 void UFlecsPhysicsModule::InitializeModule(
-	TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity)
+	TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
 	InWorld->RegisterComponentType<FFlecsPhysicsSceneComponent>();
 }
 
-void UFlecsPhysicsModule::DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld)
+void UFlecsPhysicsModule::DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld)
 {
 	if (!IsValid(InWorld))
 	{
@@ -40,7 +40,7 @@ void UFlecsPhysicsModule::DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWor
 	// }
 }
 
-void UFlecsPhysicsModule::WorldBeginPlay(TSolidNonNullPtr<UFlecsWorld> InWorld, TSolidNonNullPtr<UWorld> InGameWorld)
+void UFlecsPhysicsModule::WorldBeginPlay(TSolidNotNull<UFlecsWorld*> InWorld, TSolidNotNull<UWorld*> InGameWorld)
 {
 	Super::WorldBeginPlay(InWorld, InGameWorld);
 
@@ -49,15 +49,15 @@ void UFlecsPhysicsModule::WorldBeginPlay(TSolidNonNullPtr<UFlecsWorld> InWorld, 
 
 	InWorld->RegisterModuleDependency<UFlecsTickerModule>
 		(this, [this](
-				MAYBE_UNUSED TSolidNonNullPtr<UFlecsTickerModule> InModuleObject,
-				TSolidNonNullPtr<UFlecsWorld> InFlecsWorld,
+				MAYBE_UNUSED TSolidNotNull<UFlecsTickerModule*> InModuleObject,
+				TSolidNotNull<UFlecsWorld*> InFlecsWorld,
 				MAYBE_UNUSED FFlecsEntityHandle& InTickerEntity)
 		{
 			solid_check(Scene);
 			
 			InFlecsWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
 
-			const TSolidNonNullPtr<UFlecsTickerModule> TickerModule = InFlecsWorld->GetModule<UFlecsTickerModule>();
+			const TSolidNotNull<UFlecsTickerModule*> TickerModule = InFlecsWorld->GetModule<UFlecsTickerModule>();
 			
 			Scene->GetSolver()->EnableAsyncMode(1.0 / static_cast<double>(TickerModule->GetTickerRate()));
 			Scene->GetSolver()->SetIsDeterministic(true);
@@ -70,9 +70,9 @@ void UFlecsPhysicsModule::WorldBeginPlay(TSolidNonNullPtr<UFlecsWorld> InWorld, 
 		});
 }
 
-inline void UFlecsPhysicsModule::ResimulationHandlers()
+void UFlecsPhysicsModule::ResimulationHandlers()
 {
-	TSolidNonNullPtr<UFlecsWorld> FlecsWorld = GetFlecsWorld();
+	const TSolidNotNull<UFlecsWorld*> FlecsWorld = GetFlecsWorld();
 	
 	solid_check(Scene);
 	
@@ -105,8 +105,7 @@ inline void UFlecsPhysicsModule::ResimulationHandlers()
 			return;
 		}
 
-		const UFlecsWorld* FlecsAdvanceWorld = GetFlecsWorld();
-		solid_checkf(IsValid(FlecsAdvanceWorld), TEXT("FlecsWorld is invalid"));
+		const TSolidNotNull<UFlecsWorld*> FlecsAdvanceWorld = GetFlecsWorld();
 
 		if UNLIKELY_IF(FlecsAdvanceWorld->GetWorld()->GetPhysicsScene() == nullptr)
 		{

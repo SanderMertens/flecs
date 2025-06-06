@@ -7,7 +7,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsModuleSetDataAsset)
 
-void UFlecsModuleSetDataAsset::ImportModules(const TSolidNonNullPtr<UFlecsWorld> InWorld)
+void UFlecsModuleSetDataAsset::ImportModules(const TSolidNotNull<UFlecsWorld*> InWorld)
 {
 	for (UObject* Module : Modules)
 	{

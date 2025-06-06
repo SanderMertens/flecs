@@ -8,10 +8,10 @@
 #include "SolidMacros/Macros.h"
 #include "FlecsDefaultEntitiesDeveloperSettings.generated.h"
 
-namespace UnrealFlecs
+namespace Unreal::Flecs
 {
 	using EntityFunctionPtr = std::function<void(flecs::entity)>;
-} // namespace UnrealFlecs
+} // namespace Unreal::Flecs
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsDefaultMetaEntity

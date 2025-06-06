@@ -9,7 +9,7 @@ FFlecsQueryTermExpression::FFlecsQueryTermExpression() : Super(true /* bInAllows
 {
 }
 
-void FFlecsQueryTermExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const
+void FFlecsQueryTermExpression::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const
 {
 	switch (InputType.Type)
 	{

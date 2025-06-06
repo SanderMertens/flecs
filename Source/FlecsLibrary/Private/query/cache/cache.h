@@ -126,7 +126,7 @@ bool flecs_query_cache_is_trivial(
 ecs_size_t flecs_query_cache_elem_size(
     const ecs_query_cache_t *cache);
 
-#include "cache_iter.h"
- #include "group.h"
+#include "iter.h"
+#include "group.h"
 #include "match.h"
 #include "change_detection.h"

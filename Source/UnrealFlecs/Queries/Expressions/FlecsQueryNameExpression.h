@@ -17,6 +17,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query")
 	FString Name;
 
-	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
+	virtual void Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 	
 }; // struct FFlecsQueryNameExpression

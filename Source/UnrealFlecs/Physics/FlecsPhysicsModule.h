@@ -17,10 +17,10 @@ class UNREALFLECS_API UFlecsPhysicsModule final : public UFlecsModuleObject
 	GENERATED_BODY()
 
 public:
-	virtual void InitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
-	virtual void DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld) override;
+	virtual void InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
+	virtual void DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld) override;
 
-	virtual void WorldBeginPlay(TSolidNonNullPtr<UFlecsWorld> InWorld, TSolidNonNullPtr<UWorld> InGameWorld) override;
+	virtual void WorldBeginPlay(TSolidNotNull<UFlecsWorld*> InWorld, TSolidNotNull<UWorld*> InGameWorld) override;
 
 	void ResimulationHandlers();
 

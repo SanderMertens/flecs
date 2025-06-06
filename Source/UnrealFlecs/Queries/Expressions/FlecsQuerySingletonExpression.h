@@ -14,6 +14,6 @@ struct UNREALFLECS_API FFlecsQuerySingletonExpression : public FFlecsQueryExpres
 public:
 	FFlecsQuerySingletonExpression();
 	
-	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
+	virtual void Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 	
 }; // struct FFlecsQuerySingletonExpression

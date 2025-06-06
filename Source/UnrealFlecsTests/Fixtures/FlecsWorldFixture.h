@@ -20,9 +20,12 @@ public:
 	TStrongObjectPtr<UFlecsWorldSubsystem> WorldSubsystem = nullptr;
 	TStrongObjectPtr<UFlecsWorld> FlecsWorld = nullptr;
 
-	void SetUp(const TArray<UObject*>& InModules = {})
+	void SetUp(TScriptInterface<IFlecsGameLoopInterface> InGameLoopInterface = nullptr,
+	           const TArray<UObject*>& InModules = {})
 	{
-		TestWorld = TStrongObjectPtr(UWorld::CreateWorld(EWorldType::Game, false, TEXT("FlecsTestWorld")));
+		TestWorld = TStrongObjectPtr(UWorld::CreateWorld(EWorldType::Game,
+			false, TEXT("FlecsTestWorld")));
+		
 		check(TestWorld.IsValid());
 
 		FWorldContext& WorldContext = GEngine->CreateNewWorldContext(EWorldType::Game);
@@ -31,9 +34,15 @@ public:
 		WorldSubsystem = TStrongObjectPtr(TestWorld->GetSubsystem<UFlecsWorldSubsystem>());
 		check(WorldSubsystem.IsValid());
 
+		if (!InGameLoopInterface)
+		{
+			InGameLoopInterface = NewObject<UFlecsDefaultGameLoop>(WorldSubsystem.Get());
+		}
+
 		// Create world settings
 		FFlecsWorldSettingsInfo WorldSettings;
 		WorldSettings.WorldName = TEXT("TestWorld");
+		WorldSettings.GameLoop = InGameLoopInterface.GetObject();
 		WorldSettings.Modules = InModules;
 
 		FlecsWorld = TStrongObjectPtr(WorldSubsystem->CreateWorld(TEXT("TestWorld"), WorldSettings));

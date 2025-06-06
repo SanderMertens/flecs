@@ -6,13 +6,13 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsRestModule)
 
-void UFlecsRestModule::InitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity)
+void UFlecsRestModule::InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
 	#ifdef FLECS_REST
 	
 	uint16 ClientPieInstanceOffset = 0;
 	
-	const TSolidNonNullPtr<const UWorld> UnrealWorld = InWorld->GetWorld();
+	const TSolidNotNull<const UWorld*> UnrealWorld = InWorld->GetWorld();
 
 	#if WITH_EDITOR
 	
@@ -40,7 +40,7 @@ void UFlecsRestModule::InitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld, c
 	#endif // FLECS_REST
 }
 
-void UFlecsRestModule::DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld)
+void UFlecsRestModule::DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld)
 {
 	#ifdef FLECS_REST
 

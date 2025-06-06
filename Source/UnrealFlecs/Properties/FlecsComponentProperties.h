@@ -11,13 +11,13 @@
 #include "CoreMinimal.h"
 #include "Standard/robin_hood.h"
 #include "SolidMacros/Macros.h"
-#include "Types/SolidNonNullPtr.h"
+#include "Types/SolidNotNull.h"
 #include "Unlog/Unlog.h"
 
-namespace UnrealFlecs
+namespace Unreal::Flecs
 {
-	using FlecsComponentFunctionPtr = std::function<void(flecs::world, flecs::untyped_component)>;
-} // namespace UnrealFlecs
+	using FlecsComponentFunction = std::function<void(flecs::world, flecs::untyped_component)>;
+} // namespace Unreal::Flecs
 
 struct UNREALFLECS_API FFlecsComponentProperties
 {
@@ -27,7 +27,7 @@ struct UNREALFLECS_API FFlecsComponentProperties
 	uint32 Size = 1;
 	uint16 Alignment = 1;
 
-	UnrealFlecs::FlecsComponentFunctionPtr RegistrationFunction;
+	Unreal::Flecs::FlecsComponentFunction RegistrationFunction;
 }; // struct FFlecsComponentProperties
 
 DECLARE_DELEGATE_OneParam(FOnComponentPropertiesRegistered, FFlecsComponentProperties);
@@ -43,9 +43,9 @@ public:
 	}
 
 	FORCEINLINE void RegisterComponentProperties(const std::string& Name,
-	                                             const TSolidNonNullPtr<UScriptStruct> Struct,
+	                                             UScriptStruct* Struct,
 	                                             const uint32 Size, const uint16 Alignment,
-	                                             const UnrealFlecs::FlecsComponentFunctionPtr& RegistrationFunction)
+	                                             const Unreal::Flecs::FlecsComponentFunction& RegistrationFunction)
 	{
 		UNLOG_CATEGORY_SCOPED(LogFlecsComponentProperties);
 
@@ -79,6 +79,7 @@ public:
 	
 }; // struct FFlecsComponentPropertiesRegistry
 
+// std::function<void(flecs::world, flecs::untyped_component)>
 #define REGISTER_FLECS_COMPONENT(Name, RegistrationFunction) \
 	namespace \
 	{ \

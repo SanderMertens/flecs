@@ -16,18 +16,18 @@ UUnrealFlecsObject::UUnrealFlecsObject(const FObjectInitializer& ObjectInitializ
 {
 }
 
-void UUnrealFlecsObject::InitializeFlecsObject(TSolidNonNullPtr<UFlecsWorld> InFlecsWorld)
+void UUnrealFlecsObject::InitializeFlecsObject(TSolidNotNull<UFlecsWorld*> InFlecsWorld)
 {
 	FlecsWorld = InFlecsWorld;
 
 	ObjectEntityHandle = CreateObjectEntity();
 	ObjectEntityHandle.Set<FFlecsUObjectComponent>({ this });
 	
-	TSolidNonNullPtr<UFlecsWorldSubsystem> FlecsWorldSubsystem = FlecsWorld->GetContext();
+	TSolidNotNull<UFlecsWorldSubsystem*> FlecsWorldSubsystem = FlecsWorld->GetContext();
 
 	FlecsWorldSubsystem->ListenBeginPlay(
 		FFlecsOnWorldBeginPlay::FDelegate::CreateWeakLambda(this, [this]
-			(TSolidNonNullPtr<UWorld> InWorld)
+			(TSolidNotNull<UWorld*> InWorld)
 	{
 		solid_check(FlecsWorld.IsValid());
 		solid_check(FlecsWorld->GetWorld() == InWorld);

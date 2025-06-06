@@ -6,7 +6,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsPrefabObject)
 
-void UFlecsPrefabObject::CreatePrefab(const TSolidNonNullPtr<UFlecsWorld> InWorld)
+void UFlecsPrefabObject::CreatePrefab(const TSolidNotNull<UFlecsWorld*> InWorld)
 {
 	FlecsWorld = InWorld;
 

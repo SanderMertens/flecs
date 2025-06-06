@@ -8,7 +8,7 @@ FFlecsOperQueryExpression::FFlecsOperQueryExpression() : Super(false /* bInAllow
 {
 }
 
-void FFlecsOperQueryExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const
+void FFlecsOperQueryExpression::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const
 {
 	InQueryBuilder.oper(static_cast<flecs::oper_kind_t>(Operator));
 }

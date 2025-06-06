@@ -4,7 +4,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsQueryExpression)
 
-void FFlecsQueryExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const
+void FFlecsQueryExpression::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const
 {
 	for (const TInstancedStruct<FFlecsQueryExpression>& Child : Children)
 	{

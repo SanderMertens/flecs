@@ -24,14 +24,15 @@
 #include "General/FlecsDeveloperSettings.h"
 #include "Modules/FlecsModuleSetDataAsset.h"
 #include "Concepts/SolidConcepts.h"
+#include "Pipelines/FlecsDefaultGameLoop.h"
 #include "Standard/Hashing.h"
 #include "Standard/robin_hood.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "FlecsWorldSubsystem.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldCreated, TSolidNonNullPtr<UFlecsWorld>);
-DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldBeginPlay, TSolidNonNullPtr<UWorld>);
-DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldDestroyed, TSolidNonNullPtr<UFlecsWorld>);
+DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldCreated, TSolidNotNull<UFlecsWorld*>);
+DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldBeginPlay, TSolidNotNull<UWorld*>);
+DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldDestroyed, TSolidNotNull<UFlecsWorld*>);
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsystem
@@ -60,7 +61,7 @@ public:
 		solid_checkf(GetWorld()->GetWorldSettings()->IsA<AFlecsWorldSettings>(),
 			TEXT("World settings must be of type AFlecsWorldSettings"));
 
-		const TSolidNonNullPtr<const AFlecsWorldSettings> SettingsActor
+		const TSolidNotNull<const AFlecsWorldSettings*> SettingsActor
 			= CastChecked<AFlecsWorldSettings>(GetWorld()->GetWorldSettings());
 
 		if (const UFlecsWorldSettingsAsset* SettingsAsset = SettingsActor->DefaultWorld)
@@ -115,7 +116,7 @@ public:
 		#if WITH_EDITOR
 		const bool bResult =
 		#endif // WITH_EDITOR
-			DefaultWorld->Progress(DeltaTime);
+			DefaultWorld->ProgressGameLoop(DeltaTime);
 
 		#if WITH_EDITOR
 
@@ -142,13 +143,17 @@ public:
 		
 		DefaultWorld = NewObject<UFlecsWorld>(this, WorldNameWithWorldContext);
 
+		TSolidNotNull<UObject*> GameLoop = DuplicateObject<UObject>(Settings.GameLoop, DefaultWorld);
+
+		DefaultWorld->GameLoopInterface = GameLoop;
+
 		DefaultWorld->InitializeDefaultComponents();
-		
-		DefaultWorld->RegisterComponentType<FFlecsWorldPtrComponent>();
-		DefaultWorld->RegisterComponentType<FUWorldPtrComponent>();
 
 		// @TODO: Update this to either the FlecsWorldObject or the UWorld
 		DefaultWorld->SetContext(this);
+		
+		DefaultWorld->RegisterComponentType<FFlecsWorldPtrComponent>();
+		DefaultWorld->RegisterComponentType<FUWorldPtrComponent>();
 
 		DefaultWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ DefaultWorld });
 		DefaultWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
@@ -187,22 +192,21 @@ public:
 
 		DefaultWorld->WorldStart();
 
-		for (TSolidNonNullPtr<UObject> Module : Settings.Modules)
+		for (TSolidNotNull<UObject*> Module : Settings.Modules)
 		{
 			solid_check(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()));
 			
 			DefaultWorld->ImportModule(Module);
 		}
 
-		for (const TSolidNonNullPtr<UFlecsModuleSetDataAsset> ModuleSet : Settings.ModuleSets)
+		for (const TSolidNotNull<UFlecsModuleSetDataAsset*> ModuleSet : Settings.ModuleSets)
 		{
 			ModuleSet->ImportModules(DefaultWorld);
 		}
-		
 
 		#if WITH_EDITOR
 
-		for (TSolidNonNullPtr<UObject> Module : Settings.EditorModules)
+		for (TSolidNotNull<UObject*> Module : Settings.EditorModules)
 		{
 			solid_checkf(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
 				TEXT("Module %s does not implement UFlecsModuleInterface"), *Module->GetName());
@@ -210,13 +214,14 @@ public:
 			DefaultWorld->ImportModule(Module);
 		}
 
-		for (const TSolidNonNullPtr<UFlecsModuleSetDataAsset> ModuleSet : Settings.EditorModuleSets)
+		for (const TSolidNotNull<UFlecsModuleSetDataAsset*> ModuleSet : Settings.EditorModuleSets)
 		{
 			ModuleSet->ImportModules(DefaultWorld);
 		}
 
 		#endif // WITH_EDITOR
-		
+
+		DefaultWorld->GameLoopInterface->InitializeGameLoop(DefaultWorld);
 		OnWorldCreatedDelegate.Broadcast(DefaultWorld.Get());
 		
 		return DefaultWorld;
@@ -291,7 +296,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UFlecsWorld> DefaultWorld;
 
-	void RegisterAllGameplayTags(const TSolidNonNullPtr<const UFlecsWorld> InFlecsWorld)
+	void RegisterAllGameplayTags(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld)
 	{
 		FGameplayTagContainer AllTags;
 		UGameplayTagsManager::Get().RequestAllGameplayTags(AllTags, false);

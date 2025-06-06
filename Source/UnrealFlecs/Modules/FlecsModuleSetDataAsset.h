@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "Types/SolidNonNullPtr.h"
+#include "Types/SolidNotNull.h"
 #include "FlecsModuleSetDataAsset.generated.h"
 
 class UFlecsWorld;
@@ -19,6 +19,6 @@ public:
 		meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
 	TArray<TObjectPtr<UObject>> Modules;
 	
-	void ImportModules(const TSolidNonNullPtr<UFlecsWorld> InWorld);
+	void ImportModules(const TSolidNotNull<UFlecsWorld*> InWorld);
 	
 }; // class UFlecsModuleSetDataAsset

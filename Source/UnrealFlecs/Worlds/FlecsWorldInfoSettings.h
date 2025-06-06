@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
 #include "Standard/Hashing.h"
+#include "Types/SolidNotNull.h"
 #include "FlecsWorldInfoSettings.generated.h"
 
 class UFlecsModuleSetDataAsset;
@@ -22,9 +23,10 @@ struct UNREALFLECS_API FFlecsWorldSettingsInfo
 public:
     FFlecsWorldSettingsInfo() = default;
     
-    FORCEINLINE FFlecsWorldSettingsInfo(const FString& InWorldName,
+    FORCEINLINE FFlecsWorldSettingsInfo(const FString& InWorldName, const TSolidNotNull<UObject*> InGameLoop,
         const TArray<TObjectPtr<UObject>>& InModules = {})
         : WorldName(InWorldName)
+        , GameLoop(InGameLoop)
         , Modules(InModules)
     {
     }
@@ -42,6 +44,10 @@ public:
     UPROPERTY(EditAnywhere, Category = "Flecs")
     FString WorldName;
 
+    UPROPERTY(EditAnywhere, Instanced, Category = "Flecs",
+        meta = (MustImplement = "/Script/UnrealFlecs.FlecsGameLoopInterface"))
+    TObjectPtr<UObject> GameLoop;
+
     UPROPERTY(EditAnywhere, Instanced, Category = "Flecs | Modules",
         meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
     TArray<TObjectPtr<UObject>> Modules;
@@ -58,8 +64,7 @@ public:
     UPROPERTY(EditAnywhere, Category = "Flecs | Editor Modules")
     TArray<TObjectPtr<UFlecsModuleSetDataAsset>> EditorModuleSets;
 
-    #endif // WITH_EDITORONLY_DATA
-    
+    #endif // #if WITH_EDITORONLY_DATA
     
 }; // struct FFlecsWorldSettingsInfo
 

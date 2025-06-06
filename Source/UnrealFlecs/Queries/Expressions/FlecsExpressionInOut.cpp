@@ -2,13 +2,15 @@
 
 #include "FlecsExpressionInOut.h"
 
+#include "Types/SolidNotNull.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsExpressionInOut)
 
 FFlecsExpressionInOut::FFlecsExpressionInOut() : Super(false /* bInAllowsChildExpressions */)
 {
 }
 
-void FFlecsExpressionInOut::Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const
+void FFlecsExpressionInOut::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const
 {
 	if (bStage)
 	{

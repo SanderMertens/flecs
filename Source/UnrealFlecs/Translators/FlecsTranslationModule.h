@@ -19,8 +19,8 @@ public:
 	}
 	
 	virtual void InitializeModule(
-		TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
-	virtual void DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld) override;
+		TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
+	virtual void DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld) override;
 
 private:
 

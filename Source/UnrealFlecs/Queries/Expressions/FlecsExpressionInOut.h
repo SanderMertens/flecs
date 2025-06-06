@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "FlecsQueryExpression.h"
 #include "Queries/Enums/FlecsQueryInOut.h"
+#include "Types/SolidNotNull.h"
 #include "FlecsExpressionInOut.generated.h"
 
 USTRUCT(BlueprintType, meta = (DisplayName = "In/Out Expression"))
@@ -15,7 +16,7 @@ struct UNREALFLECS_API FFlecsExpressionInOut final : public FFlecsQueryExpressio
 public:
 	FFlecsExpressionInOut();
 	
-	virtual void Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const override;
+	virtual void Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query")
 	EFlecsQueryInOut InOut = EFlecsQueryInOut::Default;

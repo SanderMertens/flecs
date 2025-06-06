@@ -39,7 +39,9 @@ public:
         Query = InWorld.query<TArgs...>(InName);
     }
 
-    FFlecsQuery(const TSolidNonNullPtr<UFlecsWorld> InFlecsWorld, const FString& InName, const FFlecsQueryDefinition& InDefinition);
+    FFlecsQuery(const TSolidNotNull<UFlecsWorld*> InFlecsWorld,
+                const FString& InName,
+                const FFlecsQueryDefinition& InDefinition);
 
     NO_DISCARD FORCEINLINE bool HasChanged() const
     {
@@ -93,5 +95,7 @@ public:
     
     flecs::query<> Query;
 }; // struct FFlecsQuery
+
+TYPENAME_OUTSIDE_TEMPLATE
 
 

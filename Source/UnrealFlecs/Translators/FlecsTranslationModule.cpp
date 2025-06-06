@@ -7,7 +7,7 @@
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsTranslationModule)
 
 void UFlecsTranslationModule::InitializeModule(
-	TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity)
+	TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
 	InWorld->RegisterComponentType<FFlecsTranslationPropertyTrait>();
 	InWorld->RegisterComponentType<FFlecsToUnreal>();
@@ -15,7 +15,7 @@ void UFlecsTranslationModule::InitializeModule(
 	InWorld->RegisterComponentType<FFlecsToBoth>();
 }
 
-void UFlecsTranslationModule::DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld)
+void UFlecsTranslationModule::DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld)
 {
 	
 }

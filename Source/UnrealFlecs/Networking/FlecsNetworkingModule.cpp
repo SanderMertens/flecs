@@ -6,11 +6,11 @@
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsNetworkingModule)
 
 void UFlecsNetworkingModule::InitializeModule(
-	TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity)
+	TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
 }
 
-void UFlecsNetworkingModule::DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld)
+void UFlecsNetworkingModule::DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld)
 {
 	
 }

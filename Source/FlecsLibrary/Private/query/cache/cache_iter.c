@@ -1,5 +1,5 @@
 /**
- * @file query/cache/cache_iter.c
+ * @file query/cache/iter.c
  * @brief Cache iterator functions.
  */
 

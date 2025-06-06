@@ -14,8 +14,8 @@ class UNREALFLECS_API UFlecsRestModule final : public UFlecsModuleObject
 	GENERATED_BODY()
 
 public:
-	virtual void InitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
-	virtual void DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld) override;
+	virtual void InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
+	virtual void DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld) override;
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override
 	{

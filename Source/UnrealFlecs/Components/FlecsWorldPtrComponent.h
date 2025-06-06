@@ -18,6 +18,7 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 		return GetTypeHash(InComponent.World);
 	}
 
+public:
 	FORCEINLINE FFlecsWorldPtrComponent() = default;
 
 	FORCEINLINE FFlecsWorldPtrComponent(UFlecsWorld* InWorld)

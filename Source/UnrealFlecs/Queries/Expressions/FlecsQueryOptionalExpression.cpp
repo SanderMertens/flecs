@@ -8,7 +8,7 @@ FFlecsQueryOptionalExpression::FFlecsQueryOptionalExpression() : Super(false /* 
 {
 }
 
-void FFlecsQueryOptionalExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const
+void FFlecsQueryOptionalExpression::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const
 {
 	InQueryBuilder.optional();
 }

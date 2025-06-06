@@ -8,7 +8,7 @@ FFlecsQuerySingletonExpression::FFlecsQuerySingletonExpression() : Super(false /
 {
 }
 
-void FFlecsQuerySingletonExpression::Apply(UFlecsWorld* InWorld, flecs::query_builder<>& InQueryBuilder) const
+void FFlecsQuerySingletonExpression::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const
 {
 	InQueryBuilder.singleton();
 }

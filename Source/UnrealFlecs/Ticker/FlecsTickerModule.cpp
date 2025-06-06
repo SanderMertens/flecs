@@ -11,10 +11,12 @@
 UNLOG_CATEGORY(LogFlecsTicker);
 
 DECLARE_STATS_GROUP(TEXT("FlecsTickerModule"), STATGROUP_FlecsTickerModule, STATCAT_Advanced);
+
 DECLARE_CYCLE_STAT(TEXT("FlecsTickerModule::ProgressModule"),
 	STAT_FlecsTickerModule_ProgressModule, STATGROUP_FlecsTickerModule);
 DECLARE_CYCLE_STAT(TEXT("FlecsTickerModule::ProgressModule::RunPipeline"),
 	STAT_FlecsTickerModule_ProgressModule_RunPipeline, STATGROUP_FlecsTickerModule);
+
 DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("FlecsTickerModule::ProgressModule::RunPipeline::Ticks"),
 	STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, STATGROUP_FlecsTickerModule);
 
@@ -48,7 +50,7 @@ UFlecsTickerModule::UFlecsTickerModule(const FObjectInitializer& InObjectInitial
 {
 }
 
-void UFlecsTickerModule::InitializeModule(const TSolidNonNullPtr<UFlecsWorld> InWorld,
+void UFlecsTickerModule::InitializeModule(const TSolidNotNull<UFlecsWorld*> InWorld,
                                           const FFlecsEntityHandle& InModuleEntity)
 {
 	InWorld->RegisterComponentType<FFlecsTickerComponent>();
@@ -84,7 +86,7 @@ void UFlecsTickerModule::InitializeModule(const TSolidNonNullPtr<UFlecsWorld> In
 	TickerInterval = 1.0 / static_cast<double>(TickerRate);
 }
 
-void UFlecsTickerModule::DeinitializeModule(const TSolidNonNullPtr<UFlecsWorld> InWorld)
+void UFlecsTickerModule::DeinitializeModule(const TSolidNotNull<UFlecsWorld*> InWorld)
 {
 	InWorld->RemoveSingleton<FFlecsTickerComponent>();
 	TickerComponentPtr = nullptr;
@@ -98,7 +100,7 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 
 	TickerAccumulator += InDeltaTime;
 
-	const TSolidNonNullPtr<UFlecsWorld> FlecsWorld = GetFlecsWorld();
+	const TSolidNotNull<UFlecsWorld*> FlecsWorld = GetFlecsWorld();
 	
 	while (TickerAccumulator >= TickerInterval)
 	{
@@ -108,6 +110,7 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 
 		solid_check(TickerComponentPtr);
 		++TickerComponentPtr->TickId;
+		
 		SET_DWORD_STAT(STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, TickerComponentPtr->TickId);
 
 		solid_checkf(TickerPipeline.IsValid(), TEXT("TickerPipeline is not valid!"));

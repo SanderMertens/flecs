@@ -29,21 +29,21 @@ class UNREALFLECS_API IFlecsModuleInterface : public IFlecsEntityInterface
 
 public:
 
-	void ImportModule(flecs::world& InWorld);
+	void ImportModule(const flecs::world& InWorld);
 	
 	void DeinitializeModule_Internal();
 
-	virtual void InitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld, const FFlecsEntityHandle& InModuleEntity);
+	virtual void InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity);
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs | Modules", meta = (DisplayName = "Initialize Module"))
 	void BP_InitializeModule(UFlecsWorld* InWorld);
 
-	virtual void WorldBeginPlay(TSolidNonNullPtr<UFlecsWorld> InWorld, TSolidNonNullPtr<UWorld> InGameWorld);
+	virtual void WorldBeginPlay(TSolidNotNull<UFlecsWorld*> InWorld, TSolidNotNull<UWorld*> InGameWorld);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs | Modules", meta = (DisplayName = "World Begin Play"))
 	void BP_WorldBeginPlay(UFlecsWorld* InWorld, UWorld* InGameWorld);
 
-	virtual void DeinitializeModule(TSolidNonNullPtr<UFlecsWorld> InWorld);
+	virtual void DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs | Modules", meta = (DisplayName = "Deinitialize Module"))
 	void BP_DeinitializeModule(UFlecsWorld* InWorld);

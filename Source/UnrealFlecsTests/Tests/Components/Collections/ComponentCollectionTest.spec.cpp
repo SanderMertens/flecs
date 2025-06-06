@@ -19,7 +19,7 @@ void FComponentCollectionTestSpec::Define()
 	BeforeEach([this]()
 	{
 		UFlecsTransformModule* Module = NewObject<UFlecsTransformModule>();
-		Fixture.SetUp( { Module } );
+		Fixture.SetUp( nullptr, { Module } );
 	});
 	
 	AfterEach([this]()

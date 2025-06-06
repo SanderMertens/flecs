@@ -6,7 +6,6 @@
 #include "FlecsQueryFlags.h"
 #include "Enums/FlecsQueryCache.h"
 #include "Expressions/FlecsQueryTermExpression.h"
-#include "Types/SolidNonNullPtr.h"
 #include "FlecsQueryDefinition.generated.h"
 
 USTRUCT(BlueprintType)
@@ -28,7 +27,7 @@ public:
 		OtherExpressions.Emplace(InExpression);
 	}
 
-	FORCEINLINE void Apply(const TSolidNonNullPtr<UFlecsWorld> InWorld, flecs::query_builder<>& InQueryBuilder) const
+	FORCEINLINE void Apply(const TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const
 	{
 		InQueryBuilder.cache_kind(static_cast<flecs::query_cache_kind_t>(CacheType));
 		InQueryBuilder.query_flags(Flags);
