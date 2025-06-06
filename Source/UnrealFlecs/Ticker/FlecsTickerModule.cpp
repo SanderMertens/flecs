@@ -53,7 +53,7 @@ UFlecsTickerModule::UFlecsTickerModule(const FObjectInitializer& InObjectInitial
 void UFlecsTickerModule::InitializeModule(const TSolidNotNull<UFlecsWorld*> InWorld,
                                           const FFlecsEntityHandle& InModuleEntity)
 {
-	InWorld->RegisterComponentType<FFlecsTickerComponent>();
+	/*InWorld->RegisterComponentType<FFlecsTickerComponent>();
 	InWorld->AddSingleton<FFlecsTickerComponent>();
 
 	TickerComponentPtr = InWorld->GetSingletonPtr<FFlecsTickerComponent>();
@@ -83,20 +83,20 @@ void UFlecsTickerModule::InitializeModule(const TSolidNotNull<UFlecsWorld*> InWo
 
 	InWorld->SetPipeline(MainPipeline);
 
-	TickerInterval = 1.0 / static_cast<double>(TickerRate);
+	TickerInterval = 1.0 / static_cast<double>(TickerRate);*/
 }
 
 void UFlecsTickerModule::DeinitializeModule(const TSolidNotNull<UFlecsWorld*> InWorld)
 {
-	InWorld->RemoveSingleton<FFlecsTickerComponent>();
-	TickerComponentPtr = nullptr;
-		
-	TickerPipeline.Destroy();
+	// InWorld->RemoveSingleton<FFlecsTickerComponent>();
+	// TickerComponentPtr = nullptr;
+	// 	
+	// TickerPipeline.Destroy();
 }
 
 void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 {
-	SCOPE_CYCLE_COUNTER(STAT_FlecsTickerModule_ProgressModule);
+	/*SCOPE_CYCLE_COUNTER(STAT_FlecsTickerModule_ProgressModule);
 
 	TickerAccumulator += InDeltaTime;
 
@@ -115,5 +115,5 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 
 		solid_checkf(TickerPipeline.IsValid(), TEXT("TickerPipeline is not valid!"));
 		FlecsWorld->RunPipeline(TickerPipeline, TickerInterval);
-	}
+	}*/
 }
