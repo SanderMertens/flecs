@@ -464,13 +464,16 @@ void flecs_reparent_name_index(
     int32_t offset,
     int32_t count) 
 {
-    ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!(dst->flags & EcsTableHasName)) {
         /* If destination table doesn't have a name, we don't need to update the
          * name index. Even if the src table had a name, the on_remove hook for
          * EcsIdentifier will remove the entity from the index. */
         return;
+    }
+
+    if (!src) {
+        src = &world->store.root;
     }
 
     ecs_pair_record_t *src_pair = src->_->childof_r;

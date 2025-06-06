@@ -84,7 +84,7 @@ void flecs_ordered_entities_unparent_internal(
     int32_t row,
     int32_t count)
 {
-    if (table->flags & EcsTableHasOrderedChildren) {
+    if (table && (table->flags & EcsTableHasOrderedChildren)) {
         ecs_pair_record_t *pair = table->_->childof_r;
         const ecs_entity_t *entities = ecs_table_entities(entities_table);
         int32_t i = row, end = row + count;

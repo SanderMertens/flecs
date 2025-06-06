@@ -150,21 +150,10 @@ ecs_entity_t flecs_new_id(
      * since it is thread safe (uses atomic inc when in threading mode) */
     ecs_world_t *unsafe_world = ECS_CONST_CAST(ecs_world_t*, world);
 
-    ecs_entity_t entity;
-    if (unsafe_world->flags & EcsWorldMultiThreaded) {
-        /* When world is in multithreading mode, make sure OS API has threading 
-         * functions initialized */
-        ecs_assert(ecs_os_has_threading(), ECS_INVALID_OPERATION, 
-            "thread safe id creation unavailable: threading API not available");
+    ecs_assert(!(unsafe_world->flags & EcsWorldMultiThreaded),
+        ECS_INVALID_OPERATION, "cannot create entities in multithreaded mode");
 
-        /* Can't atomically increase number above max int */
-        ecs_assert(flecs_entities_max_id(unsafe_world) < UINT_MAX, 
-            ECS_INVALID_OPERATION, "thread safe ids exhausted");
-        entity = (ecs_entity_t)ecs_os_ainc(
-            (int32_t*)&flecs_entities_max_id(unsafe_world));
-    } else {
-        entity = flecs_entities_new_id(unsafe_world);
-    }
+    ecs_entity_t entity = flecs_entities_new_id(unsafe_world);
 
     ecs_assert(!unsafe_world->info.max_id || 
         ecs_entity_t_lo(entity) <= unsafe_world->info.max_id, 
@@ -744,19 +733,6 @@ error:
     return 0;
 }
 
-ecs_entity_t ecs_new_w_id(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    ecs_entity_t entity = ecs_new(world);
-    ecs_add_id(world, entity, id);
-    return entity;
-error:
-    return 0;
-}
-
 ecs_entity_t ecs_new_w_table(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -778,6 +754,39 @@ ecs_entity_t ecs_new_w_table(
     };
 
     flecs_new_entity(world, entity, r, table, &table_diff, true, 0);
+
+    return entity;
+error:
+    return 0;
+}
+
+ecs_entity_t ecs_new_w_id(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+
+    if (flecs_defer_cmd(stage)) {
+        ecs_assert(ecs_is_deferred(world), ECS_INTERNAL_ERROR, NULL);
+        ecs_entity_t e = ecs_new(world);
+        ecs_add_id(world, e, id);
+        return e;
+    }
+
+    ecs_table_diff_t table_diff = ECS_TABLE_DIFF_INIT;
+    ecs_table_t *table = flecs_table_traverse_add(
+        world, &world->store.root, &id, &table_diff);
+    
+    ecs_entity_t entity = flecs_new_id(world);
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    flecs_new_entity(world, entity, r, table, &table_diff, true, 0);
+
+    flecs_defer_end(world, stage);
+
+    ecs_assert(!ecs_is_deferred(world), ECS_INTERNAL_ERROR, NULL);
 
     return entity;
 error:
