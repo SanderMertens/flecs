@@ -21,8 +21,7 @@ class UNREALFLECS_API IFlecsGameLoopInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorld)
-		PURE_VIRTUAL(IFlecsGameLoopInterface::InitializeGameLoop, );
+	virtual void InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorld) {}
 	
 	virtual bool Progress(double DeltaTime, TSolidNotNull<UFlecsWorld*> InWorld)
 		PURE_VIRTUAL(IFlecsGameLoopInterface::Progress, return false;);

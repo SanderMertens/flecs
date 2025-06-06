@@ -45,12 +45,12 @@ NO_DISCARD FORCEINLINE static int flecs_priority_compare(
 	}
 }
 
-UFlecsTickerModule::UFlecsTickerModule(const FObjectInitializer& InObjectInitializer)
+UDEPRECATED_FlecsTickerModule::UDEPRECATED_FlecsTickerModule(const FObjectInitializer& InObjectInitializer)
 	: Super(InObjectInitializer)
 {
 }
 
-void UFlecsTickerModule::InitializeModule(const TSolidNotNull<UFlecsWorld*> InWorld,
+void UDEPRECATED_FlecsTickerModule::InitializeModule(const TSolidNotNull<UFlecsWorld*> InWorld,
                                           const FFlecsEntityHandle& InModuleEntity)
 {
 	/*InWorld->RegisterComponentType<FFlecsTickerComponent>();
@@ -86,7 +86,7 @@ void UFlecsTickerModule::InitializeModule(const TSolidNotNull<UFlecsWorld*> InWo
 	TickerInterval = 1.0 / static_cast<double>(TickerRate);*/
 }
 
-void UFlecsTickerModule::DeinitializeModule(const TSolidNotNull<UFlecsWorld*> InWorld)
+void UDEPRECATED_FlecsTickerModule::DeinitializeModule(const TSolidNotNull<UFlecsWorld*> InWorld)
 {
 	// InWorld->RemoveSingleton<FFlecsTickerComponent>();
 	// TickerComponentPtr = nullptr;
@@ -94,7 +94,7 @@ void UFlecsTickerModule::DeinitializeModule(const TSolidNotNull<UFlecsWorld*> In
 	// TickerPipeline.Destroy();
 }
 
-void UFlecsTickerModule::ProgressModule(double InDeltaTime)
+void UDEPRECATED_FlecsTickerModule::ProgressModule(double InDeltaTime)
 {
 	/*SCOPE_CYCLE_COUNTER(STAT_FlecsTickerModule_ProgressModule);
 

@@ -47,9 +47,11 @@ void UFlecsPhysicsModule::WorldBeginPlay(TSolidNotNull<UFlecsWorld*> InWorld, TS
 	Scene = InGameWorld->GetPhysicsScene();
 	solid_check(Scene);
 
-	InWorld->RegisterModuleDependency<UFlecsTickerModule>
+	InWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
+
+	/*InWorld->RegisterModuleDependency<UDEPRECATED_FlecsTickerModule>
 		(this, [this](
-				MAYBE_UNUSED TSolidNotNull<UFlecsTickerModule*> InModuleObject,
+				MAYBE_UNUSED TSolidNotNull<UDEPRECATED_FlecsTickerModule*> InModuleObject,
 				TSolidNotNull<UFlecsWorld*> InFlecsWorld,
 				MAYBE_UNUSED FFlecsEntityHandle& InTickerEntity)
 		{
@@ -57,7 +59,7 @@ void UFlecsPhysicsModule::WorldBeginPlay(TSolidNotNull<UFlecsWorld*> InWorld, TS
 			
 			InFlecsWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
 
-			const TSolidNotNull<UFlecsTickerModule*> TickerModule = InFlecsWorld->GetModule<UFlecsTickerModule>();
+			const TSolidNotNull<UDEPRECATED_FlecsTickerModule*> TickerModule = InFlecsWorld->GetModule<UDEPRECATED_FlecsTickerModule>();
 			
 			Scene->GetSolver()->EnableAsyncMode(1.0 / static_cast<double>(TickerModule->GetTickerRate()));
 			Scene->GetSolver()->SetIsDeterministic(true);
@@ -67,7 +69,7 @@ void UFlecsPhysicsModule::WorldBeginPlay(TSolidNotNull<UFlecsWorld*> InWorld, TS
 			// {
 			// 	ResimulationHandlers();
 			// }
-		});
+		}); */
 }
 
 void UFlecsPhysicsModule::ResimulationHandlers()

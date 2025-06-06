@@ -4,35 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "FlecsTickerComponent.h"
-#include "Modules/FlecsModuleObject.h"
-#include "Modules/FlecsModuleProgressInterface.h"
+#include "Entities/FlecsEntityHandle.h"
+#include "Pipelines/FlecsGameLoopObject.h"
 #include "Systems/FlecsSystem.h"
-#include "UObject/Object.h"
-#include "FlecsTickerModule.generated.h"
+#include "FlecsTickerGameLoop.generated.h"
 
-UCLASS(BlueprintType, DisplayName = "Flecs Ticker Module", Deprecated)
-class UNREALFLECS_API UDEPRECATED_FlecsTickerModule final : public UFlecsModuleObject, public IFlecsModuleProgressInterface
+UCLASS(BlueprintType)
+class UNREALFLECS_API UFlecsTickerGameLoop : public UFlecsGameLoopObject
 {
 	GENERATED_BODY()
 
 public:
-	UDEPRECATED_FlecsTickerModule(const FObjectInitializer& InObjectInitializer);
 
-	virtual void InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
-	virtual void DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld) override;
-
-	virtual void ProgressModule(double InDeltaTime) override;
-
-	FORCEINLINE virtual FString GetModuleName_Implementation() const override
-	{
-		return "Flecs Ticker Module";
-	}
-
-	UPROPERTY()
-	bool bUsePhysicsTick = false;
-
+	virtual void InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorld) override;
+	virtual bool Progress(double DeltaTime, TSolidNotNull<UFlecsWorld*> InWorld) override;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ticker",
-		meta = (Units = "Hz", ClampMin = "1", ClampMax = "240", EditCondition = "!bUsePhysicsTick"))
+		meta = (Units = "Hz", ClampMin = "1", ClampMax = "240")) //EditCondition = "!bUsePhysicsTick"))
 	int64 TickerRate = 60;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Ticker")
@@ -46,7 +34,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Ticker")
 	FORCEINLINE FFlecsEntityHandle GetTickerSource() const { return TickerSystem.GetEntity(); }
-
+	
 	UPROPERTY()
 	double TickerAccumulator = 0.0;
 
@@ -63,4 +51,4 @@ public:
 	UPROPERTY()
 	FFlecsEntityHandle TickerPipeline;
 
-}; // class UFlecsTickerModule
+}; // class UFlecsTickerGameLoop
