@@ -436,10 +436,7 @@
                 "5_threads_add_to_current",
                 "6_threads_add_to_current",
                 "2_threads_on_add",
-                "new_w_count",
                 "custom_thread_auto_merge",
-                "set_pair_w_new_target_readonly",
-                "set_pair_w_new_target_tgt_component_readonly",
                 "set_pair_w_new_target_defer",
                 "set_pair_w_new_target_tgt_component_defer"
             ]
