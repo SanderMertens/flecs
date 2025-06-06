@@ -658,7 +658,8 @@ void Monitor_monitor_other_table(void) {
     ctx.table = ecs_get_table(world, x);
     ctx.other_table = root;
     ctx.event = EcsOnAdd;
-    ecs_entity_t e = ecs_new_w(world, X);
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, X);
     test_int(ctx.invoked, 1);
 
     ctx.table = ecs_get_table(world, xy);

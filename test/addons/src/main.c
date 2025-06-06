@@ -396,10 +396,7 @@ void MultiThreadStaging_4_threads_add_to_current(void);
 void MultiThreadStaging_5_threads_add_to_current(void);
 void MultiThreadStaging_6_threads_add_to_current(void);
 void MultiThreadStaging_2_threads_on_add(void);
-void MultiThreadStaging_new_w_count(void);
 void MultiThreadStaging_custom_thread_auto_merge(void);
-void MultiThreadStaging_set_pair_w_new_target_readonly(void);
-void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly(void);
 void MultiThreadStaging_set_pair_w_new_target_defer(void);
 void MultiThreadStaging_set_pair_w_new_target_tgt_component_defer(void);
 
@@ -1999,20 +1996,8 @@ bake_test_case MultiThreadStaging_testcases[] = {
         MultiThreadStaging_2_threads_on_add
     },
     {
-        "new_w_count",
-        MultiThreadStaging_new_w_count
-    },
-    {
         "custom_thread_auto_merge",
         MultiThreadStaging_custom_thread_auto_merge
-    },
-    {
-        "set_pair_w_new_target_readonly",
-        MultiThreadStaging_set_pair_w_new_target_readonly
-    },
-    {
-        "set_pair_w_new_target_tgt_component_readonly",
-        MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly
     },
     {
         "set_pair_w_new_target_defer",
@@ -2675,7 +2660,7 @@ static bake_test_suite suites[] = {
         "MultiThreadStaging",
         MultiThreadStaging_setup,
         NULL,
-        12,
+        9,
         MultiThreadStaging_testcases,
         1,
         MultiThreadStaging_params
