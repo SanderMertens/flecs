@@ -182,6 +182,14 @@ public:
         return ecs_field_is_readonly(iter_, index);
     }
 
+    
+    /** Returns whether field is shared.
+     * @param index The field index.
+     */
+    bool is_shared(int8_t index) const {
+        return ecs_field_src(iter_, index) != 0;
+    }
+
     /** Number of fields in iterator.
      */
     int32_t field_count() const {
