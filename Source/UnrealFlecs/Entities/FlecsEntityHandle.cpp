@@ -58,7 +58,7 @@ FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeEnum(const TSolidNotNu
 
 void FFlecsEntityHandle::AddCollection(UObject* Collection) const
 {
-    solid_check(::IsValid(Collection));
+    solid_check(Collection);
     UFlecsComponentCollectionObject* ComponentCollection = CastChecked<UFlecsComponentCollectionObject>(Collection);
     ComponentCollection->ApplyCollection_Internal(*this, GetFlecsWorld());
 }

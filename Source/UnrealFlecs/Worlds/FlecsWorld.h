@@ -894,7 +894,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE bool IsModuleImported(const TSubclassOf<UObject> InModule) const
 	{
-		solid_check(IsValid(InModule));
+		solid_check(InModule);
 		
 		const flecs::entity ModuleEntity = ModuleComponentQuery
 			.find([&InModule](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
@@ -914,7 +914,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule) const
 	{
-		solid_check(IsValid(InModule));
+		solid_check(InModule);
 		
 		const flecs::entity ModuleEntity = ModuleComponentQuery
 			.find([&InModule](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
@@ -1060,7 +1060,7 @@ public:
 			
 			for (const TScriptInterface<IFlecsModuleProgressInterface>& Module : ProgressModules)
 			{
-				solid_checkf(IsValid(Module.GetObject()), TEXT("Progress module is nullptr"));
+				solid_checkf(Module, TEXT("Progress module is nullptr"));
 				Module->ProgressModule(DeltaTime);
 			}
 		}
@@ -1315,7 +1315,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE bool HasScriptStruct(const UScriptStruct* ScriptStruct) const
 	{
-		solid_check(IsValid(ScriptStruct));
+		solid_check(ScriptStruct);
 		
 		if (TypeMapComponent->ScriptStructMap.contains(ScriptStruct))
 		{
@@ -1329,7 +1329,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE bool HasScriptEnum(const UEnum* ScriptEnum) const
 	{
-		solid_check(IsValid(ScriptEnum));
+		solid_check(ScriptEnum);
 		
 		if (TypeMapComponent->ScriptEnumMap.contains(ScriptEnum))
 		{
@@ -1343,7 +1343,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetScriptStructEntity(const UScriptStruct* ScriptStruct) const
 	{
-		solid_check(IsValid(ScriptStruct));
+		solid_check(ScriptStruct);
 		
 		const FFlecsId Component = TypeMapComponent->ScriptStructMap.at(ScriptStruct);
 		solid_checkf(IsAlive(Component), TEXT("Entity is not alive"));
@@ -1354,7 +1354,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetScriptEnumEntity(const UEnum* ScriptEnum) const
 	{
-		solid_check(IsValid(ScriptEnum));
+		solid_check(ScriptEnum);
 		
 		const FFlecsId Component = TypeMapComponent->ScriptEnumMap.at(ScriptEnum);
 		solid_checkf(ecs_is_valid(World.c_ptr(), Component), TEXT("Entity is not alive"));
@@ -1514,7 +1514,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterScriptStruct(const UScriptStruct* ScriptStruct) const
 	{
-		solid_check(IsValid(ScriptStruct));
+		solid_check(ScriptStruct);
 
 		const FFlecsEntityHandle OldScope = ClearScope();
 
@@ -1862,7 +1862,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* ScriptStruct) const
 	{
-		solid_check(IsValid(ScriptStruct));
+		solid_check(ScriptStruct);
+		
 		solid_checkf(HasScriptStruct(ScriptStruct),
 			TEXT("Script struct %s is not registered"), *ScriptStruct->GetStructCPPName());
 		
@@ -1872,7 +1873,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeEnum(const UEnum* ScriptEnum) const
 	{
-		solid_check(IsValid(ScriptEnum));
+		solid_check(ScriptEnum);
+		
 		solid_checkf(HasScriptEnum(ScriptEnum),
 			TEXT("Script enum %s is not registered"), *ScriptEnum->GetName());
 		
@@ -1967,7 +1969,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE void EnableType(UScriptStruct* ScriptStruct) const
 	{
-		solid_check(IsValid(ScriptStruct));
+		solid_check(ScriptStruct);
 		
 		ObtainComponentTypeStruct(ScriptStruct).Enable();
 	}
@@ -1981,7 +1983,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE void DisableType(UScriptStruct* ScriptStruct) const
 	{
-		solid_check(IsValid(ScriptStruct));
+		solid_check(ScriptStruct);
 		
 		ObtainComponentTypeStruct(ScriptStruct).Disable();
 	}
@@ -1995,7 +1997,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE bool IsTypeEnabled(UScriptStruct* ScriptStruct) const
 	{
-		solid_check(IsValid(ScriptStruct));
+		solid_check(ScriptStruct);
 		
 		return ObtainComponentTypeStruct(ScriptStruct).IsEnabled();
 	}
@@ -2009,7 +2011,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE void ToggleType(UScriptStruct* ScriptStruct) const
 	{
-		solid_check(IsValid(ScriptStruct));
+		solid_check(ScriptStruct);
 		
 		ObtainComponentTypeStruct(ScriptStruct).Toggle();
 	}

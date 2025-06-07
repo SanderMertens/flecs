@@ -2,22 +2,24 @@
 
 #pragma once
 
+#if WITH_AUTOMATION_TESTS && defined(FLECS_TESTS)
+
 #include "CoreMinimal.h"
 #include "flecs.h"
 
 class FFlecsLibraryWorldFixture
 {
-	flecs::world* World = nullptr;
+	TUniquePtr<flecs::world> World = nullptr;
+	
 public:
 	void Setup()
 	{
-		World = new flecs::world();
+		World = MakeUnique<flecs::world>();
 	}
 
 	void TearDown()
 	{
-		delete World;
-		World = nullptr;
+		World.Reset();
 	}
 	
 }; // class FFlecsLibraryWorldFixture
@@ -31,4 +33,5 @@ public:
 	{ \
 		FixtureName.TearDown(); \
 	})
-	
+
+#endif // #if WITH_AUTOMATION_TESTS && defined(FLECS_TESTS)

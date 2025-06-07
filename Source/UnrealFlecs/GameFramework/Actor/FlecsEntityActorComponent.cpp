@@ -86,7 +86,7 @@ void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 	GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreatedDelegate.RemoveAll(this);
 }
 
-void UFlecsEntityActorComponent::CreateActorEntity(UFlecsWorld* InWorld)
+void UFlecsEntityActorComponent::CreateActorEntity(TSolidNotNull<UFlecsWorld*> InWorld)
 {
 	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord, EntityName);
 	

@@ -194,10 +194,12 @@ bool ecs_query_next(
 
         if (it->flags & EcsIterTrivialSearch) {
             if (flecs_query_is_trivial_cache_search(&ctx)) {
+                ecs_os_perf_trace_pop("flecs.query.next");
                 return true;
             }
         } else if (it->flags & EcsIterTrivialTest) {
             if (flecs_query_is_trivial_cache_test(&ctx, redo)) {
+                ecs_os_perf_trace_pop("flecs.query.next");
                 return true;
             }
         }

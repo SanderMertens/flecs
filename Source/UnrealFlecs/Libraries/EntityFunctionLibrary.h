@@ -24,7 +24,7 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
     static FORCEINLINE bool IsEntityFromObject(UObject* Object)
     {
-        if UNLIKELY_IF(!ensureMsgf(IsValid(Object), TEXT("Object is not valid")))
+        if UNLIKELY_IF(!ensureMsgf(Object, TEXT("Object is not valid")))
         {
             return false;
         }
@@ -45,7 +45,7 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
     static FORCEINLINE FFlecsEntityHandle GetEntityFromObject(UObject* Object)
     {
-        solid_check(IsValid(Object));
+        solid_check(Object);
 
         if (Object->Implements<UFlecsEntityInterface>())
         {

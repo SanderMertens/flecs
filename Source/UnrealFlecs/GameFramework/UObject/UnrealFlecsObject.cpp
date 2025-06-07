@@ -26,10 +26,9 @@ void UUnrealFlecsObject::InitializeFlecsObject(TSolidNotNull<UFlecsWorld*> InFle
 	TSolidNotNull<UFlecsWorldSubsystem*> FlecsWorldSubsystem = FlecsWorld->GetContext();
 
 	FlecsWorldSubsystem->ListenBeginPlay(
-		FFlecsOnWorldBeginPlay::FDelegate::CreateWeakLambda(this, [this]
-			(TSolidNotNull<UWorld*> InWorld)
+		FFlecsOnWorldBeginPlay::FDelegate::CreateWeakLambda(this,
+			[this](TSolidNotNull<UWorld*> InWorld)
 	{
-		solid_check(FlecsWorld.IsValid());
 		solid_check(FlecsWorld->GetWorld() == InWorld);
 		
 		BeginPlay();

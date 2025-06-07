@@ -25,11 +25,6 @@ void UFlecsPhysicsModule::InitializeModule(
 
 void UFlecsPhysicsModule::DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld)
 {
-	if (!IsValid(InWorld))
-	{
-		return;
-	}
-	
 	InWorld->RemoveSingleton<FFlecsPhysicsSceneComponent>();
 
 	// if (bAllowResimulation)

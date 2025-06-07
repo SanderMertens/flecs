@@ -343,18 +343,74 @@ struct FOSApiInitializer
 #endif // UNLOG_ENABLED
         };
 
+		#ifdef FLECS_PERF_TRACE
+
+		struct FFlecsProfilerTrace
+		{
+			FString FileName;
+			uint32 Line;
+			FString Name;
+
+			FORCEINLINE FFlecsProfilerTrace(const FString& InFileName, uint32 InLine, const FString& InName)
+				: FileName(InFileName), Line(InLine), Name(InName)
+			{
+			}
+
+			NO_DISCARD FORCEINLINE FString ToString() const
+			{
+				return FString::Printf(TEXT("FlecsProfilerTrace - File: %s, Line: %d, Name: %s"),
+					*FileName, Line, *Name);
+			}
+			
+		}; // struct FFlecsProfilerTrace
+
+		thread_local TArray<FFlecsProfilerTrace> FlecsProfilerTraces;
+
+		#endif // FLECS_PERF_TRACE
+
 		os_api.perf_trace_push_ = [](const char* FileName, size_t Line, const char* Name)
 		{
 			#ifdef FLECS_PERF_TRACE
+			
 				solid_check(Line < std::numeric_limits<uint32>::max());
+			
+				FlecsProfilerTraces.Emplace(
+					StringCast<TCHAR>(FileName).Get(), static_cast<uint32>(Line),
+					StringCast<TCHAR>(Name).Get());
+			
 				FCpuProfilerTrace::OutputBeginDynamicEvent(Name, FileName, static_cast<uint32>(Line));
+			
 			#endif // FLECS_PERF_TRACE
 		};
 
 		os_api.perf_trace_pop_ = [](const char* FileName, size_t Line, const char* Name)
 		{
 			#ifdef FLECS_PERF_TRACE
+			
+				solid_check(Line < std::numeric_limits<uint32>::max());
+			
+				if (!FlecsProfilerTraces.IsEmpty())
+				{
+					const FFlecsProfilerTrace& Trace = FlecsProfilerTraces.Pop();
+
+					if (!((Trace.FileName == StringCast<TCHAR>(FileName).Get()) &&
+						(Trace.Name == StringCast<TCHAR>(Name).Get())))
+					{
+						UN_LOGF(LogFlecsCore, Error,
+							"Flecs - Mismatched profiler trace pop: "
+							"Got '%s' from '%s:%d', expected '%s' from '%s:%d'",
+							*Trace.Name, *Trace.FileName, Trace.Line,
+							StringCast<TCHAR>(Name).Get(), StringCast<TCHAR>(FileName).Get(),
+							static_cast<uint32>(Line));
+					}
+				}
+				else
+				{
+					solid_checkf(false, TEXT("No matching Flecs profiler trace found for pop"));
+				}
+			
 				FCpuProfilerTrace::OutputEndEvent();
+			
 			#endif // FLECS_PERF_TRACE
 		};
 

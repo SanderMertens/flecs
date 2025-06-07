@@ -108,7 +108,7 @@ public:
 	{
 		Super::Tick(DeltaTime);
 
-		if UNLIKELY_IF(!IsValid(DefaultWorld))
+		if UNLIKELY_IF(!DefaultWorld)
 		{
 			return;
 		}
@@ -180,8 +180,8 @@ public:
 
 		if (ConsoleManager.FindConsoleVariable(TEXT("Flecs.UseTaskThreads"))->GetBool())
 		{
-			const IConsoleVariable* TaskThreads = ConsoleManager.FindConsoleVariable(TEXT("Flecs.TaskThreadCount"));
-			solid_checkf(TaskThreads, TEXT("TaskThreads console variable not found!"));
+			const TSolidNotNull<IConsoleVariable*> TaskThreads
+				= ConsoleManager.FindConsoleVariable(TEXT("Flecs.TaskThreadCount"));
 			
 			DefaultWorld->SetTaskThreads(TaskThreads->GetInt());
 		}
@@ -242,7 +242,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE UFlecsWorld* GetDefaultWorldStatic(const UObject* WorldContextObject)
 	{
-		solid_check(IsValid(WorldContextObject));
+		solid_check(WorldContextObject);
 		
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)->
 			GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld;
@@ -251,7 +251,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE bool HasValidFlecsWorldStatic(const UObject* WorldContextObject)
 	{
-		solid_check(IsValid(WorldContextObject));
+		solid_check(WorldContextObject);
 		
 		if (GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
 		{
