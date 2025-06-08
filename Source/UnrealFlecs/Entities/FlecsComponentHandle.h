@@ -48,12 +48,6 @@ public:
 	SOLID_INLINE FFlecsComponentHandle operator=(const FFlecsEntityHandle& InEntityHandle)
 	{
 		FFlecsEntityHandle::operator=(InEntityHandle);
-		
-		if LIKELY_IF(IsValid())
-		{
-			solid_checkf(IsComponent(),
-				TEXT("FFlecsComponentHandle must be initialized with a component entity, not an entity."));
-		}
 
 		return *this;
 	}
