@@ -25,7 +25,7 @@ flecs::entity FFlecsDefaultEntityEngine::CreateDefaultEntity(
 	const FFlecsDefaultMetaEntity& DefaultEntity, const flecs::world& World)
 {
 	flecs::entity Entity = World.make_alive(DefaultEntity.EntityId);
-	Entity.set_name(StringCast<char>(*DefaultEntity.EntityName).Get());
+	Entity.set_name(Unreal::Flecs::ToCString(DefaultEntity.EntityName));
 	
 	if LIKELY_IF(ensureAlwaysMsgf(DefaultEntityFunctions.contains(DefaultEntity.EntityId),
 		TEXT("Default entity %s does not have a function registered for it"),

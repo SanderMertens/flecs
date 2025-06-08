@@ -43,7 +43,7 @@ public:
 	NO_DISCARD FORCEINLINE static flecs::system_builder<TComponents...> CreateSystem(
 		flecs::world& InWorld, const TCHAR* InName)
 	{
-		return InWorld.system<TComponents...>(StringCast<char>(InName).Get());
+		return InWorld.system<TComponents...>(Unreal::Flecs::ToCString(InName));
 	}
 	
 	FORCEINLINE FFlecsSystem& operator=(const flecs::system& InSystem)

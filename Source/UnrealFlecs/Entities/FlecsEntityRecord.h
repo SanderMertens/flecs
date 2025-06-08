@@ -480,7 +480,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		for (const FFlecsRecordSubEntity& SubEntity : SubEntities)
 		{
 			FFlecsEntityHandle NewEntityHandle = InEntityHandle
-				.GetEntity().world().entity(StringCast<char>(*SubEntity.Name).Get());
+				.GetEntity().world().entity(Unreal::Flecs::ToCString(SubEntity.Name));
 			
 			NewEntityHandle.SetParent(InEntityHandle);
 			

@@ -59,7 +59,8 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 public:
 	UFlecsWorld()
 	{
-		char* argv[] = { const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*GetName()).Get()) };  // NOLINT(clang-diagnostic-dangling, cppcoreguidelines-pro-type-const-cast)
+		char* argv[] = { const_cast<char*>(Unreal::Flecs::ToCString(GetName())) }; // NOLINT(clang-diagnostic-dangling, cppcoreguidelines-pro-type-const-cast)
+		
 		World = flecs::world(1, argv);
 		
 		TypeMapComponent = GetTypeMapComponent();  // NOLINT(cppcoreguidelines-prefer-member-initializer)
@@ -156,8 +157,7 @@ public:
 		 	.opaque(flecs::Entity)
 		 	.serialize([](const flecs::serializer* Serializer, const FGameplayTag* Data)
 		 	{
-		 		const FFlecsId TagEntity = ecs_lookup(Serializer->world,
-		 			StringCast<char>(*Data->ToString()).Get());
+		 		const FFlecsId TagEntity = ecs_lookup(Serializer->world, Unreal::Flecs::ToCString(Data->ToString()));
 		 		return Serializer->value(flecs::Entity, &TagEntity);
 		 	});
 		
@@ -636,7 +636,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntity(const FString& Name = "") const
 	{
-		return World.entity(StringCast<char>(*Name).Get());
+		return World.entity(Unreal::Flecs::ToCString(Name));
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -676,9 +676,9 @@ public:
 	                                                       const FString& RootSeparator = "::",
 	                                                       const bool bRecursive = true) const
 	{
-		return World.lookup(StringCast<char>(*Name).Get(),
-		                    StringCast<char>(*Separator).Get(),
-		                    StringCast<char>(*RootSeparator).Get(),
+		return World.lookup(Unreal::Flecs::ToCString(Name),
+		                    Unreal::Flecs::ToCString(Separator),
+		                    Unreal::Flecs::ToCString(RootSeparator),
 		                    bRecursive);
 	}
 	
@@ -1118,7 +1118,7 @@ public:
 	template <typename ...TComponents>
 	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::system_builder<TComponents...> CreateSystemWithBuilder(const FString& InName) const
 	{
-		return World.system<TComponents...>(StringCast<char>(*InName).Get());
+		return World.system<TComponents...>(Unreal::Flecs::ToCString(InName));
 	}
 	
 	/**
@@ -1354,7 +1354,7 @@ public:
 			FProperty* Property = *PropertyIt;
 			solid_check(Property);
 
-			const char* PropertyNameCStr = StringCast<char>(*Property->GetName()).Get();
+			const char* PropertyNameCStr = Unreal::Flecs::ToCString(Property->GetName());
 				
 			if (Property->IsA<FBoolProperty>())
 			{
@@ -1480,7 +1480,7 @@ public:
 		FFlecsComponentHandle ScriptStructComponent;
 
 		const FString StructName = ScriptStruct->GetStructCPPName();
-		const char* StructNameCStr = StringCast<char>(*StructName).Get();
+		const char* StructNameCStr = Unreal::Flecs::ToCString(StructName);
 		std::string StructNameStd = std::string(StructNameCStr);
 
 		DeferEndLambda([this, ScriptStruct, &ScriptStructComponent, StructNameCStr, &StructNameStd]()
@@ -1661,7 +1661,7 @@ public:
 		FFlecsComponentHandle ScriptEnumComponent;
 
 		const FString EnumName = ScriptEnum->GetName();
-		const char* EnumNameCStr = StringCast<char>(*EnumName).Get();
+		const char* EnumNameCStr = Unreal::Flecs::ToCString(EnumName);
 
 		DeferEndLambda([this, ScriptEnum, &ScriptEnumComponent, EnumNameCStr]()
 		{

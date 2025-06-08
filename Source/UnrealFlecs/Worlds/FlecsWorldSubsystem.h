@@ -305,10 +305,9 @@ protected:
 
 		for (const FGameplayTag& Tag : AllTags)
 		{
-			const FFlecsEntityHandle TagEntity =
-				flecs::entity(InFlecsWorld->World,
-					StringCast<char>(*Tag.ToString()).Get(),
-					".", ".");
+			const FFlecsEntityHandle TagEntity = flecs::entity(InFlecsWorld->World,
+					Unreal::Flecs::ToCString(Tag.ToString()), ".", ".");
+			
 			TagEntity.Set<FGameplayTag>(Tag);
 		}
 	}
