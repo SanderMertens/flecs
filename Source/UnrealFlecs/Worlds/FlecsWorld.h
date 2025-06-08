@@ -35,7 +35,9 @@ class UFlecsWorldSubsystem;
 
 DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
 
-DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
+DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"),
+	STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
+
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"),
 	STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
 
@@ -211,11 +213,11 @@ public:
 		
 		RegisterComponentType<FFlecsUObjectTag>();
 		
-		RegisterComponentType<FFlecsActorTag>().is_a<FFlecsUObjectTag>();
-		RegisterComponentType<FFlecsActorComponentTag>().is_a<FFlecsUObjectTag>();
-		RegisterComponentType<FFlecsModuleComponentTag>().is_a<FFlecsUObjectTag>();
+		RegisterComponentType<FFlecsActorTag>().SetIsA<FFlecsUObjectTag>();
+		RegisterComponentType<FFlecsActorComponentTag>().SetIsA<FFlecsUObjectTag>();
+		RegisterComponentType<FFlecsModuleComponentTag>().SetIsA<FFlecsUObjectTag>();
 		
-		RegisterComponentType<FFlecsSceneComponentTag>().is_a<FFlecsActorComponentTag>();
+		RegisterComponentType<FFlecsSceneComponentTag>().SetIsA<FFlecsActorComponentTag>();
 
 		RegisterComponentType<FFlecsModuleComponent>();
 		RegisterComponentType<FFlecsModuleInitEvent>();
@@ -309,14 +311,13 @@ public:
 					const FFlecsEntityHandle EntityHandle = Iter.entity(Index);
 					
 					const FString StructSymbol = EntityHandle.GetSymbol();
-					const char* StructSymbolCStr = StringCast<char>(*StructSymbol).Get();
 					
-					if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(StructSymbolCStr))
+					if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(StructSymbol))
 					{
-						const flecs::untyped_component InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
+						FFlecsComponentHandle InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
 						
-						const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get().
-							GetComponentProperties(StructSymbolCStr);
+						const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get()
+							.GetComponentProperties(StructSymbol);
 						solid_check(Properties);
 
 						std::invoke(Properties->RegistrationFunction, Iter.world(), InUntypedComponent);
@@ -346,7 +347,7 @@ public:
 				if (!InUObjectComponent.IsValid())
 				{
 					UN_LOGF(LogFlecsWorld, Log,
-						"Entity Garbage Collected: %s", StringCast<char>(*EntityHandle.GetName()).Get());
+						"Entity Garbage Collected: %s", *EntityHandle.GetName());
 					EntityHandle.Destroy();
 				}
 			});
@@ -371,12 +372,12 @@ public:
 				UN_LOGF(LogFlecsWorld, Log,
 					"Module component %s added", *ObjectPtr->GetName());
 				
-				if (ObjectPtr->Implements<UFlecsModuleProgressInterface>())
-				{
-					ProgressModules.Add(ObjectPtr);
-					UN_LOGF(LogFlecsWorld, Log, "Progress module %s added",
-						*InUObjectComponent.GetObjectChecked()->GetName());
-				}
+				// if (ObjectPtr->Implements<UFlecsModuleProgressInterface>())
+				// {
+				// 	ProgressModules.Add(ObjectPtr);
+				// 	UN_LOGF(LogFlecsWorld, Log, "Progress module %s added",
+				// 		*InUObjectComponent.GetObjectChecked()->GetName());
+				// }
 			});
 
 		CreateObserver<FFlecsModuleComponent>(TEXT("ModuleInitEventObserver"))
@@ -384,58 +385,6 @@ public:
 			.event<FFlecsModuleInitEvent>()
 			.run([this](flecs::iter& Iter)
 			{
-				/*DeferEndScoped([this, &Iter]()
-				{
-					ecs_suspend_readonly_state_t state{};
-					flecs_suspend_readonly(World, &state);
-
-					while (Iter.next())
-					{
-						ECS_TABLE_UNLOCK(World, Iter.table());
-
-						for (const size_t Index : Iter)
-						{
-							const FFlecsEntityHandle ModuleEntity = Iter.entity(Index);
-							const FFlecsModuleComponent& InModuleComponent = Iter.field_at<FFlecsModuleComponent>(0, Index);
-							FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, Index);
-							
-							DependenciesComponentQuery.run([InModuleComponent, ModuleEntity, this, InUObjectComponent](flecs::iter& DependenciesIter)
-							{
-								DeferEndScoped([this, &DependenciesIter, InModuleComponent, ModuleEntity, InUObjectComponent]()
-								{
-									while (DependenciesIter.next())
-									{
-										ECS_TABLE_UNLOCK(World, DependenciesIter.table());
-									
-										for (const size_t DependenciesIndex : DependenciesIter)
-										{
-											const FFlecsEntityHandle InEntity = DependenciesIter.entity(DependenciesIndex);
-										
-											FFlecsDependenciesComponent& DependenciesComponent
-												= DependenciesIter.field_at<FFlecsDependenciesComponent>(0, DependenciesIndex);
-										
-											if (DependenciesComponent.Dependencies.contains(InModuleComponent.ModuleClass))
-											{
-												const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& Function
-													= DependenciesComponent.Dependencies.at(InModuleComponent.ModuleClass);
-
-												InEntity.AddPair(flecs::DependsOn, ModuleEntity);
-
-												std::invoke(Function, InUObjectComponent.GetObjectChecked(), this, ModuleEntity);
-											}
-										}
-
-										ECS_TABLE_LOCK(World, DependenciesIter.table());
-									}
-								});
-							});
-						}
-
-						ECS_TABLE_LOCK(World, Iter.table());
-					}
-
-					flecs_resume_readonly(World, &state);
-				});*/
 				UnlockIter_Internal(Iter, [this](flecs::iter& Iter, size_t Index)
 				{
 					const FFlecsEntityHandle ModuleEntity = Iter.entity(Index);
@@ -477,7 +426,24 @@ public:
 			.term_at(0).second(flecs::Wildcard).filter() // FFlecsUObjectComponent
 			.each([this](flecs::entity InEntity, const FFlecsUObjectComponent& InUObjectComponent)
 			{
-				for (int32 Index = ProgressModules.Num(); Index > 0; --Index)
+				for (int32 Index = ImportedModules.Num() - 1; Index >= 0; --Index)
+				{
+					const TSolidNotNull<UObject*> ModuleObject = ImportedModules[Index].GetObject();
+					
+					if UNLIKELY_IF(!IsValid(ModuleObject))
+					{
+						ImportedModules.RemoveAt(Index);
+						continue;
+					}
+					
+					if (ModuleObject == InUObjectComponent.GetObjectChecked())
+					{
+						ImportedModules.RemoveAt(Index);
+						break;
+					}
+				}
+				
+				/*for (int32 Index = ProgressModules.Num(); Index > 0; --Index)
 				{
 					const UObject* Module = ProgressModules[Index - 1].GetObject();
 					
@@ -492,7 +458,7 @@ public:
 						ProgressModules.RemoveAt(Index - 1);
 						break;
 					}
-				}
+				}*/
 			});
 	}
 
@@ -852,7 +818,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FString GetWorldName() const
 	{
-		return GetWorldEntity().GetName();
+		return FString(GetWorldEntity().GetName());
 	}
 
 	/**
@@ -895,14 +861,16 @@ public:
 	FORCEINLINE_DEBUGGABLE bool IsModuleImported(const TSubclassOf<UObject> InModule) const
 	{
 		solid_check(InModule);
-		
-		const flecs::entity ModuleEntity = ModuleComponentQuery
-			.find([&InModule](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
-			{
-				return InComponent.ModuleClass == InModule;
-			});
 
-		return ModuleEntity.is_valid();
+		for (const TScriptInterface<IFlecsModuleInterface>& ModuleObject : ImportedModules)
+		{
+			if (ModuleObject.GetObject()->GetClass() == InModule)
+			{
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	template <Solid::TStaticClassConcept T>
@@ -1054,16 +1022,6 @@ public:
 	FORCEINLINE_DEBUGGABLE bool ProgressGameLoop(const double DeltaTime = 0.0)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_FlecsWorldProgress);
-		
-		{
-			SCOPE_CYCLE_COUNTER(STAT_FlecsWorldProgressModule);
-			
-			for (const TScriptInterface<IFlecsModuleProgressInterface>& Module : ProgressModules)
-			{
-				solid_checkf(Module, TEXT("Progress module is nullptr"));
-				Module->ProgressModule(DeltaTime);
-			}
-		}
 
 		solid_check(GameLoopInterface);
 		return GameLoopInterface->Progress(DeltaTime, this);
@@ -1386,11 +1344,9 @@ public:
 	}
 
 	void RegisterMemberProperties(const TSolidNotNull<const UStruct*> InStruct,
-	                              const FFlecsEntityHandle& InEntity) const
+	                              const FFlecsComponentHandle& InComponent) const
 	{
-		solid_checkf(InEntity.IsValid(), TEXT("Entity is nullptr"));
-		
-		flecs::untyped_component UntypedComponent = InEntity.GetUntypedComponent_Unsafe();
+		solid_checkf(InComponent.IsValid(), TEXT("Entity is nullptr"));
 
 		for (TFieldIterator<FProperty> PropertyIt(InStruct, EFieldIterationFlags::IncludeSuper);
 			PropertyIt; ++PropertyIt)
@@ -1402,87 +1358,87 @@ public:
 				
 			if (Property->IsA<FBoolProperty>())
 			{
-				UntypedComponent.member<bool>(PropertyNameCStr,
+				InComponent.AddMember<bool>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FByteProperty>())
 			{
-				UntypedComponent.member<uint8>(PropertyNameCStr,
+				InComponent.AddMember<uint8>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FInt16Property>())
 			{
-				UntypedComponent.member<int16>(PropertyNameCStr,
+				InComponent.AddMember<int16>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FUInt16Property>())
 			{
-				UntypedComponent.member<uint16>(PropertyNameCStr,
+				InComponent.AddMember<uint16>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FIntProperty>())
 			{
-				UntypedComponent.member<int32>(PropertyNameCStr,
+				InComponent.AddMember<int32>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FUInt32Property>())
 			{
-				UntypedComponent.member<uint32>(PropertyNameCStr,
+				InComponent.AddMember<uint32>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FInt64Property>())
 			{
-				UntypedComponent.member<int64>(PropertyNameCStr,
+				InComponent.AddMember<int64>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FUInt64Property>())
 			{
-				UntypedComponent.member<uint64>(PropertyNameCStr,
+				InComponent.AddMember<uint64>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FFloatProperty>())
 			{
-				UntypedComponent.member<float>(PropertyNameCStr,
+				InComponent.AddMember<float>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FDoubleProperty>())
 			{
-				UntypedComponent.member<double>(PropertyNameCStr,
+				InComponent.AddMember<double>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FStrProperty>())
 			{
-				UntypedComponent.member<FString>(PropertyNameCStr,
+				InComponent.AddMember<FString>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FNameProperty>())
 			{
-				UntypedComponent.member<FName>(PropertyNameCStr,
+				InComponent.AddMember<FName>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FTextProperty>())
 			{
-				UntypedComponent.member<FText>(PropertyNameCStr,
+				InComponent.AddMember<FText>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FObjectProperty>())
 			{
-				UntypedComponent.member<FObjectPtr>(PropertyNameCStr,
+				InComponent.AddMember<FObjectPtr>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FWeakObjectProperty>())
 			{
-				UntypedComponent.member<FWeakObjectPtr>(PropertyNameCStr,
+				InComponent.AddMember<FWeakObjectPtr>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FSoftObjectProperty>())
 			{
-				UntypedComponent.member<FSoftObjectPtr>(PropertyNameCStr,
+				InComponent.AddMember<FSoftObjectPtr>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FClassProperty>())
 			{
-				UntypedComponent.member<TSubclassOf<UObject>>(PropertyNameCStr,
+				InComponent.AddMember<TSubclassOf<UObject>>(PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FStructProperty>())
@@ -1492,7 +1448,7 @@ public:
 				{
 					UN_LOGF(LogFlecsWorld, Error,
 						"Property Type Script struct %s is not registered for entity %s",
-						*CastFieldChecked<FStructProperty>(Property)->Struct->GetName(), *InEntity.GetName());
+						*CastFieldChecked<FStructProperty>(Property)->Struct->GetName(), *InComponent.GetName());
 					continue;
 				}
 				else
@@ -1500,10 +1456,10 @@ public:
 					StructComponent = GetScriptStructEntity(CastFieldChecked<FStructProperty>(Property)->Struct);
 				}
 			 		
-				UntypedComponent.member(StructComponent, PropertyNameCStr,
+				InComponent.AddMember(StructComponent, PropertyNameCStr,
 					1, Property->GetOffset_ForInternal());
 			}
-			else
+			else UNLIKELY_ATTRIBUTE
 			{
 				UN_LOGF(LogFlecsWorld, Warning,
 					"Property Type: %s is not supported", *Property->GetName());
@@ -1521,7 +1477,7 @@ public:
 		solid_checkf(!TypeMapComponent->ScriptStructMap.contains(ScriptStruct),
 			TEXT("Script struct %s is already registered"), *ScriptStruct->GetStructCPPName());
 		
-		flecs::untyped_component ScriptStructComponent;
+		FFlecsComponentHandle ScriptStructComponent;
 
 		const FString StructName = ScriptStruct->GetStructCPPName();
 		const char* StructNameCStr = StringCast<char>(*StructName).Get();
@@ -1530,18 +1486,17 @@ public:
 		DeferEndLambda([this, ScriptStruct, &ScriptStructComponent, StructNameCStr, &StructNameStd]()
 		{
 			ScriptStructComponent = World.component(StructNameCStr);
-			solid_check(ScriptStructComponent.is_valid());
+			solid_check(ScriptStructComponent.IsValid());
 			
-			ScriptStructComponent.set_symbol(StructNameCStr);
+			ScriptStructComponent.GetEntity().set_symbol(StructNameCStr);
 			
 			const TFieldIterator<FProperty> PropertyIt(ScriptStruct);
 			const bool bIsTag = ScriptStruct->GetStructureSize() <= 1 && !PropertyIt;
-			
-			ScriptStructComponent.set<flecs::Component>(
-			{
-						.size = bIsTag ? 0 : ScriptStruct->GetStructureSize(),
-						.alignment = bIsTag ? 0 : ScriptStruct->GetMinAlignment()
-					});
+
+			ScriptStructComponent.Set<flecs::Component>({
+				.size = bIsTag ? 0 : ScriptStruct->GetStructureSize(),
+				.alignment = bIsTag ? 0 : ScriptStruct->GetMinAlignment()
+			});
 
 			if (!bIsTag)
 			{
@@ -1551,11 +1506,11 @@ public:
 						"Script struct %s has a noop constructor, this will not be used in flecs",
 						*ScriptStruct->GetName());
 				}
-				
-				flecs::type_hooks_t Hooks = {};
-				Hooks.ctx = const_cast<UScriptStruct*>(ScriptStruct);
-				
+
+				ScriptStructComponent.SetHooksLambda([ScriptStruct](flecs::type_hooks_t& Hooks)
 				{
+					Hooks.ctx = const_cast<UScriptStruct*>(ScriptStruct);
+					
 					if (!ScriptStruct->GetCppStructOps()->HasZeroConstructor())
 					{
 						Hooks.ctor = [](void* Ptr, int32_t Count, const ecs_type_info_t* TypeInfo)
@@ -1574,7 +1529,7 @@ public:
 					{
 						Hooks.ctor = nullptr;
 					}
-
+					
 					if (ScriptStruct->GetCppStructOps()->HasDestructor())
 					{
 						Hooks.dtor = [](void* Ptr, int32_t Count, const ecs_type_info_t* TypeInfo)
@@ -1593,62 +1548,60 @@ public:
 					{
 						Hooks.dtor = nullptr;
 					}
-					
+						
 					Hooks.copy = [](void* Dst, const void* Src, int32_t Count, const ecs_type_info_t* TypeInfo)
-					{
-						solid_check(TypeInfo != nullptr);
-						solid_check(Src != nullptr);
-						solid_check(Dst != nullptr);
-						solid_check(TypeInfo->hooks.ctx != nullptr);
-
-						const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
-						solid_check(IsValid(ScriptStruct));
-
-						ScriptStruct->CopyScriptStruct(Dst, Src, Count);
-					};
-					
-					Hooks.move = [](void* Dst, void* Src, int32_t Count, const ecs_type_info_t* TypeInfo)
-					{
-						solid_check(TypeInfo != nullptr);
-						solid_check(Src != nullptr);
-						solid_check(Dst != nullptr);
-						solid_check(TypeInfo->hooks.ctx != nullptr);
-
-						const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
-						solid_check(IsValid(ScriptStruct));
-
-						ScriptStruct->CopyScriptStruct(Dst, Src, Count);
-					};
-
-					if (ScriptStruct->GetCppStructOps()->HasIdentical())
-					{
-						Hooks.equals = [](const void* Ptr1, const void* Ptr2, const ecs_type_info_t* TypeInfo)
-							-> bool
 						{
 							solid_check(TypeInfo != nullptr);
-							solid_check(Ptr1 != nullptr);
-							solid_check(Ptr2 != nullptr);
+							solid_check(Src != nullptr);
+							solid_check(Dst != nullptr);
 							solid_check(TypeInfo->hooks.ctx != nullptr);
 
 							const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
 							solid_check(IsValid(ScriptStruct));
 
-							return ScriptStruct->CompareScriptStruct(Ptr1, Ptr2, PPF_DeepComparison);
+							ScriptStruct->CopyScriptStruct(Dst, Src, Count);
 						};
-					}
-					else
+						
+						Hooks.move = [](void* Dst, void* Src, int32_t Count, const ecs_type_info_t* TypeInfo)
+						{
+							solid_check(TypeInfo != nullptr);
+							solid_check(Src != nullptr);
+							solid_check(Dst != nullptr);
+							solid_check(TypeInfo->hooks.ctx != nullptr);
+
+							const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+							solid_check(IsValid(ScriptStruct));
+
+							ScriptStruct->CopyScriptStruct(Dst, Src, Count);
+						};
+
+						if (ScriptStruct->GetCppStructOps()->HasIdentical())
+						{
+							Hooks.equals = [](const void* Ptr1, const void* Ptr2, const ecs_type_info_t* TypeInfo)
+								-> bool
+							{
+								solid_check(TypeInfo != nullptr);
+								solid_check(Ptr1 != nullptr);
+								solid_check(Ptr2 != nullptr);
+								solid_check(TypeInfo->hooks.ctx != nullptr);
+
+								const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+								solid_check(IsValid(ScriptStruct));
+
+								return ScriptStruct->CompareScriptStruct(Ptr1, Ptr2, PPF_DeepComparison);
+							};
+						}
+						else
+						{
+							Hooks.equals = nullptr;
+						}
+
+					if (ScriptStruct->GetCppStructOps()->IsPlainOldData())
 					{
-						Hooks.equals = nullptr;
+						Hooks.copy = nullptr;
+						Hooks.move = nullptr;
 					}
-				};
-
-				if (ScriptStruct->GetCppStructOps()->IsPlainOldData())
-				{
-					Hooks.copy = nullptr;
-					Hooks.move = nullptr;
-				}
-
-				ScriptStructComponent.set_hooks(Hooks);
+				});
 			}
 
 			if (!flecs::_::g_type_to_impl_data.contains(StructNameStd))
@@ -1672,7 +1625,7 @@ public:
 			RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
 		});
 
-		ScriptStructComponent.set<FFlecsScriptStructComponent>(FFlecsScriptStructComponent{ ScriptStruct });
+		ScriptStructComponent.Set<FFlecsScriptStructComponent>({ ScriptStruct });
 
 		SetScope(OldScope);
 		return ScriptStructComponent;
@@ -1705,25 +1658,24 @@ public:
 		solid_checkf(!TypeMapComponent->ScriptEnumMap.contains(FFlecsScriptEnumComponent(ScriptEnum)),
 			TEXT("Script enum %s is already registered"), *ScriptEnum->GetName());
 
-		flecs::untyped_component ScriptEnumComponent;
+		FFlecsComponentHandle ScriptEnumComponent;
 
 		const FString EnumName = ScriptEnum->GetName();
 		const char* EnumNameCStr = StringCast<char>(*EnumName).Get();
 
 		DeferEndLambda([this, ScriptEnum, &ScriptEnumComponent, EnumNameCStr]()
 		{
-			ScriptEnumComponent = World.component(StringCast<char>(*ScriptEnum->GetName()).Get());
-			solid_check(ScriptEnumComponent.is_valid());
+			ScriptEnumComponent = World.component(Unreal::Flecs::ToCString(ScriptEnum->GetName()));
+			solid_check(ScriptEnumComponent.IsValid());
 			
-			ScriptEnumComponent.set_symbol(StringCast<char>(*ScriptEnum->GetName()).Get());
+			ScriptEnumComponent.GetEntity().set_symbol(Unreal::Flecs::ToCString(ScriptEnum->GetName()));
+
+			ScriptEnumComponent.Set<flecs::Component>({
+				.size = sizeof(uint8),
+				.alignment = alignof(uint8)
+			});
 			
-			ScriptEnumComponent.set<flecs::Component>(
-				{
-							.size = sizeof(uint8),
-							.alignment = alignof(uint8)
-						});
-			
-			ScriptEnumComponent.set<flecs::Enum>(flecs::Enum{ .underlying_type = flecs::U8 });
+			ScriptEnumComponent.Set<flecs::Enum>(flecs::Enum{ .underlying_type = flecs::U8 });
 
 			const int32 EnumCount = ScriptEnum->NumEnums();
 			
@@ -1739,7 +1691,7 @@ public:
 					continue;
 				}
 				
-				ScriptEnumComponent.constant<uint8>(StringCast<char>(*EnumValueName).Get(),
+				ScriptEnumComponent.AddConstant<uint8>(StringCast<char>(*EnumValueName).Get(),
 					static_cast<uint8>(EnumValue));
 			}
 
@@ -1763,7 +1715,7 @@ public:
 			TypeMapComponent->ScriptEnumMap.emplace(ScriptEnum, ScriptEnumComponent);
 		});
 
-		ScriptEnumComponent.set<FFlecsScriptEnumComponent>(FFlecsScriptEnumComponent{ ScriptEnum.Get() });
+		ScriptEnumComponent.Set<FFlecsScriptEnumComponent>({ ScriptEnum.Get() });
 
 		SetScope(OldScope);
 		return ScriptEnumComponent;
@@ -1827,10 +1779,10 @@ public:
 	}*/
 
 	template <typename T>
-	FORCEINLINE_DEBUGGABLE flecs::untyped_component RegisterComponentType() const
+	FORCEINLINE_DEBUGGABLE FFlecsComponentHandle RegisterComponentType() const
 	{
-		flecs::untyped_component Component = World.component<T>();
-		solid_check(Component.is_valid());
+		FFlecsComponentHandle Component = World.component<T>();
+		solid_check(Component.IsValid());
 		
 		if constexpr (Solid::IsScriptStruct<T>())
 		{
@@ -1852,7 +1804,7 @@ public:
 	}
 
 	template <typename T>
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeStruct() const
+	FORCEINLINE_DEBUGGABLE FFlecsComponentHandle ObtainComponentTypeStruct() const
 	{
 		solid_checkf(World.is_valid(flecs::_::type<T>::id(World)),
 			TEXT("Component %hs is not registered"), nameof(T).data());
@@ -1860,7 +1812,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* ScriptStruct) const
+	FORCEINLINE_DEBUGGABLE FFlecsComponentHandle ObtainComponentTypeStruct(const UScriptStruct* ScriptStruct) const
 	{
 		solid_check(ScriptStruct);
 		
@@ -1871,7 +1823,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainComponentTypeEnum(const UEnum* ScriptEnum) const
+	FORCEINLINE_DEBUGGABLE FFlecsComponentHandle ObtainComponentTypeEnum(const UEnum* ScriptEnum) const
 	{
 		solid_check(ScriptEnum);
 		
@@ -1955,9 +1907,9 @@ public:
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
 	{
 		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
-		return LookupEntity(StringCast<char>(*Tag.GetTagName().ToString()).Get(),
-		                    ".",
-		                    ".");
+		
+		const FString TagName = Tag.GetTagName().ToString();
+		return LookupEntity(TagName, ".", ".");
 	}
 
 	template <typename T>
@@ -2134,11 +2086,11 @@ public:
 	UPROPERTY()
 	TArray<TScriptInterface<IFlecsModuleInterface>> ImportedModules;
 
-	UPROPERTY()
-	TArray<TScriptInterface<IFlecsModuleProgressInterface>> ProgressModules;
+	//UPROPERTY()
+	//TArray<TScriptInterface<IFlecsModuleProgressInterface>> ProgressModules;
 
-	UPROPERTY()
-	TArray<TObjectPtr<UFlecsPrimaryDataAsset>> FlecsPrimaryDataAssets;
+	//UPROPERTY()
+	//TArray<TObjectPtr<UFlecsPrimaryDataAsset>> FlecsPrimaryDataAssets;
 
 	flecs::query<FFlecsModuleComponent> ModuleComponentQuery;
 	flecs::query<FFlecsUObjectComponent> ObjectDestructionComponentQuery;

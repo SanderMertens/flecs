@@ -24,7 +24,8 @@ public:
 	
 }; // struct FFlecsPrimaryAssetComponent
 
-REGISTER_FLECS_COMPONENT(FFlecsPrimaryAssetComponent, [](flecs::world InWorld, flecs::untyped_component InComponent)
-{
-	InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
-});
+REGISTER_FLECS_COMPONENT(FFlecsPrimaryAssetComponent,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
+	{
+		InComponent.AddPair(flecs::OnInstantiate, flecs::DontInherit);
+	});

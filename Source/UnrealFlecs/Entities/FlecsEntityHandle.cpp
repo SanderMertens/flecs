@@ -25,12 +25,12 @@ FFlecsEntityHandle::FFlecsEntityHandle(const flecs::world_t* InWorld, const FFle
     SetEntity(flecs::entity(InWorld, InEntity));
 }
 
-UFlecsWorld* FFlecsEntityHandle::GetFlecsWorld() const
+TSolidNotNull<UFlecsWorld*> FFlecsEntityHandle::GetFlecsWorld() const
 {
-    return ToFlecsWorld(GetEntity().world());
+    return Unreal::Flecs::ToFlecsWorld(GetEntity().world());
 }
 
-UWorld* FFlecsEntityHandle::GetOuterWorld() const
+TSolidNotNull<UWorld*> FFlecsEntityHandle::GetOuterWorld() const
 {
     solid_checkf(::IsValid(GetFlecsWorld()), TEXT("Flecs World not found"));
     return GetFlecsWorld()->GetSingletonPtr<FUWorldPtrComponent>()->World.Get();

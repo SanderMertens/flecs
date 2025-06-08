@@ -79,7 +79,7 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
     static FORCEINLINE FString GetEntityName(const FFlecsEntityHandle& Entity)
     {
-        return Entity.GetName();
+        return FString(Entity.GetName());
     }
 
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")

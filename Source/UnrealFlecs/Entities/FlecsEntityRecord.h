@@ -491,7 +491,8 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	
 }; // struct FFlecsEntityRecord
 
-REGISTER_FLECS_COMPONENT(FFlecsEntityRecord, [](flecs::world InWorld, flecs::untyped_component InComponent)
+REGISTER_FLECS_COMPONENT(FFlecsEntityRecord,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
 	{
-		InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+		InComponent.AddPair(flecs::OnInstantiate, flecs::DontInherit);
 	});

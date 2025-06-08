@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FFlecsUObjectTag.h"
+#include "Entities/FlecsComponentHandle.h"
 #include "Properties/FlecsComponentProperties.h"
 #include "FFlecsActorComponentTag.generated.h"
 
@@ -14,7 +15,7 @@ struct UNREALFLECS_API FFlecsActorComponentTag : public FFlecsUObjectTag
 }; // struct FFlecsActorComponentTag
 
 REGISTER_FLECS_COMPONENT(FFlecsActorComponentTag,
-	[](flecs::world InWorld, flecs::untyped_component InComponent)
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
 	{
-		InComponent.add(flecs::Target);
+		InComponent.Add(flecs::Target);
 	});

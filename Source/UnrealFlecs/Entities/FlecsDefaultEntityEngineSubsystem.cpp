@@ -64,8 +64,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 			return;
 		}
 
-		UN_LOGF(LogFlecsEntity, Log,
-			"Entity: %s", *FString(Entity.name().c_str()));
+		UN_LOGF(LogFlecsEntity, Log, "Entity: %s", Entity.name().c_str());
 		DefaultEntityOptions.Add(Entity.name().c_str(), Entity.id());
 	});
 	

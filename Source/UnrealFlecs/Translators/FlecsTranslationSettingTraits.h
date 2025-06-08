@@ -13,9 +13,9 @@ struct UNREALFLECS_API FFlecsTranslationPropertyTrait
 }; // struct FFlecsTranslationPropertyTrait
 
 REGISTER_FLECS_COMPONENT(FFlecsTranslationPropertyTrait,
-	[](flecs::world InWorld, flecs::untyped_component InComponent)
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
 {
-	InComponent.add(flecs::PairIsTag);
+	InComponent.Add(flecs::PairIsTag);
 })
 
 USTRUCT(BlueprintType)

@@ -25,7 +25,7 @@ public:
 }; // struct FFlecsDependenciesComponent
 
 REGISTER_FLECS_COMPONENT(FFlecsDependenciesComponent,
-	[](flecs::world InWorld, flecs::untyped_component InComponent)
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
 	{
-		InComponent.add(flecs::Sparse);
+		InComponent.Add(flecs::Sparse);
 	});

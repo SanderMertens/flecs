@@ -85,8 +85,9 @@ public:
     {
         return IsValid();
     }
-    
-    NO_DISCARD FORCEINLINE bool IsStale(const bool bIncludeIfPendingKill = true, const bool bThreadSafeTest = false) const
+
+    NO_DISCARD FORCEINLINE bool IsStale(const bool bIncludeIfPendingKill = true,
+                                        const bool bThreadSafeTest = false) const
     {
         return Object.IsStale(bIncludeIfPendingKill, bThreadSafeTest);
     }
@@ -116,11 +117,12 @@ public:
     
 }; // struct FFlecsUObjectComponent
 
-REGISTER_FLECS_COMPONENT(FFlecsUObjectComponent, [](flecs::world InWorld, flecs::untyped_component InComponent)
+REGISTER_FLECS_COMPONENT(FFlecsUObjectComponent,
+[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
     {
-        InComponent.add(flecs::Relationship);
-        InComponent.add(flecs::Exclusive);
-        InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+        InComponent.Add(flecs::Relationship);
+        InComponent.Add(flecs::Exclusive);
+        InComponent.AddPair(flecs::OnInstantiate, flecs::DontInherit);
     });
 
 // @TODO: Currently not used
@@ -130,9 +132,10 @@ struct UNREALFLECS_API FFlecsNoDeleteUObject
     GENERATED_BODY()
 }; // struct FFlecsNoDeleteUObject
 
-REGISTER_FLECS_COMPONENT(FFlecsNoDeleteUObject, [](flecs::world InWorld, flecs::untyped_component InComponent)
+REGISTER_FLECS_COMPONENT(FFlecsNoDeleteUObject,
+    [](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
     {
-        InComponent.add(flecs::OnInstantiate, flecs::DontInherit);
+        InComponent.AddPair(flecs::OnInstantiate, flecs::DontInherit);
     });
 
 

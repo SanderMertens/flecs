@@ -72,4 +72,5 @@ public:
     }
     
     flecs::type Type;
+    
 }; // struct FFlecsArchetype

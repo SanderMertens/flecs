@@ -117,7 +117,7 @@ public:
 
 	NO_DISCARD FORCEINLINE FString GetName() const
 	{
-		return static_cast<FString>(System.name());
+		return FString(System.name());
 	}
 
 	FORCEINLINE void SetContext(void* InContext)

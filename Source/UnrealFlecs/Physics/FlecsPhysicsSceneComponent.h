@@ -30,7 +30,8 @@ public:
 	
 }; // struct FFlecsPhysicsSceneComponent
 
-REGISTER_FLECS_COMPONENT(FFlecsPhysicsSceneComponent, [](flecs::world World, flecs::untyped_component Component)
+REGISTER_FLECS_COMPONENT(FFlecsPhysicsSceneComponent,
+	[](flecs::world World, const FFlecsComponentHandle& Component)
 	{
-		Component.add(flecs::Sparse);
+		Component.Add(flecs::Sparse);
 	});

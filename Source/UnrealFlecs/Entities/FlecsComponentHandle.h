@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FFlecsMemberHandle.h"
 #include "FlecsEntityHandle.h"
 #include "FlecsComponentHandle.generated.h"
 
 /**
- * @TODO: Equivalent to flecs::untyped_component and flecs::component<T>
+ * @brief Equivalent to flecs::untyped_component and flecs::component<T>
  */
 USTRUCT(BlueprintType, meta = (DisableSplitPin))
 struct alignas(8) UNREALFLECS_API FFlecsComponentHandle : public FFlecsEntityHandle
@@ -17,4 +18,327 @@ struct alignas(8) UNREALFLECS_API FFlecsComponentHandle : public FFlecsEntityHan
 public:
 	FFlecsComponentHandle() = default;
 
+	SOLID_INLINE FFlecsComponentHandle(const flecs::entity& InEntity)
+		: FFlecsEntityHandle(InEntity)
+	{
+	}
+
+	SOLID_INLINE FFlecsComponentHandle(const FFlecsEntityHandle& InEntityHandle)
+		: FFlecsEntityHandle(InEntityHandle)
+	{
+	}
+
+	SOLID_INLINE FFlecsComponentHandle(flecs::world& InWorld, const FFlecsId& InId)
+		: FFlecsEntityHandle(InWorld, InId)
+	{
+	}
+
+	SOLID_INLINE FFlecsComponentHandle(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsId& InId)
+		: FFlecsEntityHandle(InWorld, InId)
+	{
+	}
+
+	SOLID_INLINE FFlecsComponentHandle operator=(const flecs::entity& InEntity)
+	{
+		FFlecsEntityHandle::operator=(InEntity);
+
+		return *this;
+	}
+
+	SOLID_INLINE FFlecsComponentHandle operator=(const FFlecsEntityHandle& InEntityHandle)
+	{
+		FFlecsEntityHandle::operator=(InEntityHandle);
+		
+		if LIKELY_IF(IsValid())
+		{
+			solid_checkf(IsComponent(),
+				TEXT("FFlecsComponentHandle must be initialized with a component entity, not an entity."));
+		}
+
+		return *this;
+	}
+	
+	template <typename T>
+	NO_DISCARD SOLID_INLINE flecs::component<T> GetTypedComponent() const
+	{
+		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
+		return flecs::component<T>(GetUntypedComponent());
+	}
+
+	NO_DISCARD SOLID_INLINE flecs::untyped_component GetUntypedComponent() const
+	{
+		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
+		return GetUntypedComponent_Unsafe();
+	}
+
+	SOLID_INLINE operator flecs::untyped_component() const
+	{
+		return GetUntypedComponent();
+	}
+
+	template <typename T>
+	SOLID_INLINE operator flecs::component<T>() const
+	{
+		return GetTypedComponent<T>();
+	}
+
+	NO_DISCARD SOLID_INLINE flecs::Component GetComponentData() const
+	{
+		return Get<flecs::Component>();
+	}
+
+	SOLID_INLINE void SetComponentData(const flecs::Component& InComponentData) const
+	{
+		Set<flecs::Component>(InComponentData);
+	}
+
+	SOLID_INLINE void SetComponentData(const int32 InSize, const int32 InAlignment) const
+	{
+		solid_check(InSize > 0 && InAlignment > 0);
+		
+		SetComponentData(flecs::Component{ .size = InSize, .alignment = InAlignment });
+	}
+
+	SOLID_INLINE void SetHooks(flecs::type_hooks_t& InHooks) const
+	{
+		GetUntypedComponent().set_hooks(InHooks);
+	}
+	
+	SOLID_INLINE void SetHooksLambda(const TFunctionRef<void(flecs::type_hooks_t&)>& InHooksFunction) const
+	{
+		flecs::type_hooks_t Hooks = GetHooks();
+		Invoke(InHooksFunction, Hooks);
+		GetUntypedComponent().set_hooks(Hooks);
+	}
+
+	NO_DISCARD SOLID_INLINE flecs::type_hooks_t GetHooks() const
+	{
+		return GetUntypedComponent().get_hooks();
+	}
+	
+	SOLID_INLINE void SetConstructor(const ecs_xtor_t& InConstructor) const
+	{
+		SetHooksLambda([InConstructor](flecs::type_hooks_t& Hooks)
+		{
+			Hooks.ctor = InConstructor;
+		});
+	}
+
+	SOLID_INLINE void SetDestructor(const ecs_xtor_t& InDestructor) const
+	{
+		SetHooksLambda([InDestructor](flecs::type_hooks_t& Hooks)
+		{
+			Hooks.dtor = InDestructor;
+		});
+	}
+
+	SOLID_INLINE void SetCopy(const ecs_copy_t& InCopy) const
+	{
+		SetHooksLambda([InCopy](flecs::type_hooks_t& Hooks)
+		{
+			Hooks.copy = InCopy;
+		});
+	}
+
+	SOLID_INLINE void SetMove(const ecs_move_t& InMove) const
+	{
+		SetHooksLambda([InMove](flecs::type_hooks_t& Hooks)
+		{
+			Hooks.move = InMove;
+		});
+	}
+
+	SOLID_INLINE void SetCompare(const ecs_cmp_t& InCompare) const
+	{
+		SetHooksLambda([InCompare](flecs::type_hooks_t& Hooks)
+		{
+			Hooks.cmp = InCompare;
+		});
+	}
+
+	SOLID_INLINE void SetEquals(const ecs_equals_t& InEquals) const
+	{
+		SetHooksLambda([InEquals](flecs::type_hooks_t& Hooks)
+		{
+			Hooks.equals = InEquals;
+		});
+	}
+
+	SOLID_INLINE void SetOnAdd(const ecs_iter_action_t& InOnAdd) const
+	{
+		SetHooksLambda([InOnAdd](flecs::type_hooks_t& Hooks)
+		{
+			Hooks.on_add = InOnAdd;
+		});
+	}
+
+	SOLID_INLINE void SetOnRemove(const ecs_iter_action_t& InOnRemove) const
+	{
+		SetHooksLambda([InOnRemove](flecs::type_hooks_t& Hooks)
+		{
+			Hooks.on_remove = InOnRemove;
+		});
+	}
+
+	SOLID_INLINE void SetOnSet(const ecs_iter_action_t& InOnSet) const
+	{
+		SetHooksLambda([InOnSet](flecs::type_hooks_t& Hooks)
+		{
+			Hooks.on_set = InOnSet;
+		});
+	}
+
+	NO_DISCARD SOLID_INLINE uint32 GetSize() const
+	{
+		solid_check(GetComponentData().size > 0);
+		return GetComponentData().size;
+	}
+
+	NO_DISCARD SOLID_INLINE uint32 GetAlignment() const
+	{
+		solid_check(GetComponentData().alignment > 0);
+		return GetComponentData().alignment;
+	}
+
+	NO_DISCARD SOLID_INLINE FFlecsMemberHandle GetLastMember() const
+	{
+		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
+		return FFlecsMemberHandle(ecs_cpp_last_member(GetFlecsWorld_Internal(), GetEntity()));
+	}
+	
+	SOLID_INLINE void AddMember(const FFlecsId InTypeId,
+								const FFlecsId InUnitId,
+								const FString& InName,
+	                            const uint32 InCount = 0) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+					 TEXT("Cannot add member to component while in deferred mode."));
+		
+		GetUntypedComponent().member(InTypeId,
+		                             InUnitId,
+		                             Unreal::Flecs::ToCString(InName),
+		                             InCount);
+	}
+	
+	SOLID_INLINE void AddMember(const FFlecsId InTypeId,
+								const FFlecsId InUnitId,
+								const FString& InName,
+								const uint32 InCount,
+								const uint64 InSizeOffset) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+					 TEXT("Cannot add member to component while in deferred mode."));
+		
+		GetUntypedComponent().member(InTypeId,
+									 InUnitId,
+									 Unreal::Flecs::ToCString(InName),
+									 InCount,
+									 InSizeOffset);
+	}
+
+	SOLID_INLINE void AddMember(const FFlecsId InTypeId, const FString& InName, const uint32 InCount = 0) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+					 TEXT("Cannot add member to component while in deferred mode."));
+		
+		GetUntypedComponent().member(InTypeId, Unreal::Flecs::ToCString(InName), InCount);
+	}
+
+	SOLID_INLINE void AddMember(const FFlecsId InTypeId,
+	                                          const FString& InName,
+	                                          const uint32 InCount,
+	                                          const uint64 InSizeOffset) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		             TEXT("Cannot add member to component while in deferred mode."));
+			
+		GetUntypedComponent().member(InTypeId,
+		                             Unreal::Flecs::ToCString(InName),
+		                             InCount,
+		                             InSizeOffset);
+	}
+
+	template <typename T>
+	SOLID_INLINE void AddMember(const FString& InName, const uint32 InCount = 0) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+					 TEXT("Cannot add member to component while in deferred mode."));
+		
+		GetUntypedComponent().member<T>(Unreal::Flecs::ToCString(InName), InCount);
+	}
+
+	template <typename T>
+	SOLID_INLINE void AddMember(const FString& InName, const uint32 InCount, const uint64 InSizeOffset) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+					 TEXT("Cannot add member to component while in deferred mode."));
+		
+		GetUntypedComponent().member<T>(Unreal::Flecs::ToCString(InName), InCount, InSizeOffset);
+	}
+
+	template <typename T>
+	SOLID_INLINE void AddMember(const FFlecsId InUnitId, const FString& InName, const uint32 InCount = 0) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+					 TEXT("Cannot add member to component while in deferred mode."));
+		
+		GetUntypedComponent().member<T>(InUnitId, Unreal::Flecs::ToCString(InName), InCount);
+	}
+
+	template <typename TMember, typename TUnit>
+	SOLID_INLINE void AddMember(const FString& InName, const uint32 InCount = 0) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+					 TEXT("Cannot add member to component while in deferred mode."));
+		
+		GetUntypedComponent().member<TMember, TUnit>(Unreal::Flecs::ToCString(InName), InCount);
+	}
+
+	template <typename TMember, typename TUnit>
+	SOLID_INLINE void AddMember(const FString& InName, const uint32 InCount, const uint64 InSizeOffset) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+					 TEXT("Cannot add member to component while in deferred mode."));
+		
+		GetUntypedComponent().member<TMember, TUnit>(Unreal::Flecs::ToCString(InName), InCount, InSizeOffset);
+	}
+
+	template <typename TMember, typename TComponent>
+	SOLID_INLINE void AddMember(const FString& InName, const TMember TComponent::*MemberPtr) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+					 TEXT("Cannot add member to component while in deferred mode."));
+		
+		GetUntypedComponent().member<TMember, TComponent>(Unreal::Flecs::ToCString(InName), MemberPtr);
+	}
+
+	template <typename TUnit, typename TMember, typename TComponent>
+	SOLID_INLINE void AddMember(const FString& InName, const TMember TComponent::*MemberPtr) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+					 TEXT("Cannot add member to component while in deferred mode."));
+		
+		GetUntypedComponent().member<TUnit, TMember, TComponent>(Unreal::Flecs::ToCString(InName), MemberPtr);
+	}
+
+	template <typename TConstant = uint32>
+	SOLID_INLINE void AddConstant(const FString& InName, const TConstant& InValue) const
+	{
+		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+					 TEXT("Cannot add constant to component while in deferred mode."));
+		
+		GetUntypedComponent().constant<TConstant>(Unreal::Flecs::ToCString(InName), InValue);
+	}
+
+private:
+	NO_DISCARD SOLID_INLINE flecs::untyped_component GetUntypedComponent_Unsafe() const
+	{
+		return flecs::untyped_component(GetFlecsWorld_Internal(), GetEntity());
+	}
+	
 }; // struct FFlecsComponentHandle
+
+template <typename TComponent>
+struct TFlecsComponentHandle : public FFlecsComponentHandle
+{
+}; // struct TFlecsComponentHandle

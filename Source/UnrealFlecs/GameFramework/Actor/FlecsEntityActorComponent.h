@@ -54,6 +54,6 @@ public:
 	void OnWorldCreated(UFlecsWorld* InWorld);
 
 private:
-	void CreateActorEntity(TSolidNotNull<UFlecsWorld*> InWorld);
+	void CreateActorEntity(const TSolidNotNull<const UFlecsWorld*> InWorld);
 	
 }; // class UFlecsEntityActorComponent

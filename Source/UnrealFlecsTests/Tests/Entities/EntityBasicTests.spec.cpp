@@ -162,7 +162,7 @@ void FEntityBasicTestsSpec::Define()
 			};
 
 			Fixture.FlecsWorld->RegisterComponentType<FTestComponent>()
-				.member<int32>("Value");
+				.AddMember<int32>("Value");
 			
 			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
 			EntityHandle.Set<FTestComponent>({ 42 });
@@ -172,7 +172,9 @@ void FEntityBasicTestsSpec::Define()
 			TestTrue("Serialized entity should not be empty", !SerializedEntity.IsEmpty());
 			
 			FFlecsEntityHandle DeserializedEntity = Fixture.FlecsWorld->CreateEntity();
+			
 			DeserializedEntity.FromJson(SerializedEntity);
+			
 			TestTrue("Deserialized entity should be valid", DeserializedEntity.IsValid());
 			TestEqual("Deserialized entity value should be 42",
 				DeserializedEntity.Get<FTestComponent>().Value, 42);
@@ -235,7 +237,7 @@ void FEntityBasicTestsSpec::Define()
 			};
 
 			Fixture.FlecsWorld->RegisterComponentType<FTestPairComponent>()
-				.member<int32>("Value");
+				.AddMember<int32>("Value");
 				
 			FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
 			
@@ -260,8 +262,7 @@ void FEntityBasicTestsSpec::Define()
 			};
 
 			Fixture.FlecsWorld->RegisterComponentType<FTestPairComponent>()
-				.member<int32>("Value");
-				
+				.AddMember<int32>("Value");
 				
 			FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
 			

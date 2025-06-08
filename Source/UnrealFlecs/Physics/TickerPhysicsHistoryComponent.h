@@ -21,7 +21,8 @@ public:
 	int32 PhysicsFrame = 0;
 }; // struct FTickerPhysicsHistoryItem
 
-REGISTER_FLECS_COMPONENT(FTickerPhysicsHistoryItem, [](flecs::world World, flecs::untyped_component Component)
+REGISTER_FLECS_COMPONENT(FTickerPhysicsHistoryItem,
+	[](flecs::world World, const FFlecsComponentHandle& Component)
 	{
 	});
 
@@ -35,7 +36,8 @@ public:
 	TArray<FTickerPhysicsHistoryItem> HistoryItems;
 }; // struct FTickerPhysicsHistoryComponent
 
-REGISTER_FLECS_COMPONENT(FTickerPhysicsHistoryComponent, [](flecs::world World, flecs::untyped_component Component)
+REGISTER_FLECS_COMPONENT(FTickerPhysicsHistoryComponent,
+	[](flecs::world World, const FFlecsComponentHandle& Component)
 	{
-		Component.add(flecs::Sparse);
+		Component.Add(flecs::Sparse);
 	});

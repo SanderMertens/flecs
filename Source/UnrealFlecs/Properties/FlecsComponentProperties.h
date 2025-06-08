@@ -9,6 +9,7 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
+#include "Entities/FlecsComponentHandle.h"
 #include "Standard/robin_hood.h"
 #include "SolidMacros/Macros.h"
 #include "Types/SolidNotNull.h"
@@ -16,7 +17,7 @@
 
 namespace Unreal::Flecs
 {
-	using FlecsComponentFunction = std::function<void(flecs::world, flecs::untyped_component)>;
+	using FlecsComponentFunction = std::function<void(flecs::world, FFlecsComponentHandle&)>;
 } // namespace Unreal::Flecs
 
 struct UNREALFLECS_API FFlecsComponentProperties
@@ -62,16 +63,29 @@ public:
 		OnComponentPropertiesRegistered.ExecuteIfBound(ComponentProperties[Name]);
 	}
 
-	NO_DISCARD FORCEINLINE bool ContainsComponentProperties(const std::string& Name) const
+	NO_DISCARD FORCEINLINE bool ContainsComponentProperties(const std::string_view Name) const
 	{
-		return ComponentProperties.contains(Name);
+		return ComponentProperties.contains(Name.data());
 	}
 
-	NO_DISCARD FORCEINLINE const FFlecsComponentProperties* GetComponentProperties(const std::string& Name) const
+	NO_DISCARD FORCEINLINE bool ContainsComponentProperties(const FString& Name) const
+	{
+		return ComponentProperties.contains(Unreal::Flecs::ToCString(Name));
+	}
+
+	NO_DISCARD FORCEINLINE const FFlecsComponentProperties* GetComponentProperties(const std::string_view Name) const
 	{
 		checkf(!Name.empty(), TEXT("Component properties name is empty!"));
-		checkf(ComponentProperties.contains(Name), TEXT("Component properties not found!"));
-		return &ComponentProperties.at(Name);
+		checkf(ComponentProperties.contains(Name.data()), TEXT("Component properties not found!"));
+		return &ComponentProperties.at(Name.data());
+	}
+
+	NO_DISCARD FORCEINLINE const FFlecsComponentProperties* GetComponentProperties(const FString& Name) const
+	{
+		solid_checkf(!Name.IsEmpty(), TEXT("Component properties name is empty!"));
+		solid_checkf(ComponentProperties.contains(Unreal::Flecs::ToCString(Name)),
+			TEXT("Component properties not found!"));
+		return &ComponentProperties.at(Unreal::Flecs::ToCString(Name));
 	}
 	
 	robin_hood::unordered_flat_map<std::string, FFlecsComponentProperties> ComponentProperties;
@@ -79,7 +93,7 @@ public:
 	
 }; // struct FFlecsComponentPropertiesRegistry
 
-// std::function<void(flecs::world, flecs::untyped_component)>
+// std::function<void(flecs::world, FFlecsComponentHandle&)>
 #define REGISTER_FLECS_COMPONENT(Name, RegistrationFunction) \
 	namespace \
 	{ \

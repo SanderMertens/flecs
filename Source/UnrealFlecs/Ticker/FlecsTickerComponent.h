@@ -21,8 +21,8 @@ public:
 }; // struct FFlecsTickerComponent
 
 REGISTER_FLECS_COMPONENT(FFlecsTickerComponent,
-	[](flecs::world InWorld, flecs::untyped_component InComponent)
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
 {
-	InComponent.add(flecs::Sparse);
+	InComponent.Add(flecs::Sparse);
 });
 

@@ -285,6 +285,7 @@ struct FOSApiInitializer
         {
             const double Seconds = FPlatformTime::Seconds();
             TimeOut->sec = static_cast<uint32_t>(Seconds);
+        	// Seconds to Nanoseconds: // 1 second = 1e9 nanoseconds
             TimeOut->nanosec = static_cast<uint32_t>((Seconds - TimeOut->sec) * 1e9);
         };
 
@@ -293,6 +294,7 @@ struct FOSApiInitializer
         	#if UNLOG_ENABLED
         		UN_LOGF(LogFlecsCore, Fatal, "Flecs - Aborting...");
 			#endif // UNLOG_ENABLED
+        	
         	FGenericPlatformMisc::RequestExit(false);
         };
 
