@@ -964,6 +964,8 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
+    /* Set entity symbol.
+     */
     const Self& set_symbol(const char *name) const  {
         ecs_set_symbol(this->world_, this->id_, name);
         return to_base();
