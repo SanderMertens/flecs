@@ -25,7 +25,6 @@
 #include "Modules/FlecsDependenciesComponent.h"
 #include "Modules/FlecsModuleInitEvent.h"
 #include "Modules/FlecsModuleInterface.h"
-#include "Modules/FlecsModuleProgressInterface.h"
 #include "Pipelines/FlecsGameLoopInterface.h"
 #include "Prefabs/FlecsPrefabAsset.h"
 #include "UObject/PropertyIterator.h"

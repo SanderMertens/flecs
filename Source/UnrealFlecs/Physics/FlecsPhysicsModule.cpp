@@ -6,7 +6,6 @@
 #include "TickerPhysicsHistoryComponent.h"
 #include "Physics/Experimental/PhysScene_Chaos.h"
 #include "Ticker/FlecsTickerComponent.h"
-#include "Ticker/FlecsTickerModule.h"
 #include "Worlds/FlecsWorld.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsPhysicsModule)
