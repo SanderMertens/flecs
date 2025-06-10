@@ -187,17 +187,19 @@ public:
 		return Has(EnumSelector.Class, EnumSelector.Value);
 	}
 
-	SOLID_INLINE void Add(const FFlecsId InEntity) const
+	SOLID_INLINE const FFlecsEntityHandle& Add(const FFlecsId InEntity) const
 	{
 		GetEntity().add(InEntity);
+		return *this;
 	}
 
-	SOLID_INLINE void Add(const UScriptStruct* StructType) const
+	SOLID_INLINE const FFlecsEntityHandle& Add(const UScriptStruct* StructType) const
 	{
 		Add(ObtainComponentTypeStruct(StructType));
+		return *this;
 	}
 	
-	SOLID_INLINE void Add(const UEnum* EnumType, const int64 InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& Add(const UEnum* EnumType, const int64 InValue) const
 	{
 		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
 
@@ -205,54 +207,65 @@ public:
 		solid_check(ValueEntity.IsValid());
 		
 		AddPair(EnumEntity, ValueEntity);
+		return *this;
 	}
 
-	SOLID_INLINE void Add(const FGameplayTag& InTag) const
+	SOLID_INLINE const FFlecsEntityHandle& Add(const FGameplayTag& InTag) const
 	{
 		Add(GetTagEntity(InTag));
+		return *this;
 	}
 
-	SOLID_INLINE void Add(const FGameplayTagContainer& InTags) const
+	SOLID_INLINE const FFlecsEntityHandle& Add(const FGameplayTagContainer& InTags) const
 	{
 		for (const FGameplayTag& Tag : InTags)
 		{
 			Add(Tag);
 		}
+
+		return *this;
 	}
 	
 	template <typename T>
-	SOLID_INLINE void Add() const
+	SOLID_INLINE const FFlecsEntityHandle& Add() const
 	{
 		GetEntity().add<T>();
+		return *this;
 	}
 
-	template <typename T UE_REQUIRES (std::is_enum<T>::value)>
-	SOLID_INLINE void Add(const T InValue) const
+	template <typename T
+		UE_REQUIRES (std::is_enum<T>::value)>
+	SOLID_INLINE const FFlecsEntityHandle& Add(const T InValue) const
 	{
 		GetEntity().add<T>(InValue);
+		return *this;
 	}
 	
-	SOLID_INLINE void Remove(const FFlecsId InEntity) const
+	SOLID_INLINE const FFlecsEntityHandle& Remove(const FFlecsId InEntity) const
 	{
 		GetEntity().remove(InEntity);
+		return *this;
 	}
 
-	SOLID_INLINE void Remove(const UScriptStruct* StructType) const
+	SOLID_INLINE const FFlecsEntityHandle& Remove(const UScriptStruct* StructType) const
 	{
 		Remove(ObtainComponentTypeStruct(StructType));
+		return *this;
 	}
 
-	SOLID_INLINE void Remove(const FGameplayTag& InTag) const
+	SOLID_INLINE const FFlecsEntityHandle& Remove(const FGameplayTag& InTag) const
 	{
 		Remove(GetTagEntity(InTag));
+		return *this;
 	}
 
-	SOLID_INLINE void Remove(const UEnum* EnumType) const
+	SOLID_INLINE const FFlecsEntityHandle& Remove(const UEnum* EnumType) const
 	{
 		RemovePair(ObtainComponentTypeEnum(EnumType), flecs::Wildcard);
+		return *this;
 	}
 
-	SOLID_INLINE void Remove(const UEnum* EnumType, const int64 InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& Remove(const UEnum* EnumType, const int64 InValue) const
 	{
 		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
 		solid_check(EnumEntity.IsValid());
@@ -261,9 +274,10 @@ public:
 		const FFlecsId EnumConstant = ObtainEnumConstant(EnumType, InValue);
 		
 		RemovePair(EnumEntity, EnumConstant);
+		return *this;
 	}
 
-	SOLID_INLINE void Remove(const FGameplayTagContainer& InTags, const bool bMustHaveAll = false) const
+	SOLID_INLINE const FFlecsEntityHandle& Remove(const FGameplayTagContainer& InTags, const bool bMustHaveAll = false) const
 	{
 		for (const FGameplayTag& Tag : InTags)
 		{
@@ -277,50 +291,60 @@ public:
 			
 			Remove(Tag);
 		}
+
+		return *this;
 	}
 
 	template <typename T>
-	SOLID_INLINE void Remove() const
+	SOLID_INLINE const FFlecsEntityHandle& Remove() const
 	{
 		GetEntity().remove<T>();
+		return *this;
 	}
 
 	template <typename First, typename Second>
-	SOLID_INLINE void RemovePair() const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair() const
 	{
 		GetEntity().remove<First, Second>();
+		return *this;
 	}
 
 	template <typename First>
-	SOLID_INLINE void RemovePair(const FFlecsId InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FFlecsId InSecond) const
 	{
 		GetEntity().remove<First>(InSecond);
+		return *this;
 	}
 
 	template <typename T>
-	SOLID_INLINE void Set(const T& InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& Set(const T& InValue) const
 	{
 		GetEntity().set<T>(InValue);
+		return *this;
 	}
 
-	SOLID_INLINE void Set(const FFlecsId InId, const void* InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& Set(const FFlecsId InId, const void* InValue) const
 	{
 		GetEntity().set_ptr(InId, InValue);
+		return *this;
 	}
 
-	SOLID_INLINE void Set(const FFlecsId InId, const uint32 InSize, const void* InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& Set(const FFlecsId InId, const uint32 InSize, const void* InValue) const
 	{
 		GetEntity().set_ptr(InId, InSize, InValue);
+		return *this;
 	}
 	
-	SOLID_INLINE void Set(const UScriptStruct* StructType, const void* InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& Set(const UScriptStruct* StructType, const void* InValue) const
 	{
 		Set(ObtainComponentTypeStruct(StructType), InValue);
+		return *this;
 	}
 
-	SOLID_INLINE void Set(const FInstancedStruct& InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& Set(const FInstancedStruct& InValue) const
 	{
 		Set(ObtainComponentTypeStruct(InValue.GetScriptStruct()), InValue.GetMemory());
+		return *this;
 	}
 	
 	template <typename T>
@@ -397,82 +421,97 @@ public:
 		GetEntity().clear();
 	}
 
-	SOLID_INLINE void Enable() const
+	SOLID_INLINE const FFlecsEntityHandle& Enable() const
 	{
 		GetEntity().enable();
+		return *this;
 	}
 	
-	SOLID_INLINE void Disable() const
+	SOLID_INLINE const FFlecsEntityHandle& Disable() const
 	{
 		GetEntity().disable();
+		return *this;
 	}
 
 	template <typename T>
-	SOLID_INLINE void Enable() const
+	SOLID_INLINE const FFlecsEntityHandle& Enable() const
 	{
 		GetEntity().enable<T>();
+		return *this;
 	}
 
-	SOLID_INLINE void Enable(const FFlecsId InEntity) const
+	SOLID_INLINE const FFlecsEntityHandle& Enable(const FFlecsId InEntity) const
 	{
 		GetEntity().enable(InEntity);
+		return *this;
 	}
 	
-	SOLID_INLINE void Enable(const UScriptStruct* StructType) const
+	SOLID_INLINE const FFlecsEntityHandle& Enable(const UScriptStruct* StructType) const
 	{
 		Enable(ObtainComponentTypeStruct(StructType));
+		return *this;
 	}
 
-	SOLID_INLINE void Enable(const FGameplayTag& InTag) const
+	SOLID_INLINE const FFlecsEntityHandle& Enable(const FGameplayTag& InTag) const
 	{
 		Enable(GetTagEntity(InTag));
+		return *this;
 	}
 
-	SOLID_INLINE void Disable(const FFlecsId InEntity) const
+	SOLID_INLINE const FFlecsEntityHandle& Disable(const FFlecsId InEntity) const
 	{
 		GetEntity().disable(InEntity);
+		return *this;
 	}
 	
-	SOLID_INLINE void Disable(const UScriptStruct* StructType) const
+	SOLID_INLINE const FFlecsEntityHandle& Disable(const UScriptStruct* StructType) const
 	{
 		Disable(ObtainComponentTypeStruct(StructType));
+		return *this;
 	}
 
-	SOLID_INLINE void Disable(const FGameplayTag& InTag) const
+	SOLID_INLINE const FFlecsEntityHandle& Disable(const FGameplayTag& InTag) const
 	{
 		Disable(GetTagEntity(InTag));
+		return *this;
 	}
 
 	template <typename T>
-	SOLID_INLINE void Disable() const
+	SOLID_INLINE const FFlecsEntityHandle& Disable() const
 	{
 		GetEntity().disable<T>();
+		return *this;
 	}
 
-	SOLID_INLINE void Toggle() const
+	SOLID_INLINE const FFlecsEntityHandle& Toggle() const
 	{
 		IsEnabled() ? Disable() : Enable();
+		return *this;
 	}
 
 	template <typename T>
-	SOLID_INLINE void Toggle() const
+	SOLID_INLINE const FFlecsEntityHandle& Toggle() const
 	{
 		IsEnabled<T>() ? Disable<T>() : Enable<T>();
+		return *this;
 	}
 
-	SOLID_INLINE void Toggle(const FFlecsId InEntity) const
+	SOLID_INLINE const FFlecsEntityHandle& Toggle(const FFlecsId InEntity) const
 	{
 		GetEntity().enable(InEntity, !IsEnabled(InEntity));
+		return *this;
 	}
 	
-	SOLID_INLINE void Toggle(const UScriptStruct* StructType) const
+	SOLID_INLINE const FFlecsEntityHandle& Toggle(const UScriptStruct* StructType) const
 	{
 		Toggle(ObtainComponentTypeStruct(StructType));
+		return *this;
 	}
 
-	SOLID_INLINE void Toggle(const FGameplayTag& InTag) const
+	SOLID_INLINE const FFlecsEntityHandle& Toggle(const FGameplayTag& InTag) const
 	{
 		Toggle(GetTagEntity(InTag));
+		return *this;
 	}
 
 	NO_DISCARD SOLID_INLINE bool IsEnabled() const
@@ -512,9 +551,10 @@ public:
 		return GetEntity().clone(bCloneValue, DestinationId);
 	}
 
-	SOLID_INLINE void SetName(const FString& InName) const
+	SOLID_INLINE const FFlecsEntityHandle& SetName(const FString& InName) const
 	{
 		GetEntity().set_name(Unreal::Flecs::ToCString(InName));
+		return *this;
 	}
 	
 	NO_DISCARD SOLID_INLINE FString GetName() const
@@ -537,9 +577,10 @@ public:
 		return HasPair<flecs::Identifier>(flecs::Symbol);
 	}
 
-	SOLID_INLINE void SetDocBrief(const FString& InDocBrief) const
+	SOLID_INLINE const FFlecsEntityHandle& SetDocBrief(const FString& InDocBrief) const
 	{
 		GetEntity().set_doc_brief(Unreal::Flecs::ToCString(InDocBrief));
+		return *this;
 	}
 	
 	NO_DISCARD SOLID_INLINE FString GetDocBrief() const
@@ -547,9 +588,10 @@ public:
 		return GetEntity().doc_brief();
 	}
 
-	SOLID_INLINE void SetDocColor(const FString& Link) const
+	SOLID_INLINE const FFlecsEntityHandle& SetDocColor(const FString& Link) const
 	{
 		GetEntity().set_doc_color(Unreal::Flecs::ToCString(Link));
+		return *this;
 	}
 	
 	NO_DISCARD SOLID_INLINE FString GetDocColor() const
@@ -557,9 +599,10 @@ public:
 		return GetEntity().doc_color();
 	}
 
-	SOLID_INLINE void SetDocName(const FString& InDocName) const
+	SOLID_INLINE const FFlecsEntityHandle& SetDocName(const FString& InDocName) const
 	{
 		GetEntity().set_doc_name(Unreal::Flecs::ToCString(InDocName));
+		return *this;
 	}
 	
 	NO_DISCARD SOLID_INLINE FString GetDocName() const
@@ -567,9 +610,10 @@ public:
 		return GetEntity().doc_name();
 	}
 
-	SOLID_INLINE void SetDocLink(const FString& InDocLink) const
+	SOLID_INLINE const FFlecsEntityHandle& SetDocLink(const FString& InDocLink) const
 	{
 		GetEntity().set_doc_link(Unreal::Flecs::ToCString(InDocLink));
+		return *this;
 	}
 	
 	NO_DISCARD SOLID_INLINE FString GetDocLink() const
@@ -577,9 +621,10 @@ public:
 		return GetEntity().doc_link();
 	}
 
-	SOLID_INLINE void SetDocDetails(const FString& InDocDetails) const
+	SOLID_INLINE const FFlecsEntityHandle& SetDocDetails(const FString& InDocDetails) const
 	{
 		GetEntity().set_doc_detail(Unreal::Flecs::ToCString(InDocDetails));
+		return *this;
 	}
 	
 	NO_DISCARD SOLID_INLINE FString GetDocDetails() const
@@ -597,12 +642,13 @@ public:
 		return HasPair(flecs::ChildOf, flecs::Wildcard);
 	}
 
-	SOLID_INLINE void SetParent(const FFlecsId InParent) const
+	SOLID_INLINE const FFlecsEntityHandle& SetParent(const FFlecsId InParent) const
 	{
 		GetEntity().child_of(InParent);
+		return *this;
 	}
 
-	SOLID_INLINE void SetParent(const FFlecsId InParent, const bool bIsA) const
+	SOLID_INLINE const FFlecsEntityHandle& SetParent(const FFlecsId InParent, const bool bIsA) const
 	{
 		SetParent(InParent);
 
@@ -610,6 +656,8 @@ public:
 		{
 			GetEntity().is_a(InParent);
 		}
+		
+		return *this;
 	}
 
 	NO_DISCARD SOLID_INLINE bool IsPrefab() const
@@ -729,18 +777,19 @@ public:
 	{
 		Enqueue(GetTagEntity(InTag));
 	}
-	
 
 	template <typename TEvent, typename FunctionType>
-	SOLID_INLINE void Observe(FunctionType&& InFunction) const
+	SOLID_INLINE const FFlecsEntityHandle& Observe(FunctionType&& InFunction) const
 	{
 		GetEntity().observe<TEvent>(std::forward<FunctionType>(InFunction));
+		return *this;
 	}
 
 	template <typename FunctionType>
-	SOLID_INLINE void Observe(const FFlecsId InEntity, FunctionType&& InFunction) const
+	SOLID_INLINE const FFlecsEntityHandle& Observe(const FFlecsId InEntity, FunctionType&& InFunction) const
 	{
 		GetEntity().observe(InEntity, std::forward<FunctionType>(InFunction));
+		return *this;
 	}
 
 	NO_DISCARD SOLID_INLINE bool operator==(const FFlecsEntityHandle& Other) const
@@ -787,9 +836,9 @@ public:
 		return FString(GetEntity().to_json().c_str());
 	}
 
-	SOLID_INLINE void FromJson(const FString& InJson) const
+	SOLID_INLINE FString FromJson(const FString& InJson) const
 	{
-		GetEntity().from_json(Unreal::Flecs::ToCString(InJson));
+		return GetEntity().from_json(Unreal::Flecs::ToCString(InJson));
 	}
 
 	// @TODO: Implement serialization
@@ -808,70 +857,82 @@ public:
 	}
 
 	template <typename TFirst, typename TSecond>
-	SOLID_INLINE void AddPair() const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair() const
 	{
 		GetEntity().add<TFirst, TSecond>();
+		return *this;
 	}
 
 	template <typename TFirst>
-	SOLID_INLINE void AddPair(const FFlecsId InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FFlecsId InSecond) const
 	{
 		GetEntity().add<TFirst>(InSecond);
+		return *this;
 	}
 
 	template <typename TFirst>
-	SOLID_INLINE void AddPair(const UScriptStruct* InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const UScriptStruct* InSecond) const
 	{
 		AddPair<TFirst>(ObtainComponentTypeStruct(InSecond));
+		return *this;
 	}
 
 	template <typename TFirst>
-	SOLID_INLINE void AddPair(const FGameplayTag& InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FGameplayTag& InSecond) const
 	{
 		AddPair<TFirst>(GetTagEntity(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void AddPair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
 	{
 		AddPair(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void AddPair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
 	{
 		AddPair(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void AddPair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
 	{
 		AddPair(ObtainComponentTypeStruct(InFirst), InSecond);
+		return *this;
 	}
 
-	SOLID_INLINE void AddPair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
 	{
 		AddPair(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void AddPair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
 	{
 		AddPair(GetTagEntity(InFirst), GetTagEntity(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void AddPair(const FGameplayTag& InFirst, const FFlecsId InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FGameplayTag& InFirst, const FFlecsId InSecond) const
 	{
 		AddPair(GetTagEntity(InFirst), InSecond);
+		return *this;
 	}
 
-	SOLID_INLINE void AddPair(const FFlecsId InFirst, const UScriptStruct* InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FFlecsId InFirst, const UScriptStruct* InSecond) const
 	{
 		AddPair(InFirst, ObtainComponentTypeStruct(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void AddPair(const FFlecsId InFirst, const FGameplayTag& InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FFlecsId InFirst, const FGameplayTag& InSecond) const
 	{
 		AddPair(InFirst, GetTagEntity(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void AddPair(const FFlecsId InFirst, UEnum* InSecond, const int64 InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FFlecsId InFirst, UEnum* InSecond, const int64 InValue) const
 	{
 		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(InSecond);
 		solid_check(EnumEntity.IsValid());
@@ -880,62 +941,74 @@ public:
 		const FFlecsId EnumConstant = ObtainEnumConstant(InSecond, InValue);
 		
 		AddPair(EnumEntity, EnumConstant);
+		return *this;
 	}
 
-	SOLID_INLINE void AddPair(const FFlecsId InFirst, const FFlecsId InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FFlecsId InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().add(InFirst, InSecond);
+		return *this;
 	}
 
 	template <typename TSecond>
-	SOLID_INLINE void AddPairSecond(const FFlecsId InFirst) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPairSecond(const FFlecsId InFirst) const
 	{
 		GetEntity().add_second<TSecond>(InFirst);
+		return *this;
 	}
 
-	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
 	{
 		RemovePair(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
 	{
 		RemovePair(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
 	{
 		RemovePair(ObtainComponentTypeStruct(InFirst), InSecond);
+		return *this;
 	}
 
-	SOLID_INLINE void RemovePair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
 	{
 		RemovePair(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void RemovePair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
 	{
 		RemovePair(GetTagEntity(InFirst), GetTagEntity(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void RemovePair(const FGameplayTag& InFirst, const FFlecsId InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FGameplayTag& InFirst, const FFlecsId InSecond) const
 	{
 		RemovePair(GetTagEntity(InFirst), InSecond);
+		return *this;
 	}
 
-	SOLID_INLINE void RemovePair(const FFlecsId InFirst, const UScriptStruct* InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FFlecsId InFirst, const UScriptStruct* InSecond) const
 	{
 		RemovePair(InFirst, ObtainComponentTypeStruct(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void RemovePair(const FFlecsId InFirst, const FGameplayTag& InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FFlecsId InFirst, const FGameplayTag& InSecond) const
 	{
 		RemovePair(InFirst, GetTagEntity(InSecond));
+		return *this;
 	}
 
-	SOLID_INLINE void RemovePair(const FFlecsId InFirst, const FFlecsId InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FFlecsId InFirst, const FFlecsId InSecond) const
 	{
 		GetEntity().remove(InFirst, InSecond);
+		return *this;
 	}
 
 	template <typename TFirst, typename TSecond>
@@ -1091,33 +1164,36 @@ public:
 	}
 
 	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-	UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
-	SOLID_INLINE void SetPairFirst(const TActual& InValue) const
+		UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const TActual& InValue) const
 	{
 		GetEntity().set<TFirst, TSecond>(InValue);
+		return *this;
 	}
 
-	template <typename TFirst, typename TSecond,
-	typename TActual = typename flecs::pair<TFirst, TSecond>::type
-	UE_REQUIRES (std::is_same_v<TSecond, TActual>)>
-	SOLID_INLINE void SetPairSecond(const TActual& InValue) const
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
+		UE_REQUIRES (std::is_same_v<TSecond, TActual>)>
+	SOLID_INLINE const FFlecsEntityHandle& SetPairSecond(const TActual& InValue) const
 	{
 		GetEntity().set_second<TFirst, TSecond>(InValue);
+		return *this;
 	}
 
 	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE void SetPairFirst(const FFlecsId InSecond, const TActual& InFirst) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const FFlecsId InSecond, const TActual& InFirst) const
 	{
 		GetEntity().set<TFirst>(InSecond, InFirst);
+		return *this;
 	}
 
 	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE void SetPairFirst(const UScriptStruct* InSecond, const TActual& InFirst) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const UScriptStruct* InSecond, const TActual& InFirst) const
 	{
 		SetPairFirst<TFirst>(ObtainComponentTypeStruct(InSecond), InFirst);
+		return *this;
 	}
 
-	SOLID_INLINE void SetPairFirst(const UScriptStruct* InFirst, const void* InValue, const UScriptStruct* InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const UScriptStruct* InFirst, const void* InValue, const UScriptStruct* InSecond) const
 	{
 		if (!HasPair(InFirst, InSecond))
 		{
@@ -1127,9 +1203,11 @@ public:
 		Set(FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond)),
 				InFirst->GetStructureSize(),
 				InValue);
+		return *this;
 	}
 
-	SOLID_INLINE void SetPairFirst(const UScriptStruct* InFirst, const void* InValue, const FGameplayTag& InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const UScriptStruct* InFirst,
+		const void* InValue, const FGameplayTag& InSecond) const
 	{
 		if (!HasPair(InFirst, InSecond))
 		{
@@ -1139,9 +1217,11 @@ public:
 		Set(FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond)),
 				InFirst->GetStructureSize(),
 				InValue);
+		return *this;
 	}
 
-	SOLID_INLINE void SetPairFirst(const UScriptStruct* InFirst, const void* InValue, const FFlecsId InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const UScriptStruct* InFirst,
+		const void* InValue, const FFlecsId InSecond) const
 	{
 		if (!HasPair(InFirst, InSecond))
 		{
@@ -1151,33 +1231,39 @@ public:
 		Set(FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst), InSecond),
 				InFirst->GetStructureSize(),
 				InValue);
+		return *this;
 	}
 
 	template <typename TFirst, typename TSecond, typename TActual = TSecond>
-	SOLID_INLINE void SetPairSecond(const TActual& InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairSecond(const TActual& InSecond) const
 	{
 		GetEntity().set_second<TFirst, TSecond>(InSecond);
+		return *this;
 	}
 
 	template <typename TSecond>
-	SOLID_INLINE void SetPairSecond(const FFlecsId InFirst, const TSecond& InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairSecond(const FFlecsId InFirst, const TSecond& InValue) const
 	{
 		GetEntity().set_second<TSecond>(InFirst, InValue);
+		return *this;
 	}
 
 	template <typename TSecond>
-	SOLID_INLINE void SetPairSecond(const UScriptStruct* InFirst, const TSecond& InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairSecond(const UScriptStruct* InFirst, const TSecond& InValue) const
 	{
 		SetPairSecond<TSecond>(ObtainComponentTypeStruct(InFirst), InValue);
+		return *this;
 	}
 	
 	template <typename TSecond>
-	SOLID_INLINE void SetPairSecond(const FGameplayTag& InFirst, const TSecond& InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairSecond(const FGameplayTag& InFirst, const TSecond& InValue) const
 	{
 		SetPairSecond<TSecond>(GetTagEntity(InFirst), InValue);
+		return *this;
 	}
 
-	SOLID_INLINE void SetPairSecond(const FFlecsId InFirst, const UScriptStruct* InSecond, const void* InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairSecond(const FFlecsId InFirst,
+		const UScriptStruct* InSecond, const void* InValue) const
 	{
 		if (!HasPair(InFirst, InSecond))
 		{
@@ -1187,9 +1273,10 @@ public:
 		Set(FFlecsId::MakePair(InFirst, ObtainComponentTypeStruct(InSecond)),
 			InSecond->GetStructureSize(),
 			InValue);
+		return *this;
 	}
 
-	SOLID_INLINE void SetPairSecond(const FGameplayTag& InFirst, const UScriptStruct* InSecond, const void* InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairSecond(const FGameplayTag& InFirst, const UScriptStruct* InSecond, const void* InValue) const
 	{
 		if (!HasPair(InFirst, InSecond))
 		{
@@ -1199,6 +1286,7 @@ public:
 		Set(FFlecsId::MakePair(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond)),
 			InSecond->GetStructureSize(),
 			InValue);
+		return *this;
 	}
 	
 	template <typename TFirst, typename TSecond>
@@ -1319,25 +1407,29 @@ public:
 		return EnumEntity.Lookup(EnumType->GetNameStringByValue(static_cast<int64>(InValue)));
 	}
 
-	SOLID_INLINE void AddPrefab(const FFlecsId InPrefab) const
+	SOLID_INLINE const FFlecsEntityHandle& AddPrefab(const FFlecsId InPrefab) const
 	{
 		GetEntity().is_a(InPrefab);
+		return *this;
 	}
 
-	SOLID_INLINE void RemovePrefab(const FFlecsId InPrefab) const
+	SOLID_INLINE const FFlecsEntityHandle& RemovePrefab(const FFlecsId InPrefab) const
 	{
 		RemovePair(flecs::IsA, InPrefab);
+		return *this;
 	}
 	
-	SOLID_INLINE void SetIsA(const FFlecsId InPrefab) const
+	SOLID_INLINE const FFlecsEntityHandle& SetIsA(const FFlecsId InPrefab) const
 	{
 		GetEntity().is_a(InPrefab);
+		return *this;
 	}
 
 	template <typename T>
-	SOLID_INLINE void SetIsA() const
+	SOLID_INLINE const FFlecsEntityHandle& SetIsA() const
 	{
 		GetEntity().is_a<T>();
+		return *this;
 	}
 
 	NO_DISCARD SOLID_INLINE bool HasPrefab(const FFlecsId InPrefab) const
