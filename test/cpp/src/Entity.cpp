@@ -131,7 +131,7 @@ void Entity_new_set(void) {
     test_assert(entity);
     test_assert(entity.has<Position>());
 
-    const Position *p = entity.get<Position>();
+    const Position *p = entity.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
@@ -150,11 +150,11 @@ void Entity_new_set_2(void) {
     test_assert(entity.has<Position>());
     test_assert(entity.has<Velocity>());
 
-    const Position *p = entity.get<Position>();
+    const Position *p = entity.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = entity.get<Velocity>();
+    const Velocity *v = entity.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -197,7 +197,7 @@ void Entity_set(void) {
     entity.set<Position>({10, 20});
     test_assert(entity.has<Position>());
 
-    const Position *p = entity.get<Position>();
+    const Position *p = entity.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
@@ -212,12 +212,12 @@ void Entity_emplace_2(void) {
     test_assert(e.has<Position>());
     test_assert(e.has<Velocity>());
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -233,7 +233,7 @@ void Entity_emplace_after_add(void) {
     test_assert(e.has<Position>());
     test_assert(e.has<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -251,7 +251,7 @@ void Entity_emplace_after_add_pair(void) {
     test_assert(e.has(flecs::ChildOf, dummy));
     test_assert(e.has<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_assert(v != NULL);
     test_int(v->x, 30);
     test_int(v->y, 40);
@@ -265,7 +265,7 @@ void Entity_emplace_pair(void) {
 
     test_assert((e.has<Position, Tag>()));
 
-    const Position *p = e.get<Position, Tag>();
+    const Position *p = e.try_get<Position, Tag>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -281,7 +281,7 @@ void Entity_emplace_pair_w_entity(void) {
 
     test_assert((e.has<Position>(tag)));
 
-    const Position *p = e.get<Position>(tag);
+    const Position *p = e.try_get<Position>(tag);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -295,7 +295,7 @@ void Entity_emplace_pair_type(void) {
 
     test_assert((e.has<Position, Tag>()));
 
-    const Position *p = e.get<Position, Tag>();
+    const Position *p = e.try_get<Position, Tag>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -311,7 +311,7 @@ void Entity_emplace_pair_second(void) {
 
     test_assert((e.has_second<Position>(tag)));
 
-    const Position *p = e.get_second<Position>(tag);
+    const Position *p = e.try_get_second<Position>(tag);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -408,11 +408,11 @@ void Entity_set_2(void) {
     test_assert(entity.has<Position>());
     test_assert(entity.has<Velocity>());
 
-    const Position *p = entity.get<Position>();
+    const Position *p = entity.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = entity.get<Velocity>();
+    const Velocity *v = entity.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);    
 }
@@ -613,17 +613,267 @@ void Entity_ensure_generic_w_id_t(void) {
     test_bool(invoked, true);
 }
 
-void Entity_get_mut_w_id(void) {
+void Entity_get_w_id(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    e.set<Position>({10, 20});
+    
+    const Position *p = static_cast<const Position*>(e.get(world.id<Position>()));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_T(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    e.set<Position>({10, 20});
+    
+    const Position& p = e.get<Position>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_get_r_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    flecs::entity e = world.entity();
+
+    e.set<Position>(tgt, {10, 20});
+    
+    const Position* p = static_cast<const Position*>(e.get(world.id<Position>(), tgt));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_R_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    flecs::entity e = world.entity();
+    e.set<Position>(tgt, {10, 20});
+    
+    const Position& p = e.get<Position>(tgt);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_get_R_T(void) {
+    flecs::world world;
+
+    struct Tgt { };
+
+    flecs::entity e = world.entity();
+    e.set<Position, Tgt>({10, 20});
+    
+    const Position& p = e.get<Position, Tgt>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_get_r_T(void) {
+    flecs::world world;
+
+    flecs::entity rel = world.entity();
+    flecs::entity e = world.entity();
+    e.set_second<Position>(rel, {10, 20});
+    
+    const Position& p = e.get_second<Position>(rel);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_get_w_id_not_found(void) {
+    install_test_abort();
+
     flecs::world world;
 
     flecs::entity e = world.entity();
 
-    Position *p = static_cast<Position*>(e.get_mut(world.id<Position>()));
+    test_expect_abort();
+    e.get(world.id<Position>());
+}
+
+void Entity_get_T_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    test_expect_abort();
+    e.get<Position>();
+}
+
+void Entity_get_r_t_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    flecs::entity tgt = world.entity();
+
+    test_expect_abort();
+    e.get(world.id<Position>(), tgt);
+}
+
+void Entity_get_R_t_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    flecs::entity tgt = world.entity();
+
+    test_expect_abort();
+    e.get<Position>(tgt);
+}
+
+void Entity_get_R_T_not_found(void) {
+    struct Tgt { };
+
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    test_expect_abort();
+    e.get<Position, Tgt>();
+}
+
+void Entity_get_r_T_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    flecs::entity tgt = world.entity();
+
+    test_expect_abort();
+    e.get_second<Position>(tgt);
+}
+
+void Entity_try_get_w_id(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    const Position *p = static_cast<const Position*>(e.try_get(world.id<Position>()));
     test_assert(p == nullptr);
 
     e.set<Position>({10, 20});
     
-    p = static_cast<Position*>(e.get_mut(world.id<Position>()));
+    p = static_cast<const Position*>(e.try_get(world.id<Position>()));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_try_get_T(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    const Position *p = e.try_get<Position>();
+    test_assert(p == nullptr);
+
+    e.set<Position>({10, 20});
+    
+    p = e.try_get<Position>();
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_try_get_r_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    flecs::entity e = world.entity();
+
+    const Position *p = static_cast<const Position*>(e.try_get_mut(world.id<Position>(), tgt));
+    test_assert(p == nullptr);
+
+    e.set<Position>(tgt, {10, 20});
+    
+    p = static_cast<const Position*>(e.get_mut(world.id<Position>(), tgt));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_try_get_R_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    flecs::entity e = world.entity();
+
+    const Position *p = e.try_get<Position>(tgt);
+    test_assert(p == nullptr);
+
+    e.set<Position>(tgt, {10, 20});
+    
+    p = e.try_get<Position>(tgt);
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_try_get_R_T(void) {
+    flecs::world world;
+
+    struct Tgt { };
+
+    flecs::entity e = world.entity();
+
+    const Position *p = e.try_get<Position, Tgt>();
+    test_assert(p == nullptr);
+
+    e.set<Position, Tgt>({10, 20});
+    
+    p = e.try_get<Position, Tgt>();
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_try_get_r_T(void) {
+    flecs::world world;
+
+    flecs::entity rel = world.entity();
+    flecs::entity e = world.entity();
+
+    const Position *p = e.try_get_second<Position>(rel);
+    test_assert(p == nullptr);
+
+    e.set_second<Position>(rel, {10, 20});
+    
+    p = e.try_get_second<Position>(rel);
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_mut_w_id(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    e.set<Position>({10, 20});
+    
+    Position *p = static_cast<Position*>(e.get_mut(world.id<Position>()));
     test_assert(p != nullptr);
 
     test_int(p->x, 10);
@@ -634,17 +884,11 @@ void Entity_get_mut_T(void) {
     flecs::world world;
 
     flecs::entity e = world.entity();
-
-    Position *p = e.get_mut<Position>();
-    test_assert(p == nullptr);
-
     e.set<Position>({10, 20});
     
-    p = e.get_mut<Position>();
-    test_assert(p != nullptr);
-
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    Position& p = e.get_mut<Position>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
 }
 
 void Entity_get_mut_r_t(void) {
@@ -653,12 +897,9 @@ void Entity_get_mut_r_t(void) {
     flecs::entity tgt = world.entity();
     flecs::entity e = world.entity();
 
-    Position *p = static_cast<Position*>(e.get_mut(world.id<Position>(), tgt));
-    test_assert(p == nullptr);
-
     e.set<Position>(tgt, {10, 20});
     
-    p = static_cast<Position*>(e.get_mut(world.id<Position>(), tgt));
+    Position* p = static_cast<Position*>(e.get_mut(world.id<Position>(), tgt));
     test_assert(p != nullptr);
 
     test_int(p->x, 10);
@@ -670,17 +911,11 @@ void Entity_get_mut_R_t(void) {
 
     flecs::entity tgt = world.entity();
     flecs::entity e = world.entity();
-
-    Position *p = e.get_mut<Position>(tgt);
-    test_assert(p == nullptr);
-
     e.set<Position>(tgt, {10, 20});
     
-    p = e.get_mut<Position>(tgt);
-    test_assert(p != nullptr);
-
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    Position& p = e.get_mut<Position>(tgt);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
 }
 
 void Entity_get_mut_R_T(void) {
@@ -689,17 +924,11 @@ void Entity_get_mut_R_T(void) {
     struct Tgt { };
 
     flecs::entity e = world.entity();
-
-    Position *p = e.get_mut<Position, Tgt>();
-    test_assert(p == nullptr);
-
     e.set<Position, Tgt>({10, 20});
     
-    p = e.get_mut<Position, Tgt>();
-    test_assert(p != nullptr);
-
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    Position& p = e.get_mut<Position, Tgt>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
 }
 
 void Entity_get_mut_r_T(void) {
@@ -707,13 +936,186 @@ void Entity_get_mut_r_T(void) {
 
     flecs::entity rel = world.entity();
     flecs::entity e = world.entity();
+    e.set_second<Position>(rel, {10, 20});
+    
+    Position& p = e.get_mut_second<Position>(rel);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
 
-    Position *p = e.get_mut_second<Position>(rel);
+
+void Entity_get_mut_w_id_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    test_expect_abort();
+    e.get_mut(world.id<Position>());
+}
+
+void Entity_get_mut_T_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    test_expect_abort();
+    e.get_mut<Position>();
+}
+
+void Entity_get_mut_r_t_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    flecs::entity tgt = world.entity();
+
+    test_expect_abort();
+    e.get_mut(world.id<Position>(), tgt);
+}
+
+void Entity_get_mut_R_t_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    flecs::entity tgt = world.entity();
+
+    test_expect_abort();
+    e.get_mut<Position>(tgt);
+}
+
+void Entity_get_mut_R_T_not_found(void) {
+    struct Tgt { };
+
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    test_expect_abort();
+    e.get_mut<Position, Tgt>();
+}
+
+void Entity_get_mut_r_T_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    flecs::entity tgt = world.entity();
+
+    test_expect_abort();
+    e.get_mut_second<Position>(tgt);
+}
+
+void Entity_try_get_mut_w_id(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    Position *p = static_cast<Position*>(e.try_get_mut(world.id<Position>()));
+    test_assert(p == nullptr);
+
+    e.set<Position>({10, 20});
+    
+    p = static_cast<Position*>(e.try_get_mut(world.id<Position>()));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_try_get_mut_T(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    Position *p = e.try_get_mut<Position>();
+    test_assert(p == nullptr);
+
+    e.set<Position>({10, 20});
+    
+    p = e.try_get_mut<Position>();
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_try_get_mut_r_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    flecs::entity e = world.entity();
+
+    Position *p = static_cast<Position*>(e.try_get_mut(world.id<Position>(), tgt));
+    test_assert(p == nullptr);
+
+    e.set<Position>(tgt, {10, 20});
+    
+    p = static_cast<Position*>(e.get_mut(world.id<Position>(), tgt));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_try_get_mut_R_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    flecs::entity e = world.entity();
+
+    Position *p = e.try_get_mut<Position>(tgt);
+    test_assert(p == nullptr);
+
+    e.set<Position>(tgt, {10, 20});
+    
+    p = e.try_get_mut<Position>(tgt);
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_try_get_mut_R_T(void) {
+    flecs::world world;
+
+    struct Tgt { };
+
+    flecs::entity e = world.entity();
+
+    Position *p = e.try_get_mut<Position, Tgt>();
+    test_assert(p == nullptr);
+
+    e.set<Position, Tgt>({10, 20});
+    
+    p = e.try_get_mut<Position, Tgt>();
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_try_get_mut_r_T(void) {
+    flecs::world world;
+
+    flecs::entity rel = world.entity();
+    flecs::entity e = world.entity();
+
+    Position *p = e.try_get_mut_second<Position>(rel);
     test_assert(p == nullptr);
 
     e.set_second<Position>(rel, {10, 20});
     
-    p = e.get_mut_second<Position>(rel);
+    p = e.try_get_mut_second<Position>(rel);
     test_assert(p != nullptr);
 
     test_int(p->x, 10);
@@ -733,7 +1135,7 @@ void Entity_set_generic(void) {
     test_assert(e.has<Position>());
     test_assert(e.has(position));
 
-    const Position *ptr = e.get<Position>();
+    const Position *ptr = e.try_get<Position>();
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 }
@@ -752,7 +1154,7 @@ void Entity_set_generic_w_id(void) {
     test_assert(e.has<Position>());
     test_assert(e.has(id));
 
-    const Position *ptr = e.get<Position>();
+    const Position *ptr = e.try_get<Position>();
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 }
@@ -771,7 +1173,7 @@ void Entity_set_generic_w_id_t(void) {
     test_assert(e.has<Position>());
     test_assert(e.has(id));
 
-    const Position *ptr = e.get<Position>();
+    const Position *ptr = e.try_get<Position>();
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 }
@@ -789,7 +1191,7 @@ void Entity_set_generic_no_size(void) {
     test_assert(e.has<Position>());
     test_assert(e.has(position));
 
-    const Position *ptr = e.get<Position>();
+    const Position *ptr = e.try_get<Position>();
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 }
@@ -808,7 +1210,7 @@ void Entity_set_generic_no_size_w_id(void) {
     test_assert(e.has<Position>());
     test_assert(e.has(id));
 
-    const Position *ptr = e.get<Position>();
+    const Position *ptr = e.try_get<Position>();
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 }
@@ -827,7 +1229,7 @@ void Entity_set_generic_no_size_w_id_t(void) {
     test_assert(e.has<Position>());
     test_assert(e.has(id));
 
-    const Position *ptr = e.get<Position>();
+    const Position *ptr = e.try_get<Position>();
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 }
@@ -1263,7 +1665,7 @@ void Entity_tag_has_size_zero(void) {
 
     auto comp = world.component<MyTag>();
 
-    auto ptr = comp.get<flecs::Component>();
+    auto ptr = comp.try_get<flecs::Component>();
     test_int(ptr->size, 0);
     test_int(ptr->alignment, 0);
 }
@@ -1529,7 +1931,7 @@ void Entity_set_no_copy(void) {
     test_int(Pod::copy_invoked, 0);
 
     test_assert(e.has<Pod>());
-    const Pod *p = e.get<Pod>();
+    const Pod *p = e.try_get<Pod>();
     test_assert(p != NULL);
     test_int(p->value, 10);
 }
@@ -1544,7 +1946,7 @@ void Entity_set_copy(void) {
     test_int(Pod::copy_invoked, 1);
 
     test_assert(e.has<Pod>());
-    const Pod *p = e.get<Pod>();
+    const Pod *p = e.try_get<Pod>();
     test_assert(p != NULL);
     test_int(p->value, 10);
 }
@@ -1557,7 +1959,7 @@ void Entity_set_deduced(void) {
 
     test_assert(e.has<Position>());
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
@@ -1675,11 +2077,11 @@ void Entity_set_override(void) {
     test_assert(e.has<Position>());
     test_assert(e.owns<Position>());
 
-    const Position* p = e.get<Position>();
+    const Position* p = e.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Position* p_base = base.get<Position>();
+    const Position* p_base = base.try_get<Position>();
     test_assert(p != p_base);
     test_int(p_base->x, 10);
     test_int(p_base->y, 20);
@@ -1701,11 +2103,11 @@ void Entity_set_override_lvalue(void) {
     test_assert(e.has<Position>());
     test_assert(e.owns<Position>());
 
-    const Position* p = e.get<Position>();
+    const Position* p = e.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Position* p_base = base.get<Position>();
+    const Position* p_base = base.try_get<Position>();
     test_assert(p != p_base);
     test_int(p_base->x, 10);
     test_int(p_base->y, 20);
@@ -1727,11 +2129,11 @@ void Entity_set_override_pair(void) {
     test_assert((e.has<Position, Tgt>()));
     test_assert((e.owns<Position, Tgt>()));
 
-    const Position* p = e.get<Position, Tgt>();
+    const Position* p = e.try_get<Position, Tgt>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Position* p_base = base.get<Position, Tgt>();
+    const Position* p_base = base.try_get<Position, Tgt>();
     test_assert(p != p_base);
     test_int(p_base->x, 10);
     test_int(p_base->y, 20);
@@ -1753,11 +2155,11 @@ void Entity_set_override_pair_w_tgt_id(void) {
     test_assert((e.has<Position>(tgt)));
     test_assert((e.owns<Position>(tgt)));
 
-    const Position* p = e.get<Position>(tgt);
+    const Position* p = e.try_get<Position>(tgt);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Position* p_base = base.get<Position>(tgt);
+    const Position* p_base = base.try_get<Position>(tgt);
     test_assert(p != p_base);
     test_int(p_base->x, 10);
     test_int(p_base->y, 20);
@@ -1779,11 +2181,11 @@ void Entity_set_override_pair_w_rel_tag(void) {
     test_assert((e.has<Tgt, Position>()));
     test_assert((e.owns<Tgt, Position>()));
 
-    const Position* p = e.get<Tgt, Position>();
+    const Position* p = e.try_get<Tgt, Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Position* p_base = base.get<Tgt, Position>();
+    const Position* p_base = base.try_get<Tgt, Position>();
     test_assert(p != p_base);
     test_int(p_base->x, 10);
     test_int(p_base->y, 20);
@@ -1795,7 +2197,7 @@ void Entity_emplace_override(void) {
     auto e = world.entity().emplace_auto_override<NoDefaultCtor>(10);
     test_assert(e.has<NoDefaultCtor>());
 
-    const NoDefaultCtor *ptr = e.get<NoDefaultCtor>();
+    const NoDefaultCtor *ptr = e.try_get<NoDefaultCtor>();
     test_assert(ptr != nullptr);
     test_int(ptr->x_, 10);
 }
@@ -1806,7 +2208,7 @@ void Entity_emplace_override_pair(void) {
     auto e = world.entity().emplace_auto_override<NoDefaultCtor, Tag>(10);
     test_assert((e.has<NoDefaultCtor, Tag>()));
 
-    const NoDefaultCtor *ptr = e.get<NoDefaultCtor, Tag>();
+    const NoDefaultCtor *ptr = e.try_get<NoDefaultCtor, Tag>();
     test_assert(ptr != nullptr);
     test_int(ptr->x_, 10);
 }
@@ -1907,7 +2309,7 @@ void Entity_entity_to_entity_view(void) {
     test_assert(ev != 0);
     test_assert(e == ev);
 
-    const Position *p = ev.get<Position>();
+    const Position *p = ev.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -1928,7 +2330,7 @@ void Entity_entity_view_to_entity_world(void) {
     ew.set<Position>({10, 20});
 
     test_assert(ev.has<Position>());
-    const Position *p = ev.get<Position>();
+    const Position *p = ev.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -1953,7 +2355,7 @@ void Entity_entity_view_to_entity_stage(void) {
     test_assert(ew.has<Position>());
     test_assert(ev.has<Position>());
 
-    const Position *p = ev.get<Position>();
+    const Position *p = ev.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -1976,7 +2378,7 @@ void Entity_create_entity_view_from_stage(void) {
     ew.set<Position>({10, 20});
     test_assert(ev.has<Position>());
 
-    const Position *p = ev.get<Position>();
+    const Position *p = ev.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -1988,7 +2390,7 @@ void Entity_set_template(void) {
     auto e = ecs.entity()
         .set<Template<int>>({10, 20});
 
-    const Template<int> *ptr = e.get<Template<int>>();
+    const Template<int> *ptr = e.try_get<Template<int>>();
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 }
@@ -2073,11 +2475,11 @@ void Entity_ensure_1_component_w_callback(void) {
     }), true);
 
     const Position* 
-    p = e_1.get<Position>();
+    p = e_1.try_get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 
-    p = e_2.get<Position>();
+    p = e_2.try_get<Position>();
     test_int(p->x, 12);
     test_int(p->y, 24);
 
@@ -2114,11 +2516,11 @@ void Entity_ensure_2_components_w_callback(void) {
 
     test_bool(e_3.get([](const Position& p, const Velocity& v) {}), false);
 
-    const Position* p = e_1.get<Position>();
+    const Position* p = e_1.try_get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 
-    const Velocity* v = e_1.get<Velocity>();
+    const Velocity* v = e_1.try_get<Velocity>();
     test_int(v->x, 4);
     test_int(v->y, 6);
 }
@@ -2171,7 +2573,7 @@ void Entity_set_1_component_w_callback(void) {
 
     test_assert(e.has<Position>());
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -2188,12 +2590,12 @@ void Entity_set_2_components_w_callback(void) {
 
     test_assert(e.has<Position>());
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_assert(v != NULL);
     test_int(v->x, 1);
     test_int(v->y, 2);
@@ -2211,17 +2613,17 @@ void Entity_set_3_components_w_callback(void) {
 
     test_assert(e.has<Position>());
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_assert(v != NULL);
     test_int(v->x, 1);
     test_int(v->y, 2);
 
-    const Mass *m = e.get<Mass>();
+    const Mass *m = e.try_get<Mass>();
     test_assert(m != NULL);
     test_int(m->value, 50);
 }
@@ -2997,7 +3399,7 @@ void Entity_defer_ensure(void) {
         world.defer_end();
     }
 
-    Position* p = e.get_mut<Position>();
+    Position* p = e.try_get_mut<Position>();
     test_assert(p != nullptr);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -3135,7 +3537,7 @@ void Entity_emplace(void) {
 
     test_assert(e.has<Position>());
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -3888,7 +4290,7 @@ void Entity_clone(void) {
     test_assert(dst.has<Tag>());
     test_assert(dst.has<PositionInitialized>());
 
-    const PositionInitialized *ptr = dst.get<PositionInitialized>();
+    const PositionInitialized *ptr = dst.try_get<PositionInitialized>();
     test_assert(ptr != NULL);
     test_int(ptr->x, -1);
     test_int(ptr->y, -1);
@@ -3904,7 +4306,7 @@ void Entity_clone_w_value(void) {
     test_assert(dst.has<Tag>());
     test_assert(dst.has<PositionInitialized>());
 
-    const PositionInitialized *ptr = dst.get<PositionInitialized>();
+    const PositionInitialized *ptr = dst.try_get<PositionInitialized>();
     test_assert(ptr != NULL);
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
@@ -3923,7 +4325,7 @@ void Entity_clone_to_existing(void) {
     test_assert(dst.has<Tag>());
     test_assert(dst.has<PositionInitialized>());
 
-    const PositionInitialized *ptr = dst.get<PositionInitialized>();
+    const PositionInitialized *ptr = dst.try_get<PositionInitialized>();
     test_assert(ptr != NULL);
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
@@ -4566,10 +4968,10 @@ void Entity_emplace_w_observer(void) {
 
     test_assert(e.has<Position>());
     test_assert(e.has<Velocity>());
-    test_int(e.get<Velocity>()->x, 1);
-    test_int(e.get<Velocity>()->y, 2);
-    test_int(e.get<Position>()->x, 10);
-    test_int(e.get<Position>()->y, 20);
+    test_int(e.try_get<Velocity>()->x, 1);
+    test_int(e.try_get<Velocity>()->y, 2);
+    test_int(e.try_get<Position>()->x, 10);
+    test_int(e.try_get<Position>()->y, 20);
 }
 
 void Entity_scoped_world(void) {
@@ -4657,9 +5059,9 @@ void Entity_const_entity_set(void) {
     const flecs::entity e = world.entity();
 
     e.set<Position>({10, 20});
-    test_assert(e.get<Position>() != nullptr);
-    test_int(e.get<Position>()->x, 10);
-    test_int(e.get<Position>()->y, 20);
+    test_assert(e.try_get<Position>() != nullptr);
+    test_int(e.try_get<Position>()->x, 10);
+    test_int(e.try_get<Position>()->y, 20);
 }
 
 void Entity_const_entity_get_mut(void) {
@@ -4667,12 +5069,12 @@ void Entity_const_entity_get_mut(void) {
 
     const flecs::entity e = world.entity();
 
-    Position *p = e.get_mut<Position>();
+    Position *p = e.try_get_mut<Position>();
     test_assert(p == nullptr);
     test_assert(!e.has<Position>());
 
     e.add<Position>();
-    p = e.get_mut<Position>();
+    p = e.try_get_mut<Position>();
     test_assert(p != nullptr);
     test_assert(e.has<Position>());
 
@@ -4712,9 +5114,9 @@ void Entity_const_entity_emit_after_build(void) {
 
     e.set<Position>({10, 20}).emit<Velocity>({1, 2});
 
-    test_assert(e.get<Position>() != nullptr);
-    test_int(e.get<Position>()->x, 10);
-    test_int(e.get<Position>()->y, 20);
+    test_assert(e.try_get<Position>() != nullptr);
+    test_int(e.try_get<Position>()->x, 10);
+    test_int(e.try_get<Position>()->y, 20);
 
     test_int(count, 1);
 }
@@ -4746,7 +5148,7 @@ void Entity_set_sparse(void) {
 
     test_assert(e.has<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -4763,7 +5165,7 @@ void Entity_insert_1_sparse(void) {
 
     test_assert(e.has<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -4784,11 +5186,11 @@ void Entity_insert_2_w_1_sparse(void) {
     test_assert(e.has<Position>());
     test_assert(e.has<Velocity>());
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -4805,7 +5207,7 @@ void Entity_insert_1_dont_fragment(void) {
 
     test_assert(e.has<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -4826,11 +5228,11 @@ void Entity_insert_2_w_1_dont_fragment(void) {
     test_assert(e.has<Position>());
     test_assert(e.has<Velocity>());
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -4844,7 +5246,7 @@ void Entity_emplace_sparse(void) {
 
     test_assert(e.has<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -4861,7 +5263,7 @@ void Entity_override_sparse(void) {
     test_assert(e.has<Velocity>());
     test_assert(e.owns<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -4878,7 +5280,7 @@ void Entity_delete_w_override_sparse(void) {
     test_assert(e.has<Velocity>());
     test_assert(e.owns<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 
@@ -5000,7 +5402,7 @@ void Entity_add_remove_enum_component(void) {
     test_assert(e.has<Color>());
 
     {
-        const Color *c = e.get<Color>();
+        const Color *c = e.try_get<Color>();
         test_assert(c != nullptr);
         test_assert(*c == Blue);
     }
@@ -5009,7 +5411,7 @@ void Entity_add_remove_enum_component(void) {
     test_assert(e.has<Color>());
 
     {
-        const Color *c = e.get<Color>();
+        const Color *c = e.try_get<Color>();
         test_assert(c != nullptr);
         test_assert(*c == Green);
     }
@@ -5017,4 +5419,3 @@ void Entity_add_remove_enum_component(void) {
     e.remove<Color>();
     test_assert(!e.has<Color>());
 }
-

@@ -3126,7 +3126,7 @@ void QueryBuilder_builder_force_assign_operator(void) {
     );
 
     int32_t count = 0;
-    f.get<QueryWrapper<>>()->f_.each([&](flecs::entity e) {
+    f.get<QueryWrapper<>>().f_.each([&](flecs::entity e) {
         test_assert(e == e1);
         count ++;
     });
@@ -3623,13 +3623,13 @@ void QueryBuilder_iter_column_w_const_as_array(void) {
 
     test_int(count, 2);
 
-    const Position *p = e1.get<Position>();
-    test_int(p->x, 11);
-    test_int(p->y, 22);
+    const Position& p1 = e1.get<Position>();
+    test_int(p1.x, 11);
+    test_int(p1.y, 22);
 
-    p = e2.get<Position>();
-    test_int(p->x, 21);
-    test_int(p->y, 32);
+    const Position& p2 = e2.get<Position>();
+    test_int(p2.x, 21);
+    test_int(p2.y, 32);
 }
 
 void QueryBuilder_iter_column_w_const_as_ptr(void) {

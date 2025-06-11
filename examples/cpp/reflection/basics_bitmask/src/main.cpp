@@ -28,6 +28,6 @@ int main(int, char *[]) {
         .set<Sandwich>({Toppings::Bacon | Toppings::Lettuce});
 
     // Convert Sandwich component to flecs expression string
-    const Sandwich *ptr = e.get<Sandwich>();
-    std::cout << ecs.to_expr(ptr).c_str() << "\n"; // {toppings: Lettuce|Bacon}
+    const Sandwich& c = e.get<Sandwich>();
+    std::cout << ecs.to_expr(&c).c_str() << "\n"; // {toppings: Lettuce|Bacon}
 }

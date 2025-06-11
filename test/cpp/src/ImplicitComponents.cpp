@@ -44,7 +44,7 @@ void ImplicitComponents_set(void) {
 
     test_str(e.type().str().c_str(), "Position");
     test_assert(e.has<Position>());
-    auto *p = e.get<Position>();
+    auto *p = e.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -57,7 +57,7 @@ void ImplicitComponents_get(void) {
 
     auto e = world.entity();
 
-    auto *p = e.get<Position>();
+    auto *p = e.try_get<Position>();
     test_assert(p == nullptr);
 
     auto position = world.lookup("Position");
@@ -188,7 +188,7 @@ void ImplicitComponents_system_const(void) {
 
     test_int(count, 1);
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
@@ -365,7 +365,7 @@ void ImplicitComponents_use_const(void) {
 
     test_assert(e.has<Position>());
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
@@ -387,7 +387,7 @@ void ImplicitComponents_use_const_w_stage(void) {
 
     test_assert(e.has<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -411,7 +411,7 @@ void ImplicitComponents_use_const_w_threads(void) {
 
     test_assert(e.has<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }

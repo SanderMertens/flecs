@@ -1493,13 +1493,13 @@ void Observer_trigger_on_set_in_on_add_implicit_registration(void) {
   auto e = world.entity().add<Tag>();
 
   {
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
   }
 
   {
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
   }
@@ -1531,13 +1531,13 @@ void Observer_trigger_on_set_in_on_add_implicit_registration_namespaced(void) {
     auto e = world.entity().add<Tag>();
 
     {
-        const Position *p = e.get<Position>();
+        const Position *p = e.try_get<Position>();
         test_int(p->x, 10);
         test_int(p->y, 20);
     }
 
     {
-        const ns::Velocity *v = e.get<ns::Velocity>();
+        const ns::Velocity *v = e.try_get<ns::Velocity>();
         test_int(v->x, 1);
         test_int(v->y, 2);
     }

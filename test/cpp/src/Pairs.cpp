@@ -112,7 +112,7 @@ void Pairs_set_component_pair(void) {
 
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 
-    const Pair *t = entity.get<Pair, Position>();
+    const Pair *t = entity.try_get<Pair, Position>();
     test_int(t->value, 10);
 }
 
@@ -128,7 +128,7 @@ void Pairs_set_tag_pair(void) {
     test_assert(entity.has_second<Position>(Pair));
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 
-    const Position *p = entity.get_second<Position>(Pair);
+    const Position *p = entity.try_get_second<Position>(Pair);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -207,19 +207,19 @@ void Pairs_override_pair(void) {
         .add(flecs::IsA, base);
 
     test_assert((instance.has<Pair, Position>()));
-    const Pair *t = instance.get<Pair, Position>();
+    const Pair *t = instance.try_get<Pair, Position>();
     test_int(t->value, 10);
 
-    const Pair *t_2 = base.get<Pair, Position>();
+    const Pair *t_2 = base.try_get<Pair, Position>();
     test_assert(t == t_2);
 
     instance.add<Pair, Position>();
-    t = instance.get<Pair, Position>();
+    t = instance.try_get<Pair, Position>();
     test_int(t->value, 10);
     test_assert(t != t_2);
 
     instance.remove<Pair, Position>();
-    t = instance.get<Pair, Position>();
+    t = instance.try_get<Pair, Position>();
     test_int(t->value, 10);
     test_assert(t == t_2);    
 }
@@ -236,21 +236,21 @@ void Pairs_override_tag_pair(void) {
         .add(flecs::IsA, base);
 
     test_assert((instance.has_second<Position>(Pair)));
-    const Position *t = instance.get_second<Position>(Pair);
+    const Position *t = instance.try_get_second<Position>(Pair);
     test_int(t->x, 10);
     test_int(t->y, 20);
 
-    const Position *t_2 = base.get_second<Position>(Pair);
+    const Position *t_2 = base.try_get_second<Position>(Pair);
     test_assert(t == t_2);
 
     instance.add_second<Position>(Pair);
-    t = instance.get_second<Position>(Pair);
+    t = instance.try_get_second<Position>(Pair);
     test_int(t->x, 10);
     test_int(t->y, 20);
     test_assert(t != t_2);
 
     instance.remove_second<Position>(Pair);
-    t = instance.get_second<Position>(Pair);
+    t = instance.try_get_second<Position>(Pair);
     test_int(t->x, 10);
     test_int(t->y, 20);
     test_assert(t == t_2); 
@@ -264,7 +264,7 @@ void Pairs_ensure_pair(void) {
     Pair& t = e.ensure<Pair, Position>();
     t.value = 10;
 
-    const Pair *t_2 = e.get<Pair, Position>();
+    const Pair *t_2 = e.try_get<Pair, Position>();
     test_int(t.value, 10);
     test_int(t_2->value, 10);
 }
@@ -279,7 +279,7 @@ void Pairs_ensure_pair_existing(void) {
     test_int(t.value, 20);
     t.value = 10;
 
-    const Pair *t_2 = e.get<Pair, Position>();
+    const Pair *t_2 = e.try_get<Pair, Position>();
     test_int(t.value, 10);
     test_int(t_2->value, 10);
 }
@@ -295,7 +295,7 @@ void Pairs_ensure_pair_tag(void) {
     p.x = 10;
     p.y = 20;
 
-    const Position *p_2 = e.get_second<Position>(Pair);
+    const Position *p_2 = e.try_get_second<Position>(Pair);
     test_int(p.x, 10);
     test_int(p.y, 20);
     test_int(p_2->x, 10);
@@ -314,7 +314,7 @@ void Pairs_ensure_pair_tag_existing(void) {
     test_int(p.x, 10);
     test_int(p.y, 20);
 
-    const Position *p_2 = e.get_second<Position>(Pair);
+    const Position *p_2 = e.try_get_second<Position>(Pair);
     test_int(p.x, 10);
     test_int(p.y, 20);
     test_int(p_2->x, 10);
@@ -333,7 +333,7 @@ void Pairs_ensure_R_tag_O(void) {
     t.x = 30;
     t.y = 40;
 
-    const Position *t_2 = e.get<Tag, Position>();
+    const Position *t_2 = e.try_get<Tag, Position>();
     test_int(t.x, 30);
     test_int(t.y, 40);
     test_int(t_2->x, 30);
@@ -432,7 +432,7 @@ void Pairs_get_rel_obj(void) {
     test_assert(e.has<Position>(obj));
     test_assert(e.has(rel, obj));
 
-    const void *ptr = e.get(rel, obj);
+    const void *ptr = e.try_get(rel, obj);
     test_assert(ptr != nullptr);
 
     test_int(static_cast<const Position*>(ptr)->x, 10);
@@ -451,7 +451,7 @@ void Pairs_get_rel_obj_id(void) {
     test_assert(e.has<Position>(obj));
     test_assert(e.has(rel, obj));
 
-    const void *ptr = e.get(rel, obj);
+    const void *ptr = e.try_get(rel, obj);
     test_assert(ptr != nullptr);
 
     test_int(static_cast<const Position*>(ptr)->x, 10);
@@ -470,7 +470,7 @@ void Pairs_get_rel_obj_id_t(void) {
     test_assert(e.has<Position>(obj));
     test_assert(e.has(rel, obj));
 
-    const void *ptr = e.get(rel, obj);
+    const void *ptr = e.try_get(rel, obj);
     test_assert(ptr != nullptr);
 
     test_int(static_cast<const Position*>(ptr)->x, 10);
@@ -487,7 +487,7 @@ void Pairs_get_R_obj(void) {
 
     test_assert(e.has<Position>(obj));
 
-    const Position *ptr = e.get<Position>(obj);
+    const Position *ptr = e.try_get<Position>(obj);
     test_assert(ptr != nullptr);
 
     test_int(ptr->x, 10);
@@ -504,7 +504,7 @@ void Pairs_get_R_obj_id(void) {
 
     test_assert(e.has<Position>(obj));
 
-    const Position *ptr = e.get<Position>(obj);
+    const Position *ptr = e.try_get<Position>(obj);
     test_assert(ptr != nullptr);
 
     test_int(ptr->x, 10);
@@ -521,7 +521,7 @@ void Pairs_get_R_obj_id_t(void) {
 
     test_assert(e.has<Position>(obj));
 
-    const Position *ptr = e.get<Position>(obj);
+    const Position *ptr = e.try_get<Position>(obj);
     test_assert(ptr != nullptr);
 
     test_int(ptr->x, 10);
@@ -535,7 +535,7 @@ void Pairs_get_R_O(void) {
 
     test_assert((e.has<Position, Tag>()));
 
-    const Position *ptr = e.get<Position, Tag>();
+    const Position *ptr = e.try_get<Position, Tag>();
     test_assert(ptr != nullptr);
 
     test_int(ptr->x, 10);
@@ -549,7 +549,7 @@ void Pairs_get_R_tag_O(void) {
 
     test_assert((e.has<Tag, Position>()));
 
-    const Position *ptr = e.get<Tag, Position>();
+    const Position *ptr = e.try_get<Tag, Position>();
     test_assert(ptr != nullptr);
 
     test_int(ptr->x, 10);
@@ -566,7 +566,7 @@ void Pairs_get_second(void) {
 
     test_assert(e.has_second<Position>(rel));
 
-    const Position *ptr = e.get_second<Position>(rel);
+    const Position *ptr = e.try_get_second<Position>(rel);
     test_assert(ptr != nullptr);
 
     test_int(ptr->x, 10);
@@ -583,7 +583,7 @@ void Pairs_get_second_id(void) {
 
     test_assert(e.has_second<Position>(rel));
 
-    const Position *ptr = e.get_second<Position>(rel);
+    const Position *ptr = e.try_get_second<Position>(rel);
     test_assert(ptr != nullptr);
 
     test_int(ptr->x, 10);
@@ -600,7 +600,7 @@ void Pairs_get_second_id_t(void) {
 
     test_assert(e.has_second<Position>(rel));
 
-    const Position *ptr = e.get_second<Position>(rel);
+    const Position *ptr = e.try_get_second<Position>(rel);
     test_assert(ptr != nullptr);
 
     test_int(ptr->x, 10);
@@ -949,10 +949,10 @@ void Pairs_set_pair_type(void) {
     test_assert((e.has<Eats, Apples>()));
     test_assert((e.has<EatsApples>()));
 
-    const Eats *ptr = e.get<EatsApples>();
+    const Eats *ptr = e.try_get<EatsApples>();
     test_int(ptr->amount, 10);
 
-    test_assert((ptr == e.get<Eats, Apples>()));
+    test_assert((ptr == e.try_get<Eats, Apples>()));
 }
 
 void Pairs_has_pair_type(void) {
@@ -1001,7 +1001,7 @@ void Pairs_set_1_pair_arg(void) {
             a->amount = 10;
         });
 
-    auto eats = e.get<EatsApples>();
+    auto eats = e.try_get<EatsApples>();
     test_int(eats->amount, 10);
 }
 
@@ -1014,10 +1014,10 @@ void Pairs_set_2_pair_arg(void) {
             p->amount = 20;
         });
 
-    auto eats = e.get<EatsApples>();
+    auto eats = e.try_get<EatsApples>();
     test_int(eats->amount, 10);
 
-    eats = e.get<EatsPears>();
+    eats = e.try_get<EatsPears>();
     test_int(eats->amount, 20);
 }
 
@@ -1041,7 +1041,7 @@ void Pairs_set_inline_pair_type(void) {
             a->amount = 10;
         });
 
-    auto eats = e.get<EatsApples>();
+    auto eats = e.try_get<EatsApples>();
     test_int(eats->amount, 10);
 }
 
@@ -1064,7 +1064,7 @@ void Pairs_set_pair_type_object(void) {
             a->amount = 10;
         });
 
-    auto eats = e.get_second<Apples, Eats>();
+    auto eats = e.try_get_second<Apples, Eats>();
     test_int(eats->amount, 10);
 }
 
@@ -1083,25 +1083,25 @@ void Pairs_set_get_second_variants(void) {
 
     auto e1 = ecs.entity().set_second<Begin, Event>({"Big Bang"});
     test_assert((e1.has<Begin, Event>()));
-    const Event* v = e1.get_second<Begin, Event>();
+    const Event* v = e1.try_get_second<Begin, Event>();
     test_assert(v != NULL);
     test_str(v->value, "Big Bang");
 
     auto e2 = ecs.entity().set<Begin, Event>({"Big Bang"});
     test_assert((e2.has<Begin, Event>()));
-    v = e2.get<Begin, Event>();
+    v = e2.try_get<Begin, Event>();
     test_assert(v != NULL);
     test_str(v->value, "Big Bang");
 
     auto e3 = ecs.entity().set<flecs::pair<Begin, Event>>({"Big Bang"});
     test_assert((e3.has<flecs::pair<Begin, Event>>()));
-    v = e3.get<flecs::pair<Begin, Event>>();
+    v = e3.try_get<flecs::pair<Begin, Event>>();
     test_assert(v != NULL);
     test_str(v->value, "Big Bang");  
 
     auto e4 = ecs.entity().set<BeginEvent>({"Big Bang"});
     test_assert((e4.has<BeginEvent>()));
-    v = e4.get<BeginEvent>();
+    v = e4.try_get<BeginEvent>();
     test_assert(v != NULL);
     test_str(v->value, "Big Bang");            
 }
@@ -1229,7 +1229,7 @@ void Pairs_set_R_existing_value(void) {
     Position p{10, 20};
     flecs::entity e = ecs.entity().set<Position, Tag>(p);
 
-    const Position *ptr = e.get<Position, Tag>();
+    const Position *ptr = e.try_get<Position, Tag>();
     test_assert(ptr != nullptr);
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);

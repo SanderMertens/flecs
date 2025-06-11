@@ -20,6 +20,6 @@ int main(int, char *[]) {
         .set<TypeWithEntity>({ foo });
 
     // Convert PortableType component to flecs expression string
-    const TypeWithEntity *ptr = e.get<TypeWithEntity>();
-    std::cout << ecs.to_expr(ptr).c_str() << "\n"; // {e: Foo}
+    const TypeWithEntity& c = e.get<TypeWithEntity>();
+    std::cout << ecs.to_expr(&c).c_str() << "\n"; // {e: Foo}
 }

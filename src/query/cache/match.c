@@ -148,7 +148,7 @@ void flecs_query_cache_match_set(
         qm->_up_fields = it->up_fields;
     } else {
         /* If this is a trivial cache, we shouldn't have any fields with 
-        * non-$this sources */
+         * non-$this sources */
         ecs_assert(i == field_count, ECS_INTERNAL_ERROR, NULL);
     }
 }

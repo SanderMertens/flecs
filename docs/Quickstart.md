@@ -398,7 +398,16 @@ e.set<Position>({10, 20})
  .set<Velocity>({1, 2});
 
 // Get a component
-const Position *p = e.get<Position>();
+const Position& p = e.get<Position>();
+
+// Get mutable:
+// Position& p = e.get_mut<Position>();
+
+// Get optional:
+// const Position* p = e.try_get<Position>();
+
+// Get optional mutable:
+// Position* p = e.try_get_mut<Position>();
 
 // Remove component
 e.remove<Position>();
@@ -559,7 +568,7 @@ printf("Component size: %u\n", c->size);
 ```cpp
 flecs::entity pos_e = world.entity<Position>();
 
-const EcsComponent *c = pos_e.get<flecs::Component>();
+const EcsComponent& c = pos_e.get<flecs::Component>();
 std::cout << "Component size: " << c->size << std::endl;
 ```
 </li>
@@ -1355,7 +1364,7 @@ const Gravity *g = ecs_singleton_get(world, Gravity);
 world.set<Gravity>({ 9.81 });
 
 // Get singleton component
-const Gravity *g = world.get<Gravity>();
+const Gravity& g = world.get<Gravity>();
 ```
 </li>
 <li><b class="tab-title">C#</b>
@@ -1410,7 +1419,7 @@ flecs::entity grav_e = world.entity<Gravity>();
 
 grav_e.set<Gravity>({10, 20});
 
-const Gravity *g = grav_e.get<Gravity>();
+const Gravity& g = grav_e.get<Gravity>();
 ```
 </li>
 <li><b class="tab-title">C#</b>

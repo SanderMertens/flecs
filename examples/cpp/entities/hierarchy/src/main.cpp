@@ -14,10 +14,10 @@ void iterate_tree(flecs::entity e, Position p_parent = {0, 0}) {
     std::cout << e.path() << " [" << e.type().str() << "]\n";
 
     // Get entity position
-    const Position *p = e.get<Position>();
+    const Position& p = e.get<Position>();
 
     // Calculate actual position
-    Position p_actual = {p->x + p_parent.x, p->y + p_parent.y};
+    Position p_actual = {p.x + p_parent.x, p.y + p_parent.y};
     std::cout << "{" << p_actual.x << ", " << p_actual.y << "}\n\n";
 
     // Iterate children recursively

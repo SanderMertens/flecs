@@ -5,7 +5,7 @@ void Singleton_set_get_singleton(void) {
 
     world.set<Position>({10, 20});
 
-    const Position *p = world.get<Position>();
+    const Position *p = world.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -18,7 +18,7 @@ void Singleton_ensure_singleton(void) {
     p_mut.x = 10;
     p_mut.y = 20;
 
-    const Position *p = world.get<Position>();
+    const Position *p = world.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -27,11 +27,11 @@ void Singleton_ensure_singleton(void) {
 void Singleton_get_mut_singleton(void) {
     flecs::world world;
 
-    Position *p = world.get_mut<Position>();
+    Position *p = world.try_get_mut<Position>();
     test_assert(p == nullptr);
 
     world.set<Position>({10, 20});
-    p = world.get_mut<Position>();
+    p = world.try_get_mut<Position>();
     test_assert(p != nullptr);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -42,7 +42,7 @@ void Singleton_emplace_singleton(void) {
 
     world.emplace<Position>(10.0f, 20.0f);
 
-    const Position *p = world.get<Position>();
+    const Position *p = world.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -132,7 +132,7 @@ void Singleton_singleton_system(void) {
 
     world.progress();
 
-    const Position *p = world.get<Position>();
+    const Position *p = world.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 11);
     test_int(p->y, 21);
@@ -147,7 +147,7 @@ void Singleton_get_singleton(void) {
     test_assert(s.has<Position>());
     test_assert(s.id() == world.id<Position>());
 
-    const Position* p = s.get<Position>();
+    const Position* p = s.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
@@ -173,7 +173,7 @@ void Singleton_set_lambda(void) {
         p.y = 20;
     });
 
-    const Position* p = world.get<Position>();
+    const Position* p = world.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -182,7 +182,7 @@ void Singleton_set_lambda(void) {
         p.y ++;
     });
 
-    p = world.get<Position>();
+    p = world.try_get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 21);
 }
@@ -218,7 +218,7 @@ void Singleton_get_write_lambda(void) {
 
     test_int(count, 1);
 
-    const Position *p = world.get<Position>();
+    const Position *p = world.try_get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 21);
 }
@@ -228,7 +228,7 @@ void Singleton_get_set_singleton_pair_R_T(void) {
 
     world.set<Position, Tag>({10, 20});
 
-    const Position *p = world.get<Position, Tag>();
+    const Position *p = world.try_get<Position, Tag>();
     test_assert(p != nullptr);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -241,7 +241,7 @@ void Singleton_get_set_singleton_pair_R_t(void) {
 
     world.set<Position>(tgt, {10, 20});
 
-    const Position *p = world.get<Position>(tgt);
+    const Position *p = world.try_get<Position>(tgt);
     test_assert(p != nullptr);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -341,7 +341,7 @@ void Singleton_singleton_enum(void) {
     test_assert(world.has<Color>());
 
     {
-        const Color *c = world.get<Color>();
+        const Color *c = world.try_get<Color>();
         test_assert(c != nullptr);
         test_assert(*c == Blue);
     }
@@ -350,11 +350,406 @@ void Singleton_singleton_enum(void) {
     test_assert(world.has<Color>());
 
     {
-        const Color *c = world.get<Color>();
+        const Color *c = world.try_get<Color>();
         test_assert(c != nullptr);
         test_assert(*c == Green);
     }
 
     world.remove<Color>();
     test_assert(!world.has<Color>());
+}
+
+void Singleton_get_w_id(void) {
+    flecs::world world;
+
+    world.set<Position>({10, 20});
+    
+    const Position *p = static_cast<const Position*>(world.get(world.id<Position>()));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_get_T(void) {
+    flecs::world world;
+
+    world.set<Position>({10, 20});
+    
+    const Position& p = world.get<Position>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Singleton_get_r_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    world.set<Position>(tgt, {10, 20});
+    
+    const Position* p = static_cast<const Position*>(world.get(world.id<Position>(), tgt));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_get_R_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    world.set<Position>(tgt, {10, 20});
+    
+    const Position& p = world.get<Position>(tgt);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Singleton_get_R_T(void) {
+    flecs::world world;
+
+    struct Tgt { };
+
+    world.set<Position, Tgt>({10, 20});
+    
+    const Position& p = world.get<Position, Tgt>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+
+void Singleton_get_w_id_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+
+    test_expect_abort();
+    world.get(world.id<Position>());
+}
+
+void Singleton_get_T_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+
+    test_expect_abort();
+    world.get<Position>();
+}
+
+void Singleton_get_r_t_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    test_expect_abort();
+    world.get(world.id<Position>(), tgt);
+}
+
+void Singleton_get_R_t_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    test_expect_abort();
+    world.get<Position>(tgt);
+}
+
+void Singleton_get_R_T_not_found(void) {
+    struct Tgt { };
+
+    install_test_abort();
+
+    flecs::world world;
+
+
+    test_expect_abort();
+    world.get<Position, Tgt>();
+}
+
+void Singleton_try_get_w_id(void) {
+    flecs::world world;
+
+
+    const Position *p = static_cast<const Position*>(world.try_get(world.id<Position>()));
+    test_assert(p == nullptr);
+
+    world.set<Position>({10, 20});
+    
+    p = static_cast<const Position*>(world.try_get(world.id<Position>()));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_try_get_T(void) {
+    flecs::world world;
+
+
+    const Position *p = world.try_get<Position>();
+    test_assert(p == nullptr);
+
+    world.set<Position>({10, 20});
+    
+    p = world.try_get<Position>();
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_try_get_r_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    const Position *p = static_cast<const Position*>(world.try_get_mut(world.id<Position>(), tgt));
+    test_assert(p == nullptr);
+
+    world.set<Position>(tgt, {10, 20});
+    
+    p = static_cast<const Position*>(world.get_mut(world.id<Position>(), tgt));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_try_get_R_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    const Position *p = world.try_get<Position>(tgt);
+    test_assert(p == nullptr);
+
+    world.set<Position>(tgt, {10, 20});
+    
+    p = world.try_get<Position>(tgt);
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_try_get_R_T(void) {
+    flecs::world world;
+
+    struct Tgt { };
+
+
+    const Position *p = world.try_get<Position, Tgt>();
+    test_assert(p == nullptr);
+
+    world.set<Position, Tgt>({10, 20});
+    
+    p = world.try_get<Position, Tgt>();
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_get_mut_w_id(void) {
+    flecs::world world;
+
+    world.set<Position>({10, 20});
+    
+    Position *p = static_cast<Position*>(world.get_mut(world.id<Position>()));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_get_mut_T(void) {
+    flecs::world world;
+
+    world.set<Position>({10, 20});
+    
+    Position& p = world.get_mut<Position>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Singleton_get_mut_r_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    world.set<Position>(tgt, {10, 20});
+    
+    Position* p = static_cast<Position*>(world.get_mut(world.id<Position>(), tgt));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_get_mut_R_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    world.set<Position>(tgt, {10, 20});
+    
+    Position& p = world.get_mut<Position>(tgt);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Singleton_get_mut_R_T(void) {
+    flecs::world world;
+
+    struct Tgt { };
+
+    world.set<Position, Tgt>({10, 20});
+    
+    Position& p = world.get_mut<Position, Tgt>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Singleton_get_mut_w_id_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+
+    test_expect_abort();
+    world.get_mut(world.id<Position>());
+}
+
+void Singleton_get_mut_T_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+
+    test_expect_abort();
+    world.get_mut<Position>();
+}
+
+void Singleton_get_mut_r_t_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    test_expect_abort();
+    world.get_mut(world.id<Position>(), tgt);
+}
+
+void Singleton_get_mut_R_t_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    test_expect_abort();
+    world.get_mut<Position>(tgt);
+}
+
+void Singleton_get_mut_R_T_not_found(void) {
+    struct Tgt { };
+
+    install_test_abort();
+
+    flecs::world world;
+
+
+    test_expect_abort();
+    world.get_mut<Position, Tgt>();
+}
+
+void Singleton_try_get_mut_w_id(void) {
+    flecs::world world;
+
+
+    Position *p = static_cast<Position*>(world.try_get_mut(world.id<Position>()));
+    test_assert(p == nullptr);
+
+    world.set<Position>({10, 20});
+    
+    p = static_cast<Position*>(world.try_get_mut(world.id<Position>()));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_try_get_mut_T(void) {
+    flecs::world world;
+
+
+    Position *p = world.try_get_mut<Position>();
+    test_assert(p == nullptr);
+
+    world.set<Position>({10, 20});
+    
+    p = world.try_get_mut<Position>();
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_try_get_mut_r_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    Position *p = static_cast<Position*>(world.try_get_mut(world.id<Position>(), tgt));
+    test_assert(p == nullptr);
+
+    world.set<Position>(tgt, {10, 20});
+    
+    p = static_cast<Position*>(world.get_mut(world.id<Position>(), tgt));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_try_get_mut_R_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    Position *p = world.try_get_mut<Position>(tgt);
+    test_assert(p == nullptr);
+
+    world.set<Position>(tgt, {10, 20});
+    
+    p = world.try_get_mut<Position>(tgt);
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Singleton_try_get_mut_R_T(void) {
+    flecs::world world;
+
+    struct Tgt { };
+
+
+    Position *p = world.try_get_mut<Position, Tgt>();
+    test_assert(p == nullptr);
+
+    world.set<Position, Tgt>({10, 20});
+    
+    p = world.try_get_mut<Position, Tgt>();
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 }

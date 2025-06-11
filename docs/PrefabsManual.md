@@ -55,7 +55,7 @@ flecs::entity inst_1 = world.entity().is_a(SpaceShip);
 flecs::entity inst_2 = world.entity().is_a(SpaceShip);
 
 // Get instantiated component
-const Defense *d = inst_1.get<Defense>();
+const Defense& d = inst_1.get<Defense>();
 ```
 
 </li>
@@ -355,10 +355,10 @@ flecs::entity SpaceShip = world.prefab()
 flecs::entity inst = world.entity().is_a(SpaceShip);
 
 // Component is retrieved from instance
-const Health *health = inst.get<Health>();
+const Health& health = inst.get<Health>();
 
 // Component is retrieved from prefab
-const Defense *defense = inst.get<Defense>();
+const Defense& defense = inst.get<Defense>();
 ```
 
 </li>
@@ -836,8 +836,8 @@ flecs::entity Freighter = world.prefab("Freighter")
 
 // Create prefab instance
 flecs::entity inst = world.entity().is_a(Freighter);
-const Health *health = inst.get<Health>(); // 150
-const Defense *defense = inst.get<Defense>(); // 50
+const Health& health = inst.get<Health>(); // 150
+const Defense& defense = inst.get<Defense>(); // 50
 ```
 
 </li>

@@ -31,8 +31,8 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        const U *v = constant.get_second<U>(flecs::Constant);
-        if (*v != Red) {
+        const U& v = constant.get_second<U>(flecs::Constant);
+        if (v != Red) {
             std::cout << "Constant has wrong value\n";
             return -1;
         }
@@ -52,8 +52,8 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        const U *v = constant.get_second<U>(flecs::Constant);
-        if (*v != Green) {
+        const U& v = constant.get_second<U>(flecs::Constant);
+        if (v != Green) {
             std::cout << "Constant has wrong value\n";
             return -1;
         }
@@ -73,8 +73,8 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        const U *v = constant.get_second<U>(flecs::Constant);
-        if (*v != Blue) {
+        const U& v = constant.get_second<U>(flecs::Constant);
+        if (v != Blue) {
             std::cout << "Constant has wrong value\n";
             return -1;
         }

@@ -83,13 +83,13 @@ void Meta_struct(void) {
     auto a = c.lookup("a");
     test_assert(a != 0);
     test_assert( a.has<flecs::Member>() );
-    const flecs::Member *m = a.get<flecs::Member>();
+    const flecs::Member *m = a.try_get<flecs::Member>();
     test_uint(m->type, flecs::I32);
 
     auto b = c.lookup("b");
     test_assert(b != 0);
     test_assert( b.has<flecs::Member>() );
-    m = b.get<flecs::Member>();
+    m = b.try_get<flecs::Member>();
     test_uint(m->type, flecs::F32);
 }
 
@@ -114,7 +114,7 @@ void Meta_nested_struct(void) {
     auto a = n.lookup("a");
     test_assert(a != 0);
     test_assert( a.has<flecs::Member>() );
-    const flecs::Member *m = a.get<flecs::Member>();
+    const flecs::Member *m = a.try_get<flecs::Member>();
     test_uint(m->type, t);
 }
 
@@ -138,25 +138,25 @@ void Meta_struct_w_portable_type(void) {
     auto a = t.lookup("a");
     test_assert(a != 0);
     test_assert( a.has<flecs::Member>() );
-    const flecs::Member *m = a.get<flecs::Member>();
+    const flecs::Member *m = a.try_get<flecs::Member>();
     test_uint(m->type, ecs.component<uintptr_t>());
 
     auto b = t.lookup("b");
     test_assert(b != 0);
     test_assert( b.has<flecs::Member>() );
-    m = b.get<flecs::Member>();
+    m = b.try_get<flecs::Member>();
     test_uint(m->type, flecs::Uptr);
 
     auto c = t.lookup("c");
     test_assert(c != 0);
     test_assert( c.has<flecs::Member>() );
-    m = c.get<flecs::Member>();
+    m = c.try_get<flecs::Member>();
     test_uint(m->type, flecs::U64);
 
     auto d = t.lookup("d");
     test_assert(d != 0);
     test_assert( d.has<flecs::Member>() );
-    m = d.get<flecs::Member>();
+    m = d.try_get<flecs::Member>();
     test_uint(m->type, flecs::Entity);
 }
 
@@ -174,7 +174,7 @@ void Meta_units(void) {
     test_assert(custom_unit != 0);
     test_str(custom_unit.name(), "some_unit");
 
-    const flecs::Unit *unit = custom_unit.get<flecs::Unit>();
+    const flecs::Unit *unit = custom_unit.try_get<flecs::Unit>();
     test_assert(unit != nullptr);
     test_str(unit->symbol, "u");
 
@@ -185,14 +185,14 @@ void Meta_units(void) {
 
     flecs::entity m_meters = t.lookup("meters");
     test_assert(m_meters != 0);
-    const flecs::Member *m = m_meters.get<flecs::Member>();
+    const flecs::Member *m = m_meters.try_get<flecs::Member>();
     test_assert(m != nullptr);
     test_uint(m->type, flecs::I32);
     test_uint(m->unit, ecs.id<flecs::units::length::Meters>());
 
     flecs::entity m_custom_unit = t.lookup("custom_unit");
     test_assert(m_custom_unit != 0);
-    m = m_custom_unit.get<flecs::Member>();
+    m = m_custom_unit.try_get<flecs::Member>();
     test_assert(m != nullptr);
     test_uint(m->type, flecs::I32);
     test_uint(m->unit, custom_unit);
@@ -222,14 +222,14 @@ void Meta_unit_w_quantity(void) {
 
     flecs::entity m_1 = t.lookup("m_1");
     test_assert(m_1 != 0);
-    const flecs::Member *m = m_1.get<flecs::Member>();
+    const flecs::Member *m = m_1.try_get<flecs::Member>();
     test_assert(m != nullptr);
     test_uint(m->type, flecs::I32);
     test_uint(m->unit, unit_1);
 
     flecs::entity m_2 = t.lookup("m_2");
     test_assert(m_2 != 0);
-    m = m_2.get<flecs::Member>();
+    m = m_2.try_get<flecs::Member>();
     test_assert(m != nullptr);
     test_uint(m->type, flecs::I32);
     test_uint(m->unit, unit_2);
@@ -248,12 +248,12 @@ void Meta_unit_w_prefix(void) {
     auto prefix = ecs.entity().unit_prefix("p", 100, 1);
     
     auto unit_1 = ecs.entity().unit("U1");
-    const flecs::Unit *unit = unit_1.get<flecs::Unit>();
+    const flecs::Unit *unit = unit_1.try_get<flecs::Unit>();
     test_assert(unit != nullptr);
     test_str(unit->symbol, "U1");
 
     auto unit_2 = ecs.entity().unit(prefix, unit_1);
-    unit = unit_2.get<flecs::Unit>();
+    unit = unit_2.try_get<flecs::Unit>();
     test_assert(unit != nullptr);
     test_str(unit->symbol, "pU1");
 }
@@ -271,17 +271,17 @@ void Meta_unit_w_over(void) {
     auto prefix = ecs.entity().unit_prefix("p", 100, 1);
     
     auto unit_0 = ecs.entity().unit("U0");
-    const flecs::Unit *unit = unit_0.get<flecs::Unit>();
+    const flecs::Unit *unit = unit_0.try_get<flecs::Unit>();
     test_assert(unit != nullptr);
     test_str(unit->symbol, "U0");
 
     auto unit_1 = ecs.entity().unit("U1");
-    unit = unit_1.get<flecs::Unit>();
+    unit = unit_1.try_get<flecs::Unit>();
     test_assert(unit != nullptr);
     test_str(unit->symbol, "U1");
 
     auto unit_2 = ecs.entity().unit(prefix, unit_1, unit_0);
-    unit = unit_2.get<flecs::Unit>();
+    unit = unit_2.try_get<flecs::Unit>();
     test_assert(unit != nullptr);
     test_str(unit->symbol, "pU1/U0");
 }
@@ -293,14 +293,14 @@ void Meta_partial_struct(void) {
         .member<float>("x");
     test_assert(c != 0);
 
-    const flecs::Component *ptr = c.get<flecs::Component>();
+    const flecs::Component *ptr = c.try_get<flecs::Component>();
     test_int(ptr->size, 8);
     test_int(ptr->alignment, 4);
     
     auto xe = c.lookup("x");
     test_assert(xe != 0);
     test_assert( xe.has<flecs::Member>() );
-    const flecs::Member *x = xe.get<flecs::Member>();
+    const flecs::Member *x = xe.try_get<flecs::Member>();
     test_uint(x->type, flecs::F32);
     test_uint(x->offset, 0);
 }
@@ -312,14 +312,14 @@ void Meta_partial_struct_custom_offset(void) {
         .member<float>("y", 1, offsetof(Position, y));
     test_assert(c != 0);
 
-    const flecs::Component *ptr = c.get<flecs::Component>();
+    const flecs::Component *ptr = c.try_get<flecs::Component>();
     test_int(ptr->size, 8);
     test_int(ptr->alignment, 4);
     
     auto xe = c.lookup("y");
     test_assert(xe != 0);
     test_assert( xe.has<flecs::Member>() );
-    const flecs::Member *x = xe.get<flecs::Member>();
+    const flecs::Member *x = xe.try_get<flecs::Member>();
     test_uint(x->type, flecs::F32);
     test_uint(x->offset, 4);
 }
@@ -351,7 +351,7 @@ void Meta_bitmask(void) {
         .set<Sandwich>({Toppings::Bacon | Toppings::Lettuce});
 
     // Convert Sandwidth component to flecs expression string
-    const Sandwich *ptr = e.get<Sandwich>();
+    const Sandwich *ptr = e.try_get<Sandwich>();
     test_str(ecs.to_expr(ptr).c_str(), "{toppings: Lettuce|Bacon}");
 }
 
@@ -616,16 +616,16 @@ void Meta_primitive_type(void) {
     test_assert(t.has<flecs::Type>());
     test_assert(t.has<flecs::Primitive>());
 
-    const flecs::Component *c = t.get<flecs::Component>();
+    const flecs::Component *c = t.try_get<flecs::Component>();
     test_assert(c != nullptr);
     test_int(c->size, 4);
     test_int(c->alignment, 4);
 
-    const flecs::Type *mt = t.get<flecs::Type>();
+    const flecs::Type *mt = t.try_get<flecs::Type>();
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::PrimitiveType);
 
-    const flecs::Primitive *pt = t.get<flecs::Primitive>();
+    const flecs::Primitive *pt = t.try_get<flecs::Primitive>();
     test_assert(pt != nullptr);
     test_assert(pt->kind == flecs::meta::I32);
 }
@@ -640,16 +640,16 @@ void Meta_array_type(void) {
     test_assert(t.has<flecs::Type>());
     test_assert(t.has<flecs::Array>());
 
-    const flecs::Component *c = t.get<flecs::Component>();
+    const flecs::Component *c = t.try_get<flecs::Component>();
     test_assert(c != nullptr);
     test_int(c->size, 3 * 4);
     test_int(c->alignment, 4);
 
-    const flecs::Type *mt = t.get<flecs::Type>();
+    const flecs::Type *mt = t.try_get<flecs::Type>();
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::ArrayType);
 
-    const flecs::Array *at = t.get<flecs::Array>();
+    const flecs::Array *at = t.try_get<flecs::Array>();
     test_assert(at != nullptr);
     test_assert(at->type == ecs.id<int32_t>());
     test_int(at->count, 3);
@@ -665,16 +665,16 @@ void Meta_vector_type(void) {
     test_assert(t.has<flecs::Type>());
     test_assert(t.has<flecs::Vector>());
 
-    const flecs::Component *c = t.get<flecs::Component>();
+    const flecs::Component *c = t.try_get<flecs::Component>();
     test_assert(c != nullptr);
     test_int(c->size, ECS_SIZEOF(ecs_vec_t));
     test_int(c->alignment, ECS_SIZEOF(void*));
 
-    const flecs::Type *mt = t.get<flecs::Type>();
+    const flecs::Type *mt = t.try_get<flecs::Type>();
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::VectorType);
 
-    const flecs::Vector *vt = t.get<flecs::Vector>();
+    const flecs::Vector *vt = t.try_get<flecs::Vector>();
     test_assert(vt != nullptr);
     test_assert(vt->type == ecs.id<int32_t>());
 }
@@ -779,7 +779,7 @@ void Meta_entity_from_json_w_values(void) {
     test_str(e.name(), "ent");
     test_assert(e.has<Position>());
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
@@ -794,7 +794,7 @@ void Meta_set_type_json(void) {
     flecs::entity e = ecs.entity()
         .set_json<Position>("{\"x\":10, \"y\":20}");
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -810,7 +810,7 @@ void Meta_set_pair_R_T_json(void) {
     flecs::entity e = ecs.entity()
         .set_json<Position, Tag>("{\"x\":10, \"y\":20}");
 
-    const Position *p = e.get<Position, Tag>();
+    const Position *p = e.try_get<Position, Tag>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -828,7 +828,7 @@ void Meta_set_pair_R_t_json(void) {
     flecs::entity e = ecs.entity()
         .set_json<Position>(tgt, "{\"x\":10, \"y\":20}");
 
-    const Position *p = e.get<Position>(tgt);
+    const Position *p = e.try_get<Position>(tgt);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -844,7 +844,7 @@ void Meta_set_pair_r_T_json(void) {
     flecs::entity e = ecs.entity()
         .set_json_second<Tag>(pos, "{\"x\":10, \"y\":20}");
 
-    const Position *p = e.get<Position, Tag>();
+    const Position *p = e.try_get<Position, Tag>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -862,7 +862,7 @@ void Meta_set_pair_r_t_json(void) {
     flecs::entity e = ecs.entity()
         .set_json(pos, tgt, "{\"x\":10, \"y\":20}");
 
-    const Position *p = e.get<Position>(tgt);
+    const Position *p = e.try_get<Position>(tgt);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -878,7 +878,7 @@ void Meta_set_id_json(void) {
     flecs::entity e = ecs.entity()
         .set_json(pos, "{\"x\":10, \"y\":20}");
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -962,7 +962,7 @@ void Meta_std_vector_random_access(void) {
 
     std::vector<int> v = {1, 2};
 
-    const EcsOpaque *opaque_info = vector_type.get<EcsOpaque>();
+    const EcsOpaque *opaque_info = vector_type.try_get<EcsOpaque>();
     test_assert(opaque_info != nullptr);
     test_assert(opaque_info->serialize_element != nullptr);
 
@@ -1011,7 +1011,7 @@ void Meta_struct_random_access(void) {
                 return 1;
             });
 
-    const EcsOpaque *opaque_info = world.component<Position>().get<EcsOpaque>();
+    const EcsOpaque *opaque_info = world.component<Position>().try_get<EcsOpaque>();
     test_assert(opaque_info != nullptr);
     test_assert(opaque_info->serialize_member != nullptr);
 
@@ -1070,7 +1070,7 @@ void Meta_world_ser_deser_flecs_entity(void) {
     flecs::entity e2 = world.entity("ent2").set<CppEntity>({e1});
 
     {
-        const CppEntity *ptr = e2.get<CppEntity>();
+        const CppEntity *ptr = e2.try_get<CppEntity>();
         test_assert(ptr != nullptr);
         test_str(world.to_json(ptr).c_str(), "{\"entity\":\"ent1\"}");
     }
@@ -1082,7 +1082,7 @@ void Meta_world_ser_deser_flecs_entity(void) {
     test_assert(e2.is_alive());
 
     {
-        const CppEntity *ptr = e2.get<CppEntity>();
+        const CppEntity *ptr = e2.try_get<CppEntity>();
         test_assert(ptr != nullptr);
         test_str(world.to_json(ptr).c_str(), "{\"entity\":\"ent1\"}");
     }
@@ -1098,7 +1098,7 @@ void Meta_new_world_ser_deser_flecs_entity(void) {
     flecs::entity e2 = world.entity("ent2").set<CppEntity>({e1});
 
     {
-        const CppEntity *ptr = e2.get<CppEntity>();
+        const CppEntity *ptr = e2.try_get<CppEntity>();
         test_assert(ptr != nullptr);
         test_str(world.to_json(ptr).c_str(), "{\"entity\":\"ent1\"}");
     }
@@ -1121,7 +1121,7 @@ void Meta_new_world_ser_deser_flecs_entity(void) {
     test_assert(e2.is_alive());
 
     {
-        const CppEntity *ptr = e2.get<CppEntity>();
+        const CppEntity *ptr = e2.try_get<CppEntity>();
         test_assert(ptr != nullptr);
         test_str(world2.to_json(ptr).c_str(), "{\"entity\":\"ent1\"}");
     }
@@ -1136,7 +1136,7 @@ void Meta_new_world_ser_deser_empty_flecs_entity(void) {
     flecs::entity e1 = world.entity("ent1").set<CppEntity>({});
 
     {
-        const CppEntity *ptr = e1.get<CppEntity>();
+        const CppEntity *ptr = e1.try_get<CppEntity>();
         test_assert(ptr != nullptr);
         test_str(world.to_json(ptr).c_str(), "{\"entity\":\"#0\"}");
     }
@@ -1156,7 +1156,7 @@ void Meta_new_world_ser_deser_empty_flecs_entity(void) {
     test_assert(e1.is_alive());
 
     {
-        const CppEntity *ptr = e1.get<CppEntity>();
+        const CppEntity *ptr = e1.try_get<CppEntity>();
         test_assert(ptr != nullptr);
         test_str(world2.to_json(ptr).c_str(), "{\"entity\":\"#0\"}");
     }
@@ -1257,7 +1257,7 @@ void Meta_value_range(void) {
     test_assert(x != 0);
     test_assert(x.has<flecs::MemberRanges>());
     {
-        const flecs::MemberRanges *ranges = x.get<flecs::MemberRanges>();
+        const flecs::MemberRanges *ranges = x.try_get<flecs::MemberRanges>();
         test_assert(ranges != nullptr);
         test_assert(ranges->value.min == -1);
         test_assert(ranges->value.max == 1);
@@ -1267,7 +1267,7 @@ void Meta_value_range(void) {
     test_assert(y != 0);
     test_assert(y.has<flecs::MemberRanges>());
     {
-        const flecs::MemberRanges *ranges = y.get<flecs::MemberRanges>();
+        const flecs::MemberRanges *ranges = y.try_get<flecs::MemberRanges>();
         test_assert(ranges != nullptr);
         test_assert(ranges->value.min == -2);
         test_assert(ranges->value.max == 2);
@@ -1285,7 +1285,7 @@ void Meta_warning_range(void) {
     test_assert(x != 0);
     test_assert(x.has<flecs::MemberRanges>());
     {
-        const flecs::MemberRanges *ranges = x.get<flecs::MemberRanges>();
+        const flecs::MemberRanges *ranges = x.try_get<flecs::MemberRanges>();
         test_assert(ranges != nullptr);
         test_assert(ranges->warning.min == -1);
         test_assert(ranges->warning.max == 1);
@@ -1295,7 +1295,7 @@ void Meta_warning_range(void) {
     test_assert(y != 0);
     test_assert(y.has<flecs::MemberRanges>());
     {
-        const flecs::MemberRanges *ranges = y.get<flecs::MemberRanges>();
+        const flecs::MemberRanges *ranges = y.try_get<flecs::MemberRanges>();
         test_assert(ranges != nullptr);
         test_assert(ranges->warning.min == -2);
         test_assert(ranges->warning.max == 2);
@@ -1313,7 +1313,7 @@ void Meta_error_range(void) {
     test_assert(x != 0);
     test_assert(x.has<flecs::MemberRanges>());
     {
-        const flecs::MemberRanges *ranges = x.get<flecs::MemberRanges>();
+        const flecs::MemberRanges *ranges = x.try_get<flecs::MemberRanges>();
         test_assert(ranges != nullptr);
         test_assert(ranges->error.min == -1);
         test_assert(ranges->error.max == 1);
@@ -1323,7 +1323,7 @@ void Meta_error_range(void) {
     test_assert(y != 0);
     test_assert(y.has<flecs::MemberRanges>());
     {
-        const flecs::MemberRanges *ranges = y.get<flecs::MemberRanges>();
+        const flecs::MemberRanges *ranges = y.try_get<flecs::MemberRanges>();
         test_assert(ranges != nullptr);
         test_assert(ranges->error.min == -2);
         test_assert(ranges->error.max == 2);
@@ -1361,7 +1361,7 @@ void Meta_struct_member_ptr(void) {
         auto x = t.lookup("x");
         test_assert(x != 0);
         test_assert(x.has<flecs::Member>());
-        const flecs::Member *xm = x.get<flecs::Member>();
+        const flecs::Member *xm = x.try_get<flecs::Member>();
         test_uint(xm->type, flecs::I32);
         test_uint(xm->offset, offsetof(Test, x));
     }
@@ -1371,7 +1371,7 @@ void Meta_struct_member_ptr(void) {
         auto y = t2.lookup("y");
         test_assert(y != 0);
         test_assert(y.has<flecs::Member>());
-        const flecs::Member *ym = y.get<flecs::Member>();
+        const flecs::Member *ym = y.try_get<flecs::Member>();
         test_uint(ym->type, flecs::F64);
         test_uint(ym->offset, offsetof(Test2, y));
     }
@@ -1382,7 +1382,7 @@ void Meta_struct_member_ptr(void) {
         auto a = n.lookup("a");
         test_assert(a != 0);
         test_assert(a.has<flecs::Member>());
-        const flecs::Member *am = a.get<flecs::Member>();
+        const flecs::Member *am = a.try_get<flecs::Member>();
         test_uint(am->type, t);
         test_uint(am->offset, offsetof(Nested, a));
     }
@@ -1390,7 +1390,7 @@ void Meta_struct_member_ptr(void) {
         auto b = n.lookup("b");
         test_assert(b != 0);
         test_assert(b.has<flecs::Member>());
-        const flecs::Member *bm = b.get<flecs::Member>();
+        const flecs::Member *bm = b.try_get<flecs::Member>();
         test_uint(bm->type, t2);
         test_uint(bm->offset, offsetof(Nested, b));
         test_uint(bm->count, 2);
@@ -1431,7 +1431,7 @@ void Meta_struct_member_ptr_packed_struct(void) {
         auto a = s.lookup("a");
         test_assert(a != 0);
         test_assert(a.has<flecs::Member>());
-        const flecs::Member *am = a.get<flecs::Member>();
+        const flecs::Member *am = a.try_get<flecs::Member>();
         test_uint(am->type, flecs::Char);
         test_uint(am->offset, offsetof(PackedStruct, a));
     }
@@ -1439,7 +1439,7 @@ void Meta_struct_member_ptr_packed_struct(void) {
         auto b = s.lookup("b");
         test_assert(b != 0);
         test_assert(b.has<flecs::Member>());
-        const flecs::Member *bm = b.get<flecs::Member>();
+        const flecs::Member *bm = b.try_get<flecs::Member>();
         test_uint(bm->type, flecs::I32);
         test_uint(bm->offset, offsetof(PackedStruct, b));
     }
@@ -1447,7 +1447,7 @@ void Meta_struct_member_ptr_packed_struct(void) {
         auto c = s.lookup("c");
         test_assert(c != 0);
         test_assert(c.has<flecs::Member>());
-        const flecs::Member *cm = c.get<flecs::Member>();
+        const flecs::Member *cm = c.try_get<flecs::Member>();
         test_uint(cm->type, flecs::F64);
         test_uint(cm->offset, offsetof(PackedStruct, c));
     }
@@ -1461,7 +1461,7 @@ void Meta_component_as_array(void) {
 
     test_assert(c.has<flecs::Array>());
 
-    const flecs::Array *ptr = c.get<flecs::Array>();
+    const flecs::Array *ptr = c.try_get<flecs::Array>();
     test_assert(ptr != nullptr);
     test_assert(ptr->type == ecs.id<float>());
     test_int(ptr->count, 2);
@@ -1475,26 +1475,26 @@ void Meta_out_of_order_member_declaration(void) {
         .member<float>("x", 1, offsetof(Position, x));
     test_assert(c != 0);
 
-    const flecs::Component *ptr = c.get<flecs::Component>();
+    const flecs::Component *ptr = c.try_get<flecs::Component>();
     test_int(ptr->size, 8);
     test_int(ptr->alignment, 4);
 
     auto xe = c.lookup("x");
     test_assert(xe != 0);
     test_assert( xe.has<flecs::Member>() );
-    const flecs::Member *x = xe.get<flecs::Member>();
+    const flecs::Member *x = xe.try_get<flecs::Member>();
     test_uint(x->type, flecs::F32);
     test_uint(x->offset, 0);
 
     auto ye = c.lookup("y");
     test_assert(ye != 0);
     test_assert( ye.has<flecs::Member>() );
-    const flecs::Member *y = ye.get<flecs::Member>();
+    const flecs::Member *y = ye.try_get<flecs::Member>();
     test_uint(y->type, flecs::F32);
     test_uint(y->offset, 4);
 
     flecs::entity e2 = ecs.entity("ent2").set<Position>({10, 20});
-    const Position *p = e2.get<Position>();
+    const Position *p = e2.try_get<Position>();
 
     auto json = ecs.to_json(p);
     test_str(json.c_str(), "{\"y\":20, \"x\":10}");

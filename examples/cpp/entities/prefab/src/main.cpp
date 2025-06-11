@@ -59,8 +59,8 @@ int main(int, char *[]) {
 
     // Even though the instance doesn't have a private copy of ImpulseSpeed, we
     // can still get it using the regular API (outputs 50)
-    const ImpulseSpeed *ptr = inst.get<ImpulseSpeed>();
-    std::cout << "Impulse speed: " << ptr->value << "\n";
+    const ImpulseSpeed& ptr = inst.get<ImpulseSpeed>();
+    std::cout << "Impulse speed: " << ptr.value << "\n";
 
     // Prefab components can be iterated just like regular components:
     ecs.each([](flecs::entity e, ImpulseSpeed& is, Position& p) {
