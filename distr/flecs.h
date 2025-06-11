@@ -25332,6 +25332,9 @@ struct entity_view : public id {
         return *r;
     }
 
+    /** Get enum constant for enum relationship. */
+    template<typename Enum>
+    Enum get_constant() const;
     
     /** Get target for a given pair.
      * This operation returns the target for a given pair. The optional
@@ -30502,6 +30505,12 @@ inline const Self& entity_builder<Self>::insert(const Func& func) const  {
     _::entity_with_delegate<Func>::invoke_ensure(
         this->world_, this->id_, func);
     return to_base();
+}
+
+template<typename Enum>
+inline Enum entity_view::get_constant() const {
+    flecs::entity tgt = this->target<Enum>();
+    return tgt.to_constant<Enum>();
 }
 
 template<typename First>

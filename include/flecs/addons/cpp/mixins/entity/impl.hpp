@@ -26,6 +26,12 @@ inline const Self& entity_builder<Self>::insert(const Func& func) const  {
     return to_base();
 }
 
+template<typename Enum>
+inline Enum entity_view::get_constant() const {
+    flecs::entity tgt = this->target<Enum>();
+    return tgt.to_constant<Enum>();
+}
+
 template<typename First>
 inline flecs::entity entity_view::target(int32_t index) const 
 {

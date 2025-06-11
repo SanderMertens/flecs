@@ -822,6 +822,9 @@ struct entity_view : public id {
         return *r;
     }
 
+    /** Get enum constant for enum relationship. */
+    template<typename Enum>
+    Enum get_constant() const;
     
     /** Get target for a given pair.
      * This operation returns the target for a given pair. The optional

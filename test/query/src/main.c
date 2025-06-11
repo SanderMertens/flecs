@@ -1591,7 +1591,6 @@ void Cascade_invalid_desc_without_cascade(void);
 void Cascade_invalid_desc_for_first(void);
 void Cascade_invalid_desc_for_second(void);
 void Cascade_cascade_w_cache_kind_default(void);
-void Cascade_cascade_w_optional(void);
 
 // Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
@@ -8583,10 +8582,6 @@ bake_test_case Cascade_testcases[] = {
     {
         "cascade_w_cache_kind_default",
         Cascade_cascade_w_cache_kind_default
-    },
-    {
-        "cascade_w_optional",
-        Cascade_cascade_w_optional
     }
 };
 
@@ -11764,7 +11759,7 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-        25,
+        24,
         Cascade_testcases
     },
     {

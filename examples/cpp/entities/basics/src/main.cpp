@@ -20,8 +20,8 @@ int main(int, char *[]) {
         .add<Walking>();
 
     // Get the value for the Position component
-    const Position& p = bob.get<Position>();
-    std::cout << "{" << p.x << ", " << p.y << "}" << "\n";
+    const Position& c = bob.get<Position>();
+    std::cout << "{" << c.x << ", " << c.y << "}" << "\n";
 
     // Overwrite the value of the Position component
     bob.set<Position>({20, 30});

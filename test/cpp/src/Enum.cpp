@@ -574,19 +574,19 @@ void Enum_has_enum_wildcard(void) {
 }
 
 void Enum_get_constant(void) {
-    // flecs::world ecs;
+    flecs::world ecs;
 
-    // auto e = ecs.entity().add(StandardEnum::Red);
-    // test_assert(e.has(StandardEnum::Red));
+    auto e = ecs.entity().add(StandardEnum::Red);
+    test_assert(e.has(StandardEnum::Red));
 
-    // const StandardEnum v = e.get_constant<StandardEnum>();
-    // test_assert(v == StandardEnum::Red);
+    StandardEnum v = e.get_constant<StandardEnum>();
+    test_assert(v == StandardEnum::Red);
 
-    // e.add(StandardEnum::Green);
-    // test_assert(e.has(StandardEnum::Green));
+    e.add(StandardEnum::Green);
+    test_assert(e.has(StandardEnum::Green));
 
-    // v = e.get_constant<StandardEnum>();
-    // test_assert(v == StandardEnum::Green);
+    v = e.get_constant<StandardEnum>();
+    test_assert(v == StandardEnum::Green);
 }
 
 void Enum_remove_enum(void) {

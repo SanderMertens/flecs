@@ -422,7 +422,7 @@ void Enum_add_enum_class_constant(void);
 void Enum_replace_enum_constants(void);
 void Enum_has_enum(void);
 void Enum_has_enum_wildcard(void);
-void Enum_get_enum(void);
+void Enum_get_constant(void);
 void Enum_remove_enum(void);
 void Enum_remove_wildcard(void);
 void Enum_enum_as_component(void);
@@ -3197,8 +3197,8 @@ bake_test_case Enum_testcases[] = {
         Enum_has_enum_wildcard
     },
     {
-        "get_enum",
-        Enum_get_enum
+        "get_constant",
+        Enum_get_constant
     },
     {
         "remove_enum",
