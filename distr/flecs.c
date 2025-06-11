@@ -12636,7 +12636,7 @@ bool ecs_iter_var_is_constrained(
 }
 
 uint64_t ecs_iter_get_group(
-    ecs_iter_t *it)
+    const ecs_iter_t *it)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -12646,7 +12646,7 @@ uint64_t ecs_iter_get_group(
 
     ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, 
         "ecs_iter_get_group must be called on iterator that iterates a query");
-    ecs_query_iter_t *qit = &it->priv_.iter.query;
+    const ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_check(qit->group != NULL, ECS_INVALID_PARAMETER,
         "ecs_iter_get_group must be called on iterator that iterates a cached "
         "query (query is uncached)");

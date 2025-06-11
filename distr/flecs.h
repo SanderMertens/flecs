@@ -9177,7 +9177,7 @@ bool ecs_iter_var_is_constrained(
  */
 FLECS_API
 uint64_t ecs_iter_get_group(
-    ecs_iter_t *it);
+    const ecs_iter_t *it);
 
 /** Returns whether current iterator result has changed.
  * This operation must be used in combination with a query that supports change
