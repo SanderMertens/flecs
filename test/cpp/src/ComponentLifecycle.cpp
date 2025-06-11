@@ -27,7 +27,7 @@ void ComponentLifecycle_ctor_on_add(void) {
     test_assert(e.id() != 0);
     test_assert(e.has<Pod>());
 
-    const Pod *pod = e.get<Pod>();
+    const Pod *pod = e.try_get<Pod>();
     test_assert(pod != NULL);
     test_int(Pod::ctor_invoked, 1);
     test_int(Pod::dtor_invoked, 0);
@@ -64,7 +64,7 @@ void ComponentLifecycle_move_on_add(void) {
     test_assert(e.id() != 0);
     test_assert(e.has<Pod>());
 
-    const Pod *pod = e.get<Pod>();
+    const Pod *pod = e.try_get<Pod>();
     test_assert(pod != NULL);
     test_int(Pod::ctor_invoked, 1);
     test_int(Pod::dtor_invoked, 0);
@@ -94,7 +94,7 @@ void ComponentLifecycle_move_on_remove(void) {
     test_assert(e.id() != 0);
     test_assert(e.has<Pod>());
 
-    const Pod *pod = e.get<Pod>();
+    const Pod *pod = e.try_get<Pod>();
     test_assert(pod != NULL);
     test_int(Pod::ctor_invoked, 1);
     test_int(Pod::dtor_invoked, 0);
@@ -160,7 +160,7 @@ void ComponentLifecycle_copy_on_override(void) {
     test_int(Pod::copy_invoked, 1);
     test_int(Pod::move_invoked, 0);
 
-    const Pod *pod = e.get<Pod>();
+    const Pod *pod = e.try_get<Pod>();
     test_assert(pod != NULL);
     test_int(pod->value, 10);
 }
@@ -172,7 +172,7 @@ void ComponentLifecycle_struct_w_string_add(void) {
     test_assert(e.id() != 0);
     test_assert(e.has<Struct_w_string>());
 
-    const Struct_w_string *str = e.get<Struct_w_string>();
+    const Struct_w_string *str = e.try_get<Struct_w_string>();
     test_assert(str != NULL);
     test_assert(str->value == "");
 }
@@ -196,7 +196,7 @@ void ComponentLifecycle_struct_w_string_set(void) {
     test_assert(e.id() != 0);
     test_assert(e.has<Struct_w_string>());
 
-    const Struct_w_string *str = e.get<Struct_w_string>();
+    const Struct_w_string *str = e.try_get<Struct_w_string>();
     test_assert(str != NULL);
     test_assert(str->value == "Hello World");
 }
@@ -216,7 +216,7 @@ void ComponentLifecycle_struct_w_string_override(void) {
 
     e.add<Struct_w_string>();
 
-    const Struct_w_string *str = e.get<Struct_w_string>();
+    const Struct_w_string *str = e.try_get<Struct_w_string>();
     test_assert(str != NULL);
     test_assert(str->value == "Hello World");
 }
@@ -227,23 +227,23 @@ void ComponentLifecycle_struct_w_string_add_2_remove(void) {
     auto e1 = world.entity().add<Struct_w_string>();
     auto e2 = world.entity().add<Struct_w_string>();
 
-    const Struct_w_string *str1 = e1.get<Struct_w_string>();
+    const Struct_w_string *str1 = e1.try_get<Struct_w_string>();
     test_assert(str1 != NULL);
     test_assert(str1->value == "");
-    const Struct_w_string *str2 = e2.get<Struct_w_string>();
+    const Struct_w_string *str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 != NULL);
     test_assert(str2->value == "");
 
     e1.remove<Struct_w_string>();
-    str1 = e1.get<Struct_w_string>();
+    str1 = e1.try_get<Struct_w_string>();
     test_assert(str1 == NULL);
 
-    str2 = e2.get<Struct_w_string>();
+    str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 != NULL);
     test_assert(str2->value == "");
 
     e2.remove<Struct_w_string>();
-    str2 = e2.get<Struct_w_string>();
+    str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 == NULL);
 }
 
@@ -253,23 +253,23 @@ void ComponentLifecycle_struct_w_string_set_2_remove(void) {
     auto e1 = world.entity().set<Struct_w_string>({"hello"});
     auto e2 = world.entity().set<Struct_w_string>({"world"});
 
-    const Struct_w_string *str1 = e1.get<Struct_w_string>();
+    const Struct_w_string *str1 = e1.try_get<Struct_w_string>();
     test_assert(str1 != NULL);
     test_assert(str1->value == "hello");
-    const Struct_w_string *str2 = e2.get<Struct_w_string>();
+    const Struct_w_string *str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 != NULL);
     test_assert(str2->value == "world");
 
     e1.remove<Struct_w_string>();
-    str1 = e1.get<Struct_w_string>();
+    str1 = e1.try_get<Struct_w_string>();
     test_assert(str1 == NULL);
 
-    str2 = e2.get<Struct_w_string>();
+    str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 != NULL);
     test_assert(str2->value == "world");
 
     e2.remove<Struct_w_string>();
-    str2 = e2.get<Struct_w_string>();
+    str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 == NULL);
 }
 
@@ -279,23 +279,23 @@ void ComponentLifecycle_struct_w_string_add_2_remove_w_tag(void) {
     auto e1 = world.entity().add<Tag>().add<Struct_w_string>();
     auto e2 = world.entity().add<Tag>().add<Struct_w_string>();
 
-    const Struct_w_string *str1 = e1.get<Struct_w_string>();
+    const Struct_w_string *str1 = e1.try_get<Struct_w_string>();
     test_assert(str1 != NULL);
     test_assert(str1->value == "");
-    const Struct_w_string *str2 = e2.get<Struct_w_string>();
+    const Struct_w_string *str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 != NULL);
     test_assert(str2->value == "");
 
     e1.remove<Struct_w_string>();
-    str1 = e1.get<Struct_w_string>();
+    str1 = e1.try_get<Struct_w_string>();
     test_assert(str1 == NULL);
 
-    str2 = e2.get<Struct_w_string>();
+    str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 != NULL);
     test_assert(str2->value == "");
 
     e2.remove<Struct_w_string>();
-    str2 = e2.get<Struct_w_string>();
+    str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 == NULL);
 }
 
@@ -305,23 +305,23 @@ void ComponentLifecycle_struct_w_string_set_2_remove_w_tag(void) {
     auto e1 = world.entity().add<Tag>().set<Struct_w_string>({"hello"});
     auto e2 = world.entity().add<Tag>().set<Struct_w_string>({"world"});
 
-    const Struct_w_string *str1 = e1.get<Struct_w_string>();
+    const Struct_w_string *str1 = e1.try_get<Struct_w_string>();
     test_assert(str1 != NULL);
     test_assert(str1->value == "hello");
-    const Struct_w_string *str2 = e2.get<Struct_w_string>();
+    const Struct_w_string *str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 != NULL);
     test_assert(str2->value == "world");
 
     e1.remove<Struct_w_string>();
-    str1 = e1.get<Struct_w_string>();
+    str1 = e1.try_get<Struct_w_string>();
     test_assert(str1 == NULL);
 
-    str2 = e2.get<Struct_w_string>();
+    str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 != NULL);
     test_assert(str2->value == "world");
 
     e2.remove<Struct_w_string>();
-    str2 = e2.get<Struct_w_string>();
+    str2 = e2.try_get<Struct_w_string>();
     test_assert(str2 == NULL);
 }
 
@@ -331,7 +331,7 @@ void ComponentLifecycle_struct_w_vector_add(void) {
     auto e = world.entity().add<Struct_w_vector>();
     test_assert(e.has<Struct_w_vector>());
 
-    const Struct_w_vector *ptr = e.get<Struct_w_vector>();
+    const Struct_w_vector *ptr = e.try_get<Struct_w_vector>();
     test_assert(ptr != NULL);
     test_int(ptr->value.size(), 0);
 }
@@ -352,7 +352,7 @@ void ComponentLifecycle_struct_w_vector_set(void) {
     auto e = world.entity().set<Struct_w_vector>({std::vector<int>{1, 2}});
     test_assert(e.has<Struct_w_vector>());
 
-    const Struct_w_vector *ptr = e.get<Struct_w_vector>();
+    const Struct_w_vector *ptr = e.try_get<Struct_w_vector>();
     test_assert(ptr != NULL);
     test_int(ptr->value.size(), 2);
     test_int(ptr->value.at(0), 1);
@@ -368,13 +368,13 @@ void ComponentLifecycle_struct_w_vector_override(void) {
     auto e = world.entity().is_a(base).add<Struct_w_vector>();
     test_assert(e.has<Struct_w_vector>());
 
-    const Struct_w_vector *ptr = base.get<Struct_w_vector>();
+    const Struct_w_vector *ptr = base.try_get<Struct_w_vector>();
     test_assert(ptr != NULL);
     test_int(ptr->value.size(), 2);
     test_int(ptr->value.at(0), 1);
     test_int(ptr->value.at(1), 2);
 
-    ptr = e.get<Struct_w_vector>();
+    ptr = e.try_get<Struct_w_vector>();
     test_assert(ptr != NULL);
     test_int(ptr->value.size(), 2);
     test_int(ptr->value.at(0), 1);
@@ -387,23 +387,23 @@ void ComponentLifecycle_struct_w_vector_add_2_remove(void) {
     auto e1 = world.entity().add<Struct_w_vector>();
     auto e2 = world.entity().add<Struct_w_vector>();
 
-    const Struct_w_vector *ptr1 = e1.get<Struct_w_vector>();
+    const Struct_w_vector *ptr1 = e1.try_get<Struct_w_vector>();
     test_assert(ptr1 != NULL);
     test_int(ptr1->value.size(), 0);
-    const Struct_w_vector *ptr2 = e2.get<Struct_w_vector>();
+    const Struct_w_vector *ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 != NULL);
     test_int(ptr2->value.size(), 0);
 
     e1.remove<Struct_w_vector>();
-    ptr1 = e1.get<Struct_w_vector>();
+    ptr1 = e1.try_get<Struct_w_vector>();
     test_assert(ptr1 == NULL);
 
-    ptr2 = e2.get<Struct_w_vector>();
+    ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 != NULL);
     test_int(ptr2->value.size(), 0);
 
     e2.remove<Struct_w_vector>();
-    ptr2 = e2.get<Struct_w_vector>();
+    ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 == NULL);
 }
 
@@ -413,29 +413,29 @@ void ComponentLifecycle_struct_w_vector_set_2_remove(void) {
     auto e1 = world.entity().set<Struct_w_vector>({std::vector<int>{1, 2}});
     auto e2 = world.entity().set<Struct_w_vector>({std::vector<int>{3, 4}});
 
-    const Struct_w_vector *ptr1 = e1.get<Struct_w_vector>();
+    const Struct_w_vector *ptr1 = e1.try_get<Struct_w_vector>();
     test_assert(ptr1 != NULL);
     test_int(ptr1->value.size(), 2);
     test_int(ptr1->value.at(0), 1);
     test_int(ptr1->value.at(1), 2);
-    const Struct_w_vector *ptr2 = e2.get<Struct_w_vector>();
+    const Struct_w_vector *ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 != NULL);
     test_int(ptr2->value.size(), 2);
     test_int(ptr2->value.at(0), 3);
     test_int(ptr2->value.at(1), 4);
 
     e1.remove<Struct_w_vector>();
-    ptr1 = e1.get<Struct_w_vector>();
+    ptr1 = e1.try_get<Struct_w_vector>();
     test_assert(ptr1 == NULL);
 
-    ptr2 = e2.get<Struct_w_vector>();
+    ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 != NULL);
     test_int(ptr2->value.size(), 2);
     test_int(ptr2->value.at(0), 3);
     test_int(ptr2->value.at(1), 4);
 
     e2.remove<Struct_w_vector>();
-    ptr2 = e2.get<Struct_w_vector>();
+    ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 == NULL);
 }
 
@@ -445,23 +445,23 @@ void ComponentLifecycle_struct_w_vector_add_2_remove_w_tag(void) {
     auto e1 = world.entity().add<Tag>().add<Struct_w_vector>();
     auto e2 = world.entity().add<Tag>().add<Struct_w_vector>();
 
-    const Struct_w_vector *ptr1 = e1.get<Struct_w_vector>();
+    const Struct_w_vector *ptr1 = e1.try_get<Struct_w_vector>();
     test_assert(ptr1 != NULL);
     test_int(ptr1->value.size(), 0);
-    const Struct_w_vector *ptr2 = e2.get<Struct_w_vector>();
+    const Struct_w_vector *ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 != NULL);
     test_int(ptr2->value.size(), 0);
 
     e1.remove<Struct_w_vector>();
-    ptr1 = e1.get<Struct_w_vector>();
+    ptr1 = e1.try_get<Struct_w_vector>();
     test_assert(ptr1 == NULL);
 
-    ptr2 = e2.get<Struct_w_vector>();
+    ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 != NULL);
     test_int(ptr2->value.size(), 0);
 
     e2.remove<Struct_w_vector>();
-    ptr2 = e2.get<Struct_w_vector>();
+    ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 == NULL);
 }
 
@@ -471,29 +471,29 @@ void ComponentLifecycle_struct_w_vector_set_2_remove_w_tag(void) {
     auto e1 = world.entity().add<Tag>().set<Struct_w_vector>({std::vector<int>{1, 2}});
     auto e2 = world.entity().add<Tag>().set<Struct_w_vector>({std::vector<int>{3, 4}});
 
-    const Struct_w_vector *ptr1 = e1.get<Struct_w_vector>();
+    const Struct_w_vector *ptr1 = e1.try_get<Struct_w_vector>();
     test_assert(ptr1 != NULL);
     test_int(ptr1->value.size(), 2);
     test_int(ptr1->value.at(0), 1);
     test_int(ptr1->value.at(1), 2);
-    const Struct_w_vector *ptr2 = e2.get<Struct_w_vector>();
+    const Struct_w_vector *ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 != NULL);
     test_int(ptr2->value.size(), 2);
     test_int(ptr2->value.at(0), 3);
     test_int(ptr2->value.at(1), 4);
 
     e1.remove<Struct_w_vector>();
-    ptr1 = e1.get<Struct_w_vector>();
+    ptr1 = e1.try_get<Struct_w_vector>();
     test_assert(ptr1 == NULL);
 
-    ptr2 = e2.get<Struct_w_vector>();
+    ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 != NULL);
     test_int(ptr2->value.size(), 2);
     test_int(ptr2->value.at(0), 3);
     test_int(ptr2->value.at(1), 4);
 
     e2.remove<Struct_w_vector>();
-    ptr2 = e2.get<Struct_w_vector>();
+    ptr2 = e2.try_get<Struct_w_vector>();
     test_assert(ptr2 == NULL);
 }
 
@@ -552,7 +552,7 @@ void ComponentLifecycle_implicit_component(void) {
     test_assert(e.has<Pod>());
     test_int(Pod::ctor_invoked, 1);
 
-    const Pod *pod = e.get<Pod>();
+    const Pod *pod = e.try_get<Pod>();
     test_assert(pod != NULL);
 
     test_int(pod->value, 10);
@@ -585,7 +585,7 @@ void ComponentLifecycle_implicit_after_query(void) {
     test_assert(e.has<Pod>());
     test_int(Pod::ctor_invoked, 1);
 
-    const Pod *pod = e.get<Pod>();
+    const Pod *pod = e.try_get<Pod>();
     test_assert(pod != NULL);
 
     test_int(pod->value, 10);
@@ -614,7 +614,7 @@ static void try_add(flecs::world& ecs) {
     
     test_assert(e.has<T>());
 
-    const T *ptr = e.get<T>();
+    const T *ptr = e.try_get<T>();
     test_int(ptr->x_, 99);
 
     e.remove<T>();
@@ -628,7 +628,7 @@ static void try_add_relation(flecs::world& ecs) {
     flecs::entity e = ecs.entity().add<T>(obj);
     test_assert(e.has<T>());
 
-    const T *ptr = e.get<T>();
+    const T *ptr = e.try_get<T>();
     test_int(ptr->x_, 89);
 
     e.remove<T>();
@@ -642,7 +642,7 @@ static void try_add_second(flecs::world& ecs) {
     flecs::entity e = ecs.entity().add_second<T>(rel);
     test_assert(e.has<T>());
 
-    const T *ptr = e.get<T>();
+    const T *ptr = e.try_get<T>();
     test_int(ptr->x_, 89);
 
     e.remove<T>();
@@ -653,7 +653,7 @@ template <typename T>
 static void try_set(flecs::world& ecs) {
     flecs::entity e = ecs.entity().set<T>({10});
 
-    const T *ptr = e.get<T>();
+    const T *ptr = e.try_get<T>();
     test_int(ptr->x_, 10);
 }
 
@@ -661,7 +661,7 @@ template <typename T>
 static void try_emplace(flecs::world& ecs) {
     flecs::entity e = ecs.entity().emplace<T>(10);
 
-    const T *ptr = e.get<T>();
+    const T *ptr = e.try_get<T>();
     test_int(ptr->x_, 10);
 }
 
@@ -669,7 +669,7 @@ template <typename T>
 static void try_set_default(flecs::world& ecs) {
     flecs::entity e = ecs.entity().set(T());
 
-    const T *ptr = e.get<T>();
+    const T *ptr = e.try_get<T>();
     test_int(ptr->x_, 99);
 
     e.remove<T>();
@@ -770,13 +770,13 @@ void ComponentLifecycle_no_move(void) {
     test_assert(ecs.component<NoMove>().has(flecs::Sparse));
 
     flecs::entity e = ecs.entity().add<NoMove>();
-    const NoMove *ptr = e.get<NoMove>();
+    const NoMove *ptr = e.try_get<NoMove>();
     test_assert(ptr != NULL);
     test_int(ptr->x_, 99);
 
     e.add<Position>();
 
-    test_assert(ptr == e.get<NoMove>());
+    test_assert(ptr == e.try_get<NoMove>());
     test_int(ptr->x_, 99);
 }
 
@@ -789,13 +789,13 @@ void ComponentLifecycle_no_move_ctor(void) {
     test_assert(ecs.component<NoMoveCtor>().has(flecs::Sparse));
 
     flecs::entity e = ecs.entity().add<NoMoveCtor>();
-    const NoMoveCtor *ptr = e.get<NoMoveCtor>();
+    const NoMoveCtor *ptr = e.try_get<NoMoveCtor>();
     test_assert(ptr != NULL);
     test_int(ptr->x_, 99);
 
     e.add<Position>();
 
-    test_assert(ptr == e.get<NoMoveCtor>());
+    test_assert(ptr == e.try_get<NoMoveCtor>());
     test_int(ptr->x_, 99);
 }
 
@@ -808,13 +808,13 @@ void ComponentLifecycle_no_move_assign(void) {
     test_assert(ecs.component<NoMoveAssign>().has(flecs::Sparse));
 
     flecs::entity e = ecs.entity().add<NoMoveAssign>();
-    const NoMoveAssign *ptr = e.get<NoMoveAssign>();
+    const NoMoveAssign *ptr = e.try_get<NoMoveAssign>();
     test_assert(ptr != NULL);
     test_int(ptr->x_, 99);
 
     e.add<Position>();
 
-    test_assert(ptr == e.get<NoMoveAssign>());
+    test_assert(ptr == e.try_get<NoMoveAssign>());
     test_int(ptr->x_, 99);
 }
 
@@ -869,7 +869,7 @@ void ComponentLifecycle_no_default_ctor_move_ctor_on_set(void) {
     auto e = ecs.entity().emplace<CountNoDefaultCtor>(10);
     test_assert(e.has<CountNoDefaultCtor>());
 
-    const CountNoDefaultCtor* ptr = e.get<CountNoDefaultCtor>();
+    const CountNoDefaultCtor* ptr = e.try_get<CountNoDefaultCtor>();
     test_assert(ptr != NULL);
     test_int(ptr->value, 10);
 
@@ -900,7 +900,7 @@ void ComponentLifecycle_emplace_w_ctor(void) {
     test_int(Pod::ctor_invoked, 1);
     test_int(Pod::dtor_invoked, 0);
 
-    const Pod *ptr = e.get<Pod>();
+    const Pod *ptr = e.try_get<Pod>();
     test_assert(ptr != NULL);
     test_int(ptr->value, 10);
 
@@ -917,7 +917,7 @@ void ComponentLifecycle_emplace_no_default_ctor(void) {
     test_int(CountNoDefaultCtor::ctor_invoked, 1);
     test_int(CountNoDefaultCtor::dtor_invoked, 0);
 
-    const CountNoDefaultCtor *ptr = e.get<CountNoDefaultCtor>();
+    const CountNoDefaultCtor *ptr = e.try_get<CountNoDefaultCtor>();
     test_assert(ptr != NULL);
     test_int(ptr->value, 10);
 
@@ -946,7 +946,7 @@ void ComponentLifecycle_emplace_defer_use_move_ctor(void) {
         test_int(CountNoDefaultCtor::move_invoked, 0);
         test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
 
-        const CountNoDefaultCtor *ptr = e.get<CountNoDefaultCtor>();
+        const CountNoDefaultCtor *ptr = e.try_get<CountNoDefaultCtor>();
         test_assert(ptr != NULL);
         test_int(ptr->value, 10);
 
@@ -970,7 +970,7 @@ void ComponentLifecycle_emplace_existing(void) {
     auto e = ecs.entity()
         .emplace<Pod>(10);
 
-    const Pod *ptr = e.get<Pod>();
+    const Pod *ptr = e.try_get<Pod>();
     test_assert(ptr != NULL);
     test_int(ptr->value, 10);    
 
@@ -989,7 +989,7 @@ void ComponentLifecycle_emplace_singleton(void) {
     test_int(Pod::ctor_invoked, 1);
     test_int(Pod::dtor_invoked, 0);
 
-    const Pod *ptr = ecs.get<Pod>();
+    const Pod *ptr = ecs.try_get<Pod>();
     test_assert(ptr != NULL);
     test_int(ptr->value, 10);
 
@@ -1029,11 +1029,11 @@ void ComponentLifecycle_dtor_w_non_trivial_implicit_move(void) {
     auto e_1 = ecs.entity().emplace<CtorDtorNonTrivial>(10);
     auto e_2 = ecs.entity().emplace<CtorDtorNonTrivial>(20);
 
-    const CtorDtorNonTrivial *ptr = e_1.get<CtorDtorNonTrivial>();
+    const CtorDtorNonTrivial *ptr = e_1.try_get<CtorDtorNonTrivial>();
     test_assert(ptr != nullptr);
     test_int(ptr->x_, 10);
 
-    ptr = e_2.get<CtorDtorNonTrivial>();
+    ptr = e_2.try_get<CtorDtorNonTrivial>();
     test_assert(ptr != nullptr);
     test_int(ptr->x_, 20);
 
@@ -1100,11 +1100,11 @@ void ComponentLifecycle_dtor_w_non_trivial_explicit_move(void) {
     auto e_1 = ecs.entity().emplace<CtorDtor_w_MoveAssign>(10);
     auto e_2 = ecs.entity().emplace<CtorDtor_w_MoveAssign>(20);
 
-    const CtorDtor_w_MoveAssign *ptr = e_1.get<CtorDtor_w_MoveAssign>();
+    const CtorDtor_w_MoveAssign *ptr = e_1.try_get<CtorDtor_w_MoveAssign>();
     test_assert(ptr != nullptr);
     test_int(ptr->x_, 10);
 
-    ptr = e_2.get<CtorDtor_w_MoveAssign>();
+    ptr = e_2.try_get<CtorDtor_w_MoveAssign>();
     test_assert(ptr != nullptr);
     test_int(ptr->x_, 20);
 
@@ -1149,9 +1149,9 @@ void ComponentLifecycle_grow_no_default_ctor(void) {
         test_assert(e2.has<CountNoDefaultCtor>());
         test_assert(e3.has<CountNoDefaultCtor>());
 
-        test_int(e1.get<CountNoDefaultCtor>()->value, 1);
-        test_int(e2.get<CountNoDefaultCtor>()->value, 2);
-        test_int(e3.get<CountNoDefaultCtor>()->value, 3);
+        test_int(e1.try_get<CountNoDefaultCtor>()->value, 1);
+        test_int(e2.try_get<CountNoDefaultCtor>()->value, 2);
+        test_int(e3.try_get<CountNoDefaultCtor>()->value, 3);
     }
 
     test_int(CountNoDefaultCtor::ctor_invoked, 3);
@@ -1193,9 +1193,9 @@ void ComponentLifecycle_grow_no_default_ctor_move(void) {
         test_assert(e2.has<CountNoDefaultCtor>());
         test_assert(e3.has<CountNoDefaultCtor>());
 
-        test_int(e1.get<CountNoDefaultCtor>()->value, 1);
-        test_int(e2.get<CountNoDefaultCtor>()->value, 2);
-        test_int(e3.get<CountNoDefaultCtor>()->value, 3);
+        test_int(e1.try_get<CountNoDefaultCtor>()->value, 1);
+        test_int(e2.try_get<CountNoDefaultCtor>()->value, 2);
+        test_int(e3.try_get<CountNoDefaultCtor>()->value, 3);
 
         CountNoDefaultCtor::reset();
         e1.add<Tag>();
@@ -1269,9 +1269,9 @@ void ComponentLifecycle_grow_no_default_ctor_move_w_component(void) {
         test_assert(e2.has<CountNoDefaultCtor>());
         test_assert(e3.has<CountNoDefaultCtor>());
 
-        test_int(e1.get<CountNoDefaultCtor>()->value, 1);
-        test_int(e2.get<CountNoDefaultCtor>()->value, 2);
-        test_int(e3.get<CountNoDefaultCtor>()->value, 3);
+        test_int(e1.try_get<CountNoDefaultCtor>()->value, 1);
+        test_int(e2.try_get<CountNoDefaultCtor>()->value, 2);
+        test_int(e3.try_get<CountNoDefaultCtor>()->value, 3);
 
         CountNoDefaultCtor::reset();
         e1.add<Position>();
@@ -1335,9 +1335,9 @@ void ComponentLifecycle_delete_no_default_ctor(void) {
         test_assert(e2.has<CountNoDefaultCtor>());
         test_assert(e3.has<CountNoDefaultCtor>());
 
-        test_int(e1.get<CountNoDefaultCtor>()->value, 1);
-        test_int(e2.get<CountNoDefaultCtor>()->value, 2);
-        test_int(e3.get<CountNoDefaultCtor>()->value, 3);
+        test_int(e1.try_get<CountNoDefaultCtor>()->value, 1);
+        test_int(e2.try_get<CountNoDefaultCtor>()->value, 2);
+        test_int(e3.try_get<CountNoDefaultCtor>()->value, 3);
 
         e2.destruct();
 
@@ -1908,7 +1908,7 @@ void ComponentLifecycle_defer_emplace(void) {
     ecs.defer_end();
     test_assert(e.has<DeferEmplaceTest>());
 
-    const DeferEmplaceTest *p = e.get<DeferEmplaceTest>();
+    const DeferEmplaceTest *p = e.try_get<DeferEmplaceTest>();
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -1954,7 +1954,7 @@ void ComponentLifecycle_set_pair_no_copy(void) {
     flecs::entity e = ecs.entity()
         .set<NoCopy, Tag>({ 10 });
 
-    const NoCopy *ptr = e.get<NoCopy, Tag>();
+    const NoCopy *ptr = e.try_get<NoCopy, Tag>();
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 }
@@ -1967,7 +1967,7 @@ void ComponentLifecycle_set_pair_w_entity_no_copy(void) {
     flecs::entity e = ecs.entity()
         .set<NoCopy>(tag, { 10 });
 
-    const NoCopy *ptr = e.get<NoCopy>(tag);
+    const NoCopy *ptr = e.try_get<NoCopy>(tag);
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 }
@@ -1980,7 +1980,7 @@ void ComponentLifecycle_set_pair_second_no_copy(void) {
     flecs::entity e = ecs.entity()
         .set_second<NoCopy>(tag, { 10 });
 
-    const NoCopy *ptr = e.get_second<NoCopy>(tag);
+    const NoCopy *ptr = e.try_get_second<NoCopy>(tag);
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 }
@@ -1991,7 +1991,7 @@ void ComponentLifecycle_set_override_no_copy(void) {
     flecs::entity e = ecs.entity()
         .set_auto_override<NoCopy>({ 10 });
 
-    const NoCopy *ptr = e.get<NoCopy>();
+    const NoCopy *ptr = e.try_get<NoCopy>();
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 
@@ -2004,7 +2004,7 @@ void ComponentLifecycle_set_override_pair_no_copy(void) {
     flecs::entity e = ecs.entity()
         .set_auto_override<NoCopy, Tag>({ 10 });
 
-    const NoCopy *ptr = e.get<NoCopy, Tag>();
+    const NoCopy *ptr = e.try_get<NoCopy, Tag>();
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 
@@ -2019,7 +2019,7 @@ void ComponentLifecycle_set_override_pair_w_entity_no_copy(void) {
     flecs::entity e = ecs.entity()
         .set_auto_override<NoCopy>(tag, { 10 });
 
-    const NoCopy *ptr = e.get<NoCopy>(tag);
+    const NoCopy *ptr = e.try_get<NoCopy>(tag);
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 
@@ -2047,7 +2047,7 @@ void ComponentLifecycle_dtor_after_defer_set(void) {
         test_int(Pod::move_invoked, 2);
         test_int(Pod::move_ctor_invoked, 0);
 
-        const Pod *ptr = e.get<Pod>();
+        const Pod *ptr = e.try_get<Pod>();
         test_assert(ptr != NULL);
         test_int(ptr->value, 10);
 
@@ -2077,7 +2077,7 @@ void ComponentLifecycle_dtor_with_relation(void) {
         test_int(Pod::move_invoked, 2);
         test_int(Pod::move_ctor_invoked, 1);
 
-        const Pod *ptr = e.get<Pod>();
+        const Pod *ptr = e.try_get<Pod>();
         test_assert(ptr != NULL);
         test_int(ptr->value, 10);
 
@@ -2139,7 +2139,7 @@ void ComponentLifecycle_dtor_relation_target(void) {
         test_int(CountNoDefaultCtor::move_invoked, 0);
         test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
 
-        const CountNoDefaultCtor *ptr = e2.get<CountNoDefaultCtor>();
+        const CountNoDefaultCtor *ptr = e2.try_get<CountNoDefaultCtor>();
         test_assert(ptr != NULL);
         test_int(ptr->value, 5);
 
@@ -2171,7 +2171,7 @@ void ComponentLifecycle_sparse_component(void) {
     test_assert(e.id() != 0);
     test_assert(e.has<Pod>());
 
-    const Pod *pod = e.get<Pod>();
+    const Pod *pod = e.try_get<Pod>();
     test_assert(pod != NULL);
     test_int(Pod::ctor_invoked, 1);
     test_int(Pod::dtor_invoked, 0);
@@ -2864,12 +2864,12 @@ void ComponentLifecycle_move_ctor_no_default_ctor(void) {
     test_assert(e1.has<Tag>());
 
     {
-        const NonDefaultConstructible *ptr = e1.get<NonDefaultConstructible>();
+        const NonDefaultConstructible *ptr = e1.try_get<NonDefaultConstructible>();
         test_assert(ptr != nullptr);
         test_int(ptr->x, 1);
     }
     {
-        const NonDefaultConstructible *ptr = e2.get<NonDefaultConstructible>();
+        const NonDefaultConstructible *ptr = e2.try_get<NonDefaultConstructible>();
         test_assert(ptr != nullptr);
         test_int(ptr->x, 2);
     }

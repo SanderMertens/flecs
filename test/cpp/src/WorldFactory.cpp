@@ -56,7 +56,7 @@ void WorldFactory_system(void) {
 
     ecs.progress();
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
@@ -79,7 +79,7 @@ void WorldFactory_system_w_name(void) {
 
     ecs.progress();
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
@@ -113,7 +113,7 @@ void WorldFactory_system_w_expr(void) {
 
     ecs.progress();
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
@@ -132,7 +132,7 @@ void WorldFactory_query(void) {
         p.y += v.y;
     });
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
@@ -161,7 +161,7 @@ void WorldFactory_query_w_expr(void) {
         }
     });
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 }

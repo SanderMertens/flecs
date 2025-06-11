@@ -19,8 +19,8 @@ int main(int, char *[]) {
         .set<Position>({10, 20});
 
     // Convert position component to JSON string
-    const Position *ptr = e.get<Position>();
-    std::cout << ecs.to_json(ptr) << "\n"; // {"x":10, "y":20}
+    const Position& p = e.get<Position>();
+    std::cout << ecs.to_json(&p) << "\n"; // {"x":10, "y":20}
 
     // Convert entity to JSON
     std::cout << e.to_json() << "\n";

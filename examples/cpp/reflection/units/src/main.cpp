@@ -10,11 +10,11 @@ struct WeatherStation {
 void print_value(const flecs::cursor& cur) {
     // Get unit entity and component
     flecs::entity u = cur.get_unit();
-    const flecs::Unit *u_data = u.get<flecs::Unit>();
+    const flecs::Unit& u_data = u.get<flecs::Unit>();
 
     // Print value with unit symbol
     std::cout << cur.get_member() << ": " << cur.get_float() 
-        << " " << u_data->symbol << "\n";
+        << " " << u_data.symbol << "\n";
 }
 
 int main(int, char *[]) {

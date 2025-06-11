@@ -131,7 +131,7 @@ flecs::entity find_item_w_kind(
 
 // Transfer item to container
 void transfer_item(flecs::entity container, flecs::entity item) {
-    const Amount *amt = item.get<Amount>();
+    const Amount* amt = item.try_get<Amount>();
     if (amt) {
         // If item has amount we need to check if the container already has an
         // item of this kind, and increase the value.
@@ -177,7 +177,7 @@ void attack(flecs::entity player, flecs::entity weapon) {
     std::cout << ">> " << player.name() << " is attacked with a " 
         << item_name(weapon) << "!\n";
 
-    const Attack *att = weapon.get<Attack>();
+    const Attack *att = weapon.try_get<Attack>();
     if (!att) {
         // A weapon without Attack power? Odd.
         std::cout << " - the weapon is a dud\n";
@@ -189,7 +189,7 @@ void attack(flecs::entity player, flecs::entity weapon) {
     // Get armor item, if player has equipped any
     flecs::entity armor = find_item_w_kind(player, ecs.entity<Armor>(), true);
     if (armor) {
-        Health *armor_health = armor.get_mut<Health>();
+        Health *armor_health = armor.try_get_mut<Health>();
         if (!armor_health) {
             // Armor without Defense power? Odd.
             std::cout << " - the " << item_name(armor) << " armor is a dud\n";

@@ -28,7 +28,7 @@ int main(int, char *[]) {
         .set<Line>({{10, 20}, {30, 40}});
 
     // Convert Line component to flecs expression string
-    const Line *ptr = e.get<Line>();
-    std::cout << ecs.to_expr(ptr).c_str() << std::endl;
+    const Line& l = e.get<Line>();
+    std::cout << ecs.to_expr(&l).c_str() << std::endl;
     // {start: {x: 10.00, y: 20.00}, stop: {x: 30.00, y: 40.00}}
 }

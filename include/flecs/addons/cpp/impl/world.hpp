@@ -124,38 +124,114 @@ inline ref<T> world::get_ref() const {
     return e.get_ref<T>();
 }
 
+inline const void* world::try_get(flecs::id_t id) const {
+    flecs::entity e(world_, id);
+    return e.try_get(id);
+}
+
+inline const void* world::try_get(flecs::entity_t r, flecs::entity_t t) const {
+    flecs::entity e(world_, r);
+    return e.try_get(r, t);
+}
+
 template <typename T>
-inline const T* world::get() const {
+inline const T* world::try_get() const {
+    flecs::entity e(world_, _::type<T>::id(world_));
+    return e.try_get<T>();
+}
+
+template <typename First, typename Second, typename P, typename A>
+inline const A* world::try_get() const {
+    flecs::entity e(world_, _::type<First>::id(world_));
+    return e.try_get<First, Second>();
+}
+
+template <typename First, typename Second>
+inline const First* world::try_get(Second second) const {
+    flecs::entity e(world_, _::type<First>::id(world_));
+    return e.try_get<First>(second);
+}
+
+inline const void* world::get(flecs::id_t id) const {
+    flecs::entity e(world_, id);
+    return e.get(id);
+}
+
+inline const void* world::get(flecs::entity_t r, flecs::entity_t t) const {
+    flecs::entity e(world_, r);
+    return e.get(r, t);
+}
+
+template <typename T>
+inline const T& world::get() const {
     flecs::entity e(world_, _::type<T>::id(world_));
     return e.get<T>();
 }
 
 template <typename First, typename Second, typename P, typename A>
-const A* world::get() const {
+inline const A& world::get() const {
     flecs::entity e(world_, _::type<First>::id(world_));
     return e.get<First, Second>();
 }
 
 template <typename First, typename Second>
-const First* world::get(Second second) const {
+const First& world::get(Second second) const {
     flecs::entity e(world_, _::type<First>::id(world_));
     return e.get<First>(second);
 }
 
+inline void* world::try_get_mut(flecs::id_t id) const {
+    flecs::entity e(world_, id);
+    return e.try_get_mut(id);
+}
+
+inline void* world::try_get_mut(flecs::entity_t r, flecs::entity_t t) const {
+    flecs::entity e(world_, r);
+    return e.try_get_mut(r, t);
+}
+
 template <typename T>
-T* world::get_mut() const {
+inline T* world::try_get_mut() const {
+    flecs::entity e(world_, _::type<T>::id(world_));
+    return e.try_get_mut<T>();
+}
+
+template <typename First, typename Second, typename P, typename A>
+inline A* world::try_get_mut() const {
+    flecs::entity e(world_, _::type<First>::id(world_));
+    return e.try_get_mut<First, Second>();
+}
+
+template <typename First, typename Second>
+inline First* world::try_get_mut(Second second) const {
+    flecs::entity e(world_, _::type<First>::id(world_));
+    return e.try_get_mut<First>(second);
+}
+
+inline void* world::get_mut(flecs::id_t id) const {
+    flecs::entity e(world_, id);
+    return e.get_mut(id);
+}
+
+inline void* world::get_mut(flecs::entity_t r, flecs::entity_t t) const {
+    flecs::entity e(world_, r);
+    return e.get_mut(r, t);
+}
+
+template <typename T>
+inline T& world::get_mut() const {
     flecs::entity e(world_, _::type<T>::id(world_));
     return e.get_mut<T>();
 }
 
 template <typename First, typename Second, typename P, typename A>
-A* world::get_mut() const {
+inline A& world::get_mut() const {
     flecs::entity e(world_, _::type<First>::id(world_));
     return e.get_mut<First, Second>();
 }
 
 template <typename First, typename Second>
-First* world::get_mut(Second second) const {
+inline First& world::get_mut(Second second) const {
     flecs::entity e(world_, _::type<First>::id(world_));
     return e.get_mut<First>(second);
 }
@@ -308,9 +384,8 @@ inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
         .with(flecs::Constant, world.id<int32_t>())
         .build()
         .find([value](flecs::entity constant) {
-            const int32_t *constant_value = constant.get_second<int32_t>(flecs::Constant);
-            ecs_assert(constant_value, ECS_INTERNAL_ERROR, NULL);
-            return value == static_cast<underlying_type_t<E>>(*constant_value);
+            const int32_t& constant_value = constant.get_second<int32_t>(flecs::Constant);
+            return value == static_cast<underlying_type_t<E>>(constant_value);
         });
 #else
     return flecs::entity::null(world_);

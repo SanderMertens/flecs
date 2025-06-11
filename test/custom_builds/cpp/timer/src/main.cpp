@@ -26,16 +26,16 @@ int main(int, char *[]) {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    const Position *p = e.get<Position>();
+    const Position& p = e.get<Position>();
 
     ecs.progress(1.0);
     ecs.progress(1.0);
 
-    assert(p->x == 10);
-    assert(p->y == 20);
+    assert(p.x == 10);
+    assert(p.y == 20);
 
     ecs.progress(1.0);
 
-    assert(p->x == 11);
-    assert(p->y == 22);
+    assert(p.x == 11);
+    assert(p.y == 22);
 }

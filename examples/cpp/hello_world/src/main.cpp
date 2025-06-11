@@ -41,8 +41,8 @@ int main(int, char *[]) {
     ecs.progress();
 
     // See if Bob has moved (he has)
-    const Position *p = Bob.get<Position>();
-    std::cout << Bob.name() << "'s position is {" << p->x << ", " << p->y << "}\n";
+    const Position& p = Bob.get<Position>();
+    std::cout << Bob.name() << "'s position is {" << p.x << ", " << p.y << "}\n";
 
     // Output
     //  Bob's got [Position, Velocity, (Identifier,Name), (Eats,Apples)]

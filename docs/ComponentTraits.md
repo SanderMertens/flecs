@@ -750,10 +750,10 @@ auto e = ecs.entity()
                                   // has a value of type Position
 
 // Gets value from Position component
-const Position *p = e.get<Position>();
+const Position& p = e.get<Position>();
 
 // Gets (unintended) value from (Serializable, Position) pair
-const Position *p = e.get<Serializable, Position>();
+const Position& p = e.get<Serializable, Position>();
 ```
 
 </li>
@@ -847,10 +847,10 @@ auto e = ecs.entity()
                                   // Position is a component
 
 // Gets value from Position component
-const Position *p = e.get<Position>();
+const Position& p = e.get<Position>();
 
 // This no longer works, the pair has no data
-const Position *p = e.get<Serializable, Position>();
+const Position& p = e.get<Serializable, Position>();
 ```
 
 </li>
@@ -1171,7 +1171,7 @@ ecs_entity_t base = ecs.entity().set(Mass, { 100 });
 ecs_entity_t inst = ecs.entity().is_a(base); // Mass is copied to inst
 
 assert(inst.owns<Mass>());
-assert(base.get<Mass>() != inst.get<Mass>());
+assert(base.try_get<Mass>() != inst.try_get<Mass>());
 ```
 
 </li>
@@ -1248,7 +1248,7 @@ ecs_entity_t inst = ecs.entity().is_a(base);
 
 assert(inst.has<Mass>());
 assert(!inst.owns<Mass>());
-assert(base.get<Mass>() != inst.get<Mass>());
+assert(base.try_get<Mass>() != inst.try_get<Mass>());
 ```
 
 </li>
@@ -1327,7 +1327,7 @@ ecs_entity_t inst = ecs.entity().is_a(base);
 
 assert(!inst.has<Mass>());
 assert(!inst.owns<Mass>());
-assert(inst.get<Mass>() == nullptr);
+assert(inst.try_get<Mass>() == nullptr);
 ```
 
 </li>

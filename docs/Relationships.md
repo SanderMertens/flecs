@@ -1402,8 +1402,8 @@ v->value == 100; // true
 
 ```cpp
 // Obtain the inherited component from Spaceship
-const MaxSpeed *v = Frigate.get<MaxSpeed>();
-v->value == 100; // true
+const MaxSpeed& v = Frigate.get<MaxSpeed>();
+v.value == 100; // true
 ```
 
 </li>
@@ -1446,8 +1446,8 @@ v->value == 75; // true
 
 ```cpp
 // Obtain the overridden component from Frigate
-const Defense *v = Frigate.get<Defense>();
-v->value == 75; // true
+const Defense& v = Frigate.get<Defense>();
+v.value == 75; // true
 ```
 
 </li>
@@ -1488,7 +1488,7 @@ const MaxSpeed *s = ecs_get(world, Frigate, MaxSpeed);
 s->value == 200; // true
 
 // Obtain the inherited component from Frigate
-const Defense *d = Frigate.get<Defense>();
+const Defense *d = ecs_get(world, Frigate, Defense);
 d->value == 75; // true
 ```
 
@@ -1501,12 +1501,12 @@ auto FastFrigate = world.entity()
   .set<MaxSpeed>({200});
 
 // Obtain the overridden component from FastFrigate
-const MaxSpeed *s = Frigate.get<MaxSpeed>();
-s->value == 200; // true
+const MaxSpeed& s = Frigate.get<MaxSpeed>();
+s.value == 200; // true
 
 // Obtain the inherited component from Frigate
-const Defense *d = Frigate.get<Defense>();
-d->value == 75; // true
+const Defense& d = Frigate.get<Defense>();
+d.value == 75; // true
 ```
 
 </li>

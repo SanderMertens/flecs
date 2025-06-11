@@ -19,6 +19,6 @@ int main(int, char *[]) {
         .set<Position>({10, 20});
 
     // Convert position component to flecs expression string
-    const Position *ptr = e.get<Position>();
-    std::cout << ecs.to_expr(ptr).c_str() << "\n"; // {x: 10, y: 20}
+    const Position& p = e.get<Position>();
+    std::cout << ecs.to_expr(&p).c_str() << "\n"; // {x: 10, y: 20}
 }

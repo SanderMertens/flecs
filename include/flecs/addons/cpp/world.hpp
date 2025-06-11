@@ -712,42 +712,113 @@ struct world {
     template <typename T>
     ref<T> get_ref() const;
 
+
+    /* try_get */
+
+    /** Get singleton component.
+     */
+    const void* try_get(flecs::id_t id) const;
+
+    /** Get singleton pair.
+     */
+    const void* try_get(flecs::entity_t r, flecs::entity_t t) const;
+
     /** Get singleton component.
      */
     template <typename T>
-    const T* get() const;
+    const T* try_get() const;
 
     /** Get singleton pair.
      */
     template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>>
-    const A* get() const;
+    const A* try_get() const;
 
     /** Get singleton pair.
      */
     template <typename First, typename Second>
-    const First* get(Second second) const;
+    const First* try_get(Second second) const;
+
+
+    /* get */
+
+    /** Get singleton component.
+     */
+    const void* get(flecs::id_t id) const;
+
+    /** Get singleton component.
+     */
+    const void* get(flecs::entity_t r, flecs::entity_t t) const;
+
+    template <typename T>
+    const T& get() const;
+
+    /** Get singleton pair.
+     */
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
+        typename A = actual_type_t<P>>
+    const A& get() const;
+
+    /** Get singleton pair.
+     */
+    template <typename First, typename Second>
+    const First& get(Second second) const;
 
     /** Get singleton component inside a callback.
      */
     template <typename Func, if_t< is_callable<Func>::value > = 0 >
     void get(const Func& func) const;
 
+
+    /* try_get_mut */
+
     /** Get mutable singleton component.
      */
+    void* try_get_mut(flecs::id_t id) const;
+
+    /** Get mutable singleton pair.
+     */
+    void* try_get_mut(flecs::entity_t r, flecs::entity_t t) const;
+
     template <typename T>
-    T* get_mut() const;
+    T* try_get_mut() const;
 
     /** Get mutable singleton pair.
      */
     template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>>
-    A* get_mut() const;
+    A* try_get_mut() const;
 
     /** Get mutable singleton pair.
      */
     template <typename First, typename Second>
-    First* get_mut(Second second) const;
+    First* try_get_mut(Second second) const;
+
+
+    /* get_mut */
+
+    /** Get mutable singleton component.
+     */
+    void* get_mut(flecs::id_t id) const;
+
+    /** Get mutable singleton pair.
+     */
+    void* get_mut(flecs::entity_t r, flecs::entity_t t) const;
+
+    template <typename T>
+    T& get_mut() const;
+
+    /** Get mutable singleton pair.
+     */
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
+        typename A = actual_type_t<P>>
+    A& get_mut() const;
+
+    /** Get mutable singleton pair.
+     */
+    template <typename First, typename Second>
+    First& get_mut(Second second) const;
+
 
     /** Test if world has singleton component.
      */

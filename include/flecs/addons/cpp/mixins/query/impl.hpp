@@ -216,6 +216,11 @@ public:
         return *this;
     }
 
+    flecs::query<> cache_query() const {
+        const flecs::query_t *q = ecs_query_get_cache_query(query_);
+        return flecs::query<>(q);
+    }
+
 private:
     ecs_iter_t get_iter(flecs::world_t *world) const override {
         ecs_assert(query_ != nullptr, ECS_INVALID_PARAMETER, 

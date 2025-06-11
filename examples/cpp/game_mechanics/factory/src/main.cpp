@@ -162,7 +162,7 @@ struct factories {
         for (int i = 0; i < MaxInputs; i ++) {
           int32_t needed = s.required[i] - s.collected[i];
           if (needed) {
-            Stores *p = s.inputs[i].get();
+            Stores* p = s.inputs[i].get();
             if (p->amount >= needed) {
               s.collected[i] += needed;
               p->amount -= needed;

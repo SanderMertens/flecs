@@ -1239,10 +1239,10 @@ printf("{size: %d, alignment: %d}\n",
 flecs::entity pos = world.component<Position>();
 
 // Component entities have the Component component
-const flecs::Component *comp_data = pos.get<flecs::Component>();
+const flecs::Component& comp_data = pos.get<flecs::Component>();
 
-std::cout << "{size: " << comp_data->size << ", " 
-          << comp_data->alignment << "}\n";
+std::cout << "{size: " << comp_data.size << ", " 
+          << comp_data.alignment << "}\n";
 ```
 
 </li>
@@ -1801,7 +1801,7 @@ const TimeOfDay *t = ecs_singleton_get(world, TimeOfDay);
 world.set<TimeOfDay>({ 0.5 });
 
 // Get singleton
-const TimeOfDay *t = world.get<TimeOfDay>();
+const TimeOfDay& t = world.get<TimeOfDay>();
 ```
 
 </li>
