@@ -326,7 +326,9 @@ void flecs_script_for_range_to_str(
 {
     flecs_scriptbuf_node(v, &node->node);
     flecs_scriptbuf_appendstr(v, node->loop_var);
-    flecs_scriptbuf_appendstr(v, " ");
+    flecs_script_color_to_str(v, ECS_BLUE);
+    flecs_scriptbuf_appendstr(v, " in ");
+    flecs_script_color_to_str(v, ECS_NORMAL);
     flecs_expr_to_str(v, node->from);
     flecs_scriptbuf_appendstr(v, " .. ");
     flecs_expr_to_str(v, node->to);

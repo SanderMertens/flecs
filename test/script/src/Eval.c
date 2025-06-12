@@ -10615,3 +10615,83 @@ void Eval_add_component_as_tag_pair_w_invalid_ctor(void) {
 
     ecs_fini(world);
 }
+
+void Eval_interpolated_name_w_nested_for_loop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for x in 0..3 {"
+    LINE "  for y in 0..2 {"
+    LINE "    \"e_{$x}_{$y}\" {"
+    LINE "      Position: {x, y}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_0_0");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 0);
+        test_int(p->y, 0);
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_0_1");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 0);
+        test_int(p->y, 1);
+    }
+
+    test_assert(ecs_lookup(world, "e_0_2") == 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_1_0");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 1);
+        test_int(p->y, 0);
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_1_1");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 1);
+        test_int(p->y, 1);
+    }
+
+    test_assert(ecs_lookup(world, "e_1_2") == 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_2_0");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 2);
+        test_int(p->y, 0);
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_2_1");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 2);
+        test_int(p->y, 1);
+    }
+
+    test_assert(ecs_lookup(world, "e_2_2") == 0);
+
+    ecs_fini(world);
+}

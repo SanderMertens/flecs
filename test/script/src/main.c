@@ -324,6 +324,7 @@ void Eval_add_component_w_invalid_ctor(void);
 void Eval_add_component_pair_w_invalid_ctor(void);
 void Eval_add_component_as_tag_w_invalid_ctor(void);
 void Eval_add_component_as_tag_pair_w_invalid_ctor(void);
+void Eval_interpolated_name_w_nested_for_loop(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -2220,6 +2221,10 @@ bake_test_case Eval_testcases[] = {
     {
         "add_component_as_tag_pair_w_invalid_ctor",
         Eval_add_component_as_tag_pair_w_invalid_ctor
+    },
+    {
+        "interpolated_name_w_nested_for_loop",
+        Eval_interpolated_name_w_nested_for_loop
     }
 };
 
@@ -4729,7 +4734,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        315,
+        316,
         Eval_testcases
     },
     {

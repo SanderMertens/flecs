@@ -184,7 +184,7 @@ int flecs_expr_interpolated_string_visit_fold(
         (ecs_expr_interpolated_string_t*)*node_ptr;
 
     bool can_fold = true;
-    
+
     int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
     char **fragments = ecs_vec_first(&node->fragments);
     for (i = 0; i < count; i ++) {

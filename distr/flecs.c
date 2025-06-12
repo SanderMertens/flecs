@@ -67497,7 +67497,9 @@ void flecs_script_for_range_to_str(
 {
     flecs_scriptbuf_node(v, &node->node);
     flecs_scriptbuf_appendstr(v, node->loop_var);
-    flecs_scriptbuf_appendstr(v, " ");
+    flecs_script_color_to_str(v, ECS_BLUE);
+    flecs_scriptbuf_appendstr(v, " in ");
+    flecs_script_color_to_str(v, ECS_NORMAL);
     flecs_expr_to_str(v, node->from);
     flecs_scriptbuf_appendstr(v, " .. ");
     flecs_expr_to_str(v, node->to);
@@ -84090,7 +84092,7 @@ int flecs_expr_interpolated_string_visit_fold(
         (ecs_expr_interpolated_string_t*)*node_ptr;
 
     bool can_fold = true;
-    
+
     int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
     char **fragments = ecs_vec_first(&node->fragments);
     for (i = 0; i < count; i ++) {
@@ -85821,6 +85823,8 @@ int flecs_expr_interpolated_string_visit_type(
                 if (!ptr) {
                     goto error;
                 }
+
+                impl->token_remaining = parser.token_cur;
 
                 if (ptr[0] != '}') {
                     flecs_expr_visit_error(script, node,
