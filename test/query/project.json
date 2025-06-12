@@ -722,7 +722,8 @@
                 "get_cache_query_partially_cached",
                 "get_query",
                 "get_query_not_a_query",
-                "mixed_uncacheable_w_shared"
+                "mixed_uncacheable_w_shared",
+                "query_has_and_optional_and"
             ]
         }, {
             "id": "Combinations",
@@ -1205,7 +1206,8 @@
                 "or_w_tag_and_component",
                 "not_isa_wildcard",
                 "not_transitive_rel_wildcard",
-                "not_reflexive_rel_wildcard"
+                "not_reflexive_rel_wildcard",
+                "and_optional_and"
             ]
         }, {
             "id": "Transitive",
@@ -1652,7 +1654,8 @@
                 "invalid_desc_without_cascade",
                 "invalid_desc_for_first",
                 "invalid_desc_for_second",
-                "cascade_w_cache_kind_default"
+                "cascade_w_cache_kind_default",
+                "cascade_w_optional"
             ]
         }, {
             "id": "Cached",

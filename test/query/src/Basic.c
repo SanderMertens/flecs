@@ -11614,3 +11614,48 @@ void Basic_mixed_uncacheable_w_shared(void) {
 
     ecs_fini(world);
 }
+
+void Basic_query_has_and_optional_and(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA, ?TagB, TagC",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    ecs_add(world, e1, TagC);
+
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e2, TagC);
+
+    ecs_entity_t e3 = ecs_new_w(world, TagA);
+
+    ecs_iter_t it;
+    test_assert(ecs_query_has_table(q, ecs_get_table(world, e1), &it));
+    test_uint(e1, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_query_next(&it));
+
+    test_assert(ecs_query_has_table(q, ecs_get_table(world, e2), &it));
+    test_uint(e2, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_query_next(&it));
+
+    test_assert(!ecs_query_has_table(q, ecs_get_table(world, e3), &it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

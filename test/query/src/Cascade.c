@@ -1100,3 +1100,37 @@ void Cascade_cascade_w_cache_kind_default(void) {
 
     ecs_fini(world);
 }
+
+void Cascade_cascade_w_optional(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo, ?Bar, Position(cascade)",
+        .cache_kind = EcsQueryCacheDefault
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t p = ecs_new_w(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Foo);
+    ecs_add_pair(world, e, EcsChildOf, p);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p, ecs_field_src(&it, 2));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
