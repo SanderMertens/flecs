@@ -4070,6 +4070,41 @@ void Entity_child_of_w_type(void) {
     test_assert(e.has_second<Parent>(flecs::ChildOf));
 }
 
+
+void Entity_child(void) {
+    flecs::world world;
+
+    auto base = world.entity();
+
+    auto e = base.child();
+
+    test_assert(e.has(flecs::ChildOf, base));
+}
+
+void Entity_child_custom_rel(void) {
+    flecs::world world;
+
+    auto r = world.entity();
+
+    auto base = world.entity();
+
+    auto e = base.child(r);
+
+    test_assert(e.has(r, base));
+}
+
+void Entity_child_custom_type(void) {
+    flecs::world world;
+
+    struct R { };
+
+    auto base = world.entity();
+
+    auto e = base.child<R>();
+
+    test_assert(e.has<R>(base));
+}
+
 void Entity_slot_of(void) {
     flecs::world world;
 

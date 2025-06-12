@@ -241,6 +241,9 @@ void Entity_is_a(void);
 void Entity_is_a_w_type(void);
 void Entity_child_of(void);
 void Entity_child_of_w_type(void);
+void Entity_child(void);
+void Entity_child_custom_rel(void);
+void Entity_child_custom_type(void);
 void Entity_slot_of(void);
 void Entity_slot_of_w_type(void);
 void Entity_slot(void);
@@ -2486,6 +2489,18 @@ bake_test_case Entity_testcases[] = {
     {
         "child_of_w_type",
         Entity_child_of_w_type
+    },
+    {
+        "child",
+        Entity_child
+    },
+    {
+        "child_custom_rel",
+        Entity_child_custom_rel
+    },
+    {
+        "child_custom_type",
+        Entity_child_custom_type
     },
     {
         "slot_of",
@@ -7667,7 +7682,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        314,
+        317,
         Entity_testcases
     },
     {

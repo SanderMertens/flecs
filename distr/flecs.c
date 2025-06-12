@@ -36617,6 +36617,8 @@ int flecs_query_finalize_terms(
         {
             ECS_BIT_SET(q->flags, EcsQueryMatchOnlySelf);
 
+            bool is_trivial = true;
+
             for (i = 0; i < term_count; i ++) {
                 ecs_term_t *term = &terms[i];
                 ecs_term_ref_t *src = &term->src;
@@ -36626,7 +36628,8 @@ int flecs_query_finalize_terms(
                 }
 
                 if (!(term->flags_ & EcsTermIsTrivial)) {
-                    break;
+                    is_trivial = false;
+                    continue;
                 }
 
                 if ((term->src.id & EcsTraverseFlags) == EcsSelf) {
@@ -36638,7 +36641,7 @@ int flecs_query_finalize_terms(
                 }
             }
 
-            if (term_count && (i == term_count)) {
+            if (term_count && is_trivial) {
                 ECS_BIT_SET(q->flags, EcsQueryIsTrivial);
             }
         }
@@ -37047,6 +37050,7 @@ int flecs_query_finalize_query(
     #ifndef FLECS_SANITIZE
 done:
     #endif
+
     flecs_query_copy_arrays(q);
     return 0;
 error:
