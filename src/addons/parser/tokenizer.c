@@ -229,7 +229,6 @@ const char* flecs_tokenizer_identifier(
         out->value = parser->token_cur;
     }
 
-    ecs_assert(flecs_script_is_identifier(pos[0]), ECS_INTERNAL_ERROR, NULL);
     bool is_var = pos[0] == '$';
     char *outpos = NULL;
     const char *start = pos;
@@ -238,6 +237,16 @@ const char* flecs_tokenizer_identifier(
         if (parser->merge_variable_members) {
             is_var = false;
         }
+    }
+
+    const char *name = parser ? parser->name : NULL;
+    const char *code = parser ? parser->code : pos;
+
+    if (!flecs_script_is_identifier(pos[0])) {
+        ecs_parser_error(name, code, pos - code,
+            "invalid start of identifier '%c'",
+                pos[0]);
+        return NULL;
     }
 
     do {
@@ -273,9 +282,7 @@ const char* flecs_tokenizer_identifier(
                     } else if (c == '>') {
                         indent --;
                     } else if (!c) {
-                        ecs_parser_error(parser->name, 
-                            parser->code, 
-                                pos - parser->code, 
+                        ecs_parser_error(name, code, pos - code, 
                                     "< without > in identifier");
                         return NULL;
                     }
@@ -297,10 +304,8 @@ const char* flecs_tokenizer_identifier(
                 }
                 return pos;
             } else if (c == '>') {
-                ecs_parser_error(parser->name, 
-                    parser->code,
-                        pos - parser->code, 
-                            "> without < in identifier");
+                ecs_parser_error(name, code, pos - code, 
+                    "> without < in identifier");
                 return NULL;
             } else {
                 if (outpos && parser) {

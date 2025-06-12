@@ -325,6 +325,8 @@ void Eval_add_component_pair_w_invalid_ctor(void);
 void Eval_add_component_as_tag_w_invalid_ctor(void);
 void Eval_add_component_as_tag_pair_w_invalid_ctor(void);
 void Eval_interpolated_name_w_nested_for_loop(void);
+void Eval_interpolated_name_w_nested_for_loop_no_dollar_sign(void);
+void Eval_interpolated_name_w_nested_for_loop_wrong_dollar_sign(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -2225,6 +2227,14 @@ bake_test_case Eval_testcases[] = {
     {
         "interpolated_name_w_nested_for_loop",
         Eval_interpolated_name_w_nested_for_loop
+    },
+    {
+        "interpolated_name_w_nested_for_loop_no_dollar_sign",
+        Eval_interpolated_name_w_nested_for_loop_no_dollar_sign
+    },
+    {
+        "interpolated_name_w_nested_for_loop_wrong_dollar_sign",
+        Eval_interpolated_name_w_nested_for_loop_wrong_dollar_sign
     }
 };
 
@@ -4734,7 +4744,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        316,
+        318,
         Eval_testcases
     },
     {
