@@ -634,6 +634,8 @@ int flecs_expr_interpolated_string_visit_type(
                     goto error;
                 }
 
+                impl->token_remaining = parser.token_cur;
+
                 if (ptr[0] != '}') {
                     flecs_expr_visit_error(script, node,
                         "expected '}' at end of interpolated expression");
