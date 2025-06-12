@@ -706,6 +706,7 @@ void Basic_get_cache_query_partially_cached(void);
 void Basic_get_query(void);
 void Basic_get_query_not_a_query(void);
 void Basic_mixed_uncacheable_w_shared(void);
+void Basic_query_has_and_optional_and(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -1171,6 +1172,7 @@ void Operators_or_w_tag_and_component(void);
 void Operators_not_isa_wildcard(void);
 void Operators_not_transitive_rel_wildcard(void);
 void Operators_not_reflexive_rel_wildcard(void);
+void Operators_and_optional_and(void);
 
 // Testsuite 'Transitive'
 void Transitive_1_fact_0_lvl_true(void);
@@ -1591,6 +1593,7 @@ void Cascade_invalid_desc_without_cascade(void);
 void Cascade_invalid_desc_for_first(void);
 void Cascade_invalid_desc_for_second(void);
 void Cascade_cascade_w_cache_kind_default(void);
+void Cascade_cascade_w_optional(void);
 
 // Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
@@ -5125,6 +5128,10 @@ bake_test_case Basic_testcases[] = {
     {
         "mixed_uncacheable_w_shared",
         Basic_mixed_uncacheable_w_shared
+    },
+    {
+        "query_has_and_optional_and",
+        Basic_query_has_and_optional_and
     }
 };
 
@@ -6953,6 +6960,10 @@ bake_test_case Operators_testcases[] = {
     {
         "not_reflexive_rel_wildcard",
         Operators_not_reflexive_rel_wildcard
+    },
+    {
+        "and_optional_and",
+        Operators_and_optional_and
     }
 };
 
@@ -8582,6 +8593,10 @@ bake_test_case Cascade_testcases[] = {
     {
         "cascade_w_cache_kind_default",
         Cascade_cascade_w_cache_kind_default
+    },
+    {
+        "cascade_w_optional",
+        Cascade_cascade_w_optional
     }
 };
 
@@ -11666,7 +11681,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        235,
+        236,
         Basic_testcases,
         1,
         Basic_params
@@ -11700,7 +11715,7 @@ static bake_test_suite suites[] = {
         "Operators",
         Operators_setup,
         NULL,
-        162,
+        163,
         Operators_testcases,
         1,
         Operators_params
@@ -11759,7 +11774,7 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-        24,
+        25,
         Cascade_testcases
     },
     {
