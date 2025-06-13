@@ -50397,7 +50397,8 @@ error:
 static
 const char * flecs_meta_utils_open_scope(
     const char *ptr,
-    flecs_meta_utils_parse_ctx_t *ctx)    
+    flecs_meta_utils_parse_ctx_t *ctx,
+    bool *error)
 {
     /* Skip initial whitespaces */
     ptr = flecs_parse_ws_eol(ptr);
@@ -50419,6 +50420,8 @@ const char * flecs_meta_utils_open_scope(
         goto error;
     }   
 
+    *error = false;
+
     /* Is this the end of the type definition? */
     if (*ptr == '}') {
         ptr = flecs_parse_ws_eol(ptr + 1);
@@ -50432,6 +50435,7 @@ const char * flecs_meta_utils_open_scope(
 
     return ptr;
 error:
+    *error = true;
     return NULL;
 }
 
@@ -50439,9 +50443,10 @@ static
 const char* flecs_meta_utils_parse_constant(
     const char *ptr,
     flecs_meta_utils_constant_t *token,
-    flecs_meta_utils_parse_ctx_t *ctx)
+    flecs_meta_utils_parse_ctx_t *ctx,
+    bool *error)
 {    
-    ptr = flecs_meta_utils_open_scope(ptr, ctx);
+    ptr = flecs_meta_utils_open_scope(ptr, ctx, error);
     if (!ptr) {
         return NULL;
     }
@@ -50530,9 +50535,10 @@ static
 const char* flecs_meta_utils_parse_member(
     const char *ptr,
     flecs_meta_utils_member_t *token,
-    flecs_meta_utils_parse_ctx_t *ctx)
+    flecs_meta_utils_parse_ctx_t *ctx,
+    bool *error)
 {
-    ptr = flecs_meta_utils_open_scope(ptr, ctx);
+    ptr = flecs_meta_utils_open_scope(ptr, ctx, error);
     if (!ptr) {
         return NULL;
     }
@@ -50927,7 +50933,8 @@ int flecs_meta_utils_parse_struct(
 
     ecs_entity_t old_scope = ecs_set_scope(world, t);
 
-    while ((ptr = flecs_meta_utils_parse_member(ptr, &token, &ctx)) && ptr[0]) {
+    bool error;
+    while ((ptr = flecs_meta_utils_parse_member(ptr, &token, &ctx, &error)) && ptr[0]) {
         ecs_entity_t m = ecs_entity(world, {
             .name = token.name
         });
@@ -50946,7 +50953,7 @@ int flecs_meta_utils_parse_struct(
 
     ecs_set_scope(world, old_scope);
 
-    return 0;
+    return error ? -1 : 0;
 error:
     return -1;
 }
@@ -50979,7 +50986,8 @@ int flecs_meta_utils_parse_constants(
 
     ecs_entity_t old_scope = ecs_set_scope(world, t);
 
-    while ((ptr = flecs_meta_utils_parse_constant(ptr, &token, &ctx))) {
+    bool error;
+    while ((ptr = flecs_meta_utils_parse_constant(ptr, &token, &ctx, &error))) {
         if (token.is_value_set) {
             last_value = token.value;
         } else if (is_bitmask) {
@@ -51017,7 +51025,7 @@ int flecs_meta_utils_parse_constants(
 
     ecs_set_scope(world, old_scope);
 
-    return 0;
+    return error ? -1 : 0;
 error:
     return -1;
 }
