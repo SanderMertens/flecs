@@ -7,7 +7,8 @@
 #include "CoreMinimal.h"
 #include "FFlecsMemberHandle.generated.h"
 
-USTRUCT(BlueprintType)
+// Avoid using this directly
+USTRUCT()
 struct UNREALFLECS_API FFlecsMemberHandle
 {
 	GENERATED_BODY()

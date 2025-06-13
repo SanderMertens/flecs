@@ -116,7 +116,8 @@ void FFlecsDefaultEntityEngine::Initialize()
 		}
 	});
 	
-	#endif // WITH_EDITOR*/
+	#endif // WITH_EDITOR
+	*/
 	
 	bIsInitialized = true;
 }

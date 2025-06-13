@@ -376,6 +376,12 @@ public:
 		return GetEntity().get<T>();
 	}
 
+	template <typename T>
+	NO_DISCARD SOLID_INLINE T* GetMutPtr() const
+	{
+		return GetEntity().get_mut<T>();
+	}
+
 	NO_DISCARD SOLID_INLINE void* GetPtr(const UScriptStruct* StructType)
 	{
 		return GetPtr(ObtainComponentTypeStruct(StructType));
@@ -386,28 +392,70 @@ public:
 		return GetPtr(ObtainComponentTypeStruct(StructType));
 	}
 
+	NO_DISCARD SOLID_INLINE void* GetMutPtr(const UScriptStruct* StructType) const
+	{
+		return GetEntity().get_mut(ObtainComponentTypeStruct(StructType));
+	}
+
 	template <typename T>
 	NO_DISCARD SOLID_INLINE T& GetRef()
 	{
-		return *GetEntity().get_ref<T>().get();
+		solid_checkf(Has<T>(), TEXT("Entity does not have component"));
+		
+		const TSolidNotNull<T*> Ptr = GetPtr<T>();
+		return *Ptr;
 	}
 
 	template <typename T>
 	NO_DISCARD SOLID_INLINE const T& GetRef() const
 	{
-		return *GetEntity().get_ref<T>().get();
+		solid_checkf(Has<T>(), TEXT("Entity does not have component"));
+		
+		const TSolidNotNull<const T*> Ptr = GetPtr<T>();
+		return *Ptr;
+	}
+
+	template <typename T>
+	NO_DISCARD SOLID_INLINE T& GetMutRef() const
+	{
+		solid_checkf(Has<T>(), TEXT("Entity does not have component"));
+		
+		TSolidNotNull<T*> Ptr = GetMutPtr<T>();
+		return *Ptr;
 	}
 
 	template <typename T>
 	NO_DISCARD SOLID_INLINE flecs::ref<T> GetFlecsRef() const
 	{
+		solid_checkf(Has<T>(),
+			TEXT("Entity does not have component with type %hs"), nameof(T).data());
+		
 		return GetEntity().get_ref<T>();
 	}
 
 	template <typename T>
 	NO_DISCARD SOLID_INLINE flecs::ref<T> GetFlecsRef()
 	{
+		solid_checkf(Has<T>(),
+			TEXT("Entity does not have component with type %hs"), nameof(T).data());
+		
 		return GetEntity().get_ref<T>();
+	}
+
+	NO_DISCARD SOLID_INLINE flecs::untyped_ref GetFlecsRef(const FFlecsId InEntity) const
+	{
+		solid_checkf(Has(InEntity),
+			TEXT("Entity does not have component with id %llu"), InEntity.GetId());
+		
+		return GetEntity().get_ref(InEntity);
+	}
+
+	NO_DISCARD SOLID_INLINE flecs::untyped_ref GetFlecsRef(const UScriptStruct* StructType) const
+	{
+		solid_checkf(Has(StructType),
+			TEXT("Entity does not have component with script struct %s"), *StructType->GetStructCPPName());
+		
+		return GetFlecsRef(ObtainComponentTypeStruct(StructType));
 	}
 
 	template <typename T>

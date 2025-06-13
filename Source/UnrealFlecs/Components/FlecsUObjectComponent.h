@@ -120,9 +120,10 @@ public:
 REGISTER_FLECS_COMPONENT(FFlecsUObjectComponent,
 [](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
     {
-        InComponent.Add(flecs::Relationship);
-        InComponent.Add(flecs::Exclusive);
-        InComponent.AddPair(flecs::OnInstantiate, flecs::DontInherit);
+        InComponent
+            .Add(flecs::Relationship)
+            .Add(flecs::Exclusive)
+            .AddPair(flecs::OnInstantiate, flecs::DontInherit);
     });
 
 // @TODO: Currently not used

@@ -8,6 +8,7 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
+#include "ObjectCacheContext.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
@@ -21,6 +22,7 @@
 #include "Entities/FlecsEntityRecord.h"
 #include "Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
+#include "General/FlecsObjectRegistrationInterface.h"
 #include "Logs/FlecsCategories.h"
 #include "Modules/FlecsDependenciesComponent.h"
 #include "Modules/FlecsModuleInitEvent.h"
@@ -101,6 +103,8 @@ public:
 		#if WITH_AUTOMATION_TESTS
 		}
 		#endif // WITH_AUTOMATION_TESTS
+
+		InitializeFlecsRegistrationObjects();
 	}
 
 	// ReSharper disable once CppMemberFunctionMayBeConst
@@ -223,6 +227,41 @@ public:
 		RegisterComponentType<FFlecsDependenciesComponent>();
 
 		RegisterComponentType<FFlecsEntityRecord>();
+	}
+
+	void InitializeFlecsRegistrationObjects()
+	{
+		for (TObjectIterator<UClass> It = TObjectIterator<UClass>(); It; ++It)
+		{
+			const UClass* Class = *It;
+			
+			if (Class->ImplementsInterface(UFlecsObjectRegistrationInterface::StaticClass()))
+			{
+				if (Class->HasAnyClassFlags(CLASS_Abstract | CLASS_Deprecated | CLASS_NewerVersionExists))
+				{
+					UN_LOGF(LogFlecsWorld, Warning,
+						"Skipping registration of %s because it is abstract, deprecated or has a newer version",
+						*Class->GetName());
+					continue;
+				}
+				
+				if UNLIKELY_IF(RegisteredObjectTypes.Contains(Class))
+				{
+					continue;
+				}
+
+				TSolidNotNull<UObject*> ObjectPtr = NewObject<UObject>(this, Class);
+				
+				const TScriptInterface<IFlecsObjectRegistrationInterface> ScriptInterface(ObjectPtr);
+				ScriptInterface->RegisterObject(this);
+
+				RegisteredObjects.Add(ObjectPtr);
+				RegisteredObjectTypes.Add(Class, ObjectPtr);
+
+				UN_LOGF(LogFlecsWorld, Log,
+					"Registering object type %s", *Class->GetName());
+			}
+		}
 	}
 
 	void RegisterUnrealTypes() const
@@ -839,7 +878,7 @@ public:
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ImportFlecsModule()
 	{
 		static_assert(!TIsDerivedFrom<T, IFlecsModuleInterface>::Value,
-			"T must not be derived from IFlecsModuleInterface, use ImportModule(Non-Template) instead");
+			"T must not be derived from IFlecsModuleInterface, use ImportModule (Non-Template) instead");
 		return World.import<T>();
 	}
 
@@ -878,12 +917,17 @@ public:
 		return IsModuleImported(T::StaticClass());
 	}
 
+	/**
+	 * @brief Get the entity handle of the module with the given class
+	 * @param InModule The module class
+	 * @return The entity handle of the module, or an invalid handle if the module is not imported
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule) const
 	{
 		solid_check(InModule);
 		
-		const flecs::entity ModuleEntity = ModuleComponentQuery
+		const FFlecsEntityHandle ModuleEntity = ModuleComponentQuery
 			.find([&InModule](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
 			{
 				return InComponent.ModuleClass == InModule;
@@ -892,6 +936,11 @@ public:
 		return ModuleEntity;
 	}
 
+	/**
+	 * @brief Get the entity handle of the module with the given class
+	 * @tparam T The module class
+	 * @return The entity handle of the module, or an invalid handle if the module is not imported
+	 */
 	template <Solid::TStaticClassConcept T>
 	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetModuleEntity() const
 	{
@@ -952,6 +1001,7 @@ public:
 
 	/**
 	 * @brief End or Suspend the defer state and execute the lambda function.
+	 * @param Function The function to execute after the defer state is ended or suspended.
 	 * @param bEndDefer If true, the defer state will be ended after the function is executed, otherwise it will be suspended and resumed after the function is executed.
 	 */
 	template <typename TFunction>
@@ -2084,6 +2134,11 @@ public:
 
 	UPROPERTY()
 	TArray<TScriptInterface<IFlecsModuleInterface>> ImportedModules;
+	
+	TMap<const UClass*, TScriptInterface<IFlecsObjectRegistrationInterface>> RegisteredObjectTypes;
+
+	UPROPERTY()
+	TArray<TScriptInterface<IFlecsObjectRegistrationInterface>> RegisteredObjects;
 
 	//UPROPERTY()
 	//TArray<TScriptInterface<IFlecsModuleProgressInterface>> ProgressModules;
