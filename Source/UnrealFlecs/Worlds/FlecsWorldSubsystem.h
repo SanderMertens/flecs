@@ -70,7 +70,7 @@ public:
 		}
 		else
 		{
-			UN_LOGF(LogFlecsCore, Warning, "No default world settings asset found");
+			UE_LOG(LogFlecsCore, Warning, TEXT("No default world settings asset found"));
 		}
 	}
 
@@ -122,7 +122,7 @@ public:
 
 		if UNLIKELY_IF(!bResult)
 		{
-			UN_LOGF(LogFlecsCore, Error, "Failed to progress Flecs world");
+			UE_LOG(LogFlecsCore, Error, TEXT("Failed to progress Flecs world"));
 		}
 
 		#endif // WITH_EDITOR
@@ -169,13 +169,14 @@ public:
 		
 		for (const FFlecsDefaultMetaEntity& DefaultEntity : DefaultEntities)
 		{
-			#if UNLOG_ENABLED
+			#if !NO_LOGGING
 			flecs::entity NewDefaultEntity =
 			#endif // UNLOG_ENABLED
 				FFlecsDefaultEntityEngine::Get().CreateDefaultEntity(DefaultEntity, DefaultWorld->World);
 
-			UN_LOGF(LogFlecsCore, Log,
-				"Created default entity %s with id %d", *DefaultEntity.EntityName, NewDefaultEntity.id());
+			UE_LOG(LogFlecsCore, Log,
+				TEXT("Created default entity %s with id %d"),
+				*DefaultEntity.EntityName, NewDefaultEntity.id());
 		}
 
 		const IConsoleManager& ConsoleManager = IConsoleManager::Get();

@@ -13,7 +13,6 @@
 #include "Standard/robin_hood.h"
 #include "SolidMacros/Macros.h"
 #include "Types/SolidNotNull.h"
-#include "Unlog/Unlog.h"
 
 namespace Unreal::Flecs
 {
@@ -48,8 +47,6 @@ public:
 	                                             const uint32 Size, const uint16 Alignment,
 	                                             const Unreal::Flecs::FlecsComponentFunction& RegistrationFunction)
 	{
-		UNLOG_CATEGORY_SCOPED(LogFlecsComponentProperties);
-
 		solid_checkf(!Name.empty(), TEXT("Component properties name is empty!"));
 		
 		ComponentProperties[Name] = FFlecsComponentProperties

@@ -1076,7 +1076,7 @@ void Enum_add_if_other(void) {
 void Enum_query_union_enum(void) {
     flecs::world ecs;
 
-    enum Color {
+    enum class Color : uint8_t {
         Red,
         Green,
         Blue

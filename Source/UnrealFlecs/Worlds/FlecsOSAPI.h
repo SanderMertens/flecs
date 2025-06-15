@@ -9,7 +9,6 @@
 #include "flecs/os_api.h"
 #include "Logs/FlecsCategories.h"
 #include "SolidMacros/Macros.h"
-#include "Unlog/Unlog.h"
 
 DECLARE_STATS_GROUP(TEXT("FlecsOS"), STATGROUP_FlecsOS, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("FlecsOS::TaskThread"), STAT_FlecsOS, STATGROUP_FlecsOS);
@@ -146,7 +145,7 @@ struct FOSApiInitializer
 {
 	FOSApiInitializer()
 	{
-		UN_LOG(LogFlecsCore, Log, "Initializing Flecs OS API");
+		UE_LOG(LogFlecsCore, Log, TEXT("Initializing Flecs OS API"));
 		InitializeOSAPI();
 	}
 	
@@ -291,39 +290,39 @@ struct FOSApiInitializer
 
         os_api.abort_ = []()
         {
-        	#if UNLOG_ENABLED
-        		UN_LOGF(LogFlecsCore, Fatal, "Flecs - Aborting...");
-			#endif // UNLOG_ENABLED
+        	#if !NO_LOGGING
+        		UE_LOG(LogFlecsCore, Fatal, TEXT("Flecs - Aborting..."));
+			#endif // SOLID_LOG_ENABLED
         	
         	FGenericPlatformMisc::RequestExit(false);
         };
 
         os_api.log_ = [](int32_t Level, const char* File, int32_t Line, const char* Message)
         {
-#if UNLOG_ENABLED
+#if !NO_LOGGING
             switch (Level)
             {
                 case -4: // Fatal
 	                {
-                		UN_LOGF(LogFlecsCore, Fatal, "Flecs - File: %s, Line: %d, Message: %s",
+                		UE_LOG(LogFlecsCore, Fatal, TEXT("Flecs - File: %s, Line: %d, Message: %s"),
 							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
 	                }
                     break;
                 case -3: // Error
 	                {
-                		UN_LOGF(LogFlecsCore, Error, "Error Flecs - File: %s, Line: %d, Message: %s",
+                		UE_LOG(LogFlecsCore, Error, TEXT("Error Flecs - File: %s, Line: %d, Message: %s"),
 							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
 	                }
                     break;
                 case -2: // Warning
 	                {
-                		UN_LOGF(LogFlecsCore, Warning, "Flecs - File: %s, Line: %d, Message: %s",
+                		UE_LOG(LogFlecsCore, Warning, TEXT("Flecs - File: %s, Line: %d, Message: %s"),
 							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
 	                }
                     break;
             	case 0: // Verbose
             		{
-            			UN_LOGF(LogFlecsCore, Verbose, "Flecs - File: %s, Line: %d, Message: %s",
+            			UE_LOG(LogFlecsCore, Verbose, TEXT("Flecs - File: %s, Line: %d, Message: %s"),
 							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
             		}
                     break;
@@ -331,13 +330,13 @@ struct FOSApiInitializer
             		{
             			TRACE_BOOKMARK(TEXT("Flecs - File: %s, Line: %d, Message: %s"),
             				StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
-            			UN_LOGF(LogFlecsJournal, Log, "Flecs - File: %s, Line: %d, Message: %s",
+            			UE_LOG(LogFlecsJournal, Log, TEXT("Flecs - File: %s, Line: %d, Message: %s"),
             				StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
             		}
 					break;
                 default: // Info and Debug
             		{
-            			UN_LOGF(LogFlecsCore, Log, "Flecs - File: %s, Line: %d, Message: %s",
+            			UE_LOG(LogFlecsCore, Log, TEXT("Flecs - File: %s, Line: %d, Message: %s"),
 							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
             		}
                     break;
@@ -398,9 +397,9 @@ struct FOSApiInitializer
 					if (!((Trace.FileName == StringCast<TCHAR>(FileName).Get()) &&
 						(Trace.Name == StringCast<TCHAR>(Name).Get())))
 					{
-						UN_LOGF(LogFlecsCore, Error,
-							"Flecs - Mismatched profiler trace pop: "
-							"Got '%s' from '%s:%d', expected '%s' from '%s:%d'",
+						UE_LOG(LogFlecsCore, Error,
+							TEXT("Flecs - Mismatched profiler trace pop: "
+							"Got '%s' from '%s:%d', expected '%s' from '%s:%d'"),
 							*Trace.Name, *Trace.FileName, Trace.Line,
 							StringCast<TCHAR>(Name).Get(), StringCast<TCHAR>(FileName).Get(),
 							static_cast<uint32>(Line));

@@ -3,7 +3,6 @@
 // ReSharper disable CppExpressionWithoutSideEffects
 #include "FlecsDefaultEntityEngineSubsystem.h"
 #include "FlecsDefaultEntitiesDeveloperSettings.h"
-#include "Unlog/Unlog.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 #include "Types/SolidNotNull.h"
 
@@ -64,7 +63,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 			return;
 		}
 
-		UN_LOGF(LogFlecsEntity, Log, "Entity: %s", Entity.name().c_str());
+		UE_LOG(LogFlecsEntity, Log, TEXT("Entity: %hs"), Entity.name().c_str());
 		DefaultEntityOptions.Add(Entity.name().c_str(), Entity.id());
 	});
 	

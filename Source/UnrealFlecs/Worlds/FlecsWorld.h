@@ -93,8 +93,8 @@ public:
 
 	void WorldStart()
 	{
-		UN_LOG(LogFlecsWorld, Log, "Flecs World begin play");
-
+		UE_LOG(LogFlecsWorld, Log, TEXT("Flecs World start"));
+		
 		#if WITH_AUTOMATION_TESTS
 		if (!GIsAutomationTesting)
 		{
@@ -239,8 +239,8 @@ public:
 			{
 				if (Class->HasAnyClassFlags(CLASS_Abstract | CLASS_Deprecated | CLASS_NewerVersionExists))
 				{
-					UN_LOGF(LogFlecsWorld, Warning,
-						"Skipping registration of %s because it is abstract, deprecated or has a newer version",
+					UE_LOG(LogFlecsWorld, Warning,
+						TEXT("Skipping registration of %s because it is abstract, deprecated or has a newer version"),
 						*Class->GetName());
 					continue;
 				}
@@ -258,8 +258,8 @@ public:
 				RegisteredObjects.Add(ObjectPtr);
 				RegisteredObjectTypes.Add(Class, ObjectPtr);
 
-				UN_LOGF(LogFlecsWorld, Log,
-					"Registering object type %s", *Class->GetName());
+				UE_LOG(LogFlecsWorld, Log,
+					TEXT("Registering object type %s"), *Class->GetName());
 			}
 		}
 	}
@@ -360,11 +360,11 @@ public:
 
 						std::invoke(Properties->RegistrationFunction, Iter.world(), InUntypedComponent);
 					}
-					#if UNLOG_ENABLED
+					#if !NO_LOGGING
 					else
 					{
-						UN_LOGF(LogFlecsWorld, Log,
-							"Component properties %s not found", *StructSymbol);
+						UE_LOG(LogFlecsWorld, Log,
+							TEXT("Component properties %s not found"), *StructSymbol);
 					}
 					#endif // UNLOG_ENABLED
 				});
@@ -384,8 +384,8 @@ public:
 					
 				if (!InUObjectComponent.IsValid())
 				{
-					UN_LOGF(LogFlecsWorld, Log,
-						"Entity Garbage Collected: %s", *EntityHandle.GetName());
+					UE_LOG(LogFlecsWorld, Log,
+						TEXT("Entity Garbage Collected: %s"), *EntityHandle.GetName());
 					EntityHandle.Destroy();
 				}
 			});
@@ -407,8 +407,8 @@ public:
 			{
 				const TSolidNotNull<UObject*> ObjectPtr = InUObjectComponent.GetObjectChecked();
 
-				UN_LOGF(LogFlecsWorld, Log,
-					"Module component %s added", *ObjectPtr->GetName());
+				UE_LOG(LogFlecsWorld, Log,
+					TEXT("Module component %s added"), *ObjectPtr->GetName());
 				
 				// if (ObjectPtr->Implements<UFlecsModuleProgressInterface>())
 				// {
@@ -733,7 +733,7 @@ public:
 		}
 		else
 		{
-			UN_LOGF(LogFlecsWorld, Warning, "Entity %s not found", *Name);
+			UE_LOG(LogFlecsWorld, Warning, TEXT("Entity %s not found"), *Name);
 		}
 	}
 
@@ -1495,8 +1495,8 @@ public:
 				FFlecsEntityHandle StructComponent;
 				if (!HasScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct))
 				{
-					UN_LOGF(LogFlecsWorld, Error,
-						"Property Type Script struct %s is not registered for entity %s",
+					UE_LOG(LogFlecsWorld, Error,
+						TEXT("Property Type Script struct %s is not registered for entity %s"),
 						*CastFieldChecked<FStructProperty>(Property)->Struct->GetName(), *InComponent.GetName());
 					continue;
 				}
@@ -1510,8 +1510,8 @@ public:
 			}
 			else UNLIKELY_ATTRIBUTE
 			{
-				UN_LOGF(LogFlecsWorld, Warning,
-					"Property Type: %s is not supported", *Property->GetName());
+				UE_LOG(LogFlecsWorld, Warning,
+					TEXT("Property Type: %s is not supported"), *Property->GetName());
 			}
 		}
 	}
@@ -1551,8 +1551,8 @@ public:
 			{
 				if (ScriptStruct->GetCppStructOps()->HasNoopConstructor())
 				{
-					UN_LOGF(LogFlecsComponent, Warning,
-						"Script struct %s has a noop constructor, this will not be used in flecs",
+					UE_LOG(LogFlecsComponent, Warning,
+						TEXT("Script struct %s has a noop constructor, this will not be used in flecs"),
 						*ScriptStruct->GetName());
 				}
 
@@ -1888,7 +1888,7 @@ public:
 		return World.observer<TComponents...>(StringCast<char>(*Name).Get());
 	}
 
-	FORCEINLINE_DEBUGGABLE NO_DISCARD flecs::observer_builder<> CreateObserver(const FString& Name = "") const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::observer_builder<> CreateObserver(const FString& Name = "") const
 	{
 		return World.observer<>(StringCast<char>(*Name).Get());
 	}

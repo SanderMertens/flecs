@@ -1250,7 +1250,7 @@ void Meta_struct_member_ptr_packed_struct(void) {
     } __attribute__((__packed__));
     #endif
 
-    #if defined(_MSC_VER)
+    #if defined(_MSC_VER) && !defined(__clang__)
     #pragma pack(push, 1)
     struct FlecsTestPackedStruct {
         char a;

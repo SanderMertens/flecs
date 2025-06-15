@@ -73,6 +73,11 @@ public class FlecsLibrary : ModuleRules
                 }
             );
         }
+
+        if (Target.bCompileAgainstEditor)
+        {
+           PublicDefinitions.Add("FLECS_SANITIZE");
+        }
         
         PublicIncludePaths.AddRange(
             new string[] {

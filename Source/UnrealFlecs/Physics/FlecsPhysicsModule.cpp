@@ -10,7 +10,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsPhysicsModule)
 
-UNLOG_CATEGORY(LogFlecsPhysicsModule);
+DEFINE_LOG_CATEGORY_STATIC(LogFlecsPhysicsModule, Log, All);
 
 DECLARE_STATS_GROUP(TEXT("FlecsPhysicsModule"), STATGROUP_FlecsPhysicsModule, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("FlecsPhysicsModule::ResimulationHandlers"),
@@ -105,7 +105,7 @@ void UFlecsPhysicsModule::ResimulationHandlers()
 
 		if UNLIKELY_IF(FlecsAdvanceWorld->GetWorld()->GetPhysicsScene() == nullptr)
 		{
-			UN_LOGF(LogFlecsPhysicsModule, Error, "Physics scene is invalid");
+			UE_LOG(LogFlecsPhysicsModule, Error, TEXT("Physics scene is invalid"));
 			return;
 		}
 		

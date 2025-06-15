@@ -11,6 +11,8 @@
 #include "Widgets/EntityHandle/FlecsIdPinFactory.h"
 #include "Widgets/Notifications/SNotificationList.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogFlecsEditor, Log, All);
+
 #define LOCTEXT_NAMESPACE "FUnrealFlecsEditorModule"
 
 void FUnrealFlecsEditorModule::StartupModule()
@@ -80,7 +82,7 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 				
 				if (!PIEInfo.IsSet())
 				{
-					FFlecsEditorLog::Warn<LogFlecsEditor>("No PIE instances found");
+					UE_LOG(LogFlecsEditor, Warning, TEXT("No PIE session info found"));
 					return;
 				}
 				
@@ -138,7 +140,8 @@ void FUnrealFlecsEditorModule::AddPrimaryAssetTypes()
 	if (bModified)
 	{
 		Settings->SaveConfig();
-		UN_LOG(LogFlecsEditor, Log, "Added Flecs asset types to PrimaryAssetTypesToScan.");
+		UE_LOG(LogFlecsEditor, Log,
+			TEXT("Added Flecs asset types to PrimaryAssetTypesToScan."));
 		
 		FNotificationInfo Info(LOCTEXT("FlecsAssetTypesAdded",
 			"Flecs asset types have been added to Asset Manager settings."));
