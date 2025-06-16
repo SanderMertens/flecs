@@ -84,7 +84,7 @@ public:
 
 		TypeMapComponent = nullptr;
 
-		if (World)
+		if LIKELY_IF(World)
 		{
 			World.release();
 			World.world_ = nullptr;
@@ -445,8 +445,7 @@ public:
 							{
 								const std::function<void(
 									TSolidNotNull<UObject*>,
-									TSolidNotNull<UFlecsWorld*>,
-									FFlecsEntityHandle)>& Function
+									TSolidNotNull<UFlecsWorld*>, FFlecsEntityHandle)>& Function
 									= DependenciesComponent.Dependencies.at(InModuleComponent.ModuleClass);
 
 								InEntity.AddPair(flecs::DependsOn, ModuleEntity);
@@ -586,7 +585,8 @@ public:
 				TSolidNotNull<UFlecsWorld*> InWorld,
 				FFlecsEntityHandle InDependencyEntity)
 			{
-				std::invoke(InFunction, CastChecked<TModule>(InDependencyObject.Get()), InWorld, InDependencyEntity);
+				std::invoke(InFunction, CastChecked<TModule>(
+					InDependencyObject.Get()), InWorld, InDependencyEntity);
 			});
 	}
 

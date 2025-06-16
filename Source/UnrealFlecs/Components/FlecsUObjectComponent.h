@@ -118,7 +118,7 @@ public:
 }; // struct FFlecsUObjectComponent
 
 REGISTER_FLECS_COMPONENT(FFlecsUObjectComponent,
-[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
+    [](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
     {
         InComponent
             .Add(flecs::Relationship)

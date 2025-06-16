@@ -45,11 +45,11 @@ public:
     FString WorldName;
 
     UPROPERTY(EditAnywhere, Instanced, Category = "Flecs",
-        meta = (MustImplement = "/Script/UnrealFlecs.FlecsGameLoopInterface"))
+        meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsGameLoopInterface"))
     TObjectPtr<UObject> GameLoop;
 
     UPROPERTY(EditAnywhere, Instanced, Category = "Flecs | Modules",
-        meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
+        meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
     TArray<TObjectPtr<UObject>> Modules;
 
     UPROPERTY(EditAnywhere, Category = "Flecs | Modules")
@@ -58,7 +58,7 @@ public:
     #if WITH_EDITORONLY_DATA
 
     UPROPERTY(EditAnywhere, Instanced, Category = "Flecs | Editor Modules",
-         meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
+         meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
     TArray<TObjectPtr<UObject>> EditorModules;
 
     UPROPERTY(EditAnywhere, Category = "Flecs | Editor Modules")
