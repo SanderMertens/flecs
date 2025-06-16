@@ -634,7 +634,14 @@ void Expr_mul_int_shift_left_int(void);
 void Expr_add_int_shift_left_int_add_int(void);
 void Expr_mul_int_shift_left_int_mul_int(void);
 void Expr_entity_expr(void);
+void Expr_entity_0_expr(void);
 void Expr_entity_path_expr(void);
+void Expr_root_lookup_func(void);
+void Expr_root_lookup_func_not_found(void);
+void Expr_root_lookup_func_w_entity_arg(void);
+void Expr_entity_lookup_func(void);
+void Expr_entity_lookup_func_not_found(void);
+void Expr_entity_lookup_func_w_entity_arg(void);
 void Expr_entity_parent_func(void);
 void Expr_entity_name_func(void);
 void Expr_entity_has_func(void);
@@ -3446,8 +3453,36 @@ bake_test_case Expr_testcases[] = {
         Expr_entity_expr
     },
     {
+        "entity_0_expr",
+        Expr_entity_0_expr
+    },
+    {
         "entity_path_expr",
         Expr_entity_path_expr
+    },
+    {
+        "root_lookup_func",
+        Expr_root_lookup_func
+    },
+    {
+        "root_lookup_func_not_found",
+        Expr_root_lookup_func_not_found
+    },
+    {
+        "root_lookup_func_w_entity_arg",
+        Expr_root_lookup_func_w_entity_arg
+    },
+    {
+        "entity_lookup_func",
+        Expr_entity_lookup_func
+    },
+    {
+        "entity_lookup_func_not_found",
+        Expr_entity_lookup_func_not_found
+    },
+    {
+        "entity_lookup_func_w_entity_arg",
+        Expr_entity_lookup_func_w_entity_arg
     },
     {
         "entity_parent_func",
@@ -4765,7 +4800,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        273,
+        280,
         Expr_testcases,
         1,
         Expr_params

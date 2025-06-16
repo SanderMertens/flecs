@@ -2152,8 +2152,13 @@ void SerializeEntityToJson_serialize_null_doc_name(void) {
 
     char *json = ecs_entity_to_json(world, e, NULL);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"#535\", \"components\":{\"(flecs.doc.Description,flecs.core.Name)\":{\"value\":null}}}");
+    
+    char *expect = flecs_asprintf(
+        "{\"name\":\"#%u\", \"components\":{\"(flecs.doc.Description,flecs.core.Name)\":{\"value\":null}}}", (uint32_t)e);
+
+    test_json(json, expect);
     ecs_os_free(json);
+    ecs_os_free(expect);
 
     ecs_fini(world);
 }
