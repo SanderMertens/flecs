@@ -176,6 +176,13 @@ void* flecs_defer_set(
     void *value,
     bool *is_new);
 
+/* Insert assign component command. */
+void* flecs_defer_assign(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
 /* Insert event command. */
 void flecs_enqueue(
     ecs_world_t *world,

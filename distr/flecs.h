@@ -7106,6 +7106,23 @@ void* ecs_ensure_modified_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
+/** Combines get_mut + modified in single operation.
+ * This operation is a more efficient alternative to calling ecs_get_mut_id() and
+ * ecs_modified_id() separately. This operation is only valid when the world is in
+ * deferred mode, which ensures that the Modified event is not emitted before
+ * the modification takes place.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The id of the component to obtain.
+ * @return The component pointer.
+ */
+FLECS_API
+void* ecs_get_mut_modified_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
 /** Create a component ref.
  * A ref is a handle to an entity + component which caches a small amount of
  * data to reduce overhead of repeatedly accessing the component. Use
@@ -21809,37 +21826,55 @@ inline void set(world_t *world, entity_t entity, const A& value) {
 // set(T&&), T = not constructible
 template <typename T>
 inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
-    using Type = remove_reference_t<T>;
+    using ActualType = remove_reference_t<T>;
 
-    ecs_assert(_::type<Type>::size() != 0, ECS_INVALID_PARAMETER,
+    ecs_assert(_::type<ActualType>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
 
-    Type *dst_ptr = static_cast<Type*>(ecs_get_mut_id(world, entity, id));
-    ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
-        "entity does not have component, use set() instead");
-    
-    Type& dst = *dst_ptr;
-    dst = FLECS_MOV(value);
+    if (!ecs_is_deferred(world)) {
+        ActualType *dst_ptr = static_cast<ActualType*>(ecs_get_mut_id(world, entity, id));
+        ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
+            "entity does not have component, use set() instead");
+        
+        ActualType& dst = *dst_ptr;
+        dst = FLECS_MOV(value);
 
-    ecs_modified_id(world, entity, id);
+        ecs_modified_id(world, entity, id);
+    } else {
+        ActualType *dst_ptr = static_cast<ActualType*>(ecs_get_mut_modified_id(world, entity, id));
+        ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
+            "entity does not have component, use set() instead");
+        
+        ActualType& dst = *dst_ptr;
+        dst = FLECS_MOV(value);
+    }
 }
 
 // set(const T&), T = not constructible
 template <typename T>
 inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
-    using Type = remove_reference_t<T>;
+    using ActualType = remove_reference_t<T>;
 
-    ecs_assert(_::type<Type>::size() != 0, ECS_INVALID_PARAMETER,
+    ecs_assert(_::type<ActualType>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
 
-    Type *dst_ptr = static_cast<Type*>(ecs_get_mut_id(world, entity, id));
-    ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
-        "entity does not have component, use set() instead");
-    
-    Type& dst = *dst_ptr;
-    dst = FLECS_MOV(value);
+    if (!ecs_is_deferred(world)) {
+        ActualType *dst_ptr = static_cast<ActualType*>(ecs_get_mut_id(world, entity, id));
+        ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
+            "entity does not have component, use set() instead");
+        
+        ActualType& dst = *dst_ptr;
+        dst = FLECS_MOV(value);
 
-    ecs_modified_id(world, entity, id);
+        ecs_modified_id(world, entity, id);
+    } else {
+        ActualType *dst_ptr = static_cast<ActualType*>(ecs_get_mut_modified_id(world, entity, id));
+        ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
+            "entity does not have component, use set() instead");
+        
+        ActualType& dst = *dst_ptr;
+        dst = FLECS_MOV(value);
+    }
 }
 
 // set(T&&)
@@ -26790,8 +26825,8 @@ struct entity_builder : entity_view {
      * This operation sets the pair value, and uses Second as type. If the
      * entity did not yet have the pair, it will be added.
      *
+     * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair
-     * @param first The first element of the pair.
      * @param value The value to set.
      */
     template <typename First, typename Second>
