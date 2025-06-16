@@ -61384,6 +61384,24 @@ void flecs_meta_entity_has(
 }
 
 static
+void flecs_meta_entity_lookup(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result) 
+{
+    (void)argc;
+    (void)ctx;
+    ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
+    const char *path = *(char**)argv[1].ptr;
+    if (entity) {
+        *(ecs_entity_t*)result->ptr = ecs_lookup_child(ctx->world, entity, path);
+    } else {
+        *(ecs_entity_t*)result->ptr = ecs_lookup(ctx->world, path);
+    }
+}
+
+static
 void flecs_meta_core_pair(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -61555,9 +61573,23 @@ void flecs_script_register_builtin_functions(
     }
 
     {
+        ecs_entity_t m = ecs_method(world, {
+            .name = "lookup",
+            .parent = ecs_id(ecs_entity_t),
+            .params = {
+                { .name = "path", .type = ecs_id(ecs_string_t) }
+            },
+            .return_type = ecs_id(ecs_entity_t),
+            .callback = flecs_meta_entity_lookup
+        });
+
+        ecs_doc_set_brief(world, m, "Lookup child by name");
+    }
+
+    {
         ecs_entity_t m = ecs_function(world, {
             .name = "pair",
-            .parent = ecs_entity(world, { .name = "core"}),
+            .parent = ecs_entity(world, { .name = "core" }),
             .params = {
                 { .name = "first", .type = ecs_id(ecs_entity_t) },
                 { .name = "second", .type = ecs_id(ecs_entity_t) }
@@ -86256,12 +86288,23 @@ int flecs_expr_identifier_visit_type(
         /* If not, try to resolve the identifier as entity */
         ecs_entity_t e = desc->lookup_action(
             script->world, node->value, desc->lookup_ctx);
-        if (e) {
-            const EcsScriptConstVar *global = ecs_get(
-                script->world, e, EcsScriptConstVar);
+        if (e || !ecs_os_strcmp(node->value, "#0")) {
+            const EcsScriptConstVar *global = NULL;
+            if (e) {
+                global = ecs_get(script->world, e, EcsScriptConstVar);
+            }
             if (!global) {
                 if (!type) {
                     type = ecs_id(ecs_entity_t);
+                } else if (type != ecs_id(ecs_id_t) && 
+                           type != ecs_id(ecs_entity_t)) 
+                {
+                    char *type_str = ecs_get_path(script->world, type);
+                    flecs_expr_visit_error(script, node,
+                        "cannot cast identifier '%s' to %s",
+                        node->value, type_str);
+                    ecs_os_free(type_str);
+                    goto error;
                 }
 
                 ecs_expr_value_node_t *result = flecs_expr_value_from(

@@ -3520,6 +3520,20 @@ void Expr_mul_int_shift_left_int_mul_int(void) {
     ecs_fini(world);
 }
 
+void Expr_entity_0_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "#0", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, 0);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
 void Expr_entity_expr(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3553,6 +3567,115 @@ void Expr_entity_path_expr(void) {
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, foo);
     ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_root_lookup_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "#0.lookup(\"foo\")", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, foo);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_root_lookup_func_not_found(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "#0.lookup(\"bar\")", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, 0);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_root_lookup_func_w_entity_arg(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    ecs_log_set_level(-4);
+    test_assert(
+        ecs_expr_run(world, "#0.lookup(foo)", &v, &desc) == NULL);
+
+    ecs_fini(world);
+}
+
+void Expr_entity_lookup_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "parent.foo" });
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "parent.lookup(\"foo\")", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, foo);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_entity_lookup_func_not_found(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "parent.foo" });
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "parent.lookup(\"bar\")", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, 0);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_entity_lookup_func_w_entity_arg(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "parent.foo" });
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    ecs_log_set_level(-4);
+    test_assert(
+        ecs_expr_run(world, "parent.lookup(parent.foo)", &v, &desc) == NULL);
 
     ecs_fini(world);
 }
