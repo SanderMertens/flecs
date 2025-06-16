@@ -1234,6 +1234,151 @@ void Entity_set_generic_no_size_w_id_t(void) {
     test_int(ptr->y, 20);
 }
 
+void Entity_set_T(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity()
+        .set(Position{10, 20});
+
+    const Position& p = e.get<Position>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_set_R_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    flecs::entity e = world.entity()
+        .set<Position>(tgt, {10, 20});
+
+    const Position& p = e.get<Position>(tgt);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_set_R_T(void) {
+    flecs::world world;
+
+    struct Tgt { };
+    
+    flecs::entity e = world.entity()
+        .set<Position, Tgt>({10, 20});
+
+    const Position& p = e.get<Position, Tgt>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_set_r_T(void) {
+    flecs::world world;
+
+    flecs::entity rel = world.entity();
+    
+    flecs::entity e = world.entity()
+        .set_second<Position>(rel, {10, 20});
+
+    const Position& p = e.get_second<Position>(rel);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_assign_T(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().add<Position>();
+
+    e.assign(Position{10, 20});
+
+    const Position& p = e.get<Position>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_assign_R_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    flecs::entity e = world.entity().add<Position>(tgt);
+    e.assign<Position>(tgt, {10, 20});
+
+    const Position& p = e.get<Position>(tgt);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_assign_R_T(void) {
+    flecs::world world;
+
+    struct Tgt { };
+    
+    flecs::entity e = world.entity().add<Position, Tgt>();
+    e.assign<Position, Tgt>({10, 20});
+
+    const Position& p = e.get<Position, Tgt>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_assign_r_T(void) {
+    flecs::world world;
+
+    flecs::entity rel = world.entity();
+    
+    flecs::entity e = world.entity().add_second<Position>(rel);
+    e.assign_second<Position>(rel, {10, 20});
+
+    const Position& p = e.get_second<Position>(rel);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_assign_T_not_found(void) {
+    install_test_abort();
+    
+    flecs::world world;
+
+    test_expect_abort();
+    world.entity()
+        .assign(Position{10, 20});
+}
+
+void Entity_assign_R_t_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+
+    test_expect_abort();
+    world.entity()
+        .assign<Position>(tgt, {10, 20});
+}
+
+void Entity_assign_R_T_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    struct Tgt { };
+    
+    test_expect_abort();
+    world.entity()
+        .assign<Position, Tgt>({10, 20});
+}
+
+void Entity_assign_r_T_not_found(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity rel = world.entity();
+    
+    test_expect_abort();
+    world.entity()
+        .assign_second<Position>(rel, {10, 20});
+}
+
 void Entity_add_role(void) {
     flecs::world world;
 

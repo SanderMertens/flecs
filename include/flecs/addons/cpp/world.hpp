@@ -44,17 +44,33 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
     }
 }
 
+// set(T&&)
+template <typename T, typename A>
+inline void set(world_t *world, entity_t entity, A&& value) {
+    id_t id = _::type<T>::id(world);
+    flecs::set(world, entity, FLECS_FWD(value), id);
+}
+
+// set(const T&)
+template <typename T, typename A>
+inline void set(world_t *world, entity_t entity, const A& value) {
+    id_t id = _::type<T>::id(world);
+    flecs::set(world, entity, value, id);
+}
+
 // set(T&&), T = not constructible
 template <typename T>
 inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
-    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+    using Type = remove_reference_t<T>;
+
+    ecs_assert(_::type<Type>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
 
-    T *dst_ptr = static_cast<remove_reference_t<T>*>(ecs_get_mut_id(world, entity, id));
+    Type *dst_ptr = static_cast<Type*>(ecs_get_mut_id(world, entity, id));
     ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
         "entity does not have component, use set() instead");
     
-    T& dst = *dst_ptr;
+    Type& dst = *dst_ptr;
     dst = FLECS_MOV(value);
 
     ecs_modified_id(world, entity, id);
@@ -63,18 +79,35 @@ inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_
 // set(const T&), T = not constructible
 template <typename T>
 inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
-    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+    using Type = remove_reference_t<T>;
+
+    ecs_assert(_::type<Type>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
 
-    T *dst_ptr = static_cast<remove_reference_t<T>*>(ecs_get_mut_id(world, entity, id));
+    Type *dst_ptr = static_cast<Type*>(ecs_get_mut_id(world, entity, id));
     ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
         "entity does not have component, use set() instead");
     
-    T& dst = *dst_ptr;
+    Type& dst = *dst_ptr;
     dst = FLECS_MOV(value);
 
     ecs_modified_id(world, entity, id);
 }
+
+// set(T&&)
+template <typename T, typename A>
+inline void assign(world_t *world, entity_t entity, A&& value) {
+    id_t id = _::type<T>::id(world);
+    flecs::assign(world, entity, FLECS_FWD(value), id);
+}
+
+// set(const T&)
+template <typename T, typename A>
+inline void assign(world_t *world, entity_t entity, const A& value) {
+    id_t id = _::type<T>::id(world);
+    flecs::assign(world, entity, value, id);
+}
+
 
 // emplace for T(Args...)
 template <typename T, typename ... Args, if_t<
@@ -88,20 +121,6 @@ inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args
     FLECS_PLACEMENT_NEW(&dst, T{FLECS_FWD(args)...});
 
     ecs_modified_id(world, entity, id);
-}
-
-// set(T&&)
-template <typename T, typename A>
-inline void set(world_t *world, entity_t entity, A&& value) {
-    id_t id = _::type<T>::id(world);
-    flecs::set(world, entity, FLECS_FWD(value), id);
-}
-
-// set(const T&)
-template <typename T, typename A>
-inline void set(world_t *world, entity_t entity, const A& value) {
-    id_t id = _::type<T>::id(world);
-    flecs::set(world, entity, value, id);
 }
 
 /** Return id without generation.

@@ -91,6 +91,18 @@ void Entity_set_generic_w_id_t(void);
 void Entity_set_generic_no_size(void);
 void Entity_set_generic_no_size_w_id(void);
 void Entity_set_generic_no_size_w_id_t(void);
+void Entity_set_T(void);
+void Entity_set_R_t(void);
+void Entity_set_R_T(void);
+void Entity_set_r_T(void);
+void Entity_assign_T(void);
+void Entity_assign_R_t(void);
+void Entity_assign_R_T(void);
+void Entity_assign_r_T(void);
+void Entity_assign_T_not_found(void);
+void Entity_assign_R_t_not_found(void);
+void Entity_assign_R_T_not_found(void);
+void Entity_assign_r_T_not_found(void);
 void Entity_add_role(void);
 void Entity_remove_role(void);
 void Entity_has_role(void);
@@ -1889,6 +1901,54 @@ bake_test_case Entity_testcases[] = {
     {
         "set_generic_no_size_w_id_t",
         Entity_set_generic_no_size_w_id_t
+    },
+    {
+        "set_T",
+        Entity_set_T
+    },
+    {
+        "set_R_t",
+        Entity_set_R_t
+    },
+    {
+        "set_R_T",
+        Entity_set_R_T
+    },
+    {
+        "set_r_T",
+        Entity_set_r_T
+    },
+    {
+        "assign_T",
+        Entity_assign_T
+    },
+    {
+        "assign_R_t",
+        Entity_assign_R_t
+    },
+    {
+        "assign_R_T",
+        Entity_assign_R_T
+    },
+    {
+        "assign_r_T",
+        Entity_assign_r_T
+    },
+    {
+        "assign_T_not_found",
+        Entity_assign_T_not_found
+    },
+    {
+        "assign_R_t_not_found",
+        Entity_assign_R_t_not_found
+    },
+    {
+        "assign_R_T_not_found",
+        Entity_assign_R_T_not_found
+    },
+    {
+        "assign_r_T_not_found",
+        Entity_assign_r_T_not_found
     },
     {
         "add_role",
@@ -7682,7 +7742,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        317,
+        329,
         Entity_testcases
     },
     {
