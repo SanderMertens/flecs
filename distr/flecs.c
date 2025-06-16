@@ -2683,6 +2683,13 @@ void* flecs_defer_set(
     void *value,
     bool *is_new);
 
+/* Insert assign component command. */
+void* flecs_defer_assign(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
 /* Insert event command. */
 void flecs_enqueue(
     ecs_world_t *world,
@@ -5463,6 +5470,39 @@ void* flecs_defer_set(
     return cmd_value;
 error:
     return NULL;
+}
+
+void* flecs_defer_assign(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_assert(r != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    ecs_assert(cr != NULL, ECS_INVALID_OPERATION, 
+        "unregistered component cannot be assigned, try set() instead");
+    ecs_assert(cr->type_info != NULL, ECS_INVALID_OPERATION, 
+        "assigned id is not a component");
+
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    void *result = flecs_get_component_ptr(r->table, row, cr).ptr;
+
+    bool track_changes = false;
+    track_changes |= (cr->flags & EcsIdHasOnSet) != 0;
+    track_changes |= cr->type_info->hooks.on_set != NULL;
+
+    if (track_changes) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
+        cmd->kind = EcsCmdModified;
+        cmd->entity = entity;
+        cmd->id = id;
+        cmd->cr = cr;
+    }
+
+    return result;
 }
 
 void flecs_enqueue(
@@ -8906,6 +8946,23 @@ void* ecs_ensure_modified_id(
     ecs_check(flecs_defer_cmd(stage), ECS_INVALID_PARAMETER, NULL);
 
     return flecs_defer_set(world, stage, EcsCmdSet, entity, id, 0, NULL, NULL);
+error:
+    return NULL;
+}
+
+void* ecs_get_mut_modified_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_check(flecs_defer_cmd(stage), ECS_INVALID_PARAMETER, NULL);
+
+    return flecs_defer_assign(world, stage, entity, id);
 error:
     return NULL;
 }
@@ -70409,6 +70466,20 @@ ecs_query_cache_t* flecs_query_cache_init(
             {
                 q->flags |= EcsQueryTrivialCache;
             }
+        }
+    }
+
+    if (const_desc->flags & EcsQueryDetectChanges) {
+        for (int i = 0; i < q->term_count; i ++) {
+            ecs_term_t *term = &q->terms[i];
+            /* If query has change detection, flag this on the component record. 
+             * This allows code to skip calling modified() if there are no OnSet
+             * hooks/observers, and the component isn't used in any queries that use
+             * change detection. */
+            
+            ecs_component_record_t *cr = 
+                flecs_components_ensure(world, term->id);
+            cr->flags |= EcsIdHasOnSet;
         }
     }
 

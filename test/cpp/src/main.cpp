@@ -103,6 +103,12 @@ void Entity_assign_T_not_found(void);
 void Entity_assign_R_t_not_found(void);
 void Entity_assign_R_T_not_found(void);
 void Entity_assign_r_T_not_found(void);
+void Entity_assign_w_on_set_hook(void);
+void Entity_assign_w_on_set_observer(void);
+void Entity_assign_w_change_detect(void);
+void Entity_defer_assign_w_on_set_hook(void);
+void Entity_defer_assign_w_on_set_observer(void);
+void Entity_defer_assign_w_change_detect(void);
 void Entity_add_role(void);
 void Entity_remove_role(void);
 void Entity_has_role(void);
@@ -1949,6 +1955,30 @@ bake_test_case Entity_testcases[] = {
     {
         "assign_r_T_not_found",
         Entity_assign_r_T_not_found
+    },
+    {
+        "assign_w_on_set_hook",
+        Entity_assign_w_on_set_hook
+    },
+    {
+        "assign_w_on_set_observer",
+        Entity_assign_w_on_set_observer
+    },
+    {
+        "assign_w_change_detect",
+        Entity_assign_w_change_detect
+    },
+    {
+        "defer_assign_w_on_set_hook",
+        Entity_defer_assign_w_on_set_hook
+    },
+    {
+        "defer_assign_w_on_set_observer",
+        Entity_defer_assign_w_on_set_observer
+    },
+    {
+        "defer_assign_w_change_detect",
+        Entity_defer_assign_w_change_detect
     },
     {
         "add_role",
@@ -7742,7 +7772,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        329,
+        335,
         Entity_testcases
     },
     {

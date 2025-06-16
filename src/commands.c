@@ -478,6 +478,39 @@ error:
     return NULL;
 }
 
+void* flecs_defer_assign(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_assert(r != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    ecs_assert(cr != NULL, ECS_INVALID_OPERATION, 
+        "unregistered component cannot be assigned, try set() instead");
+    ecs_assert(cr->type_info != NULL, ECS_INVALID_OPERATION, 
+        "assigned id is not a component");
+
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    void *result = flecs_get_component_ptr(r->table, row, cr).ptr;
+
+    bool track_changes = false;
+    track_changes |= (cr->flags & EcsIdHasOnSet) != 0;
+    track_changes |= cr->type_info->hooks.on_set != NULL;
+
+    if (track_changes) {
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
+        cmd->kind = EcsCmdModified;
+        cmd->entity = entity;
+        cmd->id = id;
+        cmd->cr = cr;
+    }
+
+    return result;
+}
+
 void flecs_enqueue(
     ecs_world_t *world,
     ecs_stage_t *stage,

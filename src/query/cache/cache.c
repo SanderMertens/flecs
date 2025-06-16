@@ -625,6 +625,20 @@ ecs_query_cache_t* flecs_query_cache_init(
         }
     }
 
+    if (const_desc->flags & EcsQueryDetectChanges) {
+        for (int i = 0; i < q->term_count; i ++) {
+            ecs_term_t *term = &q->terms[i];
+            /* If query has change detection, flag this on the component record. 
+             * This allows code to skip calling modified() if there are no OnSet
+             * hooks/observers, and the component isn't used in any queries that use
+             * change detection. */
+            
+            ecs_component_record_t *cr = 
+                flecs_components_ensure(world, term->id);
+            cr->flags |= EcsIdHasOnSet;
+        }
+    }
+
     ecs_size_t elem_size = flecs_query_cache_elem_size(result);
     ecs_vec_init(&world->allocator, &result->default_group.tables, 
         elem_size, 0);

@@ -858,8 +858,8 @@ struct entity_builder : entity_view {
      * This operation sets the pair value, and uses Second as type. If the
      * entity did not yet have the pair, it will be added.
      *
+     * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair
-     * @param first The first element of the pair.
      * @param value The value to set.
      */
     template <typename First, typename Second>
