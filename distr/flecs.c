@@ -70408,6 +70408,20 @@ ecs_query_cache_t* flecs_query_cache_init(
         if (!result->observer) {
             goto error;
         }
+
+        // Undo double increment from (above) query_init +  observer_init->query_init call
+        int i, count = q->term_count;
+        for (i = 0; i < count; i ++) {
+            ecs_term_t *term = &q->terms[i];
+            if (!(term->flags_ & EcsTermKeepAlive)) {
+                continue;
+            }
+
+            ecs_component_record_t *cr = flecs_components_get(q->real_world, term->id);
+            if (cr) {
+                cr->keep_alive --;
+            }
+        }
     }
 
     result->prev_match_count = -1;
