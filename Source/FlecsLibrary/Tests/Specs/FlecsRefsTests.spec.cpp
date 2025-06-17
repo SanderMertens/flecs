@@ -124,7 +124,7 @@ void Refs_non_const_ref(void) {
     auto ref = e.get_ref<Position>();
     ref->x ++;
 
-    test_int(e.get<Position>()->x, 11);
+    test_int(e.get<Position>().x, 11);
 }
 
 void Refs_pair_ref(void) {
@@ -135,7 +135,7 @@ void Refs_pair_ref(void) {
     auto ref = e.get_ref<Position, Tag>();
     ref->x ++;
 
-    test_int((e.get<Position, Tag>()->x), 11);
+    test_int((e.get<Position, Tag>().x), 11);
 }
 
 using PositionTag = flecs::pair<Position, Tag>;
@@ -148,7 +148,7 @@ void Refs_pair_ref_w_pair_type(void) {
     auto ref = e.get_ref<PositionTag>();
     ref->x ++;
 
-    test_int((e.get<PositionTag>()->x), 11);
+    test_int((e.get<PositionTag>().x), 11);
 }
 
 using TagPosition = flecs::pair<Tag, Position>;
@@ -161,7 +161,7 @@ void Refs_pair_ref_w_pair_type_second(void) {
     auto ref = e.get_ref<TagPosition>();
     ref->x++;
 
-    test_int((e.get<TagPosition>()->x), 11);
+    test_int((e.get<TagPosition>().x), 11);
 }
 
 void Refs_pair_ref_w_entity(void) {
@@ -173,7 +173,7 @@ void Refs_pair_ref_w_entity(void) {
     auto ref = e.get_ref<Position>(tag);
     ref->x ++;
 
-    test_int(e.get<Position>(tag)->x, 11);
+    test_int(e.get<Position>(tag).x, 11);
 }
 
 void Refs_pair_ref_second(void) {
@@ -185,7 +185,7 @@ void Refs_pair_ref_second(void) {
     auto ref = e.get_ref_second<Position>(tag);
     ref->x ++;
 
-    test_int(e.get_second<Position>(tag)->x, 11);
+    test_int(e.get_second<Position>(tag).x, 11);
 }
 
 void Refs_from_stage(void) {
@@ -362,7 +362,7 @@ void Refs_untyped_pair_ref(void) {
     Position* pos = static_cast<Position*>(ref.get());
     pos->x ++;
 
-    test_int((e.get<Position>(tag)->x), 11);
+    test_int((e.get<Position>(tag).x), 11);
 }
 
 void Refs_untyped_runtime_component_ref(void) {

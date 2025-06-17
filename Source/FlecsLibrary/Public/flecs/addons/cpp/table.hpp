@@ -210,6 +210,67 @@ struct table {
         return ecs_table_get_column(table_, index, 0);
     }
 
+
+    /* get */
+
+    /** Get pointer to component array by component.
+     *
+     * @param id The component id.
+     * @return Pointer to the column, NULL if not found.
+     */
+    void* try_get(flecs::id_t id) const {
+        int32_t index = column_index(id);
+        if (index == -1) {
+            return NULL;
+        }
+        return get_column(index);
+    }
+
+    /** Get pointer to component array by pair.
+     *
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
+     * @return Pointer to the column, NULL if not found.
+     */
+    void* try_get(flecs::entity_t first, flecs::entity_t second) const {
+        return try_get(ecs_pair(first, second));
+    }
+
+    /** Get pointer to component array by component.
+     *
+     * @tparam T The component.
+     * @return Pointer to the column, NULL if not found.
+     */
+    template <typename T, if_t< is_actual<T>::value > = 0>
+    T* try_get() const {
+        return static_cast<T*>(try_get(_::type<T>::id(world_)));
+    }
+
+    /** Get pointer to component array by component.
+     *
+     * @tparam T The component.
+     * @return Pointer to the column, NULL if not found.
+     */
+    template <typename T, typename A = actual_type_t<T>,
+        if_t< flecs::is_pair<T>::value > = 0>
+    A* try_get() const {
+        return static_cast<A*>(try_get(_::type<T>::id(world_)));
+    }
+
+    /** Get pointer to component array by pair.
+     *
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
+     * @return Pointer to the column, NULL if not found.
+     */
+    template <typename First>
+    First* try_get(flecs::entity_t second) const {
+        return static_cast<First*>(try_get(_::type<First>::id(world_), second));
+    }
+
+
+    /* get */
+
     /** Get pointer to component array by component.
      *
      * @param id The component id.
@@ -220,7 +281,10 @@ struct table {
         if (index == -1) {
             return NULL;
         }
-        return get_column(index);
+        void *r = get_column(index);
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
+            "invalid get_mut: table does not have component (use try_get)");
+        return r;
     }
 
     /** Get pointer to component array by pair.
@@ -239,16 +303,6 @@ struct table {
      * @return Pointer to the column, NULL if not found.
      */
     template <typename T, if_t< is_actual<T>::value > = 0>
-    T* get() const {
-        return static_cast<T*>(get(_::type<T>::id(world_)));
-    }
-
-    /** Get pointer to component array by (enum) component.
-     *
-     * @tparam T The (enum) component.
-     * @return Pointer to the column, NULL if not found.
-     */
-    template <typename T, if_t< is_enum<T>::value > = 0>
     T* get() const {
         return static_cast<T*>(get(_::type<T>::id(world_)));
     }
@@ -274,6 +328,7 @@ struct table {
     First* get(flecs::entity_t second) const {
         return static_cast<First*>(get(_::type<First>::id(world_), second));
     }
+
 
     /** Get pointer to component array by pair.
      *

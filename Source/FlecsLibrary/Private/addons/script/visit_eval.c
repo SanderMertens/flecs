@@ -1373,6 +1373,7 @@ int flecs_script_eval_for_range(
     for (i = from; i < to; i ++) {
         *(int32_t*)var->value.ptr = i;
         if (flecs_script_eval_scope(v, node->scope)) {
+            v->vars = ecs_script_vars_pop(v->vars);
             return -1;
         }
     }

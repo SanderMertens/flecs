@@ -148,7 +148,7 @@ void flecs_query_cache_match_set(
         qm->_up_fields = it->up_fields;
     } else {
         /* If this is a trivial cache, we shouldn't have any fields with 
-        * non-$this sources */
+         * non-$this sources */
         ecs_assert(i == field_count, ECS_INTERNAL_ERROR, NULL);
     }
 }
@@ -327,7 +327,7 @@ void flecs_query_rematch(
 
     if (!ecs_query_next(&it)) {
         flecs_query_cache_remove_all_tables(cache);
-        return;
+        goto done;
     }
 
     while (flecs_query_cache_rematch_next(cache, &it)) { }
@@ -363,5 +363,6 @@ void flecs_query_rematch(
         world->info.rematch_time_total += (ecs_ftime_t)ecs_time_measure(&t);
     }
 
+done:
     ecs_os_perf_trace_pop("flecs.query.rematch");
 }

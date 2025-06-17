@@ -135,14 +135,24 @@ bool flecs_set_id_flag(
         if (flag == EcsIdIsSparse) {
             flecs_component_init_sparse(world, cr);
         }
+
         if (flag == EcsIdDontFragment) {
             flecs_component_record_init_dont_fragment(world, cr);
         }
+
         if (flag == EcsIdExclusive) {
             flecs_component_record_init_exclusive(world, cr);
         }
+
+        if (flag == EcsIdOnInstantiateInherit) {
+            if (cr->id < FLECS_HI_COMPONENT_ID) {
+                world->non_trivial[cr->id] |= EcsNonTrivialIdInherit;
+            }
+        }
+
         return true;
     }
+
     return false;
 }
 

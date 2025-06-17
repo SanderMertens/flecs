@@ -363,6 +363,19 @@ struct entity : entity_builder<entity>
         ecs_delete(world_, id_);
     }
 
+    /** Create child */
+    template <typename ... Args>
+    flecs::entity child(flecs::entity_t r = flecs::ChildOf, Args&&... args) {
+        flecs::world world(world_);
+        return world.entity(FLECS_FWD(args)...).add(r, id_);
+    }
+
+    template <typename R, typename ... Args>
+    flecs::entity child(Args&&... args) {
+        flecs::world world(world_);
+        return world.entity(FLECS_FWD(args)...).add(_::type<R>::id(world_), id_);
+    }
+
     /** Set child order.
      * Changes the order of children as returned by entity::children(). Only 
      * applicableo to entities with the flecs::OrderedChildren trait.

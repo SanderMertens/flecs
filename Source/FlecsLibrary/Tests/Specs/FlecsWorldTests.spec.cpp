@@ -223,33 +223,33 @@ void World_multi_world_component(void) {
         .set(Mass{100});
 
     {
-        const Position *p = w1_e.get<Position>();
+        const Position *p = w1_e.try_get<Position>();
         test_assert(p != nullptr);
         test_int(p->x, 10);
         test_int(p->y, 20);
 
-        const Velocity *v = w1_e.get<Velocity>();
+        const Velocity *v = w1_e.try_get<Velocity>();
         test_assert(v != nullptr);
         test_int(v->x, 1);
         test_int(v->y, 2);
 
-        const Mass *m = w1_e.get<Mass>();
+        const Mass *m = w1_e.try_get<Mass>();
         test_assert(m != nullptr);
         test_int(m->value, 100);
     }
 
     {
-        const Position *p = w2_e.get<Position>();
+        const Position *p = w2_e.try_get<Position>();
         test_assert(p != nullptr);
         test_int(p->x, 10);
         test_int(p->y, 20);
 
-        const Velocity *v = w2_e.get<Velocity>();
+        const Velocity *v = w2_e.try_get<Velocity>();
         test_assert(v != nullptr);
         test_int(v->x, 1);
         test_int(v->y, 2);
 
-        const Mass *m = w2_e.get<Mass>();
+        const Mass *m = w2_e.try_get<Mass>();
         test_assert(m != nullptr);
         test_int(m->value, 100);
     }
@@ -418,7 +418,7 @@ void World_register_component_w_reset_in_multithreaded(void) {
 
     test_assert(e.has<Position>());
     test_assert(e.has(pos));
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_assert(p != nullptr);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -432,7 +432,7 @@ void World_register_short_template(void) {
     test_assert(c != 0);
     test_str(name, "FlecsTestTmp<FlecsTestTest>");
 
-    const EcsComponent *ptr = c.get<flecs::Component>();
+    const EcsComponent *ptr = c.try_get<flecs::Component>();
     test_assert(ptr != NULL);
     test_int(ptr->size, 4);
     test_int(ptr->alignment, 4);
@@ -534,7 +534,7 @@ void World_implicit_register_w_new_world(void) {
 
         auto e = ecs.entity().set<Position>({10, 20});
         test_assert(e.has<Position>());
-        auto *p = e.get<Position>();
+        auto *p = e.try_get<Position>();
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
@@ -547,7 +547,7 @@ void World_implicit_register_w_new_world(void) {
 
         auto e = ecs.entity().set<Position>({10, 20});
         test_assert(e.has<Position>());
-        auto *p = e.get<Position>();
+        auto *p = e.try_get<Position>();
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
@@ -1917,12 +1917,12 @@ void World_get_mut_T(void) {
     flecs::world world;
     RegisterTestTypeComponents(world);
 
-    Position *p = world.get_mut<Position>();
+    Position *p = world.try_get_mut<Position>();
 
     test_assert(p == nullptr);
 
     world.set<Position>({10, 20});
-    p = world.get_mut<Position>();
+    p = world.try_get_mut<Position>();
 
     test_assert(p != nullptr);
     test_int(p->x, 10);
@@ -1936,12 +1936,12 @@ void World_get_mut_R_T(void) {
     struct Tgt { };
     world.component<Tgt>();
 
-    Position *p = world.get_mut<Position, Tgt>();
+    Position *p = world.try_get_mut<Position, Tgt>();
     test_assert(p == nullptr);
 
     world.set<Position, Tgt>({10, 20});
     
-    p = world.get_mut<Position, Tgt>();
+    p = world.try_get_mut<Position, Tgt>();
     test_assert(p != nullptr);
 
     test_int(p->x, 10);
@@ -2019,7 +2019,7 @@ void World_fini_copy_move_assign(void) {
         *finished = true;
     };
 
-    auto get_world_id = [](const flecs::world &world) { return world.get<ID>()->id; };
+    auto get_world_id = [](const flecs::world &world) { return world.try_get<ID>()->id; };
 
     bool finished_1 = false;
     bool finished_2 = false;
