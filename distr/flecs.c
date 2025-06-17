@@ -70247,17 +70247,19 @@ void flecs_query_cache_fini(
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (cache->observer) {
-        // Undo double increment from query_cache_init + observer_init->query_init call
-        int i, count = cache->query->term_count;
-        for (i = 0; i < count; i ++) {
-            ecs_term_t *term = &cache->query->terms[i];
-            if (!(term->flags_ & EcsTermKeepAlive)) {
-                continue;
-            }
+        if (!cache->observer->query) {
+            // Undo increment from "simple" queries
+            int i, count = cache->query->term_count;
+            for (i = 0; i < count; i ++) {
+                ecs_term_t *term = &cache->query->terms[i];
+                if (!(term->flags_ & EcsTermKeepAlive)) {
+                    continue;
+                }
 
-            ecs_component_record_t *cr = flecs_components_get(cache->query->real_world, term->id);
-            if (cr) {
-                cr->keep_alive --;
+                ecs_component_record_t *cr = flecs_components_get(cache->query->real_world, term->id);
+                if (cr) {
+                    cr->keep_alive --;
+                }
             }
         }
         flecs_observer_fini(cache->observer);
