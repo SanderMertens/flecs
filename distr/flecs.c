@@ -3378,7 +3378,7 @@ struct ecs_world_t {
     uint32_t table_column_version[ECS_TABLE_VERSION_ARRAY_SIZE];
 
     /* Array for checking if components can be looked up trivially */
-    bool non_fragmenting[FLECS_HI_COMPONENT_ID];
+    ecs_flags8_t non_trivial[FLECS_HI_COMPONENT_ID];
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;
@@ -3921,14 +3921,24 @@ bool flecs_set_id_flag(
         if (flag == EcsIdIsSparse) {
             flecs_component_init_sparse(world, cr);
         }
+
         if (flag == EcsIdDontFragment) {
             flecs_component_record_init_dont_fragment(world, cr);
         }
+
         if (flag == EcsIdExclusive) {
             flecs_component_record_init_exclusive(world, cr);
         }
+
+        if (flag == EcsIdOnInstantiateInherit) {
+            if (cr->id < FLECS_HI_COMPONENT_ID) {
+                world->non_trivial[cr->id] |= EcsNonTrivialIdInherit;
+            }
+        }
+
         return true;
     }
+
     return false;
 }
 
@@ -8816,13 +8826,6 @@ error:
         ecs_column_t *column = &table->data.columns[column_index - 1];\
         return ECS_ELEM(column->data, column->ti->size, \
             ECS_RECORD_TO_ROW(r->row));\
-    } else if (column_index < 0) {\
-        column_index = flecs_ito(int16_t, -column_index - 1);\
-        const ecs_table_record_t *tr = &table->_->records[column_index];\
-        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;\
-        if (cr->flags & EcsIdIsSparse) {\
-            return flecs_component_sparse_get(cr, entity);\
-        }\
     }
 
 const void* ecs_get_id(
@@ -8842,11 +8845,9 @@ const void* ecs_get_id(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (id < FLECS_HI_COMPONENT_ID) {
-        ecs_get_low_id(table, r, id);
-        if (!world->non_fragmenting[id]) {
-            if (!(table->flags & EcsTableHasIsA)) {
-                return NULL;
-            }
+        if (!world->non_trivial[id]) {
+            ecs_get_low_id(table, r, id);
+            return NULL;
         }
     }
 
@@ -8894,7 +8895,7 @@ void* ecs_get_mut_id(
     ecs_assert(r != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (id < FLECS_HI_COMPONENT_ID) {
-        if (!world->non_fragmenting[id]) {
+        if (!world->non_trivial[id]) {
             ecs_get_low_id(r->table, r, id);
             return NULL;
         }
@@ -9430,13 +9431,8 @@ bool ecs_has_id(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (id < FLECS_HI_COMPONENT_ID) {
-        if (table->component_map[id] != 0) {
-            return true;
-        }
-        if (!world->non_fragmenting[id]) {
-            if (!(table->flags & EcsTableHasIsA)) {
-                return false;
-            }
+        if (!world->non_trivial[id]) {
+            return table->component_map[id] != 0;
         }
     }
 
@@ -9507,11 +9503,8 @@ bool ecs_owns_id(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (id < FLECS_HI_COMPONENT_ID) {
-        if (table->component_map[id]) {
-            return true;
-        }
-        if (!world->non_fragmenting[id]) {
-            return false;
+        if (!world->non_trivial[id]) {
+            return table->component_map[id];
         }
     }
 
@@ -37272,6 +37265,9 @@ void flecs_component_init_sparse(
             }
         }
 
+        if (cr->id < FLECS_HI_COMPONENT_ID) {
+            world->non_trivial[cr->id] |= EcsNonTrivialIdSparse;
+        }
     } else if (ECS_IS_PAIR(cr->id)) {
         if (cr->flags & EcsIdDontFragment) {
             if (cr->sparse) {
@@ -37303,7 +37299,7 @@ void flecs_component_record_init_dont_fragment(
     world->cr_non_fragmenting_head = cr;
 
     if (cr->id < FLECS_HI_COMPONENT_ID) {
-        world->non_fragmenting[cr->id] = true;
+        world->non_trivial[cr->id] |= EcsNonTrivialIdNonFragmenting;
     }
 
     flecs_component_init_sparse(world, cr);
@@ -42521,7 +42517,7 @@ void flecs_compute_table_diff(
 
     bool dont_fragment = false;
     if (id < FLECS_HI_COMPONENT_ID) {
-        dont_fragment = world->non_fragmenting[id];
+        dont_fragment = (world->non_trivial[id] & EcsNonTrivialIdNonFragmenting) != 0;
         if (dont_fragment) {
             flecs_components_ensure(world, id);
         }

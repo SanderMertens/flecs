@@ -156,6 +156,9 @@ void flecs_component_init_sparse(
             }
         }
 
+        if (cr->id < FLECS_HI_COMPONENT_ID) {
+            world->non_trivial[cr->id] |= EcsNonTrivialIdSparse;
+        }
     } else if (ECS_IS_PAIR(cr->id)) {
         if (cr->flags & EcsIdDontFragment) {
             if (cr->sparse) {
@@ -187,7 +190,7 @@ void flecs_component_record_init_dont_fragment(
     world->cr_non_fragmenting_head = cr;
 
     if (cr->id < FLECS_HI_COMPONENT_ID) {
-        world->non_fragmenting[cr->id] = true;
+        world->non_trivial[cr->id] |= EcsNonTrivialIdNonFragmenting;
     }
 
     flecs_component_init_sparse(world, cr);
