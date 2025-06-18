@@ -34381,10 +34381,6 @@ ecs_query_count_t ecs_query_count(
     flecs_poly_assert(q, ecs_query_t);
     ecs_query_count_t result = {0};
 
-    if (!(q->flags & EcsQueryMatchThis)) {
-        return result;
-    }
-
     ecs_iter_t it = flecs_query_iter(q->world, q);
     it.flags |= EcsIterNoData;
 
@@ -34392,6 +34388,17 @@ ecs_query_count_t ecs_query_count(
         result.results ++;
         result.entities += it.count;
         ecs_iter_skip(&it);
+    }
+
+    if ((q->flags & EcsQueryMatchOnlySelf) && 
+       !(q->flags & EcsQueryMatchWildcards)) 
+    {
+        result.tables = result.results;
+    } else if (q->flags & EcsQueryIsCacheable) {
+        ecs_query_impl_t *impl = flecs_query_impl(q);
+        if (impl->cache) {
+            result.tables = ecs_map_count(&impl->cache->tables);
+        }
     }
 
     return result;
