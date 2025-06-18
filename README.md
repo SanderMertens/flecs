@@ -122,6 +122,9 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### Age of Respair
 [![image](docs/img/projects/age_of_respair.png)](https://store.steampowered.com/app/3164360/Age_of_Respair/)
 
+### FEAST
+[![image](docs/img/projects/feast.jpg)](https://store.steampowered.com/app/3823480/FEAST/)
+
 ### The Forge
 [![image](docs/img/projects/the_forge.jpg)](https://github.com/ConfettiFX/The-Forge)
 
