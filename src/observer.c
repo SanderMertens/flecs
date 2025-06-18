@@ -1021,6 +1021,20 @@ ecs_observer_t* flecs_observer_init(
             if (trivial_observer) {
                 dummy_query.flags |= desc->query.flags;
                 query = &dummy_query;
+            } else {
+                // Undo increment queries
+                int i, count = dummy_query.term_count;
+                for (i = 0; i < count; i ++) {
+                    ecs_term_t *term = &dummy_query.terms[i];
+                    if (!(term->flags_ & EcsTermKeepAlive)) {
+                        continue;
+                    }
+
+                    ecs_component_record_t *cr = flecs_components_get(world, term->id);
+                    if (cr) {
+                        cr->keep_alive --;
+                    }
+                }
             }
         }
     }
