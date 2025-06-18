@@ -16001,9 +16001,12 @@ ecs_observer_t* flecs_observer_init(
                 !dummy_query.row_fields;
             if (trivial_observer) {
                 dummy_query.flags |= desc->query.flags;
+                if (dummy_query.terms[0].flags_ & EcsTermKeepAlive) {
+                    impl->flags |= EcsTermKeepAlive;
+                }
                 query = &dummy_query;
             } else {
-                // Undo increment queries
+                // Undo increment for unused queries
                 int i, count = dummy_query.term_count;
                 for (i = 0; i < count; i ++) {
                     ecs_term_t *term = &dummy_query.terms[i];
@@ -16294,6 +16297,13 @@ void flecs_observer_fini(
     /* Cleanup queries */
     if (o->query) {
         ecs_query_fini(o->query);
+    }
+    else if (impl->flags & EcsTermKeepAlive) {
+        // cleanup simple query optimization refcounts
+        ecs_component_record_t *cr = flecs_components_get(world, impl->register_id);
+        if (cr) {
+            cr->keep_alive --;
+        }
     }
     if (impl->not_query) {
         ecs_query_fini(impl->not_query);
@@ -70261,21 +70271,6 @@ void flecs_query_cache_fini(
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (cache->observer) {
-        if (!cache->observer->query) {
-            // Undo increment from "simple" queries
-            int i, count = cache->query->term_count;
-            for (i = 0; i < count; i ++) {
-                ecs_term_t *term = &cache->query->terms[i];
-                if (!(term->flags_ & EcsTermKeepAlive)) {
-                    continue;
-                }
-
-                ecs_component_record_t *cr = flecs_components_get(cache->query->real_world, term->id);
-                if (cr) {
-                    cr->keep_alive --;
-                }
-            }
-        }
         flecs_observer_fini(cache->observer);
     }
 
