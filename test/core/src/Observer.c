@@ -10141,6 +10141,8 @@ void Observer_create_observer_before_in_use_w_delete_component(void) {
     test_int(ctx.event, EcsOnAdd);
     test_uint(ctx.e[0], e);
 
+    ecs_delete(world, o);
+
     ecs_delete(world, Rel);
 
     test_assert(!ecs_has_pair(world, e, Rel, Tgt));
@@ -10158,7 +10160,7 @@ void Observer_create_observer_after_in_use_w_delete_component(void) {
 
     ecs_entity_t e = ecs_new_w_pair(world, Rel, Tgt);
 
-    ecs_observer(world, {
+    ecs_entity_t o = ecs_observer(world, {
         .query.terms = {
             { ecs_pair(Rel, EcsWildcard) }
         },
@@ -10168,6 +10170,8 @@ void Observer_create_observer_after_in_use_w_delete_component(void) {
     });
 
     test_int(ctx.invoked, 0);
+
+    ecs_delete(world, o);
 
     ecs_delete(world, Rel);
 
@@ -10202,6 +10206,8 @@ void Observer_create_trivial_component_observer_before_in_use_w_delete_component
     test_int(ctx.event, EcsOnAdd);
     test_uint(ctx.e[0], e);
 
+    ecs_delete(world, o);
+
     ecs_delete(world, ecs_id(Position));
 
     test_assert(!ecs_has(world, e, Position));
@@ -10218,7 +10224,7 @@ void Observer_create_trivial_component_observer_after_in_use_w_delete_component(
 
     ecs_entity_t e = ecs_new_w(world, Position);
 
-    ecs_observer(world, {
+    ecs_entity_t o = ecs_observer(world, {
         .query.terms = {
             { ecs_id(Position) }
         },
@@ -10228,6 +10234,8 @@ void Observer_create_trivial_component_observer_after_in_use_w_delete_component(
     });
 
     test_int(ctx.invoked, 0);
+
+    ecs_delete(world, o);
 
     ecs_delete(world, ecs_id(Position));
 
@@ -10263,6 +10271,8 @@ void Observer_create_trivial_pair_observer_before_in_use_w_delete_component(void
     test_int(ctx.event, EcsOnAdd);
     test_uint(ctx.e[0], e);
 
+    ecs_delete(world, o);
+
     ecs_delete(world, Rel);
 
     test_assert(!ecs_has_pair(world, e, Rel, Tgt));
@@ -10280,7 +10290,7 @@ void Observer_create_trivial_pair_observer_after_in_use_w_delete_component(void)
 
     ecs_entity_t e = ecs_new_w_pair(world, Rel, Tgt);
 
-    ecs_observer(world, {
+    ecs_entity_t o = ecs_observer(world, {
         .query.terms = {
             { ecs_pair(Rel, Tgt) }
         },
@@ -10290,6 +10300,8 @@ void Observer_create_trivial_pair_observer_after_in_use_w_delete_component(void)
     });
 
     test_int(ctx.invoked, 0);
+
+    ecs_delete(world, o);
 
     ecs_delete(world, Rel);
 
@@ -10327,6 +10339,8 @@ void Observer_create_multi_observer_before_in_use_w_delete_component(void) {
     test_int(ctx.event, EcsOnAdd);
     test_uint(ctx.e[0], e);
 
+    ecs_delete(world, o);
+
     ecs_delete(world, ecs_id(Position));
     ecs_delete(world, ecs_id(Velocity));
 
@@ -10347,7 +10361,7 @@ void Observer_create_multi_observer_after_in_use_w_delete_component(void) {
     ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_observer(world, {
+    ecs_entity_t o = ecs_observer(world, {
         .query.terms = {
             { ecs_id(Position) },
             { ecs_id(Velocity) },
@@ -10358,6 +10372,8 @@ void Observer_create_multi_observer_after_in_use_w_delete_component(void) {
     });
 
     test_int(ctx.invoked, 0);
+
+    ecs_delete(world, o);
 
     ecs_delete(world, ecs_id(Position));
     ecs_delete(world, ecs_id(Velocity));
