@@ -6,7 +6,7 @@
 
 Many Features are not complete
 
-Only tested on Version: UE 5.5 MSVC
+Only tested on Version: UE 5.6 MSVC
 
 ### Contributors to Unreal-Flecs:
 @Megafunk
