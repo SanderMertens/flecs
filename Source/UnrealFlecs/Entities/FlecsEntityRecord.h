@@ -124,18 +124,21 @@ struct UNREALFLECS_API FFlecsRecordPair
 							if (PairValueType == EFlecsValuePairType::First)
 							{
 								InEntityHandle.SetPairFirst(First.PairScriptStruct.GetScriptStruct(),
-									First.PairScriptStruct.GetMemory(), Second.PairScriptStruct.GetScriptStruct());
+									First.PairScriptStruct.GetMemory(),
+									Second.PairScriptStruct.GetScriptStruct());
 							}
 						}
 					break;
 					case EFlecsPairNodeType::EntityHandle:
 						{
-							InEntityHandle.AddPair(First.PairScriptStruct.GetScriptStruct(), Second.EntityHandle);
+							InEntityHandle.AddPair(First.PairScriptStruct.GetScriptStruct(),
+								Second.EntityHandle);
 						}
 					break;
 					case EFlecsPairNodeType::FGameplayTag:
 						{
-							InEntityHandle.AddPair(First.PairScriptStruct.GetScriptStruct(), Second.GameplayTag);
+							InEntityHandle.AddPair(First.PairScriptStruct.GetScriptStruct(),
+								Second.GameplayTag);
 						}
 					break;
 				}

@@ -1681,7 +1681,7 @@ END_DEFINE_SPEC(FFlecsEnumTestsSpec);
                 "replace_enum_constants",
                 "has_enum",
                 "has_enum_wildcard",
-                "get_enum",
+                "get_constant",
                 "remove_enum",
                 "remove_wildcard",
                 "enum_as_component",
@@ -1735,7 +1735,7 @@ void FFlecsEnumTestsSpec::Define()
     It("replace_enum_constants", [&]() { Enum_replace_enum_constants(); });
     It("has_enum", [&]() { Enum_has_enum(); });
     It("has_enum_wildcard", [&]() { Enum_has_enum_wildcard(); });
-    It("get_enum", [&]() { Enum_get_enum(); });
+    It("get_constant", [&]() { Enum_get_constant(); });
     It("remove_enum", [&]() { Enum_remove_enum(); });
     It("remove_wildcard", [&]() { Enum_remove_wildcard(); });
     It("enum_as_component", [&]() { Enum_enum_as_component(); });

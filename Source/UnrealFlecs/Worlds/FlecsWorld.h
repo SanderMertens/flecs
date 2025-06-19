@@ -52,7 +52,7 @@ struct UNREALFLECS_API FFlecsBeginPlay
 	GENERATED_BODY()
 }; // struct FFlecsBeginPlayEvent
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, NotBlueprintable)
 class UNREALFLECS_API UFlecsWorld final : public UObject
 {
 	GENERATED_BODY()
@@ -344,7 +344,7 @@ public:
 			.yield_existing()
 			.run([this](flecs::iter& Iter)
 			{
-				UnlockIter_Internal(Iter, [this](flecs::iter& Iter, size_t Index)
+				UnlockIter_Internal(Iter, [this](flecs::iter& Iter, const size_t Index)
 				{
 					const FFlecsEntityHandle EntityHandle = Iter.entity(Index);
 					
@@ -377,8 +377,8 @@ public:
 
 		FCoreUObjectDelegates::GarbageCollectComplete.AddWeakLambda(this, [this]
 		{
-			ObjectDestructionComponentQuery.each(
-				[](flecs::entity InEntity, const FFlecsUObjectComponent& InUObjectComponent)
+			ObjectDestructionComponentQuery
+				.each([](flecs::entity InEntity, const FFlecsUObjectComponent& InUObjectComponent)
 			{
 				const FFlecsEntityHandle EntityHandle = InEntity;
 					
@@ -465,13 +465,8 @@ public:
 			{
 				for (int32 Index = ImportedModules.Num() - 1; Index >= 0; --Index)
 				{
-					const TSolidNotNull<UObject*> ModuleObject = ImportedModules[Index].GetObject();
-					
-					if UNLIKELY_IF(!IsValid(ModuleObject))
-					{
-						ImportedModules.RemoveAt(Index);
-						continue;
-					}
+					UObject* ModuleObject = ImportedModules[Index].GetObject();
+					solid_check(IsValid(ModuleObject));
 					
 					if (ModuleObject == InUObjectComponent.GetObjectChecked())
 					{
@@ -613,15 +608,16 @@ public:
 
 		ModuleEntity.Add<FFlecsDependenciesComponent>();
 		
-		FFlecsDependenciesComponent* Dependencies = ModuleEntity.GetPtr<FFlecsDependenciesComponent>();
-		solid_check(Dependencies);
+		auto& [Dependencies] = ModuleEntity.GetMut<FFlecsDependenciesComponent>();
 		
-		Dependencies->Dependencies.emplace(InDependencyClass, InFunction);
+		Dependencies.emplace(InDependencyClass, InFunction);
 		
 		if (IsModuleImported(InDependencyClass))
 		{
 			const FFlecsEntityHandle DependencyEntity = GetModuleEntity(InDependencyClass);
-			TSolidNotNull<UObject*> DependencyModuleObject = GetModule(InDependencyClass);
+			
+			UObject* DependencyModuleObject = GetModule(InDependencyClass);
+			solid_check(IsValid(DependencyModuleObject));
 
 			solid_check(DependencyEntity.IsValid());
 
@@ -779,52 +775,37 @@ public:
 		return World.has<T>();
 	}
 
-	template <typename T
-		UE_REQUIRES(std::is_copy_constructible<T>::value)>
-	NO_DISCARD FORCEINLINE_DEBUGGABLE T GetSingleton() const
+	template <typename T>
+	NO_DISCARD FORCEINLINE_DEBUGGABLE const T& GetSingleton() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
-		return *World.get<T>();
-	}
-
-	template <typename T>
-	NO_DISCARD FORCEINLINE_DEBUGGABLE T* GetSingletonPtr()
-	{
-		return World.get_mut<T>();
-	}
-
-	template <typename T>
-	NO_DISCARD FORCEINLINE_DEBUGGABLE const T* GetSingletonPtr() const
-	{
 		return World.get<T>();
 	}
 
 	template <typename T>
-	NO_DISCARD FORCEINLINE_DEBUGGABLE T& GetSingletonRef()
+	NO_DISCARD FORCEINLINE_DEBUGGABLE T& GetMutSingleton() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
-		return *GetSingletonPtr<T>();
+		return World.get_mut<T>();
+	}
+	
+	template <typename T>
+	NO_DISCARD FORCEINLINE_DEBUGGABLE const T* GetSingletonPtr() const
+	{
+		return World.try_get<T>();
 	}
 
 	template <typename T>
-	NO_DISCARD FORCEINLINE_DEBUGGABLE const T& GetSingletonRef() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE T* GetMutSingletonPtr() const
 	{
-		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
-		return *GetSingletonPtr<T>();
-	}
-
-	template <typename T>
-	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::ref<T> GetSingletonFlecsRef() const
-	{
-		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
-		return World.get_ref<T>();
+		return World.try_get_mut<T>();
 	}
 	
 	template <typename T>
 	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainSingletonEntity() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
-		return World.entity<T>();
+		return World.singleton<T>();
 	}
 
 	template <typename T>
@@ -953,14 +934,14 @@ public:
 		solid_check(IsValid(InModule));
 		
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModule);
-		return ModuleEntity.GetPairPtr<FFlecsUObjectComponent, FFlecsModuleComponentTag>()->GetObjectChecked();
+		return ModuleEntity.GetPairFirst<FFlecsUObjectComponent, FFlecsModuleComponentTag>().GetObjectChecked();
 	}
 
 	template <Solid::TStaticClassConcept T>
 	NO_DISCARD FORCEINLINE_DEBUGGABLE TSolidNotNull<T*> GetModule() const
 	{
 		const FFlecsEntityHandle ModuleEntity = GetModuleEntity<T>();
-		return ModuleEntity.GetPairPtr<FFlecsUObjectComponent, FFlecsModuleComponentTag>()->GetObjectChecked<T>();
+		return ModuleEntity.GetPairFirst<FFlecsUObjectComponent, FFlecsModuleComponentTag>().GetObjectChecked<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")

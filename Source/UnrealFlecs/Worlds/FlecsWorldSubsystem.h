@@ -160,7 +160,7 @@ public:
 		DefaultWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ DefaultWorld });
 		DefaultWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
 
-		solid_checkf(DefaultWorld->GetSingletonRef<FFlecsWorldPtrComponent>().World == DefaultWorld,
+		solid_checkf(DefaultWorld->GetSingleton<FFlecsWorldPtrComponent>().World == DefaultWorld,
 			TEXT("Singleton world ptr component does not point to the correct world"));
 
 		DefaultWorld->InitializeSystems();
@@ -175,7 +175,7 @@ public:
 				FFlecsDefaultEntityEngine::Get().CreateDefaultEntity(DefaultEntity, DefaultWorld->World);
 
 			UE_LOG(LogFlecsCore, Log,
-				TEXT("Created default entity %s with id %d"),
+				TEXT("Created default entity %s with id %llu"),
 				*DefaultEntity.EntityName, NewDefaultEntity.id());
 		}
 

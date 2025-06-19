@@ -250,7 +250,7 @@ void FEntityBasicTestsSpec::Define()
 			TestFalse("Entity should not have a pair with SecondEntity",
 				EntityHandle.HasPairSecond<FTestPairComponent>(SecondEntity));
 			TestEqual("Entity pair component value should be 100", 
-				EntityHandle.GetPair<FTestPairComponent>(SecondEntity).Value, 100);
+				EntityHandle.GetPairFirst<FTestPairComponent>(SecondEntity).Value, 100);
 		});
 
 		It("Should create an entity with a pair that has a component in the second of the pair (with data)",

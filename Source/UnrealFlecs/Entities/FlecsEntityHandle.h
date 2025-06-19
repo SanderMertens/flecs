@@ -346,45 +346,91 @@ public:
 		Set(ObtainComponentTypeStruct(InValue.GetScriptStruct()), InValue.GetMemory());
 		return *this;
 	}
-	
+
 	template <typename T>
-	NO_DISCARD SOLID_INLINE T Get() const
+	SOLID_INLINE const FFlecsEntityHandle& Assign(const T& InValue) const
 	{
-		check(Has<T>());
-		return *GetEntity().get<T>();
+		solid_checkf(Has<T>(),
+			TEXT("Entity does not have component with type %hs"), nameof(T).data());
+		
+		GetEntity().assign<T>(InValue);
+		return *this;
 	}
 
-	NO_DISCARD SOLID_INLINE void* GetPtr(const FFlecsId InEntity)
+	SOLID_INLINE const FFlecsEntityHandle& Assign(const FFlecsId InEntity, const void* InValue) const
 	{
-		return GetEntity().get_mut(InEntity);
+		solid_checkf(Has(InEntity),
+			TEXT("Entity does not have component with id %llu"), InEntity.GetId());
+		
+		GetEntity().set_ptr(InEntity, InValue);
+		return *this;
 	}
 
-	NO_DISCARD SOLID_INLINE const void* GetPtr(const FFlecsId InEntity) const
+	SOLID_INLINE const FFlecsEntityHandle& Assign(const FFlecsId InEntity, const uint32 InSize, const void* InValue) const
 	{
-		return GetEntity().get(InEntity);
+		solid_checkf(Has(InEntity),
+			TEXT("Entity does not have component with id %llu"), InEntity.GetId());
+		
+		GetEntity().set_ptr(InEntity, InSize, InValue);
+		return *this;
+	}
+
+	SOLID_INLINE const FFlecsEntityHandle& Assign(const UScriptStruct* StructType, const void* InValue) const
+	{
+		solid_checkf(Has(StructType),
+			TEXT("Entity does not have component with script struct %s"),
+			*StructType->GetStructCPPName());
+		
+		Assign(ObtainComponentTypeStruct(StructType), InValue);
+		return *this;
+	}
+
+	SOLID_INLINE const FFlecsEntityHandle& Assign(const FInstancedStruct& InValue) const
+	{
+		solid_checkf(Has(InValue.GetScriptStruct()),
+			TEXT("Entity does not have component with script struct %s"),
+			*InValue.GetScriptStruct()->GetStructCPPName());
+		
+		Assign(ObtainComponentTypeStruct(InValue.GetScriptStruct()), InValue.GetMemory());
+		return *this;
 	}
 	
 	template <typename T>
-	NO_DISCARD SOLID_INLINE T* GetPtr()
+	NO_DISCARD SOLID_INLINE const T& Get() const
 	{
+		solid_checkf(Has<T>(),
+			TEXT("Entity does not have component with type %hs"), nameof(T).data());
+		return GetEntity().get<T>();
+	}
+
+	template <typename T>
+	NO_DISCARD SOLID_INLINE T& GetMut() const
+	{
+		solid_checkf(Has<T>(),
+			TEXT("Entity does not have component with type %hs"), nameof(T).data());
 		return GetEntity().get_mut<T>();
 	}
 	
 	template <typename T>
 	NO_DISCARD SOLID_INLINE const T* GetPtr() const
 	{
-		return GetEntity().get<T>();
+		return GetEntity().try_get<T>();
 	}
 
 	template <typename T>
 	NO_DISCARD SOLID_INLINE T* GetMutPtr() const
 	{
-		return GetEntity().get_mut<T>();
+		return GetEntity().try_get_mut<T>();
+	}
+	
+	NO_DISCARD SOLID_INLINE const void* GetPtr(const FFlecsId InEntity) const
+	{
+		return GetEntity().try_get(InEntity);
 	}
 
-	NO_DISCARD SOLID_INLINE void* GetPtr(const UScriptStruct* StructType)
+	NO_DISCARD SOLID_INLINE void* GetMutPtr(const FFlecsId InEntity) const
 	{
-		return GetPtr(ObtainComponentTypeStruct(StructType));
+		return GetEntity().try_get_mut(InEntity);
 	}
 
 	NO_DISCARD SOLID_INLINE const void* GetPtr(const UScriptStruct* StructType) const
@@ -394,47 +440,11 @@ public:
 
 	NO_DISCARD SOLID_INLINE void* GetMutPtr(const UScriptStruct* StructType) const
 	{
-		return GetEntity().get_mut(ObtainComponentTypeStruct(StructType));
-	}
-
-	template <typename T>
-	NO_DISCARD SOLID_INLINE T& GetRef()
-	{
-		solid_checkf(Has<T>(), TEXT("Entity does not have component"));
-		
-		const TSolidNotNull<T*> Ptr = GetPtr<T>();
-		return *Ptr;
-	}
-
-	template <typename T>
-	NO_DISCARD SOLID_INLINE const T& GetRef() const
-	{
-		solid_checkf(Has<T>(), TEXT("Entity does not have component"));
-		
-		const TSolidNotNull<const T*> Ptr = GetPtr<T>();
-		return *Ptr;
-	}
-
-	template <typename T>
-	NO_DISCARD SOLID_INLINE T& GetMutRef() const
-	{
-		solid_checkf(Has<T>(), TEXT("Entity does not have component"));
-		
-		TSolidNotNull<T*> Ptr = GetMutPtr<T>();
-		return *Ptr;
+		return GetMutPtr(ObtainComponentTypeStruct(StructType));
 	}
 
 	template <typename T>
 	NO_DISCARD SOLID_INLINE flecs::ref<T> GetFlecsRef() const
-	{
-		solid_checkf(Has<T>(),
-			TEXT("Entity does not have component with type %hs"), nameof(T).data());
-		
-		return GetEntity().get_ref<T>();
-	}
-
-	template <typename T>
-	NO_DISCARD SOLID_INLINE flecs::ref<T> GetFlecsRef()
 	{
 		solid_checkf(Has<T>(),
 			TEXT("Entity does not have component with type %hs"), nameof(T).data());
@@ -453,15 +463,10 @@ public:
 	NO_DISCARD SOLID_INLINE flecs::untyped_ref GetFlecsRef(const UScriptStruct* StructType) const
 	{
 		solid_checkf(Has(StructType),
-			TEXT("Entity does not have component with script struct %s"), *StructType->GetStructCPPName());
+			TEXT("Entity does not have component with script struct %s"),
+			*StructType->GetStructCPPName());
 		
 		return GetFlecsRef(ObtainComponentTypeStruct(StructType));
-	}
-
-	template <typename T>
-	NO_DISCARD SOLID_INLINE bool Has()
-	{
-		return GetEntity().has<T>();
 	}
 
 	SOLID_INLINE void Clear() const
@@ -1146,71 +1151,341 @@ public:
 		return HasPairSecond<TSecond>(GetTagEntity(InFirst));
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	NO_DISCARD SOLID_INLINE TActual GetPair() const
-	{
-		return *GetEntity().get<TFirst, TSecond>();
-	}
-
-	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE TActual GetPair(const TSolidNotNull<UScriptStruct*> InSecond) const
-	{
-		return GetPair<TFirst>(ObtainComponentTypeStruct(InSecond));
-	}
-
-	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE TActual GetPair(const FGameplayTag& InSecond) const
-	{
-		solid_checkf(InSecond.IsValid(), TEXT("Invalid GameplayTag provided for GetPair"));
-		solid_checkf(HasPair<TFirst>(InSecond),
-			TEXT("Entity does not have pair with %s"), *InSecond.ToString());
-		return GetPair<TFirst>(GetTagEntity(InSecond));
-	}
-
-	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE TActual GetPair(const FFlecsId InSecond) const
-	{
-		solid_check(HasPair<TFirst>(InSecond));
-		return *GetEntity().get<TFirst>(InSecond);
-	}
-	
 	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-	UE_REQUIRES(std::is_same_v<TSecond, TActual>)>
-	SOLID_INLINE TActual GetPairSecond(const FFlecsId InFirst, const FFlecsId InSecond) const
+		UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
+	NO_DISCARD SOLID_INLINE const TActual& GetPairFirst() const
 	{
-		return *GetEntity().get<TFirst, TSecond>(InFirst, InSecond);
+		solid_checkf((HasPair<TFirst, TSecond>()),
+			TEXT("Entity does not have pair with %hs and %hs"),
+			nameof(TFirst).data(),
+			nameof(TSecond).data());
+		
+		return GetEntity().get<TFirst, TSecond>();
 	}
 
-	template <typename TSecond, typename TActual = TSecond>
-	SOLID_INLINE TActual GetPairSecond(const FFlecsId InFirst) const
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
+		UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
+	NO_DISCARD SOLID_INLINE TActual& GetPairMutFirst() const
 	{
-		return *GetEntity().get_second<TSecond>(InFirst);
-	}
-
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	SOLID_INLINE TActual* GetPairPtr() const
-	{
+		solid_checkf((HasPair<TFirst, TSecond>()),
+			TEXT("Entity does not have pair with %hs and %hs"),
+			nameof(TFirst).data(),
+			nameof(TSecond).data());
+		
 		return GetEntity().get_mut<TFirst, TSecond>();
 	}
 
 	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE TActual* GetPairPtr(const FFlecsId InSecond) const
+	NO_DISCARD SOLID_INLINE const TActual& GetPairFirst(const FFlecsId InSecond) const
 	{
+		solid_checkf(HasPair<TFirst>(InSecond),
+			TEXT("Entity does not have pair with %hs and %s"),
+			nameof(TFirst).data(),
+			*InSecond.ToString());
+		
+		return GetEntity().get<TFirst>(InSecond);
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	NO_DISCARD SOLID_INLINE TActual& GetPairMutFirst(const FFlecsId InSecond) const
+	{
+		solid_checkf(HasPair<TFirst>(InSecond),
+			TEXT("Entity does not have pair with %hs and %s"),
+			nameof(TFirst).data(),
+			*InSecond.ToString());
+		
 		return GetEntity().get_mut<TFirst>(InSecond);
 	}
 
 	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE TActual* GetPairPtr(const UScriptStruct* InSecond) const
+	NO_DISCARD SOLID_INLINE TActual& GetPairFirst(const UScriptStruct* InSecond) const
 	{
-		return GetPairPtr<TFirst>(ObtainComponentTypeStruct(InSecond));
+		return GetPairFirst<TFirst>(ObtainComponentTypeStruct(InSecond));
 	}
 
 	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE TActual* GetPairPtr(const FGameplayTag& InSecond) const
+	NO_DISCARD SOLID_INLINE TActual& GetPairMutFirst(const UScriptStruct* InSecond) const
 	{
-		return GetPairPtr<TFirst>(GetTagEntity(InSecond));
+		return GetPairMutFirst<TFirst>(ObtainComponentTypeStruct(InSecond));
 	}
 
+	template <typename TFirst, typename TActual = TFirst>
+	NO_DISCARD SOLID_INLINE TActual& GetPairFirst(const FGameplayTag& InSecond) const
+	{
+		return GetPairFirst<TFirst>(GetTagEntity(InSecond));
+	}
+	
+	template <typename TFirst, typename TActual = TFirst>
+	NO_DISCARD SOLID_INLINE TActual& GetPairMutFirst(const FGameplayTag& InSecond) const
+	{
+		return GetPairMutFirst<TFirst>(GetTagEntity(InSecond));
+	}
+
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
+		UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
+	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrFirst() const
+	{
+		return GetEntity().try_get<TFirst, TSecond>();
+	}
+
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
+		UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
+	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutFirst() const
+	{
+		return GetEntity().try_get_mut<TFirst, TSecond>();
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrFirst(const FFlecsId InSecond) const
+	{
+		return GetEntity().try_get<TFirst>(InSecond);
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutFirst(const FFlecsId InSecond) const
+	{
+		return GetEntity().try_get_mut<TFirst>(InSecond);
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrFirst(const UScriptStruct* InSecond) const
+	{
+		return GetPairPtrFirst<TFirst>(ObtainComponentTypeStruct(InSecond));
+	}
+	
+	template <typename TFirst, typename TActual = TFirst>
+	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutFirst(const UScriptStruct* InSecond) const
+	{
+		return GetPairPtrMutFirst<TFirst>(ObtainComponentTypeStruct(InSecond));
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrFirst(const FGameplayTag& InSecond) const
+	{
+		return GetPairPtrFirst<TFirst>(GetTagEntity(InSecond));
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutFirst(const FGameplayTag& InSecond) const
+	{
+		return GetPairPtrMutFirst<TFirst>(GetTagEntity(InSecond));
+	}
+
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const FFlecsId InFirst, const FFlecsId InSecond) const
+	{
+		return GetEntity().try_get(InFirst, InSecond);
+	}
+
+	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const FFlecsId InFirst, const FFlecsId InSecond) const
+	{
+		return GetEntity().try_get_mut(InFirst, InSecond);
+	}
+
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const UScriptStruct* InFirst, const FFlecsId InSecond) const
+	{
+		return GetPairPtrFirst(ObtainComponentTypeStruct(InFirst), InSecond);
+	}
+
+	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const UScriptStruct* InFirst, const FFlecsId InSecond) const
+	{
+		return GetPairPtrMutFirst(ObtainComponentTypeStruct(InFirst), InSecond);
+	}
+
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const FFlecsId InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetPairPtrFirst(InFirst, ObtainComponentTypeStruct(InSecond));
+	}
+
+	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const FFlecsId InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetPairPtrMutFirst(InFirst, ObtainComponentTypeStruct(InSecond));
+	}
+
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetPairPtrFirst(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
+	}
+
+	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetPairPtrMutFirst(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
+	}
+
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
+	{
+		return GetPairPtrFirst(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
+	}
+
+	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
+	{
+		return GetPairPtrMutFirst(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
+	}
+	
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
+		UE_REQUIRES(std::is_same_v<TSecond, TActual>)>
+	NO_DISCARD SOLID_INLINE const TActual& GetPairSecond() const
+	{
+		solid_checkf((HasPairSecond<TFirst, TSecond>()),
+			TEXT("Entity does not have pair with %hs and %hs"),
+			nameof(TFirst).data(),
+			nameof(TSecond).data());
+		
+		return GetEntity().get_second<TFirst, TSecond>();
+	}
+
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
+		UE_REQUIRES(std::is_same_v<TSecond, TActual>)>
+	NO_DISCARD SOLID_INLINE TActual& GetPairMutSecond() const
+	{
+		solid_checkf((HasPairSecond<TFirst, TSecond>()),
+			TEXT("Entity does not have pair with %hs and %hs"),
+			nameof(TFirst).data(),
+			nameof(TSecond).data());
+		
+		return GetEntity().get_mut_second<TFirst, TSecond>();
+	}
+
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE const TActual& GetPairSecond(const FFlecsId InFirst) const
+	{
+		solid_checkf(HasPairSecond<TSecond>(InFirst),
+			TEXT("Entity does not have pair with %hs and %s"),
+			nameof(TSecond).data(),
+			*InFirst.ToString());
+		
+		return GetEntity().get_second<TSecond>(InFirst);
+	}
+
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE TActual& GetPairMutSecond(const FFlecsId InFirst) const
+	{
+		solid_checkf(HasPairSecond<TSecond>(InFirst),
+			TEXT("Entity does not have pair with %hs and %s"),
+			Unreal::Flecs::ToCString(nameof(TSecond).data()),
+			*InFirst.ToString());
+		
+		return GetEntity().get_mut_second<TSecond>(InFirst);
+	}
+
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE const TActual& GetPairSecond(const UScriptStruct* InFirst) const
+	{
+		return GetPairSecond<TSecond>(ObtainComponentTypeStruct(InFirst));
+	}
+
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE TActual& GetPairMutSecond(const UScriptStruct* InFirst) const
+	{
+		return GetPairMutSecond<TSecond>(ObtainComponentTypeStruct(InFirst));
+	}
+
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE const TActual& GetPairSecond(const FGameplayTag& InFirst) const
+	{
+		return GetPairSecond<TSecond>(GetTagEntity(InFirst));
+	}
+
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE TActual& GetPairMutSecond(const FGameplayTag& InFirst) const
+	{
+		return GetPairMutSecond<TSecond>(GetTagEntity(InFirst));
+	}
+	
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
+		UE_REQUIRES(std::is_same_v<TSecond, TActual>)>
+	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrSecond() const
+	{
+		return GetEntity().try_get_second<TFirst, TSecond>();
+	}
+
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
+		UE_REQUIRES(std::is_same_v<TSecond, TActual>)>
+	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutSecond() const
+	{
+		return GetEntity().try_get_mut_second<TFirst, TSecond>();
+	}
+
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrSecond(const FFlecsId InFirst) const
+	{
+		return GetEntity().try_get_second<TSecond>(InFirst);
+	}
+	
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutSecond(const FFlecsId InFirst) const
+	{
+		return GetEntity().try_get_mut_second<TSecond>(InFirst);
+	}
+
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrSecond(const UScriptStruct* InFirst) const
+	{
+		return GetPairPtrSecond<TSecond>(ObtainComponentTypeStruct(InFirst));
+	}
+
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutSecond(const UScriptStruct* InFirst) const
+	{
+		return GetPairPtrMutSecond<TSecond>(ObtainComponentTypeStruct(InFirst));
+	}
+
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrSecond(const FGameplayTag& InFirst) const
+	{
+		return GetPairPtrSecond<TSecond>(GetTagEntity(InFirst));
+	}
+
+	template <typename TSecond, typename TActual = TSecond>
+	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutSecond(const FGameplayTag& InFirst) const
+	{
+		return GetPairPtrMutSecond<TSecond>(GetTagEntity(InFirst));
+	}
+
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const FFlecsId InFirst, const FFlecsId InSecond) const
+	{
+		return GetEntity().try_get(InFirst, InSecond);
+	}
+
+	NO_DISCARD SOLID_INLINE void* GetPairPtrMutSecond(const FFlecsId InFirst, const FFlecsId InSecond) const
+	{
+		return GetEntity().try_get_mut(InFirst, InSecond);
+	}
+
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const UScriptStruct* InFirst, const FFlecsId InSecond) const
+	{
+		return GetPairPtrSecond(ObtainComponentTypeStruct(InFirst), InSecond);
+	}
+
+	NO_DISCARD SOLID_INLINE void* GetPairPtrMutSecond(const UScriptStruct* InFirst, const FFlecsId InSecond) const
+	{
+		return GetPairPtrMutSecond(ObtainComponentTypeStruct(InFirst), InSecond);
+	}
+	
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const FFlecsId InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetPairPtrSecond(InFirst, ObtainComponentTypeStruct(InSecond));
+	}
+	
+	NO_DISCARD SOLID_INLINE void* GetPairPtrMutSecond(const FFlecsId InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetPairPtrMutSecond(InFirst, ObtainComponentTypeStruct(InSecond));
+	}
+
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetPairPtrSecond(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
+	}
+
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetPairPtrSecond(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond));
+	}
+
+	NO_DISCARD SOLID_INLINE void* GetPairPtrMutSecond(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetPairPtrMutSecond(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
+	}
+	
 	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
 		UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
 	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const TActual& InValue) const
@@ -1241,14 +1516,16 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const UScriptStruct* InFirst, const void* InValue, const UScriptStruct* InSecond) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const UScriptStruct* InFirst,
+		const void* InValue, const UScriptStruct* InSecond) const
 	{
 		if (!HasPair(InFirst, InSecond))
 		{
 			AddPair(InFirst, InSecond);
 		}
 
-		Set(FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond)),
+		Set(FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst),
+			ObtainComponentTypeStruct(InSecond)),
 				InFirst->GetStructureSize(),
 				InValue);
 		return *this;
@@ -1262,7 +1539,8 @@ public:
 			AddPair(InFirst, InSecond);
 		}
 
-		Set(FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond)),
+		Set(FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst),
+			GetTagEntity(InSecond)),
 				InFirst->GetStructureSize(),
 				InValue);
 		return *this;
@@ -1331,7 +1609,8 @@ public:
 			AddPair(InFirst, InSecond);
 		}
 
-		Set(FFlecsId::MakePair(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond)),
+		Set(FFlecsId::MakePair(GetTagEntity(InFirst),
+			ObtainComponentTypeStruct(InSecond)),
 			InSecond->GetStructureSize(),
 			InValue);
 		return *this;
@@ -1511,4 +1790,5 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 	{
 		WithNetSerializer = true,
 	}; // enum
+	
 }; // struct TStructOpsTypeTraits<FFlecsEntityHandle>

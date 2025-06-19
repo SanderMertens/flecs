@@ -68,6 +68,7 @@ void UFlecsPhysicsModule::WorldBeginPlay(TSolidNotNull<UFlecsWorld*> InWorld, TS
 
 void UFlecsPhysicsModule::ResimulationHandlers()
 {
+	solid_check(IsWorldValid());
 	const TSolidNotNull<UFlecsWorld*> FlecsWorld = GetFlecsWorld();
 	
 	solid_check(Scene);
@@ -82,12 +83,12 @@ void UFlecsPhysicsModule::ResimulationHandlers()
 
 	FlecsWorld->AddSingleton<FTickerPhysicsHistoryComponent>();
 		
-	PhysicsHistoryComponentRef = FlecsWorld->GetSingletonPtr<FTickerPhysicsHistoryComponent>();
+	PhysicsHistoryComponentRef = FlecsWorld->GetMutSingletonPtr<FTickerPhysicsHistoryComponent>();
 	solid_check(PhysicsHistoryComponentRef);
 
 	PhysicsHistoryComponentRef->HistoryItems.Reserve(MaxFrameHistory);
 
-	TickerComponentRef = FlecsWorld->GetSingletonPtr<FFlecsTickerComponent>();
+	TickerComponentRef = FlecsWorld->GetMutSingletonPtr<FFlecsTickerComponent>();
 
 	FSolverPostAdvance::FDelegate PostAdvanceDelegate;
 	

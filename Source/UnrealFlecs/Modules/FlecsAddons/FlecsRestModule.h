@@ -8,7 +8,7 @@
 #include "UObject/Object.h"
 #include "FlecsRestModule.generated.h"
 
-UCLASS(BlueprintType, DisplayName = "Flecs Rest Module")
+UCLASS(BlueprintType, NotBlueprintable, DisplayName = "Flecs Rest Module")
 class UNREALFLECS_API UFlecsRestModule final : public UFlecsModuleObject
 {
 	GENERATED_BODY()

@@ -11,7 +11,7 @@
 #include "FlecsPhysicsModule.generated.h"
 
 // @TODO: Not Fully Implemented
-UCLASS(BlueprintType, DefaultToInstanced, EditInlineNew, DisplayName = "Flecs Physics Module")
+UCLASS(BlueprintType, NotBlueprintable, DisplayName = "Flecs Physics Module")
 class UNREALFLECS_API UFlecsPhysicsModule final : public UFlecsModuleObject
 {
 	GENERATED_BODY()

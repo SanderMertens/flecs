@@ -47,7 +47,7 @@ void UFlecsTickerGameLoop::InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorl
 	InWorld->RegisterComponentType<FFlecsTickerComponent>();
 	InWorld->AddSingleton<FFlecsTickerComponent>();
 
-	TickerComponentPtr = InWorld->GetSingletonPtr<FFlecsTickerComponent>();
+	TickerComponentPtr = InWorld->GetMutSingletonPtr<FFlecsTickerComponent>();
 	solid_check(TickerComponentPtr);
 
 	MainPipeline = InWorld->CreatePipeline()

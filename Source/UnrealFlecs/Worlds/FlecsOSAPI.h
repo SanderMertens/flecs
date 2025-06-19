@@ -300,44 +300,52 @@ struct FOSApiInitializer
         os_api.log_ = [](int32_t Level, const char* File, int32_t Line, const char* Message)
         {
 #if !NO_LOGGING
+        	const TCHAR* LogFile = StringCast<TCHAR>(File).Get();
+        	const TCHAR* LogMessage = StringCast<TCHAR>(Message).Get();
             switch (Level)
             {
                 case -4: // Fatal
 	                {
-                		UE_LOG(LogFlecsCore, Fatal, TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+                		UE_LOG(LogFlecsCore, Fatal,
+                			TEXT("Flecs - File: %s, Line: %d, Message: %s"),
+							LogFile, Line, LogMessage);
 	                }
                     break;
                 case -3: // Error
 	                {
-                		UE_LOG(LogFlecsCore, Error, TEXT("Error Flecs - File: %s, Line: %d, Message: %s"),
-							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+                		UE_LOG(LogFlecsCore, Error,
+                			TEXT("Error Flecs - File: %s, Line: %d, Message: %s"),
+							LogFile, Line, LogMessage);
 	                }
                     break;
                 case -2: // Warning
 	                {
-                		UE_LOG(LogFlecsCore, Warning, TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+                		UE_LOG(LogFlecsCore, Warning,
+                			TEXT("Flecs - File: %s, Line: %d, Message: %s"),
+							LogFile, Line, LogMessage);
 	                }
                     break;
             	case 0: // Verbose
             		{
-            			UE_LOG(LogFlecsCore, Verbose, TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+            			UE_LOG(LogFlecsCore, Verbose,
+            				TEXT("Flecs - File: %s, Line: %d, Message: %s"),
+							LogFile, Line, LogMessage);
             		}
                     break;
             	case 4: // Bookmark/Journal
             		{
             			TRACE_BOOKMARK(TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-            				StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
-            			UE_LOG(LogFlecsJournal, Log, TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-            				StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+            				LogFile, Line, LogMessage);
+            			UE_LOG(LogFlecsJournal, VeryVerbose,
+            				TEXT("Flecs - File: %s, Line: %d, Message: %s"),
+            				LogFile, Line, LogMessage);
             		}
 					break;
                 default: // Info and Debug
             		{
-            			UE_LOG(LogFlecsCore, Log, TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-							StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+            			UE_LOG(LogFlecsCore, Log,
+            				TEXT("Flecs - File: %s, Line: %d, Message: %s"),
+							LogFile, Line, LogMessage);
             		}
                     break;
             }
@@ -392,17 +400,20 @@ struct FOSApiInitializer
 			
 				if (!FlecsProfilerTraces.IsEmpty())
 				{
-					const FFlecsProfilerTrace& Trace = FlecsProfilerTraces.Pop();
+					const FFlecsProfilerTrace& Trace = FlecsProfilerTraces.Last();
 
-					if (!((Trace.FileName == StringCast<TCHAR>(FileName).Get()) &&
-						(Trace.Name == StringCast<TCHAR>(Name).Get())))
+					if (Trace.FileName != FileName || Trace.Name != Name)
 					{
-						UE_LOG(LogFlecsCore, Error,
-							TEXT("Flecs - Mismatched profiler trace pop: "
-							"Got '%s' from '%s:%d', expected '%s' from '%s:%d'"),
+						UE_LOGFMT(LogFlecsCore, Error,
+							"Flecs - Mismatched profiler trace pop: "
+							"Got {TraceName} from {TraceFileName}:{TraceLine}, "
+							"Expected {Name} from {FileName}:{Line}",
 							*Trace.Name, *Trace.FileName, Trace.Line,
-							StringCast<TCHAR>(Name).Get(), StringCast<TCHAR>(FileName).Get(),
-							static_cast<uint32>(Line));
+							Name, FileName, static_cast<uint32>(Line));
+					}
+					else
+					{
+						FlecsProfilerTraces.Pop();
 					}
 				}
 				else

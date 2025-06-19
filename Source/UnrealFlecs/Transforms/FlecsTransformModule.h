@@ -7,7 +7,7 @@
 #include "FlecsTransformModule.generated.h"
 
 // @TODO: Not Fully Implemented
-UCLASS(BlueprintType, DisplayName = "Flecs Transform Module")
+UCLASS(BlueprintType, NotBlueprintable, DisplayName = "Flecs Transform Module")
 class UNREALFLECS_API UFlecsTransformModule final : public UFlecsModuleObject
 {
 	GENERATED_BODY()
