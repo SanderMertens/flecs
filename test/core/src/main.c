@@ -1781,6 +1781,14 @@ void Observer_on_add_on_set_w_not_term(void);
 void Observer_on_add_on_set_w_not_2_terms(void);
 void Observer_observer_w_vars(void);
 void Observer_observer_w_invalid_expr(void);
+void Observer_create_observer_before_in_use_w_delete_component(void);
+void Observer_create_observer_after_in_use_w_delete_component(void);
+void Observer_create_trivial_component_observer_before_in_use_w_delete_component(void);
+void Observer_create_trivial_component_observer_after_in_use_w_delete_component(void);
+void Observer_create_trivial_pair_observer_before_in_use_w_delete_component(void);
+void Observer_create_trivial_pair_observer_after_in_use_w_delete_component(void);
+void Observer_create_multi_observer_before_in_use_w_delete_component(void);
+void Observer_create_multi_observer_after_in_use_w_delete_component(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -9560,6 +9568,38 @@ bake_test_case Observer_testcases[] = {
         Observer_observer_w_invalid_expr
     },
     {
+        "create_observer_before_in_use_w_delete_component",
+        Observer_create_observer_before_in_use_w_delete_component
+    },
+    {
+        "create_observer_after_in_use_w_delete_component",
+        Observer_create_observer_after_in_use_w_delete_component
+    },
+    {
+        "create_trivial_component_observer_before_in_use_w_delete_component",
+        Observer_create_trivial_component_observer_before_in_use_w_delete_component
+    },
+    {
+        "create_trivial_component_observer_after_in_use_w_delete_component",
+        Observer_create_trivial_component_observer_after_in_use_w_delete_component
+    },
+    {
+        "create_trivial_pair_observer_before_in_use_w_delete_component",
+        Observer_create_trivial_pair_observer_before_in_use_w_delete_component
+    },
+    {
+        "create_trivial_pair_observer_after_in_use_w_delete_component",
+        Observer_create_trivial_pair_observer_after_in_use_w_delete_component
+    },
+    {
+        "create_multi_observer_before_in_use_w_delete_component",
+        Observer_create_multi_observer_before_in_use_w_delete_component
+    },
+    {
+        "create_multi_observer_after_in_use_w_delete_component",
+        Observer_create_multi_observer_after_in_use_w_delete_component
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -13114,7 +13154,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        240,
+        248,
         Observer_testcases
     },
     {

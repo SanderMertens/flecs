@@ -443,7 +443,6 @@ void* flecs_defer_set(
         cmd = flecs_cmd_new(stage);
     }
 
-    
     if (!existing) {
         /* If component didn't exist yet, insert command that will create it */
         cmd->kind = cmd_kind;
