@@ -565,3 +565,43 @@ void Module_component_name_w_module_name(void) {
     test_str(c.name().c_str(), "module_a_component");
     test_str(c.parent().name().c_str(), "module_a");
 }
+
+struct SystemAndImplicitComponent {
+    SystemAndImplicitComponent(flecs::world& world) {
+        world.system("VelocitySys").with<Velocity>().each([]() {});
+    }
+};
+
+void Module_delete_module_w_implicit_component_and_system(void) {
+    flecs::world world;
+
+    auto m = world.import<SystemAndImplicitComponent>();
+
+    test_assert(m.lookup("Velocity") == 0);
+    test_assert(world.lookup("Velocity") != 0);
+    test_assert(m.lookup("VelocitySys") != 0);
+
+    m.destruct();
+
+    test_assert(true); // verify code doesn't crash
+}
+
+struct SystemAndExplicitComponent {
+    SystemAndExplicitComponent(flecs::world& world) {
+        world.component<Velocity>();
+        world.system("VelocitySys").with<Velocity>().each([]() {});
+    }
+};
+
+void Module_delete_module_w_explicit_component_and_system(void) {
+    flecs::world world;
+
+    auto m = world.import<SystemAndExplicitComponent>();
+
+    test_assert(m.lookup("Velocity") != 0);
+    test_assert(m.lookup("VelocitySys") != 0);
+
+    m.destruct();
+
+    test_assert(true); // verify code doesn't crash
+}
