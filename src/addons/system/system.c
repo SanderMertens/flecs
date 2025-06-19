@@ -428,6 +428,10 @@ void FlecsSystemImport(
     flecs_bootstrap_tag(world, EcsSystem);
     flecs_bootstrap_component(world, EcsTickSource);
 
+    ecs_set_hooks(world, EcsTickSource, {
+        .ctor = flecs_default_ctor
+    });
+
     /* Make sure to never inherit system component. This makes sure that any
      * term created for the System component will default to 'self' traversal,
      * which improves efficiency of the query. */
