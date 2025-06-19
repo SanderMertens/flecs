@@ -10,20 +10,14 @@
 #ifdef FLECS_TIMER
 
 static
-void AddTickSource(ecs_iter_t *it) {
-    for (int32_t i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], EcsTickSource, {0});
-    }
-}
-
-static
 void ProgressTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_field(it, EcsTimer, 0);
     EcsTickSource *tick_source = ecs_field(it, EcsTickSource, 1);
 
     ecs_assert(timer != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    for (int i = 0; i < it->count; i ++) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
         tick_source[i].tick = false;
 
         if (!timer[i].active) {
@@ -59,8 +53,9 @@ void ProgressRateFilters(ecs_iter_t *it) {
     EcsRateFilter *filter = ecs_field(it, EcsRateFilter, 0);
     EcsTickSource *tick_dst = ecs_field(it, EcsTickSource, 1);
 
-    for (int i = 0; i < it->count; i ++) {
-        const ecs_entity_t src = filter[i].src;
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t src = filter[i].src;
         bool inc = false;
 
         filter[i].time_elapsed += it->delta_time;
@@ -97,7 +92,8 @@ void ProgressTickSource(ecs_iter_t *it) {
     EcsTickSource *tick_src = ecs_field(it, EcsTickSource, 0);
 
     /* If tick source has no filters, tick unconditionally */
-    for (int i = 0; i < it->count; i ++) {
+    int i;
+    for (i = 0; i < it->count; i ++) {
         tick_src[i].tick = true;
         tick_src[i].time_elapsed = it->delta_time;
     }
@@ -267,7 +263,8 @@ error:
 static
 void RandomizeTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_field(it, EcsTimer, 0);
-    for (int32_t i = 0; i < it->count; i ++) {
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
         timer[i].time = 
             ((ecs_ftime_t)rand() / (ecs_ftime_t)RAND_MAX) * timer[i].timeout;
     }
@@ -307,16 +304,8 @@ void FlecsTimerImport(
         .ctor = flecs_default_ctor
     });
 
-    /* Add EcsTickSource to timers and rate filters */
-    ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "AddTickSource", .add = ecs_ids( ecs_dependson(EcsPreFrame) )}),
-        .query.terms = {
-            { .id = ecs_id(EcsTimer), .oper = EcsOr },
-            { .id = ecs_id(EcsRateFilter), .oper = EcsAnd },
-            { .id = ecs_id(EcsTickSource), .oper = EcsNot, .inout = EcsOut}
-        },
-        .callback = AddTickSource
-    });
+    ecs_add_pair(world, ecs_id(EcsTimer), EcsWith, ecs_id(EcsTickSource));
+    ecs_add_pair(world, ecs_id(EcsRateFilter), EcsWith, ecs_id(EcsTickSource));
 
     /* Timer handling */
     ecs_system(world, {

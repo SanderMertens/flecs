@@ -58,7 +58,6 @@ static ECS_DTOR(EcsRest, ptr, {
             ecs_rest_server_fini(impl->srv);
         }
     }
-    
     ecs_os_free(ptr->ipaddr);
 })
 
@@ -239,7 +238,7 @@ bool flecs_rest_get_entity(
     char *path = &req->path[7];
     ecs_dbg_2("rest: request entity '%s'", path);
 
-    const ecs_entity_t e = ecs_lookup_path_w_sep(
+    ecs_entity_t e = ecs_lookup_path_w_sep(
         world, 0, path, "/", NULL, false);
     if (!e) {
         ecs_dbg_2("rest: entity '%s' not found", path);
@@ -267,7 +266,7 @@ bool flecs_rest_put_entity(
 {
     ecs_dbg_2("rest: create entity '%s'", path);
 
-    const ecs_entity_t result = ecs_entity(world, {
+    ecs_entity_t result = ecs_entity(world, {
         .name = path,
         .sep = "/"
     });
@@ -308,7 +307,7 @@ ecs_entity_t flecs_rest_entity_from_path(
     ecs_http_reply_t *reply,
     const char *path)
 {
-    const ecs_entity_t e = ecs_lookup_path_w_sep(
+    ecs_entity_t e = ecs_lookup_path_w_sep(
         world, 0, path, "/", NULL, false);
     if (!e) {
         flecs_reply_error(reply, "entity '%s' not found", path);
@@ -343,7 +342,7 @@ bool flecs_rest_get_component(
         return true;
     }
 
-    const ecs_entity_t type = ecs_get_typeid(world, id);
+    ecs_entity_t type = ecs_get_typeid(world, id);
     if (!type) {
         flecs_reply_error(reply, "component '%s' is not a type", component);
         reply->code = 400;
@@ -394,7 +393,7 @@ bool flecs_rest_put_component(
         return true;
     }
 
-    const ecs_entity_t type = ecs_get_typeid(world, id);
+    ecs_entity_t type = ecs_get_typeid(world, id);
     if (!type) {
         flecs_reply_error(reply, "component '%s' is not a type", component);
         reply->code = 400;
@@ -546,7 +545,7 @@ bool flecs_rest_script(
     }
 
     bool prev_color = ecs_log_enable_colors(false);
-    const ecs_os_api_log_t prev_log = ecs_os_api.log_;
+    ecs_os_api_log_t prev_log = ecs_os_api.log_;
     flecs_set_prev_log(ecs_os_api.log_, try);
     ecs_os_api.log_ = flecs_rest_capture_log;
 
@@ -631,7 +630,7 @@ bool flecs_rest_reply_existing_query(
     ecs_http_reply_t *reply,
     const char *name)
 {
-    const ecs_entity_t qe = ecs_lookup(world, name);
+    ecs_entity_t qe = ecs_lookup(world, name);
     if (!qe) {
         flecs_reply_error(reply, "unresolved identifier '%s'", name);
         reply->code = 404;
@@ -716,7 +715,7 @@ bool flecs_rest_get_query(
 
     ecs_dbg_2("rest: request query '%s'", expr);
     bool prev_color = ecs_log_enable_colors(false);
-    const ecs_os_api_log_t prev_log = ecs_os_api.log_;
+    ecs_os_api_log_t prev_log = ecs_os_api.log_;
     flecs_set_prev_log(ecs_os_api.log_, try);
     ecs_os_api.log_ = flecs_rest_capture_log;
 
@@ -754,8 +753,9 @@ void flecs_rest_array_append_(
     ecs_strbuf_appendlit(reply, "\":");
     ecs_strbuf_list_push(reply, "[", ",");
 
-    for (int32_t i = t + 1; i <= (t + ECS_STAT_WINDOW); i ++) {
-        const int32_t index = i % ECS_STAT_WINDOW;
+    int32_t i;
+    for (i = t + 1; i <= (t + ECS_STAT_WINDOW); i ++) {
+        int32_t index = i % ECS_STAT_WINDOW;
         ecs_strbuf_list_next(reply);
         ecs_strbuf_appendflt(reply, (double)values[index], '"');
     }
@@ -955,8 +955,8 @@ void flecs_all_systems_stats_to_json(
     if (stats) {
         ecs_map_iter_t it = ecs_map_iter(&stats->stats);
         while (ecs_map_next(&it)) {
-            const ecs_entity_t id = ecs_map_key(&it);
-            const ecs_system_stats_t *sys_stats = ecs_map_ptr(&it);
+            ecs_entity_t id = ecs_map_key(&it);
+            ecs_system_stats_t *sys_stats = ecs_map_ptr(&it);
 
             if (!ecs_is_alive(world, id)) {
                 continue;
@@ -985,7 +985,7 @@ void flecs_pipeline_stats_to_json(
         return;
     }
 
-    const ecs_entity_t e = ecs_lookup(world, pipeline_name);
+    ecs_entity_t e = ecs_lookup(world, pipeline_name);
     if (!e) {
         flecs_reply_error(reply, "pipeline '%s' not found", pipeline_name);
         reply->code = 404;
@@ -1011,21 +1011,23 @@ void flecs_pipeline_stats_to_json(
     ecs_strbuf_list_push(&reply->body, "[", ",");
 
     ecs_pipeline_op_t *ops = ecs_vec_first_t(&p->state->ops, ecs_pipeline_op_t);
-    const ecs_entity_t *systems = ecs_vec_first_t(&p->state->systems, ecs_entity_t);
-    const ecs_sync_stats_t *syncs = ecs_vec_first_t(
+    ecs_system_t **systems = ecs_vec_first_t(&p->state->systems, ecs_system_t*);
+    ecs_sync_stats_t *syncs = ecs_vec_first_t(
         &pstats->sync_points, ecs_sync_stats_t);
 
-    const int32_t op_count = ecs_vec_count(&p->state->ops);
-    for (int32_t o = 0; o < op_count; o ++) {
-        const ecs_pipeline_op_t *op = &ops[o];
-        for (int32_t s = op->offset; s < (op->offset + op->count); s ++) {
-            const ecs_entity_t system = systems[s];
+    int32_t s, o, op_count = ecs_vec_count(&p->state->ops);
+
+    for (o = 0; o < op_count; o ++) {
+        ecs_pipeline_op_t *op = &ops[o];
+        for (s = op->offset; s < (op->offset + op->count); s ++) {
+            ecs_system_t *system_data = systems[s];
+            ecs_entity_t system = system_data->query->entity;
 
             if (!ecs_is_alive(world, system)) {
                 continue;
             }
 
-            const ecs_system_stats_t *sys_stats = ecs_map_get_deref(
+            ecs_system_stats_t *sys_stats = ecs_map_get_deref(
                 &system_stats->stats, ecs_system_stats_t, system);
             ecs_strbuf_list_next(&reply->body);
             flecs_system_stats_to_json(world, &reply->body, system, sys_stats);
@@ -1049,7 +1051,7 @@ bool flecs_rest_get_stats(
 {
     char *period_str = NULL;
     flecs_rest_string_param(req, "period", &period_str);
-    const char *category = &req->path[6];
+    char *category = &req->path[6];
 
     ecs_entity_t period = EcsPeriod1s;
     if (period_str) {
@@ -1100,9 +1102,9 @@ void flecs_rest_reply_table_append_type(
     const ecs_table_t *table)
 {
     ecs_strbuf_list_push(reply, "[", ",");
-    const int32_t count = table->type.count;
-    const ecs_id_t *ids = table->type.array;
-    for (int32_t i = 0; i < count; i ++) {
+    int32_t i, count = table->type.count;
+    ecs_id_t *ids = table->type.array;
+    for (i = 0; i < count; i ++) {
         ecs_strbuf_list_next(reply);
         ecs_strbuf_appendch(reply, '"');
         ecs_id_str_buf(world, ids[i], reply);
@@ -1122,10 +1124,10 @@ void flecs_rest_reply_table_append_memory(
     used += count * ECS_SIZEOF(ecs_entity_t);
     allocated += size * ECS_SIZEOF(ecs_entity_t);
 
-    const int32_t storage_count = table->column_count;
-    const ecs_column_t *columns = table->data.columns;
+    int32_t i, storage_count = table->column_count;
+    ecs_column_t *columns = table->data.columns;
 
-    for (int32_t i = 0; i < storage_count; i ++) {
+    for (i = 0; i < storage_count; i ++) {
         used += count * columns[i].ti->size;
         allocated += size * columns[i].ti->size;
     }
@@ -1166,10 +1168,10 @@ bool flecs_rest_get_tables(
     (void)req;
 
     ecs_strbuf_list_push(&reply->body, "[", ",");
-    const ecs_sparse_t *tables = &world->store.tables;
-    const int32_t count = flecs_sparse_count(tables);
-    for (int32_t i = 0; i < count; i ++) {
-        const ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
+    ecs_sparse_t *tables = &world->store.tables;
+    int32_t i, count = flecs_sparse_count(tables);
+    for (i = 0; i < count; i ++) {
+        ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
         flecs_rest_reply_table_append(world, &reply->body, table);
     }
     ecs_strbuf_list_pop(&reply->body, "]");
@@ -1243,10 +1245,10 @@ void flecs_rest_server_garbage_collect_all(
 
     while (ecs_map_next(&it)) {
         ecs_rest_cmd_capture_t *capture = ecs_map_ptr(&it);
-        const int32_t count = ecs_vec_count(&capture->syncs);
+        int32_t i, count = ecs_vec_count(&capture->syncs);
         ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
-        for (int32_t i = 0; i < count; i ++) {
-            const ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
+        for (i = 0; i < count; i ++) {
+            ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
             ecs_os_free(sync->cmds);
         }
         ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
@@ -1266,13 +1268,13 @@ void flecs_rest_server_garbage_collect(
     ecs_vec_t removed_frames = {0};
 
     while (ecs_map_next(&it)) {
-        const int64_t frame = flecs_uto(int64_t, ecs_map_key(&it));
+        int64_t frame = flecs_uto(int64_t, ecs_map_key(&it));
         if ((wi->frame_count_total - frame) > FLECS_REST_COMMAND_RETAIN_COUNT) {
             ecs_rest_cmd_capture_t *capture = ecs_map_ptr(&it);
-            const int32_t count = ecs_vec_count(&capture->syncs);
+            int32_t i, count = ecs_vec_count(&capture->syncs);
             ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
-            for (int32_t i = 0; i < count; i ++) {
-                const ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
+            for (i = 0; i < count; i ++) {
+                ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
                 ecs_os_free(sync->cmds);
             }
             ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
@@ -1283,15 +1285,15 @@ void flecs_rest_server_garbage_collect(
         }
     }
 
-    const int32_t count = ecs_vec_count(&removed_frames);
+    int32_t i, count = ecs_vec_count(&removed_frames);
     if (count) {
-        const int64_t *frames = ecs_vec_first(&removed_frames);
-
-        for (int32_t i = 0; i < count; i ++) {
+        int64_t *frames = ecs_vec_first(&removed_frames);
+        if (count) {
+            for (i = 0; i < count; i ++) {
                 ecs_map_remove(&impl->cmd_captures, 
                     flecs_ito(uint64_t, frames[i]));
             }
-
+        }
         ecs_vec_fini_t(NULL, &removed_frames, int64_t);
     }
 }
@@ -1367,13 +1369,13 @@ void flecs_rest_on_commands(
         ecs_rest_cmd_sync_capture_t *sync = ecs_vec_append_t(
             NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
 
-        const int32_t count = ecs_vec_count(commands);
+        int32_t i, count = ecs_vec_count(commands);
         ecs_cmd_t *cmds = ecs_vec_first(commands);
         sync->buf = ECS_STRBUF_INIT;
         ecs_strbuf_list_push(&sync->buf, "{", ",");
         ecs_strbuf_list_appendlit(&sync->buf, "\"commands\":");
             ecs_strbuf_list_push(&sync->buf, "[", ",");
-            for (int32_t i = 0; i < count; i ++) {
+            for (i = 0; i < count; i ++) {
                 ecs_strbuf_list_next(&sync->buf);
                 flecs_rest_cmd_to_json(world, &sync->buf, &cmds[i]);
             }
@@ -1386,7 +1388,7 @@ void flecs_rest_on_commands(
         /* Finished processing queue, measure duration */
         ecs_rest_cmd_sync_capture_t *sync = ecs_vec_last_t(
             &capture->syncs, ecs_rest_cmd_sync_capture_t);
-        const double duration = ecs_time_measure(&sync->start_time);
+        double duration = ecs_time_measure(&sync->start_time);
 
         ecs_strbuf_list_appendlit(&sync->buf, "\"duration\":");
         ecs_strbuf_appendflt(&sync->buf, duration, '"');
@@ -1432,8 +1434,8 @@ bool flecs_rest_get_commands_request(
     ecs_http_reply_t *reply)
 {
     (void)world;
-    const char *frame_str = &req->path[15];
-    const int32_t frame = atoi(frame_str);
+    char *frame_str = &req->path[15];
+    int32_t frame = atoi(frame_str);
     
     ecs_map_init_if(&impl->cmd_captures, &world->allocator);
     const ecs_rest_cmd_capture_t *capture = ecs_map_get_deref(
@@ -1453,11 +1455,11 @@ bool flecs_rest_get_commands_request(
     ecs_strbuf_list_append(&reply->body, "\"syncs\":");
     ecs_strbuf_list_push(&reply->body, "[", ",");
 
-    const int32_t count = ecs_vec_count(&capture->syncs);
+    int32_t i, count = ecs_vec_count(&capture->syncs);
     ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
 
-    for (int32_t i = 0; i < count; i ++) {
-        const ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
+    for (i = 0; i < count; i ++) {
+        ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
         ecs_strbuf_list_appendstr(&reply->body, sync->cmds);
     }
 
@@ -1586,7 +1588,8 @@ static
 void flecs_on_set_rest(ecs_iter_t *it) {
     EcsRest *rest = ecs_field(it, EcsRest, 0);
 
-    for(int i = 0; i < it->count; i ++) {
+    int i;
+    for(i = 0; i < it->count; i ++) {
         if (!rest[i].port) {
             rest[i].port = ECS_REST_DEFAULT_PORT;
         }
@@ -1613,7 +1616,7 @@ void flecs_on_set_rest(ecs_iter_t *it) {
 
 static
 void DequeueRest(ecs_iter_t *it) {
-    const EcsRest *rest = ecs_field(it, EcsRest, 0);
+    EcsRest *rest = ecs_field(it, EcsRest, 0);
 
     if (it->delta_system_time > (ecs_ftime_t)1.0) {
         ecs_warn(
@@ -1623,10 +1626,11 @@ void DequeueRest(ecs_iter_t *it) {
 
     const ecs_world_info_t *wi = ecs_get_world_info(it->world);
 
-    for(int32_t i = 0; i < it->count; i ++) {
+    int32_t i;
+    for(i = 0; i < it->count; i ++) {
         ecs_rest_ctx_t *ctx = rest[i].impl;
         if (ctx) {
-            const float elapsed = (float)(wi->world_time_total_raw - ctx->last_time);
+            float elapsed = (float)(wi->world_time_total_raw - ctx->last_time);
             ecs_http_server_dequeue(ctx->srv, (ecs_ftime_t)elapsed);
             flecs_rest_server_garbage_collect(it->world, ctx);
             ctx->last_time = wi->world_time_total_raw;
@@ -1636,25 +1640,27 @@ void DequeueRest(ecs_iter_t *it) {
 
 static
 void DisableRest(ecs_iter_t *it) {
-    const ecs_world_t *world = it->world;
+    ecs_world_t *world = it->world;
 
     ecs_iter_t rit = ecs_each_id(world, ecs_id(EcsRest));
 
     if (it->event == EcsOnAdd) {
         /* REST module was disabled */
         while (ecs_each_next(&rit)) {
-            const EcsRest *rest = ecs_field(&rit, EcsRest, 0);
-            for (int i = 0; i < rit.count; i ++) {
-                const ecs_rest_ctx_t *ctx = rest[i].impl;
+            EcsRest *rest = ecs_field(&rit, EcsRest, 0);
+            int i;
+            for (i = 0; i < rit.count; i ++) {
+                ecs_rest_ctx_t *ctx = rest[i].impl;
                 ecs_http_server_stop(ctx->srv);
             }
         }
     } else if (it->event == EcsOnRemove) {
         /* REST module was enabled */
         while (ecs_each_next(&rit)) {
-            const EcsRest *rest = ecs_field(&rit, EcsRest, 0);
-            for (int i = 0; i < rit.count; i ++) {
-                const ecs_rest_ctx_t *ctx = rest[i].impl;
+            EcsRest *rest = ecs_field(&rit, EcsRest, 0);
+            int i;
+            for (i = 0; i < rit.count; i ++) {
+                ecs_rest_ctx_t *ctx = rest[i].impl;
                 ecs_http_server_start(ctx->srv);
             }
         }

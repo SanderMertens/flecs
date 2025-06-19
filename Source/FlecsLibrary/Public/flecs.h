@@ -5085,8 +5085,9 @@ const ecs_query_group_info_t* ecs_query_get_group_info(
 typedef struct ecs_query_count_t {
     int32_t results;      /**< Number of results returned by query. */
     int32_t entities;     /**< Number of entities returned by query. */
-    int32_t tables;       /**< Number of tables returned by query. */
-    int32_t empty_tables; /**< Number of empty tables returned by query. */
+    int32_t tables;       /**< Number of tables returned by query. Only set for
+                             * queries for which the table count can be reliably
+                             * determined. */
 } ecs_query_count_t;
 
 /** Returns number of entities and results the query matches with.
