@@ -211,7 +211,7 @@ extern "C" {
 #define EcsObserverBypassQuery         (1u << 7u)  /* Don't evaluate query for multi-component observer*/
 #define EcsObserverYieldOnCreate       (1u << 8u)  /* Yield matching entities when creating observer */
 #define EcsObserverYieldOnDelete       (1u << 9u)  /* Yield matching entities when deleting observer */
-
+#define EcsObserverKeepAlive           (1u << 11u) /* Observer keeps component alive (same value as EcsTermKeepAlive) */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
