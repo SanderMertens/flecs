@@ -1134,3 +1134,120 @@ void Cascade_cascade_w_optional(void) {
 
     ecs_fini(world);
 }
+
+void Cascade_remove_all(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, ?Position(cascade)",
+        .cache_kind = EcsQueryCacheDefault
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t p = ecs_new_w(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_add_pair(world, e, EcsChildOf, p);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(p, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove_all(world, ecs_id(Position));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cascade_recreate_after_remove_all(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, ?Position(cascade)",
+        .cache_kind = EcsQueryCacheDefault
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_entity_t p = ecs_new_w(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
+        ecs_add_pair(world, e, EcsChildOf, p);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(p, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove_all(world, ecs_id(Position));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_entity_t p = ecs_new_w(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
+        ecs_add_pair(world, e, EcsChildOf, p);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(p, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

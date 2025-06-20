@@ -1655,7 +1655,9 @@
                 "invalid_desc_for_first",
                 "invalid_desc_for_second",
                 "cascade_w_cache_kind_default",
-                "cascade_w_optional"
+                "cascade_w_optional",
+                "remove_all",
+                "recreate_after_remove_all"
             ]
         }, {
             "id": "Cached",
@@ -1858,7 +1860,9 @@
                 "group_by_recreate_one_group_after_rematch",
                 "group_by_recreate_two_groups_after_rematch",
                 "group_by_move_to_group_after_rematch",
-                "group_by_childof"
+                "group_by_childof",
+                "remove_all",
+                "recreate_after_remove_all"
             ]
         }, {
             "id": "MemberTarget",
