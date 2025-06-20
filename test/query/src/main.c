@@ -1594,6 +1594,8 @@ void Cascade_invalid_desc_for_first(void);
 void Cascade_invalid_desc_for_second(void);
 void Cascade_cascade_w_cache_kind_default(void);
 void Cascade_cascade_w_optional(void);
+void Cascade_remove_all(void);
+void Cascade_recreate_after_remove_all(void);
 
 // Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
@@ -1791,6 +1793,8 @@ void GroupBy_group_by_recreate_one_group_after_rematch(void);
 void GroupBy_group_by_recreate_two_groups_after_rematch(void);
 void GroupBy_group_by_move_to_group_after_rematch(void);
 void GroupBy_group_by_childof(void);
+void GroupBy_remove_all(void);
+void GroupBy_recreate_after_remove_all(void);
 
 // Testsuite 'MemberTarget'
 void MemberTarget_setup(void);
@@ -8597,6 +8601,14 @@ bake_test_case Cascade_testcases[] = {
     {
         "cascade_w_optional",
         Cascade_cascade_w_optional
+    },
+    {
+        "remove_all",
+        Cascade_remove_all
+    },
+    {
+        "recreate_after_remove_all",
+        Cascade_recreate_after_remove_all
     }
 };
 
@@ -9370,6 +9382,14 @@ bake_test_case GroupBy_testcases[] = {
     {
         "group_by_childof",
         GroupBy_group_by_childof
+    },
+    {
+        "remove_all",
+        GroupBy_remove_all
+    },
+    {
+        "recreate_after_remove_all",
+        GroupBy_recreate_after_remove_all
     }
 };
 
@@ -11774,7 +11794,7 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-        25,
+        27,
         Cascade_testcases
     },
     {
@@ -11795,7 +11815,7 @@ static bake_test_suite suites[] = {
         "GroupBy",
         NULL,
         NULL,
-        18,
+        20,
         GroupBy_testcases
     },
     {

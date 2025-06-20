@@ -71439,6 +71439,10 @@ void flecs_query_cache_remove_group(
         
         prev = cur;
     } while ((cur = cur->next));
+    
+    /* If this is the default_group, make sure next is set to NULL since we 
+     * never delete the default group. */
+    group->next = NULL;
 
     /* ensure group was found */
     ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);

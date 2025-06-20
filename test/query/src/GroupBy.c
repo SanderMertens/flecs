@@ -1181,9 +1181,115 @@ void GroupBy_group_by_childof(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    ecs_query_fini(q);
 
+    ecs_fini(world);
+}
 
+void GroupBy_remove_all(void) {
+    ecs_world_t *world = ecs_mini();
 
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position",
+        .group_by = EcsChildOf
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t p = ecs_new_w(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_add_pair(world, e, EcsChildOf, p);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(p, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove_all(world, ecs_id(Position));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void GroupBy_recreate_after_remove_all(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position",
+        .group_by = EcsChildOf
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_entity_t p = ecs_new_w(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
+        ecs_add_pair(world, e, EcsChildOf, p);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(p, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove_all(world, ecs_id(Position));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_entity_t p = ecs_new_w(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
+        ecs_add_pair(world, e, EcsChildOf, p);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(p, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
