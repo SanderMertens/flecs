@@ -30426,7 +30426,7 @@ void flecs_ballocator_init(
         ba->outstanding = ecs_os_malloc_t(ecs_map_t);
         ecs_map_init(ba->outstanding, NULL);
     }
-    size += ECS_SIZEOF(int64_t);
+    size += ECS_SIZEOF(int64_t) * 2; /* 16 byte aligned */
 #endif
     ba->chunk_size = ECS_ALIGN(size, 16);
     ba->chunks_per_block = ECS_MAX(4096 / ba->chunk_size, 1);
@@ -30533,7 +30533,7 @@ void* flecs_balloc_w_dbg_info(
     }
     ba->alloc_count ++;
     *(int64_t*)result = (uintptr_t)ba;
-    result = ECS_OFFSET(result, ECS_SIZEOF(int64_t));
+    result = ECS_OFFSET(result, ECS_SIZEOF(int64_t) * 2);
 #endif
 #endif
 
@@ -30602,7 +30602,7 @@ void flecs_bfree_w_dbg_info(
     }
 
 #ifdef FLECS_SANITIZE
-    memory = ECS_OFFSET(memory, -ECS_SIZEOF(int64_t));
+    memory = ECS_OFFSET(memory, -ECS_SIZEOF(int64_t) * 2);
     ecs_block_allocator_t *actual = *(ecs_block_allocator_t**)memory;
     if (actual != ba) {
         if (type_name) {
