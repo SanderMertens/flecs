@@ -69,14 +69,12 @@ public class FlecsLibrary : ModuleRules
                     "FLECS_UNITS",
                     "FLECS_ALERTS",
                     "FLECS_KEEP_ASSERT",
-                   // "FLECS_SANITIZE",
                 }
             );
         }
 
         if (Target.bCompileAgainstEditor)
         {
-          // PublicDefinitions.Add("FLECS_SANITIZE");
         }
         
         PublicIncludePaths.AddRange(
