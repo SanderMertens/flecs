@@ -250,7 +250,9 @@ int ecs_meta_next(
     scope->op_cur += op->op_count;
 
     if (scope->op_cur >= scope->op_count) {
-        ecs_err("out of bounds");
+        char *str = ecs_get_path(cursor->world, scope->type);
+        ecs_err("too many elements for scope for type %s", str);
+        ecs_os_free(str);
         return -1;
     }
 
