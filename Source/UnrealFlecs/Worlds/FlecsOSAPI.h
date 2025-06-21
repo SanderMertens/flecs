@@ -448,17 +448,17 @@ struct FOSApiInitializer
 
 		os_api.malloc_ = [](int Size) -> void*
 		{
-			return FMemory::Malloc(Size);
+			return FMemory::Malloc(Size, 64);
 		};
 
 		os_api.realloc_ = [](void* Ptr, int Size) -> void*
 		{
-			return FMemory::Realloc(Ptr, Size);
+			return FMemory::Realloc(Ptr, Size, 64);
 		};
 
 		os_api.calloc_ = [](int Size) -> void*
 		{
-			return FMemory::MallocZeroed(Size);
+			return FMemory::MallocZeroed(Size, 64);
 		};
 
 		os_api.free_ = [](void* Ptr)

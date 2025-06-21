@@ -20,6 +20,28 @@
 
 class UFlecsWorld;
 
+namespace Unreal::Flecs
+{
+	template <typename T>
+	concept TFlecsEntityFunctionInputDataTypeConcept =
+		std::is_convertible_v<T, const FFlecsId> ||
+		std::is_convertible_v<T, const UScriptStruct*>;
+
+	template <typename T>
+	concept TFlecsEntityFunctionInputNoDataTypeConcept =
+		std::is_convertible_v<T, const FGameplayTag&>;
+	
+	template <typename T>
+	concept TFlecsEntityFunctionInputTypeConcept =
+		TFlecsEntityFunctionInputDataTypeConcept<T> || TFlecsEntityFunctionInputNoDataTypeConcept<T>;
+
+	template <typename T>
+	concept TFlecsEntityFunctionInputEnumTypeConcept =
+		std::is_convertible_v<T, const UEnum*> ||
+		std::is_convertible_v<T, const FSolidEnumSelector&>;
+	
+} // namespace Unreal::Flecs
+
 /**
  * @struct FFlecsEntityHandle
  *
@@ -32,6 +54,29 @@ USTRUCT(BlueprintType, meta = (DisableSplitPin))
 struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 {
 	GENERATED_BODY()
+
+private:
+	FORCEINLINE static FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const FFlecsId InId)
+	{
+		return InId;
+	}
+
+	FORCEINLINE static FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const UScriptStruct* StructType)
+	{
+		return InEntity.ObtainComponentTypeStruct(StructType);
+	}
+
+	FORCEINLINE static FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const UEnum* EnumType)
+	{
+		return InEntity.ObtainComponentTypeEnum(EnumType);
+	}
+
+	FORCEINLINE static FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const FGameplayTag& InTag)
+	{
+		return InEntity.GetTagEntity(InTag);
+	}
+
+public:
 
 	NO_DISCARD FORCEINLINE friend bool IsValid(const FFlecsEntityHandle& Test)
 	{
@@ -144,26 +189,17 @@ public:
 	{
 		return FFlecsArchetype(GetEntity().type());
 	}
-
-	NO_DISCARD SOLID_INLINE bool Has(const FFlecsId InEntity) const
-	{
-		return GetEntity().has(InEntity);
-	}
-
+	
 	template <typename T>
 	NO_DISCARD SOLID_INLINE bool Has() const
 	{
 		return GetEntity().has<T>();
 	}
-
-	NO_DISCARD SOLID_INLINE bool Has(const UScriptStruct* StructType) const
+	
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept T>
+	SOLID_INLINE bool Has(const T& InValue) const
 	{
-		return Has(ObtainComponentTypeStruct(StructType));
-	}
-
-	NO_DISCARD SOLID_INLINE bool Has(const FGameplayTag& InTag) const
-	{
-		return Has(GetTagEntity(InTag));
+		return GetEntity().has(FFlecsEntityHandle::GetInputId(*this, InValue));
 	}
 
 	NO_DISCARD SOLID_INLINE bool Has(const UEnum* EnumType) const
@@ -186,16 +222,11 @@ public:
 	{
 		return Has(EnumSelector.Class, EnumSelector.Value);
 	}
-
-	SOLID_INLINE const FFlecsEntityHandle& Add(const FFlecsId InEntity) const
+	
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept T>
+	SOLID_INLINE const FFlecsEntityHandle& Add(const T& InValue) const
 	{
-		GetEntity().add(InEntity);
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& Add(const UScriptStruct* StructType) const
-	{
-		Add(ObtainComponentTypeStruct(StructType));
+		GetEntity().add(FFlecsEntityHandle::GetInputId(*this, InValue));
 		return *this;
 	}
 	
@@ -207,12 +238,6 @@ public:
 		solid_check(ValueEntity.IsValid());
 		
 		AddPair(EnumEntity, ValueEntity);
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& Add(const FGameplayTag& InTag) const
-	{
-		Add(GetTagEntity(InTag));
 		return *this;
 	}
 
@@ -233,29 +258,25 @@ public:
 		return *this;
 	}
 
-	template <typename T
-		UE_REQUIRES (std::is_enum<T>::value)>
+	template <typename T>
+	requires (std::is_enum<T>::value)
 	SOLID_INLINE const FFlecsEntityHandle& Add(const T InValue) const
 	{
 		GetEntity().add<T>(InValue);
 		return *this;
 	}
 	
-	SOLID_INLINE const FFlecsEntityHandle& Remove(const FFlecsId InEntity) const
+	template <typename T>
+	SOLID_INLINE const FFlecsEntityHandle& Remove() const
 	{
-		GetEntity().remove(InEntity);
+		GetEntity().remove<T>();
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& Remove(const UScriptStruct* StructType) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept T>
+	SOLID_INLINE const FFlecsEntityHandle& Remove(const T& InValue) const
 	{
-		Remove(ObtainComponentTypeStruct(StructType));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& Remove(const FGameplayTag& InTag) const
-	{
-		Remove(GetTagEntity(InTag));
+		GetEntity().remove(FFlecsEntityHandle::GetInputId(*this, InValue));
 		return *this;
 	}
 
@@ -277,16 +298,13 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& Remove(const FGameplayTagContainer& InTags, const bool bMustHaveAll = false) const
+	SOLID_INLINE const FFlecsEntityHandle& Remove(const FGameplayTagContainer& InTags) const
 	{
 		for (const FGameplayTag& Tag : InTags)
 		{
-			if (!bMustHaveAll)
+			if (!Has(Tag))
 			{
-				if (!Has(Tag))
-				{
-					continue;
-				}
+				continue;
 			}
 			
 			Remove(Tag);
@@ -294,28 +312,7 @@ public:
 
 		return *this;
 	}
-
-	template <typename T>
-	SOLID_INLINE const FFlecsEntityHandle& Remove() const
-	{
-		GetEntity().remove<T>();
-		return *this;
-	}
-
-	template <typename First, typename Second>
-	SOLID_INLINE const FFlecsEntityHandle& RemovePair() const
-	{
-		GetEntity().remove<First, Second>();
-		return *this;
-	}
-
-	template <typename First>
-	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FFlecsId InSecond) const
-	{
-		GetEntity().remove<First>(InSecond);
-		return *this;
-	}
-
+	
 	template <typename T>
 	SOLID_INLINE const FFlecsEntityHandle& Set(const T& InValue) const
 	{
@@ -323,27 +320,44 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& Set(const FFlecsId InId, const void* InValue) const
-	{
-		GetEntity().set_ptr(InId, InValue);
-		return *this;
-	}
-
 	SOLID_INLINE const FFlecsEntityHandle& Set(const FFlecsId InId, const uint32 InSize, const void* InValue) const
 	{
+		if (!Has(InId))
+		{
+			Add(InId);
+		}
+		
 		GetEntity().set_ptr(InId, InSize, InValue);
 		return *this;
 	}
-	
-	SOLID_INLINE const FFlecsEntityHandle& Set(const UScriptStruct* StructType, const void* InValue) const
+
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept T>
+	SOLID_INLINE const FFlecsEntityHandle& Set(const T& InValue, const void* InData) const
 	{
-		Set(ObtainComponentTypeStruct(StructType), InValue);
+		const FFlecsId InId = FFlecsEntityHandle::GetInputId(*this, InValue);
+		
+		if (!Has(InId))
+		{
+			Add(InId);
+		}
+
+		if constexpr (std::is_convertible_v<T, const UScriptStruct*>)
+		{
+			Set(InId, InValue->GetStructureSize(), InData);
+		}
+		else
+		{
+			GetEntity().set_ptr(InId, InData);
+		}
+		
 		return *this;
 	}
 
 	SOLID_INLINE const FFlecsEntityHandle& Set(const FInstancedStruct& InValue) const
 	{
-		Set(ObtainComponentTypeStruct(InValue.GetScriptStruct()), InValue.GetMemory());
+		Set(ObtainComponentTypeStruct(InValue.GetScriptStruct()),
+			InValue.GetScriptStruct()->GetStructureSize(),
+			InValue.GetMemory());
 		return *this;
 	}
 
@@ -356,16 +370,7 @@ public:
 		GetEntity().assign<T>(InValue);
 		return *this;
 	}
-
-	SOLID_INLINE const FFlecsEntityHandle& Assign(const FFlecsId InEntity, const void* InValue) const
-	{
-		solid_checkf(Has(InEntity),
-			TEXT("Entity does not have component with id %llu"), InEntity.GetId());
-		
-		GetEntity().set_ptr(InEntity, InValue);
-		return *this;
-	}
-
+	
 	SOLID_INLINE const FFlecsEntityHandle& Assign(const FFlecsId InEntity, const uint32 InSize, const void* InValue) const
 	{
 		solid_checkf(Has(InEntity),
@@ -375,13 +380,22 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& Assign(const UScriptStruct* StructType, const void* InValue) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept T>
+	SOLID_INLINE const FFlecsEntityHandle& Assign(const T& InTypeValue, const void* InValue) const
 	{
-		solid_checkf(Has(StructType),
-			TEXT("Entity does not have component with script struct %s"),
-			*StructType->GetStructCPPName());
+		const FFlecsId InId = FFlecsEntityHandle::GetInputId(*this, InTypeValue);
+		solid_checkf(Has(InId),
+			TEXT("Entity does not have component with id %llu"), InId.GetId());
 		
-		Assign(ObtainComponentTypeStruct(StructType), InValue);
+		if constexpr (std::is_convertible_v<T, const UScriptStruct*>)
+		{
+			Assign(InId, InTypeValue->GetStructureSize(), InValue);
+		}
+		else
+		{
+			GetEntity().set_ptr(InId, InValue);
+		}
+		
 		return *this;
 	}
 
@@ -391,7 +405,7 @@ public:
 			TEXT("Entity does not have component with script struct %s"),
 			*InValue.GetScriptStruct()->GetStructCPPName());
 		
-		Assign(ObtainComponentTypeStruct(InValue.GetScriptStruct()), InValue.GetMemory());
+		Assign(InValue.GetScriptStruct(), InValue.GetMemory());
 		return *this;
 	}
 	
@@ -422,25 +436,17 @@ public:
 	{
 		return GetEntity().try_get_mut<T>();
 	}
-	
-	NO_DISCARD SOLID_INLINE const void* GetPtr(const FFlecsId InEntity) const
+
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept T>
+	NO_DISCARD SOLID_INLINE const void* GetPtr(const T& InValue) const
 	{
-		return GetEntity().try_get(InEntity);
+		return GetEntity().try_get(FFlecsEntityHandle::GetInputId(*this, InValue));
 	}
 
-	NO_DISCARD SOLID_INLINE void* GetMutPtr(const FFlecsId InEntity) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept T>
+	NO_DISCARD SOLID_INLINE void* GetMutPtr(const T& InValue) const
 	{
-		return GetEntity().try_get_mut(InEntity);
-	}
-
-	NO_DISCARD SOLID_INLINE const void* GetPtr(const UScriptStruct* StructType) const
-	{
-		return GetPtr(ObtainComponentTypeStruct(StructType));
-	}
-
-	NO_DISCARD SOLID_INLINE void* GetMutPtr(const UScriptStruct* StructType) const
-	{
-		return GetMutPtr(ObtainComponentTypeStruct(StructType));
+		return GetEntity().try_get_mut(FFlecsEntityHandle::GetInputId(*this, InValue));
 	}
 
 	template <typename T>
@@ -452,21 +458,14 @@ public:
 		return GetEntity().get_ref<T>();
 	}
 
-	NO_DISCARD SOLID_INLINE flecs::untyped_ref GetFlecsRef(const FFlecsId InEntity) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept T>
+	NO_DISCARD SOLID_INLINE flecs::untyped_ref GetFlecsRef(const T& InValue) const
 	{
-		solid_checkf(Has(InEntity),
-			TEXT("Entity does not have component with id %llu"), InEntity.GetId());
+		solid_checkf(Has(FFlecsEntityHandle::GetInputId(*this, InValue)),
+			TEXT("Entity does not have component with id %llu"),
+			FFlecsEntityHandle::GetInputId(*this, InValue).GetId());
 		
-		return GetEntity().get_ref(InEntity);
-	}
-
-	NO_DISCARD SOLID_INLINE flecs::untyped_ref GetFlecsRef(const UScriptStruct* StructType) const
-	{
-		solid_checkf(Has(StructType),
-			TEXT("Entity does not have component with script struct %s"),
-			*StructType->GetStructCPPName());
-		
-		return GetFlecsRef(ObtainComponentTypeStruct(StructType));
+		return GetEntity().get_ref(FFlecsEntityHandle::GetInputId(*this, InValue));
 	}
 
 	SOLID_INLINE void Clear() const
@@ -492,47 +491,25 @@ public:
 		GetEntity().enable<T>();
 		return *this;
 	}
-
-	SOLID_INLINE const FFlecsEntityHandle& Enable(const FFlecsId InEntity) const
+	
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept T>
+	SOLID_INLINE const FFlecsEntityHandle& Enable(const T& InValue) const
 	{
-		GetEntity().enable(InEntity);
+		GetEntity().enable(FFlecsEntityHandle::GetInputId(*this, InValue));
 		return *this;
 	}
 	
-	SOLID_INLINE const FFlecsEntityHandle& Enable(const UScriptStruct* StructType) const
-	{
-		Enable(ObtainComponentTypeStruct(StructType));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& Enable(const FGameplayTag& InTag) const
-	{
-		Enable(GetTagEntity(InTag));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& Disable(const FFlecsId InEntity) const
-	{
-		GetEntity().disable(InEntity);
-		return *this;
-	}
-	
-	SOLID_INLINE const FFlecsEntityHandle& Disable(const UScriptStruct* StructType) const
-	{
-		Disable(ObtainComponentTypeStruct(StructType));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& Disable(const FGameplayTag& InTag) const
-	{
-		Disable(GetTagEntity(InTag));
-		return *this;
-	}
-
 	template <typename T>
 	SOLID_INLINE const FFlecsEntityHandle& Disable() const
 	{
 		GetEntity().disable<T>();
+		return *this;
+	}
+
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept T>
+	SOLID_INLINE const FFlecsEntityHandle& Disable(const T& InValue) const
+	{
+		GetEntity().disable(FFlecsEntityHandle::GetInputId(*this, InValue));
 		return *this;
 	}
 
@@ -549,21 +526,10 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& Toggle(const FFlecsId InEntity) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept T>
+	SOLID_INLINE const FFlecsEntityHandle& Toggle(const T& InValue) const
 	{
-		GetEntity().enable(InEntity, !IsEnabled(InEntity));
-		return *this;
-	}
-	
-	SOLID_INLINE const FFlecsEntityHandle& Toggle(const UScriptStruct* StructType) const
-	{
-		Toggle(ObtainComponentTypeStruct(StructType));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& Toggle(const FGameplayTag& InTag) const
-	{
-		Toggle(GetTagEntity(InTag));
+		GetEntity().enable(FFlecsEntityHandle::GetInputId(*this, InValue), !IsEnabled(InValue));
 		return *this;
 	}
 
@@ -578,19 +544,10 @@ public:
 		return GetEntity().enabled<T>();
 	}
 
-	NO_DISCARD SOLID_INLINE bool IsEnabled(const FFlecsId InEntity) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept T>
+	NO_DISCARD SOLID_INLINE bool IsEnabled(const T& InValue) const
 	{
-		return GetEntity().enabled(InEntity);
-	}
-	
-	NO_DISCARD SOLID_INLINE bool IsEnabled(const UScriptStruct* StructType) const
-	{
-		return IsEnabled(ObtainComponentTypeStruct(StructType));
-	}
-
-	NO_DISCARD SOLID_INLINE bool IsEnabled(const FGameplayTag& InTag) const
-	{
-		return IsEnabled(GetTagEntity(InTag));
+		return GetEntity().enabled(FFlecsEntityHandle::GetInputId(*this, InValue));
 	}
 
 	SOLID_INLINE void Destroy() const
@@ -723,15 +680,11 @@ public:
 	{
 		return GetEntity().owns<T>();
 	}
-	
-	NO_DISCARD SOLID_INLINE bool DoesOwn(const FFlecsId InEntity) const
-	{
-		return GetEntity().owns(InEntity);
-	}
 
-	NO_DISCARD SOLID_INLINE bool DoesOwn(const UScriptStruct* StructType) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept T>
+	NO_DISCARD SOLID_INLINE bool DoesOwn(const T& InValue) const
 	{
-		return DoesOwn(ObtainComponentTypeStruct(StructType));
+		return GetEntity().owns(FFlecsEntityHandle::GetInputId(*this, InValue));
 	}
 
 	template <typename First, typename Second>
@@ -740,31 +693,20 @@ public:
 		return GetEntity().owns<First, Second>();
 	}
 
-	template <typename First>
-	NO_DISCARD SOLID_INLINE bool DoesOwnPair(const FFlecsId InSecond) const
+	template <typename First, Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept Second>
+	NO_DISCARD SOLID_INLINE bool DoesOwnPair(const Second& InSecond) const
 	{
-		return GetEntity().owns<First>(InSecond);
+		return GetEntity().owns<First>(FFlecsEntityHandle::GetInputId(*this, InSecond));
 	}
 
-	NO_DISCARD SOLID_INLINE bool DoesOwnPair(const FFlecsId InFirst, const FFlecsId InSecond) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First,
+		Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept Second>
+	NO_DISCARD SOLID_INLINE bool DoesOwnPair(const First& InFirst, const Second& InSecond) const
 	{
-		return GetEntity().owns(InFirst, InSecond);
-	}
-
-	NO_DISCARD SOLID_INLINE bool DoesOwnPair(const UScriptStruct* First, const UScriptStruct* Second) const
-	{
-		return DoesOwnPair(ObtainComponentTypeStruct(First), ObtainComponentTypeStruct(Second));
+		return GetEntity().owns(FFlecsEntityHandle::GetInputId(*this, InFirst),
+			FFlecsEntityHandle::GetInputId(*this, InSecond));
 	}
 	
-	NO_DISCARD SOLID_INLINE bool DoesOwnPair(const UScriptStruct* First, const FFlecsId Second) const
-	{
-		return DoesOwnPair(ObtainComponentTypeStruct(First), Second);
-	}
-
-	NO_DISCARD SOLID_INLINE bool DoesOwnPair(const FFlecsId First, const UScriptStruct* Second) const
-	{
-		return DoesOwnPair(First, ObtainComponentTypeStruct(Second));
-	}
 
 	NO_DISCARD SOLID_INLINE bool IsComponent() const
 	{
@@ -799,9 +741,10 @@ public:
 		GetEntity().emit<T>(InValue);
 	}
 
-	SOLID_INLINE void Emit(const FFlecsId InEntity) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept T>
+	SOLID_INLINE void Emit(const T& InValue) const
 	{
-		GetEntity().emit(InEntity);
+		GetEntity().emit(FFlecsEntityHandle::GetInputId(*this, InValue));
 	}
 
 	template <typename T>
@@ -816,19 +759,10 @@ public:
 		GetEntity().enqueue<T>(InValue);
 	}
 
-	SOLID_INLINE void Enqueue(const FFlecsId InEntity) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept T>
+	SOLID_INLINE void Enqueue(const T& InValue) const
 	{
-		GetEntity().enqueue(InEntity);
-	}
-
-	SOLID_INLINE void Enqueue(const UScriptStruct* StructType) const
-	{
-		Enqueue(ObtainComponentTypeStruct(StructType));
-	}
-
-	SOLID_INLINE void Enqueue(const FGameplayTag& InTag) const
-	{
-		Enqueue(GetTagEntity(InTag));
+		GetEntity().enqueue(FFlecsEntityHandle::GetInputId(*this, InValue));
 	}
 
 	template <typename TEvent, typename FunctionType>
@@ -838,10 +772,10 @@ public:
 		return *this;
 	}
 
-	template <typename FunctionType>
-	SOLID_INLINE const FFlecsEntityHandle& Observe(const FFlecsId InEntity, FunctionType&& InFunction) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept T, typename FunctionType>
+	SOLID_INLINE const FFlecsEntityHandle& Observe(const T& InValue, FunctionType&& InFunction) const
 	{
-		GetEntity().observe(InEntity, std::forward<FunctionType>(InFunction));
+		GetEntity().observe(FFlecsEntityHandle::GetInputId(*this, InValue), std::forward<FunctionType>(InFunction));
 		return *this;
 	}
 
@@ -916,72 +850,19 @@ public:
 		return *this;
 	}
 
-	template <typename TFirst>
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FFlecsId InSecond) const
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const TSecond& InSecond) const
 	{
-		GetEntity().add<TFirst>(InSecond);
+		GetEntity().add<TFirst>(FFlecsEntityHandle::GetInputId(*this, InSecond));
 		return *this;
 	}
 
-	template <typename TFirst>
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const UScriptStruct* InSecond) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst,
+		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	SOLID_INLINE const FFlecsEntityHandle& AddPair(const TFirst& InFirst, const TSecond& InSecond) const
 	{
-		AddPair<TFirst>(ObtainComponentTypeStruct(InSecond));
-		return *this;
-	}
-
-	template <typename TFirst>
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FGameplayTag& InSecond) const
-	{
-		AddPair<TFirst>(GetTagEntity(InSecond));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
-	{
-		AddPair(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
-	{
-		AddPair(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
-	{
-		AddPair(ObtainComponentTypeStruct(InFirst), InSecond);
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
-	{
-		AddPair(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
-	{
-		AddPair(GetTagEntity(InFirst), GetTagEntity(InSecond));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FGameplayTag& InFirst, const FFlecsId InSecond) const
-	{
-		AddPair(GetTagEntity(InFirst), InSecond);
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FFlecsId InFirst, const UScriptStruct* InSecond) const
-	{
-		AddPair(InFirst, ObtainComponentTypeStruct(InSecond));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FFlecsId InFirst, const FGameplayTag& InSecond) const
-	{
-		AddPair(InFirst, GetTagEntity(InSecond));
+		GetEntity().add(FFlecsEntityHandle::GetInputId(*this, InFirst),
+			FFlecsEntityHandle::GetInputId(*this, InSecond));
 		return *this;
 	}
 
@@ -993,74 +874,44 @@ public:
 
 		const FFlecsId EnumConstant = ObtainEnumConstant(InSecond, InValue);
 		
-		AddPair(EnumEntity, EnumConstant);
+		AddPair(InFirst, EnumConstant);
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& AddPair(const FFlecsId InFirst, const FFlecsId InSecond) const
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
+	SOLID_INLINE const FFlecsEntityHandle& AddPairSecond(const TFirst& InFirst) const
 	{
-		GetEntity().add(InFirst, InSecond);
+		GetEntity().add_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirst));
 		return *this;
 	}
 
-	template <typename TSecond>
-	SOLID_INLINE const FFlecsEntityHandle& AddPairSecond(const FFlecsId InFirst) const
+	template <typename First, typename Second>
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair() const
 	{
-		GetEntity().add_second<TSecond>(InFirst);
+		GetEntity().remove<First, Second>();
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
+	template <typename First, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const Second& InSecond) const
 	{
-		RemovePair(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
+		GetEntity().remove<First>(FFlecsEntityHandle::GetInputId(*this, InSecond));
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept First,
+		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
+	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const First& InFirst, const Second& InSecond) const
 	{
-		RemovePair(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
+		GetEntity().remove(FFlecsEntityHandle::GetInputId(*this, InFirst),
+			FFlecsEntityHandle::GetInputId(*this, InSecond));
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
+	SOLID_INLINE const FFlecsEntityHandle& RemovePairSecond(const TFirst& InFirst) const
 	{
-		RemovePair(ObtainComponentTypeStruct(InFirst), InSecond);
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
-	{
-		RemovePair(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
-	{
-		RemovePair(GetTagEntity(InFirst), GetTagEntity(InSecond));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FGameplayTag& InFirst, const FFlecsId InSecond) const
-	{
-		RemovePair(GetTagEntity(InFirst), InSecond);
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FFlecsId InFirst, const UScriptStruct* InSecond) const
-	{
-		RemovePair(InFirst, ObtainComponentTypeStruct(InSecond));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FFlecsId InFirst, const FGameplayTag& InSecond) const
-	{
-		RemovePair(InFirst, GetTagEntity(InSecond));
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& RemovePair(const FFlecsId InFirst, const FFlecsId InSecond) const
-	{
-		GetEntity().remove(InFirst, InSecond);
+		GetEntity().remove_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirst));
 		return *this;
 	}
 
@@ -1070,89 +921,28 @@ public:
 		return GetEntity().has<TFirst, TSecond>();
 	}
 
-	template <typename TFirst>
-	NO_DISCARD SOLID_INLINE bool HasPair(const FFlecsId InSecond) const
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	NO_DISCARD SOLID_INLINE bool HasPair(const TSecond& InSecond) const
 	{
-		return GetEntity().has<TFirst>(InSecond);
+		return GetEntity().has<TFirst>(FFlecsEntityHandle::GetInputId(*this, InSecond));
+	}
+	
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst,
+		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	NO_DISCARD SOLID_INLINE bool HasPair(const TFirst& InFirst, const TSecond& InSecond) const
+	{
+		return GetEntity().has(FFlecsEntityHandle::GetInputId(*this, InFirst),
+			FFlecsEntityHandle::GetInputId(*this, InSecond));
 	}
 
-	template <typename TFirst>
-	NO_DISCARD SOLID_INLINE bool HasPair(const UScriptStruct* InSecond) const
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
+	NO_DISCARD SOLID_INLINE bool HasPairSecond(const TFirst& InFirst) const
 	{
-		return HasPair<TFirst>(ObtainComponentTypeStruct(InSecond));
+		return GetEntity().has_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirst));
 	}
 
-	template <typename TFirst>
-	NO_DISCARD SOLID_INLINE bool HasPair(const FGameplayTag& InSecond) const
-	{
-		return HasPair<TFirst>(GetTagEntity(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE bool HasPair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
-	{
-		return HasPair(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE bool HasPair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
-	{
-		return HasPair(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE bool HasPair(const UScriptStruct* InFirst, const FFlecsId InSecond) const
-	{
-		return HasPair(ObtainComponentTypeStruct(InFirst), InSecond);
-	}
-
-	NO_DISCARD SOLID_INLINE bool HasPair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
-	{
-		return HasPair(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE bool HasPair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
-	{
-		return HasPair(GetTagEntity(InFirst), GetTagEntity(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE bool HasPair(const FGameplayTag& InFirst, const FFlecsId InSecond) const
-	{
-		return HasPair(GetTagEntity(InFirst), InSecond);
-	}
-
-	NO_DISCARD SOLID_INLINE bool HasPair(const FFlecsId InFirst, const UScriptStruct* InSecond) const
-	{
-		return HasPair(InFirst, ObtainComponentTypeStruct(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE bool HasPair(const FFlecsId InFirst, const FGameplayTag& InSecond) const
-	{
-		return HasPair(InFirst, GetTagEntity(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE bool HasPair(const FFlecsId InFirst, const FFlecsId InSecond) const
-	{
-		return GetEntity().has(InFirst, InSecond);
-	}
-
-	template <typename TSecond>
-	NO_DISCARD SOLID_INLINE bool HasPairSecond(const FFlecsId InFirst) const
-	{
-		return GetEntity().has_second<TSecond>(InFirst);
-	}
-
-	template <typename TSecond>
-	NO_DISCARD SOLID_INLINE bool HasPairSecond(const UScriptStruct* InFirst) const
-	{
-		return HasPairSecond<TSecond>(ObtainComponentTypeStruct(InFirst));
-	}
-
-	template <typename TSecond>
-	NO_DISCARD SOLID_INLINE bool HasPairSecond(const FGameplayTag& InFirst) const
-	{
-		return HasPairSecond<TSecond>(GetTagEntity(InFirst));
-	}
-
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-		UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TFirst, TActual>)
 	NO_DISCARD SOLID_INLINE const TActual& GetPairFirst() const
 	{
 		solid_checkf((HasPair<TFirst, TSecond>()),
@@ -1163,8 +953,9 @@ public:
 		return GetEntity().get<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-		UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
+	template <typename TFirst, typename TSecond,
+	typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TFirst, TActual>)
 	NO_DISCARD SOLID_INLINE TActual& GetPairMutFirst() const
 	{
 		solid_checkf((HasPair<TFirst, TSecond>()),
@@ -1175,154 +966,72 @@ public:
 		return GetEntity().get_mut<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE const TActual& GetPairFirst(const FFlecsId InSecond) const
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	NO_DISCARD SOLID_INLINE const TFirst& GetPairFirst(const TSecond& InSecond) const
 	{
 		solid_checkf(HasPair<TFirst>(InSecond),
 			TEXT("Entity does not have pair with %hs and %s"),
 			nameof(TFirst).data(),
 			*InSecond.ToString());
 		
-		return GetEntity().get<TFirst>(InSecond);
+		return GetEntity().get<TFirst>(FFlecsEntityHandle::GetInputId(*this, InSecond));
 	}
 
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE TActual& GetPairMutFirst(const FFlecsId InSecond) const
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	NO_DISCARD SOLID_INLINE TFirst& GetPairMutFirst(const TSecond& InSecond) const
 	{
 		solid_checkf(HasPair<TFirst>(InSecond),
 			TEXT("Entity does not have pair with %hs and %s"),
 			nameof(TFirst).data(),
 			*InSecond.ToString());
 		
-		return GetEntity().get_mut<TFirst>(InSecond);
+		return GetEntity().get_mut<TFirst>(FFlecsEntityHandle::GetInputId(*this, InSecond));
 	}
 
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE TActual& GetPairFirst(const UScriptStruct* InSecond) const
-	{
-		return GetPairFirst<TFirst>(ObtainComponentTypeStruct(InSecond));
-	}
-
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE TActual& GetPairMutFirst(const UScriptStruct* InSecond) const
-	{
-		return GetPairMutFirst<TFirst>(ObtainComponentTypeStruct(InSecond));
-	}
-
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE TActual& GetPairFirst(const FGameplayTag& InSecond) const
-	{
-		return GetPairFirst<TFirst>(GetTagEntity(InSecond));
-	}
-	
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE TActual& GetPairMutFirst(const FGameplayTag& InSecond) const
-	{
-		return GetPairMutFirst<TFirst>(GetTagEntity(InSecond));
-	}
-
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-		UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TFirst, TActual>)
 	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrFirst() const
 	{
 		return GetEntity().try_get<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-		UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TFirst, TActual>)
 	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutFirst() const
 	{
 		return GetEntity().try_get_mut<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrFirst(const FFlecsId InSecond) const
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	NO_DISCARD SOLID_INLINE const TFirst* GetPairPtrFirst(const TSecond& InSecond) const
 	{
-		return GetEntity().try_get<TFirst>(InSecond);
+		return GetEntity().try_get<TFirst>(FFlecsEntityHandle::GetInputId(*this, InSecond));
 	}
 
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutFirst(const FFlecsId InSecond) const
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	NO_DISCARD SOLID_INLINE TFirst* GetPairPtrMutFirst(const TSecond& InSecond) const
 	{
-		return GetEntity().try_get_mut<TFirst>(InSecond);
+		return GetEntity().try_get_mut<TFirst>(FFlecsEntityHandle::GetInputId(*this, InSecond));
 	}
 
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrFirst(const UScriptStruct* InSecond) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First, 
+		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const First& InFirst, const Second& InSecond) const
 	{
-		return GetPairPtrFirst<TFirst>(ObtainComponentTypeStruct(InSecond));
+		return GetEntity().try_get(FFlecsEntityHandle::GetInputId(*this, InFirst),
+			FFlecsEntityHandle::GetInputId(*this, InSecond));
+	}
+
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First, 
+		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
+	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const First& InFirst, const Second& InSecond) const
+	{
+		return GetEntity().try_get_mut(FFlecsEntityHandle::GetInputId(*this, InFirst),
+			FFlecsEntityHandle::GetInputId(*this, InSecond));
 	}
 	
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutFirst(const UScriptStruct* InSecond) const
-	{
-		return GetPairPtrMutFirst<TFirst>(ObtainComponentTypeStruct(InSecond));
-	}
-
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrFirst(const FGameplayTag& InSecond) const
-	{
-		return GetPairPtrFirst<TFirst>(GetTagEntity(InSecond));
-	}
-
-	template <typename TFirst, typename TActual = TFirst>
-	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutFirst(const FGameplayTag& InSecond) const
-	{
-		return GetPairPtrMutFirst<TFirst>(GetTagEntity(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const FFlecsId InFirst, const FFlecsId InSecond) const
-	{
-		return GetEntity().try_get(InFirst, InSecond);
-	}
-
-	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const FFlecsId InFirst, const FFlecsId InSecond) const
-	{
-		return GetEntity().try_get_mut(InFirst, InSecond);
-	}
-
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const UScriptStruct* InFirst, const FFlecsId InSecond) const
-	{
-		return GetPairPtrFirst(ObtainComponentTypeStruct(InFirst), InSecond);
-	}
-
-	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const UScriptStruct* InFirst, const FFlecsId InSecond) const
-	{
-		return GetPairPtrMutFirst(ObtainComponentTypeStruct(InFirst), InSecond);
-	}
-
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const FFlecsId InFirst, const UScriptStruct* InSecond) const
-	{
-		return GetPairPtrFirst(InFirst, ObtainComponentTypeStruct(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const FFlecsId InFirst, const UScriptStruct* InSecond) const
-	{
-		return GetPairPtrMutFirst(InFirst, ObtainComponentTypeStruct(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
-	{
-		return GetPairPtrFirst(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
-	{
-		return GetPairPtrMutFirst(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
-	{
-		return GetPairPtrFirst(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
-	{
-		return GetPairPtrMutFirst(ObtainComponentTypeStruct(InFirst), GetTagEntity(InSecond));
-	}
-	
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-		UE_REQUIRES(std::is_same_v<TSecond, TActual>)>
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TSecond, TActual>)
 	NO_DISCARD SOLID_INLINE const TActual& GetPairSecond() const
 	{
 		solid_checkf((HasPairSecond<TFirst, TSecond>()),
@@ -1333,8 +1042,8 @@ public:
 		return GetEntity().get_second<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-		UE_REQUIRES(std::is_same_v<TSecond, TActual>)>
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TSecond, TActual>)
 	NO_DISCARD SOLID_INLINE TActual& GetPairMutSecond() const
 	{
 		solid_checkf((HasPairSecond<TFirst, TSecond>()),
@@ -1345,178 +1054,94 @@ public:
 		return GetEntity().get_mut_second<TFirst, TSecond>();
 	}
 
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE const TActual& GetPairSecond(const FFlecsId InFirst) const
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
+	NO_DISCARD SOLID_INLINE const TSecond& GetPairSecond(const TFirst& InFirst) const
 	{
 		solid_checkf(HasPairSecond<TSecond>(InFirst),
 			TEXT("Entity does not have pair with %hs and %s"),
 			nameof(TSecond).data(),
 			*InFirst.ToString());
 		
-		return GetEntity().get_second<TSecond>(InFirst);
+		return GetEntity().get_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirst));
 	}
 
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE TActual& GetPairMutSecond(const FFlecsId InFirst) const
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
+	NO_DISCARD SOLID_INLINE TSecond& GetPairMutSecond(const TFirst& InFirst) const
 	{
 		solid_checkf(HasPairSecond<TSecond>(InFirst),
 			TEXT("Entity does not have pair with %hs and %s"),
-			Unreal::Flecs::ToCString(nameof(TSecond).data()),
+			nameof(TSecond).data(),
 			*InFirst.ToString());
 		
-		return GetEntity().get_mut_second<TSecond>(InFirst);
-	}
-
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE const TActual& GetPairSecond(const UScriptStruct* InFirst) const
-	{
-		return GetPairSecond<TSecond>(ObtainComponentTypeStruct(InFirst));
-	}
-
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE TActual& GetPairMutSecond(const UScriptStruct* InFirst) const
-	{
-		return GetPairMutSecond<TSecond>(ObtainComponentTypeStruct(InFirst));
-	}
-
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE const TActual& GetPairSecond(const FGameplayTag& InFirst) const
-	{
-		return GetPairSecond<TSecond>(GetTagEntity(InFirst));
-	}
-
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE TActual& GetPairMutSecond(const FGameplayTag& InFirst) const
-	{
-		return GetPairMutSecond<TSecond>(GetTagEntity(InFirst));
+		return GetEntity().get_mut_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirst));
 	}
 	
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-		UE_REQUIRES(std::is_same_v<TSecond, TActual>)>
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TSecond, TActual>)
 	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrSecond() const
 	{
 		return GetEntity().try_get_second<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-		UE_REQUIRES(std::is_same_v<TSecond, TActual>)>
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TSecond, TActual>)
 	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutSecond() const
 	{
 		return GetEntity().try_get_mut_second<TFirst, TSecond>();
 	}
 
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrSecond(const FFlecsId InFirst) const
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
+	NO_DISCARD SOLID_INLINE const TSecond* GetPairPtrSecond(const TFirst& InFirst) const
 	{
-		return GetEntity().try_get_second<TSecond>(InFirst);
+		return GetEntity().try_get_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirst));
+	}
+
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
+	NO_DISCARD SOLID_INLINE TSecond* GetPairPtrMutSecond(const TFirst& InFirst) const
+	{
+		return GetEntity().try_get_mut_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirst));
+	}
+
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First, 
+		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
+	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const First& InFirst, const Second& InSecond) const
+	{
+		return GetEntity().try_get(FFlecsEntityHandle::GetInputId(*this, InFirst),
+			FFlecsEntityHandle::GetInputId(*this, InSecond));
+	}
+
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First, 
+		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
+	NO_DISCARD SOLID_INLINE void* GetPairPtrMutSecond(const First& InFirst, const Second& InSecond) const
+	{
+		return GetEntity().try_get_mut(FFlecsEntityHandle::GetInputId(*this, InFirst),
+			FFlecsEntityHandle::GetInputId(*this, InSecond));
 	}
 	
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutSecond(const FFlecsId InFirst) const
-	{
-		return GetEntity().try_get_mut_second<TSecond>(InFirst);
-	}
-
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrSecond(const UScriptStruct* InFirst) const
-	{
-		return GetPairPtrSecond<TSecond>(ObtainComponentTypeStruct(InFirst));
-	}
-
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutSecond(const UScriptStruct* InFirst) const
-	{
-		return GetPairPtrMutSecond<TSecond>(ObtainComponentTypeStruct(InFirst));
-	}
-
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE const TActual* GetPairPtrSecond(const FGameplayTag& InFirst) const
-	{
-		return GetPairPtrSecond<TSecond>(GetTagEntity(InFirst));
-	}
-
-	template <typename TSecond, typename TActual = TSecond>
-	NO_DISCARD SOLID_INLINE TActual* GetPairPtrMutSecond(const FGameplayTag& InFirst) const
-	{
-		return GetPairPtrMutSecond<TSecond>(GetTagEntity(InFirst));
-	}
-
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const FFlecsId InFirst, const FFlecsId InSecond) const
-	{
-		return GetEntity().try_get(InFirst, InSecond);
-	}
-
-	NO_DISCARD SOLID_INLINE void* GetPairPtrMutSecond(const FFlecsId InFirst, const FFlecsId InSecond) const
-	{
-		return GetEntity().try_get_mut(InFirst, InSecond);
-	}
-
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const UScriptStruct* InFirst, const FFlecsId InSecond) const
-	{
-		return GetPairPtrSecond(ObtainComponentTypeStruct(InFirst), InSecond);
-	}
-
-	NO_DISCARD SOLID_INLINE void* GetPairPtrMutSecond(const UScriptStruct* InFirst, const FFlecsId InSecond) const
-	{
-		return GetPairPtrMutSecond(ObtainComponentTypeStruct(InFirst), InSecond);
-	}
-	
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const FFlecsId InFirst, const UScriptStruct* InSecond) const
-	{
-		return GetPairPtrSecond(InFirst, ObtainComponentTypeStruct(InSecond));
-	}
-	
-	NO_DISCARD SOLID_INLINE void* GetPairPtrMutSecond(const FFlecsId InFirst, const UScriptStruct* InSecond) const
-	{
-		return GetPairPtrMutSecond(InFirst, ObtainComponentTypeStruct(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
-	{
-		return GetPairPtrSecond(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
-	{
-		return GetPairPtrSecond(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond));
-	}
-
-	NO_DISCARD SOLID_INLINE void* GetPairPtrMutSecond(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
-	{
-		return GetPairPtrMutSecond(ObtainComponentTypeStruct(InFirst), ObtainComponentTypeStruct(InSecond));
-	}
-	
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-		UE_REQUIRES(std::is_same_v<TFirst, TActual>)>
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TFirst, TActual>)
 	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const TActual& InValue) const
 	{
 		GetEntity().set<TFirst, TSecond>(InValue);
 		return *this;
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type
-		UE_REQUIRES (std::is_same_v<TSecond, TActual>)>
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TSecond, TActual>)
 	SOLID_INLINE const FFlecsEntityHandle& SetPairSecond(const TActual& InValue) const
 	{
 		GetEntity().set_second<TFirst, TSecond>(InValue);
 		return *this;
 	}
 
-	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const FFlecsId InSecond, const TActual& InFirst) const
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const TSecond& InSecondType, const TFirst& InValue) const
 	{
-		GetEntity().set<TFirst>(InSecond, InFirst);
+		GetEntity().set<TFirst>(FFlecsEntityHandle::GetInputId(*this, InSecondType), InValue);
 		return *this;
 	}
 
-	template <typename TFirst, typename TActual = TFirst>
-	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const UScriptStruct* InSecond, const TActual& InFirst) const
-	{
-		SetPairFirst<TFirst>(ObtainComponentTypeStruct(InSecond), InFirst);
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const UScriptStruct* InFirst,
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const TSolidNotNull<const UScriptStruct*> InFirst,
 		const void* InValue, const UScriptStruct* InSecond) const
 	{
 		if (!HasPair(InFirst, InSecond))
@@ -1531,7 +1156,7 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const UScriptStruct* InFirst,
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const TSolidNotNull<const UScriptStruct*> InFirst,
 		const void* InValue, const FGameplayTag& InSecond) const
 	{
 		if (!HasPair(InFirst, InSecond))
@@ -1546,7 +1171,8 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const UScriptStruct* InFirst,
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(
+		const TSolidNotNull<const UScriptStruct*> InFirst,
 		const void* InValue, const FFlecsId InSecond) const
 	{
 		if (!HasPair(InFirst, InSecond))
@@ -1589,7 +1215,7 @@ public:
 	}
 
 	SOLID_INLINE const FFlecsEntityHandle& SetPairSecond(const FFlecsId InFirst,
-		const UScriptStruct* InSecond, const void* InValue) const
+		const TSolidNotNull<const UScriptStruct*> InSecond, const void* InValue) const
 	{
 		if (!HasPair(InFirst, InSecond))
 		{
@@ -1602,7 +1228,9 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& SetPairSecond(const FGameplayTag& InFirst, const UScriptStruct* InSecond, const void* InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& SetPairSecond(
+		const FGameplayTag& InFirst,
+		const TSolidNotNull<const UScriptStruct*> InSecond, const void* InValue) const
 	{
 		if (!HasPair(InFirst, InSecond))
 		{
@@ -1621,6 +1249,8 @@ public:
 	{
 		GetEntity().modified<TFirst, TSecond>();
 	}
+
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
 
 	SOLID_INLINE void ModifiedPair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
 	{
@@ -1671,41 +1301,23 @@ public:
 	{
 		GetEntity().modified<TComponent>();
 	}
-	
-	SOLID_INLINE void Modified(const UScriptStruct* StructType) const
-	{
-		Modified(ObtainComponentTypeStruct(StructType));
-	}
 
-	SOLID_INLINE void Modified(const FGameplayTag& InTag) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TComponent>
+	SOLID_INLINE void Modified(const TComponent& InValueValue) const
 	{
-		Modified(GetTagEntity(InTag));
-	}
-
-	SOLID_INLINE void Modified(const FFlecsId InEntity) const
-	{
-		GetEntity().modified(InEntity);
-	}
-
-	NO_DISCARD SOLID_INLINE int32 GetDepth(const FFlecsId InEntity) const
-	{
-		return GetEntity().depth(InEntity);
-	}
-
-	NO_DISCARD SOLID_INLINE int32 GetDepth(const UScriptStruct* StructType) const
-	{
-		return GetDepth(ObtainComponentTypeStruct(StructType));
-	}
-
-	NO_DISCARD SOLID_INLINE int32 GetDepth(const FGameplayTag& InTag) const
-	{
-		return GetDepth(GetTagEntity(InTag));
+		GetEntity().modified(FFlecsEntityHandle::GetInputId(*this, InValueValue));
 	}
 
 	template <typename TEntity>
 	NO_DISCARD SOLID_INLINE int32 GetDepth() const
 	{
 		return GetEntity().depth<TEntity>();
+	}
+
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TComponent>
+	NO_DISCARD SOLID_INLINE int32 GetDepth(const TComponent& InValue) const
+	{
+		return GetEntity().depth(FFlecsEntityHandle::GetInputId(*this, InValue));
 	}
 
 	NO_DISCARD SOLID_INLINE FString GetPath() const

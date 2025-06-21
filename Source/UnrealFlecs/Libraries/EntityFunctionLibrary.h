@@ -83,7 +83,7 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void AddComponent(const FFlecsEntityHandle& Entity, UScriptStruct* ComponentType)
+    static FORCEINLINE void AddComponent(const FFlecsEntityHandle& Entity, const UScriptStruct* ComponentType)
     {
         Entity.Add(ComponentType);
     }
@@ -95,7 +95,7 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void RemoveComponent(const FFlecsEntityHandle& Entity, UScriptStruct* ComponentType)
+    static FORCEINLINE void RemoveComponent(const FFlecsEntityHandle& Entity, const UScriptStruct* ComponentType)
     {
         Entity.Remove(ComponentType);
     }
@@ -107,7 +107,7 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE bool HasComponent(const FFlecsEntityHandle& Entity, UScriptStruct* ComponentType)
+    static FORCEINLINE bool HasComponent(const FFlecsEntityHandle& Entity, const UScriptStruct* ComponentType)
     {
         return Entity.Has(ComponentType);
     }

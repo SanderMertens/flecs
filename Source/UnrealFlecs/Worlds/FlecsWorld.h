@@ -233,15 +233,24 @@ public:
 	{
 		for (TObjectIterator<UClass> It = TObjectIterator<UClass>(); It; ++It)
 		{
-			const UClass* Class = *It;
+			const TNotNull<const UClass*> Class = *It;
 			
 			if (Class->ImplementsInterface(UFlecsObjectRegistrationInterface::StaticClass()))
 			{
-				if (Class->HasAnyClassFlags(CLASS_Abstract | CLASS_Deprecated | CLASS_NewerVersionExists))
+				// @TODO: should we log if the class is abstract?
+				if (Class->HasAnyClassFlags(CLASS_Abstract))
 				{
-					UE_LOG(LogFlecsWorld, Warning,
-						TEXT("Skipping registration of %s because it is abstract, deprecated or has a newer version"),
-						*Class->GetName());
+					UE_LOGFMT(LogFlecsWorld, Log,
+						"Skipping registration of {ClassName} because it is abstract",
+						Class->GetName());
+					continue;
+				}
+				
+				if (Class->HasAnyClassFlags(CLASS_Deprecated | CLASS_NewerVersionExists))
+				{
+					UE_LOGFMT(LogFlecsWorld, Warning,
+						"Skipping registration of {ClassName} because it is deprecated or has a newer version",
+						Class->GetName());
 					continue;
 				}
 				
@@ -258,8 +267,8 @@ public:
 				RegisteredObjects.Add(ObjectPtr);
 				RegisteredObjectTypes.Add(Class, ObjectPtr);
 
-				UE_LOG(LogFlecsWorld, Log,
-					TEXT("Registering object type %s"), *Class->GetName());
+				UE_LOGFMT(LogFlecsWorld, Log,
+					"Registering object type {ClassName}", Class->GetName());
 			}
 		}
 	}
@@ -720,8 +729,8 @@ public:
 	FORCEINLINE_DEBUGGABLE void DestroyEntityByName(const FString& Name) const
 	{
 		solid_checkf(!Name.IsEmpty(), TEXT("Name is empty"));
-		
-		FFlecsEntityHandle Handle = LookupEntity(Name);
+
+		const FFlecsEntityHandle Handle = LookupEntity(Name);
 		
 		if LIKELY_IF(Handle.IsValid())
 		{
@@ -1491,8 +1500,9 @@ public:
 			}
 			else UNLIKELY_ATTRIBUTE
 			{
-				UE_LOG(LogFlecsWorld, Warning,
-					TEXT("Property Type: %s is not supported"), *Property->GetName());
+				UE_LOG(LogFlecsWorld, Log,
+					TEXT("Property Type: %s is not supported for member serialization"),
+					*Property->GetName());
 			}
 		}
 	}
@@ -1549,10 +1559,10 @@ public:
 							solid_check(Ptr != nullptr);
 							solid_check(TypeInfo->hooks.ctx != nullptr);
 
-							const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
-							solid_check(IsValid(ScriptStruct));
+							const UScriptStruct* ContextScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+							solid_check(IsValid(ContextScriptStruct));
 
-							ScriptStruct->InitializeStruct(Ptr, Count);
+							ContextScriptStruct->InitializeStruct(Ptr, Count);
 						};
 					}
 					else
@@ -1568,10 +1578,10 @@ public:
 							solid_check(Ptr != nullptr);
 							solid_check(TypeInfo->hooks.ctx != nullptr);
 
-							const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
-							solid_check(IsValid(ScriptStruct));
+							const UScriptStruct* ContextScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+							solid_check(IsValid(ContextScriptStruct));
 
-							ScriptStruct->DestroyStruct(Ptr, Count);
+							ContextScriptStruct->DestroyStruct(Ptr, Count);
 						};
 					}
 					else
@@ -1586,10 +1596,10 @@ public:
 							solid_check(Dst != nullptr);
 							solid_check(TypeInfo->hooks.ctx != nullptr);
 
-							const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
-							solid_check(IsValid(ScriptStruct));
+							const UScriptStruct* ContextScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+							solid_check(IsValid(ContextScriptStruct));
 
-							ScriptStruct->CopyScriptStruct(Dst, Src, Count);
+							ContextScriptStruct->CopyScriptStruct(Dst, Src, Count);
 						};
 						
 						Hooks.move = [](void* Dst, void* Src, int32_t Count, const ecs_type_info_t* TypeInfo)
@@ -1599,10 +1609,10 @@ public:
 							solid_check(Dst != nullptr);
 							solid_check(TypeInfo->hooks.ctx != nullptr);
 
-							const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
-							solid_check(IsValid(ScriptStruct));
+							const UScriptStruct* ContextScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+							solid_check(IsValid(ContextScriptStruct));
 
-							ScriptStruct->CopyScriptStruct(Dst, Src, Count);
+							ContextScriptStruct->CopyScriptStruct(Dst, Src, Count);
 						};
 
 						if (ScriptStruct->GetCppStructOps()->HasIdentical())
@@ -1615,10 +1625,10 @@ public:
 								solid_check(Ptr2 != nullptr);
 								solid_check(TypeInfo->hooks.ctx != nullptr);
 
-								const UScriptStruct* ScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
-								solid_check(IsValid(ScriptStruct));
+								const UScriptStruct* ContextScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
+								solid_check(IsValid(ContextScriptStruct));
 
-								return ScriptStruct->CompareScriptStruct(Ptr1, Ptr2, PPF_DeepComparison);
+								return ContextScriptStruct->CompareScriptStruct(Ptr1, Ptr2, PPF_DeepComparison);
 							};
 						}
 						else

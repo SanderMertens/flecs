@@ -39,7 +39,9 @@ void FRegisteredComponentTestsSpec::Define()
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Add(FUStructTestComponent_TagUSTRUCT::StaticStruct());
 
-			FFlecsEntityHandle RegisteredComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_TagUSTRUCT::StaticStruct());
+			FFlecsEntityHandle RegisteredComponent
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_TagUSTRUCT::StaticStruct());
+			
 			TestTrue("Component properties should be registered",
 				TestEntity.Has<FUStructTestComponent_TagUSTRUCT>());
 			TestTrue("Component properties should be registered",
@@ -167,22 +169,221 @@ void FRegisteredComponentTestsSpec::Define()
 		});
 	});
 
-	Describe("Register Inherited Components", [this]()
+	Describe("Unreal Struct Type Registration", [this]()
 	{
-		// It("Should add USTRUCT Component using StaticStruct", [this]()
-		// {
-		// 	FFlecsEntityHandle RegisteredInheritedComponent
-		// 		= Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_Inherited::StaticStruct());
-		// 	TestTrue("Inherited Component should have its parent",
-		// 		RegisteredInheritedComponent.HasPair(flecs::IsA, FUStructTestComponent_RegisterComponentTest::StaticStruct()));
-		// });
+		It("Should Register Non Static Struct, Script Struct(FVector) using CPP API", [this]()
+		{
+			FFlecsEntityHandle FVectorComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct<FVector>();
+			TestTrue("Component properties should be registered",
+				FVectorComponent.Has<FFlecsScriptStructComponent>());
+		});
+
+		It("Should Register Non Static Struct, Script Struct(FVector) using BaseStructure", [this]()
+		{
+			FFlecsEntityHandle FVectorComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct(TBaseStructure<FVector>::Get());
+			TestTrue("Component properties should be registered",
+				FVectorComponent.Has<FFlecsScriptStructComponent>());
+		});
 	});
 
-	It("Should Register Non Static Struct Script Structs(FVector)", [this]()
+	xDescribe("Custom Alignment Registration", [this]()
 	{
-		FFlecsEntityHandle FVectorComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct<FVector>();
-		TestTrue("Component properties should be registered",
-			FVectorComponent.Has<FFlecsScriptStructComponent>());
+		It("Should Register(CPP API) and Add Component with Custom Alignment (16 bytes)", [this]()
+		{
+			FFlecsEntityHandle RegisteredComponent
+				= Fixture.FlecsWorld->RegisterComponentType<FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes>();
+			
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add<FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes>();
+
+			TestTrue("Component should be registered",
+				TestEntity.Has<FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes>());
+			
+			TestTrue("Component properties should be registered",
+				TestEntity.Has(FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes::StaticStruct()));
+			
+			TestEqual("Component Size should be 16",
+				RegisteredComponent.Get<flecs::Component>().alignment,
+				alignof(FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes));
+
+			const FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes* ComponentPtr 
+				= TestEntity.GetPtr<FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes>();
+
+			TestTrue("Component Memory should be aligned to 16 bytes",
+				IsAligned(ComponentPtr, alignof(FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes)));
+		});
+
+		It("Should Register(StaticStruct) and Add Component with Custom Alignment (16 bytes)", [this]()
+		{
+			FFlecsEntityHandle RegisteredComponent
+				= Fixture.FlecsWorld->RegisterComponentType(FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes::StaticStruct());
+			
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add<FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes>();
+
+			TestTrue("Component should be registered",
+				TestEntity.Has<FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes>());
+			
+			TestTrue("Component properties should be registered",
+				TestEntity.Has(FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes::StaticStruct()));
+			
+			TestEqual("Component Size should be 16",
+				RegisteredComponent.Get<flecs::Component>().alignment,
+				alignof(FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes));
+
+			const FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes* ComponentPtr
+				= TestEntity.GetPtr<FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes>();
+
+			TestTrue("Component Memory should be aligned to 16 bytes",
+				IsAligned(ComponentPtr, alignof(FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes)));
+		});
+
+		It("Should Register(CPP API) and Add Component with Custom Alignment (32 bytes)", [this]()
+		{
+			FFlecsEntityHandle RegisteredComponent
+				= Fixture.FlecsWorld->RegisterComponentType<FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes>();
+			
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add<FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes>();
+
+			TestTrue("Component should be registered",
+				TestEntity.Has<FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes>());
+			
+			TestTrue("Component properties should be registered",
+				TestEntity.Has(FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes::StaticStruct()));
+			
+			TestEqual("Component Size should be 32",
+				RegisteredComponent.Get<flecs::Component>().alignment,
+				alignof(FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes));
+
+			const FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes* ComponentPtr
+				= TestEntity.GetPtr<FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes>();
+			
+			TestTrue("Component Memory should be aligned to 32 bytes",
+				IsAligned(ComponentPtr, alignof(FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes)));
+		});
+
+		It("Should Register(StaticStruct) and Add Component with Custom Alignment (32 bytes)", [this]()
+		{
+			FFlecsEntityHandle RegisteredComponent
+				= Fixture.FlecsWorld->RegisterComponentType(FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes::StaticStruct());
+			
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add<FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes>();
+
+			TestTrue("Component should be registered",
+				TestEntity.Has<FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes>());
+			
+			TestTrue("Component properties should be registered",
+				TestEntity.Has(FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes::StaticStruct()));
+			
+			TestEqual("Component Size should be 32",
+				RegisteredComponent.Get<flecs::Component>().alignment,
+				alignof(FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes));
+
+			const FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes* ComponentPtr
+				= TestEntity.GetPtr<FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes>();
+
+			TestTrue("Component Memory should be aligned to 32 bytes",
+				IsAligned(ComponentPtr, alignof(FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes)));
+		});
+
+		It("Should Register(CPP API) and Add Component with Custom Alignment (64 bytes)", [this]()
+		{
+			FFlecsEntityHandle RegisteredComponent
+				= Fixture.FlecsWorld->RegisterComponentType<FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes>();
+			
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add<FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes>();
+
+			TestTrue("Component should be registered",
+				TestEntity.Has<FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes>());
+			
+			TestTrue("Component properties should be registered",
+				TestEntity.Has(FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes::StaticStruct()));
+			
+			TestEqual("Component Size should be 64",
+				RegisteredComponent.Get<flecs::Component>().alignment,
+				alignof(FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes));
+		});
+
+		It("Should Register(StaticStruct) and Add Component with Custom Alignment (64 bytes)", [this]()
+		{
+			FFlecsEntityHandle RegisteredComponent
+				= Fixture.FlecsWorld->RegisterComponentType(FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes::StaticStruct());
+			
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			TestEntity.Add<FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes>();
+
+			TestTrue("Component should be registered",
+				TestEntity.Has<FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes>());
+			
+			TestTrue("Component properties should be registered",
+				TestEntity.Has(FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes::StaticStruct()));
+			
+			TestEqual("Component Size should be 64",
+				RegisteredComponent.Get<flecs::Component>().alignment,
+				alignof(FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes));
+
+		});
+		
+	});
+
+	Describe("Pair Testing", [this]()
+	{
+		It("Should add entity tag pair", [this]()
+		{
+			const FFlecsEntityHandle Tag = Fixture.FlecsWorld->CreateEntity("TestTag1");
+			const FFlecsEntityHandle Tag2 = Fixture.FlecsWorld->CreateEntity("TestTag2");
+			
+
+			const FFlecsEntityHandle Entity = Fixture.FlecsWorld->CreateEntity()
+				.AddPair(Tag, Tag2);
+			TestTrue("Entity should have pair tag",
+				Entity.HasPair(Tag, Tag2));
+		});
+
+		It("Should add component pair using Flecs API", [this]()
+		{
+			const FFlecsComponentHandle PairComponent
+				= Fixture.FlecsWorld->RegisterComponentType<FUSTRUCTPairTestComponent>();
+			const FFlecsComponentHandle PairSecondComponent
+				= Fixture.FlecsWorld->RegisterComponentType<FUSTRUCTPairTestComponent_Second>();
+
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity()
+				.AddPair(PairComponent, PairSecondComponent);
+		});
+
+		It("Should add component pair using CPP Type API", [this]()
+		{
+			const FFlecsComponentHandle PairComponent
+				= Fixture.FlecsWorld->RegisterComponentType<FUSTRUCTPairTestComponent>();
+			const FFlecsComponentHandle PairSecondComponent
+				= Fixture.FlecsWorld->RegisterComponentType<FUSTRUCTPairTestComponent_Second>();
+
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity()
+				.AddPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>();
+			
+			TestTrue("Entity should have pair component",
+				TestEntity.HasPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>());
+		});
+
+		It("Should add component pair using Static Struct API", [this]()
+		{
+			const FFlecsComponentHandle PairComponent
+				= Fixture.FlecsWorld->RegisterComponentType(FUSTRUCTPairTestComponent::StaticStruct());
+			const FFlecsComponentHandle PairSecondComponent
+				= Fixture.FlecsWorld->RegisterComponentType(FUSTRUCTPairTestComponent_Second::StaticStruct());
+
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity()
+				.AddPair(FUSTRUCTPairTestComponent::StaticStruct(),
+					FUSTRUCTPairTestComponent_Second::StaticStruct());
+			
+			TestTrue("Entity should have pair component",
+				TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(),
+					FUSTRUCTPairTestComponent_Second::StaticStruct()));
+		});
+		
 	});
 }
 

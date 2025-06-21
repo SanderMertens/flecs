@@ -4939,6 +4939,7 @@ void Entity_children_w_any(void) {
 	test_assert(count == 0);
 }
 
+// @TODO
 void Entity_children_from_root(void) {
 	flecs::world ecs;
 
@@ -4950,6 +4951,7 @@ void Entity_children_from_root(void) {
 	test_assert(count == 1);
 }
 
+// @TODO
 void Entity_children_from_root_world(void) {
 	flecs::world ecs;
 
@@ -6036,8 +6038,8 @@ void FFlecsEntityTestsSpec::Define()
 	It("Entity_children_w_this", [&]() { Entity_children_w_this(); });
 	It("Entity_children_w_wildcard", [&]() { Entity_children_w_wildcard(); });
 	It("Entity_children_w_any", [&]() { Entity_children_w_any(); });
-	//It("Entity_children_from_root", [&]() { Entity_children_from_root(); });
-	//It("Entity_children_from_root_world", [&]() { Entity_children_from_root_world(); });
+	//xIt("Entity_children_from_root", [&]() { Entity_children_from_root(); });
+	//xIt("Entity_children_from_root_world", [&]() { Entity_children_from_root_world(); });
 	It("Entity_get_depth", [&]() { Entity_get_depth(); });
 	It("Entity_get_depth_w_type", [&]() { Entity_get_depth_w_type(); });
 	It("Entity_to_view", [&]() { Entity_to_view(); });
