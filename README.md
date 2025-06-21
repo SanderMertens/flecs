@@ -2,8 +2,8 @@
 
 ## Depends on [Solid-Macros](https://github.com/Reddy-dev/Solid-Macros)
 
-## Unreal-Flecs Discord: https://discord.gg/Q6EWgd8tFK
-## Flecs Discord: https://discord.gg/WRn8QSfVvx
+### Unreal-Flecs Discord: https://discord.gg/Q6EWgd8tFK
+### Flecs Discord: https://discord.gg/WRn8QSfVvx
 
 ### Note:
 
