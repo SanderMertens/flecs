@@ -383,6 +383,74 @@ void FRegisteredComponentTestsSpec::Define()
 				TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(),
 					FUSTRUCTPairTestComponent_Second::StaticStruct()));
 		});
+
+		It("Should add component pair using Static Struct API with CPP Type", [this]()
+		{
+			const FFlecsComponentHandle PairComponent
+				= Fixture.FlecsWorld->RegisterComponentType(FUSTRUCTPairTestComponent::StaticStruct());
+			const FFlecsComponentHandle PairSecondComponent
+				= Fixture.FlecsWorld->RegisterComponentType(FUSTRUCTPairTestComponent_Second::StaticStruct());
+
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity()
+				.AddPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>();
+			
+			TestTrue("Entity should have pair component",
+				TestEntity.HasPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>());
+		});
+
+		It("Should add component pair with first being data using CPP API", [this]()
+		{
+			const FFlecsComponentHandle PairComponent
+			= Fixture.FlecsWorld->RegisterComponentType<FUSTRUCTPairTestComponent>();
+			const FFlecsComponentHandle PairSecondComponent
+				= Fixture.FlecsWorld->RegisterComponentType<FUSTRUCTPairTestComponent_Data>();
+
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity()
+				.SetPairFirst<FUSTRUCTPairTestComponent_Data, FUSTRUCTPairTestComponent>(
+					FUSTRUCTPairTestComponent_Data
+					{
+						.Value = 42
+					});
+
+			TestTrue("Entity should have pair component",
+				TestEntity.HasPair<FUSTRUCTPairTestComponent_Data, FUSTRUCTPairTestComponent>());
+
+			TestTrue("Entity should have pair component using StaticStruct API",
+				TestEntity.HasPair(FUSTRUCTPairTestComponent_Data::StaticStruct(), FUSTRUCTPairTestComponent::StaticStruct()));
+
+			const FUSTRUCTPairTestComponent_Data& PairData
+				= TestEntity.GetPairFirst<FUSTRUCTPairTestComponent_Data, FUSTRUCTPairTestComponent>();
+			TestEqual("Pair Data Value should be 42", PairData.Value, 42);
+		});
+
+		It("Should add component pair with first being data using Static Struct API", [this]()
+		{
+			const FFlecsComponentHandle PairComponent
+				= Fixture.FlecsWorld->RegisterComponentType(FUSTRUCTPairTestComponent::StaticStruct());
+			const FFlecsComponentHandle PairSecondComponent
+				= Fixture.FlecsWorld->RegisterComponentType(FUSTRUCTPairTestComponent_Data::StaticStruct());
+
+			FUSTRUCTPairTestComponent_Data PairData
+			{
+				.Value = 42
+			};
+			
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity()
+				.SetPairFirst(FUSTRUCTPairTestComponent_Data::StaticStruct(), &PairData, FUSTRUCTPairTestComponent::StaticStruct());
+			
+			TestTrue("Entity should have pair component",
+				TestEntity.HasPair<FUSTRUCTPairTestComponent_Data, FUSTRUCTPairTestComponent>());
+
+			TestTrue("Entity should have pair component using StaticStruct API",
+				TestEntity.HasPair(FUSTRUCTPairTestComponent_Data::StaticStruct(),
+					FUSTRUCTPairTestComponent::StaticStruct()));
+
+			const void* PairDataPtr
+				= TestEntity.GetPairPtrFirst(FUSTRUCTPairTestComponent_Data::StaticStruct(),
+					FUSTRUCTPairTestComponent::StaticStruct());
+			TestEqual("Pair Data Value should be 42",
+				static_cast<const FUSTRUCTPairTestComponent_Data*>(PairDataPtr)->Value, 42);
+		});
 		
 	});
 }
