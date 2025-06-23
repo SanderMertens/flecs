@@ -5402,6 +5402,89 @@ void Sparse_defer_batched_remove_exclusive_pair_tag(void) {
     ecs_fini(world);
 }
 
+void Sparse_defer_change_exclusive(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TAG(world, Movement);
+    ecs_add_id(world, Movement, EcsSparse);
+    ecs_add_id(world, Movement, EcsExclusive);
+    if (!fragment) ecs_add_id(world, Movement, EcsDontFragment);
+
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Jumping);
+
+    ECS_ENTITY(world, e0, Position, (Movement, Jumping));
+    ECS_ENTITY(world, e1, Position, (Movement, Walking));
+    ECS_ENTITY(world, e2, Position, (Movement, Running));
+    ECS_ENTITY(world, e3, Position, (Movement, Walking));
+    ECS_ENTITY(world, e4, Position, (Movement, Running));
+    ECS_ENTITY(world, e5, Position, (Movement, Jumping));
+
+    ecs_defer_begin(world);
+    ecs_add_pair(world, e1, Movement, Jumping);
+    ecs_add_pair(world, e3, Movement, Jumping);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_pair(world, e0, Movement, Jumping));
+    test_assert(ecs_has_pair(world, e1, Movement, Jumping));
+    test_assert(ecs_has_pair(world, e2, Movement, Running));
+    test_assert(ecs_has_pair(world, e3, Movement, Jumping));
+    test_assert(ecs_has_pair(world, e4, Movement, Running));
+    test_assert(ecs_has_pair(world, e5, Movement, Jumping));
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_add_pair_2_commands(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_defer_begin(world);
+    ecs_add_pair(world, e, Rel, Tgt);
+    ecs_add(world, e, Tag);
+    test_assert(!ecs_has_pair(world, e, Rel, Tgt));
+    test_assert(!ecs_has(world, e, Tag));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Tag));
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_add_pair_exclusive_2_commands(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsSparse);
+    ecs_add_id(world, Rel, EcsExclusive);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_defer_begin(world);
+    ecs_add_pair(world, e, Rel, Tgt);
+    ecs_add(world, e, Tag);
+    test_assert(!ecs_has_pair(world, e, Rel, Tgt));
+    test_assert(!ecs_has(world, e, Tag));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Tag));
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+
+    ecs_fini(world);
+}
+
 void Sparse_dont_fragment_trait_without_sparse_trait(void) {
     if (fragment) {
         test_assert(true);
