@@ -3330,6 +3330,51 @@ void DontFragment_1_this_exclusive(void) {
     ecs_fini(world);
 }
 
+void DontFragment_1_this_exclusive_not_in_use(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Movement);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(Movement, Walking)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Movement, Walking);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Movement, Walking);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Movement, Walking);
+
+    test_assert(ecs_has_pair(world, e1, Movement, Walking));
+    test_assert(ecs_has_pair(world, e2, Movement, Walking));
+    test_assert(ecs_has_pair(world, e3, Movement, Walking));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e2);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e1);
+
+    test_assert(!ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void DontFragment_1_this_exclusive_second_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
