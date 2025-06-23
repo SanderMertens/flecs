@@ -1014,7 +1014,7 @@ int flecs_term_finalize(
         trivial_term = false;
     }
 
-    if (term->flags_ & EcsTermIsUnion) {
+    if (term->flags_ & (EcsTermIsUnion|EcsTermDontFragment)) {
         trivial_term = false;
         cacheable_term = false;
     }

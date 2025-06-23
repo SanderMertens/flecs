@@ -2218,6 +2218,7 @@
                 "1_fixed_exclusive",
                 "1_fixed_exclusive_second_wildcard",
                 "1_this_exclusive",
+                "1_this_exclusive_not_in_use",
                 "1_this_exclusive_second_wildcard",
                 "1_var_exclusive",
                 "1_var_exclusive_second_wildcard",

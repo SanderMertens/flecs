@@ -2130,6 +2130,7 @@ void DontFragment_1_var_sparse_written_first_wildcard(void);
 void DontFragment_1_fixed_exclusive(void);
 void DontFragment_1_fixed_exclusive_second_wildcard(void);
 void DontFragment_1_this_exclusive(void);
+void DontFragment_1_this_exclusive_not_in_use(void);
 void DontFragment_1_this_exclusive_second_wildcard(void);
 void DontFragment_1_var_exclusive(void);
 void DontFragment_1_var_exclusive_second_wildcard(void);
@@ -10696,6 +10697,10 @@ bake_test_case DontFragment_testcases[] = {
         DontFragment_1_this_exclusive
     },
     {
+        "1_this_exclusive_not_in_use",
+        DontFragment_1_this_exclusive_not_in_use
+    },
+    {
         "1_this_exclusive_second_wildcard",
         DontFragment_1_this_exclusive_second_wildcard
     },
@@ -11849,7 +11854,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        85,
+        86,
         DontFragment_testcases,
         1,
         DontFragment_params
