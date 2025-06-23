@@ -456,6 +456,8 @@ bool flecs_sparse_remove(
             ecs_os_memset(ptr, 0, size);
         }
 
+        page->sparse[offset] = 0;
+
         /* Reset memory to zero on remove */
         return true;
     } else {

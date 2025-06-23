@@ -326,7 +326,7 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
         }
     }
 
-    *tgt_ptr = ECS_PAIR_SECOND(component_id);
+    *tgt_ptr = flecs_entities_get_alive(world, ECS_PAIR_SECOND(component_id));
 
     ecs_assert(flecs_sparse_has(parent->sparse, entity), 
         ECS_INTERNAL_ERROR, NULL);

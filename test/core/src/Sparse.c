@@ -371,6 +371,63 @@ void Sparse_add_remove_twice_w_hooks(void) {
     ecs_fini(world);
 }
 
+void Sparse_add_remove_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Movement);
+    ecs_add_id(world, Movement, EcsSparse);
+    if (!fragment) ecs_add_id(world, Movement, EcsDontFragment);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(!ecs_has_pair(world, e, Movement, Walking));
+    test_assert(!ecs_has_pair(world, e, Movement, Running));
+
+    ecs_add_pair(world, e, Movement, Walking);
+    test_assert(ecs_has_pair(world, e, Movement, Walking));
+    test_assert(!ecs_has_pair(world, e, Movement, Running));
+
+    ecs_remove_pair(world, e, Movement, EcsWildcard);
+    test_assert(!ecs_has_pair(world, e, Movement, Walking));
+    test_assert(!ecs_has_pair(world, e, Movement, Running));
+
+    ecs_add_pair(world, e, Movement, Walking);
+    test_assert(ecs_has_pair(world, e, Movement, Walking));
+    test_assert(!ecs_has_pair(world, e, Movement, Running));
+
+    ecs_fini(world);
+}
+
+void Sparse_add_remove_add_exclusive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Movement);
+    ecs_add_id(world, Movement, EcsSparse);
+    ecs_add_id(world, Movement, EcsExclusive);
+    if (!fragment) ecs_add_id(world, Movement, EcsDontFragment);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(!ecs_has_pair(world, e, Movement, Walking));
+    test_assert(!ecs_has_pair(world, e, Movement, Running));
+
+    ecs_add_pair(world, e, Movement, Walking);
+    test_assert(ecs_has_pair(world, e, Movement, Walking));
+    test_assert(!ecs_has_pair(world, e, Movement, Running));
+
+    ecs_remove_pair(world, e, Movement, EcsWildcard);
+    test_assert(!ecs_has_pair(world, e, Movement, Walking));
+    test_assert(!ecs_has_pair(world, e, Movement, Running));
+
+    ecs_add_pair(world, e, Movement, Walking);
+    test_assert(ecs_has_pair(world, e, Movement, Walking));
+    test_assert(!ecs_has_pair(world, e, Movement, Running));
+
+    ecs_fini(world);
+}
+
 void Sparse_remove_after_add_non_sparse(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -3631,6 +3688,57 @@ void Sparse_target_exclusive_pair_after_add_same(void) {
     test_assert(ecs_has_pair(world, e2, Rel, TgtB));
     test_uint(TgtB, ecs_get_target(world, e2, Rel, 0));
     test_uint(0, ecs_get_target(world, e2, Rel, 1));
+
+    ecs_fini(world);
+}
+
+void Sparse_target_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Movement);
+    ecs_add_id(world, Movement, EcsSparse);
+    if (!fragment) ecs_add_id(world, Movement, EcsDontFragment);
+
+    ecs_entity_t ent = ecs_new(world);
+    ecs_delete(world, ent);
+    ecs_entity_t recycled = ecs_new(world);
+    test_assert(ent != recycled);
+    test_assert(ent == (uint32_t)recycled);
+
+    ecs_entity_t e = ecs_new(world);
+    test_uint(0, ecs_get_target(world, e, Movement, 0));
+
+    ecs_add_pair(world, e, Movement, recycled);
+    test_uint(recycled, ecs_get_target(world, e, Movement, 0));
+
+    ecs_remove_pair(world, e, Movement, EcsWildcard);
+    test_uint(0, ecs_get_target(world, e, Movement, 0));
+
+    ecs_fini(world);
+}
+
+void Sparse_target_recycled_exclusive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Movement);
+    ecs_add_id(world, Movement, EcsSparse);
+    ecs_add_id(world, Movement, EcsExclusive);
+    if (!fragment) ecs_add_id(world, Movement, EcsDontFragment);
+
+    ecs_entity_t ent = ecs_new(world);
+    ecs_delete(world, ent);
+    ecs_entity_t recycled = ecs_new(world);
+    test_assert(ent != recycled);
+    test_assert(ent == (uint32_t)recycled);
+
+    ecs_entity_t e = ecs_new(world);
+    test_uint(0, ecs_get_target(world, e, Movement, 0));
+
+    ecs_add_pair(world, e, Movement, recycled);
+    test_uint(recycled, ecs_get_target(world, e, Movement, 0));
+
+    ecs_remove_pair(world, e, Movement, EcsWildcard);
+    test_uint(0, ecs_get_target(world, e, Movement, 0));
 
     ecs_fini(world);
 }

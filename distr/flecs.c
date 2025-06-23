@@ -32244,6 +32244,8 @@ bool flecs_sparse_remove(
             ecs_os_memset(ptr, 0, size);
         }
 
+        page->sparse[offset] = 0;
+
         /* Reset memory to zero on remove */
         return true;
     } else {
@@ -38943,7 +38945,7 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
         }
     }
 
-    *tgt_ptr = ECS_PAIR_SECOND(component_id);
+    *tgt_ptr = flecs_entities_get_alive(world, ECS_PAIR_SECOND(component_id));
 
     ecs_assert(flecs_sparse_has(parent->sparse, entity), 
         ECS_INTERNAL_ERROR, NULL);
