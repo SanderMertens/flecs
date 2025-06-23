@@ -2071,7 +2071,7 @@ void DontFragment_1_fixed_sparse_self_up(void);
 void DontFragment_1_fixed_sparse_up(void);
 void DontFragment_1_fixed_sparse_any(void);
 void DontFragment_1_fixed_sparse_tgt_var(void);
-void DontFragment_1_fixed_exclusive_sparse_tgt_var(void);
+void DontFragment_1_fixed_sparse_exclusive_tgt_var(void);
 void DontFragment_1_fixed_sparse_tgt_var_written(void);
 void DontFragment_1_this_sparse_simple(void);
 void DontFragment_1_this_sparse(void);
@@ -2081,7 +2081,9 @@ void DontFragment_1_this_sparse_written_partial(void);
 void DontFragment_1_this_sparse_written_none(void);
 void DontFragment_1_this_sparse_any(void);
 void DontFragment_1_this_sparse_tgt_var(void);
+void DontFragment_1_this_sparse_exclusive_tgt_var(void);
 void DontFragment_1_this_sparse_tgt_var_written(void);
+void DontFragment_1_this_sparse_exclusive_tgt_var_written(void);
 void DontFragment_1_var_sparse(void);
 void DontFragment_1_var_sparse_none(void);
 void DontFragment_1_var_sparse_written(void);
@@ -10468,8 +10470,8 @@ bake_test_case DontFragment_testcases[] = {
         DontFragment_1_fixed_sparse_tgt_var
     },
     {
-        "1_fixed_exclusive_sparse_tgt_var",
-        DontFragment_1_fixed_exclusive_sparse_tgt_var
+        "1_fixed_sparse_exclusive_tgt_var",
+        DontFragment_1_fixed_sparse_exclusive_tgt_var
     },
     {
         "1_fixed_sparse_tgt_var_written",
@@ -10508,8 +10510,16 @@ bake_test_case DontFragment_testcases[] = {
         DontFragment_1_this_sparse_tgt_var
     },
     {
+        "1_this_sparse_exclusive_tgt_var",
+        DontFragment_1_this_sparse_exclusive_tgt_var
+    },
+    {
         "1_this_sparse_tgt_var_written",
         DontFragment_1_this_sparse_tgt_var_written
+    },
+    {
+        "1_this_sparse_exclusive_tgt_var_written",
+        DontFragment_1_this_sparse_exclusive_tgt_var_written
     },
     {
         "1_var_sparse",
@@ -11889,7 +11899,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        93,
+        95,
         DontFragment_testcases,
         1,
         DontFragment_params

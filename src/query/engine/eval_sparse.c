@@ -132,6 +132,7 @@ next:
 
     flecs_query_var_set_range(op, op->src.var, 
         range.table, range.offset, range.count, ctx);
+    it->ids[field_index] = id;
     flecs_query_set_vars(op, it->ids[field_index], ctx);
 
     return true;
