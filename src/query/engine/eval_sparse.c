@@ -329,7 +329,7 @@ bool flecs_query_sparse_with_exclusive(
     void *tgt_ptr = NULL;
     if (flecs_query_sparse_with_id(op, redo, ctx, not, actual_id, &tgt_ptr)) {
         ecs_entity_t tgt = *(ecs_entity_t*)tgt_ptr;
-        ctx->it->ids[op->field_index] = 
+        actual_id = ctx->it->ids[op->field_index] = 
             ecs_pair(ECS_PAIR_FIRST(actual_id), tgt);
         flecs_query_set_vars(op, actual_id, ctx);
         return true;
