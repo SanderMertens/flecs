@@ -457,6 +457,8 @@ void Sparse_add_remove_tag(void);
 void Sparse_add_remove_pair(void);
 void Sparse_add_remove_pair_tag(void);
 void Sparse_add_remove_twice_w_hooks(void);
+void Sparse_add_remove_add(void);
+void Sparse_add_remove_add_exclusive(void);
 void Sparse_remove_after_add_non_sparse(void);
 void Sparse_remove_after_add_non_sparse_pair(void);
 void Sparse_remove_pair_wildcard_rel(void);
@@ -553,6 +555,8 @@ void Sparse_target_2_pairs(void);
 void Sparse_target_exclusive_pair(void);
 void Sparse_target_exclusive_pair_after_change(void);
 void Sparse_target_exclusive_pair_after_add_same(void);
+void Sparse_target_recycled(void);
+void Sparse_target_recycled_exclusive(void);
 void Sparse_target_from_base(void);
 void Sparse_target_for_base(void);
 void Sparse_target_for_self_sparse_component(void);
@@ -4386,6 +4390,14 @@ bake_test_case Sparse_testcases[] = {
         Sparse_add_remove_twice_w_hooks
     },
     {
+        "add_remove_add",
+        Sparse_add_remove_add
+    },
+    {
+        "add_remove_add_exclusive",
+        Sparse_add_remove_add_exclusive
+    },
+    {
         "remove_after_add_non_sparse",
         Sparse_remove_after_add_non_sparse
     },
@@ -4768,6 +4780,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "target_exclusive_pair_after_add_same",
         Sparse_target_exclusive_pair_after_add_same
+    },
+    {
+        "target_recycled",
+        Sparse_target_recycled
+    },
+    {
+        "target_recycled_exclusive",
+        Sparse_target_recycled_exclusive
     },
     {
         "target_from_base",
@@ -13026,7 +13046,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        164,
+        168,
         Sparse_testcases,
         1,
         Sparse_params
