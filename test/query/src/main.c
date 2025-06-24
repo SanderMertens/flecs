@@ -2108,15 +2108,23 @@ void DontFragment_1_var_sparse_not(void);
 void DontFragment_1_this_sparse_written_not(void);
 void DontFragment_1_var_sparse_written_not(void);
 void DontFragment_1_fixed_sparse_pair_not(void);
+void DontFragment_1_fixed_sparse_pair_exclusive_not(void);
+void DontFragment_1_fixed_sparse_pair_wildcard_not(void);
+void DontFragment_1_fixed_sparse_pair_exclusive_wildcard_not(void);
+void DontFragment_1_fixed_sparse_pair_any_not(void);
+void DontFragment_1_fixed_sparse_pair_exclusive_any_not(void);
 void DontFragment_1_this_sparse_pair_not(void);
+void DontFragment_1_this_sparse_pair_exclusive_not(void);
+void DontFragment_1_this_sparse_pair_wildcard_not(void);
+void DontFragment_1_this_sparse_pair_exclusive_wildcard_not(void);
+void DontFragment_1_this_sparse_pair_any_not(void);
+void DontFragment_1_this_sparse_pair_exclusive_any_not(void);
 void DontFragment_1_var_sparse_pair_not(void);
-void DontFragment_1_this_sparse_written_pair_not(void);
-void DontFragment_1_var_sparse_written_pair_not(void);
-void DontFragment_1_fixed_sparse_exclusive_pair_not(void);
-void DontFragment_1_this_sparse_exclusive_pair_not(void);
-void DontFragment_1_var_sparse_exclusive_pair_not(void);
-void DontFragment_1_this_sparse_exclusive_written_pair_not(void);
-void DontFragment_1_var_sparse_exclusive_written_pair_not(void);
+void DontFragment_1_var_sparse_pair_exclusive_not(void);
+void DontFragment_1_var_sparse_pair_wildcard_not(void);
+void DontFragment_1_var_sparse_pair_exclusive_wildcard_not(void);
+void DontFragment_1_var_sparse_pair_any_not(void);
+void DontFragment_1_var_sparse_pair_exclusive_any_not(void);
 void DontFragment_1_sparse_component_unused(void);
 void DontFragment_1_sparse_tag_unused(void);
 void DontFragment_1_sparse_pair_wildcard_unused(void);
@@ -10634,40 +10642,72 @@ bake_test_case DontFragment_testcases[] = {
         DontFragment_1_fixed_sparse_pair_not
     },
     {
+        "1_fixed_sparse_pair_exclusive_not",
+        DontFragment_1_fixed_sparse_pair_exclusive_not
+    },
+    {
+        "1_fixed_sparse_pair_wildcard_not",
+        DontFragment_1_fixed_sparse_pair_wildcard_not
+    },
+    {
+        "1_fixed_sparse_pair_exclusive_wildcard_not",
+        DontFragment_1_fixed_sparse_pair_exclusive_wildcard_not
+    },
+    {
+        "1_fixed_sparse_pair_any_not",
+        DontFragment_1_fixed_sparse_pair_any_not
+    },
+    {
+        "1_fixed_sparse_pair_exclusive_any_not",
+        DontFragment_1_fixed_sparse_pair_exclusive_any_not
+    },
+    {
         "1_this_sparse_pair_not",
         DontFragment_1_this_sparse_pair_not
+    },
+    {
+        "1_this_sparse_pair_exclusive_not",
+        DontFragment_1_this_sparse_pair_exclusive_not
+    },
+    {
+        "1_this_sparse_pair_wildcard_not",
+        DontFragment_1_this_sparse_pair_wildcard_not
+    },
+    {
+        "1_this_sparse_pair_exclusive_wildcard_not",
+        DontFragment_1_this_sparse_pair_exclusive_wildcard_not
+    },
+    {
+        "1_this_sparse_pair_any_not",
+        DontFragment_1_this_sparse_pair_any_not
+    },
+    {
+        "1_this_sparse_pair_exclusive_any_not",
+        DontFragment_1_this_sparse_pair_exclusive_any_not
     },
     {
         "1_var_sparse_pair_not",
         DontFragment_1_var_sparse_pair_not
     },
     {
-        "1_this_sparse_written_pair_not",
-        DontFragment_1_this_sparse_written_pair_not
+        "1_var_sparse_pair_exclusive_not",
+        DontFragment_1_var_sparse_pair_exclusive_not
     },
     {
-        "1_var_sparse_written_pair_not",
-        DontFragment_1_var_sparse_written_pair_not
+        "1_var_sparse_pair_wildcard_not",
+        DontFragment_1_var_sparse_pair_wildcard_not
     },
     {
-        "1_fixed_sparse_exclusive_pair_not",
-        DontFragment_1_fixed_sparse_exclusive_pair_not
+        "1_var_sparse_pair_exclusive_wildcard_not",
+        DontFragment_1_var_sparse_pair_exclusive_wildcard_not
     },
     {
-        "1_this_sparse_exclusive_pair_not",
-        DontFragment_1_this_sparse_exclusive_pair_not
+        "1_var_sparse_pair_any_not",
+        DontFragment_1_var_sparse_pair_any_not
     },
     {
-        "1_var_sparse_exclusive_pair_not",
-        DontFragment_1_var_sparse_exclusive_pair_not
-    },
-    {
-        "1_this_sparse_exclusive_written_pair_not",
-        DontFragment_1_this_sparse_exclusive_written_pair_not
-    },
-    {
-        "1_var_sparse_exclusive_written_pair_not",
-        DontFragment_1_var_sparse_exclusive_written_pair_not
+        "1_var_sparse_pair_exclusive_any_not",
+        DontFragment_1_var_sparse_pair_exclusive_any_not
     },
     {
         "1_sparse_component_unused",
@@ -11979,7 +12019,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        111,
+        119,
         DontFragment_testcases,
         1,
         DontFragment_params

@@ -456,8 +456,6 @@ bool flecs_sparse_remove(
             ecs_os_memset(ptr, 0, size);
         }
 
-        page->sparse[offset] = 0;
-
         /* Reset memory to zero on remove */
         return true;
     } else {
@@ -518,7 +516,6 @@ bool flecs_sparse_remove_w_gen(
             ecs_os_memset(ptr, 0, size);
         }
 
-        /* Reset memory to zero on remove */
         return true;
     } else {
         /* Element is not paired and thus not alive, nothing to be done */

@@ -2500,6 +2500,1156 @@ void DontFragment_1_var_sparse_written_not(void) {
     ecs_fini(world);
 }
 
+void DontFragment_1_fixed_sparse_pair_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "ent" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Movement(ent, Walking)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add_pair(world, e1, Movement, Walking);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_fixed_sparse_pair_exclusive_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "ent" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Movement(ent, Walking)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add_pair(world, e1, Movement, Walking);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_fixed_sparse_pair_wildcard_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "ent" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Movement(ent, *)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add_pair(world, e1, Movement, Walking);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_fixed_sparse_pair_exclusive_wildcard_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "ent" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Movement(ent, *)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add_pair(world, e1, Movement, Walking);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_fixed_sparse_pair_any_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "ent" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Movement(ent, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add_pair(world, e1, Movement, Walking);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_fixed_sparse_pair_exclusive_any_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "ent" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Movement(ent, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add_pair(world, e1, Movement, Walking);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_this_sparse_pair_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA, !(Movement, Walking)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e5, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e6, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_this_sparse_pair_wildcard_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA, !(Movement, *)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_this_sparse_pair_exclusive_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA, !(Movement, Walking)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e5, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e6, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_this_sparse_pair_exclusive_wildcard_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA, !(Movement, *)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_this_sparse_pair_any_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA, !(Movement, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_this_sparse_pair_exclusive_any_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA, !(Movement, *)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_var_sparse_pair_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA($x), !Movement($x, Walking)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e7, ecs_field_src(&it, 0));
+    test_uint(e7, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e3, ecs_field_src(&it, 0));
+    test_uint(e3, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e4, ecs_field_src(&it, 0));
+    test_uint(e4, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e5, ecs_field_src(&it, 0));
+    test_uint(e5, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e6, ecs_field_src(&it, 0));
+    test_uint(e6, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_var_sparse_pair_exclusive_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA($x), !Movement($x, Walking)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e7, ecs_field_src(&it, 0));
+    test_uint(e7, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e3, ecs_field_src(&it, 0));
+    test_uint(e3, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e4, ecs_field_src(&it, 0));
+    test_uint(e4, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e5, ecs_field_src(&it, 0));
+    test_uint(e5, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e6, ecs_field_src(&it, 0));
+    test_uint(e6, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, Walking), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_var_sparse_pair_wildcard_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA($x), !Movement($x, *)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e7, ecs_field_src(&it, 0));
+    test_uint(e7, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_var_sparse_pair_exclusive_wildcard_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA($x), !Movement($x, *)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e7, ecs_field_src(&it, 0));
+    test_uint(e7, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_var_sparse_pair_any_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA($x), !Movement($x, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e7, ecs_field_src(&it, 0));
+    test_uint(e7, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_var_sparse_pair_exclusive_any_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ECS_TAG(world, Walking);
+    ECS_TAG(world, Running);
+    ECS_TAG(world, Sitting);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_add_pair(world, e2, Movement, Walking);
+    ecs_add_pair(world, e3, Movement, Running);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_add_pair(world, e5, Movement, Running);
+    ecs_add_pair(world, e6, Movement, Sitting);
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+    ecs_add(world, e4, TagA);
+    ecs_add(world, e5, TagA);
+    ecs_add(world, e6, TagA);
+
+    ecs_entity_t e7 = ecs_new_w(world, TagA);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+    ecs_add(world, e5, Bar);
+    ecs_add(world, e6, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA($x), !Movement($x, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(e7, ecs_field_src(&it, 0));
+    test_uint(e7, ecs_iter_get_var(&it, x_var));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Movement, EcsWildcard), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void DontFragment_1_sparse_component_unused(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -5543,44 +6693,4 @@ void DontFragment_add_to_self_while_iterate(void) {
     ecs_query_fini(q);
 
     ecs_fini(world);
-}
-
-void DontFragment_1_fixed_sparse_pair_not(void) {
-    // Implement testcase
-}
-
-void DontFragment_1_this_sparse_pair_not(void) {
-    // Implement testcase
-}
-
-void DontFragment_1_var_sparse_pair_not(void) {
-    // Implement testcase
-}
-
-void DontFragment_1_this_sparse_written_pair_not(void) {
-    // Implement testcase
-}
-
-void DontFragment_1_var_sparse_written_pair_not(void) {
-    // Implement testcase
-}
-
-void DontFragment_1_fixed_sparse_exclusive_pair_not(void) {
-    // Implement testcase
-}
-
-void DontFragment_1_this_sparse_exclusive_pair_not(void) {
-    // Implement testcase
-}
-
-void DontFragment_1_var_sparse_exclusive_pair_not(void) {
-    // Implement testcase
-}
-
-void DontFragment_1_this_sparse_exclusive_written_pair_not(void) {
-    // Implement testcase
-}
-
-void DontFragment_1_var_sparse_exclusive_written_pair_not(void) {
-    // Implement testcase
 }
