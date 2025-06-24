@@ -335,11 +335,13 @@ bool flecs_query_sparse_with_exclusive(
     ecs_id_t actual_id = op_ctx->cr->id;
     void *tgt_ptr = NULL;
     if (flecs_query_sparse_with_id(op, redo, ctx, not, actual_id, &tgt_ptr)) {
-        ecs_entity_t tgt = *(ecs_entity_t*)tgt_ptr;
-        actual_id = ctx->it->ids[op->field_index] = 
-            ecs_pair(ECS_PAIR_FIRST(actual_id), tgt);
+        if (!not) {
+            ecs_entity_t tgt = *(ecs_entity_t*)tgt_ptr;
+            actual_id = ctx->it->ids[op->field_index] = 
+                ecs_pair(ECS_PAIR_FIRST(actual_id), tgt);
+        }
 
-        if (op->match_flags & EcsTermMatchAny) {
+        if (not || (op->match_flags & EcsTermMatchAny)) {
             ctx->it->ids[op->field_index] = id;
         }
 
@@ -370,16 +372,20 @@ bool flecs_query_sparse_with_wildcard(
             return flecs_query_sparse_with_exclusive(op, false, ctx, not, id);
         }
 
-        if (ECS_PAIR_FIRST(id) == EcsWildcard) {
-            op_ctx->cr = cr->pair->second.next;
+        if (!not) {
+            if (ECS_PAIR_FIRST(id) == EcsWildcard) {
+                op_ctx->cr = cr->pair->second.next;
+            } else {
+                ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
+                    ECS_INTERNAL_ERROR, NULL);
+                op_ctx->cr = cr->pair->first.next;
+            }
         } else {
-            ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
-                ECS_INTERNAL_ERROR, NULL);
-            op_ctx->cr = cr->pair->first.next;
+            op_ctx->cr = cr;
         }
 
         if (!op_ctx->cr) {
-            return false;
+            return not;
         }
     } else {
         if (op_ctx->exclusive) {
@@ -391,11 +397,12 @@ bool flecs_query_sparse_with_wildcard(
 
 next:
     if (!flecs_query_sparse_init_sparse(op_ctx, op_ctx->cr)) {
-        return false;
+        return not;
     }
 
 next_select: {
         ecs_id_t actual_id = op_ctx->cr->id;
+
         if (flecs_query_sparse_with_id(op, with_redo, ctx, not, actual_id, NULL)) {
             ctx->it->ids[op->field_index] = actual_id;
             flecs_query_set_vars(op, actual_id, ctx);
@@ -410,12 +417,16 @@ next_select: {
 
 next_component: {
         ecs_component_record_t *cr = op_ctx->cr;
-        if (ECS_PAIR_FIRST(id) == EcsWildcard) {
-            cr = op_ctx->cr = cr->pair->second.next;
+        if (!not) {
+            if (ECS_PAIR_FIRST(id) == EcsWildcard) {
+                cr = op_ctx->cr = cr->pair->second.next;
+            } else {
+                ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
+                    ECS_INTERNAL_ERROR, NULL);
+                cr = op_ctx->cr = cr->pair->first.next;
+            }
         } else {
-            ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
-                ECS_INTERNAL_ERROR, NULL);
-            cr = op_ctx->cr = cr->pair->first.next;
+            cr = NULL;
         }
 
         if (!cr) {
