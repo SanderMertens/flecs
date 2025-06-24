@@ -1245,23 +1245,28 @@ void MyMonitor(ecs_iter_t *it) {
     }
 }
 
-// Monitor observer
+// Monitor observer for Position, (ChildOf, *)
 ecs_observer(world, {
     .query.terms = {
         { ecs_id(Position) }, 
-        { ecs_id(Velocity) }
+        { ecs_pair(EcsChildOf, EcsWildcard) }
     },
     .events = { EcsMonitor },
     .callback = MyMonitor
 });
 
+ecs_entity_t p_a = ecs_new(world);
+ecs_entity_t p_b = ecs_new(world);
 ecs_entity_t e = ecs_new(world);
 
 // Doesn't trigger the monitor, entity doesn't match
 ecs_set(world, e, Position, {10, 20});
 
 // Entity now matches, triggers monitor with OnAdd event
-ecs_set(world, e, Velocity, {1, 2});
+ecs_add(world, e, EcsChildOf, p_a);
+
+// Entity still matches the query, monitor doesn't trigger
+ecs_add(world, e, EcsChildOf, p_b);
 
 // Entity no longer matches, triggers monitor with OnRemove event
 ecs_remove(world, e, Position);
@@ -1271,10 +1276,11 @@ ecs_remove(world, e, Position);
 <li><b class="tab-title">C++</b>
 
 ```cpp
-// Monitor observer
-world.observer<Position, Velocity>()
+// Monitor observer for Position, (ChildOf, *)
+world.observer<Position>()
+    .with(flecs::ChildOf, flecs::Wildcard)
     .event(flecs::Monitor)
-    .each([](flecs::iter& it, size_t i, Position& p, Velocity& v) {
+    .each([](flecs::iter& it, size_t i, Position& p) {
         if (it.event() == flecs::OnAdd) {
             // Entity started matching query
         } else if (it.event() == flecs::OnRemove) {
@@ -1282,13 +1288,18 @@ world.observer<Position, Velocity>()
         }
     });
 
+flecs::entity p_a = world.entity();
+flecs::entity p_b = world.entity();
 flecs::entity e = world.entity();
 
 // Doesn't trigger the monitor, entity doesn't match
 e.set(Position{10, 20});
 
 // Entity now matches, triggers monitor with OnAdd event
-e.set(Velocity{1, 2});
+e.child_of(p_a);
+
+// Entity still matches the query, monitor doesn't trigger
+e.child_of(p_b);
 
 // Entity no longer matches, triggers monitor with OnRemove event
 e.remove<Position>();
@@ -1298,10 +1309,11 @@ e.remove<Position>();
 <li><b class="tab-title">C#</b>
 
 ```cs
-// Monitor observer
-world.Observer<Position, Velocity>()
+// Monitor observer for Position, (ChildOf, *)
+world.Observer<Position>()
+    .With(Ecs.ChildOf, Ecs.WildCard)
     .Event(Ecs.Monitor)
-    .Each((Iter it, int i, ref Position p, ref Velocity v) =>
+    .Each((Iter it, int i, ref Position p) =>
     {
         if (it.Event() == Ecs.OnAdd) {
             // Entity started matching query
@@ -1310,13 +1322,18 @@ world.Observer<Position, Velocity>()
         }
     });
 
+Entity p_a = world.Entity();
+Entity p_b = world.Entity();
 Entity e = world.Entity();
 
 // Doesn't trigger the monitor, entity doesn't match
-e.set(new Position(10, 20));
+e.Set(new Position(10, 20));
 
 // Entity now matches, triggers monitor with OnAdd event
-e.Set(new Velocity(1, 2));
+e.ChildOf(p_a);
+
+// Entity still matches the query, monitor doesn't trigger
+e.ChildOf(p_b);
 
 // Entity no longer matches, triggers monitor with OnRemove event
 e.Remove<Velocity>();
@@ -1326,9 +1343,10 @@ e.Remove<Velocity>();
 <li><b class="tab-title">Rust</b>
 
 ```rust
-// Monitor observer
+// Monitor observer for Position, (ChildOf, *)
 world
-    .observer::<flecs::Monitor, (&Position, &Velocity)>()
+    .observer::<flecs::Monitor, (&Position)>()
+    .with::<flecs::ChildOf>(flecs::Wildcard)
     .each_iter(|it, i, (p, v)| {
         if it.event() == flecs::OnAdd::ID {
             // Entity started matching query
@@ -1337,13 +1355,18 @@ world
         }
     });
 
+let p_a = world.entity();
+let p_b = world.entity();
 let e = world.entity();
 
 // Doesn't trigger the monitor, entity doesn't match
 e.set(Position { x: 10.0, y: 20.0 });
 
 // Entity now matches, triggers monitor with OnAdd event
-e.set(Velocity { x: 1.0, y: 2.0 });
+e.child_of(p_a);
+
+// Entity still matches the query, monitor doesn't trigger
+e.child_of(p_b);
 
 // Entity no longer matches, triggers monitor with OnRemove event
 e.remove::<Position>();
