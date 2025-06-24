@@ -2070,6 +2070,7 @@ void DontFragment_1_fixed_sparse_self(void);
 void DontFragment_1_fixed_sparse_self_up(void);
 void DontFragment_1_fixed_sparse_up(void);
 void DontFragment_1_fixed_sparse_any(void);
+void DontFragment_1_fixed_sparse_exclusive_any(void);
 void DontFragment_1_fixed_sparse_tgt_var(void);
 void DontFragment_1_fixed_sparse_exclusive_tgt_var(void);
 void DontFragment_1_fixed_sparse_tgt_var_written(void);
@@ -2080,6 +2081,7 @@ void DontFragment_1_this_sparse_written(void);
 void DontFragment_1_this_sparse_written_partial(void);
 void DontFragment_1_this_sparse_written_none(void);
 void DontFragment_1_this_sparse_any(void);
+void DontFragment_1_this_sparse_exclusive_any(void);
 void DontFragment_1_this_sparse_tgt_var(void);
 void DontFragment_1_this_sparse_exclusive_tgt_var(void);
 void DontFragment_1_this_sparse_tgt_var_written(void);
@@ -2088,6 +2090,8 @@ void DontFragment_1_var_sparse(void);
 void DontFragment_1_var_sparse_none(void);
 void DontFragment_1_var_sparse_written(void);
 void DontFragment_1_var_sparse_written_none(void);
+void DontFragment_1_var_sparse_any(void);
+void DontFragment_1_var_sparse_exclusive_any(void);
 void DontFragment_2_sparse_simple(void);
 void DontFragment_2_sparse(void);
 void DontFragment_2_sparse_and_regular(void);
@@ -2103,6 +2107,16 @@ void DontFragment_1_this_sparse_not(void);
 void DontFragment_1_var_sparse_not(void);
 void DontFragment_1_this_sparse_written_not(void);
 void DontFragment_1_var_sparse_written_not(void);
+void DontFragment_1_fixed_sparse_pair_not(void);
+void DontFragment_1_this_sparse_pair_not(void);
+void DontFragment_1_var_sparse_pair_not(void);
+void DontFragment_1_this_sparse_written_pair_not(void);
+void DontFragment_1_var_sparse_written_pair_not(void);
+void DontFragment_1_fixed_sparse_exclusive_pair_not(void);
+void DontFragment_1_this_sparse_exclusive_pair_not(void);
+void DontFragment_1_var_sparse_exclusive_pair_not(void);
+void DontFragment_1_this_sparse_exclusive_written_pair_not(void);
+void DontFragment_1_var_sparse_exclusive_written_pair_not(void);
 void DontFragment_1_sparse_component_unused(void);
 void DontFragment_1_sparse_tag_unused(void);
 void DontFragment_1_sparse_pair_wildcard_unused(void);
@@ -2158,6 +2172,8 @@ void DontFragment_this_written_wc_rel_var_w_component(void);
 void DontFragment_this_written_wc_tgt_var_w_component(void);
 void DontFragment_this_written_rel_var_w_component(void);
 void DontFragment_this_written_tgt_var_w_component(void);
+void DontFragment_this_written_sparse_any(void);
+void DontFragment_this_written_sparse_exclusive_any(void);
 void DontFragment_add_to_self_while_iterate(void);
 
 // Testsuite 'Union'
@@ -10466,6 +10482,10 @@ bake_test_case DontFragment_testcases[] = {
         DontFragment_1_fixed_sparse_any
     },
     {
+        "1_fixed_sparse_exclusive_any",
+        DontFragment_1_fixed_sparse_exclusive_any
+    },
+    {
         "1_fixed_sparse_tgt_var",
         DontFragment_1_fixed_sparse_tgt_var
     },
@@ -10506,6 +10526,10 @@ bake_test_case DontFragment_testcases[] = {
         DontFragment_1_this_sparse_any
     },
     {
+        "1_this_sparse_exclusive_any",
+        DontFragment_1_this_sparse_exclusive_any
+    },
+    {
         "1_this_sparse_tgt_var",
         DontFragment_1_this_sparse_tgt_var
     },
@@ -10536,6 +10560,14 @@ bake_test_case DontFragment_testcases[] = {
     {
         "1_var_sparse_written_none",
         DontFragment_1_var_sparse_written_none
+    },
+    {
+        "1_var_sparse_any",
+        DontFragment_1_var_sparse_any
+    },
+    {
+        "1_var_sparse_exclusive_any",
+        DontFragment_1_var_sparse_exclusive_any
     },
     {
         "2_sparse_simple",
@@ -10596,6 +10628,46 @@ bake_test_case DontFragment_testcases[] = {
     {
         "1_var_sparse_written_not",
         DontFragment_1_var_sparse_written_not
+    },
+    {
+        "1_fixed_sparse_pair_not",
+        DontFragment_1_fixed_sparse_pair_not
+    },
+    {
+        "1_this_sparse_pair_not",
+        DontFragment_1_this_sparse_pair_not
+    },
+    {
+        "1_var_sparse_pair_not",
+        DontFragment_1_var_sparse_pair_not
+    },
+    {
+        "1_this_sparse_written_pair_not",
+        DontFragment_1_this_sparse_written_pair_not
+    },
+    {
+        "1_var_sparse_written_pair_not",
+        DontFragment_1_var_sparse_written_pair_not
+    },
+    {
+        "1_fixed_sparse_exclusive_pair_not",
+        DontFragment_1_fixed_sparse_exclusive_pair_not
+    },
+    {
+        "1_this_sparse_exclusive_pair_not",
+        DontFragment_1_this_sparse_exclusive_pair_not
+    },
+    {
+        "1_var_sparse_exclusive_pair_not",
+        DontFragment_1_var_sparse_exclusive_pair_not
+    },
+    {
+        "1_this_sparse_exclusive_written_pair_not",
+        DontFragment_1_this_sparse_exclusive_written_pair_not
+    },
+    {
+        "1_var_sparse_exclusive_written_pair_not",
+        DontFragment_1_var_sparse_exclusive_written_pair_not
     },
     {
         "1_sparse_component_unused",
@@ -10816,6 +10888,14 @@ bake_test_case DontFragment_testcases[] = {
     {
         "this_written_tgt_var_w_component",
         DontFragment_this_written_tgt_var_w_component
+    },
+    {
+        "this_written_sparse_any",
+        DontFragment_this_written_sparse_any
+    },
+    {
+        "this_written_sparse_exclusive_any",
+        DontFragment_this_written_sparse_exclusive_any
     },
     {
         "add_to_self_while_iterate",
@@ -11899,7 +11979,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        95,
+        111,
         DontFragment_testcases,
         1,
         DontFragment_params

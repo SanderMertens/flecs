@@ -172,6 +172,11 @@ next_select:
         ecs_id_t actual_id = op_ctx->cr->id;
         ctx->it->ids[op->field_index] = actual_id;
         flecs_query_set_vars(op, actual_id, ctx);
+
+        if (op->match_flags & EcsTermMatchAny) {
+            ctx->it->ids[op->field_index] = id;
+        }
+
         return true;
     }
     
@@ -316,7 +321,8 @@ bool flecs_query_sparse_with_exclusive(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
-    bool not)
+    bool not,
+    ecs_id_t id)
 {
     ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
 
@@ -332,6 +338,11 @@ bool flecs_query_sparse_with_exclusive(
         ecs_entity_t tgt = *(ecs_entity_t*)tgt_ptr;
         actual_id = ctx->it->ids[op->field_index] = 
             ecs_pair(ECS_PAIR_FIRST(actual_id), tgt);
+
+        if (op->match_flags & EcsTermMatchAny) {
+            ctx->it->ids[op->field_index] = id;
+        }
+
         flecs_query_set_vars(op, actual_id, ctx);
         return true;
     }
@@ -356,7 +367,7 @@ bool flecs_query_sparse_with_wildcard(
         if (cr->flags & EcsIdExclusive) {
             op_ctx->cr = cr;
             op_ctx->exclusive = true;
-            return flecs_query_sparse_with_exclusive(op, false, ctx, not);
+            return flecs_query_sparse_with_exclusive(op, false, ctx, not, id);
         }
 
         if (ECS_PAIR_FIRST(id) == EcsWildcard) {
@@ -372,7 +383,7 @@ bool flecs_query_sparse_with_wildcard(
         }
     } else {
         if (op_ctx->exclusive) {
-            return flecs_query_sparse_with_exclusive(op, true, ctx, not);
+            return flecs_query_sparse_with_exclusive(op, true, ctx, not, id);
         }
         with_redo = true;
         goto next_select;
@@ -388,6 +399,11 @@ next_select: {
         if (flecs_query_sparse_with_id(op, with_redo, ctx, not, actual_id, NULL)) {
             ctx->it->ids[op->field_index] = actual_id;
             flecs_query_set_vars(op, actual_id, ctx);
+
+            if (op->match_flags & EcsTermMatchAny) {
+                ctx->it->ids[op->field_index] = id;
+            }
+
             return true;
         }
     }
