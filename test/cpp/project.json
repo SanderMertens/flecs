@@ -476,7 +476,6 @@
                 "add_if",
                 "add_if_other",
                 "query_union_enum",
-                "query_union_enum_invalid_query_type",
                 "component_registered_as_enum",
                 "mixed_auto_manual_constants",
                 "enum_class_mixed_auto_manual_constants",

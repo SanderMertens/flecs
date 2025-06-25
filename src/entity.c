@@ -259,7 +259,7 @@ void flecs_commit(
          * However, if a component was added in the process of traversing a
          * table, this suggests that a union relationship could have changed. */
         ecs_flags32_t non_fragment_flags = 
-            src_table->flags & (EcsTableHasUnion|EcsTableHasDontFragment);
+            src_table->flags & EcsTableHasDontFragment;
         if (non_fragment_flags) {
             diff->added_flags |= non_fragment_flags;
             diff->removed_flags |= non_fragment_flags;
@@ -2402,17 +2402,8 @@ bool ecs_has_id(
         can_inherit = cr->flags & EcsIdOnInstantiateInherit;
     }
 
-    if (!(table->flags & (EcsTableHasUnion|EcsTableHasIsA))) {
+    if (!(table->flags & EcsTableHasIsA)) {
         return false;
-    }
-
-    if (ECS_IS_PAIR(id) && (table->flags & EcsTableHasUnion)) {
-        ecs_component_record_t *u_cr = flecs_components_get(world, 
-            ecs_pair(ECS_PAIR_FIRST(id), EcsUnion));
-        if (u_cr && u_cr->flags & EcsIdIsUnion) {
-            uint64_t cur = flecs_switch_get(u_cr->sparse, (uint32_t)entity);
-            return (uint32_t)cur == ECS_PAIR_SECOND(id);
-        }
     }
 
     if (!can_inherit) {
@@ -2525,17 +2516,7 @@ ecs_entity_t ecs_get_target(
         goto look_in_base;
     }
 
-    ecs_entity_t result = 
-        ecs_pair_second(world, table->type.array[tr->index + index]);
-
-    if (result == EcsUnion) {
-        wc = ecs_pair(rel, EcsUnion);
-        ecs_component_record_t *wc_cr = flecs_components_get(world, wc);
-        ecs_assert(wc_cr != NULL, ECS_INTERNAL_ERROR, NULL);
-        result = flecs_switch_get(wc_cr->sparse, (uint32_t)entity);
-    }
-
-    return result;
+    return ecs_pair_second(world, table->type.array[tr->index + index]);
 look_in_base:
     if (table->flags & EcsTableHasIsA) {
         const ecs_table_record_t *tr_isa = flecs_component_get_table(

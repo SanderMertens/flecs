@@ -142,6 +142,8 @@ bool flecs_json_serialize_table_pairs(
     int16_t f, type_count = flecs_ito(int16_t, table->type.count);
     ecs_id_t *ids = table->type.array;
     int16_t *column_map = table->column_map;
+
+    (void)row;
     
     int32_t pair_count = 0;
     bool same_first = false;
@@ -211,12 +213,6 @@ bool flecs_json_serialize_table_pairs(
         } 
         if (same_first) {
             flecs_json_next(buf);
-        }
-        
-        if (second == EcsUnion) {
-            ecs_assert(row < ecs_table_count(table), ECS_INTERNAL_ERROR, NULL);
-            ecs_entity_t e = ecs_table_entities(table)[row];
-            second = ecs_get_target(world, e, first, 0);
         }
 
         flecs_json_path_or_label(buf, world, second, 
@@ -458,21 +454,16 @@ int flecs_json_serialize_iter_result_table(
         return 0;
     }
 
-    /* Serialize tags, pairs, vars once, since they're the same for each row, 
-     * except when table has union pairs, which can be different for each 
-     * entity. */
+    /* Serialize tags, pairs, vars once, since they're the same for each row */
     ecs_strbuf_t tags_pairs_vars_buf = ECS_STRBUF_INIT;
     int32_t tags_pairs_vars_len = 0;
     char *tags_pairs_vars = NULL;
-    bool has_union = table->flags & EcsTableHasUnion;
 
-    if (!has_union) {
-        if (flecs_json_serialize_table_tags_pairs_vars(
-            world, it, table, 0, &tags_pairs_vars_buf, desc)) 
-        {
-            tags_pairs_vars_len = ecs_strbuf_written(&tags_pairs_vars_buf);
-            tags_pairs_vars = ecs_strbuf_get(&tags_pairs_vars_buf);
-        }
+    if (flecs_json_serialize_table_tags_pairs_vars(
+        world, it, table, 0, &tags_pairs_vars_buf, desc)) 
+    {
+        tags_pairs_vars_len = ecs_strbuf_written(&tags_pairs_vars_buf);
+        tags_pairs_vars = ecs_strbuf_get(&tags_pairs_vars_buf);
     }
 
     /* If one entity has more than 256 components (oof), bad luck */
@@ -491,23 +482,9 @@ int flecs_json_serialize_iter_result_table(
                 it, parent_path, &this_data_cpy, i - it->offset, buf, desc);
         }
 
-        if (has_union) {
-            if (flecs_json_serialize_table_tags_pairs_vars(
-                world, it, table, i, &tags_pairs_vars_buf, desc)) 
-            {
-                tags_pairs_vars_len = ecs_strbuf_written(&tags_pairs_vars_buf);
-                tags_pairs_vars = ecs_strbuf_get(&tags_pairs_vars_buf);
-            }
-        }
-
         if (tags_pairs_vars) {
             ecs_strbuf_list_appendstrn(buf, 
                 tags_pairs_vars, tags_pairs_vars_len);
-        }
-
-        if (has_union) {
-            ecs_os_free(tags_pairs_vars);
-            tags_pairs_vars = NULL;
         }
 
         component_count = 0; /* Each row has the same number of components */

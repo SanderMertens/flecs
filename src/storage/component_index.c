@@ -141,18 +141,12 @@ void flecs_component_init_sparse(
     if (!ecs_id_is_wildcard(cr->id)) {
         if (!cr->sparse) {
             if (cr->flags & EcsIdIsSparse) {
-                ecs_assert(!(cr->flags & EcsIdIsUnion), ECS_CONSTRAINT_VIOLATED,
-                    "cannot mix union and sparse traits");
                 cr->sparse = flecs_walloc_t(world, ecs_sparse_t);
                 if (cr->type_info) {
                     flecs_sparse_init(cr->sparse, NULL, NULL, cr->type_info->size);
                 } else {
                     flecs_sparse_init(cr->sparse, NULL, NULL, 0);
                 }
-            } else
-            if (cr->flags & EcsIdIsUnion) {
-                cr->sparse = flecs_walloc_t(world, ecs_switch_t);
-                flecs_switch_init(cr->sparse, &world->allocator);
             }
         }
 
@@ -229,20 +223,13 @@ void flecs_component_fini_sparse(
     ecs_component_record_t *cr)
 {
     if (cr->sparse) {
-        if (cr->flags & EcsIdIsSparse) {
-            if (cr->flags & EcsIdDontFragment) {
-                flecs_component_sparse_remove_all(world, cr);
-            }
-
-            flecs_sparse_fini(cr->sparse);
-            flecs_wfree_t(world, ecs_sparse_t, cr->sparse);
-        } else
-        if (cr->flags & EcsIdIsUnion) {
-            flecs_switch_fini(cr->sparse);
-            flecs_wfree_t(world, ecs_switch_t, cr->sparse);
-        } else {
-            ecs_abort(ECS_INTERNAL_ERROR, "unknown sparse storage");
+        ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        if (cr->flags & EcsIdDontFragment) {
+            flecs_component_sparse_remove_all(world, cr);
         }
+
+        flecs_sparse_fini(cr->sparse);
+        flecs_wfree_t(world, ecs_sparse_t, cr->sparse);
     }
 }
 
@@ -338,7 +325,7 @@ ecs_component_record_t* flecs_component_new(
             #endif
         }
 
-        if (tgt && !ecs_id_is_wildcard(tgt) && tgt != EcsUnion) {
+        if (tgt && !ecs_id_is_wildcard(tgt)) {
             /* Check if target of relationship satisfies OneOf property */
             ecs_entity_t oneof = flecs_get_oneof(world, rel);
             if (oneof) {
@@ -478,10 +465,6 @@ ecs_component_record_t* flecs_component_new(
 
     if (cr->flags & EcsIdIsSparse) {
         flecs_component_init_sparse(world, cr);
-    } else if (cr->flags & EcsIdIsUnion) {
-        if (ECS_IS_PAIR(id) && ECS_PAIR_SECOND(id) == EcsUnion) {
-            flecs_component_init_sparse(world, cr);
-        }
     }
 
     if (cr->flags & EcsIdDontFragment) {

@@ -181,40 +181,6 @@ bool flecs_query_select_w_id(
     ecs_flags32_t filter_mask);
 
 
-/* Union evaluation */
-
-bool flecs_query_union_select(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx);
-
-bool flecs_query_union(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx);
-
-bool flecs_query_union_neq(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx);
-
-bool flecs_query_union_with(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    bool neq);
-
-bool flecs_query_union_up(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx);
-
-bool flecs_query_union_self_up(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx);
-
-
 /* Sparse evaluation */
 
 bool flecs_query_sparse(
@@ -320,7 +286,6 @@ typedef enum ecs_query_up_select_trav_kind_t {
 typedef enum ecs_query_up_select_kind_t {
     FlecsQueryUpSelectDefault,
     FlecsQueryUpSelectId,
-    FlecsQueryUpSelectUnion,
     FlecsQueryUpSelectSparse
 } ecs_query_up_select_kind_t;
 

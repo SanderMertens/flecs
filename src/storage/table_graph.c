@@ -680,22 +680,6 @@ void flecs_compute_table_diff(
 
     if (ECS_IS_PAIR(id)) { 
         childof = ECS_PAIR_FIRST(id) ==  EcsChildOf;
-
-        ecs_component_record_t *cr = flecs_components_get(world, ecs_pair(
-            ECS_PAIR_FIRST(id), EcsWildcard));
-        if (cr->flags & EcsIdIsUnion) {
-            if (node != next) {
-                id = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
-            } else {
-                ecs_table_diff_t *diff = flecs_bcalloc(
-                    &world->allocators.table_diff);
-                diff->added.count = 1;
-                diff->added.array = flecs_wdup_n(world, ecs_id_t, 1, &id);
-                diff->added_flags = EcsTableHasUnion;
-                edge->diff = diff;
-                return;
-            }
-        }
     }
 
     bool dont_fragment = false;
@@ -953,9 +937,7 @@ ecs_table_t* flecs_find_table_with(
         r = ECS_PAIR_FIRST(with);
         o = ECS_PAIR_SECOND(with);
         cr = flecs_components_ensure(world, ecs_pair(r, EcsWildcard));
-        if (cr->flags & EcsIdIsUnion) {
-            with = ecs_pair(r, EcsUnion);
-        } else if (cr->flags & EcsIdExclusive) {
+        if (cr->flags & EcsIdExclusive) {
             /* Relationship is exclusive, check if table already has it */
             const ecs_table_record_t *tr = flecs_component_get_table(cr, node);
             if (tr) {
@@ -1017,9 +999,7 @@ ecs_table_t* flecs_find_table_without(
         ecs_entity_t r = ECS_PAIR_FIRST(without);
         cr = flecs_components_get(world, ecs_pair(r, EcsWildcard));
         if (cr) {
-            if (cr->flags & EcsIdIsUnion) {
-                without = ecs_pair(r, EcsUnion);
-            } else if (cr->flags & EcsIdDontFragment) {
+            if (cr->flags & EcsIdDontFragment) {
                 node->flags |= EcsTableHasDontFragment;
                 /* Component doesn't fragment tables */
                 return node;
@@ -1074,7 +1054,7 @@ void flecs_init_edge_for_add(
 
     flecs_table_ensure_hi_edge(world, &table->node.add, id);
 
-    if ((table != to) || (table->flags & (EcsTableHasUnion|EcsTableHasDontFragment))) {
+    if ((table != to) || (table->flags & EcsTableHasDontFragment)) {
         /* Add edges are appended to refs.next */
         ecs_graph_edge_hdr_t *to_refs = &to->node.refs;
         ecs_graph_edge_hdr_t *next = to_refs->next;
@@ -1103,7 +1083,7 @@ void flecs_init_edge_for_remove(
 
     flecs_table_ensure_hi_edge(world, &table->node.remove, id);
 
-    if ((table != to) || (table->flags & (EcsTableHasUnion|EcsTableHasDontFragment))) {
+    if ((table != to) || (table->flags & EcsTableHasDontFragment)) {
         /* Remove edges are appended to refs.prev */
         ecs_graph_edge_hdr_t *to_refs = &to->node.refs;
         ecs_graph_edge_hdr_t *prev = to_refs->prev;
@@ -1209,13 +1189,6 @@ ecs_table_t* flecs_table_traverse_add(
     if (node != to || edge->diff) {
         if (edge->diff) {
             *diff = *edge->diff;
-            if (diff->added_flags & EcsIdIsUnion) {
-                if (diff->added.count == 1) {
-                    diff->added.array = id_ptr;
-                    diff->added.count = 1;
-                    diff->removed.count = 0;
-                }
-            }
         } else {
             diff->added.array = id_ptr;
             diff->added.count = 1;

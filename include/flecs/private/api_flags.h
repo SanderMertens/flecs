@@ -85,11 +85,10 @@ extern "C" {
 #define EcsIdIsSparse                  (1u << 23)
 #define EcsIdDontFragment              (1u << 24)
 #define EcsIdMatchDontFragment         (1u << 25) /* For (*, T) wildcards */
-#define EcsIdIsUnion                   (1u << 26)
 #define EcsIdOrderedChildren           (1u << 28)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
-        EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion|\
+        EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|\
         EcsIdOrderedChildren)
 
 #define EcsIdMarkedForDelete           (1u << 30)
@@ -193,9 +192,8 @@ extern "C" {
 #define EcsTermIsToggle               (1u << 10)
 #define EcsTermKeepAlive              (1u << 11)
 #define EcsTermIsSparse               (1u << 12)
-#define EcsTermIsUnion                (1u << 13)
-#define EcsTermIsOr                   (1u << 14)
-#define EcsTermDontFragment           (1u << 15)
+#define EcsTermIsOr                   (1u << 13)
+#define EcsTermDontFragment           (1u << 14)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -243,7 +241,6 @@ extern "C" {
 #define EcsTableHasSparse              (1u << 23u)
 #define EcsTableHasDontFragment        (1u << 24u)
 #define EcsTableOverrideDontFragment   (1u << 25u)
-#define EcsTableHasUnion               (1u << 26u)
 
 #define EcsTableHasTraversable         (1u << 27u)
 #define EcsTableHasOrderedChildren     (1u << 28u)
@@ -255,9 +252,9 @@ extern "C" {
 #define EcsTableIsComplex        (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
 #define EcsTableHasAddActions    (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
 #define EcsTableHasRemoveActions (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
-#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion)
-#define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse | EcsTableHasUnion)
-#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion | EcsTableHasOrderedChildren)
+#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse)
+#define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse)
+#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasOrderedChildren)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Aperiodic action flags (used by ecs_run_aperiodic)

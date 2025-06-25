@@ -5235,7 +5235,8 @@ void Prefab_prefab_w_union(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t rel = ecs_new(world);
-    ecs_add_id(world, rel, EcsUnion);
+    ecs_add_id(world, rel, EcsDontFragment);
+    ecs_add_id(world, rel, EcsExclusive);
     ecs_entity_t tgt = ecs_new(world);
 
     ecs_entity_t base = ecs_new(world);
@@ -5252,7 +5253,8 @@ void Prefab_prefab_child_w_union(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t rel = ecs_new(world);
-    ecs_add_id(world, rel, EcsUnion);
+    ecs_add_id(world, rel, EcsDontFragment);
+    ecs_add_id(world, rel, EcsExclusive);
     ecs_entity_t tgt = ecs_new(world);
 
     ecs_entity_t base = ecs_new(world);
@@ -5275,7 +5277,8 @@ void Prefab_prefab_w_union_and_component(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t rel = ecs_new(world);
-    ecs_add_id(world, rel, EcsUnion);
+    ecs_add_id(world, rel, EcsDontFragment);
+    ecs_add_id(world, rel, EcsExclusive);
     ecs_entity_t tgt = ecs_new(world);
 
     ecs_entity_t base = ecs_new(world);
@@ -5404,7 +5407,7 @@ void Prefab_instantiate_while_defer_suspended(void) {
 void Prefab_instantiate_w_union_while_defer_suspended(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Union);
+    ECS_ENTITY(world, Rel, DontFragment, Exclusive);
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
 

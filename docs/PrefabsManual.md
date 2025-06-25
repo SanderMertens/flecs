@@ -971,7 +971,7 @@ When a prefab hierarchy is instantiated often code will want to refer to a speci
 
 While it is possible to lookup a child by name and store it on a component, this adds boilerplate and reduces efficiency. Prefab slots make this easier.
 
-A prefab child can be created as a slot. Slots are created as relationships on the instance, with as target of the relationship the instantiated child. The slot is added as a union relationship which doesn't fragment archetypes.
+A prefab child can be created as a slot. Slots are created as relationships on the instance, with as target of the relationship the instantiated child. The slot is added as a `DontFragment` relationship which doesn't fragment archetypes.
 
 The following example shows how to create and use a prefab slot:
 

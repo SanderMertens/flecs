@@ -146,8 +146,6 @@ void Validator_validate_simple_2_term_is_cacheable(void);
 void Validator_validate_simple_w_can_inherit(void);
 void Validator_validate_simple_w_can_toggle(void);
 void Validator_validate_simple_w_sparse(void);
-void Validator_validate_simple_w_union(void);
-void Validator_validate_simple_w_union_pair(void);
 void Validator_validate_simple_w_transitive(void);
 void Validator_validate_simple_w_transitive_pair(void);
 void Validator_validate_simple_w_reflexive(void);
@@ -789,10 +787,8 @@ void Plan_0_src_tag(void);
 void Plan_0_src_component(void);
 void Plan_0_src_w_sparse(void);
 void Plan_0_src_w_toggle(void);
-void Plan_0_src_w_union(void);
 void Plan_0_src_w_sparse_and_component(void);
 void Plan_0_src_w_toggle_and_component(void);
-void Plan_0_src_w_union_and_component(void);
 void Plan_cached_isa_tgt(void);
 void Plan_cached_isa_tgt_w_self_second(void);
 void Plan_cached_isa_tgt_no_expr(void);
@@ -2184,80 +2180,6 @@ void DontFragment_this_written_sparse_any(void);
 void DontFragment_this_written_sparse_exclusive_any(void);
 void DontFragment_add_to_self_while_iterate(void);
 
-// Testsuite 'Union'
-void Union_setup(void);
-void Union_1_fixed_union_any(void);
-void Union_1_fixed_union_wildcard(void);
-void Union_1_fixed_union_tgt(void);
-void Union_1_fixed_union_tgt_var(void);
-void Union_1_fixed_union_tgt_var_written(void);
-void Union_1_this_union_any(void);
-void Union_1_this_union_wildcard(void);
-void Union_1_this_union_tgt(void);
-void Union_1_this_union_tgt_var(void);
-void Union_1_this_union_tgt_var_written(void);
-void Union_1_var_union_any(void);
-void Union_1_var_union_wildcard(void);
-void Union_1_var_union_tgt(void);
-void Union_1_var_union_tgt_var(void);
-void Union_1_var_union_tgt_var_written(void);
-void Union_1_this_written_union_any(void);
-void Union_1_this_written_union_wildcard(void);
-void Union_1_this_written_union_tgt(void);
-void Union_1_this_written_union_tgt_var(void);
-void Union_1_this_written_union_tgt_var_written(void);
-void Union_1_var_written_union_any(void);
-void Union_1_var_written_union_wildcard(void);
-void Union_1_var_written_union_tgt(void);
-void Union_1_var_written_union_tgt_var(void);
-void Union_1_var_written_union_tgt_var_written(void);
-void Union_not_fixed_union_any(void);
-void Union_not_fixed_union_wildcard(void);
-void Union_not_fixed_union_tgt(void);
-void Union_not_fixed_union_var(void);
-void Union_not_fixed_union_var_written(void);
-void Union_not_this_written_union_any(void);
-void Union_not_this_written_union_wildcard(void);
-void Union_not_this_written_union_tgt(void);
-void Union_not_this_written_union_var(void);
-void Union_not_this_written_union_var_written(void);
-void Union_query_switch(void);
-void Union_query_1_case_1_type(void);
-void Union_query_1_case_2_types(void);
-void Union_query_2_cases_1_type(void);
-void Union_query_2_cases_2_types(void);
-void Union_query_after_remove(void);
-void Union_sort(void);
-void Union_query_recycled_tags(void);
-void Union_query_single_case(void);
-void Union_match_switch_on_base_instance(void);
-void Union_switch_w_bitset_query(void);
-void Union_switch_w_bitset_query_inv(void);
-void Union_switch_w_bitset_query_2_elems(void);
-void Union_switch_w_bitset_query_2_elems_skip(void);
-void Union_switch_w_bitset_query_elems_interleaved(void);
-void Union_switch_w_bitset_query_elems_interleaved_2_types(void);
-void Union_component_relation(void);
-void Union_switch_term_filter(void);
-void Union_2_terms_switch_term_filter(void);
-void Union_match_switch_w_switch(void);
-void Union_match_switch_w_case(void);
-void Union_match_switch_w_case_2_terms(void);
-void Union_up(void);
-void Union_self_up(void);
-void Union_up_written(void);
-void Union_self_up_written(void);
-void Union_existing_union_table(void);
-void Union_new_union_table(void);
-void Union_existing_union_table_w_tgt(void);
-void Union_new_union_table_w_tgt(void);
-void Union_tgt_w_generation(void);
-void Union_tgt_w_not_alive(void);
-void Union_for_switch_filter_term(void);
-void Union_union_from_nothing(void);
-void Union_union_tgt_from_nothing(void);
-void Union_tgt_inherited(void);
-
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
 void OrderBy_sort_by_component_2_tables(void);
@@ -2949,14 +2871,6 @@ bake_test_case Validator_testcases[] = {
     {
         "validate_simple_w_sparse",
         Validator_validate_simple_w_sparse
-    },
-    {
-        "validate_simple_w_union",
-        Validator_validate_simple_w_union
-    },
-    {
-        "validate_simple_w_union_pair",
-        Validator_validate_simple_w_union_pair
     },
     {
         "validate_simple_w_transitive",
@@ -5486,20 +5400,12 @@ bake_test_case Plan_testcases[] = {
         Plan_0_src_w_toggle
     },
     {
-        "0_src_w_union",
-        Plan_0_src_w_union
-    },
-    {
         "0_src_w_sparse_and_component",
         Plan_0_src_w_sparse_and_component
     },
     {
         "0_src_w_toggle_and_component",
         Plan_0_src_w_toggle_and_component
-    },
-    {
-        "0_src_w_union_and_component",
-        Plan_0_src_w_union_and_component
     },
     {
         "cached_isa_tgt",
@@ -10943,293 +10849,6 @@ bake_test_case DontFragment_testcases[] = {
     }
 };
 
-bake_test_case Union_testcases[] = {
-    {
-        "1_fixed_union_any",
-        Union_1_fixed_union_any
-    },
-    {
-        "1_fixed_union_wildcard",
-        Union_1_fixed_union_wildcard
-    },
-    {
-        "1_fixed_union_tgt",
-        Union_1_fixed_union_tgt
-    },
-    {
-        "1_fixed_union_tgt_var",
-        Union_1_fixed_union_tgt_var
-    },
-    {
-        "1_fixed_union_tgt_var_written",
-        Union_1_fixed_union_tgt_var_written
-    },
-    {
-        "1_this_union_any",
-        Union_1_this_union_any
-    },
-    {
-        "1_this_union_wildcard",
-        Union_1_this_union_wildcard
-    },
-    {
-        "1_this_union_tgt",
-        Union_1_this_union_tgt
-    },
-    {
-        "1_this_union_tgt_var",
-        Union_1_this_union_tgt_var
-    },
-    {
-        "1_this_union_tgt_var_written",
-        Union_1_this_union_tgt_var_written
-    },
-    {
-        "1_var_union_any",
-        Union_1_var_union_any
-    },
-    {
-        "1_var_union_wildcard",
-        Union_1_var_union_wildcard
-    },
-    {
-        "1_var_union_tgt",
-        Union_1_var_union_tgt
-    },
-    {
-        "1_var_union_tgt_var",
-        Union_1_var_union_tgt_var
-    },
-    {
-        "1_var_union_tgt_var_written",
-        Union_1_var_union_tgt_var_written
-    },
-    {
-        "1_this_written_union_any",
-        Union_1_this_written_union_any
-    },
-    {
-        "1_this_written_union_wildcard",
-        Union_1_this_written_union_wildcard
-    },
-    {
-        "1_this_written_union_tgt",
-        Union_1_this_written_union_tgt
-    },
-    {
-        "1_this_written_union_tgt_var",
-        Union_1_this_written_union_tgt_var
-    },
-    {
-        "1_this_written_union_tgt_var_written",
-        Union_1_this_written_union_tgt_var_written
-    },
-    {
-        "1_var_written_union_any",
-        Union_1_var_written_union_any
-    },
-    {
-        "1_var_written_union_wildcard",
-        Union_1_var_written_union_wildcard
-    },
-    {
-        "1_var_written_union_tgt",
-        Union_1_var_written_union_tgt
-    },
-    {
-        "1_var_written_union_tgt_var",
-        Union_1_var_written_union_tgt_var
-    },
-    {
-        "1_var_written_union_tgt_var_written",
-        Union_1_var_written_union_tgt_var_written
-    },
-    {
-        "not_fixed_union_any",
-        Union_not_fixed_union_any
-    },
-    {
-        "not_fixed_union_wildcard",
-        Union_not_fixed_union_wildcard
-    },
-    {
-        "not_fixed_union_tgt",
-        Union_not_fixed_union_tgt
-    },
-    {
-        "not_fixed_union_var",
-        Union_not_fixed_union_var
-    },
-    {
-        "not_fixed_union_var_written",
-        Union_not_fixed_union_var_written
-    },
-    {
-        "not_this_written_union_any",
-        Union_not_this_written_union_any
-    },
-    {
-        "not_this_written_union_wildcard",
-        Union_not_this_written_union_wildcard
-    },
-    {
-        "not_this_written_union_tgt",
-        Union_not_this_written_union_tgt
-    },
-    {
-        "not_this_written_union_var",
-        Union_not_this_written_union_var
-    },
-    {
-        "not_this_written_union_var_written",
-        Union_not_this_written_union_var_written
-    },
-    {
-        "query_switch",
-        Union_query_switch
-    },
-    {
-        "query_1_case_1_type",
-        Union_query_1_case_1_type
-    },
-    {
-        "query_1_case_2_types",
-        Union_query_1_case_2_types
-    },
-    {
-        "query_2_cases_1_type",
-        Union_query_2_cases_1_type
-    },
-    {
-        "query_2_cases_2_types",
-        Union_query_2_cases_2_types
-    },
-    {
-        "query_after_remove",
-        Union_query_after_remove
-    },
-    {
-        "sort",
-        Union_sort
-    },
-    {
-        "query_recycled_tags",
-        Union_query_recycled_tags
-    },
-    {
-        "query_single_case",
-        Union_query_single_case
-    },
-    {
-        "match_switch_on_base_instance",
-        Union_match_switch_on_base_instance
-    },
-    {
-        "switch_w_bitset_query",
-        Union_switch_w_bitset_query
-    },
-    {
-        "switch_w_bitset_query_inv",
-        Union_switch_w_bitset_query_inv
-    },
-    {
-        "switch_w_bitset_query_2_elems",
-        Union_switch_w_bitset_query_2_elems
-    },
-    {
-        "switch_w_bitset_query_2_elems_skip",
-        Union_switch_w_bitset_query_2_elems_skip
-    },
-    {
-        "switch_w_bitset_query_elems_interleaved",
-        Union_switch_w_bitset_query_elems_interleaved
-    },
-    {
-        "switch_w_bitset_query_elems_interleaved_2_types",
-        Union_switch_w_bitset_query_elems_interleaved_2_types
-    },
-    {
-        "component_relation",
-        Union_component_relation
-    },
-    {
-        "switch_term_filter",
-        Union_switch_term_filter
-    },
-    {
-        "2_terms_switch_term_filter",
-        Union_2_terms_switch_term_filter
-    },
-    {
-        "match_switch_w_switch",
-        Union_match_switch_w_switch
-    },
-    {
-        "match_switch_w_case",
-        Union_match_switch_w_case
-    },
-    {
-        "match_switch_w_case_2_terms",
-        Union_match_switch_w_case_2_terms
-    },
-    {
-        "up",
-        Union_up
-    },
-    {
-        "self_up",
-        Union_self_up
-    },
-    {
-        "up_written",
-        Union_up_written
-    },
-    {
-        "self_up_written",
-        Union_self_up_written
-    },
-    {
-        "existing_union_table",
-        Union_existing_union_table
-    },
-    {
-        "new_union_table",
-        Union_new_union_table
-    },
-    {
-        "existing_union_table_w_tgt",
-        Union_existing_union_table_w_tgt
-    },
-    {
-        "new_union_table_w_tgt",
-        Union_new_union_table_w_tgt
-    },
-    {
-        "tgt_w_generation",
-        Union_tgt_w_generation
-    },
-    {
-        "tgt_w_not_alive",
-        Union_tgt_w_not_alive
-    },
-    {
-        "for_switch_filter_term",
-        Union_for_switch_filter_term
-    },
-    {
-        "union_from_nothing",
-        Union_union_from_nothing
-    },
-    {
-        "union_tgt_from_nothing",
-        Union_union_tgt_from_nothing
-    },
-    {
-        "tgt_inherited",
-        Union_tgt_inherited
-    }
-};
-
 bake_test_case OrderBy_testcases[] = {
     {
         "sort_by_component",
@@ -11838,17 +11457,13 @@ const char* DontFragment_cache_kind_param[] = {"default", "auto"};
 bake_test_param DontFragment_params[] = {
     {"cache_kind", (char**)DontFragment_cache_kind_param, 2}
 };
-const char* Union_cache_kind_param[] = {"default", "auto"};
-bake_test_param Union_params[] = {
-    {"cache_kind", (char**)Union_cache_kind_param, 2}
-};
 
 static bake_test_suite suites[] = {
     {
         "Validator",
         NULL,
         NULL,
-        145,
+        143,
         Validator_testcases
     },
     {
@@ -11889,7 +11504,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        87,
+        85,
         Plan_testcases
     },
     {
@@ -12025,15 +11640,6 @@ static bake_test_suite suites[] = {
         DontFragment_params
     },
     {
-        "Union",
-        Union_setup,
-        NULL,
-        71,
-        Union_testcases,
-        1,
-        Union_params
-    },
-    {
         "OrderBy",
         NULL,
         NULL,
@@ -12064,5 +11670,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("query", argc, argv, suites, 27);
+    return bake_test_run("query", argc, argv, suites, 26);
 }

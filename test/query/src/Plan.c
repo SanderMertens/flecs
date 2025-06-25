@@ -2340,36 +2340,6 @@ void Plan_0_src_w_toggle(void) {
     ecs_fini(world);
 }
 
-void Plan_0_src_w_union(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Movement);
-
-    ecs_add_id(world, ecs_id(Movement), EcsUnion);
-
-    ecs_query_t *q = ecs_query(world, {
-        .expr = "Movement(#0, *)"
-    });
-
-    test_assert(q != NULL);
-
-    ecs_log_enable_colors(false);
-
-    const char *expect = 
-    HEAD " 0. [-1,  1]  setfix      "
-    LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  yield       "
-    LINE "";
-    char *plan = ecs_query_plan(q);
-
-    test_str(expect, plan);
-    ecs_os_free(plan);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
 void Plan_0_src_w_sparse_and_component(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -2432,38 +2402,6 @@ void Plan_0_src_w_toggle_and_component(void) {
     ecs_query_fini(q);
 
     ecs_fini(world); 
-}
-
-void Plan_0_src_w_union_and_component(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Movement);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_add_id(world, ecs_id(Movement), EcsUnion);
-
-    ecs_query_t *q = ecs_query(world, {
-        .expr = "Movement(#0, *), Velocity"
-    });
-
-    test_assert(q != NULL);
-
-    ecs_log_enable_colors(false);
-
-    const char *expect = 
-    HEAD " 0. [-1,  1]  setfix      "
-    LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  and         $[this]           (Velocity)"
-    LINE " 3. [ 2,  4]  yield       "
-    LINE "";
-    char *plan = ecs_query_plan(q);
-
-    test_str(expect, plan);
-    ecs_os_free(plan);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
 }
 
 void Plan_cached_isa_tgt(void) {

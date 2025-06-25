@@ -99,14 +99,7 @@ void flecs_assert_relation_unused(
     }
 
     bool in_use = ecs_id_in_use(world, ecs_pair(rel, EcsWildcard));
-
-    /* Hack to make enum unions work. C++ enum reflection registers enum 
-     * constants right after creating the enum entity. The enum constant 
-     * entities have a component of the enum type with the constant value, which
-     * is why it shows up as in use. */
-    if (property != EcsUnion) {
-        in_use |= ecs_id_in_use(world, rel);
-    }
+    in_use |= ecs_id_in_use(world, rel);
 
     if (in_use) {
         char *r_str = ecs_get_path(world, rel);
@@ -781,7 +774,6 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, EcsTarget);
     flecs_bootstrap_make_alive(world, EcsSparse);
     flecs_bootstrap_make_alive(world, EcsDontFragment);
-    flecs_bootstrap_make_alive(world, EcsUnion);
     flecs_bootstrap_make_alive(world, EcsObserver);
     flecs_bootstrap_make_alive(world, EcsPairIsTag);
 
@@ -909,7 +901,6 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsOnInstantiate);
     flecs_bootstrap_trait(world, EcsSparse);
     flecs_bootstrap_trait(world, EcsDontFragment);
-    flecs_bootstrap_trait(world, EcsUnion);
 
     flecs_bootstrap_tag(world, EcsRemove);
     flecs_bootstrap_tag(world, EcsDelete);
@@ -1061,15 +1052,6 @@ void flecs_bootstrap(
         .ctx = &dont_fragment_trait
     });
 
-    static ecs_on_trait_ctx_t union_trait = { EcsIdIsUnion, 0 };
-    ecs_observer(world, {
-        .query.terms = {{ .id = EcsUnion }},
-        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnAdd},
-        .callback = flecs_register_trait,
-        .ctx = &union_trait
-    });
-
     ecs_observer(world, {
         .query.terms = {{ .id = EcsOrderedChildren }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
@@ -1169,7 +1151,6 @@ void flecs_bootstrap(
     ecs_add_pair(world, EcsPrefab, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsComponent), EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsOnDelete, EcsOnInstantiate, EcsDontInherit);
-    ecs_add_pair(world, EcsUnion, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsExclusive, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsDontFragment, EcsOnInstantiate, EcsDontInherit);
 

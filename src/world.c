@@ -96,7 +96,6 @@ const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 52;
 /* Storage */
 const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 53;
 const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 54;
-const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 55;
 
 /* Misc */
 const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 56;

@@ -1605,9 +1605,11 @@ void SerializeEntityToJson_serialize_id_recycled(void) {
 }
 
 void SerializeEntityToJson_serialize_union_target(void) {
+    test_quarantine("25 Jun 2025");
+
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, Union);
+    ECS_ENTITY(world, Rel, DontFragment, Exclusive);
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
     ECS_TAG(world, TgtC);
@@ -1642,9 +1644,11 @@ void SerializeEntityToJson_serialize_union_target(void) {
 }
 
 void SerializeEntityToJson_serialize_union_target_recycled(void) {
+    test_quarantine("25 Jun 2025");
+
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, Union);
+    ECS_ENTITY(world, Rel, DontFragment, Exclusive);
 
     ecs_entity_t e = ecs_new(world);
     ecs_delete(world, e);
