@@ -73,7 +73,7 @@ ecs_event_record_t* flecs_event_record_ensure(
     }
     er = flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
     if (!er) {
-        er = flecs_sparse_insert_t(&o->events, ecs_event_record_t, event);
+        er = flecs_sparse_ensure_t(&o->events, ecs_event_record_t, event, NULL);
     }
     er->event = event;
     return er;

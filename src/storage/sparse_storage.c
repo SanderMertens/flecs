@@ -280,8 +280,8 @@ void flecs_component_sparse_dont_fragment_pair_insert(
         return;
     }
 
-    ecs_type_t *type = flecs_sparse_ensure_fast_t(
-        parent->sparse, ecs_type_t, entity);
+    ecs_type_t *type = flecs_sparse_ensure_t(
+        parent->sparse, ecs_type_t, entity, NULL);
     flecs_type_add(world, type, ecs_pair_second(world, cr->id));
 }
 
@@ -298,9 +298,12 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
     ecs_assert(parent->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_t component_id = cr->id;
-    ecs_entity_t tgt, *tgt_ptr = flecs_sparse_ensure_fast_t(
-        parent->sparse, ecs_entity_t, entity);
+    ecs_entity_t tgt, *tgt_ptr = flecs_sparse_ensure_t(
+        parent->sparse, ecs_entity_t, entity, NULL);
     ecs_assert(tgt_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_assert(flecs_sparse_has(parent->sparse, entity), 
+        ECS_INTERNAL_ERROR, NULL);
 
     if ((tgt = *tgt_ptr)) {
         ecs_component_record_t *other = flecs_components_get(world,
@@ -325,6 +328,9 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
             flecs_component_sparse_remove_intern(world, other, table, row);
         }
     }
+
+    ecs_assert(flecs_sparse_has(parent->sparse, entity), 
+        ECS_INTERNAL_ERROR, NULL);
 
     *tgt_ptr = flecs_entities_get_alive(world, ECS_PAIR_SECOND(component_id));
 }
@@ -395,7 +401,7 @@ void* flecs_component_sparse_emplace(
     ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t entity = ecs_table_entities(table)[row];
-    void *ptr = flecs_sparse_insert(cr->sparse, 0, entity);
+    void *ptr = flecs_sparse_ensure(cr->sparse, 0, entity, NULL);
     if (!ptr) {
         return NULL;
     }

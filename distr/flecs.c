@@ -13440,7 +13440,7 @@ ecs_event_record_t* flecs_event_record_ensure(
     }
     er = flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
     if (!er) {
-        er = flecs_sparse_insert_t(&o->events, ecs_event_record_t, event);
+        er = flecs_sparse_ensure_t(&o->events, ecs_event_record_t, event, NULL);
     }
     er->event = event;
     return er;
@@ -32119,6 +32119,20 @@ void* flecs_sparse_insert(
     ecs_size_t size,
     uint64_t id)
 {
+    bool is_new = true;
+    void *result = flecs_sparse_ensure(sparse, size, id, &is_new);
+    if (!is_new) {
+        result = NULL;
+    }
+    return result;
+}
+
+void* flecs_sparse_ensure(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t id,
+    bool *is_new)
+{
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vec_count(&sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
@@ -32145,8 +32159,7 @@ void* flecs_sparse_insert(
             /* Set dense element to new generation */
             ecs_vec_first_t(&sparse->dense, uint64_t)[dense] = id;
         } else {
-            /* Already inserted */
-            return NULL;
+            if (is_new) *is_new = false;
         }
     } else {
         /* Element is not paired yet. Must add a new element to dense array */
@@ -38896,8 +38909,8 @@ void flecs_component_sparse_dont_fragment_pair_insert(
         return;
     }
 
-    ecs_type_t *type = flecs_sparse_ensure_fast_t(
-        parent->sparse, ecs_type_t, entity);
+    ecs_type_t *type = flecs_sparse_ensure_t(
+        parent->sparse, ecs_type_t, entity, NULL);
     flecs_type_add(world, type, ecs_pair_second(world, cr->id));
 }
 
@@ -38914,9 +38927,12 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
     ecs_assert(parent->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_t component_id = cr->id;
-    ecs_entity_t tgt, *tgt_ptr = flecs_sparse_ensure_fast_t(
-        parent->sparse, ecs_entity_t, entity);
+    ecs_entity_t tgt, *tgt_ptr = flecs_sparse_ensure_t(
+        parent->sparse, ecs_entity_t, entity, NULL);
     ecs_assert(tgt_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_assert(flecs_sparse_has(parent->sparse, entity), 
+        ECS_INTERNAL_ERROR, NULL);
 
     if ((tgt = *tgt_ptr)) {
         ecs_component_record_t *other = flecs_components_get(world,
@@ -38941,6 +38957,9 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
             flecs_component_sparse_remove_intern(world, other, table, row);
         }
     }
+
+    ecs_assert(flecs_sparse_has(parent->sparse, entity), 
+        ECS_INTERNAL_ERROR, NULL);
 
     *tgt_ptr = flecs_entities_get_alive(world, ECS_PAIR_SECOND(component_id));
 }
@@ -39011,7 +39030,7 @@ void* flecs_component_sparse_emplace(
     ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t entity = ecs_table_entities(table)[row];
-    void *ptr = flecs_sparse_insert(cr->sparse, 0, entity);
+    void *ptr = flecs_sparse_ensure(cr->sparse, 0, entity, NULL);
     if (!ptr) {
         return NULL;
     }
