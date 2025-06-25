@@ -211,11 +211,6 @@ const char* flecs_query_op_str(
     case EcsQueryMemberNeq:      return "memberneq ";
     case EcsQueryToggle:         return "toggle    ";
     case EcsQueryToggleOption:   return "togglopt  ";
-    case EcsQueryUnionEq:        return "union     ";
-    case EcsQueryUnionEqWith:    return "union_w   ";
-    case EcsQueryUnionNeq:       return "unionneq  ";
-    case EcsQueryUnionEqUp:      return "union_up  ";
-    case EcsQueryUnionEqSelfUp:  return "union_sup ";
     case EcsQuerySparse:         return "spars     ";
     case EcsQuerySparseWith:     return "spars_w   ";
     case EcsQuerySparseNot:      return "spars_not ";

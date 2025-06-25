@@ -1876,7 +1876,7 @@ Fragmentation is a property of archetype-based ECS implementations where entitie
 
 Applications that make extensive use of relationships might observe high levels of fragmentation, as relationships can introduce many different combinations of components. While the Flecs storage is optimized for supporting large amounts (hundreds of thousands) of tables, fragmentation is a factor to consider when using relationships.
 
-Fragmentation can be reduced by using [union relationships](#union-property). There are additional storage improvements on the roadmap that will decrease the overhead of fragmentation introduced by relationships.
+Fragmentation can be reduced by using DontFragment relationships. There are additional storage improvements on the roadmap that will decrease the overhead of fragmentation introduced by relationships.
 
 ### Table Creation
 When an id added to an entity is deleted, all references to that id are deleted from the storage (see [cleanup properties](#cleanup-properties)). For example, when the component `Position` is deleted it is removed from all entities, and all tables with the `Position` component are deleted. While not unique to relationships, it is more common for relationships to trigger cleanup actions, as relationship pairs contain regular entities.

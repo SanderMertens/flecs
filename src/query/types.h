@@ -79,11 +79,6 @@ typedef enum {
     EcsQueryMemberNeq,      /* Compare member value */
     EcsQueryToggle,         /* Evaluate toggle bitset, if present */
     EcsQueryToggleOption,   /* Toggle for optional terms */
-    EcsQueryUnionEq,        /* Evaluate union relationship */
-    EcsQueryUnionEqWith,    /* Evaluate union relationship against fixed or variable source */
-    EcsQueryUnionNeq,       /* Evaluate union relationship */
-    EcsQueryUnionEqUp,      /* Evaluate union relationship w/up traversal */
-    EcsQueryUnionEqSelfUp,  /* Evaluate union relationship w/self|up traversal */
     EcsQuerySparse,         /* Evaluate sparse component */
     EcsQuerySparseNot,      /* Evaluate sparse component with not operator */
     EcsQuerySparseSelfUp,
@@ -148,16 +143,6 @@ typedef struct {
     bool non_fragmenting;
 } ecs_query_and_ctx_t;
 
-/* Union context */
-typedef struct {
-    ecs_component_record_t *cr;
-    ecs_table_range_t range;
-    ecs_map_iter_t tgt_iter;
-    ecs_entity_t cur;
-    ecs_entity_t tgt;
-    int32_t row;
-} ecs_query_union_ctx_t;
-
 /* Sparse context */
 typedef struct {
     ecs_query_and_ctx_t and_; /* For mixed sparse/non-sparse results */
@@ -220,7 +205,6 @@ typedef struct {
 typedef struct {
     union {
         ecs_query_and_ctx_t and;
-        ecs_query_union_ctx_t union_;
         ecs_query_sparse_ctx_t sparse_;
     } is;
 
@@ -332,7 +316,6 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_trivial_ctx_t trivial;
         ecs_query_membereq_ctx_t membereq;
         ecs_query_toggle_ctx_t toggle;
-        ecs_query_union_ctx_t union_;
         ecs_query_sparse_ctx_t sparse;
     } is;
 } ecs_query_op_ctx_t;

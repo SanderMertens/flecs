@@ -490,9 +490,16 @@ world.entity()
 </div>
 
 ## Union relationships
-In v3, Union relationships where encoded on the entity type with a `(Union, Relationship)` pair. In v4, union relationships are encoded with a `(Relationship, Union)` pair.
+Union relationships have been replaced with `DontFragment, Exclusive` relationships. See the ComponentTraits manual for more information on `DontFragment` relationships.
 
-The API for unions has not changed meaningfully. However, the union storage has changed, which might impact performance (positively or negatively).
+```cpp
+// Old
+world.component<Position>().add(flecs::Union);
+```
+```cpp
+// New
+world.component<Position>().add(flecs::DontFragment).add(flecs::Exclusive);
+```
 
 ## Snapshots
 The snapshot feature has been removed from v4.

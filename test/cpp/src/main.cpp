@@ -462,7 +462,6 @@ void Enum_constant_from_entity(void);
 void Enum_add_if(void);
 void Enum_add_if_other(void);
 void Enum_query_union_enum(void);
-void Enum_query_union_enum_invalid_query_type(void);
 void Enum_component_registered_as_enum(void);
 void Enum_mixed_auto_manual_constants(void);
 void Enum_enum_class_mixed_auto_manual_constants(void);
@@ -3378,10 +3377,6 @@ bake_test_case Enum_testcases[] = {
     {
         "query_union_enum",
         Enum_query_union_enum
-    },
-    {
-        "query_union_enum_invalid_query_type",
-        Enum_query_union_enum_invalid_query_type
     },
     {
         "component_registered_as_enum",
@@ -7803,7 +7798,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        52,
+        51,
         Enum_testcases
     },
     {

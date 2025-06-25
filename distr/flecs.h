@@ -441,11 +441,10 @@ extern "C" {
 #define EcsIdIsSparse                  (1u << 23)
 #define EcsIdDontFragment              (1u << 24)
 #define EcsIdMatchDontFragment         (1u << 25) /* For (*, T) wildcards */
-#define EcsIdIsUnion                   (1u << 26)
 #define EcsIdOrderedChildren           (1u << 28)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
-        EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion|\
+        EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdIsSparse|\
         EcsIdOrderedChildren)
 
 #define EcsIdMarkedForDelete           (1u << 30)
@@ -549,9 +548,8 @@ extern "C" {
 #define EcsTermIsToggle               (1u << 10)
 #define EcsTermKeepAlive              (1u << 11)
 #define EcsTermIsSparse               (1u << 12)
-#define EcsTermIsUnion                (1u << 13)
-#define EcsTermIsOr                   (1u << 14)
-#define EcsTermDontFragment           (1u << 15)
+#define EcsTermIsOr                   (1u << 13)
+#define EcsTermDontFragment           (1u << 14)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -599,7 +597,6 @@ extern "C" {
 #define EcsTableHasSparse              (1u << 23u)
 #define EcsTableHasDontFragment        (1u << 24u)
 #define EcsTableOverrideDontFragment   (1u << 25u)
-#define EcsTableHasUnion               (1u << 26u)
 
 #define EcsTableHasTraversable         (1u << 27u)
 #define EcsTableHasOrderedChildren     (1u << 28u)
@@ -611,9 +608,9 @@ extern "C" {
 #define EcsTableIsComplex        (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
 #define EcsTableHasAddActions    (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
 #define EcsTableHasRemoveActions (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
-#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion)
-#define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse | EcsTableHasUnion)
-#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion | EcsTableHasOrderedChildren)
+#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse)
+#define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse)
+#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasOrderedChildren)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Aperiodic action flags (used by ecs_run_aperiodic)
@@ -1983,87 +1980,6 @@ void ecs_map_copy(
 #define ecs_map_value(it) ((it)->res[1])
 #define ecs_map_ptr(it) ECS_PTR_CAST(void*, ECS_CAST(uintptr_t, ecs_map_value(it)))
 #define ecs_map_ref(it, T) (ECS_CAST(T**, &((it)->res[1])))
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-/**
- * @file switch_list.h
- * @brief Interleaved linked list for storing mutually exclusive values.
- */
-
-#ifndef FLECS_SWITCH_LIST_H
-#define FLECS_SWITCH_LIST_H
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct ecs_switch_node_t {
-    uint32_t next;      /* Next node in list */
-    uint32_t prev;      /* Prev node in list */
-} ecs_switch_node_t;
-
-typedef struct ecs_switch_page_t {
-    ecs_vec_t nodes;    /* vec<ecs_switch_node_t> */
-    ecs_vec_t values;   /* vec<uint64_t> */
-} ecs_switch_page_t;
-
-typedef struct ecs_switch_t {
-    ecs_map_t hdrs;     /* map<uint64_t, uint32_t> */
-    ecs_vec_t pages;    /* vec<ecs_switch_page_t> */
-} ecs_switch_t;
-
-/** Init new switch. */
-FLECS_DBG_API
-void flecs_switch_init(
-    ecs_switch_t* sw,
-    ecs_allocator_t *allocator);
-
-/** Fini switch. */
-FLECS_DBG_API
-void flecs_switch_fini(
-    ecs_switch_t *sw);
-
-/** Set value of element. */
-FLECS_DBG_API
-bool flecs_switch_set(
-    ecs_switch_t *sw,
-    uint32_t element,
-    uint64_t value);
-
-/** Reset value of element. */
-FLECS_DBG_API
-bool flecs_switch_reset(
-    ecs_switch_t *sw,
-    uint32_t element);
-
-/** Get value for element. */
-FLECS_DBG_API
-uint64_t flecs_switch_get(
-    const ecs_switch_t *sw,
-    uint32_t element);
-
-/** Get first element for value. */
-FLECS_DBG_API
-uint32_t flecs_switch_first(
-    const ecs_switch_t *sw,
-    uint64_t value);
-
-/** Get next element. */
-FLECS_DBG_API
-uint32_t flecs_switch_next(
-    const ecs_switch_t *sw,
-    uint32_t previous);
-
-/** Get target iterator. */
-FLECS_DBG_API
-ecs_map_iter_t flecs_switch_targets(
-    const ecs_switch_t *sw);
 
 #ifdef __cplusplus
 }
@@ -5699,9 +5615,6 @@ FLECS_API extern const ecs_entity_t EcsSparse;
 
 /** Mark component as non-fragmenting */
 FLECS_API extern const ecs_entity_t EcsDontFragment;
-
-/** Mark relationship as union */
-FLECS_API extern const ecs_entity_t EcsUnion;
 
 /** Marker used to indicate `$var == ...` matching in queries. */
 FLECS_API extern const ecs_entity_t EcsPredEq;
@@ -17968,7 +17881,6 @@ static const flecs::entity_t Symbol = EcsSymbol;
 /* Storage */
 static const flecs::entity_t Sparse = EcsSparse;
 static const flecs::entity_t DontFragment = EcsDontFragment;
-static const flecs::entity_t Union = EcsUnion;
 
 /* Builtin predicates for comparing entity ids in queries. */
 static const flecs::entity_t PredEq = EcsPredEq;
@@ -31095,24 +31007,6 @@ namespace _ {
         void populate(const Builder& b) {
             size_t i = 0;
             for (auto id : ids) {
-               if (!(id & ECS_ID_FLAGS_MASK)) {
-                    const flecs::type_info_t *ti = ecs_get_type_info(world_, id);
-                    if (ti) {
-                        // Union relationships always return a value of type
-                        // flecs::entity_t which holds the target id of the 
-                        // union relationship.
-                        // If a union component with a non-zero size (like an 
-                        // enum) is added to the query signature, the each/iter
-                        // functions would accept a parameter of the component
-                        // type instead of flecs::entity_t, which would cause
-                        // an assert.
-                        ecs_assert(
-                            !ti->size || !ecs_has_id(world_, id, flecs::Union),
-                            ECS_INVALID_PARAMETER,
-                            "use with() method to add union relationship");
-                    }
-                }
-
                 b->with(id).inout(inout[i]).oper(oper[i]);
                 i ++;
             }

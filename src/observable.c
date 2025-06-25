@@ -1302,10 +1302,7 @@ repeat_event:
         }
 
         cr = flecs_components_get(world, id);
-        if (!cr) {
-            /* Possible for union ids */
-            continue;
-        }
+        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_flags32_t cr_flags = cr->flags;
         dont_fragment = cr_flags & EcsIdDontFragment;

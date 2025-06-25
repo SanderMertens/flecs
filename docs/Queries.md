@@ -2918,7 +2918,6 @@ This list is an overview of current relationship traversal limitations:
 
 - The `Cascade` and `Desc` flags require caching.
 - Traversal flags can only be specified for the term source.
-- Union relationship queries that are not wildcards are not supported for traversal.
 
 The following sections show how to use traversal in the different language bindings.
 
@@ -3355,7 +3354,7 @@ q.iterable().set_var_expr("$Location", earth).each(|it| {
 </div>
 
 ### Member Value Queries
-Queries can match against the values of component members if they are of the `ecs_entity_t` type, and the component type is described with the reflection framework. Member value queries make it possible to query on values that can change rapidly without requiring structural changes in the ECS. The tradeoff is that other than with the regular, union and toggle storage options there are no acceleration structures to speed up query evaluation, which means that a query has to evaluate each instance of the component.
+Queries can match against the values of component members if they are of the `ecs_entity_t` type, and the component type is described with the reflection framework. Member value queries make it possible to query on values that can change rapidly without requiring structural changes in the ECS. The tradeoff is that other than with the regular, `DontFragment` and `CanToggle` storage options there are no acceleration structures to speed up query evaluation, which means that a query has to evaluate each instance of the component.
 
 The following sections show how to use queries in the different language bindings.
 

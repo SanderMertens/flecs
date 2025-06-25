@@ -878,7 +878,7 @@ void Enum_set_enum_constant_w_tag(void) {
 void Enum_add_union_enum(void) {
     flecs::world ecs;
 
-    ecs.component<StandardEnum>().add(flecs::Union);
+    ecs.component<StandardEnum>().add(flecs::DontFragment);
 
     auto t_color = flecs::enum_type<StandardEnum>(ecs);
     auto red = t_color.entity(StandardEnum::Red);
@@ -897,8 +897,8 @@ void Enum_add_union_enum(void) {
 void Enum_add_2_union_enums(void) {
     flecs::world ecs;
 
-    ecs.component<StandardEnum>().add(flecs::Union);
-    ecs.component<AnotherEnum>().add(flecs::Union);
+    ecs.component<StandardEnum>().add(flecs::DontFragment);
+    ecs.component<AnotherEnum>().add(flecs::DontFragment);
 
     auto e = ecs.entity();
     e.add(StandardEnum::Red);
@@ -921,8 +921,8 @@ void Enum_add_2_union_enums(void) {
 void Enum_add_2_union_enums_reverse(void) {
     flecs::world ecs;
 
-    ecs.component<StandardEnum>().add(flecs::Union);
-    ecs.component<AnotherEnum>().add(flecs::Union);
+    ecs.component<StandardEnum>().add(flecs::DontFragment);
+    ecs.component<AnotherEnum>().add(flecs::DontFragment);
 
     auto e = ecs.entity();
     e.add(AnotherEnum::Running);
@@ -997,7 +997,7 @@ void Enum_query_union_enum(void) {
         Blue
     };
 
-    ecs.component<StandardEnum>().add(flecs::Union);
+    ecs.component<StandardEnum>().add(flecs::DontFragment);
 
     flecs::entity e1 = ecs.entity().add(StandardEnum::Red);
     flecs::entity e2 = ecs.entity().add(StandardEnum::Green);
@@ -1033,20 +1033,6 @@ void Enum_query_union_enum(void) {
     test_assert(get_from_map(e3) == ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Blue)));
 
     ecs_map_fini(&map);
-}
-
-void Enum_query_union_enum_invalid_query_type(void) {
-    install_test_abort();
-
-    flecs::world ecs;
-
-    ecs.component<StandardEnum>().add(flecs::Union);
-
-    test_expect_abort();
-
-    ecs.query_builder<StandardEnum>()
-        .term_at(0).second(flecs::Wildcard)
-        .build();
 }
 
 void Enum_component_registered_as_enum(void) {
