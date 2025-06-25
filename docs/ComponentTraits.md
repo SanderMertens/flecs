@@ -1797,7 +1797,7 @@ world.component::<Position>().add_trait::<flecs::Sparse>();
 </ul>
 </div>
 
-## DontFragment trait (EXPERIMENTAL)
+## DontFragment trait
 The `DontFragment` trait uses the same sparse storage as the `Sparse` trait, but does not fragment tables. This can be desirable especially if a component or relationship is very sparse (e.g. it is only added to a few entities) as this would otherwise result in many tables that only contain a small number of entities.
 
 The following code example shows how to mark a component as `DontFragment`:
@@ -1841,14 +1841,12 @@ Components with the `DontFragment` trait have the following limitations:
 - They don't show up in types (obtained by `ecs_get_type` / `entity::type`)
 - Monitors don't trigger on `DontFragment` components. The reason for this is that monitors compare the previous table with the current table of an entity to determine if an entity started matching, and `DontFragment` components aren't part of the table.
 
-Support for `DontFragment` is currently experimental and there are a number of temporary limitations:
+Support for `DontFragment` has a number of (temporary) limitations:
 - `target_for` does not yet work for `DontFragment` components.
 - `DontFragment` components are not serialized yet to JSON (and don't show up in the explorer).
 - `Or`, `Optional`, `AndFrom` and `NotFrom` operators are not yet supported.
-- `Not` operators are only supported for non-wildcard terms.
 - Component inheritance and transitivity are not yet supported.
-- Queries for `DontFragment` components may run slower than necessary.
-- The `flecs::Any` wildcard does not yet work
+- Queries for `DontFragment` components may run slower than expected.
 
 What does work:
 - ECS operations (`add`, `remove`, `get`, `get_mut`, `ensure`, `emplace`, `set`, `delete`).
