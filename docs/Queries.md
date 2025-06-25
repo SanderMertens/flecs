@@ -3166,15 +3166,6 @@ Serializable($Component), $Component($this)
 
 This query returns serializable components for all entities that have at least one.
 
-#### Setting Variables
-By default variables are assigned while the query is being iterated, but variables can be set before query iteration to constrain the results of a query. Consider the previous example:
-
-```
-SpaceShip($this), DockedTo($this, $Location)
-```
-
-An application can set the `$this` variable or `$Location` variables, or both, before starting iteration to constrain the results returned by the query. This makes it possible to reuse a single query for multiple purposes, which provides better performance when compared to creating multiple queries.
-
 #### Lookup variables
 Variables can be used as the starting point of a by-name lookup. This can be useful when matching hierarchies that have a well-defined structure. An example:
 
@@ -3185,7 +3176,16 @@ SpaceShip($this), !Powered($this.cockpit)
 
 This query will look for an child entity named `cockpit` in the scope of the matched entity for `$this`, and use that entity to match with `Powered`. If no entity with the name `cockpit` is found, the term will evaluate to false.
 
-The following sections show how to use queries in the different language bindings.
+#### Setting Variables
+By default variables are assigned while the query is being iterated, but variables can be set before query iteration to constrain the results of a query. Consider the previous example:
+
+```
+SpaceShip($this), DockedTo($this, $Location)
+```
+
+An application can set the `$this` variable or `$Location` variables, or both, before starting iteration to constrain the results returned by the query. This makes it possible to reuse a single query for multiple purposes, which provides better performance when compared to creating multiple queries.
+
+The following sections show how to use query variables in the different language bindings.
 
 <div class="flecs-snippet-tabs">
 <ul>
