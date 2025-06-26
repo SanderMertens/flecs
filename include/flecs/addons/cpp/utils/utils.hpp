@@ -1,7 +1,7 @@
 /**
  * @file addons/cpp/utils/utils.hpp
  * @brief Flecs STL (FTL?)
- * 
+ *
  * Flecs STL (FTL?)
  * Minimalistic utilities that allow for STL like functionality without having
  * to depend on the actual STL.
@@ -36,7 +36,7 @@
 #define FLECS_FWD(...) \
   static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
 
-namespace flecs 
+namespace flecs
 {
 
 namespace _
@@ -46,10 +46,10 @@ namespace _
 struct placement_new_tag_t{};
 constexpr placement_new_tag_t placement_new_tag{};
 template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
-template<class Ty> inline void free_obj(void* _ptr) { 
+template<class Ty> inline void free_obj(void* _ptr) {
     if (_ptr) {
-        destruct_obj(static_cast<Ty*>(_ptr)); 
-        ecs_os_free(_ptr); 
+        destruct_obj(static_cast<Ty*>(_ptr));
+        ecs_os_free(_ptr);
     }
 }
 
@@ -96,6 +96,60 @@ using std::is_reference;
 using std::is_volatile;
 using std::is_same;
 using std::is_enum;
+
+// GCC 4.9.2 compatibility: missing C++11 type traits
+#if defined(__GNUC__) && (__GNUC__ < 5) && (__GNUC_MINOR__ < 10)
+// Direct implementations for missing type traits in GCC 4.9.2
+} // namespace flecs
+
+namespace std {
+    // Only implement the ones that are actually missing in GCC 4.9.2
+    template<typename T>
+    struct is_trivially_constructible {
+        static const bool value = __is_pod(T);
+    };
+
+    template<typename T>
+    struct is_trivially_move_assignable {
+        static const bool value = __is_pod(T);
+    };
+
+    template<typename T>
+    struct is_trivially_copy_assignable {
+        static const bool value = __is_pod(T);
+    };
+
+    template<typename T>
+    struct is_trivially_copy_constructible {
+        static const bool value = __is_pod(T);
+    };
+
+    template<typename T>
+    struct is_trivially_move_constructible {
+        static const bool value = __is_pod(T);
+    };
+
+    template<typename T>
+    struct is_trivially_copyable {
+        static const bool value = __is_pod(T);
+    };
+}
+
+namespace flecs {
+#else
+using std::is_trivially_constructible;
+using std::is_trivially_move_assignable;
+using std::is_trivially_copy_assignable;
+using std::is_trivially_copy_constructible;
+using std::is_trivially_move_constructible;
+using std::is_trivially_copyable;
+#endif
+
+// These exist in GCC 4.9.2, so we can always use them
+using std::is_move_assignable;
+using std::is_move_constructible;
+using std::is_copy_constructible;
+using std::is_trivially_destructible;
 
 // Determine constness even if T is a pointer type
 template <typename T>
