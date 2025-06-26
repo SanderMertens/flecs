@@ -791,7 +791,11 @@
                 "change_order_null_children_nonzero_count",
                 "change_order_not_null_children_zero_count",
                 "change_order_on_parent_without_ordered_children",
-                "change_order"
+                "change_order",
+                "get_ordered_children_empty",
+                "get_ordered_children_invalid",
+                "get_ordered_children",
+                "get_ordered_children_from_stage"
             ]
         }, {
             "id": "Has",
