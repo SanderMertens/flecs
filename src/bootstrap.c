@@ -852,6 +852,7 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, ecs_id(EcsComponent));
     flecs_bootstrap_make_alive(world, ecs_id(EcsIdentifier));
     flecs_bootstrap_make_alive(world, ecs_id(EcsPoly));
+    flecs_bootstrap_make_alive(world, ecs_id(EcsParent));
     flecs_bootstrap_make_alive(world, ecs_id(EcsDefaultChildComponent));
     flecs_bootstrap_make_alive(world, EcsFinal);
     flecs_bootstrap_make_alive(world, EcsName);
@@ -902,6 +903,10 @@ void flecs_bootstrap(
         .dtor = ecs_dtor(EcsPoly)
     });
 
+    flecs_type_info_init(world, EcsParent, { 
+        .ctor = flecs_default_ctor
+    });
+
     flecs_type_info_init(world, EcsDefaultChildComponent, { 
         .ctor = flecs_default_ctor,
     });
@@ -919,6 +924,7 @@ void flecs_bootstrap(
     flecs_bootstrap_builtin_t(world, table, EcsIdentifier);
     flecs_bootstrap_builtin_t(world, table, EcsComponent);
     flecs_bootstrap_builtin_t(world, table, EcsPoly);
+    flecs_bootstrap_builtin_t(world, table, EcsParent);
     flecs_bootstrap_builtin_t(world, table, EcsDefaultChildComponent);
 
     /* Initialize default entity id range */
