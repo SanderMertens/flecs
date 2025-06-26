@@ -98,7 +98,7 @@ using std::is_same;
 using std::is_enum;
 
 // GCC 4.9.2 compatibility: missing C++11 type traits
-#if defined(__GNUC__) && (__GNUC__ < 5) && (__GNUC_MINOR__ < 10)
+#if defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 9)
 // Direct implementations for missing type traits in GCC 4.9.2
 } // namespace flecs
 
