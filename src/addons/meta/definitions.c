@@ -51,13 +51,6 @@ void flecs_meta_import_core_definitions(
     });
 
     ecs_struct(world, {
-        .entity = ecs_id(EcsDefaultChildComponent),
-        .members = {
-            { .name = "component", .type = ecs_id(ecs_entity_t) }
-        }
-    });
-
-    ecs_struct(world, {
         .entity = ecs_id(EcsIdentifier),
         .members = {
             {
@@ -65,6 +58,20 @@ void flecs_meta_import_core_definitions(
                 .type = ecs_id(ecs_string_t), 
                 .offset = offsetof(EcsIdentifier, value) 
             }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsParent),
+        .members = {
+            { .name = "value", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsDefaultChildComponent),
+        .members = {
+            { .name = "component", .type = ecs_id(ecs_entity_t) }
         }
     });
 

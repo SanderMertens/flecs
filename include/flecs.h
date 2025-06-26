@@ -1558,6 +1558,11 @@ typedef struct EcsDefaultChildComponent {
     ecs_id_t component;  /**< Default component id. */
 } EcsDefaultChildComponent;
 
+/* Non-fragmenting ChildOf relationship. Experimental! Do not use! */
+typedef struct EcsParent {
+    ecs_entity_t value;
+} EcsParent;
+
 /** @} */
 /** @} */
 
@@ -1606,6 +1611,9 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 
 /** Poly component id. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsPoly);
+
+/** Parent component id. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsParent);
 
 /** DefaultChildComponent component id. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsDefaultChildComponent);

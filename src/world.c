@@ -15,6 +15,7 @@ const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
 const ecs_entity_t ecs_id(EcsComponent) =                                   1;
 const ecs_entity_t ecs_id(EcsIdentifier) =                                  2;
 const ecs_entity_t ecs_id(EcsPoly) =                                        3;
+const ecs_entity_t ecs_id(EcsParent) =                                      4;
 
 /* Poly target components */
 const ecs_entity_t EcsQuery =                       FLECS_HI_COMPONENT_ID + 0;
