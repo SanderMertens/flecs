@@ -1162,3 +1162,82 @@ void OrderedChildren_change_order(void) {
 
     ecs_fini(world);
 }
+
+void OrderedChildren_get_ordered_children_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, parent);
+    test_int(entities.count, 0);
+    test_int(entities.alive_count, 0);
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_get_ordered_children_invalid(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    test_expect_abort();
+    ecs_get_ordered_children(world, parent);
+}
+
+void OrderedChildren_get_ordered_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e2, Foo);
+    ecs_add(world, e1, Foo);
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, parent);
+    test_int(entities.count, 3);
+    test_int(entities.alive_count, 3);
+    test_int(entities.ids[0], e1);
+    test_int(entities.ids[1], e2);
+    test_int(entities.ids[2], e3);
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_get_ordered_children_from_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e2, Foo);
+    ecs_add(world, e1, Foo);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    test_assert(stage != NULL);
+
+    ecs_entities_t entities = ecs_get_ordered_children(stage, parent);
+    test_int(entities.count, 3);
+    test_int(entities.alive_count, 3);
+    test_int(entities.ids[0], e1);
+    test_int(entities.ids[1], e2);
+    test_int(entities.ids[2], e3);
+
+    ecs_fini(world);
+}

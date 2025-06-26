@@ -2359,6 +2359,33 @@ error:
     return;
 }
 
+ecs_entities_t ecs_get_ordered_children(
+    const ecs_world_t *world,
+    ecs_entity_t parent)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
+    flecs_check_exclusive_world_access_read(world);
+
+    ecs_component_record_t *cr = flecs_components_get(
+        world, ecs_childof(parent));
+    ecs_check(cr != NULL, ECS_INVALID_PARAMETER, 
+        "parent does not have the OrderedChildren trait");
+    ecs_check(cr->flags & EcsIdOrderedChildren, ECS_INVALID_PARAMETER,
+        "parent does not have the OrderedChildren trait");
+    ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return (ecs_entities_t){
+        .count = ecs_vec_count(&cr->pair->ordered_children),
+        .alive_count = ecs_vec_count(&cr->pair->ordered_children),
+        .ids = ecs_vec_first(&cr->pair->ordered_children),
+    };
+error:
+    return (ecs_entities_t){0};
+}
+
 bool ecs_has_id(
     const ecs_world_t *world,
     ecs_entity_t entity,

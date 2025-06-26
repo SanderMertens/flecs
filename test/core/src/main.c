@@ -758,6 +758,10 @@ void OrderedChildren_change_order_null_children_nonzero_count(void);
 void OrderedChildren_change_order_not_null_children_zero_count(void);
 void OrderedChildren_change_order_on_parent_without_ordered_children(void);
 void OrderedChildren_change_order(void);
+void OrderedChildren_get_ordered_children_empty(void);
+void OrderedChildren_get_ordered_children_invalid(void);
+void OrderedChildren_get_ordered_children(void);
+void OrderedChildren_get_ordered_children_from_stage(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -5527,6 +5531,22 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "change_order",
         OrderedChildren_change_order
+    },
+    {
+        "get_ordered_children_empty",
+        OrderedChildren_get_ordered_children_empty
+    },
+    {
+        "get_ordered_children_invalid",
+        OrderedChildren_get_ordered_children_invalid
+    },
+    {
+        "get_ordered_children",
+        OrderedChildren_get_ordered_children
+    },
+    {
+        "get_ordered_children_from_stage",
+        OrderedChildren_get_ordered_children_from_stage
     }
 };
 
@@ -12812,7 +12832,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        29,
+        33,
         OrderedChildren_testcases
     },
     {
