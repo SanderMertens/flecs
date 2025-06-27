@@ -439,8 +439,31 @@ bool ecs_system_stats_get(
 
     ecs_query_stats_get(world, ptr->query, &s->query);
     int32_t t = s->query.t;
+    s->t = t;
 
-    ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
+    /* Record total time spent */
+    ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent_total);
+
+    /* Record per-thread timing information */
+    int32_t count = ecs_vec_count(&ptr->time_spent_per_thread);
+    if (count) {
+        s->thread_count = count;
+        
+        /* Initialize or resize array if needed */
+        if (!s->thread_time_spent_array || s->thread_time_spent_array_count < count) {
+            if (s->thread_time_spent_array) {
+                ecs_os_free(s->thread_time_spent_array);
+            }
+            s->thread_time_spent_array = ecs_os_malloc_n(ecs_metric_t, count);
+            s->thread_time_spent_array_count = count;
+        }
+
+        int i;
+        for (i = 0; i < count; i++) {
+            ecs_ftime_t thread_time = *(ecs_ftime_t*)ecs_vec_get_t(&ptr->time_spent_per_thread, ecs_ftime_t, i);
+            ECS_COUNTER_RECORD(&s->thread_time_spent_array[i], t, thread_time);
+        }
+    }
 
     s->task = !(ptr->query->flags & EcsQueryMatchThis);
 
@@ -455,8 +478,27 @@ void ecs_system_stats_reduce(
 {
     ecs_query_cache_stats_reduce(&dst->query, &src->query);
     dst->task = src->task;
-    flecs_stats_reduce(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
-        ECS_METRIC_FIRST(src), dst->query.t, src->query.t);
+    
+    /* Reduce time spent metric */
+    ecs_metric_reduce(&dst->time_spent, &src->time_spent, dst->query.t, src->query.t);
+
+    /* Reduce per-thread metrics if available */
+    if (src->thread_time_spent_array && src->thread_count) {
+        if (!dst->thread_time_spent_array || dst->thread_time_spent_array_count < src->thread_count) {
+            if (dst->thread_time_spent_array) {
+                ecs_os_free(dst->thread_time_spent_array);
+            }
+            dst->thread_time_spent_array = ecs_os_malloc_n(ecs_metric_t, src->thread_count);
+            dst->thread_time_spent_array_count = src->thread_count;
+        }
+        dst->thread_count = src->thread_count;
+        
+        int i;
+        for (i = 0; i < src->thread_count; i++) {
+            ecs_metric_reduce(&dst->thread_time_spent_array[i], 
+                &src->thread_time_spent_array[i], dst->query.t, src->query.t);
+        }
+    }
 }
 
 void ecs_system_stats_reduce_last(
@@ -466,16 +508,43 @@ void ecs_system_stats_reduce_last(
 {
     ecs_query_cache_stats_reduce_last(&dst->query, &src->query, count);
     dst->task = src->task;
-    flecs_stats_reduce_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
-        ECS_METRIC_FIRST(src), dst->query.t, src->query.t, count);
+    
+    /* Reduce time spent metric */
+    ecs_metric_reduce_last(&dst->time_spent, dst->query.t, count);
+
+    /* Reduce per-thread metrics if available */
+    if (src->thread_time_spent_array && src->thread_count) {
+        if (!dst->thread_time_spent_array || dst->thread_time_spent_array_count < src->thread_count) {
+            if (dst->thread_time_spent_array) {
+                ecs_os_free(dst->thread_time_spent_array);
+            }
+            dst->thread_time_spent_array = ecs_os_malloc_n(ecs_metric_t, src->thread_count);
+            dst->thread_time_spent_array_count = src->thread_count;
+        }
+        dst->thread_count = src->thread_count;
+        
+        int i;
+        for (i = 0; i < src->thread_count; i++) {
+            ecs_metric_reduce_last(&dst->thread_time_spent_array[i], dst->query.t, count);
+        }
+    }
 }
 
 void ecs_system_stats_repeat_last(
     ecs_system_stats_t *stats)
 {
     ecs_query_cache_stats_repeat_last(&stats->query);
-    flecs_stats_repeat_last(ECS_METRIC_FIRST(stats), ECS_METRIC_LAST(stats),
-        (stats->query.t));
+    
+    /* Repeat time spent metric */
+    ecs_metric_repeat_last(&stats->time_spent, stats->query.t);
+
+    /* Repeat per-thread metrics if available */
+    if (stats->thread_time_spent_array && stats->thread_count) {
+        int i;
+        for (i = 0; i < stats->thread_count; i++) {
+            ecs_metric_repeat_last(&stats->thread_time_spent_array[i], stats->query.t);
+        }
+    }
 }
 
 void ecs_system_stats_copy_last(
@@ -484,8 +553,37 @@ void ecs_system_stats_copy_last(
 {
     ecs_query_cache_stats_copy_last(&dst->query, &src->query);
     dst->task = src->task;
-    flecs_stats_copy_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst),
-        ECS_METRIC_FIRST(src), dst->query.t, t_next(src->query.t));
+    
+    /* Copy time spent metric */
+    ecs_metric_copy(&dst->time_spent, dst->query.t, t_next(src->query.t));
+
+    /* Copy per-thread metrics if available */
+    if (src->thread_time_spent_array && src->thread_count) {
+        if (!dst->thread_time_spent_array || dst->thread_time_spent_array_count < src->thread_count) {
+            if (dst->thread_time_spent_array) {
+                ecs_os_free(dst->thread_time_spent_array);
+            }
+            dst->thread_time_spent_array = ecs_os_malloc_n(ecs_metric_t, src->thread_count);
+            dst->thread_time_spent_array_count = src->thread_count;
+        }
+        dst->thread_count = src->thread_count;
+        
+        int i;
+        for (i = 0; i < src->thread_count; i++) {
+            ecs_metric_copy(&dst->thread_time_spent_array[i], dst->query.t, t_next(src->query.t));
+        }
+    }
+}
+
+void ecs_system_stats_fini(
+    ecs_system_stats_t *stats)
+{
+    if (stats->thread_time_spent_array) {
+        ecs_os_free(stats->thread_time_spent_array);
+        stats->thread_time_spent_array = NULL;
+        stats->thread_time_spent_array_count = 0;
+        stats->thread_count = 0;
+    }
 }
 
 #endif
@@ -754,6 +852,15 @@ void ecs_world_stats_log(
     
 error:
     return;
+}
+
+/* Function to repeat the last measurement */
+void ecs_metric_repeat_last(
+    ecs_metric_t *m,
+    int32_t t) 
+{
+    t = t_next(t);
+    ecs_metric_copy(m, t, t_prev(t));
 }
 
 #endif
