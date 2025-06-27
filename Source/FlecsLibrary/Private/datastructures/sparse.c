@@ -335,6 +335,20 @@ void* flecs_sparse_insert(
     ecs_size_t size,
     uint64_t id)
 {
+    bool is_new = true;
+    void *result = flecs_sparse_ensure(sparse, size, id, &is_new);
+    if (!is_new) {
+        result = NULL;
+    }
+    return result;
+}
+
+void* flecs_sparse_ensure(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t id,
+    bool *is_new)
+{
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vec_count(&sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
@@ -361,8 +375,7 @@ void* flecs_sparse_insert(
             /* Set dense element to new generation */
             ecs_vec_first_t(&sparse->dense, uint64_t)[dense] = id;
         } else {
-            /* Already inserted */
-            return NULL;
+            if (is_new) *is_new = false;
         }
     } else {
         /* Element is not paired yet. Must add a new element to dense array */
@@ -520,7 +533,6 @@ bool flecs_sparse_remove_w_gen(
             ecs_os_memset(ptr, 0, size);
         }
 
-        /* Reset memory to zero on remove */
         return true;
     } else {
         /* Element is not paired and thus not alive, nothing to be done */

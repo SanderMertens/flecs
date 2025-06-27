@@ -73,7 +73,7 @@ ecs_event_record_t* flecs_event_record_ensure(
     }
     er = flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
     if (!er) {
-        er = flecs_sparse_insert_t(&o->events, ecs_event_record_t, event);
+        er = flecs_sparse_ensure_t(&o->events, ecs_event_record_t, event, NULL);
     }
     er->event = event;
     return er;
@@ -1306,10 +1306,7 @@ repeat_event:
         }
 
         cr = flecs_components_get(world, id);
-        if (!cr) {
-            /* Possible for union ids */
-            continue;
-        }
+        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_flags32_t cr_flags = cr->flags;
         dont_fragment = cr_flags & EcsIdDontFragment;

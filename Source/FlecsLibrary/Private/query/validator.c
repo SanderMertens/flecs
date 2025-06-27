@@ -877,15 +877,6 @@ int flecs_term_finalize(
                         }
                     }
                 }
-
-                /* Check if term is union */
-                if (ecs_table_has_id(world, first_table, EcsUnion)) {
-                    /* Any wildcards don't need special handling as they just return
-                     * (Rel, *). */
-                    if (ECS_IS_PAIR(term->id) && ECS_PAIR_SECOND(term->id) != EcsAny) {
-                        term->flags_ |= EcsTermIsUnion;
-                    }
-                }
             }
 
             if (ecs_table_has_id(world, first_table, EcsDontFragment)) {
@@ -1014,7 +1005,7 @@ int flecs_term_finalize(
         trivial_term = false;
     }
 
-    if (term->flags_ & EcsTermIsUnion) {
+    if (term->flags_ & EcsTermDontFragment) {
         trivial_term = false;
         cacheable_term = false;
     }
@@ -1239,8 +1230,6 @@ int flecs_query_finalize_terms(
         } else if (term->inout == EcsInOutNone) {
             nodata_term = true;
         } else if (!ecs_get_type_info(world, term->id)) {
-            nodata_term = true;
-        } else if (term->flags_ & EcsTermIsUnion) {
             nodata_term = true;
         } else if (term->flags_ & EcsTermIsMember) {
             nodata_term = true;
@@ -1696,14 +1685,6 @@ bool flecs_query_finalize_simple(
             if (cr->flags & EcsIdDontFragment) {
                 term->flags_ |= EcsTermDontFragment;
                 trivial = false;
-            }
-
-            if (ECS_IS_PAIR(id)) {
-                if (cr->flags & EcsIdIsUnion) {
-                    term->flags_ |= EcsTermIsUnion;
-                    trivial = false;
-                    cacheable = false;
-                }
             }
 
             if (cr->flags & EcsIdIsSparse) {

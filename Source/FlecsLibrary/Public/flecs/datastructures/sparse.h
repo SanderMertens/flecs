@@ -130,7 +130,7 @@ void* flecs_sparse_get(
 #define flecs_sparse_get_t(sparse, T, index)\
     ECS_CAST(T*, flecs_sparse_get(sparse, ECS_SIZEOF(T), index))
 
-/** Get or create element by (sparse) id. */
+/** Create element by (sparse) id. */
 FLECS_DBG_API
 void* flecs_sparse_insert(
     ecs_sparse_t *sparse,
@@ -139,6 +139,17 @@ void* flecs_sparse_insert(
 
 #define flecs_sparse_insert_t(sparse, T, index)\
     ECS_CAST(T*, flecs_sparse_insert(sparse, ECS_SIZEOF(T), index))
+
+/** Get or create element by (sparse) id. */
+FLECS_DBG_API
+void* flecs_sparse_ensure(
+    ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id,
+    bool *is_new);
+
+#define flecs_sparse_ensure_t(sparse, T, index, is_new)\
+    ECS_CAST(T*, flecs_sparse_ensure(sparse, ECS_SIZEOF(T), index, is_new))
 
 /** Fast version of ensure, no liveliness checking */
 FLECS_DBG_API

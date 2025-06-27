@@ -329,38 +329,6 @@ error:
 }
 
 static
-void flecs_instantiate_union(
-    ecs_world_t *world,
-    ecs_entity_t base,
-    ecs_table_t *base_table,
-    ecs_entity_t instance)
-{
-    ecs_component_record_t *union_cr = flecs_components_get(world, 
-        ecs_pair(EcsWildcard, EcsUnion));
-    ecs_assert(union_cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    const ecs_table_record_t *tr = flecs_component_get_table(
-        union_cr, base_table);
-    ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t i = 0, union_count = 0;
-    do {
-        ecs_id_t id = base_table->type.array[i];
-        if (ECS_PAIR_SECOND(id) == EcsUnion) {
-            ecs_entity_t rel = ECS_PAIR_FIRST(id);
-            ecs_entity_t tgt = ecs_get_target(world, base, rel, 0);
-            ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
-            ecs_component_record_t *cr = 
-                (ecs_component_record_t*)base_table->_->records[i].hdr.cache;
-
-            flecs_switch_set(cr->sparse, (uint32_t)instance, tgt);
-
-            union_count ++;
-        }
-
-        i ++;
-    } while (union_count < tr->count);
-}
-
-static
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -431,11 +399,6 @@ void flecs_instantiate(
     ecs_record_t *record = flecs_entities_get_any(world, base);
     ecs_table_t *base_table = record->table;
     ecs_assert(base_table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* If prefab has union relationships, also set them on instance */
-    if (base_table->flags & EcsTableHasUnion) {
-        flecs_instantiate_union(world, base, base_table, instance);
-    }
 
     if (base_table->flags & EcsTableOverrideDontFragment) {
         flecs_instantiate_override_dont_fragment(

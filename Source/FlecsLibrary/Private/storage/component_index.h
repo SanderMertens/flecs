@@ -67,7 +67,7 @@ struct ecs_component_record_t {
     /* Cached pointer to type info for id, if id contains data. */
     const ecs_type_info_t *type_info;
 
-    /* Storage for sparse components or union relationships */
+    /* Storage for sparse components */
     void *sparse;
 
     /* Pair data */

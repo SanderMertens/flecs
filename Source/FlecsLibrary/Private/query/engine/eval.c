@@ -1498,11 +1498,6 @@ bool flecs_query_dispatch(
     case EcsQueryMemberNeq: return flecs_query_member_neq(op, redo, ctx);
     case EcsQueryToggle: return flecs_query_toggle(op, redo, ctx);
     case EcsQueryToggleOption: return flecs_query_toggle_option(op, redo, ctx);
-    case EcsQueryUnionEq: return flecs_query_union(op, redo, ctx);
-    case EcsQueryUnionEqWith: return flecs_query_union_with(op, redo, ctx, false);
-    case EcsQueryUnionNeq: return flecs_query_union_neq(op, redo, ctx);
-    case EcsQueryUnionEqUp: return flecs_query_union_up(op, redo, ctx);
-    case EcsQueryUnionEqSelfUp: return flecs_query_union_self_up(op, redo, ctx);
     case EcsQuerySparse: return flecs_query_sparse(op, redo, ctx);
     case EcsQuerySparseWith: return flecs_query_sparse_with(op, redo, ctx, false);
     case EcsQuerySparseNot: return flecs_query_sparse_with(op, redo, ctx, true);

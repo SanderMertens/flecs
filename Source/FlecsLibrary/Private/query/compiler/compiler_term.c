@@ -1083,30 +1083,6 @@ void flecs_query_set_op_kind(
     } else if (term->flags_ & EcsTermTransitive) {
         ecs_assert(ecs_term_ref_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
         op->kind = EcsQueryTrav;
-
-    /* If term queries for union pair, use union instruction */
-    } else if (term->flags_ & EcsTermIsUnion) {
-        if (op->kind == EcsQueryAnd) {
-            op->kind = EcsQueryUnionEq;
-            if (term->oper == EcsNot) {
-                if (!ecs_id_is_wildcard(ECS_TERM_REF_ID(&term->second))) {
-                    term->oper = EcsAnd;
-                    op->kind = EcsQueryUnionNeq;
-                }
-            }
-        } else {
-            op->kind = EcsQueryUnionEqWith;
-        }
-
-        if ((term->src.id & trav_flags) == EcsUp) {
-            if (op->kind == EcsQueryUnionEq) {
-                op->kind = EcsQueryUnionEqUp;
-            }
-        } else if ((term->src.id & trav_flags) == (EcsSelf|EcsUp)) {
-            if (op->kind == EcsQueryUnionEq) {
-                op->kind = EcsQueryUnionEqSelfUp;
-            }
-        }
     } else if (term->flags_ & EcsTermDontFragment) {
         if (op->kind == EcsQueryAnd) {
             op->kind = EcsQuerySparse;

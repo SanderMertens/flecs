@@ -241,57 +241,6 @@ void flecs_entity_remove_non_fragmenting(
     r->row &= ~EcsEntityHasDontFragment;
 }
 
-static
-void flecs_union_on_add(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t row,
-    int32_t count,
-    const ecs_type_t *added)
-{
-    int32_t i, j;
-    for (i = 0; i < added->count; i ++) {
-        ecs_id_t id = added->array[i];
-        if (ECS_IS_PAIR(id)) {
-            ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
-            ecs_component_record_t *cr = flecs_components_get(world, wc);
-            if (cr && cr->flags & EcsIdIsUnion) {
-                const ecs_entity_t *entities = ecs_table_entities(table);
-                for (j = 0; j < count; j ++) {
-                    ecs_entity_t e = entities[row + j];
-                    flecs_switch_set(
-                        cr->sparse, (uint32_t)e, ecs_pair_second(world, id));
-                }
-            }
-        }
-    }
-}
-
-static
-void flecs_union_on_remove(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t row,
-    int32_t count,
-    const ecs_type_t *removed)
-{
-    int32_t i, j;
-    for (i = 0; i < removed->count; i ++) {
-        ecs_id_t id = removed->array[i];
-        if (ECS_IS_PAIR(id)) {
-            ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
-            ecs_component_record_t *cr = flecs_components_get(world, wc);
-            if (cr && cr->flags & EcsIdIsUnion) {
-                const ecs_entity_t *entities = ecs_table_entities(table);
-                for (j = 0; j < count; j ++) {
-                    ecs_entity_t e = entities[row + j];
-                    flecs_switch_reset(cr->sparse, (uint32_t)e);
-                }
-            }
-        }
-    }
-}
-
 void flecs_notify_on_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -322,10 +271,6 @@ void flecs_notify_on_add(
             if (flecs_sparse_on_add(world, table, row, count, added, construct)) {
                 diff_flags |= EcsTableHasOnAdd;
             }
-        }
-
-        if (diff_flags & EcsTableHasUnion) {
-            flecs_union_on_add(world, table, row, count, added);
         }
 
         if (diff_flags & (EcsTableHasOnAdd|EcsTableHasTraversable)) {
@@ -364,10 +309,6 @@ void flecs_notify_on_remove(
 
         if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
             flecs_on_unparent(world, table, row, count);
-        }
-
-        if (diff_flags & EcsTableHasUnion) {
-            flecs_union_on_remove(world, table, row, count, removed);
         }
 
         if (diff_flags & EcsTableHasDontFragment) {
