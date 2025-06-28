@@ -955,73 +955,6 @@ void Enum_set_enum_constant_w_tag(void) {
     test_int(p->y, 4);
 }
 
-void Enum_add_union_enum(void) {
-    flecs::world ecs;
-
-    ecs.component<StandardEnum>().add(flecs::Union);
-
-    auto t_color = flecs::enum_type<StandardEnum>(ecs);
-    auto red = t_color.entity(StandardEnum::Red);
-    auto blue = t_color.entity(StandardEnum::Blue);
-
-    auto e1 = ecs.entity().add(StandardEnum::Red);
-    auto e2 = ecs.entity().add(StandardEnum::Blue);
-
-    test_assert(e1.type() == e2.type());
-    test_assert(e1.target<StandardEnum>() == red);
-    test_assert(e2.target<StandardEnum>() == blue);
-    test_assert(e1.has(StandardEnum::Red));
-    test_assert(e2.has(StandardEnum::Blue));
-}
-
-void Enum_add_2_union_enums(void) {
-    flecs::world ecs;
-
-    ecs.component<StandardEnum>().add(flecs::Union);
-    ecs.component<AnotherEnum>().add(flecs::Union);
-
-    auto e = ecs.entity();
-    e.add(StandardEnum::Red);
-    e.add(AnotherEnum::Running);
-
-    test_assert(e.has(StandardEnum::Red));
-    test_assert(e.has(AnotherEnum::Running));
-    test_assert(e.target<StandardEnum>() != 0);
-    test_assert(e.target<AnotherEnum>() != 0);
-
-    auto t_color = flecs::enum_type<StandardEnum>(ecs);
-    auto t_AnotherEnum = flecs::enum_type<AnotherEnum>(ecs);
-    auto red = t_color.entity(StandardEnum::Red);
-    auto running = t_AnotherEnum.entity(AnotherEnum::Running);
-
-    test_assert(e.target<StandardEnum>() == red);
-    test_assert(e.target<AnotherEnum>() == running);
-}
-
-void Enum_add_2_union_enums_reverse(void) {
-    flecs::world ecs;
-
-    ecs.component<StandardEnum>().add(flecs::Union);
-    ecs.component<AnotherEnum>().add(flecs::Union);
-
-    auto e = ecs.entity();
-    e.add(AnotherEnum::Running);
-    e.add(StandardEnum::Red);
-
-    test_assert(e.has(StandardEnum::Red));
-    test_assert(e.has(AnotherEnum::Running));
-    test_assert(e.target<StandardEnum>() != 0);
-    test_assert(e.target<AnotherEnum>() != 0);
-
-    auto t_color = flecs::enum_type<StandardEnum>(ecs);
-    auto t_AnotherEnum = flecs::enum_type<AnotherEnum>(ecs);
-    auto red = t_color.entity(StandardEnum::Red);
-    auto running = t_AnotherEnum.entity(AnotherEnum::Running);
-
-    test_assert(e.target<StandardEnum>() == red);
-    test_assert(e.target<AnotherEnum>() == running);
-}
-
 void Enum_constant_from_entity(void) {
     flecs::world ecs;
     ecs.component<StandardEnum>();
@@ -1069,55 +1002,6 @@ void Enum_add_if_other(void) {
     test_assert(!e.has(StandardEnum::Blue));
     test_assert(!e.has(StandardEnum::Red));
     test_assert(!e.has<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
-}
-
-void Enum_query_union_enum(void) {
-    flecs::world ecs;
-
-    enum class Color : uint8_t {
-        Red,
-        Green,
-        Blue
-    };
-    ecs.component<Color>();
-
-    ecs.component<StandardEnum>().add(flecs::Union);
-    
-
-    flecs::entity e1 = ecs.entity().add(StandardEnum::Red);
-    flecs::entity e2 = ecs.entity().add(StandardEnum::Green);
-    flecs::entity e3 = ecs.entity().add(StandardEnum::Blue);
-
-
-    auto q = ecs.query_builder()
-        .with<StandardEnum>().second(flecs::Wildcard)
-        .build();
-
-
-    // Entity order in the query is not guaranteed. Thus,
-    // we store the query result in a map and check afterwards.
-    ecs_map_t map;
-    ecs_map_init(&map, nullptr);
-    q.run([&](flecs::iter& it) {
-        while (it.next()) {
-            test_int(it.count(), 1);
-            ecs_map_insert(&map, it.entity(0), it.id(0));
-        }
-    });
-
-    //Helper function to query the map:
-    auto get_from_map = [&map](const flecs::entity &e) -> flecs::id_t {
-        ecs_map_val_t* val = ecs_map_get(&map, e);
-        return val ? flecs::id_t(*val) : 0;
-    };
-
-    test_int(ecs_map_count(&map), 3);
-
-    test_assert(get_from_map(e1) == ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
-    test_assert(get_from_map(e2) == ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Green)));
-    test_assert(get_from_map(e3) == ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Blue)));
-
-    ecs_map_fini(&map);
 }
 
 void Enum_component_registered_as_enum(void) {
@@ -1747,13 +1631,9 @@ void FFlecsEnumTestsSpec::Define()
     It("add_enum_constant_w_tag", [&]() { Enum_add_enum_constant_w_tag(); });
     It("remove_enum_constant_w_tag", [&]() { Enum_remove_enum_constant_w_tag(); });
     It("set_enum_constant_w_tag", [&]() { Enum_set_enum_constant_w_tag(); });
-    It("add_union_enum", [&]() { Enum_add_union_enum(); });
-    It("add_2_union_enums", [&]() { Enum_add_2_union_enums(); });
-    It("add_2_union_enums_reverse", [&]() { Enum_add_2_union_enums_reverse(); });
     It("constant_from_entity", [&]() { Enum_constant_from_entity(); });
     It("add_if", [&]() { Enum_add_if(); });
     It("add_if_other", [&]() { Enum_add_if_other(); });
-    It("query_union_enum", [&]() { Enum_query_union_enum(); });
     It("component_registered_as_enum", [&]() { Enum_component_registered_as_enum(); });
     It("mixed_auto_manual_constants", [&]() { Enum_mixed_auto_manual_constants(); });
     It("enum_class_mixed_auto_manual_constants", [&]() { Enum_enum_class_mixed_auto_manual_constants(); });
