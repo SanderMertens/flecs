@@ -124,6 +124,12 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### Extermination Shock
 [![image](docs/img/projects/extermination_shock.png)](https://store.steampowered.com/app/2510820/Extermination_Shock/)
 
+### ECS survivors
+[![image](docs/img/projects/ecs_survivors.png)](https://laurent-voisard.itch.io/ecs-survivors/)
+
+### Ascendant
+[![image](docs/img/projects/ascendant.jpg)](https://vkguide.dev/docs/ascendant/)
+
 ### Tome Tumble Tournament
 [![image](docs/img/projects/tome_tumble.png)](https://terzalo.itch.io/tome-tumble-tournament)
 
