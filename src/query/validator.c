@@ -1609,6 +1609,8 @@ bool flecs_query_finalize_simple(
 
         if (term->src.id == (EcsThis|EcsSelf|EcsIsVariable)) {
             cmp_term.src.id = EcsThis|EcsSelf|EcsIsVariable;
+        } else if (term->src.id == EcsSelf) {
+            cmp_term.src.id = EcsSelf;
         }
 
         if (term->first.id == (term->id|EcsSelf|EcsIsEntity)) {
@@ -1646,6 +1648,8 @@ bool flecs_query_finalize_simple(
             term->second.id = second | EcsIsEntity | EcsSelf;
         }
 
+        bool is_self = term->src.id == EcsSelf;
+
         term->field_index = i;
         term->first.id = first | EcsIsEntity | EcsSelf;
         term->src.id = EcsThis | EcsIsVariable | EcsSelf;
@@ -1671,7 +1675,7 @@ bool flecs_query_finalize_simple(
                 q->data_fields |= (ecs_termset_t)(1llu << i);
             }
 
-            if (cr->flags & EcsIdOnInstantiateInherit) {
+            if (!is_self && cr->flags & EcsIdOnInstantiateInherit) {
                 term->src.id |= EcsUp;
                 term->trav = EcsIsA;
                 up_count ++;
