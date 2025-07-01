@@ -1127,6 +1127,30 @@ void flecs_ordered_children_reorder(
     const ecs_entity_t *children,
     int32_t child_count);
 
+/* Directly add child to ordered children array. */
+void flecs_ordered_entities_append(
+    ecs_world_t *world,
+    ecs_pair_record_t *pair,
+    ecs_entity_t e);
+
+/* Directly remove child from ordered children array. */
+void flecs_ordered_entities_remove(
+    ecs_pair_record_t *pair,
+    ecs_entity_t e);
+
+#endif
+
+/**
+ * @file storage/non_fragmenting_childof.h
+ * @brief Non-fragmenting storage for hierarchies.
+ */
+
+#ifndef FLECS_NON_FRAGMENTING_CHILDOF
+#define FLECS_NON_FRAGMENTING_CHILDOF
+
+void flecs_bootstrap_parent_component(
+    ecs_world_t *world);
+
 #endif
 
  /**
@@ -5204,6 +5228,7 @@ void flecs_bootstrap(
     
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_entity_name(world);
+    flecs_bootstrap_parent_component(world);
 
     /* Register constant tag */
     ecs_component(world, {
@@ -38741,6 +38766,48 @@ const uint64_t* flecs_entity_index_ids(
 }
 
 
+static
+void flecs_on_parent(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsParent *p = ecs_field(it, EcsParent, 0);
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t parent = p[i].value;
+
+        ecs_component_record_t *cr = flecs_components_get(world, 
+            ecs_pair(EcsChildOf, parent));
+
+        if (it->event == EcsOnSet) {
+            ecs_check(cr != NULL, ECS_INVALID_OPERATION, 
+                "entity set in Parent component must have OrderedChildren trait");
+            ecs_check(cr->flags & EcsIdOrderedChildren, ECS_INVALID_OPERATION, 
+                "entity set in Parent component must have OrderedChildren trait");
+            ecs_check(parent != 0, ECS_INVALID_OPERATION, 
+                "cannot set Parent component with 0 entity");
+            ecs_check(ecs_is_alive(world, parent), ECS_INVALID_OPERATION, 
+                "cannot set Parent component to entity that is not alive");
+            flecs_ordered_entities_append(world, cr->pair, it->entities[i]);
+        } else if (cr) {
+            ecs_assert(it->event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
+            flecs_ordered_entities_remove(cr->pair, it->entities[i]);
+        }
+    error:
+        continue;
+    }
+}
+
+void flecs_bootstrap_parent_component(
+    ecs_world_t *world)
+{
+    flecs_type_info_init(world, EcsParent, { 
+        .ctor = flecs_default_ctor,
+        .on_set = flecs_on_parent,
+        .on_remove = flecs_on_parent
+    });
+}
+
+
 void flecs_ordered_children_init(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -38788,7 +38855,6 @@ void flecs_ordered_children_clear(
     ecs_vec_clear(v);
 }
 
-static
 void flecs_ordered_entities_append(
     ecs_world_t *world,
     ecs_pair_record_t *pair,
@@ -38800,7 +38866,6 @@ void flecs_ordered_entities_append(
         &world->allocator, &pair->ordered_children, ecs_entity_t)[0] = e;
 }
 
-static
 void flecs_ordered_entities_remove(
     ecs_pair_record_t *pair,
     ecs_entity_t e)
