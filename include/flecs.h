@@ -32,8 +32,8 @@
 
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
-#define FLECS_VERSION_MINOR 0  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 5  /**< Flecs patch version. */
+#define FLECS_VERSION_MINOR 1  /**< Flecs minor version. */
+#define FLECS_VERSION_PATCH 0  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
@@ -3007,6 +3007,20 @@ void ecs_set_child_order(
     ecs_entity_t parent,
     const ecs_entity_t *children,
     int32_t child_count);
+
+/** Get ordered children.
+ * If a parent has the OrderedChildren trait, this operation can be used to
+ * obtain the array with child entities. If this operation is used on a parent
+ * that does not have the OrderedChildren trait, it will fail.asm
+ * 
+ * @param world The world.
+ * @param parent The parent.
+ * @return The array with child entities.
+ */
+FLECS_API
+ecs_entities_t ecs_get_ordered_children(
+    const ecs_world_t *world,
+    ecs_entity_t parent);
 
 /** @} */
 
