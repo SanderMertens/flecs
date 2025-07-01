@@ -97,6 +97,60 @@ using std::is_volatile;
 using std::is_same;
 using std::is_enum;
 
+// GCC 4.9.2 compatibility: missing C++11 type traits
+#if defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 9)
+// Direct implementations for missing type traits in GCC 4.9.2
+} // namespace flecs
+
+namespace std {
+    // Only implement the ones that are actually missing in GCC 4.9.2
+    template<typename T>
+    struct is_trivially_constructible {
+        static const bool value = __is_pod(T);
+    };
+
+    template<typename T>
+    struct is_trivially_move_assignable {
+        static const bool value = __is_pod(T);
+    };
+
+    template<typename T>
+    struct is_trivially_copy_assignable {
+        static const bool value = __is_pod(T);
+    };
+
+    template<typename T>
+    struct is_trivially_copy_constructible {
+        static const bool value = __is_pod(T);
+    };
+
+    template<typename T>
+    struct is_trivially_move_constructible {
+        static const bool value = __is_pod(T);
+    };
+
+    template<typename T>
+    struct is_trivially_copyable {
+        static const bool value = __is_pod(T);
+    };
+}
+
+namespace flecs {
+#else
+using std::is_trivially_constructible;
+using std::is_trivially_move_assignable;
+using std::is_trivially_copy_assignable;
+using std::is_trivially_copy_constructible;
+using std::is_trivially_move_constructible;
+using std::is_trivially_copyable;
+#endif
+
+// These exist in GCC 4.9.2, so we can always use them
+using std::is_move_assignable;
+using std::is_move_constructible;
+using std::is_copy_constructible;
+using std::is_trivially_destructible;
+
 // Determine constness even if T is a pointer type
 template <typename T>
 using is_const_p = is_const< remove_pointer_t<T> >;
