@@ -26,6 +26,7 @@
 #include "storage/table.h"
 #include "storage/sparse_storage.h"
 #include "storage/ordered_children.h"
+#include "storage/non_fragmenting_childof.h"
 #include "query/query.h"
 #include "component_actions.h"
 #include "entity_name.h"

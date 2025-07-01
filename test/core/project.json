@@ -700,6 +700,16 @@
                 "child_of_component_w_sparse_exclusive"
             ]
         }, {
+            "id": "NonFragmentingChildOf",
+            "testcases": [ 
+                "set_parent_no_ordered_children",
+                "set_0_parent",
+                "set_parent",
+                "remove_parent",
+                "clear_child",
+                "delete_child"
+            ]
+        }, {
             "id": "Hierarchies",
             "setup": true,
             "testcases": [
