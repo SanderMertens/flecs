@@ -2508,6 +2508,12 @@ bool ecs_table_has_flags(
     return (table->flags & flags) == flags;
 }
 
+bool ecs_table_has_traversable(
+    const ecs_table_t *table)
+{
+    return table->_->traversable_count != 0;
+}
+
 void ecs_table_swap_rows(
     ecs_world_t* world,
     ecs_table_t* table,

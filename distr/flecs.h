@@ -9709,6 +9709,17 @@ bool ecs_table_has_flags(
     ecs_table_t *table,
     ecs_flags32_t flags);
 
+/** Check if table has traversable entities.
+ * Traversable entities are entities that are used as target in a pair with a
+ * relationship that has the Traversable trait.
+ * 
+ * @param table The table.
+ * @return Whether the table has traversable entities.
+ */
+FLECS_API
+bool ecs_table_has_traversable(
+    const ecs_table_t *table);
+
 /** Swaps two elements inside the table. This is useful for implementing custom
  * table sorting algorithms.
  * @param world The world
