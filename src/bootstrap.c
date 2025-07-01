@@ -1277,6 +1277,7 @@ void flecs_bootstrap(
     
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_entity_name(world);
+    flecs_bootstrap_parent_component(world);
 
     /* Register constant tag */
     ecs_component(world, {

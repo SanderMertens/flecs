@@ -637,6 +637,14 @@ void Sparse_entity_w_sparse_pair_to_recycled_child_delete_child_exclusive(void);
 void Sparse_entity_w_sparse_pair_to_recycled_child_delete_parent_exclusive(void);
 void Sparse_fini_w_sparse_tgt_in_module(void);
 
+// Testsuite 'NonFragmentingChildOf'
+void NonFragmentingChildOf_set_parent_no_ordered_children(void);
+void NonFragmentingChildOf_set_0_parent(void);
+void NonFragmentingChildOf_set_parent(void);
+void NonFragmentingChildOf_remove_parent(void);
+void NonFragmentingChildOf_clear_child(void);
+void NonFragmentingChildOf_delete_child(void);
+
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
 void Hierarchies_empty_scope(void);
@@ -5162,6 +5170,33 @@ bake_test_case Sparse_testcases[] = {
     {
         "fini_w_sparse_tgt_in_module",
         Sparse_fini_w_sparse_tgt_in_module
+    }
+};
+
+bake_test_case NonFragmentingChildOf_testcases[] = {
+    {
+        "set_parent_no_ordered_children",
+        NonFragmentingChildOf_set_parent_no_ordered_children
+    },
+    {
+        "set_0_parent",
+        NonFragmentingChildOf_set_0_parent
+    },
+    {
+        "set_parent",
+        NonFragmentingChildOf_set_parent
+    },
+    {
+        "remove_parent",
+        NonFragmentingChildOf_remove_parent
+    },
+    {
+        "clear_child",
+        NonFragmentingChildOf_clear_child
+    },
+    {
+        "delete_child",
+        NonFragmentingChildOf_delete_child
     }
 };
 
@@ -13347,6 +13382,13 @@ static bake_test_suite suites[] = {
         Sparse_params
     },
     {
+        "NonFragmentingChildOf",
+        NULL,
+        NULL,
+        6,
+        NonFragmentingChildOf_testcases
+    },
+    {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
@@ -13594,5 +13636,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("core", argc, argv, suites, 47);
+    return bake_test_run("core", argc, argv, suites, 48);
 }
