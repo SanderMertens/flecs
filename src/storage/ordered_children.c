@@ -47,7 +47,6 @@ void flecs_ordered_children_clear(
     ecs_vec_clear(v);
 }
 
-static
 void flecs_ordered_entities_append(
     ecs_world_t *world,
     ecs_pair_record_t *pair,
@@ -59,7 +58,6 @@ void flecs_ordered_entities_append(
         &world->allocator, &pair->ordered_children, ecs_entity_t)[0] = e;
 }
 
-static
 void flecs_ordered_entities_remove(
     ecs_pair_record_t *pair,
     ecs_entity_t e)

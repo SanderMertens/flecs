@@ -47,4 +47,15 @@ void flecs_ordered_children_reorder(
     const ecs_entity_t *children,
     int32_t child_count);
 
+/* Directly add child to ordered children array. */
+void flecs_ordered_entities_append(
+    ecs_world_t *world,
+    ecs_pair_record_t *pair,
+    ecs_entity_t e);
+
+/* Directly remove child from ordered children array. */
+void flecs_ordered_entities_remove(
+    ecs_pair_record_t *pair,
+    ecs_entity_t e);
+
 #endif
