@@ -112,13 +112,19 @@ void* ecs_field_w_size(
         void *ptr = it->ptrs[index];
         if (ptr) {
 #ifdef FLECS_DEBUG
-            /* Make sure that address in ptrs array is the same as what this 
-             * function would have returned if no ptrs array was set. */
-            void **temp_ptrs = it->ptrs;
-            ECS_CONST_CAST(ecs_iter_t*, it)->ptrs = NULL;
-            ecs_assert(ptr == ecs_field_w_size(it, size, index), 
-                ECS_INTERNAL_ERROR, NULL);
-            ECS_CONST_CAST(ecs_iter_t*, it)->ptrs = temp_ptrs;
+            if (it->trs[index]) {
+                /* Make sure that address in ptrs array is the same as what this 
+                * function would have returned if no ptrs array was set. */
+                void **temp_ptrs = it->ptrs;
+                ECS_CONST_CAST(ecs_iter_t*, it)->ptrs = NULL;
+                ecs_assert(ptr == ecs_field_w_size(it, size, index), 
+                    ECS_INTERNAL_ERROR, NULL);
+                ECS_CONST_CAST(ecs_iter_t*, it)->ptrs = temp_ptrs;
+            } else {
+                /* We're just passing in a pointer to a value that may not be
+                 * a component on the entity (such as a pointer to a new value
+                 * in an on_replace hook). */
+            }
 #endif
             return ptr;
         }
@@ -132,7 +138,8 @@ void* ecs_field_w_size(
 
     ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
     ecs_assert(!(cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
-        "use ecs_field_at to access fields for sparse components");
+        "field %d: use ecs_field_at to access fields for sparse components", 
+        index);
     (void)cr;
 
     ecs_entity_t src = it->sources[index];
@@ -152,7 +159,7 @@ void* ecs_field_w_size(
 
     int32_t column_index = tr->column;
     ecs_assert(column_index != -1, ECS_NOT_A_COMPONENT, 
-        "only components can be fetched with fields");
+        "field %d: only components can be fetched with fields", index);
     ecs_assert(column_index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
 

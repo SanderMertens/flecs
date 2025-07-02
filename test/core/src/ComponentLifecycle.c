@@ -4018,3 +4018,121 @@ void ComponentLifecycle_equals_flags(void) {
 
     ecs_fini(world);
 }
+
+static int replace_Position_invoked = 0;
+
+static
+void replace_Position(ecs_iter_t *it) {
+    Position *old = ecs_field(it, Position, 0);
+    Position *new = ecs_field(it, Position, 1);
+
+    test_int(it->count, 1);
+
+    switch(replace_Position_invoked) {
+    case 0:
+        test_int(old->x, 0); test_int(old->y, 0);
+        test_int(new->x, 10); test_int(new->y, 20);
+        break;
+    case 1:
+        test_int(old->x, 10); test_int(old->y, 20);
+        test_int(new->x, 11); test_int(new->y, 21);
+        break;
+    default:
+        test_assert(false);
+        break;
+    }
+
+    replace_Position_invoked ++;
+}
+
+void ComponentLifecycle_on_replace_w_get_mut(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_get_mut(world, e, Position);
+}
+
+void ComponentLifecycle_on_replace_w_ensure(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_ensure(world, e, Position);
+}
+
+void ComponentLifecycle_on_replace_w_emplace(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_emplace(world, e, Position, NULL);
+}
+
+void ComponentLifecycle_on_replace_w_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_replace_w_set_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+
+    ecs_set(world, e, Position, {11, 21});
+    test_int(replace_Position_invoked, 2);
+
+    ecs_fini(world);
+}

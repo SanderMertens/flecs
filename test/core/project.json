@@ -1321,7 +1321,12 @@
                 "ctor_move_dtor_flags",
                 "move_dtor_flags",
                 "cmp_flags",
-                "equals_flags"
+                "equals_flags",
+                "on_replace_w_get_mut",
+                "on_replace_w_ensure",
+                "on_replace_w_emplace",
+                "on_replace_w_set",
+                "on_replace_w_set_existing"
             ]
         }, {
             "id": "Pairs",
@@ -2529,7 +2534,15 @@
                 "batch_w_two_named_entities_one_reparent",
                 "batch_w_two_named_entities_one_reparent_w_remove",
                 "batch_new_w_parent_w_name",
-                "enable_component_from_stage"
+                "enable_component_from_stage",
+                "on_replace_w_set",
+                "on_replace_w_set_twice",
+                "on_replace_w_set_existing",
+                "on_replace_w_set_existing_twice",
+                "on_replace_w_set_batched",
+                "on_replace_w_set_batched_twice",
+                "on_replace_w_set_batched_existing",
+                "on_replace_w_set_batched_existing_twice"
             ]
         }, {
             "id": "SingleThreadStaging",

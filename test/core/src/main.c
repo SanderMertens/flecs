@@ -1263,6 +1263,11 @@ void ComponentLifecycle_ctor_move_dtor_flags(void);
 void ComponentLifecycle_move_dtor_flags(void);
 void ComponentLifecycle_cmp_flags(void);
 void ComponentLifecycle_equals_flags(void);
+void ComponentLifecycle_on_replace_w_get_mut(void);
+void ComponentLifecycle_on_replace_w_ensure(void);
+void ComponentLifecycle_on_replace_w_emplace(void);
+void ComponentLifecycle_on_replace_w_set(void);
+void ComponentLifecycle_on_replace_w_set_existing(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -2443,6 +2448,14 @@ void Commands_batch_w_two_named_entities_one_reparent(void);
 void Commands_batch_w_two_named_entities_one_reparent_w_remove(void);
 void Commands_batch_new_w_parent_w_name(void);
 void Commands_enable_component_from_stage(void);
+void Commands_on_replace_w_set(void);
+void Commands_on_replace_w_set_twice(void);
+void Commands_on_replace_w_set_existing(void);
+void Commands_on_replace_w_set_existing_twice(void);
+void Commands_on_replace_w_set_batched(void);
+void Commands_on_replace_w_set_batched_twice(void);
+void Commands_on_replace_w_set_batched_existing(void);
+void Commands_on_replace_w_set_batched_existing_twice(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -7471,6 +7484,26 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "equals_flags",
         ComponentLifecycle_equals_flags
+    },
+    {
+        "on_replace_w_get_mut",
+        ComponentLifecycle_on_replace_w_get_mut
+    },
+    {
+        "on_replace_w_ensure",
+        ComponentLifecycle_on_replace_w_ensure
+    },
+    {
+        "on_replace_w_emplace",
+        ComponentLifecycle_on_replace_w_emplace
+    },
+    {
+        "on_replace_w_set",
+        ComponentLifecycle_on_replace_w_set
+    },
+    {
+        "on_replace_w_set_existing",
+        ComponentLifecycle_on_replace_w_set_existing
     }
 };
 
@@ -12105,6 +12138,38 @@ bake_test_case Commands_testcases[] = {
     {
         "enable_component_from_stage",
         Commands_enable_component_from_stage
+    },
+    {
+        "on_replace_w_set",
+        Commands_on_replace_w_set
+    },
+    {
+        "on_replace_w_set_twice",
+        Commands_on_replace_w_set_twice
+    },
+    {
+        "on_replace_w_set_existing",
+        Commands_on_replace_w_set_existing
+    },
+    {
+        "on_replace_w_set_existing_twice",
+        Commands_on_replace_w_set_existing_twice
+    },
+    {
+        "on_replace_w_set_batched",
+        Commands_on_replace_w_set_batched
+    },
+    {
+        "on_replace_w_set_batched_twice",
+        Commands_on_replace_w_set_batched_twice
+    },
+    {
+        "on_replace_w_set_batched_existing",
+        Commands_on_replace_w_set_batched_existing
+    },
+    {
+        "on_replace_w_set_batched_existing_twice",
+        Commands_on_replace_w_set_batched_existing_twice
     }
 };
 
@@ -12916,7 +12981,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        122,
+        127,
         ComponentLifecycle_testcases
     },
     {
@@ -13014,7 +13079,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        159,
+        167,
         Commands_testcases
     },
     {

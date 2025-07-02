@@ -478,14 +478,15 @@ void Set_get_mut_existing(void) {
 }
 
 void Set_get_mut_tag(void) {
+    install_test_abort();
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
     ecs_entity_t e = ecs_new_w(world, Foo);
-    test_assert(NULL == ecs_get_mut_id(world, e, Foo));
-    
-    ecs_fini(world);
+
+    test_expect_abort();
+    ecs_get_mut_id(world, e, Foo);
 }
 
 void Set_get_mut_pair(void) {

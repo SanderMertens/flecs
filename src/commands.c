@@ -421,6 +421,13 @@ void* flecs_defer_set(
             }
         }
     } else if (value) {
+        if (ti->hooks.on_replace) {
+            ecs_record_t *r = flecs_entities_get(world, entity);
+            flecs_invoke_replace_hook(
+                world, table, ECS_RECORD_TO_ROW(r->row), entity, id, 
+                cmd_value, value, ti);
+        }
+
         /* If component exists and value is provided, copy */
         ecs_copy_t copy = ti->hooks.copy;
         if (copy) {
@@ -877,30 +884,37 @@ void flecs_cmd_batch_for_entity(
             switch(cmd->kind) {
             case EcsCmdSet:
             case EcsCmdEnsure: {
-                flecs_component_ptr_t ptr = {0};
+                int32_t row = ECS_RECORD_TO_ROW(r->row);
+
+                flecs_component_ptr_t dst = {0};
                 if (r->table) {
                     ecs_component_record_t *cr = flecs_components_get(world, cmd->id);
-                    ptr = flecs_get_component_ptr(
-                        r->table, ECS_RECORD_TO_ROW(r->row), cr);
+                    dst = flecs_get_component_ptr(r->table, row, cr);
                 }
 
                 /* It's possible that even though the component was set, the
                  * command queue also contained a remove command, so before we
                  * do anything ensure the entity actually has the component. */
-                if (ptr.ptr) {
-                    const ecs_type_info_t *ti = ptr.ti;
-                    ecs_move_t move = ti->hooks.move;
-                    if (move) {
-                        move(ptr.ptr, cmd->is._1.value, 1, ti);
-                        ecs_xtor_t dtor = ti->hooks.dtor;
-                        if (dtor) {
-                            dtor(cmd->is._1.value, 1, ti);
-                        }
-                    } else {
-                        ecs_os_memcpy(ptr.ptr, cmd->is._1.value, ti->size);
+                if (dst.ptr) {
+                    void *ptr = cmd->is._1.value;
+                    const ecs_type_info_t *ti = dst.ti;
+                    if (ti->hooks.on_replace) {
+                        flecs_invoke_replace_hook(world, r->table, row, entity, 
+                            cmd->id, dst.ptr, ptr, ti);
                     }
 
-                    flecs_stack_free(cmd->is._1.value, cmd->is._1.size);
+                    ecs_move_t move = ti->hooks.move;
+                    if (move) {
+                        move(dst.ptr, ptr, 1, ti);
+                        ecs_xtor_t dtor = ti->hooks.dtor;
+                        if (dtor) {
+                            dtor(ptr, 1, ti);
+                        }
+                    } else {
+                        ecs_os_memcpy(dst.ptr, ptr, ti->size);
+                    }
+
+                    flecs_stack_free(ptr, cmd->is._1.size);
                     cmd->is._1.value = NULL;
 
                     if (cmd->kind == EcsCmdSet) {

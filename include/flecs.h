@@ -976,6 +976,12 @@ struct ecs_type_hooks_t {
      * destructor is invoked. */
     ecs_iter_action_t on_remove;
 
+    /** Callback that is invoked with the existing and new value before the
+     * value is assigned. Invoked after on_add and before on_set. Registering
+     * an on_replace hook prevents using operations that return a mutable 
+     * pointer to the component like get_mut, ensure and emplace. */
+    ecs_iter_action_t on_replace;
+
     void *ctx;                         /**< User defined context */
     void *binding_ctx;                 /**< Language binding context */
     void *lifecycle_ctx;               /**< Component lifecycle context (see meta add-on)*/

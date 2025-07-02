@@ -284,6 +284,7 @@ void ecs_set_hooks_id(
     if (h->on_add) ti->hooks.on_add = h->on_add;
     if (h->on_remove) ti->hooks.on_remove = h->on_remove;
     if (h->on_set) ti->hooks.on_set = h->on_set;
+    if (h->on_replace) ti->hooks.on_replace = h->on_replace;
 
     if (h->ctx) ti->hooks.ctx = h->ctx;
     if (h->binding_ctx) ti->hooks.binding_ctx = h->binding_ctx;
@@ -424,7 +425,7 @@ void ecs_set_hooks_id(
     }
 
     if (component < FLECS_HI_COMPONENT_ID) {
-        if (ti->hooks.on_set || ti->hooks.copy || ti->hooks.move) {
+        if (ti->hooks.on_set || ti->hooks.copy || ti->hooks.move || ti->hooks.on_replace) {
             world->non_trivial_set[component] = true;
         }
     }
