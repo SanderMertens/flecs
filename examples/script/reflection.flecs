@@ -28,7 +28,8 @@ struct Position {
 // scope. The Struct component has Member as default type. This means we can
 // also create a type like this, which is a bit shorter:
 struct Mass {
-  value = f32 // 'type' can be omitted since it's the first member
+  // 'type' can be omitted since it's the first member
+  value = f32
 }
 
 // Similarly we can also define an enumeration type. The default scope type for

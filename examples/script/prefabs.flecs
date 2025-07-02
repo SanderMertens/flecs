@@ -7,20 +7,19 @@
 using flecs.meta
 
 struct Attack {
-  value : f32
+  value = f32
 }
 
 struct Defense {
-  value : f32
+  value = f32
 }
 
 // To create a prefab, you can create an entity with the Prefab tag:
 SpaceShip {
-  prefab
+  Prefab
 }
 
-// Alternatively you can use the shorthand declaration syntax which has the same
-// result, and allows you to open a scope after the statement:
+// ... or use this shorthand syntax
 prefab SpaceShip {
   Attack: {50}
   Defense: {50}
