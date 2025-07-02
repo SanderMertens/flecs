@@ -14,7 +14,10 @@ int main(int argc, char *argv[]) {
 
     // Create entity, set value of position using reflection API
     ecs_entity_t ent = ecs_entity(ecs, { .name = "ent" });
-    void *ptr = ecs_ensure_id(ecs, ent, Position);
+
+    // Get type info because we need to pass in the size
+    const ecs_type_info_t *ti = ecs_get_type_info(ecs, Position);
+    void *ptr = ecs_ensure_id(ecs, ent, Position, (size_t)ti->size);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(ecs, Position, ptr);
     ecs_meta_push(&cur);          // {

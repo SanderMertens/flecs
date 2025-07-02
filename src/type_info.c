@@ -423,6 +423,11 @@ void ecs_set_hooks_id(
         ti->hooks.move_dtor = flecs_move_ctor_illegal;
     }
 
+    if (component < FLECS_HI_COMPONENT_ID) {
+        if (ti->hooks.on_set || ti->hooks.copy || ti->hooks.move) {
+            world->non_trivial_set[component] = true;
+        }
+    }
 
 error:
     return;

@@ -17,7 +17,7 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
             "operation invalid for empty type");
 
     if (!ecs_is_deferred(world)) {
-        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id));
+        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id, sizeof(T)));
         dst = FLECS_MOV(value);
 
         ecs_modified_id(world, entity, id);
@@ -34,7 +34,7 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
             "operation invalid for empty type");
 
     if (!ecs_is_deferred(world)) {
-        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id));
+        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id, sizeof(T)));
         dst = FLECS_MOV(value);
 
         ecs_modified_id(world, entity, id);

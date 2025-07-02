@@ -416,7 +416,7 @@ static
 void* thread_exclusive_access_other_ensure(void *arg) {
     ecs_world_t *world = arg;
     test_expect_abort();
-    ecs_ensure_id(world, thr_entity, thr_component);
+    ecs_ensure_id(world, thr_entity, thr_component, sizeof(Position));
     return NULL;
 }
 
