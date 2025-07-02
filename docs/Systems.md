@@ -998,14 +998,6 @@ move_sys.add::<Foo>();
 </ul>
 </div>
 
-#### Pipeline switching performance
-When running a multithreaded application, switching pipelines can be an expensive operation. The reason for this is that it requires tearing down and recreating the worker threads with the new pipeline context. For this reason it can be more efficient to use queries that allow for enabling/disabling groups of systems vs. switching pipelines.
-
-For example, the builtin pipeline excludes groups of systems from the schedule that:
-- have the `Disabled` tag
-- have a parent (module) with the `Disabled` tag
-- depend on a phase with the `Disabled` tag
-
 ### Disabling systems
 Because pipelines use regular ECS queries, adding the `EcsDisabled`/`flecs::Disabled` tag to a system entity will exclude the system from the pipeline. An application can use the `ecs_enable` function or `entity::enable`/`entity::disable` methods to enable/disable a system:
 <div class="flecs-snippet-tabs">
