@@ -564,27 +564,23 @@ void Sparse_target_for_base_sparse_component(void);
 void Sparse_exclusive_target_from_base(void);
 void Sparse_defer_ensure(void);
 void Sparse_defer_ensure_w_modified(void);
-void Sparse_defer_ensure_modified(void);
 void Sparse_defer_emplace(void);
 void Sparse_defer_emplace_w_modified(void);
 void Sparse_defer_set(void);
 void Sparse_defer_ensure_existing(void);
 void Sparse_defer_ensure_existing_twice(void);
 void Sparse_defer_ensure_w_modified_existing(void);
-void Sparse_defer_ensure_modified_existing(void);
 void Sparse_defer_emplace_existing(void);
 void Sparse_defer_emplace_w_modified_existing(void);
 void Sparse_defer_set_existing(void);
 void Sparse_defer_batched_ensure(void);
 void Sparse_defer_batched_ensure_w_modified(void);
-void Sparse_defer_batched_ensure_modified(void);
 void Sparse_defer_batched_emplace(void);
 void Sparse_defer_batched_emplace_w_modified(void);
 void Sparse_defer_batched_set(void);
 void Sparse_defer_batched_ensure_existing(void);
 void Sparse_defer_batched_ensure_existing_twice(void);
 void Sparse_defer_batched_ensure_w_modified_existing(void);
-void Sparse_defer_batched_ensure_modified_existing(void);
 void Sparse_defer_batched_emplace_existing(void);
 void Sparse_defer_batched_emplace_w_modified_existing(void);
 void Sparse_defer_batched_set_existing(void);
@@ -2155,8 +2151,6 @@ void ExclusiveAccess_other_set(void);
 void ExclusiveAccess_other_set_existing(void);
 void ExclusiveAccess_other_ensure(void);
 void ExclusiveAccess_other_ensure_existing(void);
-void ExclusiveAccess_other_ensure_modified(void);
-void ExclusiveAccess_other_ensure_modified_existing(void);
 void ExclusiveAccess_other_emplace(void);
 void ExclusiveAccess_other_emplace_existing(void);
 void ExclusiveAccess_other_defer_begin(void);
@@ -2209,8 +2203,6 @@ void ExclusiveAccess_locked_set(void);
 void ExclusiveAccess_locked_set_existing(void);
 void ExclusiveAccess_locked_ensure(void);
 void ExclusiveAccess_locked_ensure_existing(void);
-void ExclusiveAccess_locked_ensure_modified(void);
-void ExclusiveAccess_locked_ensure_modified_existing(void);
 void ExclusiveAccess_locked_emplace(void);
 void ExclusiveAccess_locked_emplace_existing(void);
 void ExclusiveAccess_locked_defer_begin(void);
@@ -4784,10 +4776,6 @@ bake_test_case Sparse_testcases[] = {
         Sparse_defer_ensure_w_modified
     },
     {
-        "defer_ensure_modified",
-        Sparse_defer_ensure_modified
-    },
-    {
         "defer_emplace",
         Sparse_defer_emplace
     },
@@ -4812,10 +4800,6 @@ bake_test_case Sparse_testcases[] = {
         Sparse_defer_ensure_w_modified_existing
     },
     {
-        "defer_ensure_modified_existing",
-        Sparse_defer_ensure_modified_existing
-    },
-    {
         "defer_emplace_existing",
         Sparse_defer_emplace_existing
     },
@@ -4834,10 +4818,6 @@ bake_test_case Sparse_testcases[] = {
     {
         "defer_batched_ensure_w_modified",
         Sparse_defer_batched_ensure_w_modified
-    },
-    {
-        "defer_batched_ensure_modified",
-        Sparse_defer_batched_ensure_modified
     },
     {
         "defer_batched_emplace",
@@ -4862,10 +4842,6 @@ bake_test_case Sparse_testcases[] = {
     {
         "defer_batched_ensure_w_modified_existing",
         Sparse_defer_batched_ensure_w_modified_existing
-    },
-    {
-        "defer_batched_ensure_modified_existing",
-        Sparse_defer_batched_ensure_modified_existing
     },
     {
         "defer_batched_emplace_existing",
@@ -10987,14 +10963,6 @@ bake_test_case ExclusiveAccess_testcases[] = {
         ExclusiveAccess_other_ensure_existing
     },
     {
-        "other_ensure_modified",
-        ExclusiveAccess_other_ensure_modified
-    },
-    {
-        "other_ensure_modified_existing",
-        ExclusiveAccess_other_ensure_modified_existing
-    },
-    {
         "other_emplace",
         ExclusiveAccess_other_emplace
     },
@@ -11201,14 +11169,6 @@ bake_test_case ExclusiveAccess_testcases[] = {
     {
         "locked_ensure_existing",
         ExclusiveAccess_locked_ensure_existing
-    },
-    {
-        "locked_ensure_modified",
-        ExclusiveAccess_locked_ensure_modified
-    },
-    {
-        "locked_ensure_modified_existing",
-        ExclusiveAccess_locked_ensure_modified_existing
     },
     {
         "locked_emplace",
@@ -12881,7 +12841,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        171,
+        167,
         Sparse_testcases,
         1,
         Sparse_params
@@ -13058,7 +13018,7 @@ static bake_test_suite suites[] = {
         "ExclusiveAccess",
         NULL,
         NULL,
-        119,
+        115,
         ExclusiveAccess_testcases
     },
     {

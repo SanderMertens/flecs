@@ -1527,6 +1527,8 @@ void ComponentLifecycle_merge_async_stage_w_emplace(void) {
 }
 
 void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1547,21 +1549,8 @@ void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void) {
     p->y = 20;
 
     ecs_defer_begin(world);
+    test_expect_abort();
     ecs_merge(async);
-    test_assert(!ecs_has(world, e, Position));
-    test_int(ctor_position, 0);
-
-    ecs_defer_end(world);
-    test_assert(ecs_has(world, e, Position));
-    test_int(ctor_position, 0);
-
-    const Position *ptr = ecs_get(world, e, Position);
-    test_int(ptr->x, 10);
-    test_int(ptr->y, 20);
-
-    ecs_stage_free(async);
-
-    ecs_fini(world);
 }
 
 static void invalid_ctor(void *ptr, int count, const ecs_type_info_t *ti) {

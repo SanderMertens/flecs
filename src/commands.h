@@ -165,16 +165,30 @@ bool flecs_defer_remove(
     ecs_entity_t entity,
     ecs_id_t id);
 
+void* flecs_defer_emplace(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_cmd_kind_t cmd_kind,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_size_t size,
+    bool *is_new);
+
+void* flecs_defer_ensure(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_size_t size);
+
 /* Insert set component command. */
 void* flecs_defer_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_cmd_kind_t op_kind,
     ecs_entity_t entity,
-    ecs_entity_t component,
+    ecs_id_t id,
     ecs_size_t size,
-    void *value,
-    bool *is_new);
+    void *value);
 
 /* Insert assign component command. */
 void* flecs_defer_assign(

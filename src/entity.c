@@ -1932,8 +1932,7 @@ void* ecs_ensure_id(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(
-            world, stage, EcsCmdEnsure, entity, id, 0, NULL, NULL);
+        return flecs_defer_ensure(world, stage, entity, id, size);
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -1943,46 +1942,6 @@ void* ecs_ensure_id(
 
     flecs_defer_end(world, stage);
     return result;
-error:
-    return NULL;
-}
-
-void* ecs_ensure_modified_id(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    ecs_dbg_assert(!flecs_component_has_on_replace(world, id), ECS_INVALID_PARAMETER,
-        "cannot call entity::set() for component with on_replace hook "
-        "(use entity::replace())");
-
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_check(flecs_defer_cmd(stage), ECS_INVALID_PARAMETER, NULL);
-
-    return flecs_defer_set(world, stage, EcsCmdSet, entity, id, 0, NULL, NULL);
-error:
-    return NULL;
-}
-
-void* ecs_get_mut_modified_id(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    ecs_dbg_assert(!flecs_component_has_on_replace(world, id), ECS_INVALID_PARAMETER,
-        "cannot call entity::assign() for component with on_replace hook "
-        "(use entity::replace())");
-
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_check(flecs_defer_cmd(stage), ECS_INVALID_PARAMETER, NULL);
-
-    return flecs_defer_assign(world, stage, entity, id);
 error:
     return NULL;
 }
@@ -2003,8 +1962,8 @@ void* ecs_emplace_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(
-            world, stage, EcsCmdEmplace, entity, id, 0, NULL, is_new);
+        return flecs_defer_emplace(
+            world, stage, EcsCmdEmplace, entity, id, 0, is_new);
     }
 
     ecs_check(is_new || !ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, 
@@ -2236,9 +2195,8 @@ void flecs_set_id_move(
     ecs_cmd_kind_t cmd_kind)
 {
     if (flecs_defer_cmd(stage)) {
-        flecs_defer_set(world, stage, cmd_kind, entity, id, 
-            flecs_utosize(size), ptr, NULL);
-        return;
+        ecs_check(false, ECS_INTERNAL_ERROR, 
+            "cannot flush a queue to a deferred stage");
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -2299,8 +2257,8 @@ void ecs_set_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_cmd(stage)) {
-        flecs_defer_set(world, stage, EcsCmdSet, entity, id, 
-            flecs_utosize(size), ECS_CONST_CAST(void*, ptr), NULL);
+        flecs_defer_set(world, stage, entity, id, flecs_utosize(size), 
+            ECS_CONST_CAST(void*, ptr));
         return;
     }
 

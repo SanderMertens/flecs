@@ -3935,39 +3935,6 @@ void Sparse_defer_ensure_w_modified(void) {
     ecs_fini(world);
 }
 
-void Sparse_defer_ensure_modified(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_add_id(world, ecs_id(Position), EcsSparse);
-    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
-
-    ecs_entity_t e = ecs_new(world);
-
-    ecs_defer_begin(world);
-
-    {
-        Position *p = ecs_ensure_modified_id(world, e, ecs_id(Position));
-        test_assert(p != NULL);
-        p->x = 10;
-        p->y = 20;
-    }
-
-    test_assert(!ecs_has(world, e, Position));
-    ecs_defer_end(world);
-    test_assert(ecs_has(world, e, Position));
-
-    {
-        const Position *p = ecs_get(world, e, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 10);
-        test_int(p->y, 20);
-    }
-
-    ecs_fini(world);
-}
-
 void Sparse_defer_set(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -4171,38 +4138,6 @@ void Sparse_defer_ensure_w_modified_existing(void) {
     ecs_fini(world);
 }
 
-void Sparse_defer_ensure_modified_existing(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_add_id(world, ecs_id(Position), EcsSparse);
-    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
-
-    ecs_entity_t e = ecs_new(world);
-    ecs_add(world, e, Position);
-
-    ecs_defer_begin(world);
-
-    {
-        Position *p = ecs_ensure_modified_id(world, e, ecs_id(Position));
-        test_assert(p != NULL);
-        p->x = 10;
-        p->y = 20;
-    }
-
-    ecs_defer_end(world);
-
-    {
-        const Position *p = ecs_get(world, e, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 10);
-        test_int(p->y, 20);
-    }
-
-    ecs_fini(world);
-}
-
 void Sparse_defer_set_existing(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -4376,56 +4311,6 @@ void Sparse_defer_batched_ensure_w_modified(void) {
         p->y = 2;
     }
     ecs_modified(world, e, Velocity);
-
-    test_assert(!ecs_has(world, e, Position));
-    test_assert(!ecs_has(world, e, Velocity));
-    ecs_defer_end(world);
-    test_assert(ecs_has(world, e, Position));
-    test_assert(ecs_has(world, e, Velocity));
-
-    {
-        const Position *p = ecs_get(world, e, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 10);
-        test_int(p->y, 20);
-    }
-    {
-        const Velocity *p = ecs_get(world, e, Velocity);
-        test_assert(p != NULL);
-        test_int(p->x, 1);
-        test_int(p->y, 2);
-    }
-
-    ecs_fini(world);
-}
-
-void Sparse_defer_batched_ensure_modified(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_add_id(world, ecs_id(Position), EcsSparse);
-    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
-    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
-    if (!fragment) ecs_add_id(world, ecs_id(Velocity), EcsDontFragment);
-
-    ecs_entity_t e = ecs_new(world);
-
-    ecs_defer_begin(world);
-
-    {
-        Position *p = ecs_ensure_modified_id(world, e, ecs_id(Position));
-        test_assert(p != NULL);
-        p->x = 10;
-        p->y = 20;
-    }
-    {
-        Velocity *p = ecs_ensure_modified_id(world, e, ecs_id(Velocity));
-        test_assert(p != NULL);
-        p->x = 1;
-        p->y = 2;
-    }
 
     test_assert(!ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
@@ -4745,54 +4630,6 @@ void Sparse_defer_batched_ensure_w_modified_existing(void) {
         p->y = 2;
     }
     ecs_modified(world, e, Velocity);
-
-    ecs_defer_end(world);
-
-    {
-        const Position *p = ecs_get(world, e, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 10);
-        test_int(p->y, 20);
-    }
-    {
-        const Velocity *p = ecs_get(world, e, Velocity);
-        test_assert(p != NULL);
-        test_int(p->x, 1);
-        test_int(p->y, 2);
-    }
-
-    ecs_fini(world);
-}
-
-void Sparse_defer_batched_ensure_modified_existing(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_add_id(world, ecs_id(Position), EcsSparse);
-    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
-    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
-    if (!fragment) ecs_add_id(world, ecs_id(Velocity), EcsDontFragment);
-
-    ecs_entity_t e = ecs_new(world);
-    ecs_add(world, e, Position);
-    ecs_add(world, e, Velocity);
-
-    ecs_defer_begin(world);
-
-    {
-        Position *p = ecs_ensure_modified_id(world, e, ecs_id(Position));
-        test_assert(p != NULL);
-        p->x = 10;
-        p->y = 20;
-    }
-    {
-        Velocity *p = ecs_ensure_modified_id(world, e, ecs_id(Velocity));
-        test_assert(p != NULL);
-        p->x = 1;
-        p->y = 2;
-    }
 
     ecs_defer_end(world);
 
