@@ -17667,6 +17667,27 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_entity_t value_type,
     size_t value_size);
 
+typedef struct ecs_cpp_get_mut_t {
+    void *ptr;
+    bool call_modified;
+} ecs_cpp_get_mut_t;
+
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_cpp_get_mut_t ecs_cpp_set(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    const void *new_ptr,
+    size_t size);
+
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_cpp_get_mut_t ecs_cpp_assign(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    const void *new_ptr,
+    size_t size);
+
 #ifdef FLECS_META
 FLECS_API
 const ecs_member_t* ecs_cpp_last_member(
@@ -21776,37 +21797,35 @@ namespace flecs
 
 /* Static helper functions to assign a component value */
 
-// set(T&&), T = not constructible
+// set(T&&)
 template <typename T>
 inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
     ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
 
-    if (!ecs_is_deferred(world)) {
-        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id, sizeof(T)));
-        dst = FLECS_MOV(value);
+    ecs_cpp_get_mut_t res = ecs_cpp_set(world, entity, id, &value, sizeof(T));
 
+    T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
+    dst = FLECS_MOV(value);
+
+    if (res.call_modified) {
         ecs_modified_id(world, entity, id);
-    } else {
-        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_modified_id(world, entity, id));
-        dst = FLECS_MOV(value);
     }
 }
 
-// set(const T&), T = not constructible
+// set(const T&)
 template <typename T>
 inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
     ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
 
-    if (!ecs_is_deferred(world)) {
-        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id, sizeof(T)));
-        dst = FLECS_MOV(value);
+    ecs_cpp_get_mut_t res = ecs_cpp_set(world, entity, id, &value, sizeof(T));
 
+    T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
+    dst = FLECS_MOV(value);
+
+    if (res.call_modified) {
         ecs_modified_id(world, entity, id);
-    } else {
-        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_modified_id(world, entity, id));
-        dst = FLECS_MOV(value);
     }
 }
 
@@ -21824,57 +21843,41 @@ inline void set(world_t *world, entity_t entity, const A& value) {
     flecs::set(world, entity, value, id);
 }
 
-// set(T&&), T = not constructible
+// assign(T&&)
 template <typename T>
 inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
     using ActualType = remove_reference_t<T>;
 
     ecs_assert(_::type<ActualType>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
+        "operation invalid for empty type");
 
-    if (!ecs_is_deferred(world)) {
-        ActualType *dst_ptr = static_cast<ActualType*>(ecs_get_mut_id(world, entity, id));
-        ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
-            "entity does not have component, use set() instead");
-        
-        ActualType& dst = *dst_ptr;
-        dst = FLECS_MOV(value);
+    ecs_cpp_get_mut_t res = ecs_cpp_assign(
+        world, entity, id, &value, sizeof(T));
 
+    T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
+    dst = FLECS_MOV(value);
+
+    if (res.call_modified) {
         ecs_modified_id(world, entity, id);
-    } else {
-        ActualType *dst_ptr = static_cast<ActualType*>(ecs_get_mut_modified_id(world, entity, id));
-        ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
-            "entity does not have component, use set() instead");
-        
-        ActualType& dst = *dst_ptr;
-        dst = FLECS_MOV(value);
     }
 }
 
-// set(const T&), T = not constructible
+// assign(const T&)
 template <typename T>
 inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
     using ActualType = remove_reference_t<T>;
 
     ecs_assert(_::type<ActualType>::size() != 0, ECS_INVALID_PARAMETER,
-            "operation invalid for empty type");
+        "operation invalid for empty type");
 
-    if (!ecs_is_deferred(world)) {
-        ActualType *dst_ptr = static_cast<ActualType*>(ecs_get_mut_id(world, entity, id));
-        ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
-            "entity does not have component, use set() instead");
-        
-        ActualType& dst = *dst_ptr;
-        dst = FLECS_MOV(value);
+    ecs_cpp_get_mut_t res = ecs_cpp_assign(
+        world, entity, id, &value, sizeof(T));
 
+    T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
+    dst = FLECS_MOV(value);
+
+    if (res.call_modified) {
         ecs_modified_id(world, entity, id);
-    } else {
-        ActualType *dst_ptr = static_cast<ActualType*>(ecs_get_mut_modified_id(world, entity, id));
-        ecs_assert(dst_ptr != nullptr, ECS_INVALID_OPERATION, 
-            "entity does not have component, use set() instead");
-        
-        ActualType& dst = *dst_ptr;
-        dst = FLECS_MOV(value);
     }
 }
 
@@ -27944,9 +27947,11 @@ struct component_binding_ctx {
     void *on_add = nullptr;
     void *on_remove = nullptr;
     void *on_set = nullptr;
+    void *on_replace = nullptr;
     ecs_ctx_free_t free_on_add = nullptr;
     ecs_ctx_free_t free_on_remove = nullptr;
     ecs_ctx_free_t free_on_set = nullptr;
+    ecs_ctx_free_t free_on_replace = nullptr;
 
     ~component_binding_ctx() {
         if (on_add && free_on_add) {
@@ -27957,6 +27962,9 @@ struct component_binding_ctx {
         }
         if (on_set && free_on_set) {
             free_on_set(on_set);
+        }
+        if (on_replace && free_on_replace) {
+            free_on_replace(on_replace);
         }
     }
 };
@@ -28223,6 +28231,14 @@ struct each_delegate : public delegate {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
             iter->callback_ctx);
         iter->callback_ctx = ctx->on_set;
+        run(iter);
+    }
+
+    // Static function to call for component on_replace hook
+    static void run_replace(ecs_iter_t *iter) {
+        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+            iter->callback_ctx);
+        iter->callback_ctx = ctx->on_replace;
         run(iter);
     }
 
@@ -29647,6 +29663,22 @@ struct component : untyped_component {
         h.on_set = Delegate::run_set;
         ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_set = _::free_obj<Delegate>;
+        set_hooks(h);
+        return *this;
+    }
+
+    /** Register on_replace hook. */
+    template <typename Func>
+    component<T>& on_replace(Func&& func) {
+        using Delegate = typename _::each_delegate<
+            typename std::decay<Func>::type, T, T>;
+        flecs::type_hooks_t h = get_hooks();
+        ecs_assert(h.on_set == nullptr, ECS_INVALID_OPERATION,
+            "on_set hook is already set");
+        BindingCtx *ctx = get_binding_ctx(h);
+        h.on_replace = Delegate::run_replace;
+        ctx->on_replace = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ctx->free_on_replace = _::free_obj<Delegate>;
         set_hooks(h);
         return *this;
     }

@@ -5766,3 +5766,292 @@ void Entity_add_remove_enum_component(void) {
     e.remove<Color>();
     test_assert(!e.has<Color>());
 }
+
+void Entity_on_replace_w_get_mut(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.component<Position>()
+        .on_replace([&](Position& prev, Position& next) {
+            invoked ++;
+        });
+
+    test_expect_abort();
+    world.entity().get_mut<Position>();
+}
+
+void Entity_on_replace_w_ensure(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.component<Position>()
+        .on_replace([&](Position& prev, Position& next) {
+            invoked ++;
+        });
+
+    test_expect_abort();
+    world.entity().ensure<Position>();
+}
+
+void Entity_on_replace_w_emplace(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.component<Position>()
+        .on_replace([&](Position& prev, Position& next) {
+            invoked ++;
+        });
+
+    test_expect_abort();
+    world.entity().emplace<Position>();
+}
+
+void Entity_on_replace_w_set(void) {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.component<Position>()
+        .on_add([&](Position& p) {
+            p.x = 0; p.y = 0;
+        })
+        .on_replace([&](Position& prev, Position& next) {
+            switch(invoked) {
+            case 0:
+                test_int(prev.x, 0); test_int(prev.y, 0);
+                test_int(next.x, 10); test_int(next.y, 20);
+                break;
+            case 1:
+                test_int(prev.x, 10); test_int(prev.y, 20);
+                test_int(next.x, 11); test_int(next.y, 21);
+                break;
+            }
+            invoked ++;
+        });
+
+    flecs::entity e = world.entity().add<Position>();
+    test_int(invoked, 0);
+
+    e.set(Position{10, 20});
+    test_int(invoked, 1);
+
+    const Position& p = e.get<Position>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_on_replace_w_set_existing(void) {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.component<Position>()
+        .on_add([&](Position& p) {
+            p.x = 0; p.y = 0;
+        })
+        .on_replace([&](Position& prev, Position& next) {
+            switch(invoked) {
+            case 0:
+                test_int(prev.x, 0); test_int(prev.y, 0);
+                test_int(next.x, 10); test_int(next.y, 20);
+                break;
+            case 1:
+                test_int(prev.x, 10); test_int(prev.y, 20);
+                test_int(next.x, 11); test_int(next.y, 21);
+                break;
+            }
+            invoked ++;
+        });
+
+    flecs::entity e = world.entity().add<Position>();
+    test_int(invoked, 0);
+
+    e.set(Position{10, 20});
+    test_int(invoked, 1);
+
+    e.set(Position{11, 21});
+    test_int(invoked, 2);
+
+    const Position& p = e.get<Position>();
+    test_int(p.x, 11);
+    test_int(p.y, 21);
+}
+
+void Entity_on_replace_w_assign(void) {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.component<Position>()
+        .on_add([&](Position& p) {
+            p.x = 0; p.y = 0;
+        })
+        .on_replace([&](Position& prev, Position& next) {
+            switch(invoked) {
+            case 0:
+                test_int(prev.x, 0); test_int(prev.y, 0);
+                test_int(next.x, 10); test_int(next.y, 20);
+                break;
+            case 1:
+                test_int(prev.x, 10); test_int(prev.y, 20);
+                test_int(next.x, 11); test_int(next.y, 21);
+                break;
+            }
+            invoked ++;
+        });
+
+    flecs::entity e = world.entity().add<Position>();
+    test_int(invoked, 0);
+
+    e.assign(Position{10, 20});
+    test_int(invoked, 1);
+
+    const Position& p = e.get<Position>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_on_replace_w_assign_existing(void) {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.component<Position>()
+        .on_add([&](Position& p) {
+            p.x = 0; p.y = 0;
+        })
+        .on_replace([&](Position& prev, Position& next) {
+            switch(invoked) {
+            case 0:
+                test_int(prev.x, 0); test_int(prev.y, 0);
+                test_int(next.x, 10); test_int(next.y, 20);
+                break;
+            case 1:
+                test_int(prev.x, 10); test_int(prev.y, 20);
+                test_int(next.x, 11); test_int(next.y, 21);
+                break;
+            }
+            invoked ++;
+        });
+
+    flecs::entity e = world.entity().add<Position>();
+    test_int(invoked, 0);
+
+    e.assign(Position{10, 20});
+    test_int(invoked, 1);
+
+    e.assign(Position{11, 21});
+    test_int(invoked, 2);
+
+    const Position& p = e.get<Position>();
+    test_int(p.x, 11);
+    test_int(p.y, 21);
+}
+
+void Entity_defer_on_replace_w_set(void) {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.component<Position>()
+        .on_add([&](Position& p) {
+            p.x = 0; p.y = 0;
+        })
+        .on_replace([&](Position& prev, Position& next) {
+            switch(invoked) {
+            case 0:
+                test_int(prev.x, 0); test_int(prev.y, 0);
+                test_int(next.x, 10); test_int(next.y, 20);
+                break;
+            case 1:
+                test_int(prev.x, 10); test_int(prev.y, 20);
+                test_int(next.x, 11); test_int(next.y, 21);
+                break;
+            }
+            invoked ++;
+        });
+
+    flecs::entity e = world.entity();
+    test_int(invoked, 0);
+
+    world.defer_begin();
+    printf("\n\n\n");
+    e.set(Position{10, 20});
+    test_int(invoked, 0);
+    world.defer_end();
+    test_int(invoked, 1);
+
+    const Position& p = e.get<Position>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_defer_on_replace_w_set_twice(void) {
+    // Implement testcase
+}
+
+void Entity_defer_on_replace_w_set_existing(void) {
+    flecs::world world;
+
+    int invoked = 0;
+
+    world.component<Position>()
+        .on_add([&](Position& p) {
+            p.x = 0; p.y = 0;
+        })
+        .on_replace([&](Position& prev, Position& next) {
+            switch(invoked) {
+            case 0:
+                test_int(prev.x, 0); test_int(prev.y, 0);
+                test_int(next.x, 10); test_int(next.y, 20);
+                break;
+            case 1:
+                test_int(prev.x, 10); test_int(prev.y, 20);
+                test_int(next.x, 11); test_int(next.y, 21);
+                break;
+            }
+            invoked ++;
+        });
+
+    flecs::entity e = world.entity().add<Position>();
+    test_int(invoked, 0);
+
+    world.defer_begin();
+    e.set(Position{10, 20});
+    test_int(invoked, 0);
+    world.defer_end();
+    test_int(invoked, 1);
+
+    const Position& p = e.get<Position>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+}
+
+void Entity_defer_on_replace_w_set_existing_twice(void) {
+    // Implement testcase
+}
+
+void Entity_defer_on_replace_w_set_batched(void) {
+    // Implement testcase
+}
+
+void Entity_defer_on_replace_w_set_batched_twice(void) {
+    // Implement testcase
+}
+
+void Entity_defer_on_replace_w_set_batched_existing(void) {
+    // Implement testcase
+}
+
+void Entity_defer_on_replace_w_set_batched_existing_twice(void) {
+    // Implement testcase
+}

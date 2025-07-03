@@ -533,7 +533,6 @@ void flecs_add_ids(
     flecs_table_diff_builder_fini(world, &diff);
 }
 
-static
 flecs_component_ptr_t flecs_ensure(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -599,6 +598,46 @@ flecs_component_ptr_t flecs_ensure(
     dst = flecs_get_component_ptr(r->table, ECS_RECORD_TO_ROW(r->row), cr);
 error:
     return dst;
+}
+
+flecs_component_ptr_t flecs_get_mut(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t id,
+    ecs_record_t *r,
+    ecs_size_t size)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
+    flecs_check_exclusive_world_access_write(world);
+
+    flecs_component_ptr_t result;
+
+    if (id < FLECS_HI_COMPONENT_ID) {
+        if (!world->non_trivial_lookup[id]) {
+            ecs_table_t *table = r->table;
+            ecs_assert(table->component_map != NULL, ECS_INTERNAL_ERROR, NULL);
+            int16_t column_index = table->component_map[id];
+            if (column_index > 0) {
+                ecs_column_t *column = &table->data.columns[column_index - 1];
+                result.ptr = ECS_ELEM(column->data, column->ti->size, 
+                    ECS_RECORD_TO_ROW(r->row));
+                result.ti = column->ti;
+                return result;
+            }
+            return (flecs_component_ptr_t){0};
+        }
+    }
+
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    return flecs_get_component_ptr(r->table, row, cr);
+error:
+    return (flecs_component_ptr_t){0};
 }
 
 void flecs_record_add_flag(
@@ -1779,15 +1818,6 @@ ecs_entity_t ecs_clone(
 error:
     return 0;
 }
-
-#define ecs_get_low_id(table, r, id)\
-    ecs_assert(table->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
-    int16_t column_index = table->component_map[id];\
-    if (column_index > 0) {\
-        ecs_column_t *column = &table->data.columns[column_index - 1];\
-        return ECS_ELEM(column->data, column->ti->size, \
-            ECS_RECORD_TO_ROW(r->row));\
-    }
 
 const void* ecs_get_id(
     const ecs_world_t *world,

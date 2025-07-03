@@ -543,3 +543,107 @@ const ecs_member_t* ecs_cpp_last_member(
 #endif
 
 #endif
+
+ecs_cpp_get_mut_t ecs_cpp_set(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    const void *new_ptr,
+    size_t size)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_cpp_get_mut_t result;
+
+    if (flecs_defer_cmd(stage)) {
+        result.ptr = flecs_defer_set(world, stage, EcsCmdSet, entity, id,
+            flecs_utosize(size), NULL, NULL);
+        /* Modified command is already inserted */
+        result.call_modified = false;
+        return result;
+    }
+
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    flecs_component_ptr_t dst = flecs_ensure(world, entity, id, r, 
+        flecs_uto(int32_t, size));
+    
+    result.ptr = dst.ptr;
+
+    if (id < FLECS_HI_COMPONENT_ID) {
+        if (!world->non_trivial_set[id]) {
+            flecs_table_mark_dirty(world, r->table, id);
+            result.call_modified = false;
+            goto done;
+        }
+    }
+
+    /* Not deferring, so need to call modified after setting the component */
+    result.call_modified = true;
+
+    if (dst.ti->hooks.on_replace) {
+        flecs_invoke_replace_hook(world, r->table, 
+            ECS_RECORD_TO_ROW(r->row), entity, id, dst.ptr, new_ptr, dst.ti);
+    }
+
+done:
+    flecs_defer_end(world, stage);
+    
+    return result;
+error:
+    return (ecs_cpp_get_mut_t){0};
+}
+
+ecs_cpp_get_mut_t ecs_cpp_assign(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    const void *new_ptr,
+    size_t size)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_cpp_get_mut_t result;
+
+    if (flecs_defer_cmd(stage)) {
+        result.ptr = flecs_defer_assign(world, stage, entity, id);
+        /* Modified command is already inserted */
+        result.call_modified = false;
+        return result;
+    }
+
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    flecs_component_ptr_t dst = flecs_get_mut(world, entity, id, r, 
+        flecs_uto(int32_t, size));
+
+    ecs_assert(dst.ptr != NULL, ECS_INVALID_OPERATION, 
+        "entity does not have component, use set() instead");
+        
+    result.ptr = dst.ptr;
+
+    if (id < FLECS_HI_COMPONENT_ID) {
+        if (!world->non_trivial_set[id]) {
+            flecs_table_mark_dirty(world, r->table, id);
+            result.call_modified = false;
+            goto done;
+        }
+    }
+
+    /* Not deferring, so need to call modified after setting the component */
+    result.call_modified = true;
+
+    if (dst.ti->hooks.on_replace) {
+        flecs_invoke_replace_hook(world, r->table, 
+            ECS_RECORD_TO_ROW(r->row), entity, id, dst.ptr, new_ptr, dst.ti);
+    }
+
+done:
+    flecs_defer_end(world, stage);
+    
+    return result;
+error:
+    return (ecs_cpp_get_mut_t){0};
+}

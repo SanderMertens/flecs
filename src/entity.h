@@ -6,10 +6,33 @@
 #ifndef FLECS_ENTITY_H
 #define FLECS_ENTITY_H
 
+#define ecs_get_low_id(table, r, id)\
+    ecs_assert(table->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
+    int16_t column_index = table->component_map[id];\
+    if (column_index > 0) {\
+        ecs_column_t *column = &table->data.columns[column_index - 1];\
+        return ECS_ELEM(column->data, column->ti->size, \
+            ECS_RECORD_TO_ROW(r->row));\
+    }
+
 typedef struct {
     const ecs_type_info_t *ti;
     void *ptr;
 } flecs_component_ptr_t;
+
+flecs_component_ptr_t flecs_ensure(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t id,
+    ecs_record_t *r,
+    ecs_size_t size);
+
+flecs_component_ptr_t flecs_get_mut(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t id,
+    ecs_record_t *r,
+    ecs_size_t size);
 
 /* Get component pointer with type info. */
 flecs_component_ptr_t flecs_get_component_ptr(
