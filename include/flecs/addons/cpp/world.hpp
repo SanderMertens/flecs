@@ -18,12 +18,12 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id));
-        dst = FLECS_MOV(value);
+        dst = FLECS_FWD(value);
 
         ecs_modified_id(world, entity, id);
     } else {
         T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_modified_id(world, entity, id));
-        dst = FLECS_MOV(value);
+        dst = FLECS_FWD(value);
     }
 }
 
@@ -35,12 +35,12 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id));
-        dst = FLECS_MOV(value);
+        dst = value;
 
         ecs_modified_id(world, entity, id);
     } else {
         T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_modified_id(world, entity, id));
-        dst = FLECS_MOV(value);
+        dst = value;
     }
 }
 
@@ -72,7 +72,7 @@ inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_
             "entity does not have component, use set() instead");
         
         ActualType& dst = *dst_ptr;
-        dst = FLECS_MOV(value);
+        dst = FLECS_FWD(value);
 
         ecs_modified_id(world, entity, id);
     } else {
@@ -81,7 +81,7 @@ inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_
             "entity does not have component, use set() instead");
         
         ActualType& dst = *dst_ptr;
-        dst = FLECS_MOV(value);
+        dst = FLECS_FWD(value);
     }
 }
 
@@ -99,7 +99,7 @@ inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs
             "entity does not have component, use set() instead");
         
         ActualType& dst = *dst_ptr;
-        dst = FLECS_MOV(value);
+        dst = value;
 
         ecs_modified_id(world, entity, id);
     } else {
@@ -108,7 +108,7 @@ inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs
             "entity does not have component, use set() instead");
         
         ActualType& dst = *dst_ptr;
-        dst = FLECS_MOV(value);
+        dst = value;
     }
 }
 

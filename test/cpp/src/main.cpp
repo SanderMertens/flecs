@@ -348,6 +348,9 @@ void Entity_iter_type(void);
 void Entity_iter_empty_type(void);
 void Entity_untyped_component_use_low_id(void);
 void Entity_add_remove_enum_component(void);
+void Entity_set_lvalue_to_mutable(void);
+void Entity_set_lvalue_to_const(void);
+void Entity_set_rvalue(void);
 
 // Testsuite 'OrderedChildren'
 void OrderedChildren_iter_no_children(void);
@@ -2936,6 +2939,18 @@ bake_test_case Entity_testcases[] = {
     {
         "add_remove_enum_component",
         Entity_add_remove_enum_component
+    },
+    {
+        "set_lvalue_to_mutable",
+        Entity_set_lvalue_to_mutable
+    },
+    {
+        "set_lvalue_to_const",
+        Entity_set_lvalue_to_const
+    },
+    {
+        "set_rvalue",
+        Entity_set_rvalue
     }
 };
 
@@ -7777,7 +7792,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        335,
+        338,
         Entity_testcases
     },
     {

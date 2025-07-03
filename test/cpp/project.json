@@ -355,7 +355,10 @@
                 "iter_type",
                 "iter_empty_type",
                 "untyped_component_use_low_id",
-                "add_remove_enum_component"
+                "add_remove_enum_component",
+                "set_lvalue_to_mutable",
+                "set_lvalue_to_const",
+                "set_rvalue"
             ]
         }, {
             "id": "OrderedChildren",
