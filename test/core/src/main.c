@@ -564,27 +564,23 @@ void Sparse_target_for_base_sparse_component(void);
 void Sparse_exclusive_target_from_base(void);
 void Sparse_defer_ensure(void);
 void Sparse_defer_ensure_w_modified(void);
-void Sparse_defer_ensure_modified(void);
 void Sparse_defer_emplace(void);
 void Sparse_defer_emplace_w_modified(void);
 void Sparse_defer_set(void);
 void Sparse_defer_ensure_existing(void);
 void Sparse_defer_ensure_existing_twice(void);
 void Sparse_defer_ensure_w_modified_existing(void);
-void Sparse_defer_ensure_modified_existing(void);
 void Sparse_defer_emplace_existing(void);
 void Sparse_defer_emplace_w_modified_existing(void);
 void Sparse_defer_set_existing(void);
 void Sparse_defer_batched_ensure(void);
 void Sparse_defer_batched_ensure_w_modified(void);
-void Sparse_defer_batched_ensure_modified(void);
 void Sparse_defer_batched_emplace(void);
 void Sparse_defer_batched_emplace_w_modified(void);
 void Sparse_defer_batched_set(void);
 void Sparse_defer_batched_ensure_existing(void);
 void Sparse_defer_batched_ensure_existing_twice(void);
 void Sparse_defer_batched_ensure_w_modified_existing(void);
-void Sparse_defer_batched_ensure_modified_existing(void);
 void Sparse_defer_batched_emplace_existing(void);
 void Sparse_defer_batched_emplace_w_modified_existing(void);
 void Sparse_defer_batched_set_existing(void);
@@ -1263,6 +1259,11 @@ void ComponentLifecycle_ctor_move_dtor_flags(void);
 void ComponentLifecycle_move_dtor_flags(void);
 void ComponentLifecycle_cmp_flags(void);
 void ComponentLifecycle_equals_flags(void);
+void ComponentLifecycle_on_replace_w_get_mut(void);
+void ComponentLifecycle_on_replace_w_ensure(void);
+void ComponentLifecycle_on_replace_w_emplace(void);
+void ComponentLifecycle_on_replace_w_set(void);
+void ComponentLifecycle_on_replace_w_set_existing(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -2150,8 +2151,6 @@ void ExclusiveAccess_other_set(void);
 void ExclusiveAccess_other_set_existing(void);
 void ExclusiveAccess_other_ensure(void);
 void ExclusiveAccess_other_ensure_existing(void);
-void ExclusiveAccess_other_ensure_modified(void);
-void ExclusiveAccess_other_ensure_modified_existing(void);
 void ExclusiveAccess_other_emplace(void);
 void ExclusiveAccess_other_emplace_existing(void);
 void ExclusiveAccess_other_defer_begin(void);
@@ -2204,8 +2203,6 @@ void ExclusiveAccess_locked_set(void);
 void ExclusiveAccess_locked_set_existing(void);
 void ExclusiveAccess_locked_ensure(void);
 void ExclusiveAccess_locked_ensure_existing(void);
-void ExclusiveAccess_locked_ensure_modified(void);
-void ExclusiveAccess_locked_ensure_modified_existing(void);
 void ExclusiveAccess_locked_emplace(void);
 void ExclusiveAccess_locked_emplace_existing(void);
 void ExclusiveAccess_locked_defer_begin(void);
@@ -2443,6 +2440,14 @@ void Commands_batch_w_two_named_entities_one_reparent(void);
 void Commands_batch_w_two_named_entities_one_reparent_w_remove(void);
 void Commands_batch_new_w_parent_w_name(void);
 void Commands_enable_component_from_stage(void);
+void Commands_on_replace_w_set(void);
+void Commands_on_replace_w_set_twice(void);
+void Commands_on_replace_w_set_existing(void);
+void Commands_on_replace_w_set_existing_twice(void);
+void Commands_on_replace_w_set_batched(void);
+void Commands_on_replace_w_set_batched_twice(void);
+void Commands_on_replace_w_set_batched_existing(void);
+void Commands_on_replace_w_set_batched_existing_twice(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -4771,10 +4776,6 @@ bake_test_case Sparse_testcases[] = {
         Sparse_defer_ensure_w_modified
     },
     {
-        "defer_ensure_modified",
-        Sparse_defer_ensure_modified
-    },
-    {
         "defer_emplace",
         Sparse_defer_emplace
     },
@@ -4799,10 +4800,6 @@ bake_test_case Sparse_testcases[] = {
         Sparse_defer_ensure_w_modified_existing
     },
     {
-        "defer_ensure_modified_existing",
-        Sparse_defer_ensure_modified_existing
-    },
-    {
         "defer_emplace_existing",
         Sparse_defer_emplace_existing
     },
@@ -4821,10 +4818,6 @@ bake_test_case Sparse_testcases[] = {
     {
         "defer_batched_ensure_w_modified",
         Sparse_defer_batched_ensure_w_modified
-    },
-    {
-        "defer_batched_ensure_modified",
-        Sparse_defer_batched_ensure_modified
     },
     {
         "defer_batched_emplace",
@@ -4849,10 +4842,6 @@ bake_test_case Sparse_testcases[] = {
     {
         "defer_batched_ensure_w_modified_existing",
         Sparse_defer_batched_ensure_w_modified_existing
-    },
-    {
-        "defer_batched_ensure_modified_existing",
-        Sparse_defer_batched_ensure_modified_existing
     },
     {
         "defer_batched_emplace_existing",
@@ -7471,6 +7460,26 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "equals_flags",
         ComponentLifecycle_equals_flags
+    },
+    {
+        "on_replace_w_get_mut",
+        ComponentLifecycle_on_replace_w_get_mut
+    },
+    {
+        "on_replace_w_ensure",
+        ComponentLifecycle_on_replace_w_ensure
+    },
+    {
+        "on_replace_w_emplace",
+        ComponentLifecycle_on_replace_w_emplace
+    },
+    {
+        "on_replace_w_set",
+        ComponentLifecycle_on_replace_w_set
+    },
+    {
+        "on_replace_w_set_existing",
+        ComponentLifecycle_on_replace_w_set_existing
     }
 };
 
@@ -10954,14 +10963,6 @@ bake_test_case ExclusiveAccess_testcases[] = {
         ExclusiveAccess_other_ensure_existing
     },
     {
-        "other_ensure_modified",
-        ExclusiveAccess_other_ensure_modified
-    },
-    {
-        "other_ensure_modified_existing",
-        ExclusiveAccess_other_ensure_modified_existing
-    },
-    {
         "other_emplace",
         ExclusiveAccess_other_emplace
     },
@@ -11168,14 +11169,6 @@ bake_test_case ExclusiveAccess_testcases[] = {
     {
         "locked_ensure_existing",
         ExclusiveAccess_locked_ensure_existing
-    },
-    {
-        "locked_ensure_modified",
-        ExclusiveAccess_locked_ensure_modified
-    },
-    {
-        "locked_ensure_modified_existing",
-        ExclusiveAccess_locked_ensure_modified_existing
     },
     {
         "locked_emplace",
@@ -12105,6 +12098,38 @@ bake_test_case Commands_testcases[] = {
     {
         "enable_component_from_stage",
         Commands_enable_component_from_stage
+    },
+    {
+        "on_replace_w_set",
+        Commands_on_replace_w_set
+    },
+    {
+        "on_replace_w_set_twice",
+        Commands_on_replace_w_set_twice
+    },
+    {
+        "on_replace_w_set_existing",
+        Commands_on_replace_w_set_existing
+    },
+    {
+        "on_replace_w_set_existing_twice",
+        Commands_on_replace_w_set_existing_twice
+    },
+    {
+        "on_replace_w_set_batched",
+        Commands_on_replace_w_set_batched
+    },
+    {
+        "on_replace_w_set_batched_twice",
+        Commands_on_replace_w_set_batched_twice
+    },
+    {
+        "on_replace_w_set_batched_existing",
+        Commands_on_replace_w_set_batched_existing
+    },
+    {
+        "on_replace_w_set_batched_existing_twice",
+        Commands_on_replace_w_set_batched_existing_twice
     }
 };
 
@@ -12816,7 +12841,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        171,
+        167,
         Sparse_testcases,
         1,
         Sparse_params
@@ -12916,7 +12941,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        122,
+        127,
         ComponentLifecycle_testcases
     },
     {
@@ -12993,7 +13018,7 @@ static bake_test_suite suites[] = {
         "ExclusiveAccess",
         NULL,
         NULL,
-        119,
+        115,
         ExclusiveAccess_testcases
     },
     {
@@ -13014,7 +13039,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        159,
+        167,
         Commands_testcases
     },
     {

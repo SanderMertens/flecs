@@ -5,6 +5,13 @@
     (((uint32_t) (x)) + ((uint32_t) (x) << 8) + ((uint32_t) (x) << 16) + \
      ((uint32_t) (x) << 24))
 
+static
+void* test_ecs_ensure(ecs_world_t *world, ecs_entity_t entity, ecs_id_t component) {
+    const ecs_type_info_t *ti = ecs_get_type_info(world, component);
+    test_assert(ti != NULL);
+    return ecs_ensure_id(world, entity, component, ti->size);
+}
+
 static 
 bool is_memory_filled_with(
     const void *ptr,
@@ -405,7 +412,7 @@ void RuntimeTypes_move(void) {
     ecs_entity_t e = ecs_new(world);
 
     test_int(0, move_calls);
-    void *ptr = ecs_ensure_id(world, e, test_struct);
+    void *ptr = test_ecs_ensure(world, e, test_struct);
     test_int(0, move_calls);
 
     /* use a cursor to set the x and s1.a field to specific numbers */
@@ -501,7 +508,7 @@ void RuntimeTypes_copy(void) {
     ecs_add_id(world, prefab, EcsPrefab);
 
     test_int(0, copy_calls);
-    void *original_ptr = ecs_ensure_id(world, prefab, test_struct);
+    void *original_ptr = test_ecs_ensure(world, prefab, test_struct);
     test_int(0, copy_calls);
 
     /* use a cursor to set the x and s1.a field to specific numbers */
@@ -1294,7 +1301,7 @@ void RuntimeTypes_vector_lifecycle(void) {
     ecs_entity_t prefab = ecs_new(world);
     ecs_add_id(world, prefab, EcsPrefab);
     ecs_vec_t *v =
-        (ecs_vec_t *) ecs_ensure_id(world, prefab, vector_of_resources);
+        (ecs_vec_t *) test_ecs_ensure(world, prefab, vector_of_resources);
     test_assert(v != NULL);
     test_assert(v->array == NULL);
     test_assert(v->count == 0);
@@ -1356,7 +1363,7 @@ void RuntimeTypes_vector_lifecycle_trivial_type(void) {
     /* Test the vector type is working: */
     ecs_entity_t prefab = ecs_new(world);
     ecs_add_id(world, prefab, EcsPrefab);
-    ecs_vec_t *v = (ecs_vec_t *) ecs_ensure_id(world, prefab, vector_of_ints);
+    ecs_vec_t *v = (ecs_vec_t *) test_ecs_ensure(world, prefab, vector_of_ints);
     test_assert(v != NULL);
     test_assert(v->array == NULL);
     test_assert(v->count == 0);
@@ -1511,7 +1518,7 @@ void RuntimeTypes_struct_with_ints(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    StructWithInts *ptr1 = ecs_ensure_id(world, e, struct_with_ints);
+    StructWithInts *ptr1 = test_ecs_ensure(world, e, struct_with_ints);
     test_memory_zero(ptr1, sizeof(StructWithInts));
     ptr1->a = 100;
     ptr1->b = 101;
@@ -1562,7 +1569,7 @@ void RuntimeTypes_struct_with_strings(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    StructWithStrings *ptr1 = ecs_ensure_id(world, e, struct_with_strings);
+    StructWithStrings *ptr1 = test_ecs_ensure(world, e, struct_with_strings);
     test_memory_zero(ptr1, sizeof(StructWithStrings));
     ptr1->a = ecs_os_strdup("String100");
     ptr1->b = 101;
@@ -1618,7 +1625,7 @@ void RuntimeTypes_struct_with_opaque(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    StructWithOpaque *ptr1 = ecs_ensure_id(world, e, struct_with_opaque);
+    StructWithOpaque *ptr1 = test_ecs_ensure(world, e, struct_with_opaque);
     test_assert(ptr1->a.id != 0);
     test_int(0, ptr1->a.value);
     ptr1->a.value = 100;
@@ -1702,7 +1709,7 @@ void RuntimeTypes_nested_struct_with_strings(void) {
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     NestedStructWithStrings *ptr1 =
-        ecs_ensure_id(world, e, nested_struct_with_strings);
+        test_ecs_ensure(world, e, nested_struct_with_strings);
     test_memory_zero(ptr1, sizeof(NestedStructWithStrings));
     ptr1->a.a = ecs_os_strdup("String100");
     ptr1->a.b = 101;
@@ -1769,7 +1776,7 @@ void RuntimeTypes_struct_with_array_of_strings(void) {
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     StructWithArrayOfStrings *ptr1 =
-        ecs_ensure_id(world, e, struct_with_array_of_strings);
+        test_ecs_ensure(world, e, struct_with_array_of_strings);
     test_memory_zero(ptr1, sizeof(StructWithArrayOfStrings));
     ptr1->a[0] = ecs_os_strdup("String100");
     ptr1->a[1] = ecs_os_strdup("String101");
@@ -1830,7 +1837,7 @@ void RuntimeTypes_struct_with_array_of_array_of_strings(void) {
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     StructWithArrayOfArrayOfStrings *ptr1 =
-        ecs_ensure_id(world, e, struct_with_array_of_array_of_strings);
+        test_ecs_ensure(world, e, struct_with_array_of_array_of_strings);
     test_memory_zero(ptr1, sizeof(StructWithArrayOfArrayOfStrings));
     int i;
     for (i = 0; i < 3; i++) {
@@ -1892,7 +1899,7 @@ void RuntimeTypes_struct_with_vector_of_ints(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    StructWithVectorOfInts *ptr1 = ecs_ensure_id(world, e, struct_with_vector_of_ints);
+    StructWithVectorOfInts *ptr1 = test_ecs_ensure(world, e, struct_with_vector_of_ints);
     test_int(0, ecs_vec_count(&ptr1->a));
     ecs_vec_set_count(NULL, &ptr1->a, sizeof(ecs_i32_t), 3);
     ecs_i32_t *va1 = ecs_vec_first(&ptr1->a);
@@ -1953,7 +1960,7 @@ void RuntimeTypes_struct_with_vector_of_strings(void) {
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     StructWithVectorOfStrings *ptr1 =
-        ecs_ensure_id(world, e, struct_with_vector_of_strings);
+        test_ecs_ensure(world, e, struct_with_vector_of_strings);
     test_int(0, ecs_vec_count(&ptr1->a));
     ecs_vec_set_count(NULL, &ptr1->a, sizeof(ecs_string_t), 3);
     ecs_string_t *va1 = ecs_vec_first(&ptr1->a);
@@ -2034,7 +2041,7 @@ void RuntimeTypes_nested_struct_with_vector_of_ints(void) {
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     NestedStructWithVectorOfInts *ptr1 =
-        ecs_ensure_id(world, e, nested_struct_with_vector_of_ints);
+        test_ecs_ensure(world, e, nested_struct_with_vector_of_ints);
     {
         test_int(0, ecs_vec_count(&ptr1->a));
         ecs_vec_set_count(NULL, &ptr1->a, sizeof(ecs_i32_t), 3);
@@ -2181,7 +2188,7 @@ void RuntimeTypes_nested_struct_with_vector_of_strings(void) {
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     NestedStructWithVectorOfStrings *ptr1 =
-        ecs_ensure_id(world, e, nested_struct_with_vector_of_strings);
+        test_ecs_ensure(world, e, nested_struct_with_vector_of_strings);
     {
         test_int(0, ecs_vec_count(&ptr1->a));
         ecs_vec_set_count(NULL, &ptr1->a, sizeof(ecs_string_t), 3);
@@ -2299,7 +2306,7 @@ void RuntimeTypes_array_of_ints(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    ecs_i32_t *arr1 = ecs_ensure_id(world, e, array_of_ints);
+    ecs_i32_t *arr1 = test_ecs_ensure(world, e, array_of_ints);
     test_memory_zero(arr1, sizeof(ecs_i32_t[3]));
     arr1[0] = 100;
     arr1[1] = 101;
@@ -2339,7 +2346,7 @@ void RuntimeTypes_array_of_strings(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    ecs_string_t *arr1 = ecs_ensure_id(world, e, array_of_strings);
+    ecs_string_t *arr1 = test_ecs_ensure(world, e, array_of_strings);
     test_memory_zero(arr1, sizeof(ecs_string_t[3]));
     arr1[0] = ecs_os_strdup("String100");
     arr1[1] = ecs_os_strdup("String101");
@@ -2392,7 +2399,7 @@ void RuntimeTypes_array_of_struct_with_ints(void) {
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     StructWithInts *arr1 =
-        ecs_ensure_id(world, e, array_of_struct_with_ints);
+        test_ecs_ensure(world, e, array_of_struct_with_ints);
     test_memory_zero(arr1, sizeof(StructWithInts[3]));
     arr1[0].a = 100;
     arr1[0].b = 101;
@@ -2458,7 +2465,7 @@ void RuntimeTypes_array_of_struct_with_strings(void) {
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     StructWithStrings *arr1 =
-        ecs_ensure_id(world, e, array_of_struct_with_strings);
+        test_ecs_ensure(world, e, array_of_struct_with_strings);
     test_memory_zero(arr1, sizeof(StructWithStrings[3]));
     arr1[0].a = ecs_os_strdup("String100");
     arr1[0].b = 101;
@@ -2535,7 +2542,7 @@ void RuntimeTypes_array_of_struct_with_opaques(void) {
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     StructWithOpaque *arr1 =
-        ecs_ensure_id(world, e, array_of_struct_with_opaques);
+        test_ecs_ensure(world, e, array_of_struct_with_opaques);
     test_assert(arr1[0].a.id != 0);
     test_int(0, arr1[0].a.value);
     arr1[0].a.value = 100;
@@ -2608,7 +2615,7 @@ void RuntimeTypes_array_of_array_of_strings(void) {
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     ecs_string_t(*arr1)[3] =
-        ecs_ensure_id(world, e, array_of_array_of_strings);
+        test_ecs_ensure(world, e, array_of_array_of_strings);
     test_memory_zero(arr1, sizeof(ecs_string_t[3][3]));
     int i;
     for (i = 0; i < 3; i++) {
@@ -2676,7 +2683,7 @@ void RuntimeTypes_array_of_array_of_struct_with_strings(void) {
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     StructWithStrings(*arr1)[3] =
-        ecs_ensure_id(world, e, array_of_array_of_struct_with_strings);
+        test_ecs_ensure(world, e, array_of_array_of_struct_with_strings);
     test_memory_zero(arr1, sizeof(StructWithStrings[3][3]));
     int i;
     for (i = 0; i < 3; i++) {
@@ -2748,7 +2755,7 @@ void RuntimeTypes_array_of_vectors_of_ints(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    ecs_vec_t *arr1 = ecs_ensure_id(world, e, array_of_vectors_of_ints);
+    ecs_vec_t *arr1 = test_ecs_ensure(world, e, array_of_vectors_of_ints);
     {
         test_int(0, ecs_vec_count(&arr1[0]));
         ecs_vec_set_count(NULL, &arr1[0], sizeof(ecs_i32_t), 3);
@@ -2859,7 +2866,7 @@ void RuntimeTypes_array_of_vectors_of_strings(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    ecs_vec_t *arr1 = ecs_ensure_id(world, e, array_of_vectors_of_strings);
+    ecs_vec_t *arr1 = test_ecs_ensure(world, e, array_of_vectors_of_strings);
     {
         test_int(0, ecs_vec_count(&arr1[0]));
         ecs_vec_set_count(NULL, &arr1[0], sizeof(ecs_string_t), 3);
@@ -2975,7 +2982,7 @@ void RuntimeTypes_array_of_opaque(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    ResourceHandle *arr1 = ecs_ensure_id(world, e, array_of_opaque);
+    ResourceHandle *arr1 = test_ecs_ensure(world, e, array_of_opaque);
     test_assert(arr1[0].id != 0);
     test_int(0, arr1[0].value);
     arr1[0].value = 100;
@@ -3042,7 +3049,7 @@ void RuntimeTypes_vector_of_ints(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e, vector_of_ints);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e, vector_of_ints);
     {
         test_int(0, ecs_vec_count(vec1));
         ecs_vec_set_count(NULL, vec1, sizeof(ecs_i32_t), 3);
@@ -3098,7 +3105,7 @@ void RuntimeTypes_vector_of_strings(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e, vector_of_strings);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e, vector_of_strings);
     {
         test_int(0, ecs_vec_count(vec1));
         ecs_vec_set_count(NULL, vec1, sizeof(ecs_string_t), 3);
@@ -3166,7 +3173,7 @@ void RuntimeTypes_vector_of_struct_with_ints(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e, vector_of_struct_with_ints);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e, vector_of_struct_with_ints);
     {
         test_int(0, ecs_vec_count(vec1));
         ecs_vec_set_count(NULL, vec1, sizeof(StructWithInts), 3);
@@ -3244,7 +3251,7 @@ void RuntimeTypes_vector_of_struct_with_strings(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e, vector_of_struct_with_strings);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e, vector_of_struct_with_strings);
     {
         test_int(0, ecs_vec_count(vec1));
         ecs_vec_set_count(NULL, vec1, sizeof(StructWithStrings), 3);
@@ -3319,7 +3326,7 @@ void RuntimeTypes_vector_of_arrays_of_strings(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e, vector_of_arrays_of_strings);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e, vector_of_arrays_of_strings);
     {
         test_int(0, ecs_vec_count(vec1));
         ecs_vec_set_count(NULL, vec1, sizeof(ecs_string_t[3]), 3);
@@ -3390,7 +3397,7 @@ void RuntimeTypes_vector_of_opaque(void) {
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e, vector_of_opaque);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e, vector_of_opaque);
     {
         test_int(0, ecs_vec_count(vec1));
         ecs_vec_set_count(NULL, vec1, sizeof(ResourceHandle), 3);

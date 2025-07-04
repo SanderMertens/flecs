@@ -362,7 +362,7 @@ void Set_ensure_tag_new(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_ensure_tag_existing(void) {
@@ -378,7 +378,7 @@ void Set_ensure_tag_existing(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_ensure_tag_new_w_comp(void) {
@@ -394,7 +394,7 @@ void Set_ensure_tag_new_w_comp(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_ensure_tag_existing_w_comp(void) {
@@ -412,7 +412,7 @@ void Set_ensure_tag_existing_w_comp(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_ensure_tag_new_w_pair(void) {
@@ -429,7 +429,7 @@ void Set_ensure_tag_new_w_pair(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_ensure_tag_existing_w_pair(void) {
@@ -448,7 +448,7 @@ void Set_ensure_tag_existing_w_pair(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_get_mut_not_existing(void) {
@@ -478,14 +478,15 @@ void Set_get_mut_existing(void) {
 }
 
 void Set_get_mut_tag(void) {
+    install_test_abort();
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
     ecs_entity_t e = ecs_new_w(world, Foo);
-    test_assert(NULL == ecs_get_mut_id(world, e, Foo));
-    
-    ecs_fini(world);
+
+    test_expect_abort();
+    ecs_get_mut_id(world, e, Foo);
 }
 
 void Set_get_mut_pair(void) {

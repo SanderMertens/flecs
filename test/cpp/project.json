@@ -355,7 +355,27 @@
                 "iter_type",
                 "iter_empty_type",
                 "untyped_component_use_low_id",
-                "add_remove_enum_component"
+                "add_remove_enum_component",
+                "on_replace_w_get_mut",
+                "on_replace_w_ensure",
+                "on_replace_w_emplace",
+                "on_replace_w_set",
+                "on_replace_w_set_existing",
+                "on_replace_w_assign",
+                "on_replace_w_assign_existing",
+                "defer_on_replace_w_set",
+                "defer_on_replace_w_set_twice",
+                "defer_on_replace_w_set_existing",
+                "defer_on_replace_w_set_existing_twice",
+                "defer_on_replace_w_set_batched",
+                "defer_on_replace_w_set_batched_twice",
+                "defer_on_replace_w_set_batched_existing",
+                "defer_on_replace_w_set_batched_existing_twice",
+                "defer_on_replace_w_assign",
+                "defer_on_replace_w_assign_existing",
+                "defer_on_replace_w_assign_existing_twice",
+                "defer_on_replace_w_assign_batched_existing",
+                "defer_on_replace_w_assign_batched_existing_twice"
             ]
         }, {
             "id": "OrderedChildren",

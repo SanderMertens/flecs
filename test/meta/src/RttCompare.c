@@ -2,6 +2,13 @@
 #include "flecs.h"
 
 static
+void* test_ecs_ensure(ecs_world_t *world, ecs_entity_t entity, ecs_id_t component) {
+    const ecs_type_info_t *ti = ecs_get_type_info(world, component);
+    test_assert(ti != NULL);
+    return ecs_ensure_id(world, entity, component, ti->size);
+}
+
+static
 int cmp(const ecs_world_t *world, ecs_entity_t component, ecs_entity_t ea,
           ecs_entity_t eb) {
     const ecs_type_info_t *ti = ecs_get_type_info(world, component);
@@ -75,15 +82,15 @@ void RttCompare_struct_with_ints(void) {
     ecs_entity_t e2 = ecs_new(world);
     ecs_entity_t e3 = ecs_new(world);
 
-    StructWithInts *ptr1 = ecs_ensure_id(world, e1, struct_with_ints);
+    StructWithInts *ptr1 = test_ecs_ensure(world, e1, struct_with_ints);
     ptr1->a = 10;
     ptr1->b = 20;
 
-    StructWithInts *ptr2 = ecs_ensure_id(world, e2, struct_with_ints);
+    StructWithInts *ptr2 = test_ecs_ensure(world, e2, struct_with_ints);
     ptr2->a = 10;
     ptr2->b = 25;
 
-    StructWithInts *ptr3 = ecs_ensure_id(world, e3, struct_with_ints);
+    StructWithInts *ptr3 = test_ecs_ensure(world, e3, struct_with_ints);
     ptr3->a = 10;
     ptr3->b = 20;
 
@@ -131,17 +138,17 @@ void RttCompare_struct_with_strings(void) {
     ecs_entity_t e2 = ecs_new(world);
     ecs_entity_t e3 = ecs_new(world);
 
-    StructWithStrings *ptr1 = ecs_ensure_id(world, e1, struct_with_strings);
+    StructWithStrings *ptr1 = test_ecs_ensure(world, e1, struct_with_strings);
     ptr1->a = ecs_os_strdup("AA");
     ptr1->b = 20;
     ptr1->c = ecs_os_strdup("CC");
 
-    StructWithStrings *ptr2 = ecs_ensure_id(world, e2, struct_with_strings);
+    StructWithStrings *ptr2 = test_ecs_ensure(world, e2, struct_with_strings);
     ptr2->a = ecs_os_strdup("AA");
     ptr2->b = 25;
     ptr2->c = ecs_os_strdup("BB");
 
-    StructWithStrings *ptr3 = ecs_ensure_id(world, e3, struct_with_strings);
+    StructWithStrings *ptr3 = test_ecs_ensure(world, e3, struct_with_strings);
     ptr3->a = ecs_os_strdup("AA");
     ptr3->b = 20;
     ptr3->c = ecs_os_strdup("CC");
@@ -188,13 +195,13 @@ void RttCompare_struct_with_opaque(void) {
     ecs_entity_t e2 = ecs_new(world);
     ecs_entity_t e3 = ecs_new(world);
 
-    StructWithOpaque *ptr1 = ecs_ensure_id(world, e1, struct_with_opaque);
+    StructWithOpaque *ptr1 = test_ecs_ensure(world, e1, struct_with_opaque);
     ptr1->a.value = 10;
 
-    StructWithOpaque *ptr2 = ecs_ensure_id(world, e2, struct_with_opaque);
+    StructWithOpaque *ptr2 = test_ecs_ensure(world, e2, struct_with_opaque);
     ptr2->a.value = 15;
 
-    StructWithOpaque *ptr3 = ecs_ensure_id(world, e3, struct_with_opaque);
+    StructWithOpaque *ptr3 = test_ecs_ensure(world, e3, struct_with_opaque);
     ptr3->a.value = 10;
 
     /* Test "less" */
@@ -255,7 +262,7 @@ void RttCompare_nested_struct_with_strings(void) {
     ecs_entity_t e2 = ecs_new(world);
     ecs_entity_t e3 = ecs_new(world);
 
-    NestedStructWithStrings *ptr1 = ecs_ensure_id(world, e1, nested_struct_with_strings);
+    NestedStructWithStrings *ptr1 = test_ecs_ensure(world, e1, nested_struct_with_strings);
     ptr1->a.a = ecs_os_strdup("AA");
     ptr1->a.b = 10;
     ptr1->a.c = ecs_os_strdup("BB");
@@ -264,7 +271,7 @@ void RttCompare_nested_struct_with_strings(void) {
     ptr1->c.b = 30;
     ptr1->c.c = ecs_os_strdup("DD");
 
-    NestedStructWithStrings *ptr2 = ecs_ensure_id(world, e2, nested_struct_with_strings);
+    NestedStructWithStrings *ptr2 = test_ecs_ensure(world, e2, nested_struct_with_strings);
     ptr2->a.a = ecs_os_strdup("AA");
     ptr2->a.b = 15;
     ptr2->a.c = ecs_os_strdup("BB");
@@ -273,7 +280,7 @@ void RttCompare_nested_struct_with_strings(void) {
     ptr2->c.b = 35;
     ptr2->c.c = ecs_os_strdup("DD");
 
-    NestedStructWithStrings *ptr3 = ecs_ensure_id(world, e3, nested_struct_with_strings);
+    NestedStructWithStrings *ptr3 = test_ecs_ensure(world, e3, nested_struct_with_strings);
     ptr3->a.a = ecs_os_strdup("AA");
     ptr3->a.b = 10;
     ptr3->a.c = ecs_os_strdup("BB");
@@ -326,35 +333,35 @@ void RttCompare_struct_with_array_of_strings(void) {
     ecs_entity_t e4 = ecs_new(world);
     ecs_entity_t e5 = ecs_new(world);
 
-    StructWithArrayOfStrings *ptr1 = ecs_ensure_id(world, e1,
+    StructWithArrayOfStrings *ptr1 = test_ecs_ensure(world, e1,
         struct_with_array_of_strings);
     ptr1->a[0] = ecs_os_strdup("AA");
     ptr1->a[1] = ecs_os_strdup("BB");
     ptr1->a[2] = ecs_os_strdup("CC");
     ptr1->b = 10;
 
-    StructWithArrayOfStrings *ptr2 = ecs_ensure_id(world, e2,
+    StructWithArrayOfStrings *ptr2 = test_ecs_ensure(world, e2,
         struct_with_array_of_strings);
     ptr2->a[0] = ecs_os_strdup("AA");
     ptr2->a[1] = ecs_os_strdup("BB");
     ptr2->a[2] = ecs_os_strdup("CC");
     ptr2->b = 20;
 
-    StructWithArrayOfStrings *ptr3 = ecs_ensure_id(world, e3,
+    StructWithArrayOfStrings *ptr3 = test_ecs_ensure(world, e3,
         struct_with_array_of_strings);
     ptr3->a[0] = ecs_os_strdup("AA");
     ptr3->a[1] = ecs_os_strdup("BB");
     ptr3->a[2] = ecs_os_strdup("CC");
     ptr3->b = 10;
 
-    StructWithArrayOfStrings *ptr4 = ecs_ensure_id(world, e4,
+    StructWithArrayOfStrings *ptr4 = test_ecs_ensure(world, e4,
         struct_with_array_of_strings);
     ptr4->a[0] = ecs_os_strdup("AA");
     ptr4->a[1] = ecs_os_strdup("ZZ");
     ptr4->a[2] = ecs_os_strdup("CC");
     ptr4->b = 10;
 
-    StructWithArrayOfStrings *ptr5 = ecs_ensure_id(world, e5,
+    StructWithArrayOfStrings *ptr5 = test_ecs_ensure(world, e5,
         struct_with_array_of_strings);
     ptr5->a[0] = ecs_os_strdup("AA");
     ptr5->a[1] = ecs_os_strdup("AA");
@@ -425,7 +432,7 @@ void RttCompare_struct_with_array_of_array_of_strings(void) {
     ecs_entity_t e4 = ecs_new(world);
     ecs_entity_t e5 = ecs_new(world);
 
-    StructWithArrayOfArrayOfStrings *ptr1 = ecs_ensure_id(world, e1,
+    StructWithArrayOfArrayOfStrings *ptr1 = test_ecs_ensure(world, e1,
         struct_with_array_of_array_of_strings);
     for (int i = 0; i < 3; i++) {
         ptr1->a[i][0] = ecs_os_strdup("AA");
@@ -434,7 +441,7 @@ void RttCompare_struct_with_array_of_array_of_strings(void) {
     }
     ptr1->b = ecs_os_strdup("DD");
 
-    StructWithArrayOfArrayOfStrings *ptr2 = ecs_ensure_id(world, e2,
+    StructWithArrayOfArrayOfStrings *ptr2 = test_ecs_ensure(world, e2,
         struct_with_array_of_array_of_strings);
     for (int i = 0; i < 3; i++) {
         ptr2->a[i][0] = ecs_os_strdup("AA");
@@ -443,7 +450,7 @@ void RttCompare_struct_with_array_of_array_of_strings(void) {
     }
     ptr2->b = ecs_os_strdup("EE");
 
-    StructWithArrayOfArrayOfStrings *ptr3 = ecs_ensure_id(world, e3,
+    StructWithArrayOfArrayOfStrings *ptr3 = test_ecs_ensure(world, e3,
         struct_with_array_of_array_of_strings);
     for (int i = 0; i < 3; i++) {
         ptr3->a[i][0] = ecs_os_strdup("AA");
@@ -452,7 +459,7 @@ void RttCompare_struct_with_array_of_array_of_strings(void) {
     }
     ptr3->b = ecs_os_strdup("DD");
 
-    StructWithArrayOfArrayOfStrings *ptr4 = ecs_ensure_id(world, e4,
+    StructWithArrayOfArrayOfStrings *ptr4 = test_ecs_ensure(world, e4,
         struct_with_array_of_array_of_strings);
     for (int i = 0; i < 3; i++) {
         ptr4->a[i][0] = ecs_os_strdup("AA");
@@ -461,7 +468,7 @@ void RttCompare_struct_with_array_of_array_of_strings(void) {
     }
     ptr4->b = ecs_os_strdup("DD");
 
-    StructWithArrayOfArrayOfStrings *ptr5 = ecs_ensure_id(world, e5,
+    StructWithArrayOfArrayOfStrings *ptr5 = test_ecs_ensure(world, e5,
         struct_with_array_of_array_of_strings);
     for (int i = 0; i < 3; i++) {
         ptr5->a[i][0] = ecs_os_strdup("XX");
@@ -528,28 +535,28 @@ void RttCompare_struct_with_vector_of_ints(void) {
     ecs_entity_t e3 = ecs_new(world);
     ecs_entity_t e4 = ecs_new(world);
 
-    StructWithVectorOfInts *ptr1 = ecs_ensure_id(world, e1, struct_with_vector_of_ints);
+    StructWithVectorOfInts *ptr1 = test_ecs_ensure(world, e1, struct_with_vector_of_ints);
     ecs_vec_set_count(NULL, &ptr1->a, sizeof(ecs_i32_t), 3);
     ecs_i32_t *v1 = ecs_vec_first(&ptr1->a);
     v1[0] = 10;
     v1[1] = 20;
     v1[2] = 30;
 
-    StructWithVectorOfInts *ptr2 = ecs_ensure_id(world, e2, struct_with_vector_of_ints);
+    StructWithVectorOfInts *ptr2 = test_ecs_ensure(world, e2, struct_with_vector_of_ints);
     ecs_vec_set_count(NULL, &ptr2->a, sizeof(ecs_i32_t), 3);
     ecs_i32_t *v2 = ecs_vec_first(&ptr2->a);
     v2[0] = 15;
     v2[1] = 25;
     v2[2] = 35;
 
-    StructWithVectorOfInts *ptr3 = ecs_ensure_id(world, e3, struct_with_vector_of_ints);
+    StructWithVectorOfInts *ptr3 = test_ecs_ensure(world, e3, struct_with_vector_of_ints);
     ecs_vec_set_count(NULL, &ptr3->a, sizeof(ecs_i32_t), 3);
     ecs_i32_t *v3 = ecs_vec_first(&ptr3->a);
     v3[0] = 10;
     v3[1] = 20;
     v3[2] = 30;
 
-    StructWithVectorOfInts *ptr4 = ecs_ensure_id(world, e4, struct_with_vector_of_ints);
+    StructWithVectorOfInts *ptr4 = test_ecs_ensure(world, e4, struct_with_vector_of_ints);
     ecs_vec_set_count(NULL, &ptr4->a, sizeof(ecs_i32_t), 2);
     ecs_i32_t *v4 = ecs_vec_first(&ptr4->a);
     v4[0] = 10;
@@ -606,28 +613,28 @@ void RttCompare_struct_with_vector_of_strings(void) {
     ecs_entity_t e3 = ecs_new(world);
     ecs_entity_t e4 = ecs_new(world);
 
-    StructWithVectorOfStrings *ptr1 = ecs_ensure_id(world, e1, struct_with_vector_of_strings);
+    StructWithVectorOfStrings *ptr1 = test_ecs_ensure(world, e1, struct_with_vector_of_strings);
     ecs_vec_set_count(NULL, &ptr1->a, sizeof(ecs_string_t), 3);
     ecs_string_t *va1 = ecs_vec_first(&ptr1->a);
     va1[0] = ecs_os_strdup("AA");
     va1[1] = ecs_os_strdup("BB");
     va1[2] = ecs_os_strdup("CC");
 
-    StructWithVectorOfStrings *ptr2 = ecs_ensure_id(world, e2, struct_with_vector_of_strings);
+    StructWithVectorOfStrings *ptr2 = test_ecs_ensure(world, e2, struct_with_vector_of_strings);
     ecs_vec_set_count(NULL, &ptr2->a, sizeof(ecs_string_t), 3);
     ecs_string_t *va2 = ecs_vec_first(&ptr2->a);
     va2[0] = ecs_os_strdup("AA");
     va2[1] = ecs_os_strdup("BB");
     va2[2] = ecs_os_strdup("DD");
 
-    StructWithVectorOfStrings *ptr3 = ecs_ensure_id(world, e3, struct_with_vector_of_strings);
+    StructWithVectorOfStrings *ptr3 = test_ecs_ensure(world, e3, struct_with_vector_of_strings);
     ecs_vec_set_count(NULL, &ptr3->a, sizeof(ecs_string_t), 3);
     ecs_string_t *va3 = ecs_vec_first(&ptr3->a);
     va3[0] = ecs_os_strdup("AA");
     va3[1] = ecs_os_strdup("BB");
     va3[2] = ecs_os_strdup("CC");
 
-    StructWithVectorOfStrings *ptr4 = ecs_ensure_id(world, e4, struct_with_vector_of_strings);
+    StructWithVectorOfStrings *ptr4 = test_ecs_ensure(world, e4, struct_with_vector_of_strings);
     ecs_vec_set_count(NULL, &ptr4->a, sizeof(ecs_string_t), 2);
     ecs_string_t *va4 = ecs_vec_first(&ptr4->a);
     va4[0] = ecs_os_strdup("AA");
@@ -704,7 +711,7 @@ void RttCompare_nested_struct_with_vector_of_ints(void) {
     ecs_entity_t e5 = ecs_new(world);
 
     /* Entity e1 */
-    NestedStructWithVectorOfInts *ptr1 = ecs_ensure_id(world, e1,
+    NestedStructWithVectorOfInts *ptr1 = test_ecs_ensure(world, e1,
         nested_struct_with_vector_of_ints);
     ecs_vec_set_count(NULL, &ptr1->a, sizeof(ecs_i32_t), 3);
     ecs_i32_t *va1 = ecs_vec_first(&ptr1->a);
@@ -724,7 +731,7 @@ void RttCompare_nested_struct_with_vector_of_ints(void) {
     vcc1[0] = 6;
 
     /* Entity e2 */
-    NestedStructWithVectorOfInts *ptr2 = ecs_ensure_id(world, e2,
+    NestedStructWithVectorOfInts *ptr2 = test_ecs_ensure(world, e2,
         nested_struct_with_vector_of_ints);
     ecs_vec_set_count(NULL, &ptr2->a, sizeof(ecs_i32_t), 3);
     ecs_i32_t *va2 = ecs_vec_first(&ptr2->a);
@@ -744,7 +751,7 @@ void RttCompare_nested_struct_with_vector_of_ints(void) {
     vcc2[0] = 6;
 
     /* Entity e3 */
-    NestedStructWithVectorOfInts *ptr3 = ecs_ensure_id(world, e3,
+    NestedStructWithVectorOfInts *ptr3 = test_ecs_ensure(world, e3,
         nested_struct_with_vector_of_ints);
     ecs_vec_set_count(NULL, &ptr3->a, sizeof(ecs_i32_t), 3);
     ecs_i32_t *va3 = ecs_vec_first(&ptr3->a);
@@ -764,7 +771,7 @@ void RttCompare_nested_struct_with_vector_of_ints(void) {
     vcc3[0] = 6;
 
     /* Entity e4 - different vector values */
-    NestedStructWithVectorOfInts *ptr4 = ecs_ensure_id(world, e4,
+    NestedStructWithVectorOfInts *ptr4 = test_ecs_ensure(world, e4,
         nested_struct_with_vector_of_ints);
     ecs_vec_set_count(NULL, &ptr4->a, sizeof(ecs_i32_t), 3);
     ecs_i32_t *va4 = ecs_vec_first(&ptr4->a);
@@ -784,7 +791,7 @@ void RttCompare_nested_struct_with_vector_of_ints(void) {
     vcc4[0] = 6;
 
     /* Entity e5 - different nested structure values */
-    NestedStructWithVectorOfInts *ptr5 = ecs_ensure_id(world, e5,
+    NestedStructWithVectorOfInts *ptr5 = test_ecs_ensure(world, e5,
         nested_struct_with_vector_of_ints);
     ecs_vec_set_count(NULL, &ptr5->a, sizeof(ecs_i32_t), 3);
     ecs_i32_t *va5 = ecs_vec_first(&ptr5->a);
@@ -876,7 +883,7 @@ void RttCompare_nested_struct_with_vector_of_strings(void) {
     ecs_entity_t e4 = ecs_new(world);
     ecs_entity_t e5 = ecs_new(world);
 
-    NestedStructWithVectorOfStrings *ptr1 = ecs_ensure_id(world, e1,
+    NestedStructWithVectorOfStrings *ptr1 = test_ecs_ensure(world, e1,
         nested_struct_with_vector_of_strings);
     ecs_vec_set_count(NULL, &ptr1->a, sizeof(ecs_string_t), 3);
     ecs_string_t *a1 = ecs_vec_first(&ptr1->a);
@@ -893,7 +900,7 @@ void RttCompare_nested_struct_with_vector_of_strings(void) {
     ecs_string_t *c_c1 = ecs_vec_first(&ptr1->c.c);
     c_c1[0] = ecs_os_strdup("ZZ");
 
-    NestedStructWithVectorOfStrings *ptr2 = ecs_ensure_id(world, e2,
+    NestedStructWithVectorOfStrings *ptr2 = test_ecs_ensure(world, e2,
         nested_struct_with_vector_of_strings);
     ecs_vec_set_count(NULL, &ptr2->a, sizeof(ecs_string_t), 3);
     ecs_string_t *a2 = ecs_vec_first(&ptr2->a);
@@ -910,7 +917,7 @@ void RttCompare_nested_struct_with_vector_of_strings(void) {
     ecs_string_t *c_c2 = ecs_vec_first(&ptr2->c.c);
     c_c2[0] = ecs_os_strdup("ZZ");
 
-    NestedStructWithVectorOfStrings *ptr3 = ecs_ensure_id(world, e3,
+    NestedStructWithVectorOfStrings *ptr3 = test_ecs_ensure(world, e3,
         nested_struct_with_vector_of_strings);
     ecs_vec_set_count(NULL, &ptr3->a, sizeof(ecs_string_t), 3);
     ecs_string_t *a3 = ecs_vec_first(&ptr3->a);
@@ -927,7 +934,7 @@ void RttCompare_nested_struct_with_vector_of_strings(void) {
     ecs_string_t *c_c3 = ecs_vec_first(&ptr3->c.c);
     c_c3[0] = ecs_os_strdup("ZZ");
 
-    NestedStructWithVectorOfStrings *ptr4 = ecs_ensure_id(world, e4,
+    NestedStructWithVectorOfStrings *ptr4 = test_ecs_ensure(world, e4,
         nested_struct_with_vector_of_strings);
     ecs_vec_set_count(NULL, &ptr4->a, sizeof(ecs_string_t), 2);
     ecs_string_t *a4 = ecs_vec_first(&ptr4->a);
@@ -945,7 +952,7 @@ void RttCompare_nested_struct_with_vector_of_strings(void) {
     c_c4[0] = ecs_os_strdup("WW");
     c_c4[1] = ecs_os_strdup("QQ");
 
-    NestedStructWithVectorOfStrings *ptr5 = ecs_ensure_id(world, e5,
+    NestedStructWithVectorOfStrings *ptr5 = test_ecs_ensure(world, e5,
         nested_struct_with_vector_of_strings);
     ecs_vec_set_count(NULL, &ptr5->a, sizeof(ecs_string_t), 1);
     ecs_string_t *a5 = ecs_vec_first(&ptr5->a);
@@ -1019,27 +1026,27 @@ void RttCompare_array_of_ints(void) {
     ecs_entity_t e4 = ecs_new(world);
     ecs_entity_t e5 = ecs_new(world);
 
-    ecs_i32_t *arr1 = ecs_ensure_id(world, e1, array_of_ints);
+    ecs_i32_t *arr1 = test_ecs_ensure(world, e1, array_of_ints);
     arr1[0] = 1;
     arr1[1] = 2;
     arr1[2] = 3;
 
-    ecs_i32_t *arr2 = ecs_ensure_id(world, e2, array_of_ints);
+    ecs_i32_t *arr2 = test_ecs_ensure(world, e2, array_of_ints);
     arr2[0] = 1;
     arr2[1] = 2;
     arr2[2] = 4;
 
-    ecs_i32_t *arr3 = ecs_ensure_id(world, e3, array_of_ints);
+    ecs_i32_t *arr3 = test_ecs_ensure(world, e3, array_of_ints);
     arr3[0] = 1;
     arr3[1] = 2;
     arr3[2] = 3;
 
-    ecs_i32_t *arr4 = ecs_ensure_id(world, e4, array_of_ints);
+    ecs_i32_t *arr4 = test_ecs_ensure(world, e4, array_of_ints);
     arr4[0] = 0;
     arr4[1] = 5;
     arr4[2] = 6;
 
-    ecs_i32_t *arr5 = ecs_ensure_id(world, e5, array_of_ints);
+    ecs_i32_t *arr5 = test_ecs_ensure(world, e5, array_of_ints);
     arr5[0] = 1;
     arr5[1] = 2;
     arr5[2] = 2;
@@ -1087,27 +1094,27 @@ void RttCompare_array_of_strings(void) {
     ecs_entity_t e4 = ecs_new(world);
     ecs_entity_t e5 = ecs_new(world);
 
-    ecs_string_t *arr1 = ecs_ensure_id(world, e1, array_of_strings);
+    ecs_string_t *arr1 = test_ecs_ensure(world, e1, array_of_strings);
     arr1[0] = ecs_os_strdup("AA");
     arr1[1] = ecs_os_strdup("BB");
     arr1[2] = ecs_os_strdup("CC");
 
-    ecs_string_t *arr2 = ecs_ensure_id(world, e2, array_of_strings);
+    ecs_string_t *arr2 = test_ecs_ensure(world, e2, array_of_strings);
     arr2[0] = ecs_os_strdup("AA");
     arr2[1] = ecs_os_strdup("BB");
     arr2[2] = ecs_os_strdup("DD");
 
-    ecs_string_t *arr3 = ecs_ensure_id(world, e3, array_of_strings);
+    ecs_string_t *arr3 = test_ecs_ensure(world, e3, array_of_strings);
     arr3[0] = ecs_os_strdup("AA");
     arr3[1] = ecs_os_strdup("BB");
     arr3[2] = ecs_os_strdup("CC");
 
-    ecs_string_t *arr4 = ecs_ensure_id(world, e4, array_of_strings);
+    ecs_string_t *arr4 = test_ecs_ensure(world, e4, array_of_strings);
     arr4[0] = ecs_os_strdup("ZZ");
     arr4[1] = ecs_os_strdup("YY");
     arr4[2] = ecs_os_strdup("XX");
 
-    ecs_string_t *arr5 = ecs_ensure_id(world, e5, array_of_strings);
+    ecs_string_t *arr5 = test_ecs_ensure(world, e5, array_of_strings);
     arr5[0] = ecs_os_strdup("AA");
     arr5[1] = ecs_os_strdup("AB");
     arr5[2] = ecs_os_strdup("AC");
@@ -1167,27 +1174,27 @@ void RttCompare_array_of_struct_with_ints(void) {
     ecs_entity_t e4 = ecs_new(world);
     ecs_entity_t e5 = ecs_new(world);
 
-    StructWithInts *arr1 = ecs_ensure_id(world, e1, array_of_struct_with_ints);
+    StructWithInts *arr1 = test_ecs_ensure(world, e1, array_of_struct_with_ints);
     arr1[0].a = 1; arr1[0].b = 2;
     arr1[1].a = 3; arr1[1].b = 4;
     arr1[2].a = 5; arr1[2].b = 6;
 
-    StructWithInts *arr2 = ecs_ensure_id(world, e2, array_of_struct_with_ints);
+    StructWithInts *arr2 = test_ecs_ensure(world, e2, array_of_struct_with_ints);
     arr2[0].a = 1; arr2[0].b = 2;
     arr2[1].a = 3; arr2[1].b = 4;
     arr2[2].a = 5; arr2[2].b = 10;
 
-    StructWithInts *arr3 = ecs_ensure_id(world, e3, array_of_struct_with_ints);
+    StructWithInts *arr3 = test_ecs_ensure(world, e3, array_of_struct_with_ints);
     arr3[0].a = 1; arr3[0].b = 2;
     arr3[1].a = 3; arr3[1].b = 4;
     arr3[2].a = 5; arr3[2].b = 6;
 
-    StructWithInts *arr4 = ecs_ensure_id(world, e4, array_of_struct_with_ints);
+    StructWithInts *arr4 = test_ecs_ensure(world, e4, array_of_struct_with_ints);
     arr4[0].a = 0; arr4[0].b = 1;
     arr4[1].a = 2; arr4[1].b = 3;
     arr4[2].a = 4; arr4[2].b = 5;
 
-    StructWithInts *arr5 = ecs_ensure_id(world, e5, array_of_struct_with_ints);
+    StructWithInts *arr5 = test_ecs_ensure(world, e5, array_of_struct_with_ints);
     arr5[0].a = 7; arr5[0].b = 8;
     arr5[1].a = 9; arr5[1].b = 10;
     arr5[2].a = 11; arr5[2].b = 12;
@@ -1260,7 +1267,7 @@ void RttCompare_array_of_struct_with_strings(void) {
     ecs_entity_t e5 = ecs_new(world);
 
     /* Initialize e1 */
-    ArrayOfStructWithStrings *ptr1 = ecs_ensure_id(world, e1, struct_array_entity);
+    ArrayOfStructWithStrings *ptr1 = test_ecs_ensure(world, e1, struct_array_entity);
     ptr1->items[0].a = ecs_os_strdup("AA");
     ptr1->items[0].b = 10;
     ptr1->items[0].c = ecs_os_strdup("BB");
@@ -1272,7 +1279,7 @@ void RttCompare_array_of_struct_with_strings(void) {
     ptr1->items[2].c = ecs_os_strdup("FF");
 
     /* Initialize e2 with different value in the second struct */
-    ArrayOfStructWithStrings *ptr2 = ecs_ensure_id(world, e2, struct_array_entity);
+    ArrayOfStructWithStrings *ptr2 = test_ecs_ensure(world, e2, struct_array_entity);
     ptr2->items[0].a = ecs_os_strdup("AA");
     ptr2->items[0].b = 10;
     ptr2->items[0].c = ecs_os_strdup("BB");
@@ -1284,7 +1291,7 @@ void RttCompare_array_of_struct_with_strings(void) {
     ptr2->items[2].c = ecs_os_strdup("FF");
 
     /* Initialize e3 identical to e1 */
-    ArrayOfStructWithStrings *ptr3 = ecs_ensure_id(world, e3, struct_array_entity);
+    ArrayOfStructWithStrings *ptr3 = test_ecs_ensure(world, e3, struct_array_entity);
     ptr3->items[0].a = ecs_os_strdup("AA");
     ptr3->items[0].b = 10;
     ptr3->items[0].c = ecs_os_strdup("BB");
@@ -1296,7 +1303,7 @@ void RttCompare_array_of_struct_with_strings(void) {
     ptr3->items[2].c = ecs_os_strdup("FF");
 
     /* Initialize e4 with completely different strings */
-    ArrayOfStructWithStrings *ptr4 = ecs_ensure_id(world, e4, struct_array_entity);
+    ArrayOfStructWithStrings *ptr4 = test_ecs_ensure(world, e4, struct_array_entity);
     ptr4->items[0].a = ecs_os_strdup("XX");
     ptr4->items[0].b = 5;
     ptr4->items[0].c = ecs_os_strdup("YY");
@@ -1308,7 +1315,7 @@ void RttCompare_array_of_struct_with_strings(void) {
     ptr4->items[2].c = ecs_os_strdup("UU");
 
     /* Initialize e5 with mixture of similar and different values */
-    ArrayOfStructWithStrings *ptr5 = ecs_ensure_id(world, e5, struct_array_entity);
+    ArrayOfStructWithStrings *ptr5 = test_ecs_ensure(world, e5, struct_array_entity);
     ptr5->items[0].a = ecs_os_strdup("AA");
     ptr5->items[0].b = 10;
     ptr5->items[0].c = ecs_os_strdup("GG"); // Different from e1
@@ -1370,17 +1377,17 @@ void RttCompare_array_of_struct_with_opaques(void) {
     ecs_entity_t e2 = ecs_new(world);
     ecs_entity_t e3 = ecs_new(world);
 
-    StructWithOpaque *arr1 = ecs_ensure_id(world, e1, array_of_struct_with_opaques);
+    StructWithOpaque *arr1 = test_ecs_ensure(world, e1, array_of_struct_with_opaques);
     arr1[0].a.value = 5;
     arr1[1].a.value = 10;
     arr1[2].a.value = 15;
 
-    StructWithOpaque *arr2 = ecs_ensure_id(world, e2, array_of_struct_with_opaques);
+    StructWithOpaque *arr2 = test_ecs_ensure(world, e2, array_of_struct_with_opaques);
     arr2[0].a.value = 5;
     arr2[1].a.value = 15;
     arr2[2].a.value = 20;
 
-    StructWithOpaque *arr3 = ecs_ensure_id(world, e3, array_of_struct_with_opaques);
+    StructWithOpaque *arr3 = test_ecs_ensure(world, e3, array_of_struct_with_opaques);
     arr3[0].a.value = 5;
     arr3[1].a.value = 10;
     arr3[2].a.value = 15;
@@ -1422,7 +1429,7 @@ void RttCompare_array_of_array_of_strings(void) {
     ecs_entity_t e3 = ecs_new(world);
     ecs_entity_t e4 = ecs_new(world);
 
-    ecs_string_t (*arr1)[3] = ecs_ensure_id(world, e1, array_of_array_of_strings);
+    ecs_string_t (*arr1)[3] = test_ecs_ensure(world, e1, array_of_array_of_strings);
     arr1[0][0] = ecs_os_strdup("AA");
     arr1[0][1] = ecs_os_strdup("BB");
     arr1[0][2] = ecs_os_strdup("CC");
@@ -1433,7 +1440,7 @@ void RttCompare_array_of_array_of_strings(void) {
     arr1[2][1] = ecs_os_strdup("BB");
     arr1[2][2] = ecs_os_strdup("CC");
 
-    ecs_string_t (*arr2)[3] = ecs_ensure_id(world, e2, array_of_array_of_strings);
+    ecs_string_t (*arr2)[3] = test_ecs_ensure(world, e2, array_of_array_of_strings);
     arr2[0][0] = ecs_os_strdup("AA");
     arr2[0][1] = ecs_os_strdup("BB");
     arr2[0][2] = ecs_os_strdup("CC");
@@ -1444,7 +1451,7 @@ void RttCompare_array_of_array_of_strings(void) {
     arr2[2][1] = ecs_os_strdup("BB");
     arr2[2][2] = ecs_os_strdup("CC");
 
-    ecs_string_t (*arr3)[3] = ecs_ensure_id(world, e3, array_of_array_of_strings);
+    ecs_string_t (*arr3)[3] = test_ecs_ensure(world, e3, array_of_array_of_strings);
     arr3[0][0] = ecs_os_strdup("AA");
     arr3[0][1] = ecs_os_strdup("BB");
     arr3[0][2] = ecs_os_strdup("CC");
@@ -1455,7 +1462,7 @@ void RttCompare_array_of_array_of_strings(void) {
     arr3[2][1] = ecs_os_strdup("BB");
     arr3[2][2] = ecs_os_strdup("CC");
 
-    ecs_string_t (*arr4)[3] = ecs_ensure_id(world, e4, array_of_array_of_strings);
+    ecs_string_t (*arr4)[3] = test_ecs_ensure(world, e4, array_of_array_of_strings);
     arr4[0][0] = ecs_os_strdup("XX");
     arr4[0][1] = ecs_os_strdup("YY");
     arr4[0][2] = ecs_os_strdup("ZZ");
@@ -1525,7 +1532,7 @@ void RttCompare_array_of_array_of_struct_with_strings(void) {
     ecs_entity_t e5 = ecs_new(world);
 
     StructWithStrings (*ptr1)[3] =
-        ecs_ensure_id(world, e1, array_of_array_of_struct_with_strings);
+        test_ecs_ensure(world, e1, array_of_array_of_struct_with_strings);
     ptr1[0][0].a = ecs_os_strdup("AA");
     ptr1[0][0].b = 10;
     ptr1[0][0].c = ecs_os_strdup("CC");
@@ -1534,7 +1541,7 @@ void RttCompare_array_of_array_of_struct_with_strings(void) {
     ptr1[1][1].c = ecs_os_strdup("DD");
 
     StructWithStrings (*ptr2)[3] =
-        ecs_ensure_id(world, e2, array_of_array_of_struct_with_strings);
+        test_ecs_ensure(world, e2, array_of_array_of_struct_with_strings);
     ptr2[0][0].a = ecs_os_strdup("AA");
     ptr2[0][0].b = 10;
     ptr2[0][0].c = ecs_os_strdup("CC");
@@ -1543,7 +1550,7 @@ void RttCompare_array_of_array_of_struct_with_strings(void) {
     ptr2[1][1].c = ecs_os_strdup("DD");
 
     StructWithStrings (*ptr3)[3] =
-        ecs_ensure_id(world, e3, array_of_array_of_struct_with_strings);
+        test_ecs_ensure(world, e3, array_of_array_of_struct_with_strings);
     ptr3[0][0].a = ecs_os_strdup("AA");
     ptr3[0][0].b = 10;
     ptr3[0][0].c = ecs_os_strdup("CC");
@@ -1552,7 +1559,7 @@ void RttCompare_array_of_array_of_struct_with_strings(void) {
     ptr3[1][1].c = ecs_os_strdup("DD");
 
     StructWithStrings (*ptr4)[3] =
-        ecs_ensure_id(world, e4, array_of_array_of_struct_with_strings);
+        test_ecs_ensure(world, e4, array_of_array_of_struct_with_strings);
     ptr4[0][0].a = ecs_os_strdup("AA");
     ptr4[0][0].b = 5;
     ptr4[0][0].c = ecs_os_strdup("EE");
@@ -1561,7 +1568,7 @@ void RttCompare_array_of_array_of_struct_with_strings(void) {
     ptr4[1][1].c = ecs_os_strdup("FF");
 
     StructWithStrings (*ptr5)[3] =
-        ecs_ensure_id(world, e5, array_of_array_of_struct_with_strings);
+        test_ecs_ensure(world, e5, array_of_array_of_struct_with_strings);
     ptr5[0][0].a = ecs_os_strdup("AA");
     ptr5[0][0].b = 15;
     ptr5[0][0].c = ecs_os_strdup("GG");
@@ -1614,7 +1621,7 @@ void RttCompare_array_of_vectors_of_ints(void) {
     ecs_entity_t e3 = ecs_new(world);
     ecs_entity_t e4 = ecs_new(world);
 
-    ecs_vec_t *arr1 = ecs_ensure_id(world, e1, array_of_vectors_of_ints);
+    ecs_vec_t *arr1 = test_ecs_ensure(world, e1, array_of_vectors_of_ints);
     ecs_vec_set_count(NULL, &arr1[0], sizeof(ecs_i32_t), 3);
     ecs_i32_t *v1_0 = ecs_vec_first(&arr1[0]);
     v1_0[0] = 10;
@@ -1631,7 +1638,7 @@ void RttCompare_array_of_vectors_of_ints(void) {
     v1_2[2] = 3;
     v1_2[3] = 4;
 
-    ecs_vec_t *arr2 = ecs_ensure_id(world, e2, array_of_vectors_of_ints);
+    ecs_vec_t *arr2 = test_ecs_ensure(world, e2, array_of_vectors_of_ints);
     ecs_vec_set_count(NULL, &arr2[0], sizeof(ecs_i32_t), 3);
     ecs_i32_t *v2_0 = ecs_vec_first(&arr2[0]);
     v2_0[0] = 10;
@@ -1648,7 +1655,7 @@ void RttCompare_array_of_vectors_of_ints(void) {
     v2_2[2] = 3;
     v2_2[3] = 4;
 
-    ecs_vec_t *arr3 = ecs_ensure_id(world, e3, array_of_vectors_of_ints);
+    ecs_vec_t *arr3 = test_ecs_ensure(world, e3, array_of_vectors_of_ints);
     ecs_vec_set_count(NULL, &arr3[0], sizeof(ecs_i32_t), 3);
     ecs_i32_t *v3_0 = ecs_vec_first(&arr3[0]);
     v3_0[0] = 10;
@@ -1665,7 +1672,7 @@ void RttCompare_array_of_vectors_of_ints(void) {
     v3_2[2] = 3;
     v3_2[3] = 4;
 
-    ecs_vec_t *arr4 = ecs_ensure_id(world, e4, array_of_vectors_of_ints);
+    ecs_vec_t *arr4 = test_ecs_ensure(world, e4, array_of_vectors_of_ints);
     ecs_vec_set_count(NULL, &arr4[0], sizeof(ecs_i32_t), 3);
     ecs_i32_t *v4_0 = ecs_vec_first(&arr4[0]);
     v4_0[0] = 12; // Different from arr1
@@ -1723,7 +1730,7 @@ void RttCompare_array_of_vectors_of_strings(void) {
     ecs_entity_t e5 = ecs_new(world);
 
     /* Initialize e1 */
-    ecs_vec_t *arr1 = ecs_ensure_id(world, e1, array_of_vectors_of_strings);
+    ecs_vec_t *arr1 = test_ecs_ensure(world, e1, array_of_vectors_of_strings);
     ecs_vec_set_count(NULL, &arr1[0], sizeof(ecs_string_t), 3);
     ecs_string_t *vec1_0 = ecs_vec_first(&arr1[0]);
     vec1_0[0] = ecs_os_strdup("AA");
@@ -1740,7 +1747,7 @@ void RttCompare_array_of_vectors_of_strings(void) {
     vec1_2[0] = ecs_os_strdup("ZZ");
 
     /* Initialize e2 */
-    ecs_vec_t *arr2 = ecs_ensure_id(world, e2, array_of_vectors_of_strings);
+    ecs_vec_t *arr2 = test_ecs_ensure(world, e2, array_of_vectors_of_strings);
     ecs_vec_set_count(NULL, &arr2[0], sizeof(ecs_string_t), 3);
     ecs_string_t *vec2_0 = ecs_vec_first(&arr2[0]);
     vec2_0[0] = ecs_os_strdup("AA");
@@ -1757,7 +1764,7 @@ void RttCompare_array_of_vectors_of_strings(void) {
     vec2_2[0] = ecs_os_strdup("AA");
 
     /* Initialize e3 */
-    ecs_vec_t *arr3 = ecs_ensure_id(world, e3, array_of_vectors_of_strings);
+    ecs_vec_t *arr3 = test_ecs_ensure(world, e3, array_of_vectors_of_strings);
     ecs_vec_set_count(NULL, &arr3[0], sizeof(ecs_string_t), 3);
     ecs_string_t *vec3_0 = ecs_vec_first(&arr3[0]);
     vec3_0[0] = ecs_os_strdup("AA");
@@ -1774,7 +1781,7 @@ void RttCompare_array_of_vectors_of_strings(void) {
     vec3_2[0] = ecs_os_strdup("ZZ");
 
     /* Initialize e4 with different strings */
-    ecs_vec_t *arr4 = ecs_ensure_id(world, e4, array_of_vectors_of_strings);
+    ecs_vec_t *arr4 = test_ecs_ensure(world, e4, array_of_vectors_of_strings);
     ecs_vec_set_count(NULL, &arr4[0], sizeof(ecs_string_t), 3);
     ecs_string_t *vec4_0 = ecs_vec_first(&arr4[0]);
     vec4_0[0] = ecs_os_strdup("AA");
@@ -1791,7 +1798,7 @@ void RttCompare_array_of_vectors_of_strings(void) {
     vec4_2[0] = ecs_os_strdup("AA");
 
     /* Initialize e5 with even more variation */
-    ecs_vec_t *arr5 = ecs_ensure_id(world, e5, array_of_vectors_of_strings);
+    ecs_vec_t *arr5 = test_ecs_ensure(world, e5, array_of_vectors_of_strings);
     ecs_vec_set_count(NULL, &arr5[0], sizeof(ecs_string_t), 3);
     ecs_string_t *vec5_0 = ecs_vec_first(&arr5[0]);
     vec5_0[0] = ecs_os_strdup("DD");
@@ -1849,27 +1856,27 @@ void RttCompare_array_of_opaque(void) {
     ecs_entity_t e4 = ecs_new(world);
     ecs_entity_t e5 = ecs_new(world);
 
-    OpaqueType *ptr1 = ecs_ensure_id(world, e1, array_of_opaque);
+    OpaqueType *ptr1 = test_ecs_ensure(world, e1, array_of_opaque);
     ptr1[0].value = 5;
     ptr1[1].value = 10;
     ptr1[2].value = 15;
 
-    OpaqueType *ptr2 = ecs_ensure_id(world, e2, array_of_opaque);
+    OpaqueType *ptr2 = test_ecs_ensure(world, e2, array_of_opaque);
     ptr2[0].value = 5;
     ptr2[1].value = 10;
     ptr2[2].value = 20;
 
-    OpaqueType *ptr3 = ecs_ensure_id(world, e3, array_of_opaque);
+    OpaqueType *ptr3 = test_ecs_ensure(world, e3, array_of_opaque);
     ptr3[0].value = 5;
     ptr3[1].value = 10;
     ptr3[2].value = 15;
 
-    OpaqueType *ptr4 = ecs_ensure_id(world, e4, array_of_opaque);
+    OpaqueType *ptr4 = test_ecs_ensure(world, e4, array_of_opaque);
     ptr4[0].value = 7;
     ptr4[1].value = 8;
     ptr4[2].value = 9;
 
-    OpaqueType *ptr5 = ecs_ensure_id(world, e5, array_of_opaque);
+    OpaqueType *ptr5 = test_ecs_ensure(world, e5, array_of_opaque);
     ptr5[0].value = 3;
     ptr5[1].value = 10;
     ptr5[2].value = 15;
@@ -1917,34 +1924,34 @@ void RttCompare_vector_of_ints(void) {
     ecs_entity_t e4 = ecs_new(world);
     ecs_entity_t e5 = ecs_new(world);
 
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e1, vector_of_ints);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e1, vector_of_ints);
     ecs_vec_set_count(NULL, vec1, sizeof(ecs_i32_t), 3);
     ecs_i32_t *v1_data = ecs_vec_first(vec1);
     v1_data[0] = 10;
     v1_data[1] = 20;
     v1_data[2] = 30;
 
-    ecs_vec_t *vec2 = ecs_ensure_id(world, e2, vector_of_ints);
+    ecs_vec_t *vec2 = test_ecs_ensure(world, e2, vector_of_ints);
     ecs_vec_set_count(NULL, vec2, sizeof(ecs_i32_t), 3);
     ecs_i32_t *v2_data = ecs_vec_first(vec2);
     v2_data[0] = 10;
     v2_data[1] = 25;
     v2_data[2] = 30;
 
-    ecs_vec_t *vec3 = ecs_ensure_id(world, e3, vector_of_ints);
+    ecs_vec_t *vec3 = test_ecs_ensure(world, e3, vector_of_ints);
     ecs_vec_set_count(NULL, vec3, sizeof(ecs_i32_t), 3);
     ecs_i32_t *v3_data = ecs_vec_first(vec3);
     v3_data[0] = 10;
     v3_data[1] = 20;
     v3_data[2] = 30;
 
-    ecs_vec_t *vec4 = ecs_ensure_id(world, e4, vector_of_ints);
+    ecs_vec_t *vec4 = test_ecs_ensure(world, e4, vector_of_ints);
     ecs_vec_set_count(NULL, vec4, sizeof(ecs_i32_t), 2);
     ecs_i32_t *v4_data = ecs_vec_first(vec4);
     v4_data[0] = 10;
     v4_data[1] = 20;
 
-    ecs_vec_t *vec5 = ecs_ensure_id(world, e5, vector_of_ints);
+    ecs_vec_t *vec5 = test_ecs_ensure(world, e5, vector_of_ints);
     ecs_vec_set_count(NULL, vec5, sizeof(ecs_i32_t), 3);
     ecs_i32_t *v5_data = ecs_vec_first(vec5);
     v5_data[0] = 40;
@@ -1997,35 +2004,35 @@ void RttCompare_vector_of_strings(void) {
     ecs_entity_t e4 = ecs_new(world);
     ecs_entity_t e5 = ecs_new(world);
 
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e1, vector_of_strings);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e1, vector_of_strings);
     ecs_vec_set_count(NULL, vec1, sizeof(ecs_string_t), 3);
     ecs_string_t *v1_data = ecs_vec_first(vec1);
     v1_data[0] = ecs_os_strdup("AA");
     v1_data[1] = ecs_os_strdup("BB");
     v1_data[2] = ecs_os_strdup("CC");
 
-    ecs_vec_t *vec2 = ecs_ensure_id(world, e2, vector_of_strings);
+    ecs_vec_t *vec2 = test_ecs_ensure(world, e2, vector_of_strings);
     ecs_vec_set_count(NULL, vec2, sizeof(ecs_string_t), 3);
     ecs_string_t *v2_data = ecs_vec_first(vec2);
     v2_data[0] = ecs_os_strdup("AA");
     v2_data[1] = ecs_os_strdup("BB");
     v2_data[2] = ecs_os_strdup("DD");
 
-    ecs_vec_t *vec3 = ecs_ensure_id(world, e3, vector_of_strings);
+    ecs_vec_t *vec3 = test_ecs_ensure(world, e3, vector_of_strings);
     ecs_vec_set_count(NULL, vec3, sizeof(ecs_string_t), 3);
     ecs_string_t *v3_data = ecs_vec_first(vec3);
     v3_data[0] = ecs_os_strdup("AA");
     v3_data[1] = ecs_os_strdup("BB");
     v3_data[2] = ecs_os_strdup("CC");
 
-    ecs_vec_t *vec4 = ecs_ensure_id(world, e4, vector_of_strings);
+    ecs_vec_t *vec4 = test_ecs_ensure(world, e4, vector_of_strings);
     ecs_vec_set_count(NULL, vec4, sizeof(ecs_string_t), 3);
     ecs_string_t *v4_data = ecs_vec_first(vec4);
     v4_data[0] = ecs_os_strdup("ZZ");
     v4_data[1] = ecs_os_strdup("AA");
     v4_data[2] = ecs_os_strdup("DD");
 
-    ecs_vec_t *vec5 = ecs_ensure_id(world, e5, vector_of_strings);
+    ecs_vec_t *vec5 = test_ecs_ensure(world, e5, vector_of_strings);
     ecs_vec_set_count(NULL, vec5, sizeof(ecs_string_t), 3);
     ecs_string_t *v5_data = ecs_vec_first(vec5);
     v5_data[0] = ecs_os_strdup("AA");
@@ -2091,21 +2098,21 @@ void RttCompare_vector_of_struct_with_ints(void) {
     ecs_entity_t e2 = ecs_new(world);
     ecs_entity_t e3 = ecs_new(world);
 
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e1, vector_of_struct_with_ints);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e1, vector_of_struct_with_ints);
     ecs_vec_set_count(NULL, vec1, sizeof(StructWithInts), 3);
     StructWithInts *v1 = ecs_vec_first(vec1);
     v1[0] = (StructWithInts){.a = 10, .b = 20};
     v1[1] = (StructWithInts){.a = 15, .b = 25};
     v1[2] = (StructWithInts){.a = 20, .b = 30};
 
-    ecs_vec_t *vec2 = ecs_ensure_id(world, e2, vector_of_struct_with_ints);
+    ecs_vec_t *vec2 = test_ecs_ensure(world, e2, vector_of_struct_with_ints);
     ecs_vec_set_count(NULL, vec2, sizeof(StructWithInts), 3);
     StructWithInts *v2 = ecs_vec_first(vec2);
     v2[0] = (StructWithInts){.a = 10, .b = 20};
     v2[1] = (StructWithInts){.a = 15, .b = 25};
     v2[2] = (StructWithInts){.a = 25, .b = 35};
 
-    ecs_vec_t *vec3 = ecs_ensure_id(world, e3, vector_of_struct_with_ints);
+    ecs_vec_t *vec3 = test_ecs_ensure(world, e3, vector_of_struct_with_ints);
     ecs_vec_set_count(NULL, vec3, sizeof(StructWithInts), 3);
     StructWithInts *v3 = ecs_vec_first(vec3);
     v3[0] = (StructWithInts){.a = 10, .b = 20};
@@ -2160,7 +2167,7 @@ void RttCompare_vector_of_struct_with_strings(void) {
     ecs_entity_t e3 = ecs_new(world);
     ecs_entity_t e4 = ecs_new(world);
 
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e1, vector_of_struct_with_strings);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e1, vector_of_struct_with_strings);
     ecs_vec_set_count(NULL, vec1, sizeof(StructWithStrings), 2);
     StructWithStrings *v1 = ecs_vec_first(vec1);
     v1[0].a = ecs_os_strdup("AA");
@@ -2170,7 +2177,7 @@ void RttCompare_vector_of_struct_with_strings(void) {
     v1[1].b = 15;
     v1[1].c = ecs_os_strdup("DD");
 
-    ecs_vec_t *vec2 = ecs_ensure_id(world, e2, vector_of_struct_with_strings);
+    ecs_vec_t *vec2 = test_ecs_ensure(world, e2, vector_of_struct_with_strings);
     ecs_vec_set_count(NULL, vec2, sizeof(StructWithStrings), 2);
     StructWithStrings *v2 = ecs_vec_first(vec2);
     v2[0].a = ecs_os_strdup("AA");
@@ -2180,7 +2187,7 @@ void RttCompare_vector_of_struct_with_strings(void) {
     v2[1].b = 15;
     v2[1].c = ecs_os_strdup("DD");
 
-    ecs_vec_t *vec3 = ecs_ensure_id(world, e3, vector_of_struct_with_strings);
+    ecs_vec_t *vec3 = test_ecs_ensure(world, e3, vector_of_struct_with_strings);
     ecs_vec_set_count(NULL, vec3, sizeof(StructWithStrings), 2);
     StructWithStrings *v3 = ecs_vec_first(vec3);
     v3[0].a = ecs_os_strdup("AA");
@@ -2190,7 +2197,7 @@ void RttCompare_vector_of_struct_with_strings(void) {
     v3[1].b = 15;
     v3[1].c = ecs_os_strdup("DD");
 
-    ecs_vec_t *vec4 = ecs_ensure_id(world, e4, vector_of_struct_with_strings);
+    ecs_vec_t *vec4 = test_ecs_ensure(world, e4, vector_of_struct_with_strings);
     ecs_vec_set_count(NULL, vec4, sizeof(StructWithStrings), 1);
     StructWithStrings *v4 = ecs_vec_first(vec4);
     v4[0].a = ecs_os_strdup("AA");
@@ -2240,35 +2247,35 @@ void RttCompare_vector_of_arrays_of_strings(void) {
     ecs_entity_t e4 = ecs_new(world);
     ecs_entity_t e5 = ecs_new(world);
 
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e1, vector_of_arrays_of_strings);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e1, vector_of_arrays_of_strings);
     ecs_vec_set_count(NULL, vec1, sizeof(ecs_string_t[3]), 1);
     ecs_string_t (*v1)[3] = ecs_vec_first(vec1);
     v1[0][0] = ecs_os_strdup("AA");
     v1[0][1] = ecs_os_strdup("BB");
     v1[0][2] = ecs_os_strdup("CC");
 
-    ecs_vec_t *vec2 = ecs_ensure_id(world, e2, vector_of_arrays_of_strings);
+    ecs_vec_t *vec2 = test_ecs_ensure(world, e2, vector_of_arrays_of_strings);
     ecs_vec_set_count(NULL, vec2, sizeof(ecs_string_t[3]), 1);
     ecs_string_t (*v2)[3] = ecs_vec_first(vec2);
     v2[0][0] = ecs_os_strdup("AA");
     v2[0][1] = ecs_os_strdup("BB");
     v2[0][2] = ecs_os_strdup("CC");
 
-    ecs_vec_t *vec3 = ecs_ensure_id(world, e3, vector_of_arrays_of_strings);
+    ecs_vec_t *vec3 = test_ecs_ensure(world, e3, vector_of_arrays_of_strings);
     ecs_vec_set_count(NULL, vec3, sizeof(ecs_string_t[3]), 1);
     ecs_string_t (*v3)[3] = ecs_vec_first(vec3);
     v3[0][0] = ecs_os_strdup("AA");
     v3[0][1] = ecs_os_strdup("ZZ");
     v3[0][2] = ecs_os_strdup("CC");
 
-    ecs_vec_t *vec4 = ecs_ensure_id(world, e4, vector_of_arrays_of_strings);
+    ecs_vec_t *vec4 = test_ecs_ensure(world, e4, vector_of_arrays_of_strings);
     ecs_vec_set_count(NULL, vec4, sizeof(ecs_string_t[3]), 1);
     ecs_string_t (*v4)[3] = ecs_vec_first(vec4);
     v4[0][0] = ecs_os_strdup("ZZ");
     v4[0][1] = ecs_os_strdup("AA");
     v4[0][2] = ecs_os_strdup("DD");
 
-    ecs_vec_t *vec5 = ecs_ensure_id(world, e5, vector_of_arrays_of_strings);
+    ecs_vec_t *vec5 = test_ecs_ensure(world, e5, vector_of_arrays_of_strings);
     ecs_vec_set_count(NULL, vec5, sizeof(ecs_string_t[3]), 1);
     ecs_string_t (*v5)[3] = ecs_vec_first(vec5);
     v5[0][0] = ecs_os_strdup("AA");
@@ -2323,34 +2330,34 @@ void RttCompare_vector_of_opaque(void) {
     ecs_entity_t e4 = ecs_new(world);
     ecs_entity_t e5 = ecs_new(world);
 
-    ecs_vec_t *vec1 = ecs_ensure_id(world, e1, vector_of_opaque);
+    ecs_vec_t *vec1 = test_ecs_ensure(world, e1, vector_of_opaque);
     ecs_vec_set_count(NULL, vec1, sizeof(OpaqueType), 3);
     OpaqueType *v1_data = ecs_vec_first(vec1);
     v1_data[0].value = 10;
     v1_data[1].value = 20;
     v1_data[2].value = 30;
 
-    ecs_vec_t *vec2 = ecs_ensure_id(world, e2, vector_of_opaque);
+    ecs_vec_t *vec2 = test_ecs_ensure(world, e2, vector_of_opaque);
     ecs_vec_set_count(NULL, vec2, sizeof(OpaqueType), 3);
     OpaqueType *v2_data = ecs_vec_first(vec2);
     v2_data[0].value = 10;
     v2_data[1].value = 25;
     v2_data[2].value = 30;
 
-    ecs_vec_t *vec3 = ecs_ensure_id(world, e3, vector_of_opaque);
+    ecs_vec_t *vec3 = test_ecs_ensure(world, e3, vector_of_opaque);
     ecs_vec_set_count(NULL, vec3, sizeof(OpaqueType), 3);
     OpaqueType *v3_data = ecs_vec_first(vec3);
     v3_data[0].value = 10;
     v3_data[1].value = 20;
     v3_data[2].value = 30;
 
-    ecs_vec_t *vec4 = ecs_ensure_id(world, e4, vector_of_opaque);
+    ecs_vec_t *vec4 = test_ecs_ensure(world, e4, vector_of_opaque);
     ecs_vec_set_count(NULL, vec4, sizeof(OpaqueType), 2);
     OpaqueType *v4_data = ecs_vec_first(vec4);
     v4_data[0].value = 5;
     v4_data[1].value = 15;
 
-    ecs_vec_t *vec5 = ecs_ensure_id(world, e5, vector_of_opaque);
+    ecs_vec_t *vec5 = test_ecs_ensure(world, e5, vector_of_opaque);
     ecs_vec_set_count(NULL, vec5, sizeof(OpaqueType), 4);
     OpaqueType *v5_data = ecs_vec_first(vec5);
     v5_data[0].value = 10;

@@ -1091,7 +1091,7 @@ void flecs_normalize_term_name(
 
 static
 int flecs_query_finalize_terms(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_query_t *q,
     const ecs_query_desc_t *desc)
 {
@@ -1318,6 +1318,15 @@ int flecs_query_finalize_terms(
 
             if (cr->flags & EcsIdIsSparse) {
                 is_sparse = true;
+            }
+
+            /* If this is a static field, we need to assume that we might have 
+             * to do change detection. */
+            if (term->src.id & EcsIsEntity) {
+                cr->flags |= EcsIdHasOnSet;
+                if (term->id < FLECS_HI_COMPONENT_ID) {
+                    world->non_trivial_set[term->id] = true;
+                }
             }
         } else {
             ecs_entity_t type = ecs_get_typeid(world, term->id);

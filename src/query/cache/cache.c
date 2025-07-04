@@ -636,6 +636,22 @@ ecs_query_cache_t* flecs_query_cache_init(
             ecs_component_record_t *cr = 
                 flecs_components_ensure(world, term->id);
             cr->flags |= EcsIdHasOnSet;
+
+            if (term->id < FLECS_HI_COMPONENT_ID) {
+                world->non_trivial_set[term->id] = true;
+            }
+        }
+    }
+
+    if (const_desc->order_by) {
+        ecs_component_record_t *cr = 
+            flecs_components_ensure(world, const_desc->order_by);
+        if (cr) {
+            cr->flags |= EcsIdHasOnSet;
+
+            if (const_desc->order_by < FLECS_HI_COMPONENT_ID) {
+                world->non_trivial_set[const_desc->order_by] = true;
+            }
         }
     }
 
