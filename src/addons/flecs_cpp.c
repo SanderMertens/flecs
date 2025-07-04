@@ -609,7 +609,7 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
 
     if (flecs_defer_cmd(stage)) {
         result.ptr = flecs_defer_cpp_assign(
-            world, stage, entity, id, size, new_ptr);
+            world, stage, entity, id, flecs_uto(int32_t, size), new_ptr);
         /* Modified command is already inserted */
         result.call_modified = false;
         return result;

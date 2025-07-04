@@ -333,7 +333,6 @@ flecs_component_ptr_t flecs_defer_get_existing(
 void* flecs_defer_emplace(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_cmd_kind_t cmd_kind,
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,

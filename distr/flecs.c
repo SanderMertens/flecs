@@ -2516,7 +2516,6 @@ typedef struct ecs_cmd_t {
     ecs_cmd_kind_t kind;             /* Command kind */
     int32_t next_for_entity;         /* Next operation for entity */    
     ecs_id_t id;                     /* (Component) id */
-    ecs_component_record_t *cr;            /* component record (only for set/mut/emplace) */
     ecs_cmd_entry_t *entry;
     ecs_entity_t entity;             /* Entity id */
 
@@ -2634,7 +2633,6 @@ bool flecs_defer_remove(
 void* flecs_defer_emplace(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_cmd_kind_t cmd_kind,
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,
@@ -5326,7 +5324,6 @@ flecs_component_ptr_t flecs_defer_get_existing(
 void* flecs_defer_emplace(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_cmd_kind_t cmd_kind,
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,
@@ -7779,7 +7776,7 @@ flecs_component_ptr_t flecs_get_mut(
             int16_t column_index = table->component_map[id];
             if (column_index > 0) {
                 ecs_column_t *column = &table->data.columns[column_index - 1];
-                result.ptr = ECS_ELEM(column->data, column->ti->size, 
+                result.ptr = ECS_ELEM(column->data, size, 
                     ECS_RECORD_TO_ROW(r->row));
                 result.ti = column->ti;
                 return result;
@@ -9087,7 +9084,8 @@ void* ecs_ensure_id(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_ensure(world, stage, entity, id, size);
+        return flecs_defer_ensure(
+            world, stage, entity, id, flecs_uto(int32_t, size));
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -9117,8 +9115,7 @@ void* ecs_emplace_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_emplace(
-            world, stage, EcsCmdEmplace, entity, id, 0, is_new);
+        return flecs_defer_emplace(world, stage, entity, id, 0, is_new);
     }
 
     ecs_check(is_new || !ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, 
@@ -23323,7 +23320,7 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
 
     if (flecs_defer_cmd(stage)) {
         result.ptr = flecs_defer_cpp_assign(
-            world, stage, entity, id, size, new_ptr);
+            world, stage, entity, id, flecs_uto(int32_t, size), new_ptr);
         /* Modified command is already inserted */
         result.call_modified = false;
         return result;
