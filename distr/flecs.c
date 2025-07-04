@@ -7762,6 +7762,7 @@ flecs_component_ptr_t flecs_get_mut(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+    (void)entity;
 
     world = ecs_get_world(world);
 
@@ -36370,7 +36371,7 @@ void flecs_normalize_term_name(
 
 static
 int flecs_query_finalize_terms(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_query_t *q,
     const ecs_query_desc_t *desc)
 {
@@ -36597,6 +36598,15 @@ int flecs_query_finalize_terms(
 
             if (cr->flags & EcsIdIsSparse) {
                 is_sparse = true;
+            }
+
+            /* If this is a static field, we need to assume that we might have 
+             * to do change detection. */
+            if (term->src.id & EcsIsEntity) {
+                cr->flags |= EcsIdHasOnSet;
+                if (term->id < FLECS_HI_COMPONENT_ID) {
+                    world->non_trivial_set[term->id] = true;
+                }
             }
         } else {
             ecs_entity_t type = ecs_get_typeid(world, term->id);
@@ -70484,6 +70494,18 @@ ecs_query_cache_t* flecs_query_cache_init(
 
             if (term->id < FLECS_HI_COMPONENT_ID) {
                 world->non_trivial_set[term->id] = true;
+            }
+        }
+    }
+
+    if (const_desc->order_by) {
+        ecs_component_record_t *cr = 
+            flecs_components_ensure(world, const_desc->order_by);
+        if (cr) {
+            cr->flags |= EcsIdHasOnSet;
+
+            if (const_desc->order_by < FLECS_HI_COMPONENT_ID) {
+                world->non_trivial_set[const_desc->order_by] = true;
             }
         }
     }

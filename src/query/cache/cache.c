@@ -643,6 +643,18 @@ ecs_query_cache_t* flecs_query_cache_init(
         }
     }
 
+    if (const_desc->order_by) {
+        ecs_component_record_t *cr = 
+            flecs_components_ensure(world, const_desc->order_by);
+        if (cr) {
+            cr->flags |= EcsIdHasOnSet;
+
+            if (const_desc->order_by < FLECS_HI_COMPONENT_ID) {
+                world->non_trivial_set[const_desc->order_by] = true;
+            }
+        }
+    }
+
     ecs_size_t elem_size = flecs_query_cache_elem_size(result);
     ecs_vec_init(&world->allocator, &result->default_group.tables, 
         elem_size, 0);

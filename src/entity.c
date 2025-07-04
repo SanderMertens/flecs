@@ -610,6 +610,7 @@ flecs_component_ptr_t flecs_get_mut(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+    (void)entity;
 
     world = ecs_get_world(world);
 
