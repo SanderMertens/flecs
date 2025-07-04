@@ -9423,7 +9423,6 @@ void ecs_set_id(
 
     if (id < FLECS_HI_COMPONENT_ID) {
         if (!world->non_trivial_set[id]) {
-            flecs_table_mark_dirty(world, r->table, id);
             ecs_os_memcpy(dst.ptr, ptr, size);
             goto done;
         }
@@ -23288,7 +23287,6 @@ ecs_cpp_get_mut_t ecs_cpp_set(
 
     if (id < FLECS_HI_COMPONENT_ID) {
         if (!world->non_trivial_set[id]) {
-            flecs_table_mark_dirty(world, r->table, id);
             result.call_modified = false;
             goto done;
         }
@@ -23342,7 +23340,6 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
 
     if (id < FLECS_HI_COMPONENT_ID) {
         if (!world->non_trivial_set[id]) {
-            flecs_table_mark_dirty(world, r->table, id);
             result.call_modified = false;
             goto done;
         }
