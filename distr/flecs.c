@@ -9318,6 +9318,12 @@ void ecs_modified_id(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
+    if (id < FLECS_HI_COMPONENT_ID) {
+        if (!world->non_trivial_set[id]) {
+            return;
+        }
+    }
+
     if (flecs_defer_modified(stage, entity, id)) {
         return;
     }
