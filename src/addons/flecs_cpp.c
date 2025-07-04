@@ -558,8 +558,8 @@ ecs_cpp_get_mut_t ecs_cpp_set(
     ecs_cpp_get_mut_t result;
 
     if (flecs_defer_cmd(stage)) {
-        result.ptr = flecs_defer_ensure(world, stage, entity, id,
-            flecs_utosize(size));
+        result.ptr = flecs_defer_cpp_set(world, stage, entity, id,
+            flecs_utosize(size), new_ptr);
         /* Modified command is already inserted */
         result.call_modified = false;
         return result;
@@ -609,7 +609,8 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
     ecs_cpp_get_mut_t result;
 
     if (flecs_defer_cmd(stage)) {
-        result.ptr = flecs_defer_assign(world, stage, entity, id);
+        result.ptr = flecs_defer_cpp_assign(
+            world, stage, entity, id, size, new_ptr);
         /* Modified command is already inserted */
         result.call_modified = false;
         return result;

@@ -2656,12 +2656,21 @@ void* flecs_defer_set(
     ecs_size_t size,
     void *value);
 
-/* Insert assign component command. */
-void* flecs_defer_assign(
+void* flecs_defer_cpp_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_id_t id);
+    ecs_id_t id,
+    ecs_size_t size,
+    const void *value);
+
+void* flecs_defer_cpp_assign(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_size_t size,
+    const void *value);
 
 /* Insert event command. */
 void flecs_enqueue(
@@ -5480,7 +5489,6 @@ void* flecs_defer_set(
 
         /* Call on_replace hook before copying the new value. */
         if (ti->hooks.on_replace) {
-            ecs_record_t *r = flecs_entities_get(world, entity);
             flecs_invoke_replace_hook(
                 world, r->table, ECS_RECORD_TO_ROW(r->row), entity, id, 
                 ptr.ptr, value, ti);
@@ -5500,37 +5508,117 @@ error:
     return NULL;
 }
 
-void* flecs_defer_assign(
+/* Same as flecs_defer_set, but doesn't copy value into storage. */
+void* flecs_defer_cpp_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_id_t id)
+    ecs_id_t id,
+    ecs_size_t size,
+    const void *value)
+{
+    ecs_assert(value != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
+    ecs_assert(cmd != NULL, ECS_INTERNAL_ERROR, NULL);
+    cmd->entity = entity;
+    cmd->id = id;
+
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    flecs_component_ptr_t ptr = flecs_defer_get_existing(
+        world, entity, r, id, size);
+
+    const ecs_type_info_t *ti = ptr.ti;
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
+        "provided component is not a type");
+    ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
+        "mismatching size specified for component in ensure/emplace/set");
+
+    /* Handle trivial set command (no hooks, OnSet observers) */
+    if (id < FLECS_HI_COMPONENT_ID) {
+        if (!world->non_trivial_set[id]) {
+            if (!ptr.ptr) {
+                ptr.ptr = flecs_stack_alloc(
+                    &stage->cmd->stack, size, ti->alignment);
+                
+                /* No OnSet observers, so ensure is enough */
+                cmd->kind = EcsCmdEnsure;
+                cmd->is._1.size = size;
+                cmd->is._1.value = ptr.ptr;
+            } else {
+                /* No OnSet observers, so only thing we need to do is make sure
+                 * that a preceding remove command doesn't cause the entity to
+                 * end up without the component. */
+                cmd->kind = EcsCmdAdd;
+            }
+
+            ecs_os_memcpy(ptr.ptr, value, size);
+            return ptr.ptr;
+        }
+    }
+    
+    if (!ptr.ptr) {
+        cmd->kind = EcsCmdSet;
+        cmd->is._1.size = size;
+        ptr.ptr = cmd->is._1.value =
+            flecs_stack_alloc(&stage->cmd->stack, size, ti->alignment);
+
+        ecs_xtor_t ctor = ti->hooks.ctor;
+        if (ctor) {
+            ctor(ptr.ptr, 1, ti);
+        }
+    } else {
+        cmd->kind = EcsCmdAddModified;
+
+        /* Call on_replace hook before copying the new value. */
+        if (ti->hooks.on_replace) {
+            flecs_invoke_replace_hook(
+                world, r->table, ECS_RECORD_TO_ROW(r->row), entity, id, 
+                ptr.ptr, value, ti);
+        }
+    }
+
+    return ptr.ptr;
+error:
+    return NULL;
+}
+
+void* flecs_defer_cpp_assign(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_size_t size,
+    const void *value)
 {
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_assert(r != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_component_record_t *cr = flecs_components_get(world, id);
-    ecs_assert(cr != NULL, ECS_INVALID_OPERATION, 
-        "unregistered component cannot be assigned, try set() instead");
-    ecs_assert(cr->type_info != NULL, ECS_INVALID_OPERATION, 
-        "assigned id is not a component");
+    flecs_component_ptr_t ptr = flecs_get_mut(world, entity, id, r, size);
+    ecs_assert(ptr.ptr != NULL, ECS_INVALID_PARAMETER,
+        "entity does not have component, use set() instead");
 
-    int32_t row = ECS_RECORD_TO_ROW(r->row);
-    void *result = flecs_get_component_ptr(r->table, row, cr).ptr;
-
-    bool track_changes = false;
-    track_changes |= (cr->flags & EcsIdHasOnSet) != 0;
-    track_changes |= cr->type_info->hooks.on_set != NULL;
-
-    if (track_changes) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage);
-        cmd->kind = EcsCmdModified;
-        cmd->entity = entity;
-        cmd->id = id;
-        cmd->cr = cr;
+    if (id < FLECS_HI_COMPONENT_ID) {
+        if (!world->non_trivial_set[id]) {
+            return ptr.ptr; /* Nothing more to do */
+        }
     }
 
-    return result;
+    /* Call on_replace hook before copying the new value. */
+    ecs_iter_action_t on_replace = ptr.ti->hooks.on_replace;
+    if (on_replace) {
+        flecs_invoke_replace_hook(
+            world, r->table, ECS_RECORD_TO_ROW(r->row), entity, id, 
+            ptr.ptr, value, ptr.ti);
+    }
+
+    ecs_cmd_t *cmd = flecs_cmd_new(stage);
+    cmd->kind = EcsCmdModified;
+    cmd->entity = entity;
+    cmd->id = id;
+
+    return ptr.ptr;
 }
 
 void flecs_enqueue(
@@ -23185,8 +23273,8 @@ ecs_cpp_get_mut_t ecs_cpp_set(
     ecs_cpp_get_mut_t result;
 
     if (flecs_defer_cmd(stage)) {
-        result.ptr = flecs_defer_ensure(world, stage, entity, id,
-            flecs_utosize(size));
+        result.ptr = flecs_defer_cpp_set(world, stage, entity, id,
+            flecs_utosize(size), new_ptr);
         /* Modified command is already inserted */
         result.call_modified = false;
         return result;
@@ -23236,7 +23324,8 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
     ecs_cpp_get_mut_t result;
 
     if (flecs_defer_cmd(stage)) {
-        result.ptr = flecs_defer_assign(world, stage, entity, id);
+        result.ptr = flecs_defer_cpp_assign(
+            world, stage, entity, id, size, new_ptr);
         /* Modified command is already inserted */
         result.call_modified = false;
         return result;
@@ -70398,6 +70487,10 @@ ecs_query_cache_t* flecs_query_cache_init(
             ecs_component_record_t *cr = 
                 flecs_components_ensure(world, term->id);
             cr->flags |= EcsIdHasOnSet;
+
+            if (term->id < FLECS_HI_COMPONENT_ID) {
+                world->non_trivial_set[term->id] = true;
+            }
         }
     }
 

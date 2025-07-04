@@ -190,12 +190,21 @@ void* flecs_defer_set(
     ecs_size_t size,
     void *value);
 
-/* Insert assign component command. */
-void* flecs_defer_assign(
+void* flecs_defer_cpp_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
-    ecs_id_t id);
+    ecs_id_t id,
+    ecs_size_t size,
+    const void *value);
+
+void* flecs_defer_cpp_assign(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_size_t size,
+    const void *value);
 
 /* Insert event command. */
 void flecs_enqueue(

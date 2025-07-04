@@ -363,6 +363,11 @@ void Entity_defer_on_replace_w_set_batched(void);
 void Entity_defer_on_replace_w_set_batched_twice(void);
 void Entity_defer_on_replace_w_set_batched_existing(void);
 void Entity_defer_on_replace_w_set_batched_existing_twice(void);
+void Entity_defer_on_replace_w_assign(void);
+void Entity_defer_on_replace_w_assign_existing(void);
+void Entity_defer_on_replace_w_assign_existing_twice(void);
+void Entity_defer_on_replace_w_assign_batched_existing(void);
+void Entity_defer_on_replace_w_assign_batched_existing_twice(void);
 
 // Testsuite 'OrderedChildren'
 void OrderedChildren_iter_no_children(void);
@@ -3011,6 +3016,26 @@ bake_test_case Entity_testcases[] = {
     {
         "defer_on_replace_w_set_batched_existing_twice",
         Entity_defer_on_replace_w_set_batched_existing_twice
+    },
+    {
+        "defer_on_replace_w_assign",
+        Entity_defer_on_replace_w_assign
+    },
+    {
+        "defer_on_replace_w_assign_existing",
+        Entity_defer_on_replace_w_assign_existing
+    },
+    {
+        "defer_on_replace_w_assign_existing_twice",
+        Entity_defer_on_replace_w_assign_existing_twice
+    },
+    {
+        "defer_on_replace_w_assign_batched_existing",
+        Entity_defer_on_replace_w_assign_batched_existing
+    },
+    {
+        "defer_on_replace_w_assign_batched_existing_twice",
+        Entity_defer_on_replace_w_assign_batched_existing_twice
     }
 };
 
@@ -7852,7 +7877,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        350,
+        355,
         Entity_testcases
     },
     {
