@@ -23260,8 +23260,6 @@ const ecs_member_t* ecs_cpp_last_member(
 }
 #endif
 
-#endif
-
 ecs_cpp_get_mut_t ecs_cpp_set(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -23364,6 +23362,8 @@ done:
 error:
     return (ecs_cpp_get_mut_t){0};
 }
+
+#endif
 
 /**
  * @file addons/http.c

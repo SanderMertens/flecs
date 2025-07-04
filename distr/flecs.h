@@ -21811,10 +21811,8 @@ inline void set(world_t *world, entity_t entity, const A& value) {
 // assign(T&&)
 template <typename T>
 inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
-    using ActualType = remove_reference_t<T>;
-
-    ecs_assert(_::type<ActualType>::size() != 0, ECS_INVALID_PARAMETER,
-        "operation invalid for empty type");
+    ecs_assert(_::type<remove_reference_t<T>>::size() != 0, 
+        ECS_INVALID_PARAMETER, "operation invalid for empty type");
 
     ecs_cpp_get_mut_t res = ecs_cpp_assign(
         world, entity, id, &value, sizeof(T));
@@ -21830,10 +21828,8 @@ inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_
 // assign(const T&)
 template <typename T>
 inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
-    using ActualType = remove_reference_t<T>;
-
-    ecs_assert(_::type<ActualType>::size() != 0, ECS_INVALID_PARAMETER,
-        "operation invalid for empty type");
+    ecs_assert(_::type<remove_reference_t<T>>::size() != 0, 
+        ECS_INVALID_PARAMETER, "operation invalid for empty type");
 
     ecs_cpp_get_mut_t res = ecs_cpp_assign(
         world, entity, id, &value, sizeof(T));
