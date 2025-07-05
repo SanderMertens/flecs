@@ -641,9 +641,16 @@ void Sparse_fini_w_sparse_tgt_in_module(void);
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
 void NonFragmentingChildOf_set_0_parent(void);
 void NonFragmentingChildOf_set_parent(void);
+void NonFragmentingChildOf_insert_parent(void);
 void NonFragmentingChildOf_remove_parent(void);
 void NonFragmentingChildOf_clear_child(void);
 void NonFragmentingChildOf_delete_child(void);
+void NonFragmentingChildOf_reparent(void);
+void NonFragmentingChildOf_set_parent_2_children(void);
+void NonFragmentingChildOf_remove_parent_2_children(void);
+void NonFragmentingChildOf_clear_2_children(void);
+void NonFragmentingChildOf_delete_2_children(void);
+void NonFragmentingChildOf_reparent_2_children(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5187,6 +5194,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_set_parent
     },
     {
+        "insert_parent",
+        NonFragmentingChildOf_insert_parent
+    },
+    {
         "remove_parent",
         NonFragmentingChildOf_remove_parent
     },
@@ -5197,6 +5208,30 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "delete_child",
         NonFragmentingChildOf_delete_child
+    },
+    {
+        "reparent",
+        NonFragmentingChildOf_reparent
+    },
+    {
+        "set_parent_2_children",
+        NonFragmentingChildOf_set_parent_2_children
+    },
+    {
+        "remove_parent_2_children",
+        NonFragmentingChildOf_remove_parent_2_children
+    },
+    {
+        "clear_2_children",
+        NonFragmentingChildOf_clear_2_children
+    },
+    {
+        "delete_2_children",
+        NonFragmentingChildOf_delete_2_children
+    },
+    {
+        "reparent_2_children",
+        NonFragmentingChildOf_reparent_2_children
     }
 };
 
@@ -13385,7 +13420,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        6,
+        13,
         NonFragmentingChildOf_testcases
     },
     {
