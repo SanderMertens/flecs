@@ -2,32 +2,31 @@
 
 #pragma once
 
+#if WITH_AUTOMATION_TESTS
+
 #include "CoreMinimal.h"
 #include "EngineUtils.h"
+#include "Tests/AutomationCommon.h"
 #include "Tests/AutomationEditorCommon.h"
 #include "UObject/Object.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
-#define FLECS_LOAD_OBJECT(AssetType, AssetPath) \
-	StaticLoadObject(AssetType::StaticClass(), nullptr, AssetPath, nullptr, LOAD_None, nullptr)
-
 class UNREALFLECSTESTS_API FFlecsTestFixture
 {
 public:
-	TStrongObjectPtr<UWorld> TestWorld = nullptr;
+	TUniquePtr<FTestWorldWrapper> TestWorldWrapper;
+	
+	TWeakObjectPtr<UWorld> TestWorld;
 	TStrongObjectPtr<UFlecsWorldSubsystem> WorldSubsystem = nullptr;
 	TStrongObjectPtr<UFlecsWorld> FlecsWorld = nullptr;
 
 	void SetUp(TScriptInterface<IFlecsGameLoopInterface> InGameLoopInterface = nullptr,
 	           const TArray<UObject*>& InModules = {})
 	{
-		TestWorld = TStrongObjectPtr(UWorld::CreateWorld(EWorldType::Game,
-			false, TEXT("FlecsTestWorld")));
-		
-		check(TestWorld.IsValid());
+		TestWorldWrapper = MakeUnique<FTestWorldWrapper>();
+		TestWorldWrapper->CreateTestWorld(EWorldType::Game);
 
-		FWorldContext& WorldContext = GEngine->CreateNewWorldContext(EWorldType::Game);
-		WorldContext.SetCurrentWorld(TestWorld.Get());
+		TestWorld = TestWorldWrapper->GetTestWorld();
 
 		WorldSubsystem = TStrongObjectPtr(TestWorld->GetSubsystem<UFlecsWorldSubsystem>());
 		check(WorldSubsystem.IsValid());
@@ -45,25 +44,57 @@ public:
 
 		FlecsWorld = TStrongObjectPtr(WorldSubsystem->CreateWorld(TEXT("TestWorld"), WorldSettings));
 
-		TestWorld->InitializeActorsForPlay(FURL());
-		TestWorld->BeginPlay();
+		TestWorldWrapper->BeginPlayInTestWorld();
+	}
+
+	void TickWorld(const float DeltaTime = 0.01f) const
+	{
+		TestWorldWrapper->TickTestWorld(DeltaTime);
 	}
 
 	void TearDown()
 	{
-		if (TestWorld.IsValid())
+		if (FlecsWorld.IsValid())
 		{
-			TestWorld->EndPlay(EEndPlayReason::Quit);
-			TestWorld->DestroyWorld(false);
-			GEngine->DestroyWorldContext(TestWorld.Get());
+			FlecsWorld.Reset();
 		}
 
-		TestWorld.Reset();
-		WorldSubsystem.Reset();
-		FlecsWorld.Reset();
+		if (WorldSubsystem.IsValid())
+		{
+			WorldSubsystem.Reset();
+		}
+
+		TestWorldWrapper.Reset();
+	}
+
+	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorld() const
+	{
+		return FlecsWorld.Get();
 	}
 	
 }; // class FFlecsTestFixture
+
+struct UNREALFLECSTESTS_API FFlecsTestFixtureRAII
+{
+	mutable FFlecsTestFixture Fixture;
+
+	FFlecsTestFixtureRAII(const TScriptInterface<IFlecsGameLoopInterface> InGameLoopInterface = nullptr,
+			   const TArray<UObject*>& InModules = {})
+	{
+		Fixture.SetUp(InGameLoopInterface, InModules);
+	}
+
+	~FFlecsTestFixtureRAII()
+	{
+		Fixture.TearDown();
+	}
+
+	FORCEINLINE FFlecsTestFixture* operator->() const
+	{
+		return &Fixture;
+	}
+	
+}; // struct FFlecsTestFixtureRAII
 
 #define FLECS_FIXTURE_LIFECYCLE(FixtureName) \
 	BeforeEach([this]() \
@@ -73,4 +104,18 @@ public:
 	AfterEach([this]() \
 	{ \
 		FixtureName.TearDown(); \
-	})
+	}) \
+
+#define FLECS_FIXTURE_LIFECYCLE_LATENT(FixtureName) \
+	LatentBeforeEach([this](const FDoneDelegate& Done) \
+	{ \
+		FixtureName.SetUp(); \
+		Done.Execute(); \
+	}); \
+	LatentAfterEach([this](const FDoneDelegate& Done) \
+	{ \
+		FixtureName.TearDown(); \
+		Done.Execute(); \
+	});
+
+#endif // #if WITH_AUTOMATION_TESTS

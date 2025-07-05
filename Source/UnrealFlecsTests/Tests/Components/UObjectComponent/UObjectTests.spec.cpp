@@ -1,7 +1,6 @@
 ﻿
 #if WITH_AUTOMATION_TESTS
 
-#include "FlecsUObjectComponentTestObject.h"
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
 #include "Kismet/KismetSystemLibrary.h"

@@ -180,7 +180,7 @@ struct entity : entity_builder<entity>
      * @param second The second element of the pair.
      */
     void* obtain(entity_t first, entity_t second) const {
-        return obtain(world_, id_, ecs_pair(first, second));
+        return obtain(ecs_pair(first, second));
     }
 
     /** Get mutable pointer for the second element of a pair.

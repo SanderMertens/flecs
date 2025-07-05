@@ -282,9 +282,12 @@ struct FOSApiInitializer
 
         os_api.get_time_ = [](ecs_time_t* TimeOut)
         {
+        	solid_check(TimeOut);
+        	
             const double Seconds = FPlatformTime::Seconds();
             TimeOut->sec = static_cast<uint32_t>(Seconds);
-        	// Seconds to Nanoseconds: // 1 second = 1e9 nanoseconds
+        	
+        	// Seconds to Nanoseconds: 1 second = 1e9 nanoseconds
             TimeOut->nanosec = static_cast<uint32_t>((Seconds - TimeOut->sec) * 1e9);
         };
 

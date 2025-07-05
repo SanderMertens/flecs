@@ -5,8 +5,8 @@
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
 #include "Queries/FlecsQueryDefinition.h"
-#include "QueryDefinitionTestComponents.h"
 #include "Queries/FlecsQuery.h"
+#include "Tests/FlecsTestTypes.h"
 
 BEGIN_DEFINE_SPEC(FQueryDefinitionTestsSpec,
                   "Flecs.Query.Definition",
@@ -22,7 +22,7 @@ void FQueryDefinitionTestsSpec::Define()
 	{
 		Fixture.SetUp();
 
-		Fixture.FlecsWorld->RegisterComponentType<FTestStruct_QueryDefinitions>();
+		Fixture.FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
 	});
 	
 	AfterEach([this]()
@@ -38,7 +38,7 @@ void FQueryDefinitionTestsSpec::Define()
 			
 			FFlecsQueryTermExpression TermExpression1;
 			TermExpression1.InputType.Type = EFlecsQueryInputType::ScriptStruct;
-			TermExpression1.InputType.ScriptStruct = FTestStruct_QueryDefinitions::StaticStruct();
+			TermExpression1.InputType.ScriptStruct = FFlecsTestStruct_Value::StaticStruct();
 			
 			Definition.AddQueryTerm(TermExpression1);
 
@@ -53,7 +53,7 @@ void FQueryDefinitionTestsSpec::Define()
 
 			FFlecsQueryTermExpression TermExpression1;
 			TermExpression1.InputType.Type = EFlecsQueryInputType::ScriptStruct;
-			TermExpression1.InputType.ScriptStruct = FTestStruct_QueryDefinitions::StaticStruct();
+			TermExpression1.InputType.ScriptStruct = FFlecsTestStruct_Value::StaticStruct();
 
 			Definition.AddQueryTerm(TermExpression1);
 
@@ -71,13 +71,13 @@ void FQueryDefinitionTestsSpec::Define()
 		It("Should create a query definition and query for entities", [this]
 		{
 			FFlecsEntityHandle Entity1 = Fixture.FlecsWorld->CreateEntity();
-			Entity1.Add<FTestStruct_QueryDefinitions>();
+			Entity1.Add<FFlecsTestStruct_Value>();
 			
 			FFlecsQueryDefinition Definition;
 
 			FFlecsQueryTermExpression TermExpression1;
 			TermExpression1.InputType.Type = EFlecsQueryInputType::ScriptStruct;
-			TermExpression1.InputType.ScriptStruct = FTestStruct_QueryDefinitions::StaticStruct();
+			TermExpression1.InputType.ScriptStruct = FFlecsTestStruct_Value::StaticStruct();
 
 			Definition.AddQueryTerm(TermExpression1);
 

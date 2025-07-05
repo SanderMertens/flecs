@@ -4,7 +4,7 @@
 
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
-#include "ComponentTestStructs.h"
+#include "Tests/FlecsTestTypes.h"
 
 BEGIN_DEFINE_SPEC(FRegisteredComponentTestsSpec,
                   "Flecs.Components.Registration",
@@ -19,10 +19,9 @@ void FRegisteredComponentTestsSpec::Define()
 	BeforeEach([this]()
 	{
 		Fixture.SetUp();
-
-		Fixture.FlecsWorld->RegisterComponentType<FTestComponent_RegisterComponentTest>();
-		Fixture.FlecsWorld->RegisterComponentType<FUStructTestComponent_RegisterComponentTest>();
-		Fixture.FlecsWorld->RegisterComponentType<FUStructTestComponent_Inherited>();
+		
+		Fixture.FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
+		Fixture.FlecsWorld->RegisterComponentType<FFlecsTestComponent_Inherited>();
 	});
 	
 	AfterEach([this]()
@@ -34,50 +33,57 @@ void FRegisteredComponentTestsSpec::Define()
 	{
 		It("Should register a size 1 USTRUCT and be a tag using CPP API", [this]()
 		{
-			Fixture.FlecsWorld->RegisterComponentType<FUStructTestComponent_TagUSTRUCT>();
+			Fixture.FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
 			
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
-			TestEntity.Add(FUStructTestComponent_TagUSTRUCT::StaticStruct());
+			TestEntity.Add(FFlecsTestStruct_Tag::StaticStruct());
 
 			FFlecsEntityHandle RegisteredComponent
-				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_TagUSTRUCT::StaticStruct());
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FFlecsTestStruct_Tag::StaticStruct());
 			
-			TestTrue("Component properties should be registered",
-				TestEntity.Has<FUStructTestComponent_TagUSTRUCT>());
-			TestTrue("Component properties should be registered",
-				TestEntity.Has(FUStructTestComponent_TagUSTRUCT::StaticStruct()));
+			TestTrue("Entity should have the FUStructTestComponent_TagUSTRUCT component using the CPP API",
+				TestEntity.Has<FFlecsTestStruct_Tag>());
+			TestTrue("Entity should have the FUStructTestComponent_TagUSTRUCT component using StaticStruct API",
+				TestEntity.Has(FFlecsTestStruct_Tag::StaticStruct()));
 			TestEqual("Component Size should be 0",
 				RegisteredComponent.Get<flecs::Component>().size, 0);
 		});
 
 		It("Should register a size 1 USTRUCT and be a tag using StaticStruct", [this]()
 		{
-			Fixture.FlecsWorld->RegisterComponentType(FUStructTestComponent_TagUSTRUCT::StaticStruct());
+			Fixture.FlecsWorld->RegisterComponentType(FFlecsTestStruct_Tag::StaticStruct());
 			
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
-			TestEntity.Add(FUStructTestComponent_TagUSTRUCT::StaticStruct());
+			TestEntity.Add(FFlecsTestStruct_Tag::StaticStruct());
 
-			FFlecsEntityHandle RegisteredComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_TagUSTRUCT::StaticStruct());
-			TestTrue("Component properties should be registered",
-				TestEntity.Has<FUStructTestComponent_TagUSTRUCT>());
-			TestTrue("Component properties should be registered",
-				TestEntity.Has(FUStructTestComponent_TagUSTRUCT::StaticStruct()));
+			const FFlecsEntityHandle RegisteredComponent
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FFlecsTestStruct_Tag::StaticStruct());
+			
+			TestTrue("Entity should have the FUStructTestComponent_TagUSTRUCT component using the StaticStruct API",
+				TestEntity.Has<FFlecsTestStruct_Tag>());
+			TestTrue("Entity should have the FUStructTestComponent_TagUSTRUCT component using StaticStruct API",
+				TestEntity.Has(FFlecsTestStruct_Tag::StaticStruct()));
+			
 			TestEqual("Component Size should be 0",
 				RegisteredComponent.Get<flecs::Component>().size, 0);
 		});
 
-		It("Should register a size 1 USTRUCT and be a non tag due to having a UPROPERTY using CPP", [this]()
+		It("Should register a size 1 USTRUCT and be a non tag due to having a UPROPERTY using CPP",
+			[this]()
 		{
 			Fixture.FlecsWorld->RegisterComponentType<FUStructTestComponent_NonTagUSTRUCT>();
 			
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Add(FUStructTestComponent_NonTagUSTRUCT::StaticStruct());
 
-			FFlecsEntityHandle RegisteredComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_NonTagUSTRUCT::StaticStruct());
-			TestTrue("Component properties should be registered",
+			const FFlecsEntityHandle RegisteredComponent
+				= Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_NonTagUSTRUCT::StaticStruct());
+				
+			TestTrue("Entity should have the FUStructTestComponent_NonTagUSTRUCT component using the CPP API",
 				TestEntity.Has<FUStructTestComponent_NonTagUSTRUCT>());
-			TestTrue("Component properties should be registered",
+			TestTrue("Entity should have the FUStructTestComponent_NonTagUSTRUCT component using StaticStruct API",
 				TestEntity.Has(FUStructTestComponent_NonTagUSTRUCT::StaticStruct()));
+				
 			TestEqual("Component Size should be 1",
 				RegisteredComponent.Get<flecs::Component>().size, 1);
 		});
@@ -90,9 +96,9 @@ void FRegisteredComponentTestsSpec::Define()
 			TestEntity.Add(FUStructTestComponent_NonTagUSTRUCT::StaticStruct());
 
 			FFlecsEntityHandle RegisteredComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_NonTagUSTRUCT::StaticStruct());
-			TestTrue("Component properties should be registered",
+			TestTrue("Entity should have the FUStructTestComponent_NonTagUSTRUCT component using the StaticStruct API",
 				TestEntity.Has<FUStructTestComponent_NonTagUSTRUCT>());
-			TestTrue("Component properties should be registered",
+			TestTrue("Entity should have the FUStructTestComponent_NonTagUSTRUCT component using StaticStruct API",
 				TestEntity.Has(FUStructTestComponent_NonTagUSTRUCT::StaticStruct()));
 			TestEqual("Component Size should be 1",
 				RegisteredComponent.Get<flecs::Component>().size, 1);
@@ -104,15 +110,15 @@ void FRegisteredComponentTestsSpec::Define()
 		It("Should add USTRUCT Component using StaticStruct", [this]()
 		{
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
-			TestEntity.Add(FUStructTestComponent_RegisterComponentTest::StaticStruct());
+			TestEntity.Add(FFlecsTestStruct_Value::StaticStruct());
 
-			FFlecsEntityHandle StaticStructComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_RegisterComponentTest::StaticStruct());
-			FFlecsEntityHandle CPPTypeComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct<FUStructTestComponent_RegisterComponentTest>();
+			const FFlecsEntityHandle StaticStructComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct(FFlecsTestStruct_Value::StaticStruct());
+			const FFlecsEntityHandle CPPTypeComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct<FFlecsTestStruct_Value>();
 
+			TestTrue("Entity should have the FFlecsTestStruct_Value component using StaticStruct",
+				TestEntity.Has<FFlecsTestStruct_Value>());
 			TestTrue("Component properties should be registered",
-				TestEntity.Has<FUStructTestComponent_RegisterComponentTest>());
-			TestTrue("Component properties should be registered",
-				TestEntity.Has(FUStructTestComponent_RegisterComponentTest::StaticStruct()));
+				TestEntity.Has(FFlecsTestStruct_Value::StaticStruct()));
 			TestEqual("Component properties should be registered",
 				StaticStructComponent, CPPTypeComponent);
 		});
@@ -120,51 +126,51 @@ void FRegisteredComponentTestsSpec::Define()
 		It("Should add USTRUCT Component using cpp type", [this]()
 		{
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
-			TestEntity.Add<FUStructTestComponent_RegisterComponentTest>();
+			TestEntity.Add<FFlecsTestStruct_Value>();
 			
-			FFlecsEntityHandle StaticStructComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct(FUStructTestComponent_RegisterComponentTest::StaticStruct());
-			FFlecsEntityHandle CPPTypeComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct<FUStructTestComponent_RegisterComponentTest>();
+			FFlecsEntityHandle StaticStructComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct(FFlecsTestStruct_Value::StaticStruct());
+			FFlecsEntityHandle CPPTypeComponent = Fixture.FlecsWorld->ObtainComponentTypeStruct<FFlecsTestStruct_Value>();
 
 			TestTrue("Component properties should be registered",
-				TestEntity.Has<FUStructTestComponent_RegisterComponentTest>());
+				TestEntity.Has<FFlecsTestStruct_Value>());
 			TestTrue("Component properties should be registered",
-				TestEntity.Has(FUStructTestComponent_RegisterComponentTest::StaticStruct()));
+				TestEntity.Has(FFlecsTestStruct_Value::StaticStruct()));
 			TestEqual("Component properties should be registered",
 				StaticStructComponent, CPPTypeComponent);
 		});
 
 		It("Should set USTRUCT Component using FInstancedStruct", [this]()
 		{
-			FInstancedStruct TestComponent = FInstancedStruct(FUStructTestComponent_RegisterComponentTest::StaticStruct());
-			TestComponent.InitializeAs<FUStructTestComponent_RegisterComponentTest>(FUStructTestComponent_RegisterComponentTest{ 1 });
+			FInstancedStruct TestComponent = FInstancedStruct(FFlecsTestStruct_Value::StaticStruct());
+			TestComponent.InitializeAs<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ 1 });
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestEntity.Set(TestComponent);
 
 			TestTrue("Component properties should be registered",
-				TestEntity.Has<FUStructTestComponent_RegisterComponentTest>());
+				TestEntity.Has<FFlecsTestStruct_Value>());
 				
 			if (TestTrue("Component properties should be registered",
-				TestEntity.Has(FUStructTestComponent_RegisterComponentTest::StaticStruct())))
+				TestEntity.Has(FFlecsTestStruct_Value::StaticStruct())))
 			{
 				TestEqual("Component properties should be registered",
-					TestEntity.Get<FUStructTestComponent_RegisterComponentTest>().Value, 1);
+					TestEntity.Get<FFlecsTestStruct_Value>().Value, 1);
 			}
 		});
 
 		It("Should set USTRUCT Component using Set Ptr", [this]()
 		{
-			constexpr FUStructTestComponent_RegisterComponentTest TestComponent{ 1 };
+			constexpr FFlecsTestStruct_Value TestComponent{ 1 };
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
-			TestEntity.Set(FUStructTestComponent_RegisterComponentTest::StaticStruct(), &TestComponent);
+			TestEntity.Set(FFlecsTestStruct_Value::StaticStruct(), &TestComponent);
 
 			TestTrue("Component properties should be registered",
-				TestEntity.Has<FUStructTestComponent_RegisterComponentTest>());
+				TestEntity.Has<FFlecsTestStruct_Value>());
 				
 			if (TestTrue("Component properties should be registered",
-				TestEntity.Has(FUStructTestComponent_RegisterComponentTest::StaticStruct())))
+				TestEntity.Has(FFlecsTestStruct_Value::StaticStruct())))
 			{
 				TestEqual("Component properties should be registered",
-					TestEntity.Get<FUStructTestComponent_RegisterComponentTest>().Value, 1);
+					TestEntity.Get<FFlecsTestStruct_Value>().Value, 1);
 			}
 		});
 	});

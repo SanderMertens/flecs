@@ -173,6 +173,12 @@
  */
  #define FLECS_CPP_NO_AUTO_REGISTRATION
 
+#if !defined(FLECS_CPP_NO_AUTO_REGISTRATION)
+
+#error "UnrealFlecs does not support Auto Registration, please define FLECS_CPP_NO_AUTO_REGISTRATION to use UnrealFlecs."
+
+#endif // #if !defined(FLECS_CPP_NO_AUTO_REGISTRATION)
+
 /** @def FLECS_CPP_NO_ENUM_REFLECTION 
  * When set, the C++ API will not attempt to discover and register enum 
  * constants for registered enum components. This will cause C++ APIs that 

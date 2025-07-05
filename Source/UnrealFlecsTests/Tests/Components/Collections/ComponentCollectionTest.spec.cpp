@@ -18,7 +18,7 @@ void FComponentCollectionTestSpec::Define()
 {
 	BeforeEach([this]()
 	{
-		UFlecsTransformModule* Module = NewObject<UFlecsTransformModule>();
+		const TSolidNotNull<UFlecsTransformModule*> Module = NewObject<UFlecsTransformModule>();
 		Fixture.SetUp( nullptr, { Module } );
 	});
 	
@@ -31,7 +31,7 @@ void FComponentCollectionTestSpec::Define()
 	{
 		It("Should be able to add a Component Collection", [this]()
 		{
-			FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
+			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 				
 			UFlecsTransform3dCollection* Collection = NewObject<UFlecsTransform3dCollection>();
 			Collection->Location = FFlecsLocationComponent(FVector(1.f, 2.f, 3.f));

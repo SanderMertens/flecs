@@ -117,7 +117,7 @@ public:
 	{
 		Super::Tick(DeltaTime);
 
-		if UNLIKELY_IF(!DefaultWorld)
+		if UNLIKELY_IF(!IsValid(DefaultWorld))
 		{
 			return;
 		}

@@ -29,10 +29,13 @@ void FFlecsOSApiTestsSpec::Define()
 		{
 			void* Memory = ecs_os_malloc(10);
     		TestNotNull("Memory should not be null", Memory);
+    		
     		void* NewMemory = ecs_os_realloc(Memory, 20);
     		TestNotNull("Memory should not be null", NewMemory);
+    		
     		ecs_os_free(NewMemory);
     		NewMemory = nullptr;
+    		TestNull("NewMemory should be null", NewMemory);
 		});
     });
 
@@ -44,12 +47,13 @@ void FFlecsOSApiTestsSpec::Define()
 			TestTrue("Time should be greater than 0", Time > 0);
 		});
 
-		It("Should Sleep 10000 nanosecs", [this]
+		It("Should Sleep 10000 nano secs", [this]
 		{
 			ecs_time_t Time = {};
 			ecs_time_measure(&Time);
 			ecs_os_sleep(0, 10000);
 			const double Elapsed = ecs_time_measure(&Time);
+			
 			TestTrue("Elapsed time should be greater than 0", Elapsed > 0);
 		});
 	});

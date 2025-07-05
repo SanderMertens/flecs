@@ -22,34 +22,38 @@ void FEntityBasicTestsSpec::Define()
 		It("Should create and delete an entity", [this]()
 		{
 			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity();
-			TestTrue("Entity should be valid", EntityHandle.IsValid());
+			TestTrueExpr(EntityHandle.IsValid());
 		});
 
 		It("Should create and delete an entity with a name", [this]()
 		{
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
 			TestTrue("Entity should be valid", EntityHandle.IsValid());
-			TestEqual("Entity name should be TestEntity", EntityHandle.GetName(), TEXT("TestEntity"));
+			TestEqual("Entity name should be TestEntity",
+				EntityHandle.GetName(), TEXT("TestEntity"));
+			
 			EntityHandle.Destroy();
-			TestFalse("Entity should be invalid", EntityHandle.IsValid());
+			TestFalseExpr(EntityHandle.IsValid());
 		});
 
 		It("Should create an entity with a specific ID", [this]()
 		{
 			constexpr FFlecsId EntityId = 12345;
+			
 			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntityWithId(EntityId);
-			TestTrue("Entity should be valid", EntityHandle.IsValid());
 			TestTrue("Entity ID should be 12345", EntityHandle == EntityId);
 		});
 
 		It("Should create an entity and destroy it with a specific Id", [this]()
 		{
 			constexpr FFlecsId EntityId = 12345;
+			
 			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntityWithId(EntityId);
 			TestTrue("Entity should be valid", EntityHandle.IsValid());
 			TestTrue("Entity ID should be 12345", EntityHandle == EntityId);
+			
 			EntityHandle.Destroy();
-			TestFalse("Entity should be invalid", EntityHandle.IsValid());
+			TestFalseExpr(EntityHandle.IsValid());
 		});
 	});
 
@@ -57,23 +61,28 @@ void FEntityBasicTestsSpec::Define()
 	{
 		It("Should create a child entity", [this]()
 		{
-			FFlecsEntityHandle ParentEntity = Fixture.FlecsWorld->CreateEntity();
-			FFlecsEntityHandle ChildEntity = Fixture.FlecsWorld->CreateEntity();
+			const FFlecsEntityHandle ParentEntity = Fixture.FlecsWorld->CreateEntity();
+			const FFlecsEntityHandle ChildEntity = Fixture.FlecsWorld->CreateEntity();
 			ChildEntity.SetParent(ParentEntity);
+			
 			TestTrue("Child entity should be valid", ChildEntity.IsValid());
 			TestTrue("Parent entity should be valid", ParentEntity.IsValid());
-			TestTrue("Child entity should have a parent", ChildEntity.HasParent());
-			TestEqual("Child entity should have a parent", ChildEntity.GetParent(), ParentEntity);
+			TestTrueExpr(ChildEntity.HasParent());
+			
+			TestEqual("Child entity should have a parent",
+				ChildEntity.GetParent(), ParentEntity);
 		});
 
 		It("Should create a child entity and then destroy the parent", [this]()
 		{
-			FFlecsEntityHandle ParentEntity = Fixture.FlecsWorld->CreateEntity();
-			FFlecsEntityHandle ChildEntity = Fixture.FlecsWorld->CreateEntity();
+			const FFlecsEntityHandle ParentEntity = Fixture.FlecsWorld->CreateEntity();
+			const FFlecsEntityHandle ChildEntity = Fixture.FlecsWorld->CreateEntity();
 			ChildEntity.SetParent(ParentEntity);
+			
 			TestTrue("Child entity should be valid", ChildEntity.IsValid());
 			TestTrue("Parent entity should be valid", ParentEntity.IsValid());
 			TestEqual("Child entity should have a parent", ChildEntity.GetParent(), ParentEntity);
+			
 			ParentEntity.Destroy();
 			TestFalse("Parent entity should be invalid", ParentEntity.IsValid());
 			TestFalse("Child entity should be invalid", ChildEntity.IsValid());
@@ -81,10 +90,10 @@ void FEntityBasicTestsSpec::Define()
 
 		It("Should create a path of child entities", [this]()
 		{
-			FFlecsEntityHandle ParentEntity = Fixture.FlecsWorld->CreateEntity("Parent");
-			FFlecsEntityHandle ChildEntity1 = Fixture.FlecsWorld->CreateEntity("Child1");
-			FFlecsEntityHandle ChildEntity2 = Fixture.FlecsWorld->CreateEntity("Child2");
-			FFlecsEntityHandle ChildEntity3 = Fixture.FlecsWorld->CreateEntity("Child3");
+			const FFlecsEntityHandle ParentEntity = Fixture.FlecsWorld->CreateEntity("Parent");
+			const FFlecsEntityHandle ChildEntity1 = Fixture.FlecsWorld->CreateEntity("Child1");
+			const FFlecsEntityHandle ChildEntity2 = Fixture.FlecsWorld->CreateEntity("Child2");
+			const FFlecsEntityHandle ChildEntity3 = Fixture.FlecsWorld->CreateEntity("Child3");
 
 			ChildEntity1.SetParent(ParentEntity);
 			ChildEntity2.SetParent(ChildEntity1);
@@ -99,12 +108,9 @@ void FEntityBasicTestsSpec::Define()
 			TestEqual("Child entity 2 should have a parent", ChildEntity2.GetParent(), ChildEntity1);
 			TestEqual("Child entity 3 should have a parent", ChildEntity3.GetParent(), ChildEntity2);
 
-			TestEqual("Child entity 1 should have a parent name",
-				ChildEntity1.GetDepth(flecs::ChildOf), 1);
-			TestEqual("Child entity 2 should have a parent name",
-				ChildEntity2.GetDepth(flecs::ChildOf), 2);
-			TestEqual("Child entity 3 should have a parent name",
-				ChildEntity3.GetDepth(flecs::ChildOf), 3);
+			TestEqual("Child entity 1 should have a depth of 1", ChildEntity1.GetDepth(flecs::ChildOf), 1);
+			TestEqual("Child entity 2 should have a depth of 2", ChildEntity2.GetDepth(flecs::ChildOf), 2);
+			TestEqual("Child entity 3 should have a depth of 3", ChildEntity3.GetDepth(flecs::ChildOf), 3);
 		});
 	});
 
@@ -112,43 +118,36 @@ void FEntityBasicTestsSpec::Define()
 	{
 		It("Should create an entity with a name", [this]()
 		{
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			
 			TestTrue("Entity should be valid", EntityHandle.IsValid());
-			TestEqual("Entity name should be TestEntity", EntityHandle.GetName(),
-				TEXT("TestEntity"));
+			TestEqual("Entity name should be TestEntity", EntityHandle.GetName(), TEXT("TestEntity"));
 		});
 
 		It("Should create an entity with a name and change it", [this]()
 		{
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
 			TestTrue("Entity should be valid", EntityHandle.IsValid());
-			TestEqual("Entity name should be TestEntity", EntityHandle.GetName(),
-				TEXT("TestEntity"));
+			TestEqual("Entity name should be TestEntity", EntityHandle.GetName(), TEXT("TestEntity"));
 			EntityHandle.SetName(TEXT("NewName"));
-			TestEqual("Entity name should be NewName", EntityHandle.GetName(),
-				TEXT("NewName"));
+			TestEqual("Entity name should be NewName", EntityHandle.GetName(), TEXT("NewName"));
 		});
 
 		It("Should create a path of entities using the '::' Separator", [this]()
 		{
-			FFlecsEntityHandle ParentEntity = Fixture.FlecsWorld->CreateEntity("Parent");
-			FFlecsEntityHandle ChildEntity1 = Fixture.FlecsWorld->CreateEntity("Child1");
+			const FFlecsEntityHandle ParentEntity = Fixture.FlecsWorld->CreateEntity("Parent");
+			const FFlecsEntityHandle ChildEntity1 = Fixture.FlecsWorld->CreateEntity("Child1");
 			ChildEntity1.SetParent(ParentEntity);
-			FFlecsEntityHandle ChildEntity2 = Fixture.FlecsWorld->CreateEntity("Child2");
+			const FFlecsEntityHandle ChildEntity2 = Fixture.FlecsWorld->CreateEntity("Child2");
 			ChildEntity2.SetParent(ChildEntity1);
-			FFlecsEntityHandle ChildEntity3 = Fixture.FlecsWorld->CreateEntity("Child3");
+			const FFlecsEntityHandle ChildEntity3 = Fixture.FlecsWorld->CreateEntity("Child3");
 			ChildEntity3.SetParent(ChildEntity2);
 
-			TestTrue("Parent entity should be valid",
-				Fixture.FlecsWorld->LookupEntity("Parent").IsValid());
-			TestTrue("Child entity 1 should be valid",
-				Fixture.FlecsWorld->LookupEntity("Parent::Child1").IsValid());
-			TestFalse("Child entity 1 should not be valid",
-				Fixture.FlecsWorld->LookupEntity("Child1").IsValid());
-			TestTrue("Child entity 1 should be valid",
-				Fixture.FlecsWorld->LookupEntity("Parent::Child1::Child2").IsValid());
-			TestFalse("Child entity 1 should not be valid",
-				Fixture.FlecsWorld->LookupEntity("Child2").IsValid());
+			TestTrue("Parent entity should be valid", Fixture.FlecsWorld->LookupEntity("Parent").IsValid());
+			TestTrue("Child entity 1 under parent scope should be valid", Fixture.FlecsWorld->LookupEntity("Parent::Child1").IsValid());
+			TestFalse("Child entity 1 should not be valid", Fixture.FlecsWorld->LookupEntity("Child1").IsValid());
+			TestTrue("Child entity 2 under child 1 scope should be valid", Fixture.FlecsWorld->LookupEntity("Parent::Child1::Child2").IsValid());
+			TestFalse("Child entity 2 should not be valid", Fixture.FlecsWorld->LookupEntity("Child2").IsValid());
 		});
 	});
 
@@ -163,15 +162,15 @@ void FEntityBasicTestsSpec::Define()
 
 			Fixture.FlecsWorld->RegisterComponentType<FTestComponent>()
 				.AddMember<int32>("Value");
-			
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
 			EntityHandle.Set<FTestComponent>({ 42 });
-			FString SerializedEntity = EntityHandle.ToJson();
+			const FString SerializedEntity = EntityHandle.ToJson();
 			EntityHandle.Destroy();
 			
 			TestTrue("Serialized entity should not be empty", !SerializedEntity.IsEmpty());
-			
-			FFlecsEntityHandle DeserializedEntity = Fixture.FlecsWorld->CreateEntity();
+
+			const FFlecsEntityHandle DeserializedEntity = Fixture.FlecsWorld->CreateEntity();
 			
 			DeserializedEntity.FromJson(SerializedEntity);
 			
@@ -185,47 +184,42 @@ void FEntityBasicTestsSpec::Define()
 	{
 		It("Should create an entity with a pair", [this]()
 		{
-			FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
-			FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
-			
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			const FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
+			const FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
+
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
 			
 			EntityHandle.AddPair(FirstEntity, SecondEntity);
-			TestTrue("Entity should have a pair",
-				EntityHandle.HasPair(FirstEntity, SecondEntity));
+			TestTrue("Entity should have a pair", EntityHandle.HasPair(FirstEntity, SecondEntity));
 		});
 
 		It("Should create an entity with a pair and then remove it", [this]()
 		{
-			FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
-			FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
-			
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			const FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
+			const FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
+
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
 			
 			EntityHandle.AddPair(FirstEntity, SecondEntity);
-			TestTrue("Entity should have a pair",
-				EntityHandle.HasPair(FirstEntity, SecondEntity));
+			TestTrue("Entity should have a pair", EntityHandle.HasPair(FirstEntity, SecondEntity));
 			
 			EntityHandle.RemovePair(FirstEntity, SecondEntity);
-			TestFalse("Entity should not have a pair",
-				EntityHandle.HasPair(FirstEntity, SecondEntity));
+			TestFalse("Entity should not have a pair", EntityHandle.HasPair(FirstEntity, SecondEntity));
 		});
 
 		It("Should create an entity with multiple pairs", [this]()
 		{
-			FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
-			FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
-			FFlecsEntityHandle ThirdEntity = Fixture.FlecsWorld->CreateEntity(TEXT("ThirdEntity"));
-			
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+			const FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
+			const FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
+			const FFlecsEntityHandle ThirdEntity = Fixture.FlecsWorld->CreateEntity(TEXT("ThirdEntity"));
+
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
 			
 			EntityHandle.AddPair(FirstEntity, SecondEntity);
 			EntityHandle.AddPair(FirstEntity, ThirdEntity);
 			
-			TestTrue("Entity should have a pair with First and Second",
-				EntityHandle.HasPair(FirstEntity, SecondEntity));
-			TestTrue("Entity should have a pair with First and Third",
-				EntityHandle.HasPair(FirstEntity, ThirdEntity));
+			TestTrue("Entity should have a pair with First and Second", EntityHandle.HasPair(FirstEntity, SecondEntity));
+			TestTrue("Entity should have a pair with First and Third", EntityHandle.HasPair(FirstEntity, ThirdEntity));
 		});
 
 		It("Should create an entity with a pair that has a component in the first of the pair (with data)",
@@ -238,17 +232,15 @@ void FEntityBasicTestsSpec::Define()
 
 			Fixture.FlecsWorld->RegisterComponentType<FTestPairComponent>()
 				.AddMember<int32>("Value");
-				
-			FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
-			
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+
+			const FFlecsEntityHandle SecondEntity = Fixture.FlecsWorld->CreateEntity(TEXT("SecondEntity"));
+
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
 			
 			EntityHandle.SetPairFirst<FTestPairComponent>(SecondEntity, { .Value = 100 });
 
-			TestTrue("Entity should have a pair with SecondEntity without data",
-				EntityHandle.HasPair<FTestPairComponent>(SecondEntity));
-			TestFalse("Entity should not have a pair with SecondEntity",
-				EntityHandle.HasPairSecond<FTestPairComponent>(SecondEntity));
+			TestTrueExpr(EntityHandle.HasPair<FTestPairComponent>(SecondEntity));
+			TestFalseExpr(EntityHandle.HasPairSecond<FTestPairComponent>(SecondEntity));
 			TestEqual("Entity pair component value should be 100", 
 				EntityHandle.GetPairFirst<FTestPairComponent>(SecondEntity).Value, 100);
 		});
@@ -263,22 +255,18 @@ void FEntityBasicTestsSpec::Define()
 
 			Fixture.FlecsWorld->RegisterComponentType<FTestPairComponent>()
 				.AddMember<int32>("Value");
-				
-			FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
-			
-			FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
+
+			const FFlecsEntityHandle FirstEntity = Fixture.FlecsWorld->CreateEntity(TEXT("FirstEntity"));
+
+			const FFlecsEntityHandle EntityHandle = Fixture.FlecsWorld->CreateEntity(TEXT("TestEntity"));
 			
 			EntityHandle.SetPairSecond<FTestPairComponent>(FirstEntity, { .Value = 200 });
 
-			TestTrue("Entity should have a pair with FirstEntity without data",
-				EntityHandle.HasPairSecond<FTestPairComponent>(FirstEntity));
-			TestFalse("Entity should not have a pair with FirstEntity",
-				EntityHandle.HasPair<FTestPairComponent>(FirstEntity));
+			TestTrueExpr(EntityHandle.HasPairSecond<FTestPairComponent>(FirstEntity));
+			TestFalseExpr(EntityHandle.HasPair<FTestPairComponent>(FirstEntity));
 			TestEqual("Entity pair component value should be 200", 
 				EntityHandle.GetPairSecond<FTestPairComponent>(FirstEntity).Value, 200);
 		});
-
-		
 		
 	});
 }

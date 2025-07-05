@@ -29,7 +29,7 @@ void FStringComponentTestsSpec::Define()
 		It("Should be able to add a FName component to an entity", [this]
 		{
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
-			TestEntity.Set<FName>(FName(TEXT("Hello, World!")));
+			TestEntity.Set<FName>(FName(TEXT("World")));
 
 			FString TestSerialization = TestEntity.ToJson();
 		});
