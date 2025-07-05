@@ -1264,6 +1264,7 @@ void ComponentLifecycle_on_replace_w_ensure(void);
 void ComponentLifecycle_on_replace_w_emplace(void);
 void ComponentLifecycle_on_replace_w_set(void);
 void ComponentLifecycle_on_replace_w_set_existing(void);
+void ComponentLifecycle_on_replace_set_2_entities(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -7480,6 +7481,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_replace_w_set_existing",
         ComponentLifecycle_on_replace_w_set_existing
+    },
+    {
+        "on_replace_set_2_entities",
+        ComponentLifecycle_on_replace_set_2_entities
     }
 };
 
@@ -12941,7 +12946,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        127,
+        128,
         ComponentLifecycle_testcases
     },
     {

@@ -4015,6 +4015,9 @@ void replace_Position(ecs_iter_t *it) {
     Position *old = ecs_field(it, Position, 0);
     Position *new = ecs_field(it, Position, 1);
 
+    ecs_assert(old != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new != NULL, ECS_INTERNAL_ERROR, NULL);
+
     test_int(it->count, 1);
 
     switch(replace_Position_invoked) {
@@ -4121,6 +4124,35 @@ void ComponentLifecycle_on_replace_w_set_existing(void) {
     test_int(replace_Position_invoked, 1);
 
     ecs_set(world, e, Position, {11, 21});
+    test_int(replace_Position_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_replace_set_2_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+    ecs_set(world, e1, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+    ecs_set(world, e1, Position, {11, 21});
+    test_int(replace_Position_invoked, 2);
+
+    replace_Position_invoked = 0;
+
+    ecs_entity_t e2 = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+    ecs_set(world, e2, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+    ecs_set(world, e2, Position, {11, 21});
     test_int(replace_Position_invoked, 2);
 
     ecs_fini(world);
