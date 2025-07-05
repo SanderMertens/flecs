@@ -2373,7 +2373,6 @@ void flecs_invoke_hook(
 void flecs_invoke_replace_hook(
     ecs_world_t *world,
     ecs_table_t *table,
-    int32_t row,
     ecs_entity_t entity,
     ecs_id_t id,
     const void *old_ptr,
@@ -5487,8 +5486,7 @@ void* flecs_defer_set(
         /* Call on_replace hook before copying the new value. */
         if (ti->hooks.on_replace) {
             flecs_invoke_replace_hook(
-                world, r->table, ECS_RECORD_TO_ROW(r->row), entity, id, 
-                ptr.ptr, value, ti);
+                world, r->table, entity, id, ptr.ptr, value, ti);
         }
 
         copy = ti->hooks.copy;
@@ -5571,8 +5569,7 @@ void* flecs_defer_cpp_set(
         /* Call on_replace hook before copying the new value. */
         if (ti->hooks.on_replace) {
             flecs_invoke_replace_hook(
-                world, r->table, ECS_RECORD_TO_ROW(r->row), entity, id, 
-                ptr.ptr, value, ti);
+                world, r->table, entity, id, ptr.ptr, value, ti);
         }
     }
 
@@ -5606,8 +5603,7 @@ void* flecs_defer_cpp_assign(
     ecs_iter_action_t on_replace = ptr.ti->hooks.on_replace;
     if (on_replace) {
         flecs_invoke_replace_hook(
-            world, r->table, ECS_RECORD_TO_ROW(r->row), entity, id, 
-            ptr.ptr, value, ptr.ti);
+            world, r->table, entity, id, ptr.ptr, value, ptr.ti);
     }
 
     ecs_cmd_t *cmd = flecs_cmd_new(stage);
@@ -6000,7 +5996,7 @@ void flecs_cmd_batch_for_entity(
                     void *ptr = cmd->is._1.value;
                     const ecs_type_info_t *ti = dst.ti;
                     if (ti->hooks.on_replace) {
-                        flecs_invoke_replace_hook(world, r->table, row, entity, 
+                        flecs_invoke_replace_hook(world, r->table, entity, 
                             cmd->id, dst.ptr, ptr, ti);
                     }
 
@@ -6503,7 +6499,6 @@ void flecs_invoke_hook(
 void flecs_invoke_replace_hook(
     ecs_world_t *world,
     ecs_table_t *table,
-    int32_t row,
     ecs_entity_t entity,
     ecs_id_t id,
     const void *old_ptr,
@@ -6531,7 +6526,7 @@ void flecs_invoke_replace_hook(
     it.row_fields = 0;
     it.ref_fields = it.row_fields;
     it.sizes = sizes;
-    it.ptrs = ECS_CONST_CAST(void*, ptrs);
+    it.ptrs = ECS_CONST_CAST(void**, ptrs);
     it.ids = ids;
     it.sources = srcs;
     it.event = 0;
@@ -6539,7 +6534,7 @@ void flecs_invoke_replace_hook(
     it.ctx = ti->hooks.ctx;
     it.callback_ctx = ti->hooks.binding_ctx;
     it.count = 1;
-    it.offset = row;
+    it.offset = 0; /* Don't set row because we don't want to offset ptrs */
     it.flags = EcsIterIsValid;
 
     ti->hooks.on_replace(&it);
@@ -8004,8 +7999,8 @@ void flecs_copy_id(
     ecs_check(src_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ti->hooks.on_replace) {
-        flecs_invoke_replace_hook(world, r->table, 
-            ECS_RECORD_TO_ROW(r->row), entity, id, dst_ptr, src_ptr, ti);
+        flecs_invoke_replace_hook(
+            world, r->table, entity, id, dst_ptr, src_ptr, ti);
     }
 
     ecs_copy_t copy = ti->hooks.copy;
@@ -9367,8 +9362,8 @@ void flecs_set_id_move(
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ti->hooks.on_replace) {
-        flecs_invoke_replace_hook(world, r->table, 
-            ECS_RECORD_TO_ROW(r->row), entity, id, dst.ptr, ptr, ti);
+        flecs_invoke_replace_hook(
+            world, r->table, entity, id, dst.ptr, ptr, ti);
     }
 
     ecs_move_t move;
@@ -23298,8 +23293,8 @@ ecs_cpp_get_mut_t ecs_cpp_set(
     result.call_modified = true;
 
     if (dst.ti->hooks.on_replace) {
-        flecs_invoke_replace_hook(world, r->table, 
-            ECS_RECORD_TO_ROW(r->row), entity, id, dst.ptr, new_ptr, dst.ti);
+        flecs_invoke_replace_hook(
+            world, r->table, entity, id, dst.ptr, new_ptr, dst.ti);
     }
 
 done:
@@ -23351,8 +23346,8 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
     result.call_modified = true;
 
     if (dst.ti->hooks.on_replace) {
-        flecs_invoke_replace_hook(world, r->table, 
-            ECS_RECORD_TO_ROW(r->row), entity, id, dst.ptr, new_ptr, dst.ti);
+        flecs_invoke_replace_hook(
+            world, r->table, entity, id, dst.ptr, new_ptr, dst.ti);
     }
 
 done:

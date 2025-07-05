@@ -1322,7 +1322,8 @@
                 "on_replace_w_ensure",
                 "on_replace_w_emplace",
                 "on_replace_w_set",
-                "on_replace_w_set_existing"
+                "on_replace_w_set_existing",
+                "on_replace_set_2_entities"
             ]
         }, {
             "id": "Pairs",
