@@ -139,7 +139,7 @@ bool flecs_set_id_flag(
 
         if (flag == EcsIdOnInstantiateInherit) {
             if (cr->id < FLECS_HI_COMPONENT_ID) {
-                world->non_trivial[cr->id] |= EcsNonTrivialIdInherit;
+                world->non_trivial_lookup[cr->id] |= EcsNonTrivialIdInherit;
             }
         }
 

@@ -256,7 +256,11 @@
  * Increasing this value increases the size of the lookup array, which allows
  * fast table traversal, which improves performance of ECS add/remove
  * operations. Component ids that fall outside of this range use a regular map
- * lookup, which is slower but more memory efficient. */
+ * lookup, which is slower but more memory efficient. 
+ * 
+ * This value must be set to a value that is a power of 2. Setting it to a value
+ * that is not a power of two will degrade performance.
+ */
 #ifndef FLECS_HI_COMPONENT_ID
 #define FLECS_HI_COMPONENT_ID (512)
 #endif
@@ -1045,6 +1049,12 @@ struct ecs_type_hooks_t {
      * This callback is invoked after the triggers are invoked, and before the
      * destructor is invoked. */
     ecs_iter_action_t on_remove;
+
+    /** Callback that is invoked with the existing and new value before the
+     * value is assigned. Invoked after on_add and before on_set. Registering
+     * an on_replace hook prevents using operations that return a mutable 
+     * pointer to the component like get_mut, ensure and emplace. */
+    ecs_iter_action_t on_replace;
 
     void *ctx;                         /**< User defined context */
     void *binding_ctx;                 /**< Language binding context */
@@ -3360,48 +3370,14 @@ FLECS_ALWAYS_INLINE void* ecs_get_mut_id(
  * @param id The entity id of the component to obtain.
  * @return The component pointer.
  *
- * @see ecs_ensure_modified_id()
  * @see ecs_emplace_id()
  */
 FLECS_API
 void* ecs_ensure_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id);
-
-/** Combines ensure + modified in single operation.
- * This operation is a more efficient alternative to calling ecs_ensure_id() and
- * ecs_modified_id() separately. This operation is only valid when the world is in
- * deferred mode, which ensures that the Modified event is not emitted before
- * the modification takes place.
- *
- * @param world The world.
- * @param entity The entity.
- * @param id The id of the component to obtain.
- * @return The component pointer.
- */
-FLECS_API
-void* ecs_ensure_modified_id(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id);
-
-/** Combines get_mut + modified in single operation.
- * This operation is a more efficient alternative to calling ecs_get_mut_id() and
- * ecs_modified_id() separately. This operation is only valid when the world is in
- * deferred mode, which ensures that the Modified event is not emitted before
- * the modification takes place.
- *
- * @param world The world.
- * @param entity The entity.
- * @param id The id of the component to obtain.
- * @return The component pointer.
- */
-FLECS_API
-void* ecs_get_mut_modified_id(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id);
+    ecs_id_t id,
+    size_t size);
 
 /** Create a component ref.
  * A ref is a handle to an entity + component which caches a small amount of

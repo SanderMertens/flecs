@@ -79,6 +79,17 @@ void flecs_inc_observer_count(
             if (cr) {
                 cr->flags |= flags;
             }
+
+            /* Track that we've created an OnSet observer so we know not to take
+             * fast code path when doing a set operation. */
+            if (event == EcsOnSet || event == EcsWildcard) {
+                if (id < FLECS_HI_COMPONENT_ID) {
+                    world->non_trivial_set[id] = true;
+                } else if (id == EcsWildcard || id == EcsAny) {
+                    ecs_os_memset_n(world->non_trivial_set, true, bool, 
+                        FLECS_HI_COMPONENT_ID);
+                }
+            }
         }
     } else if (result == 0) {
         /* Ditto, but the reverse */

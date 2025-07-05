@@ -257,7 +257,8 @@ untyped_component& range(
 
     // Don't use C++ ensure because Unreal defines a macro called ensure
     flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
-        ecs_ensure_id(w, me, w.id<flecs::MemberRanges>()));
+        ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
+            sizeof(flecs::MemberRanges)));
     mr->value.min = min;
     mr->value.max = max;
     me.modified<flecs::MemberRanges>();
@@ -279,7 +280,8 @@ untyped_component& warning_range(
 
     // Don't use C++ ensure because Unreal defines a macro called ensure
     flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
-        ecs_ensure_id(w, me, w.id<flecs::MemberRanges>()));
+        ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
+            sizeof(flecs::MemberRanges)));
     mr->warning.min = min;
     mr->warning.max = max;
     me.modified<flecs::MemberRanges>();
@@ -301,7 +303,7 @@ untyped_component& error_range(
 
     // Don't use C++ ensure because Unreal defines a macro called ensure
     flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(ecs_ensure_id(
-        w, me, w.id<flecs::MemberRanges>()));
+        w, me, w.id<flecs::MemberRanges>(), sizeof(flecs::MemberRanges)));
     mr->error.min = min;
     mr->error.max = max;
     me.modified<flecs::MemberRanges>();

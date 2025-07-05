@@ -121,7 +121,10 @@ struct ecs_world_t {
     uint32_t table_column_version[ECS_TABLE_VERSION_ARRAY_SIZE];
 
     /* Array for checking if components can be looked up trivially */
-    ecs_flags8_t non_trivial[FLECS_HI_COMPONENT_ID];
+    ecs_flags8_t non_trivial_lookup[FLECS_HI_COMPONENT_ID];
+
+    /* Array for checking if components can be set trivially */
+    ecs_flags8_t non_trivial_set[FLECS_HI_COMPONENT_ID];
 
     /* Is entity range checking enabled? */
     bool range_check_enabled;

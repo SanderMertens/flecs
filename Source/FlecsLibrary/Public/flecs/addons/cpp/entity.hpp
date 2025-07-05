@@ -41,7 +41,7 @@ struct entity : entity_builder<entity>
         if (!ecs_get_scope(world_) && !ecs_get_with(world_)) {
             id_ = ecs_new(world);
         } else {
-            const ecs_entity_desc_t desc = {};
+            ecs_entity_desc_t desc = {};
             id_ = ecs_entity_init(world_, &desc);
         }
     }
@@ -123,7 +123,7 @@ struct entity : entity_builder<entity>
         auto comp_id = _::type<T>::id(world_);
         ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
-        return *static_cast<T*>(ecs_ensure_id(world_, id_, comp_id));
+        return *static_cast<T*>(ecs_ensure_id(world_, id_, comp_id, sizeof(T)));
     }
 
     /** Get mutable component value (untyped).
@@ -136,7 +136,10 @@ struct entity : entity_builder<entity>
      * @return Pointer to the component value.
      */
     void* obtain(entity_t comp) const {
-        return ecs_ensure_id(world_, id_, comp);
+        const flecs::type_info_t *ti = ecs_get_type_info(world_, comp);
+        ecs_assert(ti != nullptr && ti->size != 0, ECS_INVALID_PARAMETER, 
+            "provided component is not a type or has size 0");
+        return ecs_ensure_id(world_, id_, comp, static_cast<size_t>(ti->size));
     }
 
     /** Get mutable pointer for a pair.
@@ -150,7 +153,7 @@ struct entity : entity_builder<entity>
     A& obtain() const {
         return *static_cast<A*>(ecs_ensure_id(world_, id_, ecs_pair(
             _::type<First>::id(world_),
-            _::type<Second>::id(world_))));
+            _::type<Second>::id(world_)), sizeof(A)));
     }
 
     /** Get mutable pointer for the first element of a pair.
@@ -165,7 +168,7 @@ struct entity : entity_builder<entity>
         ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
         return *static_cast<First*>(
-            ecs_ensure_id(world_, id_, ecs_pair(first, second)));
+            ecs_ensure_id(world_, id_, ecs_pair(first, second), sizeof(First)));
     }
 
     /** Get mutable pointer for a pair (untyped).
@@ -177,7 +180,7 @@ struct entity : entity_builder<entity>
      * @param second The second element of the pair.
      */
     void* obtain(entity_t first, entity_t second) const {
-        return ecs_ensure_id(world_, id_, ecs_pair(first, second));
+        return obtain(world_, id_, ecs_pair(first, second));
     }
 
     /** Get mutable pointer for the second element of a pair.
@@ -196,7 +199,7 @@ struct entity : entity_builder<entity>
         ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
         return *static_cast<Second*>(
-            ecs_ensure_id(world_, id_, ecs_pair(first, second)));
+            ecs_ensure_id(world_, id_, ecs_pair(first, second), sizeof(Second)));
     }
 
     #endif

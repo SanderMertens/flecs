@@ -393,20 +393,21 @@ bool flecs_rest_put_component(
         return true;
     }
 
-    ecs_entity_t type = ecs_get_typeid(world, id);
-    if (!type) {
+    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+    if (!ti) {
         flecs_reply_error(reply, "component '%s' is not a type", component);
         reply->code = 400;
         return true;
     }
 
-    void *ptr = ecs_ensure_id(world, e, id);
+    void *ptr = ecs_ensure_id(world, e, id, flecs_ito(size_t, ti->size));
     if (!ptr) {
         flecs_reply_error(reply, "failed to create component '%s'", component);
         reply->code = 500;
         return true;
     }
 
+    ecs_entity_t type = ti->component;
     if (!ecs_ptr_from_json(world, type, ptr, data, NULL)) {
         flecs_reply_error(reply, "invalid value for component '%s'", component);
         reply->code = 400;

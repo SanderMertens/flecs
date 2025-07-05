@@ -579,6 +579,22 @@ struct component : untyped_component {
         return *this;
     }
 
+    /** Register on_replace hook. */
+    template <typename Func>
+    component<T>& on_replace(Func&& func) {
+        using Delegate = typename _::each_delegate<
+            typename std::decay<Func>::type, T, T>;
+        flecs::type_hooks_t h = get_hooks();
+        ecs_assert(h.on_set == nullptr, ECS_INVALID_OPERATION,
+            "on_set hook is already set");
+        BindingCtx *ctx = get_binding_ctx(h);
+        h.on_replace = Delegate::run_replace;
+        ctx->on_replace = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ctx->free_on_replace = _::free_obj<Delegate>;
+        set_hooks(h);
+        return *this;
+    }
+
     /** Register operator compare hook. */
     using untyped_component::on_compare;
     component<T>& on_compare() {

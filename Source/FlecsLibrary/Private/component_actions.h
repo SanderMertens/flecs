@@ -19,6 +19,17 @@ void flecs_invoke_hook(
     ecs_entity_t event,
     ecs_iter_action_t hook);
 
+/* Invoke replace hook */
+void flecs_invoke_replace_hook(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    const void *old_ptr,
+    const void *new_ptr,
+    const ecs_type_info_t *ti);
+
 /* Add action for sparse components. */
 bool flecs_sparse_on_add(
     ecs_world_t *world,

@@ -697,7 +697,7 @@ void flecs_compute_table_diff(
 
     bool dont_fragment = false;
     if (id < FLECS_HI_COMPONENT_ID) {
-        dont_fragment = (world->non_trivial[id] & EcsNonTrivialIdNonFragmenting) != 0;
+        dont_fragment = (world->non_trivial_lookup[id] & EcsNonTrivialIdNonFragmenting) != 0;
         if (dont_fragment) {
             flecs_components_ensure(world, id);
         }

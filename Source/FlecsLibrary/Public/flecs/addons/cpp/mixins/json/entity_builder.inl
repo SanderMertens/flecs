@@ -13,13 +13,15 @@ const Self& set_json(
     const char *json, 
     flecs::from_json_desc_t *desc = nullptr) const
 {
-    flecs::entity_t type = ecs_get_typeid(world_, e);
-    if (!type) {
+    const flecs::type_info_t *ti = ecs_get_type_info(world_, e);
+    if (!ti) {
         ecs_err("id is not a type");
         return to_base();
     }
 
-    void *ptr = ecs_ensure_id(world_, id_, e);
+    flecs::entity_t type = ti->component;
+
+    void *ptr = ecs_ensure_id(world_, id_, e, static_cast<size_t>(ti->size));
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_ptr_from_json(world_, type, ptr, json, desc);
     ecs_modified_id(world_, id_, e);
