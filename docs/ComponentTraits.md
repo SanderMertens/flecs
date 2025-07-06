@@ -369,7 +369,8 @@ ecs_observer(world, {
 });
 
 ecs_entity_t p = ecs_new_w(world, Node);
-ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+ecs_entity_t c = ecs_new_w(world, Node);
+ecs_add_pair(world, c, EcsChildOf, p);
 ```
 
 </li>
@@ -1370,7 +1371,7 @@ assert!(!inst.try_get::<&Mass>(|mass| {}));
 </div>
 
 ## Transitive trait
-Relationships can be marked as transitive. A formal-ish definition if transitivity in the context of relationships is:
+Relationships can be marked as transitive. A formal-ish definition of transitivity in the context of relationships is:
 
 ```
 If   Relationship(EntityA, EntityB) 
@@ -1447,7 +1448,7 @@ newyork.add_id((locatedin, usa));
 </ul>
 </div>
 
-If we were now to query for `(LocatedIn, USA)` we would only match `NewYork`, because we never added `(LocatedIn, USA)` to `Manhattan`. To make sure queries `Manhattan` as well we have to make the `LocatedIn` relationship transitive. We can simply do this by adding the transitive trait to the relationship entity:
+If we were now to query for `(LocatedIn, USA)` we would only match `NewYork`, because we never added `(LocatedIn, USA)` to `Manhattan`. To make sure we match `Manhattan` as well we have to make the `LocatedIn` relationship transitive. We can simply do this by adding the transitive trait to the relationship entity:
 
 <div class="flecs-snippet-tabs">
 <ul>
