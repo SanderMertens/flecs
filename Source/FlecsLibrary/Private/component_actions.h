@@ -23,7 +23,6 @@ void flecs_invoke_hook(
 void flecs_invoke_replace_hook(
     ecs_world_t *world,
     ecs_table_t *table,
-    int32_t row,
     ecs_entity_t entity,
     ecs_id_t id,
     const void *old_ptr,

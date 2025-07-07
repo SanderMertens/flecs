@@ -851,8 +851,8 @@ void flecs_copy_id(
     ecs_check(src_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ti->hooks.on_replace) {
-        flecs_invoke_replace_hook(world, r->table, 
-            ECS_RECORD_TO_ROW(r->row), entity, id, dst_ptr, src_ptr, ti);
+        flecs_invoke_replace_hook(
+            world, r->table, entity, id, dst_ptr, src_ptr, ti);
     }
 
     ecs_copy_t copy = ti->hooks.copy;
@@ -2214,8 +2214,8 @@ void flecs_set_id_move(
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (ti->hooks.on_replace) {
-        flecs_invoke_replace_hook(world, r->table, 
-            ECS_RECORD_TO_ROW(r->row), entity, id, dst.ptr, ptr, ti);
+        flecs_invoke_replace_hook(
+            world, r->table, entity, id, dst.ptr, ptr, ti);
     }
 
     ecs_move_t move;

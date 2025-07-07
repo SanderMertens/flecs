@@ -580,8 +580,8 @@ ecs_cpp_get_mut_t ecs_cpp_set(
     result.call_modified = true;
 
     if (dst.ti->hooks.on_replace) {
-        flecs_invoke_replace_hook(world, r->table, 
-            ECS_RECORD_TO_ROW(r->row), entity, id, dst.ptr, new_ptr, dst.ti);
+        flecs_invoke_replace_hook(
+            world, r->table, entity, id, dst.ptr, new_ptr, dst.ti);
     }
 
 done:
@@ -633,8 +633,8 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
     result.call_modified = true;
 
     if (dst.ti->hooks.on_replace) {
-        flecs_invoke_replace_hook(world, r->table, 
-            ECS_RECORD_TO_ROW(r->row), entity, id, dst.ptr, new_ptr, dst.ti);
+        flecs_invoke_replace_hook(
+            world, r->table, entity, id, dst.ptr, new_ptr, dst.ti);
     }
 
 done:
