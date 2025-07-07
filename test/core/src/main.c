@@ -637,6 +637,8 @@ void NonFragmentingChildOf_remove_ordered_children_trait_w_children(void);
 void NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_child(void);
 void NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_children(void);
 void NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_children_reverse(void);
+void NonFragmentingChildOf_get_parent(void);
+void NonFragmentingChildOf_get_target(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5087,6 +5089,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "remove_ordered_children_trait_w_deleted_children_reverse",
         NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_children_reverse
+    },
+    {
+        "get_parent",
+        NonFragmentingChildOf_get_parent
+    },
+    {
+        "get_target",
+        NonFragmentingChildOf_get_target
     }
 };
 
@@ -12975,7 +12985,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        23,
+        25,
         NonFragmentingChildOf_testcases
     },
     {
