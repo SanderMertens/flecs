@@ -914,6 +914,7 @@
                 "serialize_w_field_info_pair_w_not_pair",
                 "serialize_w_field_info_pair_w_not_component",
                 "serialize_w_field_info_w_or",
+                "serialize_w_field_info_w_none",
                 "serialize_recycled_id",
                 "serialize_entity_w_flecs_core_parent"
             ]
