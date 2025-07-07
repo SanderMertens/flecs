@@ -683,6 +683,16 @@ void NonFragmentingChildOf_remove_parent_2_children(void);
 void NonFragmentingChildOf_clear_2_children(void);
 void NonFragmentingChildOf_delete_2_children(void);
 void NonFragmentingChildOf_reparent_2_children(void);
+void NonFragmentingChildOf_delete_parent(void);
+void NonFragmentingChildOf_delete_parent_2_children(void);
+void NonFragmentingChildOf_mixed_childof(void);
+void NonFragmentingChildOf_delete_parent_w_mixed_childof(void);
+void NonFragmentingChildOf_delete_nested_parent(void);
+void NonFragmentingChildOf_delete_nested_mixed_parent(void);
+void NonFragmentingChildOf_remove_ordered_children_trait_w_children(void);
+void NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_child(void);
+void NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_children(void);
+void NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_children_reverse(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5494,6 +5504,46 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "reparent_2_children",
         NonFragmentingChildOf_reparent_2_children
+    },
+    {
+        "delete_parent",
+        NonFragmentingChildOf_delete_parent
+    },
+    {
+        "delete_parent_2_children",
+        NonFragmentingChildOf_delete_parent_2_children
+    },
+    {
+        "mixed_childof",
+        NonFragmentingChildOf_mixed_childof
+    },
+    {
+        "delete_parent_w_mixed_childof",
+        NonFragmentingChildOf_delete_parent_w_mixed_childof
+    },
+    {
+        "delete_nested_parent",
+        NonFragmentingChildOf_delete_nested_parent
+    },
+    {
+        "delete_nested_mixed_parent",
+        NonFragmentingChildOf_delete_nested_mixed_parent
+    },
+    {
+        "remove_ordered_children_trait_w_children",
+        NonFragmentingChildOf_remove_ordered_children_trait_w_children
+    },
+    {
+        "remove_ordered_children_trait_w_deleted_child",
+        NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_child
+    },
+    {
+        "remove_ordered_children_trait_w_deleted_children",
+        NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_children
+    },
+    {
+        "remove_ordered_children_trait_w_deleted_children_reverse",
+        NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_children_reverse
     }
 };
 
@@ -14090,7 +14140,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        13,
+        23,
         NonFragmentingChildOf_testcases
     },
     {
