@@ -724,7 +724,9 @@
                 "remove_ordered_children_trait_w_children",
                 "remove_ordered_children_trait_w_deleted_child",
                 "remove_ordered_children_trait_w_deleted_children",
-                "remove_ordered_children_trait_w_deleted_children_reverse"
+                "remove_ordered_children_trait_w_deleted_children_reverse",
+                "get_parent",
+                "get_target"
             ]
         }, {
             "id": "Hierarchies",

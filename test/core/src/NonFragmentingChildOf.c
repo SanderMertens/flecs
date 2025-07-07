@@ -703,3 +703,43 @@ void NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_children_reve
     
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_get_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_add_id(world, parent_a, EcsOrderedChildren);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_add_id(world, parent_b, EcsOrderedChildren);
+
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_set(world, child_a, EcsParent, { parent_a });
+
+    ecs_entity_t child_b = ecs_new(world);
+    ecs_set(world, child_b, EcsParent, { parent_b });
+
+    test_assert(ecs_get_parent(world, child_a) == parent_a);
+    test_assert(ecs_get_parent(world, child_b) == parent_b);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_get_target(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_add_id(world, parent_a, EcsOrderedChildren);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_add_id(world, parent_b, EcsOrderedChildren);
+
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_set(world, child_a, EcsParent, { parent_a });
+
+    ecs_entity_t child_b = ecs_new(world);
+    ecs_set(world, child_b, EcsParent, { parent_b });
+
+    test_assert(ecs_get_target(world, child_a, EcsChildOf, 0) == parent_a);
+    test_assert(ecs_get_target(world, child_b, EcsChildOf, 0) == parent_b);
+
+    ecs_fini(world);
+}
