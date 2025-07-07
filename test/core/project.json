@@ -714,7 +714,17 @@
                 "remove_parent_2_children",
                 "clear_2_children",
                 "delete_2_children",
-                "reparent_2_children"
+                "reparent_2_children",
+                "delete_parent",
+                "delete_parent_2_children",
+                "mixed_childof",
+                "delete_parent_w_mixed_childof",
+                "delete_nested_parent",
+                "delete_nested_mixed_parent",
+                "remove_ordered_children_trait_w_children",
+                "remove_ordered_children_trait_w_deleted_child",
+                "remove_ordered_children_trait_w_deleted_children",
+                "remove_ordered_children_trait_w_deleted_children_reverse"
             ]
         }, {
             "id": "Hierarchies",
