@@ -251,6 +251,8 @@ void flecs_table_init_flags(
             table->flags |= EcsTableIsDisabled;
         } else if (id == EcsNotQueryable) {
             table->flags |= EcsTableNotQueryable;
+        } else if (id == ecs_id(EcsParent)) {
+            table->flags |= EcsTableHasParent;
         } else {
             if (ECS_IS_PAIR(id)) {
                 ecs_entity_t r = ECS_PAIR_FIRST(id);
@@ -269,7 +271,6 @@ void flecs_table_init_flags(
 
                     if (tgt == EcsFlecsCore || tgt == EcsFlecsInternals) {
                         table->flags |= EcsTableHasBuiltins;
-                        table->flags |= EcsTableHasModule;
                     }
 
                     if (ecs_has_id(world, tgt, EcsModule)) {
