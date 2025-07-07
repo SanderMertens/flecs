@@ -245,13 +245,14 @@ void flecs_table_init_flags(
 
         if (id == EcsModule) {
             table->flags |= EcsTableHasBuiltins;
-            table->flags |= EcsTableHasModule;
         } else if (id == EcsPrefab) {
             table->flags |= EcsTableIsPrefab;
         } else if (id == EcsDisabled) {
             table->flags |= EcsTableIsDisabled;
         } else if (id == EcsNotQueryable) {
             table->flags |= EcsTableNotQueryable;
+        } else if (id == ecs_id(EcsParent)) {
+            table->flags |= EcsTableHasParent;
         } else {
             if (ECS_IS_PAIR(id)) {
                 ecs_entity_t r = ECS_PAIR_FIRST(id);
@@ -271,7 +272,6 @@ void flecs_table_init_flags(
                         /* If table contains entities that are inside one of the 
                          * builtin modules, it contains builtin entities */
                         table->flags |= EcsTableHasBuiltins;
-                        table->flags |= EcsTableHasModule;
                     }
 
 #ifdef FLECS_DEBUG_INFO
