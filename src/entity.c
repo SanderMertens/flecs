@@ -2663,6 +2663,13 @@ ecs_entity_t ecs_get_target(
     flecs_assert_entity_valid(world, entity, "get_target");
     ecs_check(rel != 0, ECS_INVALID_PARAMETER, NULL);
 
+    if (rel == EcsChildOf) {
+        if (index > 0) {
+            return 0;
+        }
+        return ecs_get_parent(world, entity);
+    }
+
     world = ecs_get_world(world);
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -2745,6 +2752,16 @@ ecs_entity_t ecs_get_parent(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *table = r->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (table->flags & EcsTableHasParent) {
+        int32_t column = table->component_map[ecs_id(EcsParent)];
+        ecs_assert(column > 0, ECS_INTERNAL_ERROR, NULL);
+        EcsParent *p = ecs_table_get_column(
+            table, column - 1, ECS_RECORD_TO_ROW(r->row));
+        ecs_assert(ecs_is_valid(world, p->value), ECS_INTERNAL_ERROR, 
+            "Parent component points to invalid parent");
+        return p->value;
+    }
 
     ecs_component_record_t *cr = world->cr_childof_wildcard;
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
