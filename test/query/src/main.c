@@ -590,6 +590,8 @@ void Basic_match_optional_disabled_prefab_this_tgt(void);
 void Basic_match_optional_self_disabled(void);
 void Basic_match_optional_self_prefab(void);
 void Basic_match_optional_self_disabled_prefab(void);
+void Basic_match_optional_disabled_prefab_w_flecs_core(void);
+void Basic_match_optional_disabled_prefab_w_not_queryable(void);
 void Basic_inout_none_first_term(void);
 void Basic_inout_none_first_term_self_up(void);
 void Basic_inout_none_second_term(void);
@@ -4624,6 +4626,14 @@ bake_test_case Basic_testcases[] = {
     {
         "match_optional_self_disabled_prefab",
         Basic_match_optional_self_disabled_prefab
+    },
+    {
+        "match_optional_disabled_prefab_w_flecs_core",
+        Basic_match_optional_disabled_prefab_w_flecs_core
+    },
+    {
+        "match_optional_disabled_prefab_w_not_queryable",
+        Basic_match_optional_disabled_prefab_w_not_queryable
     },
     {
         "inout_none_first_term",
@@ -11486,7 +11496,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        236,
+        238,
         Basic_testcases,
         1,
         Basic_params
