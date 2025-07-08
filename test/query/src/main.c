@@ -2182,6 +2182,22 @@ void DontFragment_this_written_sparse_any(void);
 void DontFragment_this_written_sparse_exclusive_any(void);
 void DontFragment_add_to_self_while_iterate(void);
 
+// Testsuite 'NonFragmentingChildOf'
+void NonFragmentingChildOf_setup(void);
+void NonFragmentingChildOf_0_src_childof_parent(void);
+void NonFragmentingChildOf_0_src_childof_0(void);
+void NonFragmentingChildOf_fixed_src_childof_0(void);
+void NonFragmentingChildOf_fixed_src_not_childof_wildcard(void);
+void NonFragmentingChildOf_fixed_src_childof_parent(void);
+void NonFragmentingChildOf_fixed_src_childof_parent_w_tag(void);
+void NonFragmentingChildOf_fixed_src_childof_parent_w_component(void);
+void NonFragmentingChildOf_fixed_src_childof_wildcard(void);
+void NonFragmentingChildOf_fixed_src_childof_wildcard_w_tag(void);
+void NonFragmentingChildOf_fixed_src_childof_wildcard_w_component(void);
+void NonFragmentingChildOf_fixed_src_childof_any(void);
+void NonFragmentingChildOf_fixed_src_childof_var(void);
+void NonFragmentingChildOf_fixed_src_childof_set_var(void);
+
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
 void OrderBy_sort_by_component_2_tables(void);
@@ -10859,6 +10875,61 @@ bake_test_case DontFragment_testcases[] = {
     }
 };
 
+bake_test_case NonFragmentingChildOf_testcases[] = {
+    {
+        "0_src_childof_parent",
+        NonFragmentingChildOf_0_src_childof_parent
+    },
+    {
+        "0_src_childof_0",
+        NonFragmentingChildOf_0_src_childof_0
+    },
+    {
+        "fixed_src_childof_0",
+        NonFragmentingChildOf_fixed_src_childof_0
+    },
+    {
+        "fixed_src_not_childof_wildcard",
+        NonFragmentingChildOf_fixed_src_not_childof_wildcard
+    },
+    {
+        "fixed_src_childof_parent",
+        NonFragmentingChildOf_fixed_src_childof_parent
+    },
+    {
+        "fixed_src_childof_parent_w_tag",
+        NonFragmentingChildOf_fixed_src_childof_parent_w_tag
+    },
+    {
+        "fixed_src_childof_parent_w_component",
+        NonFragmentingChildOf_fixed_src_childof_parent_w_component
+    },
+    {
+        "fixed_src_childof_wildcard",
+        NonFragmentingChildOf_fixed_src_childof_wildcard
+    },
+    {
+        "fixed_src_childof_wildcard_w_tag",
+        NonFragmentingChildOf_fixed_src_childof_wildcard_w_tag
+    },
+    {
+        "fixed_src_childof_wildcard_w_component",
+        NonFragmentingChildOf_fixed_src_childof_wildcard_w_component
+    },
+    {
+        "fixed_src_childof_any",
+        NonFragmentingChildOf_fixed_src_childof_any
+    },
+    {
+        "fixed_src_childof_var",
+        NonFragmentingChildOf_fixed_src_childof_var
+    },
+    {
+        "fixed_src_childof_set_var",
+        NonFragmentingChildOf_fixed_src_childof_set_var
+    }
+};
+
 bake_test_case OrderBy_testcases[] = {
     {
         "sort_by_component",
@@ -11467,6 +11538,10 @@ const char* DontFragment_cache_kind_param[] = {"default", "auto"};
 bake_test_param DontFragment_params[] = {
     {"cache_kind", (char**)DontFragment_cache_kind_param, 2}
 };
+const char* NonFragmentingChildOf_cache_kind_param[] = {"default", "auto"};
+bake_test_param NonFragmentingChildOf_params[] = {
+    {"cache_kind", (char**)NonFragmentingChildOf_cache_kind_param, 2}
+};
 
 static bake_test_suite suites[] = {
     {
@@ -11650,6 +11725,15 @@ static bake_test_suite suites[] = {
         DontFragment_params
     },
     {
+        "NonFragmentingChildOf",
+        NonFragmentingChildOf_setup,
+        NULL,
+        13,
+        NonFragmentingChildOf_testcases,
+        1,
+        NonFragmentingChildOf_params
+    },
+    {
         "OrderBy",
         NULL,
         NULL,
@@ -11680,5 +11764,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("query", argc, argv, suites, 26);
+    return bake_test_run("query", argc, argv, suites, 27);
 }
