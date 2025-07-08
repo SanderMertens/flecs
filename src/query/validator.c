@@ -596,7 +596,9 @@ int flecs_term_verify(
             if ((src->id & mask) == (second->id & mask)) {
                 bool is_same = false;
                 if (src->id & EcsIsEntity) {
-                    is_same = src_id == second_id;
+                    if (src_id) {
+                        is_same = src_id == second_id;
+                    }
                 } else if (src->name && second->name) {
                     is_same = !ecs_os_strcmp(src->name, second->name);
                 }
@@ -933,6 +935,13 @@ int flecs_term_finalize(
     if (ecs_id_is_wildcard(term->id)) {
         if (ECS_PAIR_FIRST(term->id) == EcsWildcard) {
             cacheable_term = false;
+            trivial_term = false;
+        }
+
+        if (ECS_PAIR_FIRST(term->id) == EcsChildOf) {
+            if (ECS_PAIR_SECOND(term->id) != EcsWildcard) {
+                cacheable_term = false;
+            }
             trivial_term = false;
         }
 
@@ -1756,11 +1765,19 @@ bool flecs_query_finalize_simple(
         }
 
         if (ECS_IS_PAIR(id)) {
+            if (first == EcsChildOf) {
+                trivial = false;
+                if (ECS_PAIR_SECOND(id) != EcsWildcard) {
+                    cacheable = false;
+                }
+            }
+
             if (ecs_has_id(world, first, EcsTransitive)) {
                 term->flags_ |= EcsTermTransitive;
                 trivial = false;
                 cacheable = false; 
             }
+
             if (ecs_has_id(world, first, EcsReflexive)) {
                 term->flags_ |= EcsTermReflexive;
                 trivial = false;

@@ -2303,6 +2303,27 @@
                 "this_written_sparse_any_pair_recycled"
             ]
         }, {
+            "id": "NonFragmentingChildOf",
+            "setup": true,
+            "params": {
+                "cache_kind": ["default", "auto"]
+            },
+            "testcases": [
+                "0_src_childof_parent",
+                "0_src_childof_0",
+                "fixed_src_childof_0",
+                "fixed_src_not_childof_wildcard",
+                "fixed_src_childof_parent",
+                "fixed_src_childof_parent_w_tag",
+                "fixed_src_childof_parent_w_component",
+                "fixed_src_childof_wildcard",
+                "fixed_src_childof_wildcard_w_tag",
+                "fixed_src_childof_wildcard_w_component",
+                "fixed_src_childof_any",
+                "fixed_src_childof_var",
+                "fixed_src_childof_set_var"
+            ]
+        }, {
             "id": "OrderBy",
             "testcases": [
                 "sort_by_component",
