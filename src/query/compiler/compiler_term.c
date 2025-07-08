@@ -1086,8 +1086,11 @@ void flecs_query_set_op_kind(
 
     /* If query is transitive, use Trav(ersal) instruction */
     } else if (term->flags_ & EcsTermTransitive) {
-        ecs_assert(ecs_term_ref_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_term_ref_is_set(&term->second), 
+            ECS_INTERNAL_ERROR, NULL);
         op->kind = EcsQueryTrav;
+    
+    /* Handle non-fragmenting components */
     } else if (term->flags_ & EcsTermDontFragment) {
         if (op->kind == EcsQueryAnd) {
             op->kind = EcsQuerySparse;
@@ -1117,6 +1120,14 @@ void flecs_query_set_op_kind(
                 op->kind = EcsQueryAndWcTgt;
             } else {
                 op->kind = EcsQueryWithWcTgt;
+            }
+        }
+
+        /* ChildOf terms need to take into account both ChildOf pairs and the 
+         * Parent component for non-fragmenting hierarchies. */
+        if (ECS_IS_PAIR(term->id) && ECS_PAIR_FIRST(term->id) == EcsChildOf) {
+            if (!src_is_var) {
+                op->kind = EcsQueryTreeWith;
             }
         }
     }

@@ -1258,6 +1258,8 @@ typedef enum {
     EcsQuerySparseSelfUp,
     EcsQuerySparseUp,
     EcsQuerySparseWith,     /* Evaluate sparse component against fixed or variable source */
+    EcsQueryTree,
+    EcsQueryTreeWith,       /* Evaluate (ChildOf, tgt) against fixed or variable source */
     EcsQueryLookup,         /* Lookup relative to variable */
     EcsQuerySetVars,        /* Populate it.sources from variables */
     EcsQuerySetThis,        /* Populate This entity variable */
@@ -2119,6 +2121,13 @@ bool flecs_query_run_until(
     int32_t last);
 
 
+/* And evaluation */
+
+bool flecs_query_and_any(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
 /* Select evaluation */
 
 bool flecs_query_select(
@@ -2179,6 +2188,13 @@ bool flecs_query_sparse_self_up(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
+
+/* Hierarchy evaluation */
+
+bool flecs_query_tree_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
 
 /* Toggle evaluation*/
 
@@ -34689,6 +34705,68 @@ void* ecs_query_get_group_ctx(
  */
 
 
+const char* flecs_query_op_str(
+    uint16_t kind)
+{
+    switch(kind) {
+    case EcsQueryAll:            return "all       ";
+    case EcsQueryAnd:            return "and       ";
+    case EcsQueryAndAny:         return "and_any   ";
+    case EcsQueryAndWcTgt:       return "and_wct   ";
+    case EcsQueryTriv:           return "triv      ";
+    case EcsQueryCache:          return "cache     ";
+    case EcsQueryIsCache:        return "xcache    ";
+    case EcsQueryUp:             return "up        ";
+    case EcsQuerySelfUp:         return "selfup    ";
+    case EcsQueryWith:           return "with      ";
+    case EcsQueryWithWcTgt:      return "with_wct  ";
+    case EcsQueryTrav:           return "trav      ";
+    case EcsQueryAndFrom:        return "andfrom   ";
+    case EcsQueryOrFrom:         return "orfrom    ";
+    case EcsQueryNotFrom:        return "notfrom   ";
+    case EcsQueryIds:            return "ids       ";
+    case EcsQueryIdsRight:       return "idsr      ";
+    case EcsQueryIdsLeft:        return "idsl      ";
+    case EcsQueryEach:           return "each      ";
+    case EcsQueryStore:          return "store     ";
+    case EcsQueryReset:          return "reset     ";
+    case EcsQueryOr:             return "or        ";
+    case EcsQueryOptional:       return "option    ";
+    case EcsQueryIfVar:          return "ifvar     ";
+    case EcsQueryIfSet:          return "ifset     ";
+    case EcsQueryEnd:            return "end       ";
+    case EcsQueryNot:            return "not       ";
+    case EcsQueryPredEq:         return "eq        ";
+    case EcsQueryPredNeq:        return "neq       ";
+    case EcsQueryPredEqName:     return "eq_nm     ";
+    case EcsQueryPredNeqName:    return "neq_nm    ";
+    case EcsQueryPredEqMatch:    return "eq_m      ";
+    case EcsQueryPredNeqMatch:   return "neq_m     ";
+    case EcsQueryMemberEq:       return "membereq  ";
+    case EcsQueryMemberNeq:      return "memberneq ";
+    case EcsQueryToggle:         return "toggle    ";
+    case EcsQueryToggleOption:   return "togglopt  ";
+    case EcsQuerySparse:         return "spars     ";
+    case EcsQuerySparseWith:     return "spars_w   ";
+    case EcsQuerySparseNot:      return "spars_not ";
+    case EcsQuerySparseSelfUp:   return "spars_sup ";
+    case EcsQuerySparseUp:       return "spars_up  ";
+    case EcsQueryTree:           return "tree      ";
+    case EcsQueryTreeWith:       return "tree_w    ";
+    case EcsQueryLookup:         return "lookup    ";
+    case EcsQuerySetVars:        return "setvars   ";
+    case EcsQuerySetThis:        return "setthis   ";
+    case EcsQuerySetFixed:       return "setfix    ";
+    case EcsQuerySetIds:         return "setids    ";
+    case EcsQuerySetId:          return "setid     ";
+    case EcsQueryContain:        return "contain   ";
+    case EcsQueryPairEq:         return "pair_eq   ";
+    case EcsQueryYield:          return "yield     ";
+    case EcsQueryNothing:        return "nothing   ";
+    default:                     return "!invalid  ";
+    }
+}
+
 ecs_query_lbl_t flecs_itolbl(int64_t val) {
     return flecs_ito(int16_t, val);
 }
@@ -34851,66 +34929,6 @@ ecs_allocator_t* flecs_query_get_allocator(
     } else {
         ecs_assert(flecs_poly_is(world, ecs_stage_t), ECS_INTERNAL_ERROR, NULL);
         return &((ecs_stage_t*)world)->allocator;
-    }
-}
-
-const char* flecs_query_op_str(
-    uint16_t kind)
-{
-    switch(kind) {
-    case EcsQueryAll:            return "all       ";
-    case EcsQueryAnd:            return "and       ";
-    case EcsQueryAndAny:         return "and_any   ";
-    case EcsQueryAndWcTgt:       return "and_wct   ";
-    case EcsQueryTriv:           return "triv      ";
-    case EcsQueryCache:          return "cache     ";
-    case EcsQueryIsCache:        return "xcache    ";
-    case EcsQueryUp:             return "up        ";
-    case EcsQuerySelfUp:         return "selfup    ";
-    case EcsQueryWith:           return "with      ";
-    case EcsQueryWithWcTgt:      return "with_wct  ";
-    case EcsQueryTrav:           return "trav      ";
-    case EcsQueryAndFrom:        return "andfrom   ";
-    case EcsQueryOrFrom:         return "orfrom    ";
-    case EcsQueryNotFrom:        return "notfrom   ";
-    case EcsQueryIds:            return "ids       ";
-    case EcsQueryIdsRight:       return "idsr      ";
-    case EcsQueryIdsLeft:        return "idsl      ";
-    case EcsQueryEach:           return "each      ";
-    case EcsQueryStore:          return "store     ";
-    case EcsQueryReset:          return "reset     ";
-    case EcsQueryOr:             return "or        ";
-    case EcsQueryOptional:       return "option    ";
-    case EcsQueryIfVar:          return "ifvar     ";
-    case EcsQueryIfSet:          return "ifset     ";
-    case EcsQueryEnd:            return "end       ";
-    case EcsQueryNot:            return "not       ";
-    case EcsQueryPredEq:         return "eq        ";
-    case EcsQueryPredNeq:        return "neq       ";
-    case EcsQueryPredEqName:     return "eq_nm     ";
-    case EcsQueryPredNeqName:    return "neq_nm    ";
-    case EcsQueryPredEqMatch:    return "eq_m      ";
-    case EcsQueryPredNeqMatch:   return "neq_m     ";
-    case EcsQueryMemberEq:       return "membereq  ";
-    case EcsQueryMemberNeq:      return "memberneq ";
-    case EcsQueryToggle:         return "toggle    ";
-    case EcsQueryToggleOption:   return "togglopt  ";
-    case EcsQuerySparse:         return "spars     ";
-    case EcsQuerySparseWith:     return "spars_w   ";
-    case EcsQuerySparseNot:      return "spars_not ";
-    case EcsQuerySparseSelfUp:   return "spars_sup ";
-    case EcsQuerySparseUp:       return "spars_up  ";
-    case EcsQueryLookup:         return "lookup    ";
-    case EcsQuerySetVars:        return "setvars   ";
-    case EcsQuerySetThis:        return "setthis   ";
-    case EcsQuerySetFixed:       return "setfix    ";
-    case EcsQuerySetIds:         return "setids    ";
-    case EcsQuerySetId:          return "setid     ";
-    case EcsQueryContain:        return "contain   ";
-    case EcsQueryPairEq:         return "pair_eq   ";
-    case EcsQueryYield:          return "yield     ";
-    case EcsQueryNothing:        return "nothing   ";
-    default:                     return "!invalid  ";
     }
 }
 
@@ -35986,7 +36004,9 @@ int flecs_term_verify(
             if ((src->id & mask) == (second->id & mask)) {
                 bool is_same = false;
                 if (src->id & EcsIsEntity) {
-                    is_same = src_id == second_id;
+                    if (src_id) {
+                        is_same = src_id == second_id;
+                    }
                 } else if (src->name && second->name) {
                     is_same = !ecs_os_strcmp(src->name, second->name);
                 }
@@ -36316,6 +36336,13 @@ int flecs_term_finalize(
     if (ecs_id_is_wildcard(term->id)) {
         if (ECS_PAIR_FIRST(term->id) == EcsWildcard) {
             cacheable_term = false;
+            trivial_term = false;
+        }
+
+        if (ECS_PAIR_FIRST(term->id) == EcsChildOf) {
+            if (ECS_PAIR_SECOND(term->id) != EcsWildcard) {
+                cacheable_term = false;
+            }
             trivial_term = false;
         }
 
@@ -37129,11 +37156,19 @@ bool flecs_query_finalize_simple(
         }
 
         if (ECS_IS_PAIR(id)) {
+            if (first == EcsChildOf) {
+                trivial = false;
+                if (ECS_PAIR_SECOND(id) != EcsWildcard) {
+                    cacheable = false;
+                }
+            }
+
             if (ecs_has_id(world, first, EcsTransitive)) {
                 term->flags_ |= EcsTermTransitive;
                 trivial = false;
                 cacheable = false; 
             }
+
             if (ecs_has_id(world, first, EcsReflexive)) {
                 term->flags_ |= EcsTermReflexive;
                 trivial = false;
@@ -77561,8 +77596,11 @@ void flecs_query_set_op_kind(
 
     /* If query is transitive, use Trav(ersal) instruction */
     } else if (term->flags_ & EcsTermTransitive) {
-        ecs_assert(ecs_term_ref_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_term_ref_is_set(&term->second), 
+            ECS_INTERNAL_ERROR, NULL);
         op->kind = EcsQueryTrav;
+    
+    /* Handle non-fragmenting components */
     } else if (term->flags_ & EcsTermDontFragment) {
         if (op->kind == EcsQueryAnd) {
             op->kind = EcsQuerySparse;
@@ -77592,6 +77630,14 @@ void flecs_query_set_op_kind(
                 op->kind = EcsQueryAndWcTgt;
             } else {
                 op->kind = EcsQueryWithWcTgt;
+            }
+        }
+
+        /* ChildOf terms need to take into account both ChildOf pairs and the 
+         * Parent component for non-fragmenting hierarchies. */
+        if (ECS_IS_PAIR(term->id) && ECS_PAIR_FIRST(term->id) == EcsChildOf) {
+            if (!src_is_var) {
+                op->kind = EcsQueryTreeWith;
             }
         }
     }
@@ -78294,7 +78340,6 @@ bool flecs_query_self_up(
     }
 }
 
-static
 bool flecs_query_and_any(
     const ecs_query_op_t *op,
     bool redo,
@@ -79471,6 +79516,7 @@ bool flecs_query_dispatch(
     case EcsQuerySparseNot: return flecs_query_sparse_with(op, redo, ctx, true);
     case EcsQuerySparseSelfUp: return flecs_query_sparse_self_up(op, redo, ctx);
     case EcsQuerySparseUp: return flecs_query_sparse_up(op, redo, ctx);
+    case EcsQueryTreeWith: return flecs_query_tree_with(op, redo, ctx);
     case EcsQueryLookup: return flecs_query_lookup(op, redo, ctx);
     case EcsQuerySetVars: return flecs_query_setvars(op, redo, ctx);
     case EcsQuerySetThis: return flecs_query_setthis(op, redo, ctx);
@@ -81805,6 +81851,85 @@ bool flecs_query_trav(
             return flecs_query_trav_fixed_src_up_fixed_second(op, redo, ctx);
         }
     }
+}
+
+/**
+ * @file query/engine/eval_tree.c
+ * @brief Hierarchy evaluation (ChildOf pairs/Parent components).
+ */
+
+
+bool flecs_query_tree_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    if (redo) {
+        return false;
+    }
+
+    ecs_table_range_t range = flecs_query_get_range(
+        op, &op->src, EcsQuerySrc, ctx);
+    if (!range.count) {
+        range.count = ecs_table_count(range.table);
+    }
+
+    ecs_table_t *table = range.table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (table->flags & EcsTableHasChildOf) {
+        if (op->match_flags & EcsTermMatchAny) {
+            return flecs_query_and_any(op, redo, ctx);
+        } else {
+            return flecs_query_with(op, redo, ctx);
+        }
+    }
+
+    ecs_iter_t *it = ctx->it;
+    ecs_id_t id = flecs_query_op_get_id(op, ctx);
+    ecs_assert(ECS_IS_PAIR(id), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ECS_PAIR_FIRST(id) == EcsChildOf, ECS_INTERNAL_ERROR, NULL);
+    ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+
+    if (!(table->flags & EcsTableHasParent)) {
+        if (!tgt) {
+            int8_t field_index = op->field_index;
+            it->set_fields &= ~(1u << field_index);
+            it->ids[op->field_index] = ecs_childof(EcsWildcard);
+            return true;
+        }
+        return false;
+    }
+
+    int32_t parent_column = range.table->component_map[ecs_id(EcsParent)];
+    ecs_assert(parent_column != -1, ECS_INTERNAL_ERROR, NULL);
+    EcsParent *parents = ecs_table_get_column(
+        range.table, parent_column - 1, range.offset);
+
+    if (range.count == 1) {
+        ecs_entity_t parent = parents[0].value;
+        if (tgt == EcsWildcard) {
+            if (op->match_flags & EcsTermMatchAny) {
+                it->ids[op->field_index] = ecs_childof(EcsWildcard);
+            } else {
+                ecs_id_t actual_id = it->ids[op->field_index] = 
+                    ecs_childof(parent);
+                flecs_query_set_vars(op, actual_id, ctx);
+            }
+        } else {
+            if ((uint32_t)parent != tgt) {
+                return false;
+            }
+
+            ecs_id_t actual_id = it->ids[op->field_index] = 
+                ecs_childof(parent);
+            flecs_query_set_vars(op, actual_id, ctx);
+        }     
+    } else {
+        ecs_abort(ECS_UNSUPPORTED, NULL);
+    }
+
+    return true;
 }
 
 /**
