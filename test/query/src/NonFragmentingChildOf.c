@@ -1386,3 +1386,131 @@ void NonFragmentingChildOf_fixed_src_childof_set_var(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_this_src_childof_0(void) {
+
+}
+
+void NonFragmentingChildOf_this_src_not_childof_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t c3 = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_childof(EcsWildcard), .oper = EcsNot }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c3, it.entities[0]);
+    test_uint(ecs_childof(0), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(EcsFlecs, it.entities[0]);
+    test_uint(ecs_childof(0), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(p, it.entities[0]);
+    test_uint(ecs_childof(0), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_not_childof_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t c3 = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_childof(EcsAny), .oper = EcsNot }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    printf("%s\n", ecs_query_plan(q));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c3, it.entities[0]);
+    test_uint(ecs_childof(0), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(EcsFlecs, it.entities[0]);
+    test_uint(ecs_childof(0), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(p, it.entities[0]);
+    test_uint(ecs_childof(0), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_parent(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_src_childof_parent_w_tag(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_src_childof_parent_w_component(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_src_childof_wildcard(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_src_childof_wildcard_w_tag(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_src_childof_wildcard_w_component(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_src_childof_any(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_src_childof_var(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_src_childof_set_var(void) {
+    // Implement testcase
+}
