@@ -607,6 +607,8 @@
                 "match_optional_self_disabled",
                 "match_optional_self_prefab",
                 "match_optional_self_disabled_prefab",
+                "match_optional_disabled_prefab_w_flecs_core",
+                "match_optional_disabled_prefab_w_not_queryable",
                 "inout_none_first_term",
                 "inout_none_first_term_self_up",
                 "inout_none_second_term",

@@ -6682,6 +6682,70 @@ void Basic_match_optional_self_disabled_prefab(void) {
     ecs_fini(world);
 }
 
+void Basic_match_optional_disabled_prefab_w_flecs_core(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(ChildOf, flecs.core), ?Prefab, ?Disabled",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    // Make sure we're not matching *, _, $, this
+
+    int32_t i, count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        count += it.count;
+        for (i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] != EcsWildcard);
+            test_assert(it.entities[i] != EcsAny);
+            test_assert(it.entities[i] != EcsVariable);
+            test_assert(it.entities[i] != EcsThis);
+        }
+    }
+
+    test_assert(count != 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_match_optional_disabled_prefab_w_not_queryable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo, ?Prefab, ?Disabled",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_add_id(world, e2, EcsNotQueryable);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_field_is_set(&it, 2));
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(EcsPrefab, ecs_field_id(&it, 1));
+    test_uint(EcsDisabled, ecs_field_id(&it, 2));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Basic_inout_none_first_term(void) {
     ecs_world_t *world = ecs_mini();
 

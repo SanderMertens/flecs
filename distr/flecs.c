@@ -70082,6 +70082,10 @@ bool flecs_query_cache_match_table(
     }
 #endif
 
+    if (table->flags & EcsTableNotQueryable) {
+        return false;
+    }
+
     /* Iterate uncached query for table to check if it matches. If this is a
      * wildcard query, a table can match multiple times. */
     ecs_iter_t it = flecs_query_iter(world, q);
@@ -74742,7 +74746,8 @@ ecs_flags32_t flecs_query_to_table_flags(
 
         return table_flags;
     }
-    return 0;
+
+    return EcsTableNotQueryable;
 }
 
 static
@@ -77154,7 +77159,8 @@ bool ecs_query_next(
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
-    ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(impl != NULL, ECS_INVALID_OPERATION, 
+        "cannot call ecs_query_next on invalid iterator");
 
     ecs_query_run_ctx_t ctx;
     flecs_query_iter_run_ctx_init(it, &ctx);
