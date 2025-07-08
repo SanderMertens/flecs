@@ -2321,7 +2321,19 @@
                 "fixed_src_childof_wildcard_w_component",
                 "fixed_src_childof_any",
                 "fixed_src_childof_var",
-                "fixed_src_childof_set_var"
+                "fixed_src_childof_set_var",
+                "this_src_childof_0",
+                "this_src_not_childof_wildcard",
+                "this_src_not_childof_any",
+                "this_src_childof_parent",
+                "this_src_childof_parent_w_tag",
+                "this_src_childof_parent_w_component",
+                "this_src_childof_wildcard",
+                "this_src_childof_wildcard_w_tag",
+                "this_src_childof_wildcard_w_component",
+                "this_src_childof_any",
+                "this_src_childof_var",
+                "this_src_childof_set_var"
             ]
         }, {
             "id": "OrderBy",
