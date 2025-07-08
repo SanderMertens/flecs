@@ -5,6 +5,68 @@
 
 #include "../private_api.h"
 
+const char* flecs_query_op_str(
+    uint16_t kind)
+{
+    switch(kind) {
+    case EcsQueryAll:            return "all       ";
+    case EcsQueryAnd:            return "and       ";
+    case EcsQueryAndAny:         return "and_any   ";
+    case EcsQueryAndWcTgt:       return "and_wct   ";
+    case EcsQueryTriv:           return "triv      ";
+    case EcsQueryCache:          return "cache     ";
+    case EcsQueryIsCache:        return "xcache    ";
+    case EcsQueryUp:             return "up        ";
+    case EcsQuerySelfUp:         return "selfup    ";
+    case EcsQueryWith:           return "with      ";
+    case EcsQueryWithWcTgt:      return "with_wct  ";
+    case EcsQueryTrav:           return "trav      ";
+    case EcsQueryAndFrom:        return "andfrom   ";
+    case EcsQueryOrFrom:         return "orfrom    ";
+    case EcsQueryNotFrom:        return "notfrom   ";
+    case EcsQueryIds:            return "ids       ";
+    case EcsQueryIdsRight:       return "idsr      ";
+    case EcsQueryIdsLeft:        return "idsl      ";
+    case EcsQueryEach:           return "each      ";
+    case EcsQueryStore:          return "store     ";
+    case EcsQueryReset:          return "reset     ";
+    case EcsQueryOr:             return "or        ";
+    case EcsQueryOptional:       return "option    ";
+    case EcsQueryIfVar:          return "ifvar     ";
+    case EcsQueryIfSet:          return "ifset     ";
+    case EcsQueryEnd:            return "end       ";
+    case EcsQueryNot:            return "not       ";
+    case EcsQueryPredEq:         return "eq        ";
+    case EcsQueryPredNeq:        return "neq       ";
+    case EcsQueryPredEqName:     return "eq_nm     ";
+    case EcsQueryPredNeqName:    return "neq_nm    ";
+    case EcsQueryPredEqMatch:    return "eq_m      ";
+    case EcsQueryPredNeqMatch:   return "neq_m     ";
+    case EcsQueryMemberEq:       return "membereq  ";
+    case EcsQueryMemberNeq:      return "memberneq ";
+    case EcsQueryToggle:         return "toggle    ";
+    case EcsQueryToggleOption:   return "togglopt  ";
+    case EcsQuerySparse:         return "spars     ";
+    case EcsQuerySparseWith:     return "spars_w   ";
+    case EcsQuerySparseNot:      return "spars_not ";
+    case EcsQuerySparseSelfUp:   return "spars_sup ";
+    case EcsQuerySparseUp:       return "spars_up  ";
+    case EcsQueryTree:           return "tree      ";
+    case EcsQueryTreeWith:       return "tree_w    ";
+    case EcsQueryLookup:         return "lookup    ";
+    case EcsQuerySetVars:        return "setvars   ";
+    case EcsQuerySetThis:        return "setthis   ";
+    case EcsQuerySetFixed:       return "setfix    ";
+    case EcsQuerySetIds:         return "setids    ";
+    case EcsQuerySetId:          return "setid     ";
+    case EcsQueryContain:        return "contain   ";
+    case EcsQueryPairEq:         return "pair_eq   ";
+    case EcsQueryYield:          return "yield     ";
+    case EcsQueryNothing:        return "nothing   ";
+    default:                     return "!invalid  ";
+    }
+}
+
 ecs_query_lbl_t flecs_itolbl(int64_t val) {
     return flecs_ito(int16_t, val);
 }
@@ -167,66 +229,6 @@ ecs_allocator_t* flecs_query_get_allocator(
     } else {
         ecs_assert(flecs_poly_is(world, ecs_stage_t), ECS_INTERNAL_ERROR, NULL);
         return &((ecs_stage_t*)world)->allocator;
-    }
-}
-
-const char* flecs_query_op_str(
-    uint16_t kind)
-{
-    switch(kind) {
-    case EcsQueryAll:            return "all       ";
-    case EcsQueryAnd:            return "and       ";
-    case EcsQueryAndAny:         return "and_any   ";
-    case EcsQueryAndWcTgt:       return "and_wct   ";
-    case EcsQueryTriv:           return "triv      ";
-    case EcsQueryCache:          return "cache     ";
-    case EcsQueryIsCache:        return "xcache    ";
-    case EcsQueryUp:             return "up        ";
-    case EcsQuerySelfUp:         return "selfup    ";
-    case EcsQueryWith:           return "with      ";
-    case EcsQueryWithWcTgt:      return "with_wct  ";
-    case EcsQueryTrav:           return "trav      ";
-    case EcsQueryAndFrom:        return "andfrom   ";
-    case EcsQueryOrFrom:         return "orfrom    ";
-    case EcsQueryNotFrom:        return "notfrom   ";
-    case EcsQueryIds:            return "ids       ";
-    case EcsQueryIdsRight:       return "idsr      ";
-    case EcsQueryIdsLeft:        return "idsl      ";
-    case EcsQueryEach:           return "each      ";
-    case EcsQueryStore:          return "store     ";
-    case EcsQueryReset:          return "reset     ";
-    case EcsQueryOr:             return "or        ";
-    case EcsQueryOptional:       return "option    ";
-    case EcsQueryIfVar:          return "ifvar     ";
-    case EcsQueryIfSet:          return "ifset     ";
-    case EcsQueryEnd:            return "end       ";
-    case EcsQueryNot:            return "not       ";
-    case EcsQueryPredEq:         return "eq        ";
-    case EcsQueryPredNeq:        return "neq       ";
-    case EcsQueryPredEqName:     return "eq_nm     ";
-    case EcsQueryPredNeqName:    return "neq_nm    ";
-    case EcsQueryPredEqMatch:    return "eq_m      ";
-    case EcsQueryPredNeqMatch:   return "neq_m     ";
-    case EcsQueryMemberEq:       return "membereq  ";
-    case EcsQueryMemberNeq:      return "memberneq ";
-    case EcsQueryToggle:         return "toggle    ";
-    case EcsQueryToggleOption:   return "togglopt  ";
-    case EcsQuerySparse:         return "spars     ";
-    case EcsQuerySparseWith:     return "spars_w   ";
-    case EcsQuerySparseNot:      return "spars_not ";
-    case EcsQuerySparseSelfUp:   return "spars_sup ";
-    case EcsQuerySparseUp:       return "spars_up  ";
-    case EcsQueryLookup:         return "lookup    ";
-    case EcsQuerySetVars:        return "setvars   ";
-    case EcsQuerySetThis:        return "setthis   ";
-    case EcsQuerySetFixed:       return "setfix    ";
-    case EcsQuerySetIds:         return "setids    ";
-    case EcsQuerySetId:          return "setid     ";
-    case EcsQueryContain:        return "contain   ";
-    case EcsQueryPairEq:         return "pair_eq   ";
-    case EcsQueryYield:          return "yield     ";
-    case EcsQueryNothing:        return "nothing   ";
-    default:                     return "!invalid  ";
     }
 }
 
