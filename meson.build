@@ -126,6 +126,7 @@ flecs_src = files(
     'src/query/engine/eval_pred.c',
     'src/query/engine/eval_toggle.c',
     'src/query/engine/eval_trav.c',
+    'src/query/engine/eval_tree.c',
     'src/query/engine/eval_up.c',
     'src/query/engine/eval_sparse.c',
     'src/query/engine/eval_utils.c',
