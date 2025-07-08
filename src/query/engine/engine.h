@@ -150,6 +150,13 @@ bool flecs_query_run_until(
     int32_t last);
 
 
+/* And evaluation */
+
+bool flecs_query_and_any(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
 /* Select evaluation */
 
 bool flecs_query_select(
@@ -210,6 +217,13 @@ bool flecs_query_sparse_self_up(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
+
+/* Hierarchy evaluation */
+
+bool flecs_query_tree_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
 
 /* Toggle evaluation*/
 
