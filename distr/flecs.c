@@ -36133,7 +36133,11 @@ int flecs_term_finalize(
 
     /* If term queries for !(ChildOf, _), translate it to the builtin 
      * (ChildOf, 0) index which is a cheaper way to find root entities */
-    if (term->oper == EcsNot && term->id == ecs_pair(EcsChildOf, EcsAny)) {
+    if (term->oper == EcsNot && (
+            (term->id == ecs_pair(EcsChildOf, EcsAny)) ||
+            (term->id == ecs_pair(EcsChildOf, EcsWildcard))
+        ))
+    {
         /* Only if the source is not EcsAny */
         if (!(ECS_TERM_REF_ID(&term->src) == EcsAny && (term->src.id & EcsIsVariable))) {
             term->oper = EcsAnd;
@@ -40368,7 +40372,7 @@ void flecs_table_init(
     }
 
     int32_t last_pair = -1;
-    bool has_childof = table->flags & EcsTableHasChildOf;
+    bool has_childof = !!(table->flags & (EcsTableHasChildOf|EcsTableHasParent));
     if (first_pair != -1) {
         /* Add a (Relationship, *) record for each relationship. */
         ecs_entity_t r = 0;
@@ -40513,12 +40517,14 @@ void flecs_table_init(
 
     /* If the table doesn't have an explicit ChildOf pair, it will be in the
      * root which is registered with the (ChildOf, 0) index. */
-    ecs_assert(childof_cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (childof_cr) {
+        if (table->flags & EcsTableHasName) {
+            flecs_component_name_index_ensure(world, childof_cr);
+            ecs_assert(childof_cr->pair->name_index != NULL, 
+                ECS_INTERNAL_ERROR, NULL);
+        }
 
-    if (table->flags & EcsTableHasName) {
-        flecs_component_name_index_ensure(world, childof_cr);
-        ecs_assert(childof_cr->pair->name_index != NULL, 
-            ECS_INTERNAL_ERROR, NULL);
+        table->_->childof_r = childof_cr->pair;
     }
 
     table->_->childof_r = childof_cr->pair;
