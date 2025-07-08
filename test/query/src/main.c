@@ -2230,6 +2230,18 @@ void NonFragmentingChildOf_fixed_src_childof_wildcard_w_component(void);
 void NonFragmentingChildOf_fixed_src_childof_any(void);
 void NonFragmentingChildOf_fixed_src_childof_var(void);
 void NonFragmentingChildOf_fixed_src_childof_set_var(void);
+void NonFragmentingChildOf_this_src_childof_0(void);
+void NonFragmentingChildOf_this_src_not_childof_wildcard(void);
+void NonFragmentingChildOf_this_src_not_childof_any(void);
+void NonFragmentingChildOf_this_src_childof_parent(void);
+void NonFragmentingChildOf_this_src_childof_parent_w_tag(void);
+void NonFragmentingChildOf_this_src_childof_parent_w_component(void);
+void NonFragmentingChildOf_this_src_childof_wildcard(void);
+void NonFragmentingChildOf_this_src_childof_wildcard_w_tag(void);
+void NonFragmentingChildOf_this_src_childof_wildcard_w_component(void);
+void NonFragmentingChildOf_this_src_childof_any(void);
+void NonFragmentingChildOf_this_src_childof_var(void);
+void NonFragmentingChildOf_this_src_childof_set_var(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -11092,6 +11104,54 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "fixed_src_childof_set_var",
         NonFragmentingChildOf_fixed_src_childof_set_var
+    },
+    {
+        "this_src_childof_0",
+        NonFragmentingChildOf_this_src_childof_0
+    },
+    {
+        "this_src_not_childof_wildcard",
+        NonFragmentingChildOf_this_src_not_childof_wildcard
+    },
+    {
+        "this_src_not_childof_any",
+        NonFragmentingChildOf_this_src_not_childof_any
+    },
+    {
+        "this_src_childof_parent",
+        NonFragmentingChildOf_this_src_childof_parent
+    },
+    {
+        "this_src_childof_parent_w_tag",
+        NonFragmentingChildOf_this_src_childof_parent_w_tag
+    },
+    {
+        "this_src_childof_parent_w_component",
+        NonFragmentingChildOf_this_src_childof_parent_w_component
+    },
+    {
+        "this_src_childof_wildcard",
+        NonFragmentingChildOf_this_src_childof_wildcard
+    },
+    {
+        "this_src_childof_wildcard_w_tag",
+        NonFragmentingChildOf_this_src_childof_wildcard_w_tag
+    },
+    {
+        "this_src_childof_wildcard_w_component",
+        NonFragmentingChildOf_this_src_childof_wildcard_w_component
+    },
+    {
+        "this_src_childof_any",
+        NonFragmentingChildOf_this_src_childof_any
+    },
+    {
+        "this_src_childof_var",
+        NonFragmentingChildOf_this_src_childof_var
+    },
+    {
+        "this_src_childof_set_var",
+        NonFragmentingChildOf_this_src_childof_set_var
     }
 };
 
@@ -11893,7 +11953,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        13,
+        25,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params
