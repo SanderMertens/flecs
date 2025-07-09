@@ -52,7 +52,10 @@ const char* flecs_query_op_str(
     case EcsQuerySparseSelfUp:   return "spars_sup ";
     case EcsQuerySparseUp:       return "spars_up  ";
     case EcsQueryTree:           return "tree      ";
+    case EcsQueryTreeWildcard:   return "tree_wc   ";
     case EcsQueryTreeWith:       return "tree_w    ";
+    case EcsQueryChildren:       return "childs    ";
+    case EcsQueryChildrenWc:     return "childs_wc ";
     case EcsQueryLookup:         return "lookup    ";
     case EcsQuerySetVars:        return "setvars   ";
     case EcsQuerySetThis:        return "setthis   ";
