@@ -2300,6 +2300,8 @@
                 "this_src_childof_wildcard_w_tag",
                 "this_src_childof_wildcard_w_component",
                 "this_src_childof_any",
+                "this_src_childof_any_w_tag",
+                "this_src_childof_any_w_component",
                 "this_src_childof_var",
                 "this_src_childof_set_var"
             ]

@@ -2207,6 +2207,8 @@ void NonFragmentingChildOf_this_src_childof_wildcard(void);
 void NonFragmentingChildOf_this_src_childof_wildcard_w_tag(void);
 void NonFragmentingChildOf_this_src_childof_wildcard_w_component(void);
 void NonFragmentingChildOf_this_src_childof_any(void);
+void NonFragmentingChildOf_this_src_childof_any_w_tag(void);
+void NonFragmentingChildOf_this_src_childof_any_w_component(void);
 void NonFragmentingChildOf_this_src_childof_var(void);
 void NonFragmentingChildOf_this_src_childof_set_var(void);
 
@@ -10981,6 +10983,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_this_src_childof_any
     },
     {
+        "this_src_childof_any_w_tag",
+        NonFragmentingChildOf_this_src_childof_any_w_tag
+    },
+    {
+        "this_src_childof_any_w_component",
+        NonFragmentingChildOf_this_src_childof_any_w_component
+    },
+    {
         "this_src_childof_var",
         NonFragmentingChildOf_this_src_childof_var
     },
@@ -11788,7 +11798,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        25,
+        27,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

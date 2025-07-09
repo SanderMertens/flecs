@@ -1135,6 +1135,8 @@ void flecs_query_set_op_kind(
                     } else {
                         op->kind = EcsQueryTree;
                     }
+                } else if (op->kind == EcsQueryAndAny) {
+                    op->kind = EcsQueryTreeWildcard;
                 }
             }
         }
