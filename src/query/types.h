@@ -85,7 +85,10 @@ typedef enum {
     EcsQuerySparseUp,
     EcsQuerySparseWith,     /* Evaluate sparse component against fixed or variable source */
     EcsQueryTree,
+    EcsQueryTreeWildcard,
     EcsQueryTreeWith,       /* Evaluate (ChildOf, tgt) against fixed or variable source */
+    EcsQueryChildren,       /* Return children for parent, if possible in order */
+    EcsQueryChildrenWc,     /* Return children for parents, if possible in order */
     EcsQueryLookup,         /* Lookup relative to variable */
     EcsQuerySetVars,        /* Populate it.sources from variables */
     EcsQuerySetThis,        /* Populate This entity variable */
@@ -147,7 +150,7 @@ typedef struct {
 
 /* Sparse context */
 typedef struct {
-    ecs_query_and_ctx_t and_; /* For mixed sparse/non-sparse results */
+    ecs_query_and_ctx_t and_; /* For mixed results */
 
     ecs_sparse_t *sparse;
     ecs_table_range_t range;
@@ -159,6 +162,29 @@ typedef struct {
     ecs_table_range_t prev_range;
     int32_t prev_cur;
 } ecs_query_sparse_ctx_t;
+
+typedef struct {
+    ecs_query_and_ctx_t and_; /* For mixed results */
+    uint32_t tgt;
+    ecs_entity_t *entities;
+    int32_t count;
+    int32_t cur;
+} ecs_query_tree_ctx_t;
+
+typedef enum ecs_query_tree_iter_state_t {
+    EcsQueryTreeIterNext,
+    EcsQueryTreeIterTables,
+    EcsQueryTreeIterEntities
+} ecs_query_tree_iter_state_t;
+
+typedef struct {
+    ecs_component_record_t *cr;
+    ecs_table_cache_iter_t it;
+    ecs_entity_t *entities;
+    int32_t count;
+    int32_t cur;
+    ecs_query_tree_iter_state_t state;
+} ecs_query_tree_wildcard_ctx_t;
 
 /* Down traversal cache (for resolving up queries w/unknown source) */
 typedef struct {
@@ -319,6 +345,8 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_membereq_ctx_t membereq;
         ecs_query_toggle_ctx_t toggle;
         ecs_query_sparse_ctx_t sparse;
+        ecs_query_tree_ctx_t tree;
+        ecs_query_tree_wildcard_ctx_t tree_wildcard;
     } is;
 } ecs_query_op_ctx_t;
 

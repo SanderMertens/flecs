@@ -1128,6 +1128,14 @@ void flecs_query_set_op_kind(
         if (ECS_IS_PAIR(term->id) && ECS_PAIR_FIRST(term->id) == EcsChildOf) {
             if (!src_is_var) {
                 op->kind = EcsQueryTreeWith;
+            } else {
+                if (op->kind == EcsQueryAnd) {
+                    if (ECS_PAIR_SECOND(term->id) == EcsWildcard) {
+                        op->kind = EcsQueryTreeWildcard;
+                    } else {
+                        op->kind = EcsQueryTree;
+                    }
+                }
             }
         }
     }
