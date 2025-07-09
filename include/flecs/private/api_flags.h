@@ -221,16 +221,17 @@ extern "C" {
 #define EcsTableHasIsA                 (1u << 2u)  /* Does the table have IsA relationship */
 #define EcsTableHasMultiIsA            (1u << 3u)  /* Does table have multiple IsA pairs */
 #define EcsTableHasChildOf             (1u << 4u)  /* Does the table type ChildOf relationship */
-#define EcsTableHasName                (1u << 5u)  /* Does the table type have (Identifier, Name) */
-#define EcsTableHasPairs               (1u << 6u)  /* Does the table type have pairs */
-#define EcsTableHasModule              (1u << 7u)  /* Does the table have module data */
-#define EcsTableIsDisabled             (1u << 8u)  /* Does the table type has EcsDisabled */
-#define EcsTableNotQueryable           (1u << 9u)  /* Table should never be returned by queries */
-#define EcsTableHasCtors               (1u << 10u)
-#define EcsTableHasDtors               (1u << 11u)
-#define EcsTableHasCopy                (1u << 12u)
-#define EcsTableHasMove                (1u << 13u)
-#define EcsTableHasToggle              (1u << 14u)
+#define EcsTableHasParent              (1u << 5u)  /* Does the table type Parent component */
+#define EcsTableHasName                (1u << 6u)  /* Does the table type have (Identifier, Name) */
+#define EcsTableHasPairs               (1u << 7u)  /* Does the table type have pairs */
+#define EcsTableHasModule              (1u << 8u)  /* Does the table have module data */
+#define EcsTableIsDisabled             (1u << 9u)  /* Does the table type has EcsDisabled */
+#define EcsTableNotQueryable           (1u << 10u)  /* Table should never be returned by queries */
+#define EcsTableHasCtors               (1u << 11u)
+#define EcsTableHasDtors               (1u << 12u)
+#define EcsTableHasCopy                (1u << 13u)
+#define EcsTableHasMove                (1u << 14u)
+#define EcsTableHasToggle              (1u << 15u)
 
 #define EcsTableHasOnAdd               (1u << 16u) /* Same values as id flags */
 #define EcsTableHasOnRemove            (1u << 17u)
