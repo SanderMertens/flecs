@@ -1135,6 +1135,13 @@ void flecs_query_set_op_kind(
                     } else {
                         op->kind = EcsQueryTree;
                     }
+                } else if (op->kind == EcsQueryAndAny) {
+                    if (ECS_PAIR_SECOND(term->id)) {
+                        op->kind = EcsQueryTreeWildcard;
+                    } else {
+                        /* If it's a (ChildOf, 0) query then we don't need to
+                         * evaluate it as a wildcard. */
+                    }
                 }
             }
         }
