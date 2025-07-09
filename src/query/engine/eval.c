@@ -198,7 +198,6 @@ repeat:
     }
 }
 
-static
 bool flecs_query_and(
     const ecs_query_op_t *op,
     bool redo,
@@ -1502,7 +1501,11 @@ bool flecs_query_dispatch(
     case EcsQuerySparseNot: return flecs_query_sparse_with(op, redo, ctx, true);
     case EcsQuerySparseSelfUp: return flecs_query_sparse_self_up(op, redo, ctx);
     case EcsQuerySparseUp: return flecs_query_sparse_up(op, redo, ctx);
+    case EcsQueryTree: return flecs_query_tree_and(op, redo, ctx);
+    case EcsQueryTreeWildcard: return flecs_query_tree_and_wildcard(op, redo, ctx, false);
+    case EcsQueryChildrenWc: return flecs_query_tree_and_wildcard(op, redo, ctx, true);
     case EcsQueryTreeWith: return flecs_query_tree_with(op, redo, ctx);
+    case EcsQueryChildren: return flecs_query_children(op, redo, ctx);
     case EcsQueryLookup: return flecs_query_lookup(op, redo, ctx);
     case EcsQuerySetVars: return flecs_query_setvars(op, redo, ctx);
     case EcsQuerySetThis: return flecs_query_setthis(op, redo, ctx);

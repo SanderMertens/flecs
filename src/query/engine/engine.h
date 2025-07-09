@@ -152,6 +152,11 @@ bool flecs_query_run_until(
 
 /* And evaluation */
 
+bool flecs_query_and(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
 bool flecs_query_and_any(
     const ecs_query_op_t *op,
     bool redo,
@@ -220,10 +225,27 @@ bool flecs_query_sparse_self_up(
 
 /* Hierarchy evaluation */
 
+bool flecs_query_tree_and(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_tree_and_wildcard(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool bulk_return);
+
 bool flecs_query_tree_with(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_children(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
 
 /* Toggle evaluation*/
 
