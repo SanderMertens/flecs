@@ -162,7 +162,8 @@ bool ecs_query_next(
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
-    ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(impl != NULL, ECS_INVALID_OPERATION, 
+        "cannot call ecs_query_next on invalid iterator");
 
     ecs_query_run_ctx_t ctx;
     flecs_query_iter_run_ctx_init(it, &ctx);

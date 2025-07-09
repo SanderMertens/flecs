@@ -601,10 +601,8 @@ int flecs_term_verify(
                 if (is_same && ecs_has_id(world, first_id, EcsAcyclic)
                     && !(term->flags_ & EcsTermReflexive)) 
                 {
-                    char *pred_str = ecs_get_path(world, term->first.id);
-                    flecs_query_validator_error(ctx, "term with acyclic relationship"
-                        " '%s' cannot have same subject and object", pred_str);
-                    ecs_os_free(pred_str);
+                    flecs_query_validator_error(ctx, "term with acyclic "
+                        "relationship cannot have same source and target");
                     return -1;
                 }
             }

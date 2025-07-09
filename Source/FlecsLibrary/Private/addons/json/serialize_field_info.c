@@ -69,20 +69,22 @@ void flecs_json_serialize_field(
                 }
             }
 
-            if (value_ctx->type) {
-                flecs_json_memberl(buf, "type");
-                flecs_json_label(buf, world, value_ctx->type);
+            if (term->inout != EcsInOutNone) {
+                if (value_ctx->type) {
+                    flecs_json_memberl(buf, "type");
+                    flecs_json_label(buf, world, value_ctx->type);
 
-                const char *symbol = ecs_get_symbol(world, value_ctx->type);
-                if (symbol) {
-                    flecs_json_memberl(buf, "symbol");
-                    flecs_json_string(buf, symbol);
+                    const char *symbol = ecs_get_symbol(world, value_ctx->type);
+                    if (symbol) {
+                        flecs_json_memberl(buf, "symbol");
+                        flecs_json_string(buf, symbol);
+                    }
                 }
-            }
 
-            if (value_ctx->ser) {
-                flecs_json_memberl(buf, "schema");
-                ecs_type_info_to_json_buf(world, value_ctx->type, buf);
+                if (value_ctx->ser) {
+                    flecs_json_memberl(buf, "schema");
+                    ecs_type_info_to_json_buf(world, value_ctx->type, buf);
+                }
             }
         } else {
             flecs_json_memberl(buf, "not");

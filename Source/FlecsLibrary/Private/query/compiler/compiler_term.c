@@ -814,7 +814,8 @@ ecs_flags32_t flecs_query_to_table_flags(
 
         return table_flags;
     }
-    return 0;
+
+    return EcsTableNotQueryable;
 }
 
 static
