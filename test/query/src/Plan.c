@@ -5,9 +5,10 @@ void Plan_reordered_plan_1(void) {
 
     ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
     ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ECS_TAG(world, Rel);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo, ChildOf($this, $p, $gp, $ggp), Bar($ggp)"
+        .expr = "Foo, Rel($this, $p, $gp, $ggp), Bar($ggp)"
     });
 
     test_assert(r != NULL);
@@ -17,9 +18,9 @@ void Plan_reordered_plan_1(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
     LINE " 1. [ 0,  2]  selfup      $[this]           (Foo)"
-    LINE " 2. [ 1,  3]  and         $[this]           (ChildOf, $p)"
-    LINE " 3. [ 2,  4]  and         $p                (ChildOf, $gp)"
-    LINE " 4. [ 3,  5]  and         $gp               (ChildOf, $ggp)"
+    LINE " 2. [ 1,  3]  and         $[this]           (Rel, $p)"
+    LINE " 3. [ 2,  4]  and         $p                (Rel, $gp)"
+    LINE " 4. [ 3,  5]  and         $gp               (Rel, $ggp)"
     LINE " 5. [ 4,  6]  selfup      $ggp              (Bar)"
     LINE " 6. [ 5,  7]  setvars     "
     LINE " 7. [ 6,  8]  yield       "
@@ -39,6 +40,78 @@ void Plan_reordered_plan_2(void) {
 
     ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
     ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ECS_TAG(world, Rel);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Foo($ggp), Rel($this, $p, $gp, $ggp), Bar($this)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  selfup      $[ggp]            (Foo)"
+    LINE " 2. [ 1,  3]  each        $ggp              ($[ggp])"
+    LINE " 3. [ 2,  4]  and         $[gp]             (Rel, $ggp)"
+    LINE " 4. [ 3,  5]  each        $gp               ($[gp])"
+    LINE " 5. [ 4,  6]  and         $[p]              (Rel, $gp)"
+    LINE " 6. [ 5,  7]  each        $p                ($[p])"
+    LINE " 7. [ 6,  8]  and         $[this]           (Rel, $p)"
+    LINE " 8. [ 7,  9]  selfup      $[this]           (Bar)"
+    LINE " 9. [ 8, 10]  setvars     "
+    LINE "10. [ 9, 11]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_reordered_plan_1_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Foo, ChildOf($this, $p, $gp, $ggp), Bar($ggp)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  selfup      $[this]           (Foo)"
+    LINE " 2. [ 1,  3]  tree_wc     $[this]           (ChildOf, $p)"
+    LINE " 3. [ 2,  4]  tree_wc     $p                (ChildOf, $gp)"
+    LINE " 4. [ 3,  5]  tree_wc     $gp               (ChildOf, $ggp)"
+    LINE " 5. [ 4,  6]  selfup      $ggp              (Bar)"
+    LINE " 6. [ 5,  7]  setvars     "
+    LINE " 7. [ 6,  8]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_reordered_plan_2_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo($ggp), ChildOf($this, $p, $gp, $ggp), Bar($this)"
@@ -52,11 +125,11 @@ void Plan_reordered_plan_2(void) {
     HEAD " 0. [-1,  1]  setids      "
     LINE " 1. [ 0,  2]  selfup      $[ggp]            (Foo)"
     LINE " 2. [ 1,  3]  each        $ggp              ($[ggp])"
-    LINE " 3. [ 2,  4]  and         $[gp]             (ChildOf, $ggp)"
+    LINE " 3. [ 2,  4]  tree_wc     $[gp]             (ChildOf, $ggp)"
     LINE " 4. [ 3,  5]  each        $gp               ($[gp])"
-    LINE " 5. [ 4,  6]  and         $[p]              (ChildOf, $gp)"
+    LINE " 5. [ 4,  6]  tree_wc     $[p]              (ChildOf, $gp)"
     LINE " 6. [ 5,  7]  each        $p                ($[p])"
-    LINE " 7. [ 6,  8]  and         $[this]           (ChildOf, $p)"
+    LINE " 7. [ 6,  8]  tree_wc     $[this]           (ChildOf, $p)"
     LINE " 8. [ 7,  9]  selfup      $[this]           (Bar)"
     LINE " 9. [ 8, 10]  setvars     "
     LINE "10. [ 9, 11]  yield       "
@@ -378,6 +451,72 @@ void Plan_3_trivial_plan_w_wildcard(void) {
 
     ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
     ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ECS_TAG(world, Rel);
+
+    ecs_entity(world, { .name = "p" });
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Foo(self), Bar(self), Rel(self, *)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  triv        {0,1}"
+    LINE " 2. [ 1,  3]  and         $[this]           (Rel, $*'1)"
+    LINE " 3. [ 2,  4]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_3_trivial_plan_w_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+    ECS_TAG(world, Rel);
+
+    ecs_entity(world, { .name = "p" });
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Foo(self), Bar(self), Rel(self, _)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  triv        {0,1}"
+    LINE " 2. [ 1,  3]  and_any     $[this]           (Rel, $_'1)"
+    LINE " 3. [ 2,  4]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_3_trivial_plan_w_wildcard_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "p" });
 
@@ -392,7 +531,7 @@ void Plan_3_trivial_plan_w_wildcard(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
     LINE " 1. [ 0,  2]  triv        {0,1}"
-    LINE " 2. [ 1,  3]  and         $[this]           (ChildOf, $*'1)"
+    LINE " 2. [ 1,  3]  tree_wc     $[this]           (ChildOf, $*'1)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -405,7 +544,7 @@ void Plan_3_trivial_plan_w_wildcard(void) {
     ecs_fini(world);
 }
 
-void Plan_3_trivial_plan_w_any(void) {
+void Plan_3_trivial_plan_w_any_childof(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
@@ -424,7 +563,7 @@ void Plan_3_trivial_plan_w_any(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      " 
     LINE " 1. [ 0,  2]  triv        {0,1}"
-    LINE " 2. [ 1,  3]  and_any     $[this]           (ChildOf, $_'1)"
+    LINE " 2. [ 1,  3]  tree_wc     $[this]           (ChildOf, $_'1)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -471,6 +610,76 @@ void Plan_3_trivial_plan_w_wildcard_component(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+    ECS_TAG(world, Rel);
+
+    ecs_entity(world, { .name = "p" });
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Position(self), Velocity(self), Rel(self, *)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  triv        {0,1}"
+    LINE " 2. [ 1,  3]  and         $[this]           (Rel, $*'1)"
+    LINE " 3. [ 2,  4]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_3_trivial_plan_w_any_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+    ECS_TAG(world, Rel);
+
+    ecs_entity(world, { .name = "p" });
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Position(self), Velocity(self), Rel(self, _)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  triv        {0,1}"
+    LINE " 2. [ 1,  3]  and_any     $[this]           (Rel, $_'1)"
+    LINE " 3. [ 2,  4]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_3_trivial_plan_w_pair_component_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -485,7 +694,7 @@ void Plan_3_trivial_plan_w_wildcard_component(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
     LINE " 1. [ 0,  2]  triv        {0,1}"
-    LINE " 2. [ 1,  3]  and         $[this]           (ChildOf, $*'1)"
+    LINE " 2. [ 1,  3]  tree_wc     $[this]           (ChildOf, $*'1)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -498,7 +707,7 @@ void Plan_3_trivial_plan_w_wildcard_component(void) {
     ecs_fini(world);
 }
 
-void Plan_3_trivial_plan_w_any_component(void) {
+void Plan_3_trivial_plan_w_wildcard_component_childof(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -519,7 +728,7 @@ void Plan_3_trivial_plan_w_any_component(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      " 
     LINE " 1. [ 0,  2]  triv        {0,1}"
-    LINE " 2. [ 1,  3]  and_any     $[this]           (ChildOf, $_'1)"
+    LINE " 2. [ 1,  3]  tree_wc     $[this]           (ChildOf, $_'1)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -629,6 +838,36 @@ void Plan_2_trivial_plan_w_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_TAG(world, Rel);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Foo(self), Rel(self, *)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  and         $[this]           (Foo)"
+    LINE " 2. [ 1,  3]  and         $[this]           (Rel, $*'1)"
+    LINE " 3. [ 2,  4]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_2_trivial_plan_w_wildcard_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(self), ChildOf(self, *)"
@@ -641,7 +880,7 @@ void Plan_2_trivial_plan_w_wildcard(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
     LINE " 1. [ 0,  2]  and         $[this]           (Foo)"
-    LINE " 2. [ 1,  3]  and         $[this]           (ChildOf, $*'1)"
+    LINE " 2. [ 1,  3]  tree_wc     $[this]           (ChildOf, $*'1)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -653,6 +892,7 @@ void Plan_2_trivial_plan_w_wildcard(void) {
 
     ecs_fini(world);
 }
+
 
 void Plan_this_before_fixed_src(void) {
     ecs_world_t *world = ecs_mini();

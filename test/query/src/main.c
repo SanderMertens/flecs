@@ -744,6 +744,8 @@ void Combinations_trav_and_self_and_singleton(void);
 // Testsuite 'Plan'
 void Plan_reordered_plan_1(void);
 void Plan_reordered_plan_2(void);
+void Plan_reordered_plan_1_childof(void);
+void Plan_reordered_plan_2_childof(void);
 void Plan_reordered_plan_3(void);
 void Plan_reordered_plan_4(void);
 void Plan_reordered_plan_5(void);
@@ -756,13 +758,18 @@ void Plan_2_trivial_plan_component(void);
 void Plan_3_trivial_plan_w_pair(void);
 void Plan_3_trivial_plan_w_wildcard(void);
 void Plan_3_trivial_plan_w_any(void);
+void Plan_3_trivial_plan_w_wildcard_childof(void);
+void Plan_3_trivial_plan_w_any_childof(void);
 void Plan_3_trivial_plan_w_pair_component(void);
 void Plan_3_trivial_plan_w_wildcard_component(void);
+void Plan_3_trivial_plan_w_pair_component_childof(void);
+void Plan_3_trivial_plan_w_wildcard_component_childof(void);
 void Plan_3_trivial_plan_w_any_component(void);
 void Plan_3_trivial_plan_w_any_cached(void);
 void Plan_1_trivial_component_w_none(void);
 void Plan_2_trivial_component_w_none(void);
 void Plan_2_trivial_plan_w_wildcard(void);
+void Plan_2_trivial_plan_w_wildcard_childof(void);
 void Plan_this_before_fixed_src(void);
 void Plan_fixed_src_before_this(void);
 void Plan_var_before_fixed_src(void);
@@ -2239,6 +2246,8 @@ void NonFragmentingChildOf_this_src_childof_wildcard(void);
 void NonFragmentingChildOf_this_src_childof_wildcard_w_tag(void);
 void NonFragmentingChildOf_this_src_childof_wildcard_w_component(void);
 void NonFragmentingChildOf_this_src_childof_any(void);
+void NonFragmentingChildOf_this_src_childof_any_w_tag(void);
+void NonFragmentingChildOf_this_src_childof_any_w_component(void);
 void NonFragmentingChildOf_this_src_childof_var(void);
 void NonFragmentingChildOf_this_src_childof_set_var(void);
 
@@ -5290,6 +5299,14 @@ bake_test_case Plan_testcases[] = {
         Plan_reordered_plan_2
     },
     {
+        "reordered_plan_1_childof",
+        Plan_reordered_plan_1_childof
+    },
+    {
+        "reordered_plan_2_childof",
+        Plan_reordered_plan_2_childof
+    },
+    {
         "reordered_plan_3",
         Plan_reordered_plan_3
     },
@@ -5338,12 +5355,28 @@ bake_test_case Plan_testcases[] = {
         Plan_3_trivial_plan_w_any
     },
     {
+        "3_trivial_plan_w_wildcard_childof",
+        Plan_3_trivial_plan_w_wildcard_childof
+    },
+    {
+        "3_trivial_plan_w_any_childof",
+        Plan_3_trivial_plan_w_any_childof
+    },
+    {
         "3_trivial_plan_w_pair_component",
         Plan_3_trivial_plan_w_pair_component
     },
     {
         "3_trivial_plan_w_wildcard_component",
         Plan_3_trivial_plan_w_wildcard_component
+    },
+    {
+        "3_trivial_plan_w_pair_component_childof",
+        Plan_3_trivial_plan_w_pair_component_childof
+    },
+    {
+        "3_trivial_plan_w_wildcard_component_childof",
+        Plan_3_trivial_plan_w_wildcard_component_childof
     },
     {
         "3_trivial_plan_w_any_component",
@@ -5364,6 +5397,10 @@ bake_test_case Plan_testcases[] = {
     {
         "2_trivial_plan_w_wildcard",
         Plan_2_trivial_plan_w_wildcard
+    },
+    {
+        "2_trivial_plan_w_wildcard_childof",
+        Plan_2_trivial_plan_w_wildcard_childof
     },
     {
         "this_before_fixed_src",
@@ -11141,6 +11178,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_this_src_childof_any
     },
     {
+        "this_src_childof_any_w_tag",
+        NonFragmentingChildOf_this_src_childof_any_w_tag
+    },
+    {
+        "this_src_childof_any_w_component",
+        NonFragmentingChildOf_this_src_childof_any_w_component
+    },
+    {
         "this_src_childof_var",
         NonFragmentingChildOf_this_src_childof_var
     },
@@ -11809,7 +11854,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        86,
+        93,
         Plan_testcases
     },
     {
@@ -11948,7 +11993,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        25,
+        27,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params
