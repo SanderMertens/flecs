@@ -465,6 +465,8 @@ void Prefab_new_type_w_1_override(void) {
     ecs_set(world, Prefab, Position, {10, 20});
     ecs_set(world, Prefab, Velocity, {30, 40});
 
+    printf("\n\n\nNew\n");
+
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, Prefab);
     test_assert(e1 != 0);
     test_assert( ecs_has(world, e1, Position));

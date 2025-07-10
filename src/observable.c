@@ -488,42 +488,6 @@ void flecs_propagate_entities(
 }
 
 static
-void flecs_override_copy(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    const ecs_table_record_t *tr,
-    const ecs_type_info_t *ti,
-    void *dst,
-    const void *src,
-    int32_t offset,
-    int32_t count)
-{
-    void *ptr = dst;
-    ecs_copy_t copy = ti->hooks.copy;
-    ecs_size_t size = ti->size;
-    int32_t i;
-
-    if (copy) {
-        for (i = 0; i < count; i ++) {
-            copy(ptr, src, 1, ti);
-            ptr = ECS_OFFSET(ptr, size);
-        }
-    } else {
-        for (i = 0; i < count; i ++) {
-            ecs_os_memcpy(ptr, src, size);
-            ptr = ECS_OFFSET(ptr, size);
-        }
-    }
-
-    ecs_iter_action_t on_set = ti->hooks.on_set;
-    if (on_set) {
-        const ecs_entity_t *entities = &ecs_table_entities(table)[offset];
-        flecs_invoke_hook(world, table, tr->hdr.cr, tr, 
-            count, offset, entities, ti->component, ti, EcsOnSet, on_set);
-    }
-}
-
-static
 void* flecs_override(
     ecs_iter_t *it, 
     const ecs_type_t *emit_ids,
@@ -1216,22 +1180,12 @@ void flecs_emit(
     const ecs_event_record_t *wcer = flecs_event_record_get_if(observable, EcsWildcard);
     const ecs_event_record_t *er_onset = flecs_event_record_get_if(observable, EcsOnSet);
 
-    ecs_data_t *storage = NULL;
-    ecs_column_t *columns = NULL;
     if (count) {
-        storage = &table->data;
-        columns = storage->columns;
         it.entities = &ecs_table_entities(table)[offset];
     }
 
     int32_t id_count = ids->count;
     ecs_id_t *id_array = ids->array;
-
-    /* If a table has IsA relationships, OnAdd/OnRemove events can trigger 
-     * (un)overriding a component. When a component is overridden its value is
-     * initialized with the value of the overridden component. */
-    bool can_override = count && (table_flags & EcsTableHasIsA) && (
-        (event == EcsOnAdd) || (event == EcsOnRemove));
 
     /* When a new (traversable) relationship is added (emitting an OnAdd/OnRemove
      * event) this will cause the components of the target entity to be 
@@ -1243,13 +1197,6 @@ void flecs_emit(
     bool has_observed = table_flags & EcsTableHasTraversable;
 
     ecs_event_id_record_t *iders[5] = {0};
-
-    /* Collect overridden ids so we can emit OnSet as last step */
-    int32_t override_count = 0;
-    ecs_id_t override_ids[256];
-    ecs_component_record_t *override_crs[256];
-    const ecs_table_record_t *override_trs[256];
-    ecs_size_t override_sizes[256];
     ecs_table_record_t dummy_tr;
 
     if (count && can_forward && has_observed) {
@@ -1284,21 +1231,12 @@ repeat_event:
 
         int32_t ider_i, ider_count = 0;
         bool is_pair = ECS_IS_PAIR(id);
-        void *override_ptr = NULL;
-        bool override_base_added = false;
-        ecs_table_record_t *base_tr = NULL;
-        ecs_entity_t base = 0;
-        bool id_can_override = can_override;
         bool dont_fragment = false;
 
         /* Only added components can trigger overriding */
         if (set_mask && event == EcsOnAdd) {
             ecs_assert(i < 256, ECS_UNSUPPORTED, 
                 "cannot add more than 256 components in a single operation");
-            if (set_mask[i >> 6] & (1llu << (i & 63))) {
-                /* Component is already set, so don't override with prefab value */
-                id_can_override = false;
-            }
         }
 
         cr = flecs_components_get(world, id);
@@ -1311,7 +1249,7 @@ repeat_event:
 
         /* Check if this id is a pair of an traversable relationship. If so, we 
          * may have to forward ids from the pair's target. */
-        if ((can_forward && is_pair) || id_can_override) {
+        if ((can_forward && is_pair)) {
             if (is_pair && (cr_flags & EcsIdTraversable)) {
                 const ecs_event_record_t *er_fwd = NULL;
                 if (ECS_PAIR_FIRST(id) == EcsIsA) {
@@ -1349,50 +1287,6 @@ repeat_event:
                 flecs_emit_forward(world, er, er_fwd, ids, &it, table, cr);
                 ecs_assert(it.event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
             }
-
-            if (id_can_override && !(cr_flags & EcsIdOnInstantiateDontInherit)) {
-                /* Initialize overridden components with value from base */
-                if (ti) {
-                    int32_t base_column = ecs_search_relation(world, table, 
-                        0, id, EcsIsA, EcsUp, &base, NULL, &base_tr);
-                    if (base_column != -1) {
-                        /* Base found with component */
-                        if (cr->flags & EcsIdIsSparse) {
-                            override_ptr = flecs_sparse_get(
-                                cr->sparse, 0, base);
-                        } else {
-                            ecs_table_t *base_table = base_tr->hdr.table;
-                            base_column = base_tr->column;
-                            ecs_assert(base_column != -1, ECS_INTERNAL_ERROR, NULL);
-                            ecs_record_t *base_r = flecs_entities_get(world, base);
-                            ecs_assert(base_r != NULL, ECS_INTERNAL_ERROR, NULL);
-                            int32_t base_row = ECS_RECORD_TO_ROW(base_r->row);
-                            override_ptr = base_table->data.columns[base_column].data;
-                            override_ptr = ECS_ELEM(override_ptr, ti->size, base_row);
-                        }
-
-                        /* For ids with override policy, check if base was added 
-                         * in same operation. This will determine later on 
-                         * whether we need to emit an OnSet event. */
-                        if (!(cr->flags & 
-                            (EcsIdOnInstantiateInherit|EcsIdOnInstantiateDontInherit))) {
-                            int32_t base_i;
-                            for (base_i = 0; base_i < id_count; base_i ++) {
-                                ecs_id_t base_id = id_array[base_i];
-                                if (!ECS_IS_PAIR(base_id)) {
-                                    continue;
-                                }
-                                if (ECS_PAIR_FIRST(base_id) != EcsIsA) {
-                                    continue;
-                                }
-                                if (ECS_PAIR_SECOND(base_id) == (uint32_t)base) {
-                                    override_base_added = true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         if (er) {
@@ -1405,7 +1299,7 @@ repeat_event:
             ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
-        if (!ider_count && !override_ptr) {
+        if (!ider_count) {
             /* If nothing more to do for this id, early out */
             continue;
         }
@@ -1442,73 +1336,8 @@ repeat_event:
             storage_i = tr->column;
 
             if (!ecs_id_is_wildcard(id) && (storage_i != -1 || ti)) {
-                bool is_sparse = cr->flags & EcsIdIsSparse;
-                ecs_size_t size = ti->size;
-                void *ptr;
-
-                if (is_sparse) {
-                    ecs_assert(count == 1, ECS_UNSUPPORTED, 
-                        "events for multiple entities are currently unsupported"
-                        " for sparse components");
-                    ecs_entity_t e = ecs_table_entities(table)[offset];
-                    ptr = flecs_sparse_get(cr->sparse, 0, e);
-                } else{
-                    ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-                    ecs_column_t *c = &columns[storage_i];
-                    ptr = ECS_ELEM(c->data, size, offset);
-                }
-
                 /* Safe, owned by observer */
-                ECS_CONST_CAST(int32_t*, it.sizes)[0] = size;
-
-                if (override_ptr) {
-                    if (event == EcsOnAdd) {
-                        /* If this is a new override, initialize the component
-                         * with the value of the overridden component. */
-                        flecs_override_copy(world, table, tr, ti, ptr, 
-                            override_ptr, offset, count);
-
-                        /* If the base for this component got added in the same
-                         * operation, generate an OnSet event as this is the 
-                         * first time this value is observed for the entity. */
-                        if (override_base_added) {
-                            override_ids[override_count] = id;
-                            override_crs[override_count] = cr;
-                            override_trs[override_count] = tr;
-                            override_sizes[override_count] = size;
-                            override_count ++;
-                        }
-                    } else if (er_onset && it.other_table && 
-                            it.other_table->type.count) 
-                    {
-                        ecs_assert(event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
-                        ecs_event_id_record_t *iders_set[5] = {0};
-                        int32_t ider_set_i, ider_set_count = 
-                            flecs_event_observers_get(er_onset, id, iders_set);
-                        if (ider_set_count) {
-                            /* Set the source temporarily to the base and base
-                             * component pointer. */
-                            it.sources[0] = base;
-                            it.trs[0] = base_tr;
-                            it.up_fields = 1;
-
-                            for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
-                                ecs_event_id_record_t *ider = iders_set[ider_set_i];
-                                flecs_observers_invoke(
-                                    world, &ider->self_up, &it, table, EcsIsA);
-                                ecs_assert(it.event_cur == evtx, 
-                                    ECS_INTERNAL_ERROR, NULL);
-                                flecs_observers_invoke(
-                                    world, &ider->up, &it, table, EcsIsA);
-                                ecs_assert(it.event_cur == evtx, 
-                                    ECS_INTERNAL_ERROR, NULL);
-                            }
-
-                            it.sources[0] = 0;
-                            it.trs[0] = tr;
-                        }
-                    }
-                }
+                ECS_CONST_CAST(int32_t*, it.sizes)[0] = ti->size;
             }
         }
 
@@ -1533,7 +1362,6 @@ repeat_event:
             world, &it, cr, it.entities, count, 0, iders, ider_count);
     }
 
-    can_override = false; /* Don't override twice */
     can_forward = false; /* Don't forward twice */
 
     if (wcer && er != wcer) {
@@ -1541,50 +1369,6 @@ repeat_event:
         er = wcer;
         it.event = event;
         goto repeat_event;
-    }
-
-    if (override_count) {
-        it.sources[0] = 0;
-        it.up_fields = 0;
-
-        for (i = 0; i < override_count; i ++) {
-            ecs_id_t id = override_ids[i];
-            const ecs_table_record_t *tr = override_trs[i];
-
-            if (tr == &dummy_tr) {
-                dummy_tr = (ecs_table_record_t){
-                    .hdr.cr = override_crs[i],
-                    .hdr.table = table,
-                    .index = -1,
-                    .column = -1,
-                    .count = 0
-                };
-            }
-
-            it.trs[0] = tr;
-            ECS_CONST_CAST(int32_t*, it.sizes)[0] = override_sizes[i];
-            it.event_id = id;
-            it.ids[0] = id;
-
-            ecs_event_id_record_t *iders_set[5] = {0};
-            int32_t ider_set_i, ider_set_count = 
-                flecs_event_observers_get(er_onset, id, iders_set);
-            if (!ider_set_count) {
-                continue;
-            }
-
-            for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
-                ecs_event_id_record_t *ider = iders_set[ider_set_i];
-                flecs_observers_invoke(
-                    world, &ider->self, &it, table, 0);
-                ecs_assert(it.event_cur == evtx, 
-                    ECS_INTERNAL_ERROR, NULL);
-                flecs_observers_invoke(
-                    world, &ider->self_up, &it, table, 0);
-                ecs_assert(it.event_cur == evtx, 
-                    ECS_INTERNAL_ERROR, NULL);
-            }
-        }
     }
 
 error:

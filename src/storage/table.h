@@ -72,6 +72,13 @@ typedef struct ecs_table_event_t {
      * initializing an event a bit simpler. */
 } ecs_table_event_t;
 
+/** Overrides (set if table overrides components) */
+typedef struct ecs_table_overrides_t {
+    const ecs_table_record_t *tr;    /* Table record for (ChildOf, *) */
+    int32_t *generations;            /* Reachable cache generations (one per IsA pair) */
+    ecs_ref_t *refs;                 /* Refs to base components (one for each column) */
+} ecs_table_overrides_t;
+
 /** Infrequently accessed data not stored inline in ecs_table_t */
 typedef struct ecs_table__t {
     uint64_t hash;                   /* Type hash */
@@ -86,6 +93,7 @@ typedef struct ecs_table__t {
     ecs_bitset_t *bs_columns;        /* Bitset columns */
 
     struct ecs_table_record_t *records; /* Array with table records */
+    ecs_table_overrides_t *overrides;   /* Component overrides (for tables with IsA pairs) */
     ecs_pair_record_t *childof_r;       /* ChildOf pair data */
 
 #ifdef FLECS_DEBUG_INFO
