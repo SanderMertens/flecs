@@ -18,7 +18,10 @@ struct UNREALFLECS_API FFlecsNetworkIdComponent
 
 public:
 	FORCEINLINE FFlecsNetworkIdComponent() = default;
-	FORCEINLINE FFlecsNetworkIdComponent(const uint32 InNetworkId) : NetworkId(InNetworkId) {}
+	FORCEINLINE FFlecsNetworkIdComponent(const uint32 InNetworkId)
+		: NetworkId(InNetworkId)
+	{
+	}
 
 	NO_DISCARD FORCEINLINE uint32 GetNetworkId() const
 	{
@@ -70,8 +73,11 @@ public:
 
 	FORCEINLINE bool NetSerialize(FArchive& Ar, MAYBE_UNUSED UPackageMap* Map, bool& bOutSuccess)
 	{
-		SerializeOptionalValue<TOptional<uint32>>(Ar.IsSaving(), Ar,
-			NetworkId, TOptional<uint32>());
+		SerializeOptionalValue<TOptional<uint32>>(
+			Ar.IsSaving(),
+			Ar,
+			NetworkId,
+			TOptional<uint32>());
 
 		bOutSuccess = true;
 		return true;
@@ -86,4 +92,5 @@ struct TStructOpsTypeTraits<FFlecsNetworkIdComponent> : public TStructOpsTypeTra
 	{
 		WithNetSerializer = true,
 	}; // enum
+	
 }; // struct TStructOpsTypeTraits<FFlecsNetworkIdComponent>

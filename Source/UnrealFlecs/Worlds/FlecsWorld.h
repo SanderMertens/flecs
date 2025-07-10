@@ -1676,8 +1676,12 @@ public:
 	{
 		solid_check(IsValid(ScriptEnum));
 
-		solid_checkf(!TypeMapComponent->ScriptEnumMap.contains(ScriptEnum),
-			TEXT("Script enum %s is already registered"), *ScriptEnum->GetName());
+		if (HasScriptEnum(ScriptEnum))
+		{
+			UE_LOGFMT(LogFlecsWorld, Log,
+				"Script enum {EnumName} is already registered", ScriptEnum->GetName());
+			return GetScriptEnumEntity(ScriptEnum);
+		}
 
 		// if (ScriptEnum->HasAnyEnumFlags(EEnumFlags::Flags))
 		// {

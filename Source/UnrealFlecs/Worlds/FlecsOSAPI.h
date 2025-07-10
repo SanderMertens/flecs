@@ -143,6 +143,8 @@ struct FFlecsConditionWrapper
 
 struct FOSApiInitializer
 {
+	static constexpr uint32 FlecsMemoryDefaultAlignment = 64;
+	
 	FOSApiInitializer()
 	{
 		UE_LOG(LogFlecsCore, Log, TEXT("Initializing Flecs OS API"));
@@ -260,11 +262,8 @@ struct FOSApiInitializer
 			FFlecsTask* FlecsTask = reinterpret_cast<FFlecsTask*>(Thread);
 			solid_check(FlecsTask);
 			
-			if LIKELY_IF(FlecsTask)
-			{
-				FlecsTask->Wait();
-				delete FlecsTask;
-			}
+			FlecsTask->Wait();
+			delete FlecsTask;
 			
 			return nullptr;
 		};
@@ -363,7 +362,7 @@ struct FOSApiInitializer
 			uint32 Line;
 			FString Name;
 
-			FORCEINLINE FFlecsProfilerTrace(const FString& InFileName, uint32 InLine, const FString& InName)
+			FORCEINLINE FFlecsProfilerTrace(const FString& InFileName, const uint32 InLine, const FString& InName)
 				: FileName(InFileName), Line(InLine), Name(InName)
 			{
 			}
@@ -451,17 +450,17 @@ struct FOSApiInitializer
 
 		os_api.malloc_ = [](int Size) -> void*
 		{
-			return FMemory::Malloc(Size, 64);
+			return FMemory::Malloc(Size, FlecsMemoryDefaultAlignment);
 		};
 
 		os_api.realloc_ = [](void* Ptr, int Size) -> void*
 		{
-			return FMemory::Realloc(Ptr, Size, 64);
+			return FMemory::Realloc(Ptr, Size, FlecsMemoryDefaultAlignment);
 		};
 
 		os_api.calloc_ = [](int Size) -> void*
 		{
-			return FMemory::MallocZeroed(Size, 64);
+			return FMemory::MallocZeroed(Size, FlecsMemoryDefaultAlignment);
 		};
 
 		os_api.free_ = [](void* Ptr)

@@ -566,6 +566,12 @@ public:
 		GetEntity().set_name(Unreal::Flecs::ToCString(InName));
 		return *this;
 	}
+
+	SOLID_INLINE const FFlecsEntityHandle& ClearName() const
+	{
+		GetEntity().set_name(nullptr);
+		return *this;
+	}
 	
 	NO_DISCARD SOLID_INLINE FString GetName() const
 	{

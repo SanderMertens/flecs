@@ -4,7 +4,6 @@
 #pragma once
 
 #include <string>
-#include <vector>
 
 #include "flecs.h"
 
@@ -12,11 +11,10 @@
 #include "Entities/FlecsComponentHandle.h"
 #include "Standard/robin_hood.h"
 #include "SolidMacros/Macros.h"
-#include "Types/SolidNotNull.h"
 
 namespace Unreal::Flecs
 {
-	using FlecsComponentFunction = std::function<void(flecs::world, FFlecsComponentHandle&)>;
+	using FFlecsComponentFunction = std::function<void(flecs::world, FFlecsComponentHandle&)>;
 } // namespace Unreal::Flecs
 
 struct UNREALFLECS_API FFlecsComponentProperties
@@ -27,7 +25,7 @@ struct UNREALFLECS_API FFlecsComponentProperties
 	uint32 Size = 1;
 	uint16 Alignment = 1;
 
-	Unreal::Flecs::FlecsComponentFunction RegistrationFunction;
+	Unreal::Flecs::FFlecsComponentFunction RegistrationFunction;
 }; // struct FFlecsComponentProperties
 
 DECLARE_DELEGATE_OneParam(FOnComponentPropertiesRegistered, FFlecsComponentProperties);
@@ -45,7 +43,7 @@ public:
 	FORCEINLINE void RegisterComponentProperties(const std::string& Name,
 	                                             UScriptStruct* Struct,
 	                                             const uint32 Size, const uint16 Alignment,
-	                                             const Unreal::Flecs::FlecsComponentFunction& RegistrationFunction)
+	                                             const Unreal::Flecs::FFlecsComponentFunction& RegistrationFunction)
 	{
 		solid_checkf(!Name.empty(), TEXT("Component properties name is empty!"));
 		

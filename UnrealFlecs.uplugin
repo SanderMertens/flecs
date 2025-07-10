@@ -56,6 +56,10 @@
 		{
 			"Name": "Gauntlet",
 			"Enabled": true
+		},
+		{
+			"Name": "CQTest",
+			"Enabled": true
 		}
 	],
 	"SupportURL": "",

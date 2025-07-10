@@ -94,7 +94,8 @@ public class FlecsLibrary : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core", "SolidMacros",
+                "Core", 
+                "SolidMacros",
             }
         );
 
@@ -105,6 +106,7 @@ public class FlecsLibrary : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
+                "CQTest",
             }
         );
     }

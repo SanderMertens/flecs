@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagsManager.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
+#include "Fixtures/FlecsWorldFixture.h"
 #include "UObject/Object.h"
 #include "FlecsTestTypes.generated.h"
 
@@ -32,7 +33,7 @@ struct FFlecsTestStruct_Value
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs|Test")
-	int32 Value;
+	int32 Value = 0;
 	
 }; // struct FFlecsTestStructWithNameAndValue
 
@@ -96,6 +97,22 @@ REGISTER_FLECS_COMPONENT(FFlecsTestStruct_WithPropertyTraits,
 		InComponentHandle.Add(flecs::Trait);
 	});
 
+USTRUCT()
+struct FFlecsTestStruct_Toggleable
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	uint32 Value = 0;
+};
+
+REGISTER_FLECS_COMPONENT(FFlecsTestStruct_Toggleable,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		InComponentHandle.Add(flecs::CanToggle);
+	});
+
 enum class ETestEnum : uint8
 {
 	None,
@@ -105,16 +122,16 @@ enum class ETestEnum : uint8
 }; // enum class ETestEnum
 
 UENUM()
-enum class ETestEnum_UENUM : uint8
+enum class EFlecsTestEnum_UENUM : uint8
 {
 	None,
 	One,
 	Two,
 	Three
-}; // enum class ETestEnum
+}; // enum class EFlecsTestEnum_UENUM
 
 UENUM()
-enum class ETestEnum_SparseUENUM : uint8
+enum class EFlecsTestEnum_SparseUENUM : uint8
 {
 	None,
 	One,
@@ -122,7 +139,7 @@ enum class ETestEnum_SparseUENUM : uint8
 	Three,
 	Five = 5,
 	Ten = 10,
-}; // enum class ETestEnum
+}; // enum class EFlecsTestEnum_SparseUENUM
 
 USTRUCT()
 struct FUStructTestComponent_NonTagUSTRUCT
@@ -131,6 +148,7 @@ struct FUStructTestComponent_NonTagUSTRUCT
 
 	UPROPERTY()
 	bool bTest = false;
+	
 }; // struct FUStructTestComponent_NonTagUSTRUCT
 
 USTRUCT()
@@ -193,12 +211,17 @@ struct alignas(64) FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes
 
 struct FFlecsTestNativeGameplayTags : public FGameplayTagNativeAdder
 {
+	static FFlecsTestNativeGameplayTags StaticInstance;
+	
 	FGameplayTag TestTag1;
 	FGameplayTag TestTag2;
 	FGameplayTag TestTag3;
 
 	FGameplayTag TestSameSubTag1;
 	FGameplayTag TestSameSubTag2;
+
+	FGameplayTag TestSameSubGrandchildTag1;
+	FGameplayTag TestSameSubGrandchildTag2;
 
 	virtual void AddTags() override
 	{
@@ -209,14 +232,16 @@ struct FFlecsTestNativeGameplayTags : public FGameplayTagNativeAdder
 
 		TestSameSubTag1 = Manager.AddNativeGameplayTag(TEXT("Test.UnrealFlecs.Sub1.Tag1"));
 		TestSameSubTag2 = Manager.AddNativeGameplayTag(TEXT("Test.UnrealFlecs.Sub2.Tag1"));
+
+		TestSameSubGrandchildTag1 = Manager.AddNativeGameplayTag(TEXT("Test.UnrealFlecs.Sub1.Tag1"));
+		TestSameSubGrandchildTag2 = Manager.AddNativeGameplayTag(TEXT("Test.UnrealFlecs.Sub1.Tag2"));
 	}
 
-	FORCEINLINE static const FFlecsTestNativeGameplayTags& Get()
+	NO_DISCARD FORCEINLINE static const FFlecsTestNativeGameplayTags& Get()
 	{
 		return StaticInstance;
 	}
 	
-	static FFlecsTestNativeGameplayTags StaticInstance;
 }; // struct FFlecsTestNativeGameplayTags
 
 UCLASS()

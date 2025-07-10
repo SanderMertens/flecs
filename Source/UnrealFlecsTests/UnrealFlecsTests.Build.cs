@@ -23,7 +23,8 @@ public class UnrealFlecsTests : ModuleRules
                 "UnrealFlecs",
                 "UnrealEd",
                 "AutomationUtils",
-                "GameplayTags"
+                "GameplayTags",
+                "CQTest",
             }
         );
 
