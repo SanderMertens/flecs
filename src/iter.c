@@ -136,11 +136,9 @@ void* ecs_field_w_size(
         return NULL;
     }
 
-    ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
-    ecs_assert(!(cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_assert(!(tr->hdr.cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "field %d: use ecs_field_at to access fields for sparse components", 
         index);
-    (void)cr;
 
     ecs_entity_t src = it->sources[index];
     ecs_table_t *table;
@@ -195,7 +193,7 @@ void* ecs_field_at_w_size(
         cr = flecs_components_get(it->real_world, it->ids[index]);
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     } else {
-        cr = (ecs_component_record_t*)tr->hdr.cache;
+        cr = tr->hdr.cr;
     }
 
     ecs_assert((cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,

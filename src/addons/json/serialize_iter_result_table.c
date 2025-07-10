@@ -36,7 +36,7 @@ bool flecs_json_serialize_table_type_info(
     int32_t i, type_count = table->type.count;
     for (i = 0; i < type_count; i ++) {
         const ecs_table_record_t *tr = &table->_->records[i];
-        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
+        ecs_component_record_t *cr = tr->hdr.cr;
         ecs_id_t id = table->type.array[i];
         if (!(cr->flags & EcsIdIsSparse) && 
              (!table->column_map || (table->column_map[i] == -1))) 
@@ -97,7 +97,7 @@ bool flecs_json_serialize_table_tags(
         }
 
         const ecs_table_record_t *tr = &trs[f];
-        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
+        ecs_component_record_t *cr = tr->hdr.cr;
 
         if (src_table) {
             if (!(cr->flags & EcsIdOnInstantiateInherit)) {
@@ -166,7 +166,7 @@ bool flecs_json_serialize_table_pairs(
         }
 
         const ecs_table_record_t *tr = &trs[f];
-        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
+        ecs_component_record_t *cr = tr->hdr.cr;
 
         if (src_table) {
             if (!(cr->flags & EcsIdOnInstantiateInherit)) {
@@ -258,7 +258,7 @@ int flecs_json_serialize_table_components(
 
         void *ptr;
         const ecs_table_record_t *tr = &table->_->records[i];
-        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
+        ecs_component_record_t *cr = tr->hdr.cr;
 
         if (src_table) {
             if (!(cr->flags & EcsIdOnInstantiateInherit)) {

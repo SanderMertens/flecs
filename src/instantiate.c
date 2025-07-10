@@ -172,7 +172,7 @@ void flecs_instantiate_children(
             ECS_PAIR_FIRST(id) != EcsChildOf) 
         {
             ecs_table_record_t *tr = &child_table->_->records[i];
-            ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
+            ecs_component_record_t *cr = tr->hdr.cr;
             if (cr->flags & EcsIdOnInstantiateDontInherit) {
                 continue;
             }

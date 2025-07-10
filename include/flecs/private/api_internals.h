@@ -24,7 +24,7 @@ struct ecs_record_t {
 
 /** Header for table cache elements. */
 typedef struct ecs_table_cache_hdr_t {
-    struct ecs_table_cache_t *cache;           /**< Table cache of element. Of type ecs_component_record_t* for component index elements. */
+    struct ecs_component_record_t *cr;         /**< Component record for component. */
     ecs_table_t *table;                        /**< Table associated with element. */
     struct ecs_table_cache_hdr_t *prev, *next; /**< Next/previous elements for id in table cache. */
 } ecs_table_cache_hdr_t;

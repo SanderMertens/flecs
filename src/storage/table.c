@@ -153,7 +153,7 @@ void flecs_table_init_columns(
     for (i = 0; i < ids_count; i ++) {
         ecs_id_t id = ids[i];
         ecs_table_record_t *tr = &records[i];
-        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
+        ecs_component_record_t *cr = tr->hdr.cr;
         const ecs_type_info_t *ti = cr->type_info;
 
         if (!ti || (cr->flags & EcsIdIsSparse)) {
@@ -178,7 +178,7 @@ void flecs_table_init_columns(
     int32_t record_count = table->_->record_count;
     for (; i < record_count; i ++) {
         ecs_table_record_t *tr = &records[i];
-        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
+        ecs_component_record_t *cr = tr->hdr.cr;
         ecs_id_t id = cr->id;
         
         if (ecs_id_is_wildcard(id)) {
@@ -338,7 +338,7 @@ void flecs_table_append_to_records(
         tr->count ++;
     }
 
-    ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(tr->hdr.cr != NULL, ECS_INTERNAL_ERROR, NULL);
 }
 
 void flecs_table_emit(
@@ -424,13 +424,13 @@ void flecs_table_init(
 
         if (dst_id == src_id) {
             ecs_assert(src_tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            cr = (ecs_component_record_t*)src_tr[src_i].hdr.cache;
+            cr = (ecs_component_record_t*)src_tr[src_i].hdr.cr;
         } else if (dst_id < src_id) {
             cr = flecs_components_ensure(world, dst_id);
         }
         if (cr) {
             tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-            tr->hdr.cache = (ecs_table_cache_t*)cr;
+            tr->hdr.cr = cr;
             tr->index = flecs_ito(int16_t, dst_i);
             tr->count = 1;
         }
@@ -444,8 +444,8 @@ void flecs_table_init(
         ecs_id_t dst_id = dst_ids[dst_i];
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         cr = flecs_components_ensure(world, dst_id);
-        tr->hdr.cache = (ecs_table_cache_t*)cr;
-        ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
+        tr->hdr.cr = cr;
+        ecs_assert(tr->hdr.cr != NULL, ECS_INTERNAL_ERROR, NULL);
         tr->index = flecs_ito(int16_t, dst_i);
         tr->count = 1;
     }
@@ -513,7 +513,7 @@ void flecs_table_init(
             if (r != ECS_PAIR_FIRST(dst_id)) { /* New relationship, new record */
                 tr = ecs_vec_get_t(records, ecs_table_record_t, dst_i);
 
-                ecs_component_record_t *p_cr = (ecs_component_record_t*)tr->hdr.cache;
+                ecs_component_record_t *p_cr = tr->hdr.cr;
                 r = ECS_PAIR_FIRST(dst_id);
                 if (r == EcsChildOf) {
                     childof_cr = p_cr;
@@ -526,7 +526,7 @@ void flecs_table_init(
                 ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-                tr->hdr.cache = (ecs_table_cache_t*)cr;
+                tr->hdr.cr = cr;
                 tr->index = flecs_ito(int16_t, dst_i);
                 tr->count = 0;
             }
@@ -552,20 +552,20 @@ void flecs_table_init(
     /* Lastly, add records for all-wildcard ids */
     if (last_id >= 0) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-        tr->hdr.cache = (ecs_table_cache_t*)world->cr_wildcard;
+        tr->hdr.cr = world->cr_wildcard;
         tr->index = 0;
         tr->count = flecs_ito(int16_t, last_id + 1);
     }
     if (last_pair - first_pair) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
-        tr->hdr.cache = (ecs_table_cache_t*)world->cr_wildcard_wildcard;
+        tr->hdr.cr = world->cr_wildcard_wildcard;
         tr->index = flecs_ito(int16_t, first_pair);
         tr->count = flecs_ito(int16_t, last_pair - first_pair);
     }
     if (!has_childof) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         childof_cr = world->cr_childof_0;
-        tr->hdr.cache = (ecs_table_cache_t*)childof_cr;
+        tr->hdr.cr = childof_cr;
         tr->index = -1; /* The table doesn't have a (ChildOf, 0) component */
         tr->count = 0;
 
@@ -584,7 +584,7 @@ void flecs_table_init(
     /* Register & patch up records */
     for (i = 0; i < dst_record_count; i ++) {
         tr = &dst_tr[i];
-        cr = (ecs_component_record_t*)dst_tr[i].hdr.cache;
+        cr = dst_tr[i].hdr.cr;
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (ecs_table_cache_get(&cr->cache, table)) {
@@ -665,17 +665,17 @@ void flecs_table_records_unregister(
     int32_t i, count = table->_->record_count;
     for (i = 0; i < count; i ++) {
         ecs_table_record_t *tr = &table->_->records[i];
-        ecs_table_cache_t *cache = tr->hdr.cache;
-        ecs_id_t id = ((ecs_component_record_t*)cache)->id;
+        ecs_component_record_t *cr = tr->hdr.cr;
+        ecs_id_t id = cr->id;
 
-        ecs_assert(tr->hdr.cache == cache, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(tr->hdr.cr == cr, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(flecs_components_get(world, id) == (ecs_component_record_t*)cache,
+        ecs_assert(flecs_components_get(world, id) == cr,
             ECS_INTERNAL_ERROR, NULL);
         (void)id;
 
-        ecs_table_cache_remove(cache, table_id, &tr->hdr);
-        flecs_component_release(world, (ecs_component_record_t*)cache);
+        ecs_table_cache_remove(&cr->cache, table_id, &tr->hdr);
+        flecs_component_release(world, cr);
     }
 
     flecs_wfree_n(world, ecs_table_record_t, count, table->_->records);
@@ -753,7 +753,7 @@ void flecs_table_invoke_hook(
     ecs_assert(type_index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type_index < table->type.count, ECS_INTERNAL_ERROR, NULL);
     const ecs_table_record_t *tr = &table->_->records[type_index];
-    ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
+    ecs_component_record_t *cr = tr->hdr.cr;
     flecs_invoke_hook(world, table, cr, tr, count, row, entities, 
         table->type.array[type_index], column->ti, event, callback);
 }
@@ -2269,7 +2269,7 @@ ecs_table_records_t flecs_table_records(
 ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr)
 {
-    return (ecs_component_record_t*)tr->hdr.cache;
+    return tr->hdr.cr;
 }
 
 uint64_t flecs_table_id(

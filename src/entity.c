@@ -565,7 +565,7 @@ flecs_component_ptr_t flecs_ensure(
         } else if (column_index < 0) {
             column_index = flecs_ito(int16_t, -column_index - 1);
             const ecs_table_record_t *tr = &table->_->records[column_index];
-            cr = (ecs_component_record_t*)tr->hdr.cache;
+            cr = tr->hdr.cr;
             if (cr->flags & EcsIdIsSparse) {
                 dst.ptr = flecs_component_sparse_get(cr, entity);
                 dst.ti = cr->type_info;
@@ -1791,7 +1791,7 @@ ecs_entity_t ecs_clone(
             count = dst_table->type.count;
             for (i = 0; i < count; i ++) {
                 const ecs_table_record_t *tr = &dst_table->_->records[i];
-                ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
+                ecs_component_record_t *cr = tr->hdr.cr;
                 if (cr->sparse) {
                     void *src_ptr = flecs_component_sparse_get(cr, src);
                     if (src_ptr) {

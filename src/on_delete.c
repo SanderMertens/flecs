@@ -97,7 +97,7 @@ ecs_entity_t flecs_get_delete_action(
 {
     ecs_entity_t result = action;
     if (!result && delete_target) {
-        ecs_component_record_t *cr = (ecs_component_record_t*)tr->hdr.cache;
+        ecs_component_record_t *cr = tr->hdr.cr;
         ecs_id_t id = cr->id;
 
         /* If action is not specified and we're deleting a relationship target,
@@ -106,7 +106,7 @@ ecs_entity_t flecs_get_delete_action(
         do {
             ecs_type_t *type = &table->type;
             ecs_table_record_t *trr = &table->_->records[i];
-            ecs_component_record_t *crr = (ecs_component_record_t*)trr->hdr.cache;
+            ecs_component_record_t *crr = trr->hdr.cr;
             result = ECS_ID_ON_DELETE_TARGET(crr->flags);
             if (result == EcsDelete) {
                 /* Delete takes precedence over Remove */
