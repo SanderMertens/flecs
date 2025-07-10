@@ -347,6 +347,12 @@ void flecs_notify_on_remove(
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (removed->count) {
+        if (!(world->flags & EcsWorldFini)) {
+            ecs_check(!(table->flags & EcsTableHasBuiltins), 
+                ECS_INVALID_OPERATION,
+                "removing components from builtin entities is not allowed");
+        }
+
         ecs_flags32_t diff_flags = 
             diff->removed_flags|(table->flags & EcsTableHasTraversable);
         if (!diff_flags) {
@@ -381,6 +387,8 @@ void flecs_notify_on_remove(
             flecs_sparse_on_remove(world, table, row, count, removed);
         }
     }
+error:
+    return;
 }
 
 void flecs_notify_on_set_ids(

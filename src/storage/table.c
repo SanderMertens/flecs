@@ -240,11 +240,10 @@ void flecs_table_init_flags(
         ecs_id_t id = ids[i];
 
         if (id <= EcsLastInternalComponentId) {
-            table->flags |= EcsTableHasBuiltins;
+            table->flags |= EcsTableHasModule;
         }
 
         if (id == EcsModule) {
-            table->flags |= EcsTableHasBuiltins;
             table->flags |= EcsTableHasModule;
         } else if (id == EcsPrefab) {
             table->flags |= EcsTableIsPrefab;
@@ -265,12 +264,17 @@ void flecs_table_init_flags(
                     ecs_entity_t tgt = ecs_pair_second(world, id);
                     ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
+                    /* If table contains entities that are inside one of the 
+                     * builtin modules, it contains builtin entities */
+
                     if (tgt == EcsFlecs || tgt == EcsFlecsCore || 
-                        ecs_has_id(world, tgt, EcsModule)) 
+                        tgt == EcsFlecsInternals) 
                     {
-                        /* If table contains entities that are inside one of the 
-                         * builtin modules, it contains builtin entities */
                         table->flags |= EcsTableHasBuiltins;
+                        table->flags |= EcsTableHasModule;
+                    }
+
+                    if (ecs_has_id(world, tgt, EcsModule)) {
                         table->flags |= EcsTableHasModule;
                     }
 
@@ -283,7 +287,7 @@ void flecs_table_init_flags(
                     table->_->name_column = flecs_ito(int16_t, i);  
 #endif
                 } else if (r == ecs_id(EcsPoly)) {
-                    table->flags |= EcsTableHasBuiltins;
+                    table->flags |= EcsTableHasModule;
                 }
 #if defined(FLECS_DEBUG_INFO) && defined(FLECS_DOC)
                 else if (id == ecs_pair_t(EcsDocDescription, EcsName)) {

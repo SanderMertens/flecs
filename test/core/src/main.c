@@ -2129,6 +2129,20 @@ void World_init_shrink_twice_fini(void);
 void World_init_create_delete_entities_shrink_fini(void);
 void World_init_create_delete_random_1_entities_shrink_fini(void);
 void World_init_create_delete_random_2_entities_shrink_fini(void);
+void World_mini_all_tables_builtin(void);
+void World_mini_all_tables_builtin_after_add(void);
+void World_user_component_not_builtin(void);
+void World_remove_builtin_from_builtin(void);
+void World_remove_from_builtin(void);
+void World_reparent_builtin(void);
+void World_clear_builtin(void);
+void World_delete_builtin(void);
+void World_rename_builtin(void);
+void World_remove_name_builtin(void);
+void World_delete_flecs(void);
+void World_remove_name_from_flecs(void);
+void World_reparent_flecs(void);
+void World_rename_flecs(void);
 
 // Testsuite 'ExclusiveAccess'
 void ExclusiveAccess_self(void);
@@ -10879,6 +10893,62 @@ bake_test_case World_testcases[] = {
     {
         "init_create_delete_random_2_entities_shrink_fini",
         World_init_create_delete_random_2_entities_shrink_fini
+    },
+    {
+        "mini_all_tables_builtin",
+        World_mini_all_tables_builtin
+    },
+    {
+        "mini_all_tables_builtin_after_add",
+        World_mini_all_tables_builtin_after_add
+    },
+    {
+        "user_component_not_builtin",
+        World_user_component_not_builtin
+    },
+    {
+        "remove_builtin_from_builtin",
+        World_remove_builtin_from_builtin
+    },
+    {
+        "remove_from_builtin",
+        World_remove_from_builtin
+    },
+    {
+        "reparent_builtin",
+        World_reparent_builtin
+    },
+    {
+        "clear_builtin",
+        World_clear_builtin
+    },
+    {
+        "delete_builtin",
+        World_delete_builtin
+    },
+    {
+        "rename_builtin",
+        World_rename_builtin
+    },
+    {
+        "remove_name_builtin",
+        World_remove_name_builtin
+    },
+    {
+        "delete_flecs",
+        World_delete_flecs
+    },
+    {
+        "remove_name_from_flecs",
+        World_remove_name_from_flecs
+    },
+    {
+        "reparent_flecs",
+        World_reparent_flecs
+    },
+    {
+        "rename_flecs",
+        World_rename_flecs
     }
 };
 
@@ -13016,7 +13086,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        75,
+        89,
         World_testcases
     },
     {
