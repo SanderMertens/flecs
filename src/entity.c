@@ -178,8 +178,7 @@ ecs_record_t* flecs_new_entity(
     record->row = ECS_ROW_TO_RECORD(row, record->row & ECS_ROW_FLAGS_MASK);
 
     ecs_assert(ecs_table_count(table) > row, ECS_INTERNAL_ERROR, NULL);
-    flecs_notify_on_add(
-        world, table, NULL, row, 1, diff, evt_flags, 0, ctor, true);
+    flecs_notify_on_add(world, table, NULL, row, 1, diff, evt_flags, ctor, true);
     ecs_assert(table == record->table, ECS_INTERNAL_ERROR, NULL);
 
     return record;
@@ -228,7 +227,7 @@ void flecs_move_entity(
     flecs_table_delete(world, src_table, src_row, false);
 
     flecs_notify_on_add(world, dst_table, src_table, dst_row, 1, diff, 
-        evt_flags, 0, ctor, true);
+        evt_flags, ctor, true);
 
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
 error:
@@ -265,7 +264,7 @@ void flecs_commit(
             diff->removed_flags |= non_fragment_flags;
 
             flecs_notify_on_add(world, src_table, src_table, 
-                ECS_RECORD_TO_ROW(record->row), 1, diff, evt_flags, 0, 
+                ECS_RECORD_TO_ROW(record->row), 1, diff, evt_flags, 
                     construct, true);
 
             flecs_notify_on_remove(world, src_table, src_table, 
@@ -352,7 +351,7 @@ const ecs_entity_t* flecs_bulk_new(
     flecs_defer_begin(world, world->stages[0]);
 
     flecs_notify_on_add(world, table, NULL, row, count, diff,
-        (component_data == NULL) ? 0 : EcsEventNoOnSet, 0, true, true);
+        (component_data == NULL) ? 0 : EcsEventNoOnSet, true, true);
 
     if (component_data) {
         int32_t c_i;
@@ -610,6 +609,9 @@ flecs_component_ptr_t flecs_get_mut(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+    
+    // TODO: uncomment to fix emplace bug
+    // ecs_check(size != 0, ECS_INVALID_PARAMETER, "component size cannot be 0");
     (void)entity;
 
     world = ecs_get_world(world);
@@ -625,6 +627,9 @@ flecs_component_ptr_t flecs_get_mut(
             int16_t column_index = table->component_map[id];
             if (column_index > 0) {
                 ecs_column_t *column = &table->data.columns[column_index - 1];
+                // TODO: fix emplace bug
+                // ecs_check(column->ti->size == size, 
+                //     ECS_INVALID_PARAMETER, "invalid component size");
                 result.ptr = ECS_ELEM(column->data, size, 
                     ECS_RECORD_TO_ROW(r->row));
                 result.ti = column->ti;

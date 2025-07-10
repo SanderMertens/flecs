@@ -177,7 +177,7 @@ void flecs_component_sparse_remove(
                     .count = 1
                 };
 
-                flecs_emit(world, world, 0, &(ecs_event_desc_t) {
+                flecs_emit(world, world, &(ecs_event_desc_t) {
                     .event = EcsOnRemove,
                     .ids = &type,
                     .table = table,
@@ -315,7 +315,7 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
                 .count = 1
             };
 
-            flecs_emit(world, world, 0, &(ecs_event_desc_t) {
+            flecs_emit(world, world, &(ecs_event_desc_t) {
                 .event = EcsOnRemove,
                 .ids = &type,
                 .table = table,

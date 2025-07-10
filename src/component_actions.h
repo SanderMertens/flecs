@@ -56,7 +56,6 @@ void flecs_notify_on_add(
     int32_t count,
     const ecs_table_diff_t *diff,
     ecs_flags32_t flags,
-    ecs_flags64_t *set_mask,
     bool construct,
     bool sparse);
 

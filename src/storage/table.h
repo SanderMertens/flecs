@@ -289,4 +289,9 @@ bool flecs_table_bloom_filter_test(
     const ecs_table_t *table,
     uint64_t filter);
 
+const ecs_ref_t* ecs_table_get_override(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id);
+
 #endif

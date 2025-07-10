@@ -3157,6 +3157,9 @@ static int on_set_position_invoked = 0;
 
 static
 void on_set_position(ecs_iter_t *it) {
+    printf("on_set_position\n");
+    flecs_dump_backtrace(stdout);
+
     Position *p = ecs_field(it, Position, 0);
     test_int(it->count, 1);
 
