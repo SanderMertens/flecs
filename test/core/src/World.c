@@ -2049,3 +2049,197 @@ void World_init_create_delete_random_2_entities_shrink_fini(void) {
 
     ecs_fini(world);
 }
+
+void World_mini_all_tables_builtin(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ EcsAny }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        if (it.count == 1) {
+            if (it.entities[0] == EcsFlecs) {
+                // Skip table with root flecs module entity. It's technically a
+                // table with builtin entities, but it can also contain entities
+                // that are not builtin.
+                // Deleting ::flecs is protected by (OnDelete, Panic).
+                continue;
+            }
+        }
+
+        test_assert(ecs_table_has_flags(it.table, EcsTableHasBuiltins));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void World_mini_all_tables_builtin_after_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new(world);
+
+    ecs_add_id(world, ecs_id(EcsComponent), tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ EcsAny }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        if (!ecs_table_get_type(it.table)->count) {
+            // Skip root table which contains "tag"
+            continue;
+        }
+
+        if (it.entities[0] == EcsFlecs) {
+            // Skip table with root flecs module entity. It's technically a
+            // table with builtin entities, but it can also contain entities
+            // that are not builtin.
+            // Deleting ::flecs is protected by (OnDelete, Panic).
+            continue;
+        }
+
+        test_assert(ecs_table_has_flags(it.table, EcsTableHasBuiltins));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void World_user_component_not_builtin(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_table_t *table = ecs_get_table(world, ecs_id(Position));
+
+    test_assert(!ecs_table_has_flags(table, EcsTableHasBuiltins));
+
+    ecs_fini(world);
+}
+
+void World_remove_from_builtin(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new(world);
+
+    ecs_add_id(world, ecs_id(EcsComponent), tag);
+    
+    test_expect_abort();
+
+    ecs_remove_id(world, ecs_id(EcsComponent), tag);
+}
+
+void World_remove_builtin_from_builtin(void) {
+    install_test_abort();
+    
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+
+    ecs_remove_id(world, ecs_id(EcsComponent), EcsFinal);
+}
+
+void World_reparent_builtin(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+
+    ecs_add_pair(world, ecs_id(EcsComponent), EcsChildOf, EcsFlecs);
+}
+
+void World_clear_builtin(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+
+    ecs_clear(world, ecs_id(EcsComponent));
+}
+
+void World_delete_builtin(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+
+    ecs_delete(world, ecs_id(EcsComponent));
+}
+
+void World_rename_builtin(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+
+    ecs_set_name(world, ecs_id(EcsComponent), "fuu");
+}
+
+void World_remove_name_builtin(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+
+    ecs_remove_pair(
+        world, ecs_id(EcsComponent), ecs_id(EcsIdentifier), EcsName);
+}
+
+void World_delete_flecs(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+
+    ecs_delete(world, EcsFlecs);
+}
+
+void World_reparent_flecs(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tgt = ecs_new(world);
+    
+    test_expect_abort();
+
+    ecs_add_pair(world, EcsFlecs, EcsChildOf, tgt);
+}
+
+void World_rename_flecs(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+
+    ecs_set_name(world, EcsFlecs, "fuu");
+}
+
+void World_remove_name_from_flecs(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+
+    ecs_remove_pair(world, EcsFlecs, ecs_id(EcsIdentifier), EcsName);
+}

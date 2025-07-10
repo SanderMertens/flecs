@@ -1614,6 +1614,11 @@ void ecs_delete(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(
+        !ecs_is_alive(world, entity) || 
+        !ecs_has_pair(world, entity, EcsOnDelete, EcsPanic),
+            ECS_CONSTRAINT_VIOLATED,
+                "cannot delete entity with (OnDelete, Panic) trait");
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_delete(stage, entity)) {
