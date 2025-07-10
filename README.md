@@ -118,11 +118,14 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### FEAST
 [![image](docs/img/projects/feast.jpg)](https://store.steampowered.com/app/3823480/FEAST/)
 
-### The Forge
-[![image](docs/img/projects/the_forge.jpg)](https://github.com/ConfettiFX/The-Forge)
+### Gloam Vault
+[![image](docs/img/projects/gloam_vault.png)](https://store.steampowered.com/app/3460840/Gloamvault/)
 
 ### Extermination Shock
 [![image](docs/img/projects/extermination_shock.png)](https://store.steampowered.com/app/2510820/Extermination_Shock/)
+
+### The Forge
+[![image](docs/img/projects/the_forge.jpg)](https://github.com/ConfettiFX/The-Forge)
 
 ### ECS survivors
 [![image](docs/img/projects/ecs_survivors.png)](https://laurent-voisard.itch.io/ecs-survivors/)
