@@ -602,7 +602,7 @@ void flecs_fini_root_tables(
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
 
-            if (table->flags & EcsTableHasBuiltins) {
+            if (table->flags & (EcsTableHasBuiltins|EcsTableHasModule)) {
                 continue; /* Query out modules */
             }
 

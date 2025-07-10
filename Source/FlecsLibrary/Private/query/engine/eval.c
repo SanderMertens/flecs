@@ -162,7 +162,7 @@ bool flecs_query_all(
             op_ctx->dummy_tr.column = -1;
             op_ctx->dummy_tr.index = -1;
             op_ctx->dummy_tr.count = 0;
-            op_ctx->dummy_tr.hdr.cache = NULL;
+            op_ctx->dummy_tr.hdr.cr = NULL;
             if (field_index != -1) {
                 it->ids[field_index] = EcsWildcard;
                 it->trs[field_index] = &op_ctx->dummy_tr;

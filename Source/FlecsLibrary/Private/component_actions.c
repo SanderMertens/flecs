@@ -36,7 +36,7 @@ void flecs_invoke_hook(
 
     ecs_table_record_t dummy_tr;
     if (!tr) {
-        dummy_tr.hdr.cache = ECS_CONST_CAST(ecs_table_cache_t*, cr);
+        dummy_tr.hdr.cr = ECS_CONST_CAST(ecs_component_record_t*, cr);
         dummy_tr.hdr.table = table;
         dummy_tr.index = -1;
         dummy_tr.column = -1;
@@ -50,7 +50,7 @@ void flecs_invoke_hook(
     it.real_world = world;
     it.table = table;
     it.trs = &tr;
-    it.row_fields = !!(((ecs_component_record_t*)tr->hdr.cache)->flags & EcsIdIsSparse);
+    it.row_fields = !!(tr->hdr.cr->flags & EcsIdIsSparse);
     it.ref_fields = it.row_fields;
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
     it.ids = &id;
@@ -347,6 +347,12 @@ void flecs_notify_on_remove(
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (removed->count) {
+        if (!(world->flags & EcsWorldFini)) {
+            ecs_check(!(table->flags & EcsTableHasBuiltins), 
+                ECS_INVALID_OPERATION,
+                "removing components from builtin entities is not allowed");
+        }
+
         ecs_flags32_t diff_flags = 
             diff->removed_flags|(table->flags & EcsTableHasTraversable);
         if (!diff_flags) {
@@ -381,6 +387,8 @@ void flecs_notify_on_remove(
             flecs_sparse_on_remove(world, table, row, count, removed);
         }
     }
+error:
+    return;
 }
 
 void flecs_notify_on_set_ids(
@@ -414,7 +422,7 @@ void flecs_notify_on_set_ids(
         const ecs_table_record_t *tr = 
         flecs_component_get_table(cr, table);
         if (!tr) {
-            dummy_tr.hdr.cache = (ecs_table_cache_t*)cr;
+            dummy_tr.hdr.cr = cr;
             dummy_tr.hdr.table = table;
             dummy_tr.column = -1;
             dummy_tr.index = -1;
@@ -475,7 +483,7 @@ void flecs_notify_on_set(
             const ecs_table_record_t *tr = 
             flecs_component_get_table(cr, table);
             if (!tr) {
-                dummy_tr.hdr.cache = (ecs_table_cache_t*)cr;
+                dummy_tr.hdr.cr = cr;
                 dummy_tr.hdr.table = table;
                 dummy_tr.column = -1;
                 dummy_tr.index = -1;

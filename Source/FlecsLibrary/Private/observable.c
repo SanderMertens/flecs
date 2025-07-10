@@ -522,7 +522,7 @@ void flecs_override_copy(
     ecs_iter_action_t on_set = ti->hooks.on_set;
     if (on_set) {
         const ecs_entity_t *entities = &ecs_table_entities(table)[offset];
-        flecs_invoke_hook(world, table, (ecs_component_record_t*)tr->hdr.cache, tr, 
+        flecs_invoke_hook(world, table, tr->hdr.cr, tr, 
             count, offset, entities, ti->component, ti, EcsOnSet, on_set);
     }
 }
@@ -766,7 +766,7 @@ void flecs_emit_forward_cached_ids(
         ecs_reachable_elem_t *rc_elem = &elems[i];
         const ecs_table_record_t *rc_tr = rc_elem->tr;
         ecs_assert(rc_tr != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_component_record_t *rc_cr = (ecs_component_record_t*)rc_tr->hdr.cache;
+        ecs_component_record_t *rc_cr = rc_tr->hdr.cr;
         ecs_record_t *rc_record = rc_elem->record;
 
         ecs_assert(rc_cr->id == rc_elem->id, ECS_INTERNAL_ERROR, NULL);
@@ -862,7 +862,7 @@ void flecs_emit_forward_table_up(
     for (i = 0; i < id_count; i ++) {
         ecs_id_t id = ids[i];
         ecs_table_record_t *tgt_tr = &tgt_table->_->records[i];
-        ecs_component_record_t *cr = (ecs_component_record_t*)tgt_tr->hdr.cache;
+        ecs_component_record_t *cr = tgt_tr->hdr.cr;
         if (inherit && !(cr->flags & EcsIdOnInstantiateInherit)) {
             continue;
         }
@@ -1067,7 +1067,7 @@ void flecs_emit_forward(
             ecs_reachable_elem_t *elem = &elems[i];
             const ecs_table_record_t *tr = elem->tr;
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_component_record_t *rc_cr = (ecs_component_record_t*)tr->hdr.cache;
+            ecs_component_record_t *rc_cr = tr->hdr.cr;
             ecs_record_t *r = elem->record;
 
             ecs_assert(rc_cr->id == elem->id, ECS_INTERNAL_ERROR, NULL);
@@ -1101,7 +1101,7 @@ void flecs_emit_forward(
                 ecs_reachable_elem_t *elem = &elems[i];
                 const ecs_table_record_t *tr = elem->tr;
                 ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_component_record_t *rc_cr = (ecs_component_record_t*)tr->hdr.cache;
+                ecs_component_record_t *rc_cr = tr->hdr.cr;
                 ecs_record_t *r = elem->record;
 
                 ecs_assert(rc_cr->id == elem->id, ECS_INTERNAL_ERROR, NULL);
@@ -1417,7 +1417,7 @@ repeat_event:
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
         const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
         dummy_tr = (ecs_table_record_t){
-            .hdr.cache = (ecs_table_cache_t*)cr,
+            .hdr.cr = cr,
             .hdr.table = table,
             .index = -1,
             .column = -1,
@@ -1557,7 +1557,7 @@ repeat_event:
 
             if (tr == &dummy_tr) {
                 dummy_tr = (ecs_table_record_t){
-                    .hdr.cache = (ecs_table_cache_t*)override_crs[i],
+                    .hdr.cr = override_crs[i],
                     .hdr.table = table,
                     .index = -1,
                     .column = -1,
