@@ -368,6 +368,9 @@ void Entity_defer_on_replace_w_assign_existing(void);
 void Entity_defer_on_replace_w_assign_existing_twice(void);
 void Entity_defer_on_replace_w_assign_batched_existing(void);
 void Entity_defer_on_replace_w_assign_batched_existing_twice(void);
+void Entity_set_lvalue_to_mutable(void);
+void Entity_set_lvalue_to_const(void);
+void Entity_set_rvalue(void);
 
 // Testsuite 'OrderedChildren'
 void OrderedChildren_iter_no_children(void);
@@ -3036,6 +3039,18 @@ bake_test_case Entity_testcases[] = {
     {
         "defer_on_replace_w_assign_batched_existing_twice",
         Entity_defer_on_replace_w_assign_batched_existing_twice
+    },
+    {
+        "set_lvalue_to_mutable",
+        Entity_set_lvalue_to_mutable
+    },
+    {
+        "set_lvalue_to_const",
+        Entity_set_lvalue_to_const
+    },
+    {
+        "set_rvalue",
+        Entity_set_rvalue
     }
 };
 
@@ -7877,7 +7892,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        355,
+        358,
         Entity_testcases
     },
     {
