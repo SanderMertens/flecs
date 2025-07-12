@@ -11,6 +11,11 @@
 #include "UObject/Object.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
+namespace Unreal::Flecs::Testing::impl
+{
+	static const FString DefaultTags = TEXT("");
+} // namespace Unreal::Flecs::Testing::impl
+
 class UNREALFLECSTESTS_API FFlecsTestFixture
 {
 public:
@@ -117,5 +122,10 @@ struct UNREALFLECSTESTS_API FFlecsTestFixtureRAII
 		FixtureName.TearDown(); \
 		Done.Execute(); \
 	});
+
+#define xTEST_METHOD_WITH_TAGS(_MethodName, _TestTags) \
+	void _MethodName()
+
+#define xTEST_METHOD(_MethodName) xTEST_METHOD_WITH_TAGS(_MethodName, Unreal::Flecs::Testing::impl::DefaultTags)
 
 #endif // #if WITH_AUTOMATION_TESTS

@@ -132,6 +132,7 @@ struct FLECS_API type_impl_data {
     size_t s_size;
     size_t s_alignment;
     bool s_allow_tag;
+    bool s_enum_registered;
 };
 
 FLECSLIBRARY_API extern robin_hood::unordered_map<std::string, type_impl_data> g_type_to_impl_data;
@@ -153,7 +154,8 @@ FLECSLIBRARY_API extern robin_hood::unordered_map<std::string, type_impl_data> g
             .s_index = flecs_component_ids_index_get(),
             .s_size = sizeof(T),
             .s_alignment = alignof(T),
-            .s_allow_tag = allow_tag
+            .s_allow_tag = allow_tag,
+            .s_enum_registered = false,
         };
 
         if (std::is_empty<T>::value && allow_tag) {
@@ -170,7 +172,7 @@ FLECSLIBRARY_API extern robin_hood::unordered_map<std::string, type_impl_data> g
     template <typename T>
     inline type_impl_data* get_type_data_if_any()
     {
-        std::string key = std::string(_::type_name<T>());
+        const std::string key = std::string(_::type_name<T>());
         auto it = g_type_to_impl_data.find(key);
         if (it != g_type_to_impl_data.end()) {
             return &it->second;
@@ -232,6 +234,7 @@ struct type_impl {
         s_size = td.s_size;
         s_alignment = td.s_alignment;
         s_allow_tag = td.s_allow_tag;
+        s_enum_registered = td.s_enum_registered;
         
         bool registered = false, existing = false;
 
@@ -270,6 +273,9 @@ struct type_impl {
             // be calling type<T>::id().
             #if FLECS_CPP_ENUM_REFLECTION_SUPPORT
             _::init_enum<T>(world, c);
+
+            td.s_enum_registered = true;
+            s_enum_registered = td.s_enum_registered;
 
             if constexpr (Solid::IsStaticEnum<T>())
             {
@@ -315,6 +321,19 @@ struct type_impl {
         
         ecs_assert(c != 0, ECS_NOT_A_COMPONENT, "component not found, %s", 
             _::type_name<T>());
+
+        if constexpr (std::is_enum<T>::value) {
+            if (!s_enum_registered.value()) {
+                auto* td = get_type_data_if_any<T>();
+                ecs_assert(td != nullptr, ECS_INTERNAL_ERROR, 
+                    "type data not found for %s", _::type_name<T>());
+                
+                td->s_enum_registered = true;
+                s_enum_registered = td->s_enum_registered;
+                
+                _::init_enum<T>(world, c);
+            }
+        }
         
         ecs_os_perf_trace_pop("flecs.type_impl.id");
         return c;
@@ -383,12 +402,14 @@ struct type_impl {
         s_size.reset();
         s_alignment.reset();
         s_allow_tag.reset();
+        s_enum_registered.reset();
     }
         
     static std::optional<int32_t> s_index;
     static std::optional<size_t> s_size;
     static std::optional<size_t> s_alignment;
     static std::optional<bool> s_allow_tag;
+    static std::optional<bool> s_enum_registered;
 };
 
     // Global templated variables that hold component identifier and other info
@@ -396,6 +417,7 @@ struct type_impl {
     template <typename T> std::optional<size_t>   type_impl<T>::s_size;
     template <typename T> std::optional<size_t>   type_impl<T>::s_alignment;
     template <typename T> std::optional<bool>     type_impl<T>::s_allow_tag( true );
+    template <typename T> std::optional<bool>     type_impl<T>::s_enum_registered( false );
 
 // Front facing class for implicitly registering a component & obtaining
 // static component data

@@ -105,12 +105,24 @@ struct FFlecsTestStruct_Toggleable
 public:
 	UPROPERTY()
 	uint32 Value = 0;
-};
+}; // struct FFlecsTestStruct_Toggleable
 
 REGISTER_FLECS_COMPONENT(FFlecsTestStruct_Toggleable,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
 	{
 		InComponentHandle.Add(flecs::CanToggle);
+	});
+
+USTRUCT()
+struct FFlecsTestStruct_PairIsTag
+{
+	GENERATED_BODY()
+}; // struct FFlecsTestStruct_PairIsTag
+
+REGISTER_FLECS_COMPONENT(FFlecsTestStruct_PairIsTag,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		InComponentHandle.Add(flecs::PairIsTag);
 	});
 
 enum class ETestEnum : uint8
@@ -150,6 +162,18 @@ struct FUStructTestComponent_NonTagUSTRUCT
 	bool bTest = false;
 	
 }; // struct FUStructTestComponent_NonTagUSTRUCT
+
+USTRUCT()
+struct FUSTructTestComponent_AccidentalTag
+{
+	GENERATED_BODY()
+
+	/* If Registered as a static struct,
+	* this will be registered as a tag as it is one byte and has no UPROPERTY saying otherwise.
+	* */
+	uint8 Test = 0;
+	
+}; // struct FUSTructTestComponent_AccidentalTag
 
 USTRUCT()
 struct FFlecsTestComponent_Vector

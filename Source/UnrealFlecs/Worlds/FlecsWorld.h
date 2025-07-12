@@ -1650,7 +1650,7 @@ public:
 				NewData.s_size = bIsTag ? 0 : ScriptStruct->GetStructureSize();
 				NewData.s_alignment = bIsTag ? 0 : ScriptStruct->GetMinAlignment();
 				NewData.s_allow_tag = bIsTag;
-				//NewData.s_enum_registered = false;
+				NewData.s_enum_registered = false;
 				
 				flecs::_::g_type_to_impl_data.emplace(StructNameStd, NewData);
 			}
@@ -1746,14 +1746,14 @@ public:
 				NewData.s_size = sizeof(uint8);
 				NewData.s_alignment = alignof(uint8);
 				NewData.s_allow_tag = false;
-				//NewData.s_enum_registered = false;
+				NewData.s_enum_registered = false;
 				
 				flecs::_::g_type_to_impl_data.emplace(std::string(EnumNameCStr), NewData);
 			}
 
 			solid_check(flecs::_::g_type_to_impl_data.contains(std::string(EnumNameCStr)));
 			
-			auto& [s_index, s_size, s_alignment, s_allow_tag]
+			auto& [s_index, s_size, s_alignment, s_allow_tag, s_enum_registered]
 				= flecs::_::g_type_to_impl_data.at(std::string(EnumNameCStr));
 			
 			flecs_component_ids_set(World, s_index, ScriptEnumComponent);

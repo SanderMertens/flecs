@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
+
+#pragma once
 
 #if WITH_AUTOMATION_TESTS
 
@@ -17,10 +19,10 @@
  * D. Edge Case Tests
  **/
 TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
-							   "UnrealFlecs.Basic.Components",
+							   "UnrealFlecs.A2.Components",
 							   EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::ProductFilter
 								| EAutomationTestFlags::CriticalPriority,
-							   "[Flecs][Basic][Entity][Tag][Component][Registration]")
+							   "[Flecs][Entity][Tag][Component][Registration]")
 {
 	inline static TUniquePtr<FFlecsTestFixtureRAII> Fixture;
 	inline static TObjectPtr<UFlecsWorld> FlecsWorld = nullptr;
@@ -38,7 +40,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(A1_BasicUSTRUCTComponentRegistration_CPPAPI,
-						 "[Flecs][Basic][Component][USTRUCT][Registration][USTRUCT][CPP-API]")
+						 "[Flecs][Component][USTRUCT][Registration][USTRUCT][CPP-API]")
 	{
 		const FFlecsEntityHandle StructEntity = FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
 		ASSERT_THAT(IsTrue(StructEntity.IsValid()));
@@ -56,7 +58,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(A2_BasicUSTRUCTComponentRegistration_StaticStructAPI,
-		"[Flecs][Basic][Component][Registration][USTRUCT][StaticStruct-API]")
+		"[Flecs][Component][Registration][USTRUCT][StaticStruct-API]")
 	{
 		const FFlecsEntityHandle StaticStructEntity = FlecsWorld->RegisterComponentType(FFlecsTestStruct_Value::StaticStruct());
 		ASSERT_THAT(IsTrue(StaticStructEntity.IsValid()));
@@ -74,7 +76,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(A3_BasicComponentRegistration_CPPAPI,
-						 "[Flecs][Basic][Component][USTRUCT][Registration][CPP-API]")
+						 "[Flecs][Component][USTRUCT][Registration][CPP-API]")
 	{
 		const FFlecsEntityHandle StructEntity = FlecsWorld->RegisterComponentType<FFlecsTest_CPPStructValue>();
 		ASSERT_THAT(IsTrue(StructEntity.IsValid()));
@@ -84,7 +86,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B1_GetComponentPropertyTraits_CPPAPI,
-						 "[Flecs][Basic][Component][USTRUCT][Registration][Property-Traits][CPP-API]")
+						 "[Flecs][Component][USTRUCT][Registration][Property-Traits][CPP-API]")
 	{
 		const FFlecsEntityHandle StructEntity = FlecsWorld->RegisterComponentType<FFlecsTestStruct_WithPropertyTraits>();
 		ASSERT_THAT(IsTrue(StructEntity.IsValid()));
@@ -93,7 +95,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B2_GetComponentPropertyTraits_StaticStructAPI,
-		"[Flecs][Basic][Component][USTRUCT][Registration][Property-Traits][StaticStruct-API]")
+		"[Flecs][Component][USTRUCT][Registration][Property-Traits][StaticStruct-API]")
 	{
 		const FFlecsEntityHandle StaticStructEntity = FlecsWorld->RegisterComponentType(FFlecsTestStruct_WithPropertyTraits::StaticStruct());
 		ASSERT_THAT(IsTrue(StaticStructEntity.IsValid()));
@@ -102,7 +104,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B3_GetComponentPropertyTraitsFromAnotherModule_CPPAPI,
-						 "[Flecs][Basic][Component][USTRUCT][Registration][Property-Traits][CPP-API]")
+						 "[Flecs][Component][USTRUCT][Registration][Property-Traits][CPP-API]")
 	{
 		const FFlecsEntityHandle StructEntity = FlecsWorld->RegisterComponentType<FFlecsTranslationPropertyTrait>();
 		ASSERT_THAT(IsTrue(StructEntity.IsValid()));
@@ -111,7 +113,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B4_GetComponentPropertyTraitsFromAnotherModule_StaticStructAPI,
-		"[Flecs][Basic][Component][USTRUCT][Registration][Property-Traits][StaticStruct-API]")
+		"[Flecs][Component][USTRUCT][Registration][Property-Traits][StaticStruct-API]")
 	{
 		const FFlecsEntityHandle StaticStructEntity = FlecsWorld->RegisterComponentType(FFlecsTranslationPropertyTrait::StaticStruct());
 		ASSERT_THAT(IsTrue(StaticStructEntity.IsValid()));
@@ -120,7 +122,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(C1_EnumComponentRegistration_CPPAPI,
-						 "[Flecs][Basic][Component][UENUM][Registration][Enums][CPP-API]")
+						 "[Flecs][Component][UENUM][Registration][Enums][CPP-API]")
 	{
 		const FFlecsEntityHandle EnumEntity = FlecsWorld->RegisterComponentType<EFlecsTestEnum_UENUM>();
 		ASSERT_THAT(IsTrue(EnumEntity.IsValid()));
@@ -137,7 +139,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(C2_EnumComponentRegistration_StaticStructAPI,
-		"[Flecs][Basic][Component][UENUM][Registration][Enums][StaticStruct-API]")
+		"[Flecs][Component][UENUM][Registration][Enums][StaticStruct-API]")
 	{
 		const FFlecsEntityHandle StaticEnumEntity = FlecsWorld->RegisterScriptEnum(StaticEnum<EFlecsTestEnum_UENUM>());
 		ASSERT_THAT(IsTrue(StaticEnumEntity.IsValid()));
@@ -155,7 +157,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(C3_SparseEnumComponentRegistration_CPPAPI,
-						 "[Flecs][Basic][Component][UENUM][Registration][Enums][SparseEnum]")
+						 "[Flecs][Component][UENUM][Registration][Enums][SparseEnum]")
 	{
 		const FFlecsEntityHandle SparseEnumEntity = FlecsWorld->RegisterComponentType<EFlecsTestEnum_UENUM>();
 		ASSERT_THAT(IsTrue(SparseEnumEntity.IsValid()));
@@ -173,7 +175,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(C4_SparseEnumComponentRegistration_StaticStructAPI,
-		"[Flecs][Basic][Component][UENUM][Registration][Enums][SparseEnum]")
+		"[Flecs][Component][UENUM][Registration][Enums][SparseEnum]")
 	{
 		const FFlecsEntityHandle StaticSparseEnumEntity = FlecsWorld->RegisterScriptEnum(StaticEnum<EFlecsTestEnum_UENUM>());
 		ASSERT_THAT(IsTrue(StaticSparseEnumEntity.IsValid()));
@@ -191,7 +193,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(D1_RegisterScriptStructOneByteOneUProperty_CPPAPI,
-		"[Flecs][Basic][Component][USTRUCT][Registration][EdgeCase][CPP-API]")
+		"[Flecs][Component][USTRUCT][Registration][EdgeCase][CPP-API]")
 	{
 		const FFlecsEntityHandle OneByteOneUPropertyEntity = FlecsWorld->RegisterComponentType<FUStructTestComponent_NonTagUSTRUCT>();
 		ASSERT_THAT(IsTrue(OneByteOneUPropertyEntity.IsValid()));
@@ -201,13 +203,34 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(D2_RegisterScriptStructOneByteOneUProperty_StaticStructAPI,
-		"[Flecs][Basic][Component][USTRUCT][Registration][EdgeCase][StaticStruct-API]")
+		"[Flecs][Component][USTRUCT][Registration][EdgeCase][StaticStruct-API]")
 	{
 		const FFlecsEntityHandle OneByteOneUPropertyEntity = FlecsWorld->RegisterComponentType(FUStructTestComponent_NonTagUSTRUCT::StaticStruct());
 		ASSERT_THAT(IsTrue(OneByteOneUPropertyEntity.IsValid()));
 
 		ASSERT_THAT(IsTrue(OneByteOneUPropertyEntity.IsComponent()));
 		ASSERT_THAT(IsFalse(OneByteOneUPropertyEntity.IsTag()));
+	}
+
+	TEST_METHOD_WITH_TAGS(D3_RegisterScriptStructOneByteWithoutUProperty_CPPAPI,
+		"[Flecs][Component][USTRUCT][Registration][EdgeCase][CPP-API]")
+	{
+		const FFlecsEntityHandle OneByteWithoutUPropertyEntity = FlecsWorld->RegisterComponentType<FUSTructTestComponent_AccidentalTag>();
+		ASSERT_THAT(IsTrue(OneByteWithoutUPropertyEntity.IsValid()));
+
+		ASSERT_THAT(IsTrue(OneByteWithoutUPropertyEntity.IsComponent()));
+		ASSERT_THAT(IsFalse(OneByteWithoutUPropertyEntity.IsTag()));
+	}
+
+	TEST_METHOD_WITH_TAGS(D4_RegisterScriptStructOneByteWithoutUProperty_StaticStructAPI,
+		"[Flecs][Component][USTRUCT][Registration][EdgeCase][StaticStruct-API]")
+	{
+		const FFlecsEntityHandle OneByteWithoutUPropertyEntity = FlecsWorld->RegisterComponentType(FUSTructTestComponent_AccidentalTag::StaticStruct());
+		ASSERT_THAT(IsTrue(OneByteWithoutUPropertyEntity.IsValid()));
+
+		ASSERT_THAT(IsTrue(OneByteWithoutUPropertyEntity.IsComponent()));
+		// @TODO: Can we unify this?
+		ASSERT_THAT(IsTrue(OneByteWithoutUPropertyEntity.IsTag()));
 	}
 	
 }; // End of A2_UnrealFlecsComponentRegistrationTests
@@ -221,9 +244,9 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
  * D. Toggle Component Tests
  */
 TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
-                               "UnrealFlecs.Basic.Components",
+                               "UnrealFlecs.A3.Components",
                                EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::ProductFilter,
-                               "[Flecs][Basic][Entity][Tag][Component]")
+                               "[Flecs][Entity][Tag][Component]")
 {
 	inline static TUniquePtr<FFlecsTestFixtureRAII> Fixture;
 	inline static TObjectPtr<UFlecsWorld> FlecsWorld = nullptr;
@@ -268,7 +291,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(A1_BasicTagAddRemove_Add_CPPAPI_Remove_CPPAPI,
-	                     "[Flecs][Basic][Tag][USTRUCT][CPP-API][Entity-API]")
+	                     "[Flecs][Tag][USTRUCT][CPP-API][Entity-API]")
 	{
 		TestEntity.Add<FFlecsTestStruct_Tag>();
 		ASSERT_THAT(IsTrue(TestEntity.Has(TagEntity)));
@@ -282,7 +305,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(A2_BasicTagAddRemove_Add_StaticStructAPI_Remove_StaticStructAPI,
-		"[Flecs][Basic][Tag][USTRUCT][StaticStruct-API][Entity-API]")
+		"[Flecs][Tag][USTRUCT][StaticStruct-API][Entity-API]")
 	{
 		TestEntity.Add(FFlecsTestStruct_Tag::StaticStruct());
 		ASSERT_THAT(IsTrue(TestEntity.Has(TagEntity)));
@@ -296,7 +319,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(A3_BasicTagAddRemove_Add_StaticStructAPI_Remove_CPPAPI,
-	                     "[Flecs][Basic][Tag][USTRUCT][StaticStruct-API][CPP-API][StaticStruct-API]")
+	                     "[Flecs][Tag][USTRUCT][StaticStruct-API][CPP-API][StaticStruct-API]")
 	{
 		TestEntity.Add(FFlecsTestStruct_Tag::StaticStruct());
 		ASSERT_THAT(IsTrue(TestEntity.Has(TagEntity)));
@@ -310,7 +333,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(A4_BasicTagAddRemove_Add_CPPAPI_Remove_StaticStructAPI,
-		"[Flecs][Basic][Tag][USTRUCT][CPP-API][StaticStruct-API][CPP-API]")
+		"[Flecs][Tag][USTRUCT][CPP-API][StaticStruct-API][CPP-API]")
 	{
 		TestEntity.Add<FFlecsTestStruct_Tag>();
 		ASSERT_THAT(IsTrue(TestEntity.Has(TagEntity)));
@@ -324,7 +347,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(A5_BasicTagAddRemove_Add_EntityAPI_Remove_StaticStructAPI,
-	                     "[Flecs][Basic][Tag][USTRUCT][Entity-API]")
+	                     "[Flecs][Tag][USTRUCT][Entity-API]")
 	{
 		TestEntity.Add(TagEntity);
 		ASSERT_THAT(IsTrue(TestEntity.Has(TagEntity)));
@@ -338,7 +361,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(A6_BasicTagAddRemove_Add_EntityAPI_Remove_EntityAPI,
-	                     "[Flecs][Basic][Tag][USTRUCT][StaticStruct-API][Entity-API]")
+	                     "[Flecs][Tag][USTRUCT][StaticStruct-API][Entity-API]")
 	{
 		TestEntity.Add(TagEntity);
 		ASSERT_THAT(IsTrue(TestEntity.Has(TagEntity)));
@@ -352,7 +375,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B1_BasicComponentSetRemove_Set_CPPAPI_Remove_CPPAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][CPP-API][Entity-API]")
+	                     "[Flecs][Component][USTRUCT][CPP-API][Entity-API]")
 	{
 		TestEntity.Set<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ .Value = 42 });
 		ASSERT_THAT(IsTrue(TestEntity.Has(ValuedComponentEntity)));
@@ -374,7 +397,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B2_BasicComponentSetRemove_Set_StaticStructAPI_Remove_StaticStructAPI,
-		"[Flecs][Basic][Component][USTRUCT][StaticStruct-API][Entity-API]")
+		"[Flecs][Component][USTRUCT][StaticStruct-API][Entity-API]")
 	{
 		constexpr FFlecsTestStruct_Value TestValue{ .Value = 42 };
 		
@@ -399,7 +422,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B3_BasicComponentSetRemove_Set_StaticStructAPI_Remove_CPPAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][StaticStruct-API][CPP-API]")
+	                     "[Flecs][Component][USTRUCT][StaticStruct-API][CPP-API]")
 	{
 		constexpr FFlecsTestStruct_Value TestValue{ .Value = 42 };
 		
@@ -424,7 +447,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B4_BasicComponentSetRemove_Set_CPPAPI_Remove_StaticStructAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][CPP-API][StaticStruct-API]")
+	                     "[Flecs][Component][USTRUCT][CPP-API][StaticStruct-API]")
 	{
 		TestEntity.Set<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ .Value = 42 });
 		ASSERT_THAT(IsTrue(TestEntity.Has(ValuedComponentEntity)));
@@ -447,7 +470,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B5_BasicComponentSetRemove_Set_EntityAPI_Remove_StaticStructAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][Entity-API]")
+	                     "[Flecs][Component][USTRUCT][Entity-API]")
 	{
 		static constexpr FFlecsTestStruct_Value TestValue{ .Value = 42 };
 		
@@ -472,7 +495,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B6_BasicComponentAddAssignRemove_Add_CPPAPI_Assign_CPPAPI_Remove_CPPAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][CPP-API][Entity-API]")
+	                     "[Flecs][Component][USTRUCT][CPP-API][Entity-API]")
 	{
 		static constexpr int32 StartingValue = 0;
 		
@@ -502,7 +525,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B7_BasicComponentAddAssignRemove_Add_StaticStructAPI_Assign_StaticStructAPI_Remove_StaticStructAPI,
-		"[Flecs][Basic][Component][USTRUCT][StaticStruct-API][Entity-API]")
+		"[Flecs][Component][USTRUCT][StaticStruct-API][Entity-API]")
 	{
 		static constexpr int32 StartingValue = 0;
 
@@ -534,7 +557,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(B8_BasicComponentAddAssignRemove_Add_EntityAPI_Assign_EntityAPI_Remove_EntityAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][Entity-API]")
+	                     "[Flecs][Component][USTRUCT][Entity-API]")
 	{
 		static constexpr int32 StartingValue = 0;
 
@@ -566,7 +589,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(C1_BasicComponentModified_Set_CPPAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][CPP-API][Entity-API]")
+	                     "[Flecs][Component][USTRUCT][CPP-API][Entity-API]")
 	{
 		TestEntity.Set<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ .Value = 42 });
 
@@ -579,7 +602,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(C2_BasicComponentModified_Set_StaticStructAPI,
-		"[Flecs][Basic][Component][USTRUCT][StaticStruct-API][Entity-API]")
+		"[Flecs][Component][USTRUCT][StaticStruct-API][Entity-API]")
 	{
 		constexpr FFlecsTestStruct_Value TestValue{ .Value = 42 };
 		
@@ -594,7 +617,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(C3_BasicComponentModified_Set_EntityAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][Entity-API]")
+	                     "[Flecs][Component][USTRUCT][Entity-API]")
 	{
 		static constexpr FFlecsTestStruct_Value TestValue{ .Value = 42 };
 		
@@ -609,7 +632,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(C4_BasicComponentModified_Modified_CPPAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][CPP-API][Entity-API]")
+	                     "[Flecs][Component][USTRUCT][CPP-API][Entity-API]")
 	{
 		TestEntity.Add<FFlecsTestStruct_Value>();
 		ASSERT_THAT(IsTrue(Query.changed()));
@@ -627,7 +650,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(C5_BasicComponentModified_Modified_StaticStructAPI,
-		"[Flecs][Basic][Component][USTRUCT][StaticStruct-API][Entity-API]")
+		"[Flecs][Component][USTRUCT][StaticStruct-API][Entity-API]")
 	{
 		TestEntity.Add(FFlecsTestStruct_Value::StaticStruct());
 		ASSERT_THAT(IsTrue(Query.changed()));
@@ -645,7 +668,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(C6_BasicComponentModified_Modified_EntityAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][Entity-API]")
+	                     "[Flecs][Component][USTRUCT][Entity-API]")
 	{
 		TestEntity.Add(ValuedComponentEntity);
 		ASSERT_THAT(IsTrue(Query.changed()));
@@ -663,7 +686,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(D1_BasicEnableDisableToggleComponent_Enable_CPPAPI_Disable_CPPAPI_Toggle_CPPAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][CPP-API][Entity-API]")
+	                     "[Flecs][Component][USTRUCT][CPP-API][Entity-API][Toggle]")
 	{
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has<FFlecsTestStruct_Toggleable>()));
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has(ToggleableComponentHandle)));
@@ -687,7 +710,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(D2_BasicEnableDisableToggleComponent_Enable_StaticStructAPI_Disable_StaticStructAPI_Toggle_StaticStructAPI,
-		"[Flecs][Basic][Component][USTRUCT][StaticStruct-API][Entity-API]")
+		"[Flecs][Component][USTRUCT][StaticStruct-API][Entity-API][Toggle]")
 	{
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has<FFlecsTestStruct_Toggleable>()));
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has(ToggleableComponentHandle)));
@@ -711,7 +734,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(D3_BasicEnableDisableToggleComponent_Enable_EntityAPI_Disable_EntityAPI_Toggle_EntityAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][Entity-API]")
+	                     "[Flecs][Component][USTRUCT][Entity-API][Toggle]")
 	{
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has<FFlecsTestStruct_Toggleable>()));
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has(ToggleableComponentHandle)));
@@ -735,7 +758,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(D4_BasicEnableDisableToggleComponent_Enable_CPPAPI_Disable_StaticStructAPI_Toggle_CPPAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][CPP-API][StaticStruct-API]")
+	                     "[Flecs][Component][USTRUCT][CPP-API][StaticStruct-API][Toggle]")
 	{
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has<FFlecsTestStruct_Toggleable>()));
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has(ToggleableComponentHandle)));
@@ -759,7 +782,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(D5_BasicEnableDisableToggleComponent_Enable_StaticStructAPI_Disable_CPPAPI_Toggle_StaticStructAPI,
-		"[Flecs][Basic][Component][USTRUCT][StaticStruct-API][CPP-API]")
+		"[Flecs][Component][USTRUCT][StaticStruct-API][CPP-API][Toggle]")
 	{
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has<FFlecsTestStruct_Toggleable>()));
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has(ToggleableComponentHandle)));
@@ -783,7 +806,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(D6_BasicEnableDisableToggleComponent_Enable_EntityAPI_Disable_CPPAPI_Toggle_EntityAPI,
-	                     "[Flecs][Basic][Component][USTRUCT][Entity-API]")
+	                     "[Flecs][Component][USTRUCT][Entity-API][Toggle]")
 	{
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has<FFlecsTestStruct_Toggleable>()));
 		ASSERT_THAT(IsTrue(ToggleableEntityTest.Has(ToggleableComponentHandle)));
@@ -808,16 +831,29 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 
 }; // End of A3_UnrealFlecsBasicComponentTests
 
+
+/*
+ * Layout of the tests:
+ * A. Basic Pair Tests
+ */
 TEST_CLASS_WITH_FLAGS_AND_TAGS(A4_UnrealFlecsBasicPairTests,
-							   "UnrealFlecs.Basic.Pairs",
+							   "UnrealFlecs.A4.Pairs",
 							   EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::ProductFilter
 							   | EAutomationTestFlags::CriticalPriority,
-							   "[Flecs][Basic][Pair]")
+							   "[Flecs][Pair][CPP-API][StaticStruct-API][Entity-API]")
 {
 	inline static TUniquePtr<FFlecsTestFixtureRAII> Fixture;
 	inline static TObjectPtr<UFlecsWorld> FlecsWorld = nullptr;
 
 	inline static FFlecsEntityHandle TestEntity;
+
+	inline static FFlecsEntityHandle PairEntity1;
+	inline static FFlecsEntityHandle PairEntity2;
+
+	inline static FFlecsComponentHandle PairIsTagComponentHandle;
+
+	inline static FFlecsComponentHandle PairTestComponentHandle1;
+	inline static FFlecsComponentHandle PairTestComponentHandle2;
 
 	BEFORE_ALL()
 	{
@@ -825,12 +861,60 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A4_UnrealFlecsBasicPairTests,
 		FlecsWorld = Fixture->Fixture.GetFlecsWorld();
 
 		TestEntity = FlecsWorld->CreateEntity("TestEntity");
+
+		PairEntity1 = FlecsWorld->CreateEntity("PairEntity1");
+		PairEntity2 = FlecsWorld->CreateEntity("PairEntity2");
+
+		PairIsTagComponentHandle = FlecsWorld->RegisterComponentType<FFlecsTestStruct_PairIsTag>();
+
+		PairTestComponentHandle1 = FlecsWorld->RegisterComponentType<FUSTRUCTPairTestComponent>();
+		PairTestComponentHandle2 = FlecsWorld->RegisterComponentType<FUSTRUCTPairTestComponent_Second>();
 	}
 
 	AFTER_ALL()
 	{
 		FlecsWorld = nullptr;
 		Fixture.Reset();
+	}
+
+	TEST_METHOD_WITH_TAGS(A1_BasicPairAddRemove_Add_EntityAPI_Remove_EntityAPI,
+	                     "[Flecs][Pair][Entity-API]")
+	{
+		TestEntity.AddPair(PairEntity1, PairEntity2);
+		ASSERT_THAT(IsTrue(TestEntity.HasPair(PairEntity1, PairEntity2)));
+
+		TestEntity.RemovePair(PairEntity1, PairEntity2);
+		ASSERT_THAT(IsFalse(TestEntity.HasPair(PairEntity1, PairEntity2)));
+	}
+
+	TEST_METHOD_WITH_TAGS(A2_BasicPairAddRemove_Add_CPPAPI_Remove_CPPAPI,
+	                     "[Flecs][Pair][CPP-API]")
+	{
+		TestEntity.AddPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>();
+		ASSERT_THAT(IsTrue(TestEntity.HasPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>()));
+
+		TestEntity.RemovePair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>();
+		ASSERT_THAT(IsFalse(TestEntity.HasPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>()));
+	}
+
+	TEST_METHOD_WITH_TAGS(A3_BasicPairAddRemove_Add_CPPAPI_Remove_EntityAPI_SecondAPI,
+	                     "[Flecs][Pair][CPP-API][Entity-API]")
+	{
+		TestEntity.AddPairSecond<FUSTRUCTPairTestComponent_Second>(PairTestComponentHandle1);
+		ASSERT_THAT(IsTrue(TestEntity.HasPairSecond<FUSTRUCTPairTestComponent_Second>(PairTestComponentHandle1)));
+
+		TestEntity.RemovePairSecond<FUSTRUCTPairTestComponent_Second>(PairTestComponentHandle1);
+		ASSERT_THAT(IsFalse(TestEntity.HasPairSecond<FUSTRUCTPairTestComponent_Second>(PairTestComponentHandle1)));
+	}
+
+	TEST_METHOD_WITH_TAGS(A4_BasicPairAddRemove_Add_StaticStructAPI_Remove_StaticStructAPI,
+	                     "[Flecs][Pair][StaticStruct-API]")
+	{
+		TestEntity.AddPair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct());
+		ASSERT_THAT(IsTrue(TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct())));
+
+		TestEntity.RemovePair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct());
+		ASSERT_THAT(IsFalse(TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct())));
 	}
 	
 }; // End of A4_UnrealFlecsBasicPairTests
