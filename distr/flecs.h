@@ -7162,22 +7162,23 @@ void ecs_set_id(
  */
 
 /** Test whether an entity is valid.
- * Entities that are valid can be used with API functions. Using invalid
- * entities with API operations will cause the function to panic.
- *
- * An entity is valid if it is not 0 and if it is alive.
- *
- * ecs_is_valid() will return true for ids that don't exist (alive or not alive). This
- * allows for using ids that have never been created by ecs_new_w() or similar. In
- * this the function differs from ecs_is_alive(), which will return false for
- * entities that do not yet exist.
- *
- * The operation will return false for an id that exists and is not alive, as
- * using this id with an API operation would cause it to assert.
+ * This operation tests whether the entity id:
+ * - is not 0
+ * - has a valid bit pattern
+ * - is alive (see ecs_is_alive())
+ * 
+ * If this operation returns true, it is safe to use the entity with other
+ * other operations.
+ * 
+ * This operation should only be used if an application cannot be sure that an
+ * entity is initialized with a valid value. In all other cases where an entity
+ * was initialized with a valid value, but the application wants to check if the
+ * entity is (still) alive, use ecs_is_alive.
  *
  * @param world The world.
  * @param e The entity.
  * @return True if the entity is valid, false if the entity is not valid.
+ * @see ecs_is_alive()
  */
 FLECS_API
 bool ecs_is_valid(
@@ -7187,8 +7188,8 @@ bool ecs_is_valid(
 /** Test whether an entity is alive.
  * Entities are alive after they are created, and become not alive when they are
  * deleted. Operations that return alive ids are (amongst others) ecs_new(),
- * ecs_new_low_id() and ecs_entity_init(). Ids can be made alive with the ecs_make_alive()
- * function.
+ * ecs_new_low_id() and ecs_entity_init(). Ids can be made alive with the 
+ * ecs_make_alive() * function.
  *
  * After an id is deleted it can be recycled. Recycled ids are different from
  * the original id in that they have a different generation count. This makes it
@@ -7204,10 +7205,14 @@ bool ecs_is_valid(
  * ecs_is_alive(world, e2);             // true
  * ecs_is_alive(world, e1);             // false
  * @endcode
+ * 
+ * Other than ecs_is_valid(), this operation will panic if the passed in entity
+ * id is 0 or has an invalid bit pattern.
  *
  * @param world The world.
  * @param e The entity.
  * @return True if the entity is alive, false if the entity is not alive.
+ * @see ecs_is_valid()
  */
 FLECS_API
 bool ecs_is_alive(
@@ -24590,8 +24595,13 @@ struct entity_view : public id {
     }
 
     /** Check if entity is valid.
+     * An entity is valid if:
+     * - its id is not 0
+     * - the id contains a valid bit pattern for an entity
+     * - the entity is alive (see is_alive())
      *
-     * @return True if the entity is alive, false otherwise.
+     * @return True if the entity is valid, false otherwise.
+     * @see ecs_is_valid()
      */
     bool is_valid() const {
         return world_ && ecs_is_valid(world_, id_);
@@ -24604,6 +24614,7 @@ struct entity_view : public id {
     /** Check if entity is alive.
      *
      * @return True if the entity is alive, false otherwise.
+     * @see ecs_is_alive()
      */
     bool is_alive() const {
         return world_ && ecs_is_alive(world_, id_);
