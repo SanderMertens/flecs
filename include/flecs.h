@@ -3310,7 +3310,7 @@ void* ecs_ensure_id(
  * @param id The id of the component.
  * @return The reference.
  */
-FLECS_API
+FLECS_ALWAYS_INLINE FLECS_API
 ecs_ref_t ecs_ref_init_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -3324,7 +3324,7 @@ ecs_ref_t ecs_ref_init_id(
  * @param id The component id.
  * @return The component pointer, NULL if the entity does not have the component.
  */
-FLECS_API
+FLECS_ALWAYS_INLINE FLECS_API
 void* ecs_ref_get_id(
     const ecs_world_t *world,
     ecs_ref_t *ref,
@@ -3337,7 +3337,7 @@ void* ecs_ref_get_id(
  * @param world The world.
  * @param ref The ref.
  */
-FLECS_API
+FLECS_ALWAYS_INLINE FLECS_API
 void ecs_ref_update(
     const ecs_world_t *world,
     ecs_ref_t *ref);

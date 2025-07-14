@@ -1265,6 +1265,9 @@ void ComponentLifecycle_on_replace_w_emplace(void);
 void ComponentLifecycle_on_replace_w_set(void);
 void ComponentLifecycle_on_replace_w_set_existing(void);
 void ComponentLifecycle_on_replace_set_2_entities(void);
+void ComponentLifecycle_copy_ctor_w_override(void);
+void ComponentLifecycle_copy_ctor_w_override_w_emplace(void);
+void ComponentLifecycle_copy_ctor_w_override_w_ensure(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -7499,6 +7502,18 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_replace_set_2_entities",
         ComponentLifecycle_on_replace_set_2_entities
+    },
+    {
+        "copy_ctor_w_override",
+        ComponentLifecycle_copy_ctor_w_override
+    },
+    {
+        "copy_ctor_w_override_w_emplace",
+        ComponentLifecycle_copy_ctor_w_override_w_emplace
+    },
+    {
+        "copy_ctor_w_override_w_ensure",
+        ComponentLifecycle_copy_ctor_w_override_w_ensure
     }
 };
 
@@ -13016,7 +13031,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        128,
+        131,
         ComponentLifecycle_testcases
     },
     {

@@ -177,7 +177,7 @@ void flecs_component_sparse_remove(
                     .count = 1
                 };
 
-                flecs_emit(world, world, 0, &(ecs_event_desc_t) {
+                flecs_emit(world, world, &(ecs_event_desc_t) {
                     .event = EcsOnRemove,
                     .ids = &type,
                     .table = table,
@@ -315,7 +315,7 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
                 .count = 1
             };
 
-            flecs_emit(world, world, 0, &(ecs_event_desc_t) {
+            flecs_emit(world, world, &(ecs_event_desc_t) {
                 .event = EcsOnRemove,
                 .ids = &type,
                 .table = table,
@@ -333,6 +333,43 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
         ECS_INTERNAL_ERROR, NULL);
 
     *tgt_ptr = flecs_entities_get_alive(world, ECS_PAIR_SECOND(component_id));
+}
+
+static
+void flecs_component_sparse_override(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t component_id,
+    void *ptr,
+    const ecs_type_info_t *ti)
+{
+    const void *override_ptr = NULL;
+    if (table->flags & EcsTableHasIsA) {
+        ecs_entity_t base = 0;
+        if (ecs_search_relation(world, table, 0, component_id, EcsIsA, EcsUp, 
+            &base, NULL, NULL) != -1) 
+        {
+            override_ptr = ecs_get_id(world, base, component_id);
+            ecs_assert(override_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        }
+    }
+
+    ecs_xtor_t ctor = ti->hooks.ctor;
+    if (!override_ptr) {
+        if (ctor) {
+            ctor(ptr, 1, ti);
+        }
+    } else {
+        ecs_copy_t copy = ti->hooks.copy_ctor;
+        if (copy) {
+            copy(ptr, override_ptr, 1, ti);
+        } else {
+            if (ctor) {
+                ctor(ptr, 1, ti);
+            }
+            ecs_os_memcpy(ptr, override_ptr, ti->size);
+        }
+    }
 }
 
 void* flecs_component_sparse_insert(
@@ -370,10 +407,7 @@ void* flecs_component_sparse_insert(
         return ptr;
     }
 
-    ecs_xtor_t ctor = ti->hooks.ctor;
-    if (ctor) {
-        ctor(ptr, 1, ti);
-    }
+    flecs_component_sparse_override(world, table, component_id, ptr, ti);
 
     ecs_iter_action_t on_add = ti->hooks.on_add;
     if (!on_add) {

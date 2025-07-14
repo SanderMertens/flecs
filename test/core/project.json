@@ -1323,7 +1323,10 @@
                 "on_replace_w_emplace",
                 "on_replace_w_set",
                 "on_replace_w_set_existing",
-                "on_replace_set_2_entities"
+                "on_replace_set_2_entities",
+                "copy_ctor_w_override",
+                "copy_ctor_w_override_w_emplace",
+                "copy_ctor_w_override_w_ensure"
             ]
         }, {
             "id": "Pairs",

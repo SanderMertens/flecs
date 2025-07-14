@@ -153,12 +153,16 @@ static int copy_position = 0;
 static
 ECS_COPY(Position, dst, src, {
     copy_position ++;
+    dst->x = src->x;
+    dst->y = src->y;
 })
 
 static int move_position = 0;
 static
 ECS_MOVE(Position, dst, src, {
     move_position ++;
+    dst->x = src->x;
+    dst->y = src->y;
 })
 
 static int on_add_position = 0;
@@ -4155,5 +4159,131 @@ void ComponentLifecycle_on_replace_set_2_entities(void) {
     ecs_set(world, e2, Position, {11, 21});
     test_int(replace_Position_invoked, 2);
 
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_ctor_w_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .copy_ctor = ecs_copy(Position)
+    });
+
+    test_int(ctor_position, 0);
+    test_int(copy_position, 0);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has(world, i, Position));
+    {
+        const Position *ptr = ecs_get(world, i, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 1);
+    
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_ctor_w_override_w_emplace(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .copy_ctor = ecs_copy(Position)
+    });
+
+    test_int(ctor_position, 0);
+    test_int(copy_position, 0);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has(world, i, Position));
+    {
+        const Position *ptr = ecs_get(world, i, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+
+    bool is_new = false;
+    Position *ptr = ecs_emplace(world, i, Position, &is_new);
+    test_assert(ptr != NULL);
+    test_bool(is_new, true);
+    test_assert(ecs_owns(world, i, Position));
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+    
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_ctor_w_override_w_ensure(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .copy_ctor = ecs_copy(Position)
+    });
+
+    test_int(ctor_position, 0);
+    test_int(copy_position, 0);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has(world, i, Position));
+    {
+        const Position *ptr = ecs_get(world, i, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+
+    Position *ptr = ecs_ensure(world, i, Position);
+    test_assert(ptr != NULL);
+    test_assert(ecs_owns(world, i, Position));
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 1);
+
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    
     ecs_fini(world);
 }

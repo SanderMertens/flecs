@@ -1690,8 +1690,6 @@ void Sparse_emplace_inherited(void) {
     Position *p = ecs_emplace(world, e, Position, &is_new);
     test_bool(is_new, true);
     test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
     test_assert(p != ecs_get(world, b, Position));
 
     ecs_fini(world);
