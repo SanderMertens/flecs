@@ -822,36 +822,35 @@ void flecs_cmd_batch_for_entity(
 
     world->info.cmd.batched_entity_count ++;
 
+    bool has_set = false;
     ecs_table_t *start_table = table;
-    ecs_cmd_t *cmd;
-    int32_t next_for_entity;
     ecs_table_diff_t table_diff; /* Keep track of diff for observers/hooks */
     int32_t cur = start;
-    ecs_id_t id;
-
-    /* Mask to let observable implementation know which components were set.
-     * This prevents the code from overwriting components with an override if
-     * the batch also contains an IsA pair. 
-     * Use 4 elements, so the implementation supports up to 256 components added
-     * in a single batch. */
-    ecs_flags64_t set_mask[4] = {0};
+    int32_t next_for_entity;
 
     do {
-        cmd = &cmds[cur];
-        id = cmd->id;
+        ecs_cmd_t *cmd = &cmds[cur];
+        ecs_id_t id = cmd->id;
         next_for_entity = cmd->next_for_entity;
         if (next_for_entity < 0) {
             /* First command for an entity has a negative index, flip sign */
             next_for_entity *= -1;
         }
 
-        ecs_component_record_t *cr = NULL;
-
         /* Check if added id is still valid (like is the parent of a ChildOf 
          * pair still alive), if not run cleanup actions for entity */
         if (id) {
-            cr = flecs_components_get(world, cmd->id);
+            ecs_component_record_t *cr = NULL;
+            if ((id < FLECS_HI_COMPONENT_ID)) {
+                if (world->non_trivial_lookup[id]) {
+                    cr = flecs_components_get(world, id);
+                }
+            } else {
+                cr = flecs_components_get(world, id);
+            }
+                    
             if (cr && cr->flags & EcsIdDontFragment) {
+                /* Nothing to batch for non-fragmenting components */
                 continue;
             }
 
@@ -874,48 +873,51 @@ void flecs_cmd_batch_for_entity(
         ecs_cmd_kind_t kind = cmd->kind;
         switch(kind) {
         case EcsCmdNew:
+            // TODO: remove command
             break;
         case EcsCmdAddModified:
             /* Add is batched, but keep Modified */
             cmd->kind = EcsCmdModified;
-
-            /* fall through */
-        case EcsCmdAdd:
             table = flecs_find_table_add(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
             break;
+        case EcsCmdAdd:
+            table = flecs_find_table_add(world, table, id, diff);
+            world->info.cmd.batched_command_count ++;
+            cmd->kind = EcsCmdSkip;
+            break;
         case EcsCmdSet:
         case EcsCmdEnsure: {
-            ecs_id_t *ids = diff->added.array;
-
-            ecs_table_t *next = flecs_find_table_add(world, table, id, diff);
-            if (next != table) {
-                table = next;
-            }
-
-            /* Find id in added array so we can set the bit in the set_mask */
-            int32_t i;
-            for (i = 0; i < diff->added.count; i ++) {
-                if (ids[i] == id) {
-                    break;
-                }
-            }
-
-            ecs_assert(i < 256, ECS_UNSUPPORTED, 
-                "cannot add more than 256 components in a single operation");
-            set_mask[i >> 6] |= 1llu << (i & 63);
-
+            table = flecs_find_table_add(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
+            has_set = true;
             break;
         }
         case EcsCmdEmplace:
             /* Don't add for emplace, as this requires a special call to ensure
              * the constructor is not invoked for the component */
             break;
-        case EcsCmdRemove:
-            table = flecs_find_table_remove(world, table, id, diff);
+        case EcsCmdRemove: {
+            ecs_table_t *next =
+                flecs_find_table_remove(world, table, id, diff);
+            if ((table != next) && (table->flags & EcsTableHasIsA)) {
+                /* Abort batch. It's possible that we removed an override, and
+                 * if we're readding the component in the same batch we need to
+                 * reapply the override. If we do nothing here, an add for the
+                 * same component would cancel out the remove and we'd won't get
+                 * the override for the component. */
+                next_for_entity = 0;
+                
+                /* Make sure that if we have to do any processing we don't go 
+                 * beyond the current command. */
+                cmd->next_for_entity = 0;
+            }
+
+            table = next;
             world->info.cmd.batched_command_count ++;
+            cmd->kind = EcsCmdSkip;
             break;
+        }
         case EcsCmdClear:
             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
             if (table->type.count) {
@@ -927,6 +929,7 @@ void flecs_cmd_batch_for_entity(
             }
             table = &world->store.root;
             world->info.cmd.batched_command_count ++;
+            cmd->kind = EcsCmdSkip;
             break;
         case EcsCmdClone:
         case EcsCmdBulkNew:
@@ -940,12 +943,6 @@ void flecs_cmd_batch_for_entity(
         case EcsCmdModifiedNoHook:
         case EcsCmdModified:
             break;
-        }
-
-        /* Add, remove and clear operations can be skipped since they have no
-         * side effects besides adding/removing components */
-        if (kind == EcsCmdAdd || kind == EcsCmdRemove || kind == EcsCmdClear) {
-            cmd->kind = EcsCmdSkip;
         }
     } while ((cur = next_for_entity));
 
@@ -979,10 +976,10 @@ void flecs_cmd_batch_for_entity(
      * This only happens for entities that didn't have the assigned component
      * yet, as for entities that did have the component already the value will
      * have been assigned directly to the component storage. */
-    if (set_mask[0] | set_mask[1] | set_mask[2] | set_mask[3]) {
+    if (has_set) {
         cur = start;
         do {
-            cmd = &cmds[cur];
+            ecs_cmd_t *cmd = &cmds[cur];
             next_for_entity = cmd->next_for_entity;
             if (next_for_entity < 0) {
                 next_for_entity *= -1;
@@ -991,13 +988,8 @@ void flecs_cmd_batch_for_entity(
             switch(cmd->kind) {
             case EcsCmdSet:
             case EcsCmdEnsure: {
-                int32_t row = ECS_RECORD_TO_ROW(r->row);
-
-                flecs_component_ptr_t dst = {0};
-                if (r->table) {
-                    ecs_component_record_t *cr = flecs_components_get(world, cmd->id);
-                    dst = flecs_get_component_ptr(r->table, row, cr);
-                }
+                flecs_component_ptr_t dst = flecs_get_mut(
+                    world, entity, cmd->id, r, cmd->is._1.size);
 
                 /* It's possible that even though the component was set, the
                  * command queue also contained a remove command, so before we
@@ -1042,11 +1034,11 @@ void flecs_cmd_batch_for_entity(
                 }
                 break;
             }
+            case EcsCmdRemove:
             case EcsCmdNew:
             case EcsCmdClone:
             case EcsCmdBulkNew:
             case EcsCmdAdd:
-            case EcsCmdRemove:
             case EcsCmdEmplace:
             case EcsCmdModified:
             case EcsCmdModifiedNoHook:
@@ -1087,7 +1079,7 @@ void flecs_cmd_batch_for_entity(
 
         flecs_defer_begin(world, world->stages[0]);
         flecs_notify_on_add(world, r->table, start_table,
-            ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, set_mask, true, false);
+            ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, true, false);
         flecs_defer_end(world, world->stages[0]);
     }
 

@@ -143,6 +143,7 @@ void ComponentLifecycle_copy_on_override(void) {
     test_int(Pod::ctor_invoked, 2);
     test_int(Pod::dtor_invoked, 1);
     test_int(Pod::copy_invoked, 0);
+    test_int(Pod::copy_ctor_invoked, 0);
     Pod::ctor_invoked = 0;
     Pod::dtor_invoked = 0;
     Pod::copy_invoked = 0;
@@ -155,10 +156,11 @@ void ComponentLifecycle_copy_on_override(void) {
     test_int(Pod::ctor_invoked, 0);
 
     e.add<Pod>();
-    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::ctor_invoked, 0);
     test_int(Pod::dtor_invoked, 0);
-    test_int(Pod::copy_invoked, 1);
+    test_int(Pod::copy_invoked, 0);
     test_int(Pod::move_invoked, 0);
+    test_int(Pod::copy_ctor_invoked, 1);
 
     const Pod *pod = e.try_get<Pod>();
     test_assert(pod != NULL);
