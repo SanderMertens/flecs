@@ -9073,11 +9073,13 @@ void Traversal_up_component_w_singleton_after_parent_table_change(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Foo);
 
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Position), .src.id = EcsUp },
-            { .id = ecs_id(Velocity), .src.id = EcsSingleton }
+            { .id = ecs_id(Velocity) }
         },
         .cache_kind = cache_kind
     });
@@ -9411,11 +9413,13 @@ void Traversal_test_up_component_w_singleton_after_parent_table_change(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Foo);
 
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Position), .src.id = EcsUp },
-            { .id = ecs_id(Velocity), .src.id = EcsSingleton }
+            { .id = ecs_id(Velocity) }
         },
         .cache_kind = cache_kind
     });
@@ -9581,11 +9585,13 @@ void Traversal_up_component_w_singleton_after_parent_table_change_no_data(void) 
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Foo);
 
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { .id = ecs_id(Position), .inout = EcsInOutNone },
             { .id = ecs_id(Position), .src.id = EcsUp, .inout = EcsInOutNone },
-            { .id = ecs_id(Velocity), .src.id = EcsSingleton, .inout = EcsInOutNone }
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone }
         },
         .cache_kind = cache_kind
     });
@@ -9835,11 +9841,13 @@ void Traversal_test_up_component_w_singleton_after_parent_table_change_no_data(v
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Foo);
 
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { .id = ecs_id(Position), .inout = EcsInOutNone },
             { .id = ecs_id(Position), .src.id = EcsUp, .inout = EcsInOutNone },
-            { .id = ecs_id(Velocity), .src.id = EcsSingleton, .inout = EcsInOutNone }
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone }
         },
         .cache_kind = cache_kind
     });
@@ -11062,8 +11070,10 @@ void Traversal_singleton_w_this_up_w_table_change(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
+    ecs_add_id(world, Foo, EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ Foo, .src.id = EcsSingleton }, { Bar, .src.id = EcsUp }},
+        .terms = {{ Foo }, { Bar, .src.id = EcsUp }},
         .cache_kind = cache_kind
     });
 
@@ -11138,8 +11148,10 @@ void Traversal_this_up_w_singleton_w_table_change(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
+    ecs_add_id(world, Foo, EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ Bar, .src.id = EcsUp }, { Foo, .src.id = EcsSingleton }},
+        .terms = {{ Bar, .src.id = EcsUp }, { Foo }},
         .cache_kind = cache_kind
     });
 
@@ -11215,11 +11227,13 @@ void Traversal_2_this_up_w_singleton_w_table_change(void) {
     ECS_TAG(world, Bar);
     ECS_TAG(world, Singleton);
 
+    ecs_add_id(world, Singleton, EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { Foo, .src.id = EcsUp },
             { Bar, .src.id = EcsUp },
-            { Singleton, .src.id = EcsSingleton }
+            { Singleton }
         },
         .cache_kind = cache_kind
     });
@@ -11310,11 +11324,13 @@ void Traversal_2_this_up_w_singleton_w_tag_w_table_change(void) {
     ECS_TAG(world, Hello);
     ECS_TAG(world, Singleton);
 
+    ecs_add_id(world, Singleton, EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { Foo, .src.id = EcsUp },
             { Bar, .src.id = EcsUp },
-            { Singleton, .src.id = EcsSingleton },
+            { Singleton },
             { Hello },
         },
         .cache_kind = cache_kind
@@ -11405,9 +11421,11 @@ void Traversal_singleton_w_this_up_w_table_change_components(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
         .terms = {
-            { ecs_id(Velocity), .src.id = EcsSingleton }, 
+            { ecs_id(Velocity) }, 
             { ecs_id(Position), .src.id = EcsUp }
         },
         .cache_kind = cache_kind
@@ -11521,10 +11539,12 @@ void Traversal_this_up_w_singleton_w_table_change_components(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { ecs_id(Position), .src.id = EcsUp },
-            { ecs_id(Velocity), .src.id = EcsSingleton }
+            { ecs_id(Velocity) }
         },
         .cache_kind = cache_kind
     });
@@ -11637,11 +11657,13 @@ void Traversal_2_this_up_w_singleton_w_table_change_components(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
+    ecs_add_id(world, ecs_id(Mass), EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { ecs_id(Position), .src.id = EcsUp },
             { ecs_id(Velocity), .src.id = EcsUp },
-            { ecs_id(Mass), .src.id = EcsSingleton }
+            { ecs_id(Mass) }
         },
         .cache_kind = cache_kind
     });
@@ -11783,11 +11805,13 @@ void Traversal_2_this_up_w_singleton_w_component_w_table_change_components(void)
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
+    ecs_add_id(world, ecs_id(Mass), EcsSingleton);
+
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { ecs_id(Position), .src.id = EcsUp },
             { ecs_id(Velocity), .src.id = EcsUp },
-            { ecs_id(Mass), .src.id = EcsSingleton },
+            { ecs_id(Mass) },
             { ecs_id(Rotation) }
         },
         .cache_kind = cache_kind

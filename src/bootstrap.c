@@ -320,21 +320,21 @@ void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
 
     ecs_world_t *world = it->world;
     ecs_entity_t rel = ECS_PAIR_FIRST(pair);
-    ecs_entity_t obj = ecs_pair_second(world, pair);
+    ecs_entity_t tgt = ecs_pair_second(world, pair);
     ecs_entity_t event = it->event;
 
 
-    if (obj) {
+    if (tgt) {
         int i, count = it->count;
         for (i = 0; i < count; i ++) {
             ecs_entity_t subj = it->entities[i];
             if (event == EcsOnAdd) {
-                if (!ecs_has_id(it->real_world, obj, ecs_pair(rel, subj))) {
-                    ecs_add_pair(it->world, obj, rel, subj);   
+                if (!ecs_has_id(it->real_world, tgt, ecs_pair(rel, subj))) {
+                    ecs_add_pair(it->world, tgt, rel, subj);   
                 }
             } else {
-                if (ecs_has_id(it->real_world, obj, ecs_pair(rel, subj))) {
-                    ecs_remove_pair(it->world, obj, rel, subj);   
+                if (ecs_has_id(it->real_world, tgt, ecs_pair(rel, subj))) {
+                    ecs_remove_pair(it->world, tgt, rel, subj);   
                 }
             }
         }
@@ -357,6 +357,60 @@ void flecs_register_symmetric(ecs_iter_t *it) {
             .query.terms[0] = { .id = ecs_pair(r, EcsWildcard) },
             .callback = flecs_on_symmetric_add_remove,
             .events = {EcsOnAdd, EcsOnRemove}
+        });
+    } 
+}
+
+static
+void flecs_on_singleton_add_remove(ecs_iter_t *it) {
+    ecs_entity_t component = ecs_field_id(it, 0);
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+
+        if (ECS_IS_PAIR(component)) {
+            ecs_entity_t relationship = ECS_PAIR_FIRST(component);
+            e = (uint32_t)e;
+            ecs_assert(relationship == e, ECS_CONSTRAINT_VIOLATED,
+                "singleton components can only be added to themselves");
+        } else {
+            ecs_assert(component == e, ECS_CONSTRAINT_VIOLATED,
+                "singleton components can only be added to themselves");
+        }
+    }
+}
+
+static
+void flecs_register_singleton(ecs_iter_t *it) {
+    ecs_world_t *world = it->real_world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t component = it->entities[i];
+
+        flecs_register_id_flag_for_relation(
+            it, component, EcsIdSingleton, 0, 0);
+
+        ecs_assert(flecs_components_get(world, component) != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* Create observer that enforces that singleton is only added to self */
+        ecs_observer(world, {
+            .entity = ecs_entity(world, { .parent = component }),
+            .query.terms[0] = { 
+                .id = component, .src.id = EcsThis|EcsSelf 
+            },
+            .callback = flecs_on_singleton_add_remove,
+            .events = {EcsOnAdd}
+        });
+
+        ecs_observer(world, {
+            .entity = ecs_entity(world, { .parent = component }),
+            .query.terms[0] = { 
+                .id = ecs_pair(component, EcsWildcard), .src.id = EcsThis|EcsSelf 
+            },
+            .callback = flecs_on_singleton_add_remove,
+            .events = {EcsOnAdd}
         });
     } 
 }
@@ -884,6 +938,7 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsTransitive);
     flecs_bootstrap_trait(world, EcsReflexive);
     flecs_bootstrap_trait(world, EcsSymmetric);
+    flecs_bootstrap_trait(world, EcsSingleton);
     flecs_bootstrap_trait(world, EcsFinal);
     flecs_bootstrap_trait(world, EcsInheritable);
     flecs_bootstrap_trait(world, EcsPairIsTag);
@@ -994,6 +1049,13 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_symmetric
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsSingleton }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_singleton
     });
 
     static ecs_on_trait_ctx_t traversable_trait = { EcsIdTraversable, EcsIdTraversable };

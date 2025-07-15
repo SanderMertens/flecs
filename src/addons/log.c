@@ -399,11 +399,11 @@ void ecs_assert_log_(
         va_start(args, fmt);
         char *msg = flecs_vasprintf(fmt, args);
         va_end(args);
-        ecs_fatal_(file, line, "assert: %s %s (%s)",
+        ecs_fatal_(file, line, "#[blue]assert#[reset](%s): %s (#[blue]%s#[reset])",
             cond_str, msg, ecs_strerror(err));
         ecs_os_free(msg);
     } else {
-        ecs_fatal_(file, line, "assert: %s %s",
+        ecs_fatal_(file, line, "#[blue]assert#[reset](%s) (#[blue]%s#[reset])",
             cond_str, ecs_strerror(err));
     }
     ecs_os_api.log_last_error_ = err;

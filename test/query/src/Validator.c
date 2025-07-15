@@ -3628,3 +3628,198 @@ void Validator_validate_eq_this_not_a_var_w_wildcard(void) {
 
     ecs_fini(world);
 }
+
+void Validator_validate_term_1_w_singleton_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo }}
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, Foo);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsIsEntity);
+    test_str(q->terms[0].src.name, NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_term_2_w_singleton_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Bar }, { Foo }}
+    });
+
+    test_int(q->term_count, 2);
+    test_int(q->field_count, 2);
+
+    test_uint(q->terms[0].id, Bar);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Bar|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_str(q->terms[0].src.name, NULL);
+
+    test_uint(q->terms[1].id, Foo);
+    test_int(q->terms[1].oper, EcsAnd);
+    test_int(q->terms[1].field_index, 1);
+    test_uint(q->terms[1].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[1].src.id, Foo|EcsSelf|EcsIsEntity);
+    test_str(q->terms[1].src.name, NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_term_pair_w_singleton_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Tgt);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Bar }, { ecs_pair(Foo, Tgt) }}
+    });
+
+    test_int(q->term_count, 2);
+    test_int(q->field_count, 2);
+
+    test_uint(q->terms[0].id, Bar);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Bar|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_str(q->terms[0].src.name, NULL);
+
+    test_uint(q->terms[1].id, ecs_pair(Foo, Tgt));
+    test_int(q->terms[1].oper, EcsAnd);
+    test_int(q->terms[1].field_index, 1);
+    test_uint(q->terms[1].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[1].src.id, Foo|EcsSelf|EcsIsEntity);
+    test_str(q->terms[1].src.name, NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_or_term_w_singleton_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+    ecs_add_id(world, Bar, EcsSingleton);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Bar, .oper = EcsOr }, { Foo }}
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_term_w_singleton_trait_w_explicit_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = Bar }}
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, Foo);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, Bar|EcsSelf|EcsIsEntity);
+    test_str(q->terms[0].src.name, NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_term_w_singleton_trait_w_explicit_self_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = Foo }}
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, Foo);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsIsEntity);
+    test_str(q->terms[0].src.name, NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_term_w_singleton_trait_w_pair_w_explicit_self_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair(Foo, EcsWildcard), .src.id = Foo }}
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, ecs_pair(Foo, EcsWildcard));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsIsEntity);
+    test_str(q->terms[0].src.name, NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

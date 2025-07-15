@@ -129,3 +129,81 @@ void Singleton_singleton_system(void) {
 
     ecs_fini(world);    
 }
+
+void Singleton_trait_add_singleton_to_self(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
+    ecs_singleton_set(world, Position, {10, 20});
+
+    const Position *p = ecs_singleton_get(world, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Singleton_trait_add_singleton_pair_to_self(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
+    ecs_set_pair(world, ecs_id(Position), Position, TgtA, {10, 20});
+    ecs_set_pair(world, ecs_id(Position), Position, TgtB, {30, 40});
+
+    {
+        const Position *p = ecs_get_pair(
+            world, ecs_id(Position), Position, TgtA);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Position *p = ecs_get_pair(
+            world, ecs_id(Position), Position, TgtB);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Singleton_trait_add_singleton_to_other(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_set(world, e, Position, {10, 20});
+}
+
+void Singleton_trait_add_singleton_pair_to_other(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+    
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_set_pair(world, e, Position, TgtA, {10, 20});
+}

@@ -1652,9 +1652,6 @@ FLECS_API extern const ecs_entity_t EcsThis;
 /** Variable entity ("$"). Used in expressions to prefix variable names */
 FLECS_API extern const ecs_entity_t EcsVariable;
 
-/** Shortcut as EcsVariable is typically used as source for singleton terms */
-#define EcsSingleton EcsVariable
-
 /** Marks a relationship as transitive.
  * Behavior:
  *
@@ -1873,6 +1870,10 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 /** Panic cleanup policy. Must be used as target in pair with #EcsOnDelete or
  * #EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
+
+/** Mark component as singleton. Singleton components may only be added to 
+ * themselves. */
+FLECS_API extern const ecs_entity_t EcsSingleton;
 
 /** Mark component as sparse */
 FLECS_API extern const ecs_entity_t EcsSparse;

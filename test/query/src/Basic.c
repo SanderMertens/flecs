@@ -11647,12 +11647,14 @@ void Basic_mixed_uncacheable_w_shared(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
     ECS_TAG(world, Singleton);
+    
+    ecs_add_id(world, Singleton, EcsSingleton);
 
     ecs_singleton_add(world, Singleton);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
-            { Singleton, .src.id = EcsSingleton },
+            { Singleton },
             { Bar, .src.id = EcsUp }
         },
         .cache_kind = cache_kind

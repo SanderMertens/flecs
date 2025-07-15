@@ -1121,6 +1121,7 @@ int flecs_query_finalize_terms(
         ecs_term_t *term = &terms[i];
         bool prev_is_or = i && term[-1].oper == EcsOr;
         bool nodata_term = false;
+        bool default_src = term->src.id == 0;
         ctx.term_index = i;
 
         if (flecs_term_finalize(world, term, &ctx)) {
@@ -1171,17 +1172,7 @@ int flecs_query_finalize_terms(
             }
         }
 
-        if (prev_is_or) {
-            if (ECS_TERM_REF_ID(&term[-1].src) != ECS_TERM_REF_ID(&term->src)) {
-                flecs_query_validator_error(&ctx, "mismatching src.id for OR terms");
-                return -1;
-            }
-            if (term->oper != EcsOr && term->oper != EcsAnd) {
-                flecs_query_validator_error(&ctx, 
-                    "term after OR operator must use AND operator");
-                return -1;
-            }
-        } else {
+        if (!prev_is_or) {
             field_count ++;
         }
 
@@ -1318,6 +1309,18 @@ int flecs_query_finalize_terms(
                 is_sparse = true;
             }
 
+            if (cr->flags & EcsIdSingleton) {
+                if (default_src) {
+                    term->src.id = term->first.id|EcsSelf|EcsIsEntity;
+
+                    ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
+                    if (term->flags_ & EcsTermIsCacheable) {
+                        cacheable_terms --;
+                        ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
+                    }
+                }
+            }
+
             /* If this is a static field, we need to assume that we might have 
              * to do change detection. */
             if (term->src.id & EcsIsEntity) {
@@ -1330,6 +1333,18 @@ int flecs_query_finalize_terms(
             ecs_entity_t type = ecs_get_typeid(world, term->id);
             if (type && ecs_has_id(world, type, EcsSparse)) {
                 is_sparse = true;
+            }
+        }
+
+        if (prev_is_or) {
+            if (ECS_TERM_REF_ID(&term[-1].src) != ECS_TERM_REF_ID(&term->src)) {
+                flecs_query_validator_error(&ctx, "mismatching src.id for OR terms");
+                return -1;
+            }
+            if (term->oper != EcsOr && term->oper != EcsAnd) {
+                flecs_query_validator_error(&ctx, 
+                    "term after OR operator must use AND operator");
+                return -1;
             }
         }
 
@@ -1656,6 +1671,7 @@ bool flecs_query_finalize_simple(
         }
 
         bool is_self = term->src.id == EcsSelf;
+        bool default_src = term->src.id == 0;
 
         term->field_index = i;
         term->first.id = first | EcsIsEntity | EcsSelf;
@@ -1702,6 +1718,13 @@ bool flecs_query_finalize_simple(
                 term->flags_ |= EcsTermIsSparse;
                 cacheable = false; trivial = false;
                 q->row_fields |= flecs_uto(uint32_t, 1llu << i);
+            }
+
+            if (cr->flags & EcsIdSingleton) {
+                if (default_src) {
+                    term->src.id = term->first.id|EcsSelf|EcsIsEntity;
+                    cacheable = false; trivial = false;
+                }
             }
         }
 

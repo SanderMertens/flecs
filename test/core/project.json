@@ -1170,7 +1170,13 @@
                 "get_mut_singleton",
                 "ensure_singleton",
                 "emplace_singleton",
-                "singleton_system"
+                "singleton_system",
+                "trait_add_singleton_to_self",
+                "trait_add_singleton_pair_to_self",
+                "trait_add_singleton_to_other",
+                "trait_add_singleton_pair_to_other",
+                "add_trait_after_in_use",
+                "add_trait_after_pair_in_use"
             ]
         }, {
             "id": "Clone",
