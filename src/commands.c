@@ -107,21 +107,6 @@ bool flecs_defer_cmd(
     return false;
 }
 
-bool flecs_defer_new(
-    ecs_stage_t *stage,
-    ecs_entity_t entity)
-{
-    if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage);
-        if (cmd) {
-            cmd->kind = EcsCmdNew;
-            cmd->entity = entity;
-        }
-        return true;
-    }
-    return false; 
-}
-
 bool flecs_defer_modified(
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -683,7 +668,6 @@ void flecs_enqueue(
 static
 void flecs_flush_bulk_new(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_cmd_t *cmd)
 {
     ecs_entity_t *entities = cmd->is._n.entities;
@@ -693,7 +677,7 @@ void flecs_flush_bulk_new(
         for (i = 0; i < count; i ++) {
             ecs_record_t *r = flecs_entities_ensure(world, entities[i]);
             if (!r->table) {
-                flecs_add_to_root_table(world, stage, entities[i]);
+                flecs_add_to_root_table(world, entities[i]);
             }
             flecs_add_id(world, entities[i], cmd->id);
         }
@@ -872,9 +856,6 @@ void flecs_cmd_batch_for_entity(
 
         ecs_cmd_kind_t kind = cmd->kind;
         switch(kind) {
-        case EcsCmdNew:
-            // TODO: remove command
-            break;
         case EcsCmdAddModified:
             /* Add is batched, but keep Modified */
             cmd->kind = EcsCmdModified;
@@ -1035,7 +1016,6 @@ void flecs_cmd_batch_for_entity(
                 break;
             }
             case EcsCmdRemove:
-            case EcsCmdNew:
             case EcsCmdClone:
             case EcsCmdBulkNew:
             case EcsCmdAdd:
@@ -1182,9 +1162,6 @@ bool flecs_defer_end(
                 ecs_id_t id = cmd->id;
 
                 switch(kind) {
-                case EcsCmdNew:
-                    flecs_add_to_root_table(world, stage, id);
-                    break;
                 case EcsCmdAdd:
                     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
                     if (flecs_remove_invalid(world, id, &id)) {
@@ -1269,7 +1246,7 @@ bool flecs_defer_end(
                     world->info.cmd.other_count ++;
                     break;
                 case EcsCmdBulkNew:
-                    flecs_flush_bulk_new(world, stage, cmd);
+                    flecs_flush_bulk_new(world, cmd);
                     world->info.cmd.other_count ++;
                     continue;
                 case EcsCmdPath: {

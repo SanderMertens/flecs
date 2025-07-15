@@ -65,7 +65,6 @@ const ecs_entity_t* flecs_bulk_new(
 /* Add new entity id to root table. */
 void flecs_add_to_root_table(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t e);
 
 /* Mark an entity as being watched. This is used to trigger automatic rematching
