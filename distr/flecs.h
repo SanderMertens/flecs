@@ -7103,6 +7103,7 @@ void ecs_ref_update(
  * @param world The world.
  * @param entity The entity.
  * @param id The component to obtain.
+ * @param size The component size.
  * @param is_new Whether this is an existing or new component.
  * @return The (uninitialized) component pointer.
  */
@@ -7111,6 +7112,7 @@ void* ecs_emplace_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
+    size_t size,
     bool *is_new);
 
 /** Signal that a component has been modified.
@@ -10457,10 +10459,10 @@ int ecs_value_move_ctor(
 /* emplace */
 
 #define ecs_emplace(world, entity, T, is_new)\
-    (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T), is_new)))
+    (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T), sizeof(T), is_new)))
 
 #define ecs_emplace_pair(world, entity, First, second, is_new)\
-    (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second), is_new)))
+    (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second), sizeof(First), is_new)))
 
 /* get */
 
@@ -21879,7 +21881,7 @@ template <typename T, typename ... Args, if_t<
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
     ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
-    T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id, nullptr));
+    T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id, sizeof(T), nullptr));
 
     FLECS_PLACEMENT_NEW(&dst, T{FLECS_FWD(args)...});
 

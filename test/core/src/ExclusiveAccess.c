@@ -467,7 +467,7 @@ void* thread_exclusive_access_other_emplace(void *arg) {
     ecs_world_t *world = arg;
     test_expect_abort();
     bool is_new;
-    ecs_emplace_id(world, thr_entity, thr_component, &is_new);
+    ecs_emplace_id(world, thr_entity, thr_component, 8, &is_new);
     return NULL;
 }
 
