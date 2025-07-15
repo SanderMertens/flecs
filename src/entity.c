@@ -672,17 +672,12 @@ void flecs_add_flag(
 
 void flecs_add_to_root_table(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t e)
 {
     flecs_poly_assert(world, ecs_world_t);
 
-    if (world->flags & EcsWorldMultiThreaded) {
-        if (flecs_defer_new(stage, e)) {
-            return;
-        }
-        ecs_abort(ECS_INTERNAL_ERROR, NULL); /* Can't happen */
-    }
+    ecs_assert(!(world->flags & EcsWorldMultiThreaded), 
+        ECS_INTERNAL_ERROR, NULL);
 
     ecs_record_t *r = flecs_entities_get(world, e);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -741,9 +736,9 @@ error:
 ecs_entity_t ecs_new(
     ecs_world_t *world)
 {
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    flecs_stage_from_world(&world);
     ecs_entity_t e = flecs_new_id(world);
-    flecs_add_to_root_table(world, stage, e);
+    flecs_add_to_root_table(world, e);
     return e;
 }
 
@@ -752,7 +747,7 @@ ecs_entity_t ecs_new_low_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    flecs_stage_from_world(&world);
 
     flecs_check_exclusive_world_access_write(world);
 
@@ -774,7 +769,7 @@ ecs_entity_t ecs_new_low_id(
         e = ecs_new(world);
     } else {
         flecs_entities_ensure(world, e);
-        flecs_add_to_root_table(world, stage, e);
+        flecs_add_to_root_table(world, e);
     }
 
     return e;
