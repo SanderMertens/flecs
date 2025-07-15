@@ -4537,6 +4537,35 @@ void Commands_defer_emplace_after_remove(void) {
     ecs_fini(world);
 }
 
+void Commands_defer_emplace_2nd(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {30, 40}));
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e1, Position, &is_new);
+        test_bool(is_new, false);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e2, Position, &is_new);
+        test_bool(is_new, false);
+        test_int(p->x, 30); test_int(p->y, 40);
+    }
+
+    ecs_defer_end(world);
+
+    ecs_fini(world);
+}
+
 static
 void RemoveVelocity(ecs_iter_t *it) {
     test_int(it->count, 1);

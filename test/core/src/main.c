@@ -2448,6 +2448,7 @@ void Commands_add_isa_set_w_override_batched(void);
 void Commands_add_set_isa_w_override_batched(void);
 void Commands_add_batched_set_with(void);
 void Commands_defer_emplace_after_remove(void);
+void Commands_defer_emplace_2nd(void);
 void Commands_batched_w_table_change_in_observer(void);
 void Commands_redefine_named_in_threaded_app(void);
 void Commands_batched_cmd_w_component_init(void);
@@ -12150,6 +12151,10 @@ bake_test_case Commands_testcases[] = {
         Commands_defer_emplace_after_remove
     },
     {
+        "defer_emplace_2nd",
+        Commands_defer_emplace_2nd
+    },
+    {
         "batched_w_table_change_in_observer",
         Commands_batched_w_table_change_in_observer
     },
@@ -13129,7 +13134,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        167,
+        168,
         Commands_testcases
     },
     {

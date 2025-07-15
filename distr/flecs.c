@@ -6204,7 +6204,8 @@ bool flecs_defer_end(
                 case EcsCmdEmplace:
                     if (merge_to_world) {
                         bool is_new;
-                        ecs_emplace_id(world, e, id, &is_new);
+                        ecs_emplace_id(world, e, id, 
+                            flecs_itosize(cmd->is._1.size), &is_new);
                         if (!is_new) {
                             kind = EcsCmdEnsure;
                         }
@@ -7754,8 +7755,7 @@ flecs_component_ptr_t flecs_get_mut(
     ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
     
-    // TODO: uncomment to fix emplace bug
-    // ecs_check(size != 0, ECS_INVALID_PARAMETER, "component size cannot be 0");
+    ecs_check(size != 0, ECS_INVALID_PARAMETER, "component size cannot be 0");
     (void)entity;
 
     world = ecs_get_world(world);
@@ -7771,9 +7771,8 @@ flecs_component_ptr_t flecs_get_mut(
             int16_t column_index = table->component_map[id];
             if (column_index > 0) {
                 ecs_column_t *column = &table->data.columns[column_index - 1];
-                // TODO: fix emplace bug
-                // ecs_check(column->ti->size == size, 
-                //     ECS_INVALID_PARAMETER, "invalid component size");
+                ecs_check(column->ti->size == size, 
+                    ECS_INVALID_PARAMETER, "invalid component size");
                 result.ptr = ECS_ELEM(column->data, size, 
                     ECS_RECORD_TO_ROW(r->row));
                 result.ti = column->ti;
@@ -9101,6 +9100,7 @@ void* ecs_emplace_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
+    size_t size,
     bool *is_new)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -9113,7 +9113,8 @@ void* ecs_emplace_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_emplace(world, stage, entity, id, 0, is_new);
+        return flecs_defer_emplace(
+            world, stage, entity, id, flecs_uto(int32_t, size), is_new);
     }
 
     ecs_check(is_new || !ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, 

@@ -3358,6 +3358,7 @@ void ecs_ref_update(
  * @param world The world.
  * @param entity The entity.
  * @param id The component to obtain.
+ * @param size The component size.
  * @param is_new Whether this is an existing or new component.
  * @return The (uninitialized) component pointer.
  */
@@ -3366,6 +3367,7 @@ void* ecs_emplace_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
+    size_t size,
     bool *is_new);
 
 /** Signal that a component has been modified.

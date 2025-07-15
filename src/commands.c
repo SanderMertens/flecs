@@ -1193,7 +1193,8 @@ bool flecs_defer_end(
                 case EcsCmdEmplace:
                     if (merge_to_world) {
                         bool is_new;
-                        ecs_emplace_id(world, e, id, &is_new);
+                        ecs_emplace_id(world, e, id, 
+                            flecs_itosize(cmd->is._1.size), &is_new);
                         if (!is_new) {
                             kind = EcsCmdEnsure;
                         }
