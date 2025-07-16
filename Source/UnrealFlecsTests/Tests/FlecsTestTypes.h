@@ -168,9 +168,10 @@ struct FUSTructTestComponent_AccidentalTag
 {
 	GENERATED_BODY()
 
-	/* If Registered as a static struct,
+	/*
+	* If Registered as a static struct,
 	* this will be registered as a tag as it is one byte and has no UPROPERTY saying otherwise.
-	* */
+	**/
 	uint8 Test = 0;
 	
 }; // struct FUSTructTestComponent_AccidentalTag

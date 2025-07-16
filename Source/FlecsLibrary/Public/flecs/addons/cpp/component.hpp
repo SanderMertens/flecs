@@ -534,6 +534,8 @@ untyped_component& on_equals(
  */
 template <typename T>
 struct component : untyped_component {
+        
+        
     
     /** Register a component.
      * If the component was already registered, this operation will return a handle

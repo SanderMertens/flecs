@@ -18,8 +18,7 @@ public:
 		return "Flecs Translation Module";
 	}
 	
-	virtual void InitializeModule(
-		TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
+	virtual void InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld) override;
 
 private:

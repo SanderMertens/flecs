@@ -35,8 +35,12 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 
 	AFTER_EACH()
 	{
-		Fixture.Reset();
 		FlecsWorld = nullptr;
+	}
+
+	AFTER_ALL()
+	{
+		Fixture.Reset();
 	}
 
 	TEST_METHOD_WITH_TAGS(A1_BasicUSTRUCTComponentRegistration_CPPAPI,
@@ -130,7 +134,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 		ASSERT_THAT(IsTrue(EnumEntity.IsComponent()));
 		ASSERT_THAT(IsTrue(EnumEntity.IsEnum()));
 
-		const FFlecsEntityHandle StaticEnumEntity = FlecsWorld->RegisterScriptEnum(StaticEnum<EFlecsTestEnum_UENUM>());
+		const FFlecsEntityHandle StaticEnumEntity = FlecsWorld->RegisterComponentType(StaticEnum<EFlecsTestEnum_UENUM>());
 		ASSERT_THAT(IsTrue(StaticEnumEntity.IsValid()));
 		ASSERT_THAT(IsTrue(StaticEnumEntity.IsComponent()));
 		ASSERT_THAT(IsTrue(StaticEnumEntity.IsEnum()));
@@ -141,7 +145,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	TEST_METHOD_WITH_TAGS(C2_EnumComponentRegistration_StaticStructAPI,
 		"[Flecs][Component][UENUM][Registration][Enums][StaticStruct-API]")
 	{
-		const FFlecsEntityHandle StaticEnumEntity = FlecsWorld->RegisterScriptEnum(StaticEnum<EFlecsTestEnum_UENUM>());
+		const FFlecsEntityHandle StaticEnumEntity = FlecsWorld->RegisterComponentType(StaticEnum<EFlecsTestEnum_UENUM>());
 		ASSERT_THAT(IsTrue(StaticEnumEntity.IsValid()));
 		
 		ASSERT_THAT(IsTrue(StaticEnumEntity.IsComponent()));
@@ -165,7 +169,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 		ASSERT_THAT(IsTrue(SparseEnumEntity.IsComponent()));
 		ASSERT_THAT(IsTrue(SparseEnumEntity.IsEnum()));
 
-		const FFlecsEntityHandle StaticSparseEnumEntity = FlecsWorld->RegisterScriptEnum(StaticEnum<EFlecsTestEnum_UENUM>());
+		const FFlecsEntityHandle StaticSparseEnumEntity = FlecsWorld->RegisterComponentType(StaticEnum<EFlecsTestEnum_UENUM>());
 		ASSERT_THAT(IsTrue(StaticSparseEnumEntity.IsValid()));
 		
 		ASSERT_THAT(IsTrue(StaticSparseEnumEntity.IsComponent()));
@@ -177,7 +181,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 	TEST_METHOD_WITH_TAGS(C4_SparseEnumComponentRegistration_StaticStructAPI,
 		"[Flecs][Component][UENUM][Registration][Enums][SparseEnum]")
 	{
-		const FFlecsEntityHandle StaticSparseEnumEntity = FlecsWorld->RegisterScriptEnum(StaticEnum<EFlecsTestEnum_UENUM>());
+		const FFlecsEntityHandle StaticSparseEnumEntity = FlecsWorld->RegisterComponentType(StaticEnum<EFlecsTestEnum_UENUM>());
 		ASSERT_THAT(IsTrue(StaticSparseEnumEntity.IsValid()));
 
 		ASSERT_THAT(IsTrue(StaticSparseEnumEntity.IsComponent()));
@@ -835,6 +839,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 /*
  * Layout of the tests:
  * A. Basic Pair Tests
+ * B. Variation API Tests
  */
 TEST_CLASS_WITH_FLAGS_AND_TAGS(A4_UnrealFlecsBasicPairTests,
 							   "UnrealFlecs.A4.Pairs",
@@ -878,7 +883,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A4_UnrealFlecsBasicPairTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(A1_BasicPairAddRemove_Add_EntityAPI_Remove_EntityAPI,
-	                     "[Flecs][Pair][Entity-API]")
+	                     "[Flecs][Component][Pair][Entity-API]")
 	{
 		TestEntity.AddPair(PairEntity1, PairEntity2);
 		ASSERT_THAT(IsTrue(TestEntity.HasPair(PairEntity1, PairEntity2)));
@@ -888,7 +893,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A4_UnrealFlecsBasicPairTests,
 	}
 
 	TEST_METHOD_WITH_TAGS(A2_BasicPairAddRemove_Add_CPPAPI_Remove_CPPAPI,
-	                     "[Flecs][Pair][CPP-API]")
+	                     "[Flecs][Component][Pair][CPP-API]")
 	{
 		TestEntity.AddPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>();
 		ASSERT_THAT(IsTrue(TestEntity.HasPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>()));
@@ -897,8 +902,48 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A4_UnrealFlecsBasicPairTests,
 		ASSERT_THAT(IsFalse(TestEntity.HasPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>()));
 	}
 
-	TEST_METHOD_WITH_TAGS(A3_BasicPairAddRemove_Add_CPPAPI_Remove_EntityAPI_SecondAPI,
-	                     "[Flecs][Pair][CPP-API][Entity-API]")
+	TEST_METHOD_WITH_TAGS(A3_BasicPairAddRemove_Add_StaticStructAPI_Remove_StaticStructAPI,
+						 "[Flecs][Component][Pair][StaticStruct-API]")
+	{
+		TestEntity.AddPair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct());
+		ASSERT_THAT(IsTrue(TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct())));
+
+		TestEntity.RemovePair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct());
+		ASSERT_THAT(IsFalse(TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct())));
+	}
+
+	TEST_METHOD_WITH_TAGS(A4_BasicPairAddRemove_Add_CPPAPIEntityAPI_Remove_CPPAPIEntityAPI,
+	                     "[Flecs][Component][Pair][CPP-API][Entity-API]")
+	{
+		TestEntity.AddPair<FUSTRUCTPairTestComponent>(PairTestComponentHandle2);
+		ASSERT_THAT(IsTrue(TestEntity.HasPair<FUSTRUCTPairTestComponent>(PairTestComponentHandle2)));
+		
+		TestEntity.RemovePair<FUSTRUCTPairTestComponent>(PairTestComponentHandle2);
+		ASSERT_THAT(IsFalse(TestEntity.HasPair<FUSTRUCTPairTestComponent>(PairTestComponentHandle2)));
+	}
+
+	TEST_METHOD_WITH_TAGS(A5_BasicPairAddRemove_Add_CPPAPIStaticStructAPI_Remove_CPPAPIEntityAPI,
+	                     "[Flecs][Component][Pair][CPP-API][StaticStruct-API]")
+	{
+		TestEntity.AddPair<FUSTRUCTPairTestComponent>(FUSTRUCTPairTestComponent::StaticStruct());
+		ASSERT_THAT(IsTrue(TestEntity.HasPair<FUSTRUCTPairTestComponent>(FUSTRUCTPairTestComponent::StaticStruct())));
+
+		TestEntity.RemovePair<FUSTRUCTPairTestComponent>(FUSTRUCTPairTestComponent::StaticStruct());
+		ASSERT_THAT(IsFalse(TestEntity.HasPair<FUSTRUCTPairTestComponent>(FUSTRUCTPairTestComponent::StaticStruct())));
+	}
+
+	TEST_METHOD_WITH_TAGS(A6_BasicPairAddRemove_Add_StaticStructAPIEntityAPI_Remove_StaticStructAPIEntityAPI,
+	                     "[Flecs][Component][Pair][StaticStruct-API][Entity-API]")
+	{
+		TestEntity.AddPair(FUSTRUCTPairTestComponent::StaticStruct(), PairTestComponentHandle2);
+		ASSERT_THAT(IsTrue(TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(), PairTestComponentHandle2)));
+
+		TestEntity.RemovePair(FUSTRUCTPairTestComponent::StaticStruct(), PairTestComponentHandle2);
+		ASSERT_THAT(IsFalse(TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(), PairTestComponentHandle2)));
+	}
+
+	TEST_METHOD_WITH_TAGS(A7_BasicPairAddSecondRemove_Add_CPPAPI_Remove_EntityAPI_SecondAPI,
+	                     "[Flecs][Component][Pair][CPP-API][Entity-API]")
 	{
 		TestEntity.AddPairSecond<FUSTRUCTPairTestComponent_Second>(PairTestComponentHandle1);
 		ASSERT_THAT(IsTrue(TestEntity.HasPairSecond<FUSTRUCTPairTestComponent_Second>(PairTestComponentHandle1)));
@@ -907,16 +952,26 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A4_UnrealFlecsBasicPairTests,
 		ASSERT_THAT(IsFalse(TestEntity.HasPairSecond<FUSTRUCTPairTestComponent_Second>(PairTestComponentHandle1)));
 	}
 
-	TEST_METHOD_WITH_TAGS(A4_BasicPairAddRemove_Add_StaticStructAPI_Remove_StaticStructAPI,
-	                     "[Flecs][Pair][StaticStruct-API]")
+	TEST_METHOD_WITH_TAGS(A8_BasicPairAddSecondRemove_Add_CPPAPI_Remove_StaticStructAPI_SecondAPI,
+	                     "[Flecs][Component][Pair][CPP-API][StaticStruct-API]")
 	{
-		TestEntity.AddPair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct());
-		ASSERT_THAT(IsTrue(TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct())));
+		TestEntity.AddPairSecond<FUSTRUCTPairTestComponent_Second>(FUSTRUCTPairTestComponent::StaticStruct());
+		ASSERT_THAT(IsTrue(TestEntity.HasPairSecond<FUSTRUCTPairTestComponent_Second>(FUSTRUCTPairTestComponent::StaticStruct())));
 
-		TestEntity.RemovePair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct());
-		ASSERT_THAT(IsFalse(TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(), FUSTRUCTPairTestComponent_Second::StaticStruct())));
+		TestEntity.RemovePairSecond<FUSTRUCTPairTestComponent_Second>(FUSTRUCTPairTestComponent::StaticStruct());
+		ASSERT_THAT(IsFalse(TestEntity.HasPairSecond<FUSTRUCTPairTestComponent_Second>(FUSTRUCTPairTestComponent::StaticStruct())));
 	}
-	
+
+	TEST_METHOD_WITH_TAGS(B1_BasicPairAddRemove_Add_StaticStructAPIEntityAPI_Remove_CPPAPIEntityAPI,
+	                     "[Flecs][Component][Pair][StaticStruct-API][Entity-API]")
+	{
+		TestEntity.AddPair(FUSTRUCTPairTestComponent::StaticStruct(), PairTestComponentHandle2);
+		ASSERT_THAT(IsTrue(TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(), PairTestComponentHandle2)));
+
+		TestEntity.RemovePair<FUSTRUCTPairTestComponent>(PairTestComponentHandle2);
+		ASSERT_THAT(IsFalse(TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(), PairTestComponentHandle2)));
+	}
+
 }; // End of A4_UnrealFlecsBasicPairTests
 
 #endif // #if WITH_AUTOMATION_TESTS

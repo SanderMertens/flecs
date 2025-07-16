@@ -50,7 +50,7 @@ USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsBeginPlay
 {
 	GENERATED_BODY()
-}; // struct FFlecsBeginPlayEvent
+}; // struct FFlecsBeginPlay
 
 UCLASS(BlueprintType, NotBlueprintable)
 class UNREALFLECS_API UFlecsWorld final : public UObject
@@ -1683,6 +1683,10 @@ public:
 			return GetScriptEnumEntity(ScriptEnum);
 		}
 
+		solid_checkf(!ScriptEnum->HasAnyEnumFlags(EEnumFlags::Flags),
+			TEXT("Script enum %s is not supported, use RegisterScriptBitmask instead"),
+			*ScriptEnum->GetName());
+
 		// if (ScriptEnum->HasAnyEnumFlags(EEnumFlags::Flags))
 		// {
 		// 	return RegisterComponentBitmaskType(ScriptEnum);
@@ -1693,6 +1697,13 @@ public:
 		// }
 		
 		return RegisterComponentEnumType(ScriptEnum);
+	}
+
+	template <typename T>
+	requires (std::is_enum<T>::value)
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterScriptEnum() const
+	{
+		return World.component<T>();
 	}
 	
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentEnumType(TSolidNotNull<const UEnum*> ScriptEnum) const
@@ -1722,6 +1733,9 @@ public:
 			ScriptEnumComponent.Set<flecs::Enum>(flecs::Enum{ .underlying_type = flecs::U8 });
 
 			const int32 EnumCount = ScriptEnum->NumEnums();
+
+			const uint64 MaxEnumValue = ScriptEnum->GetMaxEnumValue();
+			const bool bUint8 = MaxEnumValue < std::numeric_limits<uint8>::max();
 			
 			for (int32 EnumIndex = 0; EnumIndex < EnumCount; ++EnumIndex)
 			{
@@ -1730,13 +1744,21 @@ public:
 				
 				const FString EnumValueName = ScriptEnum->GetNameStringByIndex(EnumIndex);
 
-				if (ScriptEnum->GetMaxEnumValue() == EnumValue)
+				if (MaxEnumValue == EnumValue)
 				{
 					continue;
 				}
-				
-				ScriptEnumComponent.AddConstant<uint8>(StringCast<char>(*EnumValueName).Get(),
-					static_cast<uint8>(EnumValue));
+
+				if (bUint8)
+				{
+					ScriptEnumComponent.AddConstant<uint8>(StringCast<char>(*EnumValueName).Get(),
+						static_cast<uint8>(EnumValue));
+				}
+				else
+				{
+					ScriptEnumComponent.AddConstant<uint64>(StringCast<char>(*EnumValueName).Get(),
+						static_cast<uint64>(EnumValue));
+				}
 			}
 
 			if (!flecs::_::g_type_to_impl_data.contains(std::string(EnumNameCStr)))
@@ -1846,6 +1868,17 @@ public:
 		}
 
 		return RegisterScriptStruct(ScriptStruct);
+	}
+
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentType(
+		const TSolidNotNull<const UEnum*> ScriptEnum) const
+	{
+		if (HasScriptEnum(ScriptEnum))
+		{
+			return GetScriptEnumEntity(ScriptEnum);
+		}
+
+		return RegisterScriptEnum(ScriptEnum);
 	}
 
 	template <typename T>

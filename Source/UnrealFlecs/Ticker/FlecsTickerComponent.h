@@ -22,7 +22,7 @@ public:
 
 REGISTER_FLECS_COMPONENT(FFlecsTickerComponent,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
-{
-	InComponent.Add(flecs::Sparse);
-});
+	{
+		InComponent.Add(flecs::Sparse);
+	});
 

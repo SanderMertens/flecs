@@ -11,3 +11,6 @@
 template <typename E>
 E to_constant() const;
 
+template <typename TInt>
+TInt to_constant(flecs::entity_t type_id) const;
+
