@@ -77,10 +77,89 @@ void Eval_multiple_trailing_newlines(void) {
     ecs_fini(world);
 }
 
+void Eval_space_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, " \r\n \r\n") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_two_empty_crlfs(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "\r\n\r\n") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_three_empty_crlfs(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "\r\n\r\n\r\n") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_crlf_trailing_space(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "\r\n ") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_crlf_trailing_spaces(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "\r\n   ") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_multiple_trailing_crlfs(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "Foo{}\r\n\r\n\r\n") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_str(ecs_get_name(world, foo), "Foo");
+    test_int(ecs_get_type(world, foo)->count, 1);
+
+    ecs_fini(world);
+}
+
 void Eval_entity(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "Foo{}") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_str(ecs_get_name(world, foo), "Foo");
+    test_int(ecs_get_type(world, foo)->count, 1);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "Foo{}\n") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_str(ecs_get_name(world, foo), "Foo");
+    test_int(ecs_get_type(world, foo)->count, 1);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "Foo{}\r\n") == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -108,6 +187,18 @@ void Eval_2_entities(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "Foo{}\nBar{}\n") == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "Foo");
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "Foo");
+
+    ecs_fini(world);
+}
+
+void Eval_2_entities_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "Foo{}\r\nBar{}\r\n") == 0);
 
     ecs_entity_t e = ecs_lookup(world, "Foo");
     test_assert(e != 0);

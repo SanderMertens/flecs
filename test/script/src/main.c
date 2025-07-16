@@ -18,9 +18,18 @@ void Eval_three_empty_newlines(void);
 void Eval_newline_trailing_space(void);
 void Eval_newline_trailing_spaces(void);
 void Eval_multiple_trailing_newlines(void);
+void Eval_space_crlf(void);
+void Eval_two_empty_crlfs(void);
+void Eval_three_empty_crlfs(void);
+void Eval_crlf_trailing_space(void);
+void Eval_crlf_trailing_spaces(void);
+void Eval_multiple_trailing_crlfs(void);
 void Eval_entity(void);
+void Eval_entity_newline(void);
+void Eval_entity_crlf(void);
 void Eval_entity_w_core_name(void);
 void Eval_2_entities(void);
+void Eval_2_entities_crlf(void);
 void Eval_line_comment(void);
 void Eval_line_comment_before_stmt(void);
 void Eval_line_comment_after_stmt(void);
@@ -732,9 +741,11 @@ void Expr_remainder_after_parens(void);
 void Expr_remainder_after_initializer(void);
 void Expr_remainder_after_collection_initializer(void);
 void Expr_remainder_after_initializer_w_newlines(void);
+void Expr_remainder_after_initializer_w_crlf(void);
 void Expr_remainder_after_initializer_before_parens(void);
 void Expr_space_at_start(void);
 void Expr_newline_at_start(void);
+void Expr_crlf_at_start(void);
 void Expr_global_const_var(void);
 void Expr_scoped_global_const_var(void);
 void Expr_escape_newline(void);
@@ -1008,8 +1019,40 @@ bake_test_case Eval_testcases[] = {
         Eval_multiple_trailing_newlines
     },
     {
+        "space_crlf",
+        Eval_space_crlf
+    },
+    {
+        "two_empty_crlfs",
+        Eval_two_empty_crlfs
+    },
+    {
+        "three_empty_crlfs",
+        Eval_three_empty_crlfs
+    },
+    {
+        "crlf_trailing_space",
+        Eval_crlf_trailing_space
+    },
+    {
+        "crlf_trailing_spaces",
+        Eval_crlf_trailing_spaces
+    },
+    {
+        "multiple_trailing_crlfs",
+        Eval_multiple_trailing_crlfs
+    },
+    {
         "entity",
         Eval_entity
+    },
+    {
+        "entity_newline",
+        Eval_entity_newline
+    },
+    {
+        "entity_crlf",
+        Eval_entity_crlf
     },
     {
         "entity_w_core_name",
@@ -1018,6 +1061,10 @@ bake_test_case Eval_testcases[] = {
     {
         "2_entities",
         Eval_2_entities
+    },
+    {
+        "2_entities_crlf",
+        Eval_2_entities_crlf
     },
     {
         "line_comment",
@@ -3845,6 +3892,10 @@ bake_test_case Expr_testcases[] = {
         Expr_remainder_after_initializer_w_newlines
     },
     {
+        "remainder_after_initializer_w_crlf",
+        Expr_remainder_after_initializer_w_crlf
+    },
+    {
         "remainder_after_initializer_before_parens",
         Expr_remainder_after_initializer_before_parens
     },
@@ -3855,6 +3906,10 @@ bake_test_case Expr_testcases[] = {
     {
         "newline_at_start",
         Expr_newline_at_start
+    },
+    {
+        "crlf_at_start",
+        Expr_crlf_at_start
     },
     {
         "global_const_var",
@@ -4779,7 +4834,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        318,
+        327,
         Eval_testcases
     },
     {
@@ -4800,7 +4855,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        280,
+        282,
         Expr_testcases,
         1,
         Expr_params
