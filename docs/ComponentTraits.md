@@ -1659,6 +1659,147 @@ LocatedIn(SanFrancisco, SanFrancisco)
 
 In these examples, `IsA` is a reflexive relationship, whereas `LocatedIn` is not.
 
+## Singleton trait
+The `Singleton` trait enforces that a component can only be instantiated once in the world. A singleton component can only be added to the entity that is associated with the component. This happens automatically when using the singleton APIs:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_COMPONENT(world, TimeOfDay);
+
+ecs_add_id(world, ecs_id(TimeOfDay), EcsSingleton);
+
+ecs_singleton_set(world, TimeOfDay, {0});
+
+// This is the same as adding TimeOfDay to itself:
+ecs_set(world, ecs_id(TimeOfDay), TimeOfDay, {0});
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+world.component<TimeOfDay>().add(flecs::Singleton);
+
+world.set(TimeOfDay{0});
+
+// This is the same as adding TimeOfDay to itself:
+world.component<TimeOfDay>().set(TimeOfDay{0});
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Component<TimeOfDay>().Entity
+    .Add(Ecs.Singleton);
+
+world.Set<TimeOfDay>(new(0));
+
+// This is the same as adding TimeOfDay to itself:
+world.Component<TimeOfDay>().Entity.Set<TimeOfDay>(new(0));
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world.component::<TimeOfDay>().add_trait::<flecs::Singleton>();
+
+world.set(TimeOfDay{0});
+```
+
+</li>
+</ul>
+</div>
+
+Attempting to add the component to other entities beside itself will panic.
+
+When a query is created for a component with the `Singleton` trait, the query will automatically match the singleton component on the component entity. This is the same as specifying the component itself as source for the term:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_COMPONENT(world, TimeOfDay);
+
+ecs_add_id(world, ecs_id(TimeOfDay), EcsSingleton);
+
+// Automatically matches TimeOfDay as singleton
+ecs_query_t *q = ecs_query(world, {
+  .terms = {
+    { ecs_id(Position) },
+    { ecs_id(Velocity) },
+    { ecs_id(TimeOfDay) }
+  }
+});
+
+// Is the same as
+ecs_query_t *q = ecs_query(world, {
+  .terms = {
+    { ecs_id(Position) },
+    { ecs_id(Velocity) },
+    { ecs_id(TimeOfDay), .src.id = ecs_id(TimeOfDay) }
+  }
+});
+```
+
+The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
+
+</li>
+<li><b class="tab-title">C++</b>
+
+A singleton query can be created by specifying the same id as component and source:
+
+```cpp
+world.component<TimeOfDay>().add(flecs::Singleton);
+
+// Automatically matches TimeOfDay as singleton
+auto q = world.query<Position, Velocity, const TimeOfDay>();
+
+// Is the same as
+auto q = world.query_builder<Position, Velocity, const TimeOfDay>()
+  .term_at(2).src<TimeOfDay>()
+  .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+A singleton query can be created by specifying the same id as component and source:
+
+```rust
+// Automatically matches TimeOfDay as singleton
+let q = world.new_query::<(&Position, &Velocity, &TimeOfDay)>();
+
+// Is the same as
+let q = world.query::<(&Position, &Velocity, &TimeOfDay)>()
+  .term_at(2).set_src::<TimeOfDay>()
+  .build();
+```
+
+</li>
+<li><b class="tab-title">Flecs Query Language</b>
+
+```
+Position, Velocity, TimeOfDay
+```
+
+Is the same as
+
+```
+Position, Velocity, TimeOfDay(TimeOfDay)
+```
+
+</li>
+</ul>
+</div>
+
+The old `.singleton()` method and `TimeOfDay($)` notation are no longer supported.
+
 ## Sparse trait
 The `Sparse` trait configures a component to use sparse storage. Sparse components are stored outside of tables, which means they do not have to be moved. Sparse components are also guaranteed to have stable pointers, which means that a component pointer is not invalidated when an entity moves to a new table. ECS operations and queries work as expected with sparse components.
 
