@@ -78,14 +78,9 @@ int flecs_term_ref_finalize_flags(
     if (ref->name && ref->name[0] == '$') {
         if (!ref->name[1]) {
             if (!(ref->id & EcsIsName)) {
-                if (ref->id & ~EcsTermRefFlags) {
-                    flecs_query_validator_error(ctx, 
-                        "conflicting values for .name and .id");
-                    return -1;
-                }
-
-                ref->id |= EcsVariable;
-                ref->id |= EcsIsVariable;
+                flecs_query_validator_error(ctx, "invalid variable name "
+                    "('$' syntax support is removed, use new Singleton trait)");
+                return -1;
             }
         } else {
             ref->name = &ref->name[1];
@@ -1117,11 +1112,12 @@ int flecs_query_finalize_terms(
 
     bool cacheable = true;
     bool match_nothing = true;
+
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         bool prev_is_or = i && term[-1].oper == EcsOr;
         bool nodata_term = false;
-        bool default_src = term->src.id == 0;
+        bool default_src = term->src.id == 0 && term->src.name == NULL;
         ctx.term_index = i;
 
         if (flecs_term_finalize(world, term, &ctx)) {
@@ -1283,16 +1279,6 @@ int flecs_query_finalize_terms(
             }
         }
 
-        if (ECS_TERM_REF_ID(&term->src) && (term->src.id & EcsIsEntity)) {
-            ECS_TERMSET_SET(q->fixed_fields, 1u << term->field_index);
-        }
-
-        if ((term->src.id & EcsIsVariable) && 
-            (ECS_TERM_REF_ID(&term->src) != EcsThis)) 
-        {
-            ECS_TERMSET_SET(q->var_fields, 1u << term->field_index);
-        }
-
         bool is_sparse = false;
 
         ecs_component_record_t *cr = flecs_components_get(world, term->id);
@@ -1334,6 +1320,16 @@ int flecs_query_finalize_terms(
             if (type && ecs_has_id(world, type, EcsSparse)) {
                 is_sparse = true;
             }
+        }
+
+        if (ECS_TERM_REF_ID(&term->src) && (term->src.id & EcsIsEntity)) {
+            ECS_TERMSET_SET(q->fixed_fields, 1u << term->field_index);
+        }
+
+        if ((term->src.id & EcsIsVariable) && 
+            (ECS_TERM_REF_ID(&term->src) != EcsThis)) 
+        {
+            ECS_TERMSET_SET(q->var_fields, 1u << term->field_index);
         }
 
         if (prev_is_or) {

@@ -464,6 +464,9 @@ void Parser_n_tokens_test(void);
 void Parser_this_not_a_var(void);
 void Parser_eq_this_not_a_var(void);
 void Parser_eq_this_not_a_var_w_wildcard(void);
+void Parser_singleton_trait(void);
+void Parser_singleton_trait_w_explicit_this_var(void);
+void Parser_singleton_trait_w_explicit_src(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_setup(void);
@@ -4147,6 +4150,18 @@ bake_test_case Parser_testcases[] = {
     {
         "eq_this_not_a_var_w_wildcard",
         Parser_eq_this_not_a_var_w_wildcard
+    },
+    {
+        "singleton_trait",
+        Parser_singleton_trait
+    },
+    {
+        "singleton_trait_w_explicit_this_var",
+        Parser_singleton_trait_w_explicit_this_var
+    },
+    {
+        "singleton_trait_w_explicit_src",
+        Parser_singleton_trait_w_explicit_src
     }
 };
 
@@ -11515,7 +11530,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        303,
+        306,
         Parser_testcases
     },
     {

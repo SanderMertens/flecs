@@ -35043,11 +35043,9 @@ void flecs_term_to_buf(
     ecs_strbuf_t *buf,
     int32_t t)
 {
-    const ecs_term_ref_t *src = &term->src;
     const ecs_term_ref_t *first = &term->first;
     const ecs_term_ref_t *second = &term->second;
 
-    ecs_entity_t src_id = ECS_TERM_REF_ID(src);
     ecs_entity_t first_id = ECS_TERM_REF_ID(first);
 
     bool src_set = !ecs_term_match_0(term);
@@ -35154,11 +35152,7 @@ void flecs_term_to_buf(
 
         flecs_query_str_add_id(world, buf, term, &term->first, false);
         ecs_strbuf_appendlit(buf, "(");
-        if (term->src.id & EcsIsEntity && src_id == first_id) {
-            ecs_strbuf_appendlit(buf, "$");
-        } else {
-            flecs_query_str_add_id(world, buf, term, &term->src, true);
-        }
+        flecs_query_str_add_id(world, buf, term, &term->src, true);
         if (second_set) {
             ecs_strbuf_appendlit(buf, ",");
             flecs_query_str_add_id(world, buf, term, &term->second, false);
@@ -35296,14 +35290,9 @@ int flecs_term_ref_finalize_flags(
     if (ref->name && ref->name[0] == '$') {
         if (!ref->name[1]) {
             if (!(ref->id & EcsIsName)) {
-                if (ref->id & ~EcsTermRefFlags) {
-                    flecs_query_validator_error(ctx, 
-                        "conflicting values for .name and .id");
-                    return -1;
-                }
-
-                ref->id |= EcsVariable;
-                ref->id |= EcsIsVariable;
+                flecs_query_validator_error(ctx, "invalid variable name "
+                    "('$' syntax support is removed, use new Singleton trait)");
+                return -1;
             }
         } else {
             ref->name = &ref->name[1];
@@ -36335,11 +36324,12 @@ int flecs_query_finalize_terms(
 
     bool cacheable = true;
     bool match_nothing = true;
+
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         bool prev_is_or = i && term[-1].oper == EcsOr;
         bool nodata_term = false;
-        bool default_src = term->src.id == 0;
+        bool default_src = term->src.id == 0 && term->src.name == NULL;
         ctx.term_index = i;
 
         if (flecs_term_finalize(world, term, &ctx)) {
@@ -36501,16 +36491,6 @@ int flecs_query_finalize_terms(
             }
         }
 
-        if (ECS_TERM_REF_ID(&term->src) && (term->src.id & EcsIsEntity)) {
-            ECS_TERMSET_SET(q->fixed_fields, 1u << term->field_index);
-        }
-
-        if ((term->src.id & EcsIsVariable) && 
-            (ECS_TERM_REF_ID(&term->src) != EcsThis)) 
-        {
-            ECS_TERMSET_SET(q->var_fields, 1u << term->field_index);
-        }
-
         bool is_sparse = false;
 
         ecs_component_record_t *cr = flecs_components_get(world, term->id);
@@ -36552,6 +36532,16 @@ int flecs_query_finalize_terms(
             if (type && ecs_has_id(world, type, EcsSparse)) {
                 is_sparse = true;
             }
+        }
+
+        if (ECS_TERM_REF_ID(&term->src) && (term->src.id & EcsIsEntity)) {
+            ECS_TERMSET_SET(q->fixed_fields, 1u << term->field_index);
+        }
+
+        if ((term->src.id & EcsIsVariable) && 
+            (ECS_TERM_REF_ID(&term->src) != EcsThis)) 
+        {
+            ECS_TERMSET_SET(q->var_fields, 1u << term->field_index);
         }
 
         if (prev_is_or) {

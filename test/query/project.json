@@ -470,7 +470,10 @@
                 "n_tokens_test",
                 "this_not_a_var",
                 "eq_this_not_a_var",
-                "eq_this_not_a_var_w_wildcard"
+                "eq_this_not_a_var_w_wildcard",
+                "singleton_trait",
+                "singleton_trait_w_explicit_this_var",
+                "singleton_trait_w_explicit_src"
             ]
         }, {
             "id": "Fuzzing",
