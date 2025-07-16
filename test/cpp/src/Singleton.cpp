@@ -115,10 +115,12 @@ void Singleton_has_singleton(void) {
 void Singleton_singleton_system(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::Singleton);
+
     world.set<Position>({10, 20});
 
     world.system<>()
-        .expr("[inout] Position($)")
+        .expr("[inout] Position")
         .run([](flecs::iter& it) {
             while (it.next()) {
                 auto p = it.field<Position>(0);

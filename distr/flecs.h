@@ -17892,6 +17892,7 @@ static const flecs::entity_t SlotOf = EcsSlotOf;
 
 /* Misc */
 static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
+static const flecs::entity_t Singleton = EcsSingleton;
 
 /* Builtin identifiers */
 static const flecs::entity_t Name = EcsName;
@@ -31486,27 +31487,6 @@ struct term_builder_i : term_ref_builder_i<Base> {
     /* Short for oper(flecs::NotFrom) */
     Base& not_from() {
         return this->oper(flecs::NotFrom);
-    }
-
-    /** Match singleton. */
-    Base& singleton() {
-        this->assert_term();
-        ecs_assert(term_->id || term_->first.id, ECS_INVALID_PARAMETER, 
-                "no component specified for singleton");
-        
-        flecs::id_t sid = term_->id;
-        if (!sid) {
-            sid = term_->first.id;
-        }
-
-        ecs_assert(sid != 0, ECS_INVALID_PARAMETER, NULL);
-
-        if (!ECS_IS_PAIR(sid)) {
-            term_->src.id = sid;
-        } else {
-            term_->src.id = ecs_pair_first(this->world_v(), sid);
-        }
-        return *this;
     }
 
     /* Query terms are not triggered on by observers */

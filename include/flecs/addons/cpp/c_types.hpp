@@ -154,6 +154,7 @@ static const flecs::entity_t SlotOf = EcsSlotOf;
 
 /* Misc */
 static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
+static const flecs::entity_t Singleton = EcsSingleton;
 
 /* Builtin identifiers */
 static const flecs::entity_t Name = EcsName;

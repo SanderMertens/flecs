@@ -1293,6 +1293,8 @@ void System_custom_pipeline_w_kind(void) {
 void System_instanced_query_w_singleton_each(void) {
     flecs::world ecs;
 
+    ecs.component<Velocity>().add(flecs::Singleton);
+
     ecs.set<Velocity>({1, 2});
 
     auto e1 = ecs.entity().set<Position>({10, 20}); e1.set<Self>({e1});
@@ -1307,7 +1309,6 @@ void System_instanced_query_w_singleton_each(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Self, Position, const Velocity>()
-        .term_at(2).singleton()
         .each([&](flecs::entity e, Self& s, Position&p, const Velocity& v) {
             test_assert(e == s.value);
             p.x += v.x;
@@ -1410,6 +1411,8 @@ void System_instanced_query_w_base_each(void) {
 void System_instanced_query_w_singleton_iter(void) {
     flecs::world ecs;
 
+    ecs.component<Velocity>().add(flecs::Singleton);
+
     ecs.set<Velocity>({1, 2});
 
     auto e1 = ecs.entity().set<Position>({10, 20}); e1.set<Self>({e1});
@@ -1424,7 +1427,6 @@ void System_instanced_query_w_singleton_iter(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Self, Position, const Velocity>()
-        .term_at(2).singleton()
         .run([&](flecs::iter it) {
             while (it.next()) {
                 auto s = it.field<Self>(0);

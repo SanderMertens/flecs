@@ -2340,6 +2340,8 @@ void Query_iter_type(void) {
 void Query_instanced_query_w_singleton_each(void) {
     flecs::world ecs;
 
+    ecs.component<Velocity>().add(flecs::Singleton);
+
     ecs.set<Velocity>({1, 2});
 
     auto e1 = ecs.entity().set<Position>({10, 20}); e1.set<Self>({e1});
@@ -2351,9 +2353,7 @@ void Query_instanced_query_w_singleton_each(void) {
     e4.add<Tag>();
     e5.add<Tag>();
 
-    auto q = ecs.query_builder<Self, Position, const Velocity>()
-        .term_at(2).singleton()
-        .build();
+    auto q = ecs.query<Self, Position, const Velocity>();
 
     int32_t count = 0;
     q.each([&](flecs::entity e, Self& s, Position&p, const Velocity& v) {
@@ -2456,6 +2456,8 @@ void Query_instanced_query_w_base_each(void) {
 void Query_instanced_query_w_singleton_iter(void) {
     flecs::world ecs;
 
+    ecs.component<Velocity>().add(flecs::Singleton);
+
     ecs.set<Velocity>({1, 2});
 
     auto e1 = ecs.entity().set<Position>({10, 20}); e1.set<Self>({e1});
@@ -2467,9 +2469,7 @@ void Query_instanced_query_w_singleton_iter(void) {
     e4.add<Tag>();
     e5.add<Tag>();
 
-    auto q = ecs.query_builder<Self, Position, const Velocity>()
-        .term_at(2).singleton()
-        .build();
+    auto q = ecs.query<Self, Position, const Velocity>();
 
     int32_t count = 0;
 
@@ -3051,9 +3051,11 @@ void Query_not_w_write(void) {
 void Query_instanced_nested_query_w_iter(void) {
     flecs::world ecs;
 
+    ecs.component<Mass>().add(flecs::Singleton);
+
     flecs::query<> q1 = ecs.query_builder()
         .with<Position>()
-        .with<Mass>().singleton().inout()
+        .with<Mass>().inout()
         .build();
 
     flecs::query<> q2 = ecs.query_builder()
@@ -3084,9 +3086,11 @@ void Query_instanced_nested_query_w_iter(void) {
 void Query_instanced_nested_query_w_entity(void) {
     flecs::world ecs;
 
+    ecs.component<Mass>().add(flecs::Singleton);
+
     flecs::query<> q1 = ecs.query_builder()
         .with<Position>()
-        .with<Mass>().singleton().inout()
+        .with<Mass>().inout()
         .build();
 
     flecs::query<> q2 = ecs.query_builder()
@@ -3115,9 +3119,11 @@ void Query_instanced_nested_query_w_entity(void) {
 void Query_instanced_nested_query_w_world(void) {
     flecs::world ecs;
 
+    ecs.component<Mass>().add(flecs::Singleton);
+
     flecs::query<> q1 = ecs.query_builder()
         .with<Position>()
-        .with<Mass>().singleton().inout()
+        .with<Mass>().inout()
         .build();
 
     flecs::query<> q2 = ecs.query_builder()
