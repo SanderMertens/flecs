@@ -3119,9 +3119,10 @@ void OnDelete_fini_query_w_singleton_in_scope_no_module(void) {
 
     ecs_entity_t t = ecs_entity(world, { .name = "ns.foo" });
     ecs_entity_t s = ecs_entity(world, { .name = "ns.singleton" });
+    ecs_add_id(world, s, EcsSingleton);
     ecs_add_id(world, s, s);
 
-    ecs_query_t *q = ecs_query(world, { .expr = "Position, ns.singleton($)" });
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, ns.singleton" });
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, t);
@@ -3145,9 +3146,10 @@ void OnDelete_fini_query_w_singleton_in_module(void) {
 
     ecs_entity_t t = ecs_entity(world, { .name = "ns.foo" });
     ecs_entity_t s = ecs_entity(world, { .name = "ns.singleton" });
+    ecs_add_id(world, s, EcsSingleton);
     ecs_add_id(world, s, s);
 
-    ecs_query_t *q = ecs_query(world, { .expr = "Position, ns.singleton($)" });
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, ns.singleton" });
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, t);

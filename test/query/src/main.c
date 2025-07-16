@@ -152,6 +152,13 @@ void Validator_validate_simple_w_reflexive(void);
 void Validator_validate_simple_w_reflexive_pair(void);
 void Validator_validate_simple_w_inherited_component(void);
 void Validator_validate_eq_this_not_a_var_w_wildcard(void);
+void Validator_validate_term_1_w_singleton_trait(void);
+void Validator_validate_term_2_w_singleton_trait(void);
+void Validator_validate_term_pair_w_singleton_trait(void);
+void Validator_validate_or_term_w_singleton_trait(void);
+void Validator_validate_term_w_singleton_trait_w_explicit_src(void);
+void Validator_validate_term_w_singleton_trait_w_explicit_self_src(void);
+void Validator_validate_term_w_singleton_trait_w_pair_w_explicit_self_src(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -457,6 +464,9 @@ void Parser_n_tokens_test(void);
 void Parser_this_not_a_var(void);
 void Parser_eq_this_not_a_var(void);
 void Parser_eq_this_not_a_var_w_wildcard(void);
+void Parser_singleton_trait(void);
+void Parser_singleton_trait_w_explicit_this_var(void);
+void Parser_singleton_trait_w_explicit_src(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_setup(void);
@@ -2897,6 +2907,34 @@ bake_test_case Validator_testcases[] = {
     {
         "validate_eq_this_not_a_var_w_wildcard",
         Validator_validate_eq_this_not_a_var_w_wildcard
+    },
+    {
+        "validate_term_1_w_singleton_trait",
+        Validator_validate_term_1_w_singleton_trait
+    },
+    {
+        "validate_term_2_w_singleton_trait",
+        Validator_validate_term_2_w_singleton_trait
+    },
+    {
+        "validate_term_pair_w_singleton_trait",
+        Validator_validate_term_pair_w_singleton_trait
+    },
+    {
+        "validate_or_term_w_singleton_trait",
+        Validator_validate_or_term_w_singleton_trait
+    },
+    {
+        "validate_term_w_singleton_trait_w_explicit_src",
+        Validator_validate_term_w_singleton_trait_w_explicit_src
+    },
+    {
+        "validate_term_w_singleton_trait_w_explicit_self_src",
+        Validator_validate_term_w_singleton_trait_w_explicit_self_src
+    },
+    {
+        "validate_term_w_singleton_trait_w_pair_w_explicit_self_src",
+        Validator_validate_term_w_singleton_trait_w_pair_w_explicit_self_src
     }
 };
 
@@ -4112,6 +4150,18 @@ bake_test_case Parser_testcases[] = {
     {
         "eq_this_not_a_var_w_wildcard",
         Parser_eq_this_not_a_var_w_wildcard
+    },
+    {
+        "singleton_trait",
+        Parser_singleton_trait
+    },
+    {
+        "singleton_trait_w_explicit_this_var",
+        Parser_singleton_trait_w_explicit_this_var
+    },
+    {
+        "singleton_trait_w_explicit_src",
+        Parser_singleton_trait_w_explicit_src
     }
 };
 
@@ -11473,14 +11523,14 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        143,
+        150,
         Validator_testcases
     },
     {
         "Parser",
         NULL,
         NULL,
-        303,
+        306,
         Parser_testcases
     },
     {

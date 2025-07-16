@@ -1,6 +1,88 @@
 # Component Traits
 Component traits are tags and pairs that can be added to components to modify their behavior. This manual contains an overview of all component traits supported by Flecs.
 
+## Acyclic trait
+A relationship can be marked with the `Acyclic` trait to indicate that it cannot contain cycles. Both the builtin `ChildOf` and `IsA` relationships are marked acyclic. Knowing whether a relationship is acyclic allows the storage to detect and throw errors when a cyclic relationship is introduced by accident.
+
+Note that because cycle detection requires expensive algorithms, adding `Acyclic` to a relationship does not guarantee that an error will be thrown when a cycle is accidentally introduced. While detection may improve over time, an application that runs without errors is no guarantee that it does not contain acyclic relationships with cycles.
+
+## CanToggle trait
+The `CanToggle` trait allows a component to be toggled. Component toggling can (temporarily) disable a component, which excludes it from queries. Component toggling can be used as a cheaper alternative to adding/removing as toggling relies on setting a bitset, and doesn't require the entity to be moved between tables. Component toggling can also be used to restore a component with its old value.
+
+Queries treat a disabled component as if the entity doesn't have it. `CanToggle` components add a small amount of overhead to query evaluation, even for entities that did not toggle their component.
+
+The following example shows how to use the `CanToggle` trait:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_COMPONENT(world, Position);
+ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+ecs_enable_component(world, e, Position, false); // Disable component
+assert(!ecs_is_enabled(world, e, Position));
+
+ecs_enable_component(world, e, Position, true); // Enable component
+assert(ecs_is_enabled(world, e, Position));
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+world.component<Position>().add(flecs::CanToggle);
+
+flecs::entity e = world.entity().set(Position{10, 20});
+
+e.disable<Position>(); // Disable component
+assert(!e.is_enabled<Position>());
+
+e.enable<Position>(); // Enable component
+assert(e.is_enabled<Position>());
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+ecs.Component<Position>().Entity
+    .Add(Ecs.CanToggle);
+
+Entity e = world.Entity()
+    .Set<Position>(new(10, 20));
+
+e.Disable<Position>(); // Disable component
+Debug.Assert(!e.IsEnabled<Position>());
+
+e.Enable<Position>(); // Enable component
+Debug.Assert(e.IsEnabled<Position>());
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world
+.component::<Position>()
+.add_trait::<flecs::CanToggle>();
+
+let e = world.entity().set(Position { x: 10.0, y: 20.0 });
+
+e.disable::<Position>(); // Disable component
+assert!(!e.is_enabled::<Position>());
+
+e.enable::<Position>(); // Enable component
+assert!(e.is_enabled::<Position>());
+```
+
+</li>
+</ul>
+</div>
+
 ## Cleanup traits
 When entities that are used as tags, components, relationships or relationship targets are deleted, cleanup traits ensure that the store does not contain any dangling references. Any cleanup policy provides this guarantee, so while they are configurable, applications cannot configure traits that allows for dangling references.
 
@@ -446,446 +528,143 @@ The root entities that were not filtered out will be deleted.
 5. **Delete everything else**
 The last step will delete all remaining entities. At this point cleanup traits are no longer considered and cleanup order is undefined.
 
-## Trait trait
-The trait trait marks an entity as a trait, which is any tag that is added to another tag/component/relationship to modify its behavior. All traits in this manual are marked as trait. It is not required to mark a trait as a trait before adding it to another tag/component/relationship. The main reason for the trait trait is to ease some of the constraints on relationships (see the Relationship trait).
+## DontFragment trait
+The `DontFragment` trait uses the same sparse storage as the `Sparse` trait, but does not fragment tables. This can be desirable especially if a component or relationship is very sparse (e.g. it is only added to a few entities) as this would otherwise result in many tables that only contain a small number of entities.
+
+The following code example shows how to mark a component as `DontFragment`:
 
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
 
 ```c
-ECS_TAG(world, Serializable);
-
-ecs_add_id(world, Serializable, EcsTrait);
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-struct Serializable { };
-
-world.component<Serializable>().add(flecs::Trait);
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-public struct Serializable { }
-
-world.Component<Serializable>().Entity.Add(Ecs.Trait);
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-#[derive(Component)]
-struct Serializable;
-
-world
-    .component::<Serializable>()
-    .add_trait::<flecs::Trait>();
-```
-}
-</li>
-</ul>
-</div>
-
-## Relationship trait
-The relationship trait enforces that an entity can only be used as relationship. Consider the following example:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-ECS_TAG(world, Likes);
-ECS_TAG(world, Apples);
-
-ecs_add_id(world, Likes, EcsRelationship);
-
-ecs_entity_t e = ecs_new_id(world);
-ecs_add(world, Likes);              // Panic, 'Likes' is not used as relationship
-ecs_add_pair(world, Apples, Likes); // Panic, 'Likes' is not used as relationship
-ecs_add_pair(world, Likes, Apples); // OK
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-struct Likes { };
-struct Apples { };
-
-world.component<Likes>().add(flecs::Relationship);
-
-flecs::entity e = world.entity()
-  .add<Likes>()          // Panic, 'Likes' is not used as relationship
-  .add<Apples, Likes>()  // Panic, 'Likes' is not used as relationship
-  .add<Likes, Apples>(); // OK
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-public struct Likes { }
-public struct Apples { }
-
-world.Component<Likes>().Entity.Add(Ecs.Relationship);
-
-Entity e = ecs.Entity()
-    .Add<Likes>()          // Panic, 'Likes' is not used as relationship
-    .Add<Apples, Likes>()  // Panic, 'Likes' is not used as relationship
-    .add<Likes, Apples>(); // OK
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-#[derive(Component)]
-struct Likes;
-
-#[derive(Component)]
-struct Apples;
-
-world
-    .component::<Likes>()
-    .add_trait::<flecs::Relationship>();
-
-let e = world
-    .entity()
-    .add::<Likes>() // Panic, 'Likes' is not used as relationship
-    .add::<(Apples, Likes)>() // Panic, 'Likes' is not used as relationship, but as target
-    .add::<(Likes, Apples)>(); // OK
-```
-
-</li>
-</ul>
-</div>
-
-Entities marked with `Relationship` may still be used as target if the relationship part of the pair has the `Trait` trait. This ensures the relationship can still be used to configure the behavior of other entities. Consider the following code example:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-ECS_TAG(world, Likes);
-ECS_TAG(world, Loves);
-
-ecs_add_id(world, Likes, EcsRelationship);
-
-// Even though Likes is marked as relationship and used as target here, this 
-// won't panic as With is marked as trait.
-ecs_add_pair(world, Loves, EcsWith, Likes);
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-struct Likes { };
-struct Loves { };
-
-world.component<Likes>().add(flecs::Relationship);
-
-// Even though Likes is marked as relationship and used as target here, this 
-// won't panic as With is marked as trait.
-world.component<Loves>().add(flecs::With, world.component<Likes>());
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-public struct Likes { }
-public struct Loves { }
-
-world.Component<Likes>().Entity.Add(Ecs.Relationship);
-
-world.Component<Loves>().Entity.Add(Ecs.With, world.Component<Likes>());
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-#[derive(Component)]
-struct Likes;
-
-#[derive(Component)]
-struct Loves;
-
-world
-    .component::<Likes>()
-    .add_trait::<flecs::Relationship>();
-
-// Even though Likes is marked as relationship and used as target here, this
-// won't panic as With is marked as trait.
-world
-    .component::<Loves>()
-    .add_trait::<(flecs::With, Likes)>();
-```
-
-</li>
-</ul>
-</div>
-
-## Target trait
-The target trait enforces that an entity can only be used as relationship target. Consider the following example:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-ECS_TAG(world, Likes);
-ECS_TAG(world, Apples);
-
-ecs_add_id(world, Apples, EcsTarget);
-
-ecs_entity_t e = ecs_new_id(world);
-ecs_add(world, Apples);             // Panic, 'Apples' is not used as target
-ecs_add_pair(world, Apples, Likes); // Panic, 'Apples' is not used as target
-ecs_add_pair(world, Likes, Apples); // OK
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-struct Likes { };
-struct Apples { };
-
-world.component<Apples>().add(flecs::Target);
-
-flecs::entity e = world.entity()
-  .add<Apples>()         // Panic, 'Apples' is not used as target
-  .add<Apples, Likes>()  // Panic, 'Apples' is not used as target
-  .add<Likes, Apples>(); // OK
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-public struct Likes { }
-public struct Apples { }
-
-world.Component<Apples>().Entity.Add(Ecs.Target);
-
-Entity e = ecs.Entity()
-    .Add<Apples>()         // Panic, 'Apples' is not used as target
-    .Add<Apples, Likes>()  // Panic, 'Apples' is not used as target
-    .Add<Likes, Apples>(); // OK
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-#[derive(Component)]
-struct Likes;
-
-#[derive(Component)]
-struct Apples;
-
-world.component::<Apples>().add_trait::<flecs::Target>();
-
-let e = world
-    .entity()
-    .add::<Apples>() // Panic, 'Apples' is not used as target
-    .add::<(Apples, Likes)>() // Panic, 'Apples' is not used as target, but as relationship
-    .add::<(Likes, Apples)>(); // OK
-```
-
-</li>
-</ul>
-</div>
-
-## PairIsTag trait
-A relationship can be marked with PairIsTag in which case a pair with the relationship will never contain data. By default the data associated with a pair is determined by whether either the relationship or target are components. For some relationships however, even if the target is a component, no data should be added to the relationship. Consider the following example:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-typedef struct {
-  float x;
-  float y;
-} Position;
-
-ECS_TAG(world, Serializable);
 ECS_COMPONENT(world, Position);
-
-ecs_entity_t e = ecs_new(world);
-ecs_set(world, e, Position, {10, 20});
-ecs_add_pair(world, e, Serializable, ecs_id(Position));
-
-// Gets value from Position component
-const Position *p = ecs_get(world, e, Position);
-
-// Gets (unintended) value from (Serializable, Position) pair
-const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
+ecs_add_id(world, ecs_id(Position), EcsDontFragment);
 ```
 
 </li>
 <li><b class="tab-title">C++</b>
 
 ```cpp
-struct Serializable { }; // Tag, contains no data
-
-struct Position {
-  float x, y;
-};
-
-auto e = ecs.entity()
-  .set<Position>({10, 20})
-  .add<Serializable, Position>(); // Because Serializable is a tag, the pair
-                                  // has a value of type Position
-
-// Gets value from Position component
-const Position& p = e.get<Position>();
-
-// Gets (unintended) value from (Serializable, Position) pair
-const Position& p = e.get<Serializable, Position>();
+world.component<Position>().add(flecs::DontFragment);
 ```
 
 </li>
 <li><b class="tab-title">C#</b>
 
 ```cs
-public struct Serializable { } // Tag, contains no data
-
-public record struct Position(float X, float Y);
-
-Entity e = ecs.Entity()
-    .Set<Position>(new(10, 20))
-    .Add<Serializable, Position>(); // Because Serializable is a tag, the pair
-                                    // has a value of type Position
-
-// Gets value from Position component
-ref readonly Position p = ref e.Get<Position>();
-
-// Gets (unintended) value from (Serializable, Position) pair
-ref readonly Position p = ref e.GetSecond<Serializable, Position>();
+ecs.Component<Position>().Entity
+    .Add(Ecs.DontFragment);
 ```
 
 </li>
 <li><b class="tab-title">Rust</b>
 
 ```rust
-#[derive(Component)]
-struct Serializable; // Tag, contains no data
-
-impl flecs::FlecsTrait for Serializable {}
-
-#[derive(Component)]
-struct Position {
-    x: f32,
-    y: f32,
-}
-
-let e = world
-    .entity()
-    .set(Position { x: 10.0, y: 20.9 })
-    .add_trait::<(Serializable, Position)>(); // Because Serializable is a tag, the pair
-// has a value of type Position
-
-// Gets value from Position component
-e.get::<&Position>(|pos| {
-    println!("Position: ({}, {})", pos.x, pos.y);
-});
-// Gets (unintended) value from (Serializable, Position) pair
-e.get::<&(Serializable, Position)>(|pos| {
-    println!("Serializable Position: ({}, {})", pos.x, pos.y);
-});
+world.component::<Position>().add_trait::<flecs::DontFragment>();
 ```
 
 </li>
 </ul>
 </div>
 
-To prevent data from being associated with pairs that can apply to components, the `Tag` trait can be added to relationships:
+Components with the `DontFragment` trait have the following limitations:
+- They don't show up in types (obtained by `ecs_get_type` / `entity::type`)
+- Monitors don't trigger on `DontFragment` components. The reason for this is that monitors compare the previous table with the current table of an entity to determine if an entity started matching, and `DontFragment` components aren't part of the table.
+
+Support for `DontFragment` has a number of (temporary) limitations:
+- `target_for` does not yet work for `DontFragment` components.
+- `DontFragment` components are not serialized yet to JSON (and don't show up in the explorer).
+- `Or`, `Optional`, `AndFrom` and `NotFrom` operators are not yet supported.
+- Component inheritance and transitivity are not yet supported.
+- Queries for `DontFragment` components may run slower than expected.
+
+What does work:
+- ECS operations (`add`, `remove`, `get`, `get_mut`, `ensure`, `emplace`, `set`, `delete`).
+- Relationships (including `Exclusive` relationships).
+- Simple component queries.
+- Wildcard queries.
+- Queries with variables.
+
+## Exclusive trait
+The `Exclusive` trait enforces that an entity can have only a single instance of a relationship. When a second instance is added, it replaces the first instance. An example of a relationship with the `Exclusive` trait is the builtin `ChildOf` relationship:
 
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
 
 ```c
-// Ensure that Serializable never contains data
-ecs_add_id(world, Serializable, EcsPairIsTag);
-
-// Because Serializable is marked as a Tag, no data is added for the pair
-// even though Position is a component
-ecs_add_pair(world, e, Serializable, ecs_id(Position));
-
-// This is still OK
-const Position *p = ecs_get(world, e, Position);
-
-// This no longer works, the pair has no data
-const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
+ecs_add_pair(world, child, EcsChildOf, parent_a);
+ecs_add_pair(world, child, EcsChildOf, parent_b); // replaces (ChildOf, parent_a)
 ```
 
 </li>
 <li><b class="tab-title">C++</b>
 
 ```cpp
-// Ensure that Serializable never contains data
-ecs.component<Serializable>()
-  .add(flecs::PairIsTag);
-
-auto e = ecs.entity()
-  .set<Position>({10, 20})
-  .add<Serializable, Position>(); // Because Serializable marked as a Tag, no
-                                  // data is added for the pair even though
-                                  // Position is a component
-
-// Gets value from Position component
-const Position& p = e.get<Position>();
-
-// This no longer works, the pair has no data
-const Position& p = e.get<Serializable, Position>();
+e.child_of(parent_a);
+e.child_of(parent_b); // replaces (ChildOf, parent_a)
 ```
 
 </li>
 <li><b class="tab-title">C#</b>
 
 ```cs
-// Ensure that Serializable never contains data
-ecs.Component<Serializable>().Entity
-    .Add(Ecs.PairIsTag);
-
-Entity e = ecs.Entity()
-    .Set<Position>(new(10, 20))
-    .Add<Serializable, Position>(); // Because Serializable marked as a Tag, no
-                                    // data is added for the pair even though
-                                    // Position is a component
-
-// Gets value from Position component
-ref readonly Position p = ref e.Get<Position>();
-
-// This no longer works, the pair has no data
-ref readonly Position p = ref e.GetSecond<Serializable, Position>();
+e.ChildOf(parentA);
+e.ChildOf(parentB); // replaces (ChildOf, parentA)
 ```
 
 </li>
 <li><b class="tab-title">Rust</b>
 
 ```rust
-// This is currently not supported in Rust due to safety concerns.
+let parent_a = world.entity();
+let parent_b = world.entity();
+e.child_of_id(parent_a);
+e.child_of_id(parent_b); // replaces (ChildOf, parent_a)
 ```
 
 </li>
 </ul>
 </div>
 
-The `Tag` trait is only interpreted when it is added to the relationship part of a pair.
+To create a custom exclusive relationship, add the `Exclusive` trait:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t MarriedTo = ecs_new(world);
+ecs_add_id(world, MarriedTo, EcsExclusive);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity MarriedTo = world.entity()
+  .add(flecs::Exclusive);
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity marriedTo = world.Entity()
+    .Add(Ecs.Exclusive);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let married_to = world.entity().add_trait::<flecs::Exclusive>();
+```
+
+</li>
+</ul>
+</div>
 
 ## Final trait
 Entities can be annotated with the `Final` trait, which prevents using them with `IsA` relationship. This is similar to the concept of a final class as something that cannot be extended. The following example shows how use `Final`:
@@ -1021,109 +800,160 @@ Queries must be aware of (potential) inheritance relationships when they are cre
 
 If a query was not aware of inheritance relationships at creation time and one or more of the components in the query were inherited from, query iteration will fail in debug mode.
 
-## OrderedChildren trait
-The `OrderedChildren` trait can be added to entities to indicate that creation order or a custom order should be preserved. 
+## OneOf trait
+The `OneOf` trait enforces that the target of the relationship is a child of a specified entity. `OneOf` can be used to indicate that the target needs to be either a child of the relationship (common for enum relationships), or of another entity.
 
-When this trait is added to a parent, the entity ids returned by the `ecs_children` / `entity::children` operations will be in creation or custom order. Children of a parent with the `OrderedChildren` trait are guaranteed to be returned in a single result.
-
-The trait does not affect the order in which entities are returned by queries.
+The following example shows how to constrain the relationship target to a child of the relationship:
 
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t parent = ecs_new(world);
-ecs_add_id(world, parent, EcsOrderedChildren);
+ecs_entity_t Food = ecs_new(world);
 
-ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
-ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
-ecs_entity_t child_3 = ecs_new_w_pair(world, EcsChildOf, parent);
+// Enforce that target of relationship is child of Food
+ecs_add_id(world, Food, EcsOneOf);
 
-// Adding/removing components usually changes the order in which children are
-// iterated, but with the OrderedChildren trait order is preserved.
-ecs_set(world, child_2, Position, {10, 20});
+ecs_entity_t Apples = ecs_new_w_pair(world, EcsChildOf, Food);
+ecs_entity_t Fork = ecs_new(world);
 
-ecs_iter_t it = ecs_children(world, parent);
-while (ecs_children_next(&it)) {
-    // it.table will be set to NULL when iterating ordered children.
-    for (int i = 0; i < it.count; i ++) {
-        ecs_entity_t e = it.entities[i];
-        // i == 0: child_1
-        // i == 1: child_2
-        // i == 2: child_3
-    }
-}
+// This is ok, Apples is a child of Food
+ecs_entity_t a = ecs_new_w_pair(world, Food, Apples);
+
+// This is not ok, Fork is not a child of Food
+ecs_entity_t b = ecs_new_w_pair(world, Food, Fork);
 ```
 
 </li>
 <li><b class="tab-title">C++</b>
 
 ```cpp
-flecs::entity parent = world.entity().add(flecs::OrderedChildren);
+// Enforce that target of relationship is child of Food
+auto Food = world.entity().add(flecs::OneOf);
+auto Apples = world.entity().child_of(Food);
+auto Fork = world.entity();
 
-flecs::entity child_1 = world.entity().child_of(parent);
-flecs::entity child_2 = world.entity().child_of(parent);
-flecs::entity child_3 = world.entity().child_of(parent);
+// This is ok, Apples is a child of Food
+auto a = world.entity().add(Food, Apples);
 
-// Adding/removing components usually changes the order in which children are
-// iterated, but with the OrderedChildren trait order is preserved.
-child_2.set(Position{10, 20});
-
-parent.children([](flecs::entity child) {
-    // 1st result: child_1
-    // 2nd result: child_2
-    // 3rd result: child_3
-});
+// This is not ok, Fork is not a child of Food
+auto b = world.entity().add(Food, Fork);
 ```
 
 </li>
 <li><b class="tab-title">C#</b>
 
 ```cs
-Entity parent = world.Entity().Add(Ecs.OrderedChildren);
+// Enforce that target of relationship is child of Food
+Entity food = world.Entity().Add(Ecs.OneOf);
+Entity apples = world.Entity().ChildOf(food);
+Entity fork = world.Entity();
 
-Entity child_1 = world.Entity().ChildOf(parent);
-Entity child_2 = world.Entity().ChildOf(parent);
-Entity child_3 = world.Entity().ChildOf(parent);
+// This is ok, Apples is a child of Food
+Entity a = world.Entity().Add(food, apples);
 
-// Adding/removing components usually changes the order in which children are
-// iterated, but with the OrderedChildren trait order is preserved.
-child_2.Set<Position>(new(10, 20));
-
-parent.Children((Entity child) => {
-    // 1st result: child_1
-    // 2nd result: child_2
-    // 3rd result: child_3
-});
+// This is not ok, Fork is not a child of Food
+Entity b = world.Entity().Add(food, fork);
 ```
 
 </li>
 <li><b class="tab-title">Rust</b>
 
 ```rust
-let parent = world.entity().add_trait::<flecs::OrderedChildren>();
+// Enforce that target of relationship is child of Food
+let food = world.entity().add_trait::<flecs::OneOf>();
+let apples = world.entity().child_of_id(food);
+let fork = world.entity();
 
-let child_1 = world.entity().child_of_id(parent);
-let child_2 = world.entity().child_of_id(parent);
-let child_3 = world.entity().child_of_id(parent);
+// This is ok, Apples is a child of Food
+let a = world.entity().add_id((food, apples));
 
-// Adding/removing components usually changes the order in which children are
-// iterated, but with the OrderedChildren trait order is preserved.
-child_2.set(Position{10, 20});
-
-parent.each_child(|child| {
-    // 1st result: child_1
-    // 2nd result: child_2
-    // 3rd result: child_3
-});
+// This is not ok, Fork is not a child of Food
+let b = world.entity().add_id((food, fork));
 ```
 
 </li>
 </ul>
 </div>
 
-The stored order can be modified by an application with the `ecs_set_child_order` / `entity::set_child_order` operation.
+The following example shows how `OneOf` can be used to enforce that the relationship target is the child of an entity other than the relationship:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t Food = ecs_new(world);
+ecs_entity_t Eats = ecs_new(world);
+
+// Enforce that target of relationship is child of Food
+ecs_add_pair(world, Eats, EcsOneOf, Food);
+
+ecs_entity_t Apples = ecs_new_w_pair(world, EcsChildOf, Food);
+ecs_entity_t Fork = ecs_new(world);
+
+// This is ok, Apples is a child of Food
+ecs_entity_t a = ecs_new_w_pair(world, Eats, Apples);
+
+// This is not ok, Fork is not a child of Food
+ecs_entity_t b = ecs_new_w_pair(world, Eats, Fork);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+// Enforce that target of relationship is child of Food
+auto Food = world.entity();
+auto Eats = world.entity().add(flecs::OneOf, Food);
+auto Apples = world.entity().child_of(Food);
+auto Fork = world.entity();
+
+// This is ok, Apples is a child of Food
+auto a = world.entity().add(Eats, Apples);
+
+// This is not ok, Fork is not a child of Food
+auto b = world.entity().add(Eats, Fork);
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Enforce that target of relationship is child of Food
+Entity food = world.Entity();
+Entity eats = world.Entity().Add(Ecs.OneOf, food);
+Entity apples = world.Entity().ChildOf(food);
+Entity fork = world.Entity();
+
+// This is ok, Apples is a child of Food
+Entity a = world.Entity().Add(eats, apples);
+
+// This is not ok, Fork is not a child of Food
+Entity b = world.Entity().Add(eats, fork);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Enforce that target of relationship is child of Food
+let food = world.entity();
+let eats = world.entity().add_first::<flecs::OneOf>(food);
+let apples = world.entity().child_of_id(food);
+let fork = world.entity();
+
+// This is ok, Apples is a child of Food
+let a = world.entity().add_id((eats, apples));
+
+// This is not ok, Fork is not a child of Food
+let b = world.entity().add_id((eats, fork));
+```
+
+</li>
+</ul>
+</div>
 
 ## OnInstantiate trait
 The `OnInstantiate` trait configures the behavior of components when an entity is instantiated from another entity (usually a prefab). Instantiation happens when an `IsA` pair is added to an entity.
@@ -1369,6 +1199,820 @@ assert!(!inst.try_get::<&Mass>(|mass| {}));
 </ul>
 </div>
 
+## OrderedChildren trait
+The `OrderedChildren` trait can be added to entities to indicate that creation order or a custom order should be preserved. 
+
+When this trait is added to a parent, the entity ids returned by the `ecs_children` / `entity::children` operations will be in creation or custom order. Children of a parent with the `OrderedChildren` trait are guaranteed to be returned in a single result.
+
+The trait does not affect the order in which entities are returned by queries.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t parent = ecs_new(world);
+ecs_add_id(world, parent, EcsOrderedChildren);
+
+ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
+ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
+ecs_entity_t child_3 = ecs_new_w_pair(world, EcsChildOf, parent);
+
+// Adding/removing components usually changes the order in which children are
+// iterated, but with the OrderedChildren trait order is preserved.
+ecs_set(world, child_2, Position, {10, 20});
+
+ecs_iter_t it = ecs_children(world, parent);
+while (ecs_children_next(&it)) {
+    // it.table will be set to NULL when iterating ordered children.
+    for (int i = 0; i < it.count; i ++) {
+        ecs_entity_t e = it.entities[i];
+        // i == 0: child_1
+        // i == 1: child_2
+        // i == 2: child_3
+    }
+}
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity parent = world.entity().add(flecs::OrderedChildren);
+
+flecs::entity child_1 = world.entity().child_of(parent);
+flecs::entity child_2 = world.entity().child_of(parent);
+flecs::entity child_3 = world.entity().child_of(parent);
+
+// Adding/removing components usually changes the order in which children are
+// iterated, but with the OrderedChildren trait order is preserved.
+child_2.set(Position{10, 20});
+
+parent.children([](flecs::entity child) {
+    // 1st result: child_1
+    // 2nd result: child_2
+    // 3rd result: child_3
+});
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity parent = world.Entity().Add(Ecs.OrderedChildren);
+
+Entity child_1 = world.Entity().ChildOf(parent);
+Entity child_2 = world.Entity().ChildOf(parent);
+Entity child_3 = world.Entity().ChildOf(parent);
+
+// Adding/removing components usually changes the order in which children are
+// iterated, but with the OrderedChildren trait order is preserved.
+child_2.Set<Position>(new(10, 20));
+
+parent.Children((Entity child) => {
+    // 1st result: child_1
+    // 2nd result: child_2
+    // 3rd result: child_3
+});
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let parent = world.entity().add_trait::<flecs::OrderedChildren>();
+
+let child_1 = world.entity().child_of_id(parent);
+let child_2 = world.entity().child_of_id(parent);
+let child_3 = world.entity().child_of_id(parent);
+
+// Adding/removing components usually changes the order in which children are
+// iterated, but with the OrderedChildren trait order is preserved.
+child_2.set(Position{10, 20});
+
+parent.each_child(|child| {
+    // 1st result: child_1
+    // 2nd result: child_2
+    // 3rd result: child_3
+});
+```
+
+</li>
+</ul>
+</div>
+
+The stored order can be modified by an application with the `ecs_set_child_order` / `entity::set_child_order` operation.
+
+## PairIsTag trait
+A relationship can be marked with PairIsTag in which case a pair with the relationship will never contain data. By default the data associated with a pair is determined by whether either the relationship or target are components. For some relationships however, even if the target is a component, no data should be added to the relationship. Consider the following example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+typedef struct {
+  float x;
+  float y;
+} Position;
+
+ECS_TAG(world, Serializable);
+ECS_COMPONENT(world, Position);
+
+ecs_entity_t e = ecs_new(world);
+ecs_set(world, e, Position, {10, 20});
+ecs_add_pair(world, e, Serializable, ecs_id(Position));
+
+// Gets value from Position component
+const Position *p = ecs_get(world, e, Position);
+
+// Gets (unintended) value from (Serializable, Position) pair
+const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+struct Serializable { }; // Tag, contains no data
+
+struct Position {
+  float x, y;
+};
+
+auto e = ecs.entity()
+  .set<Position>({10, 20})
+  .add<Serializable, Position>(); // Because Serializable is a tag, the pair
+                                  // has a value of type Position
+
+// Gets value from Position component
+const Position& p = e.get<Position>();
+
+// Gets (unintended) value from (Serializable, Position) pair
+const Position& p = e.get<Serializable, Position>();
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+public struct Serializable { } // Tag, contains no data
+
+public record struct Position(float X, float Y);
+
+Entity e = ecs.Entity()
+    .Set<Position>(new(10, 20))
+    .Add<Serializable, Position>(); // Because Serializable is a tag, the pair
+                                    // has a value of type Position
+
+// Gets value from Position component
+ref readonly Position p = ref e.Get<Position>();
+
+// Gets (unintended) value from (Serializable, Position) pair
+ref readonly Position p = ref e.GetSecond<Serializable, Position>();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct Serializable; // Tag, contains no data
+
+impl flecs::FlecsTrait for Serializable {}
+
+#[derive(Component)]
+struct Position {
+    x: f32,
+    y: f32,
+}
+
+let e = world
+    .entity()
+    .set(Position { x: 10.0, y: 20.9 })
+    .add_trait::<(Serializable, Position)>(); // Because Serializable is a tag, the pair
+// has a value of type Position
+
+// Gets value from Position component
+e.get::<&Position>(|pos| {
+    println!("Position: ({}, {})", pos.x, pos.y);
+});
+// Gets (unintended) value from (Serializable, Position) pair
+e.get::<&(Serializable, Position)>(|pos| {
+    println!("Serializable Position: ({}, {})", pos.x, pos.y);
+});
+```
+
+</li>
+</ul>
+</div>
+
+To prevent data from being associated with pairs that can apply to components, the `Tag` trait can be added to relationships:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+// Ensure that Serializable never contains data
+ecs_add_id(world, Serializable, EcsPairIsTag);
+
+// Because Serializable is marked as a Tag, no data is added for the pair
+// even though Position is a component
+ecs_add_pair(world, e, Serializable, ecs_id(Position));
+
+// This is still OK
+const Position *p = ecs_get(world, e, Position);
+
+// This no longer works, the pair has no data
+const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+// Ensure that Serializable never contains data
+ecs.component<Serializable>()
+  .add(flecs::PairIsTag);
+
+auto e = ecs.entity()
+  .set<Position>({10, 20})
+  .add<Serializable, Position>(); // Because Serializable marked as a Tag, no
+                                  // data is added for the pair even though
+                                  // Position is a component
+
+// Gets value from Position component
+const Position& p = e.get<Position>();
+
+// This no longer works, the pair has no data
+const Position& p = e.get<Serializable, Position>();
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Ensure that Serializable never contains data
+ecs.Component<Serializable>().Entity
+    .Add(Ecs.PairIsTag);
+
+Entity e = ecs.Entity()
+    .Set<Position>(new(10, 20))
+    .Add<Serializable, Position>(); // Because Serializable marked as a Tag, no
+                                    // data is added for the pair even though
+                                    // Position is a component
+
+// Gets value from Position component
+ref readonly Position p = ref e.Get<Position>();
+
+// This no longer works, the pair has no data
+ref readonly Position p = ref e.GetSecond<Serializable, Position>();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// This is currently not supported in Rust due to safety concerns.
+```
+
+</li>
+</ul>
+</div>
+
+The `Tag` trait is only interpreted when it is added to the relationship part of a pair.
+
+## Relationship trait
+The relationship trait enforces that an entity can only be used as relationship. Consider the following example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_TAG(world, Likes);
+ECS_TAG(world, Apples);
+
+ecs_add_id(world, Likes, EcsRelationship);
+
+ecs_entity_t e = ecs_new_id(world);
+ecs_add(world, Likes);              // Panic, 'Likes' is not used as relationship
+ecs_add_pair(world, Apples, Likes); // Panic, 'Likes' is not used as relationship
+ecs_add_pair(world, Likes, Apples); // OK
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+struct Likes { };
+struct Apples { };
+
+world.component<Likes>().add(flecs::Relationship);
+
+flecs::entity e = world.entity()
+  .add<Likes>()          // Panic, 'Likes' is not used as relationship
+  .add<Apples, Likes>()  // Panic, 'Likes' is not used as relationship
+  .add<Likes, Apples>(); // OK
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+public struct Likes { }
+public struct Apples { }
+
+world.Component<Likes>().Entity.Add(Ecs.Relationship);
+
+Entity e = ecs.Entity()
+    .Add<Likes>()          // Panic, 'Likes' is not used as relationship
+    .Add<Apples, Likes>()  // Panic, 'Likes' is not used as relationship
+    .add<Likes, Apples>(); // OK
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct Likes;
+
+#[derive(Component)]
+struct Apples;
+
+world
+    .component::<Likes>()
+    .add_trait::<flecs::Relationship>();
+
+let e = world
+    .entity()
+    .add::<Likes>() // Panic, 'Likes' is not used as relationship
+    .add::<(Apples, Likes)>() // Panic, 'Likes' is not used as relationship, but as target
+    .add::<(Likes, Apples)>(); // OK
+```
+
+</li>
+</ul>
+</div>
+
+Entities marked with `Relationship` may still be used as target if the relationship part of the pair has the `Trait` trait. This ensures the relationship can still be used to configure the behavior of other entities. Consider the following code example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_TAG(world, Likes);
+ECS_TAG(world, Loves);
+
+ecs_add_id(world, Likes, EcsRelationship);
+
+// Even though Likes is marked as relationship and used as target here, this 
+// won't panic as With is marked as trait.
+ecs_add_pair(world, Loves, EcsWith, Likes);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+struct Likes { };
+struct Loves { };
+
+world.component<Likes>().add(flecs::Relationship);
+
+// Even though Likes is marked as relationship and used as target here, this 
+// won't panic as With is marked as trait.
+world.component<Loves>().add(flecs::With, world.component<Likes>());
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+public struct Likes { }
+public struct Loves { }
+
+world.Component<Likes>().Entity.Add(Ecs.Relationship);
+
+world.Component<Loves>().Entity.Add(Ecs.With, world.Component<Likes>());
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct Likes;
+
+#[derive(Component)]
+struct Loves;
+
+world
+    .component::<Likes>()
+    .add_trait::<flecs::Relationship>();
+
+// Even though Likes is marked as relationship and used as target here, this
+// won't panic as With is marked as trait.
+world
+    .component::<Loves>()
+    .add_trait::<(flecs::With, Likes)>();
+```
+
+</li>
+</ul>
+</div>
+
+## Reflexive trait
+A relationship can be marked reflexive which means that a query like `Relationship(Entity, Entity)` should evaluate to true. The utility of `Reflexive` becomes more obvious with an example:
+
+Given this dataset:
+```
+IsA(Oak, Tree)
+```
+
+we can ask whether an oak is a tree:
+```
+IsA(Oak, Tree)
+- Yes, an Oak is a tree (Oak has (IsA, Tree))
+```
+
+We can also ask whether a tree is a tree, which it obviously is:
+```
+IsA(Tree, Tree)
+- Yes, even though Tree does not have (IsA, Tree)
+```
+
+However, this does not apply to all relationships. Consider a dataset with a `LocatedIn` relationship:
+
+```
+LocatedIn(SanFrancisco, UnitedStates)
+```
+
+we can now ask whether SanFrancisco is located in SanFrancisco, which it is not:
+```
+LocatedIn(SanFrancisco, SanFrancisco)
+- No
+```
+
+In these examples, `IsA` is a reflexive relationship, whereas `LocatedIn` is not.
+
+## Singleton trait
+The `Singleton` trait enforces that a component can only be instantiated once in the world. A singleton component can only be added to the entity that is associated with the component. This happens automatically when using the singleton APIs:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_COMPONENT(world, TimeOfDay);
+
+ecs_add_id(world, ecs_id(TimeOfDay), EcsSingleton);
+
+ecs_singleton_set(world, TimeOfDay, {0});
+
+// This is the same as adding TimeOfDay to itself:
+ecs_set(world, ecs_id(TimeOfDay), TimeOfDay, {0});
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+world.component<TimeOfDay>().add(flecs::Singleton);
+
+world.set(TimeOfDay{0});
+
+// This is the same as adding TimeOfDay to itself:
+world.component<TimeOfDay>().set(TimeOfDay{0});
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Component<TimeOfDay>().Entity
+    .Add(Ecs.Singleton);
+
+world.Set<TimeOfDay>(new(0));
+
+// This is the same as adding TimeOfDay to itself:
+world.Component<TimeOfDay>().Entity.Set<TimeOfDay>(new(0));
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world.component::<TimeOfDay>().add_trait::<flecs::Singleton>();
+
+world.set(TimeOfDay{0});
+```
+
+</li>
+</ul>
+</div>
+
+Attempting to add the component to other entities beside itself will panic.
+
+When a query is created for a component with the `Singleton` trait, the query will automatically match the singleton component on the component entity. This is the same as specifying the component itself as source for the term:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_COMPONENT(world, TimeOfDay);
+
+ecs_add_id(world, ecs_id(TimeOfDay), EcsSingleton);
+
+// Automatically matches TimeOfDay as singleton
+ecs_query_t *q = ecs_query(world, {
+  .terms = {
+    { ecs_id(Position) },
+    { ecs_id(Velocity) },
+    { ecs_id(TimeOfDay) }
+  }
+});
+
+// Is the same as
+ecs_query_t *q = ecs_query(world, {
+  .terms = {
+    { ecs_id(Position) },
+    { ecs_id(Velocity) },
+    { ecs_id(TimeOfDay), .src.id = ecs_id(TimeOfDay) }
+  }
+});
+```
+
+The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
+
+</li>
+<li><b class="tab-title">C++</b>
+
+A singleton query can be created by specifying the same id as component and source:
+
+```cpp
+world.component<TimeOfDay>().add(flecs::Singleton);
+
+// Automatically matches TimeOfDay as singleton
+auto q = world.query<Position, Velocity, const TimeOfDay>();
+
+// Is the same as
+auto q = world.query_builder<Position, Velocity, const TimeOfDay>()
+  .term_at(2).src<TimeOfDay>()
+  .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+A singleton query can be created by specifying the same id as component and source:
+
+```rust
+// Automatically matches TimeOfDay as singleton
+let q = world.new_query::<(&Position, &Velocity, &TimeOfDay)>();
+
+// Is the same as
+let q = world.query::<(&Position, &Velocity, &TimeOfDay)>()
+  .term_at(2).set_src::<TimeOfDay>()
+  .build();
+```
+
+</li>
+<li><b class="tab-title">Flecs Query Language</b>
+
+```
+Position, Velocity, TimeOfDay
+```
+
+Is the same as
+
+```
+Position, Velocity, TimeOfDay(TimeOfDay)
+```
+
+</li>
+</ul>
+</div>
+
+The old `.singleton()` method and `TimeOfDay($)` notation are no longer supported.
+
+## Sparse trait
+The `Sparse` trait configures a component to use sparse storage. Sparse components are stored outside of tables, which means they do not have to be moved. Sparse components are also guaranteed to have stable pointers, which means that a component pointer is not invalidated when an entity moves to a new table. ECS operations and queries work as expected with sparse components.
+
+Sparse components trade in query speed for component add/remove speed. Adding and removing sparse components still requires an archetype change.
+
+They also enable storage of non-movable components. Non-movable components in the C++ API are automatically marked as sparse.
+
+The following code example shows how to mark a component as sparse:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_COMPONENT(world, Position);
+ecs_add_id(world, ecs_id(Position), EcsSparse);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+world.component<Position>().add(flecs::Sparse);
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+ecs.Component<Position>().Entity
+    .Add(Ecs.Sparse);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world.component::<Position>().add_trait::<flecs::Sparse>();
+```
+
+</li>
+</ul>
+</div>
+
+## Symmetric trait
+The `Symmetric` trait enforces that when a relationship `(R, Y)` is added to entity `X`, the relationship `(R, X)` will be added to entity `Y`. The reverse is also true, if relationship `(R, Y)` is removed from `X`, relationship `(R, X)` will be removed from `Y`.
+
+The symmetric trait is useful for relationships that do not make sense unless they are bidirectional. Examples of such relationships are `AlliesWith`, `MarriedTo`, `TradingWith` and so on. An example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t MarriedTo = ecs_new_w_id(world, EcsSymmetric);
+ecs_entity_t Bob = ecs_new(world);
+ecs_entity_t Alice = ecs_new(world);
+ecs_add_pair(world, Bob, MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+auto MarriedTo = world.entity().add(flecs::Symmetric);
+auto Bob = ecs.entity();
+auto Alice = ecs.entity();
+Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity marriedTo = world.Entity().Add(Ecs.Symmetric);
+Entity bob = ecs.Entity();
+Entity alice = ecs.Entity();
+Bob.Add(marriedTo, alice); // Also adds (MarriedTo, Bob) to Alice
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let married_to = world.entity().add_trait::<flecs::Symmetric>();
+let bob = world.entity();
+let alice = world.entity();
+bob.add_id((married_to, alice)); // Also adds (MarriedTo, Bob) to Alice
+```
+
+</li>
+</ul>
+</div>
+
+## Target trait
+The target trait enforces that an entity can only be used as relationship target. Consider the following example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_TAG(world, Likes);
+ECS_TAG(world, Apples);
+
+ecs_add_id(world, Apples, EcsTarget);
+
+ecs_entity_t e = ecs_new_id(world);
+ecs_add(world, Apples);             // Panic, 'Apples' is not used as target
+ecs_add_pair(world, Apples, Likes); // Panic, 'Apples' is not used as target
+ecs_add_pair(world, Likes, Apples); // OK
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+struct Likes { };
+struct Apples { };
+
+world.component<Apples>().add(flecs::Target);
+
+flecs::entity e = world.entity()
+  .add<Apples>()         // Panic, 'Apples' is not used as target
+  .add<Apples, Likes>()  // Panic, 'Apples' is not used as target
+  .add<Likes, Apples>(); // OK
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+public struct Likes { }
+public struct Apples { }
+
+world.Component<Apples>().Entity.Add(Ecs.Target);
+
+Entity e = ecs.Entity()
+    .Add<Apples>()         // Panic, 'Apples' is not used as target
+    .Add<Apples, Likes>()  // Panic, 'Apples' is not used as target
+    .Add<Likes, Apples>(); // OK
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct Likes;
+
+#[derive(Component)]
+struct Apples;
+
+world.component::<Apples>().add_trait::<flecs::Target>();
+
+let e = world
+    .entity()
+    .add::<Apples>() // Panic, 'Apples' is not used as target
+    .add::<(Apples, Likes)>() // Panic, 'Apples' is not used as target, but as relationship
+    .add::<(Likes, Apples)>(); // OK
+```
+
+</li>
+</ul>
+</div>
+
+## Trait trait
+The trait trait marks an entity as a trait, which is any tag that is added to another tag/component/relationship to modify its behavior. All traits in this manual are marked as trait. It is not required to mark a trait as a trait before adding it to another tag/component/relationship. The main reason for the trait trait is to ease some of the constraints on relationships (see the Relationship trait).
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_TAG(world, Serializable);
+
+ecs_add_id(world, Serializable, EcsTrait);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+struct Serializable { };
+
+world.component<Serializable>().add(flecs::Trait);
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+public struct Serializable { }
+
+world.Component<Serializable>().Entity.Add(Ecs.Trait);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct Serializable;
+
+world
+    .component::<Serializable>()
+    .add_trait::<flecs::Trait>();
+```
+}
+</li>
+</ul>
+</div>
+
 ## Transitive trait
 Relationships can be marked as transitive. A formal-ish definition if transitivity in the context of relationships is:
 
@@ -1484,358 +2128,10 @@ locatedin.add_trait::<flecs::Transitive>();
 
 When now querying for `(LocatedIn, USA)`, the query will follow the `LocatedIn` relationship and return both `NewYork` and `Manhattan`. For more details on how queries use transitivity, see the [Transitive Relationships section in the query manual](Queries.md#transitive-relationships).
 
-## Reflexive trait
-A relationship can be marked reflexive which means that a query like `Relationship(Entity, Entity)` should evaluate to true. The utility of `Reflexive` becomes more obvious with an example:
-
-Given this dataset:
-```
-IsA(Oak, Tree)
-```
-
-we can ask whether an oak is a tree:
-```
-IsA(Oak, Tree)
-- Yes, an Oak is a tree (Oak has (IsA, Tree))
-```
-
-We can also ask whether a tree is a tree, which it obviously is:
-```
-IsA(Tree, Tree)
-- Yes, even though Tree does not have (IsA, Tree)
-```
-
-However, this does not apply to all relationships. Consider a dataset with a `LocatedIn` relationship:
-
-```
-LocatedIn(SanFrancisco, UnitedStates)
-```
-
-we can now ask whether SanFrancisco is located in SanFrancisco, which it is not:
-```
-LocatedIn(SanFrancisco, SanFrancisco)
-- No
-```
-
-In these examples, `IsA` is a reflexive relationship, whereas `LocatedIn` is not.
-
-## Acyclic trait
-A relationship can be marked with the `Acyclic` trait to indicate that it cannot contain cycles. Both the builtin `ChildOf` and `IsA` relationships are marked acyclic. Knowing whether a relationship is acyclic allows the storage to detect and throw errors when a cyclic relationship is introduced by accident.
-
-Note that because cycle detection requires expensive algorithms, adding `Acyclic` to a relationship does not guarantee that an error will be thrown when a cycle is accidentally introduced. While detection may improve over time, an application that runs without errors is no guarantee that it does not contain acyclic relationships with cycles.
-
 ## Traversable trait
 Traversable relationships are allowed to be traversed automatically by queries, for example using the `up` bit flag (upwards traversal, see [query traversal flags](Queries.md#traversal-flags)). Traversable relationships are also marked as `Acyclic`, which ensures a query won't accidentally attempt to traverse a relationship that contains cycles.
 
 Events are propagated along the edges of traversable relationships. A typical example of this is when a component value is changed on a prefab. The event of this change will be propagated by traversing the `IsA` relationship downwards, for all instances of the prefab. Event propagation does not happen for relationships that are not marked with `Traversable`.
-
-## Exclusive trait
-The `Exclusive` trait enforces that an entity can have only a single instance of a relationship. When a second instance is added, it replaces the first instance. An example of a relationship with the `Exclusive` trait is the builtin `ChildOf` relationship:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-ecs_add_pair(world, child, EcsChildOf, parent_a);
-ecs_add_pair(world, child, EcsChildOf, parent_b); // replaces (ChildOf, parent_a)
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-e.child_of(parent_a);
-e.child_of(parent_b); // replaces (ChildOf, parent_a)
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-e.ChildOf(parentA);
-e.ChildOf(parentB); // replaces (ChildOf, parentA)
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-let parent_a = world.entity();
-let parent_b = world.entity();
-e.child_of_id(parent_a);
-e.child_of_id(parent_b); // replaces (ChildOf, parent_a)
-```
-
-</li>
-</ul>
-</div>
-
-To create a custom exclusive relationship, add the `Exclusive` trait:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-ecs_entity_t MarriedTo = ecs_new(world);
-ecs_add_id(world, MarriedTo, EcsExclusive);
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-flecs::entity MarriedTo = world.entity()
-  .add(flecs::Exclusive);
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-Entity marriedTo = world.Entity()
-    .Add(Ecs.Exclusive);
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-let married_to = world.entity().add_trait::<flecs::Exclusive>();
-```
-
-</li>
-</ul>
-</div>
-
-## CanToggle trait
-The `CanToggle` trait allows a component to be toggled. Component toggling can (temporarily) disable a component, which excludes it from queries. Component toggling can be used as a cheaper alternative to adding/removing as toggling relies on setting a bitset, and doesn't require the entity to be moved between tables. Component toggling can also be used to restore a component with its old value.
-
-Queries treat a disabled component as if the entity doesn't have it. `CanToggle` components add a small amount of overhead to query evaluation, even for entities that did not toggle their component.
-
-The following example shows how to use the `CanToggle` trait:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-ECS_COMPONENT(world, Position);
-ecs_add_id(world, ecs_id(Position), EcsCanToggle);
-
-ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
-
-ecs_enable_component(world, e, Position, false); // Disable component
-assert(!ecs_is_enabled(world, e, Position));
-
-ecs_enable_component(world, e, Position, true); // Enable component
-assert(ecs_is_enabled(world, e, Position));
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-world.component<Position>().add(flecs::CanToggle);
-
-flecs::entity e = world.entity().set(Position{10, 20});
-
-e.disable<Position>(); // Disable component
-assert(!e.is_enabled<Position>());
-
-e.enable<Position>(); // Enable component
-assert(e.is_enabled<Position>());
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-ecs.Component<Position>().Entity
-    .Add(Ecs.CanToggle);
-
-Entity e = world.Entity()
-    .Set<Position>(new(10, 20));
-
-e.Disable<Position>(); // Disable component
-Debug.Assert(!e.IsEnabled<Position>());
-
-e.Enable<Position>(); // Enable component
-Debug.Assert(e.IsEnabled<Position>());
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-world
-.component::<Position>()
-.add_trait::<flecs::CanToggle>();
-
-let e = world.entity().set(Position { x: 10.0, y: 20.0 });
-
-e.disable::<Position>(); // Disable component
-assert!(!e.is_enabled::<Position>());
-
-e.enable::<Position>(); // Enable component
-assert!(e.is_enabled::<Position>());
-```
-
-</li>
-</ul>
-</div>
-
-## Sparse trait
-The `Sparse` trait configures a component to use sparse storage. Sparse components are stored outside of tables, which means they do not have to be moved. Sparse components are also guaranteed to have stable pointers, which means that a component pointer is not invalidated when an entity moves to a new table. ECS operations and queries work as expected with sparse components.
-
-Sparse components trade in query speed for component add/remove speed. Adding and removing sparse components still requires an archetype change.
-
-They also enable storage of non-movable components. Non-movable components in the C++ API are automatically marked as sparse.
-
-The following code example shows how to mark a component as sparse:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-ECS_COMPONENT(world, Position);
-ecs_add_id(world, ecs_id(Position), EcsSparse);
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-world.component<Position>().add(flecs::Sparse);
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-ecs.Component<Position>().Entity
-    .Add(Ecs.Sparse);
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-world.component::<Position>().add_trait::<flecs::Sparse>();
-```
-
-</li>
-</ul>
-</div>
-
-## DontFragment trait
-The `DontFragment` trait uses the same sparse storage as the `Sparse` trait, but does not fragment tables. This can be desirable especially if a component or relationship is very sparse (e.g. it is only added to a few entities) as this would otherwise result in many tables that only contain a small number of entities.
-
-The following code example shows how to mark a component as `DontFragment`:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-ECS_COMPONENT(world, Position);
-ecs_add_id(world, ecs_id(Position), EcsDontFragment);
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-world.component<Position>().add(flecs::DontFragment);
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-ecs.Component<Position>().Entity
-    .Add(Ecs.DontFragment);
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-world.component::<Position>().add_trait::<flecs::DontFragment>();
-```
-
-</li>
-</ul>
-</div>
-
-Components with the `DontFragment` trait have the following limitations:
-- They don't show up in types (obtained by `ecs_get_type` / `entity::type`)
-- Monitors don't trigger on `DontFragment` components. The reason for this is that monitors compare the previous table with the current table of an entity to determine if an entity started matching, and `DontFragment` components aren't part of the table.
-
-Support for `DontFragment` has a number of (temporary) limitations:
-- `target_for` does not yet work for `DontFragment` components.
-- `DontFragment` components are not serialized yet to JSON (and don't show up in the explorer).
-- `Or`, `Optional`, `AndFrom` and `NotFrom` operators are not yet supported.
-- Component inheritance and transitivity are not yet supported.
-- Queries for `DontFragment` components may run slower than expected.
-
-What does work:
-- ECS operations (`add`, `remove`, `get`, `get_mut`, `ensure`, `emplace`, `set`, `delete`).
-- Relationships (including `Exclusive` relationships).
-- Simple component queries.
-- Wildcard queries.
-- Queries with variables.
-
-## Symmetric trait
-The `Symmetric` trait enforces that when a relationship `(R, Y)` is added to entity `X`, the relationship `(R, X)` will be added to entity `Y`. The reverse is also true, if relationship `(R, Y)` is removed from `X`, relationship `(R, X)` will be removed from `Y`.
-
-The symmetric trait is useful for relationships that do not make sense unless they are bidirectional. Examples of such relationships are `AlliesWith`, `MarriedTo`, `TradingWith` and so on. An example:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-ecs_entity_t MarriedTo = ecs_new_w_id(world, EcsSymmetric);
-ecs_entity_t Bob = ecs_new(world);
-ecs_entity_t Alice = ecs_new(world);
-ecs_add_pair(world, Bob, MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-auto MarriedTo = world.entity().add(flecs::Symmetric);
-auto Bob = ecs.entity();
-auto Alice = ecs.entity();
-Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-Entity marriedTo = world.Entity().Add(Ecs.Symmetric);
-Entity bob = ecs.Entity();
-Entity alice = ecs.Entity();
-Bob.Add(marriedTo, alice); // Also adds (MarriedTo, Bob) to Alice
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-let married_to = world.entity().add_trait::<flecs::Symmetric>();
-let bob = world.entity();
-let alice = world.entity();
-bob.add_id((married_to, alice)); // Also adds (MarriedTo, Bob) to Alice
-```
-
-</li>
-</ul>
-</div>
 
 ## With trait
 The `With` relationship can be added to components to indicate that it must always come together with another component. The following example shows how `With` can be used with regular components/tags:
@@ -1938,161 +2234,6 @@ let pears = world.entity();
 
 // Create new entity with both (Loves, Pears) and (Likes, Pears)
 let e = world.entity().add_id((loves, pears));
-```
-
-</li>
-</ul>
-</div>
-
-## OneOf trait
-The `OneOf` trait enforces that the target of the relationship is a child of a specified entity. `OneOf` can be used to indicate that the target needs to be either a child of the relationship (common for enum relationships), or of another entity.
-
-The following example shows how to constrain the relationship target to a child of the relationship:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-ecs_entity_t Food = ecs_new(world);
-
-// Enforce that target of relationship is child of Food
-ecs_add_id(world, Food, EcsOneOf);
-
-ecs_entity_t Apples = ecs_new_w_pair(world, EcsChildOf, Food);
-ecs_entity_t Fork = ecs_new(world);
-
-// This is ok, Apples is a child of Food
-ecs_entity_t a = ecs_new_w_pair(world, Food, Apples);
-
-// This is not ok, Fork is not a child of Food
-ecs_entity_t b = ecs_new_w_pair(world, Food, Fork);
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-// Enforce that target of relationship is child of Food
-auto Food = world.entity().add(flecs::OneOf);
-auto Apples = world.entity().child_of(Food);
-auto Fork = world.entity();
-
-// This is ok, Apples is a child of Food
-auto a = world.entity().add(Food, Apples);
-
-// This is not ok, Fork is not a child of Food
-auto b = world.entity().add(Food, Fork);
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-// Enforce that target of relationship is child of Food
-Entity food = world.Entity().Add(Ecs.OneOf);
-Entity apples = world.Entity().ChildOf(food);
-Entity fork = world.Entity();
-
-// This is ok, Apples is a child of Food
-Entity a = world.Entity().Add(food, apples);
-
-// This is not ok, Fork is not a child of Food
-Entity b = world.Entity().Add(food, fork);
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-// Enforce that target of relationship is child of Food
-let food = world.entity().add_trait::<flecs::OneOf>();
-let apples = world.entity().child_of_id(food);
-let fork = world.entity();
-
-// This is ok, Apples is a child of Food
-let a = world.entity().add_id((food, apples));
-
-// This is not ok, Fork is not a child of Food
-let b = world.entity().add_id((food, fork));
-```
-
-</li>
-</ul>
-</div>
-
-The following example shows how `OneOf` can be used to enforce that the relationship target is the child of an entity other than the relationship:
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-```c
-ecs_entity_t Food = ecs_new(world);
-ecs_entity_t Eats = ecs_new(world);
-
-// Enforce that target of relationship is child of Food
-ecs_add_pair(world, Eats, EcsOneOf, Food);
-
-ecs_entity_t Apples = ecs_new_w_pair(world, EcsChildOf, Food);
-ecs_entity_t Fork = ecs_new(world);
-
-// This is ok, Apples is a child of Food
-ecs_entity_t a = ecs_new_w_pair(world, Eats, Apples);
-
-// This is not ok, Fork is not a child of Food
-ecs_entity_t b = ecs_new_w_pair(world, Eats, Fork);
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-// Enforce that target of relationship is child of Food
-auto Food = world.entity();
-auto Eats = world.entity().add(flecs::OneOf, Food);
-auto Apples = world.entity().child_of(Food);
-auto Fork = world.entity();
-
-// This is ok, Apples is a child of Food
-auto a = world.entity().add(Eats, Apples);
-
-// This is not ok, Fork is not a child of Food
-auto b = world.entity().add(Eats, Fork);
-```
-
-</li>
-<li><b class="tab-title">C#</b>
-
-```cs
-// Enforce that target of relationship is child of Food
-Entity food = world.Entity();
-Entity eats = world.Entity().Add(Ecs.OneOf, food);
-Entity apples = world.Entity().ChildOf(food);
-Entity fork = world.Entity();
-
-// This is ok, Apples is a child of Food
-Entity a = world.Entity().Add(eats, apples);
-
-// This is not ok, Fork is not a child of Food
-Entity b = world.Entity().Add(eats, fork);
-```
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-```rust
-// Enforce that target of relationship is child of Food
-let food = world.entity();
-let eats = world.entity().add_first::<flecs::OneOf>(food);
-let apples = world.entity().child_of_id(food);
-let fork = world.entity();
-
-// This is ok, Apples is a child of Food
-let a = world.entity().add_id((eats, apples));
-
-// This is not ok, Fork is not a child of Food
-let b = world.entity().add_id((eats, fork));
 ```
 
 </li>

@@ -278,7 +278,8 @@ void flecs_query_cache_for_each_component_monitor(
             callback(world, term->id, q);
 
         } else if (src->id & EcsSelf && !ecs_term_match_this(term)) {
-            ecs_abort(ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(!(src->id & EcsSelf) || ecs_term_match_this(term),   
+                ECS_INTERNAL_ERROR, NULL);
         }
     }
 }

@@ -385,27 +385,6 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return this->oper(flecs::NotFrom);
     }
 
-    /** Match singleton. */
-    Base& singleton() {
-        this->assert_term();
-        ecs_assert(term_->id || term_->first.id, ECS_INVALID_PARAMETER, 
-                "no component specified for singleton");
-        
-        flecs::id_t sid = term_->id;
-        if (!sid) {
-            sid = term_->first.id;
-        }
-
-        ecs_assert(sid != 0, ECS_INVALID_PARAMETER, NULL);
-
-        if (!ECS_IS_PAIR(sid)) {
-            term_->src.id = sid;
-        } else {
-            term_->src.id = ecs_pair_first(this->world_v(), sid);
-        }
-        return *this;
-    }
-
     /* Query terms are not triggered on by observers */
     Base& filter() {
         term_->inout = EcsInOutFilter;

@@ -17,6 +17,9 @@ struct Velocity {
 int main(int, char *[]) {
     flecs::world world;
 
+    // Mark Gravity as singleton
+    world.component<Gravity>().add(flecs::Singleton);
+
     // Set singleton
     world.set<Gravity>({ 9.81 });
 
@@ -25,14 +28,9 @@ int main(int, char *[]) {
     world.entity("e2").set<Velocity>({0, 1});
     world.entity("e3").set<Velocity>({0, 2});
 
-    // Create query that matches Gravity as singleton
+    // Create query that matches Gravity singleton
     flecs::query<Velocity, const Gravity> q = 
-        world.query_builder<Velocity, const Gravity>()
-            .term_at(1).singleton()
-            .build();
-
-    // In a query string expression you can use the $ shortcut for singletons:
-    //   Velocity, Gravity($)
+        world.query<Velocity, const Gravity>();
 
     q.each([](flecs::entity e, Velocity& v, const Gravity& g) {
         v.y += g.value;

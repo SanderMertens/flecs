@@ -16,8 +16,11 @@ typedef struct {
 int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
-    ECS_COMPONENT(ecs, Gravity);
     ECS_COMPONENT(ecs, Velocity);
+    ECS_COMPONENT(ecs, Gravity);
+
+    // Mark Gravity as singleton
+    ecs_add_id(ecs, ecs_id(Gravity), EcsSingleton);
 
     // Set singleton
     ecs_singleton_set(ecs, Gravity, { 9.81 });
@@ -31,17 +34,13 @@ int main(int argc, char *argv[]) {
     ecs_set(ecs, e2, Velocity, {0, 1});
     ecs_set(ecs, e3, Velocity, {0, 2});
 
-    // Create query that matches Gravity as singleton
+    // Create query that matches Gravity singleton
     ecs_query_t *q = ecs_query(ecs, {
         .terms = {
             { .id = ecs_id(Velocity) },
-            // A singleton is a component matched on itself
-            { .id = ecs_id(Gravity), .src.id =  ecs_id(Gravity) }
+            { .id = ecs_id(Gravity) }
         }
     });
-
-    // In a query string expression you can use the $ shortcut for singletons:
-    //   Velocity, Gravity($)
 
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {

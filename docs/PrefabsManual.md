@@ -191,7 +191,9 @@ world.QueryBuilder<Position>()
 
 ```rust
 // Only match prefab entities
-world.query::<&Position>().with::<flecs::Prefab>().build();
+world.query::<&Position>()
+    .with::<flecs::Prefab>()
+    .build();
 ```
 
 </li>
@@ -241,11 +243,10 @@ world.QueryBuilder<Position>()
 
 ```rust
 // Only match prefab entities
-world
-.query::<&Position>()
-.with::<flecs::Prefab>()
-.optional()
-.build();
+world.query::<&Position>()
+    .with::<flecs::Prefab>()
+    .optional()
+    .build();
 ```
 
 </li>
@@ -292,10 +293,9 @@ world.QueryBuilder()
 
 ```rust
 // Only match prefab entities
-world
-.query::<&Position>()
-.query_flags(QueryFlags::MatchPrefab)
-.build();
+world.query::<&Position>()
+    .query_flags(QueryFlags::MatchPrefab)
+    .build();
 ```
 
 </li>

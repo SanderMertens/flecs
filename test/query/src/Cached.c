@@ -848,13 +848,15 @@ void Cached_singleton_w_optional_new_empty_table(void) {
     ECS_ENTITY(world, Singleton, (OnInstantiate, Inherit));
     ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
 
+    ecs_add_id(world, ecs_id(Singleton), EcsSingleton);
+
     ecs_singleton_add(world, Singleton);
 
     ecs_entity_t e = ecs_new_w(world, TagA);
     ecs_set_name(world, e, "e");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Singleton($), ?TagA",
+        .expr = "Singleton, ?TagA",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -912,13 +914,15 @@ void Cached_singleton_w_optional_new_empty_non_empty_table(void) {
     ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
     ECS_ENTITY(world, TagB, (OnInstantiate, Inherit));
 
+    ecs_add_id(world, ecs_id(Singleton), EcsSingleton);
+
     ecs_singleton_add(world, Singleton);
 
     ecs_entity_t e = ecs_new_w(world, TagA);
     ecs_add(world, e, TagB);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Singleton($), ?TagA",
+        .expr = "Singleton, ?TagA",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -971,6 +975,8 @@ void Cached_singleton_w_optional_new_unset_tables(void) {
     ECS_ENTITY(world, TagB, (OnInstantiate, Inherit));
     ECS_ENTITY(world, TagC, (OnInstantiate, Inherit));
 
+    ecs_add_id(world, ecs_id(Singleton), EcsSingleton);
+
     ecs_singleton_add(world, Singleton);
 
     ecs_entity_t e = ecs_new_w(world, TagA);
@@ -978,7 +984,7 @@ void Cached_singleton_w_optional_new_unset_tables(void) {
     ecs_table_t *table = ecs_get_table(world, e);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Singleton($), ?TagC",
+        .expr = "Singleton, ?TagC",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -1060,10 +1066,12 @@ void Cached_query_w_from_singleton_match_after(void) {
     ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
     ECS_ENTITY(world, TagB, (OnInstantiate, Inherit));
 
+    ecs_add_id(world, TagB, EcsSingleton);
+
     ecs_entity_t e2 = ecs_new_w(world, TagA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "TagA, TagB($)",
+        .expr = "TagA, TagB",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);

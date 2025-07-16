@@ -7686,6 +7686,8 @@ void Basic_instanced_w_singleton(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
     ecs_singleton_set(world, Velocity, {1, 2});
 
     ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
@@ -7699,7 +7701,7 @@ void Basic_instanced_w_singleton(void) {
     ecs_add(world, e5, Tag);
 
     ecs_query_t *f = ecs_query(world, {
-        .expr = "Position, Velocity($)",
+        .expr = "Position, Velocity",
         .cache_kind = cache_kind,
     });
 
@@ -11647,12 +11649,14 @@ void Basic_mixed_uncacheable_w_shared(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
     ECS_TAG(world, Singleton);
+    
+    ecs_add_id(world, Singleton, EcsSingleton);
 
     ecs_singleton_add(world, Singleton);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
-            { Singleton, .src.id = EcsSingleton },
+            { Singleton },
             { Bar, .src.id = EcsUp }
         },
         .cache_kind = cache_kind

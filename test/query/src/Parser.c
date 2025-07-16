@@ -1391,19 +1391,11 @@ void Parser_component_singleton(void) {
 
     ECS_TAG(world, Pred);
 
+    ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "Pred($)"
     });
-    test_assert(q != NULL);
-    test_int(term_count(q), 1);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
-    test_src(terms[0], Pred, EcsSelf|EcsIsEntity);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);
-
-    ecs_query_fini(q);
+    test_assert(q == NULL);
 
     ecs_fini(world);
 }
@@ -1415,19 +1407,11 @@ void Parser_this_singleton(void) {
     ECS_TAG(world, Subj);
     ECS_TAG(world, Obj);
 
+    ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "$this($)"
     });
-    test_assert(q != NULL);
-    test_int(term_count(q), 1);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], EcsThis, EcsSelf|EcsIsVariable);
-    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutNone);
-
-    ecs_query_fini(q);
+    test_assert(q == NULL);
 
     ecs_fini(world);
 }
@@ -7130,6 +7114,80 @@ void Parser_eq_this_not_a_var_w_wildcard(void) {
     test_first(terms[0], EcsPredEq, EcsSelf|EcsIsEntity);
     test_src_var(terms[0], 0, EcsSelf|EcsIsVariable, "foo");
     test_second(terms[0], EcsThis, EcsSelf|EcsIsEntity);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_singleton_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], ecs_id(Position), EcsSelf|EcsIsEntity);
+    test_src(terms[0], ecs_id(Position), EcsSelf|EcsIsEntity);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_singleton_trait_w_explicit_this_var(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position($this)"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], ecs_id(Position), EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_singleton_trait_w_explicit_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(e)"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], ecs_id(Position), EcsSelf|EcsIsEntity);
+    test_src(terms[0], e, EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
 
