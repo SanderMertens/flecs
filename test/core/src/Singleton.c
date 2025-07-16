@@ -116,7 +116,9 @@ void Singleton_singleton_system(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, IncSingleton, EcsOnUpdate, Position($));
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
+    ECS_SYSTEM(world, IncSingleton, EcsOnUpdate, Position);
 
     ecs_singleton_set(world, Position, {10, 20});
 
@@ -206,4 +208,36 @@ void Singleton_trait_add_singleton_pair_to_other(void) {
 
     test_expect_abort();
     ecs_set_pair(world, e, Position, TgtA, {10, 20});
+}
+
+void Singleton_add_trait_after_in_use(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    test_expect_abort();
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+}
+
+void Singleton_add_trait_after_pair_in_use(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_pair(world, e, Position, Tgt, {10, 20});
+
+    test_expect_abort();
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
 }

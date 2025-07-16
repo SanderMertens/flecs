@@ -374,6 +374,7 @@ void flecs_on_singleton_add_remove(ecs_iter_t *it) {
             e = (uint32_t)e;
             ecs_assert(relationship == e, ECS_CONSTRAINT_VIOLATED,
                 "singleton components can only be added to themselves");
+            (void)relationship;
         } else {
             ecs_assert(component == e, ECS_CONSTRAINT_VIOLATED,
                 "singleton components can only be added to themselves");

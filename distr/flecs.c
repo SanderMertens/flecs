@@ -4186,6 +4186,7 @@ void flecs_on_singleton_add_remove(ecs_iter_t *it) {
             e = (uint32_t)e;
             ecs_assert(relationship == e, ECS_CONSTRAINT_VIOLATED,
                 "singleton components can only be added to themselves");
+            (void)relationship;
         } else {
             ecs_assert(component == e, ECS_CONSTRAINT_VIOLATED,
                 "singleton components can only be added to themselves");
@@ -36492,16 +36493,27 @@ int flecs_query_finalize_terms(
         }
 
         bool is_sparse = false;
+        bool keep_alive = true;
 
         ecs_component_record_t *cr = flecs_components_get(world, term->id);
-        if (cr) {
-            if (ecs_os_has_threading()) {
-                ecs_os_ainc(&cr->keep_alive);
-            } else {
-                cr->keep_alive ++;
+        if (!cr) {
+            if (ECS_IS_PAIR(term->id) && ECS_PAIR_SECOND(term->id) != EcsWildcard) {
+                ecs_entity_t first = ECS_PAIR_FIRST(term->id);
+                cr = flecs_components_get(world, ecs_pair(first, EcsWildcard));
+                keep_alive = false;
             }
+        }
 
-            term->flags_ |= EcsTermKeepAlive;
+        if (cr) {
+            if (keep_alive) {
+                if (ecs_os_has_threading()) {
+                    ecs_os_ainc(&cr->keep_alive);
+                } else {
+                    cr->keep_alive ++;
+                }
+
+                term->flags_ |= EcsTermKeepAlive;
+            }
 
             if (cr->flags & EcsIdIsSparse) {
                 is_sparse = true;

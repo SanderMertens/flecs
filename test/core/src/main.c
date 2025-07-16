@@ -1120,6 +1120,8 @@ void Singleton_trait_add_singleton_to_self(void);
 void Singleton_trait_add_singleton_pair_to_self(void);
 void Singleton_trait_add_singleton_to_other(void);
 void Singleton_trait_add_singleton_pair_to_other(void);
+void Singleton_add_trait_after_in_use(void);
+void Singleton_add_trait_after_pair_in_use(void);
 
 // Testsuite 'Clone'
 void Clone_empty(void);
@@ -6941,6 +6943,14 @@ bake_test_case Singleton_testcases[] = {
     {
         "trait_add_singleton_pair_to_other",
         Singleton_trait_add_singleton_pair_to_other
+    },
+    {
+        "add_trait_after_in_use",
+        Singleton_add_trait_after_in_use
+    },
+    {
+        "add_trait_after_pair_in_use",
+        Singleton_add_trait_after_pair_in_use
     }
 };
 
@@ -13042,7 +13052,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        11,
+        13,
         Singleton_testcases
     },
     {
