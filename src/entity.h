@@ -23,7 +23,7 @@ typedef struct {
 flecs_component_ptr_t flecs_ensure(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_t id,
+    ecs_id_t component,
     ecs_record_t *r,
     ecs_size_t size);
 
@@ -156,5 +156,9 @@ void flecs_entity_remove_non_fragmenting(
     ecs_world_t *world,
     ecs_entity_t e,
     ecs_record_t *r);
+
+const char* flecs_entity_invalid_reason(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
 
 #endif

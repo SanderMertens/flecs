@@ -226,7 +226,9 @@ void flecs_name_index_ensure(
     if (existing) {
         if (existing != id) {
             ecs_abort(ECS_ALREADY_DEFINED, 
-                "conflicting id registered with name '%s'", name);
+                "conflicting entity registered with name '%s' "
+                "(existing = %u, new = %u)", 
+                name, (uint32_t)existing, (uint32_t)id);
         }
     }
 

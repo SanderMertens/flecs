@@ -249,25 +249,6 @@
 #define ecs_component(world, ...)\
     ecs_component_init(world, &(ecs_component_desc_t) __VA_ARGS__ )
 
-/** Shorthand for creating a component from a type.
- *
- * Example:
- *
- * @code
- * ecs_component_t(world, Position);
- * @endcode
- */
-#define ecs_component_t(world, T)\
-    ecs_component_init(world, &(ecs_component_desc_t) { \
-        .entity = ecs_entity(world, { \
-            .name = #T, \
-            .symbol = #T, \
-            .use_low_id = true \
-        }), \
-        .type.size = ECS_SIZEOF(T), \
-        .type.alignment = ECS_ALIGNOF(T) \
-    })
-
 /** Shorthand for creating a query with ecs_query_cache_init.
  *
  * Example:
