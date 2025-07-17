@@ -68,18 +68,25 @@ void flecs_query_validator_error(
 static
 int flecs_term_ref_finalize_flags(
     ecs_term_ref_t *ref,
-    ecs_query_validator_ctx_t *ctx)
+    ecs_query_validator_ctx_t *ctx,
+    const char* refname)
 {
+    (void)refname;
+
     if ((ref->id & EcsIsEntity) && (ref->id & EcsIsVariable)) {
-        flecs_query_validator_error(ctx, "cannot set both IsEntity and IsVariable");
+        flecs_query_validator_error(ctx, 
+            "cannot set both EcsIsEntity and EcsIsVariable for term.%s", 
+                refname);
         return -1;
     }
 
     if (ref->name && ref->name[0] == '$') {
         if (!ref->name[1]) {
             if (!(ref->id & EcsIsName)) {
-                flecs_query_validator_error(ctx, "invalid variable name "
-                    "('$' syntax support is removed, use new Singleton trait)");
+                flecs_query_validator_error(ctx, 
+                    "invalid variable name for term.%s"
+                    "('$' syntax support is removed, use new Singleton trait)", 
+                        refname);
                 return -1;
             }
         } else {
@@ -194,7 +201,8 @@ int flecs_term_ref_lookup(
     /* Check if looked up id is alive (relevant for numerical ids) */
     if (!(ref->id & EcsIsName) && ref_id) {
         if (!ecs_is_alive(world, ref_id)) {
-            flecs_query_validator_error(ctx, "identifier '%s' is not alive", ref->name);
+            flecs_query_validator_error(ctx, "identifier '%s' is not alive", 
+                ref->name);
             return -1;
         }
 
@@ -234,15 +242,15 @@ int flecs_term_refs_finalize(
     }
 
     /* Initialize term identifier flags */
-    if (flecs_term_ref_finalize_flags(src, ctx)) {
+    if (flecs_term_ref_finalize_flags(src, ctx, "src")) {
         return -1;
     }
 
-    if (flecs_term_ref_finalize_flags(first, ctx)) {
+    if (flecs_term_ref_finalize_flags(first, ctx, "first")) {
         return -1;
     }
 
-    if (flecs_term_ref_finalize_flags(second, ctx)) {
+    if (flecs_term_ref_finalize_flags(second, ctx, "second")) {
         return -1;
     }
 
@@ -597,7 +605,7 @@ int flecs_term_verify(
                     && !(term->flags_ & EcsTermReflexive)) 
                 {
                     flecs_query_validator_error(ctx, "term with acyclic "
-                        "relationship cannot have same source and target");
+                        "relationship cannot have the same source and target");
                     return -1;
                 }
             }
@@ -759,8 +767,11 @@ int flecs_term_finalize(
 
                 if (term->trav) {
                     char *idstr = ecs_id_str(world, term->id);
-                    flecs_query_validator_error(ctx, ".trav specified for "
-                        "'%s' which can't be inherited", idstr);
+                    flecs_query_validator_error(ctx, 
+                        "traversal relationship (term::trav) '%s' specified for "
+                        "component '%s' which can't be inherited", 
+                            flecs_errstr(ecs_id_str(world, term->trav)),
+                            idstr);
                     ecs_os_free(idstr);
                     return -1;
                 }
@@ -813,7 +824,8 @@ int flecs_term_finalize(
         if (src->id & EcsUp) {
             char *idstr = ecs_id_str(world, term->id);
             flecs_query_validator_error(ctx, "IsA traversal not allowed "
-                "for '%s', add the (OnInstantiate, Inherit) trait", idstr);
+                "for '%s' because the component doesn't have the "
+                "(OnInstantiate, Inherit) trait", idstr);
             ecs_os_free(idstr);
             return -1;
         }
@@ -1345,12 +1357,14 @@ int flecs_query_finalize_terms(
 
         if (prev_is_or) {
             if (ECS_TERM_REF_ID(&term[-1].src) != ECS_TERM_REF_ID(&term->src)) {
-                flecs_query_validator_error(&ctx, "mismatching src.id for OR terms");
+                flecs_query_validator_error(&ctx, 
+                    "mismatching sources in OR expression (all terms in OR "
+                    "expression must have the same source)");
                 return -1;
             }
             if (term->oper != EcsOr && term->oper != EcsAnd) {
                 flecs_query_validator_error(&ctx, 
-                    "term after OR operator must use AND operator");
+                    "term after OR expression cannot use operators");
                 return -1;
             }
         }

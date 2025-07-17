@@ -753,8 +753,8 @@ bool flecs_remove_invalid(
             *id_out = 0;
             return true;
         } else {
-            ecs_entity_t obj = ECS_PAIR_SECOND(id);
-            if (!flecs_entities_is_valid(world, obj)) {
+            ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+            if (!flecs_entities_is_valid(world, tgt)) {
                 /* Check the relationship's policy for deleted objects */
                 ecs_component_record_t *cr = flecs_components_get(world, 
                     ecs_pair(rel, EcsWildcard));

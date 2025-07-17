@@ -1514,7 +1514,8 @@ void flecs_check_exclusive_world_access_write(
 
     if (world->exclusive_access == UINT64_MAX) {
         ecs_throw(ECS_ACCESS_VIOLATION,
-            "invalid access: world is locked for write operations");
+            "invalid access: world is locked for write operations "
+            "(call exclusive_access_begin() first)");
     } else 
     if (world->exclusive_thread_name) {
         ecs_assert(world->exclusive_access == ecs_os_thread_self(), 

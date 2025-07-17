@@ -61,7 +61,6 @@ void Error_assert_false_w_param(void) {
 
 void Error_error_codes(void) {
     test_assert(ecs_strerror(ECS_INVALID_PARAMETER) != NULL);
-    test_assert(ecs_strerror(ECS_NOT_A_COMPONENT) != NULL);
     test_assert(ecs_strerror(ECS_INTERNAL_ERROR) != NULL);
     test_assert(ecs_strerror(ECS_ALREADY_DEFINED) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_COMPONENT_SIZE) != NULL);

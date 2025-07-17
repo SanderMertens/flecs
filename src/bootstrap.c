@@ -81,7 +81,7 @@ static
 void flecs_assert_relation_unused(
     ecs_world_t *world, 
     ecs_entity_t rel,
-    ecs_entity_t property)
+    ecs_entity_t trait)
 {
     if (world->flags & (EcsWorldInit|EcsWorldFini)) {
         return;
@@ -103,10 +103,10 @@ void flecs_assert_relation_unused(
 
     if (in_use) {
         char *r_str = ecs_get_path(world, rel);
-        char *p_str = ecs_get_path(world, property);
+        char *p_str = ecs_get_path(world, trait);
 
-        ecs_throw(ECS_ID_IN_USE, 
-            "cannot change property '%s' for relationship '%s': already in use",
+        ecs_throw(ECS_INVALID_OPERATION, 
+            "cannot change trait '%s' for '%s': component is already in use",
             p_str, r_str);
         
         ecs_os_free(r_str);
@@ -222,8 +222,8 @@ void flecs_register_final(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         if (flecs_components_get(world, ecs_pair(EcsIsA, e)) != NULL) {
             char *e_str = ecs_get_path(world, e);
-            ecs_throw(ECS_ID_IN_USE,
-                "cannot change property 'Final' for '%s': already inherited from",
+            ecs_throw(ECS_INVALID_OPERATION,
+                "cannot change trait 'Final' for '%s': already inherited from",
                     e_str);
             ecs_os_free(e_str);
         error:
@@ -364,6 +364,9 @@ void flecs_register_symmetric(ecs_iter_t *it) {
 static
 void flecs_on_singleton_add_remove(ecs_iter_t *it) {
     ecs_entity_t component = ecs_field_id(it, 0);
+    ecs_world_t *world = it->real_world;
+
+    (void)world;
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -372,13 +375,23 @@ void flecs_on_singleton_add_remove(ecs_iter_t *it) {
         if (ECS_IS_PAIR(component)) {
             ecs_entity_t relationship = ECS_PAIR_FIRST(component);
             e = (uint32_t)e;
-            ecs_assert(relationship == e, ECS_CONSTRAINT_VIOLATED,
-                "singleton components can only be added to themselves");
+            ecs_check(relationship == e, ECS_CONSTRAINT_VIOLATED,
+                "cannot add singleton pair '%s' to entity '%s': singleton "
+                "component '%s' must be added to itself",
+                    flecs_errstr(ecs_id_str(world, component)),
+                    flecs_errstr_1(ecs_get_path(world, it->entities[i])),
+                    flecs_errstr_2(ecs_get_path(it->world, relationship)));
             (void)relationship;
         } else {
-            ecs_assert(component == e, ECS_CONSTRAINT_VIOLATED,
-                "singleton components can only be added to themselves");
+            ecs_check(component == e, ECS_CONSTRAINT_VIOLATED,
+                "cannot add singleton component '%s' to entity '%s': singleton"
+                " component must be added to itself", 
+                    flecs_errstr(ecs_get_path(it->world, component)),
+                    flecs_errstr_1(ecs_get_path(it->world, it->entities[i])));
         }
+
+    error:
+        continue;
     }
 }
 
@@ -386,12 +399,11 @@ static
 void flecs_register_singleton(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
 
+    flecs_register_id_flag_for_relation(it, EcsSingleton, EcsIdSingleton, 0, 0);
+
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t component = it->entities[i];
-
-        flecs_register_id_flag_for_relation(
-            it, component, EcsIdSingleton, 0, 0);
 
         ecs_assert(flecs_components_get(world, component) != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -413,7 +425,7 @@ void flecs_register_singleton(ecs_iter_t *it) {
             .callback = flecs_on_singleton_add_remove,
             .events = {EcsOnAdd}
         });
-    } 
+    }
 }
 
 static
@@ -880,7 +892,7 @@ void flecs_bootstrap(
     world->info.min_id = 0;
     world->info.max_id = 0;
 
-    /* Register observer for tag property before adding EcsPairIsTag */
+    /* Register observer for trait before adding EcsPairIsTag */
     ecs_observer(world, {
         .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = EcsPairIsTag },
@@ -1000,8 +1012,8 @@ void flecs_bootstrap(
     ecs_set_scope(world, EcsFlecsInternals);
 
     /* Register observers for components/relationship properties. Most observers
-     * set flags on an component record when a property is added to a component, which
-     * allows for quick property testing in various operations. */
+     * set flags on an component record when a trait is added to a component, which
+     * allows for quick trait testing in various operations. */
     ecs_observer(world, {
         .query.terms = {{ .id = EcsFinal }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,

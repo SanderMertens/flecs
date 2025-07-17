@@ -381,13 +381,7 @@ void flecs_on_delete_clear_sparse(
         if (cur->flags & EcsIdOnDeleteTargetDelete) {
             flecs_component_delete_sparse(world, cur);
         } else if (cur->flags & EcsIdOnDeleteTargetPanic) {
-            char *id_str = ecs_id_str(world, cur->id);
-            ecs_err("(OnDelete, Panic) constraint violated while "
-                "deleting %s", id_str);
-            ecs_os_free(id_str);
-            #ifndef FLECS_SOFT_ASSERT
-            ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
-            #endif
+            flecs_throw_invalid_delete(world, cr->id);
         }
     }
 }
@@ -464,16 +458,15 @@ void flecs_throw_invalid_delete(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    char *id_str = NULL;
+    (void)id;
+
     if (!(world->flags & EcsWorldQuit)) {
-        id_str = ecs_id_str(world, id);
-        ecs_err("(OnDelete, Panic) constraint violated while deleting %s", 
-            id_str);
-        ecs_os_free(id_str);
-        #ifndef FLECS_SOFT_ASSERT
-        ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
-        #endif
-    }    
+        ecs_throw(ECS_CONSTRAINT_VIOLATED, 
+            "(OnDelete, Panic) constraint violated while deleting entities with %s", 
+            flecs_errstr(ecs_id_str(world, id)));
+    }
+error:
+    return;
 }
 
 void flecs_on_delete(

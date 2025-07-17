@@ -373,10 +373,6 @@ void ecs_parser_warningv_(
     assert(condition) /* satisfy compiler/static analyzers */
 #endif // FLECS_NDEBUG
 
-#define ecs_assert_var(var, error_code, ...)\
-    ecs_assert(var, error_code, __VA_ARGS__);\
-    (void)var
-
 /** Debug assert.
  * Assert that is only valid in debug mode (ignores FLECS_KEEP_ASSERT) */
 #ifndef FLECS_NDEBUG
@@ -410,10 +406,15 @@ void ecs_parser_warningv_(
     if (!(condition)) {\
         ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
         goto error;\
-    }
+    }\
+    ecs_dummy_check
 #else // FLECS_SOFT_ASSERT
 #define ecs_check(condition, error_code, ...)\
-    ecs_assert(condition, error_code, __VA_ARGS__);\
+    if (!(condition)) {\
+        ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
+        ecs_os_abort();\
+    }\
+    assert(condition); /* satisfy compiler/static analyzers */ \
     ecs_dummy_check
 #endif
 #endif // FLECS_NDEBUG
@@ -545,14 +546,12 @@ int ecs_log_last_error(void);
 #define ECS_MISSING_OS_API (9)
 #define ECS_OPERATION_FAILED (10)
 #define ECS_INVALID_CONVERSION (11)
-#define ECS_ID_IN_USE (12)
 #define ECS_CYCLE_DETECTED (13)
 #define ECS_LEAK_DETECTED (14)
 #define ECS_DOUBLE_FREE (15)
 
 #define ECS_INCONSISTENT_NAME (20)
 #define ECS_NAME_IN_USE (21)
-#define ECS_NOT_A_COMPONENT (22)
 #define ECS_INVALID_COMPONENT_SIZE (23)
 #define ECS_INVALID_COMPONENT_ALIGNMENT (24)
 #define ECS_COMPONENT_NOT_REGISTERED (25)

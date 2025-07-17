@@ -375,7 +375,8 @@ void ecs_on_set(EcsIdentifier)(
             ecs_assert((world->flags & (EcsWorldInit|EcsWorldFini)) || 
                 !(cur->index) ||
                 !(it->table->flags & EcsTableHasBuiltins), 
-                    ECS_INVALID_OPERATION, "cannot rename builtin entities");
+                    ECS_INVALID_OPERATION, 
+                    "cannot rename builtin entity to '%s'", name);
             ecs_assert((world->flags & (EcsWorldInit|EcsWorldFini)) ||
                 (it->entities[i] != EcsFlecs),
                 ECS_INVALID_OPERATION,
@@ -434,7 +435,7 @@ void flecs_reparent_name_index_intern(
         EcsIdentifier *name = &names[i];
 
         ecs_assert(e != EcsFlecs, ECS_INVALID_OPERATION,
-            "cannot reparent root flecs module");
+            "cannot reparent flecs root module");
 
         uint64_t index_hash = name->index_hash;
         if (index_hash) {
@@ -933,7 +934,9 @@ ecs_entity_t ecs_add_path_w_sep(
         }
 
         if (entity && (cur != entity)) {
-            ecs_throw(ECS_ALREADY_DEFINED, name);
+            ecs_throw(ECS_ALREADY_DEFINED, "cannot assign name '%s' to "
+                "entity %u, name already used by entity '%s'", path, 
+                    (uint32_t)cur, flecs_errstr(ecs_get_path(world, entity)));
         }
 
         if (name) {
