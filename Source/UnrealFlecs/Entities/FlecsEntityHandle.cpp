@@ -98,10 +98,11 @@ FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeEnum(const TSolidNotNu
     return GetFlecsWorld()->ObtainComponentTypeEnum(EnumType);
 }
 
-void FFlecsEntityHandle::AddCollection(UObject* Collection) const
+void FFlecsEntityHandle::AddCollection(const TSolidNotNull<UObject*> Collection) const
 {
-    solid_check(Collection);
-    UFlecsComponentCollectionObject* ComponentCollection = CastChecked<UFlecsComponentCollectionObject>(Collection);
+    const TSolidNotNull<UFlecsComponentCollectionObject*> ComponentCollection
+        = CastChecked<UFlecsComponentCollectionObject>(Collection);
+    
     ComponentCollection->ApplyCollection_Internal(*this, GetFlecsWorld());
 }
 

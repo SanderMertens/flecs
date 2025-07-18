@@ -8,6 +8,7 @@
 #include "FlecsGameLoopInterface.generated.h"
 
 class UFlecsWorld;
+
 // This class does not need to be modified.
 UINTERFACE(meta=(CannotImplementInterfaceInBlueprint))
 class UNREALFLECS_API UFlecsGameLoopInterface : public UInterface

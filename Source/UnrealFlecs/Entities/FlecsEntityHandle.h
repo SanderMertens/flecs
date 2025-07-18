@@ -11,12 +11,10 @@
 #include "FlecsArchetype.h"
 #include "FlecsId.h"
 #include "GameplayTagContainer.h"
-#include "Engine/UserDefinedEnum.h"
 #include "General/FlecsStringConverters.h"
 #include "Logs/FlecsCategories.h"
 #include "SolidMacros/Macros.h"
 #include "StructUtils/InstancedStruct.h"
-#include "StructUtils/UserDefinedStruct.h"
 #include "Types/SolidEnumSelector.h"
 #include "Types/SolidNotNull.h"
 #include "FlecsEntityHandle.generated.h"
@@ -28,7 +26,7 @@ class UFlecsWorld;
 	extern Unreal::Flecs::FEntityNetSerializeFunction Name;
 
 #define DEFINE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION(Name, Lambda) \
-	Unreal::Flecs::FEntityNetSerializeFunction Name = Lambda; \
+	Unreal::Flecs::FEntityNetSerializeFunction Name = Lambda;
 
 namespace Unreal::Flecs
 {
@@ -80,22 +78,22 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 	GENERATED_BODY()
 
 private:
-	FORCEINLINE static FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const FFlecsId InId)
+	static FORCEINLINE FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const FFlecsId InId)
 	{
 		return InId;
 	}
 
-	FORCEINLINE static FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const UScriptStruct* StructType)
+	static FORCEINLINE FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const UScriptStruct* StructType)
 	{
 		return InEntity.ObtainComponentTypeStruct(StructType);
 	}
 
-	FORCEINLINE static FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const UEnum* EnumType)
+	static FORCEINLINE FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const UEnum* EnumType)
 	{
 		return InEntity.ObtainComponentTypeEnum(EnumType);
 	}
 
-	FORCEINLINE static FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const FGameplayTag& InTag)
+	static FORCEINLINE FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const FGameplayTag& InTag)
 	{
 		return InEntity.GetTagEntity(InTag);
 	}
@@ -639,7 +637,7 @@ public:
 	
 	NO_DISCARD SOLID_INLINE bool HasName() const
 	{
-		return HasPair<flecs::Identifier>(flecs::Name);
+		return DoesOwnPair<flecs::Identifier>(flecs::Name);
 	}
 
 	NO_DISCARD SOLID_INLINE FString GetSymbol() const
@@ -649,7 +647,7 @@ public:
 	
 	NO_DISCARD SOLID_INLINE bool HasSymbol() const
 	{
-		return HasPair<flecs::Identifier>(flecs::Symbol);
+		return DoesOwnPair<flecs::Identifier>(flecs::Symbol);
 	}
 
 	SOLID_INLINE const FFlecsEntityHandle& SetDocBrief(const FString& InDocBrief) const
@@ -1241,47 +1239,19 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const TSolidNotNull<const UScriptStruct*> InFirst,
-		const void* InValue, const UScriptStruct* InSecond) const
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First,
+		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
+	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const First& InFirstTypeValue, const void* InValue,
+		const Second& InSecondTypeValue) const
 	{
-		if (!HasPair(InFirst, InSecond))
+		if (!HasPair(InFirstTypeValue, InSecondTypeValue))
 		{
-			AddPair(InFirst, InSecond);
+			AddPair(InFirstTypeValue, InSecondTypeValue);
 		}
 
-		Set(FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst),
-			ObtainComponentTypeStruct(InSecond)),
-				InFirst->GetStructureSize(),
-				InValue);
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(const TSolidNotNull<const UScriptStruct*> InFirst,
-		const void* InValue, const FGameplayTag& InSecond) const
-	{
-		if (!HasPair(InFirst, InSecond))
-		{
-			AddPair(InFirst, InSecond);
-		}
-
-		Set(FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst),
-			GetTagEntity(InSecond)),
-				InFirst->GetStructureSize(),
-				InValue);
-		return *this;
-	}
-
-	SOLID_INLINE const FFlecsEntityHandle& SetPairFirst(
-		const TSolidNotNull<const UScriptStruct*> InFirst,
-		const void* InValue, const FFlecsId InSecond) const
-	{
-		if (!HasPair(InFirst, InSecond))
-		{
-			AddPair(InFirst, InSecond);
-		}
-
-		Set(FFlecsId::MakePair(ObtainComponentTypeStruct(InFirst), InSecond),
-				InFirst->GetStructureSize(),
+		Set(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
+			ObtainComponentTypeStruct(InSecondTypeValue)),
+				InSecondTypeValue->GetStructureSize(),
 				InValue);
 		return *this;
 	}
@@ -1319,30 +1289,69 @@ public:
 
 	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
 	requires (std::is_same_v<TFirst, TActual>)
-	SOLID_INLINE void AssignPairFirst(const TActual& InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& AssignPairFirst(const TActual& InValue) const
 	{
 		GetEntity().assign<TFirst, TSecond>(InValue);
+		return *this;
 	}
 
 	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
 	requires (std::is_same_v<TSecond, TActual>)
-	SOLID_INLINE void AssignPairSecond(const TActual& InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& AssignPairSecond(const TActual& InValue) const
 	{
 		GetEntity().assign_second<TFirst, TSecond>(InValue);
+		return *this;
 	}
 
 	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
-	SOLID_INLINE void AssignPairFirst(const TSecond& InSecondType, const TFirst& InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& AssignPairFirst(const TSecond& InSecondType, const TFirst& InValue) const
 	{
 		GetEntity().assign<TFirst>(FFlecsEntityHandle::GetInputId(*this, InSecondType), InValue);
+		return *this;
 	}
 
-	
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First,
+		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
+	SOLID_INLINE const FFlecsEntityHandle& AssignPairFirst(const First& InFirstTypeValue, const void* InValue,
+		const Second& InSecondTypeValue) const
+	{
+		solid_checkf(HasPair(InFirstTypeValue, InSecondTypeValue), 
+			TEXT("Entity does not have pair"));
+
+		Assign(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
+			ObtainComponentTypeStruct(InSecondTypeValue)),
+				InSecondTypeValue->GetStructureSize(),
+				InValue);
+		return *this;
+	}
+
+	template <typename TFirst, typename TSecond, typename TActual = TSecond>
+	SOLID_INLINE const FFlecsEntityHandle& AssignPairSecond(const TActual& InSecond) const
+	{
+		GetEntity().assign_second<TFirst, TSecond>(InSecond);
+		return *this;
+	}
 
 	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
-	SOLID_INLINE void AssignPairSecond(const TFirst& InFirstType, const TSecond& InValue) const
+	SOLID_INLINE const FFlecsEntityHandle& AssignPairSecond(const TFirst& InFirstType, const TSecond& InValue) const
 	{
 		GetEntity().assign_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirstType), InValue);
+		return *this;
+	}
+
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst,
+		Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept TSecond>
+	SOLID_INLINE const FFlecsEntityHandle& AssignPairSecond(const TFirst& InFirstTypeValue,
+		const TSecond& InSecondTypeValue, const void* InValue) const
+	{
+		solid_checkf(HasPair(InFirstTypeValue, InSecondTypeValue),
+			TEXT("Entity does not have pair"));
+
+		Assign(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
+			ObtainComponentTypeStruct(InSecondTypeValue)),
+				InSecondTypeValue->GetStructureSize(),
+				InValue);
+		return *this;
 	}
 	
 	template <typename TFirst, typename TSecond>
@@ -1456,7 +1465,12 @@ public:
 		return GetEntity().lookup(Unreal::Flecs::ToCString(InPath), bSearchPath);
 	}
 
-	void AddCollection(UObject* Collection) const;
+	NO_DISCARD SOLID_INLINE bool IsInStage() const
+	{
+		return GetEntity().world().is_stage();
+	}
+
+	void AddCollection(TSolidNotNull<UObject*> Collection) const;
 	
 protected:
 	flecs::entity Entity;
@@ -1476,6 +1490,7 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 	enum
 	{
 		WithNetSerializer = true,
+		WithIdenticalViaEquality = true,
 	}; // enum
 	
 }; // struct TStructOpsTypeTraits<FFlecsEntityHandle>

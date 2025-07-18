@@ -20,7 +20,7 @@
  **/
 TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 							   "UnrealFlecs.A2.Components",
-							   EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::ProductFilter
+							   EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 								| EAutomationTestFlags::CriticalPriority,
 							   "[Flecs][Entity][Tag][Component][Registration]")
 {
@@ -840,6 +840,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
  * Layout of the tests:
  * A. Basic Pair Tests
  * B. Variation API Tests
+ * C. Set/Assign API Tests
  */
 TEST_CLASS_WITH_FLAGS_AND_TAGS(A4_UnrealFlecsBasicPairTests,
 							   "UnrealFlecs.A4.Pairs",

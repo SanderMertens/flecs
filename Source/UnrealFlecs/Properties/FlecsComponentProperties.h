@@ -112,4 +112,4 @@ public:
 			} \
 		}; \
 		static FFlecs_AutoRegister_##Name AutoRegister_##Name; \
-	} 
+	}

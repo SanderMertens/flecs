@@ -391,21 +391,21 @@ inline flecs::entity enum_data<E>::entity() const {
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
-    int index = index_by_value(value);
+    /*int index = index_by_value(value);
     if (index >= 0) {
         int32_t constant_i = impl_.constants[index].index;
         flecs::entity_t entity = flecs_component_ids_get(world_, constant_i);
         return flecs::entity(world_, entity);
-    }
+    }*/
 #ifdef FLECS_META
     // Reflection data lookup failed. Try value lookup amongst flecs::Constant relationships
     flecs::world world = flecs::world(world_);
     return world.query_builder()
         .with(flecs::ChildOf, world.id<E>())
-        .with(flecs::Constant, world.id<int32_t>())
+        .with(flecs::Constant, world.id<underlying_type_t<E>>())
         .build()
         .find([value](flecs::entity constant) {
-            const int32_t& constant_value = constant.get_second<int32_t>(flecs::Constant);
+            const int32_t& constant_value = constant.get_second<underlying_type_t<E>>(flecs::Constant);
             return value == static_cast<underlying_type_t<E>>(constant_value);
         });
 #else

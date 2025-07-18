@@ -16,7 +16,7 @@ class UNREALFLECS_API UFlecsModuleSetDataAsset : public UDataAsset
 
 public:
 	UPROPERTY(EditAnywhere, Instanced, Category = "Flecs",
-		meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
+		meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
 	TArray<TObjectPtr<UObject>> Modules;
 	
 	void ImportModules(const TSolidNotNull<UFlecsWorld*> InWorld);

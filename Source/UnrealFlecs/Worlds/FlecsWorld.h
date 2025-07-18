@@ -240,7 +240,7 @@ public:
 				// @TODO: should we log if the class is abstract?
 				if (Class->HasAnyClassFlags(CLASS_Abstract))
 				{
-					UE_LOGFMT(LogFlecsWorld, Log,
+					UE_LOGFMT(LogFlecsWorld, Verbose,
 						"Skipping registration of {ClassName} because it is abstract",
 						Class->GetName());
 					continue;
@@ -363,16 +363,19 @@ public:
 					{
 						FFlecsComponentHandle InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
 						
-						const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get()
+						const TSolidNotNull<const FFlecsComponentProperties*> Properties
+							= FFlecsComponentPropertiesRegistry::Get()
 							.GetComponentProperties(StructSymbol);
-						solid_check(Properties);
 
 						std::invoke(Properties->RegistrationFunction, Iter.world(), InUntypedComponent);
+
+						UE_LOG(LogFlecsComponent, Log,
+							TEXT("Component properties %s registered"), *StructSymbol);
 					}
 					#if !NO_LOGGING
 					else
 					{
-						UE_LOG(LogFlecsWorld, Log,
+						UE_LOG(LogFlecsComponent, Log,
 							TEXT("Component properties %s not found"), *StructSymbol);
 					}
 					#endif // UNLOG_ENABLED
@@ -395,6 +398,7 @@ public:
 				{
 					UE_LOG(LogFlecsWorld, Log,
 						TEXT("Entity Garbage Collected: %s"), *EntityHandle.GetName());
+					
 					EntityHandle.Destroy();
 				}
 			});
@@ -483,93 +487,8 @@ public:
 						break;
 					}
 				}
-				
-				/*for (int32 Index = ProgressModules.Num(); Index > 0; --Index)
-				{
-					const UObject* Module = ProgressModules[Index - 1].GetObject();
-					
-					if UNLIKELY_IF(!IsValid(Module))
-					{
-						ProgressModules.RemoveAt(Index - 1);
-						break;
-					}
-					
-					if (Module == InUObjectComponent.GetObjectChecked())
-					{
-						ProgressModules.RemoveAt(Index - 1);
-						break;
-					}
-				}*/
 			});
 	}
-
-	/*void InitializeAssetRegistry()
-	{
-		const FAssetRegistryModule& AssetRegistryModule
-			= FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
-		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-
-		TArray<FAssetData> AssetDataArray;
-		AssetRegistry.GetAssetsByClass(
-			FTopLevelAssetPath(UFlecsPrimaryDataAsset::StaticClass()),
-			AssetDataArray, true);
-
-		FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
-
-		for (const FAssetData& AssetData : AssetDataArray)
-		{
-			TSoftObjectPtr<UFlecsPrimaryDataAsset> AssetPtr(AssetData.ToSoftObjectPath());
-			
-			if (AssetPtr.IsValid())
-			{
-				RegisterFlecsAsset(AssetPtr.Get());
-			}
-			else
-			{
-				Streamable.RequestAsyncLoad(AssetPtr.ToSoftObjectPath(),
-					FStreamableDelegate::CreateLambda([this, AssetPtr]()
-					{
-						if LIKELY_IF(UFlecsPrimaryDataAsset* LoadedAsset = AssetPtr.Get())
-						{
-							RegisterFlecsAsset(LoadedAsset);
-						}
-						else
-						{
-							UN_LOGF(LogFlecsWorld, Warning,
-								"Failed to load asset %s", *AssetPtr.ToString());
-						}
-					})
-				);
-			}
-		}
-		
-		AssetRegistry.OnAssetAdded().AddWeakLambda(this, [this](const FAssetData& InAssetData)
-		{
-			if (InAssetData.IsInstanceOf<UFlecsPrimaryDataAsset>())
-			{
-				TSoftObjectPtr<UFlecsPrimaryDataAsset> NewAsset(InAssetData.ToSoftObjectPath());
-				FStreamableManager& LocalStreamable = UAssetManager::GetStreamableManager();
-				LocalStreamable.RequestAsyncLoad(NewAsset.ToSoftObjectPath(),
-					FStreamableDelegate::CreateLambda([this, NewAsset]()
-					{
-						if (UFlecsPrimaryDataAsset* LoadedAsset = NewAsset.Get())
-						{
-							RegisterFlecsAsset(LoadedAsset);
-						}
-					})
-				);
-			}
-		});
-		
-		AssetRegistry.OnAssetRemoved().AddWeakLambda(this, [this](const FAssetData& InAssetData)
-		{
-			if (InAssetData.IsInstanceOf<UFlecsPrimaryDataAsset>())
-			{
-				UFlecsPrimaryDataAsset* RemovedAsset = CastChecked<UFlecsPrimaryDataAsset>(InAssetData.GetAsset());
-				UnregisterFlecsAsset(RemovedAsset);
-			}
-		});
-	}*/
 
 	/**
 	 * @brief Asynchronously Register a module dependency,
@@ -624,7 +543,7 @@ public:
 		{
 			const FFlecsEntityHandle DependencyEntity = GetModuleEntity(InDependencyClass);
 			
-			UObject* DependencyModuleObject = GetModule(InDependencyClass);
+			TSolidNotNull<UObject*> DependencyModuleObject = GetModule(InDependencyClass);
 			solid_check(IsValid(DependencyModuleObject));
 
 			solid_check(DependencyEntity.IsValid());
@@ -877,6 +796,7 @@ public:
 		solid_checkf(InModule, TEXT("Module is nullptr"));
 
 		const UObject* TemplateModuleObject = InModule.GetObject();
+		solid_check(IsValid(TemplateModuleObject));
 
 		TSolidNotNull<UObject*> NewModuleObject = DuplicateObject(TemplateModuleObject, this);
 		ImportedModules.Add(NewModuleObject);

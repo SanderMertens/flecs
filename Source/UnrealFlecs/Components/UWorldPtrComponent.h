@@ -82,3 +82,12 @@ public:
 	TObjectPtr<UWorld> World;
 	
 }; // struct FUWorldPtrComponent
+
+template<>
+struct TStructOpsTypeTraits<FUWorldPtrComponent> : public TStructOpsTypeTraitsBase2<FUWorldPtrComponent>
+{
+	enum
+	{
+		
+	};
+};

@@ -20,9 +20,9 @@ Only tested on Version: UE 5.6 MSVC
 
 New Component Registration in Source/FlecsLibrary/Public/flecs/addons/cpp/component.hpp  
 Disabled flecs Auto Component Registration  
-set\_symbol in Public Source/FlecsLibrary/Public/flecs/addons/cpp/mixins/entity/builder.hpp
+set\_symbol in Source/FlecsLibrary/Public/flecs/addons/cpp/mixins/entity/builder.hpp
 
 to\_constant in Source/FlecsLibrary/Public/flecs/addons/cpp/mixins/enum/impl.hpp and Source/FlecsLibrary/Public/flecs/addons/cpp/mixins/enum/entity\_view.inl
 
-
+enum\_data<E>::entity(underlying\_type\_t<E> value) in Source/FlecsLibrary/Public/flecs/addons/cpp/impl/world.hpp
 
