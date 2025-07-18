@@ -1757,6 +1757,8 @@ void Observer_create_trivial_pair_observer_before_in_use_w_delete_component(void
 void Observer_create_trivial_pair_observer_after_in_use_w_delete_component(void);
 void Observer_create_multi_observer_before_in_use_w_delete_component(void);
 void Observer_create_multi_observer_after_in_use_w_delete_component(void);
+void Observer_on_set_override_after_on_add(void);
+void Observer_on_set_two_overrides_after_on_add(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -9464,6 +9466,14 @@ bake_test_case Observer_testcases[] = {
         Observer_create_multi_observer_after_in_use_w_delete_component
     },
     {
+        "on_set_override_after_on_add",
+        Observer_on_set_override_after_on_add
+    },
+    {
+        "on_set_two_overrides_after_on_add",
+        Observer_on_set_two_overrides_after_on_add
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -13087,7 +13097,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        248,
+        250,
         Observer_testcases
     },
     {

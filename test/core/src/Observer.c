@@ -10383,3 +10383,130 @@ void Observer_create_multi_observer_after_in_use_w_delete_component(void) {
 
     ecs_fini(world);
 }
+
+static int override_on_add = 0;
+static int override_on_set = 0;
+
+static void OverrideOnAdd(ecs_iter_t *it) {
+    test_assert(override_on_set == 0);
+    override_on_add ++;
+}
+
+static void OverrideOnSet(ecs_iter_t *it) {
+    test_assert(override_on_add == 1);
+    override_on_set ++;
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+static void OverrideOnSetTwo(ecs_iter_t *it) {
+    test_assert(override_on_add == 2);
+    override_on_set ++;
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    Velocity *v = ecs_field(it, Velocity, 1);
+    test_assert(p != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void Observer_on_set_override_after_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+        },
+        .events = { EcsOnAdd },
+        .callback = OverrideOnAdd
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+        },
+        .events = { EcsOnSet },
+        .callback = OverrideOnSet
+    });
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_owns(world, i, Position));
+    {
+        const Position *p = ecs_get(world, i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    test_int(override_on_add, 1);
+    test_int(override_on_set, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_two_overrides_after_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+        },
+        .events = { EcsOnAdd },
+        .callback = OverrideOnAdd
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Velocity) },
+        },
+        .events = { EcsOnAdd },
+        .callback = OverrideOnAdd
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity) },
+        },
+        .events = { EcsOnSet },
+        .callback = OverrideOnSetTwo
+    });
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+    ecs_set(world, p, Velocity, {1, 2});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_owns(world, i, Position));
+    {
+        const Position *p = ecs_get(world, i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    test_assert(ecs_owns(world, i, Velocity));
+    {
+        const Velocity *v = ecs_get(world, i, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1); test_int(v->y, 2);
+    }
+    
+    test_int(override_on_add, 2);
+    test_int(override_on_set, 1);
+
+    ecs_fini(world);
+}
