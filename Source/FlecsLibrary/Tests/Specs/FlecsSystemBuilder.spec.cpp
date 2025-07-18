@@ -345,7 +345,7 @@ void SystemBuilder_singleton_term(void) {
         int32_t value;
     };
 
-    ecs.component<Singleton>();
+    ecs.component<Singleton>().add(flecs::Singleton);
     ecs.component<Entity>();
 
     ecs.set<Singleton>({10});
@@ -353,7 +353,7 @@ void SystemBuilder_singleton_term(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Entity>()
-        .with<Singleton>().singleton().in()
+        .with<Singleton>().in()
         .run([&](flecs::iter& it) {
             while (it.next()) {
                 auto e = it.field<Entity>(0);
@@ -371,8 +371,7 @@ void SystemBuilder_singleton_term(void) {
             }
         });
 
-    auto 
-    e = ecs.entity(); e.set<Entity>({e});
+    auto e = ecs.entity(); e.set<Entity>({e});
     e = ecs.entity(); e.set<Entity>({e});
     e = ecs.entity(); e.set<Entity>({e});
 

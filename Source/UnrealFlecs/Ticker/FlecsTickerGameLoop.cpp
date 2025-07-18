@@ -30,7 +30,8 @@ NO_DISCARD FORCEINLINE static int flecs_priority_compare(
 	const flecs::entity_t InEntityB,
 	const flecs::SystemPriority* InPtrB) 
 {
-	check(InPtrA && InPtrB);
+	solid_check(InPtrA);
+	solid_check(InPtrB);
 	
 	if (InPtrA->value == InPtrB->value)
 	{

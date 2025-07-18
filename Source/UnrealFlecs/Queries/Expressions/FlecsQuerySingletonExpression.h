@@ -6,6 +6,7 @@
 #include "FlecsQueryExpression.h"
 #include "FlecsQuerySingletonExpression.generated.h"
 
+// Deprecated
 USTRUCT(BlueprintType, meta = (DisplayName = "Singleton Expression"))
 struct UNREALFLECS_API FFlecsQuerySingletonExpression : public FFlecsQueryExpression
 {

@@ -319,7 +319,7 @@ struct type_impl {
         }
         #endif
         
-        ecs_assert(c != 0, ECS_NOT_A_COMPONENT, "component not found, %s", 
+        ecs_assert(c != 0, ECS_INVALID_PARAMETER, "component not found, %s", 
             _::type_name<T>());
 
         if constexpr (std::is_enum<T>::value) {
