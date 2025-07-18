@@ -1822,6 +1822,8 @@
                 "create_trivial_pair_observer_after_in_use_w_delete_component",
                 "create_multi_observer_before_in_use_w_delete_component",
                 "create_multi_observer_after_in_use_w_delete_component",
+                "on_set_override_after_on_add",
+                "on_set_two_overrides_after_on_add",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",

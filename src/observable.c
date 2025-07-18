@@ -1067,6 +1067,11 @@ void flecs_emit_on_set_for_override_on_add(
         return;
     }
 
+    it->ids[0] = id;
+    it->event_id = id;
+    it->trs[0] = flecs_component_get_table(cr, table);
+    it->sources[0] = 0;
+
     /* Invoke OnSet observers for new inherited component value. */
     for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
         ecs_event_id_record_t *ider = iders_set[ider_set_i];
@@ -1107,10 +1112,11 @@ void flecs_emit_on_set_for_override_on_remove(
     ecs_entity_t base = o->entity;
     ecs_assert(base != 0, ECS_INTERNAL_ERROR,  NULL);
     ecs_record_t *base_r = flecs_entities_get(world, base);
-    const ecs_table_record_t *tr = it->trs[0]; /* For restoring later */
     const ecs_table_record_t *base_tr = 
         flecs_component_get_table(cr, base_r->table);
 
+    it->ids[0] = id;
+    it->event_id = id;
     it->sources[0] = base;
     it->trs[0] = base_tr;
     it->up_fields = 1;
@@ -1123,10 +1129,6 @@ void flecs_emit_on_set_for_override_on_remove(
         flecs_observers_invoke(world, &ider->up, it, table, EcsIsA);
         ecs_assert(it->event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
     }
-
-    /* Restore old values */
-    it->sources[0] = 0;
-    it->trs[0] = tr;
 }
 
 /* The emit function is responsible for finding and invoking the observers 
@@ -1295,7 +1297,6 @@ repeat_event:
         int32_t ider_i, ider_count = 0;
         ecs_component_record_t *cr = flecs_components_get(world, id);
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-        const ecs_type_info_t *ti = cr->type_info;;
         ecs_flags32_t cr_flags = cr->flags;
 
         /* Check if this id is a pair of an traversable relationship. If so, we 
@@ -1351,14 +1352,6 @@ repeat_event:
             ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
-        /* Can only override components that don't have DontInherit trait. */
-        bool id_can_override_on_add = can_override_on_add;
-        bool id_can_override_on_remove = can_override_on_remove;
-        id_can_override_on_add &= !(cr_flags & EcsIdOnInstantiateDontInherit);
-        id_can_override_on_remove &= !(cr_flags & EcsIdOnInstantiateDontInherit);
-        id_can_override_on_add &= ti != NULL;
-        id_can_override_on_remove &= ti != NULL;
-
         if (!ider_count && !(can_override_on_add || can_override_on_remove)) {
             /* If nothing more to do for this id, early out */
             continue;
@@ -1392,28 +1385,6 @@ repeat_event:
         it.event_id = id;
         it.ids[0] = id;
 
-        /* Invoke OnSet observers for component overrides if necessary */
-        if (count && (id_can_override_on_add|id_can_override_on_remove)) {
-            bool non_trivial_set = true;
-            if (id < FLECS_HI_COMPONENT_ID) {
-                non_trivial_set = world->non_trivial_set[id];
-            }
-
-            if (non_trivial_set) {
-                if (id_can_override_on_add) {
-                    flecs_emit_on_set_for_override_on_add(
-                        world, er_onset, evtx, &it, id, cr, table);
-                } else if (id_can_override_on_remove) {
-                    flecs_emit_on_set_for_override_on_remove(
-                        world, er_onset, evtx, &it, id, cr, table);
-                }
-            }
-
-            ecs_assert(it.trs[0] == tr, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(it.event_id == id, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(it.ids[0] == id, ECS_INTERNAL_ERROR, NULL);
-        }
-
         /* Actually invoke observers for this event/id */
         for (ider_i = 0; ider_i < ider_count; ider_i ++) {
             ecs_event_id_record_t *ider = iders[ider_i];
@@ -1435,8 +1406,6 @@ repeat_event:
             world, &it, cr, it.entities, count, 0, iders, ider_count);
     }
 
-    can_override_on_add = false; /* Don't override twice */
-    can_override_on_remove = false; /* Don't override twice */
     can_forward = false; /* Don't forward twice */
 
     if (wcer && er != wcer) {
@@ -1444,6 +1413,41 @@ repeat_event:
         er = wcer;
         it.event = event;
         goto repeat_event;
+    }
+
+    /* Invoke OnSet observers for component overrides if necessary */
+    if (count && (can_override_on_add|can_override_on_remove)) {
+        for (i = 0; i < id_count; i ++) {
+            ecs_id_t id = id_array[i];
+
+            bool non_trivial_set = true;
+            if (id < FLECS_HI_COMPONENT_ID) {
+                non_trivial_set = world->non_trivial_set[id];
+            }
+
+            if (non_trivial_set) {
+                ecs_component_record_t *cr = flecs_components_get(world, id);
+                ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+                const ecs_type_info_t *ti = cr->type_info;;
+                ecs_flags32_t cr_flags = cr->flags;
+
+                /* Can only override components that don't have DontInherit trait. */
+                bool id_can_override_on_add = can_override_on_add;
+                bool id_can_override_on_remove = can_override_on_remove;
+                id_can_override_on_add &= !(cr_flags & EcsIdOnInstantiateDontInherit);
+                id_can_override_on_remove &= !(cr_flags & EcsIdOnInstantiateDontInherit);
+                id_can_override_on_add &= ti != NULL;
+                id_can_override_on_remove &= ti != NULL;
+
+                if (id_can_override_on_add) {
+                    flecs_emit_on_set_for_override_on_add(
+                        world, er_onset, evtx, &it, id, cr, table);
+                } else if (id_can_override_on_remove) {
+                    flecs_emit_on_set_for_override_on_remove(
+                        world, er_onset, evtx, &it, id, cr, table);
+                }
+            }
+        }
     }
 
 error:
