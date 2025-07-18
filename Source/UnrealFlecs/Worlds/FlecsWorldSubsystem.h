@@ -138,7 +138,7 @@ public:
 	}
 	
 	UFUNCTION()
-	FORCEINLINE UFlecsWorld* CreateWorld(const FString& Name, const FFlecsWorldSettingsInfo& Settings)
+	FORCEINLINE_DEBUGGABLE UFlecsWorld* CreateWorld(const FString& Name, const FFlecsWorldSettingsInfo& Settings)
 	{
 		solid_checkf(!Name.IsEmpty(), TEXT("World name cannot be NAME_None"));
 
