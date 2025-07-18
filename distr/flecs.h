@@ -23088,6 +23088,34 @@ struct world {
         }
     }
 
+    /** Return type info */
+    const flecs::type_info_t* type_info(flecs::id_t component) {
+        return ecs_get_type_info(world_, component);
+    }
+
+    /** Return type info */
+    const flecs::type_info_t* type_info(flecs::entity_t r, flecs::entity_t t) {
+        return ecs_get_type_info(world_, ecs_pair(r, t));
+    }
+
+    /** Return type info */
+    template <typename T>
+    const flecs::type_info_t* type_info() {
+        return ecs_get_type_info(world_, _::type<T>::id(world_));
+    }
+
+    /** Return type info */
+    template <typename R>
+    const flecs::type_info_t* type_info(flecs::entity_t t) {
+        return type_info(_::type<R>::id(world_), t);
+    }
+
+    /** Return type info */
+    template <typename R, typename T>
+    const flecs::type_info_t* type_info() {
+        return type_info<R>(_::type<T>::id(world_));
+    }
+
 /**
  * @file addons/cpp/mixins/id/mixin.inl
  * @brief Id world mixin.
