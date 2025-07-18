@@ -1384,6 +1384,16 @@ void World_world_init_fini_log_all(void);
 void World_exclusive_access_self_mutate(void);
 void World_exclusive_access_other_mutate(void);
 void World_id_if_registered(void);
+void World_get_type_info_t(void);
+void World_get_type_info_T(void);
+void World_get_type_info_r_t(void);
+void World_get_type_info_R_t(void);
+void World_get_type_info_R_T(void);
+void World_get_type_info_t_tag(void);
+void World_get_type_info_T_tag(void);
+void World_get_type_info_r_t_tag(void);
+void World_get_type_info_R_t_tag(void);
+void World_get_type_info_R_T_tag(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -7007,6 +7017,46 @@ bake_test_case World_testcases[] = {
     {
         "id_if_registered",
         World_id_if_registered
+    },
+    {
+        "get_type_info_t",
+        World_get_type_info_t
+    },
+    {
+        "get_type_info_T",
+        World_get_type_info_T
+    },
+    {
+        "get_type_info_r_t",
+        World_get_type_info_r_t
+    },
+    {
+        "get_type_info_R_t",
+        World_get_type_info_R_t
+    },
+    {
+        "get_type_info_R_T",
+        World_get_type_info_R_T
+    },
+    {
+        "get_type_info_t_tag",
+        World_get_type_info_t_tag
+    },
+    {
+        "get_type_info_T_tag",
+        World_get_type_info_T_tag
+    },
+    {
+        "get_type_info_r_t_tag",
+        World_get_type_info_r_t_tag
+    },
+    {
+        "get_type_info_R_t_tag",
+        World_get_type_info_R_t_tag
+    },
+    {
+        "get_type_info_R_T_tag",
+        World_get_type_info_R_T_tag
     }
 };
 
@@ -8010,7 +8060,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        120,
+        130,
         World_testcases
     },
     {
