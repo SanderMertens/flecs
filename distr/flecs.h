@@ -23072,6 +23072,22 @@ struct world {
         ecs_exclusive_access_end(world_, lock_world);
     }
 
+    /** Return component id if it has been registered.
+     * This operation is similar to world::id() but will never automatically 
+     * register the component.
+     * 
+     * @tparam T The type for which to obtain the id.
+     */
+    template <typename T>
+    flecs::id_t id_if_registered() {
+        if (_::type<T>::registered(world_)) {
+            return _::type<T>::id(world_);
+        }
+        else {
+            return 0;
+        }
+    }
+
 /**
  * @file addons/cpp/mixins/id/mixin.inl
  * @brief Id world mixin.

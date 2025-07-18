@@ -1383,6 +1383,7 @@ void World_fini_copy_move_assign(void);
 void World_world_init_fini_log_all(void);
 void World_exclusive_access_self_mutate(void);
 void World_exclusive_access_other_mutate(void);
+void World_id_if_registered(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -7002,6 +7003,10 @@ bake_test_case World_testcases[] = {
     {
         "exclusive_access_other_mutate",
         World_exclusive_access_other_mutate
+    },
+    {
+        "id_if_registered",
+        World_id_if_registered
     }
 };
 
@@ -8005,7 +8010,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        119,
+        120,
         World_testcases
     },
     {
