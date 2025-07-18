@@ -2160,3 +2160,27 @@ void World_exclusive_access_other_mutate(void) {
 
     test_assert(false); // should not get here
 }
+
+void World_id_if_registered(void) {
+    {
+        flecs::world world;
+
+        test_assert(world.id_if_registered<Position>() == 0);
+        test_assert(world.id_if_registered<Position>() == 0);
+
+        auto c = world.component<Position>();
+
+        test_assert(world.id_if_registered<Position>() == c);
+    }
+
+    {
+        flecs::world world;
+
+        test_assert(world.id_if_registered<Position>() == 0);
+        test_assert(world.id_if_registered<Position>() == 0);
+
+        auto c = world.component<Position>();
+
+        test_assert(world.id_if_registered<Position>() == c);
+    }
+}

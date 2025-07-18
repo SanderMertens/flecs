@@ -1429,7 +1429,8 @@
                 "fini_copy_move_assign",
                 "world_init_fini_log_all",
                 "exclusive_access_self_mutate",
-                "exclusive_access_other_mutate"
+                "exclusive_access_other_mutate",
+                "id_if_registered"
             ]
         }, {
             "id": "Singleton",
