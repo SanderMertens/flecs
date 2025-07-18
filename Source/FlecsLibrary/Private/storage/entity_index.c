@@ -1,4 +1,5 @@
 #include "../private_api.h"
+#include <inttypes.h>
 
 static
 ecs_entity_index_page_t* flecs_entity_index_ensure_page(
@@ -253,11 +254,14 @@ uint64_t flecs_entity_index_new_id(
     }
 
     ecs_assert(index->max_id <= UINT32_MAX, ECS_INVALID_OPERATION,
-        "max id %u exceeds 32 bits", index->max_id);
+        "entity id overflow after creating new entity "
+            "(value is %" PRIu64 ", cannot exceed %u)", 
+                index->max_id, UINT32_MAX);
 
     /* Make sure id hasn't been issued before */
     ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION,
-        "new entity %u id already in use (likely due to overlapping ranges)", (uint32_t)id);
+        "new entity %u id already in use (likely due to overlapping ranges)", 
+            (uint32_t)id);
 
     ecs_vec_append_t(index->allocator, &index->dense, uint64_t)[0] = id;
 
@@ -291,12 +295,15 @@ uint64_t* flecs_entity_index_new_ids(
     for (int32_t i = 0; i < to_add; i ++) {
         const uint32_t id = (uint32_t)++ index->max_id;
 
-        ecs_assert(index->max_id <= UINT32_MAX, ECS_INVALID_OPERATION,
-        	"max id %u exceeds 32 bits", index->max_id);
+    ecs_assert(index->max_id <= UINT32_MAX, ECS_INVALID_OPERATION,
+        "entity id overflow after creating new entity "
+            "(value is %" PRIu64 ", cannot exceed %u)", 
+                index->max_id, UINT32_MAX);
 
         /* Make sure id hasn't been issued before */
         ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION,
-            "new entity %u id already in use (likely due to overlapping ranges)", (uint32_t)id);
+            "new entity %u id already in use (likely due to overlapping ranges)", 
+                (uint32_t)id);
 
         const int32_t dense = dense_count + i;
         ecs_vec_get_t(&index->dense, uint64_t, dense)[0] = id;

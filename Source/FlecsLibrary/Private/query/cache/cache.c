@@ -278,7 +278,8 @@ void flecs_query_cache_for_each_component_monitor(
             callback(world, term->id, q);
 
         } else if (src->id & EcsSelf && !ecs_term_match_this(term)) {
-            ecs_abort(ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(!(src->id & EcsSelf) || ecs_term_match_this(term),   
+                ECS_INTERNAL_ERROR, NULL);
         }
     }
 }
@@ -334,7 +335,7 @@ int flecs_query_cache_order_by(
     ecs_query_cache_t *cache = impl->cache;
     ecs_check(cache != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!ecs_id_is_wildcard(order_by), 
-        ECS_INVALID_PARAMETER, NULL);
+        ECS_INVALID_PARAMETER, "cannot order by wildcard component");
 
     /* Find order_by term & make sure it is queried for */
     const ecs_query_t *query = cache->query;

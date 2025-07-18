@@ -43,7 +43,7 @@ void flecs_ordered_children_unparent(
 /* Reorder entities in ordered children storage. */
 void flecs_ordered_children_reorder(
     ecs_world_t *world,
-    ecs_component_record_t *cr,
+    ecs_entity_t parent,
     const ecs_entity_t *children,
     int32_t child_count);
 

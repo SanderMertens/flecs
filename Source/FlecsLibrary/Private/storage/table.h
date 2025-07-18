@@ -72,6 +72,28 @@ typedef struct ecs_table_event_t {
      * initializing an event a bit simpler. */
 } ecs_table_event_t;
 
+/** Overrides (set if table overrides components) */
+
+/* Override type used for tables with a single IsA pair */
+typedef struct ecs_table_1_override_t {
+    const ecs_pair_record_t *pair;   /* Pair data for (IsA, base) */
+    int32_t generation;              /* Reachable cache generation for IsA pair */
+} ecs_table_1_override_t;
+
+/* Override type used for tables with n IsA pairs (less common) */
+typedef struct ecs_table_n_overrides_t {
+    const ecs_table_record_t *tr;    /* Table record for (IsA, *) */
+    int32_t *generations;            /* Reachable cache generations (one per IsA pair) */
+} ecs_table_n_overrides_t;
+
+typedef struct ecs_table_overrides_t {
+    union {
+        ecs_table_1_override_t _1;
+        ecs_table_n_overrides_t _n;
+    } is;
+    ecs_ref_t *refs;                 /* Refs to base components (one for each column) */
+} ecs_table_overrides_t;
+
 /** Infrequently accessed data not stored inline in ecs_table_t */
 typedef struct ecs_table__t {
     uint64_t hash;                   /* Type hash */
@@ -108,8 +130,9 @@ typedef struct ecs_column_t {
 
 /** Table data */
 struct ecs_data_t {
-    ecs_entity_t *entities;          /* Entity ids */
-    ecs_column_t *columns;           /* Component data */
+    ecs_entity_t *entities;            /* Entity ids */
+    ecs_column_t *columns;             /* Component data */
+    ecs_table_overrides_t *overrides;  /* Component overrides (for tables with IsA pairs) */
     int32_t count;
     int32_t size;
 };
@@ -280,5 +303,12 @@ uint64_t flecs_table_bloom_filter_add(
 bool flecs_table_bloom_filter_test(
     const ecs_table_t *table,
     uint64_t filter);
+
+const ecs_ref_t* flecs_table_get_override(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    const ecs_component_record_t *cr,
+    ecs_ref_t *storage);
 
 #endif

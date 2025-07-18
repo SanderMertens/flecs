@@ -8,7 +8,6 @@
 
 /** Types for deferred operations */
 typedef enum ecs_cmd_kind_t {
-    EcsCmdNew,
     EcsCmdClone,
     EcsCmdBulkNew,
     EcsCmdAdd,
@@ -95,11 +94,6 @@ bool flecs_defer_end(
 bool flecs_defer_purge(
     ecs_world_t *world,
     ecs_stage_t *stage);
-
-/* Insert new entity command (adds entity to root table). */
-bool flecs_defer_new(
-    ecs_stage_t *stage,
-    ecs_entity_t entity);
 
 /* Insert modified command. */
 bool flecs_defer_modified(

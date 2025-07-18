@@ -299,30 +299,21 @@ ecs_component_record_t* flecs_component_new(
                 if (!ecs_id_is_wildcard(rel) && 
                     !ecs_has_id(world, rel, EcsTrait)) 
                 {
-                    char *idstr = ecs_id_str(world, id);
-                    char *tgtstr = ecs_id_str(world, tgt);
-                    ecs_err("constraint violated: relationship '%s' cannot be used"
-                        " as target in pair '%s'", tgtstr, idstr);
-                    ecs_os_free(tgtstr);
-                    ecs_os_free(idstr);
-                    #ifndef FLECS_SOFT_ASSERT
-                    ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
-                    #endif
+                    ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as target"
+                        " in pair '%s': '%s' has the Relationship trait",
+                            flecs_errstr(ecs_get_path(world, tgt)),
+                            flecs_errstr_1(ecs_id_str(world, id)),
+                            flecs_errstr_2(ecs_get_path(world, tgt)));
                 }
             }
         }
 
         if (ecs_has_id(world, rel, EcsTarget)) {
-            char *idstr = ecs_id_str(world, id);
-            char *relstr = ecs_id_str(world, rel);
-            ecs_err("constraint violated: "
-                "%s: target '%s' cannot be used as relationship",
-                    idstr, relstr);
-            ecs_os_free(relstr);
-            ecs_os_free(idstr);
-            #ifndef FLECS_SOFT_ASSERT
-            ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
-            #endif
+            ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as relationship "
+                "in pair '%s': '%s' has the Target trait",
+                    flecs_errstr(ecs_get_path(world, rel)),
+                    flecs_errstr_1(ecs_id_str(world, id)),
+                    flecs_errstr_2(ecs_get_path(world, rel)));
         }
 
         if (tgt && !ecs_id_is_wildcard(tgt)) {
@@ -330,34 +321,38 @@ ecs_component_record_t* flecs_component_new(
             ecs_entity_t oneof = flecs_get_oneof(world, rel);
             if (oneof) {
                 if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
-                    char *idstr = ecs_id_str(world, id);
-                    char *tgtstr = ecs_get_path(world, tgt);
-                    char *oneofstr = ecs_get_path(world, oneof);
-                    ecs_err("OneOf constraint violated: "
-                        "%s: '%s' is not a child of '%s'",
-                        idstr, tgtstr, oneofstr);
-                    ecs_os_free(oneofstr);
-                    ecs_os_free(tgtstr);
-                    ecs_os_free(idstr);
-                    #ifndef FLECS_SOFT_ASSERT
-                    ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
-                    #endif
+                    if (oneof == rel) {
+                        ecs_throw(ECS_CONSTRAINT_VIOLATED, 
+                            "cannot use '%s' as target in pair '%s': "
+                            "relationship '%s' has the OneOf trait and '%s' "
+                            "is not a child of '%s'",
+                                flecs_errstr(ecs_get_path(world, tgt)),
+                                flecs_errstr_1(ecs_id_str(world, id)),
+                                flecs_errstr_2(ecs_get_path(world, rel)),
+                                flecs_errstr_3(ecs_get_path(world, tgt)),
+                                flecs_errstr_4(ecs_get_path(world, rel)));
+                        } else {
+                            ecs_throw(ECS_CONSTRAINT_VIOLATED, 
+                                "cannot use '%s' as target in pair '%s': "
+                                "relationship '%s' has (OneOf, %s) and '%s' "
+                                "is not a child of '%s'",
+                                    flecs_errstr(ecs_get_path(world, tgt)),
+                                    flecs_errstr_1(ecs_id_str(world, id)),
+                                    flecs_errstr_2(ecs_get_path(world, rel)),
+                                    flecs_errstr_3(ecs_get_path(world, oneof)),
+                                    flecs_errstr_4(ecs_get_path(world, tgt)),
+                                    flecs_errstr_5(ecs_get_path(world, oneof)));
+                        }
                 }
             }
 
             /* Check if we're not trying to inherit from a final target */
             if (rel == EcsIsA) {
                 if (ecs_has_id(world, tgt, EcsFinal)) {
-                    char *idstr = ecs_id_str(world, id);
-                    char *tgtstr = ecs_get_path(world, tgt);
-                    ecs_err("Final constraint violated: "
-                            "%s: cannot inherit from final entity '%s'",
-                        idstr, tgtstr);
-                    ecs_os_free(tgtstr);
-                    ecs_os_free(idstr);
-                    #ifndef FLECS_SOFT_ASSERT
-                    ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
-                    #endif
+                    ecs_throw(ECS_CONSTRAINT_VIOLATED, 
+                        "cannot add '(IsA, %s)': '%s' has the Final trait",
+                            flecs_errstr(ecs_get_path(world, tgt)),
+                            flecs_errstr_1(ecs_get_path(world, tgt)));
                 }
             }
         }
@@ -389,16 +384,15 @@ ecs_component_record_t* flecs_component_new(
         if (ecs_has_id(world, rel, EcsRelationship) ||
             (is_tgt = ecs_has_id(world, rel, EcsTarget)))
         {
-            char *idstr = ecs_id_str(world, id);
-            char *relstr = ecs_id_str(world, rel);
-            ecs_err("constraint violated: "
-                "%s: relationship%s '%s' cannot be used as component",
-                    idstr, is_tgt ? " target" : "", relstr);
-            ecs_os_free(relstr);
-            ecs_os_free(idstr);
-            #ifndef FLECS_SOFT_ASSERT
-            ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
-            #endif
+            if (is_tgt) {
+                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
+                    "cannot use '%s' by itself: it has the Target trait and must be used in pair with relationship",
+                        flecs_errstr(ecs_get_path(world, rel)));
+            } else {
+                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
+                    "cannot use '%s' by itself: it has the Relationhip trait and must be used in pair with target",
+                        flecs_errstr(ecs_get_path(world, rel)));
+            }
         }
 #endif
     }
@@ -488,6 +482,10 @@ ecs_component_record_t* flecs_component_new(
     world->info.pair_id_count += is_pair;
 
     return cr;
+#ifdef FLECS_DEBUG
+error:
+    return NULL;
+#endif
 }
 
 static
@@ -512,7 +510,9 @@ void flecs_component_free(
 
     /* Id is still in use by a query */
     ecs_assert((world->flags & EcsWorldQuit) || (cr->keep_alive == 0), 
-        ECS_ID_IN_USE, "cannot delete id that is queried for");
+        ECS_INVALID_OPERATION, 
+        "cannot delete component '%s' as it is still in use by queries",
+            flecs_errstr(ecs_id_str(world, id)));
 
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);

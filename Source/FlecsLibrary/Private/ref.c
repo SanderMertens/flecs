@@ -17,6 +17,8 @@ ecs_ref_t ecs_ref_init_id(
     
     world = ecs_get_world(world);
 
+    flecs_check_exclusive_world_access_read(world);
+
     ecs_record_t *record = flecs_entities_get(world, entity);
     ecs_check(record != NULL, ECS_INVALID_PARAMETER,
         "cannot create ref for empty entity");
@@ -50,6 +52,8 @@ void ecs_ref_update(
     ecs_check(ref->entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ref->id != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ref->record != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    flecs_check_exclusive_world_access_read(world);
 
     if (ref->table_version_fast == flecs_get_table_version_fast(world, ref->table_id)) {
         return;

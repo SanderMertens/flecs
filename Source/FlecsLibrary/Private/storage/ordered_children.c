@@ -127,25 +127,33 @@ void flecs_ordered_children_unparent(
 
 void flecs_ordered_children_reorder(
     ecs_world_t *world,
-    ecs_component_record_t *cr,
+    ecs_entity_t parent,
     const ecs_entity_t *children,
     int32_t child_count)
 {
     (void)world;
 
-    ecs_check(cr != NULL, ECS_INVALID_PARAMETER, 
-        "ecs_set_child_order is only allowed for parents with the "
-        "OrderedChildren trait");
+    ecs_component_record_t *cr = flecs_components_get(
+        world, ecs_childof(parent));
 
-    ecs_check(cr->flags & EcsIdOrderedChildren, ECS_INVALID_PARAMETER, 
-        "ecs_set_child_order is only allowed for parents with the "
-        "OrderedChildren trait");
+    ecs_check(cr != NULL, ECS_INVALID_PARAMETER, 
+        "ecs_set_child_order() is called for parent '%s' which does not have "
+        "the OrderedChildren trait", 
+            flecs_errstr(ecs_get_path(world, parent)));
+
+    ecs_check(cr->flags & EcsIdOrderedChildren, ECS_INVALID_PARAMETER,
+        "ecs_set_child_order() is called for parent '%s' which does not have "
+        "the OrderedChildren trait", 
+            flecs_errstr(ecs_get_path(world, parent)));
 
     ecs_vec_t *vec = &cr->pair->ordered_children;
     ecs_entity_t *parent_children = ecs_vec_first_t(vec, ecs_entity_t);
     int32_t parent_child_count = ecs_vec_count(vec);
     ecs_check(parent_child_count == child_count, ECS_INVALID_PARAMETER,
-        "children provided to set_child_order must match existing children");
+        "children provided to set_child_order() for parent '%s' do not match "
+        "existing children",
+            flecs_errstr(ecs_get_path(world, parent)));
+
     (void)parent_child_count;
 
     if (parent_children == children) {
@@ -168,12 +176,12 @@ void flecs_ordered_children_reorder(
         }
 
         if (j == child_count) {
-            char *child_path = ecs_get_path(world, child);
             ecs_throw(ECS_INVALID_PARAMETER, 
-                "children provided to set_child_order must match existing "
-                "children (child '%s' is missing in provided children vector)",
-                child_path);
-            ecs_os_free(child_path);
+                "children provided to set_child_order() for parent '%s' do not "
+                "match existing children (child '%s' is missing in provided "
+                "children vector)",
+                    flecs_errstr(ecs_get_path(world, parent)),
+                    flecs_errstr_2(ecs_get_path(world, child)));
         }
     }
     #endif

@@ -112,7 +112,7 @@ template <typename T, typename ... Args, if_t<
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
     ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
-    T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id, nullptr));
+    T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id, sizeof(T), nullptr));
 
     FLECS_PLACEMENT_NEW(&dst, T{FLECS_FWD(args)...});
 

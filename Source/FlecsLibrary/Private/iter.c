@@ -156,7 +156,7 @@ void* ecs_field_w_size(
     ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
 
     int32_t column_index = tr->column;
-    ecs_assert(column_index != -1, ECS_NOT_A_COMPONENT, 
+    ecs_assert(column_index != -1, ECS_INVALID_PARAMETER, 
         "field %d: only components can be fetched with fields", index);
     ecs_assert(column_index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);

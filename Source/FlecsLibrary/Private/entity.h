@@ -23,7 +23,7 @@ typedef struct {
 flecs_component_ptr_t flecs_ensure(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_entity_t id,
+    ecs_id_t component,
     ecs_record_t *r,
     ecs_size_t size);
 
@@ -65,7 +65,6 @@ const ecs_entity_t* flecs_bulk_new(
 /* Add new entity id to root table. */
 void flecs_add_to_root_table(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t e);
 
 /* Mark an entity as being watched. This is used to trigger automatic rematching
@@ -157,5 +156,9 @@ void flecs_entity_remove_non_fragmenting(
     ecs_world_t *world,
     ecs_entity_t e,
     ecs_record_t *r);
+
+const char* flecs_entity_invalid_reason(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
 
 #endif

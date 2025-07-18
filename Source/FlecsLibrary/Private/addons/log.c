@@ -378,10 +378,12 @@ void ecs_abort_(
         va_start(args, fmt);
         char *msg = flecs_vasprintf(fmt, args);
         va_end(args);
-        ecs_fatal_(file, line, "%s (%s)", msg, ecs_strerror(err));
+        ecs_fatal_(file, line, "#[red]abort()#[reset]: %s (#[blue]%s#[reset])", 
+            msg, ecs_strerror(err));
         ecs_os_free(msg);
     } else {
-        ecs_fatal_(file, line, "%s", ecs_strerror(err));
+        ecs_fatal_(file, line, "#[red]abort()#[reset]: #[blue]%s#[reset]", 
+            ecs_strerror(err));
     }
     ecs_os_api.log_last_error_ = err;
 }
@@ -399,11 +401,11 @@ void ecs_assert_log_(
         va_start(args, fmt);
         char *msg = flecs_vasprintf(fmt, args);
         va_end(args);
-        ecs_fatal_(file, line, "assert: %s %s (%s)",
+        ecs_fatal_(file, line, "#[red]assert(%s)#[reset]: %s (#[blue]%s#[reset])",
             cond_str, msg, ecs_strerror(err));
         ecs_os_free(msg);
     } else {
-        ecs_fatal_(file, line, "assert: %s %s",
+        ecs_fatal_(file, line, "#[red]assert(%s)#[reset] (#[blue]%s#[reset])",
             cond_str, ecs_strerror(err));
     }
     ecs_os_api.log_last_error_ = err;
@@ -444,7 +446,6 @@ const char* ecs_strerror(
 {
     switch (error_code) {
     ECS_ERR_STR(ECS_INVALID_PARAMETER);
-    ECS_ERR_STR(ECS_NOT_A_COMPONENT);
     ECS_ERR_STR(ECS_INTERNAL_ERROR);
     ECS_ERR_STR(ECS_ALREADY_DEFINED);
     ECS_ERR_STR(ECS_INVALID_COMPONENT_SIZE);
@@ -476,7 +477,6 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_INVALID_OPERATION);
     ECS_ERR_STR(ECS_CONSTRAINT_VIOLATED);
     ECS_ERR_STR(ECS_LOCKED_STORAGE);
-    ECS_ERR_STR(ECS_ID_IN_USE);
     }
 
     return "unknown error code";

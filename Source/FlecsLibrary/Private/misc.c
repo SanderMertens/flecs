@@ -459,3 +459,59 @@ const char* flecs_parse_ws_eol(
 
     return ptr;
 }
+
+#define FLECS_ERRSTR_MAX (64)
+static char flecs_errstr_buf[FLECS_ERRSTR_MAX];
+static char flecs_errstr_buf_1[FLECS_ERRSTR_MAX];
+static char flecs_errstr_buf_2[FLECS_ERRSTR_MAX];
+static char flecs_errstr_buf_3[FLECS_ERRSTR_MAX];
+static char flecs_errstr_buf_4[FLECS_ERRSTR_MAX];
+static char flecs_errstr_buf_5[FLECS_ERRSTR_MAX];
+
+const char* flecs_errstr(
+    char *str)
+{
+    ecs_os_strncpy(flecs_errstr_buf, str, FLECS_ERRSTR_MAX - 1);
+    ecs_os_free(str);
+    return flecs_errstr_buf;
+}
+
+const char* flecs_errstr_1(
+    char *str)
+{
+    ecs_os_strncpy(flecs_errstr_buf_1, str, FLECS_ERRSTR_MAX - 1);
+    ecs_os_free(str);
+    return flecs_errstr_buf_1;
+}
+
+const char* flecs_errstr_2(
+    char *str)
+{
+    ecs_os_strncpy(flecs_errstr_buf_2, str, FLECS_ERRSTR_MAX - 1);
+    ecs_os_free(str);
+    return flecs_errstr_buf_2;
+}
+
+const char* flecs_errstr_3(
+    char *str)
+{
+    ecs_os_strncpy(flecs_errstr_buf_3, str, FLECS_ERRSTR_MAX - 1);
+    ecs_os_free(str);
+    return flecs_errstr_buf_3;
+}
+
+const char* flecs_errstr_4(
+    char *str)
+{
+    ecs_os_strncpy(flecs_errstr_buf_4, str, FLECS_ERRSTR_MAX - 1);
+    ecs_os_free(str);
+    return flecs_errstr_buf_4;
+}
+
+const char* flecs_errstr_5(
+    char *str)
+{
+    ecs_os_strncpy(flecs_errstr_buf_5, str, FLECS_ERRSTR_MAX - 1);
+    ecs_os_free(str);
+    return flecs_errstr_buf_5;
+}

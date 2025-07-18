@@ -102,7 +102,6 @@ void flecs_observer_fini(
 void flecs_emit( 
     ecs_world_t *world,
     ecs_world_t *stage,
-    ecs_flags64_t *set_mask,
     ecs_event_desc_t *desc);
 
 /* Default function to set in iter::next */
