@@ -178,8 +178,13 @@ int flecs_script_visit_free(
     ecs_script_t *script)
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    if (!impl->expr && !impl->root) {
+        return 0;
+    }
+
     ecs_script_visit_t v = {
-        .script = flecs_script_impl(script)
+        .script = impl
     };
 
     if (ecs_script_visit(

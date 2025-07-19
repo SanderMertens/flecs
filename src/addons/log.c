@@ -7,6 +7,82 @@
 
 #ifdef FLECS_LOG
 
+static char *flecs_log_last_err = NULL;
+static ecs_os_api_log_t flecs_log_prev_log = NULL;
+static ecs_os_api_log_t flecs_log_prev_fatal_log = NULL;
+static bool flecs_log_prev_color = false;
+static int flecs_log_prev_level = 0;
+
+static
+void flecs_set_prev_log(
+    ecs_os_api_log_t prev_log,
+    bool try)
+{
+    flecs_log_prev_log = try ? NULL : prev_log;
+    flecs_log_prev_fatal_log = prev_log;
+}
+
+static 
+void flecs_log_capture_log(
+    int32_t level, 
+    const char *file,
+    int32_t line, 
+    const char *msg)
+{
+    (void)file; (void)line;
+
+    if (level <= -4) {
+        /* Make sure to always log fatal errors */
+        if (flecs_log_prev_fatal_log) {
+            ecs_log_enable_colors(true);
+            flecs_log_prev_fatal_log(level, file, line, msg);
+            ecs_log_enable_colors(false);
+            return;
+        } else {
+            fprintf(stderr, "%s:%d: %s", file, line, msg);
+        }
+    }
+
+#ifdef FLECS_DEBUG
+    /* In debug mode, log unexpected errors to the console */
+    if (level < 0) {
+        /* Also log to previous log function in debug mode */
+        if (flecs_log_prev_log) {
+            ecs_log_enable_colors(true);
+            flecs_log_prev_log(level, file, line, msg);
+            ecs_log_enable_colors(false);
+        }
+    }
+#endif
+
+    if (!flecs_log_last_err && level <= -3) {
+        flecs_log_last_err = ecs_os_strdup(msg);
+    }
+}
+
+static
+char* flecs_log_get_captured_log(void) {
+    char *result = flecs_log_last_err;
+    flecs_log_last_err = NULL;
+    return result;
+}
+
+void ecs_log_start_capture(bool try) {
+    flecs_log_prev_color = ecs_log_enable_colors(false);
+    flecs_log_prev_log = ecs_os_api.log_;
+    flecs_log_prev_level = ecs_os_api.log_level_;
+    flecs_set_prev_log(ecs_os_api.log_, try);
+    ecs_os_api.log_ = flecs_log_capture_log;
+    ecs_os_api.log_level_ = -1; /* Ignore debug tracing, log warnings/errors */
+}
+
+char* ecs_log_stop_capture(void) {
+    ecs_os_api.log_ = flecs_log_prev_fatal_log;
+    ecs_os_api.log_level_ = flecs_log_prev_level;
+    ecs_log_enable_colors(flecs_log_prev_color);
+    return flecs_log_get_captured_log();
+}
+
 void flecs_colorize_buf(
     char *msg,
     bool enable_colors,
@@ -580,6 +656,14 @@ void ecs_assert_log_(
     (void)file;
     (void)line;
     (void)fmt;
+}
+
+void ecs_log_start_capture(bool try) {
+    (void)try;
+}
+
+char* ecs_log_stop_capture(void) {
+    return NULL;
 }
 
 #endif

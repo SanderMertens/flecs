@@ -942,12 +942,17 @@ ecs_script_t* ecs_script_parse(
     ecs_world_t *world,
     const char *name,
     const char *code,
-    const ecs_script_eval_desc_t *desc) 
+    const ecs_script_eval_desc_t *desc,
+    ecs_script_eval_result_t *result) 
 {
     (void)desc; /* Will be used in future to expand type checking features */
 
     if (!code) {
         code = "";
+    }
+
+    if (result) {
+        ecs_log_start_capture(true);
     }
 
     ecs_script_t *script = flecs_script_new(world);
@@ -993,8 +998,16 @@ ecs_script_t* ecs_script_parse(
 
     impl->token_remaining = parser.token_cur;
 
+    if (result) {
+        ecs_log_stop_capture();
+    }
+
     return script;
 error:
+    if (result) {
+        result->error = ecs_log_stop_capture();
+    }
+
     ecs_script_free(script);
     return NULL;
 }

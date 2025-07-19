@@ -496,6 +496,12 @@ void Error_reload_script_w_component_w_error(void);
 void Error_reload_script_w_component_w_error_again(void);
 void Error_initializer_w_int_to_struct(void);
 void Error_script_initializer_w_int_to_struct(void);
+void Error_capture_error(void);
+void Error_unresolved_component_error_w_script_run(void);
+void Error_unresolved_component_error_w_script_init(void);
+void Error_unresolved_component_error_w_script_init_existing(void);
+void Error_unresolved_component_error_w_script_eval(void);
+void Error_unresolved_component_error_w_script_eval_multiple_times(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -2919,6 +2925,30 @@ bake_test_case Error_testcases[] = {
     {
         "script_initializer_w_int_to_struct",
         Error_script_initializer_w_int_to_struct
+    },
+    {
+        "capture_error",
+        Error_capture_error
+    },
+    {
+        "unresolved_component_error_w_script_run",
+        Error_unresolved_component_error_w_script_run
+    },
+    {
+        "unresolved_component_error_w_script_init",
+        Error_unresolved_component_error_w_script_init
+    },
+    {
+        "unresolved_component_error_w_script_init_existing",
+        Error_unresolved_component_error_w_script_init_existing
+    },
+    {
+        "unresolved_component_error_w_script_eval",
+        Error_unresolved_component_error_w_script_eval
+    },
+    {
+        "unresolved_component_error_w_script_eval_multiple_times",
+        Error_unresolved_component_error_w_script_eval_multiple_times
     }
 };
 
@@ -4848,7 +4878,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        80,
+        86,
         Error_testcases
     },
     {
