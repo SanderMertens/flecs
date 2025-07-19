@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
     ecs_script_eval_desc_t desc = { .vars = vars };
 
     // Parse the script
-    ecs_script_t *script = ecs_script_parse(world, "My script", code, &desc);
+    ecs_script_t *script = ecs_script_parse(world, "My script", code, &desc, NULL);
     if (!script) {
         printf("script failed to parse\n");
         return -1;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     // Assign values to variables and evaluate
     *(int32_t*)x->value.ptr = 1;
     *(int32_t*)y->value.ptr = 2;
-    if (ecs_script_eval(script, &desc) != 0) {
+    if (ecs_script_eval(script, &desc, NULL) != 0) {
         printf("script failed to run\n");
         return -1;
     }
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
     // Change values for variables and reevaluate
     *(int32_t*)x->value.ptr = 2;
     *(int32_t*)y->value.ptr = 3;
-    if (ecs_script_eval(script, &desc) != 0) {
+    if (ecs_script_eval(script, &desc, NULL) != 0) {
         printf("script failed to run\n");
         return -1;
     }

@@ -15,7 +15,7 @@
  * @see ecs_script_run
  */
 int script_run(const char *name, const char *str) const {
-    return ecs_script_run(world_, name, str);
+    return ecs_script_run(world_, name, str, nullptr);
 }
 
 /** Run script from file.

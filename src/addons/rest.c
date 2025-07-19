@@ -66,7 +66,7 @@ static ecs_os_api_log_t rest_prev_log;
 static ecs_os_api_log_t rest_prev_fatal_log;
 
 static
-void flecs_set_prev_log(
+void flecs_rest_set_prev_log(
     ecs_os_api_log_t prev_log,
     bool try)
 {
@@ -545,33 +545,24 @@ bool flecs_rest_script(
         return true;
     }
 
-    bool prev_color = ecs_log_enable_colors(false);
-    ecs_os_api_log_t prev_log = ecs_os_api.log_;
-    flecs_set_prev_log(ecs_os_api.log_, try);
-    ecs_os_api.log_ = flecs_rest_capture_log;
-
-    script = ecs_script(world, {
+    ecs_entity_t result = ecs_script(world, {
         .entity = script,
         .code = code
     });
 
-    if (!script) {
-        char *err = flecs_rest_get_captured_log();
-        char *escaped_err = flecs_astresc('"', err);
-        if (escaped_err) {
-            flecs_reply_error(reply, "%s", escaped_err);
-        } else {
+    if (!result) {
+        const EcsScript *s = ecs_get(world, script, EcsScript);
+        if (!s || !s->error) {
             flecs_reply_error(reply, "error parsing script");
+        } else {
+            char *escaped_err = flecs_astresc('"', s->error);
+            flecs_reply_error(reply, "%s", escaped_err);
+            ecs_os_free(escaped_err);
         }
         if (!try) {
-            reply->code = 400; /* bad request */
+            reply->code = 400;
         }
-        ecs_os_free(escaped_err);
-        ecs_os_free(err);
     }
-
-    ecs_os_api.log_ = prev_log;
-    ecs_log_enable_colors(prev_color);
 
     return true;
 #else
@@ -667,7 +658,7 @@ bool flecs_rest_reply_existing_query(
 
     ecs_dbg_2("rest: request query '%s'", name);
     bool prev_color = ecs_log_enable_colors(false);
-    flecs_set_prev_log(ecs_os_api.log_, try);
+    flecs_rest_set_prev_log(ecs_os_api.log_, try);
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     const char *vars = ecs_http_get_param(req, "vars");
@@ -717,7 +708,7 @@ bool flecs_rest_get_query(
     ecs_dbg_2("rest: request query '%s'", expr);
     bool prev_color = ecs_log_enable_colors(false);
     ecs_os_api_log_t prev_log = ecs_os_api.log_;
-    flecs_set_prev_log(ecs_os_api.log_, try);
+    flecs_rest_set_prev_log(ecs_os_api.log_, try);
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     ecs_query_t *q = ecs_query(world, { .expr = expr });

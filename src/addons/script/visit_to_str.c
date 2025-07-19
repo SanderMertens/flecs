@@ -453,6 +453,11 @@ char* ecs_script_ast_to_str(
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+
+    if (!impl->expr && !impl->root) {
+        return NULL;
+    }
 
     if (flecs_script_impl(script)->expr) {
         flecs_expr_to_str_buf(

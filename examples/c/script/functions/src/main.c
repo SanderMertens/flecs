@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
         .callback = sum
     });
 
-    if (ecs_script_run(world, "My script", code)) {
+    if (ecs_script_run(world, "My script", code, NULL)) {
         printf("script failed to run\n");
         return -1;
     }

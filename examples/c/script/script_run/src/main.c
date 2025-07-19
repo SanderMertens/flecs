@@ -20,7 +20,7 @@ const char *script =
 int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
-    if (ecs_script_run(world, "My script", script)) {
+    if (ecs_script_run(world, "My script", script, NULL)) {
         printf("script failed to run\n");
     }
 
