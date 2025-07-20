@@ -1429,7 +1429,18 @@
                 "fini_copy_move_assign",
                 "world_init_fini_log_all",
                 "exclusive_access_self_mutate",
-                "exclusive_access_other_mutate"
+                "exclusive_access_other_mutate",
+                "id_if_registered",
+                "get_type_info_t",
+                "get_type_info_T",
+                "get_type_info_r_t",
+                "get_type_info_R_t",
+                "get_type_info_R_T",
+                "get_type_info_t_tag",
+                "get_type_info_T_tag",
+                "get_type_info_r_t_tag",
+                "get_type_info_R_t_tag",
+                "get_type_info_R_T_tag"
             ]
         }, {
             "id": "Singleton",
