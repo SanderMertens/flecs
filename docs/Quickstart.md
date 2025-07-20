@@ -2,7 +2,7 @@
 This document provides a quick overview of the different features and concepts in Flecs with short examples. This is a good resource if you're just getting started or just want to get a better idea of what kind of features are available in Flecs!
 
 ## Building Flecs
-To use Flecs, copy the [distr/flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.c) and [distr/flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.h) files from the [distr folder](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr) to your project's source folder. When building, make sure your build system is setup to do the following:
+To use Flecs, copy the [distr/flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.c) and [distr/flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.h) files from the [distr folder](https://github.com/SanderMertens/flecs/tree/master/distr) to your project's source folder. When building, make sure your build system is setup to do the following:
 
 - If it is a C++ project, make sure to compile [distr/flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.c) as C code, for example by using `gcc`/`clang` instead of `g++`/`clang++`.
 
