@@ -163,8 +163,8 @@ public:
 		// @TODO: Update this to either the FlecsWorldObject or the UWorld
 		DefaultWorld->SetContext(this);
 		
-		DefaultWorld->RegisterComponentType<FFlecsWorldPtrComponent>();
-		DefaultWorld->RegisterComponentType<FUWorldPtrComponent>();
+		DefaultWorld->RegisterComponentType<FFlecsWorldPtrComponent>().Add(flecs::Singleton);
+		DefaultWorld->RegisterComponentType<FUWorldPtrComponent>().Add(flecs::Singleton);
 
 		DefaultWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ DefaultWorld });
 		DefaultWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
@@ -180,7 +180,7 @@ public:
 		{
 			#if !NO_LOGGING
 			flecs::entity NewDefaultEntity =
-			#endif // UNLOG_ENABLED
+			#endif // #if !NO_LOGGING
 				FFlecsDefaultEntityEngine::Get().CreateDefaultEntity(DefaultEntity, DefaultWorld->World);
 
 			UE_LOG(LogFlecsCore, Log,
@@ -234,7 +234,7 @@ public:
 		#endif // WITH_EDITOR
 
 		DefaultWorld->GameLoopInterface->InitializeGameLoop(DefaultWorld);
-		OnWorldCreatedDelegate.Broadcast(DefaultWorld.Get());
+		OnWorldCreatedDelegate.Broadcast(DefaultWorld);
 		
 		return DefaultWorld;
 	}

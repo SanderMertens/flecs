@@ -1436,9 +1436,23 @@ public:
 		return *this;
 	}
 
+	template <typename T>
+	SOLID_INLINE const FFlecsEntityHandle& AddPrefab() const
+	{
+		GetEntity().is_a<T>();
+		return *this;
+	}
+
 	SOLID_INLINE const FFlecsEntityHandle& RemovePrefab(const FFlecsId InPrefab) const
 	{
 		RemovePair(flecs::IsA, InPrefab);
+		return *this;
+	}
+
+	template <typename T>
+	SOLID_INLINE const FFlecsEntityHandle& RemovePrefab() const
+	{
+		RemovePair(flecs::IsA, T::Id);
 		return *this;
 	}
 	
@@ -1458,6 +1472,12 @@ public:
 	NO_DISCARD SOLID_INLINE bool HasPrefab(const FFlecsId InPrefab) const
 	{
 		return HasPair(flecs::IsA, InPrefab);
+	}
+
+	template <typename T>
+	NO_DISCARD SOLID_INLINE bool HasPrefab() const
+	{
+		return HasPairSecond<T>(flecs::IsA);
 	}
 
 	NO_DISCARD SOLID_INLINE FFlecsEntityHandle Lookup(const FString& InPath, const bool bSearchPath = false) const

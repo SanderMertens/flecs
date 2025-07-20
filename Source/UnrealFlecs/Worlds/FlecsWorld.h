@@ -52,6 +52,12 @@ struct UNREALFLECS_API FFlecsBeginPlay
 	GENERATED_BODY()
 }; // struct FFlecsBeginPlay
 
+REGISTER_FLECS_COMPONENT(FFlecsBeginPlay,
+	[](flecs::world InWorld, FFlecsComponentHandle& InComponent)
+	{
+		InComponent.Add(flecs::Singleton);
+	});
+
 UCLASS(BlueprintType, NotBlueprintable)
 class UNREALFLECS_API UFlecsWorld final : public UObject
 {
@@ -110,13 +116,13 @@ public:
 	// ReSharper disable once CppMemberFunctionMayBeConst
 	void WorldBeginPlay()
 	{
-		GetWorldEntity().Add<FFlecsBeginPlay>();
+		AddSingleton<FFlecsBeginPlay>();
 	}
 
 	void InitializeDefaultComponents() const
 	{
-		World.component<FFlecsEntityHandle>()
-			.disable();
+		//World.component<FFlecsEntityHandle>()
+		//	.disable();
 		
 		World.component<FString>()
 			.opaque(flecs::String)
