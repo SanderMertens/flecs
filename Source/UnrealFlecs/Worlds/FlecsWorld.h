@@ -47,12 +47,12 @@ DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"),
  * Can be found in the World entity.
  */
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsBeginPlay
+struct UNREALFLECS_API FFlecsBeginPlaySingletonComponent
 {
 	GENERATED_BODY()
-}; // struct FFlecsBeginPlay
+}; // struct FFlecsBeginPlaySingletonComponent
 
-REGISTER_FLECS_COMPONENT(FFlecsBeginPlay,
+REGISTER_FLECS_COMPONENT(FFlecsBeginPlaySingletonComponent,
 	[](flecs::world InWorld, FFlecsComponentHandle& InComponent)
 	{
 		InComponent.Add(flecs::Singleton);
@@ -116,7 +116,7 @@ public:
 	// ReSharper disable once CppMemberFunctionMayBeConst
 	void WorldBeginPlay()
 	{
-		AddSingleton<FFlecsBeginPlay>();
+		AddSingleton<FFlecsBeginPlaySingletonComponent>();
 	}
 
 	void InitializeDefaultComponents() const
@@ -216,7 +216,7 @@ public:
 
 		RegisterUnrealTypes();
 
-		RegisterComponentType<FFlecsBeginPlay>();
+		RegisterComponentType<FFlecsBeginPlaySingletonComponent>();
 
 		RegisterComponentType<FFlecsUObjectComponent>();
 		

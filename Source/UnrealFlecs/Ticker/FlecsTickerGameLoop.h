@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsTickerComponent.h"
+#include "FlecsTickerSingletonComponent.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "Pipelines/FlecsGameLoopObject.h"
 #include "Systems/FlecsSystem.h"
@@ -40,7 +40,7 @@ public:
 
 	double TickerInterval = 0.0;
 
-	FFlecsTickerComponent* TickerComponentPtr = nullptr;
+	FFlecsTickerSingletonComponent* TickerComponentPtr = nullptr;
 
 	UPROPERTY()
 	FFlecsSystem TickerSystem;

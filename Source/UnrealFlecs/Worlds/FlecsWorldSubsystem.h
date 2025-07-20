@@ -290,7 +290,7 @@ public:
 			return;
 		}
 
-		if (DefaultWorld->HasSingleton<FFlecsBeginPlay>())
+		if (DefaultWorld->HasSingleton<FFlecsBeginPlaySingletonComponent>())
 		{
 			Delegate.ExecuteIfBound(GetWorld());
 		}

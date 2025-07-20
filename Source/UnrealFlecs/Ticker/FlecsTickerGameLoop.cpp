@@ -45,10 +45,10 @@ NO_DISCARD FORCEINLINE static int flecs_priority_compare(
 
 void UFlecsTickerGameLoop::InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorld)
 {
-	InWorld->RegisterComponentType<FFlecsTickerComponent>();
-	InWorld->AddSingleton<FFlecsTickerComponent>();
+	InWorld->RegisterComponentType<FFlecsTickerSingletonComponent>();
+	InWorld->AddSingleton<FFlecsTickerSingletonComponent>();
 
-	TickerComponentPtr = InWorld->GetMutSingletonPtr<FFlecsTickerComponent>();
+	TickerComponentPtr = InWorld->GetMutSingletonPtr<FFlecsTickerSingletonComponent>();
 	solid_check(TickerComponentPtr);
 
 	MainPipeline = InWorld->CreatePipeline()

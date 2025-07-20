@@ -83,11 +83,10 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 
 	TEST_METHOD_WITH_TAGS(A5_SleepNanoSecondsOSAPI, "[Flecs][OS-API]")
 	{
-		// 10 milliseconds in nanoseconds
-		static constexpr uint32 SleepTime = 10000000;
+		static FTimespan SleepTime = FTimespan::FromMilliseconds(10);
 		
 		const uint32 StartTime = ecs_os_now();
-		ecs_os_sleep(0, SleepTime);
+		ecs_os_sleep(SleepTime.GetSeconds(), 0);
 		const uint32 EndTime = ecs_os_now();
 		
 		ASSERT_THAT(IsTrue(EndTime > StartTime));
