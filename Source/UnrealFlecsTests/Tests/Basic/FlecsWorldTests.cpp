@@ -14,7 +14,7 @@
  * C. Entity Tests
  */
 TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 	| EAutomationTestFlags::CriticalPriority,
 	"[Flecs][OS-API][World][Entity]")
 {
