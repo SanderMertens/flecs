@@ -2083,6 +2083,140 @@ void World_exclusive_access_self_mutate(void) {
     ecs.exclusive_access_end();
 }
 
+void World_id_if_registered(void) {
+    {
+        flecs::world world;
+
+        test_assert(world.id_if_registered<Position>() == 0);
+        test_assert(world.id_if_registered<Position>() == 0);
+
+        auto c = world.component<Position>();
+
+        test_assert(world.id_if_registered<Position>() == c);
+    }
+
+    {
+        flecs::world world;
+
+        test_assert(world.id_if_registered<Position>() == 0);
+        test_assert(world.id_if_registered<Position>() == 0);
+
+        auto c = world.component<Position>();
+
+        test_assert(world.id_if_registered<Position>() == c);
+    }
+}
+
+void World_get_type_info_t(void) {
+    flecs::world world;
+
+    flecs::entity c = world.component<Position>();
+
+    const flecs::type_info_t *ti = world.type_info(c);
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_T(void) {
+    flecs::world world;
+    world.component<Position>();
+
+    const flecs::type_info_t *ti = world.type_info<Position>();
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == world.component<Position>());
+}
+
+void World_get_type_info_r_t(void) {
+    flecs::world world;
+
+    flecs::entity c = world.component<Position>();
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info(c, tgt);
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_R_t(void) {
+    flecs::world world;
+
+    flecs::entity c = world.component<Position>();
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info<Position>(tgt);
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_R_T(void) {
+    flecs::world world;
+    world.component<Tgt>();
+    world.component<Position>();
+
+    flecs::entity c = world.component<Position>();
+
+    const flecs::type_info_t *ti = world.type_info<Position, Tgt>();
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_t_tag(void) {
+    flecs::world world;
+
+    flecs::entity c = world.component<Tag>();
+
+    const flecs::type_info_t *ti = world.type_info(c);
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_T_tag(void) {
+    flecs::world world;
+    world.component<Tag>();
+
+    const flecs::type_info_t *ti = world.type_info<Tag>();
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_r_t_tag(void) {
+    flecs::world world;
+    world.component<Tag>();
+    
+    flecs::entity c = world.component<Tag>();
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info(c, tgt);
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_R_t_tag(void) {
+    flecs::world world;
+    world.component<Tag>();
+
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info<Tag>(tgt);
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_R_T_tag(void) {
+    flecs::world world;
+    world.component<Tag>();
+    world.component<Tgt>();
+
+    const flecs::type_info_t *ti = world.type_info<Tag, Tgt>();
+    test_assert(ti == nullptr);
+}
+
 END_DEFINE_SPEC(FFlecsWorldTestsSpec);
 
 /* "id": "World",
@@ -2197,6 +2331,17 @@ END_DEFINE_SPEC(FFlecsWorldTestsSpec);
                 "fini_reentrancy",
                 "fini_copy_move_assign",
                 "exclusive_access_self_mutate",
+                "id_if_registered",
+                "get_type_info_t",
+                "get_type_info_T",
+                "get_type_info_r_t",
+                "get_type_info_R_t",
+                "get_type_info_R_T",
+                "get_type_info_t_tag",
+                "get_type_info_T_tag",
+                "get_type_info_r_t_tag",
+                "get_type_info_R_t_tag",
+                "get_type_info_R_T_tag"
             ]*/
 
 void FFlecsWorldTestsSpec::Define()
@@ -2308,6 +2453,17 @@ void FFlecsWorldTestsSpec::Define()
     It("fini_reentrancy", [this]() { World_fini_reentrancy(); });
     It("fini_copy_move_assign", [this]() { World_fini_copy_move_assign(); });
     It("exclusive_access_self_mutate", [this]() { World_exclusive_access_self_mutate(); });
+    It("id_if_registered", [this]() { World_id_if_registered(); });
+    It("get_type_info_t_entity", [this]() { World_get_type_info_t(); });
+    It("get_type_info_T_type", [this]() { World_get_type_info_T(); });
+    It("get_type_info_r_entity_t_entity", [this]() { World_get_type_info_r_t(); });
+    It("get_type_info_R_type_t_entity", [this]() { World_get_type_info_R_t(); });
+    It("get_type_info_R_type_T_type", [this]() { World_get_type_info_R_T(); });
+    It("get_type_info_t_entity_tag", [this]() { World_get_type_info_t_tag(); });
+    It("get_type_info_T_type_tag", [this]() { World_get_type_info_T_tag(); });
+    It("get_type_info_r_entity_t_entity_tag", [this]() { World_get_type_info_r_t_tag(); });
+    It("get_type_info_R_type_t_entity_tag", [this]() { World_get_type_info_R_t_tag(); });
+    It("get_type_info_R_type_T_type_tag", [this]() { World_get_type_info_R_T_tag(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS

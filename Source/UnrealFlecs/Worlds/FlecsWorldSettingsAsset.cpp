@@ -22,8 +22,7 @@ EDataValidationResult UFlecsWorldSettingsAsset::IsDataValid(FDataValidationConte
 	if (!IsValid(WorldSettings.GameLoop))
 	{
 		Context.AddError(FText::Format(
-			LOCTEXT("InvalidGameLoop",
-				"WorldSettings {0} does not have a valid GameLoop set."),
+			LOCTEXT("InvalidGameLoop", "WorldSettings {0} does not have a valid GameLoop set."),
 			FText::FromString(GetPathName())));
 		
 		return EDataValidationResult::Invalid;
