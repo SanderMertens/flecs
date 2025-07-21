@@ -15,6 +15,7 @@ Only tested on Version: UE 5.6 MSVC
 ### Contributors to Unreal-Flecs:
 
 @Megafunk
+@ronaldburns
 
 ### Modifications to Flecs:
 
