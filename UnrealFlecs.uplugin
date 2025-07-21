@@ -42,8 +42,5 @@
 			"Enabled": true
 		}
 	],
-	"SupportURL": "",
-	"SupportedTargetPlatforms": [
-		"Win64"
-	]
+	"SupportURL": ""
 }
