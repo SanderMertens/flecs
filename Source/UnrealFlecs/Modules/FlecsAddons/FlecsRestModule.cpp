@@ -35,9 +35,9 @@ void UFlecsRestModule::InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, con
 		StatsEntity = InWorld->ImportFlecsModule<flecs::stats>();
 	}
 
-	#endif // FLECS_STATS
+	#endif // #ifdef FLECS_STATS
 
-	#endif // FLECS_REST
+	#endif // #ifdef FLECS_REST
 }
 
 void UFlecsRestModule::DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld)

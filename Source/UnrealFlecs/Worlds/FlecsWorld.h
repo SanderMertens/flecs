@@ -22,6 +22,7 @@
 #include "Entities/FlecsEntityRecord.h"
 #include "Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
+#include "General/FlecsGameplayTagManager.h"
 #include "General/FlecsObjectRegistrationInterface.h"
 #include "Logs/FlecsCategories.h"
 #include "Modules/FlecsDependenciesComponent.h"
@@ -166,7 +167,14 @@ public:
 		 	.opaque(flecs::Entity)
 		 	.serialize([](const flecs::serializer* Serializer, const FGameplayTag* Data)
 		 	{
-		 		const FFlecsId TagEntity = ecs_lookup(Serializer->world, Unreal::Flecs::ToCString(Data->ToString()));
+		 		const FFlecsId TagEntity = ecs_lookup_path_w_sep(
+		 			Serializer->world,
+		 			flecs::component<FFlecsGameplayTagManager>(const_cast<flecs::world_t*>(Serializer->world)),
+		 			Unreal::Flecs::ToCString(Data->ToString()),
+		 			".",
+		 			nullptr,
+		 			true);
+		 		
 		 		return Serializer->value(flecs::Entity, &TagEntity);
 		 	});
 		
@@ -606,6 +614,12 @@ public:
 		return World.entity(Unreal::Flecs::ToCString(Name));
 	}
 
+	template <typename T>
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateTypedEntity() const
+	{
+		return World.entity<T>();
+	}
+
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithId(const FFlecsId InId) const
 	{
@@ -745,6 +759,12 @@ public:
 	FORCEINLINE_DEBUGGABLE void ModifiedSingleton() const
 	{
 		World.modified<T>();
+	}
+
+	template <typename T>
+	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainTypedEntity() const
+	{
+		return World.entity<T>();
 	}
 
 	/**
@@ -1913,7 +1933,15 @@ public:
 		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
 		
 		const FString TagName = Tag.GetTagName().ToString();
-		return LookupEntity(TagName, ".", ".");
+
+		FFlecsEntityHandle TagEntity;
+		
+		Scope<FFlecsGameplayTagManager>([&TagEntity, &TagName, this]()
+		{
+			TagEntity = LookupEntity(TagName, ".", ".");
+		});
+		
+		return TagEntity;
 	}
 
 	template <typename T>
@@ -2032,15 +2060,15 @@ public:
 	}
 
 	template <typename T, typename FunctionType>
-	FORCEINLINE_DEBUGGABLE void Scope(const FunctionType& Function) const
+	FORCEINLINE_DEBUGGABLE void Scope(FunctionType&& Function) const
 	{
 		World.scope<T>(std::forward<FunctionType>(Function));
 	}
 
 	template <typename FunctionType>
-	FORCEINLINE_DEBUGGABLE void Scope(FFlecsId InId, const FunctionType& Function) const
+	FORCEINLINE_DEBUGGABLE void Scope(FFlecsId InId, FunctionType&& Function) const
 	{
-		World.scope(InId, Function);
+		World.scope(InId, std::forward<FunctionType>(Function));
 	}
 
 	template <typename FunctionType>

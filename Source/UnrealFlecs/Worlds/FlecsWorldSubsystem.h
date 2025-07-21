@@ -24,6 +24,7 @@
 #include "General/FlecsDeveloperSettings.h"
 #include "Modules/FlecsModuleSetDataAsset.h"
 #include "Concepts/SolidConcepts.h"
+#include "General/FlecsGameplayTagManager.h"
 #include "Pipelines/FlecsDefaultGameLoop.h"
 #include "Standard/Hashing.h"
 #include "Standard/robin_hood.h"
@@ -310,16 +311,22 @@ protected:
 
 	void RegisterAllGameplayTags(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld)
 	{
-		FGameplayTagContainer AllTags;
-		UGameplayTagsManager::Get().RequestAllGameplayTags(AllTags, false);
+		InFlecsWorld->ObtainTypedEntity<FFlecsGameplayTagManager>()
+			.Add(flecs::Module);
 
-		for (const FGameplayTag& Tag : AllTags)
+		InFlecsWorld->Scope<FFlecsGameplayTagManager>([InFlecsWorld]()
 		{
-			const FFlecsEntityHandle TagEntity = flecs::entity(InFlecsWorld->World,
-					Unreal::Flecs::ToCString(Tag.ToString()), ".", ".");
-			
-			TagEntity.Set<FGameplayTag>(Tag);
-		}
+			FGameplayTagContainer AllTags;
+			UGameplayTagsManager::Get().RequestAllGameplayTags(AllTags, false);
+
+			for (const FGameplayTag& Tag : AllTags)
+			{
+				const FFlecsEntityHandle TagEntity = flecs::entity(InFlecsWorld->World,
+						Unreal::Flecs::ToCString(Tag.ToString()), ".", ".");
+				
+				TagEntity.Set<FGameplayTag>(Tag);
+			}
+		});
 	}
 	
 }; // class UFlecsWorldSubsystem
