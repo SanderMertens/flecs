@@ -1792,6 +1792,8 @@ void Error_unresolved_component_error_w_script_eval_multiple_times(void) {
     test_assert(r != 0);
     test_assert(result.error != NULL);
 
+    ecs_os_free(result.error);
+
     r = ecs_script_eval(script, NULL, &result);
     test_assert(r != 0);
     test_assert(result.error != NULL);

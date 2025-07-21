@@ -519,6 +519,7 @@ void Rest_script_update(void) {
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_str(reply_str, "{}");
         test_assert(ecs_lookup(world, "e") != 0);
+        ecs_os_free(reply_str);
     }
 
     ecs_rest_server_fini(srv);
@@ -546,6 +547,7 @@ void Rest_script_update_w_body(void) {
         test_int(reply.code, 200);
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_str(reply_str, "{}");
+        ecs_os_free(reply_str);
     }
 
     ecs_rest_server_fini(srv);
@@ -680,6 +682,7 @@ void Rest_request_small_buffer_plus_one(void) {
         test_int(reply.code, 200);
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_str(reply_str, "{}");
+        ecs_os_free(reply_str);
     }
 
     ecs_rest_server_fini(srv);

@@ -554,7 +554,8 @@ bool flecs_rest_script(
     const EcsScript *s = ecs_get(world, script, EcsScript);
 
     if (s && s->filename && save_file) {
-        FILE *f = fopen(s->filename, "w");
+        FILE *f;
+        ecs_os_fopen(&f, s->filename, "w");
         fwrite(code, strlen(code), 1, f);
         fclose(f);
     }
