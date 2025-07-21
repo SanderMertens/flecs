@@ -37,7 +37,7 @@ DEFINE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION(Unreal::Flecs::EmptyNetSerializeFunct
     return true;
 });
 
-Unreal::Flecs::FEntityNetSerializeFunction* Unreal::Flecs::NetSerializeFunctionPtr = &EmptyNetSerializeFunction; 
+Unreal::Flecs::FEntityNetSerializeFunction* Unreal::Flecs::GNetSerializeFunctionPtr = &EmptyNetSerializeFunction; 
 
 FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const TSolidNotNull<const UFlecsWorld*> InWorld)
 {
@@ -72,10 +72,10 @@ FString FFlecsEntityHandle::GetWorldName() const
 
 bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
-    if LIKELY_IF(Unreal::Flecs::NetSerializeFunctionPtr)
+    if LIKELY_IF(Unreal::Flecs::GNetSerializeFunctionPtr)
     {
         return std::invoke(
-            *Unreal::Flecs::NetSerializeFunctionPtr, *this, GetFlecsWorld(), Ar, Map, bOutSuccess);
+            *Unreal::Flecs::GNetSerializeFunctionPtr, *this, GetFlecsWorld(), Ar, Map, bOutSuccess);
     }
     else
     {
