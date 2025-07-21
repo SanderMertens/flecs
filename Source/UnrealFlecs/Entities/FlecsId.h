@@ -188,6 +188,7 @@ struct TStructOpsTypeTraits<FFlecsId> : public TStructOpsTypeTraitsBase2<FFlecsI
         WithImportTextItem = true,
         WithExportTextItem = true,
     }; // enum
+    
 }; // struct TStructOpsTypeTraits<FFlecsId>
 
 DEFINE_STD_HASH(FFlecsId);
