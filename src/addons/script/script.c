@@ -22,10 +22,14 @@ ECS_MOVE(EcsScript, dst, src, {
         }
         ecs_script_free(dst->script);
     }
+
+    dst->filename = src->filename;
     dst->code = src->code;
     dst->error = src->error;
     dst->script = src->script;
     dst->template_ = src->template_;
+
+    src->filename = NULL;
     src->code = NULL;
     src->error = NULL;
     src->script = NULL;
@@ -38,9 +42,12 @@ ECS_DTOR(EcsScript, ptr, {
         flecs_script_template_fini(
             flecs_script_impl(ptr->script), ptr->template_);
     }
+
     if (ptr->script) {
         ecs_script_free(ptr->script);
     }
+
+    ecs_os_free(ptr->filename);
     ecs_os_free(ptr->code);
     ecs_os_free(ptr->error);
 })
@@ -260,6 +267,9 @@ ecs_entity_t ecs_script_init(
         if (!script) {
             goto error;
         }
+
+        EcsScript *comp = ecs_ensure(world, e, EcsScript);
+        comp->filename = ecs_os_strdup(desc->filename);
     }
 
     if (ecs_script_update(world, e, 0, script)) {
@@ -334,6 +344,8 @@ int EcsScript_serialize(
     const void *ptr) 
 {
     const EcsScript *data = ptr;
+    ser->member(ser, "filename");
+    ser->value(ser, ecs_id(ecs_string_t), &data->filename);
     ser->member(ser, "code");
     ser->value(ser, ecs_id(ecs_string_t), &data->code);
     ser->member(ser, "error");
@@ -378,6 +390,7 @@ void FlecsScriptImport(
     ecs_entity_t opaque_view = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "ecs_script_view_t"}),
         .members = {
+            { .name = "filename", .type = ecs_id(ecs_string_t) },
             { .name = "code", .type = ecs_id(ecs_string_t) },
             { .name = "error", .type = ecs_id(ecs_string_t) },
             { .name = "ast", .type = ecs_id(ecs_string_t) }

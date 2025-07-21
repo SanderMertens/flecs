@@ -529,20 +529,52 @@ bool flecs_rest_script(
         script = ecs_entity(world, { .name = path });
     }
 
+    /* If true, check if file changed */
+    bool check_file = false;
+    flecs_rest_bool_param(req, "check_file", &check_file);
+
+    /* If true, save code to file */
+    bool save_file = false;
+    flecs_rest_bool_param(req, "save_file", &save_file);
+
     const char *code = ecs_http_get_param(req, "code");
     if (!code) {
         code = req->body;
     }
-    
+
     bool try = false;
     flecs_rest_bool_param(req, "try", &try);
 
     if (!code) {
-        flecs_reply_error(reply, "missing code parameter");
-        if (!try) {
-            reply->code = 400;
+        code = "";
+    }
+
+    ecs_strbuf_appendlit(&reply->body, "{");
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+
+    if (s && s->filename && save_file) {
+        FILE *f = fopen(s->filename, "w");
+        fwrite(code, strlen(code), 1, f);
+        fclose(f);
+    }
+
+    if (s && check_file) {
+        ecs_strbuf_appendlit(&reply->body, "\"changed\": ");
+        if (s->filename) {
+            bool file_is_same;
+            char *file_code = flecs_load_from_file(s->filename);
+            if (!file_code) {
+                file_is_same = code[0] == '\0';
+            } else {
+                file_is_same = !ecs_os_strcmp(code, file_code);
+                ecs_os_free(file_code);
+            }
+
+            ecs_strbuf_appendstr(&reply->body, file_is_same ? "false" : "true");
+        } else {
+            ecs_strbuf_appendstr(&reply->body, "false");
         }
-        return true;
     }
 
     ecs_entity_t result = ecs_script(world, {
@@ -551,18 +583,28 @@ bool flecs_rest_script(
     });
 
     if (!result) {
-        const EcsScript *s = ecs_get(world, script, EcsScript);
+        if (check_file) {
+            ecs_strbuf_appendlit(&reply->body, ", ");
+        }
+
+        /* Refetch in case it moved around */
+        s = ecs_get(world, script, EcsScript);
+        
         if (!s || !s->error) {
-            flecs_reply_error(reply, "error parsing script");
+            ecs_strbuf_append(&reply->body, 
+                "\"error\": \"error parsing script\"");
         } else {
             char *escaped_err = flecs_astresc('"', s->error);
-            flecs_reply_error(reply, "%s", escaped_err);
+            ecs_strbuf_append(&reply->body, 
+                "\"error\": \"%s\"", escaped_err);
             ecs_os_free(escaped_err);
         }
         if (!try) {
             reply->code = 400;
         }
     }
+
+    ecs_strbuf_appendlit(&reply->body, "}");
 
     return true;
 #else

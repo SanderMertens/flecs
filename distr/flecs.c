@@ -27997,20 +27997,52 @@ bool flecs_rest_script(
         script = ecs_entity(world, { .name = path });
     }
 
+    /* If true, check if file changed */
+    bool check_file = false;
+    flecs_rest_bool_param(req, "check_file", &check_file);
+
+    /* If true, save code to file */
+    bool save_file = false;
+    flecs_rest_bool_param(req, "save_file", &save_file);
+
     const char *code = ecs_http_get_param(req, "code");
     if (!code) {
         code = req->body;
     }
-    
+
     bool try = false;
     flecs_rest_bool_param(req, "try", &try);
 
     if (!code) {
-        flecs_reply_error(reply, "missing code parameter");
-        if (!try) {
-            reply->code = 400;
+        code = "";
+    }
+
+    ecs_strbuf_appendlit(&reply->body, "{");
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+
+    if (s && s->filename && save_file) {
+        FILE *f = fopen(s->filename, "w");
+        fwrite(code, strlen(code), 1, f);
+        fclose(f);
+    }
+
+    if (s && check_file) {
+        ecs_strbuf_appendlit(&reply->body, "\"changed\": ");
+        if (s->filename) {
+            bool file_is_same;
+            char *file_code = flecs_load_from_file(s->filename);
+            if (!file_code) {
+                file_is_same = code[0] == '\0';
+            } else {
+                file_is_same = !ecs_os_strcmp(code, file_code);
+                ecs_os_free(file_code);
+            }
+
+            ecs_strbuf_appendstr(&reply->body, file_is_same ? "false" : "true");
+        } else {
+            ecs_strbuf_appendstr(&reply->body, "false");
         }
-        return true;
     }
 
     ecs_entity_t result = ecs_script(world, {
@@ -28019,18 +28051,28 @@ bool flecs_rest_script(
     });
 
     if (!result) {
-        const EcsScript *s = ecs_get(world, script, EcsScript);
+        if (check_file) {
+            ecs_strbuf_appendlit(&reply->body, ", ");
+        }
+
+        /* Refetch in case it moved around */
+        s = ecs_get(world, script, EcsScript);
+        
         if (!s || !s->error) {
-            flecs_reply_error(reply, "error parsing script");
+            ecs_strbuf_append(&reply->body, 
+                "\"error\": \"error parsing script\"");
         } else {
             char *escaped_err = flecs_astresc('"', s->error);
-            flecs_reply_error(reply, "%s", escaped_err);
+            ecs_strbuf_append(&reply->body, 
+                "\"error\": \"%s\"", escaped_err);
             ecs_os_free(escaped_err);
         }
         if (!try) {
             reply->code = 400;
         }
     }
+
+    ecs_strbuf_appendlit(&reply->body, "}");
 
     return true;
 #else
@@ -63688,10 +63730,14 @@ ECS_MOVE(EcsScript, dst, src, {
         }
         ecs_script_free(dst->script);
     }
+
+    dst->filename = src->filename;
     dst->code = src->code;
     dst->error = src->error;
     dst->script = src->script;
     dst->template_ = src->template_;
+
+    src->filename = NULL;
     src->code = NULL;
     src->error = NULL;
     src->script = NULL;
@@ -63704,9 +63750,12 @@ ECS_DTOR(EcsScript, ptr, {
         flecs_script_template_fini(
             flecs_script_impl(ptr->script), ptr->template_);
     }
+
     if (ptr->script) {
         ecs_script_free(ptr->script);
     }
+
+    ecs_os_free(ptr->filename);
     ecs_os_free(ptr->code);
     ecs_os_free(ptr->error);
 })
@@ -63926,6 +63975,9 @@ ecs_entity_t ecs_script_init(
         if (!script) {
             goto error;
         }
+
+        EcsScript *comp = ecs_ensure(world, e, EcsScript);
+        comp->filename = ecs_os_strdup(desc->filename);
     }
 
     if (ecs_script_update(world, e, 0, script)) {
@@ -64000,6 +64052,8 @@ int EcsScript_serialize(
     const void *ptr) 
 {
     const EcsScript *data = ptr;
+    ser->member(ser, "filename");
+    ser->value(ser, ecs_id(ecs_string_t), &data->filename);
     ser->member(ser, "code");
     ser->value(ser, ecs_id(ecs_string_t), &data->code);
     ser->member(ser, "error");
@@ -64044,6 +64098,7 @@ void FlecsScriptImport(
     ecs_entity_t opaque_view = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "ecs_script_view_t"}),
         .members = {
+            { .name = "filename", .type = ecs_id(ecs_string_t) },
             { .name = "code", .type = ecs_id(ecs_string_t) },
             { .name = "error", .type = ecs_id(ecs_string_t) },
             { .name = "ast", .type = ecs_id(ecs_string_t) }

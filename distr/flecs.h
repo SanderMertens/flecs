@@ -14942,6 +14942,7 @@ typedef struct ecs_script_runtime_t ecs_script_runtime_t;
  * This component is added to the entities of managed scripts and templates.
  */
 typedef struct EcsScript {
+    char *filename;
     char *code;
     char *error; /* Set if script evaluation had errors */
     ecs_script_t *script;
