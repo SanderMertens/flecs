@@ -40,26 +40,6 @@
 		{
 			"Name": "SolidMacros",
 			"Enabled": true
-		},
-		{
-			"Name": "StructUtils",
-			"Enabled": true
-		},
-		{
-			"Name": "AutomationUtils",
-			"Enabled": true
-		},
-		{
-			"Name": "FunctionalTestingEditor",
-			"Enabled": true
-		},
-		{
-			"Name": "Gauntlet",
-			"Enabled": true
-		},
-		{
-			"Name": "CQTest",
-			"Enabled": true
 		}
 	],
 	"SupportURL": "",
