@@ -18,14 +18,14 @@ void Rest_get(void) {
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
     test_int(0, ecs_http_server_request(srv, "GET",
-        "/entity/flecs/core/World?label=true", NULL, &reply));
+        "/entity/flecs/core?label=true", NULL, &reply));
     test_int(reply.code, 200);
     
     char *reply_str = ecs_strbuf_get(&reply.body);
     test_assert(reply_str != NULL);
     test_str(reply_str,
-            "{\"parent\":\"flecs.core\", \"name\":\"World\", "
-                "\"components\":{\"(flecs.core.Identifier,flecs.core.Symbol)\":{\"value\":\"flecs.core.World\"}, \"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Entity associated with world\"}}}");
+            "{\"parent\":\"flecs\", \"name\":\"core\", \"tags\":[\"flecs.core.Module\"], "
+                "\"components\":{\"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Module with builtin components\"}}}");
     ecs_os_free(reply_str);
 
     ecs_rest_server_fini(srv);
@@ -45,28 +45,28 @@ void Rest_get_cached(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/entity/flecs/core/World", NULL, &reply));
+            "/entity/flecs/core", NULL, &reply));
         test_int(reply.code, 200);
         
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);
         test_str(reply_str,
-            "{\"parent\":\"flecs.core\", \"name\":\"World\", "
-                "\"components\":{\"(flecs.core.Identifier,flecs.core.Symbol)\":{\"value\":\"flecs.core.World\"}, \"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Entity associated with world\"}}}");
+            "{\"parent\":\"flecs\", \"name\":\"core\", \"tags\":[\"flecs.core.Module\"], "
+                "\"components\":{\"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Module with builtin components\"}}}");
         ecs_os_free(reply_str);
     }
 
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/entity/flecs/core/World", NULL, &reply));
+            "/entity/flecs/core", NULL, &reply));
         test_int(reply.code, 200);
         
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);
         test_str(reply_str,
-            "{\"parent\":\"flecs.core\", \"name\":\"World\", "
-                "\"components\":{\"(flecs.core.Identifier,flecs.core.Symbol)\":{\"value\":\"flecs.core.World\"}, \"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Entity associated with world\"}}}");
+            "{\"parent\":\"flecs\", \"name\":\"core\", \"tags\":[\"flecs.core.Module\"], "
+                "\"components\":{\"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Module with builtin components\"}}}");
         ecs_os_free(reply_str);
     }
 
@@ -517,7 +517,7 @@ void Rest_script_update(void) {
             NULL, &reply));
         test_int(reply.code, 200);
         char *reply_str = ecs_strbuf_get(&reply.body);
-        test_assert(reply_str == NULL);
+        test_str(reply_str, "{}");
         test_assert(ecs_lookup(world, "e") != 0);
     }
 
@@ -545,7 +545,7 @@ void Rest_script_update_w_body(void) {
             "/script/main.flecs", "e {}", &reply));
         test_int(reply.code, 200);
         char *reply_str = ecs_strbuf_get(&reply.body);
-        test_assert(reply_str == NULL);
+        test_str(reply_str, "{}");
     }
 
     ecs_rest_server_fini(srv);
@@ -679,7 +679,7 @@ void Rest_request_small_buffer_plus_one(void) {
             payload, &reply));
         test_int(reply.code, 200);
         char *reply_str = ecs_strbuf_get(&reply.body);
-        test_assert(reply_str == NULL);
+        test_str(reply_str, "{}");
     }
 
     ecs_rest_server_fini(srv);

@@ -28057,7 +28057,7 @@ bool flecs_rest_script(
 
         /* Refetch in case it moved around */
         s = ecs_get(world, script, EcsScript);
-        
+
         if (!s || !s->error) {
             ecs_strbuf_append(&reply->body, 
                 "\"error\": \"error parsing script\"");
@@ -29072,6 +29072,14 @@ ecs_http_server_t* ecs_rest_server_init(
     srv_ctx->srv = srv;
     srv_ctx->rc = 1;
     srv_ctx->srv = srv;
+
+    /* Set build info on world so clients know which version they're using */
+    ecs_id_t build_info = ecs_lookup(world, "flecs.core.BuildInfo");
+    if (build_info) {
+        const ecs_build_info_t *bi = ecs_get_build_info();
+        ecs_set_id(world, EcsWorld, build_info, sizeof(ecs_build_info_t), bi);
+    }
+
     return srv;
 }
 
@@ -54125,7 +54133,7 @@ void flecs_meta_import_core_definitions(
 
     ecs_struct(world, {
         .entity = ecs_entity(world, { 
-            .name = "flecs.core.build_info_t",
+            .name = "flecs.core.BuildInfo",
             .root_sep = ""
         }),
         .members = {
@@ -70097,7 +70105,7 @@ void FlecsWorldSummaryImport(
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 
 #if defined(FLECS_META) && defined(FLECS_UNITS) 
-    ecs_entity_t build_info = ecs_lookup(world, "flecs.core.build_info_t");
+    ecs_entity_t build_info = ecs_lookup(world, "flecs.core.BuildInfo");
     ecs_struct(world, {
         .entity = ecs_id(EcsWorldSummary),
         .members = {
