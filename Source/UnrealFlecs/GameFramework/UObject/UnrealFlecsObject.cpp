@@ -22,8 +22,8 @@ void UUnrealFlecsObject::InitializeFlecsObject(TSolidNotNull<UFlecsWorld*> InFle
 
 	ObjectEntityHandle = CreateObjectEntity();
 	ObjectEntityHandle.SetPairFirst<FFlecsUObjectComponent, FFlecsUObjectTag>({ this });
-	
-	TSolidNotNull<UFlecsWorldSubsystem*> FlecsWorldSubsystem = FlecsWorld->GetContext();
+
+	const TSolidNotNull<UFlecsWorldSubsystem*> FlecsWorldSubsystem = FlecsWorld->GetContext();
 
 	FlecsWorldSubsystem->ListenBeginPlay(
 		FFlecsOnWorldBeginPlay::FDelegate::CreateWeakLambda(this,

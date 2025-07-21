@@ -1734,7 +1734,8 @@ public:
 		return ScriptEnumComponent;
 	}
 	
-	/*FFlecsEntityHandle RegisterComponentBitmaskType(const UEnum* ScriptEnum) const
+	/*
+	 FFlecsEntityHandle RegisterComponentBitmaskType(const UEnum* ScriptEnum) const
 	{
 		solid_check(IsValid(ScriptEnum));
 
@@ -1789,7 +1790,8 @@ public:
 		ScriptEnumComponent.set<FFlecsScriptEnumComponent>({ ScriptEnum });
 		SetScope(OldScope);
 		return ScriptEnumComponent;
-	}*/
+	}
+	*/
 
 	template <typename T>
 	FORCEINLINE_DEBUGGABLE FFlecsComponentHandle RegisterComponentType() const
@@ -2122,12 +2124,6 @@ public:
 
 	UPROPERTY()
 	TArray<TScriptInterface<IFlecsObjectRegistrationInterface>> RegisteredObjects;
-
-	//UPROPERTY()
-	//TArray<TScriptInterface<IFlecsModuleProgressInterface>> ProgressModules;
-
-	//UPROPERTY()
-	//TArray<TObjectPtr<UFlecsPrimaryDataAsset>> FlecsPrimaryDataAssets;
 
 	flecs::query<FFlecsModuleComponent> ModuleComponentQuery;
 	flecs::query<FFlecsUObjectComponent> ObjectDestructionComponentQuery;

@@ -45,5 +45,6 @@ public:
 REGISTER_FLECS_COMPONENT(FFlecsDependenciesComponent,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
 	{
-		InComponent.Add(flecs::Sparse);
+		InComponent
+			.Add(flecs::DontFragment);
 	});

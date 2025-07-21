@@ -11,7 +11,7 @@ static FAutoConsoleVariableRef CVarEnableFlecs(
 	TEXT("Enable Unreal Flecs Plugin.")
 );
 
-static bool bUseTaskThreads = true;
+static bool bUseTaskThreads = false;
 static FAutoConsoleVariableRef CVarUseTaskThreads(
 	TEXT("Flecs.UseTaskThreads"),
 	bUseTaskThreads,

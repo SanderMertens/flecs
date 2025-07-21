@@ -68,14 +68,14 @@ public:
 		return ComponentProperties.contains(Unreal::Flecs::ToCString(Name));
 	}
 
-	NO_DISCARD FORCEINLINE const FFlecsComponentProperties* GetComponentProperties(const std::string_view Name) const
+	NO_DISCARD FORCEINLINE TSolidNotNull<const FFlecsComponentProperties*> GetComponentProperties(const std::string_view Name) const
 	{
 		checkf(!Name.empty(), TEXT("Component properties name is empty!"));
 		checkf(ComponentProperties.contains(Name.data()), TEXT("Component properties not found!"));
 		return &ComponentProperties.at(Name.data());
 	}
 
-	NO_DISCARD FORCEINLINE const FFlecsComponentProperties* GetComponentProperties(const FString& Name) const
+	NO_DISCARD FORCEINLINE TSolidNotNull<const FFlecsComponentProperties*> GetComponentProperties(const FString& Name) const
 	{
 		solid_checkf(!Name.IsEmpty(), TEXT("Component properties name is empty!"));
 		solid_checkf(ComponentProperties.contains(Unreal::Flecs::ToCString(Name)),
