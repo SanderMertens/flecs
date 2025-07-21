@@ -91,6 +91,9 @@ typedef struct ecs_script_runtime_t ecs_script_runtime_t;
  * This component is added to the entities of managed scripts and templates.
  */
 typedef struct EcsScript {
+    char *filename;
+    char *code;
+    char *error; /* Set if script evaluation had errors */
     ecs_script_t *script;
     ecs_script_template_t *template_; /* Only set for template scripts */
 } EcsScript;
@@ -153,6 +156,11 @@ typedef struct ecs_script_eval_desc_t {
     ecs_script_runtime_t *runtime; /**< Reusable runtime (optional) */
 } ecs_script_eval_desc_t;
 
+/** Used to capture error output from script evaluation. */
+typedef struct ecs_script_eval_result_t {
+    char *error;
+} ecs_script_eval_result_t;
+
 /** Parse script.
  * This operation parses a script and returns a script object upon success. To
  * run the script, call ecs_script_eval().
@@ -161,10 +169,15 @@ typedef struct ecs_script_eval_desc_t {
  * provided in the vars member of the desc object that defines all variables 
  * with the correct types.
  * 
+ * When the result parameter is not NULL, the script will capture errors and 
+ * return them in the output struct. If result.error is set, it must be freed
+ * by the application.
+ * 
  * @param world The world.
  * @param name Name of the script (typically a file/module name).
  * @param code The script code.
  * @param desc Parameters for script runtime.
+ * @param result Output of script evaluation.
  * @return Script object if success, NULL if failed.
 */
 FLECS_API
@@ -172,7 +185,8 @@ ecs_script_t* ecs_script_parse(
     ecs_world_t *world,
     const char *name,
     const char *code,
-    const ecs_script_eval_desc_t *desc);
+    const ecs_script_eval_desc_t *desc,
+    ecs_script_eval_result_t *result);
 
 /** Evaluate script.
  * This operation evaluates (runs) a parsed script.
@@ -181,6 +195,10 @@ ecs_script_t* ecs_script_parse(
  * a different ecs_script_vars_t object to ecs_script_eval(), as long as the
  * object has all referenced variables and they are of the same type.
  * 
+ * When the result parameter is not NULL, the script will capture errors and 
+ * return them in the output struct. If result.error is set, it must be freed
+ * by the application.
+ * 
  * @param script The script.
  * @param desc Parameters for script runtime.
  * @return Zero if success, non-zero if failed.
@@ -188,7 +206,8 @@ ecs_script_t* ecs_script_parse(
 FLECS_API
 int ecs_script_eval(
     const ecs_script_t *script,
-    const ecs_script_eval_desc_t *desc);
+    const ecs_script_eval_desc_t *desc,
+    ecs_script_eval_result_t *result);
 
 /** Free script.
  * This operation frees a script object.
@@ -222,7 +241,8 @@ FLECS_API
 int ecs_script_run(
     ecs_world_t *world,
     const char *name,
-    const char *code);
+    const char *code,
+    ecs_script_eval_result_t *result);
 
 /** Parse script file.
  * This parses a script file and instantiates the entities in the world. This

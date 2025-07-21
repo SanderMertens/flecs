@@ -123,7 +123,7 @@ void flecs_meta_import_core_definitions(
 
     ecs_struct(world, {
         .entity = ecs_entity(world, { 
-            .name = "flecs.core.build_info_t",
+            .name = "flecs.core.BuildInfo",
             .root_sep = ""
         }),
         .members = {

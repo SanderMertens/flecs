@@ -291,7 +291,7 @@ void ExprAst_template_w_foldable_const(void) {
     LINE "  entity: Bar e "
     LINE "}\n";
 
-    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL);
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL, NULL);
     test_assert(script != NULL);
     {
         char *ast = ecs_script_ast_to_str(script, false);
@@ -299,7 +299,7 @@ void ExprAst_template_w_foldable_const(void) {
         ecs_os_free(ast);
     }
 
-    test_assert(ecs_script_eval(script, NULL) == 0);
+    test_assert(ecs_script_eval(script, NULL, NULL) == 0);
     {
         char *ast = ecs_script_ast_to_str(script, false);
         test_str(ast, result_after);

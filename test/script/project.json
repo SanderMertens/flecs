@@ -503,7 +503,13 @@
                 "reload_script_w_component_w_error",
                 "reload_script_w_component_w_error_again",
                 "initializer_w_int_to_struct",
-                "script_initializer_w_int_to_struct"
+                "script_initializer_w_int_to_struct",
+                "capture_error",
+                "unresolved_component_error_w_script_run",
+                "unresolved_component_error_w_script_init",
+                "unresolved_component_error_w_script_init_existing",
+                "unresolved_component_error_w_script_eval",
+                "unresolved_component_error_w_script_eval_multiple_times"
             ]
         }, {
             "id": "Expr",

@@ -66,7 +66,7 @@ static ecs_os_api_log_t rest_prev_log;
 static ecs_os_api_log_t rest_prev_fatal_log;
 
 static
-void flecs_set_prev_log(
+void flecs_rest_set_prev_log(
     ecs_os_api_log_t prev_log,
     bool try)
 {
@@ -529,49 +529,83 @@ bool flecs_rest_script(
         script = ecs_entity(world, { .name = path });
     }
 
+    /* If true, check if file changed */
+    bool check_file = false;
+    flecs_rest_bool_param(req, "check_file", &check_file);
+
+    /* If true, save code to file */
+    bool save_file = false;
+    flecs_rest_bool_param(req, "save_file", &save_file);
+
     const char *code = ecs_http_get_param(req, "code");
     if (!code) {
         code = req->body;
     }
-    
+
     bool try = false;
     flecs_rest_bool_param(req, "try", &try);
 
     if (!code) {
-        flecs_reply_error(reply, "missing code parameter");
-        if (!try) {
-            reply->code = 400;
-        }
-        return true;
+        code = "";
     }
 
-    bool prev_color = ecs_log_enable_colors(false);
-    ecs_os_api_log_t prev_log = ecs_os_api.log_;
-    flecs_set_prev_log(ecs_os_api.log_, try);
-    ecs_os_api.log_ = flecs_rest_capture_log;
+    ecs_strbuf_appendlit(&reply->body, "{");
 
-    script = ecs_script(world, {
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+
+    if (s && s->filename && save_file) {
+        FILE *f;
+        ecs_os_fopen(&f, s->filename, "w");
+        fwrite(code, strlen(code), 1, f);
+        fclose(f);
+    }
+
+    if (s && check_file) {
+        ecs_strbuf_appendlit(&reply->body, "\"changed\": ");
+        if (s->filename) {
+            bool file_is_same;
+            char *file_code = flecs_load_from_file(s->filename);
+            if (!file_code) {
+                file_is_same = code[0] == '\0';
+            } else {
+                file_is_same = !ecs_os_strcmp(code, file_code);
+                ecs_os_free(file_code);
+            }
+
+            ecs_strbuf_appendstr(&reply->body, file_is_same ? "false" : "true");
+        } else {
+            ecs_strbuf_appendstr(&reply->body, "false");
+        }
+    }
+
+    ecs_entity_t result = ecs_script(world, {
         .entity = script,
         .code = code
     });
 
-    if (!script) {
-        char *err = flecs_rest_get_captured_log();
-        char *escaped_err = flecs_astresc('"', err);
-        if (escaped_err) {
-            flecs_reply_error(reply, "%s", escaped_err);
+    if (!result) {
+        if (check_file) {
+            ecs_strbuf_appendlit(&reply->body, ", ");
+        }
+
+        /* Refetch in case it moved around */
+        s = ecs_get(world, script, EcsScript);
+
+        if (!s || !s->error) {
+            ecs_strbuf_append(&reply->body, 
+                "\"error\": \"error parsing script\"");
         } else {
-            flecs_reply_error(reply, "error parsing script");
+            char *escaped_err = flecs_astresc('"', s->error);
+            ecs_strbuf_append(&reply->body, 
+                "\"error\": \"%s\"", escaped_err);
+            ecs_os_free(escaped_err);
         }
         if (!try) {
-            reply->code = 400; /* bad request */
+            reply->code = 400;
         }
-        ecs_os_free(escaped_err);
-        ecs_os_free(err);
     }
 
-    ecs_os_api.log_ = prev_log;
-    ecs_log_enable_colors(prev_color);
+    ecs_strbuf_appendlit(&reply->body, "}");
 
     return true;
 #else
@@ -667,7 +701,7 @@ bool flecs_rest_reply_existing_query(
 
     ecs_dbg_2("rest: request query '%s'", name);
     bool prev_color = ecs_log_enable_colors(false);
-    flecs_set_prev_log(ecs_os_api.log_, try);
+    flecs_rest_set_prev_log(ecs_os_api.log_, try);
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     const char *vars = ecs_http_get_param(req, "vars");
@@ -717,7 +751,7 @@ bool flecs_rest_get_query(
     ecs_dbg_2("rest: request query '%s'", expr);
     bool prev_color = ecs_log_enable_colors(false);
     ecs_os_api_log_t prev_log = ecs_os_api.log_;
-    flecs_set_prev_log(ecs_os_api.log_, try);
+    flecs_rest_set_prev_log(ecs_os_api.log_, try);
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     ecs_query_t *q = ecs_query(world, { .expr = expr });
@@ -1571,6 +1605,14 @@ ecs_http_server_t* ecs_rest_server_init(
     srv_ctx->srv = srv;
     srv_ctx->rc = 1;
     srv_ctx->srv = srv;
+
+    /* Set build info on world so clients know which version they're using */
+    ecs_id_t build_info = ecs_lookup(world, "flecs.core.BuildInfo");
+    if (build_info) {
+        const ecs_build_info_t *bi = ecs_get_build_info();
+        ecs_set_id(world, EcsWorld, build_info, sizeof(ecs_build_info_t), bi);
+    }
+
     return srv;
 }
 

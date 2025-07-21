@@ -120,6 +120,10 @@ int ecs_script_visit_(
     ecs_visit_action_t visit,
     ecs_script_impl_t *script)
 {
+    if (!script->root) {
+        return -1;
+    }
+
     visitor->script = script;
     visitor->visit = visit;
     visitor->depth = 0;

@@ -71,7 +71,7 @@ void FlecsWorldSummaryImport(
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 
 #if defined(FLECS_META) && defined(FLECS_UNITS) 
-    ecs_entity_t build_info = ecs_lookup(world, "flecs.core.build_info_t");
+    ecs_entity_t build_info = ecs_lookup(world, "flecs.core.BuildInfo");
     ecs_struct(world, {
         .entity = ecs_id(EcsWorldSummary),
         .members = {

@@ -4,7 +4,7 @@ static
 void fuzz(const char *expr) {
     ecs_world_t *world = ecs_init();
     ecs_log_set_level(-5);
-    ecs_script_run(world, "test", expr);
+    ecs_script_run(world, "test", expr, NULL);
     test_assert(true);
     ecs_fini(world);
 }

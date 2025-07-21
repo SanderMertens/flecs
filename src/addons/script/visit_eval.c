@@ -1522,7 +1522,8 @@ void flecs_script_eval_visit_fini(
 
 int ecs_script_eval(
     const ecs_script_t *script,
-    const ecs_script_eval_desc_t *desc)
+    const ecs_script_eval_desc_t *desc,
+    ecs_script_eval_result_t *result)
 {
     ecs_script_eval_visitor_t v;
     ecs_script_impl_t *impl = flecs_script_impl(
@@ -1538,11 +1539,19 @@ int ecs_script_eval(
         priv_desc.runtime = flecs_script_runtime_get(script->world);
     }
 
+    if (result) {
+        ecs_log_start_capture(false);
+    }
+
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
-    int result = ecs_script_visit(impl, &v, flecs_script_eval_node);
+    int r = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v, &priv_desc);
 
-    return result;
+    if (result) {
+        result->error = ecs_log_stop_capture();
+    }
+
+    return r;
 }
 
 #endif
