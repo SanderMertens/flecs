@@ -4,24 +4,37 @@
 
 #include "CoreMinimal.h"
 #include "Types/SolidNotNull.h"
-#include "FlecsScopedDeferWindow.generated.h"
 
 class UFlecsWorld;
 
-USTRUCT()
 struct UNREALFLECS_API FFlecsScopedDeferWindow
 {
-	GENERATED_BODY()
-
-	UE_NONCOPYABLE(FFlecsScopedDeferWindow);
-
 public:
 	explicit FFlecsScopedDeferWindow(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld);
 	~FFlecsScopedDeferWindow();
 
+	FFlecsScopedDeferWindow(const FFlecsScopedDeferWindow&) = delete;
+	FFlecsScopedDeferWindow& operator=(const FFlecsScopedDeferWindow&) = delete;
+
+	FORCEINLINE FFlecsScopedDeferWindow(FFlecsScopedDeferWindow&& Other)
+		: FlecsWorld(MoveTemp(Other.FlecsWorld))
+	{
+		Other.FlecsWorld.Reset();
+	}
+
+	FORCEINLINE FFlecsScopedDeferWindow& operator=(FFlecsScopedDeferWindow&& Other)
+	{
+		if (this != &Other)
+		{
+			FlecsWorld = MoveTemp(Other.FlecsWorld);
+			Other.FlecsWorld.Reset();
+		}
+		
+		return *this;
+	}
+	
 private:
-	UPROPERTY()
-	TObjectPtr<const UFlecsWorld> FlecsWorld;
+	TWeakObjectPtr<const UFlecsWorld> FlecsWorld;
 	
 }; // struct FFlecsScopedDeferWindow
 

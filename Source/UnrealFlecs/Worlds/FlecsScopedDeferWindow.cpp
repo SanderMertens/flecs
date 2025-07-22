@@ -3,8 +3,6 @@
 #include "FlecsScopedDeferWindow.h"
 #include "FlecsWorld.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsScopedDeferWindow)
-
 FFlecsScopedDeferWindow::FFlecsScopedDeferWindow(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld)
 	: FlecsWorld(InFlecsWorld)
 {
@@ -14,14 +12,9 @@ FFlecsScopedDeferWindow::FFlecsScopedDeferWindow(const TSolidNotNull<const UFlec
 
 FFlecsScopedDeferWindow::~FFlecsScopedDeferWindow()
 {
-	if LIKELY_IF(IsValid(FlecsWorld))
+	if (FlecsWorld.IsValid())
 	{
 		ensureMsgf(FlecsWorld->EndDefer(),
 			TEXT("Failed to end defer window in FlecsWorld"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("FlecsWorld is invalid in FFlecsScopedDeferWindow destructor"));
 	}
 }
