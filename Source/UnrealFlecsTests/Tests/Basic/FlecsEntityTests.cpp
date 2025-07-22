@@ -2,7 +2,6 @@
 
 #if WITH_AUTOMATION_TESTS
 
-#include "Misc/AutomationTest.h"
-#include "Fixtures/FlecsWorldFixture.h"
+#include "Tests/FlecsTestTypes.h"
 
 #endif // #if WITH_AUTOMATION_TESTS

@@ -7,6 +7,7 @@
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 #include "Fixtures/FlecsWorldFixture.h"
 #include "UObject/Object.h"
+#include "Developer/CQTest/Public/CQTest.h"
 #include "FlecsTestTypes.generated.h"
 
 DECLARE_DEFAULT_ENTITY(TestEntityOption);

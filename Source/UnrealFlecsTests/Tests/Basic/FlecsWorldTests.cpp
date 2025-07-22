@@ -4,8 +4,7 @@
 
 #if WITH_AUTOMATION_TESTS
 
-#include "UnrealFlecsTests/Tests/FlecsTestTypes.h"
-#include "Developer/CQTest/Public/CQTest.h"
+#include "Tests/FlecsTestTypes.h"
 
 /**
  * Layout of the tests:
