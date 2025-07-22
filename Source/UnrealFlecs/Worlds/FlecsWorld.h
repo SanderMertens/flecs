@@ -8,6 +8,7 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
+#include "FlecsScopedDeferWindow.h"
 #include "ObjectCacheContext.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/FlecsModuleComponent.h"
@@ -22,7 +23,7 @@
 #include "Entities/FlecsEntityRecord.h"
 #include "Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
-#include "General/FlecsGameplayTagManager.h"
+#include "General/FlecsGameplayTagManagerComponent.h"
 #include "General/FlecsObjectRegistrationInterface.h"
 #include "Logs/FlecsCategories.h"
 #include "Modules/FlecsDependenciesComponent.h"
@@ -155,7 +156,7 @@ public:
 			.serialize([](const flecs::serializer* Serializer, const FText* Data)
 			{
 				const FString String = Data->ToString();
-				const TCHAR* CharArray = String.GetCharArray().GetData();
+				TSolidNotNull<const TCHAR*> CharArray = String.GetCharArray().GetData();
 				return Serializer->value(flecs::String, &CharArray);
 			})
 			.assign_string([](FText* Data, const char* String)
@@ -169,7 +170,7 @@ public:
 		 	{
 		 		const FFlecsId TagEntity = ecs_lookup_path_w_sep(
 		 			Serializer->world,
-		 			flecs::component<FFlecsGameplayTagManager>(const_cast<flecs::world_t*>(Serializer->world)),
+		 			flecs::component<FFlecsGameplayTagManagerComponent>(const_cast<flecs::world_t*>(Serializer->world)),
 		 			Unreal::Flecs::ToCString(Data->ToString()),
 		 			".",
 		 			nullptr,
@@ -902,6 +903,11 @@ public:
 	FORCEINLINE_DEBUGGABLE bool BeginDefer() const
 	{
 		return World.defer_begin();
+	}
+
+	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsScopedDeferWindow DeferWindow() const
+	{
+		return FFlecsScopedDeferWindow(this);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -1938,7 +1944,7 @@ public:
 
 		FFlecsEntityHandle TagEntity;
 		
-		Scope<FFlecsGameplayTagManager>([&TagEntity, &TagName, this]()
+		Scope<FFlecsGameplayTagManagerComponent>([&TagEntity, &TagName, this]()
 		{
 			TagEntity = LookupEntity(TagName, ".", ".");
 		});

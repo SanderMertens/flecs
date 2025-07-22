@@ -55,7 +55,7 @@ public:
     UPROPERTY(EditAnywhere, Category = "Flecs | Modules")
     TArray<TObjectPtr<UFlecsModuleSetDataAsset>> ModuleSets;
 
-    #if WITH_EDITORONLY_DATA
+#if WITH_EDITORONLY_DATA
 
     UPROPERTY(EditAnywhere, Instanced, Category = "Flecs | Editor Modules",
          meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
@@ -64,7 +64,7 @@ public:
     UPROPERTY(EditAnywhere, Category = "Flecs | Editor Modules")
     TArray<TObjectPtr<UFlecsModuleSetDataAsset>> EditorModuleSets;
 
-    #endif // #if WITH_EDITORONLY_DATA
+#endif // #if WITH_EDITORONLY_DATA
     
 }; // struct FFlecsWorldSettingsInfo
 

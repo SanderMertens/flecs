@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsGameplayTagManager.generated.h"
+#include "FlecsGameplayTagManagerComponent.generated.h"
 
 USTRUCT(BlueprintType, MinimalAPI)
-struct FFlecsGameplayTagManager
+struct FFlecsGameplayTagManagerComponent
 {
 	GENERATED_BODY()
-}; // struct FFlecsGameplayTagManager
+}; // struct FFlecsGameplayTagManagerComponent
