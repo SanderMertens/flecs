@@ -378,7 +378,10 @@
                 "defer_on_replace_w_assign_existing",
                 "defer_on_replace_w_assign_existing_twice",
                 "defer_on_replace_w_assign_batched_existing",
-                "defer_on_replace_w_assign_batched_existing_twice"
+                "defer_on_replace_w_assign_batched_existing_twice",
+                "set_lvalue_to_mutable",
+                "set_lvalue_to_const",
+                "set_rvalue"
             ]
         }, {
             "id": "OrderedChildren",
