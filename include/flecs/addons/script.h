@@ -583,6 +583,8 @@ typedef struct ecs_expr_eval_desc_t {
     bool allow_unresolved_identifiers;
 
     ecs_script_runtime_t *runtime;   /**< Reusable runtime (optional) */
+
+    void *script_visitor;            /**< For internal usage */
 } ecs_expr_eval_desc_t;
 
 /** Run expression.
@@ -678,7 +680,7 @@ typedef struct ecs_const_var_desc_t {
     void *value;
 } ecs_const_var_desc_t;
 
-/** Create a const variable that can be accessed by scripts. 
+/** Create a const variable that can be accessed by scripts.
  * 
  * @param world The world.
  * @param desc Const var parameters.
@@ -691,6 +693,19 @@ ecs_entity_t ecs_const_var_init(
 
 #define ecs_const_var(world, ...)\
     ecs_const_var_init(world, &(ecs_const_var_desc_t)__VA_ARGS__)
+
+
+/** Returns value for a const variable. 
+ * This returns the value for a const variable that is created either with
+ * ecs_const_var_init, or in a script with "export const v: ...".
+ * 
+ * @param world The world.
+ * @param var The variable associated with the entity. 
+ */
+FLECS_API
+ecs_value_t ecs_const_var_get(
+    const ecs_world_t *world,
+    ecs_entity_t var);
 
 /* Functions */
 

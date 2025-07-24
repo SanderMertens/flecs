@@ -578,28 +578,25 @@ bool flecs_rest_script(
         }
     }
 
-    ecs_entity_t result = ecs_script(world, {
+    /* Update script code */
+    ecs_script(world, {
         .entity = script,
         .code = code
     });
 
-    if (!result) {
+    /* Refetch in case it moved around */
+    s = ecs_get(world, script, EcsScript);
+
+    if (!s || s->error) {
         if (check_file) {
             ecs_strbuf_appendlit(&reply->body, ", ");
         }
 
-        /* Refetch in case it moved around */
-        s = ecs_get(world, script, EcsScript);
+        char *escaped_err = flecs_astresc('"', s->error);
+        ecs_strbuf_append(&reply->body, 
+            "\"error\": \"%s\"", escaped_err);
+        ecs_os_free(escaped_err);
 
-        if (!s || !s->error) {
-            ecs_strbuf_append(&reply->body, 
-                "\"error\": \"error parsing script\"");
-        } else {
-            char *escaped_err = flecs_astresc('"', s->error);
-            ecs_strbuf_append(&reply->body, 
-                "\"error\": \"%s\"", escaped_err);
-            ecs_os_free(escaped_err);
-        }
         if (!try) {
             reply->code = 400;
         }
