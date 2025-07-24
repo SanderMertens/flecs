@@ -1083,7 +1083,7 @@ void Template_instantiate_prefab_w_template(void) {
     test_assert(ecs_lookup(world, "child") == 0);
 
     const char *expr_instance =
-    LINE "e : p"
+    LINE "e : p {}"
     LINE "";
     test_assert(ecs_script_run(world, NULL, expr_instance, NULL) == 0);
 
@@ -1137,7 +1137,7 @@ void Template_template_w_prefab_w_template(void) {
     LINE "    Tree: {count: $count}"
     LINE "  }"
     LINE ""
-    LINE "  child : TreePrefab"
+    LINE "  child : TreePrefab {}"
     LINE "}"
     LINE "f { Forest: {10} }";
 
@@ -2299,7 +2299,7 @@ void Template_prefab_w_template(void) {
     LINE "  Foo: {}"
     LINE "}"
     LINE ""
-    LINE "e : Base";
+    LINE "e : Base {}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -2370,7 +2370,7 @@ void Template_nested_templates_in_prefab(void) {
     LINE "  }"
     LINE "}"
     LINE ""
-    LINE "e : HousePrefab"
+    LINE "e : HousePrefab {}"
     ;
 
     // ecs_log_set_level(0);
@@ -2458,7 +2458,7 @@ void Template_template_w_prefab_and_instance(void) {
     LINE "  prefab Base"
     LINE ""
     LINE "  child {"
-    LINE "    grand_child : Base"
+    LINE "    grand_child : Base {}"
     LINE "  }"
     LINE "}"
     LINE ""
@@ -3341,7 +3341,7 @@ void Template_redefine_nested_template_w_prefab_2(void) {
     LINE "    Foo: {}"
     LINE "  }"
     LINE ""
-    LINE "  child : Base"
+    LINE "  child : Base {}"
     LINE "}"
     LINE ""
     LINE "e = Bar: { }"
@@ -3386,7 +3386,7 @@ void Template_redefine_nested_template_w_prefab_3(void) {
     LINE "    Foo: {}"
     LINE "  }"
     LINE ""
-    LINE "  child : Base"
+    LINE "  child : Base {}"
     LINE "}"
     LINE ""
     LINE "e = Bar: { }"

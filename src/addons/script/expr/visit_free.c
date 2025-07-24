@@ -132,6 +132,18 @@ void flecs_expr_match_visit_free(
 }
 
 static
+void flecs_expr_new_visit_free(
+    ecs_script_t *script,
+    ecs_expr_new_t *node)
+{
+    if (node->entity) {
+        flecs_script_visit_free_node(script, (ecs_script_node_t*)node->entity);
+    }
+    // ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
+    // flecs_free_t(a, ecs_script_entity_t, node->entity);
+}
+
+static
 void flecs_expr_cast_visit_free(
     ecs_script_t *script,
     ecs_expr_cast_t *node)
@@ -206,6 +218,11 @@ void flecs_expr_visit_free(
         flecs_expr_match_visit_free(
             script, (ecs_expr_match_t*)node);
         flecs_free_t(a, ecs_expr_match_t, node);
+        break;
+    case EcsExprNew:
+        flecs_expr_new_visit_free(
+            script, (ecs_expr_new_t*)node);
+        flecs_free_t(a, ecs_expr_new_t, node);
         break;
     case EcsExprCast:
     case EcsExprCastNumber:

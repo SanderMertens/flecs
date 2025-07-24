@@ -1500,6 +1500,24 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var(void);
 void Misc_alert_for_member_range(void);
 void Misc_alert_w_member_range_from_var(void);
 void Misc_map_api(void);
+void Misc_get_const_var(void);
+void Misc_get_const_var_struct(void);
+void Misc_get_const_var_as_f32(void);
+void Misc_get_const_var_as_i32(void);
+void Misc_get_const_var_as_u32(void);
+void Misc_get_const_var_w_out(void);
+void Misc_get_const_var_struct_w_out(void);
+void Misc_get_const_var_struct_w_out_not_found(void);
+void Misc_get_const_var_as_f32_w_out(void);
+void Misc_get_const_var_as_i32_w_out(void);
+void Misc_get_const_var_as_u32_w_out(void);
+void Misc_get_const_var_not_found(void);
+void Misc_get_const_var_not_a_var(void);
+void Misc_get_scoped_const_var(void);
+void Misc_get_module_const_var(void);
+void Misc_get_module_const_var_from_script_module(void);
+void Misc_get_module_const_var_from_nested_script_module(void);
+void Misc_get_module_const_var_from_nested_module_no_script_module(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -7467,6 +7485,78 @@ bake_test_case Misc_testcases[] = {
     {
         "map_api",
         Misc_map_api
+    },
+    {
+        "get_const_var",
+        Misc_get_const_var
+    },
+    {
+        "get_const_var_struct",
+        Misc_get_const_var_struct
+    },
+    {
+        "get_const_var_as_f32",
+        Misc_get_const_var_as_f32
+    },
+    {
+        "get_const_var_as_i32",
+        Misc_get_const_var_as_i32
+    },
+    {
+        "get_const_var_as_u32",
+        Misc_get_const_var_as_u32
+    },
+    {
+        "get_const_var_w_out",
+        Misc_get_const_var_w_out
+    },
+    {
+        "get_const_var_struct_w_out",
+        Misc_get_const_var_struct_w_out
+    },
+    {
+        "get_const_var_struct_w_out_not_found",
+        Misc_get_const_var_struct_w_out_not_found
+    },
+    {
+        "get_const_var_as_f32_w_out",
+        Misc_get_const_var_as_f32_w_out
+    },
+    {
+        "get_const_var_as_i32_w_out",
+        Misc_get_const_var_as_i32_w_out
+    },
+    {
+        "get_const_var_as_u32_w_out",
+        Misc_get_const_var_as_u32_w_out
+    },
+    {
+        "get_const_var_not_found",
+        Misc_get_const_var_not_found
+    },
+    {
+        "get_const_var_not_a_var",
+        Misc_get_const_var_not_a_var
+    },
+    {
+        "get_scoped_const_var",
+        Misc_get_scoped_const_var
+    },
+    {
+        "get_module_const_var",
+        Misc_get_module_const_var
+    },
+    {
+        "get_module_const_var_from_script_module",
+        Misc_get_module_const_var_from_script_module
+    },
+    {
+        "get_module_const_var_from_nested_script_module",
+        Misc_get_module_const_var_from_nested_script_module
+    },
+    {
+        "get_module_const_var_from_nested_module_no_script_module",
+        Misc_get_module_const_var_from_nested_module_no_script_module
     }
 };
 
@@ -8074,7 +8164,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        52,
+        70,
         Misc_testcases
     },
     {

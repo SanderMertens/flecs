@@ -955,7 +955,11 @@ void Error_entity_w_anonymous_tag(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     });
-    test_assert(s == 0);
+    test_assert(s != 0);
+
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->error != NULL);
 
     ecs_fini(world);
 }
@@ -1717,7 +1721,11 @@ void Error_unresolved_component_error_w_script_init(void) {
         .code = expr
     });
 
-    test_assert(s == 0);
+    test_assert(s != 0);
+
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->error != NULL);
 
     ecs_fini(world);
 }
@@ -1741,7 +1749,8 @@ void Error_unresolved_component_error_w_script_init_existing(void) {
         .code = expr
     });
 
-    test_assert(r == 0);
+    test_assert(r != 0);
+    test_assert(r == s);
 
     const EcsScript *script = ecs_get(world, s, EcsScript);
     test_assert(script != NULL);

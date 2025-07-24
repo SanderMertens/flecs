@@ -85,7 +85,7 @@ int flecs_term_ref_finalize_flags(
             if (!(ref->id & EcsIsName)) {
                 flecs_query_validator_error(ctx, 
                     "invalid variable name for term.%s"
-                    "('$' syntax support is removed, use new Singleton trait)", 
+                    " ('$' syntax support is removed, use new Singleton trait)", 
                         refname);
                 return -1;
             }

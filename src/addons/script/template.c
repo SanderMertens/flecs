@@ -397,29 +397,10 @@ int flecs_script_template_eval(
     ecs_script_eval_visitor_t *v,
     ecs_script_node_t *node)
 {
-    switch(node->kind) {
-    case EcsAstTag:
-    case EcsAstComponent:
-    case EcsAstVarComponent:
-    case EcsAstEntity:
-    case EcsAstScope:
-    case EcsAstDefaultComponent:
-    case EcsAstWithVar:
-    case EcsAstWithTag:
-    case EcsAstWithComponent:
-    case EcsAstUsing:
-    case EcsAstModule:
-    case EcsAstAnnotation:
-    case EcsAstConst:
-    case EcsAstPairScope:
-    case EcsAstWith:
-    case EcsAstIf:
-    case EcsAstFor:
-        break;
-    case EcsAstTemplate:
+    if (node->kind == EcsAstTemplate) {
         flecs_script_eval_error(v, node, "nested templates are not allowed");
         return -1;
-    case EcsAstProp:
+    } else if (node->kind == EcsAstProp) {
         return flecs_script_template_eval_prop(v, (ecs_script_var_node_t*)node);
     }
 
