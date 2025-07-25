@@ -550,7 +550,9 @@
                 "unresolved_component_error_w_script_init",
                 "unresolved_component_error_w_script_init_existing",
                 "unresolved_component_error_w_script_eval",
-                "unresolved_component_error_w_script_eval_multiple_times"
+                "unresolved_component_error_w_script_eval_multiple_times",
+                "annotation_without_newline",
+                "annotation_without_entity"
             ]
         }, {
             "id": "Expr",

@@ -444,9 +444,10 @@ int flecs_script_check_annot(
 }
 
 int flecs_script_check_node(
-    ecs_script_eval_visitor_t *v,
+    ecs_script_visit_t *_v,
     ecs_script_node_t *node)
 {
+    ecs_script_eval_visitor_t *v = (ecs_script_eval_visitor_t*)_v;
     switch(node->kind) {
     case EcsAstScope:
         return flecs_script_check_scope(

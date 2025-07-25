@@ -45931,7 +45931,7 @@ int ecs_script_visit_(
 
 #define ecs_script_visit(script, visitor, visit) \
     ecs_script_visit_((ecs_script_visit_t*)visitor,\
-        (ecs_visit_action_t)visit,\
+        visit,\
         script)
 
 int ecs_script_visit_from_(
@@ -45943,7 +45943,7 @@ int ecs_script_visit_from_(
 
 #define ecs_script_visit_from(script, visitor, visit, from, depth) \
     ecs_script_visit_from_((ecs_script_visit_t*)visitor,\
-        (ecs_visit_action_t)visit,\
+        visit,\
         script, \
         from, \
         depth)
@@ -46080,11 +46080,11 @@ void flecs_script_eval_visit_fini(
     const ecs_script_eval_desc_t *desc);
 
 int flecs_script_eval_node(
-    ecs_script_eval_visitor_t *v,
+    ecs_script_visit_t *v,
     ecs_script_node_t *node);
 
 int flecs_script_check_node(
-    ecs_script_eval_visitor_t *v,
+    ecs_script_visit_t *v,
     ecs_script_node_t *node);
 
 int flecs_script_check_scope(
@@ -66318,9 +66318,10 @@ int flecs_script_check_annot(
 }
 
 int flecs_script_check_node(
-    ecs_script_eval_visitor_t *v,
+    ecs_script_visit_t *_v,
     ecs_script_node_t *node)
 {
+    ecs_script_eval_visitor_t *v = (ecs_script_eval_visitor_t*)_v;
     switch(node->kind) {
     case EcsAstScope:
         return flecs_script_check_scope(
@@ -67876,7 +67877,11 @@ int flecs_script_eval_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_annot_t *node)
 {
-    ecs_assert(v->base.next != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!v->base.next) {
+        flecs_script_eval_error(v, node,
+            "missing target for annotation");
+        return -1;
+    }
 
     ecs_allocator_t *a = &v->r->allocator;
     ecs_vec_append_t(a, &v->r->annot, ecs_script_annot_t*)[0] = node;
@@ -67885,9 +67890,10 @@ int flecs_script_eval_annot(
 }
 
 int flecs_script_eval_node(
-    ecs_script_eval_visitor_t *v,
+    ecs_script_visit_t *_v,
     ecs_script_node_t *node)
 {
+    ecs_script_eval_visitor_t *v = (ecs_script_eval_visitor_t*)_v;
     ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(v->template == NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -68633,9 +68639,10 @@ int flecs_script_scope_to_str(
 
 static
 int flecs_script_stmt_to_str(
-    ecs_script_str_visitor_t *v,
+    ecs_script_visit_t *_v,
     ecs_script_node_t *node)
 {
+    ecs_script_str_visitor_t *v = (ecs_script_str_visitor_t*)_v;
     switch(node->kind) {
     case EcsAstScope:
         if (flecs_script_scope_to_str(v, (ecs_script_scope_t*)node)) {

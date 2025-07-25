@@ -370,9 +370,10 @@ int flecs_script_scope_to_str(
 
 static
 int flecs_script_stmt_to_str(
-    ecs_script_str_visitor_t *v,
+    ecs_script_visit_t *_v,
     ecs_script_node_t *node)
 {
+    ecs_script_str_visitor_t *v = (ecs_script_str_visitor_t*)_v;
     switch(node->kind) {
     case EcsAstScope:
         if (flecs_script_scope_to_str(v, (ecs_script_scope_t*)node)) {

@@ -542,6 +542,8 @@ void Error_unresolved_component_error_w_script_init(void);
 void Error_unresolved_component_error_w_script_init_existing(void);
 void Error_unresolved_component_error_w_script_eval(void);
 void Error_unresolved_component_error_w_script_eval_multiple_times(void);
+void Error_annotation_without_newline(void);
+void Error_annotation_without_entity(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -3161,6 +3163,14 @@ bake_test_case Error_testcases[] = {
     {
         "unresolved_component_error_w_script_eval_multiple_times",
         Error_unresolved_component_error_w_script_eval_multiple_times
+    },
+    {
+        "annotation_without_newline",
+        Error_annotation_without_newline
+    },
+    {
+        "annotation_without_entity",
+        Error_annotation_without_entity
     }
 };
 
@@ -5138,7 +5148,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        86,
+        88,
         Error_testcases
     },
     {
