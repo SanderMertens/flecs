@@ -90,7 +90,7 @@ void ArrayTypes_array_bool_1_before_i32_member(void) {
 
     meta_test_struct(world, t, T);
     meta_test_member(world, t, T, x, ecs_id(ecs_bool_t), 1);
-    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 0);
 
     ecs_fini(world);
 }
@@ -116,7 +116,7 @@ void ArrayTypes_array_bool_2_before_i32_member(void) {
 
     meta_test_struct(world, t, T);
     meta_test_member(world, t, T, x, ecs_id(ecs_bool_t), 2);
-    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 0);
 
     ecs_fini(world);
 }
@@ -142,7 +142,7 @@ void ArrayTypes_array_bool_3_before_i32_member(void) {
 
     meta_test_struct(world, t, T);
     meta_test_member(world, t, T, x, ecs_id(ecs_bool_t), 3);
-    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 0);
 
     ecs_fini(world);
 }
@@ -191,7 +191,7 @@ void ArrayTypes_array_i32_3_before_i32_member(void) {
 
     meta_test_struct(world, t, T);
     meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 3);
-    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_i32_t), 0);
 
     ecs_fini(world);
 }
@@ -262,7 +262,7 @@ void ArrayTypes_array_struct_bool_3_before_i32_member(void) {
 
     meta_test_struct(world, t, T);
     meta_test_member(world, t, T, n_1, n, 3);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 0);
 
     ecs_fini(world);
 }
@@ -299,7 +299,7 @@ void ArrayTypes_array_struct_array_bool_3(void) {
 
     meta_test_struct(world, t, T);
     meta_test_member(world, t, T, n_1, n, 3);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 0);
 
     ecs_fini(world);
 }
@@ -436,7 +436,7 @@ void ArrayTypes_standaline_array_bool_1(void) {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, a, 1);
+    meta_test_member(world, t, T, x, a, 0);
 
     ecs_fini(world);
 }
@@ -468,7 +468,7 @@ void ArrayTypes_standaline_array_bool_2(void) {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, a, 1);
+    meta_test_member(world, t, T, x, a, 0);
 
     ecs_fini(world);
 }
@@ -500,7 +500,7 @@ void ArrayTypes_standaline_array_bool_3(void) {
     test_str(ecs_get_name(world, t), "T");
 
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, x, a, 1);
+    meta_test_member(world, t, T, x, a, 0);
 
     ecs_fini(world);
 }

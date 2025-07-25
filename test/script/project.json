@@ -379,7 +379,15 @@
                 "run_script_w_nested_module_from_scope",
                 "run_script_w_nested_module_from_named_scope",
                 "run_script_w_nested_module_from_module",
-                "run_script_w_nested_module_from_named_scope_managed"
+                "run_script_w_nested_module_from_named_scope_managed",
+                "vector_i32_component",
+                "vector_string_component",
+                "vector_struct_component",
+                "vector_i32_export_var",
+                "vector_string_export_var",
+                "vector_struct_export_var",
+                "opaque_vector_i32_component",
+                "opaque_vector_i32_export_var"
             ]
         }, {
             "id": "Template",
@@ -947,7 +955,13 @@
                 "escape_2_newlines",
                 "escape_string_w_trailing_newline",
                 "escape_string_w_2_trailing_newlines",
-                "escape_string_w_delim"
+                "escape_string_w_delim",
+                "opaque_i32",
+                "opaque_string",
+                "opaque_struct",
+                "opaque_array",
+                "opaque_vector",
+                "opaque_string_vector"
             ]
         }, {
             "id": "Deserialize",
@@ -1037,6 +1051,19 @@
                 "array_w_trailing_comma",
                 "array_i32_2",
                 "array_string_2",
+                "vector_i32_0",
+                "vector_i32_2",
+                "vector_i32_0_into_2",
+                "vector_i32_1_into_2",
+                "vector_string_0",
+                "vector_string_2",
+                "vector_string_0_into_2",
+                "vector_string_1_into_2",
+                "vector_struct_0",
+                "vector_struct_2",
+                "vector_struct_2_empty",
+                "vector_struct_0_into_2",
+                "vector_struct_1_into_2",
                 "discover_type_int",
                 "discover_type_negative_int",
                 "discover_type_float",
@@ -1051,7 +1078,19 @@
                 "opaque_struct_w_member",
                 "opaque_struct_w_member_reverse",
                 "struct_w_opaque_member",
-                "opaque_string"
+                "opaque_string",
+                "opaque_vector_i32_0",
+                "opaque_vector_i32_2",
+                "opaque_vector_i32_0_into_2",
+                "opaque_vector_i32_1_into_2",
+                "opaque_vector_string_0",
+                "opaque_vector_string_2",
+                "opaque_vector_string_0_into_2",
+                "opaque_vector_string_1_into_2",
+                "opaque_vector_opaque_string_0",
+                "opaque_vector_opaque_string_2",
+                "opaque_vector_opaque_string_0_into_2",
+                "opaque_vector_opaque_string_1_into_2"
             ]
         }, {
             "id": "Fuzzing",

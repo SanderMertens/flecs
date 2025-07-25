@@ -769,6 +769,20 @@ error:
     return -1;
 }
 
+/* Dynamic initializers use the cursor API to assign values, and are used for 
+ * any type where a simple list of offsets into fields doesn't work. */
+static
+bool flecs_expr_initializer_is_dynamic(
+    ecs_world_t *world,
+    ecs_entity_t type)
+{
+    const EcsType *t = ecs_get(world, type, EcsType);
+    if (t) {
+        return t->kind == EcsOpaqueType || t->kind == EcsVectorType;
+    }
+    return false;
+}
+
 static
 int flecs_expr_empty_initializer_visit_type(
     ecs_script_t *script,
@@ -784,6 +798,9 @@ int flecs_expr_empty_initializer_visit_type(
             "unknown type for initializer");
         goto error;
     }
+
+    node->is_dynamic = flecs_expr_initializer_is_dynamic(
+        script->world, node->node.type);
 
     if (ecs_meta_push(cur)) {
         goto error;
@@ -818,8 +835,8 @@ int flecs_expr_initializer_visit_type(
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Opaque types do not have deterministic offsets */
-    bool is_opaque = ecs_get(script->world, type, EcsOpaque) != NULL;
-    node->is_dynamic = is_opaque;
+    bool is_dynamic = flecs_expr_initializer_is_dynamic(script->world, type);
+    node->is_dynamic = is_dynamic;
 
     if (ecs_meta_push(cur)) {
         goto error;
@@ -828,7 +845,6 @@ int flecs_expr_initializer_visit_type(
     if (flecs_expr_initializer_collection_check(script, node, cur)) {
         goto error;
     }
-
 
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     int32_t i, count = ecs_vec_count(&node->elements);
@@ -889,8 +905,16 @@ int flecs_expr_initializer_visit_type(
             }
         }
 
-        if (!is_opaque) {
+        if (!is_dynamic) {
             elem->offset = (uintptr_t)ecs_meta_get_ptr(cur);
+        } else {
+            if (elem->value->kind == EcsExprInitializer) {
+                /* If initializer is dynamic, make sure nested initializer is
+                 * marked as dynamic too. This is necessary because a push for
+                 * a nested initializer may have to allocate elements in the 
+                 * parent collection value. */
+                ((ecs_expr_initializer_t*)elem->value)->is_dynamic = true;
+            }
         }
     }
 
@@ -1842,9 +1866,14 @@ int flecs_expr_visit_type(
 {
     if (node->kind == EcsExprEmptyInitializer) {
         node->type = desc->type;
+        
         if (node->type) {
+            ecs_expr_initializer_t* init_node = (ecs_expr_initializer_t*)node;
+            init_node->is_dynamic = flecs_expr_initializer_is_dynamic(
+                script->world, node->type);
+
             if (flecs_expr_initializer_collection_check(
-                script, (ecs_expr_initializer_t*)node, NULL))
+                script, init_node, NULL))
             {
                 return -1;
             }

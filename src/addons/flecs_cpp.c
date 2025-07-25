@@ -449,12 +449,9 @@ void ecs_cpp_enum_init(
 #ifdef FLECS_META
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
-    ecs_vec_t ordered_constants;
-    ecs_vec_init_t(NULL, &ordered_constants, ecs_enum_constant_t, 0);
-    ecs_set(world, id, EcsEnum, { 
-        .underlying_type = underlying_type,
-        .ordered_constants = ordered_constants
-    });
+    EcsEnum *ptr = ecs_ensure(world, id, EcsEnum);
+    ptr->underlying_type = underlying_type;
+    ecs_modified(world, id, EcsEnum);
     flecs_resume_readonly(world, &readonly_state);
 #else
     /* Make sure that enums still behave the same even without meta */

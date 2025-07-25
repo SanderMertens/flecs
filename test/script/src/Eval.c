@@ -12225,3 +12225,306 @@ void Eval_run_script_w_nested_module_from_named_scope_managed(void) {
 
     ecs_fini(world);
 }
+
+void Eval_vector_i32_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Vector: [10, 20, 30]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_vec_t *ptr = ecs_get_id(world, e, v);
+    test_assert(ptr != NULL);
+    test_int(ecs_vec_count(ptr), 3);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 0), 10);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 1), 20);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 2), 30);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_string_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(ecs_string_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Vector: [\"Hello\", \"World\", \"Foo\"]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_vec_t *ptr = ecs_get_id(world, e, v);
+    test_assert(ptr != NULL);
+    test_int(ecs_vec_count(ptr), 3);
+    test_str(*ecs_vec_get_t(ptr, char*, 0), "Hello");
+    test_str(*ecs_vec_get_t(ptr, char*, 1), "World");
+    test_str(*ecs_vec_get_t(ptr, char*, 2), "Foo");
+
+    ecs_fini(world);
+}
+
+void Eval_vector_struct_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(Position) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Vector: [{10, 20}, {30, 40}, {50, 60}]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_vec_t *ptr = ecs_get_id(world, e, v);
+    test_assert(ptr != NULL);
+    test_int(ecs_vec_count(ptr), 3);
+    test_int(ecs_vec_get_t(ptr, Position, 0)->x, 10);
+    test_int(ecs_vec_get_t(ptr, Position, 0)->y, 20);
+    test_int(ecs_vec_get_t(ptr, Position, 1)->x, 30);
+    test_int(ecs_vec_get_t(ptr, Position, 1)->y, 40);
+    test_int(ecs_vec_get_t(ptr, Position, 2)->x, 50);
+    test_int(ecs_vec_get_t(ptr, Position, 2)->y, 60);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_i32_export_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "export const v = Vector: [10, 20, 30]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "v");
+    test_assert(e != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, e);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, v);
+
+    const ecs_vec_t *ptr = value.ptr;
+    test_int(ecs_vec_count(ptr), 3);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 0), 10);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 1), 20);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 2), 30);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_string_export_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(ecs_string_t) 
+    });
+
+    const char *expr =
+    HEAD "export const v = Vector: [\"Hello\", \"World\"]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "v");
+    test_assert(e != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, e);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, v);
+
+    const ecs_vec_t *ptr = value.ptr;
+    test_int(ecs_vec_count(ptr), 2);
+    test_str(*ecs_vec_get_t(ptr, char*, 0), "Hello");
+    test_str(*ecs_vec_get_t(ptr, char*, 1), "World");
+
+    ecs_fini(world);
+}
+
+void Eval_vector_struct_export_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(Position) 
+    });
+
+    const char *expr =
+    HEAD "export const v = Vector: [{10, 20}, {30, 40}]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "v");
+    test_assert(e != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, e);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, v);
+
+    const ecs_vec_t *ptr = value.ptr;
+    test_int(ecs_vec_count(ptr), 2);
+    test_int(ecs_vec_get_t(ptr, Position, 0)->x, 10);
+    test_int(ecs_vec_get_t(ptr, Position, 0)->y, 20);
+    test_int(ecs_vec_get_t(ptr, Position, 1)->x, 30);
+    test_int(ecs_vec_get_t(ptr, Position, 1)->y, 40);
+
+    ecs_fini(world);
+}
+
+typedef struct IntVec {
+    bool _dummy; // make sure type doesn't accidentally line up with ecs_vec_t 
+    size_t count;
+    int32_t *array;
+} IntVec;
+
+static 
+size_t IntVec_count(const void *ptr) {
+    const IntVec *data = ptr;
+    return data->count;
+}
+
+static 
+void* IntVec_ensure(void *ptr, size_t index) {
+    IntVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count <= index) {
+        data->count = index + 1;
+        data->array = ecs_os_realloc_n(data->array, int32_t, data->count);
+    }
+    return &data->array[index];
+}
+
+static 
+void IntVec_resize(void *ptr, size_t size) {
+    IntVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count != size) {
+        data->count = size;
+        if (!data->count) {
+            ecs_os_free(data->array);
+            data->array = NULL;
+        } else {
+            data->array = ecs_os_realloc_n(data->array, int32_t, size);
+        }
+    }
+}
+
+void Eval_opaque_vector_i32_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+
+    ecs_entity_t v = ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.ensure_element = IntVec_ensure,
+        .type.count = IntVec_count,
+        .type.resize = IntVec_resize
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " IntVec: [10, 20, 30]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const IntVec *ptr = ecs_get_id(world, e, v);
+    test_assert(ptr != NULL);
+    test_int(ptr->count, 3);
+    test_int(ptr->array[0], 10);
+    test_int(ptr->array[1], 20);
+    test_int(ptr->array[2], 30);
+
+    ecs_os_free(ptr->array);
+
+    ecs_fini(world);
+}
+
+void Eval_opaque_vector_i32_export_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.ensure_element = IntVec_ensure,
+        .type.count = IntVec_count,
+        .type.resize = IntVec_resize
+    });
+
+    const char *expr =
+    HEAD "export const v = IntVec: [10, 20, 30]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "v");
+    test_assert(e != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, e);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(IntVec));
+
+    const IntVec *ptr = value.ptr;
+    test_int(ptr->count, 3);
+    test_int(ptr->array[0], 10);
+    test_int(ptr->array[1], 20);
+    test_int(ptr->array[2], 30);
+
+    ecs_os_free(ptr->array);
+
+    ecs_fini(world);
+}

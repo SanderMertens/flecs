@@ -412,30 +412,34 @@ void ecs_meta_dtor_serialized(
     EcsTypeSerializer *ptr) 
 {
     int32_t i, count = ecs_vec_count(&ptr->ops);
-    ecs_meta_type_op_t *ops = ecs_vec_first(&ptr->ops);
+    ecs_meta_op_t *ops = ecs_vec_first(&ptr->ops);
     
     for (i = 0; i < count; i ++) {
-        ecs_meta_type_op_t *op = &ops[i];
-        if (op->members) {
-            flecs_name_index_free(op->members);
+        ecs_meta_op_t *op = &ops[i];
+        if (op->kind == EcsOpPushStruct) {
+            if (op->is.members) {
+                flecs_name_index_free(op->is.members);
+            }
         }
     }
 
-    ecs_vec_fini_t(NULL, &ptr->ops, ecs_meta_type_op_t);
+    ecs_vec_fini_t(NULL, &ptr->ops, ecs_meta_op_t);
 }
 
 static ECS_COPY(EcsTypeSerializer, dst, src, {
     ecs_meta_dtor_serialized(dst);
 
-    dst->ops = ecs_vec_copy_t(NULL, &src->ops, ecs_meta_type_op_t);
+    dst->ops = ecs_vec_copy_t(NULL, &src->ops, ecs_meta_op_t);
 
     int32_t o, count = ecs_vec_count(&dst->ops);
-    ecs_meta_type_op_t *ops = ecs_vec_first_t(&dst->ops, ecs_meta_type_op_t);
+    ecs_meta_op_t *ops = ecs_vec_first_t(&dst->ops, ecs_meta_op_t);
     
     for (o = 0; o < count; o ++) {
-        ecs_meta_type_op_t *op = &ops[o];
-        if (op->members) {
-            op->members = flecs_name_index_copy(op->members);
+        ecs_meta_op_t *op = &ops[o];
+        if (op->kind == EcsOpPushStruct) {
+            if (op->is.members) {
+                op->is.members = flecs_name_index_copy(op->is.members);
+            }
         }
     }
 })
@@ -500,52 +504,29 @@ static void flecs_constants_dtor(
     ecs_map_fini(constants);
 }
 
-static void flecs_constants_copy(
-    ecs_map_t *dst,
-    const ecs_map_t *src)
-{
-    ecs_map_copy(dst, src);
-
-    ecs_map_iter_t it = ecs_map_iter(dst);
-    while (ecs_map_next(&it)) {
-        ecs_enum_constant_t **r = ecs_map_ref(&it, ecs_enum_constant_t);
-        ecs_enum_constant_t *src_c = r[0];
-        ecs_enum_constant_t *dst_c = ecs_os_calloc_t(ecs_enum_constant_t);
-        *dst_c = *src_c;
-        dst_c->name = ecs_os_strdup(dst_c->name);
-        r[0] = dst_c;
-    }
-}
-
-static void  flecs_ordered_constants_dtor(
+static void flecs_ordered_constants_dtor(
     ecs_vec_t* ordered_constants)
 {
     /* shallow fini of is ok since map deallocs name c-string member */
     ecs_vec_fini_t(NULL, ordered_constants, ecs_enum_constant_t);
 }
 
-static void flecs_ordered_constants_copy(
-    ecs_vec_t* dst,
-    const ecs_vec_t* src)
-{
-    /* shallow copy of is ok since map deep-copies name c-string member */
-    *dst = ecs_vec_copy_t(NULL, src, ecs_enum_constant_t);
-}
-
-
-static ECS_COPY(EcsEnum, dst, src, {
-    flecs_constants_dtor(&dst->constants);
-    flecs_constants_copy(&dst->constants, &src->constants);
-    flecs_ordered_constants_dtor(&dst->ordered_constants);
-    flecs_ordered_constants_copy(&dst->ordered_constants, &src->ordered_constants);  
-
-    dst->underlying_type = src->underlying_type;
+static ECS_CTOR(EcsEnum, ptr, {
+    ptr->underlying_type = 0;
+    ptr->constants = ecs_os_malloc_t(ecs_map_t);
+    ecs_map_init(ptr->constants, NULL);
+    ecs_vec_init_t(NULL, &ptr->ordered_constants, ecs_enum_constant_t, 0);
 })
 
 static ECS_MOVE(EcsEnum, dst, src, {
-    flecs_constants_dtor(&dst->constants);
+    if (dst->constants) {
+        flecs_constants_dtor(dst->constants);
+        ecs_os_free(dst->constants);
+    }
+
     dst->constants = src->constants;
-    ecs_os_zeromem(&src->constants);
+    src->constants = NULL;
+
     flecs_ordered_constants_dtor(&dst->ordered_constants);
     dst->ordered_constants = src->ordered_constants;
     ecs_os_zeromem(&src->ordered_constants);
@@ -554,25 +535,30 @@ static ECS_MOVE(EcsEnum, dst, src, {
 })
 
 static ECS_DTOR(EcsEnum, ptr, { 
-    flecs_constants_dtor(&ptr->constants);
+    if (ptr->constants) {
+        flecs_constants_dtor(ptr->constants);
+        ecs_os_free(ptr->constants);
+    }
     flecs_ordered_constants_dtor(&ptr->ordered_constants);
 })
 
 
 /* EcsBitmask lifecycle */
 
-static ECS_COPY(EcsBitmask, dst, src, {
-    /* bitmask constant & enum constant have the same layout */
-    flecs_constants_dtor(&dst->constants);
-    flecs_constants_copy(&dst->constants, &src->constants);
-    flecs_ordered_constants_dtor(&dst->ordered_constants);
-    flecs_ordered_constants_copy(&dst->ordered_constants, &src->ordered_constants);
+static ECS_CTOR(EcsBitmask, ptr, {
+    ptr->constants = ecs_os_malloc_t(ecs_map_t);
+    ecs_map_init(ptr->constants, NULL);
+    ecs_vec_init_t(NULL, &ptr->ordered_constants, ecs_bitmask_constant_t, 0);
 })
 
 static ECS_MOVE(EcsBitmask, dst, src, {
-    flecs_constants_dtor(&dst->constants);
+    if (dst->constants) {
+        flecs_constants_dtor(dst->constants);
+        ecs_os_free(dst->constants);
+    }
+
     dst->constants = src->constants;
-    ecs_os_zeromem(&src->constants);
+    src->constants = NULL;
 
     flecs_ordered_constants_dtor(&dst->ordered_constants);
     dst->ordered_constants = src->ordered_constants;
@@ -580,7 +566,11 @@ static ECS_MOVE(EcsBitmask, dst, src, {
 })
 
 static ECS_DTOR(EcsBitmask, ptr, { 
-    flecs_constants_dtor(&ptr->constants);
+    if (ptr->constants) {
+        flecs_constants_dtor(ptr->constants);
+        ecs_os_free(ptr->constants);
+    }
+
     flecs_ordered_constants_dtor(&ptr->ordered_constants);
 })
 
@@ -766,10 +756,6 @@ void flecs_set_struct_member(
     member->unit = unit;
     member->offset = offset;
 
-    if (!count) {
-        member->count = 1;
-    }
-
     ecs_os_strset(ECS_CONST_CAST(char**, &member->name), name);
 
     if (ranges) {
@@ -904,7 +890,7 @@ int flecs_add_member_to_struct(
                 return -1;
             }
 
-            member_size *= elem->count;
+            member_size *= elem->count ? elem->count : 1;
             size = ECS_ALIGN(size, member_alignment);
             elem->size = member_size;
             elem->offset = size;
@@ -954,7 +940,7 @@ int flecs_add_member_to_struct(
             return -1;
         }
 
-        member_size *= elem->count;
+        member_size *= elem->count ? elem->count : 1;
         elem->size = member_size;
         size = elem->offset + member_size;
 
@@ -992,7 +978,7 @@ int flecs_add_member_to_struct(
         ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         type_mbr->type = type;
-        type_mbr->count = 1;
+        type_mbr->count = 0;
 
         ecs_modified(world, type, EcsMember);
     }
@@ -1039,13 +1025,18 @@ int flecs_add_constant_to_enum(
         ut_is_unsigned = true;
     }
 
+    if (!ptr->constants) {
+        ptr->constants = ecs_os_malloc_t(ecs_map_t);
+        ecs_map_init(ptr->constants, NULL);
+    }
+
     /* Remove constant from map and vector if it was already added */
-    ecs_map_iter_t it = ecs_map_iter(&ptr->constants);
+    ecs_map_iter_t it = ecs_map_iter(ptr->constants);
     while (ecs_map_next(&it)) {
         ecs_enum_constant_t *c = ecs_map_ptr(&it);
         if (c->constant == e) {
             ecs_os_free(ECS_CONST_CAST(char*, c->name));
-            ecs_map_remove_free(&ptr->constants, ecs_map_key(&it));
+            ecs_map_remove_free(ptr->constants, ecs_map_key(&it));
 
             ecs_enum_constant_t* constants = ecs_vec_first_t(
                 &ptr->ordered_constants, ecs_enum_constant_t);
@@ -1104,7 +1095,7 @@ int flecs_add_constant_to_enum(
     }
 
     /* Make sure constant value doesn't conflict if set / find the next value */
-    it = ecs_map_iter(&ptr->constants);
+    it = ecs_map_iter(ptr->constants);
     while (ecs_map_next(&it)) {
         ecs_enum_constant_t *c = ecs_map_ptr(&it);
         if (ut_is_unsigned) {
@@ -1140,15 +1131,15 @@ int flecs_add_constant_to_enum(
         }
     }
 
-    ecs_map_init_if(&ptr->constants, &world->allocator);
+    ecs_map_init_if(ptr->constants, &world->allocator);
     ecs_enum_constant_t *c;
     if (ut_is_unsigned) {
-        c = ecs_map_insert_alloc_t(&ptr->constants, 
+        c = ecs_map_insert_alloc_t(ptr->constants, 
             ecs_enum_constant_t, value_unsigned);
         c->value_unsigned = value_unsigned;
         c->value = 0;
     } else {
-        c = ecs_map_insert_alloc_t(&ptr->constants, 
+        c = ecs_map_insert_alloc_t(ptr->constants, 
             ecs_enum_constant_t, (ecs_map_key_t)value);
         c->value_unsigned = 0;
         c->value = value;
@@ -1204,14 +1195,15 @@ int flecs_add_constant_to_bitmask(
     EcsBitmask *ptr = ecs_ensure(world, type, EcsBitmask);
     
     /* Remove constant from map and vector if it was already added */
-    ecs_map_iter_t it = ecs_map_iter(&ptr->constants);
+    ecs_map_iter_t it = ecs_map_iter(ptr->constants);
     while (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
         if (c->constant == e) {
             ecs_os_free(ECS_CONST_CAST(char*, c->name));
-            ecs_map_remove_free(&ptr->constants, ecs_map_key(&it));
+            ecs_map_remove_free(ptr->constants, ecs_map_key(&it));
 
-            ecs_bitmask_constant_t* constants = ecs_vec_first_t(&ptr->ordered_constants, ecs_bitmask_constant_t);
+            ecs_bitmask_constant_t* constants = ecs_vec_first_t(
+                &ptr->ordered_constants, ecs_bitmask_constant_t);
             int32_t i, count = ecs_vec_count(&ptr->ordered_constants);
             for (i = 0; i < count; i++) {
                 if (constants[i].constant == c->value) {
@@ -1242,11 +1234,16 @@ int flecs_add_constant_to_bitmask(
         ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         value = *value_ptr;
     } else {
-        value = 1u << (ecs_u32_t)ecs_map_count(&ptr->constants);
+        value = 1u << (ecs_u32_t)ecs_map_count(ptr->constants);
+    }
+
+    if (!ptr->constants) {
+        ptr->constants = ecs_os_malloc_t(ecs_map_t);
+        ecs_map_init(ptr->constants, NULL);
     }
 
     /* Make sure constant value doesn't conflict */
-    it = ecs_map_iter(&ptr->constants);
+    it = ecs_map_iter(ptr->constants);
     while  (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
         if (c->value == value) {
@@ -1258,9 +1255,9 @@ int flecs_add_constant_to_bitmask(
         }
     }
 
-    ecs_map_init_if(&ptr->constants, &world->allocator);
+    ecs_map_init_if(ptr->constants, &world->allocator);
 
-    ecs_bitmask_constant_t *c = ecs_map_insert_alloc_t(&ptr->constants, 
+    ecs_bitmask_constant_t *c = ecs_map_insert_alloc_t(ptr->constants, 
         ecs_bitmask_constant_t, value);
     c->name = ecs_os_strdup(ecs_get_name(world, e));
     c->value = value;
@@ -1696,14 +1693,6 @@ void flecs_unit_quantity_monitor(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_member_on_set(ecs_iter_t *it) {
-    EcsMember *mbr = ecs_field(it, EcsMember, 0);
-    if (!mbr->count) {
-        mbr->count = 1;
-    }
-}
-
 void FlecsMetaImport(
     ecs_world_t *world)
 {
@@ -1849,7 +1838,6 @@ void FlecsMetaImport(
 
     ecs_set_hooks(world, EcsMember, { 
         .ctor = flecs_default_ctor,
-        .on_set = flecs_member_on_set
     });
 
     ecs_set_hooks(world, EcsMemberRanges, { 
@@ -1857,17 +1845,17 @@ void FlecsMetaImport(
     });
 
     ecs_set_hooks(world, EcsEnum, { 
-        .ctor = flecs_default_ctor,
+        .ctor = ecs_ctor(EcsEnum),
         .move = ecs_move(EcsEnum),
-        .copy = ecs_copy(EcsEnum),
-        .dtor = ecs_dtor(EcsEnum)
+        .dtor = ecs_dtor(EcsEnum),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
 
     ecs_set_hooks(world, EcsBitmask, { 
-        .ctor = flecs_default_ctor,
+        .ctor = ecs_ctor(EcsBitmask),
         .move = ecs_move(EcsBitmask),
-        .copy = ecs_copy(EcsBitmask),
-        .dtor = ecs_dtor(EcsBitmask)
+        .dtor = ecs_dtor(EcsBitmask),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
 
     ecs_set_hooks(world, EcsUnit, { 
@@ -1956,7 +1944,7 @@ void FlecsMetaImport(
     ecs_observer(world, {
         .query.terms[0] = { .id = ecs_id(EcsType) },
         .events = {EcsOnSet},
-        .callback = ecs_meta_type_serialized_init
+        .callback = flecs_meta_type_serializer_init
     });
 
     ecs_observer(world, {

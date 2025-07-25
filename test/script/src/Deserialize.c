@@ -2463,6 +2463,432 @@ void Deserialize_array_string_2(void) {
     ecs_fini(world);
 }
 
+void Deserialize_vector_i32_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+    test_assert(value.array == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_i32_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[10, 20]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(((int32_t*)value.array)[0], 10);
+    test_int(((int32_t*)value.array)[1], 20);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_i32_0_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[10, 20]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(((int32_t*)value.array)[0], 10);
+    test_int(((int32_t*)value.array)[1], 20);
+
+    ptr = ecs_expr_run(world, "[]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_int(value.count, 0);
+    test_int(value.size, 2);
+    test_assert(value.array != NULL);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_i32_1_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[10, 20]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(((int32_t*)value.array)[0], 10);
+    test_int(((int32_t*)value.array)[1], 20);
+
+    ptr = ecs_expr_run(world, "[30]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_int(value.count, 1);
+    test_int(((int32_t*)value.array)[0], 30);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_string_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Strings" }),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[\"Hello\", \"World\"]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_str(((char**)value.array)[0], "Hello");
+    test_str(((char**)value.array)[1], "World");
+
+    ecs_os_free(((char**)value.array)[0]);
+    ecs_os_free(((char**)value.array)[1]);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_string_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Strings" }),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+    test_assert(value.array == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_string_0_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Strings" }),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[\"Hello\", \"World\"]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_str(((char**)value.array)[0], "Hello");
+    test_str(((char**)value.array)[1], "World");
+
+    ptr = ecs_expr_run(world, "[]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+    test_assert(value.array != NULL);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_string_1_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Strings" }),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[\"Hello\", \"World\"]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_str(((char**)value.array)[0], "Hello");
+    test_str(((char**)value.array)[1], "World");
+
+    ptr = ecs_expr_run(world, "[\"Foo\"]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 1);
+    test_assert(value.array != NULL);
+    test_str(((char**)value.array)[0], "Foo");
+    ecs_os_free(((char**)value.array)[0]);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_struct_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .type = ecs_id(Position)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_struct_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .type = ecs_id(Position)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[{10, 20}, {30, 40}]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(((Position*)value.array)[0].x, 10);
+    test_int(((Position*)value.array)[0].y, 20);
+    test_int(((Position*)value.array)[1].x, 30);
+    test_int(((Position*)value.array)[1].y, 40);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_struct_2_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor
+    });
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .type = ecs_id(Position)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[{}, {}]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(((Position*)value.array)[0].x, 0);
+    test_int(((Position*)value.array)[0].y, 0);
+    test_int(((Position*)value.array)[1].x, 0);
+    test_int(((Position*)value.array)[1].y, 0);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_struct_0_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .type = ecs_id(Position)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[{10, 20}, {30, 40}]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(((Position*)value.array)[0].x, 10);
+    test_int(((Position*)value.array)[0].y, 20);
+    test_int(((Position*)value.array)[1].x, 30);
+    test_int(((Position*)value.array)[1].y, 40);
+
+    ptr = ecs_expr_run(world, "[]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_struct_1_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .type = ecs_id(Position)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[{10, 20}, {30, 40}]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(((Position*)value.array)[0].x, 10);
+    test_int(((Position*)value.array)[0].y, 20);
+    test_int(((Position*)value.array)[1].x, 30);
+    test_int(((Position*)value.array)[1].y, 40);
+
+    ptr = ecs_expr_run(world, "[{50, 60}]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 1);
+    test_int(((Position*)value.array)[0].x, 50);
+    test_int(((Position*)value.array)[0].y, 60);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
 void Deserialize_discover_type_int(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2799,6 +3225,590 @@ void Deserialize_opaque_string(void) {
 
     test_str(v.value, "foobar");
     ecs_os_free(v.value);
+
+    ecs_fini(world);
+}
+
+typedef struct IntVec {
+    bool _dummy; // make sure type doesn't accidentally line up with ecs_vec_t 
+    size_t count;
+    int32_t *array;
+} IntVec;
+
+typedef struct StringVec {
+    bool _dummy;
+    size_t count;
+    char **array;
+} StringVec;
+
+typedef struct String {
+    bool _dummy; // make sure type doesn't line up with char*
+    char *value;
+} String;
+
+typedef struct OpaqueStringVec {
+    bool _dummy;
+    size_t count;
+    String *array;
+} OpaqueStringVec;
+
+ECS_CTOR(String, ptr, {
+    ptr->value = NULL;
+})
+
+ECS_MOVE(String, dst, src, {
+    if (dst->value) {
+        ecs_os_free(dst->value);
+    }
+    dst->value = src->value;
+    src->value = NULL;
+})
+
+ECS_COPY(String, dst, src, {
+    if (dst->value) {
+        ecs_os_free(dst->value);
+    }
+    if (src->value) {
+        dst->value = ecs_os_strdup(src->value);
+    } else {
+        dst->value = NULL;
+    }
+})
+
+ECS_DTOR(String, ptr, {
+    ecs_os_free(ptr->value);
+})
+
+static void String_assign(void *ptr, const char *value) {
+    String *s = ptr;
+    if (s->value) {
+        ecs_os_free(s->value);
+    }
+    s->value = ecs_os_strdup(value);
+}
+
+static 
+size_t IntVec_count(const void *ptr) {
+    const IntVec *data = ptr;
+    return data->count;
+}
+
+static 
+void* IntVec_ensure(void *ptr, size_t index) {
+    IntVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count <= index) {
+        data->count = index + 1;
+        data->array = ecs_os_realloc_n(data->array, int32_t, data->count);
+    }
+    return &data->array[index];
+}
+
+static 
+void IntVec_resize(void *ptr, size_t size) {
+    IntVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count != size) {
+        data->count = size;
+        if (!data->count) {
+            ecs_os_free(data->array);
+            data->array = NULL;
+        } else {
+            data->array = ecs_os_realloc_n(data->array, int32_t, size);
+        }
+    }
+}
+
+static
+size_t StringVec_count(const void *ptr) {
+    const StringVec *data = ptr;
+    test_assert(data != NULL);
+    return data->count;
+}
+
+static 
+void* StringVec_ensure(void *ptr, size_t index) {
+    StringVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count <= index) {
+        data->count = index + 1;
+        data->array = ecs_os_realloc_n(data->array, char*, data->count);
+        data->array[index] = NULL;
+    }
+    return &data->array[index];
+}
+
+static 
+void StringVec_resize(void *ptr, size_t size) {
+    StringVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count != size) {
+        for (size_t i = size; i < data->count; i ++) {
+            ecs_os_free(data->array[i]);
+        }
+        data->count = size;
+        if (!data->count) {
+            ecs_os_free(data->array);
+            data->array = NULL;
+        } else {
+            data->array = ecs_os_realloc_n(data->array, char*, size);
+        }
+    }
+}
+
+static
+size_t OpaqueStringVec_count(const void *ptr) {
+    const OpaqueStringVec *data = ptr;
+    test_assert(data != NULL);
+    return data->count;
+}
+
+static 
+void* OpaqueStringVec_ensure(void *ptr, size_t index) {
+    OpaqueStringVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count <= index) {
+        data->count = index + 1;
+        data->array = ecs_os_realloc_n(data->array, String, data->count);
+        data->array[index].value = NULL;
+    }
+    return &data->array[index];
+}
+
+static 
+void OpaqueStringVec_resize(void *ptr, size_t size) {
+    OpaqueStringVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count != size) {
+        for (size_t i = size; i < data->count; i ++) {
+            ecs_os_free(data->array[i].value);
+        }
+        data->count = size;
+        if (!data->count) {
+            ecs_os_free(data->array);
+            data->array = NULL;
+        } else {
+            data->array = ecs_os_realloc_n(data->array, String, size);
+        }
+    }
+}
+
+void Deserialize_opaque_vector_i32_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.ensure_element = IntVec_ensure,
+        .type.count = IntVec_count,
+        .type.resize = IntVec_resize
+    });
+
+    IntVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+    test_assert(value.array == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_i32_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.ensure_element = IntVec_ensure,
+        .type.count = IntVec_count,
+        .type.resize = IntVec_resize
+    });
+
+    IntVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[10, 20]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(value.array[0], 10);
+    test_int(value.array[1], 20);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_i32_0_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.ensure_element = IntVec_ensure,
+        .type.count = IntVec_count,
+        .type.resize = IntVec_resize
+    });
+
+    IntVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[10, 20]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(value.array[0], 10);
+    test_int(value.array[1], 20);
+
+    ptr = ecs_expr_run(world, "[]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_i32_1_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.ensure_element = IntVec_ensure,
+        .type.count = IntVec_count,
+        .type.resize = IntVec_resize
+    });
+
+    IntVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[10, 20]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(value.array[0], 10);
+    test_int(value.array[1], 20);
+
+    ptr = ecs_expr_run(world, "[30]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 1);
+    test_int(value.array[0], 30);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_string_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, StringVec);
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(StringVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_string_t) }),
+        .type.ensure_element = StringVec_ensure,
+        .type.count = StringVec_count,
+        .type.resize = StringVec_resize
+    });
+
+    StringVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+    test_assert(value.array == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_string_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, StringVec);
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(StringVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_string_t) }),
+        .type.ensure_element = StringVec_ensure,
+        .type.count = StringVec_count,
+        .type.resize = StringVec_resize
+    });
+
+    StringVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[\"Hello\", \"World\"]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_str(value.array[0], "Hello");
+    test_str(value.array[1], "World");
+
+    ecs_os_free(value.array[0]);
+    ecs_os_free(value.array[1]);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_string_0_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, StringVec);
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(StringVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_string_t) }),
+        .type.ensure_element = StringVec_ensure,
+        .type.count = StringVec_count,
+        .type.resize = StringVec_resize
+    });
+
+    StringVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[\"Hello\", \"World\"]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_str(value.array[0], "Hello");
+    test_str(value.array[1], "World");
+
+    ptr = ecs_expr_run(world, "[]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_string_1_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, StringVec);
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(StringVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_string_t) }),
+        .type.ensure_element = StringVec_ensure,
+        .type.count = StringVec_count,
+        .type.resize = StringVec_resize
+    });
+
+    StringVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[\"Hello\", \"World\"]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_str(value.array[0], "Hello");
+    test_str(value.array[1], "World");
+
+    ptr = ecs_expr_run(world, "[\"Foo\"]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 1);
+    test_str(value.array[0], "Foo");
+    ecs_os_free(value.array[0]);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_opaque_string_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, String);
+    ECS_COMPONENT(world, StringVec);
+
+    ecs_entity_t s = ecs_opaque(world, {
+        .entity = ecs_id(String),
+        .type.as_type = ecs_primitive(world, { .kind = EcsString }),
+        .type.assign_string = String_assign
+    });
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(StringVec),
+        .type.as_type = ecs_vector(world, { .type = s }),
+        .type.ensure_element = StringVec_ensure,
+        .type.count = StringVec_count,
+        .type.resize = StringVec_resize
+    });
+
+    StringVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_opaque_string_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, String);
+    ECS_COMPONENT(world, OpaqueStringVec);
+
+    ecs_entity_t s = ecs_opaque(world, {
+        .entity = ecs_id(String),
+        .type.as_type = ecs_primitive(world, { .kind = EcsString }),
+        .type.assign_string = String_assign
+    });
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(OpaqueStringVec),
+        .type.as_type = ecs_vector(world, { .type = s }),
+        .type.ensure_element = OpaqueStringVec_ensure,
+        .type.count = OpaqueStringVec_count,
+        .type.resize = OpaqueStringVec_resize
+    });
+
+    ecs_set_hooks(world, String, {
+        .ctor = ecs_ctor(String),
+        .move = ecs_move(String),
+        .copy = ecs_copy(String),
+        .dtor = ecs_dtor(String)
+    });
+
+    OpaqueStringVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[\"Hello\"]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 1);
+    test_str(value.array[0].value, "Hello");
+    // test_str(value.array[1].value, "World");
+
+    ecs_os_free(value.array[0].value);
+    // ecs_os_free(value.array[1].value);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_opaque_string_0_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, String);
+    ECS_COMPONENT(world, OpaqueStringVec);
+
+    ecs_entity_t s = ecs_opaque(world, {
+        .entity = ecs_id(String),
+        .type.as_type = ecs_primitive(world, { .kind = EcsString }),
+        .type.assign_string = String_assign
+    });
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(OpaqueStringVec),
+        .type.as_type = ecs_vector(world, { .type = s }),
+        .type.ensure_element = OpaqueStringVec_ensure,
+        .type.count = OpaqueStringVec_count,
+        .type.resize = OpaqueStringVec_resize
+    });
+
+    ecs_set_hooks(world, String, {
+        .ctor = ecs_ctor(String),
+        .move = ecs_move(String),
+        .copy = ecs_copy(String),
+        .dtor = ecs_dtor(String)
+    });
+
+    OpaqueStringVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[\"Hello\", \"World\"]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_str(value.array[0].value, "Hello");
+    test_str(value.array[1].value, "World");
+
+    ptr = ecs_expr_run(world, "[]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_opaque_string_1_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, String);
+    ECS_COMPONENT(world, OpaqueStringVec);
+
+    ecs_entity_t s = ecs_opaque(world, {
+        .entity = ecs_id(String),
+        .type.as_type = ecs_primitive(world, { .kind = EcsString }),
+        .type.assign_string = String_assign
+    });
+
+    ecs_set_hooks(world, String, {
+        .ctor = ecs_ctor(String),
+        .move = ecs_move(String),
+        .copy = ecs_copy(String),
+        .dtor = ecs_dtor(String)
+    });
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(OpaqueStringVec),
+        .type.as_type = ecs_vector(world, { .type = s }),
+        .type.ensure_element = OpaqueStringVec_ensure,
+        .type.count = OpaqueStringVec_count,
+        .type.resize = OpaqueStringVec_resize
+    });
+
+    OpaqueStringVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[\"Hello\", \"World\"]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_str(value.array[0].value, "Hello");
+    test_str(value.array[1].value, "World");
+
+    ptr = ecs_expr_run(world, "[\"Foo\"]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 1);
+    test_str(value.array[0].value, "Foo");
+    ecs_os_free(value.array[0].value);
+    ecs_os_free(value.array);
 
     ecs_fini(world);
 }

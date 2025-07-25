@@ -31,6 +31,8 @@ void flecs_expr_value_free(
     ecs_expr_value_t *v)
 {
     const ecs_type_info_t *ti = v->type_info;
+    // printf("stack free %p (%s) owned = %d\n", v->value.ptr,
+    //     v->type_info->name, v->owned);
     v->type_info = NULL;
 
     if (!v->owned) {

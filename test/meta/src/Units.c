@@ -29,7 +29,7 @@ void Units_member_w_unit(void) {
     test_str(members[0].name, "value");
     test_uint(members[0].type, ecs_id(ecs_f32_t));
     test_uint(members[0].unit, u);
-    test_int(members[0].count, 1);
+    test_int(members[0].count, 0);
 
     ecs_entity_t m = ecs_lookup_child(world, s, "value");
     test_assert(m != 0);
@@ -78,7 +78,7 @@ void Units_member_w_unit_type(void) {
     test_str(members[0].name, "value");
     test_uint(members[0].type, u);
     test_uint(members[0].unit, u);
-    test_int(members[0].count, 1);
+    test_int(members[0].count, 0);
 
     ecs_entity_t m = ecs_lookup_child(world, s, "value");
     test_assert(m != 0);
@@ -662,7 +662,7 @@ void Units_set_unit(void) {
     test_str(members[0].name, "value");
     test_uint(members[0].type, ecs_id(ecs_f32_t));
     test_uint(members[0].unit, u);
-    test_int(members[0].count, 1);
+    test_int(members[0].count, 0);
 
     ecs_entity_t m = ecs_lookup_child(world, s, "value");
     test_assert(m != 0);
@@ -719,7 +719,7 @@ void Units_set_unit_w_derived(void) {
     test_str(members[0].name, "value");
     test_uint(members[0].type, ecs_id(ecs_f32_t));
     test_uint(members[0].unit, u);
-    test_int(members[0].count, 1);
+    test_int(members[0].count, 0);
 
     ecs_entity_t m = ecs_lookup_child(world, s, "value");
     test_assert(m != 0);
@@ -784,7 +784,7 @@ void Units_set_unit_w_over(void) {
     test_str(members[0].name, "value");
     test_uint(members[0].type, ecs_id(ecs_f32_t));
     test_uint(members[0].unit, u);
-    test_int(members[0].count, 1);
+    test_int(members[0].count, 0);
 
     ecs_entity_t m = ecs_lookup_child(world, s, "value");
     test_assert(m != 0);
@@ -853,7 +853,7 @@ void Units_set_unit_w_prefix(void) {
     test_str(members[0].name, "value");
     test_uint(members[0].type, ecs_id(ecs_f32_t));
     test_uint(members[0].unit, u);
-    test_int(members[0].count, 1);
+    test_int(members[0].count, 0);
 
     ecs_entity_t m = ecs_lookup_child(world, s, "value");
     test_assert(m != 0);
