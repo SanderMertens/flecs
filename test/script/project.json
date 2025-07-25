@@ -380,7 +380,6 @@
                 "run_script_w_nested_module_from_named_scope",
                 "run_script_w_nested_module_from_module",
                 "run_script_w_nested_module_from_named_scope_managed"
-
             ]
         }, {
             "id": "Template",
@@ -552,7 +551,11 @@
                 "unresolved_component_error_w_script_eval",
                 "unresolved_component_error_w_script_eval_multiple_times",
                 "annotation_without_newline",
-                "annotation_without_entity"
+                "annotation_without_entity",
+                "annotation_to_unresolved_identifier",
+                "annotation_to_unresolved_identifier_managed_parse_twice",
+                "annotation_to_unresolved_identifier_managed_parse_twice_2",
+                "annotation_to_tag"
             ]
         }, {
             "id": "Expr",

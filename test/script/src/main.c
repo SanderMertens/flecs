@@ -544,6 +544,10 @@ void Error_unresolved_component_error_w_script_eval(void);
 void Error_unresolved_component_error_w_script_eval_multiple_times(void);
 void Error_annotation_without_newline(void);
 void Error_annotation_without_entity(void);
+void Error_annotation_to_unresolved_identifier(void);
+void Error_annotation_to_unresolved_identifier_managed_parse_twice(void);
+void Error_annotation_to_unresolved_identifier_managed_parse_twice_2(void);
+void Error_annotation_to_tag(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -3171,6 +3175,22 @@ bake_test_case Error_testcases[] = {
     {
         "annotation_without_entity",
         Error_annotation_without_entity
+    },
+    {
+        "annotation_to_unresolved_identifier",
+        Error_annotation_to_unresolved_identifier
+    },
+    {
+        "annotation_to_unresolved_identifier_managed_parse_twice",
+        Error_annotation_to_unresolved_identifier_managed_parse_twice
+    },
+    {
+        "annotation_to_unresolved_identifier_managed_parse_twice_2",
+        Error_annotation_to_unresolved_identifier_managed_parse_twice_2
+    },
+    {
+        "annotation_to_tag",
+        Error_annotation_to_tag
     }
 };
 
@@ -5148,7 +5168,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        88,
+        92,
         Error_testcases
     },
     {

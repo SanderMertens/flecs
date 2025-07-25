@@ -1840,3 +1840,85 @@ void Error_annotation_without_entity(void) {
     ecs_fini(world);
 }
 
+
+void Error_annotation_to_unresolved_identifier(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "@name Some annotation"
+    LINE "Foo"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, "foo", expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_annotation_to_unresolved_identifier_managed_parse_twice(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "@name Some annotation"
+    LINE "Foo"
+    ;
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_script_update(world, s, 0, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_annotation_to_unresolved_identifier_managed_parse_twice_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD ""
+    LINE "notes {"
+    LINE "  @abcde"
+    LINE "  Note"
+    LINE "}"
+    LINE ""
+    LINE ""
+    ;
+
+    ecs_entity_t s = ecs_new(world);
+
+    ecs_script(world, {
+        .entity = s,
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_script(world, {
+        .entity = s,
+        .code = expr
+    });
+
+    test_assert(s != 0);
+
+    ecs_fini(world);
+}
+
+void Error_annotation_to_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Note {}"
+    LINE "notes {"
+    LINE "  @abcde"
+    LINE "  Note"
+    LINE "}"
+    LINE ""
+    LINE ""
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, "foo", expr, NULL) != 0);
+
+    ecs_fini(world);
+}

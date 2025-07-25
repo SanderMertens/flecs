@@ -1468,8 +1468,16 @@ int flecs_script_eval_annot(
 {
     if (!v->base.next) {
         flecs_script_eval_error(v, node,
-            "missing target for annotation");
+            "missing target for @%s annotation", node->name);
         return -1;
+    }
+    
+    if (v->base.next->kind != EcsAstEntity) {
+        if (v->base.next->kind != EcsAstAnnotation) {
+            flecs_script_eval_error(v, node,
+                "target of @%s annotation must be an entity", node->name);
+            return -1;
+        }
     }
 
     ecs_allocator_t *a = &v->r->allocator;
@@ -1628,6 +1636,10 @@ int ecs_script_eval(
 
     if (result) {
         result->error = ecs_log_stop_capture();
+    }
+
+    if (r) {
+        ecs_script_runtime_clear(priv_desc.runtime);
     }
 
     return r;

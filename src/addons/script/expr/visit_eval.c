@@ -793,7 +793,7 @@ int flecs_expr_new_visit_eval(
 
     ecs_script_visit_push(v, (ecs_script_node_t*)node->entity);
 
-    if (flecs_script_eval_node(v, (ecs_script_node_t*)node->entity)) {
+    if (flecs_script_eval_node(&v->base, (ecs_script_node_t*)node->entity)) {
         return -1;
     }
 
