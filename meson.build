@@ -48,7 +48,7 @@ flecs_src = files(
     'src/addons/meta/api.c',
     'src/addons/meta/definitions.c',
     'src/addons/meta/meta.c',
-    'src/addons/meta/serialized.c',
+    'src/addons/meta/serializer.c',
     'src/addons/meta/cursor.c',
     'src/addons/meta/rtt_lifecycle.c',
     'src/addons/meta/c_utils.c',

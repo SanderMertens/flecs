@@ -18,6 +18,8 @@ namespace flecs {
 
 struct script_builder;
 
+using Script = EcsScript;
+
 /** @} */
 
 }

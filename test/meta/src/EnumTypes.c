@@ -175,9 +175,9 @@ void EnumTypes_struct_w_enum(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, before, ecs_id(ecs_bool_t), 1);
-    meta_test_member(world, t, T, v, e, 1);
-    meta_test_member(world, t, T, after, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, before, ecs_id(ecs_bool_t), 0);
+    meta_test_member(world, t, T, v, e, 0);
+    meta_test_member(world, t, T, after, ecs_id(ecs_bool_t), 0);
 
     ecs_fini(world);
 }

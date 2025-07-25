@@ -416,8 +416,10 @@ void ecs_meta_dtor_serialized(
     
     for (i = 0; i < count; i ++) {
         ecs_meta_type_op_t *op = &ops[i];
-        if (op->members) {
-            flecs_name_index_free(op->members);
+        if (op->kind == EcsOpPushStruct) {
+            if (op->is.members) {
+                flecs_name_index_free(op->is.members);
+            }
         }
     }
 
@@ -434,8 +436,10 @@ static ECS_COPY(EcsTypeSerializer, dst, src, {
     
     for (o = 0; o < count; o ++) {
         ecs_meta_type_op_t *op = &ops[o];
-        if (op->members) {
-            op->members = flecs_name_index_copy(op->members);
+        if (op->kind == EcsOpPushStruct) {
+            if (op->is.members) {
+                op->is.members = flecs_name_index_copy(op->is.members);
+            }
         }
     }
 })
@@ -766,10 +770,6 @@ void flecs_set_struct_member(
     member->unit = unit;
     member->offset = offset;
 
-    if (!count) {
-        member->count = 1;
-    }
-
     ecs_os_strset(ECS_CONST_CAST(char**, &member->name), name);
 
     if (ranges) {
@@ -904,7 +904,7 @@ int flecs_add_member_to_struct(
                 return -1;
             }
 
-            member_size *= elem->count;
+            member_size *= elem->count ? elem->count : 1;
             size = ECS_ALIGN(size, member_alignment);
             elem->size = member_size;
             elem->offset = size;
@@ -954,7 +954,7 @@ int flecs_add_member_to_struct(
             return -1;
         }
 
-        member_size *= elem->count;
+        member_size *= elem->count ? elem->count : 1;
         elem->size = member_size;
         size = elem->offset + member_size;
 
@@ -992,7 +992,7 @@ int flecs_add_member_to_struct(
         ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         type_mbr->type = type;
-        type_mbr->count = 1;
+        type_mbr->count = 0;
 
         ecs_modified(world, type, EcsMember);
     }
@@ -1696,14 +1696,6 @@ void flecs_unit_quantity_monitor(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_member_on_set(ecs_iter_t *it) {
-    EcsMember *mbr = ecs_field(it, EcsMember, 0);
-    if (!mbr->count) {
-        mbr->count = 1;
-    }
-}
-
 void FlecsMetaImport(
     ecs_world_t *world)
 {
@@ -1849,7 +1841,6 @@ void FlecsMetaImport(
 
     ecs_set_hooks(world, EcsMember, { 
         .ctor = flecs_default_ctor,
-        .on_set = flecs_member_on_set
     });
 
     ecs_set_hooks(world, EcsMemberRanges, { 

@@ -405,7 +405,7 @@ void flecs_rtt_init_default_hooks_struct(
         if (ctor_hook_required) {
             ecs_rtt_call_data_t *ctor_data =
                 ecs_vec_append_t(NULL, &rtt_ctx->vctor, ecs_rtt_call_data_t);
-            ctor_data->count = m->count;
+            ctor_data->count = m->count ? m->count : 1;
             ctor_data->offset = m->offset;
             ctor_data->type_info = member_ti;
             if (member_ti->hooks.ctor) {
@@ -417,7 +417,7 @@ void flecs_rtt_init_default_hooks_struct(
         if (dtor_hook_required && member_ti->hooks.dtor) {
             ecs_rtt_call_data_t *dtor_data =
                 ecs_vec_append_t(NULL, &rtt_ctx->vdtor, ecs_rtt_call_data_t);
-            dtor_data->count = m->count;
+            dtor_data->count = m->count ? m->count : 1;
             dtor_data->offset = m->offset;
             dtor_data->type_info = member_ti;
             dtor_data->hook.xtor = member_ti->hooks.dtor;
@@ -427,7 +427,7 @@ void flecs_rtt_init_default_hooks_struct(
                 ecs_vec_append_t(NULL, &rtt_ctx->vmove, ecs_rtt_call_data_t);
             move_data->offset = m->offset;
             move_data->type_info = member_ti;
-            move_data->count = m->count;
+            move_data->count = m->count ? m->count : 1;
             if (member_ti->hooks.move) {
                 move_data->hook.move = member_ti->hooks.move;
             } else {
@@ -439,7 +439,7 @@ void flecs_rtt_init_default_hooks_struct(
                 ecs_vec_append_t(NULL, &rtt_ctx->vcopy, ecs_rtt_call_data_t);
             copy_data->offset = m->offset;
             copy_data->type_info = member_ti;
-            copy_data->count = m->count;
+            copy_data->count = m->count ? m->count : 1;
             if (member_ti->hooks.copy) {
                 copy_data->hook.copy = member_ti->hooks.copy;
             } else {
@@ -772,6 +772,7 @@ void flecs_rtt_vector_copy(
     for (i = 0; i < count; i++) {
         const ecs_vec_t *src_vec = ECS_ELEM(src_ptr, type_info->size, i);
         ecs_vec_t *dst_vec = ECS_ELEM(dst_ptr, type_info->size, i);
+        ecs_vec_init_if(dst_vec, rtt_ctx->type_info->size);
         int32_t src_count = ecs_vec_count(src_vec);
         int32_t dst_count = ecs_vec_count(dst_vec);
         if (dtor && dst_count) {

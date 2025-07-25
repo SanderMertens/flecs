@@ -24,19 +24,10 @@ int flecs_expr_ser_type_ops(
     int32_t op_count,
     const void *base, 
     ecs_strbuf_t *str,
-    int32_t in_array,
     bool is_expr);
 
 static
-int flecs_expr_ser_type_op(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
-    const void *base,
-    ecs_strbuf_t *str,
-    bool is_expr);
-
-static
-ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
+ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
 
@@ -120,31 +111,24 @@ error:
     return -1;
 }
 
-/* Serialize elements of a contiguous array */
 static
-int expr_ser_elements(
+int flecs_expr_ser_array(
     const ecs_world_t *world,
-    ecs_meta_type_op_t *ops, 
+    ecs_meta_type_op_t *ops,
     int32_t op_count,
-    const void *base, 
-    int32_t elem_count, 
+    const void *array,
     int32_t elem_size,
+    int32_t count,
     ecs_strbuf_t *str,
-    bool is_array)
+    bool is_expr)
 {
     ecs_strbuf_list_push(str, "[", ", ");
 
-    const void *ptr = base;
-
-    int i;
-    for (i = 0; i < elem_count; i ++) {
+    int32_t i;
+    for (i = 0; i < count; i ++) {
         ecs_strbuf_list_next(str);
-        if (flecs_expr_ser_type_ops(
-            world, ops, op_count, ptr, str, is_array, true)) 
-        {
-            return -1;
-        }
-        ptr = ECS_OFFSET(ptr, elem_size);
+        void *ptr = ECS_ELEM(array, elem_size, i);
+        flecs_expr_ser_type_ops(world, ops, op_count, ptr, str, is_expr);
     }
 
     ecs_strbuf_list_pop(str, "]");
@@ -153,134 +137,113 @@ int expr_ser_elements(
 }
 
 static
-int expr_ser_type_elements(
+int flecs_expr_ser_struct(
     const ecs_world_t *world,
-    ecs_entity_t type, 
-    const void *base, 
-    int32_t elem_count, 
-    ecs_strbuf_t *str,
-    bool is_array)
-{
-    const EcsTypeSerializer *ser = ecs_get(
-        world, type, EcsTypeSerializer);
-    ecs_assert(ser != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    const EcsComponent *comp = ecs_get(world, type, EcsComponent);
-    ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
-    int32_t op_count = ecs_vec_count(&ser->ops);
-    return expr_ser_elements(
-        world, ops, op_count, base, elem_count, comp->size, str, is_array);
-}
-
-/* Serialize array */
-static
-int expr_ser_array(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
-    const void *ptr, 
-    ecs_strbuf_t *str) 
-{
-    const EcsArray *a = ecs_get(world, op->type, EcsArray);
-    ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return expr_ser_type_elements(
-        world, a->type, ptr, a->count, str, true);
-}
-
-/* Serialize vector */
-static
-int expr_ser_vector(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
-    const void *base, 
-    ecs_strbuf_t *str) 
-{
-    const ecs_vec_t *value = base;
-    const EcsVector *v = ecs_get(world, op->type, EcsVector);
-    ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t count = ecs_vec_count(value);
-    void *array = ecs_vec_first(value);
-
-    /* Serialize contiguous buffer of vector */
-    return expr_ser_type_elements(world, v->type, array, count, str, false);
-}
-
-/* Forward serialization to the different type kinds */
-static
-int flecs_expr_ser_type_op(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
-    const void *ptr,
+    ecs_meta_type_op_t *ops,
+    int32_t op_count,
+    const void *base,
     ecs_strbuf_t *str,
     bool is_expr)
 {
-    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_strbuf_list_push(str, "{", ", ");
 
-    switch(op->kind) {
-    case EcsOpPush:
-    case EcsOpPop:
-        /* Should not be parsed as single op */
-        ecs_throw(ECS_INVALID_PARAMETER, NULL);
-        break;
-    case EcsOpEnum:
-        if (flecs_expr_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            goto error;
-        }
-        break;
-    case EcsOpBitmask:
-        if (flecs_expr_ser_bitmask(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            goto error;
-        }
-        break;
-    case EcsOpArray:
-        if (expr_ser_array(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            goto error;
-        }
-        break;
-    case EcsOpVector:
-        if (expr_ser_vector(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            goto error;
-        }
-        break;
-    case EcsOpScope:
-    case EcsOpPrimitive:
-    case EcsOpBool:
-    case EcsOpChar:
-    case EcsOpByte:
-    case EcsOpU8:
-    case EcsOpU16:
-    case EcsOpU32:
-    case EcsOpU64:
-    case EcsOpI8:
-    case EcsOpI16:
-    case EcsOpI32:
-    case EcsOpI64:
-    case EcsOpF32:
-    case EcsOpF64:
-    case EcsOpUPtr:
-    case EcsOpIPtr:
-    case EcsOpEntity:
-    case EcsOpId:
-    case EcsOpString:
-    case EcsOpOpaque:
-        if (flecs_expr_ser_primitive(world, flecs_expr_op_to_primitive_kind(op->kind), 
-            ECS_OFFSET(ptr, op->offset), str, is_expr))
-        {
-            /* Unknown operation */
-            ecs_err("unknown serializer operation kind (%d)", op->kind);
-            goto error;
-        }
-        break;
-    default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+    if (flecs_expr_ser_type_ops(world, ops, op_count, base, str, is_expr)) {
+        return -1;
+    }
+
+    ecs_strbuf_list_pop(str, "}");
+
+    return 0;
+}
+
+static
+int flecs_expr_ser_forward(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *base,
+    ecs_strbuf_t *str,
+    bool is_expr)
+{
+    const EcsTypeSerializer *ts = ecs_get(world, type, EcsTypeSerializer);
+    if (!ts) {
+        ecs_err("missing type serializer for '%s'", 
+            flecs_errstr(ecs_get_path(world, type)));
+        return -1;
+    }
+
+    return flecs_expr_ser_type_ops(world, ecs_vec_first(&ts->ops), 
+        ecs_vec_count(&ts->ops), base, str, is_expr);
+}
+
+typedef struct flecs_expr_serializer_ctx_t {
+    ecs_strbuf_t *str;
+    bool is_collection;
+} flecs_expr_serializer_ctx_t;
+
+static
+int flecs_expr_ser_opaque_value(
+    const ecs_serializer_t *ser,
+    ecs_entity_t type,
+    const void *value)
+{
+    flecs_expr_serializer_ctx_t *expr_ser = ser->ctx;
+    if (expr_ser->is_collection) {
+        ecs_strbuf_list_next(expr_ser->str);
+    }
+    return ecs_ptr_to_expr_buf(ser->world, type, value, expr_ser->str);
+}
+
+static
+int flecs_expr_ser_opaque_member(
+    const ecs_serializer_t *ser,
+    const char *name)
+{
+    flecs_expr_serializer_ctx_t *expr_ser = ser->ctx;
+    ecs_strbuf_list_next(expr_ser->str);
+    ecs_strbuf_append(expr_ser->str, "%s: ", name);
+    return 0;
+}
+
+static
+int flecs_expr_ser_opaque(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    const void *base, 
+    ecs_strbuf_t *str,
+    ecs_meta_op_kind_t kind)
+{
+    bool is_struct = kind == EcsOpOpaqueStruct;
+    bool is_collection = kind == EcsOpOpaqueVector || kind == EcsOpOpaqueArray;
+
+    if (is_struct) {
+        ecs_strbuf_list_push(str, "{", ", ");
+    } else if (is_collection) {
+        ecs_strbuf_list_push(str, "[", ", ");
+    }
+
+    flecs_expr_serializer_ctx_t expr_ser = { 
+        .str = str, .is_collection = is_collection
+    };
+
+    ecs_serializer_t ser = {
+        .world = world,
+        .value = flecs_expr_ser_opaque_value,
+        .member = is_struct ? flecs_expr_ser_opaque_member : NULL,
+        .ctx = &expr_ser
+    };
+
+    ecs_assert(op->is.opaque != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (op->is.opaque(&ser, base)) {
+        return -1;
+    }
+
+    if (is_struct) {
+        ecs_strbuf_list_pop(str, "}");
+    } else if (is_collection) {
+        ecs_strbuf_list_pop(str, "]");
     }
 
     return 0;
-error:
-    return -1;
 }
 
 /* Iterate over a slice of the type ops array */
@@ -291,47 +254,77 @@ int flecs_expr_ser_type_ops(
     int32_t op_count,
     const void *base,
     ecs_strbuf_t *str,
-    int32_t in_array,
     bool is_expr) 
 {
     for (int i = 0; i < op_count; i ++) {
         ecs_meta_type_op_t *op = &ops[i];
+        const void *ptr = ECS_OFFSET(base, op->offset);
 
-        if (in_array <= 0) {
-            if (op->name) {
-                ecs_strbuf_list_next(str);
-                ecs_strbuf_append(str, "%s: ", op->name);
-            }
-
-            int32_t elem_count = op->count;
-            if (elem_count > 1) {
-                /* Serialize inline array */
-                if (expr_ser_elements(world, op, op->op_count, base,
-                    elem_count, op->size, str, true))
-                {
-                    return -1;
-                }
-
-                i += op->op_count - 1;
-                continue;
-            }
+        if (op->name) {
+            ecs_strbuf_list_next(str);
+            ecs_strbuf_append(str, "%s: ", op->name);
         }
 
         switch(op->kind) {
-        case EcsOpPush:
-            ecs_strbuf_list_push(str, "{", ", ");
-            in_array --;
+        case EcsOpPushStruct: {
+            if (flecs_expr_ser_struct(world, &op[1], op->op_count - 2, 
+                ECS_OFFSET(base, op->offset), str, is_expr))
+            {
+                goto error;
+            }
+
+            i += op->op_count - 1;
             break;
-        case EcsOpPop:
-            ecs_strbuf_list_pop(str, "}");
-            in_array ++;
+        }
+        case EcsOpPushArray: {
+            if (flecs_expr_ser_array(world, &op[1], op->op_count - 2, ptr, 
+                op->elem_size, ecs_meta_op_get_elem_count(op, ptr), str, 
+                is_expr))
+            {
+                goto error;
+            }
+
+            i += op->op_count - 1;
             break;
-        case EcsOpArray:
-        case EcsOpVector:
+        }
+        case EcsOpPushVector: {
+            ecs_vec_t *vec = ECS_OFFSET(base, op->offset);
+
+            if (flecs_expr_ser_array(world, &op[1], op->op_count - 2, 
+                vec->array, op->elem_size, vec->count, str, is_expr))
+            {
+                goto error;
+            }
+
+            i += op->op_count - 1;
+            break;
+        }
+        case EcsOpForward: {
+            if (flecs_expr_ser_forward(world, op->type, 
+                ECS_OFFSET(base, op->offset), str, is_expr))
+            {
+                goto error;
+            }
+            break;
+        }
+        case EcsOpOpaqueStruct:
+        case EcsOpOpaqueArray:
+        case EcsOpOpaqueVector:
+        case EcsOpOpaqueValue:
+            if (flecs_expr_ser_opaque(world, op, ptr, str, op->kind)) {
+                goto error;
+            }
+            break;
         case EcsOpEnum:
+            if (flecs_expr_ser_enum(world, op, ptr, str)) {
+                goto error;
+            }
+            break;
         case EcsOpBitmask:
-        case EcsOpScope:
-        case EcsOpPrimitive:
+            if (flecs_expr_ser_bitmask(world, op, ptr, str)) {
+                goto error;
+            }
+            break;
         case EcsOpBool:
         case EcsOpChar:
         case EcsOpByte:
@@ -350,11 +343,17 @@ int flecs_expr_ser_type_ops(
         case EcsOpEntity:
         case EcsOpId:
         case EcsOpString:
-        case EcsOpOpaque:
-            if (flecs_expr_ser_type_op(world, op, base, str, is_expr)) {
+            if (flecs_expr_ser_primitive(world, 
+                flecs_expr_op_to_primitive_kind(op->kind), ptr, str, is_expr))
+            {
+                /* Unknown operation */
+                ecs_err("unknown serializer operation kind (%d)", op->kind);
                 goto error;
             }
             break;
+        case EcsOpScope:
+        case EcsOpPrimitive:
+        case EcsOpPop:
         default:
             ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
         }
@@ -376,7 +375,7 @@ int flecs_expr_ser_type(
 {
     ecs_meta_type_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_type_op_t);
     int32_t count = ecs_vec_count(v_ops);
-    return flecs_expr_ser_type_ops(world, ops, count, base, str, 0, is_expr);
+    return flecs_expr_ser_type_ops(world, ops, count, base, str, is_expr);
 }
 
 int ecs_ptr_to_expr_buf(

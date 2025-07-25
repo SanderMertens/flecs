@@ -307,7 +307,7 @@ const char* flecs_meta_utils_parse_member(
         return NULL;
     }
 
-    token->count = 1;
+    token->count = 0;
     token->is_partial = false;
 
     /* Parse member type */
@@ -664,7 +664,7 @@ ecs_entity_t flecs_meta_utils_lookup(
         type = ecs_lookup_symbol(world, typename, true, true);
     }
 
-    if (count != 1) {
+    if (count != 0) {
         ecs_check(count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
 
         type = ecs_insert(world, ecs_value(EcsArray, {type, (int32_t)count}));
@@ -703,7 +703,7 @@ int flecs_meta_utils_parse_struct(
         });
 
         ecs_entity_t type = flecs_meta_utils_lookup(
-            world, &token.type, ptr, 1, &ctx);
+            world, &token.type, ptr, 0, &ctx);
         if (!type) {
             goto error;
         }
