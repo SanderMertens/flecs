@@ -16,21 +16,28 @@ struct UNREALFLECS_API FFlecsQueryDefinition
 public:
 	FORCEINLINE FFlecsQueryDefinition() = default;
 
-	FORCEINLINE void AddQueryTerm(const FFlecsQueryTermExpression& InTerm)
+	FORCEINLINE FFlecsQueryDefinition& AddQueryTerm(const FFlecsQueryTermExpression& InTerm)
 	{
-		Terms.Emplace(InTerm);
+		Terms.Add(InTerm);
+		return *this;
 	}
 
 	template <TQueryExpressionConcept TExpression>
-	FORCEINLINE void AddExpression(const TExpression& InExpression)
+	FORCEINLINE FFlecsQueryDefinition& AddExpression(const TExpression& InExpression)
 	{
-		OtherExpressions.Emplace(InExpression);
+		OtherExpressions.Add(InExpression);
+		return *this;
 	}
 
 	FORCEINLINE void Apply(const TSolidNotNull<UFlecsWorld*> InWorld, flecs::query_builder<>& InQueryBuilder) const
 	{
 		InQueryBuilder.cache_kind(static_cast<flecs::query_cache_kind_t>(CacheType));
 		InQueryBuilder.query_flags(Flags);
+
+		if (bDetectChanges)
+		{
+			InQueryBuilder.detect_changes();
+		}
 		
 		for (const FFlecsQueryTermExpression& Term : Terms)
 		{
@@ -51,6 +58,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query", meta = (Bitmask, BitmaskEnum = "EFlecsQueryFlags"))
 	uint8 Flags = static_cast<uint8>(EFlecsQueryFlags::None);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query")
+	bool bDetectChanges = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Query", meta = (ExcludeBaseStruct))
 	TArray<TInstancedStruct<FFlecsQueryExpression>> OtherExpressions;

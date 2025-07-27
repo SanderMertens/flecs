@@ -41,6 +41,7 @@ enum class EFlecsQueryFlags : uint8
 	 * @ingroup queries
 	 */
 	TableOnly = EcsQueryTableOnly,
+	
 }; // enum class EFlecsQueryFlags
 
 ENUM_CLASS_FLAGS(EFlecsQueryFlags)
