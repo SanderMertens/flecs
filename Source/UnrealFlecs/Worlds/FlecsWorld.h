@@ -19,7 +19,6 @@
 #include "Components/ObjectTypes/FFlecsSceneComponentTag.h"
 #include "Components/ObjectTypes/FFlecsUObjectTag.h"
 #include "Components/ObjectTypes/FlecsActorTag.h"
-#include "Engine/AssetManager.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
@@ -30,8 +29,7 @@
 #include "Modules/FlecsModuleInitEvent.h"
 #include "Modules/FlecsModuleInterface.h"
 #include "Pipelines/FlecsGameLoopInterface.h"
-#include "Prefabs/FlecsPrefabAsset.h"
-#include "UObject/PropertyIterator.h"
+#include "UnrealFlecsWorldSingletonComponent.h"
 #include "FlecsWorld.generated.h"
 
 class UFlecsWorldSubsystem;
