@@ -29,7 +29,6 @@
 #include "Modules/FlecsModuleInitEvent.h"
 #include "Modules/FlecsModuleInterface.h"
 #include "Pipelines/FlecsGameLoopInterface.h"
-#include "UnrealFlecsWorldSingletonComponent.h"
 #include "FlecsWorld.generated.h"
 
 class UFlecsWorldSubsystem;
@@ -224,8 +223,6 @@ public:
 			});
 
 		RegisterUnrealTypes();
-
-		RegisterComponentType<FUnrealFlecsWorldSingletonComponent>();
 
 		RegisterComponentType<FFlecsBeginPlaySingletonComponent>();
 
