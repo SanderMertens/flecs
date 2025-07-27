@@ -17,6 +17,7 @@
 #include "FlecsWorldSettings.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagsManager.h"
+#include "UnrealFlecsWorldSingletonComponent.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Components/UWorldPtrComponent.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
@@ -65,7 +66,8 @@ public:
 		const TSolidNotNull<const AFlecsWorldSettings*> SettingsActor
 			= CastChecked<AFlecsWorldSettings>(GetWorld()->GetWorldSettings());
 
-		if (const UFlecsWorldSettingsAsset* SettingsAsset = SettingsActor->DefaultWorld)
+		const UFlecsWorldSettingsAsset* SettingsAsset = SettingsActor->DefaultWorld;
+		if (SettingsActor->bUseFlecsWorld && SettingsAsset)
 		{
 			CreateWorld(SettingsAsset->WorldSettings.WorldName, SettingsAsset->WorldSettings);
 		}
@@ -167,6 +169,7 @@ public:
 		DefaultWorld->RegisterComponentType<FFlecsWorldPtrComponent>().Add(flecs::Singleton);
 		DefaultWorld->RegisterComponentType<FUWorldPtrComponent>().Add(flecs::Singleton);
 
+		DefaultWorld->AddSingleton<FUnrealFlecsWorldSingletonComponent>();
 		DefaultWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ DefaultWorld });
 		DefaultWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
 
@@ -306,7 +309,7 @@ public:
 	FFlecsOnWorldDestroyed OnWorldDestroyedDelegate;
 
 protected:
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TObjectPtr<UFlecsWorld> DefaultWorld;
 
 	void RegisterAllGameplayTags(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld)

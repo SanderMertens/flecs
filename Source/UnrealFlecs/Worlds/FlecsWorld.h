@@ -57,8 +57,10 @@ struct UNREALFLECS_API FFlecsBeginPlaySingletonComponent
 REGISTER_FLECS_COMPONENT(FFlecsBeginPlaySingletonComponent,
 	[](flecs::world InWorld, FFlecsComponentHandle& InComponent)
 	{
-		InComponent.Add(flecs::Singleton);
+		InComponent
+			.Add(flecs::Singleton);
 	});
+
 
 UCLASS(BlueprintType, NotBlueprintable)
 class UNREALFLECS_API UFlecsWorld final : public UObject
@@ -224,6 +226,8 @@ public:
 			});
 
 		RegisterUnrealTypes();
+
+		RegisterComponentType<FUnrealFlecsWorldSingletonComponent>();
 
 		RegisterComponentType<FFlecsBeginPlaySingletonComponent>();
 
@@ -700,21 +704,24 @@ public:
 	}
 
 	template <typename T>
-	FORCEINLINE_DEBUGGABLE void AddSingleton() const
+	FORCEINLINE_DEBUGGABLE UFlecsWorld* AddSingleton() const
 	{
 		World.add<T>();
+		return GetSelf();
 	}
 
 	template <typename T>
-	FORCEINLINE_DEBUGGABLE void SetSingleton(const T& Value) const
+	FORCEINLINE_DEBUGGABLE UFlecsWorld* SetSingleton(const T& Value) const
 	{
 		World.set<T>(Value);
+		return GetSelf();
 	}
 
 	template <typename T>
-	FORCEINLINE_DEBUGGABLE void RemoveSingleton() const
+	FORCEINLINE_DEBUGGABLE UFlecsWorld* RemoveSingleton() const
 	{
 		World.remove<T>();
+		return GetSelf();
 	}
 	
 	template <typename T>
@@ -2120,15 +2127,15 @@ public:
 	
 	flecs::world World;
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TScriptInterface<IFlecsGameLoopInterface> GameLoopInterface;
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TArray<TScriptInterface<IFlecsModuleInterface>> ImportedModules;
 	
 	TMap<const UClass*, TScriptInterface<IFlecsObjectRegistrationInterface>> RegisteredObjectTypes;
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TArray<TScriptInterface<IFlecsObjectRegistrationInterface>> RegisteredObjects;
 
 	flecs::query<FFlecsModuleComponent> ModuleComponentQuery;
@@ -2136,5 +2143,11 @@ public:
 	flecs::query<FFlecsDependenciesComponent> DependenciesComponentQuery;
 
 	FFlecsTypeMapComponent* TypeMapComponent;
+
+private:
+	FORCEINLINE_DEBUGGABLE UFlecsWorld* GetSelf() const
+	{
+		return const_cast<UFlecsWorld*>(this);
+	}
 	
 }; // class UFlecsWorld
