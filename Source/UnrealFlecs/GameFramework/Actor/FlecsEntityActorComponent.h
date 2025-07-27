@@ -25,12 +25,17 @@ public:
 
 	virtual void InitializeEntity();
 
+	virtual void OnEntitySpawned(const FFlecsEntityHandle& InEntityHandle);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs | Entity", meta = (DisplayName = "On Entity Spawned"))
+	void BP_OnEntitySpawned(const FFlecsEntityHandle& InEntityHandle);
+
 	FORCEINLINE virtual FFlecsEntityHandle GetEntityHandle() const override final
 	{
 		return EntityHandle;
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
+	UFUNCTION()
 	void SetEntityHandle(const FFlecsEntityHandle& InEntityHandle);
 
 	UPROPERTY(Replicated)

@@ -52,10 +52,16 @@ void UFlecsEntityActorComponent::InitializeEntity()
 	}
 }
 
+void UFlecsEntityActorComponent::OnEntitySpawned(const FFlecsEntityHandle& InEntityHandle)
+{
+	BP_OnEntitySpawned(InEntityHandle);
+}
+
 void UFlecsEntityActorComponent::SetEntityHandle(const FFlecsEntityHandle& InEntityHandle)
 {
-	EntityHandle = InEntityHandle;
-	MARK_PROPERTY_DIRTY_FROM_NAME(UFlecsEntityActorComponent, EntityHandle, this);
+	unimplemented();
+	//EntityHandle = InEntityHandle;
+	//MARK_PROPERTY_DIRTY_FROM_NAME(UFlecsEntityActorComponent, EntityHandle, this);
 }
 
 void UFlecsEntityActorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -95,4 +101,6 @@ void UFlecsEntityActorComponent::CreateActorEntity(const TSolidNotNull<const UFl
 		TEXT("Created Actor Entity: %s"), *EntityHandle.GetName());
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(UFlecsEntityActorComponent, EntityHandle, this);
+
+	OnEntitySpawned(EntityHandle);
 }
