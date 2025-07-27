@@ -95,7 +95,8 @@ int flecs_script_eval_using(
 
 int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,
-    ecs_script_var_node_t *node);
+    ecs_script_var_node_t *node,
+    bool export);
 
 ecs_entity_t flecs_script_find_entity_action(
     const ecs_world_t *world,

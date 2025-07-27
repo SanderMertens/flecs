@@ -429,7 +429,8 @@ int flecs_script_eval_expr(
         .vars = v->vars,
         .type = value->type,
         .runtime = v->r,
-        .disable_dynamic_variable_binding = !v->dynamic_variable_binding
+        .disable_dynamic_variable_binding = !v->dynamic_variable_binding,
+        .script_visitor = v
     };
 
     if (expr->type_info == NULL) {
@@ -872,13 +873,27 @@ int flecs_script_eval_var_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_component_t *node)
 {
-    
     ecs_script_var_t *var = flecs_script_find_var(
         v->vars, node->name, v->dynamic_variable_binding ? NULL : &node->sp);
+    ecs_value_t var_value = {0};
     if (!var) {
-        flecs_script_eval_error(v, node, 
-            "unresolved variable '%s'", node->name);
-        return -1;
+        /* If we cannot find local variable, try find as const var */
+        ecs_entity_t var_entity = 0;
+        if (flecs_script_find_entity(v, 0, node->name, NULL, &var_entity)) {
+            return -1;
+        }
+
+        if (var_entity) {
+            var_value = ecs_const_var_get(v->world, var_entity);
+        }
+
+        if (!var_value.ptr) {
+            flecs_script_eval_error(v, node, 
+                "unresolved variable '%s'", node->name);
+            return -1;
+        }
+    } else {
+        var_value = var->value;
     }
 
     if (v->is_with_scope) {
@@ -886,9 +901,9 @@ int flecs_script_eval_var_component(
         return -1;
     }
 
-    ecs_id_t var_id = var->value.type;
+    ecs_id_t var_id = var_value.type;
 
-    if (var->value.ptr) {
+    if (var_value.ptr) {
         const ecs_type_info_t *ti = flecs_script_get_type_info(
             v, node, var_id);
         if (!ti) {
@@ -901,7 +916,7 @@ int flecs_script_eval_var_component(
             .type = var_id
         };
 
-        ecs_value_copy_w_type_info(v->world, ti, value.ptr, var->value.ptr);
+        ecs_value_copy_w_type_info(v->world, ti, value.ptr, var_value.ptr);
 
         ecs_modified_id(v->world, v->entity->eval, var_id);
     } else {
@@ -1136,10 +1151,17 @@ int flecs_script_eval_module(
     ecs_script_eval_visitor_t *v,
     ecs_script_module_t *node)
 {
+    /* Always create modules in root */
+    ecs_entity_t old_scope = ecs_set_scope(v->world, 0);
+    v->parent = 0;
+
+
     ecs_entity_t m = flecs_script_create_entity(v, node->name);
     if (!m) {
         return -1;
     }
+
+    ecs_set_scope(v->world, old_scope);
 
     ecs_add_id(v->world, m, EcsModule);
 
@@ -1151,17 +1173,40 @@ int flecs_script_eval_module(
 
 int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,
-    ecs_script_var_node_t *node)
+    ecs_script_var_node_t *node,
+    bool export)
 {
     /* Declare variable. If this variable is declared while instantiating a
      * template, the variable sp has already been resolved in all expressions
      * that used it, so we don't need to create the variable with a name. */
-    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, 
-        v->template_entity ? NULL : node->name);
-    if (!var) {
-        flecs_script_eval_error(v, node, 
-            "variable '%s' redeclared", node->name);
-        return -1;
+    ecs_script_var_t *var = NULL;
+    if (!export) {
+        ecs_entity_t e = ecs_lookup_child(v->world, v->parent, node->name);
+        if (e) {
+            ecs_value_t existing = ecs_const_var_get(v->world, e);
+            if (existing.ptr != NULL) {
+                flecs_script_eval_error(v, node, 
+                    "local variable '%s' shadows an exported variable", 
+                        node->name);
+                return -1;
+            }
+        }
+
+        var = ecs_script_vars_declare(v->vars, 
+            v->template_entity ? NULL : node->name);
+        if (!var) {
+            flecs_script_eval_error(v, node, 
+                "variable '%s' redeclared", node->name);
+            return -1;
+        }
+    } else {
+        var = ecs_script_vars_lookup(v->vars, 
+            v->template_entity ? NULL : node->name);
+        if (var) {
+            flecs_script_eval_error(v, node, 
+                "exported variable '%s' shadows a local variable", node->name);
+            return -1;
+        }
     }
 
     ecs_entity_t type = 0;
@@ -1188,20 +1233,21 @@ int flecs_script_eval_const(
         }
     }
 
+    ecs_value_t result = {
+        .type = type
+    };
+
     if (type && ti) {
         ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        var->value.ptr = flecs_stack_calloc(
-            &v->r->stack, ti->size, ti->alignment);
-        var->value.type = type;
-        var->type_info = ti;
+        result.ptr = flecs_stack_calloc(&v->r->stack, ti->size, ti->alignment);
 
         if (ti->hooks.ctor) {
-            ti->hooks.ctor(var->value.ptr, 1, ti);
+            ti->hooks.ctor(result.ptr, 1, ti);
         }
 
-        if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
+        if (flecs_script_eval_expr(v, &node->expr, &result)) {
             flecs_script_eval_error(v, node,
                 "failed to evaluate expression for const variable '%s'", 
                     node->name);
@@ -1222,24 +1268,48 @@ int flecs_script_eval_const(
         ti = ecs_get_type_info(v->world, value.type);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        var->value.ptr = flecs_stack_calloc(
+        result.ptr = flecs_stack_calloc(
             &v->r->stack, ti->size, ti->alignment);
-        var->value.type = value.type;
-        var->type_info = ti;
+        result.type = value.type;
 
         if (ti->hooks.ctor) {
-            ti->hooks.ctor(var->value.ptr, 1, ti);
+            ti->hooks.ctor(result.ptr, 1, ti);
         }
 
-        ecs_value_copy_w_type_info(v->world, ti, var->value.ptr, value.ptr);
+        ecs_value_copy_w_type_info(v->world, ti, result.ptr, value.ptr);
         ecs_value_fini_w_type_info(v->world, ti, value.ptr);
         flecs_free(&v->world->allocator, ti->size, value.ptr);
     }
 
     /* If variable resolves to a constant expression, mark it as const so that
      * its value can be folded. */
-    if (node->expr->kind == EcsExprValue) {
-        var->is_const = true;
+    if (!export) {
+        if (node->expr->kind == EcsExprValue) {
+            var->is_const = true;
+        }
+        var->type_info = ti;
+        var->value = result;
+    } else {
+        ecs_entity_t const_var = ecs_const_var(v->world, {
+            .parent = v->parent,
+            .name = node->name,
+            .type = result.type,
+            .value = result.ptr
+        });
+
+        /* Clean up value since it'll have been copied into the const var. */
+        if (ti->hooks.dtor) {
+            ti->hooks.dtor(result.ptr, 1, ti);
+        }
+
+        flecs_stack_free(result.ptr, ti->size);
+
+        if (!const_var) {
+            flecs_script_eval_error(v, node,
+                "failed to create exported const variable '%s'",
+                    node->name);
+            return -1;
+        }
     }
 
     return 0;
@@ -1404,6 +1474,7 @@ int flecs_script_eval_node(
     ecs_script_eval_visitor_t *v,
     ecs_script_node_t *node)
 {
+    ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(v->template == NULL, ECS_INTERNAL_ERROR, NULL);
 
     switch(node->kind) {
@@ -1450,7 +1521,10 @@ int flecs_script_eval_node(
         return 0;
     case EcsAstConst:
         return flecs_script_eval_const(
-            v, (ecs_script_var_node_t*)node);
+            v, (ecs_script_var_node_t*)node, false);
+    case EcsAstExportConst:
+        return flecs_script_eval_const(
+            v, (ecs_script_var_node_t*)node, true);
     case EcsAstEntity:
         return flecs_script_eval_entity(
             v, (ecs_script_entity_t*)node);
@@ -1518,7 +1592,8 @@ void flecs_script_eval_visit_fini(
 
 int ecs_script_eval(
     const ecs_script_t *script,
-    const ecs_script_eval_desc_t *desc)
+    const ecs_script_eval_desc_t *desc,
+    ecs_script_eval_result_t *result)
 {
     ecs_script_eval_visitor_t v;
     ecs_script_impl_t *impl = flecs_script_impl(
@@ -1534,11 +1609,19 @@ int ecs_script_eval(
         priv_desc.runtime = flecs_script_runtime_get(script->world);
     }
 
+    if (result) {
+        ecs_log_start_capture(true);
+    }
+
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
-    int result = ecs_script_visit(impl, &v, flecs_script_eval_node);
+    int r = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v, &priv_desc);
 
-    return result;
+    if (result) {
+        result->error = ecs_log_stop_capture();
+    }
+
+    return r;
 }
 
 #endif

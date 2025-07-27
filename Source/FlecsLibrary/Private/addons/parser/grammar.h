@@ -109,7 +109,12 @@
         }\
         parser->significant_newline = true;\
         if (pos[0] != until) {\
-            Error("expected '%c'", until);\
+            if (until != '\n' || pos[0] != '\0') {\
+                Error("expected '%c'", until);\
+            }\
+            if (pos[0] == '\0') {\
+                pos --;\
+            }\
         }\
         INITIALIZER = (ecs_expr_node_t*)_initializer;\
         pos ++;\
@@ -214,6 +219,8 @@
         } else {\
             parser->token_cur = parser->token_keep;\
         }\
+    } else {\
+        goto error;\
     }
 
 /* Lookahead N consecutive tokens */

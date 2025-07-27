@@ -21,11 +21,15 @@ void ecs_script_params_free(ecs_vec_t *params) {
 
 static
 ECS_MOVE(EcsScriptConstVar, dst, src, {
-    if (dst->type_info->hooks.dtor) {
-        dst->type_info->hooks.dtor(dst->value.ptr, 1, dst->type_info);
-    }
+    if (dst->value.ptr) {
+        ecs_assert(dst->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_os_free(dst->value.ptr);
+        if (dst->type_info->hooks.dtor) {
+            dst->type_info->hooks.dtor(dst->value.ptr, 1, dst->type_info);
+        }
+
+        ecs_os_free(dst->value.ptr);
+    }
     
     *dst = *src;
 
@@ -36,8 +40,11 @@ ECS_MOVE(EcsScriptConstVar, dst, src, {
 
 static
 ECS_DTOR(EcsScriptConstVar, ptr, {
-    if (ptr->type_info->hooks.dtor) {
-        ptr->type_info->hooks.dtor(ptr->value.ptr, 1, ptr->type_info);
+    if (ptr->value.ptr) {
+        ecs_assert(ptr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (ptr->type_info->hooks.dtor) {
+            ptr->type_info->hooks.dtor(ptr->value.ptr, 1, ptr->type_info);
+        }
     }
     ecs_os_free(ptr->value.ptr);
 })
@@ -75,6 +82,12 @@ ecs_entity_t ecs_const_var_init(
     ecs_check(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->type != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->value != NULL, ECS_INVALID_PARAMETER, NULL);
+    
+    if (ecs_lookup_child(world, desc->parent, desc->name) != 0) {
+        ecs_err("cannot redeclare const variable entity '%s' in parent '%s'", 
+            desc->name, flecs_errstr(ecs_get_path(world, desc->parent)));
+        return 0;
+    }
 
     const ecs_type_info_t *ti = ecs_get_type_info(world, desc->type);
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
@@ -100,6 +113,21 @@ ecs_entity_t ecs_const_var_init(
     return result;
 error:
     return 0;
+}
+
+ecs_value_t ecs_const_var_get(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const EcsScriptConstVar *v = ecs_get(world, entity, EcsScriptConstVar);
+    if (!v) {
+        goto error;
+    }
+
+    return v->value;
+error:
+    return (ecs_value_t){0};
 }
 
 ecs_entity_t ecs_function_init(

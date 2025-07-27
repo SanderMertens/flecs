@@ -59,6 +59,22 @@ int32_t ecs_script_node_line_number_(
     return line_count;
 }
 
+void ecs_script_visit_push_(
+    ecs_script_visit_t *v,
+    ecs_script_node_t *node)
+{
+    v->nodes[v->depth ++] = node;
+}
+
+void ecs_script_visit_pop_(
+    ecs_script_visit_t *v,
+    ecs_script_node_t *node)
+{
+    v->depth --;
+    ecs_assert(v->nodes[v->depth] == node, ECS_INTERNAL_ERROR, NULL);
+    (void)node;
+}
+
 int ecs_script_visit_scope_(
     ecs_script_visit_t *v,
     ecs_script_scope_t *scope)
@@ -82,13 +98,15 @@ int ecs_script_visit_scope_(
             v->next = NULL;
         }
 
-        v->nodes[v->depth ++] = nodes[i];
+        ecs_script_visit_push(v, nodes[i]);
+
+        ecs_assert(v->visit != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (v->visit(v, nodes[i])) {
             return -1;
         }
 
-        v->depth --;
+        ecs_script_visit_pop(v, nodes[i]);
     }
 
     v->depth --;
@@ -111,25 +129,44 @@ int ecs_script_visit_node_(
     return 0;
 }
 
-int ecs_script_visit_(
+int ecs_script_visit_from_(
     ecs_script_visit_t *visitor,
     ecs_visit_action_t visit,
-    ecs_script_impl_t *script)
+    ecs_script_impl_t *script,
+    ecs_script_node_t *node,
+    int32_t depth)
 {
+    if (!script->root) {
+        return -1;
+    }
+
     visitor->script = script;
     visitor->visit = visit;
-    visitor->depth = 0;
-    int result = ecs_script_visit_node(visitor, script->root);
+    visitor->depth = depth;
+    int result = ecs_script_visit_node(visitor, node);
     if (result) {
         return -1;
     }
 
-    if (visitor->depth) {
+    if (visitor->depth != depth) {
         ecs_parser_error(script->pub.name, NULL, 0, "unexpected end of script");
         return -1;
     }
 
     return 0;
+}
+
+int ecs_script_visit_(
+    ecs_script_visit_t *visitor,
+    ecs_visit_action_t visit,
+    ecs_script_impl_t *script)
+{
+    if (!script->root) {
+        return -1;
+    }
+
+    return ecs_script_visit_from_(visitor, visit, script, 
+        (ecs_script_node_t*)script->root, 0);
 }
 
 #endif

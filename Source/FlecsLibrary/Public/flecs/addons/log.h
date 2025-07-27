@@ -550,6 +550,11 @@ bool ecs_log_enable_timedelta(
 FLECS_API
 int ecs_log_last_error(void);
 
+FLECS_API
+void ecs_log_start_capture(bool capture_try);
+
+FLECS_API
+char* ecs_log_stop_capture(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Error codes

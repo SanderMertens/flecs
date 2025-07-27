@@ -83,6 +83,8 @@ const char* flecs_token_kind_str(
     case EcsTokKeywordTemplate:
     case EcsTokKeywordModule:
     case EcsTokKeywordMatch:
+    case EcsTokKeywordNew:
+    case EcsTokKeywordExport:
         return "keyword ";
     case EcsTokIdentifier:
         return "identifier ";
@@ -145,6 +147,8 @@ const char* flecs_token_str(
     case EcsTokKeywordProp: return "prop";
     case EcsTokKeywordConst: return "const";
     case EcsTokKeywordMatch: return "match";
+    case EcsTokKeywordNew: return "new";
+    case EcsTokKeywordExport: return "export";
     case EcsTokKeywordIf: return "if";
     case EcsTokKeywordElse: return "else";
     case EcsTokKeywordFor: return "for";
@@ -205,6 +209,7 @@ repeat_skip_whitespace_comment:
 
             ecs_parser_error(parser->name, parser->code, 
                 pos - parser->code, "missing */ for multiline comment");
+            return NULL;
         }
     }
 
@@ -545,6 +550,9 @@ const char* flecs_token(
 
     // Skip whitespace and comments
     pos = flecs_scan_whitespace_and_comment(parser, pos);
+    if (!pos) {
+        return NULL;
+    }
 
     out->kind = EcsTokUnknown;
     out->value = NULL;
@@ -615,6 +623,8 @@ const char* flecs_token(
     Keyword           ("for",      EcsTokKeywordFor)
     Keyword           ("in",       EcsTokKeywordIn)
     Keyword           ("match",    EcsTokKeywordMatch)
+    Keyword           ("new",      EcsTokKeywordNew)
+    Keyword           ("export",   EcsTokKeywordExport)
     Keyword           ("module",   EcsTokKeywordModule)
 
     } else if (pos[0] == '"') {

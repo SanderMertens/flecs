@@ -46,7 +46,7 @@ const char* flecs_script_parse_initializer(
     ecs_expr_initializer_t **node_out);
 
 void flecs_expr_to_str_buf(
-    const ecs_world_t *world,
+    const ecs_script_t *world,
     const ecs_expr_node_t *expr,
     ecs_strbuf_t *buf,
     bool colors);

@@ -22,6 +22,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstTemplate,
     EcsAstProp,
     EcsAstConst,
+    EcsAstExportConst,
     EcsAstEntity,
     EcsAstPairScope,
     EcsAstIf,
