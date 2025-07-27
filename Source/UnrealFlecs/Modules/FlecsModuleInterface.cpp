@@ -24,15 +24,13 @@ void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 	{
 		FlecsWorld->Defer([this, &FlecsWorld]()
 		{
-			ModuleEntity = FlecsWorld->CreateEntity(Execute_GetModuleName(_getUObject()));
-			ModuleEntity.Add(flecs::Module);
-			
-			ModuleEntity.SetPairFirst<FFlecsUObjectComponent, FFlecsModuleComponentTag>(FFlecsUObjectComponent
-			{
-				_getUObject()
-			});
-
-			ModuleEntity.Set<FFlecsModuleComponent>({ _getUObject()->GetClass() });
+			ModuleEntity = FlecsWorld->CreateEntity(Execute_GetModuleName(_getUObject()))
+				.Add(flecs::Module)
+				.SetPairFirst<FFlecsUObjectComponent, FFlecsModuleComponentTag>(FFlecsUObjectComponent
+				{
+					_getUObject()
+				})
+				.Set<FFlecsModuleComponent>({ _getUObject()->GetClass() });
 		});
 
 		solid_check(ModuleEntity.IsValid());
