@@ -17,6 +17,8 @@ struct alignas(8) UNREALFLECS_API FFlecsComponentHandle : public FFlecsEntityHan
 {
 	GENERATED_BODY()
 
+	using FSelfType = FFlecsComponentHandle;
+
 public:
 	FFlecsComponentHandle() = default;
 
@@ -83,13 +85,13 @@ public:
 		return Get<flecs::Component>();
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& SetComponentData(const flecs::Component& InComponentData) const
+	SOLID_INLINE const FSelfType& SetComponentData(const flecs::Component& InComponentData) const
 	{
 		Set<flecs::Component>(InComponentData);
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& SetComponentData(const int32 InSize, const int32 InAlignment) const
+	SOLID_INLINE const FSelfType& SetComponentData(const int32 InSize, const int32 InAlignment) const
 	{
 		solid_check(InSize > 0 && InAlignment > 0);
 		
@@ -114,7 +116,7 @@ public:
 		return GetUntypedComponent().get_hooks();
 	}
 	
-	SOLID_INLINE const FFlecsComponentHandle& SetConstructor(const ecs_xtor_t& InConstructor) const
+	SOLID_INLINE const FSelfType& SetConstructor(const ecs_xtor_t& InConstructor) const
 	{
 		SetHooksLambda([InConstructor](flecs::type_hooks_t& Hooks)
 		{
@@ -123,7 +125,7 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& SetDestructor(const ecs_xtor_t& InDestructor) const
+	SOLID_INLINE const FSelfType& SetDestructor(const ecs_xtor_t& InDestructor) const
 	{
 		SetHooksLambda([InDestructor](flecs::type_hooks_t& Hooks)
 		{
@@ -132,7 +134,7 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& SetCopy(const ecs_copy_t& InCopy) const
+	SOLID_INLINE const FSelfType& SetCopy(const ecs_copy_t& InCopy) const
 	{
 		SetHooksLambda([InCopy](flecs::type_hooks_t& Hooks)
 		{
@@ -141,7 +143,7 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& SetMove(const ecs_move_t& InMove) const
+	SOLID_INLINE const FSelfType& SetMove(const ecs_move_t& InMove) const
 	{
 		SetHooksLambda([InMove](flecs::type_hooks_t& Hooks)
 		{
@@ -150,7 +152,7 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& SetCompare(const ecs_cmp_t& InCompare) const
+	SOLID_INLINE const FSelfType& SetCompare(const ecs_cmp_t& InCompare) const
 	{
 		SetHooksLambda([InCompare](flecs::type_hooks_t& Hooks)
 		{
@@ -159,7 +161,7 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& SetEquals(const ecs_equals_t& InEquals) const
+	SOLID_INLINE const FSelfType& SetEquals(const ecs_equals_t& InEquals) const
 	{
 		SetHooksLambda([InEquals](flecs::type_hooks_t& Hooks)
 		{
@@ -168,7 +170,7 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& SetOnAdd(const ecs_iter_action_t& InOnAdd) const
+	SOLID_INLINE const FSelfType& SetOnAdd(const ecs_iter_action_t& InOnAdd) const
 	{
 		SetHooksLambda([InOnAdd](flecs::type_hooks_t& Hooks)
 		{
@@ -177,7 +179,7 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& SetOnRemove(const ecs_iter_action_t& InOnRemove) const
+	SOLID_INLINE const FSelfType& SetOnRemove(const ecs_iter_action_t& InOnRemove) const
 	{
 		SetHooksLambda([InOnRemove](flecs::type_hooks_t& Hooks)
 		{
@@ -186,7 +188,7 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& SetOnSet(const ecs_iter_action_t& InOnSet) const
+	SOLID_INLINE const FSelfType& SetOnSet(const ecs_iter_action_t& InOnSet) const
 	{
 		SetHooksLambda([InOnSet](flecs::type_hooks_t& Hooks)
 		{
@@ -213,7 +215,7 @@ public:
 		return FFlecsMemberHandle(ecs_cpp_last_member(GetFlecsWorld_Internal(), GetEntity()));
 	}
 	
-	SOLID_INLINE const FFlecsComponentHandle& AddMember(const FFlecsId InTypeId,
+	SOLID_INLINE const FSelfType& AddMember(const FFlecsId InTypeId,
 								const FFlecsId InUnitId,
 								const FString& InName,
 	                            const uint32 InCount = 0) const
@@ -228,7 +230,7 @@ public:
 		return *this;
 	}
 	
-	SOLID_INLINE const FFlecsComponentHandle& AddMember(const FFlecsId InTypeId,
+	SOLID_INLINE const FSelfType& AddMember(const FFlecsId InTypeId,
 								const FFlecsId InUnitId,
 								const FString& InName,
 								const uint32 InCount,
@@ -245,7 +247,7 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& AddMember(const FFlecsId InTypeId, const FString& InName, const uint32 InCount = 0) const
+	SOLID_INLINE const FSelfType& AddMember(const FFlecsId InTypeId, const FString& InName, const uint32 InCount = 0) const
 	{
 		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
@@ -254,7 +256,7 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FFlecsComponentHandle& AddMember(const FFlecsId InTypeId,
+	SOLID_INLINE const FSelfType& AddMember(const FFlecsId InTypeId,
 	                                          const FString& InName,
 	                                          const uint32 InCount,
 	                                          const uint64 InSizeOffset) const
@@ -270,7 +272,7 @@ public:
 	}
 
 	template <typename T>
-	SOLID_INLINE const FFlecsComponentHandle& AddMember(const FString& InName, const uint32 InCount = 0) const
+	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const uint32 InCount = 0) const
 	{
 		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
@@ -280,7 +282,7 @@ public:
 	}
 
 	template <typename T>
-	SOLID_INLINE const FFlecsComponentHandle& AddMember(const FString& InName, const uint32 InCount, const uint64 InSizeOffset) const
+	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const uint32 InCount, const uint64 InSizeOffset) const
 	{
 		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
@@ -290,7 +292,7 @@ public:
 	}
 
 	template <typename T>
-	SOLID_INLINE const FFlecsComponentHandle& AddMember(const FFlecsId InUnitId, const FString& InName, const uint32 InCount = 0) const
+	SOLID_INLINE const FSelfType& AddMember(const FFlecsId InUnitId, const FString& InName, const uint32 InCount = 0) const
 	{
 		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
@@ -300,7 +302,7 @@ public:
 	}
 
 	template <typename TMember, typename TUnit>
-	SOLID_INLINE const FFlecsComponentHandle& AddMember(const FString& InName, const uint32 InCount = 0) const
+	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const uint32 InCount = 0) const
 	{
 		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
@@ -310,7 +312,7 @@ public:
 	}
 
 	template <typename TMember, typename TUnit>
-	SOLID_INLINE const FFlecsComponentHandle& AddMember(const FString& InName, const uint32 InCount, const uint64 InSizeOffset) const
+	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const uint32 InCount, const uint64 InSizeOffset) const
 	{
 		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
@@ -320,7 +322,7 @@ public:
 	}
 
 	template <typename TMember, typename TComponent>
-	SOLID_INLINE const FFlecsComponentHandle& AddMember(const FString& InName, const TMember TComponent::*MemberPtr) const
+	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const TMember TComponent::*MemberPtr) const
 	{
 		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
@@ -330,7 +332,7 @@ public:
 	}
 
 	template <typename TUnit, typename TMember, typename TComponent>
-	SOLID_INLINE const FFlecsComponentHandle& AddMember(const FString& InName, const TMember TComponent::*MemberPtr) const
+	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const TMember TComponent::*MemberPtr) const
 	{
 		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
@@ -340,7 +342,7 @@ public:
 	}
 
 	template <typename TConstant = uint32>
-	SOLID_INLINE const FFlecsComponentHandle& AddConstant(const FString& InName, const TConstant& InValue) const
+	SOLID_INLINE const FSelfType& AddConstant(const FString& InName, const TConstant& InValue) const
 	{
 		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
 					 TEXT("Cannot add constant to component while in deferred mode."));
@@ -361,6 +363,8 @@ private:
 template <typename TComponent>
 struct TFlecsComponentHandle : public FFlecsComponentHandle
 {
+	using FSelfType = TFlecsComponentHandle<TComponent>;
+	
 public:
 	SOLID_INLINE TFlecsComponentHandle() = default;
 
