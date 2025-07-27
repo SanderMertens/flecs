@@ -2,6 +2,7 @@
 
 #if WITH_AUTOMATION_TESTS
 
+#include "StructUtils/StructView.h"
 #include "Tests/FlecsTestTypes.h"
 
 /*
@@ -82,6 +83,73 @@ TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9.World.Defer",
 
 		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>(),
 			"TestEntity should not have the component after the deferred context is applied!"));
+	}
+
+	TEST_METHOD(A3_AddRemoveComponentDeferred_Add_EntityAPI_Remove_EntityAPI)
+	{
+		FlecsWorld->Defer([&]()
+		{
+			TestEntity.Add(TestComponent);
+			
+			ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>(),
+				"TestEntity should not have the component yet!"));
+		});
+
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>(),
+			"TestEntity should have the component after the deferred context is applied!"));
+
+		FlecsWorld->Defer([&]()
+		{
+			TestEntity.Remove(TestComponent);
+			
+			ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>(),
+				"TestEntity should have the component before the deferred context is applied!"));
+		});
+
+		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>(),
+			"TestEntity should not have the component after the deferred context is applied!"));
+	}
+
+	TEST_METHOD(A4_SetComponentDeferred_Set_CPPAPI)
+	{
+		FlecsWorld->Defer([&]()
+		{
+			TestEntity.Set<FFlecsTestStruct_Value>({ 42 });
+			
+			ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>(),
+				"TestEntity should not have the component yet!"));
+		});
+
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>(),
+			"TestEntity should have the component after the deferred context is applied!"));
+
+		const FFlecsTestStruct_Value& ComponentValue = TestEntity.Get<FFlecsTestStruct_Value>();
+		ASSERT_THAT(IsTrue(ComponentValue.Value == 42));
+
+		TestEntity.Remove<FFlecsTestStruct_Value>();
+		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>()));
+	}
+
+	TEST_METHOD(A5_SetComponentDeferred_Set_StaticStructAPI)
+	{
+		FlecsWorld->Defer([&]()
+		{
+			static constexpr FFlecsTestStruct_Value ComponentValue{ 42 };
+			
+			TestEntity.Set(FFlecsTestStruct_Value::StaticStruct(), &ComponentValue);
+			
+			ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>(),
+				"TestEntity should not have the component yet!"));
+		});
+
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>(),
+			"TestEntity should have the component after the deferred context is applied!"));
+
+		const FFlecsTestStruct_Value& ComponentValue = TestEntity.Get<FFlecsTestStruct_Value>();
+		ASSERT_THAT(IsTrue(ComponentValue.Value == 42));
+
+		TestEntity.Remove<FFlecsTestStruct_Value>();
+		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>()));
 	}
 	
 };
