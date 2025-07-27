@@ -188,8 +188,8 @@ public:
 			#endif // #if !NO_LOGGING
 				FFlecsDefaultEntityEngine::Get().CreateDefaultEntity(DefaultEntity, DefaultWorld->World);
 
-			UE_LOG(LogFlecsCore, Log,
-				TEXT("Created default entity %s with id %llu"),
+			UE_LOGFMT(LogFlecsCore, Log,
+				"Created default entity {EntityName} with id {EntityId}",
 				*DefaultEntity.EntityName, NewDefaultEntity.id());
 		}
 
