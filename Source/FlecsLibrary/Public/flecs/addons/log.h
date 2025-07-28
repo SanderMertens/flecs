@@ -378,9 +378,9 @@ void ecs_parser_warningv_(
     #include <intrin.h>
     #define FLECS_BREAK __nop(); __debugbreak();
     #elif defined(__GNUC__) || defined(__clang__)
-    #define FLECS_BREAK()
+    #define FLECS_BREAK
     #else
-    #define FLECS_BREAK()
+    #define FLECS_BREAK
     #endif
 
     #define ecs_assert(condition, error_code, ...)\
@@ -408,11 +408,21 @@ void ecs_parser_warningv_(
 #define ecs_san_assert(condition, error_code, ...)
 #endif
 
+    #if defined(_MSC_VER)
+    #define ecs_assume(condition)\
+        __assume(condition)
+    #elif defined(__GNUC__) || defined(__clang__)
+    #define ecs_assume(condition)\
+        __builtin_assume(condition)
+    #else
+    #define ecs_assume(condition)\
+        (void)(condition) /* no-op */
+    #endif
 
 /* Silence dead code/unused label warnings when compiling without checks. */
 #define ecs_dummy_check\
     if ((false)) {\
-        __assume(false); \
+        ecs_assume(false); \
         goto error;\
     }
 
