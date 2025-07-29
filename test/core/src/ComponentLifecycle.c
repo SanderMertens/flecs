@@ -4287,3 +4287,69 @@ void ComponentLifecycle_copy_ctor_w_override_w_ensure(void) {
     
     ecs_fini(world);
 }
+
+void ComponentLifecycle_shrink(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .move = ecs_move(Position),
+        .copy = ecs_copy(Position),
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {11, 20}));
+    test_int(ctor_position, 1);
+    test_int(dtor_position, 0);
+    test_int(move_position, 0);
+    test_int(copy_position, 1);
+
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {12, 20}));
+    test_int(ctor_position, 2);
+    test_int(dtor_position, 0);
+    test_int(move_position, 0);
+    test_int(copy_position, 2);
+
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {13, 20}));
+    test_int(ctor_position, 5); // grow
+    test_int(dtor_position, 2);
+    test_int(move_position, 2);
+    test_int(copy_position, 3);
+
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {14, 20}));
+    test_int(ctor_position, 6);
+    test_int(dtor_position, 2);
+    test_int(move_position, 2);
+    test_int(copy_position, 4);
+
+    ecs_delete(world, e4);
+    ecs_delete(world, e3);
+    ecs_delete(world, e2);
+
+    test_int(ctor_position, 6);
+    test_int(dtor_position, 5);
+    test_int(move_position, 2);
+    test_int(copy_position, 4);
+
+    ctor_position = 0;
+    dtor_position = 0;
+    move_position = 0;
+    copy_position = 0;
+
+    test_int(ecs_table_size(ecs_get_table(world, e1)), 4);
+    test_int(ecs_table_count(ecs_get_table(world, e1)), 1);
+
+    ecs_shrink(world);
+
+    test_int(ctor_position, 1);
+    test_int(dtor_position, 1);
+    test_int(move_position, 1);
+    test_int(copy_position, 0);
+
+    test_int(ecs_table_size(ecs_get_table(world, e1)), 2);
+    test_int(ecs_table_count(ecs_get_table(world, e1)), 1);
+
+    ecs_fini(world);
+}
