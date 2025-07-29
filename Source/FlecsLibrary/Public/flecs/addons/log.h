@@ -413,7 +413,8 @@ void ecs_parser_warningv_(
         __assume(condition)
     #elif defined(__GNUC__) || defined(__clang__)
     #define ecs_assume(condition)\
-        __builtin_assume(condition)
+        (void)(condition) /* no-op */
+        //__builtin_assume(condition)
     #else
     #define ecs_assume(condition)\
         (void)(condition) /* no-op */
