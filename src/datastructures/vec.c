@@ -266,7 +266,7 @@ void* ecs_vec_grow(
     int32_t elem_count)
 {
     ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(elem_count > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(elem_count >= 0, ECS_INTERNAL_ERROR, NULL);
     int32_t count = v->count;
     ecs_vec_set_count(allocator, v, size, count + elem_count);
     return ECS_ELEM(v->array, size, count);

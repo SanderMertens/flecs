@@ -1332,7 +1332,8 @@
                 "on_replace_set_2_entities",
                 "copy_ctor_w_override",
                 "copy_ctor_w_override_w_emplace",
-                "copy_ctor_w_override_w_ensure"
+                "copy_ctor_w_override_w_ensure",
+                "shrink"
             ]
         }, {
             "id": "Pairs",

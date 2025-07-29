@@ -34126,7 +34126,7 @@ void* ecs_vec_grow(
     int32_t elem_count)
 {
     ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(elem_count > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(elem_count >= 0, ECS_INTERNAL_ERROR, NULL);
     int32_t count = v->count;
     ecs_vec_set_count(allocator, v, size, count + elem_count);
     return ECS_ELEM(v->array, size, count);
@@ -41486,21 +41486,8 @@ bool flecs_table_shrink(
     flecs_table_check_sanity(table);
 
     bool has_payload = table->data.entities != NULL;
-    ecs_vec_t v_entities = ecs_vec_from_entities(table);
-    ecs_vec_reclaim_t(&world->allocator, &v_entities, ecs_entity_t);
 
-    int32_t i, count = table->column_count;
-    for (i = 0; i < count; i ++) {
-        ecs_column_t *column = &table->data.columns[i];
-        const ecs_type_info_t *ti = column->ti;
-        ecs_vec_t v_column = ecs_vec_from_column(column, table, ti->size);
-        ecs_vec_reclaim(&world->allocator, &v_column, ti->size);
-        column->data = v_column.array;
-    }
-
-    table->data.count = v_entities.count;
-    table->data.size = v_entities.size;
-    table->data.entities = v_entities.array;
+    flecs_table_grow_data(world, table, 0, ecs_table_count(table), NULL);
 
     flecs_increment_table_column_version(world, table);
 
