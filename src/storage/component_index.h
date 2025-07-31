@@ -16,7 +16,7 @@ typedef struct ecs_reachable_elem_t {
     ecs_record_t *record;
     ecs_entity_t src;
     ecs_id_t id;
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
     ecs_table_t *table;
 #endif
 } ecs_reachable_elem_t;

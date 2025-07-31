@@ -82,10 +82,10 @@
 
 /* Make sure provided configuration is valid */
 #if defined(FLECS_DEBUG) && defined(FLECS_NDEBUG)
-#error "invalid configuration: cannot both define FLECS_DEBUG and FLECS_NDEBUG"
+#warning "invalid configuration: cannot both define FLECS_DEBUG and FLECS_NDEBUG"
 #endif
 #if defined(FLECS_DEBUG) && defined(NDEBUG)
-#error "invalid configuration: cannot both define FLECS_DEBUG and NDEBUG"
+#warning "invalid configuration: cannot both define FLECS_DEBUG and NDEBUG"
 #endif
 
 /** @def FLECS_DEBUG
