@@ -430,7 +430,7 @@ typedef struct ecs_reachable_elem_t {
     ecs_record_t *record;
     ecs_entity_t src;
     ecs_id_t id;
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
     ecs_table_t *table;
 #endif
 } ecs_reachable_elem_t;
@@ -14402,7 +14402,7 @@ void flecs_emit_forward_and_cache_id(
     elem->record = tgt_record;
     elem->src = tgt;
     elem->id = cr->id;
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
     elem->table = tgt_table;
 #endif
     ecs_assert(tgt_table == tgt_record->table, ECS_INTERNAL_ERROR, NULL);
@@ -14488,7 +14488,7 @@ void flecs_emit_dump_cache(
         ecs_reachable_elem_t *elem = &elems[i];
         char *idstr = ecs_id_str(world, elem->id);
         char *estr = ecs_id_str(world, elem->src);
-        #ifndef NDEBUG
+        #ifndef FLECS_NDEBUG
         ecs_table_t *table = elem->table;
         #else
         ecs_table_t *table = NULL;
@@ -14615,7 +14615,7 @@ void flecs_emit_forward_table_up(
             elem->record = tgt_record;
             elem->src = tgt;
             elem->id = cr->id;
-#ifndef NDEBUG
+#ifndef FLECS_NDEBUG
             elem->table = tgt_table;
 #endif
         }
