@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "FlecsGameplayTagManagerComponent.generated.h"
 
-USTRUCT(BlueprintType, MinimalAPI)
+USTRUCT(BlueprintType)
 struct FFlecsGameplayTagManagerComponent
 {
 	GENERATED_BODY()
