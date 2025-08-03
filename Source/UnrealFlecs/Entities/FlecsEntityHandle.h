@@ -9,7 +9,6 @@
 
 #include "CoreMinimal.h"
 #include "FlecsArchetype.h"
-#include "FlecsEntityView.h"
 #include "FlecsId.h"
 #include "GameplayTagContainer.h"
 #include "General/FlecsStringConverters.h"

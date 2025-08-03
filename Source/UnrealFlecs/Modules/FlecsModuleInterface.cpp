@@ -35,10 +35,11 @@ void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 
 		solid_check(ModuleEntity.IsValid());
 
-		FlecsWorld->SetScope(ModuleEntity);
-
-		InitializeModule(FlecsWorld, ModuleEntity);
-		Execute_BP_InitializeModule(_getUObject(), FlecsWorld);
+		FlecsWorld->Scope(ModuleEntity, [this, FlecsWorld]()
+		{
+			InitializeModule(FlecsWorld, ModuleEntity);
+			Execute_BP_InitializeModule(_getUObject(), FlecsWorld);
+		});
 	});
 
 	FlecsWorld->Event<FFlecsModuleInitEvent>()
@@ -56,8 +57,8 @@ void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 			Execute_BP_WorldBeginPlay(_getUObject(), FlecsWorld, InGameWorld);
 		}));
 	
-	UE_LOG(LogFlecsCore, Log,
-		TEXT("Imported module: %s"), *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
+	UE_LOGFMT(LogFlecsCore, Verbose,
+		"Imported module: {ModuleName}", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }
 
 void IFlecsModuleInterface::DeinitializeModule_Internal()
@@ -72,8 +73,8 @@ void IFlecsModuleInterface::DeinitializeModule_Internal()
 		Execute_BP_DeinitializeModule(_getUObject(), FlecsWorld);
 	}
 
-	UE_LOG(LogFlecsCore, Log,
-		TEXT("Deinitialized module: %s"), *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
+	UE_LOGFMT(LogFlecsCore, Log,
+		"Deinitialized module: {ModuleName}", IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }
 
 void IFlecsModuleInterface::InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
@@ -90,9 +91,9 @@ void IFlecsModuleInterface::DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWor
 
 FString IFlecsModuleInterface::GetModuleName_Implementation() const
 {
-	UE_LOG(LogFlecsCore, Warning,
-		TEXT("Module name not implemented! It is recommended to implement this function in the module interface. "
-		"Will return the inherited class name instead. For Class: %s"), *_getUObject()->GetClass()->GetName());
+	UE_LOGFMT(LogFlecsCore, Warning,
+		"Module name not implemented! It is recommended to implement this function in the module interface. "
+		"Will return the inherited class name instead. For Class: {ClassName}", _getUObject()->GetClass()->GetName());
 	
 	return _getUObject()->GetClass()->GetName();
 }

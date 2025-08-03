@@ -49,7 +49,7 @@ struct UNREALFLECS_API FFlecsDefaultMetaEntity
 
 UCLASS(BlueprintType, Config = Flecs, DefaultConfig, Category = "Flecs",
 	meta = (DisplayName = "Flecs Default Entities Developer Settings"))
-class UNREALFLECS_API UFlecsDefaultEntitiesDeveloperSettings final : public UDeveloperSettings
+class UFlecsDefaultEntitiesDeveloperSettings final : public UDeveloperSettings
 {
 	GENERATED_BODY()
 

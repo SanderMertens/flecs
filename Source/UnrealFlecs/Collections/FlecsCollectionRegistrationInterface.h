@@ -9,8 +9,8 @@
 #include "FlecsCollectionRegistrationInterface.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(BlueprintType, MinimalAPI, meta=(CannotImplementInterfaceInBlueprint))
-class UFlecsCollectionRegistrationInterface : public UFlecsObjectRegistrationInterface
+UINTERFACE(BlueprintType, meta=(CannotImplementInterfaceInBlueprint))
+class UNREALFLECS_API UFlecsCollectionRegistrationInterface : public UFlecsObjectRegistrationInterface
 {
 	GENERATED_BODY()
 }; // class UFlecsCollectionRegistrationInterface

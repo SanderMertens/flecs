@@ -63,7 +63,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 			return;
 		}
 
-		UE_LOG(LogFlecsEntity, Log, TEXT("Entity: %hs"), Entity.name().c_str());
+		UE_LOGFMT(LogFlecsEntity, Log, "Entity: {EntityName}", Entity.name().c_str());
 		DefaultEntityOptions.Add(Entity.name().c_str(), Entity.id());
 	});
 	

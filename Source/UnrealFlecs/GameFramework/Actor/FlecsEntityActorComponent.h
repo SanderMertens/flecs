@@ -43,8 +43,8 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
-	FString EntityName;
+	//UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
+	//FString EntityName;
 
 	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
 	FFlecsEntityRecord EntityRecord;

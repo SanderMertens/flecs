@@ -112,6 +112,15 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		ASSERT_THAT(IsTrue(FlecsWorld == ConvertedWorld));
 	}
 
+	TEST_METHOD_WITH_TAGS(B4_IsUnrealFlecsWorld, "[Flecs][World]")
+	{
+		ASSERT_THAT(IsTrue(FlecsWorld->HasSingleton<FUnrealFlecsWorldTag>()));
+
+		flecs::world non_unreal_world;
+		non_unreal_world.component<FUnrealFlecsWorldTag>();
+		ASSERT_THAT(IsFalse(non_unreal_world.has<FUnrealFlecsWorldTag>()));
+	}
+
 	TEST_METHOD_WITH_TAGS(C1_CanCreateEntity, "[Flecs][World][Entity]")
 	{
 		TestEntity = FlecsWorld->CreateEntity();

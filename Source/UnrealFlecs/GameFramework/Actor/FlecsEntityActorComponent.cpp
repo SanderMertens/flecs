@@ -94,11 +94,12 @@ void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 
 void UFlecsEntityActorComponent::CreateActorEntity(const TSolidNotNull<const UFlecsWorld*> InWorld)
 {
-	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord, EntityName);
+	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord);
 	
 	EntityHandle.SetPairFirst<FFlecsUObjectComponent, FFlecsActorTag>(FFlecsUObjectComponent{ GetOwner() });
-	UE_LOG(LogFlecsEntity, Log,
-		TEXT("Created Actor Entity: %s"), *EntityHandle.GetName());
+	
+	UE_CLOGFMT(EntityHandle.HasName(), LogFlecsEntity, Log,
+		"Created Actor Entity: {EntityName}", EntityHandle.GetName());
 
 	MARK_PROPERTY_DIRTY_FROM_NAME(UFlecsEntityActorComponent, EntityHandle, this);
 

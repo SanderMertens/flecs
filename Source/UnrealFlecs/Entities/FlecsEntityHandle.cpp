@@ -14,8 +14,7 @@ DEFINE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION(Unreal::Flecs::EmptyNetSerializeFunct
 {
     if UNLIKELY_IF(!InEntity.IsValid())
     {
-        UE_LOGFMT(LogFlecsNetworking, Warning,
-            "Trying to net serialize an invalid entity");
+        UE_LOGFMT(LogFlecsNetworking, Warning, "Trying to net serialize an invalid entity");
         bOutSuccess = true;
         return true;
     }
@@ -75,12 +74,17 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
     if LIKELY_IF(Unreal::Flecs::GNetSerializeFunctionPtr)
     {
         return std::invoke(
-            *Unreal::Flecs::GNetSerializeFunctionPtr, *this, GetFlecsWorld(), Ar, Map, bOutSuccess);
+            *Unreal::Flecs::GNetSerializeFunctionPtr,
+            *this,
+            GetFlecsWorld(),
+            Ar,
+            Map,
+            bOutSuccess);
     }
     else
     {
-        UE_LOG(LogFlecsNetworking, Error,
-            TEXT("Trying to net serialize entity with a nullptr NetSerialize function ptr"));
+        UE_LOGFMT(LogFlecsNetworking, Error,
+            "Trying to net serialize entity with a nullptr NetSerialize function ptr");
         
         bOutSuccess = false;
         return false;
