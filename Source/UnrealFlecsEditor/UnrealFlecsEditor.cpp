@@ -82,7 +82,9 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 				
 				if (!PIEInfo.IsSet())
 				{
-					UE_LOG(LogFlecsEditor, Warning, TEXT("No PIE session info found"));
+					UE_LOG(LogFlecsEditor, Log, TEXT("No PIE session info found"));
+					const FString TargetUrl = "https://www.flecs.dev/explorer/?host=localhost:27750&refresh=auto&remote=true";
+					FPlatformProcess::LaunchURL(*TargetUrl, nullptr, nullptr);
 					return;
 				}
 				
@@ -90,6 +92,7 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 				{
 					FString TargetUrl = "https://www.flecs.dev/explorer/?host=localhost:";
 					TargetUrl.Append(FString::FromInt(27750 + Index));
+					TargetUrl.Append("&refresh=auto&remote=true");
 					FPlatformProcess::LaunchURL(*TargetUrl, nullptr, nullptr);
 				}
 			})
