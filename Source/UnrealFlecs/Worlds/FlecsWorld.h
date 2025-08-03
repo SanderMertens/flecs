@@ -383,14 +383,14 @@ public:
 
 						std::invoke(Properties->RegistrationFunction, Iter.world(), InUntypedComponent);
 
-						UE_LOG(LogFlecsComponent, Log,
-							TEXT("Component properties %s registered"), *StructSymbol);
+						UE_LOGFMT(LogFlecsComponent, Log,
+							"Component properties {StructName} registered", StructSymbol);
 					}
 					#if !NO_LOGGING
 					else
 					{
-						UE_LOG(LogFlecsComponent, Log,
-							TEXT("Component properties %s not found"), *StructSymbol);
+						UE_LOGFMT(LogFlecsComponent, Log,
+							"Component properties {StructName} not found", *StructSymbol);
 					}
 					#endif // UNLOG_ENABLED
 				});
@@ -410,8 +410,8 @@ public:
 					
 				if (!InUObjectComponent.IsValid())
 				{
-					UE_LOG(LogFlecsWorld, Log,
-						TEXT("Entity Garbage Collected: %s"), *EntityHandle.GetName());
+					UE_CLOGFMT(EntityHandle.HasName(), LogFlecsWorld, Verbose,
+						"Entity Garbage Collected: {EntityName}", EntityHandle.GetName());
 					
 					EntityHandle.Destroy();
 				}
@@ -434,8 +434,8 @@ public:
 			{
 				const TSolidNotNull<UObject*> ObjectPtr = InUObjectComponent.GetObjectChecked();
 
-				UE_LOG(LogFlecsWorld, Log,
-					TEXT("Module component %s added"), *ObjectPtr->GetName());
+				UE_LOGFMT(LogFlecsWorld, Log,
+					"Module component {ModuleName} added", ObjectPtr->GetName());
 				
 				// if (ObjectPtr->Implements<UFlecsModuleProgressInterface>())
 				// {
@@ -676,7 +676,7 @@ public:
 		}
 		else
 		{
-			UE_LOG(LogFlecsWorld, Warning, TEXT("Entity %s not found"), *Name);
+			UE_LOGFMT(LogFlecsWorld, Warning, "Entity {EntityName} not found", Name);
 		}
 	}
 
@@ -1343,8 +1343,7 @@ public:
 		for (TFieldIterator<FProperty> PropertyIt(InStruct, EFieldIterationFlags::IncludeSuper);
 			PropertyIt; ++PropertyIt)
 		{
-			FProperty* Property = *PropertyIt;
-			solid_check(Property);
+			TSolidNotNull<FProperty*> Property = *PropertyIt;
 
 			const char* PropertyNameCStr = Unreal::Flecs::ToCString(Property->GetName());
 				
@@ -1438,14 +1437,16 @@ public:
 				FFlecsEntityHandle StructComponent;
 				if (!HasScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct))
 				{
-					UE_LOG(LogFlecsWorld, Error,
-						TEXT("Property Type Script struct %s is not registered for entity %s"),
-						*CastFieldChecked<FStructProperty>(Property)->Struct->GetName(), *InComponent.GetName());
+					UE_LOGFMT(LogFlecsWorld, Error,
+						"Property Type Script struct {StructName} is not registered for entity {ComponentName}",
+						CastFieldChecked<FStructProperty>(Property)->Struct->GetStructCPPName(),
+						InComponent.GetName());
 					continue;
 				}
 				else
 				{
-					StructComponent = GetScriptStructEntity(CastFieldChecked<FStructProperty>(Property)->Struct);
+					StructComponent
+						= GetScriptStructEntity(CastFieldChecked<FStructProperty>(Property)->Struct);
 				}
 			 		
 				InComponent.AddMember(StructComponent, PropertyNameCStr,
@@ -1453,9 +1454,10 @@ public:
 			}
 			else UNLIKELY_ATTRIBUTE
 			{
-				UE_LOG(LogFlecsWorld, Log,
-					TEXT("Property Type: %s is not supported for member serialization"),
-					*Property->GetName());
+				UE_LOGFMT(LogFlecsWorld, Log,
+					"Property Type: {PropertyName}({TypeName} is not supported for member serialization",
+					Property->GetNameCPP(),
+					Property->GetOwnerStruct()->GetName());
 			}
 		}
 	}
@@ -1495,9 +1497,9 @@ public:
 			{
 				if (ScriptStruct->GetCppStructOps()->HasNoopConstructor())
 				{
-					UE_LOG(LogFlecsComponent, Warning,
-						TEXT("Script struct %s has a noop constructor, this will not be used in flecs"),
-						*ScriptStruct->GetName());
+					UE_LOGFMT(LogFlecsComponent, Warning,
+						"Script struct {StructName} has a No-op constructor, this will not be used in flecs",
+						ScriptStruct->GetName());
 				}
 
 				ScriptStructComponent.SetHooksLambda([ScriptStruct](flecs::type_hooks_t& Hooks)
