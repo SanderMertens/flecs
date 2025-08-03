@@ -302,52 +302,50 @@ struct FOSApiInitializer
         os_api.log_ = [](int32_t Level, const char* File, int32_t Line, const char* Message)
         {
 #if !NO_LOGGING
-        	const TCHAR* LogFile = StringCast<TCHAR>(File).Get();
-        	const TCHAR* LogMessage = StringCast<TCHAR>(Message).Get();
             switch (Level)
             {
                 case -4: // Fatal
 	                {
-                		UE_LOG(LogFlecsCore, Fatal,
-                			TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-							LogFile, Line, LogMessage);
+                		UE_LOGFMT(LogFlecsCore, Fatal,
+                			"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
+							File, Line, Message);
 	                }
                     break;
                 case -3: // Error
 	                {
-                		UE_LOG(LogFlecsCore, Error,
-                			TEXT("Error Flecs - File: %s, Line: %d, Message: %s"),
-							LogFile, Line, LogMessage);
+                		UE_LOGFMT(LogFlecsCore, Error,
+							"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
+							File, Line, Message);
 	                }
                     break;
                 case -2: // Warning
 	                {
-                		UE_LOG(LogFlecsCore, Warning,
-                			TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-							LogFile, Line, LogMessage);
+                		UE_LOGFMT(LogFlecsCore, Warning,
+                			"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
+                				File, Line, Message);
 	                }
                     break;
             	case 0: // Verbose
             		{
-            			UE_LOG(LogFlecsCore, Verbose,
-            				TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-							LogFile, Line, LogMessage);
+            			UE_LOGFMT(LogFlecsCore, Verbose,
+            				"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
+							File, Line, Message);
             		}
                     break;
             	case 4: // Bookmark/Journal
             		{
             			TRACE_BOOKMARK(TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-            				LogFile, Line, LogMessage);
-            			UE_LOG(LogFlecsJournal, VeryVerbose,
-            				TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-            				LogFile, Line, LogMessage);
+            				StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+            			UE_LOGFMT(LogFlecsJournal, VeryVerbose,
+            				"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
+            				File, Line, Message);
             		}
 					break;
                 default: // Info and Debug
             		{
-            			UE_LOG(LogFlecsCore, Log,
-            				TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-							LogFile, Line, LogMessage);
+            			UE_LOGFMT(LogFlecsCore, Log,
+							"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
+							File, Line, Message);
             		}
                     break;
             }
