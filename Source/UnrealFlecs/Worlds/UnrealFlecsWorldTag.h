@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "UnrealFlecsWorldTag.generated.h"
 
-USTRUCT(BlueprintType, MinimalAPI)
+USTRUCT(BlueprintType)
 struct FUnrealFlecsWorldTag
 {
 	GENERATED_BODY()
