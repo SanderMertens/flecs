@@ -27,7 +27,7 @@ int ecs_script_visit_(
 
 #define ecs_script_visit(script, visitor, visit) \
     ecs_script_visit_((ecs_script_visit_t*)visitor,\
-        (ecs_visit_action_t)visit,\
+        visit,\
         script)
 
 int ecs_script_visit_from_(
@@ -39,7 +39,7 @@ int ecs_script_visit_from_(
 
 #define ecs_script_visit_from(script, visitor, visit, from, depth) \
     ecs_script_visit_from_((ecs_script_visit_t*)visitor,\
-        (ecs_visit_action_t)visit,\
+        visit,\
         script, \
         from, \
         depth)

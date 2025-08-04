@@ -320,6 +320,15 @@ void ecs_script_runtime_free(
     ecs_os_free(r);
 }
 
+void ecs_script_runtime_clear(
+    ecs_script_runtime_t *r)
+{
+    ecs_vec_clear(&r->annot);
+    ecs_vec_clear(&r->with);
+    ecs_vec_clear(&r->with_type_info);
+    ecs_vec_clear(&r->using);
+}
+
 ecs_script_runtime_t* flecs_script_runtime_get(
     ecs_world_t *world)
 {

@@ -91,5 +91,8 @@ int ecs_script_ast_node_to_buf(
     bool colors,
     int32_t depth);
 
+void ecs_script_runtime_clear(
+    ecs_script_runtime_t *r);
+
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H

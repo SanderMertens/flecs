@@ -52,6 +52,8 @@ void ecs_ref_update(
     ecs_check(ref->entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ref->id != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ref->record != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref->record == flecs_entities_get_any(world, ref->entity), 
+        ECS_INVALID_OPERATION, "a corrupt ref was passed to ecs_ref_update");
 
     flecs_check_exclusive_world_access_read(world);
 
@@ -68,6 +70,8 @@ void ecs_ref_update(
         ref->ptr = NULL;
         return;
     }
+
+    ecs_check(ecs_is_alive(world, ref->entity), ECS_INVALID_PARAMETER, NULL);
 
     if (ref->table_id == table->id && ref->table_version == table->version) {
         ref->table_version_fast = flecs_get_table_version_fast(world, ref->table_id);
