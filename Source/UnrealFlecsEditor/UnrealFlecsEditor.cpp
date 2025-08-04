@@ -121,7 +121,7 @@ void FUnrealFlecsEditorModule::AddPrimaryAssetTypes()
 		false
 	);
 
-	FlecsPrimaryDataAssetTypeInfo.Rules.Priority = 1;
+	/*FlecsPrimaryDataAssetTypeInfo.Rules.Priority = 1;
 	FlecsPrimaryDataAssetTypeInfo.Rules.bApplyRecursively = true;
 	FlecsPrimaryDataAssetTypeInfo.Rules.CookRule = EPrimaryAssetCookRule::AlwaysCook;
 
@@ -151,7 +151,7 @@ void FUnrealFlecsEditorModule::AddPrimaryAssetTypes()
 		Info.ExpireDuration = 3.0f;
 		
 		FSlateNotificationManager::Get().AddNotification(Info);
-	}
+	}*/
 }
 
 #undef LOCTEXT_NAMESPACE

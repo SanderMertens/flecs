@@ -58,7 +58,7 @@ void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 		}));
 	
 	UE_LOGFMT(LogFlecsCore, Verbose,
-		"Imported module: {ModuleName}", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
+		"Imported module: {ModuleName}", IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }
 
 void IFlecsModuleInterface::DeinitializeModule_Internal()

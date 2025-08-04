@@ -32,6 +32,16 @@ public:
 		
 		return *this;
 	}
+
+	NO_DISCARD FORCEINLINE bool IsValid() const
+	{
+		return FlecsWorld.IsValid();
+	}
+
+	NO_DISCARD FORCEINLINE TSolidNotNull<const UFlecsWorld*> GetFlecsWorld() const
+	{
+		return FlecsWorld.Get();
+	}
 	
 private:
 	TWeakObjectPtr<const UFlecsWorld> FlecsWorld;

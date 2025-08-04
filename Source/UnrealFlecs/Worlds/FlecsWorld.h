@@ -5,6 +5,8 @@
 // ReSharper disable CppMemberFunctionMayBeStatic
 #pragma once
 
+#include <utility>
+
 #include "flecs.h"
 
 #include "CoreMinimal.h"
@@ -390,7 +392,7 @@ public:
 					else
 					{
 						UE_LOGFMT(LogFlecsComponent, Log,
-							"Component properties {StructName} not found", *StructSymbol);
+							"Component properties {StructName} not found", StructSymbol);
 					}
 					#endif // UNLOG_ENABLED
 				});
@@ -630,7 +632,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithPrefab(const FFlecsEntityHandle& InPrefab) const
 	{
-		return World.entity().is_a(InPrefab.GetEntity());
+		return CreateEntity().SetIsA(InPrefab);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -1700,7 +1702,7 @@ public:
 				
 				const FString EnumValueName = ScriptEnum->GetNameStringByIndex(EnumIndex);
 
-				if (MaxEnumValue == EnumValue)
+				if (std::cmp_equal(MaxEnumValue, EnumValue))
 				{
 					continue;
 				}

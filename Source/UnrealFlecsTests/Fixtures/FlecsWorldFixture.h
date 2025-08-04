@@ -29,7 +29,7 @@ public:
 	           const TArray<UObject*>& InModules = {})
 	{
 		TestWorldWrapper = MakeUnique<FTestWorldWrapper>();
-		TestWorldWrapper->CreateTestWorld(EWorldType::Game);
+		TestWorldWrapper->CreateTestWorld(EWorldType::GameRPC);
 
 		TestWorld = TestWorldWrapper->GetTestWorld();
 

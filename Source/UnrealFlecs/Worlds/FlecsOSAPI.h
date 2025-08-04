@@ -408,7 +408,7 @@ struct FOSApiInitializer
 							"Flecs - Mismatched profiler trace pop: "
 							"Got {TraceName} from {TraceFileName}:{TraceLine}, "
 							"Expected {Name} from {FileName}:{Line}",
-							*Trace.Name, *Trace.FileName, Trace.Line,
+							Trace.Name, Trace.FileName, Trace.Line,
 							Name, FileName, static_cast<uint32>(Line));
 					}
 					else

@@ -190,7 +190,7 @@ public:
 
 			UE_LOGFMT(LogFlecsCore, Log,
 				"Created default entity {EntityName} with id {EntityId}",
-				*DefaultEntity.EntityName, NewDefaultEntity.id());
+				DefaultEntity.EntityName, NewDefaultEntity.id());
 		}
 
 		const IConsoleManager& ConsoleManager = IConsoleManager::Get();
