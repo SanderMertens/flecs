@@ -21897,7 +21897,7 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
     ecs_cpp_get_mut_t res = ecs_cpp_set(world, entity, id, &value, sizeof(T));
 
     T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
-    dst = FLECS_MOV(value);
+    dst = FLECS_FWD(value);
 
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);
@@ -21913,7 +21913,7 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
     ecs_cpp_get_mut_t res = ecs_cpp_set(world, entity, id, &value, sizeof(T));
 
     T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
-    dst = FLECS_MOV(value);
+    dst = value;
 
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);
@@ -21944,7 +21944,7 @@ inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_
         world, entity, id, &value, sizeof(T));
 
     T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
-    dst = FLECS_MOV(value);
+    dst = FLECS_FWD(value);
 
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);
@@ -21961,7 +21961,7 @@ inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs
         world, entity, id, &value, sizeof(T));
 
     T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
-    dst = FLECS_MOV(value);
+    dst = value;
 
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);

@@ -6463,3 +6463,85 @@ void Entity_defer_on_replace_w_assign_batched_existing_twice(void) {
 
     test_assert(e.has<Velocity>());
 }
+
+void Entity_set_lvalue_to_mutable(void) {
+    flecs::world world;
+
+    auto e = world.entity();
+
+    LifecycleTracker src;
+
+    e.set(src);
+
+    // Assertions are the exact same as in set_lvalue_to_const; src should have been copied, not moved
+    const auto* attached = e.try_get<LifecycleTracker>();
+    test_assert(attached != nullptr);
+    
+    test_assert(attached->constructed_via == LifecycleTracker::Constructor::default_);
+    test_int(attached->times_copy_assigned_into, 1);
+    test_int(attached->times_copy_assigned_from, 0);
+    test_int(attached->times_copy_constructed_from, 0);
+    test_false(attached->moved_into() || attached->moved_from());
+    test_int(attached->times_destructed, 0);
+    
+    test_assert(src.constructed_via == LifecycleTracker::Constructor::default_);
+    test_int(src.times_copy_assigned_into, 0);
+    test_int(src.times_copy_assigned_from, 1);
+    test_int(src.times_copy_constructed_from, 0);
+    test_false(src.moved_into() || src.moved_from());
+    test_int(src.times_destructed, 0);
+}
+
+void Entity_set_lvalue_to_const(void) {
+    flecs::world world;
+
+    auto e = world.entity();
+
+    LifecycleTracker const src;
+
+    e.set(src);
+
+    const auto* attached = e.try_get<LifecycleTracker>();
+    test_assert(attached != nullptr);
+    
+    test_assert(attached->constructed_via == LifecycleTracker::Constructor::default_);
+    test_int(attached->times_copy_assigned_into, 1);
+    test_int(attached->times_copy_assigned_from, 0);
+    test_int(attached->times_copy_constructed_from, 0);
+    test_false(attached->moved_into() || attached->moved_from());
+    test_int(attached->times_destructed, 0);
+    
+    test_assert(src.constructed_via == LifecycleTracker::Constructor::default_);
+    test_int(src.times_copy_assigned_into, 0);
+    test_int(src.times_copy_assigned_from, 1);
+    test_int(src.times_copy_constructed_from, 0);
+    test_false(src.moved_into() || src.moved_from());
+    test_int(src.times_destructed, 0);
+}
+
+void Entity_set_rvalue(void) {
+    flecs::world world;
+
+    auto e = world.entity();
+
+    LifecycleTracker src;
+
+    e.set(std::move(src));
+
+    const auto* attached = e.try_get<LifecycleTracker>();
+    test_assert(attached != nullptr);
+    
+    test_assert(attached->constructed_via == LifecycleTracker::Constructor::default_);
+    test_int(attached->times_move_assigned_into, 1);
+    test_int(attached->times_move_assigned_from, 0);
+    test_int(attached->times_move_constructed_from, 0);
+    test_false(attached->copied_into() || attached->copied_from());
+    test_int(attached->times_destructed, 0);
+    
+    test_assert(src.constructed_via == LifecycleTracker::Constructor::default_);
+    test_int(src.times_move_assigned_into, 0);
+    test_int(src.times_move_assigned_from, 1);
+    test_int(src.times_move_constructed_from, 0);
+    test_false(src.copied_into() || src.copied_from());
+    test_int(src.times_destructed, 0);
+}
