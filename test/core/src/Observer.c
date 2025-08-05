@@ -10510,3 +10510,383 @@ void Observer_on_set_two_overrides_after_on_add(void) {
 
     ecs_fini(world);
 }
+
+static int is_set_invoked = 0;
+
+void IsSetObserver(ecs_iter_t *it) {
+    test_assert(it->field_count > 0);
+    for (int i = 0; i < it->field_count; i ++) {
+        test_assert(ecs_field_is_set(it, i));
+        is_set_invoked ++;
+    }
+}
+
+void Observer_1_term_on_add_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver
+    });
+
+    ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_remove_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnRemove },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_remove(world, e, Foo);
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_set_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_add_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver
+    });
+
+    ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_remove_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_remove(world, e, Position);
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_add_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }, { Bar }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Bar);
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_remove_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }, { Bar }},
+        .events = { EcsOnRemove },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Bar);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_remove(world, e, Bar);
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_set_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Velocity);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_add_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Velocity);
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_remove_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnRemove },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Velocity);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_remove(world, e, Velocity);
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_add_yield_existing_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_add_yield_existing_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_set_yield_existing_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnSet },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_add_yield_existing_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Bar);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Foo) }, { ecs_id(Bar) }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_add_yield_existing_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Velocity);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_set_yield_existing_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Velocity);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}

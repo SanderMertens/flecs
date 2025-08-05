@@ -1761,6 +1761,22 @@ void Observer_create_multi_observer_before_in_use_w_delete_component(void);
 void Observer_create_multi_observer_after_in_use_w_delete_component(void);
 void Observer_on_set_override_after_on_add(void);
 void Observer_on_set_two_overrides_after_on_add(void);
+void Observer_1_term_on_add_is_set(void);
+void Observer_1_term_on_remove_is_set(void);
+void Observer_1_term_on_set_is_set(void);
+void Observer_1_term_on_add_is_set_component(void);
+void Observer_1_term_on_remove_is_set_component(void);
+void Observer_2_terms_on_add_is_set(void);
+void Observer_2_terms_on_remove_is_set(void);
+void Observer_2_terms_on_set_is_set(void);
+void Observer_2_terms_on_add_is_set_component(void);
+void Observer_2_terms_on_remove_is_set_component(void);
+void Observer_1_term_on_add_yield_existing_is_set(void);
+void Observer_1_term_on_add_yield_existing_is_set_component(void);
+void Observer_1_term_on_set_yield_existing_is_set(void);
+void Observer_2_terms_on_add_yield_existing_is_set(void);
+void Observer_2_terms_on_add_yield_existing_is_set_component(void);
+void Observer_2_terms_on_set_yield_existing_is_set(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -9484,6 +9500,70 @@ bake_test_case Observer_testcases[] = {
         Observer_on_set_two_overrides_after_on_add
     },
     {
+        "1_term_on_add_is_set",
+        Observer_1_term_on_add_is_set
+    },
+    {
+        "1_term_on_remove_is_set",
+        Observer_1_term_on_remove_is_set
+    },
+    {
+        "1_term_on_set_is_set",
+        Observer_1_term_on_set_is_set
+    },
+    {
+        "1_term_on_add_is_set_component",
+        Observer_1_term_on_add_is_set_component
+    },
+    {
+        "1_term_on_remove_is_set_component",
+        Observer_1_term_on_remove_is_set_component
+    },
+    {
+        "2_terms_on_add_is_set",
+        Observer_2_terms_on_add_is_set
+    },
+    {
+        "2_terms_on_remove_is_set",
+        Observer_2_terms_on_remove_is_set
+    },
+    {
+        "2_terms_on_set_is_set",
+        Observer_2_terms_on_set_is_set
+    },
+    {
+        "2_terms_on_add_is_set_component",
+        Observer_2_terms_on_add_is_set_component
+    },
+    {
+        "2_terms_on_remove_is_set_component",
+        Observer_2_terms_on_remove_is_set_component
+    },
+    {
+        "1_term_on_add_yield_existing_is_set",
+        Observer_1_term_on_add_yield_existing_is_set
+    },
+    {
+        "1_term_on_add_yield_existing_is_set_component",
+        Observer_1_term_on_add_yield_existing_is_set_component
+    },
+    {
+        "1_term_on_set_yield_existing_is_set",
+        Observer_1_term_on_set_yield_existing_is_set
+    },
+    {
+        "2_terms_on_add_yield_existing_is_set",
+        Observer_2_terms_on_add_yield_existing_is_set
+    },
+    {
+        "2_terms_on_add_yield_existing_is_set_component",
+        Observer_2_terms_on_add_yield_existing_is_set_component
+    },
+    {
+        "2_terms_on_set_yield_existing_is_set",
+        Observer_2_terms_on_set_yield_existing_is_set
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -13107,7 +13187,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        250,
+        266,
         Observer_testcases
     },
     {

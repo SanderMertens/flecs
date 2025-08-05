@@ -14334,10 +14334,10 @@ void flecs_emit_forward_id(
     it->up_fields = 1;
 
     int32_t storage_i = ecs_table_type_to_column_index(tgt_table, column);
+    it->trs[0] = &tgt_table->_->records[column];
     if (storage_i != -1) {
-        ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_column_t *c = &tgt_table->data.columns[storage_i];
-        it->trs[0] = &tgt_table->_->records[column];
+        ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
         ECS_CONST_CAST(int32_t*, it->sizes)[0] = c->ti->size; /* safe, see above */
     }
 
@@ -15676,6 +15676,8 @@ void flecs_uni_observer_invoke(
     int32_t event_cur = it->event_cur;
     ecs_entity_t old_system = flecs_stage_set_system(
         world->stages[0], o->entity);
+    ecs_flags32_t cur_set_fields = it->set_fields;
+    it->set_fields = 1;
 
     ecs_query_t *query = o->query;
     it->query = query;
@@ -15755,6 +15757,7 @@ void flecs_uni_observer_invoke(
 
     it->event = event;
     it->event_cur = event_cur;
+    it->set_fields = cur_set_fields;
 
     ecs_log_pop_3();
 
