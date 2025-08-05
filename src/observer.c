@@ -361,6 +361,8 @@ void flecs_uni_observer_invoke(
     int32_t event_cur = it->event_cur;
     ecs_entity_t old_system = flecs_stage_set_system(
         world->stages[0], o->entity);
+    ecs_flags32_t cur_set_fields = it->set_fields;
+    it->set_fields = 1;
 
     ecs_query_t *query = o->query;
     it->query = query;
@@ -440,6 +442,7 @@ void flecs_uni_observer_invoke(
 
     it->event = event;
     it->event_cur = event_cur;
+    it->set_fields = cur_set_fields;
 
     ecs_log_pop_3();
 
