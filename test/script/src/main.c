@@ -376,6 +376,14 @@ void Eval_run_script_w_nested_module_from_scope(void);
 void Eval_run_script_w_nested_module_from_named_scope(void);
 void Eval_run_script_w_nested_module_from_module(void);
 void Eval_run_script_w_nested_module_from_named_scope_managed(void);
+void Eval_vector_i32_component(void);
+void Eval_vector_string_component(void);
+void Eval_vector_struct_component(void);
+void Eval_vector_i32_export_var(void);
+void Eval_vector_string_export_var(void);
+void Eval_vector_struct_export_var(void);
+void Eval_opaque_vector_i32_component(void);
+void Eval_opaque_vector_i32_export_var(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -929,6 +937,12 @@ void Serialize_escape_2_newlines(void);
 void Serialize_escape_string_w_trailing_newline(void);
 void Serialize_escape_string_w_2_trailing_newlines(void);
 void Serialize_escape_string_w_delim(void);
+void Serialize_opaque_i32(void);
+void Serialize_opaque_string(void);
+void Serialize_opaque_struct(void);
+void Serialize_opaque_array(void);
+void Serialize_opaque_vector(void);
+void Serialize_opaque_string_vector(void);
 
 // Testsuite 'Deserialize'
 void Deserialize_setup(void);
@@ -1013,6 +1027,19 @@ void Deserialize_struct_w_add_assign_expr_invalid_type(void);
 void Deserialize_array_w_trailing_comma(void);
 void Deserialize_array_i32_2(void);
 void Deserialize_array_string_2(void);
+void Deserialize_vector_i32_0(void);
+void Deserialize_vector_i32_2(void);
+void Deserialize_vector_i32_0_into_2(void);
+void Deserialize_vector_i32_1_into_2(void);
+void Deserialize_vector_string_0(void);
+void Deserialize_vector_string_2(void);
+void Deserialize_vector_string_0_into_2(void);
+void Deserialize_vector_string_1_into_2(void);
+void Deserialize_vector_struct_0(void);
+void Deserialize_vector_struct_2(void);
+void Deserialize_vector_struct_2_empty(void);
+void Deserialize_vector_struct_0_into_2(void);
+void Deserialize_vector_struct_1_into_2(void);
 void Deserialize_discover_type_int(void);
 void Deserialize_discover_type_negative_int(void);
 void Deserialize_discover_type_float(void);
@@ -1028,6 +1055,18 @@ void Deserialize_opaque_struct_w_member(void);
 void Deserialize_opaque_struct_w_member_reverse(void);
 void Deserialize_struct_w_opaque_member(void);
 void Deserialize_opaque_string(void);
+void Deserialize_opaque_vector_i32_0(void);
+void Deserialize_opaque_vector_i32_2(void);
+void Deserialize_opaque_vector_i32_0_into_2(void);
+void Deserialize_opaque_vector_i32_1_into_2(void);
+void Deserialize_opaque_vector_string_0(void);
+void Deserialize_opaque_vector_string_2(void);
+void Deserialize_opaque_vector_string_0_into_2(void);
+void Deserialize_opaque_vector_string_1_into_2(void);
+void Deserialize_opaque_vector_opaque_string_0(void);
+void Deserialize_opaque_vector_opaque_string_2(void);
+void Deserialize_opaque_vector_opaque_string_0_into_2(void);
+void Deserialize_opaque_vector_opaque_string_1_into_2(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
@@ -2513,6 +2552,38 @@ bake_test_case Eval_testcases[] = {
     {
         "run_script_w_nested_module_from_named_scope_managed",
         Eval_run_script_w_nested_module_from_named_scope_managed
+    },
+    {
+        "vector_i32_component",
+        Eval_vector_i32_component
+    },
+    {
+        "vector_string_component",
+        Eval_vector_string_component
+    },
+    {
+        "vector_struct_component",
+        Eval_vector_struct_component
+    },
+    {
+        "vector_i32_export_var",
+        Eval_vector_i32_export_var
+    },
+    {
+        "vector_string_export_var",
+        Eval_vector_string_export_var
+    },
+    {
+        "vector_struct_export_var",
+        Eval_vector_struct_export_var
+    },
+    {
+        "opaque_vector_i32_component",
+        Eval_opaque_vector_i32_component
+    },
+    {
+        "opaque_vector_i32_export_var",
+        Eval_opaque_vector_i32_export_var
     }
 };
 
@@ -4691,6 +4762,30 @@ bake_test_case Serialize_testcases[] = {
     {
         "escape_string_w_delim",
         Serialize_escape_string_w_delim
+    },
+    {
+        "opaque_i32",
+        Serialize_opaque_i32
+    },
+    {
+        "opaque_string",
+        Serialize_opaque_string
+    },
+    {
+        "opaque_struct",
+        Serialize_opaque_struct
+    },
+    {
+        "opaque_array",
+        Serialize_opaque_array
+    },
+    {
+        "opaque_vector",
+        Serialize_opaque_vector
+    },
+    {
+        "opaque_string_vector",
+        Serialize_opaque_string_vector
     }
 };
 
@@ -5020,6 +5115,58 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_array_string_2
     },
     {
+        "vector_i32_0",
+        Deserialize_vector_i32_0
+    },
+    {
+        "vector_i32_2",
+        Deserialize_vector_i32_2
+    },
+    {
+        "vector_i32_0_into_2",
+        Deserialize_vector_i32_0_into_2
+    },
+    {
+        "vector_i32_1_into_2",
+        Deserialize_vector_i32_1_into_2
+    },
+    {
+        "vector_string_0",
+        Deserialize_vector_string_0
+    },
+    {
+        "vector_string_2",
+        Deserialize_vector_string_2
+    },
+    {
+        "vector_string_0_into_2",
+        Deserialize_vector_string_0_into_2
+    },
+    {
+        "vector_string_1_into_2",
+        Deserialize_vector_string_1_into_2
+    },
+    {
+        "vector_struct_0",
+        Deserialize_vector_struct_0
+    },
+    {
+        "vector_struct_2",
+        Deserialize_vector_struct_2
+    },
+    {
+        "vector_struct_2_empty",
+        Deserialize_vector_struct_2_empty
+    },
+    {
+        "vector_struct_0_into_2",
+        Deserialize_vector_struct_0_into_2
+    },
+    {
+        "vector_struct_1_into_2",
+        Deserialize_vector_struct_1_into_2
+    },
+    {
         "discover_type_int",
         Deserialize_discover_type_int
     },
@@ -5078,6 +5225,54 @@ bake_test_case Deserialize_testcases[] = {
     {
         "opaque_string",
         Deserialize_opaque_string
+    },
+    {
+        "opaque_vector_i32_0",
+        Deserialize_opaque_vector_i32_0
+    },
+    {
+        "opaque_vector_i32_2",
+        Deserialize_opaque_vector_i32_2
+    },
+    {
+        "opaque_vector_i32_0_into_2",
+        Deserialize_opaque_vector_i32_0_into_2
+    },
+    {
+        "opaque_vector_i32_1_into_2",
+        Deserialize_opaque_vector_i32_1_into_2
+    },
+    {
+        "opaque_vector_string_0",
+        Deserialize_opaque_vector_string_0
+    },
+    {
+        "opaque_vector_string_2",
+        Deserialize_opaque_vector_string_2
+    },
+    {
+        "opaque_vector_string_0_into_2",
+        Deserialize_opaque_vector_string_0_into_2
+    },
+    {
+        "opaque_vector_string_1_into_2",
+        Deserialize_opaque_vector_string_1_into_2
+    },
+    {
+        "opaque_vector_opaque_string_0",
+        Deserialize_opaque_vector_opaque_string_0
+    },
+    {
+        "opaque_vector_opaque_string_2",
+        Deserialize_opaque_vector_opaque_string_2
+    },
+    {
+        "opaque_vector_opaque_string_0_into_2",
+        Deserialize_opaque_vector_opaque_string_0_into_2
+    },
+    {
+        "opaque_vector_opaque_string_1_into_2",
+        Deserialize_opaque_vector_opaque_string_1_into_2
     }
 };
 
@@ -5154,7 +5349,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        367,
+        375,
         Eval_testcases
     },
     {
@@ -5198,14 +5393,14 @@ static bake_test_suite suites[] = {
         "Serialize",
         NULL,
         NULL,
-        55,
+        61,
         Serialize_testcases
     },
     {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        96,
+        121,
         Deserialize_testcases,
         1,
         Deserialize_params

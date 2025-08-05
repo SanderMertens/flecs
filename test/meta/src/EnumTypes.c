@@ -17,7 +17,7 @@ void meta_test_enum(
 
     const EcsEnum *et = ecs_get(world, t, EcsEnum);
     test_assert(et != NULL);
-    test_int(ecs_map_count(&et->constants), count);
+    test_int(ecs_map_count(et->constants), count);
 }
 
 static
@@ -36,7 +36,7 @@ void meta_test_constant(
     const EcsEnum *et = ecs_get(world, t, EcsEnum);
     test_assert(et != NULL);
 
-    ecs_map_iter_t it = ecs_map_iter(&et->constants);
+    ecs_map_iter_t it = ecs_map_iter(et->constants);
     bool constant_found = false;
     while (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
@@ -175,9 +175,9 @@ void EnumTypes_struct_w_enum(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, before, ecs_id(ecs_bool_t), 1);
-    meta_test_member(world, t, T, v, e, 1);
-    meta_test_member(world, t, T, after, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, before, ecs_id(ecs_bool_t), 0);
+    meta_test_member(world, t, T, v, e, 0);
+    meta_test_member(world, t, T, after, ecs_id(ecs_bool_t), 0);
 
     ecs_fini(world);
 }
@@ -347,7 +347,7 @@ void EnumTypes_enum_w_underlying_i8(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 0);
+            e->constants, ecs_enum_constant_t, 0);
         test_assert(ec != NULL);
         test_str(ec->name, "Red");
         test_int(ec->value, 0);
@@ -364,7 +364,7 @@ void EnumTypes_enum_w_underlying_i8(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 1);
+            e->constants, ecs_enum_constant_t, 1);
         test_assert(ec != NULL);
         test_str(ec->name, "Blue");
         test_int(ec->value, 1);
@@ -381,7 +381,7 @@ void EnumTypes_enum_w_underlying_i8(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, INT8_MAX);
+            e->constants, ecs_enum_constant_t, INT8_MAX);
         test_assert(ec != NULL);
         test_str(ec->name, "Green");
         test_int(ec->value, INT8_MAX);
@@ -398,7 +398,7 @@ void EnumTypes_enum_w_underlying_i8(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, INT8_MIN);
+            e->constants, ecs_enum_constant_t, INT8_MIN);
         test_assert(ec != NULL);
         test_str(ec->name, "Yellow");
         test_int(ec->value, INT8_MIN);
@@ -440,7 +440,7 @@ void EnumTypes_enum_w_underlying_i16(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 0);
+            e->constants, ecs_enum_constant_t, 0);
         test_assert(ec != NULL);
         test_str(ec->name, "Red");
         test_int(ec->value, 0);
@@ -457,7 +457,7 @@ void EnumTypes_enum_w_underlying_i16(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 1);
+            e->constants, ecs_enum_constant_t, 1);
         test_assert(ec != NULL);
         test_str(ec->name, "Blue");
         test_int(ec->value, 1);
@@ -474,7 +474,7 @@ void EnumTypes_enum_w_underlying_i16(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, INT16_MAX);
+            e->constants, ecs_enum_constant_t, INT16_MAX);
         test_assert(ec != NULL);
         test_str(ec->name, "Green");
         test_int(ec->value, INT16_MAX);
@@ -491,7 +491,7 @@ void EnumTypes_enum_w_underlying_i16(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, INT16_MIN);
+            e->constants, ecs_enum_constant_t, INT16_MIN);
         test_assert(ec != NULL);
         test_str(ec->name, "Yellow");
         test_int(ec->value, INT16_MIN);
@@ -533,7 +533,7 @@ void EnumTypes_enum_w_underlying_i32(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 0);
+            e->constants, ecs_enum_constant_t, 0);
         test_assert(ec != NULL);
         test_str(ec->name, "Red");
         test_int(ec->value, 0);
@@ -550,7 +550,7 @@ void EnumTypes_enum_w_underlying_i32(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 1);
+            e->constants, ecs_enum_constant_t, 1);
         test_assert(ec != NULL);
         test_str(ec->name, "Blue");
         test_int(ec->value, 1);
@@ -567,7 +567,7 @@ void EnumTypes_enum_w_underlying_i32(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, INT32_MAX);
+            e->constants, ecs_enum_constant_t, INT32_MAX);
         test_assert(ec != NULL);
         test_str(ec->name, "Green");
         test_int(ec->value, INT32_MAX);
@@ -584,7 +584,7 @@ void EnumTypes_enum_w_underlying_i32(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, INT32_MIN);
+            e->constants, ecs_enum_constant_t, INT32_MIN);
         test_assert(ec != NULL);
         test_str(ec->name, "Yellow");
         test_int(ec->value, INT32_MIN);
@@ -626,7 +626,7 @@ void EnumTypes_enum_w_underlying_i64(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 0);
+            e->constants, ecs_enum_constant_t, 0);
         test_assert(ec != NULL);
         test_str(ec->name, "Red");
         test_int(ec->value, 0);
@@ -643,7 +643,7 @@ void EnumTypes_enum_w_underlying_i64(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 1);
+            e->constants, ecs_enum_constant_t, 1);
         test_assert(ec != NULL);
         test_str(ec->name, "Blue");
         test_int(ec->value, 1);
@@ -660,7 +660,7 @@ void EnumTypes_enum_w_underlying_i64(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, INT64_MAX);
+            e->constants, ecs_enum_constant_t, INT64_MAX);
         test_assert(ec != NULL);
         test_str(ec->name, "Green");
         test_int(ec->value, INT64_MAX);
@@ -677,7 +677,7 @@ void EnumTypes_enum_w_underlying_i64(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, INT64_MIN);
+            e->constants, ecs_enum_constant_t, INT64_MIN);
         test_assert(ec != NULL);
         test_str(ec->name, "Yellow");
         test_int(ec->value, INT64_MIN);
@@ -718,7 +718,7 @@ void EnumTypes_enum_w_underlying_u8(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 0);
+            e->constants, ecs_enum_constant_t, 0);
         test_assert(ec != NULL);
         test_str(ec->name, "Red");
         test_int(ec->value_unsigned, 0);
@@ -735,7 +735,7 @@ void EnumTypes_enum_w_underlying_u8(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 1);
+            e->constants, ecs_enum_constant_t, 1);
         test_assert(ec != NULL);
         test_str(ec->name, "Blue");
         test_int(ec->value_unsigned, 1);
@@ -752,7 +752,7 @@ void EnumTypes_enum_w_underlying_u8(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, UINT8_MAX);
+            e->constants, ecs_enum_constant_t, UINT8_MAX);
         test_assert(ec != NULL);
         test_str(ec->name, "Green");
         test_int(ec->value_unsigned, UINT8_MAX);
@@ -793,7 +793,7 @@ void EnumTypes_enum_w_underlying_u16(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 0);
+            e->constants, ecs_enum_constant_t, 0);
         test_assert(ec != NULL);
         test_str(ec->name, "Red");
         test_int(ec->value_unsigned, 0);
@@ -810,7 +810,7 @@ void EnumTypes_enum_w_underlying_u16(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 1);
+            e->constants, ecs_enum_constant_t, 1);
         test_assert(ec != NULL);
         test_str(ec->name, "Blue");
         test_int(ec->value_unsigned, 1);
@@ -827,7 +827,7 @@ void EnumTypes_enum_w_underlying_u16(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, UINT16_MAX);
+            e->constants, ecs_enum_constant_t, UINT16_MAX);
         test_assert(ec != NULL);
         test_str(ec->name, "Green");
         test_int(ec->value_unsigned, UINT16_MAX);
@@ -868,7 +868,7 @@ void EnumTypes_enum_w_underlying_u32(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 0);
+            e->constants, ecs_enum_constant_t, 0);
         test_assert(ec != NULL);
         test_str(ec->name, "Red");
         test_int(ec->value_unsigned, 0);
@@ -885,7 +885,7 @@ void EnumTypes_enum_w_underlying_u32(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 1);
+            e->constants, ecs_enum_constant_t, 1);
         test_assert(ec != NULL);
         test_str(ec->name, "Blue");
         test_int(ec->value_unsigned, 1);
@@ -902,7 +902,7 @@ void EnumTypes_enum_w_underlying_u32(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, UINT32_MAX);
+            e->constants, ecs_enum_constant_t, UINT32_MAX);
         test_assert(ec != NULL);
         test_str(ec->name, "Green");
         test_int(ec->value_unsigned, UINT32_MAX);
@@ -943,7 +943,7 @@ void EnumTypes_enum_w_underlying_u64(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 0);
+            e->constants, ecs_enum_constant_t, 0);
         test_assert(ec != NULL);
         test_str(ec->name, "Red");
         test_int(ec->value_unsigned, 0);
@@ -960,7 +960,7 @@ void EnumTypes_enum_w_underlying_u64(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, 1);
+            e->constants, ecs_enum_constant_t, 1);
         test_assert(ec != NULL);
         test_str(ec->name, "Blue");
         test_int(ec->value_unsigned, 1);
@@ -977,7 +977,7 @@ void EnumTypes_enum_w_underlying_u64(void) {
 
     {
         ecs_enum_constant_t *ec = ecs_map_get_deref(
-            &e->constants, ecs_enum_constant_t, UINT64_MAX);
+            e->constants, ecs_enum_constant_t, UINT64_MAX);
         test_assert(ec != NULL);
         test_str(ec->name, "Green");
         test_int(ec->value_unsigned, UINT64_MAX);

@@ -197,7 +197,7 @@ void flecs_json_id_member(
     bool fullpath);
 
 ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
-    ecs_meta_type_op_kind_t kind);
+    ecs_meta_op_kind_t kind);
 
 int flecs_json_serialize_iter_result(
     const ecs_world_t *world,

@@ -428,6 +428,18 @@ void Cursor_array_struct_3(void);
 void Cursor_array_move_primitive(void);
 void Cursor_array_move_struct(void);
 void Cursor_array_move_out_of_range(void);
+void Cursor_vector_i32_0(void);
+void Cursor_vector_i32_1(void);
+void Cursor_vector_i32_1_next(void);
+void Cursor_vector_i32_3(void);
+void Cursor_vector_i32_empty_after_3(void);
+void Cursor_vector_struct_3(void);
+void Cursor_vector_move_primitive(void);
+void Cursor_vector_move_struct(void);
+void Cursor_struct_w_vector_i32_3(void);
+void Cursor_struct_w_vector_struct_3(void);
+void Cursor_struct_w_vector_move_primitive(void);
+void Cursor_struct_w_vector_move_struct(void);
 void Cursor_opaque_set_bool(void);
 void Cursor_opaque_set_char(void);
 void Cursor_opaque_set_int(void);
@@ -993,6 +1005,16 @@ void OpaqueTypes_deser_uint_from_json(void);
 void OpaqueTypes_deser_float_from_json(void);
 void OpaqueTypes_deser_string_from_json(void);
 void OpaqueTypes_deser_entity_from_json(void);
+void OpaqueTypes_deser_struct_from_json(void);
+void OpaqueTypes_deser_struct_w_opaque_struct_from_json(void);
+void OpaqueTypes_deser_struct_w_opaque_array_from_json(void);
+void OpaqueTypes_deser_struct_w_opaque_vector_from_json(void);
+void OpaqueTypes_deser_array_from_json(void);
+void OpaqueTypes_deser_vector_from_json(void);
+void OpaqueTypes_deser_0_vector_from_json(void);
+void OpaqueTypes_deser_0_into_vector_from_json(void);
+void OpaqueTypes_deser_string_vector_from_json(void);
+void OpaqueTypes_deser_struct_vector_from_json(void);
 void OpaqueTypes_ser_deser_world_w_ser_opaque(void);
 void OpaqueTypes_ser_deser_entity(void);
 void OpaqueTypes_ser_deser_0_entity(void);
@@ -2715,6 +2737,54 @@ bake_test_case Cursor_testcases[] = {
     {
         "array_move_out_of_range",
         Cursor_array_move_out_of_range
+    },
+    {
+        "vector_i32_0",
+        Cursor_vector_i32_0
+    },
+    {
+        "vector_i32_1",
+        Cursor_vector_i32_1
+    },
+    {
+        "vector_i32_1_next",
+        Cursor_vector_i32_1_next
+    },
+    {
+        "vector_i32_3",
+        Cursor_vector_i32_3
+    },
+    {
+        "vector_i32_empty_after_3",
+        Cursor_vector_i32_empty_after_3
+    },
+    {
+        "vector_struct_3",
+        Cursor_vector_struct_3
+    },
+    {
+        "vector_move_primitive",
+        Cursor_vector_move_primitive
+    },
+    {
+        "vector_move_struct",
+        Cursor_vector_move_struct
+    },
+    {
+        "struct_w_vector_i32_3",
+        Cursor_struct_w_vector_i32_3
+    },
+    {
+        "struct_w_vector_struct_3",
+        Cursor_struct_w_vector_struct_3
+    },
+    {
+        "struct_w_vector_move_primitive",
+        Cursor_struct_w_vector_move_primitive
+    },
+    {
+        "struct_w_vector_move_struct",
+        Cursor_struct_w_vector_move_struct
     },
     {
         "opaque_set_bool",
@@ -4932,6 +5002,46 @@ bake_test_case OpaqueTypes_testcases[] = {
         OpaqueTypes_deser_entity_from_json
     },
     {
+        "deser_struct_from_json",
+        OpaqueTypes_deser_struct_from_json
+    },
+    {
+        "deser_struct_w_opaque_struct_from_json",
+        OpaqueTypes_deser_struct_w_opaque_struct_from_json
+    },
+    {
+        "deser_struct_w_opaque_array_from_json",
+        OpaqueTypes_deser_struct_w_opaque_array_from_json
+    },
+    {
+        "deser_struct_w_opaque_vector_from_json",
+        OpaqueTypes_deser_struct_w_opaque_vector_from_json
+    },
+    {
+        "deser_array_from_json",
+        OpaqueTypes_deser_array_from_json
+    },
+    {
+        "deser_vector_from_json",
+        OpaqueTypes_deser_vector_from_json
+    },
+    {
+        "deser_0_vector_from_json",
+        OpaqueTypes_deser_0_vector_from_json
+    },
+    {
+        "deser_0_into_vector_from_json",
+        OpaqueTypes_deser_0_into_vector_from_json
+    },
+    {
+        "deser_string_vector_from_json",
+        OpaqueTypes_deser_string_vector_from_json
+    },
+    {
+        "deser_struct_vector_from_json",
+        OpaqueTypes_deser_struct_vector_from_json
+    },
+    {
         "ser_deser_world_w_ser_opaque",
         OpaqueTypes_ser_deser_world_w_ser_opaque
     },
@@ -5374,7 +5484,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        146,
+        158,
         Cursor_testcases
     },
     {
@@ -5437,7 +5547,7 @@ static bake_test_suite suites[] = {
         "OpaqueTypes",
         NULL,
         NULL,
-        18,
+        28,
         OpaqueTypes_testcases
     },
     {

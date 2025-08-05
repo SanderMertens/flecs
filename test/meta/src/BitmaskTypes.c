@@ -17,7 +17,7 @@ void meta_test_bitmask(
 
     const EcsBitmask *bt = ecs_get(world, t, EcsBitmask);
     test_assert(bt != NULL);
-    test_int(ecs_map_count(&bt->constants), count);
+    test_int(ecs_map_count(bt->constants), count);
 }
 
 static
@@ -36,7 +36,7 @@ void meta_test_constant(
     const EcsBitmask *bt = ecs_get(world, t, EcsBitmask);
     test_assert(bt != NULL);
 
-    ecs_map_iter_t it = ecs_map_iter(&bt->constants);
+    ecs_map_iter_t it = ecs_map_iter(bt->constants);
     bool constant_found = false;
     while (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
@@ -187,9 +187,9 @@ void BitmaskTypes_struct_w_bitmask(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, before, ecs_id(ecs_bool_t), 1);
-    meta_test_member(world, t, T, v, b, 1);
-    meta_test_member(world, t, T, after, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, before, ecs_id(ecs_bool_t), 0);
+    meta_test_member(world, t, T, v, b, 0);
+    meta_test_member(world, t, T, after, ecs_id(ecs_bool_t), 0);
 
     ecs_fini(world);
 }

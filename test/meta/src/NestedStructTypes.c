@@ -29,7 +29,7 @@ void NestedStructTypes_1_bool(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
 
     ecs_fini(world);
 }
@@ -63,7 +63,7 @@ void NestedStructTypes_1_int32(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
 
     ecs_fini(world);
 }
@@ -99,8 +99,8 @@ void NestedStructTypes_1_bool_w_bool_member(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, x, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, x, ecs_id(ecs_bool_t), 0);
 
     ecs_fini(world);
 }
@@ -136,8 +136,8 @@ void NestedStructTypes_1_bool_w_int32_member(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 0);
 
     ecs_fini(world);
 }
@@ -173,8 +173,8 @@ void NestedStructTypes_1_int32_w_bool_member(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, x, ecs_id(ecs_bool_t), 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, x, ecs_id(ecs_bool_t), 0);
 
     ecs_fini(world);
 }
@@ -210,8 +210,8 @@ void NestedStructTypes_1_int32_w_int32_member(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, x, ecs_id(ecs_i32_t), 0);
 
     ecs_fini(world);
 }
@@ -247,8 +247,8 @@ void NestedStructTypes_1_bool_2_same(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n1, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n1, 0);
 
     ecs_fini(world);
 }
@@ -291,8 +291,8 @@ void NestedStructTypes_1_bool_2_bool(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }
@@ -339,8 +339,8 @@ void NestedStructTypes_1_bool_2_i32(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }
@@ -387,8 +387,8 @@ void NestedStructTypes_1_i32_2_bool(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }
@@ -437,8 +437,8 @@ void NestedStructTypes_1_bool_2_bool_bool(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }
@@ -487,8 +487,8 @@ void NestedStructTypes_1_bool_bool_2_bool(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }
@@ -526,8 +526,8 @@ void NestedStructTypes_1_bool_bool_2_same(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n1, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n1, 0);
 
     ecs_fini(world);
 }
@@ -578,8 +578,8 @@ void NestedStructTypes_1_bool_bool_2_bool_bool(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }
@@ -615,8 +615,8 @@ void NestedStructTypes_1_i32_2_same(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n1, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n1, 0);
 
     ecs_fini(world);
 }
@@ -663,8 +663,8 @@ void NestedStructTypes_1_i32_2_i32(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }
@@ -713,8 +713,8 @@ void NestedStructTypes_1_i32_2_i32_i32(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }
@@ -763,8 +763,8 @@ void NestedStructTypes_1_i32_i32_2_i32(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }
@@ -802,8 +802,8 @@ void NestedStructTypes_1_i32_i32_2_same(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n1, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n1, 0);
 
     ecs_fini(world);
 }
@@ -854,8 +854,8 @@ void NestedStructTypes_1_i32_i32_2_i32_i32(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }
@@ -924,8 +924,8 @@ void NestedStructTypes_2_lvls_bool(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }
@@ -998,8 +998,8 @@ void NestedStructTypes_2_lvls_bool_bool(void) {
     test_str(ecs_get_name(world, t), "T");
     
     meta_test_struct(world, t, T);
-    meta_test_member(world, t, T, n_1, n1, 1);
-    meta_test_member(world, t, T, n_2, n2, 1);
+    meta_test_member(world, t, T, n_1, n1, 0);
+    meta_test_member(world, t, T, n_2, n2, 0);
 
     ecs_fini(world);
 }

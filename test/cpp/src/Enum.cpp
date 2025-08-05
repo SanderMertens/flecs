@@ -1579,7 +1579,10 @@ void Enum_runtime_type_constant_u8_template(void) {
 
     auto comp = ecs.component("TestEnumConstant");
     comp.set<flecs::Component>({ sizeof(uint8_t), alignof(uint8_t) });
-    comp.set<flecs::Enum>({ flecs::U8 });
+
+    comp.get([](flecs::Enum& e) {
+        e.underlying_type = flecs::U8;
+    });
 
     comp.constant<uint8_t>("First", 1)
         .constant<uint8_t>("Second", 2)
