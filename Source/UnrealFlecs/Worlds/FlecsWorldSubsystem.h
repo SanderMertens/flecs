@@ -18,6 +18,7 @@
 #include "GameplayTagContainer.h"
 #include "GameplayTagsManager.h"
 #include "UnrealFlecsWorldTag.h"
+#include "Components/FlecsAddReferencedObjectsTrait.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Components/UWorldPtrComponent.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
@@ -166,9 +167,14 @@ public:
 		// @TODO: Update this to either the FlecsWorldObject or the UWorld
 		DefaultWorld->SetContext(this);
 
-		DefaultWorld->RegisterComponentType<FUnrealFlecsWorldTag>().Add(flecs::Singleton);
-		DefaultWorld->RegisterComponentType<FFlecsWorldPtrComponent>().Add(flecs::Singleton);
-		DefaultWorld->RegisterComponentType<FUWorldPtrComponent>().Add(flecs::Singleton);
+		DefaultWorld->RegisterComponentType<FUnrealFlecsWorldTag>()
+			.Add(flecs::Singleton);
+		
+		DefaultWorld->RegisterComponentType<FFlecsWorldPtrComponent>()
+			.Add(flecs::Singleton);
+		
+		DefaultWorld->RegisterComponentType<FUWorldPtrComponent>()
+			.Add(flecs::Singleton);
 
 		DefaultWorld->AddSingleton<FUnrealFlecsWorldTag>();
 		DefaultWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ DefaultWorld });
