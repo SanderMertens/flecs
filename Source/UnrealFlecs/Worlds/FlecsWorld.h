@@ -11,8 +11,8 @@
 
 #include "CoreMinimal.h"
 #include "FlecsScopedDeferWindow.h"
-#include "ObjectCacheContext.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Components/FlecsAddReferencedObjectsTrait.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsUObjectComponent.h"
@@ -103,6 +103,8 @@ public:
 	void WorldStart()
 	{
 		UE_LOG(LogFlecsWorld, Log, TEXT("Flecs World start"));
+
+		bIsInitialized = true;
 		
 		#if WITH_AUTOMATION_TESTS
 		if (!GIsAutomationTesting)
@@ -232,11 +234,17 @@ public:
 		
 		RegisterComponentType<FFlecsUObjectTag>();
 		
-		RegisterComponentType<FFlecsActorTag>().SetIsA<FFlecsUObjectTag>();
-		RegisterComponentType<FFlecsActorComponentTag>().SetIsA<FFlecsUObjectTag>();
-		RegisterComponentType<FFlecsModuleComponentTag>().SetIsA<FFlecsUObjectTag>();
+		RegisterComponentType<FFlecsActorTag>()
+			.SetIsA<FFlecsUObjectTag>();
 		
-		RegisterComponentType<FFlecsSceneComponentTag>().SetIsA<FFlecsActorComponentTag>();
+		RegisterComponentType<FFlecsActorComponentTag>()
+			.SetIsA<FFlecsUObjectTag>();
+		
+		RegisterComponentType<FFlecsModuleComponentTag>()
+			.SetIsA<FFlecsUObjectTag>();
+		
+		RegisterComponentType<FFlecsSceneComponentTag>()
+			.SetIsA<FFlecsActorComponentTag>();
 
 		RegisterComponentType<FFlecsModuleComponent>();
 		RegisterComponentType<FFlecsModuleInitEvent>();
@@ -398,15 +406,14 @@ public:
 				});
 			});
 
-		ObjectDestructionComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectDestructionComponentQuery")
+		ObjectComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectComponentQuery")
 			.term_at(0).second(flecs::Wildcard) // FFlecsUObjectComponent
 			.cached()
 			.build();
 
 		FCoreUObjectDelegates::GarbageCollectComplete.AddWeakLambda(this, [this]
 		{
-			ObjectDestructionComponentQuery
-				.each([](flecs::entity InEntity, const FFlecsUObjectComponent& InUObjectComponent)
+			ObjectComponentQuery.each([](flecs::entity InEntity, const FFlecsUObjectComponent& InUObjectComponent)
 			{
 				const FFlecsEntityHandle EntityHandle = InEntity;
 					
@@ -419,7 +426,7 @@ public:
 				}
 			});
 		});
-
+		
 		ModuleComponentQuery = World.query_builder<FFlecsModuleComponent>("ModuleComponentQuery")
 			.cached()
 			.build();
@@ -494,7 +501,7 @@ public:
 			{
 				for (int32 Index = ImportedModules.Num() - 1; Index >= 0; --Index)
 				{
-					UObject* ModuleObject = ImportedModules[Index].GetObject();
+					TSolidNotNull<UObject*> ModuleObject = ImportedModules[Index].GetObject();
 					solid_check(IsValid(ModuleObject));
 					
 					if (ModuleObject == InUObjectComponent.GetObjectChecked())
@@ -546,7 +553,7 @@ public:
 		solid_checkf(IsModuleImported(InModuleObject->GetClass()),
 			TEXT("Module %s is not imported"), *InModuleObject->GetClass()->GetName());
 
-		FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModuleObject->GetClass());
+		const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModuleObject->GetClass());
 		solid_check(ModuleEntity.IsValid());
 
 		ModuleEntity.Add<FFlecsDependenciesComponent>();
@@ -1044,7 +1051,7 @@ public:
 
 		ModuleComponentQuery.destruct();
 		DependenciesComponentQuery.destruct();
-		ObjectDestructionComponentQuery.destruct();
+		ObjectComponentQuery.destruct();
 		
 		const FAssetRegistryModule* AssetRegistryModule
 			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
@@ -1352,87 +1359,92 @@ public:
 			if (Property->IsA<FBoolProperty>())
 			{
 				InComponent.AddMember<bool>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FByteProperty>())
 			{
 				InComponent.AddMember<uint8>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FInt16Property>())
 			{
 				InComponent.AddMember<int16>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FUInt16Property>())
 			{
 				InComponent.AddMember<uint16>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FIntProperty>())
 			{
 				InComponent.AddMember<int32>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FUInt32Property>())
 			{
 				InComponent.AddMember<uint32>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FInt64Property>())
 			{
 				InComponent.AddMember<int64>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FUInt64Property>())
 			{
 				InComponent.AddMember<uint64>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FFloatProperty>())
 			{
 				InComponent.AddMember<float>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FDoubleProperty>())
 			{
 				InComponent.AddMember<double>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FStrProperty>())
 			{
 				InComponent.AddMember<FString>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FNameProperty>())
 			{
 				InComponent.AddMember<FName>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FTextProperty>())
 			{
 				InComponent.AddMember<FText>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FObjectProperty>())
 			{
 				InComponent.AddMember<FObjectPtr>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
+				
+				if UNLIKELY_IF(ecs_id_in_use(World.c_ptr(), InComponent))
+				{
+					continue;
+				}
 			}
 			else if (Property->IsA<FWeakObjectProperty>())
 			{
 				InComponent.AddMember<FWeakObjectPtr>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FSoftObjectProperty>())
 			{
 				InComponent.AddMember<FSoftObjectPtr>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FClassProperty>())
 			{
 				InComponent.AddMember<TSubclassOf<UObject>>(PropertyNameCStr,
-					1, Property->GetOffset_ForInternal());
+					0, Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FStructProperty>())
 			{
@@ -2126,6 +2138,8 @@ public:
 	
 	flecs::world World;
 
+	bool bIsInitialized = false;
+
 	UPROPERTY(Transient)
 	TScriptInterface<IFlecsGameLoopInterface> GameLoopInterface;
 
@@ -2138,7 +2152,7 @@ public:
 	TArray<TScriptInterface<IFlecsObjectRegistrationInterface>> RegisteredObjects;
 
 	flecs::query<FFlecsModuleComponent> ModuleComponentQuery;
-	flecs::query<FFlecsUObjectComponent> ObjectDestructionComponentQuery;
+	flecs::query<FFlecsUObjectComponent> ObjectComponentQuery;
 	flecs::query<FFlecsDependenciesComponent> DependenciesComponentQuery;
 
 	FFlecsTypeMapComponent* TypeMapComponent;
