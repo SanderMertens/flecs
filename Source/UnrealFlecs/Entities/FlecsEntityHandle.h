@@ -1495,6 +1495,32 @@ public:
 		GetEntity().each<TFirst, FunctionType>(std::forward<FunctionType>(InFunction));
 	}
 
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept TFirst, typename FunctionType>
+	SOLID_INLINE void Iterate(const TFirst& InFirstTypeValue, FunctionType&& InFunction) const
+	{
+		GetEntity().each(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
+			std::forward<FunctionType>(InFunction));
+	}
+
+	template <typename FunctionType>
+	SOLID_INLINE void IterateChildren(FunctionType&& InFunction) const
+	{
+		GetEntity().children(std::forward<FunctionType>(InFunction));
+	}
+
+	template <typename TFirst, typename FunctionType>
+	SOLID_INLINE void IterateChildren(FunctionType&& InFunction) const
+	{
+		GetEntity().children<TFirst, FunctionType>(std::forward<FunctionType>(InFunction));
+	}
+
+	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept TFirst, typename FunctionType>
+	SOLID_INLINE void IterateChildren(const TFirst& InFirstTypeValue, FunctionType&& InFunction) const
+	{
+		GetEntity().children(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
+			std::forward<FunctionType>(InFunction));
+	}
+
 	void AddCollection(TSolidNotNull<UObject*> Collection) const;
 	
 protected:
