@@ -312,15 +312,27 @@ const char* flecs_script_parse_var(
 
                     var->type = Token(3 + token_offset);
 
-                    // const color = Color: {
-                    LookAhead_1('{',
-                        // const color = Color: {expr}
-                        pos = lookahead;
-                        Initializer('}',
-                            var->expr = INITIALIZER;
-                            EndOfRule;
-                        )
-                    )
+                    {
+                        // Position: {
+                        LookAhead_1('{',
+                            pos = lookahead;
+                            Expr('}', {
+                                var->expr = EXPR;
+                                EndOfRule; 
+                            })
+                        )                        
+                    }
+
+                    {
+                        // Position: [
+                        LookAhead_1('[',
+                            pos = lookahead;
+                            Expr(']', {
+                                var->expr = EXPR;
+                                EndOfRule; 
+                            })
+                        )                        
+                    }
 
                     // const color = Color: expr\n
                     Initializer('\n',

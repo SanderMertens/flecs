@@ -378,7 +378,10 @@
                 "defer_on_replace_w_assign_existing",
                 "defer_on_replace_w_assign_existing_twice",
                 "defer_on_replace_w_assign_batched_existing",
-                "defer_on_replace_w_assign_batched_existing_twice"
+                "defer_on_replace_w_assign_batched_existing_twice",
+                "set_lvalue_to_mutable",
+                "set_lvalue_to_const",
+                "set_rvalue"
             ]
         }, {
             "id": "OrderedChildren",
@@ -1638,7 +1641,9 @@
                 "iter_to_json",
                 "query_to_json",
                 "entity_to_json_w_default_desc",
-                "query_to_json_w_default_desc"
+                "query_to_json_w_default_desc",
+                "script_to_std_vector_int",
+                "script_to_std_vector_std_string"
             ]
         }, {
             "id": "Table",

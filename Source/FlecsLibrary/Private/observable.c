@@ -546,10 +546,10 @@ void flecs_emit_forward_id(
     it->up_fields = 1;
 
     int32_t storage_i = ecs_table_type_to_column_index(tgt_table, column);
+    it->trs[0] = &tgt_table->_->records[column];
     if (storage_i != -1) {
-        ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_column_t *c = &tgt_table->data.columns[storage_i];
-        it->trs[0] = &tgt_table->_->records[column];
+        ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
         ECS_CONST_CAST(int32_t*, it->sizes)[0] = c->ti->size; /* safe, see above */
     }
 

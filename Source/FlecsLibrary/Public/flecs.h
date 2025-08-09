@@ -425,25 +425,6 @@
 /** @} */
 
 #include "flecs/private/api_defines.h"
-#include "flecs/datastructures/vec.h"              /* Vector datatype */
-#include "flecs/datastructures/sparse.h"           /* Sparse set */
-#include "flecs/datastructures/block_allocator.h"  /* Block allocator */
-#include "flecs/datastructures/stack_allocator.h"  /* Stack allocator */
-#include "flecs/datastructures/map.h"              /* Map */
-#include "flecs/datastructures/allocator.h"        /* Allocator */
-#include "flecs/datastructures/strbuf.h"           /* String builder */
-#include "flecs/os_api.h"  /* Abstraction for operating system functions */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * @defgroup api_types API types
- * Public API types.
- *
- * @{
- */
 
 /**
  * @defgroup core_types Core API Types
@@ -609,6 +590,27 @@ typedef struct ecs_header_t {
 typedef struct ecs_table_record_t ecs_table_record_t;
 
 /** @} */
+
+#include "flecs/datastructures/vec.h"              /* Vector datatype */
+#include "flecs/datastructures/sparse.h"           /* Sparse set */
+#include "flecs/datastructures/block_allocator.h"  /* Block allocator */
+#include "flecs/datastructures/stack_allocator.h"  /* Stack allocator */
+#include "flecs/datastructures/map.h"              /* Map */
+#include "flecs/datastructures/allocator.h"        /* Allocator */
+#include "flecs/datastructures/strbuf.h"           /* String builder */
+#include "flecs/os_api.h"  /* Abstraction for operating system functions */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @defgroup api_types API types
+ * Public API types.
+ *
+ * @{
+ */
+
 
 /**
  * @defgroup function_types Function types.

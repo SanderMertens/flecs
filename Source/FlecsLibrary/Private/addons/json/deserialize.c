@@ -107,9 +107,10 @@ static
 ecs_entity_t flecs_json_ensure_entity(
     ecs_world_t *world,
     const char *name,
-    ecs_map_t *anonymous_ids)
+    void *ctx)
 {
     ecs_entity_t e = 0;
+    ecs_map_t *anonymous_ids = ctx;
 
     if (flecs_name_is_id(name)) {
         /* Anonymous entity, find or create mapping to new id */
@@ -712,8 +713,7 @@ const char* ecs_entity_from_json(
     ctx.expr = json;
 
     if (!desc.lookup_action) {
-        desc.lookup_action = (ecs_entity_t(*)(
-            const ecs_world_t*, const char*, void*))flecs_json_ensure_entity;
+        desc.lookup_action = flecs_json_ensure_entity;
         desc.lookup_ctx = &ctx.anonymous_ids;
     }
 
@@ -746,8 +746,7 @@ const char* ecs_world_from_json(
     ctx.expr = expr;
 
     if (!desc.lookup_action) {
-        desc.lookup_action = (ecs_entity_t(*)(
-            const ecs_world_t*, const char*, void*))flecs_json_ensure_entity;
+        desc.lookup_action = flecs_json_ensure_entity;
         desc.lookup_ctx = &ctx.anonymous_ids;
     }
 
