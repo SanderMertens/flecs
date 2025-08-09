@@ -12,7 +12,7 @@ FFlecsScopedDeferWindow::FFlecsScopedDeferWindow(const TSolidNotNull<const UFlec
 
 FFlecsScopedDeferWindow::~FFlecsScopedDeferWindow()
 {
-	if (FlecsWorld.IsValid())
+	if LIKELY_IF(FlecsWorld.IsValid())
 	{
 		ensureMsgf(FlecsWorld->EndDefer(),
 			TEXT("Failed to end defer window in FlecsWorld"));

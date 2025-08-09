@@ -16,7 +16,8 @@ void UFlecsTransform3dCollection::ApplyCollectionToEntity_Implementation(FFlecsE
 {
 	Super::ApplyCollectionToEntity_Implementation(Entity);
 	
-	Entity.Set<FFlecsLocationComponent>(Location);
-	Entity.Set<FFlecsRotationComponent>(Rotation);
-	Entity.Set<FFlecsScaleComponent>(Scale);
+	Entity
+		.Set<FFlecsLocationComponent>(Location)
+		.Set<FFlecsRotationComponent>(Rotation)
+		.Set<FFlecsScaleComponent>(Scale);
 }

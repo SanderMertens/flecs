@@ -43,7 +43,6 @@ public:
 		return FlecsWorld.Get();
 	}
 	
-private:
 	TWeakObjectPtr<const UFlecsWorld> FlecsWorld;
 	
 }; // struct FFlecsScopedDeferWindow

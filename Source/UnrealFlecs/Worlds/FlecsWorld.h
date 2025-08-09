@@ -12,15 +12,11 @@
 #include "CoreMinimal.h"
 #include "FlecsScopedDeferWindow.h"
 #include "AssetRegistry/AssetRegistryModule.h"
-#include "Components/FlecsAddReferencedObjectsTrait.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsUObjectComponent.h"
 #include "Components/ObjectTypes/FFlecsActorComponentTag.h"
 #include "Components/ObjectTypes/FFlecsModuleComponentTag.h"
-#include "Components/ObjectTypes/FFlecsSceneComponentTag.h"
-#include "Components/ObjectTypes/FFlecsUObjectTag.h"
-#include "Components/ObjectTypes/FlecsActorTag.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
@@ -34,14 +30,6 @@
 #include "FlecsWorld.generated.h"
 
 class UFlecsWorldSubsystem;
-
-DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
-
-DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"),
-	STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
-
-DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"),
-	STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
 
 /**
  * @brief Component type that represents if the World has begun play.
@@ -67,277 +55,20 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 	GENERATED_BODY()
 
 public:
-	UFlecsWorld()
-	{
-		char* argv[] = { const_cast<char*>(Unreal::Flecs::ToCString(GetName())) }; // NOLINT(clang-diagnostic-dangling, cppcoreguidelines-pro-type-const-cast)
-		
-		World = flecs::world(1, argv);
-		
-		TypeMapComponent = GetTypeMapComponent();  // NOLINT(cppcoreguidelines-prefer-member-initializer)
-		solid_check(TypeMapComponent);
-	}
+	UFlecsWorld(const FObjectInitializer& ObjectInitializer);
 	
-	virtual ~UFlecsWorld() override
-	{
-		FCoreUObjectDelegates::GarbageCollectComplete.RemoveAll(this);
+	virtual ~UFlecsWorld() override;
 
-		const FAssetRegistryModule* AssetRegistryModule
-			= FModuleManager::LoadModulePtr<FAssetRegistryModule>("AssetRegistry");
-
-		if (AssetRegistryModule && AssetRegistryModule->IsValid())
-		{
-			IAssetRegistry& AssetRegistry = AssetRegistryModule->Get();
-			AssetRegistry.OnAssetAdded().RemoveAll(this);
-			AssetRegistry.OnAssetRemoved().RemoveAll(this);
-		}
-
-		TypeMapComponent = nullptr;
-
-		if LIKELY_IF(World)
-		{
-			World.release();
-			World.world_ = nullptr;
-		}
-	}
-
-	void WorldStart()
-	{
-		UE_LOG(LogFlecsWorld, Log, TEXT("Flecs World start"));
-
-		bIsInitialized = true;
-		
-		#if WITH_AUTOMATION_TESTS
-		if (!GIsAutomationTesting)
-		{
-		#endif // WITH_AUTOMATION_TESTS
-			//InitializeAssetRegistry();
-		#if WITH_AUTOMATION_TESTS
-		}
-		#endif // WITH_AUTOMATION_TESTS
-
-		InitializeFlecsRegistrationObjects();
-	}
+	void WorldStart();
 
 	// ReSharper disable once CppMemberFunctionMayBeConst
-	void WorldBeginPlay()
-	{
-		AddSingleton<FFlecsBeginPlaySingletonComponent>();
-	}
+	void WorldBeginPlay();
 
-	void InitializeDefaultComponents() const
-	{
-		//World.component<FFlecsEntityHandle>()
-		//	.disable();
-		
-		World.component<FString>()
-			.opaque(flecs::String)
-			.serialize([](const flecs::serializer* Serializer, const FString* Data)
-			{
-				const TCHAR* CharArray = Data->GetCharArray().GetData();
-				return Serializer->value(flecs::String, &CharArray);
-			})
-			.assign_string([](FString* Data, const char* String)
-			{
-				*Data = String;
-			});
+	void InitializeDefaultComponents() const;
 
-		World.component<FName>()
-			.opaque(flecs::String)
-			.serialize([](const flecs::serializer* Serializer, const FName* Data)
-			{
-				const FString String = Data->ToString();
-				const TCHAR* CharArray = String.GetCharArray().GetData();
-				return Serializer->value(flecs::String, &CharArray);
-			})
-			.assign_string([](FName* Data, const char* String)
-			{
-				*Data = FName(String);
-			});
+	void InitializeFlecsRegistrationObjects();
 
-		World.component<FText>()
-			.opaque(flecs::String)
-			.serialize([](const flecs::serializer* Serializer, const FText* Data)
-			{
-				const FString String = Data->ToString();
-				TSolidNotNull<const TCHAR*> CharArray = String.GetCharArray().GetData();
-				return Serializer->value(flecs::String, &CharArray);
-			})
-			.assign_string([](FText* Data, const char* String)
-			{
-				*Data = FText::FromString(String);
-			});
-
-		 World.component<FGameplayTag>()
-		 	.opaque(flecs::Entity)
-		 	.serialize([](const flecs::serializer* Serializer, const FGameplayTag* Data)
-		 	{
-		 		const FFlecsId TagEntity = ecs_lookup_path_w_sep(
-		 			Serializer->world,
-		 			flecs::component<FFlecsGameplayTagManagerComponent>(const_cast<flecs::world_t*>(Serializer->world)),
-		 			Unreal::Flecs::ToCString(Data->ToString()),
-		 			".",
-		 			nullptr,
-		 			true);
-		 		
-		 		return Serializer->value(flecs::Entity, &TagEntity);
-		 	});
-		
-		World.component<FObjectPtr>()
-			.opaque(flecs::Uptr)
-			.serialize([](const flecs::serializer* Serializer, const FObjectPtr* Data)
-			{
-				const UObject* Object = Data->Get();
-				return Serializer->value(flecs::Uptr, std::addressof(Object));
-			});
-		
-		World.component<FWeakObjectPtr>()
-			.opaque(flecs::Uptr)
-			.serialize([](const flecs::serializer* Serializer, const FWeakObjectPtr* Data)
-			{
-				const UObject* Object = Data->Get();
-				return Serializer->value(flecs::Uptr, std::addressof(Object));
-			})
-			.assign_null([](FWeakObjectPtr* Data)
-			{
-				Data->Reset();
-			});
-
-		World.component<FSoftObjectPtr>()
-			.opaque(flecs::Uptr)
-			.serialize([](const flecs::serializer* Serializer, const FSoftObjectPtr* Data)
-			{
-				const UObject* Object = Data->Get();
-				return Serializer->value(flecs::Uptr, std::addressof(Object));
-			})
-			.assign_null([](FSoftObjectPtr* Data)
-			{
-				Data->Reset();
-			});
-
-		World.component<TSubclassOf<UObject>>()
-			.opaque(flecs::Uptr)
-			.serialize([](const flecs::serializer* Serializer, const TSubclassOf<UObject>* Data)
-			{
-				const UClass* Class = Data->Get();
-				return Serializer->value(flecs::Uptr, std::addressof(Class));
-			})
-			.assign_null([](TSubclassOf<UObject>* Data)
-			{
-				*Data = nullptr;
-			});
-
-		RegisterUnrealTypes();
-
-		RegisterComponentType<FFlecsBeginPlaySingletonComponent>();
-
-		RegisterComponentType<FFlecsUObjectComponent>();
-		
-		RegisterComponentType<FFlecsUObjectTag>();
-		
-		RegisterComponentType<FFlecsActorTag>()
-			.SetIsA<FFlecsUObjectTag>();
-		
-		RegisterComponentType<FFlecsActorComponentTag>()
-			.SetIsA<FFlecsUObjectTag>();
-		
-		RegisterComponentType<FFlecsModuleComponentTag>()
-			.SetIsA<FFlecsUObjectTag>();
-		
-		RegisterComponentType<FFlecsSceneComponentTag>()
-			.SetIsA<FFlecsActorComponentTag>();
-
-		RegisterComponentType<FFlecsModuleComponent>();
-		RegisterComponentType<FFlecsModuleInitEvent>();
-		RegisterComponentType<FFlecsDependenciesComponent>();
-
-		RegisterComponentType<FFlecsEntityRecord>();
-	}
-
-	void InitializeFlecsRegistrationObjects()
-	{
-		for (TObjectIterator<UClass> It = TObjectIterator<UClass>(); It; ++It)
-		{
-			const TNotNull<const UClass*> Class = *It;
-			
-			if (Class->ImplementsInterface(UFlecsObjectRegistrationInterface::StaticClass()))
-			{
-				// @TODO: should we log if the class is abstract?
-				if (Class->HasAnyClassFlags(CLASS_Abstract))
-				{
-					UE_LOGFMT(LogFlecsWorld, Verbose,
-						"Skipping registration of {ClassName} because it is abstract",
-						Class->GetName());
-					continue;
-				}
-				
-				if (Class->HasAnyClassFlags(CLASS_Deprecated | CLASS_NewerVersionExists))
-				{
-					UE_LOGFMT(LogFlecsWorld, Warning,
-						"Skipping registration of {ClassName} because it is deprecated or has a newer version",
-						Class->GetName());
-					continue;
-				}
-				
-				if UNLIKELY_IF(RegisteredObjectTypes.Contains(Class))
-				{
-					continue;
-				}
-
-				TSolidNotNull<UObject*> ObjectPtr = NewObject<UObject>(this, Class);
-				
-				const TScriptInterface<IFlecsObjectRegistrationInterface> ScriptInterface(ObjectPtr);
-				ScriptInterface->RegisterObject(this);
-
-				RegisteredObjects.Add(ObjectPtr);
-				RegisteredObjectTypes.Add(Class, ObjectPtr);
-
-				UE_LOGFMT(LogFlecsWorld, Log,
-					"Registering object type {ClassName}", Class->GetName());
-			}
-		}
-	}
-
-	void RegisterUnrealTypes() const
-	{
-		RegisterComponentType<FGameplayTagContainer>();
-		
-		RegisterComponentType<FVector>();
-		RegisterComponentType<FQuat>();
-		RegisterComponentType<FRotator>();
-		RegisterComponentType<FTransform>();
-
-		RegisterComponentType<FBox>();
-		RegisterComponentType<FBoxSphereBounds>();
-		RegisterComponentType<FCapsuleShape>();
-		RegisterComponentType<FRay>();
-
-		RegisterComponentType<FVector4>();
-		
-		RegisterComponentType<FVector2D>();
-		RegisterComponentType<FQuat2D>();
-		RegisterComponentType<FTransform2D>();
-
-		RegisterComponentType<FBox2D>();
-
-		RegisterComponentType<FColor>();
-		RegisterComponentType<FLinearColor>();
-
-		RegisterComponentType<FPrimaryAssetType>();
-		RegisterComponentType<FPrimaryAssetId>();
-
-		RegisterComponentType<FTopLevelAssetPath>();
-		RegisterComponentType<FSoftClassPath>();
-		RegisterComponentType<FSoftObjectPath>();
-
-		RegisterComponentType<FAssetData>();
-		RegisterComponentType<FAssetBundleData>();
-		RegisterComponentType<FFlecsPrimaryAssetComponent>();
-
-		RegisterComponentType<FIntVector>();
-		RegisterComponentType<FIntVector4>();
-		RegisterComponentType<FIntPoint>();
-		RegisterComponentType<FIntRect>();
-	}
+	void RegisterUnrealTypes() const;
 
 	// I hate this
 	template <typename FunctionType>
@@ -435,7 +166,8 @@ public:
 			.cached()
 			.build();
 
-		CreateObserver<const FFlecsUObjectComponent>("AddModuleComponentObserver")
+		// @TODO: Remove this as ProgressModules have been replaced with a World Game Loop
+		/*CreateObserver<const FFlecsUObjectComponent>("AddModuleComponentObserver")
 			.term_at(0).second<FFlecsModuleComponentTag>().filter() // FFlecsUObjectComponent
 			.with<FFlecsModuleComponent>().event(flecs::OnAdd)
 			.yield_existing()
@@ -452,7 +184,7 @@ public:
 				// 	UN_LOGF(LogFlecsWorld, Log, "Progress module %s added",
 				// 		*InUObjectComponent.GetObjectChecked()->GetName());
 				// }
-			});
+			});*/
 
 		CreateObserver<FFlecsModuleComponent>(TEXT("ModuleInitEventObserver"))
 			.with<FFlecsUObjectComponent, FFlecsModuleComponentTag>()
@@ -543,85 +275,19 @@ public:
 	 * @param InDependencyClass The dependency class
 	 * @param InFunction The function to call when the dependency is imported
 	 */
-	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(
+	void RegisterModuleDependency(
 		const TSolidNotNull<const UObject*> InModuleObject,
 		const TSubclassOf<UFlecsModuleInterface>& InDependencyClass,
-		const std::function<void(TSolidNotNull<UObject*>, TSolidNotNull<UFlecsWorld*>, FFlecsEntityHandle)>& InFunction)
-	{
-		solid_check(InModuleObject->Implements<UFlecsModuleInterface>());
-
-		solid_checkf(IsModuleImported(InModuleObject->GetClass()),
-			TEXT("Module %s is not imported"), *InModuleObject->GetClass()->GetName());
-
-		const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModuleObject->GetClass());
-		solid_check(ModuleEntity.IsValid());
-
-		ModuleEntity.Add<FFlecsDependenciesComponent>();
-		
-		auto& [Dependencies] = ModuleEntity.GetMut<FFlecsDependenciesComponent>();
-		
-		Dependencies.emplace(InDependencyClass, InFunction);
-		
-		if (IsModuleImported(InDependencyClass))
-		{
-			const FFlecsEntityHandle DependencyEntity = GetModuleEntity(InDependencyClass);
-			
-			TSolidNotNull<UObject*> DependencyModuleObject = GetModule(InDependencyClass);
-			solid_check(IsValid(DependencyModuleObject));
-
-			solid_check(DependencyEntity.IsValid());
-
-			ModuleEntity.AddPair(flecs::DependsOn, DependencyEntity);
-			std::invoke(InFunction, DependencyModuleObject, this, DependencyEntity);
-		}
-	}
-
-	/*FORCEINLINE_DEBUGGABLE void RegisterFlecsAsset(TSolidNotNull<UFlecsPrimaryDataAsset*> InAsset)
-	{
-		if (!InAsset->ShouldSpawn())
-		{
-			return;
-		}
-
-		const FFlecsEntityHandle AssetEntity = CreateEntity(InAsset->GetPrimaryAssetId().ToString());
-		AssetEntity.Set<FFlecsPrimaryAssetComponent>(FSoftObjectPath(InAsset));
-		FlecsPrimaryDataAssets.Add(InAsset);
-		InAsset->OnEntityCreated(AssetEntity, this);
-	}
-
-	FORCEINLINE_DEBUGGABLE void UnregisterFlecsAsset(TSolidNotNull<UFlecsPrimaryDataAsset*> InAsset)
-	{
-		const FFlecsEntityHandle AssetEntity = LookupEntity(InAsset->GetPrimaryAssetId().ToString());
-		
-		if (!AssetEntity.IsValid())
-		{
-			UN_LOGF(LogFlecsWorld, Log,
-				"Asset entity %s not found", *InAsset->GetPrimaryAssetId().ToString());
-			return;
-		}
-		
-		InAsset->OnEntityDestroyed(AssetEntity, this);
-		FlecsPrimaryDataAssets.Remove(InAsset);
-		AssetEntity.Destroy();
-	}*/
+		const std::function<void(TSolidNotNull<UObject*>, TSolidNotNull<UFlecsWorld*>, FFlecsEntityHandle)>& InFunction);
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void Reset()
-	{
-		World.reset();
-	}
+	void Reset();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void ResetClock() const
-	{
-		World.reset_clock();
-	}
+	void ResetClock() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntity(const FString& Name = "") const
-	{
-		return World.entity(Unreal::Flecs::ToCString(Name));
-	}
+	FFlecsEntityHandle CreateEntity(const FString& Name = "") const;
 
 	template <typename T>
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateTypedEntity() const
@@ -630,64 +296,27 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithId(const FFlecsId InId) const
-	{
-		solid_checkf(!IsAlive(InId), TEXT("Entity with ID %s is already alive"), *InId.ToString());
-		return MakeAlive(InId);
-	}
+	FFlecsEntityHandle CreateEntityWithId(const FFlecsId InId) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithPrefab(const FFlecsEntityHandle& InPrefab) const
-	{
-		return CreateEntity().SetIsA(InPrefab);
-	}
+	FFlecsEntityHandle CreateEntityWithPrefab(const FFlecsEntityHandle& InPrefab) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord,
-	                                                                 const FString& Name = "") const
-	{
-		const FFlecsEntityHandle Entity = CreateEntity(Name);
-		InRecord.ApplyRecordToEntity(Entity);
-		return Entity;
-	}
+	FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord,
+	                                          const FString& Name = "") const;
 
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord,
-	                                                                       const FFlecsId InId) const
-	{
-		const FFlecsEntityHandle Entity = CreateEntityWithId(InId);
-		InRecord.ApplyRecordToEntity(Entity);
-		return Entity;
-	}
-	
+	FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord,
+	                                                const FFlecsId InId) const;
+
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World",
 		meta = (AdvancedDisplay = "Separator, RootSeparator, bRecursive"))
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle LookupEntity(const FString& Name,
-	                                                       const FString& Separator = "::",
-	                                                       const FString& RootSeparator = "::",
-	                                                       const bool bRecursive = true) const
-	{
-		return World.lookup(Unreal::Flecs::ToCString(Name),
-		                    Unreal::Flecs::ToCString(Separator),
-		                    Unreal::Flecs::ToCString(RootSeparator),
-		                    bRecursive);
-	}
-	
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void DestroyEntityByName(const FString& Name) const
-	{
-		solid_checkf(!Name.IsEmpty(), TEXT("Name is empty"));
+	FFlecsEntityHandle LookupEntity(const FString& Name,
+	                                const FString& Separator = "::",
+	                                const FString& RootSeparator = "::",
+	                                const bool bRecursive = true) const;
 
-		const FFlecsEntityHandle Handle = LookupEntity(Name);
-		
-		if LIKELY_IF(Handle.IsValid())
-		{
-			Handle.Destroy();
-		}
-		else
-		{
-			UE_LOGFMT(LogFlecsWorld, Warning, "Entity {EntityName} not found", Name);
-		}
-	}
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	void DestroyEntityByName(const FString& Name) const;
 
 	template <typename FunctionType>
 	FORCEINLINE_DEBUGGABLE void ForEach(FunctionType&& Function) const
@@ -791,29 +420,20 @@ public:
 	 * @see ecs_merge()
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void Merge() const
-	{
-		World.merge();
-	}
-	
+	void Merge() const;
+
 	/**
 	 * @return The Name of the World Entity
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FString GetWorldName() const
-	{
-		return FString(GetWorldEntity().GetName());
-	}
+	FString GetWorldName() const;
 
 	/**
 	 * @brief Set the Name of the World Entity
 	 * @param InName The new name
 	 */
-	FORCEINLINE_DEBUGGABLE void SetWorldName(const FString& InName) const
-	{
-		GetWorldEntity().SetName(InName);
-	}
-	
+	void SetWorldName(const FString& InName) const;
+
 	/**
 	 * @brief Import a regular C++ Module to the world,
 	 * this MUST NOT be derived from IFlecsModuleInterface nor should it be a UObject
@@ -829,34 +449,10 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void ImportModule(const TScriptInterface<IFlecsModuleInterface>& InModule)
-	{
-		solid_checkf(InModule, TEXT("Module is nullptr"));
+	void ImportModule(const TScriptInterface<IFlecsModuleInterface>& InModule);
 
-		const UObject* TemplateModuleObject = InModule.GetObject();
-		solid_check(IsValid(TemplateModuleObject));
-
-		TSolidNotNull<UObject*> NewModuleObject = DuplicateObject(TemplateModuleObject, this);
-		ImportedModules.Add(NewModuleObject);
-		
-		ImportedModules.Last()->ImportModule(World);
-	}
-	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE bool IsModuleImported(const TSubclassOf<UObject> InModule) const
-	{
-		solid_check(InModule);
-
-		for (const TScriptInterface<IFlecsModuleInterface>& ModuleObject : ImportedModules)
-		{
-			if (ModuleObject.GetObject()->GetClass() == InModule)
-			{
-				return true;
-			}
-		}
-		
-		return false;
-	}
+	bool IsModuleImported(const TSubclassOf<UObject> InModule) const;
 
 	template <Solid::TStaticClassConcept T>
 	NO_DISCARD FORCEINLINE_DEBUGGABLE bool IsModuleImported() const
@@ -870,18 +466,7 @@ public:
 	 * @return The entity handle of the module, or an invalid handle if the module is not imported
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule) const
-	{
-		solid_check(InModule);
-		
-		const FFlecsEntityHandle ModuleEntity = ModuleComponentQuery
-			.find([&InModule](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
-			{
-				return InComponent.ModuleClass == InModule;
-			});
-
-		return ModuleEntity;
-	}
+	FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule) const;
 
 	/**
 	 * @brief Get the entity handle of the module with the given class
@@ -895,13 +480,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE UObject* GetModule(const TSubclassOf<UObject> InModule) const
-	{
-		solid_check(IsValid(InModule));
-		
-		const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModule);
-		return ModuleEntity.GetPairFirst<FFlecsUObjectComponent, FFlecsModuleComponentTag>().GetObjectChecked();
-	}
+	UObject* GetModule(const TSubclassOf<UObject> InModule) const;
 
 	template <Solid::TStaticClassConcept T>
 	NO_DISCARD FORCEINLINE_DEBUGGABLE TSolidNotNull<T*> GetModule() const
@@ -911,39 +490,21 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE bool BeginDefer() const
-	{
-		return World.defer_begin();
-	}
+	bool BeginDefer() const;
 
-	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsScopedDeferWindow DeferWindow() const
-	{
-		return FFlecsScopedDeferWindow(this);
-	}
+	NO_DISCARD FFlecsScopedDeferWindow DeferWindow() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE bool EndDefer() const
-	{
-		return World.defer_end();
-	}
+	bool EndDefer() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void ResumeDefer() const
-	{
-		World.defer_resume();
-	}
+	void ResumeDefer() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void SuspendDefer() const
-	{
-		World.defer_suspend();
-	}
+	void SuspendDefer() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE bool IsDeferred() const
-	{
-		return World.is_deferred();
-	}
+	bool IsDeferred() const;
 
 	template <typename TFunction>
 	FORCEINLINE_DEBUGGABLE void Defer(TFunction&& Function) const
@@ -989,16 +550,10 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE bool BeginReadOnly() const
-	{
-		return World.readonly_begin();
-	}
+	bool BeginReadOnly() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void EndReadOnly() const
-	{
-		World.readonly_end();
-	}
+	void EndReadOnly() const;
 
 	template <typename TFunction>
 	FORCEINLINE_DEBUGGABLE void ReadOnly(TFunction&& Function) const
@@ -1014,65 +569,21 @@ public:
 		World.with(InId, std::forward<TFunction>(Function));
 	}
 
-	FORCEINLINE_DEBUGGABLE void SetContext(void* InContext) const
-	{
-		World.set_ctx(InContext);
-	}
+	void SetContext(void* InContext) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE bool ProgressGameLoop(const double DeltaTime = 0.0)
-	{
-		SCOPE_CYCLE_COUNTER(STAT_FlecsWorldProgress);
-
-		solid_check(GameLoopInterface);
-		return GameLoopInterface->Progress(DeltaTime, this);
-	}
+	bool ProgressGameLoop(const double DeltaTime = 0.0);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE bool Progress(const double DeltaTime = 0.0)
-	{
-		return World.progress(DeltaTime);
-	}
+	bool Progress(const double DeltaTime = 0.0);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void SetTimeScale(const double InTimeScale) const
-	{
-		World.set_time_scale(InTimeScale);
-	}
-	
-	void DestroyWorld()
-	{
-		if UNLIKELY_IF(ShouldQuit())
-		{
-			return;
-		}
+	void SetTimeScale(const double InTimeScale) const;
 
-		FCoreUObjectDelegates::GarbageCollectComplete.RemoveAll(this);
-
-		ModuleComponentQuery.destruct();
-		DependenciesComponentQuery.destruct();
-		ObjectComponentQuery.destruct();
-		
-		const FAssetRegistryModule* AssetRegistryModule
-			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
-
-		if (AssetRegistryModule)
-		{
-			IAssetRegistry& AssetRegistry = AssetRegistryModule->Get();
-			AssetRegistry.OnAssetAdded().RemoveAll(this);
-			AssetRegistry.OnAssetRemoved().RemoveAll(this);
-		}
-		
-		World.release();
-		World.world_ = nullptr;
-		MarkAsGarbage();
-	}
+	void DestroyWorld();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void SetPipeline(const FFlecsEntityHandle& InPipeline) const
-	{
-		World.set_pipeline(InPipeline);
-	}
+	void SetPipeline(const FFlecsEntityHandle& InPipeline) const;
 
 	template <typename T>
 	FORCEINLINE_DEBUGGABLE void SetPipeline() const
@@ -1081,40 +592,22 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetPipeline() const
-	{
-		return World.get_pipeline();
-	}
+	FFlecsEntityHandle GetPipeline() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE double GetDeltaTime() const
-	{
-		return World.delta_time();
-	}
+	double GetDeltaTime() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetAlive(const FFlecsId InId) const
-	{
-		return World.get_alive(InId);
-	}
+	FFlecsEntityHandle GetAlive(const FFlecsId InId) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE bool IsAlive(const FFlecsId InId) const
-	{
-		return World.is_alive(InId);
-	}
+	bool IsAlive(const FFlecsId InId) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetEntity(const FFlecsId InId) const
-	{
-		return World.get_alive(InId);
-	}
+	FFlecsEntityHandle GetEntity(const FFlecsId InId) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle MakeAlive(const FFlecsId& InId) const
-	{
-		return World.make_alive(InId);
-	}
+	FFlecsEntityHandle MakeAlive(const FFlecsId& InId) const;
 
 	template <typename ...TComponents>
 	NO_DISCARD FORCEINLINE_DEBUGGABLE flecs::system_builder<TComponents...> CreateSystemWithBuilder(const FString& InName) const
@@ -1127,10 +620,7 @@ public:
 	 * @return The World Entity
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetWorldEntity() const
-	{
-		return World.entity(flecs::World);
-	}
+	FFlecsEntityHandle GetWorldEntity() const;
 
 	/**
 	 * Get number of configured stages.
@@ -1142,10 +632,7 @@ public:
 	 * @see flecs::world::set_stage_count()
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE int32 GetStageCount() const
-	{
-		return World.get_stage_count();
-	}
+	int32 GetStageCount() const;
 
 	/**
 	 * Test whether the current world object is readonly.
@@ -1159,28 +646,13 @@ public:
 	 * @see flecs::world::readonly_end()
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE bool IsReadOnly() const
-	{
-		return World.is_readonly();
-	}
+	bool IsReadOnly() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void PreallocateEntities(const int32 InEntityCount) const
-	{
-		if UNLIKELY_IF(ensureAlwaysMsgf(InEntityCount > 0,
-			TEXT("Entity count must be greater than 0")))
-		{
-			return;
-		}
-		
-		World.dim(InEntityCount);
-	}
+	void PreallocateEntities(const int32 InEntityCount) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void SetEntityRange(const FFlecsId InMin, const FFlecsId InMax) const
-	{
-		World.set_entity_range(InMin, InMax);
-	}
+	void SetEntityRange(const FFlecsId InMin, const FFlecsId InMax) const;
 
 	/**
 	 * @brief Set entity range and invoke a function/lambda
@@ -1219,10 +691,7 @@ public:
 	 * @see ecs_enable_range_check()
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void EnforceEntityRange(const bool bInEnforce) const
-	{
-		World.enable_range_check(bInEnforce);
-	}
+	void EnforceEntityRange(const bool bInEnforce) const;
 
 	/**
 	 * @brief Iterate over all Child Entities of the 0 Entity
@@ -1248,10 +717,7 @@ public:
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void SetThreads(const int32 InThreadCount) const
-	{
-		World.set_threads(InThreadCount);
-	}
+	void SetThreads(const int32 InThreadCount) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE int32 GetThreads() const
@@ -1266,11 +732,8 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void SetTaskThreads(const int32 InThreadCount) const
-	{
-		World.set_task_threads(InThreadCount);
-	}
-	
+	void SetTaskThreads(const int32 InThreadCount) const;
+
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE bool HasScriptStruct(const UScriptStruct* ScriptStruct) const
 	{
@@ -1425,7 +888,7 @@ public:
 			{
 				InComponent.AddMember<FObjectPtr>(PropertyNameCStr,
 					0, Property->GetOffset_ForInternal());
-				
+
 				if UNLIKELY_IF(ecs_id_in_use(World.c_ptr(), InComponent))
 				{
 					continue;
@@ -2136,6 +1599,8 @@ public:
 		return static_cast<FFlecsTypeMapComponent*>(World.get_binding_ctx());
 	}
 	
+	static void AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector);
+
 	flecs::world World;
 
 	bool bIsInitialized = false;
