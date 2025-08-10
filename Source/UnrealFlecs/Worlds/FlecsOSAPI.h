@@ -270,16 +270,17 @@ struct FOSApiInitializer
 		
         os_api.sleep_ = [](int32_t Seconds, int32_t Nanoseconds)
         {
-            const double TotalSeconds = Seconds + Nanoseconds / 1e9;
+            const double TotalSeconds = Seconds + (Nanoseconds / 1e9);
             FPlatformProcess::SleepNoStats(static_cast<float>(TotalSeconds));
         };
 		
 		os_api.now_ = []() -> uint64_t
 		{
-			const uint64 cycles = FPlatformTime::Cycles64();
-			// Seconds per cycle is constant after startup; cache the ns-per-cycle factor.
-			static const double ns_per_cycle = 1e9 * FPlatformTime::GetSecondsPerCycle();
-			return static_cast<uint64_t>(cycles * ns_per_cycle);
+			static const uint64 BaseCycles = FPlatformTime::Cycles64();
+			const uint64 Cycles = FPlatformTime::Cycles64() - BaseCycles;
+			
+			static const double NanoSecondsPerCycle = 1e9 * FPlatformTime::GetSecondsPerCycle();
+			return static_cast<uint64_t>(Cycles * NanoSecondsPerCycle);
 		};
 
         os_api.get_time_ = [](ecs_time_t* TimeOut)
