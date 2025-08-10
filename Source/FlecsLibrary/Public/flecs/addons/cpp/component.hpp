@@ -145,7 +145,7 @@ FLECSLIBRARY_API extern robin_hood::unordered_map<std::string, type_impl_data> g
         std::string key = std::string(_::type_name<T>());  // => Solid::type_name<T>()
     
         auto it = g_type_to_impl_data.find(key);
-        if (it != g_type_to_impl_data.end()) {
+        if LIKELY_IF(it != g_type_to_impl_data.end()) {
             ecs_os_perf_trace_pop("flecs.type_impl.init");
             return it->second;
         }
@@ -174,7 +174,7 @@ FLECSLIBRARY_API extern robin_hood::unordered_map<std::string, type_impl_data> g
     {
         const std::string key = std::string(_::type_name<T>());
         auto it = g_type_to_impl_data.find(key);
-        if (it != g_type_to_impl_data.end()) {
+        if LIKELY_IF(it != g_type_to_impl_data.end()) {
             return &it->second;
         }
         return nullptr;
