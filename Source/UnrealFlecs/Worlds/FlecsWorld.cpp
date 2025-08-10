@@ -647,7 +647,7 @@ void UFlecsWorld::AddReferencedObjects(UObject* InThis, FReferenceCollector& Col
 
 	const TSolidNotNull<UFlecsWorld*> This = CastChecked<UFlecsWorld>(InThis);
 
-	if (!This->TypeMapComponent || !This->bIsInitialized)
+	if UNLIKELY_IF(!This->TypeMapComponent || !This->bIsInitialized)
 	{
 		return;
 	}
