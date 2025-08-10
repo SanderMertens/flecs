@@ -1403,8 +1403,6 @@ void Meta_query_to_json_w_default_desc(void) {
 void Meta_script_to_std_vector_int(void) {
     flecs::world world;
 
-    world.component<flecs::Script>();
-
     world.component<std::vector<int>>("IntVec")
         .opaque(std_vector_support<int>);
 
@@ -1427,8 +1425,6 @@ void Meta_script_to_std_vector_int(void) {
 
 void Meta_script_to_std_vector_std_string(void) {
     flecs::world world;
-
-    world.component<flecs::Script>();
 
     world.component<std::string>()
         .opaque(std_string_support);

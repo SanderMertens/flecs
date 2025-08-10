@@ -274,20 +274,19 @@ struct FOSApiInitializer
             FPlatformProcess::SleepNoStats(static_cast<float>(TotalSeconds));
         };
 		
-        os_api.now_ = []() -> uint64_t
-        {
-            return FPlatformTime::Cycles64();
-        };
+		os_api.now_ = []() -> uint64_t
+		{
+			const uint64 cycles = FPlatformTime::Cycles64();
+			// Seconds per cycle is constant after startup; cache the ns-per-cycle factor.
+			static const double ns_per_cycle = 1e9 * FPlatformTime::GetSecondsPerCycle();
+			return static_cast<uint64_t>(cycles * ns_per_cycle);
+		};
 
         os_api.get_time_ = [](ecs_time_t* TimeOut)
         {
-        	solid_check(TimeOut);
-        	
-            const double Seconds = FPlatformTime::Seconds();
-            TimeOut->sec = static_cast<uint32_t>(Seconds);
-        	
-        	// Seconds to Nanoseconds: 1 second = 1e9 nanoseconds
-            TimeOut->nanosec = static_cast<uint32_t>((Seconds - TimeOut->sec) * 1e9);
+        	const uint64 NanoSeconds = ecs_os_now();
+        	TimeOut->sec = static_cast<uint32_t>(NanoSeconds / 1e9);
+        	TimeOut->nanosec = static_cast<uint32_t>(NanoSeconds % static_cast<uint64>(1e9));
         };
 
         os_api.abort_ = []()
@@ -398,7 +397,7 @@ struct FOSApiInitializer
 			
 				solid_check(Line < std::numeric_limits<uint32>::max());
 			
-				if (!FlecsProfilerTraces.IsEmpty())
+				if LIKELY_IF(!FlecsProfilerTraces.IsEmpty())
 				{
 					const FFlecsProfilerTrace& Trace = FlecsProfilerTraces.Last();
 
