@@ -374,6 +374,17 @@ public:
 		GetEntity().set(std::forward<T>(InValue));
 		return *this;
 	}
+
+	template <typename TFunction>
+	requires (flecs::is_callable<TFunction>::value)
+	SOLID_INLINE const FSelfType& Set(const TFunction& InFunction) const
+	{
+		GetEntity().set(InFunction);
+		return *this;
+	}
+
+	
+	
 	
 	SOLID_INLINE const FSelfType& Set(const FFlecsId InId, const uint32 InSize, const void* InValue) const
 	{
@@ -525,9 +536,16 @@ public:
 
 	template <typename TFunction>
 	requires (flecs::is_callable<TFunction>::value)
-	NO_DISCARD SOLID_INLINE void GetLambda(const TFunction& InFunction) const
+	SOLID_INLINE bool GetLambda(TFunction&& InFunction) const
 	{
-		GetEntity().get<TFunction>(InFunction);
+		return GetEntity().get(std::forward<TFunction>(InFunction));
+	}
+
+	template <typename TFunction>
+	requires (flecs::is_callable<TFunction>::value)
+	SOLID_INLINE bool Insert(const TFunction& InFunction) const
+	{
+		return GetEntity().insert<TFunction>(InFunction);
 	}
 
 	template <typename T>

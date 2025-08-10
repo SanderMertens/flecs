@@ -6,8 +6,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsTranslationModule)
 
-void UFlecsTranslationModule::InitializeModule(
-	TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
+void UFlecsTranslationModule::InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
 	InWorld->RegisterComponentType<FFlecsTranslationPropertyTrait>();
 	InWorld->RegisterComponentType<FFlecsToUnreal>();

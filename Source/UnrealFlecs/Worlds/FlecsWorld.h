@@ -1163,7 +1163,7 @@ public:
 				.alignment = alignof(uint8)
 			});
 			
-			ScriptEnumComponent.GetEntity().get([](flecs::Enum& InEnumComponent)
+			ScriptEnumComponent.GetLambda([](flecs::Enum& InEnumComponent)
 			{
 				InEnumComponent.underlying_type = flecs::U8;
 			});

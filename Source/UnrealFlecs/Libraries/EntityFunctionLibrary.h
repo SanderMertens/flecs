@@ -52,7 +52,7 @@ public:
             return CastChecked<IFlecsEntityInterface>(Object)->GetEntityHandle();
         }
 
-        if (const AActor* Actor = Cast<AActor>(Object))
+        if LIKELY_IF(const AActor* Actor = Cast<AActor>(Object))
         {
             if (const UFlecsEntityActorComponent* EntityActorComponent
                 = Actor->FindComponentByClass<UFlecsEntityActorComponent>())
