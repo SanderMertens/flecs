@@ -665,7 +665,7 @@ void UFlecsWorld::AddReferencedObjects(UObject* InThis, FReferenceCollector& Col
 		    void* ComponentPtr = Iter.field_at(1, Index);
 		    solid_check(ComponentPtr);
 
-		    Collector.AddPropertyReferences(InScriptStructComponent.ScriptStruct.Get(),
+		    Collector.AddPropertyReferencesWithStructARO(InScriptStructComponent.ScriptStruct.Get(),
 		                                    ComponentPtr, InThis);
 	    });
 }
