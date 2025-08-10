@@ -938,7 +938,6 @@ void Meta_ser_deser_std_vector_std_string(void) {
     world.component<std::string>()
         .opaque(std_string_support);
 
-
     world.component<std::vector<std::string>>()
         .opaque(std_vector_support<std::string>);
 
@@ -1312,8 +1311,8 @@ void Meta_out_of_order_member_declaration(void) {
     flecs::world ecs;
 
     auto c = ecs.component<Position>()
-        .member<float>("y", 1, offsetof(Position, y))
-        .member<float>("x", 1, offsetof(Position, x));
+        .member<float>("y", 0, offsetof(Position, y))
+        .member<float>("x", 0, offsetof(Position, x));
     test_assert(c != 0);
 
     const flecs::Component *ptr = c.try_get<flecs::Component>();
@@ -1401,6 +1400,58 @@ void Meta_query_to_json_w_default_desc(void) {
     test_str(q.to_json(&desc).c_str(), "{\"results\":[{\"name\":\"foo\", \"fields\":{\"values\":[0]}}]}");
 }
 
+void Meta_script_to_std_vector_int(void) {
+    flecs::world world;
+
+    world.component<flecs::Script>();
+
+    world.component<std::vector<int>>("IntVec")
+        .opaque(std_vector_support<int>);
+
+    flecs::entity s = world.script()
+        .code("e { IntVec: [10, 20, 30] }")
+        .run();
+
+    const flecs::Script& sptr = s.get<flecs::Script>();
+    test_assert(sptr.error == nullptr);
+
+    flecs::entity e = world.lookup("e");
+    test_assert(e != 0);
+
+    const std::vector<int>& v = e.get<std::vector<int>>();
+    test_int(v.size(), 3);
+    test_int(v.at(0), 10);
+    test_int(v.at(1), 20);
+    test_int(v.at(2), 30);
+}
+
+void Meta_script_to_std_vector_std_string(void) {
+    flecs::world world;
+
+    world.component<flecs::Script>();
+
+    world.component<std::string>()
+        .opaque(std_string_support);
+
+    world.component<std::vector<std::string>>("StringVec")
+        .opaque(std_vector_support<std::string>);
+
+    flecs::entity s = world.script()
+        .code("e { StringVec: [\"Hello\", \"World\"] }")
+        .run();
+
+    const flecs::Script& sptr = s.get<flecs::Script>();
+    test_assert(sptr.error == nullptr);
+
+    flecs::entity e = world.lookup("e");
+    test_assert(e != 0);
+
+    const std::vector<std::string>& v = e.get<std::vector<std::string>>();
+    test_int(v.size(), 2);
+    test_str(v.at(0).c_str(), "Hello");
+    test_str(v.at(1).c_str(), "World");
+}
+
 END_DEFINE_SPEC(FFlecsMetaTestsSpec);
 
 /*"id": "Meta",
@@ -1463,7 +1514,9 @@ END_DEFINE_SPEC(FFlecsMetaTestsSpec);
                 "iter_to_json",
                 "query_to_json",
                 "entity_to_json_w_default_desc",
-                "query_to_json_w_default_desc"
+                "query_to_json_w_default_desc",
+                "script_to_std_vector_int",
+                "script_to_std_vector_std_string"
             ]*/
 
 void FFlecsMetaTestsSpec::Define()
@@ -1527,6 +1580,8 @@ void FFlecsMetaTestsSpec::Define()
     It("Meta_query_to_json", [&]() { Meta_query_to_json(); });
     It("Meta_entity_to_json_w_default_desc", [&]() { Meta_entity_to_json_w_default_desc(); });
     It("Meta_query_to_json_w_default_desc", [&]() { Meta_query_to_json_w_default_desc(); });
+    It("Meta_script_to_std_vector_int", [&]() { Meta_script_to_std_vector_int(); });
+    It("Meta_script_to_std_vector_std_string", [&]() { Meta_script_to_std_vector_std_string(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS

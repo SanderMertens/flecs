@@ -379,6 +379,65 @@ struct Position {
 
     struct Rel { };
 
+    /**
+     * A class that meticulously tracks all operations affecting its lifecycle,
+     * including construction, assignment, and destruction.
+     *
+     * Unlike with Pod, these statistics are tracked per object,
+     * which allows for more fine-grained tests.
+     */
+    struct FlecsTestLifecycleTracker
+    {
+        enum class Constructor
+        {
+            default_,
+            copy,
+            move,
+        };
+
+        Constructor constructed_via;
+        int         times_destructed{};
+
+        int         times_copy_assigned_into{};
+        mutable int times_copy_assigned_from{};
+        mutable int times_copy_constructed_from{};
+
+        int times_move_assigned_into{};
+        int times_move_assigned_from{};
+        int times_move_constructed_from{};
+
+        FlecsTestLifecycleTracker() : constructed_via{Constructor::default_} {}
+
+        FlecsTestLifecycleTracker(FlecsTestLifecycleTracker const& that) : constructed_via{Constructor::copy}
+        {
+            ++that.times_copy_constructed_from;
+        }
+        FlecsTestLifecycleTracker& operator=(FlecsTestLifecycleTracker const& that)
+        {
+            ++times_copy_assigned_into;
+            ++that.times_copy_assigned_from;
+            return *this;
+        }
+
+        FlecsTestLifecycleTracker(FlecsTestLifecycleTracker&& that) noexcept : constructed_via{Constructor::move}
+        {
+            ++that.times_move_constructed_from;
+        }
+        FlecsTestLifecycleTracker& operator=(FlecsTestLifecycleTracker&& that) noexcept
+        {
+            ++times_move_assigned_into;
+            ++that.times_move_assigned_from;
+            return *this;
+        }
+
+        ~FlecsTestLifecycleTracker() { ++times_destructed; }
+
+        bool moved_from() const { return times_move_assigned_from > 0 || times_move_constructed_from > 0; }
+        bool moved_into() const { return times_move_assigned_into > 0 || constructed_via == Constructor::move; }
+        bool copied_from() const { return times_copy_assigned_from > 0 || times_copy_constructed_from > 0; }
+        bool copied_into() const { return times_copy_assigned_into > 0 || constructed_via == Constructor::copy; }
+    };
+
     static inline void RegisterTestTypeComponents(flecs::world& ecs) {
         ecs.component<Position>();
         ecs.component<Velocity>();
@@ -449,6 +508,9 @@ struct Position {
         ecs.component<Template<Position>>();
         ecs.component<Template<Velocity>>();
         ecs.component<Template<Mass>>();
+        ecs.component<Template<Rotation>>();
+        ecs.component<Template<Tag>>();
+        ecs.component<FlecsTestLifecycleTracker>();
     }
 
 #endif // WITH_AUTOMATION_TESTS

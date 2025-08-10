@@ -1163,7 +1163,10 @@ public:
 				.alignment = alignof(uint8)
 			});
 			
-			ScriptEnumComponent.Set<flecs::Enum>(flecs::Enum{ .underlying_type = flecs::U8 });
+			ScriptEnumComponent.GetEntity().get([](flecs::Enum& InEnumComponent)
+			{
+				InEnumComponent.underlying_type = flecs::U8;
+			});
 
 			const int32 EnumCount = ScriptEnum->NumEnums();
 

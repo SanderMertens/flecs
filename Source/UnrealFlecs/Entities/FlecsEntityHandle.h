@@ -368,6 +368,13 @@ public:
 		return *this;
 	}
 
+	template <typename T>
+	SOLID_INLINE const FSelfType& Set(T&& InValue) const
+	{
+		GetEntity().set(std::forward<T>(InValue));
+		return *this;
+	}
+	
 	SOLID_INLINE const FSelfType& Set(const FFlecsId InId, const uint32 InSize, const void* InValue) const
 	{
 		if (!Has(InId))
@@ -514,6 +521,13 @@ public:
 			FFlecsEntityHandle::GetInputId(*this, InTypeValue).GetId());
 		
 		return GetEntity().get_ref(FFlecsEntityHandle::GetInputId(*this, InTypeValue));
+	}
+
+	template <typename TFunction>
+	requires (flecs::is_callable<TFunction>::value)
+	NO_DISCARD SOLID_INLINE void GetLambda(const TFunction& InFunction) const
+	{
+		GetEntity().get<TFunction>(InFunction);
 	}
 
 	template <typename T>
@@ -1519,6 +1533,27 @@ public:
 	{
 		GetEntity().children(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
 			std::forward<FunctionType>(InFunction));
+	}
+
+	// @TODO: Make FFlecsEntityView instead of flecs::entity_view
+	SOLID_INLINE FFlecsEntityHandle ToMut(const flecs::entity_view& InView) const
+	{
+		return GetEntity().mut(InView);
+	}
+
+	SOLID_INLINE FFlecsEntityHandle ToMut(const flecs::world& InWorld) const
+	{
+		return GetEntity().mut(InWorld);
+	}
+
+	SOLID_INLINE FFlecsEntityHandle ToMut(const flecs::iter& InIter) const
+	{
+		return GetEntity().mut(InIter);
+	}
+
+	SOLID_INLINE flecs::entity_view ToView() const
+	{
+		return GetEntity().view();
 	}
 
 	void AddCollection(TSolidNotNull<UObject*> Collection) const;

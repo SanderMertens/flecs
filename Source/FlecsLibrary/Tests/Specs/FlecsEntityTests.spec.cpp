@@ -6065,6 +6065,91 @@ void Entity_defer_on_replace_w_assign_batched_existing_twice(void) {
 	test_assert(e.has<Velocity>());
 }
 
+void Entity_set_lvalue_to_mutable(void) {
+    flecs::world world;
+	world.component<FlecsTestLifecycleTracker>();
+
+    auto e = world.entity();
+
+    FlecsTestLifecycleTracker src;
+
+    e.set(src);
+
+    // Assertions are the exact same as in set_lvalue_to_const; src should have been copied, not moved
+    const auto* attached = e.try_get<FlecsTestLifecycleTracker>();
+    test_assert(attached != nullptr);
+
+    test_assert(attached->constructed_via == FlecsTestLifecycleTracker::Constructor::default_);
+    test_int(attached->times_copy_assigned_into, 1);
+    test_int(attached->times_copy_assigned_from, 0);
+    test_int(attached->times_copy_constructed_from, 0);
+    test_false(attached->moved_into() || attached->moved_from());
+    test_int(attached->times_destructed, 0);
+
+    test_assert(src.constructed_via == FlecsTestLifecycleTracker::Constructor::default_);
+    test_int(src.times_copy_assigned_into, 0);
+    test_int(src.times_copy_assigned_from, 1);
+    test_int(src.times_copy_constructed_from, 0);
+    test_false(src.moved_into() || src.moved_from());
+    test_int(src.times_destructed, 0);
+}
+
+void Entity_set_lvalue_to_const(void) {
+    flecs::world world;
+	world.component<FlecsTestLifecycleTracker>();
+
+    auto e = world.entity();
+
+    FlecsTestLifecycleTracker const src;
+
+    e.set(src);
+
+    const auto* attached = e.try_get<FlecsTestLifecycleTracker>();
+    test_assert(attached != nullptr);
+
+    test_assert(attached->constructed_via == FlecsTestLifecycleTracker::Constructor::default_);
+    test_int(attached->times_copy_assigned_into, 1);
+    test_int(attached->times_copy_assigned_from, 0);
+    test_int(attached->times_copy_constructed_from, 0);
+    test_false(attached->moved_into() || attached->moved_from());
+    test_int(attached->times_destructed, 0);
+
+    test_assert(src.constructed_via == FlecsTestLifecycleTracker::Constructor::default_);
+    test_int(src.times_copy_assigned_into, 0);
+    test_int(src.times_copy_assigned_from, 1);
+    test_int(src.times_copy_constructed_from, 0);
+    test_false(src.moved_into() || src.moved_from());
+    test_int(src.times_destructed, 0);
+}
+
+void Entity_set_rvalue(void) {
+    flecs::world world;
+	world.component<FlecsTestLifecycleTracker>();
+
+    auto e = world.entity();
+
+    FlecsTestLifecycleTracker src;
+
+    e.set(std::move(src));
+
+    const auto* attached = e.try_get<FlecsTestLifecycleTracker>();
+    test_assert(attached != nullptr);
+
+    test_assert(attached->constructed_via == FlecsTestLifecycleTracker::Constructor::default_);
+    test_int(attached->times_move_assigned_into, 1);
+    test_int(attached->times_move_assigned_from, 0);
+    test_int(attached->times_move_constructed_from, 0);
+    test_false(attached->copied_into() || attached->copied_from());
+    test_int(attached->times_destructed, 0);
+
+    test_assert(src.constructed_via == FlecsTestLifecycleTracker::Constructor::default_);
+    test_int(src.times_move_assigned_into, 0);
+    test_int(src.times_move_assigned_from, 1);
+    test_int(src.times_move_constructed_from, 0);
+    test_false(src.copied_into() || src.copied_from());
+    test_int(src.times_destructed, 0);
+}
+
 END_DEFINE_SPEC(FFlecsEntityTestsSpec);
 
 /*""id": "Entity",
@@ -6417,7 +6502,10 @@ END_DEFINE_SPEC(FFlecsEntityTestsSpec);
                 "defer_on_replace_w_assign_existing",
                 "defer_on_replace_w_assign_existing_twice",
                 "defer_on_replace_w_assign_batched_existing",
-                "defer_on_replace_w_assign_batched_existing_twice"
+                "defer_on_replace_w_assign_batched_existing_twice",
+                "set_lvalue_to_mutable",
+                "set_lvalue_to_const",
+                "set_rvalue"
                 
             ]*/
 
@@ -6723,6 +6811,13 @@ void FFlecsEntityTestsSpec::Define()
 	It("Entity_defer_on_replace_w_set_existing_twice", [&]() { Entity_defer_on_replace_w_set_existing_twice(); });
 	It("Entity_defer_on_replace_w_set_batched", [&]() { Entity_defer_on_replace_w_set_batched(); });
 	It("Entity_defer_on_replace_w_set_batched_twice", [&]() { Entity_defer_on_replace_w_set_batched_twice(); });
+	It("Entity_defer_on_replace_w_assign_existing", [&]() { Entity_defer_on_replace_w_assign_existing(); });
+	It("Entity_defer_on_replace_w_assign_existing_twice", [&]() { Entity_defer_on_replace_w_assign_existing_twice(); });
+	It("Entity_defer_on_replace_w_assign_batched_existing", [&]() { Entity_defer_on_replace_w_assign_batched_existing(); });
+	It("Entity_defer_on_replace_w_assign_batched_existing_twice", [&]() { Entity_defer_on_replace_w_assign_batched_existing_twice(); });
+	It("Entity_set_lvalue_to_mutable", [&]() { Entity_set_lvalue_to_mutable(); });
+	It("Entity_set_lvalue_to_const", [&]() { Entity_set_lvalue_to_const(); });
+	It("Entity_set_rvalue", [&]() { Entity_set_rvalue(); });
 	
 }
 
