@@ -16,6 +16,7 @@ inline flecs::entity script_builder::run() const {
 }
 
 namespace _ {
+
     inline ecs_value_t get_const_var(const flecs::world_t *world, const char *name) {
         flecs::entity_t v = ecs_lookup_path_w_sep(
             world, 0, name, "::", "::", false);
@@ -186,6 +187,17 @@ void world::get_const_var(
 
     out = flecs::_::get_const_value<T>(
         world_, name, value, type, default_value);
+}
+
+
+namespace script {
+namespace _ {
+
+inline void init(flecs::world& world) {
+    world.component<Script>("flecs::script::Script");
+}
+
+}
 }
 
 }

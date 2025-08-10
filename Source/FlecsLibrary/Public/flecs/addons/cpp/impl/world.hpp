@@ -63,6 +63,9 @@ inline void world::init_builtin_components() {
 #   ifdef FLECS_META
     meta::_::init(*this);
 #   endif
+#   ifdef FLECS_SCRIPT
+    script::_::init(*this);
+#   endif
 }
 
 template <typename T>
