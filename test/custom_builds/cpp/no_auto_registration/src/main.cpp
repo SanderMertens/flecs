@@ -208,5 +208,8 @@ int main(int, char *[]) {
     world.id<flecs::units::Bel>();
     world.id<flecs::units::DeciBel>();
 
+    // script
+    world.id<flecs::Script>();
+
     return 0;
 }
