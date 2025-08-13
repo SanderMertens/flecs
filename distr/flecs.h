@@ -16609,6 +16609,7 @@ typedef enum ecs_meta_op_kind_t {
 /** Meta type serializer instruction data. */
 typedef struct ecs_meta_op_t {
     ecs_meta_op_kind_t kind;                       /**< Instruction opcode. */
+    ecs_meta_op_kind_t underlying_kind;            /**< Underlying type kind (for enums). */
     ecs_size_t offset;                             /**< Offset of current field. */
     const char *name;                              /**< Name of value (only used for struct members) */
     ecs_size_t elem_size;                          /**< Element size (for PushArray/PushVector) and element count (for PopArray) */

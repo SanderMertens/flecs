@@ -85823,8 +85823,15 @@ int flecs_expr_value_to_str(
     const ecs_expr_value_node_t *node)
 {
     flecs_expr_color_to_str(v, ECS_YELLOW);
-    int ret = ecs_ptr_to_str_buf(
-        v->world, node->node.type, node->ptr, v->buf);
+    
+    int ret = 0;
+    ecs_entity_t type = node->node.type;
+    if (ecs_has(v->world, type, EcsTypeSerializer)) {
+        ret = ecs_ptr_to_str_buf(v->world, type, node->ptr, v->buf);
+    } else {
+        ecs_strbuf_appendstr(v->buf, "{}");
+    }
+
     flecs_expr_color_to_str(v, ECS_NORMAL);
     return ret;
 }
