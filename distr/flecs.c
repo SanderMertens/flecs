@@ -37958,11 +37958,13 @@ ecs_component_record_t* flecs_component_new(
         /* Relationship object can be 0, as tables without a ChildOf 
          * relationship are added to the (ChildOf, 0) component record */
         tgt = ECS_PAIR_SECOND(id);
+        if (tgt) {
+            tgt = flecs_entities_get_alive(world, tgt);
+        }
 
 #ifdef FLECS_DEBUG
         /* Check constraints */
         if (tgt) {
-            tgt = flecs_entities_get_alive(world, tgt);
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
             /* Can't use relationship as target */
@@ -85823,8 +85825,15 @@ int flecs_expr_value_to_str(
     const ecs_expr_value_node_t *node)
 {
     flecs_expr_color_to_str(v, ECS_YELLOW);
-    int ret = ecs_ptr_to_str_buf(
-        v->world, node->node.type, node->ptr, v->buf);
+    
+    int ret = 0;
+    ecs_entity_t type = node->node.type;
+    if (ecs_has(v->world, type, EcsTypeSerializer)) {
+        ret = ecs_ptr_to_str_buf(v->world, type, node->ptr, v->buf);
+    } else {
+        ecs_strbuf_appendstr(v->buf, "{}");
+    }
+
     flecs_expr_color_to_str(v, ECS_NORMAL);
     return ret;
 }
