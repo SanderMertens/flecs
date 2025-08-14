@@ -2248,9 +2248,13 @@
                 "rename_builtin",
                 "remove_name_builtin",
                 "delete_flecs",
+                "delete_flecs_core",
                 "remove_name_from_flecs",
                 "reparent_flecs",
-                "rename_flecs"
+                "rename_flecs",
+                "reparent_flecs_core",
+                "rename_flecs_core",
+                "user_entity_w_flecs_parent"
             ]
         }, {
             "id": "ExclusiveAccess",

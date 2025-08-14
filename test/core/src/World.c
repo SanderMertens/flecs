@@ -2069,6 +2069,13 @@ void World_mini_all_tables_builtin(void) {
                 // Deleting ::flecs is protected by (OnDelete, Panic).
                 continue;
             }
+
+            if (it.entities[0] == EcsFlecsCore) {
+                // flecs.core lives in a (ChildOf, flecs) table which in theory
+                // could contain other modules that are not part of the core.
+                // Deleting ::flecs.core is also protected by (OnDelete. Panic).
+                continue;
+            }
         }
 
         test_assert(ecs_table_has_flags(it.table, EcsTableHasBuiltins));
@@ -2104,6 +2111,13 @@ void World_mini_all_tables_builtin_after_add(void) {
             // table with builtin entities, but it can also contain entities
             // that are not builtin.
             // Deleting ::flecs is protected by (OnDelete, Panic).
+            continue;
+        }
+
+        if (it.entities[0] == EcsFlecsCore) {
+            // flecs.core lives in a (ChildOf, flecs) table which in theory
+            // could contain other modules that are not part of the core.
+            // Deleting ::flecs.core is also protected by (OnDelete. Panic).
             continue;
         }
 
@@ -2242,4 +2256,54 @@ void World_remove_name_from_flecs(void) {
     test_expect_abort();
 
     ecs_remove_pair(world, EcsFlecs, ecs_id(EcsIdentifier), EcsName);
+}
+
+void World_delete_flecs_core(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+
+    ecs_delete(world, EcsFlecsCore);
+}
+
+void World_reparent_flecs_core(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tgt = ecs_new(world);
+    
+    test_expect_abort();
+
+    ecs_add_pair(world, EcsFlecsCore, EcsChildOf, tgt);
+}
+
+void World_rename_flecs_core(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+
+    ecs_set_name(world, EcsFlecsCore, "fuu");
+}
+
+void World_user_entity_w_flecs_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, EcsFlecs);
+
+    // Check we can remove components, delete entity
+    ecs_add(world, e, Position);
+    ecs_remove(world, e, Position);
+
+    ecs_delete(world, e);
+
+    test_assert(true); // no asserts
+
+    ecs_fini(world);
 }

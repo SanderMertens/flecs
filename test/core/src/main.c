@@ -2169,9 +2169,13 @@ void World_delete_builtin(void);
 void World_rename_builtin(void);
 void World_remove_name_builtin(void);
 void World_delete_flecs(void);
+void World_delete_flecs_core(void);
 void World_remove_name_from_flecs(void);
 void World_reparent_flecs(void);
 void World_rename_flecs(void);
+void World_reparent_flecs_core(void);
+void World_rename_flecs_core(void);
+void World_user_entity_w_flecs_parent(void);
 
 // Testsuite 'ExclusiveAccess'
 void ExclusiveAccess_self(void);
@@ -11085,6 +11089,10 @@ bake_test_case World_testcases[] = {
         World_delete_flecs
     },
     {
+        "delete_flecs_core",
+        World_delete_flecs_core
+    },
+    {
         "remove_name_from_flecs",
         World_remove_name_from_flecs
     },
@@ -11095,6 +11103,18 @@ bake_test_case World_testcases[] = {
     {
         "rename_flecs",
         World_rename_flecs
+    },
+    {
+        "reparent_flecs_core",
+        World_reparent_flecs_core
+    },
+    {
+        "rename_flecs_core",
+        World_rename_flecs_core
+    },
+    {
+        "user_entity_w_flecs_parent",
+        World_user_entity_w_flecs_parent
     }
 };
 
@@ -13236,7 +13256,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        89,
+        93,
         World_testcases
     },
     {
