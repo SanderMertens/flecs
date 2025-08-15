@@ -152,7 +152,8 @@ int flecs_script_find_entity(
     ecs_entity_t from,
     const char *path,
     int32_t *sp,
-    ecs_entity_t *out)
+    ecs_entity_t *out,
+    bool *is_var)
 {
     if (!path) {
         goto error;
@@ -198,6 +199,7 @@ int flecs_script_find_entity(
         }
 
         *out = result;
+        if (is_var) *is_var = true;
 
         return 0;
     }
@@ -251,7 +253,7 @@ ecs_entity_t flecs_script_find_entity_action(
     (void)world;
     ecs_script_eval_visitor_t *v = ctx;
     ecs_entity_t result;
-    if (!flecs_script_find_entity(v, 0, path, NULL, &result)) {
+    if (!flecs_script_find_entity(v, 0, path, NULL, &result, NULL)) {
         return result;
     }
     return 0;
@@ -340,7 +342,7 @@ int flecs_script_eval_id(
 
     ecs_entity_t first = 0;
     if (flecs_script_find_entity(
-        v, 0, id->first, &id->first_sp, &first) || !first)
+        v, 0, id->first, &id->first_sp, &first, NULL) || !first)
     {
         if (id->first[0] == '$') {
             flecs_script_eval_error(v, node, 
@@ -359,7 +361,7 @@ int flecs_script_eval_id(
     if (id->second) {
         ecs_entity_t second = 0;
         if (flecs_script_find_entity(
-            v, second_from, id->second, &id->second_sp, &second) || 
+            v, second_from, id->second, &id->second_sp, &second, &id->dynamic) || 
             !second) 
         {
             if (id->second[0] == '$') {
@@ -850,7 +852,7 @@ int flecs_script_eval_var_component(
     if (!var) {
         /* If we cannot find local variable, try find as const var */
         ecs_entity_t var_entity = 0;
-        if (flecs_script_find_entity(v, 0, node->name, NULL, &var_entity)) {
+        if (flecs_script_find_entity(v, 0, node->name, NULL, &var_entity, NULL)) {
             return -1;
         }
 
@@ -1188,7 +1190,7 @@ int flecs_script_eval_const(
     }
 
     if (!type && node->type) {
-        if (flecs_script_find_entity(v, 0, node->type, NULL, &type) || !type) {
+        if (flecs_script_find_entity(v, 0, node->type, NULL, &type, NULL) || !type) {
             flecs_script_eval_error(v, node,
                 "unresolved type '%s' for const variable '%s'", 
                     node->type, node->name);
@@ -1293,7 +1295,7 @@ int flecs_script_eval_pair_scope(
 {
     ecs_entity_t first;
     if (flecs_script_find_entity(
-        v, 0, node->id.first, &node->id.first_sp, &first) || !first)
+        v, 0, node->id.first, &node->id.first_sp, &first, NULL) || !first)
     {
         first = flecs_script_create_entity(v, node->id.first);
         if (!first) {
@@ -1305,7 +1307,7 @@ int flecs_script_eval_pair_scope(
     if (node->id.second) {
         if (node->id.second[0] == '$') {
             if (flecs_script_find_entity(
-                v, 0, node->id.second, &node->id.second_sp, &second)) 
+                v, 0, node->id.second, &node->id.second_sp, &second, NULL)) 
             {
                 return -1;
             }

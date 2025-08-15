@@ -36,7 +36,8 @@ int flecs_script_find_entity(
     ecs_entity_t from,
     const char *path,
     int32_t *frame_offset,
-    ecs_entity_t *out);
+    ecs_entity_t *out,
+    bool *is_var);
 
 ecs_script_var_t* flecs_script_find_var(
     const ecs_script_vars_t *vars,

@@ -11734,6 +11734,40 @@ void Eval_assign_new_to_const_in_scope(void) {
     ecs_fini(world);
 }
 
+void Eval_assign_new_to_const_in_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, DockedTo);
+
+    const char *expr = 
+    HEAD "for i in 0..2 {\n"
+    LINE "  const v: new \"Enterprise_{i}\" {}\n"
+    LINE "\n"
+    LINE "  \"Shuttle_{i}\" {\n"
+    LINE "    (DockedTo, $v)\n"
+    LINE "  }\n"
+    LINE "}\n"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e0 = ecs_lookup(world, "Enterprise_0");
+    test_assert(e0 != 0);
+    ecs_entity_t s0 = ecs_lookup(world, "Shuttle_0");
+    test_assert(s0 != 0);
+    ecs_entity_t t0 = ecs_get_target(world, s0, DockedTo, 0);
+    test_assert(t0 == e0);
+
+    ecs_entity_t e1 = ecs_lookup(world, "Enterprise_1");
+    test_assert(e1 != 0);
+    ecs_entity_t s1 = ecs_lookup(world, "Shuttle_1");
+    test_assert(s1 != 0);
+    ecs_entity_t t1 = ecs_get_target(world, s1, DockedTo, 0);
+    test_assert(t1 == e1);
+
+    ecs_fini(world);
+}
+
 void Eval_export_const_var(void) {
     ecs_world_t *world = ecs_init();
 
