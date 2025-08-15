@@ -364,6 +364,7 @@
                 "assign_new_w_child_w_name_to_const",
                 "assign_new_w_child_w_name_to_entity_member",
                 "assign_new_to_const_in_scope",
+                "assign_new_to_const_in_for",
                 "export_const_var",
                 "export_const_var_w_type",
                 "export_const_var_w_struct",
