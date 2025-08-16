@@ -11,6 +11,7 @@
 
 #include "flecs/os_api.h"
 #include "Concepts/SolidConcepts.h"
+#include "flecs/Unreal/FlecsScriptClassComponent.h"
 #include "flecs/Unreal/FlecsScriptStructComponent.h"
 #include "flecs/Unreal/FlecsTypeMapComponent.h"
 
@@ -268,6 +269,22 @@ struct type_impl {
                 entity_id.set<FFlecsScriptStructComponent>({ scriptStruct });
             }
 
+            if constexpr (Solid::IsStaticClass<T>())
+            {
+                flecs::world P_world(world);
+                UClass* scriptClass = StaticClass<T>();
+                
+                ecs_assert(scriptClass != nullptr, ECS_INTERNAL_ERROR, 
+                           "script class is null");
+
+                flecs::entity entity_id = flecs::entity(world, c);
+                
+                static_cast<FFlecsTypeMapComponent*>(P_world.get_binding_ctx())
+                    ->ScriptClassMap.emplace(scriptClass, entity_id);
+                
+                entity_id.set<FFlecsScriptClassComponent>({ scriptClass });
+            }
+
             // If component is enum type, register constants. Make sure to do 
             // this after setting the component id, because the enum code will
             // be calling type<T>::id().
@@ -453,7 +470,7 @@ struct untyped_component : entity {
     explicit untyped_component(flecs::world_t *world, flecs::entity_t id) : entity(world, id) { }
     explicit untyped_component(flecs::entity_t id) : entity(id) { }
 
-    explicit untyped_component(flecs::world_t *world, const char *name)
+    explicit untyped_component(flecs::world_t *world, const char *name, const bool bUseLowId = true)
     {
         world_ = world;
 
@@ -461,7 +478,7 @@ struct untyped_component : entity {
         desc.name = name;
         desc.sep = "::";
         desc.root_sep = "::";
-        desc.use_low_id = true;
+        desc.use_low_id = bUseLowId;
         id_ = ecs_entity_init(world, &desc);
     }
 

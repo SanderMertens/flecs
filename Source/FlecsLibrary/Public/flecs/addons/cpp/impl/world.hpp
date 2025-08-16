@@ -39,6 +39,7 @@ inline void world::init_builtin_components() {
 
     flecs::entity ScriptStructEntity = this->component<FFlecsScriptStructComponent>()
         .add(flecs::Trait)
+        .add(flecs::OnInstantiate, flecs::DontInherit)
         .set<FFlecsScriptStructComponent>({ TBaseStructure<FFlecsScriptStructComponent>::Get() });
     
     ecs_assert(ScriptStructEntity.is_valid(), ECS_INTERNAL_ERROR, NULL);
@@ -46,6 +47,11 @@ inline void world::init_builtin_components() {
     type_map->ScriptStructMap.emplace(FFlecsScriptStructComponent::StaticStruct(), ScriptStructEntity);
 
     flecs::entity ScriptEnumEntity = this->component<FFlecsScriptEnumComponent>()
+        .add(flecs::OnInstantiate, flecs::DontInherit)
+        .add(flecs::Trait);
+
+    flecs::entity ScriptClassEntity = this->component<FFlecsScriptClassComponent>()
+        .add(flecs::OnInstantiate, flecs::DontInherit)
         .add(flecs::Trait);
 
 #   ifdef FLECS_SYSTEM

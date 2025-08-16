@@ -27,3 +27,6 @@ to\_constant in Source/FlecsLibrary/Public/flecs/addons/cpp/mixins/enum/impl.hpp
 
 enum\_data<E>::entity(underlying\_type\_t<E> value) in Source/FlecsLibrary/Public/flecs/addons/cpp/impl/world.hpp
 
+EcsFirstUserComponentId is set to 9
+
+added bUseLowId bool paramn to untyped_component(flecs::world_t *world, const char *name) constructor

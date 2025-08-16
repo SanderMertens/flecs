@@ -123,6 +123,7 @@ REGISTER_FLECS_COMPONENT(FFlecsUObjectComponent,
         InComponent
             .Add(flecs::Relationship)
             .Add(flecs::Exclusive)
+            .Add(flecs::Acyclic)
             .AddPair(flecs::OnInstantiate, flecs::DontInherit);
     });
 

@@ -15,5 +15,6 @@ struct UNREALFLECS_API FFlecsModuleComponentTag : public FFlecsUObjectTag
 REGISTER_FLECS_COMPONENT(FFlecsModuleComponentTag,
 	[](flecs::world InWorld, FFlecsComponentHandle& InComponent)
 	{
-		InComponent.Add(flecs::Target);
+		InComponent
+			.Add(flecs::Target);
 	});

@@ -25,7 +25,8 @@ DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"),
 UFlecsWorld::UFlecsWorld(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	char* argv[] = { const_cast<char*>(Unreal::Flecs::ToCString(GetName())) }; // NOLINT(clang-diagnostic-dangling, cppcoreguidelines-pro-type-const-cast)
+	const FString ObjectName = GetName();
+	char* argv[] = { const_cast<char*>(Unreal::Flecs::ToCString(ObjectName)) }; // NOLINT(clang-diagnostic-dangling, cppcoreguidelines-pro-type-const-cast)
 		
 	World = flecs::world(1, argv);
 		
@@ -128,7 +129,7 @@ void UFlecsWorld::InitializeDefaultComponents() const
 	     {
 		     const FFlecsId TagEntity = ecs_lookup_path_w_sep(
 			     Serializer->world,
-			     flecs::component<FFlecsGameplayTagManagerComponent>(const_cast<flecs::world_t*>(Serializer->world)),
+			     flecs::component<FFlecsGameplayTagManagerEntity>(const_cast<flecs::world_t*>(Serializer->world)),
 			     Unreal::Flecs::ToCString(Data->ToString()),
 			     ".",
 			     nullptr,

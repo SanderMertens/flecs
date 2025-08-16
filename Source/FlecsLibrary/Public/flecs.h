@@ -2009,7 +2009,7 @@ FLECS_API extern const ecs_entity_t EcsConstant;    /**< Tag added to enum/bitma
 
 /** The first user-defined component starts from this id. Ids up to this number
  * are reserved for builtin components */
-#define EcsFirstUserComponentId (8)
+#define EcsFirstUserComponentId (9)
 
 /** The first user-defined entity starts from this id. Ids up to this number
  * are reserved for builtin entities */

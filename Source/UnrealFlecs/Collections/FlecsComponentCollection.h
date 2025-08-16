@@ -6,6 +6,14 @@
 #include "FlecsComponentCollectionItem.h"
 #include "FlecsComponentCollection.generated.h"
 
+UENUM(BlueprintType)
+enum class EFlecsCollectionApplicationType : uint8
+{
+	CurrentEntity,
+	ChildEntity,
+	SlotEntity,
+}; // enum class EFlecsCollectionApplicationType
+
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsComponentCollection
 {
@@ -36,9 +44,14 @@ public:
 	{
 		return HasComponent(FString(nameof(T).data()));
 	}
-	
-	UPROPERTY()
-	bool bApplyToOwnEntity = false;
+
+	NO_DISCARD FORCEINLINE bool HasComponent(const FFlecsComponentCollectionItem& Component) const
+	{
+		return Components.Contains(Component);
+	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Flecs|Component Collection")
+	EFlecsCollectionApplicationType ApplicationType = EFlecsCollectionApplicationType::CurrentEntity;
 
 	UPROPERTY()
 	TSet<FFlecsComponentCollectionItem> Components;

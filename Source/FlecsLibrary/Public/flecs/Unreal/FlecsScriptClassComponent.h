@@ -11,9 +11,9 @@ struct FLECSLIBRARY_API FFlecsScriptClassComponent
 {
     GENERATED_BODY()
 
-    NO_DISCARD FORCEINLINE friend uint32 GetTypeHash(const FFlecsScriptClassComponent& InScriptClassComponent)
+    NO_DISCARD FORCEINLINE friend uint32 GetTypeHash(const FFlecsScriptClassComponent& InScriptStructComponent)
     {
-        return GetTypeHash(InScriptClassComponent.ScriptClass);
+        return GetTypeHash(InScriptStructComponent.ScriptClass);
     }
 
     NO_DISCARD FORCEINLINE friend bool operator==(const FFlecsScriptClassComponent& Lhs, const FFlecsScriptClassComponent& Rhs)
@@ -26,21 +26,14 @@ struct FLECSLIBRARY_API FFlecsScriptClassComponent
         return !(Lhs == Rhs);
     }
 
-    FORCEINLINE operator TSubclassOf<UObject>() const { return ScriptClass.Get(); }
+    FORCEINLINE operator UClass*() const { return ScriptClass.Get(); }
     
-    FORCEINLINE FFlecsScriptClassComponent(const TSubclassOf<UObject>& InScriptClass = nullptr) : ScriptClass(InScriptClass) {}
-
-    template <typename T>
-    NO_DISCARD FORCEINLINE TSubclassOf<T> Get() const
-    {
-        return Cast<T>(ScriptClass.Get());
-    }
-
-    template <typename T>
-    NO_DISCARD FORCEINLINE TSubclassOf<T> GetChecked() const
-    {
-        return CastChecked<T>(ScriptClass.Get());
-    }
+    FORCEINLINE FFlecsScriptClassComponent(UClass* InScriptStruct = nullptr)
+        : ScriptClass(InScriptStruct) {}
+    FORCEINLINE FFlecsScriptClassComponent(const UClass* InScriptStruct)
+        : ScriptClass(const_cast<UClass*>(InScriptStruct)) {}
+    FORCEINLINE FFlecsScriptClassComponent(const FFlecsScriptClassComponent& InScriptStructComponent)
+        : ScriptClass(InScriptStructComponent.ScriptClass) {}
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
     TSubclassOf<UObject> ScriptClass;

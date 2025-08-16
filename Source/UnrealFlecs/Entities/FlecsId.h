@@ -171,7 +171,6 @@ public:
         ValueStr = FString::Printf(TEXT("FlecsId=%llu"), Id);
         return true;
     }
-
     
     UPROPERTY()
     uint64 Id = 0;

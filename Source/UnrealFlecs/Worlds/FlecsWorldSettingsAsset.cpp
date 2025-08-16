@@ -19,16 +19,18 @@ UFlecsWorldSettingsAsset::UFlecsWorldSettingsAsset()
 
 EDataValidationResult UFlecsWorldSettingsAsset::IsDataValid(FDataValidationContext& Context) const
 {
+	EDataValidationResult Result = Super::IsDataValid(Context);
+	
 	if (!IsValid(WorldSettings.GameLoop))
 	{
 		Context.AddError(FText::Format(
 			LOCTEXT("InvalidGameLoop", "WorldSettings {0} does not have a valid GameLoop set."),
 			FText::FromString(GetPathName())));
 		
-		return EDataValidationResult::Invalid;
+		Result = CombineDataValidationResults(Result, EDataValidationResult::Invalid);
 	}
 	
-	return Super::IsDataValid(Context);
+	return Result;
 }
 
 #endif // WITH_EDITOR

@@ -3,10 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FlecsComponentCollection.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsCollectionBuilder.generated.h"
-
-struct FFlecsComponentCollection;
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsCollectionBuilder

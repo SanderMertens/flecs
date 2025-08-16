@@ -5,13 +5,11 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsCollectionRegistrationInterface)
 
-// Add default functionality here for any IFlecsCollectionRegistrationInterface functions that are not pure virtual.
-
 void IFlecsCollectionRegistrationInterface::RegisterObject(const TSolidNotNull<UFlecsWorld*> InFlecsWorld)
 {
 	FlecsWorld = InFlecsWorld;
 	
-	const FFlecsEntityHandle PrefabEntity = InFlecsWorld->CreateEntity().Add(flecs::Prefab);
+	const FFlecsEntityHandle PrefabEntity = InFlecsWorld->CreatePrefab(_getUObject()->GetClass());
 	solid_check(PrefabEntity.IsValid());
 	
 	CollectionEntity = PrefabEntity;

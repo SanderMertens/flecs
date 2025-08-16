@@ -104,6 +104,11 @@ private:
 		return InEntity.GetTagEntity(InTag);
 	}
 
+	static FORCEINLINE FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, UClass* InClass)
+	{
+		return InEntity.ObtainTypeClass(InClass);
+	}
+
 public:
 
 	NO_DISCARD FORCEINLINE friend bool IsValid(const FFlecsEntityHandle& Test)
@@ -759,18 +764,6 @@ public:
 		return *this;
 	}
 
-	SOLID_INLINE const FSelfType& SetParent(const FFlecsId InParent, const bool bIsA) const
-	{
-		SetParent(InParent);
-
-		if (bIsA)
-		{
-			GetEntity().is_a(InParent);
-		}
-		
-		return *this;
-	}
-
 	NO_DISCARD SOLID_INLINE bool IsPrefab() const
 	{
 		return Has(flecs::Prefab);
@@ -950,8 +943,7 @@ public:
 	{
 		return GetEntity().from_json(Unreal::Flecs::ToCString(InJson));
 	}
-
-	// @TODO: Implement serialization
+	
 	bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess);
 
 	template <typename TFirst, typename TSecond>
@@ -1444,6 +1436,8 @@ public:
 	
 	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeEnum(const TSolidNotNull<const UEnum*> EnumType) const;
 
+	NO_DISCARD FFlecsEntityHandle ObtainTypeClass(const TSolidNotNull<UClass*> ClassType) const;
+
 	template <typename TEnumUnderlying = uint64>
 	NO_DISCARD SOLID_INLINE FFlecsEntityHandle ObtainEnumConstant(const TSolidNotNull<const UEnum*> EnumType,
 	                                                              const TEnumUnderlying InValue) const
@@ -1497,6 +1491,11 @@ public:
 	NO_DISCARD SOLID_INLINE bool HasPrefab(const FFlecsId InPrefab) const
 	{
 		return HasPair(flecs::IsA, InPrefab);
+	}
+
+	NO_DISCARD SOLID_INLINE bool HasPrefab(const TSolidNotNull<UClass*> InPrefabClass) const
+	{
+		return HasPair(flecs::IsA, FFlecsEntityHandle::GetInputId(*this, InPrefabClass));
 	}
 
 	template <typename T>

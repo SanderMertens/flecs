@@ -26,7 +26,7 @@
 #include "General/FlecsDeveloperSettings.h"
 #include "Modules/FlecsModuleSetDataAsset.h"
 #include "Concepts/SolidConcepts.h"
-#include "General/FlecsGameplayTagManagerComponent.h"
+#include "General/FlecsGameplayTagManagerEntity.h"
 #include "Pipelines/FlecsDefaultGameLoop.h"
 #include "Standard/Hashing.h"
 #include "Standard/robin_hood.h"
@@ -321,10 +321,10 @@ protected:
 
 	void RegisterAllGameplayTags(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld)
 	{
-		InFlecsWorld->ObtainTypedEntity<FFlecsGameplayTagManagerComponent>()
+		InFlecsWorld->ObtainTypedEntity<FFlecsGameplayTagManagerEntity>()
 			.Add(flecs::Module);
 
-		InFlecsWorld->Scope<FFlecsGameplayTagManagerComponent>([InFlecsWorld]()
+		InFlecsWorld->Scope<FFlecsGameplayTagManagerEntity>([InFlecsWorld]()
 		{
 			FGameplayTagContainer AllTags;
 			UGameplayTagsManager::Get().RequestAllGameplayTags(AllTags, false);

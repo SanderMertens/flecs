@@ -10,8 +10,9 @@ DEFINE_DEFAULT_ENTITY(TestEntityOption, 6000 + FLECS_HI_COMPONENT_ID, [](flecs::
 
 DEFINE_DEFAULT_ENTITY(TestEntityOption2WithTrait,
 	6001 + FLECS_HI_COMPONENT_ID, [](flecs::entity InEntity)
-{
-	InEntity.add(flecs::Trait);
-});
+	{
+		InEntity
+			.add(flecs::Trait);
+	});
 
 FFlecsTestNativeGameplayTags FFlecsTestNativeGameplayTags::StaticInstance;

@@ -102,6 +102,11 @@ FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeEnum(const TSolidNotNu
     return GetFlecsWorld()->ObtainComponentTypeEnum(EnumType);
 }
 
+FFlecsEntityHandle FFlecsEntityHandle::ObtainTypeClass(const TSolidNotNull<UClass*> ClassType) const
+{
+    return GetFlecsWorld()->RegisterScriptClassType(ClassType);
+}
+
 void FFlecsEntityHandle::AddCollection(const TSolidNotNull<UObject*> Collection) const
 {
     const TSolidNotNull<UFlecsComponentCollectionObject*> ComponentCollection

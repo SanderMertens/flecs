@@ -152,6 +152,6 @@ TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9.World.Defer",
 		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>()));
 	}
 	
-};
+}; // End of A9_DeferWorldTests
 
 #endif // WITH_AUTOMATION_TESTS

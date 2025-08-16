@@ -27,5 +27,6 @@ public:
 REGISTER_FLECS_COMPONENT(FFlecsPrimaryAssetComponent,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
 	{
-		InComponent.AddPair(flecs::OnInstantiate, flecs::DontInherit);
+		InComponent
+			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
 	});
