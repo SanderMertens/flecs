@@ -939,6 +939,11 @@ public:
 		return FString(GetEntity().to_json().c_str());
 	}
 
+	NO_DISCARD SOLID_INLINE FString ToJson(const ecs_entity_to_json_desc_t& InDesc) const
+	{
+		return FString(GetEntity().to_json(&InDesc).c_str());
+	}
+
 	SOLID_INLINE FString FromJson(const FString& InJson) const
 	{
 		return GetEntity().from_json(Unreal::Flecs::ToCString(InJson));

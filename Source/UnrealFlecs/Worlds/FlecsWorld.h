@@ -1241,19 +1241,19 @@ public:
 			return GetScriptClassEntity(ScriptClass);
 		}
 
-		FFlecsEntityHandle ScriptClassComponent;
+		FFlecsEntityHandle ScriptClassEntity;
 		
 		const char* ClassNameCStr = Unreal::Flecs::ToCString(ClassName);
 
-		DeferEndLambda([this, ScriptClass, &ScriptClassComponent, ClassNameCStr, &ClassName]()
+		DeferEndLambda([this, ScriptClass, &ScriptClassEntity, ClassNameCStr, &ClassName]()
 		{
-			ScriptClassComponent = CreateEntity(ClassName);
-			solid_check(ScriptClassComponent.IsValid());
+			ScriptClassEntity = CreateEntity(ClassName);
+			solid_check(ScriptClassEntity.IsValid());
 
-			ScriptClassComponent.GetEntity().set_symbol(ClassNameCStr);
-			TypeMapComponent->ScriptClassMap.emplace(ScriptClass, ScriptClassComponent);
+			ScriptClassEntity.GetEntity().set_symbol(ClassNameCStr);
+			TypeMapComponent->ScriptClassMap.emplace(ScriptClass, ScriptClassEntity);
 
-			ScriptClassComponent.Set<FFlecsScriptClassComponent>(FFlecsScriptClassComponent(ScriptClass));
+			ScriptClassEntity.Set<FFlecsScriptClassComponent>(FFlecsScriptClassComponent(ScriptClass));
 
 			//RegisterMemberProperties(ScriptClass, ScriptClassComponent);
 
@@ -1273,13 +1273,13 @@ public:
 
 			flecs::_::type_impl_data& Data = flecs::_::g_type_to_impl_data.at(std::string(ClassNameCStr));
 			
-			flecs_component_ids_set(World, Data.s_index, ScriptClassComponent);
-			TypeMapComponent->ScriptClassMap.emplace(ScriptClass, ScriptClassComponent);
+			flecs_component_ids_set(World, Data.s_index, ScriptClassEntity);
+			TypeMapComponent->ScriptClassMap.emplace(ScriptClass, ScriptClassEntity);
 		});
 
 		SetScope(OldScope);
 		
-		return ScriptClassComponent;
+		return ScriptClassEntity;
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
