@@ -3454,7 +3454,7 @@ flecs::entity e = world.entity()
 
 q_write.run([](flecs::iter& it) {
   if (it.next()) {
-    if !changed {
+    if (!changed) {
       // If no changes are made to the iterated table, the skip function can be
       // called to prevent marking the matched components as dirty.
       it.skip();
