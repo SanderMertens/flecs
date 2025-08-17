@@ -333,6 +333,86 @@ FLECS_ALWAYS_INLINE ecs_table_t *flecs_table_traverse_add(
     ecs_id_t *id_ptr,
     ecs_table_diff_t *diff);
 
+#ifdef FLECS_SAFETY_LOCKS
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_begin(
+    ecs_component_record_t *idr);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_end(
+    ecs_component_record_t *idr);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_begin(
+    ecs_component_record_t *idr);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_end(
+    ecs_component_record_t *idr);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_begin(
+    ecs_table_t *table,
+    const int16_t column_index);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_end(
+    ecs_table_t *table,
+    const int16_t column_index);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_begin(
+    ecs_table_t *table,
+    const int16_t column_index);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_end(
+    ecs_table_t *table,
+    const int16_t column_index);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_begin_multithreaded(
+    ecs_component_record_t *idr);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_end_multithreaded(
+    ecs_component_record_t *idr);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_begin_multithreaded(
+    ecs_component_record_t *idr);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_end_multithreaded(
+    ecs_component_record_t *idr);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_begin_multithreaded(
+    ecs_table_t *table,
+    const int16_t column_index,
+    const int32_t stage_id);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_end_multithreaded(
+    ecs_table_t *table,
+    const int16_t column_index,
+    const int32_t stage_id);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_begin_multithreaded(
+    ecs_table_t *table,
+    const int16_t column_index,
+    const int32_t stage_id);
+
+FLECS_API
+FLECS_ALWAYS_INLINE bool ecs_table_column_lock_write_end_multithreaded(
+    ecs_table_t *table,
+    const int16_t column_index,
+    const int32_t stage_id);
+
+#endif
+
 #ifdef __cplusplus
 }
 #endif
