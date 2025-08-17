@@ -139,8 +139,6 @@ void flecs_expr_new_visit_free(
     if (node->entity) {
         flecs_script_visit_free_node(script, (ecs_script_node_t*)node->entity);
     }
-    // ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
-    // flecs_free_t(a, ecs_script_entity_t, node->entity);
 }
 
 static

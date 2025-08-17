@@ -10898,6 +10898,258 @@ void Eval_interpolated_name_w_nested_for_loop_wrong_dollar_sign(void) {
     ecs_fini(world);
 }
 
+void Eval_interpolated_string_as_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  \"Tag_{10}\""
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Tag_10));
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (\"Tag_{10}\", Tgt)"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Tag_10, Tgt));
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (Rel, \"Tag_{10}\")"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Rel, Tag_10));
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_relationship_and_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+    ECS_TAG(world, Tag_20);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (\"Tag_{10}\", \"Tag_{20}\")"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Tag_10, Tag_20));
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_relationship_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (\"Tag_{10}\", Position): {10, 20}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Tag_10, ecs_id(Position)));
+
+    {
+        const Position *p = ecs_get_pair_second(world, e, Tag_10, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_target_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (Position, \"Tag_{10}\"): {10, 20}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), Tag_10));
+
+    {
+        const Position *p = ecs_get_pair(world, e, Position, Tag_10);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_relationship_and_target_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+    ECS_TAG(world, Tag_20);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (\"Tag_{10}\", \"Tag_{20}\"): {10, 20}"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_dynamic_interpolated_string_as_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_0);
+    ECS_TAG(world, Tag_1);
+
+    const char *expr =
+    HEAD "for i in 0..2 {"
+    LINE "  \"e_{i}\" {"
+    LINE "    \"Tag_{i}\""
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    test_assert(e_0 != 0);
+    test_assert(ecs_has(world, e_0, Tag_0));
+
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    test_assert(e_1 != 0);
+    test_assert(ecs_has(world, e_1, Tag_1));
+
+    ecs_fini(world);
+}
+
+void Eval_dynamic_interpolated_string_as_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_0);
+    ECS_TAG(world, Tag_1);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "for i in 0..2 {"
+    LINE "  \"e_{i}\" {"
+    LINE "    (\"Tag_{i}\", Tgt)"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    test_assert(e_0 != 0);
+    test_assert(ecs_has_pair(world, e_0, Tag_0, Tgt));
+
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    test_assert(e_1 != 0);
+    test_assert(ecs_has_pair(world, e_1, Tag_1, Tgt));
+
+    ecs_fini(world);
+}
+
+void Eval_dynamic_interpolated_string_as_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_0);
+    ECS_TAG(world, Tag_1);
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    HEAD "for i in 0..2 {"
+    LINE "  \"e_{i}\" {"
+    LINE "    (Rel, \"Tag_{i}\")"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    test_assert(e_0 != 0);
+    test_assert(ecs_has_pair(world, e_0, Rel, Tag_0));
+
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    test_assert(e_1 != 0);
+    test_assert(ecs_has_pair(world, e_1, Rel, Tag_1));
+
+    ecs_fini(world);
+}
+
 void Eval_assign_new_to_const_to_entity_member(void) {
     ecs_world_t *world = ecs_init();
 

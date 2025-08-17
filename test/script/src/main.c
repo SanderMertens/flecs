@@ -338,6 +338,16 @@ void Eval_add_component_as_tag_pair_w_invalid_ctor(void);
 void Eval_interpolated_name_w_nested_for_loop(void);
 void Eval_interpolated_name_w_nested_for_loop_no_dollar_sign(void);
 void Eval_interpolated_name_w_nested_for_loop_wrong_dollar_sign(void);
+void Eval_interpolated_string_as_tag(void);
+void Eval_interpolated_string_as_relationship(void);
+void Eval_interpolated_string_as_target(void);
+void Eval_interpolated_string_as_relationship_and_target(void);
+void Eval_interpolated_string_as_relationship_component(void);
+void Eval_interpolated_string_as_target_component(void);
+void Eval_interpolated_string_as_relationship_and_target_component(void);
+void Eval_dynamic_interpolated_string_as_tag(void);
+void Eval_dynamic_interpolated_string_as_relationship(void);
+void Eval_dynamic_interpolated_string_as_target(void);
 void Eval_assign_new_to_const_to_entity_member(void);
 void Eval_assign_new_w_component_to_const_to_entity_member(void);
 void Eval_assign_new_w_component_w_vars_to_const_to_entity_member(void);
@@ -2404,6 +2414,46 @@ bake_test_case Eval_testcases[] = {
     {
         "interpolated_name_w_nested_for_loop_wrong_dollar_sign",
         Eval_interpolated_name_w_nested_for_loop_wrong_dollar_sign
+    },
+    {
+        "interpolated_string_as_tag",
+        Eval_interpolated_string_as_tag
+    },
+    {
+        "interpolated_string_as_relationship",
+        Eval_interpolated_string_as_relationship
+    },
+    {
+        "interpolated_string_as_target",
+        Eval_interpolated_string_as_target
+    },
+    {
+        "interpolated_string_as_relationship_and_target",
+        Eval_interpolated_string_as_relationship_and_target
+    },
+    {
+        "interpolated_string_as_relationship_component",
+        Eval_interpolated_string_as_relationship_component
+    },
+    {
+        "interpolated_string_as_target_component",
+        Eval_interpolated_string_as_target_component
+    },
+    {
+        "interpolated_string_as_relationship_and_target_component",
+        Eval_interpolated_string_as_relationship_and_target_component
+    },
+    {
+        "dynamic_interpolated_string_as_tag",
+        Eval_dynamic_interpolated_string_as_tag
+    },
+    {
+        "dynamic_interpolated_string_as_relationship",
+        Eval_dynamic_interpolated_string_as_relationship
+    },
+    {
+        "dynamic_interpolated_string_as_target",
+        Eval_dynamic_interpolated_string_as_target
     },
     {
         "assign_new_to_const_to_entity_member",
@@ -5369,7 +5419,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        379,
+        389,
         Eval_testcases
     },
     {

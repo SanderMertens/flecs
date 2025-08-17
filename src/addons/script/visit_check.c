@@ -349,13 +349,13 @@ int flecs_script_check_pair_scope(
     ecs_entity_t dummy;
 
     if (flecs_script_find_entity(
-        v, 0, node->id.first, &node->id.first_sp, &dummy, NULL))
+        v, 0, node->id.first, NULL, &node->id.first_sp, &dummy, NULL))
     {
         return -1;
     }
 
     if (flecs_script_find_entity(
-        v, 0, node->id.second, &node->id.second_sp, &dummy, NULL))
+        v, 0, node->id.second, NULL, &node->id.second_sp, &dummy, NULL))
     {
         return -1;
     }
