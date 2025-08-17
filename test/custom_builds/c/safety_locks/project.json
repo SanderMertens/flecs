@@ -1,0 +1,14 @@
+{
+    "id": "safety_locks",
+    "type": "application",
+    "value": {
+        "public": false,
+        "use": [
+            "flecs"
+        ],
+        "standalone": true
+    },
+    "lang.c": {
+        "defines": ["FLECS_SAFETY_LOCKS", "FLECS_KEEP_ASSERT"]
+    }
+}
