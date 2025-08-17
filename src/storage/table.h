@@ -164,6 +164,10 @@ struct ecs_table_t {
                                       *  - count(T)..count(C): column -> type index
                                       */
 
+#ifdef FLECS_SAFETY_LOCKS
+    int32_t *column_lock;            /* Lock columns for writing and reading */
+#endif
+
     ecs_table__t *_;                 /* Infrequently accessed table metadata */
 };
 
@@ -308,5 +312,13 @@ ecs_pair_record_t* flecs_table_get_childof_pr(
 ecs_hashmap_t* flecs_table_get_name_index(
     const ecs_world_t *world,
     const ecs_table_t *table);
+
+#ifdef FLECS_SAFETY_LOCKS
+/* resize column locks for all tables. */
+void flecs_tables_resize_column_locks(
+    ecs_world_t *world,
+    int32_t previous_stage_count,
+    int32_t new_stage_count);
+#endif
 
 #endif
