@@ -196,7 +196,7 @@ FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_get_id_from_record(
  * This operation obtains a mutable pointer to the requested component. The
  * operation accepts the component entity id.
  *
- * Unlike ecs_get_id(), this operation does not return inherited components.
+ * Unlike flecs_get_id_from_record(), this operation does not return inherited components.
  * This is to prevent errors where an application accidentally resolves an
  * inherited component shared with many entities and modifies it, while thinking
  * it is modifying an owned component.
