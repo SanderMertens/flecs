@@ -3908,7 +3908,7 @@ ecs_query_t *q = ecs_query(world, {
 The following example shows a query that uses component inheritance to match entities:
 
 ```cpp
-flecs::entity Unit = ecs_new(world);
+flecs::entity Unit = world.entity();
 flecs::entity MeleeUnit = world.entity().is_a(Unit);
 flecs::entity RangedUnit = world.entity().is_a(Unit);
 
