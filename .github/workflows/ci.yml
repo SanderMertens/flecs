@@ -1086,6 +1086,30 @@ jobs:
         run: |
           bake run test/core --cfg sanitize -- -j 8
 
+  test-flecs-safety-core:
+    needs: [ build-linux ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --cfg sanitize -D FLECS_SAFETY_LOCKS
+
+      - name: run tests
+        run: |
+          bake run test/core --cfg sanitize -- -j 8 -D FLECS_SAFETY_LOCKS
+
   test-low-footprint-core:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
