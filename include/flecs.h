@@ -35,6 +35,8 @@
 #define FLECS_VERSION_MINOR 1  /**< Flecs minor version. */
 #define FLECS_VERSION_PATCH 4  /**< Flecs patch version. */
 
+#define FLECS_SAFETY_LOCKS
+
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
     FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH)

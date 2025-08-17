@@ -81,6 +81,16 @@ struct ecs_component_record_t {
 
     /* Refcount */
     int32_t refcount;
+
+    /* Keep alive count. This count must be 0 when the component record is deleted. If
+     * it is not 0, an application attempted to delete an id that was still
+     * queried for. */
+    int32_t keep_alive;
+
+#ifdef FLECS_SAFETY_LOCKS
+    /* lock for when sparse components are read or written to */
+    int32_t sparse_lock;
+#endif
 };
 
 /* Bootstrap cached id records */
