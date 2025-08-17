@@ -3002,16 +3002,33 @@ void flecs_tables_resize_column_locks(
     int32_t new_stage_count)
 {
     flecs_poly_assert(world, ecs_world_t);
-    //no need to resize, or world not initialized yet, or being destroyed, or the same stage count
-    if (world->flags & (EcsWorldInit|EcsWorldFini) || previous_stage_count == new_stage_count) {
+    //no need to resize when is world not initialized yet or changing to the same stage count
+    if (world->flags & EcsWorldInit || previous_stage_count == new_stage_count) {
         return;
     }
 
-    int32_t i, count = flecs_sparse_count(&world->store.tables);
-    for (i = 1; i < count; i ++) {
-        ecs_table_t *table = flecs_sparse_get_dense_t(&world->store.tables,
-            ecs_table_t, i);
-        flecs_table_resize_column_locks(world, table, previous_stage_count, new_stage_count);
+    if (!(world->flags & EcsWorldFini)) {
+        int32_t i, count = flecs_sparse_count(&world->store.tables);
+        for (i = 1; i < count; i ++) {
+            ecs_table_t *table = flecs_sparse_get_dense_t(&world->store.tables,
+                ecs_table_t, i);
+            flecs_table_resize_column_locks(world, table, previous_stage_count, new_stage_count);
+        }
+    // at world fini, we instead want to free the table locks, not resize.
+    // at world fini, the world returns to single threaded mode and sets the stage, this is where we clear the tables
+    // at the end of world fini, it sets the stage count to 0, we don't want to clean up here as it's already done so.
+    } else if (new_stage_count != 0) {
+        int32_t i, count = flecs_sparse_count(&world->store.tables);
+        for (i = 1; i < count; i ++) {
+            ecs_table_t *table = flecs_sparse_get_dense_t(&world->store.tables,
+                ecs_table_t, i);
+
+            if(table->column_lock)
+            {
+                flecs_wfree_n(world, int32_t, previous_stage_count * table->column_count, table->column_lock);
+                table->column_lock = NULL;
+            }
+        }
     }
 }
 
