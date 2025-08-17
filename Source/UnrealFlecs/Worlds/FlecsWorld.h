@@ -103,8 +103,9 @@ public:
 	void InitializeSystems()
 	{
 		CreateObserver("AnyComponentObserver")
+			.event(flecs::OnSet)
 			.with_symbol_component().filter()
-			.with<flecs::Component>().event(flecs::OnSet)
+			.with<flecs::Component>()
 			.yield_existing()
 			.run([this](flecs::iter& Iter)
 			{
@@ -118,11 +119,11 @@ public:
 					{
 						FFlecsComponentHandle InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
 						
-						const TSolidNotNull<const FFlecsComponentProperties*> Properties
+						const FFlecsComponentProperties& Properties
 							= FFlecsComponentPropertiesRegistry::Get()
 							.GetComponentProperties(StructSymbol);
 
-						std::invoke(Properties->RegistrationFunction, Iter.world(), InUntypedComponent);
+						std::invoke(Properties.RegistrationFunction, Iter.world(), InUntypedComponent);
 
 						UE_LOGFMT(LogFlecsComponent, Log,
 							"Component properties {StructName} registered", StructSymbol);
@@ -186,9 +187,9 @@ public:
 				// }
 			});*/
 
-		CreateObserver<FFlecsModuleComponent>(TEXT("ModuleInitEventObserver"))
-			.with<FFlecsUObjectComponent, FFlecsModuleComponentTag>()
+		CreateObserver<const FFlecsModuleComponent&>(TEXT("ModuleInitEventObserver"))
 			.event<FFlecsModuleInitEvent>()
+			.with<FFlecsUObjectComponent&, FFlecsModuleComponentTag>()
 			.run([this](flecs::iter& Iter)
 			{
 				UnlockIter_Internal(Iter, [this](flecs::iter& Iter, size_t Index)
@@ -225,7 +226,7 @@ public:
 				});
 			});
 
-		CreateObserver<FFlecsUObjectComponent>(TEXT("RemoveModuleComponentObserver"))
+		CreateObserver<const FFlecsUObjectComponent&>(TEXT("RemoveModuleComponentObserver"))
 			.event(flecs::OnRemove)
 			.with<FFlecsModuleComponent>().inout_none()
 			.term_at(0).second(flecs::Wildcard).filter() // FFlecsUObjectComponent
