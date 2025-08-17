@@ -2709,10 +2709,10 @@ void flecs_enqueue(
 #define FLECS_ENTITY_H
 
 #ifdef FLECS_SAFETY_LOCKS
-#  define FLECS_SI_INIT(cr_, table_, col_) \
-     .si = (ecs_safety_info_t){ .cr = (cr_), .table = (table_), .column_index = (col_) },
+    #define FLECS_SI_INIT(cr_, table_, col_) \
+     .si = (ecs_safety_info_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
 #else
-#  define FLECS_SI_INIT(cr_, table_, col_) /* nothing */
+    #define FLECS_SI_INIT(cr_, table_, col_) /* nothing */
 #endif
 
 #define ecs_get_low_id(table, r, id)\
