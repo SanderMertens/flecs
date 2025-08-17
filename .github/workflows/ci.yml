@@ -429,6 +429,11 @@ jobs:
           bake rebuild --strict -D FLECS_NO_LOG
           bake rebuild --strict --cfg release -D FLECS_NO_LOG
 
+      - name: FLECS_SAFETY_LOCKS
+        run: |
+          bake rebuild --strict -D FLECS_SAFETY_LOCKS
+          bake rebuild --strict --cfg release -D FLECS_SAFETY_LOCKS
+
       - name: FLECS_DEFAULT
         run: |
           bake rebuild --strict
