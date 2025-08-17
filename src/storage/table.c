@@ -3007,17 +3007,12 @@ void flecs_tables_resize_column_locks(
         return;
     }
 
-    ecs_query_t *q = ecs_query(world, {
-        .terms = {{ .id = EcsAny }}
-    });
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-
-    while (ecs_query_next(&it)) {
-        ecs_table_t *table = it.table;
+    int32_t i, count = flecs_sparse_count(&world->store.tables);
+    for (i = 1; i < count; i ++) {
+        ecs_table_t *table = flecs_sparse_get_dense_t(&world->store.tables,
+            ecs_table_t, i);
         flecs_table_resize_column_locks(world, table, previous_stage_count, new_stage_count);
     }
-    ecs_query_fini(q);
 }
 
 int32_t flecs_table_column_lock_inc(
