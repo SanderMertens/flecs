@@ -11768,6 +11768,81 @@ void Eval_assign_new_to_const_in_for(void) {
     ecs_fini(world);
 }
 
+void Eval_implicit_var_as_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, DockedTo);
+
+    const char *expr = 
+    HEAD "const v: new foo {}\n"
+    LINE "e {\n"
+    LINE "  v\n"
+    LINE "}\n"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has_id(world, e, foo));
+
+    ecs_fini(world);
+}
+
+void Eval_implicit_var_as_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tgt);
+
+    const char *expr = 
+    HEAD "const v: new foo {}\n"
+    LINE "e {\n"
+    LINE "  (v, Tgt)\n"
+    LINE "}\n"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has_pair(world, e, foo, Tgt));
+
+    ecs_fini(world);
+}
+
+void Eval_implicit_var_as_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, DockedTo);
+
+    const char *expr = 
+    HEAD "const v: new foo {}\n"
+    LINE "e {\n"
+    LINE "  (DockedTo, v)\n"
+    LINE "}\n"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has_pair(world, e, DockedTo, foo));
+
+    ecs_fini(world);
+}
+
 void Eval_export_const_var(void) {
     ecs_world_t *world = ecs_init();
 

@@ -361,6 +361,9 @@ void Eval_assign_new_w_child_w_name_to_const(void);
 void Eval_assign_new_w_child_w_name_to_entity_member(void);
 void Eval_assign_new_to_const_in_scope(void);
 void Eval_assign_new_to_const_in_for(void);
+void Eval_implicit_var_as_tag(void);
+void Eval_implicit_var_as_relationship(void);
+void Eval_implicit_var_as_target(void);
 void Eval_export_const_var(void);
 void Eval_export_const_var_w_type(void);
 void Eval_export_const_var_w_struct(void);
@@ -2493,6 +2496,18 @@ bake_test_case Eval_testcases[] = {
     {
         "assign_new_to_const_in_for",
         Eval_assign_new_to_const_in_for
+    },
+    {
+        "implicit_var_as_tag",
+        Eval_implicit_var_as_tag
+    },
+    {
+        "implicit_var_as_relationship",
+        Eval_implicit_var_as_relationship
+    },
+    {
+        "implicit_var_as_target",
+        Eval_implicit_var_as_target
     },
     {
         "export_const_var",
@@ -5354,7 +5369,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        376,
+        379,
         Eval_testcases
     },
     {
