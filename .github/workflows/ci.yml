@@ -1108,7 +1108,7 @@ jobs:
 
       - name: run tests
         run: |
-          bake run test/core --cfg sanitize -- -j 8 -D FLECS_SAFETY_LOCKS
+          bake run test/core --cfg sanitize -- -j 8
 
   test-low-footprint-core:
     needs: [ build-linux ]
