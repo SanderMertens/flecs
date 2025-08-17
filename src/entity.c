@@ -1998,25 +1998,17 @@ error:
 
 ecs_get_ptr_t flecs_get_mut_id_from_record(
     const ecs_world_t *world,
-    ecs_entity_t entity,
     const ecs_record_t *r,
     ecs_id_t component)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    flecs_assert_entity_valid(world, entity, "get_mut");
-    flecs_assert_component_valid(world, entity, component, "get_mut");
+    flecs_poly_assert(world, ecs_world_t);
     ecs_assert(r != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_dbg_assert(!flecs_component_has_on_replace(world, component, "get_mut"), 
         ECS_INVALID_PARAMETER,
         "cannot call get_mut() for component '%s' which has an on_replace hook "
         "(use set()/assign())",
             flecs_errstr(ecs_id_str(world, component)));
-    
-    // assert world is not poly -> how to do this? essentially, I want to ensure this function is only called
-    // with a world that is not a poly object, but a real ecs_world_t object.
-    // like this?
-    // ecs_assert(((const ecs_header_t*)world)->type == ecs_world_t_magic,
-    //     ECS_INVALID_PARAMETER, NULL);
 
     flecs_check_exclusive_world_access_write(world);
 
@@ -2046,12 +2038,14 @@ void* ecs_get_mut_id(
     ecs_id_t component)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_assert_entity_valid(world, entity, "get_mut");
+    flecs_assert_component_valid(world, entity, component, "get_mut");
 
     world = ecs_get_world(world);
 
     ecs_record_t *r = flecs_entities_get(world, entity);
 
-    return flecs_get_mut_id_from_record(world, entity, r, component).component_ptr;
+    return flecs_get_mut_id_from_record(world, r, component).component_ptr;
 
 error:
     return NULL;

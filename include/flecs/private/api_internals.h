@@ -202,7 +202,6 @@ FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_get_id_from_record(
  * it is modifying an owned component.
  *
  * @param world The world.
- * @param entity The entity.
  * @param r The entity record.
  * @param component The component to get.
  * @return The component pointer, NULL if the entity does not have the component.
@@ -214,7 +213,6 @@ FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_get_id_from_record(
 FLECS_API
 FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_get_mut_id_from_record(
     const ecs_world_t *world,
-    ecs_entity_t entity,
     const ecs_record_t *r,
     ecs_id_t component);
 
