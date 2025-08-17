@@ -2947,9 +2947,12 @@ void flecs_table_init_column_locks(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!table->column_lock) {
         int32_t column_count = table->column_count;
+
         if (column_count == 0) {
-            ++column_count;
+            //tags don't need column locks nor (new) column-less tables
+            return;
         }
+
         table->column_lock = flecs_alloc_n(&world->allocator,
               int32_t, column_count * stage_count);
         ecs_assert(
@@ -2974,9 +2977,9 @@ void flecs_table_resize_column_locks(
 
     if (table->column_lock) {
         int32_t column_count = table->column_count;
-        if (column_count == 0) {
-            ++column_count;
-        }
+        //if column_lock is not null, column count should be higher than 0
+        ecs_assert(column_count > 0, ECS_INTERNAL_ERROR, NULL);
+
         table->column_lock = flecs_realloc_n(&world->allocator,
             int32_t, column_count * new_stage_count, column_count * previous_stage_count, table->column_lock);
         ecs_assert(
@@ -2986,7 +2989,8 @@ void flecs_table_resize_column_locks(
         for (int i = 0; i < column_count * new_stage_count; i ++) {
             table->column_lock[i] = 0;
         }
-    } else if(new_stage_count > 0) {
+        
+    } else if(table->column_count > 0 && new_stage_count > 0) {
         flecs_table_init_column_locks(world, table,new_stage_count);
     }
 }
