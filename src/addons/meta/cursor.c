@@ -1432,9 +1432,9 @@ int ecs_meta_set_string(
             goto error;
         }
 
-        const void *ptr = ecs_get_id(
+        const void *cptr = ecs_get_id(
             cursor->world, c, ecs_pair(EcsConstant, underlying));
-        if (!ptr) {
+        if (!cptr) {
             char *path = ecs_get_path(cursor->world, op->type);
             ecs_err("constant '%s' enum '%s' is of an invalid underlying type", 
                 value, path);
@@ -1444,7 +1444,7 @@ int ecs_meta_set_string(
 
         ecs_value_t cv = { 
             .type = underlying, 
-            .ptr = ECS_CONST_CAST(void*, ptr) 
+            .ptr = ECS_CONST_CAST(void*, cptr) 
         };
         ecs_meta_set_value(cursor, &cv);
         break;
