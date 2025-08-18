@@ -267,9 +267,7 @@ void flecs_table_init_flags(
                     /* If table contains entities that are inside one of the 
                      * builtin modules, it contains builtin entities */
 
-                    if (tgt == EcsFlecs || tgt == EcsFlecsCore || 
-                        tgt == EcsFlecsInternals) 
-                    {
+                    if (tgt == EcsFlecsCore || tgt == EcsFlecsInternals) {
                         table->flags |= EcsTableHasBuiltins;
                         table->flags |= EcsTableHasModule;
                     }

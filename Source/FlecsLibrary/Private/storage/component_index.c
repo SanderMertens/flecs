@@ -287,11 +287,13 @@ ecs_component_record_t* flecs_component_new(
         /* Relationship object can be 0, as tables without a ChildOf 
          * relationship are added to the (ChildOf, 0) component record */
         tgt = ECS_PAIR_SECOND(id);
+        if (tgt) {
+            tgt = flecs_entities_get_alive(world, tgt);
+        }
 
 #ifdef FLECS_DEBUG
         /* Check constraints */
         if (tgt) {
-            tgt = flecs_entities_get_alive(world, tgt);
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
             /* Can't use relationship as target */

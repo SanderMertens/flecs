@@ -397,6 +397,10 @@ void ecs_on_set(EcsIdentifier)(
                 (it->entities[i] != EcsFlecs),
                 ECS_INVALID_OPERATION,
                     "cannot rename flecs root module");
+            ecs_assert((world->flags & (EcsWorldInit|EcsWorldFini)) ||
+                (it->entities[i] != EcsFlecsCore),
+                ECS_INVALID_OPERATION,
+                    "cannot rename flecs.core module");
         }
 
         if (cur->index && cur->index != index) {
@@ -452,6 +456,8 @@ void flecs_reparent_name_index_intern(
 
         ecs_assert(e != EcsFlecs, ECS_INVALID_OPERATION,
             "cannot reparent flecs root module");
+        ecs_assert(e != EcsFlecsCore, ECS_INVALID_OPERATION,
+            "cannot reparent flecs.core module");
 
         uint64_t index_hash = name->index_hash;
         if (index_hash) {
