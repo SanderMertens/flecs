@@ -347,11 +347,6 @@ FLECS_ALWAYS_INLINE int32_t flecs_table_column_lock_dec_multithreaded(
     const int16_t column_index,
     const int32_t stage_id);
 
-FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_end_multithreaded(
-    ecs_table_t *table,
-    const int16_t column_index,
-    const int32_t stage_id);
-    
 #endif
 
 #endif
