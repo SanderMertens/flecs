@@ -90,7 +90,9 @@
                 "enum_w_underlying_u8",
                 "enum_w_underlying_u16",
                 "enum_w_underlying_u32",
-                "enum_w_underlying_u64"
+                "enum_w_underlying_u64",
+                "set_enum",
+                "set_enum_w_underlying_type"
             ]
         }, {
             "id": "BitmaskTypes",

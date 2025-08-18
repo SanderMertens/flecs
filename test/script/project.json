@@ -140,6 +140,7 @@
                 "struct_type_w_default_child_component",
                 "struct_type_w_default_child_component_nested_member",
                 "enum_type_w_default_child_component",
+                "enum_type_w_underlying_type",
                 "default_type_from_with",
                 "default_type_from_nested_with",
                 "default_type_from_with_in_entity_scope_w_default_type",

@@ -84,6 +84,8 @@ void EnumTypes_enum_w_underlying_u8(void);
 void EnumTypes_enum_w_underlying_u16(void);
 void EnumTypes_enum_w_underlying_u32(void);
 void EnumTypes_enum_w_underlying_u64(void);
+void EnumTypes_set_enum(void);
+void EnumTypes_set_enum_w_underlying_type(void);
 
 // Testsuite 'BitmaskTypes'
 void BitmaskTypes_bitmask_1_constant(void);
@@ -1406,6 +1408,14 @@ bake_test_case EnumTypes_testcases[] = {
     {
         "enum_w_underlying_u64",
         EnumTypes_enum_w_underlying_u64
+    },
+    {
+        "set_enum",
+        EnumTypes_set_enum
+    },
+    {
+        "set_enum_w_underlying_type",
+        EnumTypes_set_enum_w_underlying_type
     }
 };
 
@@ -5421,7 +5431,7 @@ static bake_test_suite suites[] = {
         "EnumTypes",
         NULL,
         NULL,
-        17,
+        19,
         EnumTypes_testcases
     },
     {

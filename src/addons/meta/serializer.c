@@ -107,7 +107,7 @@ int flecs_meta_serialize_enum(
     op->type_info = ecs_get_type_info(world, type);
     ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const EcsEnum *enum_type = ecs_get(world, type, EcsEnum);
+    const EcsConstants *enum_type = ecs_get(world, type, EcsConstants);
     ecs_assert(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
     op->is.constants = enum_type->constants;
     ecs_assert(op->is.constants != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -130,7 +130,7 @@ int flecs_meta_serialize_bitmask(
     op->type_info = ecs_get_type_info(world, type);
     ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const EcsBitmask *bitmask_type = ecs_get(world, type, EcsBitmask);
+    const EcsConstants *bitmask_type = ecs_get(world, type, EcsConstants);
     ecs_assert(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
     op->is.constants = bitmask_type->constants;
     ecs_assert(op->is.constants != NULL, ECS_INTERNAL_ERROR, NULL);

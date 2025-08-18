@@ -3483,6 +3483,42 @@ void Eval_enum_type_w_default_child_component(void) {
     ecs_fini(world);
 }
 
+void Eval_enum_type_w_underlying_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "enum Color(underlying_type: u32) {"
+    LINE "  Red, Green, Blue"
+    LINE "}"
+    LINE
+    LINE "Foo { Color: {Green} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ecs_id(Color) = ecs_lookup(world, "Color");
+    ecs_entity_t green = ecs_lookup_child(world, ecs_id(Color), "Green");
+    test_assert(green != 0);
+    test_assert(ecs_has_pair(world, green, EcsConstant, ecs_id(ecs_u32_t)));
+
+    test_assert(foo != 0);
+    test_assert(ecs_id(Color) != 0);
+
+    test_assert( ecs_has(world, foo, Color));
+
+    const Color *ptr = ecs_get(world, foo, Color);
+    test_assert(ptr != NULL);
+    test_int(*ptr, Green);
+
+    ecs_fini(world);
+}
+
 void Eval_default_type_from_with(void) {
     ecs_world_t *world = ecs_init();
 

@@ -1423,16 +1423,30 @@ int ecs_meta_set_string(
             goto error;
         }
 
-        const ecs_i32_t *v = ecs_get_pair_second(
-            cursor->world, c, EcsConstant, ecs_i32_t);
-        if (v == NULL) {
+        ecs_entity_t underlying = ecs_get_target(
+            cursor->world, c, EcsConstant, 0);
+        if (!underlying) {
             char *path = ecs_get_path(cursor->world, op->type);
             ecs_err("'%s' is not an enum constant for type '%s'", value, path);
             ecs_os_free(path);
             goto error;
         }
 
-        set_T(ecs_i32_t, ptr, v[0]);
+        const void *ptr = ecs_get_id(
+            cursor->world, c, ecs_pair(EcsConstant, underlying));
+        if (!ptr) {
+            char *path = ecs_get_path(cursor->world, op->type);
+            ecs_err("constant '%s' enum '%s' is of an invalid underlying type", 
+                value, path);
+            ecs_os_free(path);
+            goto error;
+        }
+
+        ecs_value_t cv = { 
+            .type = underlying, 
+            .ptr = ECS_CONST_CAST(void*, ptr) 
+        };
+        ecs_meta_set_value(cursor, &cv);
         break;
     }
     case EcsOpBitmask:

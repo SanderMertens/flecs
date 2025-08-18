@@ -153,32 +153,33 @@ const ecs_entity_t ecs_id(EcsTypeSerializer) =      FLECS_HI_COMPONENT_ID + 100;
 const ecs_entity_t ecs_id(EcsPrimitive) =           FLECS_HI_COMPONENT_ID + 101;
 const ecs_entity_t ecs_id(EcsEnum) =                FLECS_HI_COMPONENT_ID + 102;
 const ecs_entity_t ecs_id(EcsBitmask) =             FLECS_HI_COMPONENT_ID + 103;
-const ecs_entity_t ecs_id(EcsMember) =              FLECS_HI_COMPONENT_ID + 104;
-const ecs_entity_t ecs_id(EcsMemberRanges) =        FLECS_HI_COMPONENT_ID + 105;
-const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 106;
-const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 107;
-const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 108;
-const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 109;
-const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 110;
-const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 111;
-const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 112;
+const ecs_entity_t ecs_id(EcsConstants) =           FLECS_HI_COMPONENT_ID + 104;
+const ecs_entity_t ecs_id(EcsMember) =              FLECS_HI_COMPONENT_ID + 105;
+const ecs_entity_t ecs_id(EcsMemberRanges) =        FLECS_HI_COMPONENT_ID + 106;
+const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 107;
+const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 108;
+const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 109;
+const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 110;
+const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 111;
+const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 112;
+const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 113;
 #endif
 
-const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 113;
+const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 114;
 
 /* Doc module components */
 #ifdef FLECS_DOC
-const ecs_entity_t ecs_id(EcsDocDescription) =      FLECS_HI_COMPONENT_ID + 114;
-const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 115;
-const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 116;
-const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 117;
-const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 118;
-const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 119;
+const ecs_entity_t ecs_id(EcsDocDescription) =      FLECS_HI_COMPONENT_ID + 115;
+const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 116;
+const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 117;
+const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 118;
+const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 119;
+const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 120;
 #endif
 
 /* REST module components */
 #ifdef FLECS_REST
-const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 120;
+const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 121;
 #endif
 
 /* Max static id:

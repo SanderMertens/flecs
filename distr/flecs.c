@@ -20026,32 +20026,33 @@ const ecs_entity_t ecs_id(EcsTypeSerializer) =      FLECS_HI_COMPONENT_ID + 100;
 const ecs_entity_t ecs_id(EcsPrimitive) =           FLECS_HI_COMPONENT_ID + 101;
 const ecs_entity_t ecs_id(EcsEnum) =                FLECS_HI_COMPONENT_ID + 102;
 const ecs_entity_t ecs_id(EcsBitmask) =             FLECS_HI_COMPONENT_ID + 103;
-const ecs_entity_t ecs_id(EcsMember) =              FLECS_HI_COMPONENT_ID + 104;
-const ecs_entity_t ecs_id(EcsMemberRanges) =        FLECS_HI_COMPONENT_ID + 105;
-const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 106;
-const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 107;
-const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 108;
-const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 109;
-const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 110;
-const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 111;
-const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 112;
+const ecs_entity_t ecs_id(EcsConstants) =           FLECS_HI_COMPONENT_ID + 104;
+const ecs_entity_t ecs_id(EcsMember) =              FLECS_HI_COMPONENT_ID + 105;
+const ecs_entity_t ecs_id(EcsMemberRanges) =        FLECS_HI_COMPONENT_ID + 106;
+const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 107;
+const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 108;
+const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 109;
+const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 110;
+const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 111;
+const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 112;
+const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 113;
 #endif
 
-const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 113;
+const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 114;
 
 /* Doc module components */
 #ifdef FLECS_DOC
-const ecs_entity_t ecs_id(EcsDocDescription) =      FLECS_HI_COMPONENT_ID + 114;
-const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 115;
-const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 116;
-const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 117;
-const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 118;
-const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 119;
+const ecs_entity_t ecs_id(EcsDocDescription) =      FLECS_HI_COMPONENT_ID + 115;
+const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 116;
+const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 117;
+const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 118;
+const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 119;
+const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 120;
 #endif
 
 /* REST module components */
 #ifdef FLECS_REST
-const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 120;
+const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 121;
 #endif
 
 /* Max static id:
@@ -54910,7 +54911,23 @@ static ECS_MOVE(EcsStruct, dst, src, {
 static ECS_DTOR(EcsStruct, ptr, { flecs_struct_dtor(ptr); })
 
 
-/* EcsEnum lifecycle */
+/* EcsConstants lifecycle */
+
+static void flecs_constants_copy(
+    ecs_map_t *dst,
+    const ecs_map_t *src)
+{
+    ecs_map_init_if(dst, NULL);
+
+    ecs_map_iter_t it = ecs_map_iter(src);
+    while (ecs_map_next(&it)) {
+        ecs_enum_constant_t *src_constant = ecs_map_ptr(&it);
+        ecs_enum_constant_t *dst_constant = 
+            ecs_map_insert_alloc_t(dst, ecs_enum_constant_t, ecs_map_key(&it));
+        *dst_constant = *src_constant;
+        dst_constant->name = ecs_os_strdup(dst_constant->name);
+    }
+}
 
 static void flecs_constants_dtor(
     ecs_map_t *constants) 
@@ -54924,54 +54941,43 @@ static void flecs_constants_dtor(
     ecs_map_fini(constants);
 }
 
+static void flecs_ordered_constants_copy(
+    ecs_vec_t *dst_ordered_constants,
+    const ecs_vec_t *src_ordered_constants,
+    const ecs_map_t *dst_constants)
+{
+    if (ecs_vec_count(src_ordered_constants)) {
+        *dst_ordered_constants = ecs_vec_copy_t(
+            NULL, src_ordered_constants, ecs_enum_constant_t);
+    } else {
+        ecs_vec_init_t(NULL, dst_ordered_constants, ecs_enum_constant_t, 0);
+    }
+
+    /* Patch up names */
+    ecs_enum_constant_t *constants = ecs_vec_first(dst_ordered_constants);
+    int32_t i, count = ecs_vec_count(dst_ordered_constants);
+    
+    for (i = 0; i < count; i ++) {
+        ecs_enum_constant_t *constant = &constants[i];
+        constant->name = ecs_map_get_deref(
+            dst_constants, ecs_enum_constant_t, constant->value)->name;
+    }
+}
+
 static void flecs_ordered_constants_dtor(
-    ecs_vec_t* ordered_constants)
+    ecs_vec_t *ordered_constants)
 {
     /* shallow fini of is ok since map deallocs name c-string member */
     ecs_vec_fini_t(NULL, ordered_constants, ecs_enum_constant_t);
 }
 
-static ECS_CTOR(EcsEnum, ptr, {
-    ptr->underlying_type = 0;
+static ECS_CTOR(EcsConstants, ptr, {
     ptr->constants = ecs_os_malloc_t(ecs_map_t);
     ecs_map_init(ptr->constants, NULL);
     ecs_vec_init_t(NULL, &ptr->ordered_constants, ecs_enum_constant_t, 0);
 })
 
-static ECS_MOVE(EcsEnum, dst, src, {
-    if (dst->constants) {
-        flecs_constants_dtor(dst->constants);
-        ecs_os_free(dst->constants);
-    }
-
-    dst->constants = src->constants;
-    src->constants = NULL;
-
-    flecs_ordered_constants_dtor(&dst->ordered_constants);
-    dst->ordered_constants = src->ordered_constants;
-    ecs_os_zeromem(&src->ordered_constants);
-
-    dst->underlying_type = src->underlying_type;
-})
-
-static ECS_DTOR(EcsEnum, ptr, { 
-    if (ptr->constants) {
-        flecs_constants_dtor(ptr->constants);
-        ecs_os_free(ptr->constants);
-    }
-    flecs_ordered_constants_dtor(&ptr->ordered_constants);
-})
-
-
-/* EcsBitmask lifecycle */
-
-static ECS_CTOR(EcsBitmask, ptr, {
-    ptr->constants = ecs_os_malloc_t(ecs_map_t);
-    ecs_map_init(ptr->constants, NULL);
-    ecs_vec_init_t(NULL, &ptr->ordered_constants, ecs_bitmask_constant_t, 0);
-})
-
-static ECS_MOVE(EcsBitmask, dst, src, {
+static ECS_MOVE(EcsConstants, dst, src, {
     if (dst->constants) {
         flecs_constants_dtor(dst->constants);
         ecs_os_free(dst->constants);
@@ -54985,12 +54991,11 @@ static ECS_MOVE(EcsBitmask, dst, src, {
     ecs_os_zeromem(&src->ordered_constants);
 })
 
-static ECS_DTOR(EcsBitmask, ptr, { 
+static ECS_DTOR(EcsConstants, ptr, {
     if (ptr->constants) {
         flecs_constants_dtor(ptr->constants);
         ecs_os_free(ptr->constants);
     }
-
     flecs_ordered_constants_dtor(&ptr->ordered_constants);
 })
 
@@ -55413,15 +55418,16 @@ int flecs_add_constant_to_enum(
     ecs_entity_t e,
     ecs_id_t constant_id)
 {
-    EcsEnum *ptr = ecs_ensure(world, type, EcsEnum);
-    ecs_entity_t ut = ptr->underlying_type;
+    EcsEnum *eptr = ecs_ensure(world, type, EcsEnum);
+    EcsConstants *ptr = ecs_ensure(world, type, EcsConstants);
+    ecs_entity_t ut = eptr->underlying_type;
 
     /* It's possible that a constant is added to an entity that didn't have an
      * Enum component yet. In that case derive the underlying type from the
      * first constant. */
     if (!ut) {
         if (ecs_id_is_pair(constant_id)) {
-            ut = ptr->underlying_type = ecs_pair_second(world, constant_id);
+            ut = eptr->underlying_type = ecs_pair_second(world, constant_id);
         } else {
             /* Default to i32 */
             ut = ecs_id(ecs_i32_t);
@@ -55612,7 +55618,8 @@ int flecs_add_constant_to_bitmask(
     ecs_entity_t e,
     ecs_id_t constant_id)
 {
-    EcsBitmask *ptr = ecs_ensure(world, type, EcsBitmask);
+    ecs_add(world, type, EcsBitmask);
+    EcsConstants *ptr = ecs_ensure(world, type, EcsConstants);
     
     /* Remove constant from map and vector if it was already added */
     ecs_map_iter_t it = ecs_map_iter(ptr->constants);
@@ -56265,16 +56272,17 @@ void FlecsMetaImport(
     });
 
     ecs_set_hooks(world, EcsEnum, { 
-        .ctor = ecs_ctor(EcsEnum),
-        .move = ecs_move(EcsEnum),
-        .dtor = ecs_dtor(EcsEnum),
-        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+        .ctor = flecs_default_ctor,
     });
 
     ecs_set_hooks(world, EcsBitmask, { 
-        .ctor = ecs_ctor(EcsBitmask),
-        .move = ecs_move(EcsBitmask),
-        .dtor = ecs_dtor(EcsBitmask),
+        .ctor = flecs_default_ctor,
+    });
+
+    ecs_set_hooks(world, EcsConstants, { 
+        .ctor = ecs_ctor(EcsConstants),
+        .move = ecs_move(EcsConstants),
+        .dtor = ecs_dtor(EcsConstants),
         .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
 
@@ -57539,7 +57547,7 @@ int flecs_meta_serialize_enum(
     op->type_info = ecs_get_type_info(world, type);
     ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const EcsEnum *enum_type = ecs_get(world, type, EcsEnum);
+    const EcsConstants *enum_type = ecs_get(world, type, EcsConstants);
     ecs_assert(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
     op->is.constants = enum_type->constants;
     ecs_assert(op->is.constants != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -57562,7 +57570,7 @@ int flecs_meta_serialize_bitmask(
     op->type_info = ecs_get_type_info(world, type);
     ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const EcsBitmask *bitmask_type = ecs_get(world, type, EcsBitmask);
+    const EcsConstants *bitmask_type = ecs_get(world, type, EcsConstants);
     ecs_assert(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
     op->is.constants = bitmask_type->constants;
     ecs_assert(op->is.constants != NULL, ECS_INTERNAL_ERROR, NULL);
