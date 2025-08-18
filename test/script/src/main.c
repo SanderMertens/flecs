@@ -136,6 +136,7 @@ void Eval_default_child_component_w_assign(void);
 void Eval_struct_type_w_default_child_component(void);
 void Eval_struct_type_w_default_child_component_nested_member(void);
 void Eval_enum_type_w_default_child_component(void);
+void Eval_enum_type_w_underlying_type(void);
 void Eval_default_type_from_with(void);
 void Eval_default_type_from_nested_with(void);
 void Eval_default_type_from_with_in_entity_scope_w_default_type(void);
@@ -1608,6 +1609,10 @@ bake_test_case Eval_testcases[] = {
     {
         "enum_type_w_default_child_component",
         Eval_enum_type_w_default_child_component
+    },
+    {
+        "enum_type_w_underlying_type",
+        Eval_enum_type_w_underlying_type
     },
     {
         "default_type_from_with",
@@ -5429,7 +5434,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        389,
+        390,
         Eval_testcases
     },
     {

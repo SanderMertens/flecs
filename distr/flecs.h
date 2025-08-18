@@ -16158,6 +16158,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsTypeSerializer);  /**< Id for comp
 FLECS_API extern const ecs_entity_t ecs_id(EcsPrimitive);       /**< Id for component that stores reflection data for a primitive type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsEnum);            /**< Id for component that stores reflection data for an enum type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsBitmask);         /**< Id for component that stores reflection data for a bitmask type. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsConstants);       /**< Id for component that stores reflection data for a constants. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsMember);          /**< Id for component that stores reflection data for struct members. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsMemberRanges);    /**< Id for component that stores min/max ranges for member values. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);          /**< Id for component that stores reflection data for a struct type. */
@@ -16326,12 +16327,6 @@ typedef struct ecs_enum_constant_t {
 /** Component added to enum type entities */
 typedef struct EcsEnum {
     ecs_entity_t underlying_type;
-
-    /** Populated from child entities with Constant component */
-    ecs_map_t *constants; /**< map<i32_t, ecs_enum_constant_t> */
-
-    /** Stores the constants in registration order */
-    ecs_vec_t ordered_constants; /**< vector<ecs_enum_constants_t> */
 } EcsEnum;
 
 /** Type that describes an bitmask constant */
@@ -16351,11 +16346,17 @@ typedef struct ecs_bitmask_constant_t {
 
 /** Component added to bitmask type entities */
 typedef struct EcsBitmask {
-    /* Populated from child entities with Constant component */
-    ecs_map_t *constants; /**< map<u32_t, ecs_bitmask_constant_t> */
-    /** Stores the constants in registration order */
-    ecs_vec_t ordered_constants; /**< vector<ecs_bitmask_constants_t>  */
+    int32_t dummy_;
 } EcsBitmask;
+
+/** Component with datastructures for looking up enum/bitmask constants. */
+typedef struct EcsConstants {
+    /** Populated from child entities with Constant component */
+    ecs_map_t *constants; /**< map<i32_t, ecs_enum_constant_t> */
+
+    /** Stores the constants in registration order */
+    ecs_vec_t ordered_constants; /**< vector<ecs_enum_constants_t> */
+} EcsConstants;
 
 /** Component added to array type entities */
 typedef struct EcsArray {
