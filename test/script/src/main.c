@@ -794,6 +794,8 @@ void Expr_component_expr_string(void);
 void Expr_component_member_expr_string(void);
 void Expr_component_elem_expr_string(void);
 void Expr_component_inline_elem_expr_string(void);
+void Expr_component_expr_in_object(void);
+void Expr_component_member_expr_in_object(void);
 void Expr_var_expr(void);
 void Expr_var_member_expr(void);
 void Expr_var_elem_expr(void);
@@ -4221,6 +4223,14 @@ bake_test_case Expr_testcases[] = {
         Expr_component_inline_elem_expr_string
     },
     {
+        "component_expr_in_object",
+        Expr_component_expr_in_object
+    },
+    {
+        "component_member_expr_in_object",
+        Expr_component_member_expr_in_object
+    },
+    {
         "var_expr",
         Expr_var_expr
     },
@@ -5440,7 +5450,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        294,
+        296,
         Expr_testcases,
         1,
         Expr_params
