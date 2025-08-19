@@ -342,7 +342,8 @@ void flecs_instantiate_dont_fragment(
             !ecs_id_is_wildcard(cur->id)) 
         {
             if (flecs_component_sparse_has(cur, base)) {
-                void *base_ptr = flecs_component_sparse_get(cur, base);
+                void *base_ptr = flecs_component_sparse_get(
+                    world, cur, NULL, base);
                 const ecs_type_info_t *ti = cur->type_info;
 
                 ecs_record_t *r = flecs_entities_get(world, instance);

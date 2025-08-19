@@ -482,6 +482,7 @@
                 "owns_pair",
                 "owns_pair_wildcard",
                 "get",
+                "get_wildcard",
                 "add_remove",
                 "add_remove_tag",
                 "add_remove_pair",

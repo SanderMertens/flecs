@@ -452,6 +452,7 @@ void Sparse_owns(void);
 void Sparse_owns_pair(void);
 void Sparse_owns_pair_wildcard(void);
 void Sparse_get(void);
+void Sparse_get_wildcard(void);
 void Sparse_add_remove(void);
 void Sparse_add_remove_tag(void);
 void Sparse_add_remove_pair(void);
@@ -4375,6 +4376,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "get",
         Sparse_get
+    },
+    {
+        "get_wildcard",
+        Sparse_get_wildcard
     },
     {
         "add_remove",
@@ -13086,7 +13091,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        167,
+        168,
         Sparse_testcases,
         1,
         Sparse_params
