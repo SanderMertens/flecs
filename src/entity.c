@@ -1434,6 +1434,8 @@ const ecs_entity_t* ecs_bulk_init(
     } else {
         int i;
         for (i = 0; i < count; i ++) {
+            ecs_assert(!ecs_is_alive(world, entities[i]), ECS_INVALID_PARAMETER,
+                "cannot pass alive entities to ecs_bulk_init()");
             flecs_entities_ensure(world, entities[i]);
         }
     }

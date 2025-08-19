@@ -718,3 +718,18 @@ void New_w_Count_bulk_ids_w_2_exceed_32_bits(void) {
 
     ecs_fini(world);
 }
+
+void New_w_Count_bulk_init_w_alive_entity(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t ents[] = {ecs_new(world)};
+
+    test_expect_abort();
+
+    ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .entities = ents,
+        .count = 1
+    });
+}

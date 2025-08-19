@@ -387,6 +387,7 @@ void New_w_Count_recycle_1_of_2(void);
 void New_w_Count_recycle_1_of_3(void);
 void New_w_Count_recycle_2_of_3(void);
 void New_w_Count_bulk_init_w_table(void);
+void New_w_Count_bulk_init_w_alive_entity(void);
 
 // Testsuite 'Add'
 void Add_zero(void);
@@ -4139,6 +4140,10 @@ bake_test_case New_w_Count_testcases[] = {
     {
         "bulk_init_w_table",
         New_w_Count_bulk_init_w_table
+    },
+    {
+        "bulk_init_w_alive_entity",
+        New_w_Count_bulk_init_w_alive_entity
     }
 };
 
@@ -13058,7 +13063,7 @@ static bake_test_suite suites[] = {
         "New_w_Count",
         NULL,
         NULL,
-        22,
+        23,
         New_w_Count_testcases
     },
     {
