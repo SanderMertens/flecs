@@ -49,6 +49,31 @@ typedef struct ecs_table_diff_t {
 } ecs_table_diff_t;
 
 
+#ifdef FLECS_SAFETY_LOCKS
+/** safety information of where the ptr from `get` functions originates from.
+ * when component record is null, that means it comes from a table.
+ * when table is null, that means it comes from a sparse storage.
+ * this is used for column locking / component record locking.
+ */
+struct ecs_safety_info_t{
+    ecs_component_record_t *cr;
+    ecs_table_t *table;
+    int16_t column_index;
+};
+#endif
+
+/* a wrapper around a void* which represents a component pointer. 
+ * When FLECS_SAFETY_LOCKS is defined, then this also provides additional safety information about the pointer.
+ */
+struct ecs_get_ptr_t{
+    void *component_ptr;
+#ifdef FLECS_SAFETY_LOCKS
+    ecs_safety_info_t si;
+#endif
+};
+
+
+
 /** Find record for entity. 
  * An entity record contains the table and row for the entity.
  * 
@@ -141,6 +166,55 @@ const ecs_record_t* ecs_read_begin(
 FLECS_API
 void ecs_read_end(
     const ecs_record_t *record);
+
+/** Get an immutable pointer to a component by providing the entity record.
+ * This operation obtains a const pointer to the requested component. The
+ * operation accepts the component entity id.
+ * 
+ * This operation can return inherited components reachable through an `IsA`
+ * relationship.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param r The entity record.
+ * @param component The component to get.
+ * @return The component pointer, NULL if the entity does not have the component.
+ *
+ * @see ecs_get_id()
+ * @see ecs_get_mut_id()
+ * @see flecs_get_mut_id_from_record()
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_get_id_from_record(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    const ecs_record_t *r,
+    ecs_id_t component);
+
+/**
+ * Get a mutable pointer to a component, providing the entity record.
+ * This operation obtains a mutable pointer to the requested component. The
+ * operation accepts the component entity id.
+ *
+ * Unlike flecs_get_id_from_record(), this operation does not return inherited components.
+ * This is to prevent errors where an application accidentally resolves an
+ * inherited component shared with many entities and modifies it, while thinking
+ * it is modifying an owned component.
+ *
+ * @param world The world.
+ * @param r The entity record.
+ * @param component The component to get.
+ * @return The component pointer, NULL if the entity does not have the component.
+ * 
+ * @see flecs_get_id_from_record()
+ * @see ecs_get_mut_id()
+ * @see ecs_get_id()
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_get_mut_id_from_record(
+    const ecs_world_t *world,
+    const ecs_record_t *r,
+    ecs_id_t component);
 
 /** Get component from entity record.
  * This operation returns a pointer to a component for the entity
