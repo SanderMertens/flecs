@@ -807,6 +807,8 @@
                 "component_member_expr_string",
                 "component_elem_expr_string",
                 "component_inline_elem_expr_string",
+                "component_expr_in_object",
+                "component_member_expr_in_object",
                 "var_expr",
                 "var_member_expr",
                 "var_elem_expr",

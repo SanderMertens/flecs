@@ -87885,9 +87885,7 @@ int flecs_expr_element_visit_type(
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
-    if (flecs_expr_visit_type_priv(script, node->left, cur, desc)) {
-        goto error;
-    }
+    ecs_world_t *world = script->world;
 
     ecs_meta_cursor_t index_cur = {0};
     if (flecs_expr_visit_type_priv(
@@ -87896,30 +87894,38 @@ int flecs_expr_element_visit_type(
         goto error;
     }
 
-    ecs_world_t *world = script->world;
-    ecs_entity_t left_type = node->left->type;
-
-    const EcsType *type = ecs_get(world, left_type, EcsType);
-    if (!type) {
-        char *type_str = ecs_get_path(world, left_type);
-        flecs_expr_visit_error(script, node, 
-            "cannot use [] on value of type '%s' (missing reflection data)",
-                type_str);
-        ecs_os_free(type_str);
-        goto error;
-    }
-
-    bool is_entity_type = false;
-
-    if (type->kind == EcsPrimitiveType) {
-        const EcsPrimitive *ptype = ecs_get(world, left_type, EcsPrimitive);
-        if (ptype->kind == EcsEntity) {
-            is_entity_type = true;
+    /* Check if this is a component expression */
+    if (node->index->kind == EcsExprIdentifier) {
+        /* Fetch type of left side of expression to check if it's of an entity
+         * type. Pass in an empty cursor object so we don't fail type checks in
+         * case it's a regular element expression. */
+        ecs_meta_cursor_t tmp_cur = {0};
+        if (flecs_expr_visit_type_priv(script, node->left, &tmp_cur, desc)) {
+            goto error;
         }
-    }
 
-    if (is_entity_type) {
-        if (node->index->kind == EcsExprIdentifier) {
+        ecs_entity_t left_type = node->left->type;
+
+        const EcsType *type = ecs_get(world, left_type, EcsType);
+        if (!type) {
+            char *type_str = ecs_get_path(world, left_type);
+            flecs_expr_visit_error(script, node, 
+                "cannot use [] on value of type '%s' (missing reflection data)",
+                    type_str);
+            ecs_os_free(type_str);
+            goto error;
+        }
+
+        bool is_entity_type = false;
+
+        if (type->kind == EcsPrimitiveType) {
+            const EcsPrimitive *ptype = ecs_get(world, left_type, EcsPrimitive);
+            if (ptype->kind == EcsEntity) {
+                is_entity_type = true;
+            }
+        }
+
+        if (is_entity_type) {
             ecs_expr_identifier_t *ident = (ecs_expr_identifier_t*)node->index;
             node->node.type = desc->lookup_action(
                 script->world, ident->value, desc->lookup_ctx);
@@ -87933,26 +87939,28 @@ int flecs_expr_element_visit_type(
             node->node.kind = EcsExprComponent;
 
             *cur = ecs_meta_cursor(script->world, node->node.type, NULL);
-        } else {
-            flecs_expr_visit_error(script, node, 
-                "invalid component expression");
-            goto error;
-        }
-    } else {
-        if (ecs_meta_push(cur)) {
-            goto not_a_collection;
-        }
 
-        if (!ecs_meta_is_collection(cur)) {
-            goto not_a_collection;
+            return 0;
         }
-
-        node->node.type = ecs_meta_get_type(cur);
-
-        const ecs_type_info_t *elem_ti = ecs_get_type_info(
-            script->world, node->node.type);
-        node->elem_size = elem_ti->size;
     }
+
+    if (flecs_expr_visit_type_priv(script, node->left, cur, desc)) {
+        goto error;
+    }
+
+    if (ecs_meta_push(cur)) {
+        goto not_a_collection;
+    }
+
+    if (!ecs_meta_is_collection(cur)) {
+        goto not_a_collection;
+    }
+
+    node->node.type = ecs_meta_get_type(cur);
+
+    const ecs_type_info_t *elem_ti = ecs_get_type_info(
+        script->world, node->node.type);
+    node->elem_size = elem_ti->size;
 
     return 0;
 
@@ -88263,6 +88271,12 @@ int flecs_expr_visit_type(
     ecs_expr_node_t *node,
     const ecs_expr_eval_desc_t *desc)
 {
+    // ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    // flecs_expr_to_str_buf(script, node, &buf, true);
+    // char *str = ecs_strbuf_get(&buf);
+    // printf("%s\n", str);
+    // ecs_os_free(str);
+
     if (node->kind == EcsExprEmptyInitializer) {
         node->type = desc->type;
         
