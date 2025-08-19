@@ -792,6 +792,27 @@ void Sparse_get(void) {
     ecs_fini(world);
 }
 
+void Sparse_get_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(NULL == ecs_get(world, e, Position));
+
+    ecs_set_pair(world, e, Position, Tgt, {10, 20});
+    const Position *p = ecs_get_pair(world, e, Position, EcsWildcard);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
 void Sparse_get_mut(void) {
     ecs_world_t *world = ecs_mini();
 

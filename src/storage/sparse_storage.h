@@ -11,7 +11,9 @@ bool flecs_component_sparse_has(
     ecs_entity_t entity);
 
 void* flecs_component_sparse_get(
+    const ecs_world_t *world,
     ecs_component_record_t *cr,
+    ecs_table_t *table,
     ecs_entity_t entity);
 
 void* flecs_component_sparse_insert(
