@@ -1241,3 +1241,95 @@ void OrderedChildren_get_ordered_children_from_stage(void) {
 
     ecs_fini(world);
 }
+
+void OrderedChildren_ordered_children_w_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, e, EcsOrderedChildren);
+
+    ecs_entity(world, { .parent = e, .name = "a" });
+    ecs_entity(world, { .parent = e, .name = "b" });
+    ecs_entity(world, { .parent = e, .name = "c" });
+
+    ecs_entities_t children = ecs_get_ordered_children(world, e);
+    test_int(children.count, 3);
+    test_str(ecs_get_name(world, children.ids[0]), "a");
+    test_str(ecs_get_name(world, children.ids[1]), "b");
+    test_str(ecs_get_name(world, children.ids[2]), "c");
+
+    ecs_delete(world, e);
+
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_assert(ecs_lookup(world, "c") == 0);
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_get_ordered_children_from_prefab_instance_no_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has_id(world, i, EcsOrderedChildren));
+
+    ecs_entities_t children = ecs_get_ordered_children(world, i);
+    test_int(children.count, 0);
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_get_ordered_children_from_prefab_instance_3_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity(world, { .parent = p, .name = "a" });
+    ecs_entity(world, { .parent = p, .name = "b" });
+    ecs_entity(world, { .parent = p, .name = "c" });
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has_id(world, i, EcsOrderedChildren));
+
+    ecs_entities_t children = ecs_get_ordered_children(world, i);
+    test_int(children.count, 3);
+    test_str(ecs_get_name(world, children.ids[0]), "a");
+    test_str(ecs_get_name(world, children.ids[1]), "b");
+    test_str(ecs_get_name(world, children.ids[2]), "c");
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity(world, { .parent = p, .name = "a" });
+    ecs_entity(world, { .parent = p, .name = "b" });
+    ecs_entity_t c = ecs_entity(world, { .parent = p, .name = "c" });
+    ecs_add_id(world, c, EcsOrderedChildren);
+    ecs_entity(world, { .parent = c, .name = "x" });
+    ecs_entity(world, { .parent = c, .name = "y" });
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has_id(world, i, EcsOrderedChildren));
+
+    ecs_entities_t children = ecs_get_ordered_children(world, i);
+    test_int(children.count, 3);
+    test_str(ecs_get_name(world, children.ids[0]), "a");
+    test_str(ecs_get_name(world, children.ids[1]), "b");
+    test_str(ecs_get_name(world, children.ids[2]), "c");
+
+    ecs_entities_t grandchildren = ecs_get_ordered_children(world, children.ids[2]);
+    test_int(grandchildren.count, 2);
+    test_str(ecs_get_name(world, grandchildren.ids[0]), "x");
+    test_str(ecs_get_name(world, grandchildren.ids[1]), "y");
+
+    ecs_fini(world);
+}
