@@ -6651,10 +6651,13 @@ static
 void flecs_on_unparent(
     ecs_world_t *world,
     ecs_table_t *table,
+    ecs_table_t *other_table,
     int32_t row,
     int32_t count)
 {
-    flecs_unparent_name_index(world, table, row, count);
+    if (other_table) {
+        flecs_unparent_name_index(world, table, row, count);
+    }
     flecs_ordered_children_unparent(world, table, row, count);
 }
 
@@ -6880,7 +6883,7 @@ void flecs_notify_on_remove(
         }
 
         if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
-            flecs_on_unparent(world, table, row, count);
+            flecs_on_unparent(world, table, other_table, row, count);
         }
 
         if (diff_flags & EcsTableHasDontFragment) {
@@ -12283,6 +12286,13 @@ void flecs_instantiate(
                 world, base, instance, tr->hdr.table, ctx);
         }
         ecs_os_perf_trace_pop("flecs.instantiate");
+
+        if (cr->flags & EcsIdOrderedChildren) {
+            ecs_component_record_t *icr = flecs_components_get(world, ecs_childof(instance));
+            /* If base has children, instance must now have children */
+            ecs_assert(icr != NULL, ECS_INTERNAL_ERROR, NULL);
+            flecs_ordered_children_populate(world, icr);
+        }
     }
 }
 

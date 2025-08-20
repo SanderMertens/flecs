@@ -790,10 +790,14 @@
                 "change_order_not_null_children_zero_count",
                 "change_order_on_parent_without_ordered_children",
                 "change_order",
+                "ordered_children_w_name",
                 "get_ordered_children_empty",
                 "get_ordered_children_invalid",
                 "get_ordered_children",
-                "get_ordered_children_from_stage"
+                "get_ordered_children_from_stage",
+                "get_ordered_children_from_prefab_instance_no_children",
+                "get_ordered_children_from_prefab_instance_3_children",
+                "get_ordered_children_from_prefab_instance_nested_children"
             ]
         }, {
             "id": "Has",
