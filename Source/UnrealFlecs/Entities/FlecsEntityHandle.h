@@ -1476,7 +1476,7 @@ public:
 	template <typename T>
 	SOLID_INLINE const FSelfType& RemovePrefab() const
 	{
-		RemovePair(flecs::IsA, T::Id);
+		RemovePairSecond<T>(flecs::IsA);
 		return *this;
 	}
 	
