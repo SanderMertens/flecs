@@ -426,7 +426,7 @@ void UFlecsWorld::ImportModule(const TScriptInterface<IFlecsModuleInterface>& In
 	ImportedModules.Last()->ImportModule(World);
 }
 
-bool UFlecsWorld::IsModuleImported(const TSubclassOf<UObject> InModule) const
+bool UFlecsWorld::IsModuleImported(const TSubclassOf<UObject> InModule, const bool bAllowChildren) const
 {
 	solid_check(InModule);
 
@@ -436,29 +436,33 @@ bool UFlecsWorld::IsModuleImported(const TSubclassOf<UObject> InModule) const
 		{
 			return true;
 		}
+		else if (bAllowChildren && ModuleObject.GetObject()->GetClass()->IsChildOf(InModule))
+		{
+			return true;
+		}
 	}
 		
 	return false;
 }
 
-FFlecsEntityHandle UFlecsWorld::GetModuleEntity(const TSubclassOf<UObject> InModule) const
+FFlecsEntityHandle UFlecsWorld::GetModuleEntity(const TSubclassOf<UObject> InModule, const bool bAllowChildren) const
 {
 	solid_check(InModule);
 		
 	const FFlecsEntityHandle ModuleEntity = ModuleComponentQuery
-		.find([&InModule](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
+		.find([&InModule, bAllowChildren](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
 		{
-			return InComponent.ModuleClass == InModule;
+			return InComponent.ModuleClass == InModule || (bAllowChildren && InComponent.ModuleClass->IsChildOf(InModule));
 		});
 
 	return ModuleEntity;
 }
 
-UObject* UFlecsWorld::GetModule(const TSubclassOf<UObject> InModule) const
+UObject* UFlecsWorld::GetModule(const TSubclassOf<UObject> InModule, const bool bAllowChildren) const
 {
 	solid_check(IsValid(InModule));
 		
-	const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModule);
+	const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModule, bAllowChildren);
 	solid_checkf(ModuleEntity.IsValid(),
 	             TEXT("Module %s is not imported"), *InModule->GetName());
 	

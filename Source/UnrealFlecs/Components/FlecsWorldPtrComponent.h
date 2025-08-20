@@ -78,21 +78,3 @@ public:
 	TObjectPtr<UFlecsWorld> World;
 	
 }; // struct FFlecsWorldPtrComponent
-
-namespace Unreal::Flecs
-{
-	NO_DISCARD FORCEINLINE UFlecsWorld* ToFlecsWorld(const flecs::world& InWorld)
-	{
-		static TWeakObjectPtr<UFlecsWorld> CachedWorld;
-
-		if LIKELY_IF(CachedWorld.IsValid() && CachedWorld.Get()->World == InWorld)
-		{
-			return CachedWorld.Get();
-		}
-	
-		CachedWorld = InWorld.get_mut<FFlecsWorldPtrComponent>().GetFlecsWorld();
-		solid_check(CachedWorld.IsValid());
-		return CachedWorld.Get();
-	}
-	
-} // namespace Unreal::Flecs

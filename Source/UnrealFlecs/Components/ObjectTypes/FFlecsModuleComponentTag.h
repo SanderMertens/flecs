@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FFlecsUObjectTag.h"
 #include "Properties/FlecsComponentProperties.h"
 #include "FFlecsModuleComponentTag.generated.h"
 

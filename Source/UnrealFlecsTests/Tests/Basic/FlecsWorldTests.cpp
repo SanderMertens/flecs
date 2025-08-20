@@ -5,6 +5,7 @@
 #if WITH_AUTOMATION_TESTS
 
 #include "Tests/FlecsTestTypes.h"
+#include "Worlds/FlecsWorldConverter.h"
 
 /**
  * Layout of the tests:

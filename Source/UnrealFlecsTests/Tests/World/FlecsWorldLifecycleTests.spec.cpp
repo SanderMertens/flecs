@@ -5,6 +5,7 @@
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
 #include "Fixtures/Commands/FlecsWorldTestCommands.h"
+#include "Worlds/FlecsWorldConverter.h"
 
 BEGIN_DEFINE_SPEC(FFlecsWorldLifecycleTestsSpec,
                   "Flecs.World.LifecycleTests",

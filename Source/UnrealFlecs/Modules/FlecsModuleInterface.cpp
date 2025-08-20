@@ -4,9 +4,9 @@
 #include "FlecsModuleInterface.h"
 #include "FlecsModuleInitEvent.h"
 #include "Components/FlecsModuleComponent.h"
-#include "Components/FlecsWorldPtrComponent.h"
 #include "Components/ObjectTypes/FFlecsModuleComponentTag.h"
 #include "Logs/FlecsCategories.h"
+#include "Worlds/FlecsWorldConverter.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsModuleInterface)

@@ -454,12 +454,12 @@ public:
 	void ImportModule(const TScriptInterface<IFlecsModuleInterface>& InModule);
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	bool IsModuleImported(const TSubclassOf<UObject> InModule) const;
+	bool IsModuleImported(const TSubclassOf<UObject> InModule, const bool bAllowChildren = false) const;
 
 	template <Solid::TStaticClassConcept T>
-	NO_DISCARD FORCEINLINE_DEBUGGABLE bool IsModuleImported() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE bool IsModuleImported(const bool bAllowChildren = false) const
 	{
-		return IsModuleImported(T::StaticClass());
+		return IsModuleImported(T::StaticClass(), bAllowChildren);
 	}
 
 	/**
@@ -468,7 +468,7 @@ public:
 	 * @return The entity handle of the module, or an invalid handle if the module is not imported
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule) const;
+	FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule, const bool bAllowChildren = false) const;
 
 	/**
 	 * @brief Get the entity handle of the module with the given class
@@ -476,18 +476,20 @@ public:
 	 * @return The entity handle of the module, or an invalid handle if the module is not imported
 	 */
 	template <Solid::TStaticClassConcept T>
-	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetModuleEntity() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetModuleEntity(const bool bAllowChildren = false) const
 	{
-		return GetModuleEntity(T::StaticClass());
+		return GetModuleEntity(T::StaticClass(), bAllowChildren);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	UObject* GetModule(const TSubclassOf<UObject> InModule) const;
+	UObject* GetModule(const TSubclassOf<UObject> InModule, const bool bAllowChildren = false) const;
 
 	template <Solid::TStaticClassConcept T>
-	NO_DISCARD FORCEINLINE_DEBUGGABLE TSolidNotNull<T*> GetModule() const
+	NO_DISCARD FORCEINLINE_DEBUGGABLE TSolidNotNull<T*> GetModule(const bool bAllowChildren = false) const
 	{
-		const FFlecsEntityHandle ModuleEntity = GetModuleEntity<T>();
+		const FFlecsEntityHandle ModuleEntity = GetModuleEntity<T>(bAllowChildren);
+		solid_checkf(ModuleEntity.IsValid(),
+			TEXT("Module %hs is not imported"), *T::StaticClass()->GetName());
 		return ModuleEntity.GetPairFirst<FFlecsUObjectComponent, FFlecsModuleComponentTag>().GetObjectChecked<T>();
 	}
 
