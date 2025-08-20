@@ -1546,6 +1546,7 @@ void Enum_runtime_type_constant_u8_template(void) {
     test_true(val_third != nullptr && *val_third == 3);
 }
 
+
 END_DEFINE_SPEC(FFlecsEnumTestsSpec);
 
 /* "id": "Enum",
