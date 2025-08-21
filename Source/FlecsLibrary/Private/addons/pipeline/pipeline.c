@@ -9,8 +9,7 @@
 #ifdef FLECS_PIPELINE
 #include "pipeline.h"
 
-static
-void flecs_pipeline_free(
+static void flecs_pipeline_free(
     ecs_pipeline_state_t *p) 
 {
     if (p) {

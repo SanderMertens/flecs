@@ -66,7 +66,7 @@ char* flecs_strbuf_itoa(
 
 		char *p = ptr;
 		while (v) {
-            const int64_t vdiv = v / 10;
+            int64_t vdiv = v / 10;
             int64_t vmod = v - (vdiv * 10);
 			p[0] = (char)('0' + vmod);
             p ++;

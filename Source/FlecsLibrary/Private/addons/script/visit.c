@@ -11,7 +11,11 @@
 ecs_script_node_t* ecs_script_parent_node_(
     ecs_script_visit_t *v)
 {
-    return v->depth > 1 ? v->nodes[v->depth - 2] : NULL; /* Last node is current node */
+    if (v->depth > 1) {
+        return v->nodes[v->depth - 2]; /* Last node is current node */
+    } else {
+        return NULL;
+    }
 }
 
 ecs_script_scope_t* ecs_script_current_scope_(

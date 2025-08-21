@@ -6,7 +6,6 @@
 #ifndef FLECS_ALLOCATOR_H
 #define FLECS_ALLOCATOR_H
 
-#include "block_allocator.h"
 #include "../private/api_defines.h"
 
 FLECS_DBG_API extern int64_t ecs_block_allocator_alloc_count;
@@ -66,11 +65,11 @@ void* flecs_dup(
 #define flecs_calloc_n(a, T, count) flecs_calloc_w_dbg_info(a, ECS_SIZEOF(T) * (count), #T)
 
 #define flecs_free(a, size, ptr)\
-    flecs_bfree(flecs_allocator_get(a, size), ptr)
+    flecs_bfree((ptr) ? flecs_allocator_get(a, size) : NULL, ptr)
 #define flecs_free_t(a, T, ptr)\
-    flecs_bfree_w_dbg_info(flecs_allocator_get(a, ECS_SIZEOF(T)), ptr, #T)
+    flecs_bfree_w_dbg_info((ptr) ? flecs_allocator_get(a, ECS_SIZEOF(T)) : NULL, ptr, #T)
 #define flecs_free_n(a, T, count, ptr)\
-    flecs_bfree_w_dbg_info(flecs_allocator_get(a, ECS_SIZEOF(T) * (count))\
+    flecs_bfree_w_dbg_info((ptr) ? flecs_allocator_get(a, ECS_SIZEOF(T) * (count)) : NULL\
         , ptr, #T)
 
 #define flecs_realloc(a, size_dst, size_src, ptr)\

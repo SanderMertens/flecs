@@ -15,7 +15,7 @@ typedef struct ecs_entity_index_page_t {
     ecs_record_t records[FLECS_ENTITY_PAGE_SIZE];
 } ecs_entity_index_page_t;
 
-typedef struct FLECS_ALIGNED(64) ecs_entity_index_t {
+typedef struct ecs_entity_index_t {
     ecs_vec_t dense;
     ecs_vec_t pages;
     int32_t alive_count;

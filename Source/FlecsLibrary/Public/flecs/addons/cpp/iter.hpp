@@ -385,7 +385,7 @@ public:
         if (iter_->flags & EcsIterIsValid && iter_->table) {
             ECS_TABLE_UNLOCK(iter_->world, iter_->table);
         }
-        const bool result = iter_->next(iter_);
+        bool result = iter_->next(iter_);
         iter_->flags |= EcsIterIsValid;
         if (result && iter_->table) {
             ECS_TABLE_LOCK(iter_->world, iter_->table);
@@ -474,8 +474,8 @@ private:
 
     flecs::untyped_field get_unchecked_field(int8_t index) const {
         size_t count;
-        const size_t size = ecs_field_size(iter_, index);
-        const bool is_shared = !ecs_field_is_self(iter_, index);
+        size_t size = ecs_field_size(iter_, index);
+        bool is_shared = !ecs_field_is_self(iter_, index);
 
         /* If a shared column is retrieved with 'column', there will only be a
          * single value. Ensure that the application does not accidentally read
@@ -493,7 +493,7 @@ private:
     }
 
     flecs::untyped_field get_unchecked_field_at(int8_t index, size_t row) const {
-        const size_t size = ecs_field_size(iter_, index);
+        size_t size = ecs_field_size(iter_, index);
         return flecs::untyped_field(
             ecs_field_at_w_size(iter_, size, index, static_cast<int32_t>(row)), 
                 size, 1, false);

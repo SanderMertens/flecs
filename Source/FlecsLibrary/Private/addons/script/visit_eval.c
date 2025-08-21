@@ -719,7 +719,11 @@ ecs_entity_t flecs_script_get_src(
     ecs_id_t id)
 {
     if (entity == EcsVariable) { // Singleton ($)
-        return ECS_IS_PAIR(id) ? ecs_pair_first(v->world, id) : id & ECS_COMPONENT_MASK;
+        if (ECS_IS_PAIR(id)) {
+            return ecs_pair_first(v->world, id);
+        } else {
+            return id & ECS_COMPONENT_MASK;
+        }
     }
     return entity;
 }

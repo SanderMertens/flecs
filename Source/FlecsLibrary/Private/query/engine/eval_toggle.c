@@ -21,7 +21,7 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
 {
     ecs_flags64_t mask = UINT64_MAX;
     int32_t i, field_count = it->field_count;
-    const ecs_flags64_t fields = and_fields | not_fields;
+    ecs_flags64_t fields = and_fields | not_fields;
     bool has_bitset = false;
 
     for (i = 0; i < field_count; i ++) {
@@ -38,7 +38,7 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
         }
 
-        const ecs_id_t id = it->ids[i];
+        ecs_id_t id = it->ids[i];
         ecs_bitset_t *bs = flecs_table_get_toggle(table, id);
         if (!bs) {
             if (not_fields & field_bit) {
@@ -193,7 +193,7 @@ compute_block:
             it, table, block_index, and_fields, not_fields, op_ctx);
 
         /* If table doesn't have bitset columns, all columns match */
-        if (!((op_ctx->has_bitset = row_mask.has_bitset))) {
+        if (!(op_ctx->has_bitset = row_mask.has_bitset)) {
             if (!not_fields) {
                 return true;
             } else {
@@ -330,4 +330,3 @@ repeat: {}
 
     return result;
 }
-

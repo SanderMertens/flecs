@@ -126,7 +126,7 @@ void MonitorStats(ecs_iter_t *it) {
 
 static
 void ReduceStats(ecs_iter_t *it) {
-    const ecs_reduce_stats_ctx_t *ctx = it->ctx;
+    ecs_reduce_stats_ctx_t *ctx = it->ctx;
 
     void *dst = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
     void *src = ecs_field_w_size(it, ecs_field_size(it, 1), 1);
@@ -149,8 +149,8 @@ void ReduceStats(ecs_iter_t *it) {
 
 static
 void AggregateStats(ecs_iter_t *it) {
-    const ecs_aggregate_stats_ctx_t *ctx = it->ctx;
-    const int32_t interval = ctx->interval;
+    ecs_aggregate_stats_ctx_t *ctx = it->ctx;
+    int32_t interval = ctx->interval;
 
     EcsStatsHeader *dst_hdr = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
     EcsStatsHeader *src_hdr = ecs_field_w_size(it, ecs_field_size(it, 1), 1);
@@ -244,8 +244,8 @@ void flecs_stats_api_import(
     ecs_world_t *world,
     ecs_stats_api_t *api)
 {
-    const ecs_entity_t kind = api->monitor_component_id;
-    const ecs_entity_t prev = ecs_set_scope(world, kind);
+    ecs_entity_t kind = api->monitor_component_id;
+    ecs_entity_t prev = ecs_set_scope(world, kind);
 
     ecs_query_t *q = NULL;
     if (api->query_component_id) {

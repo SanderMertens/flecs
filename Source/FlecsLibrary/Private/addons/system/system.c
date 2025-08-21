@@ -239,7 +239,7 @@ int flecs_system_init_timer(
         }
 
         if (desc->rate) {
-            const ecs_entity_t tick_source = desc->tick_source;
+            ecs_entity_t tick_source = desc->tick_source;
             ecs_set_rate(world, entity, desc->rate, tick_source);
         } else if (desc->tick_source) {
             ecs_set_tick_source(world, entity, desc->tick_source);
