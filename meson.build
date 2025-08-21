@@ -50,7 +50,7 @@ flecs_src = files(
     'src/addons/meta/type_support/opaque.c',
     'src/addons/meta/type_support/primitive.c',
     'src/addons/meta/type_support/struct.c',
-    'src/addons/meta/type_support/units.c',
+    'src/addons/meta/type_support/type_support_units.c',
     'src/addons/meta/definitions.c',
     'src/addons/meta/meta.c',
     'src/addons/meta/serializer.c',
