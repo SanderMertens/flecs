@@ -8,6 +8,7 @@
 
 #include <limits>
 
+
 // 126, so that FLECS_ENUM_MAX_COUNT is 127 which is the largest value 
 // representable by an int8_t.
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 126>::value
@@ -410,7 +411,6 @@ public:
 
     int min;
     int max;
-    bool has_contiguous;
 
     // If enum constants start not-sparse, contiguous_until will be the index of
     // the first sparse value, or end of the constants array
@@ -422,8 +422,16 @@ public:
             template each_enum< static_cast<U>(enum_last<E>::value) >();
 
     // Constants array is sized to the number of found-constants, or 1 
-    // to avoid 0-sized array
+    // to avoid 0-sized array.
+    #ifdef FLECS_CPP_ENUM_REFLECTION
     enum_constant<U> constants[constants_size? constants_size: 1] = {};
+    bool has_contiguous;
+    #else
+    // If we're not using enum reflection, we cannot statically determine the
+    // upper bound of the enum, so use 128.
+    enum_constant<U> constants[128] = {};
+    bool has_contiguous = true; // Assume contiguous ids
+    #endif
 };
 
 template <typename E, if_t< is_enum<E>::value > = 0>
@@ -481,6 +489,7 @@ struct enum_data {
         if (impl_.max < 0) {
             return -1;
         }
+
         // Check if value is in contiguous lookup section
         if (impl_.has_contiguous && value < impl_.contiguous_until && value >= 0) {
             return static_cast<int>(value);
@@ -520,6 +529,28 @@ struct enum_data {
     flecs::entity entity() const;
     flecs::entity entity(U value) const;
     flecs::entity entity(E value) const;
+
+    /**
+     * @brief Manually register constant for enum.
+     * 
+     * If automatic enum reflection is not supported, provide method for 
+     * manually registering constant.
+     */
+    #ifdef FLECS_CPP_NO_ENUM_REFLECTION
+    void register_constant(flecs::world_t *world, U v, flecs::entity_t e) {
+        if (v < 128) {
+            if (!impl_.constants[v].index) {
+                impl_.constants[v].index = flecs_component_ids_index_get();
+            }
+
+            flecs_component_ids_set(world, impl_.constants[v].index, e);
+
+            if (impl_.contiguous_until <= v) {
+                impl_.contiguous_until = v + 1;
+            }
+        }
+    }
+    #endif
 
     flecs::world_t *world_;
     _::enum_type<E>& impl_;
