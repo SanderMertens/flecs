@@ -24,12 +24,27 @@ int flecs_json_ser_enum(
     const void *base, 
     ecs_strbuf_t *str) 
 {
-    int32_t value = *(const int32_t*)base;
+    ecs_map_key_t value;
+    ecs_meta_op_kind_t kind = op->underlying_kind;
+
+    if (kind == EcsOpU8 || kind == EcsOpI8) {
+        value = *(const uint8_t*)base;
+    } else if (kind == EcsOpU16 || kind == EcsOpI16) {
+        value = *(const uint16_t*)base;
+    } else if (kind == EcsOpU32 || kind == EcsOpI32) {
+        value = *(const uint32_t*)base;
+    } else if (kind == EcsOpUPtr || kind == EcsOpIPtr) {
+        value = *(const uintptr_t*)base;
+    } else if (kind == EcsOpU64 || kind == EcsOpI64) {
+        value = *(const uint64_t*)base;
+    } else {
+        ecs_abort(ECS_INTERNAL_ERROR, "invalid underlying type");
+    }
     
     /* Enumeration constants are stored in a map that is keyed on the
      * enumeration value. */
     ecs_enum_constant_t *constant = ecs_map_get_deref(op->is.constants,
-        ecs_enum_constant_t, (ecs_map_key_t)value);
+        ecs_enum_constant_t, value);
     if (!constant) {
         /* If the value is not found, it is not a valid enumeration constant */
         char *name = ecs_get_path(world, op->type);

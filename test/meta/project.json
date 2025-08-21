@@ -704,6 +704,16 @@
                 "vector_i32_3",
                 "vector_struct_i32_i32",
                 "vector_array_i32_3",
+                "enum_underlying_i8",
+                "enum_underlying_i16",
+                "enum_underlying_i32",
+                "enum_underlying_i64",
+                "enum_underlying_iptr",
+                "enum_underlying_u8",
+                "enum_underlying_u16",
+                "enum_underlying_u32",
+                "enum_underlying_u64",
+                "enum_underlying_uptr",
                 "serialize_from_stage"
             ]
         }, {
