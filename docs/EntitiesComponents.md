@@ -1173,8 +1173,6 @@ e.add::<flecs::Disabled>();
 </ul>
 </div>
 
-
-
 ## Components
 A component is something that is added to an entity. Components can simply tag an entity ("this entity is an `Npc`"), attach data to an entity ("this entity is at `Position` `{10, 20}`") and create relationships between entities ("bob `Likes` alice") that may also contain data ("bob `Eats` `{10}` apples").
 
@@ -1210,7 +1208,134 @@ The following component lifecycle diagram shows how the different operations mut
 
 ![Component Lifecycle](img/component_lifecycle_flow.png)
 
-### Components are Entities
+### Hooks
+Hooks are callbacks that are invoked for various lifecycle stages of a component. Hooks come in two kinds: type hooks and component hooks. Type hooks apply to all instances of a type (for example: a constructor). Component hooks only apply when that type is used as a component (for example: it is added to an entity).
+
+Type hooks are usually used for resource management, whereas component hooks are used for application behavior. Using type hooks for application behavior or component hooks for resource management is bad practice, and will likely lead to memory leaks, crashes or other bugs.
+
+Hooks example code:
+- https://github.com/SanderMertens/flecs/blob/master/examples/c/entities/hooks/src/main.c
+- https://github.com/SanderMertens/flecs/blob/master/examples/cpp/entities/hooks/src/main.cpp
+
+A type can only have a single hook of each kind. This differentiates them from observers, of which there can be many instances for the same component. Hooks also have guaranteed execution order (before or after observers, depending on the kind of hook) which allows them to be used to validate or patch up component values before they're visible to observers.
+
+Another difference is that hooks apply to all instances of a component, even if that component is used as part of a pair. For example, the constructor for `Eats` will be invoked if `(Eats, Apples)` is added to an entity.
+
+Hooks can only be specified for that are not zero-sized. If hooks need to be specified on a tag, the easiest workaround is to turn the tag into a component with a dummy member.
+
+The following table lists all type hooks:
+
+| Name             | Signature                                             | Description |
+|------------------|-------------------------------------------------------|-------------|
+| `ctor`           | `(T *ptr, const ecs_type_info_t *ti)`                 | Invoked when a new instance is created (default constructor in C++). |
+| `move`           | `(T *dst, T* src, const ecs_type_info_t *ti)`         | Invoked when an instance is moved to constructed memory (move assign in C++). |
+| `move_ctor`      | `(T *dst, T* src, const ecs_type_info_t *ti)`         | Invoked when an instance is moved to unconstructed memory (move ctor in C++). |
+| `copy`           | `(T *dst, const T* src, const ecs_type_info_t *ti)`   | Invoked when an instance is copied to constructed memory (copy assign in C++). |
+| `copy_ctor`      | `(T *dst, const T* src, const ecs_type_info_t *ti)`   | Invoked when an instance is coped to unconstructed memory. (copy ctor in C++). |
+| `dtor`           | `(T *ptr, const ecs_type_info_t *ti)`                 | Invoked when an instance is deleted (destructor in C++). |
+| `cmp`            | `int (const T* a, const T* b, const ecs_type_info_t *ti)` | Invoked when two values are compared. Returns -1, 0, 1 for smaller, equal or larger |
+| `equals`         | `bool (const T* a, const T* b, const ecs_type_info_t *ti)` | Invoked to test if two values are equal. |
+
+When `move_ctor` and `copy_ctor` are not explicitly set, they are synthesized from `move`, `copy` and `ctor` hooks. Two additional hooks exist that are usually not set by the application as they are synthesized from other hooks:
+
+| Name             | Signature                                             | Description |
+|------------------|-------------------------------------------------------|-------------|
+| `move_dtor`      | `(T *dst, T* src, const ecs_type_info_t *ti)`         | Destructive move to constructed memory location. |
+| `ctor_move_dtor` | `(T *dst, T* src, const ecs_type_info_t *ti)`         | Destructive move to an unconstructed memory location. |
+
+Hook implementations must follow the [rule of 5](https://en.cppreference.com/w/cpp/language/rule_of_three.html).
+
+When type hooks are configured and a hook is left to `NULL`, it is assumed that the type has no behavior for that hook. In some cases though, an application may want to express that the component has reached an invalid lifecycle state, for example when a `move` hook is invoked for a type that is not movable. To express this an application can set the `.flags` member of the `ecs_type_hooks_t` struct (passed to `ecs_set_hooks`) to one of these flags:
+
+ - `ECS_TYPE_HOOK_CTOR_ILLEGAL`
+ - `ECS_TYPE_HOOK_DTOR_ILLEGAL`
+ - `ECS_TYPE_HOOK_COPY_ILLEGAL`
+ - `ECS_TYPE_HOOK_MOVE_ILLEGAL`
+ - `ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL`
+ - `ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL`
+ - `ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL`
+ - `ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL`
+ - `ECS_TYPE_HOOK_CMP_ILLEGAL`
+ - `ECS_TYPE_HOOK_EQUALS_ILLEGAL`
+
+In the C++ API the hooks and flags are set automatically when registering a component type.
+
+The following table lists all component hooks:
+
+| Name             | Description |
+|------------------|-------------|
+| `on_add`         | Invoked when a component is added to an entity. |
+| `on_replace`     | Invoked with the previous value when a component is set. |
+| `on_set`         | Invoked when a component is set. |
+| `on_remove`      | Invoked when a component is removed. |
+
+The signature for component hooks is the same as for systems:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+void on_set_position(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 0);
+
+    for (int i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        printf("{%f, %f}\n", p[i].x, p[i].y);
+    }
+}
+
+ECS_COMPONENT(world, Position);
+
+ecs_set_hooks(world, Position, {
+    .on_set = on_set_position
+});
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+ecs.component<Position>()
+    .on_set([](Position& p) {
+        std::cout << "{" << p.x << ", " << p.y << "}" << std::endl;
+    });
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+file struct Position(float x, float y) :
+    IOnSetHook<Position>,
+{
+    public IntPtr Value = Marshal.StringToHGlobalAnsi(str);
+
+    // The on set hook gets called when the component is set.
+    public static void OnSet(Iter it, int i, ref Position p)
+    {
+        Console.WriteLine($"{p.x}, {p.y}");
+    }
+}
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world
+    .component::<Position>()
+    .on_set(|entity, pos| {
+        println!("{:?}", pos);
+    });
+```
+</li>
+</ul>
+</div>
+
+For the `on_replace` hook, the previous value can be accessed through the second field (with index 1).
+
+### Components have entity handles
 In an ECS framework, components need to be uniquely identified. In Flecs this is done by making each component is its own unique entity. If an application has a component `Position` and `Velocity`, there  will be two entities, one for each component. Component entities can be distinguished from "regular" entities as they have a `Component` component. An example:
 
 <div class="flecs-snippet-tabs">
