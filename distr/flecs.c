@@ -13687,7 +13687,7 @@ ecs_size_t flecs_stresc(
     const char *in) 
 {
     const char *ptr = in;
-    ecs_assert(ptr, ECS_INTERNAL_ERROR, NULL);
+	ecs_assert(ptr, ECS_INTERNAL_ERROR, NULL);
 
     char ch, *bptr = out, buff[3];
     ecs_size_t written = 0;
