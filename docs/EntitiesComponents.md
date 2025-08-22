@@ -1918,11 +1918,11 @@ flecs::entity e = world.entity().set(Position{10, 20});
 
 // Disable component
 e.disable<Position>();
-e.is_enabled<Position>(); // False
+e.enabled<Position>(); // False
 
 // Enable component
 e.enable<Position>();
-e.is_enabled<Position>()  // True
+e.enabled<Position>()  // True
 ```
 
 </li>
