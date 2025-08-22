@@ -1958,12 +1958,12 @@ let e = world.entity().set(Position { x: 10.0, y: 20.0 });
 // Disable component
 e.disable::<Position>();
 
-e.is_enabled::<Position>(); // False
+e.enabled::<Position>(); // False
 
 // Enable component
 e.enable::<Position>();
 
-e.is_enabled::<Position>(); // True
+e.enabled::<Position>(); // True
 ```
 </li>
 </ul>
