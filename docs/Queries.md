@@ -3370,7 +3370,7 @@ The following scenarios are not detected by change detection:
 
 A query with change detection enabled will only report a change for the components it matched with, or when an entity got added/removed to a matched table. A change to a component in a matched table that is not matched by the query will not be reported by the query.
 
-By default queries do not use change detection. Change detection is automatically enabled when a function that requires change detection is called on the query, for example if an application calls `changed()` on the query. Once change detection is enabled it will stay enabled for both the query and the tables the query is matched with.
+Change detection needs to be explicitly enabled on queries. See the examples below for how to do this in the different language bindings.
 
 When a change occurred in a table matching a query, the query state for that table will remain changed until the table is iterated by the query.
 
@@ -3387,10 +3387,10 @@ The following sections show how to use change detection in the different languag
 The following example shows how the change detection API is used in C:
 
 ```c
-// Query used for change detection. Note that change detection is not enabled on
-// the query itself, but by calling change detection functions for the query.
+// Query used for change detection.
 ecs_query_cache_t *q_read = ecs_query(world, {
-    .terms = {{ .id = ecs_id(Position), .inout = EcsIn }}
+    .terms = {{ .id = ecs_id(Position), .inout = EcsIn }},
+    .flags = EcsQueryDetectChanges
 });
 
 // Query used to create changes
@@ -3398,8 +3398,7 @@ ecs_query_cache_t *q_write = ecs_query(world, {
     .terms = {{ .id = ecs_id(Position) }} // defaults to inout
 });
 
-// Test if changes have occurred for anything matching the query. If this is the
-// first call to the function, it will enable change detection for the query.
+// Test if changes have occurred for anything matching the query. 
 bool changed = ecs_query_changed(q_read, NULL);
 
 // Setting a component will update the changed state
@@ -3437,15 +3436,15 @@ while (ecs_query_next(&it)) {
 The following example shows how the change detection API is used in C++:
 
 ```cpp
-// Query used for change detection. Note that change detection is not enabled on
-// the query itself, but by calling change detection functions for the query.
-flecs::query<const Position> q_read = world.query<const Position>();
+// Query used for change detection.
+flecs::query<const Position> q_read = world.query_builder<const Position>()
+  .detect_changes()
+  .build();
 
 // Query used to create changes
 flecs::query<Position> q_write = world.query<Position>(); // defaults to inout
 
-// Test if changes have occurred for anything matching the query. If this is the
-// first call to the function, it will enable change detection for the query.
+// Test if changes have occurred for anything matching the query.
 bool changed = q_read.changed();
 
 // Setting a component will update the changed state
@@ -3483,15 +3482,15 @@ q_read.run([](flecs::iter& it) {
 The following example shows how the change detection API is used in C++:
 
 ```rust
-// Query used for change detection. Note that change detection is not enabled on
-// the query itself, but by calling change detection functions for the query.
-let q_read = world.new_query::<&Position>();
+// Query used for change detection.
+let q_read = world.query::<&Position>()
+  .detect_changes()
+  .build();
 
 // Query used to create changes
 let q_write = world.new_query::<&mut Position>(); // defaults to inout
 
-// Test if changes have occurred for anything matching the query. If this is the
-// first call to the function, it will enable change detection for the query.
+// Test if changes have occurred for anything matching the query.
 let changed = q_read.is_changed();
 
 // Setting a component will update the changed state
