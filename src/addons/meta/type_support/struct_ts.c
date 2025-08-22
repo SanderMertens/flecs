@@ -1,5 +1,5 @@
 /**
- * @file addons/meta/type_support/struct.c
+ * @file addons/meta/type_support/struct_ts.c
  * @brief Struct type support.
  */
 

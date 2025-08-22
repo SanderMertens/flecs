@@ -80101,7 +80101,7 @@ bool flecs_query_trivial_test(
 }
 
 /**
- * @file addons/meta/type_support/array.c
+ * @file addons/meta/type_support/array_ts.c
  * @brief Array type support.
  */
 
@@ -80241,7 +80241,7 @@ void flecs_meta_array_init(
 #endif
 
 /**
- * @file addons/meta/type_support/enum.c
+ * @file addons/meta/type_support/enum_ts.c
  * @brief Enum type support.
  */
 
@@ -80902,7 +80902,7 @@ void flecs_meta_enum_init(
 #endif
 
 /**
- * @file addons/meta/type_support/opaque.c
+ * @file addons/meta/type_support/opaque_ts.c
  * @brief Opaque type support.
  */
 
@@ -80985,7 +80985,7 @@ void flecs_meta_opaque_init(
 #endif
 
 /**
- * @file addons/meta/type_support/primitive.c
+ * @file addons/meta/type_support/primitive_ts.c
  * @brief Primitives type support.
  */
 
@@ -81544,7 +81544,7 @@ void flecs_meta_primitives_init(
 #endif
 
 /**
- * @file addons/meta/type_support/struct.c
+ * @file addons/meta/type_support/struct_ts.c
  * @brief Struct type support.
  */
 
@@ -82139,7 +82139,7 @@ void flecs_meta_struct_init(
 #endif
 
 /**
- * @file addons/meta/type_support/units.c
+ * @file addons/meta/type_support/units_ts.c
  * @brief Units type support.
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file addons/meta/type_support/enum.c
+ * @file addons/meta/type_support/enum_ts.c
  * @brief Enum type support.
  */
 

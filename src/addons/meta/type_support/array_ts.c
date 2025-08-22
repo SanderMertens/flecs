@@ -1,5 +1,5 @@
 /**
- * @file addons/meta/type_support/array.c
+ * @file addons/meta/type_support/array_ts.c
  * @brief Array type support.
  */
 

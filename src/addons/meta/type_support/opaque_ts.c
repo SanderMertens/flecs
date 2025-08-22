@@ -1,5 +1,5 @@
 /**
- * @file addons/meta/type_support/opaque.c
+ * @file addons/meta/type_support/opaque_ts.c
  * @brief Opaque type support.
  */
 
