@@ -8,7 +8,6 @@
 
 #include <limits>
 
-
 // 126, so that FLECS_ENUM_MAX_COUNT is 127 which is the largest value 
 // representable by an int8_t.
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 126>::value
@@ -371,8 +370,10 @@ public:
         has_contiguous = true;
         contiguous_until = 0;
 
+#if FLECS_CPP_ENUM_REFLECTION_SUPPORT
         enum_reflection<E, reflection_init>::
             template each_enum< static_cast<U>(enum_last<E>::value) >(*this);
+#endif
     }
 
     static enum_type<E>& get() {
@@ -544,6 +545,8 @@ struct enum_data {
             }
 
             flecs_component_ids_set(world, impl_.constants[v].index, e);
+
+            impl_.max ++;
 
             if (impl_.contiguous_until <= v) {
                 impl_.contiguous_until = v + 1;
