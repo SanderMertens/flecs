@@ -1,0 +1,218 @@
+﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "FlecsId.h"
+#include "GameplayTagContainer.h"
+#include "StructUtils/StructView.h"
+#include "Types/SolidEnumSelector.h"
+#include "Types/SolidNotNull.h"
+#include "FlecsEntityHandleTypes.generated.h"
+
+class UFlecsWorld;
+
+namespace Unreal::Flecs
+{
+	template <typename T>
+	concept TFlecsEntityFunctionInputDataTypeConcept =
+		std::is_convertible_v<T, const FFlecsId> ||
+		std::is_convertible_v<T, const UScriptStruct*>;
+
+	template <typename T>
+	concept TFlecsEntityFunctionInputNoDataTypeConcept =
+		std::is_convertible_v<T, const FGameplayTag&>;
+	
+	template <typename T>
+	concept TFlecsEntityFunctionInputTypeConcept =
+		TFlecsEntityFunctionInputDataTypeConcept<T> || TFlecsEntityFunctionInputNoDataTypeConcept<T>;
+
+	template <typename T>
+	concept TFlecsEntityFunctionUEnumTypeConcept = std::is_convertible_v<T, const UEnum*>;
+
+	template <typename T>
+	concept TFlecsEntityFunctionValueEnumTypeConcept =
+		std::is_convertible_v<T, const FSolidEnumSelector&>;
+
+	template <typename T>
+	concept TFlecsEntityFunctionDataTypeWithEnumNoValueConcept =
+		TFlecsEntityFunctionUEnumTypeConcept<T> ||
+		TFlecsEntityFunctionInputTypeConcept<T>;
+
+	template <typename T>
+	concept TFlecsEntityFunctionUSTRUCTViewDataTypeConcept
+		= std::is_convertible_v<T, FConstStructView>;
+
+	// Must have Valid Constructors
+	template <typename T>
+	concept TFlecsEntityHandleTypeConcept = requires(T)
+	{
+		{ T(std::declval<const flecs::entity&>()) } -> std::same_as<T>;
+		{ T(std::declval<const FFlecsId>()) } -> std::same_as<T>;
+		{ T(std::declval<const flecs::world&>(), std::declval<const FFlecsId>()) } -> std::same_as<T>;
+		{ T(std::declval<const flecs::world_t*>(), std::declval<const FFlecsId>()) } -> std::same_as<T>;
+		{ T(std::declval<const TSolidNotNull<const UFlecsWorld*>>(), FFlecsId()) } -> std::same_as<T>;
+	}; // concept TFlecsEntityHandleTypeConcept
+	
+} // namespace Unreal::Flecs
+
+USTRUCT(BlueprintInternalUseOnly)
+struct UNREALFLECS_API FFlecsCommonHandle
+{
+	GENERATED_BODY()
+	
+	static FORCEINLINE FFlecsId GetInputId(const FFlecsCommonHandle& InEntity, const FFlecsId InId)
+	{
+		return InId;
+	}
+
+	static FORCEINLINE FFlecsId GetInputId(const FFlecsCommonHandle& InEntity, const UScriptStruct* StructType)
+	{
+		return InEntity.ObtainComponentTypeStruct(StructType);
+	}
+
+	static FORCEINLINE FFlecsId GetInputId(const FFlecsCommonHandle& InEntity, const UEnum* EnumType)
+	{
+		return InEntity.ObtainComponentTypeEnum(EnumType);
+	}
+
+	static FORCEINLINE FFlecsId GetInputId(const FFlecsCommonHandle& InEntity, const FGameplayTag& InTag)
+	{
+		return InEntity.GetTagEntity(InTag);
+	}
+
+	static FORCEINLINE FFlecsId GetInputId(const FFlecsCommonHandle& InEntity, UClass* InClass)
+	{
+		return InEntity.ObtainTypeClass(InClass);
+	}
+
+	NO_DISCARD SOLID_INLINE friend uint32 GetTypeHash(const FFlecsCommonHandle& InEntity)
+	{
+		return GetTypeHash(InEntity.GetFlecsId());
+	}
+
+public:
+	FFlecsCommonHandle() = default;
+	
+	SOLID_INLINE explicit FFlecsCommonHandle(const flecs::entity& InEntity)
+		: Entity(InEntity)
+	{
+	}
+
+	SOLID_INLINE FFlecsCommonHandle(const FFlecsId InEntity)
+	{
+		Entity = flecs::entity(InEntity);
+	}
+
+	SOLID_INLINE FFlecsCommonHandle(const flecs::world& InWorld, const FFlecsId InEntity)
+	{
+		Entity = flecs::entity(InWorld, InEntity);
+	}
+
+	FFlecsCommonHandle(const TSolidNotNull<const UFlecsWorld*> InWorld, const FFlecsId InEntity);
+	FFlecsCommonHandle(const flecs::world_t* InWorld, const FFlecsId InEntity);
+
+	SOLID_INLINE void SetEntity(const flecs::entity& InEntity)
+	{
+		*this = FFlecsCommonHandle(InEntity);
+	}
+	
+	SOLID_INLINE void SetEntity(const FFlecsId InEntity)
+	{
+		*this = FFlecsCommonHandle(InEntity);
+	}
+
+	SOLID_INLINE operator FFlecsId() const
+	{
+		return FFlecsId(GetEntity());
+	}
+
+	NO_DISCARD SOLID_INLINE flecs::id GetId() const
+	{
+		return Entity;
+	}
+
+	NO_DISCARD SOLID_INLINE flecs::entity GetEntity() const
+	{
+		return flecs::entity(GetFlecsWorld_Internal(), Entity);
+	}
+
+	SOLID_INLINE operator flecs::entity() const
+	{
+		return GetEntity();
+	}
+	
+	SOLID_INLINE operator flecs::id_t() const
+	{
+		return GetEntity();
+	}
+
+	NO_DISCARD TSolidNotNull<UFlecsWorld*> GetFlecsWorld() const;
+	NO_DISCARD TSolidNotNull<UWorld*> GetOuterWorld() const;
+	NO_DISCARD FString GetWorldName() const;
+
+	// @TODO: be careful with these functions as they may create new component types in the Flecs world!
+	template <Unreal::Flecs::TFlecsEntityHandleTypeConcept THandleType>
+	NO_DISCARD SOLID_INLINE THandleType ObtainComponentTypeStruct(const TSolidNotNull<const UScriptStruct*> StructType) const
+	{
+		return THandleType(GetFlecsWorld_Internal(), ObtainComponentTypeStruct(StructType));
+	}
+	
+	NO_DISCARD FFlecsId ObtainComponentTypeStruct(const TSolidNotNull<const UScriptStruct*> StructType) const;
+
+	template <Unreal::Flecs::TFlecsEntityHandleTypeConcept THandleType>
+	NO_DISCARD SOLID_INLINE THandleType ObtainComponentTypeEnum(const TSolidNotNull<const UEnum*> EnumType) const
+	{
+		return THandleType(GetFlecsWorld_Internal(), ObtainComponentTypeEnum(EnumType));
+	}
+	
+	NO_DISCARD FFlecsId ObtainComponentTypeEnum(const TSolidNotNull<const UEnum*> EnumType) const;
+
+	template <Unreal::Flecs::TFlecsEntityHandleTypeConcept THandleType>
+	NO_DISCARD SOLID_INLINE THandleType ObtainTypeClass(const TSolidNotNull<UClass*> ClassType) const
+	{
+		return THandleType(GetFlecsWorld_Internal(), ObtainTypeClass(ClassType));
+	}
+
+	NO_DISCARD FFlecsId ObtainTypeClass(const TSolidNotNull<UClass*> ClassType) const;
+
+	template <Unreal::Flecs::TFlecsEntityHandleTypeConcept THandleType>
+	NO_DISCARD SOLID_INLINE THandleType GetTagEntity(const FGameplayTag& InTag) const
+	{
+		return THandleType(GetFlecsWorld_Internal(), GetTagEntity(InTag));
+	}
+
+	NO_DISCARD FFlecsId GetTagEntity(const FGameplayTag& InTag) const;
+
+	NO_DISCARD SOLID_INLINE FFlecsId GetFlecsId() const
+	{
+		return FFlecsId(GetEntity());
+	}
+	
+	NO_DISCARD SOLID_INLINE uint32 GetGeneration() const
+	{
+		return GetFlecsId().GetGeneration();
+	}
+	
+	NO_DISCARD SOLID_INLINE uint32 GetVersion() const
+	{
+		return GetGeneration();
+	}
+
+protected:
+	flecs::id Entity;
+
+	NO_DISCARD SOLID_INLINE flecs::world GetFlecsWorld_Internal() const
+	{
+		return Entity.world();
+	}
+	
+}; // struct FFlecsCommonHandle
+
+template <typename TInherited>
+struct UNREALFLECS_API TTypedFlecsCommonHandle : public FFlecsCommonHandle
+{
+	using InheritedType = TInherited;
+	using SelfType = InheritedType;
+	
+}; // struct TTypedFlecsCommonHandle

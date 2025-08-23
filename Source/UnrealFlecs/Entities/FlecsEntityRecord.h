@@ -477,6 +477,11 @@ struct UNREALFLECS_API FFlecsEntityRecord
 
 		for (UFlecsComponentCollectionObject* Collection : Collections)
 		{
+			if UNLIKELY_IF(!ensureMsgf(Collection, TEXT("Collection is null")))
+			{
+				continue;
+			}
+			
 			InEntityHandle.AddCollection(Collection);
 		}
 

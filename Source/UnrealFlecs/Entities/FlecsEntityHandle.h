@@ -8,11 +8,11 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
+#include "FlecsEntityHandleTypes.h"
 #include "FlecsArchetype.h"
 #include "FlecsId.h"
 #include "GameplayTagContainer.h"
 #include "General/FlecsStringConverters.h"
-#include "Logs/FlecsCategories.h"
 #include "SolidMacros/Macros.h"
 #include "StructUtils/InstancedStruct.h"
 #include "Types/SolidEnumSelector.h"
@@ -30,35 +30,6 @@ class UFlecsWorld;
 
 namespace Unreal::Flecs
 {
-	template <typename T>
-	concept TFlecsEntityFunctionInputDataTypeConcept =
-		std::is_convertible_v<T, const FFlecsId> ||
-		std::is_convertible_v<T, const UScriptStruct*>;
-
-	template <typename T>
-	concept TFlecsEntityFunctionInputNoDataTypeConcept =
-		std::is_convertible_v<T, const FGameplayTag&>;
-	
-	template <typename T>
-	concept TFlecsEntityFunctionInputTypeConcept =
-		TFlecsEntityFunctionInputDataTypeConcept<T> || TFlecsEntityFunctionInputNoDataTypeConcept<T>;
-
-	template <typename T>
-	concept TFlecsEntityFunctionUEnumTypeConcept = std::is_convertible_v<T, const UEnum*>;
-
-	template <typename T>
-	concept TFlecsEntityFunctionValueEnumTypeConcept =
-		std::is_convertible_v<T, const FSolidEnumSelector&>;
-
-	template <typename T>
-	concept TFlecsEntityFunctionDataTypeWithEnumNoValueConcept =
-		TFlecsEntityFunctionUEnumTypeConcept<T> ||
-		TFlecsEntityFunctionInputTypeConcept<T>;
-
-	template <typename T>
-	concept TFlecsEntityFunctionUSTRUCTViewDataTypeConcept
-		= std::is_convertible_v<T, FConstStructView>;
-	
 	using FEntityNetSerializeFunction
 		= std::function<bool(FFlecsEntityHandle&, TSolidNotNull<UFlecsWorld*>, FArchive&, UPackageMap*, bool&)>;
 
@@ -77,48 +48,17 @@ namespace Unreal::Flecs
  * This must be used with a valid `UFlecsWorld` instance to function correctly.
  */
 USTRUCT(BlueprintType, meta = (DisableSplitPin))
-struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
+struct alignas(8) UNREALFLECS_API FFlecsEntityHandle : public FFlecsCommonHandle
 {
 	GENERATED_BODY()
 
 	using FSelfType = FFlecsEntityHandle;
-
-private:
-	static FORCEINLINE FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const FFlecsId InId)
-	{
-		return InId;
-	}
-
-	static FORCEINLINE FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const UScriptStruct* StructType)
-	{
-		return InEntity.ObtainComponentTypeStruct(StructType);
-	}
-
-	static FORCEINLINE FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const UEnum* EnumType)
-	{
-		return InEntity.ObtainComponentTypeEnum(EnumType);
-	}
-
-	static FORCEINLINE FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, const FGameplayTag& InTag)
-	{
-		return InEntity.GetTagEntity(InTag);
-	}
-
-	static FORCEINLINE FFlecsId GetInputId(const FFlecsEntityHandle& InEntity, UClass* InClass)
-	{
-		return InEntity.ObtainTypeClass(InClass);
-	}
 
 public:
 
 	NO_DISCARD FORCEINLINE friend bool IsValid(const FFlecsEntityHandle& Test)
 	{
 		return Test.IsValid();
-	}
-
-	NO_DISCARD SOLID_INLINE friend uint32 GetTypeHash(const FFlecsEntityHandle& InEntity)
-	{
-		return GetTypeHash(InEntity.GetFlecsId());
 	}
 
 	NO_DISCARD SOLID_INLINE static FFlecsEntityHandle GetNullHandle()
@@ -131,58 +71,21 @@ public:
 public:
 	FFlecsEntityHandle() = default;
 	
-	SOLID_INLINE FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity)
+	SOLID_INLINE FFlecsEntityHandle(const flecs::entity& InEntity) : FFlecsCommonHandle(InEntity)
 	{
 	}
 
-	SOLID_INLINE FFlecsEntityHandle(const FFlecsId InEntity)
+	SOLID_INLINE FFlecsEntityHandle(const FFlecsId InEntity) : FFlecsCommonHandle(InEntity)
 	{
-		Entity = flecs::entity(InEntity);
 	}
 
-	SOLID_INLINE FFlecsEntityHandle(const flecs::world& InWorld, const FFlecsId InEntity)
+	SOLID_INLINE FFlecsEntityHandle(const flecs::world& InWorld, const FFlecsId InEntity) : FFlecsCommonHandle(InWorld, InEntity)
 	{
-		Entity = flecs::entity(InWorld, InEntity);
 	}
 
 	FFlecsEntityHandle(const TSolidNotNull<const UFlecsWorld*> InWorld, const FFlecsId InEntity);
 
 	FFlecsEntityHandle(const flecs::world_t* InWorld, const FFlecsId InEntity);
-	
-	NO_DISCARD SOLID_INLINE flecs::entity GetEntity() const
-	{
-		return Entity;
-	}
-
-	SOLID_INLINE void SetEntity(const flecs::entity& InEntity)
-	{
-		*this = FFlecsEntityHandle(InEntity);
-	}
-	
-	SOLID_INLINE void SetEntity(const FFlecsId InEntity)
-	{
-		*this = FFlecsEntityHandle(InEntity);
-	}
-	
-	SOLID_INLINE operator flecs::entity() const
-	{
-		return GetEntity();
-	}
-	
-	SOLID_INLINE operator flecs::id_t() const
-	{
-		return GetEntity();
-	}
-	
-	SOLID_INLINE operator flecs::entity_view() const
-	{
-		return GetEntity().view();
-	}
-
-	SOLID_INLINE operator FFlecsId() const
-	{
-		return FFlecsId(GetEntity());
-	}
 	
 	NO_DISCARD SOLID_INLINE bool IsValid() const
 	{
@@ -198,25 +101,6 @@ public:
 	{
 		return GetEntity().operator bool();
 	}
-
-	NO_DISCARD SOLID_INLINE FFlecsId GetFlecsId() const
-	{
-		return FFlecsId(GetEntity());
-	}
-	
-	NO_DISCARD SOLID_INLINE uint32 GetGeneration() const
-	{
-		return GetFlecsId().GetGeneration();
-	}
-	
-	NO_DISCARD SOLID_INLINE uint32 GetVersion() const
-	{
-		return GetGeneration();
-	}
-	
-	NO_DISCARD TSolidNotNull<UFlecsWorld*> GetFlecsWorld() const;
-	NO_DISCARD TSolidNotNull<UWorld*> GetOuterWorld() const;
-	NO_DISCARD FString GetWorldName() const;
 	
 	NO_DISCARD SOLID_INLINE FFlecsArchetype GetType() const
 	{
@@ -237,12 +121,12 @@ public:
 
 	NO_DISCARD SOLID_INLINE bool Has(const UEnum* EnumType) const
 	{
-		return HasPair(ObtainComponentTypeEnum(EnumType), flecs::Wildcard);
+		return HasPair(FFlecsEntityHandle::GetInputId(*this, EnumType), flecs::Wildcard);
 	}
 
 	NO_DISCARD SOLID_INLINE bool Has(const UEnum* EnumType, const int64 InValue) const
 	{
-		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum<FFlecsEntityHandle>(EnumType);
 		solid_check(EnumEntity.IsValid());
 		solid_check(EnumEntity.IsEnum());
 
@@ -272,7 +156,7 @@ public:
 	
 	SOLID_INLINE const FSelfType& Add(const UEnum* EnumType, const uint64 InValue) const
 	{
-		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum<FFlecsEntityHandle>(EnumType);
 
 		const FFlecsId ValueEntity = ObtainEnumConstant(EnumType, InValue);
 		solid_check(ValueEntity.IsValid());
@@ -330,13 +214,13 @@ public:
 
 	SOLID_INLINE const FSelfType& Remove(const UEnum* EnumType) const
 	{
-		RemovePair(ObtainComponentTypeEnum(EnumType), flecs::Wildcard);
+		RemovePair(FFlecsEntityHandle::GetInputId(*this, EnumType), flecs::Wildcard);
 		return *this;
 	}
 
 	SOLID_INLINE const FSelfType& Remove(const UEnum* EnumType, const int64 InValue) const
 	{
-		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum<FFlecsEntityHandle>(EnumType);
 		solid_check(EnumEntity.IsValid());
 		solid_check(EnumEntity.IsEnum());
 
@@ -426,7 +310,7 @@ public:
 
 	SOLID_INLINE const FSelfType& Set(const FInstancedStruct& InValue) const
 	{
-		Set(ObtainComponentTypeStruct(InValue.GetScriptStruct()),
+		Set(FFlecsEntityHandle::GetInputId(*this, InValue.GetScriptStruct()),
 			InValue.GetScriptStruct()->GetStructureSize(),
 			InValue.GetMemory());
 		return *this;
@@ -902,6 +786,17 @@ public:
 		return GetEntity();
 	}
 
+	SOLID_INLINE void ResetHandle()
+	{
+		Entity = flecs::entity::null();
+	}
+
+	SOLID_INLINE FFlecsEntityHandle& operator=(TYPE_OF_NULLPTR)
+	{
+		ResetHandle();
+		return *this;
+	}
+	
 	NO_DISCARD SOLID_INLINE FString ToString() const
 	{
 		return FString::Printf(TEXT("Entity: %hs"), GetEntity().str().c_str());
@@ -915,7 +810,7 @@ public:
 	
 	NO_DISCARD SOLID_INLINE uint64 ToConstant(const TSolidNotNull<const UEnum*> InEnumType) const
 	{
-		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(InEnumType);
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum<FFlecsEntityHandle>(InEnumType);
 		solid_check(EnumEntity.IsValid());
 		solid_check(EnumEntity.IsEnum());
 
@@ -976,7 +871,7 @@ public:
 
 	SOLID_INLINE const FSelfType& AddPair(const FFlecsId InFirst, UEnum* InSecond, const int64 InValue) const
 	{
-		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(InSecond);
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum<FFlecsEntityHandle>(InSecond);
 		solid_check(EnumEntity.IsValid());
 		solid_check(EnumEntity.IsEnum());
 
@@ -1271,8 +1166,7 @@ public:
 			AddPair(InFirstTypeValue, InSecondTypeValue);
 		}
 
-		Set(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
-			ObtainComponentTypeStruct(InSecondTypeValue)),
+		Set(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue), FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
 				InSecondTypeValue->GetStructureSize(),
 				InValue);
 		return *this;
@@ -1302,8 +1196,7 @@ public:
 			AddPair(InFirstTypeValue, InSecondTypeValue);
 		}
 
-		Set(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
-			ObtainComponentTypeStruct(InSecondTypeValue)),
+		Set(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue), FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
 				InSecondTypeValue->GetStructureSize(),
 				InValue);
 		return *this;
@@ -1340,8 +1233,7 @@ public:
 		solid_checkf(HasPair(InFirstTypeValue, InSecondTypeValue), 
 			TEXT("Entity does not have pair"));
 
-		Assign(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
-			ObtainComponentTypeStruct(InSecondTypeValue)),
+		Assign(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue), FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
 				InSecondTypeValue->GetStructureSize(),
 				InValue);
 		return *this;
@@ -1369,8 +1261,7 @@ public:
 		solid_checkf(HasPair(InFirstTypeValue, InSecondTypeValue),
 			TEXT("Entity does not have pair"));
 
-		Assign(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
-			ObtainComponentTypeStruct(InSecondTypeValue)),
+		Assign(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue), FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
 				InSecondTypeValue->GetStructureSize(),
 				InValue);
 		return *this;
@@ -1437,17 +1328,11 @@ public:
 								Unreal::Flecs::ToCString(InitialSeparator)));
 	}
 
-	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const TSolidNotNull<const UScriptStruct*> StructType) const;
-	
-	NO_DISCARD FFlecsEntityHandle ObtainComponentTypeEnum(const TSolidNotNull<const UEnum*> EnumType) const;
-
-	NO_DISCARD FFlecsEntityHandle ObtainTypeClass(const TSolidNotNull<UClass*> ClassType) const;
-
 	template <typename TEnumUnderlying = uint64>
 	NO_DISCARD SOLID_INLINE FFlecsEntityHandle ObtainEnumConstant(const TSolidNotNull<const UEnum*> EnumType,
 	                                                              const TEnumUnderlying InValue) const
 	{
-		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum(EnumType);
+		const FFlecsEntityHandle EnumEntity = ObtainComponentTypeEnum<FFlecsEntityHandle>(EnumType);
 		solid_check(EnumEntity.IsValid());
 		solid_check(EnumEntity.IsEnum());
 
@@ -1581,14 +1466,6 @@ public:
 	void AddCollection(TSolidNotNull<UObject*> Collection) const;
 	
 protected:
-	flecs::entity Entity;
-	
-	NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
-
-	NO_DISCARD SOLID_INLINE flecs::world GetFlecsWorld_Internal() const
-	{
-		return Entity.world();
-	}
 	
 }; // struct FFlecsEntityHandle
 

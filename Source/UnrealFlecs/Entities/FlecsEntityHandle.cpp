@@ -45,29 +45,13 @@ FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const TSolidNotNull<const U
 }
 
 FFlecsEntityHandle::FFlecsEntityHandle(const TSolidNotNull<const UFlecsWorld*> InWorld, const FFlecsId InEntity)
+    : FFlecsCommonHandle(InWorld, InEntity)
 {
-    SetEntity(flecs::entity(InWorld->World, InEntity));
 }
 
 FFlecsEntityHandle::FFlecsEntityHandle(const flecs::world_t* InWorld, const FFlecsId InEntity)
+    : FFlecsCommonHandle(InWorld, InEntity)
 {
-    SetEntity(flecs::entity(InWorld, InEntity));
-}
-
-TSolidNotNull<UFlecsWorld*> FFlecsEntityHandle::GetFlecsWorld() const
-{
-    return Unreal::Flecs::ToFlecsWorld(GetEntity().world());
-}
-
-TSolidNotNull<UWorld*> FFlecsEntityHandle::GetOuterWorld() const
-{
-    solid_checkf(::IsValid(GetFlecsWorld()), TEXT("Flecs World not found"));
-    return GetFlecsWorld()->GetSingletonPtr<FUWorldPtrComponent>()->World.Get();
-}
-
-FString FFlecsEntityHandle::GetWorldName() const
-{
-    return GetFlecsWorld()->GetWorldName();
 }
 
 bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
@@ -90,22 +74,6 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
         bOutSuccess = false;
         return false;
     }
-    
-}
-
-FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const TSolidNotNull<const UScriptStruct*> StructType) const
-{
-    return GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
-}
-
-FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeEnum(const TSolidNotNull<const UEnum*> EnumType) const
-{
-    return GetFlecsWorld()->ObtainComponentTypeEnum(EnumType);
-}
-
-FFlecsEntityHandle FFlecsEntityHandle::ObtainTypeClass(const TSolidNotNull<UClass*> ClassType) const
-{
-    return GetFlecsWorld()->RegisterScriptClassType(ClassType);
 }
 
 void FFlecsEntityHandle::AddCollection(const TSolidNotNull<UObject*> Collection) const
@@ -114,11 +82,5 @@ void FFlecsEntityHandle::AddCollection(const TSolidNotNull<UObject*> Collection)
         = CastChecked<UFlecsComponentCollectionObject>(Collection);
     
     ComponentCollection->ApplyCollection_Internal(*this, GetFlecsWorld());
-}
-
-FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) const
-{
-    solid_checkf(InTag.IsValid(), TEXT("Invalid GameplayTag provided for GetTagEntity"));
-    return GetFlecsWorld()->GetTagEntity(InTag);
 }
 
