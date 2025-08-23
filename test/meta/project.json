@@ -1073,7 +1073,10 @@
                 "ser_deser_world_w_ser_opaque",
                 "ser_deser_entity",
                 "ser_deser_0_entity",
-                "const_string"
+                "const_string",
+                "anonymous_opaque_as_type_parent",
+                "named_opaque_as_type_parent",
+                "parented_opaque_as_type_parent"
             ]
         }, {
             "id": "Misc",

@@ -1588,6 +1588,9 @@ void Meta_entity_to_json_w_default_desc(void);
 void Meta_query_to_json_w_default_desc(void);
 void Meta_script_to_std_vector_int(void);
 void Meta_script_to_std_vector_std_string(void);
+void Meta_anonymous_opaque_as_type_parent(void);
+void Meta_named_opaque_as_type_parent(void);
+void Meta_parented_opaque_as_type_parent(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -7837,6 +7840,18 @@ bake_test_case Meta_testcases[] = {
     {
         "script_to_std_vector_std_string",
         Meta_script_to_std_vector_std_string
+    },
+    {
+        "anonymous_opaque_as_type_parent",
+        Meta_anonymous_opaque_as_type_parent
+    },
+    {
+        "named_opaque_as_type_parent",
+        Meta_named_opaque_as_type_parent
+    },
+    {
+        "parented_opaque_as_type_parent",
+        Meta_parented_opaque_as_type_parent
     }
 };
 
@@ -8196,7 +8211,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        65,
+        68,
         Meta_testcases
     },
     {
