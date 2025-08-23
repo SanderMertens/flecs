@@ -1031,6 +1031,9 @@ void OpaqueTypes_ser_deser_world_w_ser_opaque(void);
 void OpaqueTypes_ser_deser_entity(void);
 void OpaqueTypes_ser_deser_0_entity(void);
 void OpaqueTypes_const_string(void);
+void OpaqueTypes_anonymous_opaque_as_type_parent(void);
+void OpaqueTypes_named_opaque_as_type_parent(void);
+void OpaqueTypes_parented_opaque_as_type_parent(void);
 
 // Testsuite 'Misc'
 void Misc_primitive_from_stage(void);
@@ -5116,6 +5119,18 @@ bake_test_case OpaqueTypes_testcases[] = {
     {
         "const_string",
         OpaqueTypes_const_string
+    },
+    {
+        "anonymous_opaque_as_type_parent",
+        OpaqueTypes_anonymous_opaque_as_type_parent
+    },
+    {
+        "named_opaque_as_type_parent",
+        OpaqueTypes_named_opaque_as_type_parent
+    },
+    {
+        "parented_opaque_as_type_parent",
+        OpaqueTypes_parented_opaque_as_type_parent
     }
 };
 
@@ -5607,7 +5622,7 @@ static bake_test_suite suites[] = {
         "OpaqueTypes",
         NULL,
         NULL,
-        28,
+        31,
         OpaqueTypes_testcases
     },
     {

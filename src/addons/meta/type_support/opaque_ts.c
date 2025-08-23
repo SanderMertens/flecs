@@ -15,12 +15,19 @@ void flecs_set_opaque_type(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t elem_type = serialize[i].as_type;
+        ecs_entity_t as_type = serialize[i].as_type;
 
-        if (!elem_type) {
+        if (!as_type) {
             ecs_err(
                 "opaque type '%s' has no mapping type", ecs_get_name(world, e));
             continue;
+        }
+
+        /* If the as_type is anonymous and has no parent, parent it under the
+        * opaque type. That way we don't end up with a bunch of anonymous entities
+        * in the root scope. */
+        if (!ecs_get_parent(world, as_type) && !ecs_get_name(world, as_type)) {
+            ecs_add_pair(world, as_type, EcsChildOf, e);
         }
 
         const EcsComponent *comp = ecs_get(world, e, EcsComponent);
