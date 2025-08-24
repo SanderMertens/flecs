@@ -11,7 +11,6 @@ public class UnrealFlecs : ModuleRules
 		CppStandard = CppStandardVersion.Latest;
 		OptimizationLevel = OptimizationMode.Speed;
 		IWYUSupport = IWYUSupport.Full;
-		bEnableNonInlinedGenCppWarnings = true;
 
 		PublicIncludePaths.AddRange(
 			new string[] 
