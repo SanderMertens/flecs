@@ -3,6 +3,7 @@
 // ReSharper disable CppTooWideScopeInitStatement
 #include "FlecsEntityHandle.h"
 #include "Collections/FlecsComponentCollectionObject.h"
+#include "Components/FlecsNetworkSerializeDefinitionComponent.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldConverter.h"
@@ -56,6 +57,28 @@ FFlecsEntityHandle::FFlecsEntityHandle(const flecs::world_t* InWorld, const FFle
 
 bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
+    if (Has<FFlecsNetworkSerializeDefinitionComponent>())
+    {
+        const FFlecsNetworkSerializeDefinitionComponent& NetSerializeDefinition = Get<FFlecsNetworkSerializeDefinitionComponent>();
+
+        if LIKELY_IF(NetSerializeDefinition.NetSerializeFunction)
+        {
+            return std::invoke(
+                NetSerializeDefinition.NetSerializeFunction,
+                *this,
+                GetFlecsWorld(),
+                Ar,
+                Map,
+                bOutSuccess);
+        }
+        else
+        {
+            UE_LOGFMT(LogFlecsNetworking, Warning,
+                "Trying to net serialize entity with a nullptr NetSerialize function ptr in "
+                "its FFlecsNetworkSerializeDefinitionComponent for Entity {EntityId}, will try global Net Serialize function",);
+        }
+    }
+    
     if LIKELY_IF(Unreal::Flecs::GNetSerializeFunctionPtr)
     {
         return std::invoke(

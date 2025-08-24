@@ -2,6 +2,7 @@
 
 #include "FlecsWorld.h"
 #include "FlecsWorldSubsystem.h"
+#include "Components/FlecsNetworkSerializeDefinitionComponent.h"
 #include "Components/ObjectTypes/FFlecsSceneComponentTag.h"
 #include "Components/ObjectTypes/FlecsActorTag.h"
 
@@ -210,6 +211,9 @@ void UFlecsWorld::InitializeDefaultComponents() const
 	RegisterComponentType<FFlecsDependenciesComponent>();
 
 	RegisterComponentType<FFlecsEntityRecord>();
+
+	RegisterComponentType<FFlecsNetworkSerializeDefinitionComponent>()
+		.Add(flecs::Sparse);
 }
 
 void UFlecsWorld::InitializeFlecsRegistrationObjects()
