@@ -17,14 +17,14 @@ DECLARE_CYCLE_STAT(TEXT("UFlecsTickerGameLoop::Progress::RunPipeline"),
 DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("UFlecsTickerGameLoop::Progress::RunPipeline::Ticks"),
 	STAT_FlecsTickerGameLoop_Progress_RunPipeline_Ticks, STATGROUP_FlecsTickerGameLoop);
 
-NO_DISCARD FORCEINLINE static int flecs_entity_compare(
+static NO_DISCARD FORCEINLINE int flecs_entity_compare(
 	const ecs_entity_t e1,
 	const ecs_entity_t e2) 
 {
 	return (e1 > e2) - (e1 < e2);
 }
 
-NO_DISCARD FORCEINLINE static int flecs_priority_compare(
+static NO_DISCARD FORCEINLINE int flecs_priority_compare(
 	const flecs::entity_t InEntityA,
 	const flecs::SystemPriority* InPtrA,
 	const flecs::entity_t InEntityB,

@@ -263,7 +263,7 @@ struct FFlecsTestNativeGameplayTags : public FGameplayTagNativeAdder
 		TestSameSubGrandchildTag2 = Manager.AddNativeGameplayTag(TEXT("Test.UnrealFlecs.Sub1.Tag2"));
 	}
 
-	NO_DISCARD FORCEINLINE static const FFlecsTestNativeGameplayTags& Get()
+	static NO_DISCARD FORCEINLINE const FFlecsTestNativeGameplayTags& Get()
 	{
 		return StaticInstance;
 	}

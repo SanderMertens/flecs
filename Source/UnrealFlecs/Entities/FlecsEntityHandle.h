@@ -61,12 +61,12 @@ public:
 		return Test.IsValid();
 	}
 
-	NO_DISCARD SOLID_INLINE static FFlecsEntityHandle GetNullHandle()
+	static NO_DISCARD SOLID_INLINE FFlecsEntityHandle GetNullHandle()
 	{
 		return FFlecsEntityHandle(flecs::entity::null());
 	}
 
-	NO_DISCARD static FFlecsEntityHandle GetNullHandle(const TSolidNotNull<const UFlecsWorld*> InWorld);
+	 static NO_DISCARD FFlecsEntityHandle GetNullHandle(const TSolidNotNull<const UFlecsWorld*> InWorld);
 
 public:
 	FFlecsEntityHandle() = default;

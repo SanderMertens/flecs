@@ -40,7 +40,7 @@ public:
 	}
 	
 	template <typename ...TComponents>
-	NO_DISCARD FORCEINLINE static flecs::system_builder<TComponents...> CreateSystem(
+	static NO_DISCARD FORCEINLINE flecs::system_builder<TComponents...> CreateSystem(
 		flecs::world& InWorld, const TCHAR* InName)
 	{
 		return InWorld.system<TComponents...>(Unreal::Flecs::ToCString(InName));
