@@ -17,10 +17,13 @@ Only tested on Version: UE 5.6 MSVC
 @Megafunk
 @ronaldburns
 
-### Modifications to Flecs:
+## Features:
+Universalized Component Type Registration CPP <--> Meta Type, Works with USTRUCTs, UENUMs, and UCLASSes
+
+## Modifications to Flecs:
 
 New Component Registration in `Source/FlecsLibrary/Public/flecs/addons/cpp/component.hpp`
-Disabled flecs Auto Component Registration  
+Disabled flecs Auto Component Registration (do not re-enable)
 set\_symbol in `Source/FlecsLibrary/Public/flecs/addons/cpp/mixins/entity/builder.hpp`
 
 to\_constant in `Source/FlecsLibrary/Public/flecs/addons/cpp/mixins/enum/impl.hpp` and `Source/FlecsLibrary/Public/flecs/addons/cpp/mixins/enum/entity\_view.inl`
