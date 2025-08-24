@@ -17,6 +17,9 @@ Only tested on Version: UE 5.6 MSVC
 @Megafunk
 @ronaldburns
 
+## Features:
+
+
 ### Modifications to Flecs:
 
 New Component Registration in `Source/FlecsLibrary/Public/flecs/addons/cpp/component.hpp`
