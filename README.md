@@ -23,7 +23,7 @@ Universalized Component Type Registration CPP <--> Meta Type, Works with USTRUCT
 ## Modifications to Flecs:
 
 New Component Registration in `Source/FlecsLibrary/Public/flecs/addons/cpp/component.hpp`
-Disabled flecs Auto Component Registration  
+Disabled flecs Auto Component Registration (do not re-enable)
 set\_symbol in `Source/FlecsLibrary/Public/flecs/addons/cpp/mixins/entity/builder.hpp`
 
 to\_constant in `Source/FlecsLibrary/Public/flecs/addons/cpp/mixins/enum/impl.hpp` and `Source/FlecsLibrary/Public/flecs/addons/cpp/mixins/enum/entity\_view.inl`
