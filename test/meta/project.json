@@ -654,7 +654,10 @@
                 "deser_unknown_component_w_spaces",
                 "deser_unknown_component_no_spaces",
                 "deser_unknown_component_w_spaces_strict",
-                "deser_unknown_component_no_spaces_strict"
+                "deser_unknown_component_no_spaces_strict",
+                "deser_unknown_member",
+                "deser_valid_after_unknown_member",
+                "deser_unknown_member_w_strict"
             ]
         }, {
             "id": "SerializeToJson",
