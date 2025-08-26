@@ -628,6 +628,9 @@ void DeserializeFromJson_deser_unknown_component_w_spaces(void);
 void DeserializeFromJson_deser_unknown_component_no_spaces(void);
 void DeserializeFromJson_deser_unknown_component_w_spaces_strict(void);
 void DeserializeFromJson_deser_unknown_component_no_spaces_strict(void);
+void DeserializeFromJson_deser_unknown_member(void);
+void DeserializeFromJson_deser_valid_after_unknown_member(void);
+void DeserializeFromJson_deser_unknown_member_w_strict(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -3547,6 +3550,18 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "deser_unknown_component_no_spaces_strict",
         DeserializeFromJson_deser_unknown_component_no_spaces_strict
+    },
+    {
+        "deser_unknown_member",
+        DeserializeFromJson_deser_unknown_member
+    },
+    {
+        "deser_valid_after_unknown_member",
+        DeserializeFromJson_deser_valid_after_unknown_member
+    },
+    {
+        "deser_unknown_member_w_strict",
+        DeserializeFromJson_deser_unknown_member_w_strict
     }
 };
 
@@ -5566,7 +5581,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        138,
+        141,
         DeserializeFromJson_testcases
     },
     {

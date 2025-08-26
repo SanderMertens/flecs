@@ -691,15 +691,40 @@ int ecs_meta_member(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
+/** Same as ecs_meta_member() but doesn't throw an error.
+ * 
+ * @param cursor The cursor.
+ * @param name The name of the member.
+ * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_member()
+ */
+FLECS_API
+int ecs_meta_try_member(
+    ecs_meta_cursor_t *cursor,
+    const char *name);
+
 /** Move cursor to member.
  * Same as ecs_meta_member(), but with support for "foo.bar" syntax.
  * 
  * @param cursor The cursor.
  * @param name The name of the member.
  * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_member()
  */
 FLECS_API
 int ecs_meta_dotmember(
+    ecs_meta_cursor_t *cursor,
+    const char *name);
+
+/** Same as ecs_meta_dotmember() but doesn't throw an error.
+ * 
+ * @param cursor The cursor.
+ * @param name The name of the member.
+ * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_dotmember()
+ */
+FLECS_API
+int ecs_meta_try_dotmember(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
