@@ -1710,7 +1710,10 @@ ecs_flags32_t ecs_world_get_flags(
 void ecs_shrink(
     ecs_world_t *world)
 {
-    flecs_entity_index_shrink(&world->store.entity_index);
+    /* This can invalidate ecs_record_t pointers for entities that are no longer
+     * alive. If you're sure an application doesn't store any ecs_record_t ptrs
+     * or ecs_ref_t's for not-alive entities, you can uncomment this line. */
+    // flecs_entity_index_shrink(&world->store.entity_index);
 
     ecs_sparse_t *tables = &world->store.tables;
     int32_t i, count = flecs_sparse_count(tables);
