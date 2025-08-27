@@ -36727,7 +36727,7 @@ int flecs_term_finalize(
         if (second->id & EcsIsVariable) {
             if (!ecs_id_is_wildcard(second_id) || second_id == EcsAny) {
                 trivial_term = false;
-                if (term->oper != EcsNot || second_id != EcsAny) {
+                if (second_id != EcsAny) {
                     cacheable_term = false;
                 }
             }
