@@ -773,6 +773,7 @@
                 "3_trivial_plan_w_pair_component",
                 "3_trivial_plan_w_wildcard_component",
                 "3_trivial_plan_w_any_component",
+                "3_trivial_plan_w_any_cached",
                 "1_trivial_component_w_none",
                 "2_trivial_component_w_none",
                 "2_trivial_plan_w_wildcard",
