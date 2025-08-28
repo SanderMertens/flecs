@@ -83,6 +83,11 @@ struct ecs_component_record_t {
      * it is not 0, an application attempted to delete an id that was still
      * queried for. */
     int32_t keep_alive;
+
+#ifdef FLECS_SAFETY_LOCKS
+    /* lock for when sparse components are read or written to */
+    int32_t sparse_lock;
+#endif
 };
 
 /* Bootstrap cached id records */
@@ -163,5 +168,21 @@ void flecs_component_record_init_dont_fragment(
 void flecs_component_record_init_exclusive(
     ecs_world_t *world,
     ecs_component_record_t *cr);
+
+#ifdef FLECS_SAFETY_LOCKS
+
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc(
+    ecs_component_record_t *idr);
+
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc_multithreaded(
+    ecs_component_record_t *idr);
+
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec(
+    ecs_component_record_t *idr);
+
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec_multithreaded(
+    ecs_component_record_t *idr);
+    
+#endif
 
 #endif
