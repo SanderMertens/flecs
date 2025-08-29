@@ -255,7 +255,7 @@ public:
 	 * @tparam TModule The module class
 	 */
 	template <Solid::TStaticClassConcept TModule, typename TFunction>
-	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(const TSolidNotNull<UObject*> InModuleObject,
+	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(const TSolidNotNull<const UObject*> InModuleObject,
 	                                                     TFunction&& InFunction)
 	{
 		RegisterModuleDependency(InModuleObject, TModule::StaticClass(),
@@ -948,7 +948,7 @@ public:
 	{
 		solid_check(ScriptStruct);
 
-		const FFlecsEntityHandle OldScope = ClearScope();
+		const FFlecsId OldScope = ClearScope();
 
 		solid_checkf(!TypeMapComponent->ScriptStructMap.contains(ScriptStruct),
 			TEXT("Script struct %s is already registered"), *ScriptStruct->GetStructCPPName());
@@ -1036,7 +1036,7 @@ public:
 
 								const UScriptStruct* ContextScriptStruct = static_cast<UScriptStruct*>(TypeInfo->hooks.ctx);
 								solid_check(IsValid(ContextScriptStruct));
-
+								
 								ContextScriptStruct->CopyScriptStruct(Dst, Src, Count);
 							};
 							
@@ -1148,7 +1148,7 @@ public:
 	
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterComponentEnumType(TSolidNotNull<const UEnum*> ScriptEnum) const
 	{
-		const FFlecsEntityHandle OldScope = ClearScope();
+		const FFlecsId OldScope = ClearScope();
 
 		solid_checkf(!TypeMapComponent->ScriptEnumMap.contains(FFlecsScriptEnumComponent(ScriptEnum)),
 			TEXT("Script enum %s is already registered"), *ScriptEnum->GetName());
@@ -1233,7 +1233,7 @@ public:
 
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterScriptClassType(TSolidNotNull<UClass*> ScriptClass) const
 	{
-		const FFlecsEntityHandle OldScope = ClearScope();
+		const FFlecsId OldScope = ClearScope();
 
 		const FString ClassName = ScriptClass->GetPrefixCPP() + ScriptClass->GetName();
 

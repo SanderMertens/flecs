@@ -313,10 +313,8 @@ void UFlecsWorld::RegisterModuleDependency(const TSolidNotNull<const UObject*> I
 
 	const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModuleObject->GetClass());
 	solid_check(ModuleEntity.IsValid());
-
-	ModuleEntity.Add<FFlecsDependenciesComponent>();
 		
-	auto& [Dependencies] = ModuleEntity.GetMut<FFlecsDependenciesComponent>();
+	auto& [Dependencies] = ModuleEntity.Obtain<FFlecsDependenciesComponent>();
 		
 	Dependencies.emplace(InDependencyClass, InFunction);
 		
@@ -424,7 +422,7 @@ void UFlecsWorld::ImportModule(const TScriptInterface<IFlecsModuleInterface>& In
 	const UObject* TemplateModuleObject = InModule.GetObject();
 	solid_check(IsValid(TemplateModuleObject));
 
-	TSolidNotNull<UObject*> NewModuleObject = DuplicateObject(TemplateModuleObject, this);
+	const TSolidNotNull<UObject*> NewModuleObject = DuplicateObject(TemplateModuleObject, this);
 	ImportedModules.Add(NewModuleObject);
 		
 	ImportedModules.Last()->ImportModule(World);

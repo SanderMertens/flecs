@@ -46,12 +46,12 @@ FFlecsEntityHandle FFlecsEntityHandle::GetNullHandle(const TSolidNotNull<const U
 }
 
 FFlecsEntityHandle::FFlecsEntityHandle(const TSolidNotNull<const UFlecsWorld*> InWorld, const FFlecsId InEntity)
-    : FFlecsCommonHandle(InWorld, InEntity)
+    : FFlecsEntityView(InWorld->World, InEntity)
 {
 }
 
 FFlecsEntityHandle::FFlecsEntityHandle(const flecs::world_t* InWorld, const FFlecsId InEntity)
-    : FFlecsCommonHandle(InWorld, InEntity)
+    : FFlecsEntityView(InWorld, InEntity)
 {
 }
 

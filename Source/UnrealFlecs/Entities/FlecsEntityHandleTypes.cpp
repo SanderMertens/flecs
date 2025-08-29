@@ -7,11 +7,12 @@
 
 FFlecsCommonHandle::FFlecsCommonHandle(const TSolidNotNull<const UFlecsWorld*> InWorld, const FFlecsId InEntity)
 {
+	SetEntity(flecs::entity(InWorld->World, InEntity));
 }
 
 FFlecsCommonHandle::FFlecsCommonHandle(const flecs::world_t* InWorld, const FFlecsId InEntity)
 {
-	
+	SetEntity(flecs::entity(InWorld, InEntity));
 }
 
 TSolidNotNull<UFlecsWorld*> FFlecsCommonHandle::GetFlecsWorld() const

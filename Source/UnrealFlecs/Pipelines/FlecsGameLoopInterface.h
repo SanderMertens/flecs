@@ -25,6 +25,6 @@ public:
 	virtual void InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorld) {}
 	
 	virtual bool Progress(double DeltaTime, TSolidNotNull<UFlecsWorld*> InWorld)
-		PURE_VIRTUAL(IFlecsGameLoopInterface::Progress, return false;);
+		PURE_VIRTUAL(IFlecsGameLoopInterface::Progress, return false;)
 	
 }; // class IFlecsGameLoopInterface

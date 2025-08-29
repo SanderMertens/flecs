@@ -91,6 +91,11 @@ struct UNREALFLECS_API FFlecsCommonHandle
 		return GetTypeHash(InEntity.GetFlecsId());
 	}
 
+	NO_DISCARD FORCEINLINE friend bool IsValid(const FFlecsCommonHandle& Test)
+	{
+		return Test.IsValid();
+	}
+
 public:
 	FFlecsCommonHandle() = default;
 	
@@ -99,7 +104,7 @@ public:
 	{
 	}
 
-	SOLID_INLINE FFlecsCommonHandle(const FFlecsId InEntity)
+	SOLID_INLINE explicit FFlecsCommonHandle(const FFlecsId InEntity)
 	{
 		Entity = flecs::entity(InEntity);
 	}
@@ -111,6 +116,21 @@ public:
 
 	FFlecsCommonHandle(const TSolidNotNull<const UFlecsWorld*> InWorld, const FFlecsId InEntity);
 	FFlecsCommonHandle(const flecs::world_t* InWorld, const FFlecsId InEntity);
+
+	NO_DISCARD SOLID_INLINE bool IsValid() const
+	{
+		return GetEntity().is_valid();
+	}
+	
+	NO_DISCARD SOLID_INLINE bool IsAlive() const
+	{
+		return GetEntity().is_alive();
+	}
+
+	SOLID_INLINE operator bool() const
+	{
+		return GetEntity().operator bool();
+	}
 
 	SOLID_INLINE void SetEntity(const flecs::entity& InEntity)
 	{
@@ -135,6 +155,11 @@ public:
 	NO_DISCARD SOLID_INLINE flecs::entity GetEntity() const
 	{
 		return flecs::entity(GetFlecsWorld_Internal(), Entity);
+	}
+
+	NO_DISCARD SOLID_INLINE flecs::entity_view GetEntityView() const
+	{
+		return flecs::entity_view(GetFlecsWorld_Internal(), Entity);
 	}
 
 	SOLID_INLINE operator flecs::entity() const
