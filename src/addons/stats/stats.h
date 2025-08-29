@@ -44,4 +44,7 @@ void FlecsSystemMonitorImport(
 void FlecsPipelineMonitorImport(
     ecs_world_t *world);
 
+void flecs_stats_memory_register_reflection(
+    ecs_world_t *world);
+
 #endif
