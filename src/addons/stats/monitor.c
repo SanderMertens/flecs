@@ -404,6 +404,10 @@ void FlecsStatsImport(
     FlecsSystemMonitorImport(world);
     FlecsPipelineMonitorImport(world);
     
+    flecs_stats_memory_register_reflection(world);
+
+    ecs_add(world, ecs_id(EcsWorldMemory), EcsWorldMemory);
+    
     if (ecs_os_has_time()) {
         ecs_measure_frame_time(world, true);
         ecs_measure_system_time(world, true);
