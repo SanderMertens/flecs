@@ -405,6 +405,30 @@ ecs_table_memory_t ecs_table_memory_get(
         if (entity_count == 0) {
             result.empty_count++;
         }
+        
+        /* Populate entity count histogram using power-of-2 buckets */
+        if (entity_count == 0) {
+            result.entity_count_histogram[0]++;  /* Bucket 0: 0 entities */
+        } else if (entity_count == 1) {
+            result.entity_count_histogram[1]++;  /* Bucket 1: 1 entity */
+        } else if (entity_count <= ECS_TABLE_MEMORY_HISTOGRAM_MAX_COUNT) {
+            /* Find the appropriate power-of-2 bucket */
+            /* Buckets: 2-3, 4-7, 8-15, 16-31, ..., 32768-65535 */
+            int32_t bucket_index = 2;
+            int32_t bucket_min = 2;
+            int32_t bucket_max = 3;
+            
+            while (bucket_max < entity_count && bucket_index < ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT - 2) {
+                bucket_index++;
+                bucket_min = bucket_max + 1;
+                bucket_max = bucket_min * 2 - 1;
+            }
+            
+            result.entity_count_histogram[bucket_index]++;
+        } else {
+            /* Bucket for >65535 entities */
+            result.entity_count_histogram[ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT - 1]++;
+        }
 
         result.bytes_table += ECS_SIZEOF(ecs_table_t);
         if (table->_) {
@@ -627,7 +651,7 @@ void flecs_stats_memory_register_reflection(
     });
 
     ecs_id(ecs_table_memory_t) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "table_memory_t" }),
+        .entity = ecs_id(ecs_table_memory_t),
         .members = {
             { .name = "count", .type = ecs_id(ecs_i32_t) },
             { .name = "empty_count", .type = ecs_id(ecs_i32_t) },
@@ -642,7 +666,8 @@ void flecs_stats_memory_register_reflection(
             { .name = "bytes_column_map", .type = ecs_id(ecs_i32_t), .unit = EcsBytes },
             { .name = "bytes_component_map", .type = ecs_id(ecs_i32_t), .unit = EcsBytes },
             { .name = "bytes_dirty_state", .type = ecs_id(ecs_i32_t), .unit = EcsBytes },
-            { .name = "bytes_edges", .type = ecs_id(ecs_i32_t), .unit = EcsBytes }
+            { .name = "bytes_edges", .type = ecs_id(ecs_i32_t), .unit = EcsBytes },
+            { .name = "entity_count_histogram", .type = ecs_id(ecs_i32_t), .count = ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT }
         }
     });
 

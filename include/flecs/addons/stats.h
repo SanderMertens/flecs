@@ -521,6 +521,10 @@ typedef struct {
     ecs_size_t bytes_builtin;           /** Bytes used in table columns with builtin entities. */
 } ecs_component_memory_t;
 
+/** Table memory histogram constants */
+#define ECS_TABLE_MEMORY_HISTOGRAM_MAX_COUNT 65536
+#define ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT 18  /* 0, 1, 2-3, 4-7, 8-15, ..., 32768-65535, >65535 */
+
 /** Table memory */
 typedef struct {
     int32_t count;                      /** Total number of tables. */
@@ -537,6 +541,8 @@ typedef struct {
     ecs_size_t bytes_component_map;     /** Bytes used by column map. */
     ecs_size_t bytes_dirty_state;       /** Bytes used by column map. */
     ecs_size_t bytes_edges;             /** Bytes used by table graph edges. */
+    int32_t entity_count_histogram[ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT]; 
+    /** Histogram of entity counts: [0], [1], [2-3], [4-7], [8-15], ..., [32768-65535], [>65535] */
 } ecs_table_memory_t;
 
 /** Commands memory */
@@ -546,6 +552,7 @@ typedef struct {
     ecs_size_t bytes_stack;             /** Stack allocator memory for temporary command data */
 } ecs_commands_memory_t;
 
+/** Component with memory statistics. */
 typedef struct {
     ecs_entity_index_memory_t entity_index;
     ecs_component_index_memory_t component_index;

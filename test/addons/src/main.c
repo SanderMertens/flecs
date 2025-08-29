@@ -336,6 +336,7 @@ void Memory_query_memory_with_groups(void);
 void Memory_query_memory_with_variables(void);
 void Memory_query_memory_with_monitors(void);
 void Memory_commands_memory(void);
+void Memory_table_memory_histogram(void);
 
 // Testsuite 'Run'
 void Run_setup(void);
@@ -1786,6 +1787,10 @@ bake_test_case Memory_testcases[] = {
     {
         "commands_memory",
         Memory_commands_memory
+    },
+    {
+        "table_memory_histogram",
+        Memory_table_memory_histogram
     }
 };
 
@@ -2689,7 +2694,7 @@ static bake_test_suite suites[] = {
         "Memory",
         NULL,
         NULL,
-        7,
+        8,
         Memory_testcases
     },
     {

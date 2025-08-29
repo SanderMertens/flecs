@@ -365,7 +365,8 @@
                 "query_memory_with_groups",
                 "query_memory_with_variables",
                 "query_memory_with_monitors",
-                "commands_memory"
+                "commands_memory",
+                "table_memory_histogram"
             ]
         }, {
             "id": "Run",

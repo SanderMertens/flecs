@@ -309,3 +309,71 @@ void Memory_commands_memory(void) {
 
     ecs_fini(world);
 }
+
+void Memory_table_memory_histogram(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    /* Get initial table memory statistics */
+    ecs_table_memory_t mem = ecs_table_memory_get(world);
+    
+    /* Initial state should have some tables */
+    test_assert(mem.count > 0);
+    test_assert(mem.entity_count_histogram[0] >= 0); /* Empty tables bucket */
+    
+    /* Create entities to populate different histogram buckets */
+    
+    /* Create 5 entities with Position (should go in histogram[5]) */
+    for (int i = 0; i < 5; i++) {
+        ecs_entity_t e = ecs_new_w(world, Position);
+        (void)e;
+    }
+    
+    /* Create 10 entities with Velocity (should go in histogram[10]) */
+    for (int i = 0; i < 10; i++) {
+        ecs_entity_t e = ecs_new_w(world, Velocity);
+        (void)e;
+    }
+    
+    /* Create 1 entity with both Position and Velocity (should go in histogram[1]) */
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+    
+    /* Get updated statistics */
+    mem = ecs_table_memory_get(world);
+    
+    /* Verify histogram has been populated (now using power-of-2 buckets) */
+    test_assert(mem.entity_count_histogram[1] >= 1);  /* At least 1 table with 1 entity (bucket 1) */
+    test_assert(mem.entity_count_histogram[3] >= 1);  /* At least 1 table with 4-7 entities (bucket 3, contains 5) */
+    test_assert(mem.entity_count_histogram[4] >= 1);  /* At least 1 table with 8-15 entities (bucket 4, contains 10) */
+    
+    /* Test edge cases - create a large table (but not > 1000) */
+    typedef struct {
+        int value;
+    } LargeComponent;
+    
+    ECS_COMPONENT(world, LargeComponent);
+    for (int i = 0; i < 500; i++) {
+        ecs_entity_t large_e = ecs_new_w(world, LargeComponent);
+        (void)large_e;
+    }
+    
+    mem = ecs_table_memory_get(world);
+    /* 500 entities should be in bucket 9: 256-511 entities */
+    test_assert(mem.entity_count_histogram[9] >= 1); /* Table with 256-511 entities */
+    
+    /* Verify the >65535 bucket is still 0 (we haven't created tables that large) */
+    int32_t overflow_bucket = ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT - 1;
+    test_assert(mem.entity_count_histogram[overflow_bucket] == 0);
+    
+    /* Test boundary conditions */
+    test_assert(mem.entity_count_histogram[0] >= 0);    /* 0 entities bucket */
+    /* Last regular bucket (32768-65535 entities) - bucket 16 */
+    test_assert(mem.entity_count_histogram[16] >= 0);
+    test_assert(mem.entity_count_histogram[overflow_bucket] >= 0); /* >65535 entities bucket */
+
+    ecs_fini(world);
+}
