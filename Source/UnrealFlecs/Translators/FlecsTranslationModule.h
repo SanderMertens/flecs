@@ -13,7 +13,7 @@ class UNREALFLECS_API UFlecsTranslationModule final : public UFlecsModuleObject
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE virtual FString GetModuleName_Implementation() const override
+	virtual FString GetModuleName_Implementation() const override
 	{
 		return "Flecs Translation Module";
 	}
