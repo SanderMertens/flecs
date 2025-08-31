@@ -888,7 +888,7 @@ public:
 	FFlecsTypeMapComponent* TypeMapComponent;
 
 private:
-	NO_DISCARD UFlecsWorld* GetSelf() const
+	NO_DISCARD FORCEINLINE UFlecsWorld* GetSelf() const
 	{
 		return const_cast<UFlecsWorld*>(this);
 	}
