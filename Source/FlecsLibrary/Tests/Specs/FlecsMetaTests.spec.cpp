@@ -1074,16 +1074,16 @@ void Meta_enum_w_bits(void) {
 	ecs.component<EnumWithBitsStruct>()
 		.member<EnumWithBits>("bits");
 
-	for (int i = 0; i < 30; i++)
+    for (int i = 0; i < 1; i++)
 	{
-		ecs.entity()
-			.child_of(ecs.entity())
+        ecs.entity("e")
+            .child_of(ecs.entity("p"))
 			.add<EnumWithBitsStruct>();
 	}
 
     auto q = ecs.query<EnumWithBitsStruct>();
     auto s = q.iter().to_json();
-    test_str(s.c_str(), "");
+    test_str(s.c_str(), "{\"results\":[{\"parent\":\"p\", \"name\":\"e\", \"fields\":{\"values\":[{\"bits\":\"BitAll\"}]}}]}");
 }
 
 void Meta_value_range(void) {
@@ -1448,6 +1448,18 @@ void Meta_script_to_std_vector_std_string(void) {
     test_str(v.at(1).c_str(), "World");
 }
 
+void Meta_anonymous_opaque_as_type_parent(void) {
+    // Implement testcase
+}
+
+void Meta_named_opaque_as_type_parent(void) {
+    // Implement testcase
+}
+
+void Meta_parented_opaque_as_type_parent(void) {
+    // Implement testcase
+}
+
 END_DEFINE_SPEC(FFlecsMetaTestsSpec);
 
 /*"id": "Meta",
@@ -1512,7 +1524,10 @@ END_DEFINE_SPEC(FFlecsMetaTestsSpec);
                 "entity_to_json_w_default_desc",
                 "query_to_json_w_default_desc",
                 "script_to_std_vector_int",
-                "script_to_std_vector_std_string"
+                "script_to_std_vector_std_string",
+                "anonymous_opaque_as_type_parent",
+                "named_opaque_as_type_parent",
+                "parented_opaque_as_type_parent"
             ]*/
 
 void FFlecsMetaTestsSpec::Define()
@@ -1578,6 +1593,9 @@ void FFlecsMetaTestsSpec::Define()
     It("Meta_query_to_json_w_default_desc", [&]() { Meta_query_to_json_w_default_desc(); });
     It("Meta_script_to_std_vector_int", [&]() { Meta_script_to_std_vector_int(); });
     It("Meta_script_to_std_vector_std_string", [&]() { Meta_script_to_std_vector_std_string(); });
+    It("Meta_anonymous_opaque_as_type_parent", [&]() { Meta_anonymous_opaque_as_type_parent(); });
+    It("Meta_named_opaque_as_type_parent", [&]() { Meta_named_opaque_as_type_parent(); });
+    It("Meta_parented_opaque_as_type_parent", [&]() { Meta_parented_opaque_as_type_parent(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS
