@@ -5,6 +5,7 @@
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
 #include "Tests/FlecsTestTypes.h"
+#include "Worlds/FlecsWorld.h"
 
 BEGIN_DEFINE_SPEC(FRegisteredComponentTestsSpec,
                   "Flecs.Components.Registration",

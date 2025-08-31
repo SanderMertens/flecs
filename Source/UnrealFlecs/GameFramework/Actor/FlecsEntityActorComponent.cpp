@@ -1,11 +1,17 @@
 ﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
 #include "FlecsEntityActorComponent.h"
-#include "Components/ObjectTypes/FlecsActorTag.h"
-#include "Logs/FlecsCategories.h"
+
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
+
+#include "Logs/FlecsCategories.h"
+
+#include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldSubsystem.h"
+
+#include "Components/FlecsUObjectComponent.h"
+#include "Components/ObjectTypes/FlecsActorTag.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityActorComponent)
 
@@ -95,7 +101,8 @@ void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 void UFlecsEntityActorComponent::CreateActorEntity(const TSolidNotNull<const UFlecsWorld*> InWorld)
 {
 	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord);
-	
+
+	// @TODO: Should this be the Component or the Owner?
 	EntityHandle.SetPairFirst<FFlecsUObjectComponent, FFlecsActorTag>(FFlecsUObjectComponent{ GetOwner() });
 	
 	UE_CLOGFMT(EntityHandle.HasName(), LogFlecsEntity, Log,

@@ -5,11 +5,15 @@
 #if WITH_AUTOMATION_TESTS
 
 #include "CoreMinimal.h"
+
 #include "EngineUtils.h"
+#include "Pipelines/FlecsDefaultGameLoop.h"
 #include "Tests/AutomationCommon.h"
 #include "Tests/AutomationEditorCommon.h"
 #include "UObject/Object.h"
+#include "Worlds/FlecsWorldInfoSettings.h"
 #include "Worlds/FlecsWorldSubsystem.h"
+#include "Worlds/FlecsWorld.h"
 
 namespace Unreal::Flecs::Testing::impl
 {
@@ -22,8 +26,8 @@ public:
 	TUniquePtr<FTestWorldWrapper> TestWorldWrapper;
 	
 	TWeakObjectPtr<UWorld> TestWorld;
-	TStrongObjectPtr<UFlecsWorldSubsystem> WorldSubsystem = nullptr;
-	TStrongObjectPtr<UFlecsWorld> FlecsWorld = nullptr;
+	UFlecsWorldSubsystem* WorldSubsystem = nullptr;
+	UFlecsWorld* FlecsWorld = nullptr;
 
 	void SetUp(TScriptInterface<IFlecsGameLoopInterface> InGameLoopInterface = nullptr,
 	           const TArray<UObject*>& InModules = {})
@@ -33,12 +37,12 @@ public:
 
 		TestWorld = TestWorldWrapper->GetTestWorld();
 
-		WorldSubsystem = TStrongObjectPtr(TestWorld->GetSubsystem<UFlecsWorldSubsystem>());
-		check(WorldSubsystem.IsValid());
+		WorldSubsystem = TestWorld->GetSubsystem<UFlecsWorldSubsystem>();
+		check(IsValid(WorldSubsystem));
 
 		if (!InGameLoopInterface)
 		{
-			InGameLoopInterface = NewObject<UFlecsDefaultGameLoop>(WorldSubsystem.Get());
+			InGameLoopInterface = NewObject<UFlecsDefaultGameLoop>(WorldSubsystem);
 		}
 
 		// Create world settings
@@ -47,7 +51,7 @@ public:
 		WorldSettings.GameLoop = InGameLoopInterface.GetObject();
 		WorldSettings.Modules = InModules;
 
-		FlecsWorld = TStrongObjectPtr(WorldSubsystem->CreateWorld(TEXT("TestWorld"), WorldSettings));
+		FlecsWorld = WorldSubsystem->CreateWorld(TEXT("TestWorld"), WorldSettings);
 
 		TestWorldWrapper->BeginPlayInTestWorld();
 	}
@@ -59,14 +63,14 @@ public:
 
 	void TearDown()
 	{
-		if (FlecsWorld.IsValid())
+		if (FlecsWorld)
 		{
-			FlecsWorld.Reset();
+			FlecsWorld = nullptr;
 		}
 
-		if (WorldSubsystem.IsValid())
+		if (WorldSubsystem)
 		{
-			WorldSubsystem.Reset();
+			WorldSubsystem = nullptr;
 		}
 
 		TestWorldWrapper.Reset();
@@ -74,7 +78,7 @@ public:
 
 	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorld() const
 	{
-		return FlecsWorld.Get();
+		return FlecsWorld;
 	}
 	
 }; // class FFlecsTestFixture

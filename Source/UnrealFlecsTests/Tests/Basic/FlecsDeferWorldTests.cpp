@@ -4,6 +4,7 @@
 
 #include "StructUtils/StructView.h"
 #include "Tests/FlecsTestTypes.h"
+#include "Worlds/FlecsWorld.h"
 
 /*
  * Layout of the tests:

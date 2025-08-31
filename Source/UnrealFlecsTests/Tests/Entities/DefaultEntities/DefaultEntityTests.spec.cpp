@@ -7,6 +7,7 @@
 #include "Fixtures/FlecsWorldFixture.h"
 #include "Transforms/FlecsTransformDefaultEntities.h"
 #include "Tests/FlecsTestTypes.h"
+#include "Worlds/FlecsWorld.h"
 
 BEGIN_DEFINE_SPEC(FDefaultEntityTestsSpec,
                   "Flecs.Entity.Default_Entities",

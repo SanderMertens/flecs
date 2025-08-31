@@ -5,6 +5,7 @@
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
 #include "Fixtures/Commands/FlecsWorldTestCommands.h"
+#include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldConverter.h"
 
 BEGIN_DEFINE_SPEC(FFlecsWorldLifecycleTestsSpec,
@@ -23,7 +24,7 @@ void FFlecsWorldLifecycleTestsSpec::Define()
 		
 		It("Should create a valid Flecs world", [this]()
 		{
-			TestTrue("Flecs world is valid", Fixture.FlecsWorld.IsValid());
+			TestTrue("Flecs world is valid", IsValid(Fixture.FlecsWorld));
 		});
 	});
 
@@ -34,7 +35,7 @@ void FFlecsWorldLifecycleTestsSpec::Define()
 		It("Should be able to convert flecs::world to UFlecsWorld using ToFlecsWorld Function",
 			[this]()
 		{
-			TestTrue("Flecs world is valid", Fixture.FlecsWorld.IsValid());
+			TestTrue("Flecs world is valid", IsValid(Fixture.FlecsWorld));
 				
 			TestNotNull("Flecs world singleton is valid",
 				Unreal::Flecs::ToFlecsWorld(Fixture.FlecsWorld->World));

@@ -2,9 +2,12 @@
 
 // ReSharper disable CppExpressionWithoutSideEffects
 #include "FlecsDefaultEntityEngineSubsystem.h"
+
 #include "FlecsDefaultEntitiesDeveloperSettings.h"
+
+#include "Logs/FlecsCategories.h"
+
 #include "Worlds/FlecsWorldSubsystem.h"
-#include "Types/SolidNotNull.h"
 
 FFlecsDefaultEntityEngine FFlecsDefaultEntityEngine::Instance;
 

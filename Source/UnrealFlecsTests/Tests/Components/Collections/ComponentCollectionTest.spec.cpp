@@ -5,6 +5,7 @@
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
 #include "Transforms/FlecsTransformComponents.h"
+#include "Worlds/FlecsWorld.h"
 
 BEGIN_DEFINE_SPEC(FComponentCollectionTestSpec,
                   "Flecs.Components.Collections",

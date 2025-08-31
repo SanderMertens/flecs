@@ -7,6 +7,7 @@
 #include "Misc/AutomationTest.h"
 #include "Tests/FlecsTestTypes.h"
 #include "Tests/Types/FlecsClassTestTypes.h"
+#include "Worlds/FlecsWorld.h"
 
 /*
  * Layout of the tests:

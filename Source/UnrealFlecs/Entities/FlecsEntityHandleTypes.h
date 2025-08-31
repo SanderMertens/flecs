@@ -3,11 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsId.h"
+
 #include "GameplayTagContainer.h"
 #include "StructUtils/StructView.h"
+
 #include "Types/SolidEnumSelector.h"
 #include "Types/SolidNotNull.h"
+
+#include "FlecsId.h"
+
 #include "FlecsEntityHandleTypes.generated.h"
 
 class UFlecsWorld;

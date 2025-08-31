@@ -1,9 +1,14 @@
 ﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
 #include "UnrealFlecsObject.h"
+
 #include "Net/UnrealNetwork.h"
+
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldSubsystem.h"
+
+#include "Components/FlecsUObjectComponent.h"
+#include "Components/ObjectTypes/FFlecsUObjectTag.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UnrealFlecsObject)
 
@@ -21,7 +26,7 @@ void UUnrealFlecsObject::InitializeFlecsObject(TSolidNotNull<UFlecsWorld*> InFle
 	FlecsWorld = InFlecsWorld;
 
 	ObjectEntityHandle = CreateObjectEntity();
-	ObjectEntityHandle.SetPairFirst<FFlecsUObjectComponent, FFlecsUObjectTag>({ this });
+	ObjectEntityHandle.SetPairFirst<FFlecsUObjectComponent, FFlecsUObjectTag>(FFlecsUObjectComponent{ this });
 
 	const TSolidNotNull<UFlecsWorldSubsystem*> FlecsWorldSubsystem = FlecsWorld->GetContext();
 

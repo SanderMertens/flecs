@@ -1,7 +1,9 @@
 ﻿#if WITH_AUTOMATION_TESTS
 
+#include "Entities/FlecsEntityHandle.h"
 #include "Misc/AutomationTest.h"
 #include "Fixtures/FlecsWorldFixture.h"
+#include "Worlds/FlecsWorld.h"
 
 
 BEGIN_DEFINE_SPEC(FStringComponentTestsSpec,

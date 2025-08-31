@@ -5,6 +5,7 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
+
 #include "FlecsDefaultEntitiesDeveloperSettings.h"
 
 struct UNREALFLECS_API FFlecsDefaultEntityEngine final

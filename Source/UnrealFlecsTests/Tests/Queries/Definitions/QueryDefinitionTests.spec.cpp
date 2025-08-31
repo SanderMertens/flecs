@@ -7,6 +7,7 @@
 #include "Queries/FlecsQueryDefinition.h"
 #include "Queries/FlecsQuery.h"
 #include "Tests/FlecsTestTypes.h"
+#include "Worlds/FlecsWorld.h"
 
 BEGIN_DEFINE_SPEC(FQueryDefinitionTestsSpec,
                   "Flecs.Query.Definition",
@@ -59,7 +60,7 @@ void FQueryDefinitionTestsSpec::Define()
 
 			flecs::query_builder<> Builder = flecs::query_builder(Fixture.FlecsWorld->World, "TestQuery");
 			
-			Definition.Apply(Fixture.FlecsWorld.Get(), Builder);
+			Definition.Apply(Fixture.FlecsWorld, Builder);
 			flecs::query<> Query = Builder.build();
 
 			TestTrue("Query has 1 term count", Query.term_count() == 1);
@@ -83,7 +84,7 @@ void FQueryDefinitionTestsSpec::Define()
 
 			flecs::query_builder<> Builder = flecs::query_builder(Fixture.FlecsWorld->World, "TestQuery");
 
-			Definition.Apply(Fixture.FlecsWorld.Get(), Builder);
+			Definition.Apply(Fixture.FlecsWorld, Builder);
 			flecs::query<> Query = Builder.build();
 
 			TestTrue("Query has 1 term count", Query.term_count() == 1);

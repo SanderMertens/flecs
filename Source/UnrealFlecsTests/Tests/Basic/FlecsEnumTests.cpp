@@ -5,6 +5,7 @@
 #if WITH_AUTOMATION_TESTS
 
 #include "Tests/FlecsTestTypes.h"
+#include "Worlds/FlecsWorld.h"
 
 /** Layout of the tests:
  * A. Enum Register Add/Remove/Replace API Tests
