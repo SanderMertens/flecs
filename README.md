@@ -34,3 +34,5 @@ enum\_data<E>::entity(underlying\_type\_t<E> value) in `Source/FlecsLibrary/Publ
 EcsFirstUserComponentId is set to 9
 
 added bUseLowId bool paramn to untyped_component(flecs::world_t *world, const char *name) constructor in `Source/FlecsLibrary/Public/flecs/addons/cpp/component.hpp`
+
+ensure in the Entity CPP-API is renamed to obtain to be compatible with Unreal
