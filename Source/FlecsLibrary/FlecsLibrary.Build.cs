@@ -52,8 +52,8 @@ public class FlecsLibrary : ModuleRules
             }
         );
         
-        // Not Packaged
-        if (Target.Configuration != UnrealTargetConfiguration.Shipping)
+        // Not Test
+        if (Target.Configuration != UnrealTargetConfiguration.Test)
         {
             PublicDefinitions.AddRange(
                 new string[]
@@ -71,6 +71,11 @@ public class FlecsLibrary : ModuleRules
                     "FLECS_KEEP_ASSERT",
                 }
             );
+        }
+        
+        if (Target.bBuildEditor)
+        {
+            PublicDefinitions.Add("FLECS_JOURNAL");
         }
 
         if (Target.bCompileAgainstEditor)
