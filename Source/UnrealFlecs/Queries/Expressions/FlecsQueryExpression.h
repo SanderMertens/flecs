@@ -53,5 +53,9 @@ struct TStructOpsTypeTraits<FFlecsQueryExpression> : public TStructOpsTypeTraits
 	};
 }; // struct TStructOpsTypeTraits<FFlecsQueryExpression>
 
-template <typename T>
-concept TQueryExpressionConcept = std::is_base_of<FFlecsQueryExpression, T>::value;
+namespace Unreal::Flecs::Queries
+{
+	template <typename T>
+	concept TQueryExpressionConcept = std::is_base_of<FFlecsQueryExpression, T>::value;
+	
+} // namespace Unreal::Flecs::Queries

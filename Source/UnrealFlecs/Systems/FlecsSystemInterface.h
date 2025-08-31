@@ -22,56 +22,13 @@ class UNREALFLECS_API IFlecsSystemInterface : public IFlecsEntityInterface
 
 public:
 
-	FORCEINLINE void InitializeSystem_Internal(const flecs::world& InWorld)
-	{
-		const FFlecsSystemSettingsInfo& Settings = GetSystemSettings();
-		
-		flecs::system_builder Builder(InWorld, StringCast<char>(*Settings.Name).Get());
-
-		if (Settings.Kind != FFlecsEntityHandle::GetNullHandle())
-		{
-			Builder.kind(Settings.Kind);
-		}
-
-		switch (Settings.TimerKind)
-		{
-		case EFlecsSystemTimerKind::None:
-			break;
-		case EFlecsSystemTimerKind::Interval:
-			Builder.interval(Settings.Interval);
-			break;
-		case EFlecsSystemTimerKind::Rate:
-			Builder.rate(Settings.Rate);
-			break;
-		};
-
-		if (Settings.TickSource != FFlecsEntityHandle::GetNullHandle())
-		{
-			Builder.tick_source(Settings.TickSource);
-		}
-
-		Builder.priority(Settings.Priority);
-		
-		BuildSystem(Builder);
-
-		System = FFlecsSystem(Builder); // Builder.build();
-		
-		Settings.SystemRecord.ApplyRecordToEntity(System.GetEntity());
-		//@TODO: Add FlecsSystemObject Component Target Type
-		//System.GetEntity().Set<FFlecsUObjectComponent>({ _getUObject() });
-		
-		InitializeSystem();
-		BP_InitializeSystem();
-	}
+	void InitializeSystem_Internal(const flecs::world& InWorld);
 
 	FORCEINLINE virtual void InitializeSystem()
 	{
 	}
 
-	FORCEINLINE virtual FFlecsEntityHandle GetEntityHandle() const override final
-	{
-		return System.GetEntity();
-	}
+	virtual FFlecsEntityHandle GetEntityHandle() const override final;
 
 	virtual void BuildSystem(flecs::system_builder<>& Builder)
 		PURE_VIRTUAL(IFlecsSystemInterface::BuildSystem, return;);

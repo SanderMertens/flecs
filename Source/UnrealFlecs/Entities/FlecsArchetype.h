@@ -51,7 +51,7 @@ public:
      * @return false to continue iteration, true to break.
      */
     template <typename FunctionType>
-    FORCEINLINE void ForEach(FunctionType&& InFunction) const
+    FORCEINLINE_DEBUGGABLE void ForEach(FunctionType&& InFunction) const
     {
         using ReturnType = std::invoke_result_t<FunctionType, FFlecsId>;
         

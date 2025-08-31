@@ -63,7 +63,7 @@ UFlecsWorld::~UFlecsWorld()
 	const FAssetRegistryModule* AssetRegistryModule
 		= FModuleManager::LoadModulePtr<FAssetRegistryModule>("AssetRegistry");
 
-	if (AssetRegistryModule && AssetRegistryModule->IsValid())
+	if LIKELY_IF(AssetRegistryModule && AssetRegistryModule->IsValid())
 	{
 		IAssetRegistry& AssetRegistry = AssetRegistryModule->Get();
 		AssetRegistry.OnAssetAdded().RemoveAll(this);
@@ -79,6 +79,18 @@ UFlecsWorld::~UFlecsWorld()
 	}
 
 	FCoreUObjectDelegates::GarbageCollectComplete.RemoveAll(this);
+}
+
+UFlecsWorld* UFlecsWorld::GetDefaultWorld(const UObject* WorldContextObject)
+{
+	solid_check(WorldContextObject);
+
+	const TSolidNotNull<const UWorld*> GameWorld
+		= GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert);
+	
+	const TSolidNotNull<const UFlecsWorldSubsystem*> WorldSubsystem = GameWorld->GetSubsystem<UFlecsWorldSubsystem>();
+	
+	return WorldSubsystem->GetDefaultWorld();
 }
 
 void UFlecsWorld::WorldStart()

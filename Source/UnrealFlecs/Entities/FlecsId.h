@@ -5,8 +5,10 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
+
 #include "SolidMacros/Macros.h"
 #include "Standard/Hashing.h"
+
 #include "FlecsId.generated.h"
 
 USTRUCT(BlueprintType)
@@ -147,31 +149,13 @@ public:
         return flecs::get_generation(Id);
     }
 
-    FORCEINLINE FString ToString() const
-    {
-        return FString::Printf(TEXT("Index: %d, Generation: %d"), GetIndex(), GetGeneration());
-    }
+    NO_DISCARD FString ToString() const;
 
-    FORCEINLINE bool ImportTextItem(const TCHAR*& Buffer, int32 PortFlags, UObject* Parent, FOutputDevice* ErrorText)
-    {
-        uint64 TempId = 0;
-        
-        if LIKELY_IF(FParse::Value(Buffer, TEXT("FlecsId="), TempId))
-        {
-            Id = TempId;
-            return true;
-        }
+    bool ImportTextItem(const TCHAR*& Buffer, int32 PortFlags, UObject* Parent, FOutputDevice* ErrorText);
 
-        return false;
-    }
+    bool ExportTextItem(FString& ValueStr, const FFlecsId& DefaultValue,
+                        UObject* Parent, int32 PortFlags, UObject* ExportRootScope) const;
 
-    FORCEINLINE bool ExportTextItem(FString& ValueStr, const FFlecsId& DefaultValue,
-        UObject* Parent, int32 PortFlags, UObject* ExportRootScope) const
-    {
-        ValueStr = FString::Printf(TEXT("FlecsId=%llu"), Id);
-        return true;
-    }
-    
     UPROPERTY()
     uint64 Id = 0;
     

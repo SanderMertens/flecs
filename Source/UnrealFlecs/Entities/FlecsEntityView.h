@@ -3,9 +3,22 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsEntityHandleTypes.h"
+
 #include "Types/SolidNotNull.h"
+
+#include "FlecsEntityHandleTypes.h"
+
 #include "FlecsEntityView.generated.h"
+
+enum class EFlecsComponentAccessorType : uint8
+{
+	
+}; // enum class EFlecsComponentAccessorType
+
+namespace Unreal::Flecs
+{
+	
+} // namespace Unreal::Flecs
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsEntityView : public FFlecsCommonHandle

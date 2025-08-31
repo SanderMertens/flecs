@@ -2,11 +2,10 @@
 
 #pragma once
 
-#include "flecs.h"
-
 #include "CoreMinimal.h"
+
 #include "Entities/FlecsComponentHandle.h"
-#include "Properties/FlecsComponentProperties.h"
+
 #include "FlecsNetworkSerializeDefinitionComponent.generated.h"
 
 // Sparse
@@ -21,4 +20,3 @@ public:
 	Unreal::Flecs::FEntityNetSerializeFunction NetSerializeFunction = nullptr;
 	
 }; // struct FFlecsNetworkSerializeDefinitionComponent
-

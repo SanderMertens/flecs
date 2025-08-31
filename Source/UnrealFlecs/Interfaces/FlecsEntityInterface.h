@@ -22,4 +22,9 @@ public:
 	NO_DISCARD virtual FFlecsEntityHandle GetEntityHandle() const
 		PURE_VIRTUAL(IFlecsEntityInterface::GetEntityHandle, return FFlecsEntityHandle(););
 
+	NO_DISCARD bool IsValidEntity() const
+	{
+		return GetEntityHandle().IsValid();
+	}
+
 }; // class IFlecsEntityInterface

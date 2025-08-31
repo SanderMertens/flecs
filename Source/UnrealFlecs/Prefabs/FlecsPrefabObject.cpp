@@ -14,3 +14,8 @@ void UFlecsPrefabObject::CreatePrefab(const TSolidNotNull<UFlecsWorld*> InWorld)
 	OnPrefabCreated(GetPrefabHandle());
 	BP_OnPrefabCreated(GetPrefabHandle());
 }
+
+FFlecsEntityHandle UFlecsPrefabObject::GetEntityHandle() const
+{
+	return PrefabEntityHandle;
+}

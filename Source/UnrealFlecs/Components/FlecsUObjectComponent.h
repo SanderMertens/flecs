@@ -4,10 +4,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SolidMacros/Macros.h"
+
 #include "UObject/Object.h"
-#include "Properties/FlecsComponentProperties.h"
+
+#include "SolidMacros/Macros.h"
 #include "Types/SolidNotNull.h"
+
+#include "Properties/FlecsComponentProperties.h"
+
 #include "FlecsUObjectComponent.generated.h"
 
 /**

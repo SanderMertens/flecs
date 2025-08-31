@@ -18,7 +18,7 @@ enum class EFlecsQueryInOut : uint8
 	Filter = flecs::InOutFilter /** Same as None + prevents term from triggering observers */
 }; // enum class EFlecsQueryInOut
 
-NO_DISCARD FORCEINLINE constexpr flecs::inout_kind_t ToFlecsInOut(EFlecsQueryInOut InOut) NOEXCEPT
+NO_DISCARD FORCEINLINE constexpr flecs::inout_kind_t ToFlecsInOut(EFlecsQueryInOut InOut)
 {
 	return static_cast<flecs::inout_kind_t>(InOut);
 }

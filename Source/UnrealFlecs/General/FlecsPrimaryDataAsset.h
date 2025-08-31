@@ -3,8 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Engine/DataAsset.h"
+
 #include "Entities/FlecsEntityHandle.h"
+
 #include "FlecsPrimaryDataAsset.generated.h"
 
 UCLASS(Abstract, BlueprintType)
@@ -17,7 +20,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	bool bEnabledOnStartup = true;
 
-	FORCEINLINE virtual FPrimaryAssetId GetPrimaryAssetId() const override final
+	virtual FPrimaryAssetId GetPrimaryAssetId() const override final
 	{
 		return FPrimaryAssetId("FlecsPrimaryDataAsset", GetFName());
 	}
@@ -27,9 +30,6 @@ public:
 	virtual void OnEntityDestroyed(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)
 		PURE_VIRTUAL(UFlecsPrimaryDataAsset::OnEntityDestroyed, );
 
-	NO_DISCARD FORCEINLINE bool ShouldSpawn() const
-	{
-		return bEnabledOnStartup && !GetClass()->HasAnyClassFlags(CLASS_Abstract);
-	}
+	NO_DISCARD bool ShouldSpawn() const;
 
 }; // class UFlecsPrimaryDataAsset

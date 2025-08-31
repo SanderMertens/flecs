@@ -26,10 +26,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Flecs")
 	FString PrefabName;
 
-	FORCEINLINE virtual FFlecsEntityHandle GetEntityHandle() const override final
-	{
-		return PrefabEntityHandle;
-	}
+	virtual FFlecsEntityHandle GetEntityHandle() const override final;
 
 	UPROPERTY()
 	FFlecsEntityHandle PrefabEntityHandle;

@@ -59,6 +59,8 @@ public:
 	
 	virtual ~UFlecsWorld() override;
 
+	static NO_DISCARD UFlecsWorld* GetDefaultWorld(const UObject* WorldContextObject);
+
 	void WorldStart();
 
 	// ReSharper disable once CppMemberFunctionMayBeConst

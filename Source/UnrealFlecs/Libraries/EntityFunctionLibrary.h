@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Entities/FlecsEntityHandle.h"
-#include "GameFramework/Actor/FlecsEntityActorComponent.h"
-#include "Interfaces/FlecsEntityInterface.h"
+
 #include "Kismet/BlueprintFunctionLibrary.h"
+
+#include "Entities/FlecsEntityHandle.h"
+
 #include "EntityFunctionLibrary.generated.h"
 
 UCLASS(BlueprintType)
@@ -16,142 +17,57 @@ class UNREALFLECS_API UEntityFunctionLibrary final : public UBlueprintFunctionLi
 
 public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE FFlecsId MakePairId(const FFlecsId First, const FFlecsId Second)
-    {
-        return FFlecsId::MakePair(First, Second);
-    }
-    
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE bool IsEntityFromObject(UObject* Object)
-    {
-        if UNLIKELY_IF(!ensureMsgf(Object, TEXT("Object is not valid")))
-        {
-            return false;
-        }
-
-        if (Object->Implements<UFlecsEntityInterface>())
-        {
-            return true;
-        }
-
-        if (const AActor* Actor = Cast<AActor>(Object))
-        {
-            return Actor->FindComponentByClass<UFlecsEntityActorComponent>() != nullptr;
-        }
-        
-        return false;
-    }
+    static FFlecsId MakePairId(const FFlecsId First, const FFlecsId Second);
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE FFlecsEntityHandle GetEntityFromObject(UObject* Object)
-    {
-        solid_check(Object);
-
-        if (Object->Implements<UFlecsEntityInterface>())
-        {
-            return CastChecked<IFlecsEntityInterface>(Object)->GetEntityHandle();
-        }
-
-        if LIKELY_IF(const AActor* Actor = Cast<AActor>(Object))
-        {
-            if (const UFlecsEntityActorComponent* EntityActorComponent
-                = Actor->FindComponentByClass<UFlecsEntityActorComponent>())
-            {
-                return EntityActorComponent->GetEntityHandle();
-            }
-        }
-
-        return FFlecsEntityHandle::GetNullHandle();
-    }
-
-    UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void DestroyEntity(const FFlecsEntityHandle& Entity)
-    {
-        Entity.Destroy();
-    }
-
-    UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void SetEntityName(const FFlecsEntityHandle& Entity, const FString& EntityName)
-    {
-        Entity.SetName(EntityName);
-    }
+    static bool IsEntityFromObject(UObject* Object);
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE FString GetEntityName(const FFlecsEntityHandle& Entity)
-    {
-        return FString(Entity.GetName());
-    }
+    static FFlecsEntityHandle GetEntityFromObject(UObject* Object);
 
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void AddComponent(const FFlecsEntityHandle& Entity, const UScriptStruct* ComponentType)
-    {
-        Entity.Add(ComponentType);
-    }
+    static void DestroyEntity(const FFlecsEntityHandle& Entity);
 
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void AddEntityType(const FFlecsEntityHandle& Entity, const FFlecsEntityHandle& EntityType)
-    {
-        Entity.Add(EntityType);
-    }
-
-    UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void RemoveComponent(const FFlecsEntityHandle& Entity, const UScriptStruct* ComponentType)
-    {
-        Entity.Remove(ComponentType);
-    }
-
-    UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void RemoveEntityType(const FFlecsEntityHandle& Entity, const FFlecsEntityHandle& EntityType)
-    {
-        Entity.Remove(EntityType);
-    }
+    static void SetEntityName(const FFlecsEntityHandle& Entity, const FString& EntityName);
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE bool HasComponent(const FFlecsEntityHandle& Entity, const UScriptStruct* ComponentType)
-    {
-        return Entity.Has(ComponentType);
-    }
-
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE bool HasEntityType(const FFlecsEntityHandle& Entity, const FFlecsEntityHandle& EntityType)
-    {
-        return Entity.Has(EntityType);
-    }
-
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE bool IsValidEntity(const FFlecsEntityHandle& Entity)
-    {
-        return Entity.IsValid();
-    }
-
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE bool IsAlive(const FFlecsEntityHandle& Entity)
-    {
-        return Entity.IsAlive();
-    }
-
-    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE bool IsEnabled(const FFlecsEntityHandle& Entity)
-    {
-        return Entity.IsEnabled();
-    }
+    static FString GetEntityName(const FFlecsEntityHandle& Entity);
 
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void Enable(const FFlecsEntityHandle& Entity)
-    {
-        Entity.Enable();
-    }
+    static void AddComponent(const FFlecsEntityHandle& Entity, const UScriptStruct* ComponentType);
 
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void Disable(const FFlecsEntityHandle& Entity)
-    {
-        Entity.Disable();
-    }
+    static void AddEntityType(const FFlecsEntityHandle& Entity, const FFlecsEntityHandle& EntityType);
 
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void Clear(const FFlecsEntityHandle& Entity)
-    {
-        Entity.Clear();
-    }
-    
+    static void RemoveComponent(const FFlecsEntityHandle& Entity, const UScriptStruct* ComponentType);
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
+    static void RemoveEntityType(const FFlecsEntityHandle& Entity, const FFlecsEntityHandle& EntityType);
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
+    static bool HasComponent(const FFlecsEntityHandle& Entity, const UScriptStruct* ComponentType);
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
+    static bool HasEntityType(const FFlecsEntityHandle& Entity, const FFlecsEntityHandle& EntityType);
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
+    static bool IsValidEntity(const FFlecsEntityHandle& Entity);
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
+    static bool IsAlive(const FFlecsEntityHandle& Entity);
+
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
+    static bool IsEnabled(const FFlecsEntityHandle& Entity);
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
+    static void Enable(const FFlecsEntityHandle& Entity);
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
+    static void Disable(const FFlecsEntityHandle& Entity);
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
+    static void Clear(const FFlecsEntityHandle& Entity);
+
 }; // class UEntityFunctionLibrary
