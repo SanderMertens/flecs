@@ -14,21 +14,10 @@ class UNREALFLECS_API UFlecsAbstractWorldSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE virtual void Initialize(FSubsystemCollectionBase& Collection) override
-	{
-		Super::Initialize(Collection);
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-		Collection.InitializeDependency<UFlecsWorldSubsystem>();
-		FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorldStatic(this);
-	}
-	
-	FORCEINLINE virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override final
-	{
-		return WorldType == EWorldType::Game
-			|| WorldType == EWorldType::PIE
-			|| WorldType == EWorldType::GameRPC;
-	}
-	
+	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override final;
+
 	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorld() const
 	{
 		return FlecsWorld.Get();
