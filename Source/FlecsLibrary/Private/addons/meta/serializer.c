@@ -227,10 +227,61 @@ int flecs_meta_serialize_enum(
     op->type_info = ecs_get_type_info(world, type);
     ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const EcsConstants *enum_type = ecs_get(world, type, EcsConstants);
-    ecs_assert(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
-    op->is.constants = enum_type->constants;
+    const EcsConstants *constants = ecs_get(world, type, EcsConstants);
+    ecs_assert(constants != NULL, ECS_INVALID_PARAMETER, NULL);
+    op->is.constants = constants->constants;
     ecs_assert(op->is.constants != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const EcsEnum *enum_type = ecs_get(world, type, EcsEnum);
+    ecs_assert(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_entity_t underlying = enum_type->underlying_type;
+    ecs_assert(underlying != 0, ECS_INTERNAL_ERROR, NULL);
+
+    const EcsPrimitive *prim_type = ecs_get(world, underlying, EcsPrimitive);
+    ecs_assert(prim_type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    switch(prim_type->kind) {
+    case EcsU8: 
+        op->underlying_kind = EcsOpU8; 
+        break;
+    case EcsU16:
+        op->underlying_kind = EcsOpU16;
+        break;
+    case EcsU32:
+        op->underlying_kind = EcsOpU32;
+        break;
+    case EcsUPtr:
+        op->underlying_kind = EcsOpUPtr;
+        break;
+    case EcsU64:
+        op->underlying_kind = EcsOpU64;
+        break;
+    case EcsI8:
+        op->underlying_kind = EcsOpI8;
+        break;
+    case EcsI16:
+        op->underlying_kind = EcsOpI16;
+        break;
+    case EcsI32:
+        op->underlying_kind = EcsOpI32;
+        break;
+    case EcsIPtr:
+        op->underlying_kind = EcsOpIPtr;
+        break;
+    case EcsI64:
+        op->underlying_kind = EcsOpI64;
+        break;
+    case EcsBool:
+    case EcsChar:
+    case EcsByte:
+    case EcsF32:
+    case EcsF64:
+    case EcsString:
+    case EcsEntity:
+    case EcsId:
+        ecs_abort(ECS_INTERNAL_ERROR, 
+            "invalid primitive type kind for underlying enum type");
+    }
 
     return 0;
 }

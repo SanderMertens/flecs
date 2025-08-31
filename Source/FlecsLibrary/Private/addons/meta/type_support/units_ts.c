@@ -1,5 +1,5 @@
 /**
- * @file addons/meta/type_support/units.c
+ * @file addons/meta/type_support/units_ts.c
  * @brief Units type support.
  */
 

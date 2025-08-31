@@ -21,6 +21,10 @@ const char* ecs_ptr_from_json(
     char *token = token_buffer;
     int depth = 0;
 
+    bool strict = desc ? desc->strict : false;
+    bool skip = false;
+    int skip_depth = 0;
+
     const char *name = NULL;
     const char *expr = NULL;
 
@@ -37,6 +41,25 @@ const char* ecs_ptr_from_json(
     }
 
     while ((json = flecs_json_parse(json, &token_kind, token))) {
+        if (skip) {
+            /* Skip over tokens in case an unknown member was encountered */
+            if (token_kind == JsonObjectOpen || token_kind == JsonArrayOpen) {
+                skip_depth ++;
+            } else
+            if (token_kind == JsonObjectClose || token_kind == JsonArrayClose) {
+                skip_depth --;
+                if (!skip_depth) {
+                    skip = false;
+                }
+            } else {
+                if (!skip_depth) {
+                    skip = false;
+                }
+            }
+
+            continue;
+        }
+
         if (token_kind == JsonLargeString) {
             ecs_strbuf_t large_token = ECS_STRBUF_INIT;
             json = flecs_json_parse_large_string(json, &large_token);
@@ -104,8 +127,14 @@ const char* ecs_ptr_from_json(
             if (token_kind == JsonColon) {
                 /* Member assignment */
                 json = lah;
-                if (ecs_meta_dotmember(&cur, token) != 0) {
-                    goto error;
+                if (strict) {
+                    if (ecs_meta_dotmember(&cur, token) != 0) {
+                        goto error;
+                    }
+                } else {
+                    if (ecs_meta_try_dotmember(&cur, token) != 0) {
+                        skip = true;
+                    }
                 }
             } else {
                 if (ecs_meta_set_string(&cur, token) != 0) {

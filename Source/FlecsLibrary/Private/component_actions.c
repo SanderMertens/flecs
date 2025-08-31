@@ -130,10 +130,13 @@ static
 void flecs_on_unparent(
     ecs_world_t *world,
     ecs_table_t *table,
+    ecs_table_t *other_table,
     int32_t row,
     int32_t count)
 {
-    flecs_unparent_name_index(world, table, row, count);
+    if (other_table) {
+        flecs_unparent_name_index(world, table, row, count);
+    }
     flecs_ordered_children_unparent(world, table, row, count);
 }
 
@@ -359,7 +362,7 @@ void flecs_notify_on_remove(
         }
 
         if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
-            flecs_on_unparent(world, table, row, count);
+            flecs_on_unparent(world, table, other_table, row, count);
         }
 
         if (diff_flags & EcsTableHasDontFragment) {

@@ -426,5 +426,12 @@ void flecs_instantiate(
                 world, base, instance, tr->hdr.table, ctx);
         }
         ecs_os_perf_trace_pop("flecs.instantiate");
+
+        if (cr->flags & EcsIdOrderedChildren) {
+            ecs_component_record_t *icr = flecs_components_get(world, ecs_childof(instance));
+            /* If base has children, instance must now have children */
+            ecs_assert(icr != NULL, ECS_INTERNAL_ERROR, NULL);
+            flecs_ordered_children_populate(world, icr);
+        }
     }
 }

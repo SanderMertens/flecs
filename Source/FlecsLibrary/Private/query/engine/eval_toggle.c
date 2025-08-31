@@ -10,6 +10,24 @@ typedef struct {
     bool has_bitset;
 } flecs_query_row_mask_t;
 
+/* Portable count-trailing-zeros for 64-bit values. Input must be nonzero. */
+static inline int32_t flecs_ctz64(uint64_t v) {
+#if defined(__clang__) || defined(__GNUC__)
+    return (int32_t)__builtin_ctzll(v);
+#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_ARM64))
+    unsigned long idx;
+    _BitScanForward64(&idx, v);
+    return (int32_t)idx;
+#else
+    int32_t count = 0;
+    while ((v & 1u) == 0u) {
+        v >>= 1;
+        count ++;
+    }
+    return count;
+#endif
+}
+
 static
 flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_iter_t *it,
@@ -157,14 +175,12 @@ bool flecs_query_toggle_cmp(
         }
     }
 
-    int32_t i, j;
-    int32_t first, last, block_index, cur;
+    int32_t last, block_index, cur;
     uint64_t block = 0;
     if (!redo) {
         op_ctx->range = range;
         cur = op_ctx->cur = range.offset;
         block_index = op_ctx->block_index = -1;
-        first = range.offset;
         last = range.offset + range.count;
     } else {
         if (!op_ctx->has_bitset) {
@@ -178,13 +194,12 @@ bool flecs_query_toggle_cmp(
             goto done;
         }
 
-        first = cur;
         block_index = op_ctx->block_index;
         block = op_ctx->block;
     }
 
     /* If end of last iteration is start of new block, compute new block */    
-    int32_t new_block_index = cur / 64, row = first;
+    int32_t new_block_index = cur / 64;
     if (new_block_index != block_index) {
 compute_block:
         block_index = op_ctx->block_index = new_block_index;
@@ -219,7 +234,7 @@ next_block:
         op_ctx->block = block;
     }
 
-    /* Find first enabled bit (TODO: use faster bitmagic) */
+    /* Find first enabled bit using bit operations */
     int32_t first_bit = cur - (block_index * 64);
     int32_t last_bit = ECS_MIN(64, last - (block_index * 64));
     ecs_assert(first_bit >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -228,32 +243,31 @@ next_block:
     ecs_assert(last_bit <= 64, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(last_bit >= first_bit, ECS_INTERNAL_ERROR, NULL);
 
-    for (i = first_bit; i < last_bit; i ++) {
-        uint64_t bit = (1ull << i);
-        bool cond = 0 != (block & bit);
-        if (cond) {
-            /* Find last enabled bit */
-            for (j = i; j < last_bit; j ++) {
-                bit = (1ull << j);
-                cond = !(block & bit);
-                if (cond) {
-                    break;
-                }
-            }
+    uint64_t low_mask = (first_bit == 0) ? UINT64_MAX : (~0ull << first_bit);
+    uint64_t high_mask = (last_bit == 64) ? UINT64_MAX : ((1ull << last_bit) - 1ull);
+    uint64_t masked = block & low_mask & high_mask;
 
-            row = i + (block_index * 64);
-            cur = j + (block_index * 64);
-            break;
-        }
-    }
-
-    if (i == last_bit) {
+    if (!masked) {
         goto next_block;
     }
 
-    ecs_assert(row >= first, ECS_INTERNAL_ERROR, NULL);
+    int32_t tz = flecs_ctz64(masked);
+    uint64_t run = masked >> tz; /* ones from start of run */
+    int32_t run_len;
+    if (~run == 0ull) {
+        run_len = 64 - tz;
+    } else {
+        run_len = flecs_ctz64(~run);
+    }
+    int32_t max_len = last_bit - tz;
+    if (run_len > max_len) {
+        run_len = max_len;
+    }
+
+    int32_t row = tz + (block_index * 64);
+    cur = tz + run_len + (block_index * 64);
+
     ecs_assert(cur <= last, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cur >= first, ECS_INTERNAL_ERROR, NULL);
 
     if (!(cur - row)) {
         goto done;
