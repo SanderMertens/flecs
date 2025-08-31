@@ -14,11 +14,11 @@ Only tested on Version: UE 5.6 MSVC
 
 ### Contributors to Unreal-Flecs:
 
-@Megafunk
-@ronaldburns
+@Megafunk \
+@ronaldburns 
 
 ## Features:
-Universalized Component Type Registration CPP <--> Meta Type, Works with USTRUCTs, UENUMs, and UCLASSes
+Universalized Component Type Registration CPP <--> Meta Type, Works with USTRUCTs, UENUMs, and UCLASSes \
 Tracked ObjectPtr References in Components
 
 ## Modifications to Flecs:
