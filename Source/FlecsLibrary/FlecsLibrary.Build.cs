@@ -7,7 +7,7 @@ public class FlecsLibrary : ModuleRules
     public FlecsLibrary(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-        
+
         const bool bCompileWithLibraryTests = false;
         
         Type = ModuleType.CPlusPlus;
@@ -53,7 +53,7 @@ public class FlecsLibrary : ModuleRules
         );
         
         // Not Test
-        if (Target.Configuration != UnrealTargetConfiguration.Test)
+        if (Target.Configuration < UnrealTargetConfiguration.Test)
         {
             PublicDefinitions.AddRange(
                 new string[]
