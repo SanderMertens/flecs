@@ -1581,6 +1581,12 @@ extern "C" {
 /** This computes the offset of an index inside a page */
 #define FLECS_SPARSE_OFFSET(index) ((int32_t)index & (FLECS_SPARSE_PAGE_SIZE - 1))
 
+typedef struct ecs_sparse_page_t {
+    int32_t *sparse;            /* Sparse array with indices to dense array */
+    void *data;                 /* Store data in sparse array to reduce  
+                                 * indirection and provide stable pointers. */
+} ecs_sparse_page_t;
+
 typedef struct ecs_sparse_t {
     ecs_vec_t dense;         /* Dense array with indices to sparse array. The
                               * dense array stores both alive and not alive
@@ -13497,6 +13503,7 @@ FLECS_API extern ECS_COMPONENT_DECLARE(ecs_query_memory_t);           /**< Compo
 FLECS_API extern ECS_COMPONENT_DECLARE(ecs_component_memory_t);       /**< Component id for ecs_component_memory_t. */
 FLECS_API extern ECS_COMPONENT_DECLARE(ecs_table_memory_t);           /**< Component id for ecs_table_memory_t. */
 FLECS_API extern ECS_COMPONENT_DECLARE(ecs_commands_memory_t);        /**< Component id for ecs_commands_memory_t. */
+FLECS_API extern ECS_COMPONENT_DECLARE(ecs_table_histogram_t);        /**< Component id for ecs_table_histogram_t. */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldMemory);               /**< Component id for EcsWorldMemory. */
 
 FLECS_API extern ecs_entity_t EcsPeriod1s;                 /**< Tag used for metrics collected in last second. */
@@ -13578,7 +13585,7 @@ typedef struct {
     ecs_size_t bytes_query;             /** Bytes used by ecs_query_impl_t struct. */
     ecs_size_t bytes_cache;             /** Bytes used by query cache. */
     ecs_size_t bytes_group_by;          /** Bytes used by query cache groups (excludes cache elements). */
-    ecs_size_t bytes_ordered_by;        /** Bytes used by table_slices. */
+    ecs_size_t bytes_order_by;          /** Bytes used by table_slices. */
     ecs_size_t bytes_plan;              /** Bytes used by query plan. */
     ecs_size_t bytes_terms;             /** Bytes used by terms array. */
     ecs_size_t bytes_misc;              /** Bytes used by remaining misc arrays. */
@@ -13586,19 +13593,19 @@ typedef struct {
 
 /* Component memory. */
 typedef struct {
-    int32_t count;                      /** Total number of component instances. */
+    int32_t instances;                  /** Total number of component instances. */
     ecs_size_t bytes_table_components;  /** Bytes used by table columns. */
     ecs_size_t bytes_table_components_unused; /** Unused bytes in table columns. */
-    ecs_size_t bytes_table_bitset;      /** Bytes used in bitsets (toggled components). */
+    ecs_size_t bytes_toggle_bitsets;    /** Bytes used in bitsets (toggled components). */
     ecs_size_t bytes_sparse_components; /** Bytes used in component sparse sets. */
     ecs_size_t bytes_sparse_components_unused;  /** Unused bytes in component sparse sets. */
-    ecs_size_t bytes_sparse_dense_array; /** Bytes used in dense array of component sparse sets. */
+    ecs_size_t bytes_sparse_overhead;   /** Sparse set overhead. */
     ecs_size_t bytes_builtin;           /** Bytes used in table columns with builtin entities. */
 } ecs_component_memory_t;
 
 /** Table memory histogram constants */
-#define ECS_TABLE_MEMORY_HISTOGRAM_MAX_COUNT 65536
-#define ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT 18  /* 0, 1, 2-3, 4-7, 8-15, ..., 32768-65535, >65535 */
+#define ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT 14
+#define ECS_TABLE_MEMORY_HISTOGRAM_MAX_COUNT (1 << ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT)
 
 /** Table memory */
 typedef struct {
@@ -13608,7 +13615,6 @@ typedef struct {
     ecs_size_t bytes_table;             /** Bytes used by ecs_table_t struct. */
     ecs_size_t bytes_type;              /** Bytes used by type vector. */
     ecs_size_t bytes_entities;          /** Bytes used by entity vectors. */
-    ecs_size_t bytes_entities_unused;   /** Unused bytes in entity vectors. */
     ecs_size_t bytes_overrides;         /** Bytes used by table overrides. */
     ecs_size_t bytes_columns;           /** Bytes used by table columns (excluding component data). */
     ecs_size_t bytes_table_records;     /** Bytes used by table records. */
@@ -13616,9 +13622,12 @@ typedef struct {
     ecs_size_t bytes_component_map;     /** Bytes used by column map. */
     ecs_size_t bytes_dirty_state;       /** Bytes used by column map. */
     ecs_size_t bytes_edges;             /** Bytes used by table graph edges. */
-    int32_t entity_count_histogram[ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT]; 
-    /** Histogram of entity counts: [0], [1], [2-3], [4-7], [8-15], ..., [32768-65535], [>65535] */
 } ecs_table_memory_t;
+
+/** Table size histogram */
+typedef struct {
+    int32_t entity_counts[ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT];
+} ecs_table_histogram_t;
 
 /** Commands memory */
 typedef struct {
@@ -13629,11 +13638,12 @@ typedef struct {
 
 /** Component with memory statistics. */
 typedef struct {
-    ecs_entity_index_memory_t entity_index;
+    ecs_entity_index_memory_t entities;
+    ecs_component_memory_t components;
     ecs_component_index_memory_t component_index;
     ecs_query_memory_t query;
-    ecs_component_memory_t component;
     ecs_table_memory_t table;
+    ecs_table_histogram_t table_histogram;
     ecs_commands_memory_t commands;
 } EcsWorldMemory;
 
