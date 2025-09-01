@@ -806,7 +806,7 @@ public:
 	}
 
 	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept T>
-	NO_DISCARD SOLID_INLINE T& Obtain(const T& InTypeValue) const
+	NO_DISCARD SOLID_INLINE void* Obtain(const T& InTypeValue) const
 	{
 		return GetEntity().obtain(FFlecsEntityHandle::GetInputId(*this, InTypeValue));
 	}
