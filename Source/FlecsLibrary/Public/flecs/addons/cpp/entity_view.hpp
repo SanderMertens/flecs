@@ -832,6 +832,7 @@ struct entity_view : public id {
     template<typename Enum>
     Enum get_constant() const;
 
+    /** Get enum constant for enum relationship. */
     template<typename TInt>
     TInt get_constant(flecs::entity_t type_id) const;
     
@@ -1075,6 +1076,17 @@ struct entity_view : public id {
         return owns(
             _::type<First>::id(world_),
             _::type<Second>::id(world_));
+    }
+
+    /** Check if entity owns the provided pair.
+     *
+     * @param first The first element of the pair.
+     * @tparam Second The second element of the pair.
+     * @return True if the entity owns the provided component, false otherwise.
+     */
+    template <typename Second>
+    bool owns_second(flecs::entity_t first) const {
+        return owns(first, _::type<Second>::id(world_));
     }
 
     /** Test if id is enabled.
