@@ -9,6 +9,7 @@ public class FlecsLibrary : ModuleRules
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
         const bool bCompileWithLibraryTests = false;
+        const bool bCompileWithJournal = false;
         
         Type = ModuleType.CPlusPlus;
         
@@ -30,7 +31,8 @@ public class FlecsLibrary : ModuleRules
             PrivateDefinitions.Add("flecs_EXPORTS");
         }
         
-        if (bCompileWithLibraryTests)
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        if (bCompileWithLibraryTests && Target.WithAutomationTests)
         {
             PublicDefinitions.Add("FLECS_TESTS");
         }
@@ -73,7 +75,8 @@ public class FlecsLibrary : ModuleRules
             );
         }
         
-        if (Target.bBuildEditor)
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        if (Target.bBuildEditor && bCompileWithJournal)
         {
             PublicDefinitions.Add("FLECS_JOURNAL");
         }
