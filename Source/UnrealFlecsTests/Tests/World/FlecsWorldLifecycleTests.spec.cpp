@@ -36,9 +36,10 @@ void FFlecsWorldLifecycleTestsSpec::Define()
 			[this]()
 		{
 			TestTrue("Flecs world is valid", IsValid(Fixture.FlecsWorld));
+
+			const UFlecsWorld* ConvertedWorld = Unreal::Flecs::ToFlecsWorld(Fixture.FlecsWorld->World);
 				
-			TestNotNull("Flecs world singleton is valid",
-				Unreal::Flecs::ToFlecsWorld(Fixture.FlecsWorld->World));
+			TestNotNull("Flecs world singleton is valid", ConvertedWorld);
 		});
 	});
 
