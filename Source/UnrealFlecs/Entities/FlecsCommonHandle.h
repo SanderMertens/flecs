@@ -112,6 +112,11 @@ public:
 		return Entity;
 	}
 
+	NO_DISCARD SOLID_INLINE flecs::id_t GetRawId() const
+	{
+		return Entity.raw_id();
+	}
+
 	NO_DISCARD SOLID_INLINE flecs::entity GetEntity() const
 	{
 		return flecs::entity(GetFlecsWorld_Internal(), Entity);
@@ -178,7 +183,7 @@ public:
 
 	NO_DISCARD SOLID_INLINE FFlecsId GetFlecsId() const
 	{
-		return FFlecsId(GetEntity());
+		return FFlecsId(GetRawId());
 	}
 	
 	NO_DISCARD SOLID_INLINE uint32 GetGeneration() const
