@@ -214,7 +214,7 @@ void FRegisteredComponentTestsSpec::Define()
 				alignof(FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes));
 
 			const FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes* ComponentPtr 
-				= TestEntity.GetPtr<FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes>();
+				= TestEntity.Get<FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes, EFlecsAccessorType::ConstPtr>();
 
 			TestTrue("Component Memory should be aligned to 16 bytes",
 				IsAligned(ComponentPtr, alignof(FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes)));
@@ -239,7 +239,7 @@ void FRegisteredComponentTestsSpec::Define()
 				alignof(FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes));
 
 			const FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes* ComponentPtr
-				= TestEntity.GetPtr<FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes>();
+				= TestEntity.Get<FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes, EFlecsAccessorType::ConstPtr>();
 
 			TestTrue("Component Memory should be aligned to 16 bytes",
 				IsAligned(ComponentPtr, alignof(FUStructTestComponent_CustomAlignedUSTRUCT_SixteenBytes)));
@@ -264,7 +264,7 @@ void FRegisteredComponentTestsSpec::Define()
 				alignof(FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes));
 
 			const FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes* ComponentPtr
-				= TestEntity.GetPtr<FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes>();
+				= TestEntity.Get<FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes, EFlecsAccessorType::ConstPtr>();
 			
 			TestTrue("Component Memory should be aligned to 32 bytes",
 				IsAligned(ComponentPtr, alignof(FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes)));
@@ -289,7 +289,7 @@ void FRegisteredComponentTestsSpec::Define()
 				alignof(FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes));
 
 			const FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes* ComponentPtr
-				= TestEntity.GetPtr<FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes>();
+				= TestEntity.Get<FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes, EFlecsAccessorType::ConstPtr>();
 
 			TestTrue("Component Memory should be aligned to 32 bytes",
 				IsAligned(ComponentPtr, alignof(FUStructTestComponent_CustomAlignedUSTRUCT_ThirtyTwoBytes)));

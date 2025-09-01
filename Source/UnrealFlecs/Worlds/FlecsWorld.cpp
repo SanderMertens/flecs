@@ -737,7 +737,7 @@ void UFlecsWorld::DestroyWorld()
 	const FAssetRegistryModule* AssetRegistryModule
 		= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
 
-	if (AssetRegistryModule)
+	if LIKELY_IF(AssetRegistryModule)
 	{
 		IAssetRegistry& AssetRegistry = AssetRegistryModule->Get();
 		AssetRegistry.OnAssetAdded().RemoveAll(this);
