@@ -268,7 +268,7 @@ void UFlecsWorld::InitializeFlecsRegistrationObjects()
 				continue;
 			}
 				
-			if (Class->HasAnyClassFlags(CLASS_Deprecated | CLASS_NewerVersionExists))
+			if UNLIKELY_IF(Class->HasAnyClassFlags(CLASS_Deprecated | CLASS_NewerVersionExists))
 			{
 				UE_LOGFMT(LogFlecsWorld, Warning,
 				          "Skipping registration of {ClassName} because it is deprecated or has a newer version",
