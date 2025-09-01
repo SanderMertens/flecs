@@ -247,14 +247,14 @@ public:
 	}
 
 	template <typename T, EFlecsAccessorType AccessorType = EFlecsAccessorType::ConstPtr>
-	requires (Unreal::Flecs::Accessors::IsConstPtr(AccessorType))
+	requires (Unreal::Flecs::Accessors::IsConst(AccessorType))
 	NO_DISCARD SOLID_INLINE const T* TryGet() const
 	{
 		return GetEntityView().try_get<T>();
 	}
 
 	template <typename T, EFlecsAccessorType AccessorType>
-	requires (Unreal::Flecs::Accessors::IsMutPtr(AccessorType))
+	requires (Unreal::Flecs::Accessors::IsMut(AccessorType))
 	NO_DISCARD SOLID_INLINE T* TryGet()
 	{
 		return GetEntityView().try_get_mut<T>();
