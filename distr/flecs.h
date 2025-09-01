@@ -35,7 +35,7 @@
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
 #define FLECS_VERSION_MINOR 1  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 0  /**< Flecs patch version. */
+#define FLECS_VERSION_PATCH 1  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
@@ -16734,15 +16734,40 @@ int ecs_meta_member(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
+/** Same as ecs_meta_member() but doesn't throw an error.
+ * 
+ * @param cursor The cursor.
+ * @param name The name of the member.
+ * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_member()
+ */
+FLECS_API
+int ecs_meta_try_member(
+    ecs_meta_cursor_t *cursor,
+    const char *name);
+
 /** Move cursor to member.
  * Same as ecs_meta_member(), but with support for "foo.bar" syntax.
  * 
  * @param cursor The cursor.
  * @param name The name of the member.
  * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_member()
  */
 FLECS_API
 int ecs_meta_dotmember(
+    ecs_meta_cursor_t *cursor,
+    const char *name);
+
+/** Same as ecs_meta_dotmember() but doesn't throw an error.
+ * 
+ * @param cursor The cursor.
+ * @param name The name of the member.
+ * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_dotmember()
+ */
+FLECS_API
+int ecs_meta_try_dotmember(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
@@ -18860,8 +18885,10 @@ public:
         has_contiguous = true;
         contiguous_until = 0;
 
+#if FLECS_CPP_ENUM_REFLECTION_SUPPORT
         enum_reflection<E, reflection_init>::
             template each_enum< static_cast<U>(enum_last<E>::value) >(*this);
+#endif
     }
 
     static enum_type<E>& get() {
@@ -18900,7 +18927,6 @@ public:
 
     int min;
     int max;
-    bool has_contiguous;
 
     // If enum constants start not-sparse, contiguous_until will be the index of
     // the first sparse value, or end of the constants array
@@ -18912,8 +18938,16 @@ public:
             template each_enum< static_cast<U>(enum_last<E>::value) >();
 
     // Constants array is sized to the number of found-constants, or 1 
-    // to avoid 0-sized array
+    // to avoid 0-sized array.
+    #ifdef FLECS_CPP_ENUM_REFLECTION
     enum_constant<U> constants[constants_size? constants_size: 1] = {};
+    bool has_contiguous;
+    #else
+    // If we're not using enum reflection, we cannot statically determine the
+    // upper bound of the enum, so use 128.
+    enum_constant<U> constants[128] = {};
+    bool has_contiguous = true; // Assume contiguous ids
+    #endif
 };
 
 template <typename E, if_t< is_enum<E>::value > = 0>
@@ -18971,6 +19005,7 @@ struct enum_data {
         if (impl_.max < 0) {
             return -1;
         }
+
         // Check if value is in contiguous lookup section
         if (impl_.has_contiguous && value < impl_.contiguous_until && value >= 0) {
             return static_cast<int>(value);
@@ -19010,6 +19045,30 @@ struct enum_data {
     flecs::entity entity() const;
     flecs::entity entity(U value) const;
     flecs::entity entity(E value) const;
+
+    /**
+     * @brief Manually register constant for enum.
+     * 
+     * If automatic enum reflection is not supported, provide method for 
+     * manually registering constant.
+     */
+    #ifdef FLECS_CPP_NO_ENUM_REFLECTION
+    void register_constant(flecs::world_t *world, U v, flecs::entity_t e) {
+        if (v < 128) {
+            if (!impl_.constants[v].index) {
+                impl_.constants[v].index = flecs_component_ids_index_get();
+            }
+
+            flecs_component_ids_set(world, impl_.constants[v].index, e);
+
+            impl_.max ++;
+
+            if (impl_.contiguous_until <= v) {
+                impl_.contiguous_until = v + 1;
+            }
+        }
+    }
+    #endif
 
     flecs::world_t *world_;
     _::enum_type<E>& impl_;
@@ -29961,6 +30020,12 @@ component<T>& constant(const char *name, T value) {
     U *ptr = static_cast<U*>(ecs_ensure_id(world_, eid, pair, sizeof(U)));
     *ptr = static_cast<U>(value);
     ecs_modified_id(world_, eid, pair);
+
+    // If we're not using automatic enum reflection, manually set static data
+    #ifdef FLECS_CPP_NO_ENUM_REFLECTION
+    auto et = enum_type<T>(world_);
+    et.register_constant(world_, static_cast<U>(value), eid);
+    #endif
 
     return *this;
 }

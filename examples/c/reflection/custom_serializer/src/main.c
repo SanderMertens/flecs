@@ -79,9 +79,26 @@ void serializeVector(ecs_world_t *world, ecs_meta_op_t *ops,
 // Serialize enum
 void serializeEnum(ecs_meta_op_t *op, const void *ptr) 
 {
-    const int32_t *value = ptr; // Assume i32, but should use underlying type
+    ecs_map_key_t value;
+    ecs_meta_op_kind_t kind = op->underlying_kind;
+
+    if (kind == EcsOpU8 || kind == EcsOpI8) {
+        value = *(const uint8_t*)ptr;
+    } else if (kind == EcsOpU16 || kind == EcsOpI16) {
+        value = *(const uint16_t*)ptr;
+    } else if (kind == EcsOpU32 || kind == EcsOpI32) {
+        value = *(const uint32_t*)ptr;
+    } else if (kind == EcsOpUPtr || kind == EcsOpIPtr) {
+        value = *(const uintptr_t*)ptr;
+    } else if (kind == EcsOpU64 || kind == EcsOpI64) {
+        value = *(const uint64_t*)ptr;
+    } else {
+        printf("<<invalid underlying enum type>>");
+        return;
+    }
+
     ecs_enum_constant_t *c = ecs_map_get_deref(op->is.constants, 
-        ecs_enum_constant_t, (ecs_map_key_t)*value);
+        ecs_enum_constant_t, value);
     printf("%s", c->name);
 }
 

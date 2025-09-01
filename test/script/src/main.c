@@ -919,6 +919,16 @@ void Serialize_entity(void);
 void Serialize_entity_10k(void);
 void Serialize_id(void);
 void Serialize_enum(void);
+void Serialize_enum_underlying_i8(void);
+void Serialize_enum_underlying_i16(void);
+void Serialize_enum_underlying_i32(void);
+void Serialize_enum_underlying_iptr(void);
+void Serialize_enum_underlying_i64(void);
+void Serialize_enum_underlying_u8(void);
+void Serialize_enum_underlying_u16(void);
+void Serialize_enum_underlying_u32(void);
+void Serialize_enum_underlying_uptr(void);
+void Serialize_enum_underlying_u64(void);
 void Serialize_bitmask(void);
 void Serialize_float_nan(void);
 void Serialize_float_inf(void);
@@ -4709,6 +4719,46 @@ bake_test_case Serialize_testcases[] = {
         Serialize_enum
     },
     {
+        "enum_underlying_i8",
+        Serialize_enum_underlying_i8
+    },
+    {
+        "enum_underlying_i16",
+        Serialize_enum_underlying_i16
+    },
+    {
+        "enum_underlying_i32",
+        Serialize_enum_underlying_i32
+    },
+    {
+        "enum_underlying_iptr",
+        Serialize_enum_underlying_iptr
+    },
+    {
+        "enum_underlying_i64",
+        Serialize_enum_underlying_i64
+    },
+    {
+        "enum_underlying_u8",
+        Serialize_enum_underlying_u8
+    },
+    {
+        "enum_underlying_u16",
+        Serialize_enum_underlying_u16
+    },
+    {
+        "enum_underlying_u32",
+        Serialize_enum_underlying_u32
+    },
+    {
+        "enum_underlying_uptr",
+        Serialize_enum_underlying_uptr
+    },
+    {
+        "enum_underlying_u64",
+        Serialize_enum_underlying_u64
+    },
+    {
         "bitmask",
         Serialize_bitmask
     },
@@ -5478,7 +5528,7 @@ static bake_test_suite suites[] = {
         "Serialize",
         NULL,
         NULL,
-        61,
+        71,
         Serialize_testcases
     },
     {

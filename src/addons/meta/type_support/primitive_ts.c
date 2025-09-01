@@ -1,5 +1,5 @@
 /**
- * @file addons/meta/type_support/primitive.c
+ * @file addons/meta/type_support/primitive_ts.c
  * @brief Primitives type support.
  */
 
