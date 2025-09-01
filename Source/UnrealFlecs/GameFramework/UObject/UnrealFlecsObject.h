@@ -40,7 +40,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:
-	UPROPERTY(Replicated)
+	UPROPERTY()
 	FFlecsEntityHandle ObjectEntityHandle;
 
 	UPROPERTY()

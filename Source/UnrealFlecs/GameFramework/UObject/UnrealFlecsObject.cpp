@@ -73,7 +73,7 @@ void UUnrealFlecsObject::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	Params.bIsPushBased = true;
 
 	// In case the Inheriting class is ever replicated, we need to replicate the ObjectEntityHandle
-	DOREPLIFETIME_WITH_PARAMS_FAST(UUnrealFlecsObject, ObjectEntityHandle, Params);
+	//DOREPLIFETIME_WITH_PARAMS_FAST(UUnrealFlecsObject, ObjectEntityHandle, Params);
 }
 
 
