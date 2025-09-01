@@ -359,7 +359,7 @@ private:
 	
 }; // struct FFlecsComponentHandle
 
-// @TODO: This
+// @TODO: Impl this
 template <typename TComponent>
 struct TFlecsComponentHandle : public FFlecsComponentHandle
 {

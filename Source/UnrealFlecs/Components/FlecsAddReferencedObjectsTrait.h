@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "FlecsAddReferencedObjectsTrait.generated.h"
 
 USTRUCT()

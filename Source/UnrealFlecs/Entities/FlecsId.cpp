@@ -2,6 +2,8 @@
 
 #include "FlecsId.h"
 
+#include "Worlds/FlecsWorld.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsId)
 
 FString FFlecsId::ToString() const

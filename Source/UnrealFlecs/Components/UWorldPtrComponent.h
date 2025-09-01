@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "SolidMacros/Macros.h"
+
 #include "UWorldPtrComponent.generated.h"
 
 class UWorld;

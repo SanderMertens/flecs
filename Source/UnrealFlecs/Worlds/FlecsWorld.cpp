@@ -1444,6 +1444,7 @@ bool UFlecsWorld::HasEntityWithName(const FString& Name, FFlecsEntityHandle& Out
 	return false;
 }
 
+// @TODO: Optimize this
 FFlecsEntityHandle UFlecsWorld::GetTagEntity(const FGameplayTag& Tag) const
 {
 	solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));

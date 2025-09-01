@@ -8,8 +8,11 @@
 
 #include "SolidMacros/Macros.h"
 #include "Standard/Hashing.h"
+#include "Types/SolidNotNull.h"
 
 #include "FlecsId.generated.h"
+
+class UFlecsWorld;
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsId
@@ -147,6 +150,13 @@ public:
     {
         solid_checkf(!IsPair(), TEXT("Id must not be a pair."));
         return flecs::get_generation(Id);
+    }
+
+    template <typename THandle>
+    NO_DISCARD FORCEINLINE THandle ToHandle(const flecs::world& World) const
+    {
+        solid_checkf(IsValid(), TEXT("Id is not valid."));
+        return World.get_alive(GetId());
     }
 
     NO_DISCARD FString ToString() const;

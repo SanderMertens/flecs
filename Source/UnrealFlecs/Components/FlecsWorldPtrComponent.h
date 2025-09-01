@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Worlds/FlecsWorld.h"
+
 #include "FlecsWorldPtrComponent.generated.h"
 
 class UFlecsWorld;

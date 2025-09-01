@@ -3,13 +3,14 @@
 // ReSharper disable CppTooWideScopeInitStatement
 #include "FlecsEntityHandle.h"
 
-#include "Collections/FlecsComponentCollectionObject.h"
-#include "Components/FlecsNetworkSerializeDefinitionComponent.h"
-
 #include "Logs/FlecsCategories.h"
+
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldConverter.h"
 #include "Worlds/FlecsWorldSubsystem.h"
+
+#include "Collections/FlecsComponentCollectionObject.h"
+#include "Components/FlecsNetworkSerializeDefinitionComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityHandle)
 

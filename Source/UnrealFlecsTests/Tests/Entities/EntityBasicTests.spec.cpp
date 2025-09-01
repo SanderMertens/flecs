@@ -72,7 +72,7 @@ void FEntityBasicTestsSpec::Define()
 			TestTrueExpr(ChildEntity.HasParent());
 			
 			TestEqual("Child entity should have a parent",
-				ChildEntity.GetParent(), ParentEntity);
+				ChildEntity.GetParent<FFlecsEntityHandle>(), ParentEntity);
 		});
 
 		It("Should create a child entity and then destroy the parent", [this]()
@@ -83,7 +83,7 @@ void FEntityBasicTestsSpec::Define()
 			
 			TestTrue("Child entity should be valid", ChildEntity.IsValid());
 			TestTrue("Parent entity should be valid", ParentEntity.IsValid());
-			TestEqual("Child entity should have a parent", ChildEntity.GetParent(), ParentEntity);
+			TestEqual("Child entity should have a parent", ChildEntity.GetParent<FFlecsEntityHandle>(), ParentEntity);
 			
 			ParentEntity.Destroy();
 			TestFalse("Parent entity should be invalid", ParentEntity.IsValid());
@@ -106,9 +106,12 @@ void FEntityBasicTestsSpec::Define()
 			TestTrue("Child entity 2 should be valid", ChildEntity2.IsValid());
 			TestTrue("Child entity 3 should be valid", ChildEntity3.IsValid());
 			
-			TestEqual("Child entity 1 should have a parent", ChildEntity1.GetParent(), ParentEntity);
-			TestEqual("Child entity 2 should have a parent", ChildEntity2.GetParent(), ChildEntity1);
-			TestEqual("Child entity 3 should have a parent", ChildEntity3.GetParent(), ChildEntity2);
+			TestEqual("Child entity 1 should have a parent",
+				ChildEntity1.GetParent<FFlecsEntityHandle>(), ParentEntity);
+			TestEqual("Child entity 2 should have a parent",
+				ChildEntity2.GetParent<FFlecsEntityHandle>(), ChildEntity1);
+			TestEqual("Child entity 3 should have a parent",
+				ChildEntity3.GetParent<FFlecsEntityHandle>(), ChildEntity2);
 
 			TestEqual("Child entity 1 should have a depth of 1", ChildEntity1.GetDepth(flecs::ChildOf), 1);
 			TestEqual("Child entity 2 should have a depth of 2", ChildEntity2.GetDepth(flecs::ChildOf), 2);

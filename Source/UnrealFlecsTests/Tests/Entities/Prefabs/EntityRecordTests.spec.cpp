@@ -98,9 +98,9 @@ void FEntityRecordTestsSpec::Define()
 				TestEntity.Get<FFlecsTestStruct_Value>().Value, 1);
 			
 			TestTrue("Entity should have the sub-entity from the record",
-				TestEntity.Lookup(TEXT("SubEntity")).IsValid());
+				TestEntity.Lookup<FFlecsEntityHandle>(TEXT("SubEntity")).IsValid());
 			TestTrue("Sub-entity should have the Component from the record",
-				TestEntity.Lookup(TEXT("SubEntity")).Has<FFlecsTestStruct_Value>());
+				TestEntity.Lookup<FFlecsEntityHandle>(TEXT("SubEntity")).Has<FFlecsTestStruct_Value>());
 		});
 	});
 }
