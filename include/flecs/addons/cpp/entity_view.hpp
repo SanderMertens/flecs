@@ -832,6 +832,7 @@ struct entity_view : public id {
     template<typename Enum>
     Enum get_constant() const;
 
+    /** Get enum constant for enum relationship. */
     template<typename TInt>
     TInt get_constant(flecs::entity_t type_id) const;
     
