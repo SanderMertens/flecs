@@ -854,8 +854,6 @@ public:
 	{
 		return FFlecsEntityView(GetEntity().view());
 	}
-
-	void AddCollection(TSolidNotNull<UObject*> Collection) const;
 	
 protected:
 	

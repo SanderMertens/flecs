@@ -21,6 +21,7 @@
 
 #include "FlecsWorld.generated.h"
 
+struct FFlecsEntityRecord;
 struct FFlecsDependenciesComponent;
 struct FFlecsUObjectComponent;
 struct FFlecsModuleComponent;

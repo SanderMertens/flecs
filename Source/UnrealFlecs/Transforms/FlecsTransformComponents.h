@@ -3,9 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Collections/FlecsComponentCollectionObject.h"
+
 #include "SolidMacros/Macros.h"
 #include "Standard/Hashing.h"
+
 #include "FlecsTransformComponents.generated.h"
 
 USTRUCT(BlueprintType)
@@ -159,25 +160,4 @@ public:
 }; // struct FFlecsScaleComponent
 
 DEFINE_STD_HASH(FFlecsScaleComponent)
-
-UCLASS(BlueprintType, EditInlineNew)
-class UNREALFLECS_API UFlecsTransform3dCollection : public UFlecsComponentCollectionObject
-{
-	GENERATED_BODY()
-
-public:
-	UFlecsTransform3dCollection(const FObjectInitializer& ObjectInitializer);
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transform")
-	FFlecsLocationComponent Location;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transform")
-	FFlecsRotationComponent Rotation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Transform")
-	FFlecsScaleComponent Scale;
-
-	virtual void ApplyCollectionToEntity_Implementation(FFlecsEntityHandle& Entity) override final;
-	
-}; // class UFlecsTransformCollection
 

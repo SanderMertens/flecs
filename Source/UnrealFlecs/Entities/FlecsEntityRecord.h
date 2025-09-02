@@ -3,11 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Collections/FlecsComponentCollectionObject.h"
+
 #include "StructUtils/InstancedStruct.h"
+
+#include "Types/SolidEnumSelector.h"
+
 #include "Entities/FlecsEntityHandle.h"
 #include "Properties/FlecsComponentProperties.h"
-#include "Types/SolidEnumSelector.h"
+
 #include "FlecsEntityRecord.generated.h"
 
 UENUM(BlueprintType)
@@ -85,6 +88,7 @@ UENUM(BlueprintType)
 enum class EFlecsValuePairType : uint8
 {
 	First = 0,
+	Second = 1,
 }; // enum class EFlecsValuePairType
 
 USTRUCT(BlueprintType)
@@ -192,9 +196,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entity Record")
 	TArray<FFlecsComponentTypeInfo> Components;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Entity Record")
-	TArray<TObjectPtr<UFlecsComponentCollectionObject>> Collections;
-
 	NO_DISCARD FORCEINLINE bool operator==(const FFlecsRecordSubEntity& Other) const
 	{
 		return Name == Other.Name && Components == Other.Components;
@@ -223,9 +224,6 @@ struct UNREALFLECS_API FFlecsEntityRecord
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entity Record")
 	TArray<FFlecsComponentTypeInfo> Components;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Entity Record")
-	TArray<TObjectPtr<UFlecsComponentCollectionObject>> Collections;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entity Record")
 	TArray<FFlecsRecordSubEntity> SubEntities;

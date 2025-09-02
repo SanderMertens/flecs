@@ -20,6 +20,13 @@ void FFlecsRecordPair::AddToEntity(const FFlecsEntityHandle& InEntityHandle) con
 								                            First.PairScriptStruct.GetMemory(),
 								                            Second.PairScriptStruct.GetScriptStruct());
 							}
+							else
+							{
+								if UNLIKELY_IF(!ensure(First.PairScriptStruct.GetScriptStruct()->GetStructureSize() <= 1))
+								{
+									return;
+								}
+							}
 						}
 						break;
 					case EFlecsPairNodeType::EntityHandle:
@@ -129,11 +136,6 @@ void FFlecsRecordSubEntity::ApplyRecordToEntity(const FFlecsEntityHandle& InEnti
 				break;
 		}
 	}
-
-	for (UFlecsComponentCollectionObject* Collection : Collections)
-	{
-		InEntityHandle.AddCollection(Collection);
-	}
 }
 
 void FFlecsEntityRecord::ApplyRecordToEntity(const FFlecsEntityHandle& InEntityHandle) const
@@ -170,16 +172,6 @@ void FFlecsEntityRecord::ApplyRecordToEntity(const FFlecsEntityHandle& InEntityH
 				}
 				break;
 		}
-	}
-
-	for (UFlecsComponentCollectionObject* Collection : Collections)
-	{
-		if UNLIKELY_IF(!ensureMsgf(Collection, TEXT("Collection is null")))
-		{
-			continue;
-		}
-			
-		InEntityHandle.AddCollection(Collection);
 	}
 
 	for (const FFlecsRecordSubEntity& SubEntity : SubEntities)

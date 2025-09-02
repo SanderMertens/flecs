@@ -1469,14 +1469,14 @@ FFlecsEntityHandle UFlecsWorld::CreatePrefabWithRecord(const FFlecsEntityRecord&
 	InRecord.ApplyRecordToEntity(Prefab);
 	Prefab.Set<FFlecsEntityRecord>(InRecord);
 		
-	#if WITH_EDITOR
+#if WITH_EDITOR
 
 	if (!Name.IsEmpty())
 	{
 		Prefab.SetDocName(Name);
 	}
 
-	#endif // WITH_EDITOR
+#endif // WITH_EDITOR
 		
 	return Prefab;
 }

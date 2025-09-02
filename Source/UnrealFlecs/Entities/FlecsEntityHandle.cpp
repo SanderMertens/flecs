@@ -6,10 +6,8 @@
 #include "Logs/FlecsCategories.h"
 
 #include "Worlds/FlecsWorld.h"
-#include "Worlds/FlecsWorldConverter.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
-#include "Collections/FlecsComponentCollectionObject.h"
 #include "Components/FlecsNetworkSerializeDefinitionComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityHandle)
@@ -101,12 +99,3 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
         return false;
     }
 }
-
-void FFlecsEntityHandle::AddCollection(const TSolidNotNull<UObject*> Collection) const
-{
-    const TSolidNotNull<UFlecsComponentCollectionObject*> ComponentCollection
-        = CastChecked<UFlecsComponentCollectionObject>(Collection);
-    
-    ComponentCollection->ApplyCollection_Internal(*this, GetFlecsWorld());
-}
-

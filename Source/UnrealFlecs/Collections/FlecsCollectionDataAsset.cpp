@@ -1,0 +1,43 @@
+﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
+
+#include "FlecsCollectionDataAsset.h"
+
+#include "Misc/DataValidation.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsCollectionDataAsset)
+
+UFlecsCollectionDataAsset::UFlecsCollectionDataAsset()
+{
+}
+
+FPrimaryAssetId UFlecsCollectionDataAsset::GetPrimaryAssetId() const
+{
+	return FPrimaryAssetId("FlecsCollectionDataAsset", GetFName());
+}
+
+#if WITH_EDITOR
+
+EDataValidationResult UFlecsCollectionDataAsset::IsDataValid(FDataValidationContext& Context) const
+{
+	const EDataValidationResult SuperResult = Super::IsDataValid(Context);
+
+	const EDataValidationResult CollectionsResult = ValidateCollections(Context);
+	
+	return CombineDataValidationResults(SuperResult, CollectionsResult);
+}
+
+EDataValidationResult UFlecsCollectionDataAsset::ValidateCollections(FDataValidationContext& Context) const
+{
+	for (const UFlecsCollectionDataAsset* Collection : Collections)
+	{
+		if UNLIKELY_IF(!Collection)
+		{
+			Context.AddError(FText::FromString(TEXT("Collections array contains null element")));
+			return EDataValidationResult::Invalid;
+		}
+	}
+	
+	return EDataValidationResult::Valid;
+}
+
+#endif // WITH_EDITOR

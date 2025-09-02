@@ -9,7 +9,7 @@ void UFlecsAbstractWorldSubsystem::Initialize(FSubsystemCollectionBase& Collecti
 	Super::Initialize(Collection);
 
 	Collection.InitializeDependency<UFlecsWorldSubsystem>();
-	FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorldStatic(this);
+	FlecsWorldRef = UFlecsWorldSubsystem::GetDefaultWorldStatic(this);
 }
 
 bool UFlecsAbstractWorldSubsystem::DoesSupportWorldType(const EWorldType::Type WorldType) const

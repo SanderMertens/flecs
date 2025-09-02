@@ -20,11 +20,11 @@ public:
 
 	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorld() const
 	{
-		return FlecsWorld.Get();
+		return FlecsWorldRef.Get();
 	}
 
 	UPROPERTY()
-	TWeakObjectPtr<UFlecsWorld> FlecsWorld;
+	TWeakObjectPtr<UFlecsWorld> FlecsWorldRef;
 	
 }; // class UFlecsAbstractWorldSubsystem
 
