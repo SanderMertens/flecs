@@ -35,6 +35,12 @@ EDataValidationResult UFlecsCollectionDataAsset::ValidateCollections(FDataValida
 			Context.AddError(FText::FromString(TEXT("Collections array contains null element")));
 			return EDataValidationResult::Invalid;
 		}
+
+		if UNLIKELY_IF(Collection == this)
+		{
+			Context.AddError(FText::FromString(TEXT("Collections array contains self reference")));
+			return EDataValidationResult::Invalid;
+		}
 	}
 	
 	return EDataValidationResult::Valid;
