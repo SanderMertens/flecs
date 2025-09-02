@@ -181,6 +181,7 @@ void SystemMisc_register_callback_after_run(void);
 void SystemMisc_register_run_after_callback(void);
 void SystemMisc_register_callback_after_run_ctx(void);
 void SystemMisc_register_run_after_callback_ctx(void);
+void SystemMisc_run_w_query_next(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -1219,6 +1220,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "register_run_after_callback_ctx",
         SystemMisc_register_run_after_callback_ctx
+    },
+    {
+        "run_w_query_next",
+        SystemMisc_run_w_query_next
     }
 };
 
@@ -2567,7 +2572,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        69,
+        70,
         SystemMisc_testcases
     },
     {
