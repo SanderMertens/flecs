@@ -25637,6 +25637,10 @@ struct entity_view : public id {
     /** Get enum constant for enum relationship. */
     template<typename Enum>
     Enum get_constant() const;
+
+    /** Get enum constant for enum relationship. */
+    template<typename TInt>
+    TInt get_constant(flecs::entity_t type_id) const;
     
     /** Get target for a given pair.
      * This operation returns the target for a given pair. The optional
@@ -31083,6 +31087,13 @@ template<typename Enum>
 inline Enum entity_view::get_constant() const {
     flecs::entity tgt = this->target<Enum>();
     return tgt.to_constant<Enum>();
+}
+
+template<typename TInt>
+inline TInt entity_view::get_constant(flecs::entity_t type_id) const
+{
+    flecs::entity tgt = this->target(type_id);
+    return tgt.to_constant<TInt>(type_id);
 }
 
 template<typename First>

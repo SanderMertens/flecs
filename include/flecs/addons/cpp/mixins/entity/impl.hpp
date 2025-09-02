@@ -32,6 +32,13 @@ inline Enum entity_view::get_constant() const {
     return tgt.to_constant<Enum>();
 }
 
+template<typename TInt>
+inline TInt entity_view::get_constant(flecs::entity_t type_id) const
+{
+    flecs::entity tgt = this->target(type_id);
+    return tgt.to_constant<TInt>(type_id);
+}
+
 template<typename First>
 inline flecs::entity entity_view::target(int32_t index) const 
 {
