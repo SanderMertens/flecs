@@ -587,8 +587,6 @@
                 "target_exclusive_pair",
                 "target_exclusive_pair_after_change",
                 "target_exclusive_pair_after_add_same",
-                "target_recycled",
-                "target_recycled_exclusive",
                 "target_from_base",
                 "target_for_base",
                 "target_for_self_sparse_component",
@@ -643,7 +641,12 @@
                 "delete_relationship",
                 "delete_parent_of_relationship",
                 "delete_exclusive_relationship",
-                "delete_parent_of_exclusive_relationship"
+                "delete_parent_of_exclusive_relationship",
+                "add_before_recycle_non_sparse",
+                "add_before_recycle_sparse",
+                "add_pair_before_recycle_non_sparse_relationship",
+                "add_pair_before_recycle_sparse_relationship",
+                "add_pair_before_recycle_sparse_target"
             ]
         }, {
             "id": "Hierarchies",

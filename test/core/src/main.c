@@ -557,8 +557,6 @@ void Sparse_target_2_pairs(void);
 void Sparse_target_exclusive_pair(void);
 void Sparse_target_exclusive_pair_after_change(void);
 void Sparse_target_exclusive_pair_after_add_same(void);
-void Sparse_target_recycled(void);
-void Sparse_target_recycled_exclusive(void);
 void Sparse_target_from_base(void);
 void Sparse_target_for_base(void);
 void Sparse_target_for_self_sparse_component(void);
@@ -614,6 +612,11 @@ void Sparse_delete_relationship(void);
 void Sparse_delete_parent_of_relationship(void);
 void Sparse_delete_exclusive_relationship(void);
 void Sparse_delete_parent_of_exclusive_relationship(void);
+void Sparse_add_before_recycle_non_sparse(void);
+void Sparse_add_before_recycle_sparse(void);
+void Sparse_add_pair_before_recycle_non_sparse_relationship(void);
+void Sparse_add_pair_before_recycle_sparse_relationship(void);
+void Sparse_add_pair_before_recycle_sparse_target(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -4804,14 +4807,6 @@ bake_test_case Sparse_testcases[] = {
         Sparse_target_exclusive_pair_after_add_same
     },
     {
-        "target_recycled",
-        Sparse_target_recycled
-    },
-    {
-        "target_recycled_exclusive",
-        Sparse_target_recycled_exclusive
-    },
-    {
         "target_from_base",
         Sparse_target_from_base
     },
@@ -5030,6 +5025,26 @@ bake_test_case Sparse_testcases[] = {
     {
         "delete_parent_of_exclusive_relationship",
         Sparse_delete_parent_of_exclusive_relationship
+    },
+    {
+        "add_before_recycle_non_sparse",
+        Sparse_add_before_recycle_non_sparse
+    },
+    {
+        "add_before_recycle_sparse",
+        Sparse_add_before_recycle_sparse
+    },
+    {
+        "add_pair_before_recycle_non_sparse_relationship",
+        Sparse_add_pair_before_recycle_non_sparse_relationship
+    },
+    {
+        "add_pair_before_recycle_sparse_relationship",
+        Sparse_add_pair_before_recycle_sparse_relationship
+    },
+    {
+        "add_pair_before_recycle_sparse_target",
+        Sparse_add_pair_before_recycle_sparse_target
     }
 };
 
@@ -13121,7 +13136,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        168,
+        171,
         Sparse_testcases,
         1,
         Sparse_params
