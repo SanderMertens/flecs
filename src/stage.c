@@ -16,6 +16,7 @@
  */
 
 #include "private_api.h"
+#include "storage/table.h"
 
 static
 void flecs_stage_merge(
@@ -209,6 +210,10 @@ void ecs_set_stage_count(
     /* World must have at least one default stage */
     ecs_assert(stage_count >= 1 || (world->flags & EcsWorldFini), 
         ECS_INTERNAL_ERROR, NULL);
+
+#ifdef FLECS_SAFETY_LOCKS
+    flecs_tables_resize_column_locks(world,world->stage_count,stage_count);
+#endif
 
     const ecs_entity_t *lookup_path = NULL;
     if (world->stage_count >= 1) {
@@ -480,3 +485,5 @@ bool ecs_is_deferred(
 error:
     return false;
 }
+
+
