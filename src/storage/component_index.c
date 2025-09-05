@@ -217,13 +217,16 @@ void flecs_component_record_fini_dont_fragment(
         uint64_t table_id = tables[i];
         ecs_table_t *table = NULL;
         if (table_id) {
-            table = flecs_sparse_get_t(&world->store.tables, ecs_table_t, table_id);
+            table = flecs_sparse_get_t(
+                &world->store.tables, ecs_table_t, table_id);
         } else {
             table = &world->store.root;
         }
 
         if (table) {
             flecs_table_clear_edges_for_id(world, table, cr->id);
+        } else {
+            /* Table was deleted */
         }
     }
 
