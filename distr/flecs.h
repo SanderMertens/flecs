@@ -17900,6 +17900,7 @@ using component_record_t = ecs_component_record_t;
 using type_info_t = ecs_type_info_t;
 using type_hooks_t = ecs_type_hooks_t;
 using flags32_t = ecs_flags32_t;
+using flags64_t = ecs_flags64_t;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,
@@ -31375,6 +31376,7 @@ namespace _ {
 } // namespace _
 } // namespace flecs
 
+#include <stdio.h>
 
 namespace flecs 
 {
@@ -31437,7 +31439,7 @@ struct term_ref_builder_i {
     }
 
     /* Override term id flags */
-    Base& flags(flecs::flags32_t flags) {
+    Base& flags(flecs::flags64_t flags) {
         this->assert_term_ref();
         term_ref_->id = flags;
         return *this;

@@ -969,6 +969,9 @@ void QueryBuilder_each_w_untyped_field_w_fixed_src(void);
 void QueryBuilder_each_w_untyped_field_at_w_fixed_src(void);
 void QueryBuilder_singleton_pair(void);
 void QueryBuilder_query_w_this_second(void);
+void QueryBuilder_pred_eq(void);
+void QueryBuilder_pred_eq_name(void);
+void QueryBuilder_pred_match(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -1588,9 +1591,6 @@ void Meta_entity_to_json_w_default_desc(void);
 void Meta_query_to_json_w_default_desc(void);
 void Meta_script_to_std_vector_int(void);
 void Meta_script_to_std_vector_std_string(void);
-void Meta_anonymous_opaque_as_type_parent(void);
-void Meta_named_opaque_as_type_parent(void);
-void Meta_parented_opaque_as_type_parent(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -5423,6 +5423,18 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "query_w_this_second",
         QueryBuilder_query_w_this_second
+    },
+    {
+        "pred_eq",
+        QueryBuilder_pred_eq
+    },
+    {
+        "pred_eq_name",
+        QueryBuilder_pred_eq_name
+    },
+    {
+        "pred_match",
+        QueryBuilder_pred_match
     }
 };
 
@@ -7840,18 +7852,6 @@ bake_test_case Meta_testcases[] = {
     {
         "script_to_std_vector_std_string",
         Meta_script_to_std_vector_std_string
-    },
-    {
-        "anonymous_opaque_as_type_parent",
-        Meta_anonymous_opaque_as_type_parent
-    },
-    {
-        "named_opaque_as_type_parent",
-        Meta_named_opaque_as_type_parent
-    },
-    {
-        "parented_opaque_as_type_parent",
-        Meta_parented_opaque_as_type_parent
     }
 };
 
@@ -8132,7 +8132,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        176,
+        179,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params
@@ -8211,7 +8211,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        68,
+        65,
         Meta_testcases
     },
     {
