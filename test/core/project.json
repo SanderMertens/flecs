@@ -646,7 +646,14 @@
                 "add_before_recycle_sparse",
                 "add_pair_before_recycle_non_sparse_relationship",
                 "add_pair_before_recycle_sparse_relationship",
-                "add_pair_before_recycle_sparse_target"
+                "add_pair_before_recycle_sparse_target",
+                "remove_before_recycle_non_sparse",
+                "remove_before_recycle_sparse",
+                "remove_pair_before_recycle_non_sparse_relationship",
+                "remove_pair_before_recycle_sparse_relationship",
+                "remove_pair_before_recycle_sparse_target",
+                "recycle_after_delete_table",
+                "recycle_pair_after_delete_table"
             ]
         }, {
             "id": "Hierarchies",

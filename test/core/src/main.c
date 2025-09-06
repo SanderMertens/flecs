@@ -617,6 +617,13 @@ void Sparse_add_before_recycle_sparse(void);
 void Sparse_add_pair_before_recycle_non_sparse_relationship(void);
 void Sparse_add_pair_before_recycle_sparse_relationship(void);
 void Sparse_add_pair_before_recycle_sparse_target(void);
+void Sparse_remove_before_recycle_non_sparse(void);
+void Sparse_remove_before_recycle_sparse(void);
+void Sparse_remove_pair_before_recycle_non_sparse_relationship(void);
+void Sparse_remove_pair_before_recycle_sparse_relationship(void);
+void Sparse_remove_pair_before_recycle_sparse_target(void);
+void Sparse_recycle_after_delete_table(void);
+void Sparse_recycle_pair_after_delete_table(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5045,6 +5052,34 @@ bake_test_case Sparse_testcases[] = {
     {
         "add_pair_before_recycle_sparse_target",
         Sparse_add_pair_before_recycle_sparse_target
+    },
+    {
+        "remove_before_recycle_non_sparse",
+        Sparse_remove_before_recycle_non_sparse
+    },
+    {
+        "remove_before_recycle_sparse",
+        Sparse_remove_before_recycle_sparse
+    },
+    {
+        "remove_pair_before_recycle_non_sparse_relationship",
+        Sparse_remove_pair_before_recycle_non_sparse_relationship
+    },
+    {
+        "remove_pair_before_recycle_sparse_relationship",
+        Sparse_remove_pair_before_recycle_sparse_relationship
+    },
+    {
+        "remove_pair_before_recycle_sparse_target",
+        Sparse_remove_pair_before_recycle_sparse_target
+    },
+    {
+        "recycle_after_delete_table",
+        Sparse_recycle_after_delete_table
+    },
+    {
+        "recycle_pair_after_delete_table",
+        Sparse_recycle_pair_after_delete_table
     }
 };
 
@@ -13136,7 +13171,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        171,
+        178,
         Sparse_testcases,
         1,
         Sparse_params
