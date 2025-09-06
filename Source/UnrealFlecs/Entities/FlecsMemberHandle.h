@@ -5,7 +5,7 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
-#include "FFlecsMemberHandle.generated.h"
+#include "FlecsMemberHandle.generated.h"
 
 // Avoid using this directly
 USTRUCT()

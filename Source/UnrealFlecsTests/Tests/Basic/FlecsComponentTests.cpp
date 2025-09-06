@@ -230,7 +230,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
  * D. Toggle Component Tests
  */
 TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
-                               "UnrealFlecs.A3.Components",
+                               "UnrealFlecs.A3_Components",
                                EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::ProductFilter,
                                "[Flecs][Entity][Tag][Component]")
 {
@@ -799,7 +799,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
  * C. Set/Assign API Tests
  */
 TEST_CLASS_WITH_FLAGS_AND_TAGS(A4_UnrealFlecsBasicPairTests,
-							   "UnrealFlecs.A4.Pairs",
+							   "UnrealFlecs.A4_Pairs",
 							   EAutomationTestFlags::EditorContext | EAutomationTestFlags::ClientContext | EAutomationTestFlags::ProductFilter
 							   | EAutomationTestFlags::CriticalPriority,
 							   "[Flecs][Pair][CPP-API][StaticStruct-API][Entity-API]")
@@ -918,6 +918,15 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A4_UnrealFlecsBasicPairTests,
 
 		TestEntity.RemovePair<FUSTRUCTPairTestComponent>(PairTestComponentHandle2);
 		ASSERT_THAT(IsFalse(TestEntity.HasPair(FUSTRUCTPairTestComponent::StaticStruct(), PairTestComponentHandle2)));
+	}
+
+	TEST_METHOD(B2_BasicPairAddRemove_Add_CPPAPIStaticStructAPI_Remove_CPPAPIEntityAPI)
+	{
+		TestEntity.AddPair<FUSTRUCTPairTestComponent>(FUSTRUCTPairTestComponent::StaticStruct());
+		ASSERT_THAT(IsTrue(TestEntity.HasPair<FUSTRUCTPairTestComponent>(FUSTRUCTPairTestComponent::StaticStruct())));
+
+		TestEntity.RemovePair<FUSTRUCTPairTestComponent>(FUSTRUCTPairTestComponent::StaticStruct());
+		ASSERT_THAT(IsFalse(TestEntity.HasPair<FUSTRUCTPairTestComponent>(FUSTRUCTPairTestComponent::StaticStruct())));
 	}
 
 }; // End of A4_UnrealFlecsBasicPairTests
