@@ -10,7 +10,7 @@
  * Layout of the tests:
  * A. Add/Remove/Set Component in Deferred Context Tests
  */
-TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9.World.Defer",
+TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9_World.Defer",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 	| EAutomationTestFlags::CriticalPriority)
 {
@@ -21,7 +21,7 @@ TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9.World.Defer",
 	
 	inline static FFlecsComponentHandle TestComponent;
 
-	BEFORE_ALL()
+	BEFORE_EACH()
 	{
 		Fixture = MakeUnique<FFlecsTestFixtureRAII>();
 		FlecsWorld = Fixture->Fixture.GetFlecsWorld();
@@ -30,7 +30,7 @@ TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9.World.Defer",
 		TestComponent = FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
 	}
 
-	AFTER_ALL()
+	AFTER_EACH()
 	{
 		FlecsWorld = nullptr;
 		Fixture.Reset();

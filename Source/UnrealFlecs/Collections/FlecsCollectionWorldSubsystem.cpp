@@ -6,12 +6,49 @@
 
 #include "FlecsCollectionTypes.h"
 #include "FlecsCollectionDataAsset.h"
+#include "Worlds/FlecsWorldSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsCollectionWorldSubsystem)
 
 void UFlecsCollectionWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+#if WITH_AUTOMATION_TESTS
+	if (GIsAutomationTesting)
+	{
+		const TSolidNotNull<const UFlecsWorldSubsystem*> WorldSubsystem = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>();
+		if (WorldSubsystem->HasValidFlecsWorld())
+		{
+			const TSolidNotNull<UFlecsWorld*> FlecsWorld = GetFlecsWorld();
+
+			FlecsWorld->RegisterComponentType<FFlecsCollectionPrefabTag>();
+			FlecsWorld->RegisterComponentType<FFlecsCollectionReferenceComponent>();
+			FlecsWorld->RegisterComponentType<FFlecsCollectionSlotTag>();
+
+			CollectionScopeEntity = FlecsWorld->CreateEntity("CollectionScope")
+				.Add(flecs::Module);
+	
+			UE_LOGFMT(LogFlecsWorld, Verbose, "UCollectionsModule registered");
+		}
+		else
+		{
+			Unreal::Flecs::GOnFlecsWorldInitialized.AddLambda([this](const TSolidNotNull<UFlecsWorld*> InWorld)
+			{
+				InWorld->RegisterComponentType<FFlecsCollectionPrefabTag>();
+				InWorld->RegisterComponentType<FFlecsCollectionReferenceComponent>();
+				InWorld->RegisterComponentType<FFlecsCollectionSlotTag>();
+
+				CollectionScopeEntity = InWorld->CreateEntity("CollectionScope")
+					.Add(flecs::Module);
+	
+				UE_LOGFMT(LogFlecsWorld, Verbose, "UCollectionsModule registered");
+			});
+		}
+		
+		return;
+	}
+#endif // WITH_AUTOMATION_TESTS
 
 	const TSolidNotNull<UFlecsWorld*> FlecsWorld = GetFlecsWorld();
 

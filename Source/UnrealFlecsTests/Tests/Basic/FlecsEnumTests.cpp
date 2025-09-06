@@ -12,7 +12,7 @@
  * B. Sparse Enum Register Add/Remove/Replace API Tests
  */
 TEST_CLASS_WITH_FLAGS_AND_TAGS(A5_UnrealFlecsEnumRegistrationTests,
-                               "UnrealFlecs.A5.Enums.Registration",
+                               "UnrealFlecs.A5_Enums.Registration",
                                EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
                                | EAutomationTestFlags::CriticalPriority,
                                "[Flecs][Component][Pair][Enum][CPP-API][StaticEnum-API]")
@@ -206,7 +206,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A6_UnrealFlecsEnumTests,
 	inline static FFlecsComponentHandle EnumComponentEntity;
 	inline static FFlecsEntityHandle SparseEnumEntity;
 
-	BEFORE_ALL()
+	BEFORE_EACH()
 	{
 		Fixture = MakeUnique<FFlecsTestFixtureRAII>();
 		FlecsWorld = Fixture->Fixture.GetFlecsWorld();
@@ -215,7 +215,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A6_UnrealFlecsEnumTests,
 		SparseEnumEntity = FlecsWorld->RegisterComponentType<EFlecsTestEnum_SparseUENUM>();
 	}
 
-	AFTER_ALL()
+	AFTER_EACH()
 	{
 		Fixture.Reset();
 		FlecsWorld = nullptr;
