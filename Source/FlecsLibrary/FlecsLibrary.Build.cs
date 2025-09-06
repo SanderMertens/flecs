@@ -74,6 +74,15 @@ public class FlecsLibrary : ModuleRules
                 }
             );
         }
+        else // Shipping or Test
+        {
+            PublicDefinitions.AddRange(
+                new string[]
+                {
+                    "FLECS_DISABLE_COUNTERS",
+                }
+            );
+        }
         
         // ReSharper disable once ConditionIsAlwaysTrueOrFalse
         if (Target.bBuildEditor && bCompileWithJournal)
@@ -112,8 +121,6 @@ public class FlecsLibrary : ModuleRules
             {
                 "CoreUObject",
                 "Engine",
-                "Slate",
-                "SlateCore",
             }
         );
     }
