@@ -27,6 +27,8 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsWorldSubsystem)
 
+FFlecsOnWorldInitializedGlobal Unreal::Flecs::GOnFlecsWorldInitialized;
+
 bool UFlecsWorldSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
 	return Super::ShouldCreateSubsystem(Outer)
@@ -227,6 +229,7 @@ UFlecsWorld* UFlecsWorldSubsystem::CreateWorld(const FString& Name, const FFlecs
 
 	DefaultWorld->GameLoopInterface->InitializeGameLoop(DefaultWorld);
 	OnWorldCreatedDelegate.Broadcast(DefaultWorld);
+	Unreal::Flecs::GOnFlecsWorldInitialized.Broadcast(DefaultWorld);
 		
 	return DefaultWorld;
 }

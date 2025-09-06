@@ -17,11 +17,11 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	/** Get (or build) the compiled prefab for a given collection asset */
-	FFlecsEntityHandle GetOrBuildPrefab(const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset);
+	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
+	FFlecsEntityHandle RegisterCollectionAsset(const UFlecsCollectionDataAsset* Asset);
 	
-	NO_DISCARD FFlecsEntityHandle GetPrefabByAsset(
-		const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset) const;
+	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
+	FFlecsEntityHandle GetPrefabByAsset(const UFlecsCollectionDataAsset* Asset) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
 	FORCEINLINE FFlecsEntityHandle GetCollectionScope() const
@@ -30,11 +30,8 @@ public:
 	}
 
 private:
-	UFUNCTION()
-	void OnAssetAdded(const FAssetData& Data);
-
-	UFUNCTION()
-	void OnAssetRemoved(const FAssetData& Data);
+	/** Get (or build) the compiled prefab for a given collection asset */
+	FFlecsEntityHandle GetOrBuildPrefab(const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset);
 	
 	FDelegateHandle AssetAddedHandle;
 	FDelegateHandle AssetRemovedHandle;

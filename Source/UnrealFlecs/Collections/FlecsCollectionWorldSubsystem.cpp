@@ -23,42 +23,16 @@ void UFlecsCollectionWorldSubsystem::Initialize(FSubsystemCollectionBase& Collec
 
 	CollectionScopeEntity = FlecsWorld->CreateEntity("CollectionScope")
 		.Add(flecs::Module);
-
-	IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
-	AssetAddedHandle = AssetRegistry.OnAssetAdded().AddUObject(this, &UFlecsCollectionWorldSubsystem::OnAssetAdded);
-	AssetRemovedHandle = AssetRegistry.OnAssetRemoved().AddUObject(this, &UFlecsCollectionWorldSubsystem::OnAssetRemoved);
-	
-	FARFilter Filter;
-	Filter.ClassPaths.Add(UFlecsCollectionDataAsset::StaticClass()->GetClassPathName());
-	Filter.bRecursivePaths = true;
-
-	TArray<FAssetData> ExistingAssets;
-	AssetRegistry.GetAssets(Filter, ExistingAssets);
-	
-	// Process all existing collection assets
-	for (const FAssetData& AssetData : ExistingAssets)
-	{
-		OnAssetAdded(AssetData);
-	}
 	
 	UE_LOGFMT(LogFlecsWorld, Verbose, "UCollectionsModule registered");
 }
 
 void UFlecsCollectionWorldSubsystem::Deinitialize()
 {
-	const FAssetRegistryModule* AssetRegistryModule = FModuleManager::GetModulePtr<FAssetRegistryModule>("AssetRegistry");
-	
-	if LIKELY_IF(AssetRegistryModule)
-	{
-		IAssetRegistry& AssetRegistry = AssetRegistryModule->Get();
-		AssetRegistry.OnAssetAdded().Remove(AssetAddedHandle);
-		AssetRegistry.OnAssetRemoved().Remove(AssetRemovedHandle);
-	}
-	
 	AssetToPrefab.Empty();
 	IdToPrefab.Empty();
 
-	if (UFlecsWorld* FlecsWorld = GetFlecsWorld())
+	if (MAYBE_UNUSED UFlecsWorld* FlecsWorld = GetFlecsWorld())
 	{
 		if LIKELY_IF(CollectionScopeEntity.IsValid())
 		{
@@ -69,46 +43,22 @@ void UFlecsCollectionWorldSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void UFlecsCollectionWorldSubsystem::OnAssetAdded(const FAssetData& Data)
+FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionAsset(const UFlecsCollectionDataAsset* Asset)
 {
-	if (!Data.GetClass()->IsChildOf(UFlecsCollectionDataAsset::StaticClass()))
-	{
-		return;
-	}
-	
-	const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset = CastChecked<UFlecsCollectionDataAsset>(Data.GetAsset());
-
-	GetOrBuildPrefab(Asset);
-
-	UE_LOGFMT(LogFlecsWorld, Verbose, "Registered collection asset: {AssetName}", Asset->GetName());
+	solid_check(Asset);
+	return GetOrBuildPrefab(Asset);
 }
 
-void UFlecsCollectionWorldSubsystem::OnAssetRemoved(const FAssetData& Data)
+FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByAsset(const UFlecsCollectionDataAsset* Asset) const
 {
-	if (!Data.GetClass()->IsChildOf(UFlecsCollectionDataAsset::StaticClass()))
-	{
-		return;
-	}
-
-	const FPrimaryAssetId Id = Data.GetPrimaryAssetId();
+	solid_check(Asset);
 	
-	if (const FFlecsEntityHandle* Prefab = IdToPrefab.Find(Id))
+	if (const FFlecsEntityHandle* Prefab = AssetToPrefab.Find(Asset))
 	{
-		if LIKELY_IF(Prefab->IsValid())
-		{
-			GetFlecsWorld()->DestroyPrefab(*Prefab);
-		}
-		
-		IdToPrefab.Remove(Id);
+		return *Prefab;
 	}
 
-	for (auto It = AssetToPrefab.CreateIterator(); It; ++It)
-	{
-		if UNLIKELY_IF(!It.Key().ResolveObjectPtr() || !It.Value().IsValid())
-		{
-			It.RemoveCurrent();
-		}
-	}
+	return FFlecsEntityHandle();
 }
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetOrBuildPrefab(const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset)
@@ -134,17 +84,6 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetOrBuildPrefab(const TSolid
 	AssetToPrefab.FindOrAdd(Asset) = Prefab;
 	IdToPrefab.FindOrAdd(Asset->GetPrimaryAssetId()) = Prefab;
 	return Prefab;
-}
-
-FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByAsset(
-	const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset) const
-{
-	if (const FFlecsEntityHandle* Prefab = AssetToPrefab.Find(Asset))
-	{
-		return *Prefab;
-	}
-
-	return FFlecsEntityHandle();
 }
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::BuildPrefabFromRecord(
