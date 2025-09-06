@@ -1713,6 +1713,8 @@ void Cached_no_rematch_after_instantiate(void);
 void Cached_no_rematch_after_batched_instantiate(void);
 void Cached_rematch_after_delete_base_of_base(void);
 void Cached_rematch_after_delete_first_base_of_base(void);
+void Cached_rematch_after_remove_all(void);
+void Cached_no_rematch_after_delete_with(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -9041,6 +9043,14 @@ bake_test_case Cached_testcases[] = {
     {
         "rematch_after_delete_first_base_of_base",
         Cached_rematch_after_delete_first_base_of_base
+    },
+    {
+        "rematch_after_remove_all",
+        Cached_rematch_after_remove_all
+    },
+    {
+        "no_rematch_after_delete_with",
+        Cached_no_rematch_after_delete_with
     }
 };
 
@@ -11651,7 +11661,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        106,
+        108,
         Cached_testcases
     },
     {
