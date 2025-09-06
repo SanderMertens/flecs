@@ -80,7 +80,7 @@ void UFlecsEntityActorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	DOREPLIFETIME_WITH_PARAMS_FAST(UFlecsEntityActorComponent, EntityHandle, Params);
 }
 
-#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
 
 bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) const
 {
@@ -89,7 +89,7 @@ bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) cons
 	return bIsEditable;
 }
 
-#endif // WITH_EDITORONLY_DATA
+#endif // WITH_EDITOR
 
 void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 {

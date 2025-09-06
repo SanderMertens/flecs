@@ -49,11 +49,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
 	FFlecsEntityRecord EntityRecord;
 
-	#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
 
 	virtual bool CanEditChange(const FProperty* InProperty) const override;
 
-	#endif // WITH_EDITORONLY_DATA
+#endif // WITH_EDITOR
 
 	UFUNCTION()
 	void OnWorldCreated(UFlecsWorld* InWorld);
