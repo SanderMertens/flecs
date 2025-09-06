@@ -299,6 +299,16 @@ void flecs_remove_from_table(
             ecs_log_push_3();
             ecs_table_diff_t td;
             flecs_table_diff_build_noalloc(&diff, &td);
+
+            if (table->flags & EcsTableHasTraversable) {
+                for (i = 0; i < diff.removed.count; i ++) {
+                    flecs_update_component_monitors(world, NULL, &(ecs_type_t){
+                        .array = (ecs_id_t[]){td.removed.array[i]},
+                        .count = 1
+                    });
+                }
+            }
+
             flecs_notify_on_remove(world, table, NULL, 0, table_count, &td);
             ecs_log_pop_3();
         }
