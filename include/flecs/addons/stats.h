@@ -555,6 +555,11 @@ typedef struct {
     ecs_size_t bytes_stack;             /** Stack allocator memory for temporary command data */
 } ecs_commands_memory_t;
 
+/** Allocator memory */
+typedef struct {
+
+} ecs_allocator_memory_t;
+
 /** Component with memory statistics. */
 typedef struct {
     ecs_entity_index_memory_t entities;
