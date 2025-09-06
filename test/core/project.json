@@ -406,7 +406,9 @@
                 "recycle_1_of_3",
                 "recycle_2_of_3",
                 "bulk_init_w_table",
-                "bulk_init_w_alive_entity"
+                "bulk_init_w_alive_entity",
+                "bulk_init_w_cmd_in_on_add_hook",
+                "bulk_init_w_cmd_in_on_add_observer"
             ]
         }, {
             "id": "Add",
