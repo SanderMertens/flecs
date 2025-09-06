@@ -703,12 +703,10 @@ void flecs_world_allocators_init(
     ecs_map_params_init(&a->ptr, &world->allocator);
     ecs_map_params_init(&a->query_table_list, &world->allocator);
 
-    flecs_ballocator_init_t(&a->query_table, ecs_query_cache_table_t);
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
-    flecs_ballocator_init_t(&a->id_record, ecs_component_record_t);
-    flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_record_t);
-    flecs_ballocator_init_n(&a->id_record_chunk, ecs_component_record_t, FLECS_SPARSE_PAGE_SIZE);
+    flecs_ballocator_init_t(&a->component_record, ecs_component_record_t);
+    flecs_ballocator_init_t(&a->pair_record, ecs_pair_record_t);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&a->hashmap, ecs_hashmap_t);
@@ -723,12 +721,10 @@ void flecs_world_allocators_fini(
 
     ecs_map_params_fini(&a->ptr);
     ecs_map_params_fini(&a->query_table_list);
-    flecs_ballocator_fini(&a->query_table);
     flecs_ballocator_fini(&a->graph_edge_lo);
     flecs_ballocator_fini(&a->graph_edge);
-    flecs_ballocator_fini(&a->id_record);
-    flecs_ballocator_fini(&a->pair_id_record);
-    flecs_ballocator_fini(&a->id_record_chunk);
+    flecs_ballocator_fini(&a->component_record);
+    flecs_ballocator_fini(&a->pair_record);
     flecs_ballocator_fini(&a->table_diff);
     flecs_ballocator_fini(&a->sparse_chunk);
     flecs_ballocator_fini(&a->hashmap);

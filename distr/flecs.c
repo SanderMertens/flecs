@@ -3312,12 +3312,10 @@ void ecs_stage_shrink(
 typedef struct ecs_world_allocators_t {
     ecs_map_params_t ptr;
     ecs_map_params_t query_table_list;
-    ecs_block_allocator_t query_table;
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
-    ecs_block_allocator_t id_record;
-    ecs_block_allocator_t pair_id_record;
-    ecs_block_allocator_t id_record_chunk;
+    ecs_block_allocator_t component_record;
+    ecs_block_allocator_t pair_record;
     ecs_block_allocator_t table_diff;
     ecs_block_allocator_t sparse_chunk;
     ecs_block_allocator_t hashmap;
@@ -20624,12 +20622,10 @@ void flecs_world_allocators_init(
     ecs_map_params_init(&a->ptr, &world->allocator);
     ecs_map_params_init(&a->query_table_list, &world->allocator);
 
-    flecs_ballocator_init_t(&a->query_table, ecs_query_cache_table_t);
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
-    flecs_ballocator_init_t(&a->id_record, ecs_component_record_t);
-    flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_record_t);
-    flecs_ballocator_init_n(&a->id_record_chunk, ecs_component_record_t, FLECS_SPARSE_PAGE_SIZE);
+    flecs_ballocator_init_t(&a->component_record, ecs_component_record_t);
+    flecs_ballocator_init_t(&a->pair_record, ecs_pair_record_t);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&a->hashmap, ecs_hashmap_t);
@@ -20644,12 +20640,10 @@ void flecs_world_allocators_fini(
 
     ecs_map_params_fini(&a->ptr);
     ecs_map_params_fini(&a->query_table_list);
-    flecs_ballocator_fini(&a->query_table);
     flecs_ballocator_fini(&a->graph_edge_lo);
     flecs_ballocator_fini(&a->graph_edge);
-    flecs_ballocator_fini(&a->id_record);
-    flecs_ballocator_fini(&a->pair_id_record);
-    flecs_ballocator_fini(&a->id_record_chunk);
+    flecs_ballocator_fini(&a->component_record);
+    flecs_ballocator_fini(&a->pair_record);
     flecs_ballocator_fini(&a->table_diff);
     flecs_ballocator_fini(&a->sparse_chunk);
     flecs_ballocator_fini(&a->hashmap);
@@ -38008,7 +38002,7 @@ ecs_component_record_t* flecs_component_new(
     ecs_component_record_t *cr, *cr_t = NULL;
     ecs_id_t hash = flecs_component_hash(id);
     cr = flecs_bcalloc_w_dbg_info(
-        &world->allocators.id_record, "ecs_component_record_t");
+        &world->allocators.component_record, "ecs_component_record_t");
 
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         ecs_map_insert_ptr(&world->id_index_hi, hash, cr);
@@ -38027,7 +38021,7 @@ ecs_component_record_t* flecs_component_new(
     ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
     if (is_pair) {
         cr->pair = flecs_bcalloc_w_dbg_info(
-            &world->allocators.pair_id_record, "ecs_pair_record_t");
+            &world->allocators.pair_record, "ecs_pair_record_t");
         cr->pair->reachable.current = -1;
 
         flecs_ordered_children_init(world, cr);
@@ -38327,7 +38321,7 @@ void flecs_component_free(
         flecs_name_index_free(cr->pair->name_index);
         ecs_vec_fini_t(&world->allocator, &cr->pair->reachable.ids, 
             ecs_reachable_elem_t);
-        flecs_bfree_w_dbg_info(&world->allocators.pair_id_record, 
+        flecs_bfree_w_dbg_info(&world->allocators.pair_record, 
                 cr->pair, "ecs_pair_record_t");
     }
 
@@ -38342,7 +38336,7 @@ void flecs_component_free(
     ecs_os_free(cr->str);
 #endif
 
-    flecs_bfree_w_dbg_info(&world->allocators.id_record, 
+    flecs_bfree_w_dbg_info(&world->allocators.component_record, 
         cr, "ecs_component_record_t");
 
     if (ecs_should_log_1()) {

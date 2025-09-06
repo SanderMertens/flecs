@@ -279,7 +279,7 @@ ecs_component_record_t* flecs_component_new(
     ecs_component_record_t *cr, *cr_t = NULL;
     ecs_id_t hash = flecs_component_hash(id);
     cr = flecs_bcalloc_w_dbg_info(
-        &world->allocators.id_record, "ecs_component_record_t");
+        &world->allocators.component_record, "ecs_component_record_t");
 
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         ecs_map_insert_ptr(&world->id_index_hi, hash, cr);
@@ -298,7 +298,7 @@ ecs_component_record_t* flecs_component_new(
     ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
     if (is_pair) {
         cr->pair = flecs_bcalloc_w_dbg_info(
-            &world->allocators.pair_id_record, "ecs_pair_record_t");
+            &world->allocators.pair_record, "ecs_pair_record_t");
         cr->pair->reachable.current = -1;
 
         flecs_ordered_children_init(world, cr);
@@ -598,7 +598,7 @@ void flecs_component_free(
         flecs_name_index_free(cr->pair->name_index);
         ecs_vec_fini_t(&world->allocator, &cr->pair->reachable.ids, 
             ecs_reachable_elem_t);
-        flecs_bfree_w_dbg_info(&world->allocators.pair_id_record, 
+        flecs_bfree_w_dbg_info(&world->allocators.pair_record, 
                 cr->pair, "ecs_pair_record_t");
     }
 
@@ -613,7 +613,7 @@ void flecs_component_free(
     ecs_os_free(cr->str);
 #endif
 
-    flecs_bfree_w_dbg_info(&world->allocators.id_record, 
+    flecs_bfree_w_dbg_info(&world->allocators.component_record, 
         cr, "ecs_component_record_t");
 
     if (ecs_should_log_1()) {
