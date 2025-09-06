@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Worlds/FlecsAbstractWorldSubsystem.h"
+
 #include "FlecsCollectionWorldSubsystem.generated.h"
 
 class UFlecsCollectionDataAsset;

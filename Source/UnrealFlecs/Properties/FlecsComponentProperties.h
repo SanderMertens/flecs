@@ -56,7 +56,7 @@ public:
 
 	NO_DISCARD const FFlecsComponentProperties& GetComponentProperties(const FString& Name) const;
 
-	robin_hood::unordered_flat_map<std::string, FFlecsComponentProperties> ComponentProperties;
+	robin_hood::unordered_map<std::string, FFlecsComponentProperties> ComponentProperties;
 	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
 	
 }; // struct FFlecsComponentPropertiesRegistry

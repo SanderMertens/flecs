@@ -2,12 +2,10 @@
 
 #include "FlecsCollectionWorldSubsystem.h"
 
-#include "FlecsCollectionDataAsset.h"
 #include "Logs/FlecsCategories.h"
 
 #include "FlecsCollectionTypes.h"
-#include "AssetRegistry/AssetRegistryModule.h"
-#include "AssetRegistry/IAssetRegistry.h"
+#include "FlecsCollectionDataAsset.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsCollectionWorldSubsystem)
 
