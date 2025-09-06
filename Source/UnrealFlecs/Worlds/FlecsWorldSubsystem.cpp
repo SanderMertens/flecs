@@ -191,7 +191,7 @@ UFlecsWorld* UFlecsWorldSubsystem::CreateWorld(const FString& Name, const FFlecs
 	}
 	else
 	{
-		DefaultWorld->SetThreads(static_cast<int32>(std::thread::hardware_concurrency()));
+		DefaultWorld->SetThreads(FMath::Max(1, FPlatformMisc::NumberOfCores() - 2));
 	}
 
 	DefaultWorld->WorldStart();

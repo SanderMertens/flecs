@@ -17,6 +17,7 @@
 namespace Unreal::Flecs
 {
 	using FFlecsComponentFunction = std::function<void(flecs::world, FFlecsComponentHandle&)>;
+	
 } // namespace Unreal::Flecs
 
 struct UNREALFLECS_API FFlecsComponentProperties

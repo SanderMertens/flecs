@@ -2,11 +2,16 @@
 
 #include "FlecsSystemInterface.h"
 
+#include "Worlds/FlecsWorld.h"
+#include "Worlds/FlecsWorldConverter.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsSystemInterface)
 
 void IFlecsSystemInterface::InitializeSystem_Internal(const flecs::world& InWorld)
 {
 	const FFlecsSystemSettingsInfo& Settings = GetSystemSettings();
+
+	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = Unreal::Flecs::ToFlecsWorld(InWorld);
 		
 	flecs::system_builder Builder(InWorld, StringCast<char>(*Settings.Name).Get());
 
@@ -38,7 +43,7 @@ void IFlecsSystemInterface::InitializeSystem_Internal(const flecs::world& InWorl
 
 	System = FFlecsSystem(Builder); // Builder.build();
 		
-	Settings.SystemRecord.ApplyRecordToEntity(System.GetEntity());
+	Settings.SystemRecord.ApplyRecordToEntity(FlecsWorld, System.GetEntity());
 	//@TODO: Add FlecsSystemObject Component Target Type
 	//System.GetEntity().Set<FFlecsUObjectComponent>({ _getUObject() });
 		

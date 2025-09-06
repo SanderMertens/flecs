@@ -17,20 +17,20 @@ DEFINE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION(Unreal::Flecs::EmptyNetSerializeFunct
 {
     if UNLIKELY_IF(!InEntity.IsValid())
     {
-        UE_LOGFMT(LogFlecsNetworking, Warning, "Trying to net serialize an invalid entity");
+        UE_LOGFMT(LogFlecsEntity, Warning, "Trying to net serialize an invalid entity");
         bOutSuccess = true;
         return true;
     }
     
     if (InEntity.HasName())
     {
-        UE_LOGFMT(LogFlecsNetworking, Warning,
+        UE_LOGFMT(LogFlecsEntity, Warning,
             "Trying to net serialize entity {EntityId} with a name ({EntityName}) without a valid NetSerialize function",
             InEntity.GetFlecsId().ToString(), InEntity.GetName());
     }
     else
     {
-        UE_LOGFMT(LogFlecsNetworking, Warning,
+        UE_LOGFMT(LogFlecsEntity, Warning,
         "Trying to net serialize entity {EntityId} without a valid NetSerialize function",
                  InEntity.GetFlecsId().ToString());
     }
@@ -74,7 +74,7 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
         }
         else
         {
-            UE_LOGFMT(LogFlecsNetworking, Warning,
+            UE_LOGFMT(LogFlecsEntity, Warning,
                 "Trying to net serialize entity with a nullptr NetSerialize function ptr in "
                 "its FFlecsNetworkSerializeDefinitionComponent for Entity {EntityId}, will try global Net Serialize function",);
         }
@@ -92,7 +92,7 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
     }
     else
     {
-        UE_LOGFMT(LogFlecsNetworking, Error,
+        UE_LOGFMT(LogFlecsEntity, Error,
             "Trying to net serialize entity with a nullptr NetSerialize function ptr");
         
         bOutSuccess = false;

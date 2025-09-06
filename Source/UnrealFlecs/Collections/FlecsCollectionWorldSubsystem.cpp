@@ -19,21 +19,26 @@ void UFlecsCollectionWorldSubsystem::Initialize(FSubsystemCollectionBase& Collec
 
 	FlecsWorld->RegisterComponentType<FFlecsCollectionPrefabTag>();
 	FlecsWorld->RegisterComponentType<FFlecsCollectionReferenceComponent>();
+	FlecsWorld->RegisterComponentType<FFlecsCollectionSlotTag>();
+
+	CollectionScopeEntity = FlecsWorld->CreateEntity("CollectionScope")
+		.Add(flecs::Module);
 
 	IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry").Get();
 	AssetAddedHandle = AssetRegistry.OnAssetAdded().AddUObject(this, &UFlecsCollectionWorldSubsystem::OnAssetAdded);
 	AssetRemovedHandle = AssetRegistry.OnAssetRemoved().AddUObject(this, &UFlecsCollectionWorldSubsystem::OnAssetRemoved);
 	
-	TArray<FAssetData> Found;
-	
 	FARFilter Filter;
 	Filter.ClassPaths.Add(UFlecsCollectionDataAsset::StaticClass()->GetClassPathName());
 	Filter.bRecursivePaths = true;
-	AssetRegistry.GetAssets(Filter, Found);
+
+	TArray<FAssetData> ExistingAssets;
+	AssetRegistry.GetAssets(Filter, ExistingAssets);
 	
-	for (const FAssetData& Data : Found)
+	// Process all existing collection assets
+	for (const FAssetData& AssetData : ExistingAssets)
 	{
-		OnAssetAdded(Data);
+		OnAssetAdded(AssetData);
 	}
 	
 	UE_LOGFMT(LogFlecsWorld, Verbose, "UCollectionsModule registered");
@@ -53,12 +58,20 @@ void UFlecsCollectionWorldSubsystem::Deinitialize()
 	AssetToPrefab.Empty();
 	IdToPrefab.Empty();
 
+	if (UFlecsWorld* FlecsWorld = GetFlecsWorld())
+	{
+		if LIKELY_IF(CollectionScopeEntity.IsValid())
+		{
+			CollectionScopeEntity.Destroy();
+		}
+	}
+		
 	Super::Deinitialize();
 }
 
 void UFlecsCollectionWorldSubsystem::OnAssetAdded(const FAssetData& Data)
 {
-	if (Data.AssetClassPath != UFlecsCollectionDataAsset::StaticClass()->GetClassPathName())
+	if (!Data.GetClass()->IsChildOf(UFlecsCollectionDataAsset::StaticClass()))
 	{
 		return;
 	}
@@ -67,17 +80,17 @@ void UFlecsCollectionWorldSubsystem::OnAssetAdded(const FAssetData& Data)
 
 	GetOrBuildPrefab(Asset);
 
-	UE_LOGFMT(LogFlecsWorld, Verbose, "Registered collection asset: {0}", *Asset->GetName());
+	UE_LOGFMT(LogFlecsWorld, Verbose, "Registered collection asset: {AssetName}", Asset->GetName());
 }
 
 void UFlecsCollectionWorldSubsystem::OnAssetRemoved(const FAssetData& Data)
 {
-	if (Data.AssetClassPath != UFlecsCollectionDataAsset::StaticClass()->GetClassPathName())
+	if (!Data.GetClass()->IsChildOf(UFlecsCollectionDataAsset::StaticClass()))
 	{
 		return;
 	}
 
-	const FPrimaryAssetId Id = FPrimaryAssetId("FlecsCollectionDataAsset", Data.AssetName);
+	const FPrimaryAssetId Id = Data.GetPrimaryAssetId();
 	
 	if (const FFlecsEntityHandle* Prefab = IdToPrefab.Find(Id))
 	{
@@ -109,15 +122,29 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetOrBuildPrefab(const TSolid
 		}
 	}
 
-	UE_LOGFMT(LogFlecsEntity, Verbose, "Building prefab for collection asset: {0}", *Asset->GetName());
+	UE_LOGFMT(LogFlecsEntity, Verbose, "Building prefab for collection asset: {AssetName}",
+		Asset->GetName());
 
 	// Prevent circular dependencies
 	TSet<const UFlecsCollectionDataAsset*> BuildStack;
-	const FFlecsEntityHandle Prefab = BuildPrefabFromRecord(Asset, BuildStack);
+
+	const FFlecsEntityHandle Prefab = BuildPrefabFromRecord(Asset, BuildStack)
+		.SetParent(CollectionScopeEntity);
 
 	AssetToPrefab.FindOrAdd(Asset) = Prefab;
 	IdToPrefab.FindOrAdd(Asset->GetPrimaryAssetId()) = Prefab;
 	return Prefab;
+}
+
+FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByAsset(
+	const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset) const
+{
+	if (const FFlecsEntityHandle* Prefab = AssetToPrefab.Find(Asset))
+	{
+		return *Prefab;
+	}
+
+	return FFlecsEntityHandle();
 }
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::BuildPrefabFromRecord(
@@ -126,16 +153,16 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::BuildPrefabFromRecord(
 	if UNLIKELY_IF(BuildStack.Contains(Asset))
 	{
 		UE_LOGFMT(LogFlecsEntity, Error,
-			"Circular dependency detected when building prefab for collection asset: {0}", *Asset->GetName());
+			"Circular dependency detected when building prefab for collection asset: {AssetName}", Asset->GetName());
 		return FFlecsEntityHandle();
 	}
 
 	BuildStack.Add(Asset);
 
 	const TSolidNotNull<UFlecsWorld*> FlecsWorld = GetFlecsWorld();
-	const FString PrefabName = GetCollectionName(Asset);
 
-	const FFlecsEntityHandle RootPrefab = FlecsWorld->CreatePrefabWithRecord(Asset->Record, PrefabName);
+	const FFlecsEntityHandle RootPrefab = FlecsWorld->CreatePrefabWithRecord(Asset->Record, Asset->GetName());
+	
 	ResolveRootCollections(RootPrefab, Asset, BuildStack);
 	ResolveChildCollections(RootPrefab, BuildStack);
 
@@ -154,8 +181,8 @@ void UFlecsCollectionWorldSubsystem::ResolveRootCollections(const FFlecsEntityHa
 		{
 			// @TODO: Maybe BuildPrefabFromRecord here, hence why we have the BuildStack?
 			UE_LOGFMT(LogFlecsEntity, Error,
-				"Failed to build referenced collection prefab for asset: {0} in collection asset: {1}",
-				*Collection->GetName(), *Asset->GetName());
+				"Failed to build referenced collection prefab for asset: {CollectionName} in collection asset: {AssetName}",
+				Collection->GetName(), Asset->GetName());
 			continue;
 		}
 
@@ -168,44 +195,57 @@ void UFlecsCollectionWorldSubsystem::ResolveChildCollections(const FFlecsEntityH
 {
 	const TSolidNotNull<UFlecsWorld*> FlecsWorld = GetFlecsWorld();
 
-	FlecsWorld->World.query_builder<FFlecsCollectionReferenceComponent*>()
-		.with(flecs::ChildOf, NodePrefab)
-		.each([&](flecs::entity ChildEntity, FFlecsCollectionReferenceComponent* ReferenceComponent)
-		{
-			const FFlecsEntityHandle ChildHandle(FlecsWorld, ChildEntity);
-
-			if (ReferenceComponent)
+	FlecsWorld->Defer([this, FlecsWorld, &NodePrefab, &BuildStack]()
+	{
+		FlecsWorld->World.query_builder<FFlecsCollectionReferenceComponent*>() // 0
+			.with(flecs::ChildOf, NodePrefab) // 1
+			.with<FFlecsCollectionSlotTag>().optional() // 2
+			.each([&](flecs::iter Iter, size_t Index, FFlecsCollectionReferenceComponent* ReferenceComponent)
 			{
-				if LIKELY_IF(ReferenceComponent->Collection)
+				const FFlecsEntityHandle ChildHandle = Iter.entity(Index);
+
+				if (ReferenceComponent)
 				{
-					const FFlecsEntityHandle OtherPrefab = GetOrBuildPrefab(ReferenceComponent->Collection);
-					if UNLIKELY_IF(!OtherPrefab.IsValid())
+					if LIKELY_IF(IsValid(ReferenceComponent->Collection))
 					{
-						// @TODO: Maybe BuildPrefabFromRecord here, hence why we have the BuildStack?
-						UE_LOGFMT(LogFlecsEntity, Error,
-							"Failed to build referenced collection prefab for asset: {0} in collection entity: {1}",
-							*ReferenceComponent->Collection->GetName(), *ChildHandle.GetName());
+						FFlecsEntityHandle OtherPrefab = GetPrefabByAsset(ReferenceComponent->Collection);
+						if (!OtherPrefab.IsValid())
+						{
+							OtherPrefab = BuildPrefabFromRecord(ReferenceComponent->Collection, BuildStack)
+								.SetParent(CollectionScopeEntity);
+							
+							if (!OtherPrefab.IsValid())
+							{
+								UE_LOGFMT(LogFlecsEntity, Error,
+									"Failed to build referenced collection prefab for asset: {CollectionName} in entity {ChildEntity}",
+									ReferenceComponent->Collection->GetName(), ChildHandle.GetName());
+								return;
+							}
+
+							AssetToPrefab.FindOrAdd(ReferenceComponent->Collection) = OtherPrefab;
+							IdToPrefab.FindOrAdd(ReferenceComponent->Collection->GetPrimaryAssetId()) = OtherPrefab;
+						}
+
+						ChildHandle.SetIsA(OtherPrefab);
 					}
 					else
 					{
-						ChildHandle.SetIsA(OtherPrefab);
+						UE_LOGFMT(LogFlecsEntity, Error,
+							"Collection reference component on entity {ChildEntity} has no collection set, skipping",
+							ChildHandle.GetName());
 					}
+
+					ChildHandle.Remove<FFlecsCollectionReferenceComponent>();
 				}
-				else
+
+				if (Iter.is_set(2))
 				{
-					UE_LOGFMT(LogFlecsEntity, Warning,
-						"Collection reference component on entity {0} has no collection set, skipping",
-						*ChildHandle.GetName());
+					ChildHandle.MarkSlot();
+					
+					ChildHandle.Remove<FFlecsCollectionSlotTag>();
 				}
 
-				ChildHandle.Remove<FFlecsCollectionReferenceComponent>();
-			}
-
-			ResolveChildCollections(ChildHandle, BuildStack);
-		});
-}
-
-FString UFlecsCollectionWorldSubsystem::GetCollectionName(const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset)
-{
-	return FString::Printf(TEXT("Collection_%s"), *Asset->GetName());
+				ResolveChildCollections(ChildHandle, BuildStack);
+			});
+	});
 }

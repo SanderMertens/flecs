@@ -65,7 +65,7 @@ void FEntityRecordTestsSpec::Define()
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 			TestTrue("Entity should be valid", TestEntity.IsValid());
 
-			Record.ApplyRecordToEntity(TestEntity);
+			Record.ApplyRecordToEntity(Fixture.FlecsWorld, TestEntity);
 			TestTrue("Entity should have the Component from the record",
 				TestEntity.Has<FFlecsTestStruct_Value>());
 			TestEqual("Entity have the correct value from the record",
@@ -91,7 +91,7 @@ void FEntityRecordTestsSpec::Define()
 
 			const FFlecsEntityHandle TestEntity = Fixture.FlecsWorld->CreateEntity();
 
-			Record.ApplyRecordToEntity(TestEntity);
+			Record.ApplyRecordToEntity(Fixture.FlecsWorld, TestEntity);
 			TestTrue("Entity should have the Component from the record using the CPP API",
 				TestEntity.Has<FFlecsTestStruct_Value>());
 			TestEqual("Entity should have the correct record value",

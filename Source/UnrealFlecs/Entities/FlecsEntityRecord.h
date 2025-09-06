@@ -239,36 +239,44 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	}
 
 	template <Solid::TScriptStructConcept T>
-	FORCEINLINE void AddComponent(const T& InComponent)
+	FORCEINLINE FFlecsEntityRecord& AddComponent(const T& InComponent)
 	{
 		FFlecsComponentTypeInfo NewComponent;
 		NewComponent.NodeType = EFlecsComponentNodeType::ScriptStruct;
 		NewComponent.ScriptStruct = FInstancedStruct::Make<T>(InComponent);
 		Components.Add(NewComponent);
+
+		return *this;
 	}
 
-	FORCEINLINE void AddComponent(const FFlecsEntityHandle& InEntityHandle)
+	FORCEINLINE FFlecsEntityRecord& AddComponent(const FFlecsEntityHandle& InEntityHandle)
 	{
 		FFlecsComponentTypeInfo NewComponent;
 		NewComponent.NodeType = EFlecsComponentNodeType::EntityHandle;
 		NewComponent.EntityHandle = InEntityHandle;
 		Components.Add(NewComponent);
+
+		return *this;
 	}
 
-	FORCEINLINE void AddComponent(const FGameplayTag& InGameplayTag)
+	FORCEINLINE FFlecsEntityRecord& AddComponent(const FGameplayTag& InGameplayTag)
 	{
 		FFlecsComponentTypeInfo NewComponent;
 		NewComponent.NodeType = EFlecsComponentNodeType::FGameplayTag;
 		NewComponent.GameplayTag = InGameplayTag;
 		Components.Add(NewComponent);
+
+		return *this;
 	}
 
-	FORCEINLINE void AddComponent(const FFlecsRecordPair& InPair)
+	FORCEINLINE FFlecsEntityRecord& AddComponent(const FFlecsRecordPair& InPair)
 	{
 		FFlecsComponentTypeInfo NewComponent;
 		NewComponent.NodeType = EFlecsComponentNodeType::Pair;
 		NewComponent.Pair = InPair;
 		Components.Add(NewComponent);
+
+		return *this;
 	}
 
 	FORCEINLINE int32 AddSubEntity(const FFlecsRecordSubEntity& InSubEntity)
@@ -309,12 +317,13 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		return SubEntities[InIndex];
 	}
 
-	void ApplyRecordToEntity(const FFlecsEntityHandle& InEntityHandle) const;
+	void ApplyRecordToEntity(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld, const FFlecsEntityHandle& InEntityHandle) const;
 
 }; // struct FFlecsEntityRecord
 
 REGISTER_FLECS_COMPONENT(FFlecsEntityRecord,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
 	{
-		InComponent.AddPair(flecs::OnInstantiate, flecs::DontInherit);
+		InComponent
+			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
 	});

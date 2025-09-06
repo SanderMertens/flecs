@@ -17,18 +17,30 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
+	/** Get (or build) the compiled prefab for a given collection asset */
+	FFlecsEntityHandle GetOrBuildPrefab(const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset);
+	
+	NO_DISCARD FFlecsEntityHandle GetPrefabByAsset(
+		const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
+	FORCEINLINE FFlecsEntityHandle GetCollectionScope() const
+	{
+		return CollectionScopeEntity;
+	}
+
+private:
 	UFUNCTION()
 	void OnAssetAdded(const FAssetData& Data);
 
 	UFUNCTION()
 	void OnAssetRemoved(const FAssetData& Data);
-
-	/** Get (or build) the compiled prefab for a given collection asset */
-	FFlecsEntityHandle GetOrBuildPrefab(const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset);
-
-private:
+	
 	FDelegateHandle AssetAddedHandle;
 	FDelegateHandle AssetRemovedHandle;
+
+	UPROPERTY()
+	FFlecsEntityHandle CollectionScopeEntity;
 	
 	TMap<TObjectKey<UFlecsCollectionDataAsset>, FFlecsEntityHandle> AssetToPrefab;
 	TMap<FPrimaryAssetId, FFlecsEntityHandle> IdToPrefab;
@@ -42,7 +54,5 @@ private:
 
 	void ResolveChildCollections(const FFlecsEntityHandle& NodePrefab,
 		OUT TSet<const UFlecsCollectionDataAsset*>& BuildStack);
-
-	static NO_DISCARD FString GetCollectionName(const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset);
 	
 }; // class UFlecsCollectionWorldSubsystem

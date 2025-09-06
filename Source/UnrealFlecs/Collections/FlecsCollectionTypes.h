@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Properties/FlecsComponentProperties.h"
 
 #include "FlecsCollectionTypes.generated.h"
@@ -13,7 +14,7 @@ USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsCollectionPrefabTag
 {
 	GENERATED_BODY()
-};
+}; // struct FFlecsCollectionPrefabTag
 
 REGISTER_FLECS_COMPONENT(FFlecsCollectionPrefabTag,
 [](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
@@ -35,6 +36,19 @@ public:
 }; // struct FFlecsCollectionReferenceComponent
 
 REGISTER_FLECS_COMPONENT(FFlecsCollectionReferenceComponent,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		InComponentHandle
+			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
+	});
+
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsCollectionSlotTag
+{
+	GENERATED_BODY()
+}; // struct FFlecsCollectionSlotTag
+
+REGISTER_FLECS_COMPONENT(FFlecsCollectionSlotTag,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
 	{
 		InComponentHandle

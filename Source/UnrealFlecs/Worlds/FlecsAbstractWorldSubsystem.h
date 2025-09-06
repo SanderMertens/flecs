@@ -18,6 +18,7 @@ public:
 
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override final;
 
+	// Will return null if the world isn't valid or initialized yet.
 	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorld() const
 	{
 		return FlecsWorldRef.Get();

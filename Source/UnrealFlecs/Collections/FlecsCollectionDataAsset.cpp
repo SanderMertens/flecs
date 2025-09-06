@@ -30,17 +30,23 @@ EDataValidationResult UFlecsCollectionDataAsset::ValidateCollections(FDataValida
 {
 	for (const UFlecsCollectionDataAsset* Collection : Collections)
 	{
-		if UNLIKELY_IF(!Collection)
+		if UNLIKELY_IF(!IsValid(Collection))
 		{
-			Context.AddError(FText::FromString(TEXT("Collections array contains null element")));
+			Context.AddError(FText::FromString(TEXT("Collections array contains null element!")));
 			return EDataValidationResult::Invalid;
 		}
 
 		if UNLIKELY_IF(Collection == this)
 		{
-			Context.AddError(FText::FromString(TEXT("Collections array contains self reference")));
+			Context.AddError(FText::FromString(TEXT("Collections array contains self reference!")));
 			return EDataValidationResult::Invalid;
 		}
+	}
+
+	if (TSet<const UFlecsCollectionDataAsset*>{Collections}.Num() != Collections.Num())
+	{
+		Context.AddError(FText::FromString(TEXT("Collections contains duplicates!")));
+		return EDataValidationResult::Invalid;
 	}
 	
 	return EDataValidationResult::Valid;

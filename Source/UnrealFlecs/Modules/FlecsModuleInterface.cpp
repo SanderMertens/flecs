@@ -20,11 +20,12 @@
 void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 {
 	World = Unreal::Flecs::ToFlecsWorld(InWorld);
-	solid_check(World.IsValid());
 	solid_check(IsWorldValid());
 
 	const TSolidNotNull<UFlecsWorld*> FlecsWorld = this->World.Get();
+	
 	const TSolidNotNull<UWorld*> GameWorld = FlecsWorld->GetWorld();
+	solid_checkf(IsValid(GameWorld), TEXT("FlecsWorld's UWorld is invalid."));
 
 	FlecsWorld->EndScope([this, &FlecsWorld]()
 	{
