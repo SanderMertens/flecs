@@ -11,8 +11,6 @@
 UFlecsWorldSettingsAsset::UFlecsWorldSettingsAsset()
 {
 	WorldSettings.WorldName = "DefaultFlecsWorld";
-	
-	//WorldSettings.GameLoop = NewObject<UFlecsDefaultGameLoop>(this);
 }
 
 #if WITH_EDITOR
@@ -34,6 +32,5 @@ EDataValidationResult UFlecsWorldSettingsAsset::IsDataValid(FDataValidationConte
 }
 
 #endif // WITH_EDITOR
-
 
 #undef LOCTEXT_NAMESPACE

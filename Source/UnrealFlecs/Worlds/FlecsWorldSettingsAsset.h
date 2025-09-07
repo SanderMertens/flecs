@@ -19,11 +19,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	FFlecsWorldSettingsInfo WorldSettings;
 
-	#if WITH_EDITOR
+#if WITH_EDITOR
 
 	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
 
-	#endif // WITH_EDITOR
+#endif // WITH_EDITOR
 
 	FORCEINLINE virtual FPrimaryAssetId GetPrimaryAssetId() const override final
 	{
