@@ -1486,7 +1486,8 @@ FFlecsEntityHandle UFlecsWorld::CreatePrefab(const FString& Name) const
 
 FFlecsEntityHandle UFlecsWorld::CreatePrefab(const TSolidNotNull<UClass*> InClass) const
 {
-	const FFlecsEntityHandle PrefabEntity = ObtainTypedEntity(InClass).Add(flecs::Prefab);
+	const FFlecsEntityHandle PrefabEntity = ObtainTypedEntity(InClass)
+		.Add(flecs::Prefab);
 		
 	return PrefabEntity;
 }

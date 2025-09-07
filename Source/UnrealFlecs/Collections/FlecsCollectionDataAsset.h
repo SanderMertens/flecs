@@ -5,11 +5,12 @@
 #include "CoreMinimal.h"
 
 #include "Engine/DataAsset.h"
+
 #include "Entities/FlecsEntityRecord.h"
 
 #include "FlecsCollectionDataAsset.generated.h"
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, Blueprintable)
 class UNREALFLECS_API UFlecsCollectionDataAsset : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
@@ -17,7 +18,7 @@ class UNREALFLECS_API UFlecsCollectionDataAsset : public UPrimaryDataAsset
 public:
 	UFlecsCollectionDataAsset();
 
-	virtual FPrimaryAssetId GetPrimaryAssetId() const override;
+	virtual FPrimaryAssetId GetPrimaryAssetId() const override final;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
 	TArray<TObjectPtr<UFlecsCollectionDataAsset>> Collections;
