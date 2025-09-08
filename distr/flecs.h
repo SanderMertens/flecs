@@ -2040,7 +2040,6 @@ typedef struct ecs_map_iter_t {
 
 typedef struct ecs_map_params_t {
     struct ecs_allocator_t *allocator;
-    struct ecs_block_allocator_t entry_allocator;
 } ecs_map_params_t;
 
 /* Function/macro postfixes meaning:
@@ -2055,10 +2054,6 @@ FLECS_API
 void ecs_map_params_init(
     ecs_map_params_t *params,
     struct ecs_allocator_t *allocator);
-
-FLECS_API
-void ecs_map_params_fini(
-    ecs_map_params_t *params);
 
 /** Initialize new map. */
 FLECS_API
@@ -13497,13 +13492,14 @@ FLECS_API extern ECS_COMPONENT_DECLARE(EcsSystemStats);    /**< Component id for
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsPipelineStats);  /**< Component id for EcsPipelineStats. */
 
 /* Memory statistics components */
-FLECS_API extern ECS_COMPONENT_DECLARE(ecs_entity_index_memory_t);    /**< Component id for ecs_entity_index_memory_t. */
+FLECS_API extern ECS_COMPONENT_DECLARE(ecs_entities_memory_t);    /**< Component id for ecs_entities_memory_t. */
 FLECS_API extern ECS_COMPONENT_DECLARE(ecs_component_index_memory_t); /**< Component id for ecs_component_index_memory_t. */
 FLECS_API extern ECS_COMPONENT_DECLARE(ecs_query_memory_t);           /**< Component id for ecs_query_memory_t. */
 FLECS_API extern ECS_COMPONENT_DECLARE(ecs_component_memory_t);       /**< Component id for ecs_component_memory_t. */
 FLECS_API extern ECS_COMPONENT_DECLARE(ecs_table_memory_t);           /**< Component id for ecs_table_memory_t. */
 FLECS_API extern ECS_COMPONENT_DECLARE(ecs_commands_memory_t);        /**< Component id for ecs_commands_memory_t. */
 FLECS_API extern ECS_COMPONENT_DECLARE(ecs_table_histogram_t);        /**< Component id for ecs_table_histogram_t. */
+FLECS_API extern ECS_COMPONENT_DECLARE(ecs_allocator_memory_t); /**< Component id for ecs_allocator_memory_t. */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldMemory);               /**< Component id for EcsWorldMemory. */
 
 FLECS_API extern ecs_entity_t EcsPeriod1s;                 /**< Tag used for metrics collected in last second. */
@@ -13521,7 +13517,7 @@ typedef struct {
 /** Component that stores world statistics. */
 typedef struct {
     EcsStatsHeader hdr;
-    ecs_world_stats_t stats;
+    ecs_world_stats_t *stats;
 } EcsWorldStats;
 
 /** Component that stores system statistics. */
@@ -13559,14 +13555,28 @@ typedef struct {
     ecs_build_info_t build_info; /**< Build info */
 } EcsWorldSummary;
 
-/** Entity index memory. */
+/** Entity memory. */
 typedef struct {
     int32_t alive_count;                 /** Number of alive entities. */
     int32_t not_alive_count;             /** Number of not alive entities. */
     ecs_size_t bytes_alive;              /** Bytes used by alive entities. */
     ecs_size_t bytes_not_alive;          /** Bytes used by not alive entities. */
     ecs_size_t bytes_unused;             /** Allocated but unused bytes. */
-} ecs_entity_index_memory_t;
+    ecs_size_t bytes_names;              /** Bytes used by names. */
+    ecs_size_t bytes_doc_names;          /** Bytes used by doc names. */
+} ecs_entities_memory_t;
+
+/* Component memory. */
+typedef struct {
+    int32_t instances;                  /** Total number of component instances. */
+    ecs_size_t bytes_table_components;  /** Bytes used by table columns. */
+    ecs_size_t bytes_table_components_unused; /** Unused bytes in table columns. */
+    ecs_size_t bytes_toggle_bitsets;    /** Bytes used in bitsets (toggled components). */
+    ecs_size_t bytes_sparse_components; /** Bytes used in component sparse sets. */
+    ecs_size_t bytes_sparse_components_unused; /** Unused bytes in component sparse sets. */
+    ecs_size_t bytes_sparse_overhead;   /** Sparse set overhead. */
+    ecs_size_t bytes_builtin;           /** Bytes used in table columns with builtin entities. */
+} ecs_component_memory_t;
 
 /** Component index memory. */
 typedef struct {
@@ -13576,12 +13586,13 @@ typedef struct {
     ecs_size_t bytes_name_index;        /** Bytes used by name index. */
     ecs_size_t bytes_ordered_children;  /** Bytes used by ordered children vector. */
     ecs_size_t bytes_reachable_cache;   /** Bytes used by reachable cache. */
+    ecs_size_t bytes_type_info;         /** Bytes used in type info. */
 } ecs_component_index_memory_t;
 
 /** Query memory. */
 typedef struct {
     int32_t count;                      /** Number of queries. */
-    int32_t cached_count;               /** Nunber of queries with caches. */
+    int32_t cached_count;               /** Number of queries with caches. */
     ecs_size_t bytes_query;             /** Bytes used by ecs_query_impl_t struct. */
     ecs_size_t bytes_cache;             /** Bytes used by query cache. */
     ecs_size_t bytes_group_by;          /** Bytes used by query cache groups (excludes cache elements). */
@@ -13590,18 +13601,6 @@ typedef struct {
     ecs_size_t bytes_terms;             /** Bytes used by terms array. */
     ecs_size_t bytes_misc;              /** Bytes used by remaining misc arrays. */
 } ecs_query_memory_t;
-
-/* Component memory. */
-typedef struct {
-    int32_t instances;                  /** Total number of component instances. */
-    ecs_size_t bytes_table_components;  /** Bytes used by table columns. */
-    ecs_size_t bytes_table_components_unused; /** Unused bytes in table columns. */
-    ecs_size_t bytes_toggle_bitsets;    /** Bytes used in bitsets (toggled components). */
-    ecs_size_t bytes_sparse_components; /** Bytes used in component sparse sets. */
-    ecs_size_t bytes_sparse_components_unused;  /** Unused bytes in component sparse sets. */
-    ecs_size_t bytes_sparse_overhead;   /** Sparse set overhead. */
-    ecs_size_t bytes_builtin;           /** Bytes used in table columns with builtin entities. */
-} ecs_component_memory_t;
 
 /** Table memory histogram constants */
 #define ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT 14
@@ -13636,20 +13635,31 @@ typedef struct {
     ecs_size_t bytes_stack;             /** Stack allocator memory for temporary command data */
 } ecs_commands_memory_t;
 
-/** Allocator memory */
+/** Allocator memory.
+ * Returns memory that's allocated by allocators but not in use. */
 typedef struct {
-
+    ecs_size_t bytes_graph_edge;        /** Graph edge allocator. */
+    ecs_size_t bytes_component_record;  /** Component record allocator. */
+    ecs_size_t bytes_pair_record;       /** Pair record allocator. */
+    ecs_size_t bytes_table_diff;        /** Table diff allocator. */
+    ecs_size_t bytes_sparse_chunk;      /** Sparse chunk allocator. */
+    ecs_size_t bytes_hashmap;           /** Hashmap allocator. */
+    ecs_size_t bytes_allocator;         /** Generic allocator. */
+    ecs_size_t bytes_cmd_entry_chunk;   /** Command batching entry chunk allocator. */
+    ecs_size_t bytes_query_impl;        /** Query struct allocator. */
+    ecs_size_t bytes_query_cache;       /** Query cache struct allocator. */
 } ecs_allocator_memory_t;
 
 /** Component with memory statistics. */
 typedef struct {
-    ecs_entity_index_memory_t entities;
+    ecs_entities_memory_t entities;
     ecs_component_memory_t components;
     ecs_component_index_memory_t component_index;
     ecs_query_memory_t query;
     ecs_table_memory_t table;
     ecs_table_histogram_t table_histogram;
     ecs_commands_memory_t commands;
+    ecs_allocator_memory_t allocators;
 } EcsWorldMemory;
 
 /** Memory statistics getters. */
@@ -13659,7 +13669,7 @@ typedef struct {
  * @return Memory statistics for the entity index.
  */
 FLECS_API
-ecs_entity_index_memory_t ecs_entity_index_memory_get(
+ecs_entities_memory_t ecs_entity_index_memory_get(
     const ecs_world_t *world);
 
 /** Get memory usage statistics for the component index.
@@ -13698,6 +13708,15 @@ FLECS_API
 ecs_table_memory_t ecs_table_memory_get(
     const ecs_world_t *world);
 
+/** Get number of tables by number of entities in the table.
+ * 
+ * @param world The world.
+ * @return Number of tables by number of entities in the table.
+ */
+FLECS_API
+ecs_table_histogram_t ecs_table_histogram_get(
+    const ecs_world_t *world);
+
 /** Get memory usage statistics for commands.
  * 
  * @param world The world.
@@ -13706,6 +13725,16 @@ ecs_table_memory_t ecs_table_memory_get(
 FLECS_API
 ecs_commands_memory_t ecs_commands_memory_get(
     const ecs_world_t *world);
+
+/** Get memory usage statistics for allocators.
+ * 
+ * @param world The world.
+ * @return Memory statistics for allocators.
+ */
+FLECS_API
+ecs_allocator_memory_t ecs_allocator_memory_get(
+    const ecs_world_t *world);
+
 
 /** Stats module import function.
  * Usage:
