@@ -328,6 +328,16 @@ void Stats_get_not_alive_entity_count(void);
 void Stats_progress_stats_systems(void);
 void Stats_progress_stats_systems_w_empty_table_flag(void);
 
+// Testsuite 'Memory'
+void Memory_query_memory_no_cache(void);
+void Memory_query_memory_trivial_cache(void);
+void Memory_query_memory_non_trivial_cache(void);
+void Memory_query_memory_with_groups(void);
+void Memory_query_memory_with_variables(void);
+void Memory_query_memory_with_monitors(void);
+void Memory_commands_memory(void);
+void Memory_table_memory_histogram(void);
+
 // Testsuite 'Run'
 void Run_setup(void);
 void Run_run(void);
@@ -1749,6 +1759,41 @@ bake_test_case Stats_testcases[] = {
     }
 };
 
+bake_test_case Memory_testcases[] = {
+    {
+        "query_memory_no_cache",
+        Memory_query_memory_no_cache
+    },
+    {
+        "query_memory_trivial_cache",
+        Memory_query_memory_trivial_cache
+    },
+    {
+        "query_memory_non_trivial_cache",
+        Memory_query_memory_non_trivial_cache
+    },
+    {
+        "query_memory_with_groups",
+        Memory_query_memory_with_groups
+    },
+    {
+        "query_memory_with_variables",
+        Memory_query_memory_with_variables
+    },
+    {
+        "query_memory_with_monitors",
+        Memory_query_memory_with_monitors
+    },
+    {
+        "commands_memory",
+        Memory_commands_memory
+    },
+    {
+        "table_memory_histogram",
+        Memory_table_memory_histogram
+    }
+};
+
 bake_test_case Run_testcases[] = {
     {
         "run",
@@ -2646,6 +2691,13 @@ static bake_test_suite suites[] = {
         Stats_testcases
     },
     {
+        "Memory",
+        NULL,
+        NULL,
+        8,
+        Memory_testcases
+    },
+    {
         "Run",
         Run_setup,
         NULL,
@@ -2715,5 +2767,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 22);
+    return bake_test_run("addons", argc, argv, suites, 23);
 }

@@ -38,6 +38,7 @@ flecs_src = files(
     'src/addons/json/serialize_type_info.c',
     'src/addons/json/serialize_value.c',
     'src/addons/json/serialize_world.c',
+    'src/addons/stats/memory.c',
     'src/addons/stats/monitor.c',
     'src/addons/stats/pipeline_monitor.c',
     'src/addons/stats/stats.c',

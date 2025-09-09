@@ -104,7 +104,6 @@ ecs_stage_t* flecs_stage_new(
     stage->thread_ctx = world;
 
     flecs_stack_init(&stage->allocators.iter_stack);
-    flecs_stack_init(&stage->allocators.deser_stack);
     flecs_allocator_init(&stage->allocator);
     flecs_ballocator_init_n(&stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t,
         FLECS_SPARSE_PAGE_SIZE);
@@ -152,7 +151,6 @@ void flecs_stage_free(
 #endif
 
     flecs_stack_fini(&stage->allocators.iter_stack);
-    flecs_stack_fini(&stage->allocators.deser_stack);
     flecs_ballocator_fini(&stage->allocators.cmd_entry_chunk);
     flecs_ballocator_fini(&stage->allocators.query_impl);
     flecs_ballocator_fini(&stage->allocators.query_cache);

@@ -357,6 +357,18 @@
                 "progress_stats_systems_w_empty_table_flag"
             ]
         }, {
+            "id": "Memory",
+            "testcases": [
+                "query_memory_no_cache",
+                "query_memory_trivial_cache",
+                "query_memory_non_trivial_cache",
+                "query_memory_with_groups",
+                "query_memory_with_variables",
+                "query_memory_with_monitors",
+                "commands_memory",
+                "table_memory_histogram"
+            ]
+        }, {
             "id": "Run",
             "setup": true,
             "testcases": [
