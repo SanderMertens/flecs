@@ -8,12 +8,6 @@
 /* Utility to get a pointer to the payload */
 #define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
 
-typedef struct ecs_sparse_page_t {
-    int32_t *sparse;            /* Sparse array with indices to dense array */
-    void *data;                 /* Store data in sparse array to reduce  
-                                 * indirection and provide stable pointers. */
-} ecs_sparse_page_t;
-
 static
 ecs_sparse_page_t* flecs_sparse_page_new(
     ecs_sparse_t *sparse,

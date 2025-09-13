@@ -1002,7 +1002,10 @@
                 "each_w_untyped_field_w_fixed_src",
                 "each_w_untyped_field_at_w_fixed_src",
                 "singleton_pair",
-                "query_w_this_second"
+                "query_w_this_second",
+                "pred_eq",
+                "pred_eq_name",
+                "pred_match"
             ]
         }, {
             "id": "SystemBuilder",

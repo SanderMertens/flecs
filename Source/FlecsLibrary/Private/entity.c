@@ -322,18 +322,13 @@ const ecs_entity_t* flecs_bulk_new(
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t row = flecs_table_appendn(world, table, count, entities);
+    flecs_defer_begin(world, world->stages[0]);
 
-    /* Update entity index. */
-    int i;
-    for (i = 0; i < count; i ++) {
-        ecs_record_t *r = flecs_entities_get(world, entities[i]);
-        r->table = table;
-        r->row = ECS_ROW_TO_RECORD(row + i, 0);
-    }
+    int32_t row = flecs_table_appendn(world, table, count, entities);
 
     ecs_type_t type = table->type;
     if (!type.count && !component_data) {
+        flecs_defer_end(world, world->stages[0]);
         return entities;        
     }
 
@@ -343,8 +338,6 @@ const ecs_entity_t* flecs_bulk_new(
         component_array.array = type.array;
         component_array.count = type.count;
     }
-
-    flecs_defer_begin(world, world->stages[0]);
 
     flecs_notify_on_add(world, table, NULL, row, count, diff,
         (component_data == NULL) ? 0 : EcsEventNoOnSet, true, true);
@@ -619,6 +612,7 @@ flecs_component_ptr_t flecs_get_mut(
     if (id < FLECS_HI_COMPONENT_ID) {
         if (!world->non_trivial_lookup[id]) {
             ecs_table_t *table = r->table;
+            ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(table->component_map != NULL, ECS_INTERNAL_ERROR, NULL);
             int16_t column_index = table->component_map[id];
             if (column_index > 0) {

@@ -2022,6 +2022,14 @@ int32_t flecs_table_appendn(
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, 
         FLECS_LOCKED_STORAGE_MSG("table bulk append"));
 
+    /* Update entity index before calling hooks. */
+    int32_t i;
+    for (i = 0; i < to_add; i ++) {
+        ecs_record_t *r = flecs_entities_get(world, ids[i]);
+        r->table = table;
+        r->row = ECS_ROW_TO_RECORD(ecs_table_count(table) + i, 0);
+    }
+
     flecs_table_check_sanity(table);
     int32_t cur_count = ecs_table_count(table);
     int32_t result = flecs_table_grow_data(
