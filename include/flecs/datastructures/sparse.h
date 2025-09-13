@@ -21,6 +21,12 @@ extern "C" {
 /** This computes the offset of an index inside a page */
 #define FLECS_SPARSE_OFFSET(index) ((int32_t)index & (FLECS_SPARSE_PAGE_SIZE - 1))
 
+typedef struct ecs_sparse_page_t {
+    int32_t *sparse;            /* Sparse array with indices to dense array */
+    void *data;                 /* Store data in sparse array to reduce  
+                                 * indirection and provide stable pointers. */
+} ecs_sparse_page_t;
+
 typedef struct ecs_sparse_t {
     ecs_vec_t dense;         /* Dense array with indices to sparse array. The
                               * dense array stores both alive and not alive

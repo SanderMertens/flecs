@@ -1233,16 +1233,16 @@ void Meta_enum_w_bits(void) {
 	ecs.component<EnumWithBitsStruct>()
 		.member<EnumWithBits>("bits");
 
-	for (int i = 0; i < 30; i++)
+	for (int i = 0; i < 1; i++)
 	{
-		ecs.entity()
-			.child_of(ecs.entity())
+		ecs.entity("e")
+			.child_of(ecs.entity("p"))
 			.add<EnumWithBitsStruct>();
 	}
 
     auto q = ecs.query<EnumWithBitsStruct>();
     auto s = q.iter().to_json();
-    test_str(s.c_str(), "");
+    test_str(s.c_str(), "{\"results\":[{\"parent\":\"p\", \"name\":\"e\", \"fields\":{\"values\":[{\"bits\":\"BitAll\"}]}}]}");
 }
 
 void Meta_value_range(void) {
@@ -1600,4 +1600,16 @@ void Meta_script_to_std_vector_std_string(void) {
     test_int(v.size(), 2);
     test_str(v.at(0).c_str(), "Hello");
     test_str(v.at(1).c_str(), "World");
+}
+
+void Meta_anonymous_opaque_as_type_parent(void) {
+    // Implement testcase
+}
+
+void Meta_named_opaque_as_type_parent(void) {
+    // Implement testcase
+}
+
+void Meta_parented_opaque_as_type_parent(void) {
+    // Implement testcase
 }

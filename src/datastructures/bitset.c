@@ -9,7 +9,7 @@
 #include "../private_api.h"
 
 static
-void ensure(
+void flecs_bitset_ensure_size(
     ecs_bitset_t *bs,
     ecs_size_t size)
 {
@@ -40,7 +40,7 @@ void flecs_bitset_ensure(
 {
     if (count > bs->count) {
         bs->count = count;
-        ensure(bs, count);
+        flecs_bitset_ensure_size(bs, count);
     }
 }
 
@@ -57,7 +57,7 @@ void flecs_bitset_addn(
     int32_t count)
 {
     int32_t elem = bs->count += count;
-    ensure(bs, elem);
+    flecs_bitset_ensure_size(bs, elem);
 }
 
 void flecs_bitset_set(

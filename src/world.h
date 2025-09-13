@@ -16,12 +16,10 @@
 typedef struct ecs_world_allocators_t {
     ecs_map_params_t ptr;
     ecs_map_params_t query_table_list;
-    ecs_block_allocator_t query_table;
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
-    ecs_block_allocator_t id_record;
-    ecs_block_allocator_t pair_id_record;
-    ecs_block_allocator_t id_record_chunk;
+    ecs_block_allocator_t component_record;
+    ecs_block_allocator_t pair_record;
     ecs_block_allocator_t table_diff;
     ecs_block_allocator_t sparse_chunk;
     ecs_block_allocator_t hashmap;

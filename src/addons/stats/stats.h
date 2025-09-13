@@ -26,6 +26,9 @@ typedef struct {
 
     /* Id of component used to query for monitored resources (optional) */
     ecs_id_t query_component_id;
+
+    /* Is the stats object inlined or a pointer */
+    bool is_pointer;
 } ecs_stats_api_t;
 
 void flecs_stats_api_import(
@@ -42,6 +45,9 @@ void FlecsSystemMonitorImport(
     ecs_world_t *world);
 
 void FlecsPipelineMonitorImport(
+    ecs_world_t *world);
+
+void flecs_stats_memory_register_reflection(
     ecs_world_t *world);
 
 #endif

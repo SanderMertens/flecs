@@ -44,7 +44,6 @@ typedef struct ecs_map_iter_t {
 
 typedef struct ecs_map_params_t {
     struct ecs_allocator_t *allocator;
-    struct ecs_block_allocator_t entry_allocator;
 } ecs_map_params_t;
 
 /* Function/macro postfixes meaning:
@@ -59,10 +58,6 @@ FLECS_API
 void ecs_map_params_init(
     ecs_map_params_t *params,
     struct ecs_allocator_t *allocator);
-
-FLECS_API
-void ecs_map_params_fini(
-    ecs_map_params_t *params);
 
 /** Initialize new map. */
 FLECS_API

@@ -644,6 +644,496 @@ void Serialize_enum(void) {
     ecs_fini(world);
 }
 
+void Serialize_enum_underlying_i8(void) {
+    enum E { Red, Blue, Green };
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum(world, {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        },
+        .underlying_type = ecs_id(ecs_i8_t)
+    });
+
+    test_assert(e != 0);
+
+    {
+    int8_t value = Red;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Red");
+    ecs_os_free(expr);
+    }
+
+    {
+    int8_t value = Blue;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Blue");
+    ecs_os_free(expr);
+    }
+
+    {
+    int8_t value = Green;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Green");
+    ecs_os_free(expr);
+    }
+
+    {
+    int8_t value = 10;
+    ecs_log_set_level(-4);
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Serialize_enum_underlying_i16(void) {
+    enum E { Red, Blue, Green };
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum(world, {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        },
+        .underlying_type = ecs_id(ecs_i16_t)
+    });
+
+    test_assert(e != 0);
+
+    {
+    int16_t value = Red;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Red");
+    ecs_os_free(expr);
+    }
+
+    {
+    int16_t value = Blue;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Blue");
+    ecs_os_free(expr);
+    }
+
+    {
+    int16_t value = Green;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Green");
+    ecs_os_free(expr);
+    }
+
+    {
+    int16_t value = 10;
+    ecs_log_set_level(-4);
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Serialize_enum_underlying_i32(void) {
+    enum E { Red, Blue, Green };
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum(world, {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        },
+        .underlying_type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(e != 0);
+
+    {
+    int32_t value = Red;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Red");
+    ecs_os_free(expr);
+    }
+
+    {
+    int32_t value = Blue;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Blue");
+    ecs_os_free(expr);
+    }
+
+    {
+    int32_t value = Green;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Green");
+    ecs_os_free(expr);
+    }
+
+    {
+    int32_t value = 10;
+    ecs_log_set_level(-4);
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Serialize_enum_underlying_i64(void) {
+    enum E { Red, Blue, Green };
+
+    uint64_t Large = 1ll << 40;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum(world, {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}, {"Large", Large}
+        },
+        .underlying_type = ecs_id(ecs_i64_t)
+    });
+
+    test_assert(e != 0);
+
+    {
+    int64_t value = Red;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Red");
+    ecs_os_free(expr);
+    }
+
+    {
+    int64_t value = Blue;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Blue");
+    ecs_os_free(expr);
+    }
+
+    {
+    int64_t value = Green;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Green");
+    ecs_os_free(expr);
+    }
+
+    {
+    int64_t value = Large;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Large");
+    ecs_os_free(expr);
+    }
+
+    {
+    int64_t value = 10;
+    ecs_log_set_level(-4);
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Serialize_enum_underlying_iptr(void) {
+    enum E { Red, Blue, Green };
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum(world, {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        },
+        .underlying_type = ecs_id(ecs_iptr_t)
+    });
+
+    test_assert(e != 0);
+
+    {
+    intptr_t value = Red;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Red");
+    ecs_os_free(expr);
+    }
+
+    {
+    intptr_t value = Blue;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Blue");
+    ecs_os_free(expr);
+    }
+
+    {
+    intptr_t value = Green;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Green");
+    ecs_os_free(expr);
+    }
+
+    {
+    intptr_t value = 10;
+    ecs_log_set_level(-4);
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Serialize_enum_underlying_u8(void) {
+    enum E { Red, Blue, Green };
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum(world, {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        },
+        .underlying_type = ecs_id(ecs_u8_t)
+    });
+
+    test_assert(e != 0);
+
+    {
+    uint8_t value = Red;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Red");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint8_t value = Blue;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Blue");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint8_t value = Green;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Green");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint8_t value = 10;
+    ecs_log_set_level(-4);
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Serialize_enum_underlying_u16(void) {
+    enum E { Red, Blue, Green };
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum(world, {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        },
+        .underlying_type = ecs_id(ecs_u16_t)
+    });
+
+    test_assert(e != 0);
+
+    {
+    uint16_t value = Red;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Red");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint16_t value = Blue;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Blue");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint16_t value = Green;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Green");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint16_t value = 10;
+    ecs_log_set_level(-4);
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Serialize_enum_underlying_u32(void) {
+    enum E { Red, Blue, Green };
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum(world, {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        },
+        .underlying_type = ecs_id(ecs_u32_t)
+    });
+
+    test_assert(e != 0);
+
+    {
+    uint32_t value = Red;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Red");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint32_t value = Blue;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Blue");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint32_t value = Green;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Green");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint32_t value = 10;
+    ecs_log_set_level(-4);
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Serialize_enum_underlying_u64(void) {
+    enum E { Red, Blue, Green };
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum(world, {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        },
+        .underlying_type = ecs_id(ecs_u64_t)
+    });
+
+    test_assert(e != 0);
+
+    {
+    uint64_t value = Red;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Red");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint64_t value = Blue;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Blue");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint64_t value = Green;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Green");
+    ecs_os_free(expr);
+    }
+
+    {
+    uint64_t value = 10;
+    ecs_log_set_level(-4);
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Serialize_enum_underlying_uptr(void) {
+    enum E { Red, Blue, Green };
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum(world, {
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        },
+        .underlying_type = ecs_id(ecs_uptr_t)
+    });
+
+    test_assert(e != 0);
+
+    {
+    uintptr_t value = Red;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Red");
+    ecs_os_free(expr);
+    }
+
+    {
+    uintptr_t value = Blue;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Blue");
+    ecs_os_free(expr);
+    }
+
+    {
+    uintptr_t value = Green;
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "Green");
+    ecs_os_free(expr);
+    }
+
+    {
+    uintptr_t value = 10;
+    ecs_log_set_level(-4);
+    char *expr = ecs_ptr_to_expr(world, e, &value);
+    test_assert(expr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
 void Serialize_bitmask(void) {
     uint32_t Lettuce = 0x1;
     uint32_t Bacon =   0x1 << 1;

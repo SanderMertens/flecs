@@ -153,32 +153,33 @@ const ecs_entity_t ecs_id(EcsTypeSerializer) =      FLECS_HI_COMPONENT_ID + 100;
 const ecs_entity_t ecs_id(EcsPrimitive) =           FLECS_HI_COMPONENT_ID + 101;
 const ecs_entity_t ecs_id(EcsEnum) =                FLECS_HI_COMPONENT_ID + 102;
 const ecs_entity_t ecs_id(EcsBitmask) =             FLECS_HI_COMPONENT_ID + 103;
-const ecs_entity_t ecs_id(EcsMember) =              FLECS_HI_COMPONENT_ID + 104;
-const ecs_entity_t ecs_id(EcsMemberRanges) =        FLECS_HI_COMPONENT_ID + 105;
-const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 106;
-const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 107;
-const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 108;
-const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 109;
-const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 110;
-const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 111;
-const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 112;
+const ecs_entity_t ecs_id(EcsConstants) =           FLECS_HI_COMPONENT_ID + 104;
+const ecs_entity_t ecs_id(EcsMember) =              FLECS_HI_COMPONENT_ID + 105;
+const ecs_entity_t ecs_id(EcsMemberRanges) =        FLECS_HI_COMPONENT_ID + 106;
+const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 107;
+const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 108;
+const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 109;
+const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 110;
+const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 111;
+const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 112;
+const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 113;
 #endif
 
-const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 113;
+const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 114;
 
 /* Doc module components */
 #ifdef FLECS_DOC
-const ecs_entity_t ecs_id(EcsDocDescription) =      FLECS_HI_COMPONENT_ID + 114;
-const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 115;
-const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 116;
-const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 117;
-const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 118;
-const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 119;
+const ecs_entity_t ecs_id(EcsDocDescription) =      FLECS_HI_COMPONENT_ID + 115;
+const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 116;
+const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 117;
+const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 118;
+const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 119;
+const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 120;
 #endif
 
 /* REST module components */
 #ifdef FLECS_REST
-const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 120;
+const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 121;
 #endif
 
 /* Max static id:
@@ -702,12 +703,10 @@ void flecs_world_allocators_init(
     ecs_map_params_init(&a->ptr, &world->allocator);
     ecs_map_params_init(&a->query_table_list, &world->allocator);
 
-    flecs_ballocator_init_t(&a->query_table, ecs_query_cache_table_t);
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
-    flecs_ballocator_init_t(&a->id_record, ecs_component_record_t);
-    flecs_ballocator_init_t(&a->pair_id_record, ecs_pair_record_t);
-    flecs_ballocator_init_n(&a->id_record_chunk, ecs_component_record_t, FLECS_SPARSE_PAGE_SIZE);
+    flecs_ballocator_init_t(&a->component_record, ecs_component_record_t);
+    flecs_ballocator_init_t(&a->pair_record, ecs_pair_record_t);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&a->hashmap, ecs_hashmap_t);
@@ -720,14 +719,10 @@ void flecs_world_allocators_fini(
 {
     ecs_world_allocators_t *a = &world->allocators;
 
-    ecs_map_params_fini(&a->ptr);
-    ecs_map_params_fini(&a->query_table_list);
-    flecs_ballocator_fini(&a->query_table);
     flecs_ballocator_fini(&a->graph_edge_lo);
     flecs_ballocator_fini(&a->graph_edge);
-    flecs_ballocator_fini(&a->id_record);
-    flecs_ballocator_fini(&a->pair_id_record);
-    flecs_ballocator_fini(&a->id_record_chunk);
+    flecs_ballocator_fini(&a->component_record);
+    flecs_ballocator_fini(&a->pair_record);
     flecs_ballocator_fini(&a->table_diff);
     flecs_ballocator_fini(&a->sparse_chunk);
     flecs_ballocator_fini(&a->hashmap);
@@ -1709,7 +1704,10 @@ ecs_flags32_t ecs_world_get_flags(
 void ecs_shrink(
     ecs_world_t *world)
 {
-    flecs_entity_index_shrink(&world->store.entity_index);
+    /* This can invalidate ecs_record_t pointers for entities that are no longer
+     * alive. If you're sure an application doesn't store any ecs_record_t ptrs
+     * or ecs_ref_t's for not-alive entities, you can uncomment this line. */
+    // flecs_entity_index_shrink(&world->store.entity_index);
 
     ecs_sparse_t *tables = &world->store.tables;
     int32_t i, count = flecs_sparse_count(tables);

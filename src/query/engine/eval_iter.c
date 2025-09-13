@@ -156,7 +156,10 @@ bool ecs_query_next(
     ecs_iter_t *it)
 {
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->next == ecs_query_next || 
+        it->next == flecs_query_trivial_cached_next ||
+        it->next == flecs_default_next_callback,
+            ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);

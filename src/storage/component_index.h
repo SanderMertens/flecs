@@ -70,6 +70,9 @@ struct ecs_component_record_t {
     /* Storage for sparse components */
     void *sparse;
 
+    /* Backref to tables with edges to non-fragmenting component ids */
+    ecs_vec_t dont_fragment_tables;
+
     /* Pair data */
     ecs_pair_record_t *pair;
 

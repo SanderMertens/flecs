@@ -11,6 +11,33 @@
 ECS_COMPONENT_DECLARE(EcsWorldStats);
 
 static
+ECS_CTOR(EcsWorldStats, ptr, {
+    ecs_os_zeromem(ptr);
+    ptr->stats = ecs_os_calloc_t(ecs_world_stats_t);
+})
+
+static
+ECS_COPY(EcsWorldStats, dst, src, {
+    ecs_os_free(dst->stats);
+    ecs_os_memcpy_t(dst, src, EcsWorldStats);
+    dst->stats = ecs_os_calloc_t(ecs_world_stats_t);
+    ecs_os_memcpy_t(dst->stats, src->stats, ecs_world_stats_t);
+})
+
+static
+ECS_MOVE(EcsWorldStats, dst, src, {
+    ecs_os_free(dst->stats);
+    ecs_os_memcpy_t(dst, src, EcsWorldStats);
+    src->stats = NULL;
+})
+
+static
+ECS_DTOR(EcsWorldStats, ptr, {
+    ecs_os_free(ptr->stats);
+    ptr->stats = NULL;
+})
+
+static
 void flecs_world_stats_get(
     ecs_world_t *world, ecs_entity_t res, void *stats)
 {
@@ -65,7 +92,10 @@ void FlecsWorldMonitorImport(
     ECS_COMPONENT_DEFINE(world, EcsWorldStats);
 
     ecs_set_hooks(world, EcsWorldStats, {
-        .ctor = flecs_default_ctor
+        .ctor = ecs_ctor(EcsWorldStats),
+        .copy = ecs_copy(EcsWorldStats),
+        .move = ecs_move(EcsWorldStats),
+        .dtor = ecs_dtor(EcsWorldStats)
     });
 
     ecs_stats_api_t api = {
@@ -77,7 +107,8 @@ void FlecsWorldMonitorImport(
         .set_t = flecs_world_stats_set_t,
         .fini = NULL,
         .stats_size = ECS_SIZEOF(ecs_world_stats_t),
-        .monitor_component_id = ecs_id(EcsWorldStats)
+        .monitor_component_id = ecs_id(EcsWorldStats),
+        .is_pointer = true
     };
 
     flecs_stats_api_import(world, &api);

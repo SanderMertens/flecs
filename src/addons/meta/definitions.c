@@ -5,6 +5,7 @@
  */
 
 #include "meta.h"
+#include "type_support/type_support.h"
 
 #ifdef FLECS_META
 
@@ -84,8 +85,8 @@ void flecs_meta_import_core_definitions(
                 .size = ECS_SIZEOF(const char*),
                 .alignment = ECS_ALIGNOF(const char*),
                 .hooks = {
-                    .cmp = ecs_compare_string,
-                    .equals = ecs_equals_string
+                    .cmp = flecs_compare_string,
+                    .equals = flecs_equals_string
                 }
             }          
         }),

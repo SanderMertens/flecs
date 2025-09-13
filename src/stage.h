@@ -9,7 +9,6 @@
 /* Stage level allocators are for operations that can be multithreaded */
 typedef struct ecs_stage_allocators_t {
     ecs_stack_t iter_stack;
-    ecs_stack_t deser_stack;
     ecs_block_allocator_t cmd_entry_chunk;
     ecs_block_allocator_t query_impl;
     ecs_block_allocator_t query_cache;

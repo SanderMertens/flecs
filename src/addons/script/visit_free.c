@@ -20,6 +20,19 @@ void flecs_script_scope_free(
 }
 
 static
+void flecs_script_id_free(
+    ecs_script_visit_t *v,
+    ecs_script_id_t *id)
+{
+    if (id->first_expr) {
+        flecs_expr_visit_free(&v->script->pub, id->first_expr);
+    }
+    if (id->second_expr) {
+        flecs_expr_visit_free(&v->script->pub, id->second_expr);
+    }
+}
+
+static
 void flecs_script_with_free(
     ecs_script_visit_t *v,
     ecs_script_with_t *node)
@@ -53,6 +66,7 @@ void flecs_script_pair_scope_free(
     ecs_script_pair_scope_t *node)
 {
     flecs_script_scope_free(v, node->scope);
+    flecs_script_id_free(v, &node->id);
 }
 
 static
@@ -76,11 +90,20 @@ void flecs_script_for_range_free(
 }
 
 static
+void flecs_script_tag_free(
+    ecs_script_visit_t *v,
+    ecs_script_tag_t *node)
+{
+    flecs_script_id_free(v, &node->id);
+}
+
+static
 void flecs_script_component_free(
     ecs_script_visit_t *v,
     ecs_script_component_t *node)
 {
     flecs_expr_visit_free(&v->script->pub, node->expr);
+    flecs_script_id_free(v, &node->id);
 }
 
 static
@@ -134,6 +157,7 @@ int flecs_script_stmt_free(
         flecs_free_t(a, ecs_script_for_range_t, node);
         break;
     case EcsAstTag:
+        flecs_script_tag_free(v, (ecs_script_tag_t*)node);
         flecs_free_t(a, ecs_script_tag_t, node);
         break;
     case EcsAstComponent:

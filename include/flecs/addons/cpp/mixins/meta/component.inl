@@ -44,5 +44,11 @@ component<T>& constant(const char *name, T value) {
     *ptr = static_cast<U>(value);
     ecs_modified_id(world_, eid, pair);
 
+    // If we're not using automatic enum reflection, manually set static data
+    #ifdef FLECS_CPP_NO_ENUM_REFLECTION
+    auto et = enum_type<T>(world_);
+    et.register_constant(world_, static_cast<U>(value), eid);
+    #endif
+
     return *this;
 }

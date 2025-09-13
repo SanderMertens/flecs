@@ -857,7 +857,7 @@ void flecs_world_stats_to_json(
     ecs_strbuf_t *reply,
     const EcsWorldStats *monitor_stats)
 {
-    const ecs_world_stats_t *stats = &monitor_stats->stats;
+    const ecs_world_stats_t *stats = monitor_stats->stats;
 
     ecs_strbuf_list_push(reply, "{", ",");
     ECS_GAUGE_APPEND(reply, stats, entities.count, "Alive entity ids in the world");

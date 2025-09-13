@@ -532,6 +532,45 @@ void Plan_3_trivial_plan_w_any_component(void) {
     ecs_fini(world);
 }
 
+void Plan_3_trivial_plan_w_any_cached(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
+
+    ecs_entity(world, { .name = "p" });
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Foo(self), Bar(self), ChildOf(self, _)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  triv        {0,1}"
+    LINE " 2. [ 1,  3]  and_any     $[this]           (ChildOf, $_'1)"
+    LINE " 3. [ 2,  4]  yield       "
+    LINE "";
+    
+    char *plan = ecs_query_plan(r);
+    test_str(NULL, plan);
+
+    const ecs_query_t *cq = ecs_query_get_cache_query(r);
+    test_assert(cq != NULL);
+
+    char *cached_plan = ecs_query_plan(cq);
+    test_str(expect, cached_plan);
+    ecs_os_free(cached_plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
 void Plan_1_trivial_component_w_none(void) {
     ecs_world_t *world = ecs_mini();
 

@@ -1148,3 +1148,67 @@ void OpaqueTypes_const_string(void) {
 
     ecs_fini(world);
 }
+
+void OpaqueTypes_anonymous_opaque_as_type_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, String);
+
+    ecs_entity_t as_type = ecs_primitive(world, { .kind = EcsString });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(String),
+        .type.as_type = as_type,
+        .type.serialize = String_serialize
+    });
+
+    test_assert(ecs_get_parent(world, as_type) == ecs_id(String));
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_named_opaque_as_type_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, String);
+
+    ecs_entity_t as_type = ecs_primitive(world, { 
+        .entity = ecs_entity(world, { .name = "Foo" }),
+        .kind = EcsString 
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(String),
+        .type.as_type = as_type,
+        .type.serialize = String_serialize
+    });
+
+    test_assert(ecs_get_parent(world, as_type) == 0);
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_parented_opaque_as_type_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, String);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+
+    ecs_entity_t as_type = ecs_primitive(world, { 
+        .entity = ecs_entity(world, { 
+            .parent = foo 
+        }),
+        .kind = EcsString 
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(String),
+        .type.as_type = as_type,
+        .type.serialize = String_serialize
+    });
+
+    test_assert(ecs_get_parent(world, as_type) == foo);
+
+    ecs_fini(world);
+}

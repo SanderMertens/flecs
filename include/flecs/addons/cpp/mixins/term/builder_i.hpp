@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../../utils/signature.hpp"
+#include <stdio.h>
 
 namespace flecs 
 {
@@ -68,7 +69,7 @@ struct term_ref_builder_i {
     }
 
     /* Override term id flags */
-    Base& flags(flecs::flags32_t flags) {
+    Base& flags(flecs::flags64_t flags) {
         this->assert_term_ref();
         term_ref_->id = flags;
         return *this;

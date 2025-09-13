@@ -84,10 +84,26 @@ private:
     // Serialize enum
     void serializeEnum(flecs::meta::op_t *op, const void *ptr) 
     {
-        // Assume i32, but should use underlying type
-        auto value = static_cast<const int32_t*>(ptr);
+        ecs_meta_op_kind_t kind = op->underlying_kind;
+        ecs_map_key_t value;
+
+        if (kind == EcsOpU8 || kind == EcsOpI8) {
+            value = *static_cast<const uint8_t*>(ptr);
+        } else if (kind == EcsOpU16 || kind == EcsOpI16) {
+            value = *static_cast<const uint16_t*>(ptr);
+        } else if (kind == EcsOpU32 || kind == EcsOpI32) {
+            value = *static_cast<const uint32_t*>(ptr);
+        } else if (kind == EcsOpUPtr || kind == EcsOpIPtr) {
+            value = *static_cast<const uintptr_t*>(ptr);
+        } else if (kind == EcsOpU64 || kind == EcsOpI64) {
+            value = *static_cast<const uint64_t*>(ptr);
+        } else {
+            printf("<<invalid underlying enum type>>");
+            return;
+        }
+
         ecs_enum_constant_t *c = ecs_map_get_deref(op->is.constants, 
-            ecs_enum_constant_t, static_cast<ecs_map_key_t>(*value));
+            ecs_enum_constant_t, value);
         printf("%s", c->name);
     }
 

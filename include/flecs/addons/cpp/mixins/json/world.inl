@@ -8,7 +8,7 @@
  * @memberof flecs::world
  * @ingroup cpp_addons_json
  */
-flecs::string to_json(flecs::entity_t tid, const void* value) {
+flecs::string to_json(flecs::entity_t tid, const void* value) const {
     char *json = ecs_ptr_to_json(world_, tid, value);
     return flecs::string(json);
 }
@@ -19,7 +19,7 @@ flecs::string to_json(flecs::entity_t tid, const void* value) {
  * @ingroup cpp_addons_json
  */
 template <typename T>
-flecs::string to_json(const T* value) {
+flecs::string to_json(const T* value) const {
     flecs::entity_t tid = _::type<T>::id(world_);
     return to_json(tid, value);
 }
@@ -29,7 +29,7 @@ flecs::string to_json(const T* value) {
  * @memberof flecs::world
  * @ingroup cpp_addons_json
  */
-flecs::string to_json() {
+flecs::string to_json() const {
     return flecs::string( ecs_world_to_json(world_, nullptr) );
 }
 

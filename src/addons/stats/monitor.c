@@ -65,6 +65,9 @@ void MonitorStats(ecs_iter_t *it) {
     } else {
         /* No query, so tracking stats for single element */
         stats = ECS_OFFSET_T(hdr, EcsStatsHeader);
+        if (ctx->api.is_pointer) {
+            stats = *((void**)stats);
+        }
     }
 
     do {
@@ -135,6 +138,10 @@ void ReduceStats(ecs_iter_t *it) {
     src = ECS_OFFSET_T(src, EcsStatsHeader);
 
     if (!ctx->api.query_component_id) {
+        if (ctx->api.is_pointer) {
+            dst = *((void**)dst);
+            src = *((void**)src);
+        }
         ctx->api.reduce(dst, src);
     } else {
         ecs_map_iter_t mit = ecs_map_iter(src);
@@ -164,6 +171,11 @@ void AggregateStats(ecs_iter_t *it) {
         src_map = src;
         dst = NULL;
         src = NULL;
+    } else {
+        if (ctx->api.is_pointer) {
+            dst = *((void**)dst);
+            src = *((void**)src);
+        }
     }
 
     void *stats_storage = ecs_os_alloca(ctx->api.stats_size);
@@ -403,6 +415,10 @@ void FlecsStatsImport(
     FlecsWorldMonitorImport(world);
     FlecsSystemMonitorImport(world);
     FlecsPipelineMonitorImport(world);
+    
+    flecs_stats_memory_register_reflection(world);
+
+    ecs_add(world, ecs_id(EcsWorldMemory), EcsWorldMemory);
     
     if (ecs_os_has_time()) {
         ecs_measure_frame_time(world, true);

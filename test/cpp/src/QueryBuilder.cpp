@@ -5323,3 +5323,57 @@ void QueryBuilder_query_w_this_second(void) {
 
     test_int(count, 1);
 }
+
+void QueryBuilder_pred_eq(void) {
+    flecs::world ecs;
+
+    flecs::entity Foo = ecs.entity("Foo");
+
+    auto q = ecs.query_builder()
+        .with(flecs::PredEq, "Foo")
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        test_assert(e == Foo);
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void QueryBuilder_pred_eq_name(void) {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder()
+        .with(flecs::PredEq).second("Foo").flags(flecs::IsName)
+        .build();
+
+    flecs::entity Foo = ecs.entity("Foo");
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        test_assert(e == Foo);
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void QueryBuilder_pred_match(void) {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder()
+        .with(flecs::PredMatch).second("Fo").flags(flecs::IsName)
+        .build();
+
+    flecs::entity Foo = ecs.entity("Foo");
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        test_assert(e == Foo);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

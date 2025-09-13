@@ -15,7 +15,7 @@ void meta_test_bitmask(
     test_assert(mt != NULL);
     test_assert(mt->kind == EcsBitmaskType);
 
-    const EcsBitmask *bt = ecs_get(world, t, EcsBitmask);
+    const EcsConstants *bt = ecs_get(world, t, EcsConstants);
     test_assert(bt != NULL);
     test_int(ecs_map_count(bt->constants), count);
 }
@@ -33,7 +33,7 @@ void meta_test_constant(
     test_assert(ecs_has_id(world, m, EcsConstant) || 
         ecs_has_pair(world, m, EcsConstant, EcsWildcard));
 
-    const EcsBitmask *bt = ecs_get(world, t, EcsBitmask);
+    const EcsConstants *bt = ecs_get(world, t, EcsConstants);
     test_assert(bt != NULL);
 
     ecs_map_iter_t it = ecs_map_iter(bt->constants);

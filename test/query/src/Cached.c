@@ -4638,3 +4638,91 @@ void Cached_rematch_after_delete_first_base_of_base(void) {
 
     ecs_fini(world);
 }
+
+void Cached_rematch_after_remove_all(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo(up)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t parent = ecs_new_w(world, Foo);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(child, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_uint(parent, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove_all(world, ecs_id(Foo));
+    test_assert(ecs_is_alive(world, Foo));
+    test_assert(!ecs_has(world, child, Foo));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    test_int(info->rematch_count_total, 1);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_no_rematch_after_delete_with(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo(up)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t parent = ecs_new_w(world, Foo);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(child, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_uint(parent, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete_with(world, ecs_id(Foo));
+    test_assert(ecs_is_alive(world, Foo));
+    test_assert(!ecs_is_alive(world, child));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    test_int(info->rematch_count_total, 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

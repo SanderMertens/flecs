@@ -52,12 +52,63 @@ bool flecs_component_sparse_has(
 }
 
 void* flecs_component_sparse_get(
+    const ecs_world_t *world,
     ecs_component_record_t *cr,
+    ecs_table_t *table,
     ecs_entity_t entity)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (!ecs_id_is_wildcard(cr->id)) {
+        return flecs_sparse_get(cr->sparse, 0, entity);
+    }
+
+    /* Table should always be provided from context where wildcard is allowed */
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!(cr->flags & EcsIdDontFragment)) {
+        const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
+        ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* Get the non-wildcard record */
+        const ecs_table_record_t *ttr = &table->_->records[tr->index];
+        cr = ttr->hdr.cr;
+    } else {
+        /* Find the target entity to replace the wildcard with */
+        ecs_entity_t tgt = 0;
+        if (cr->flags & EcsIdExclusive) {
+            ecs_entity_t *tgt_ptr = 
+                flecs_sparse_get_t(cr->sparse, ecs_entity_t, entity);
+            if (!tgt_ptr) {
+                return NULL;
+            }
+
+            tgt = *tgt_ptr;
+        } else {
+            ecs_type_t *type = flecs_sparse_get_t(
+                cr->sparse, ecs_type_t, entity);
+            if (!type) {
+                return NULL;
+            }
+
+            tgt = type->array[0];
+        }
+
+        /* Find component record for the non-wildcard component */
+        if (ECS_PAIR_FIRST(cr->id) == EcsWildcard) {
+            cr = flecs_components_get(world, 
+                ecs_pair(tgt, ECS_PAIR_SECOND(cr->id)));
+        } else {
+            /* Component record for (*, *) doesn't exist. */
+            ecs_assert(ECS_PAIR_SECOND(cr->id) == EcsWildcard, 
+                ECS_INTERNAL_ERROR, NULL);
+            cr = flecs_components_get(world, 
+                ecs_pair(ECS_PAIR_FIRST(cr->id), tgt));
+        }
+    }
+
     return flecs_sparse_get(cr->sparse, 0, entity);
 }
 

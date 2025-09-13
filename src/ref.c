@@ -35,7 +35,8 @@ ecs_ref_t ecs_ref_init_id(
     result.table_id = table->id;
     result.table_version_fast = flecs_get_table_version_fast(world, result.table_id);
     result.table_version = table->version;
-    result.ptr = flecs_get_component(table, ECS_RECORD_TO_ROW(record->row), 
+    result.ptr = flecs_get_component(
+        world, table, ECS_RECORD_TO_ROW(record->row), 
         flecs_components_get(world, id));
 
     return result;
@@ -81,7 +82,7 @@ void ecs_ref_update(
     ref->table_id = table->id;
     ref->table_version_fast = flecs_get_table_version_fast(world, ref->table_id);
     ref->table_version = table->version;
-    ref->ptr = flecs_get_component(table, ECS_RECORD_TO_ROW(r->row), 
+    ref->ptr = flecs_get_component(world, table, ECS_RECORD_TO_ROW(r->row), 
         flecs_components_get(world, ref->id));
 
 error:

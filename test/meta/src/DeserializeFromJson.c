@@ -6247,3 +6247,87 @@ void DeserializeFromJson_deser_unknown_component_no_spaces_strict(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_deser_unknown_member(void) {
+    typedef struct {
+        ecs_i32_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"v\": 10, \"y\": 20}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.v, 10);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_valid_after_unknown_member(void) {
+    typedef struct {
+        ecs_i32_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"y\": 20, \"v\": 10}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.v, 10);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_unknown_member_w_strict(void) {
+    typedef struct {
+        ecs_i32_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+    
+    ecs_log_set_level(-4);
+
+    ecs_from_json_desc_t desc = { .strict = true };
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"v\": 10, \"y\": 20}", &desc);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}

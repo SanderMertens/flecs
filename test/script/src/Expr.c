@@ -5828,6 +5828,89 @@ void Expr_component_inline_elem_expr_string(void) {
     ecs_fini(world);
 }
 
+void Expr_component_expr_in_object(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point start;
+        Point stop;
+    } Line;
+
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Line) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Line" }),
+        .members = {
+            {"start", ecs_id(Point)},
+            {"stop", ecs_id(Point)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Point, {10, 20});
+
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, Point, {30, 40});
+
+    ecs_value_t v = { .type = ecs_id(Line) };
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "{ e1[Point], e2[Point] }", &v, &desc) != NULL);
+
+    test_assert(v.ptr != NULL);
+    Line *ptr = v.ptr;
+    test_int(ptr->start.x, 10);
+    test_int(ptr->start.y, 20);
+    test_int(ptr->stop.x, 30);
+    test_int(ptr->stop.y, 40);
+
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_component_member_expr_in_object(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Point, {10, 20});
+
+    ecs_value_t v = { .type = ecs_id(Point) };
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "{ e1[Point].x, e1[Point].y }", &v, &desc) != NULL);
+
+    test_assert(v.ptr != NULL);
+    Point *ptr = v.ptr;
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
 void Expr_var_expr(void) {
     ecs_world_t *world = ecs_init();
 

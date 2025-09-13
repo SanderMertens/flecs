@@ -748,6 +748,7 @@ void Plan_3_trivial_plan_w_any(void);
 void Plan_3_trivial_plan_w_pair_component(void);
 void Plan_3_trivial_plan_w_wildcard_component(void);
 void Plan_3_trivial_plan_w_any_component(void);
+void Plan_3_trivial_plan_w_any_cached(void);
 void Plan_1_trivial_component_w_none(void);
 void Plan_2_trivial_component_w_none(void);
 void Plan_2_trivial_plan_w_wildcard(void);
@@ -1712,6 +1713,8 @@ void Cached_no_rematch_after_instantiate(void);
 void Cached_no_rematch_after_batched_instantiate(void);
 void Cached_rematch_after_delete_base_of_base(void);
 void Cached_rematch_after_delete_first_base_of_base(void);
+void Cached_rematch_after_remove_all(void);
+void Cached_no_rematch_after_delete_with(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -5254,6 +5257,10 @@ bake_test_case Plan_testcases[] = {
     {
         "3_trivial_plan_w_any_component",
         Plan_3_trivial_plan_w_any_component
+    },
+    {
+        "3_trivial_plan_w_any_cached",
+        Plan_3_trivial_plan_w_any_cached
     },
     {
         "1_trivial_component_w_none",
@@ -9036,6 +9043,14 @@ bake_test_case Cached_testcases[] = {
     {
         "rematch_after_delete_first_base_of_base",
         Cached_rematch_after_delete_first_base_of_base
+    },
+    {
+        "rematch_after_remove_all",
+        Cached_rematch_after_remove_all
+    },
+    {
+        "no_rematch_after_delete_with",
+        Cached_no_rematch_after_delete_with
     }
 };
 
@@ -11564,7 +11579,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        85,
+        86,
         Plan_testcases
     },
     {
@@ -11646,7 +11661,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        106,
+        108,
         Cached_testcases
     },
     {
