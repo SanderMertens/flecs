@@ -124,6 +124,8 @@ void test_null_component_safety_info(void) {
 }
 
 int main(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
     test_table_component_safety_info();
     test_sparse_non_fragmenting_safety_info();
     test_sparse_fragmenting_safety_info();
