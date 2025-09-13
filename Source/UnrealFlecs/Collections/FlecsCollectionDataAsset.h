@@ -20,10 +20,10 @@ public:
 
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override final;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
 	TArray<TObjectPtr<UFlecsCollectionDataAsset>> Collections;
 
-	UPROPERTY(EditAnywhere, Category="Collections")
+	UPROPERTY(EditAnywhere, Category = "Collections")
 	FFlecsEntityRecord Record;
 
 #if WITH_EDITOR

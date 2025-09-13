@@ -143,7 +143,7 @@ struct FFlecsConditionWrapper
 
 struct FOSApiInitializer
 {
-	static constexpr uint32 FlecsMemoryDefaultAlignment = 64;
+	static constexpr uint32 FlecsMemoryDefaultAlignment = PLATFORM_CACHE_LINE_SIZE;
 	
 	FOSApiInitializer()
 	{
@@ -294,7 +294,7 @@ struct FOSApiInitializer
         {
         	#if !NO_LOGGING
         		UE_LOG(LogFlecsCore, Fatal, TEXT("Flecs - Aborting..."));
-			#endif // SOLID_LOG_ENABLED
+			#endif // !NO_LOGGING
         	
         	FGenericPlatformMisc::RequestExit(false);
         };
