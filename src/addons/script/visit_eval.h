@@ -35,6 +35,7 @@ int flecs_script_find_entity(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t from,
     const char *path,
+    ecs_expr_node_t **name_expr,
     int32_t *frame_offset,
     ecs_entity_t *out,
     bool *is_var);

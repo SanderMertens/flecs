@@ -51,12 +51,14 @@ flecs_component_ptr_t flecs_get_mut(
 
 /* Get component pointer with type info. */
 flecs_component_ptr_t flecs_get_component_ptr(
+    const ecs_world_t *world,
     ecs_table_t *table,
     int32_t row,
     ecs_component_record_t *cr);
 
 /* Get component pointer. */
 void* flecs_get_component(
+    const ecs_world_t *world,
     ecs_table_t *table,
     int32_t row,
     ecs_component_record_t *cr);

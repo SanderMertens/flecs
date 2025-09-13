@@ -179,12 +179,6 @@ void ecs_map_params_init(
     params->allocator = allocator;
 }
 
-void ecs_map_params_fini(
-    ecs_map_params_t *params)
-{
-    flecs_ballocator_fini(&params->entry_allocator);
-}
-
 void ecs_map_init_w_params(
     ecs_map_t *result,
     ecs_map_params_t *params)

@@ -39,10 +39,10 @@ world.component<Position>().add(flecs::CanToggle);
 flecs::entity e = world.entity().set(Position{10, 20});
 
 e.disable<Position>(); // Disable component
-assert(!e.is_enabled<Position>());
+assert(!e.enabled<Position>());
 
 e.enable<Position>(); // Enable component
-assert(e.is_enabled<Position>());
+assert(e.enabled<Position>());
 ```
 
 </li>
@@ -56,10 +56,10 @@ Entity e = world.Entity()
     .Set<Position>(new(10, 20));
 
 e.Disable<Position>(); // Disable component
-Debug.Assert(!e.IsEnabled<Position>());
+Debug.Assert(!e.Enabled<Position>());
 
 e.Enable<Position>(); // Enable component
-Debug.Assert(e.IsEnabled<Position>());
+Debug.Assert(e.Enabled<Position>());
 ```
 
 </li>
@@ -73,10 +73,10 @@ world
 let e = world.entity().set(Position { x: 10.0, y: 20.0 });
 
 e.disable::<Position>(); // Disable component
-assert!(!e.is_enabled::<Position>());
+assert!(!e.enabled::<Position>());
 
 e.enable::<Position>(); // Enable component
-assert!(e.is_enabled::<Position>());
+assert!(e.enabled::<Position>());
 ```
 
 </li>

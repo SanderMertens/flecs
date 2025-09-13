@@ -405,7 +405,10 @@
                 "recycle_1_of_2",
                 "recycle_1_of_3",
                 "recycle_2_of_3",
-                "bulk_init_w_table"
+                "bulk_init_w_table",
+                "bulk_init_w_alive_entity",
+                "bulk_init_w_cmd_in_on_add_hook",
+                "bulk_init_w_cmd_in_on_add_observer"
             ]
         }, {
             "id": "Add",
@@ -482,6 +485,7 @@
                 "owns_pair",
                 "owns_pair_wildcard",
                 "get",
+                "get_wildcard",
                 "add_remove",
                 "add_remove_tag",
                 "add_remove_pair",
@@ -585,8 +589,6 @@
                 "target_exclusive_pair",
                 "target_exclusive_pair_after_change",
                 "target_exclusive_pair_after_add_same",
-                "target_recycled",
-                "target_recycled_exclusive",
                 "target_from_base",
                 "target_for_base",
                 "target_for_self_sparse_component",
@@ -641,7 +643,19 @@
                 "delete_relationship",
                 "delete_parent_of_relationship",
                 "delete_exclusive_relationship",
-                "delete_parent_of_exclusive_relationship"
+                "delete_parent_of_exclusive_relationship",
+                "add_before_recycle_non_sparse",
+                "add_before_recycle_sparse",
+                "add_pair_before_recycle_non_sparse_relationship",
+                "add_pair_before_recycle_sparse_relationship",
+                "add_pair_before_recycle_sparse_target",
+                "remove_before_recycle_non_sparse",
+                "remove_before_recycle_sparse",
+                "remove_pair_before_recycle_non_sparse_relationship",
+                "remove_pair_before_recycle_sparse_relationship",
+                "remove_pair_before_recycle_sparse_target",
+                "recycle_after_delete_table",
+                "recycle_pair_after_delete_table"
             ]
         }, {
             "id": "Hierarchies",
@@ -788,10 +802,14 @@
                 "change_order_not_null_children_zero_count",
                 "change_order_on_parent_without_ordered_children",
                 "change_order",
+                "ordered_children_w_name",
                 "get_ordered_children_empty",
                 "get_ordered_children_invalid",
                 "get_ordered_children",
-                "get_ordered_children_from_stage"
+                "get_ordered_children_from_stage",
+                "get_ordered_children_from_prefab_instance_no_children",
+                "get_ordered_children_from_prefab_instance_3_children",
+                "get_ordered_children_from_prefab_instance_nested_children"
             ]
         }, {
             "id": "Has",
@@ -869,7 +887,8 @@
                 "aba_table",
                 "recycled_table",
                 "recycled_table_twice",
-                "ref_after_shrink"
+                "ref_after_shrink",
+                "ref_after_shrink_w_freed_pages"
             ]
         }, {
             "id": "Delete",

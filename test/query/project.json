@@ -773,6 +773,7 @@
                 "3_trivial_plan_w_pair_component",
                 "3_trivial_plan_w_wildcard_component",
                 "3_trivial_plan_w_any_component",
+                "3_trivial_plan_w_any_cached",
                 "1_trivial_component_w_none",
                 "2_trivial_component_w_none",
                 "2_trivial_plan_w_wildcard",
@@ -1775,7 +1776,9 @@
                 "no_rematch_after_instantiate",
                 "no_rematch_after_batched_instantiate",
                 "rematch_after_delete_base_of_base",
-                "rematch_after_delete_first_base_of_base"
+                "rematch_after_delete_first_base_of_base",
+                "rematch_after_remove_all",
+                "no_rematch_after_delete_with"
             ]
         }, {
             "id": "ChangeDetection",

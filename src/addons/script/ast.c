@@ -57,10 +57,34 @@ ecs_script_scope_t* flecs_script_insert_scope(
     return result;
 }
 
-ecs_script_entity_t* flecs_script_insert_entity(
+static
+int flecs_script_name_to_expr(
     ecs_parser_t *parser,
     const char *name,
-    bool name_is_expr)
+    ecs_expr_node_t** out)
+{
+    if (!name || !flecs_string_is_interpolated(name)) {
+        return 0;
+    }
+
+    parser->significant_newline = false;
+
+    ecs_expr_node_t *result = (ecs_expr_node_t*)
+        flecs_expr_interpolated_string(parser, name);
+    if (!result) {
+        return -1;
+    }
+
+    parser->significant_newline = true;
+
+    *out = result;
+
+    return 0;
+}
+
+ecs_script_entity_t* flecs_script_insert_entity(
+    ecs_parser_t *parser,
+    const char *name)
 {
     ecs_script_scope_t *scope = parser->scope;
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -74,14 +98,8 @@ ecs_script_entity_t* flecs_script_insert_entity(
 
     result->name = name;
 
-    if (name_is_expr) {
-        parser->significant_newline = false;
-        result->name_expr = (ecs_expr_node_t*)
-            flecs_expr_interpolated_string(parser, name);
-        if (!result->name_expr) {
-            goto error;
-        }
-        parser->significant_newline = true;
+    if (flecs_script_name_to_expr(parser, name, &result->name_expr)) {
+        goto error;
     }
 
     ecs_script_scope_t *entity_scope = flecs_script_scope_new(parser);
@@ -95,7 +113,8 @@ error:
 }
 
 static
-void flecs_script_set_id(
+int flecs_script_set_id(
+    ecs_parser_t *parser,
     ecs_script_id_t *id,
     const char *first,
     const char *second)
@@ -105,6 +124,20 @@ void flecs_script_set_id(
     id->second = second;
     id->first_sp = -1;
     id->second_sp = -1;
+
+    if (flecs_script_name_to_expr(parser, first, &id->first_expr)) {
+        return -1;
+    }
+
+    if (flecs_script_name_to_expr(parser, second, &id->second_expr)) {
+        return -1;
+    }
+
+    if (id->first_expr || id->second_expr) {
+        id->dynamic = true;
+    }
+
+    return 0;
 }
 
 ecs_script_pair_scope_t* flecs_script_insert_pair_scope(
@@ -115,7 +148,11 @@ ecs_script_pair_scope_t* flecs_script_insert_pair_scope(
     ecs_script_scope_t *scope = parser->scope;
     ecs_script_pair_scope_t *result = flecs_ast_new(
         parser, ecs_script_pair_scope_t, EcsAstPairScope);
-    flecs_script_set_id(&result->id, first, second);
+
+    if (flecs_script_set_id(parser, &result->id, first, second)) {
+        return NULL;
+    }
+
     result->scope = flecs_script_scope_new(parser);
 
     flecs_ast_append(parser, scope->stmts, ecs_script_pair_scope_t, result);
@@ -132,7 +169,10 @@ ecs_script_tag_t* flecs_script_insert_pair_tag(
 
     ecs_script_tag_t *result = flecs_ast_new(
         parser, ecs_script_tag_t, EcsAstTag);
-    flecs_script_set_id(&result->id, first, second);
+
+    if (flecs_script_set_id(parser, &result->id, first, second)) {
+        return NULL;
+    }
 
     flecs_ast_append(parser, scope->stmts, ecs_script_tag_t, result);
 
@@ -156,7 +196,10 @@ ecs_script_component_t* flecs_script_insert_pair_component(
 
     ecs_script_component_t *result = flecs_ast_new(
             parser, ecs_script_component_t, EcsAstComponent);
-    flecs_script_set_id(&result->id, first, second);
+
+    if (flecs_script_set_id(parser, &result->id, first, second)) {
+        return NULL;
+    }
 
     flecs_ast_append(parser, scope->stmts, ecs_script_component_t, result);
 

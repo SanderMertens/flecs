@@ -136,6 +136,7 @@ void Eval_default_child_component_w_assign(void);
 void Eval_struct_type_w_default_child_component(void);
 void Eval_struct_type_w_default_child_component_nested_member(void);
 void Eval_enum_type_w_default_child_component(void);
+void Eval_enum_type_w_underlying_type(void);
 void Eval_default_type_from_with(void);
 void Eval_default_type_from_nested_with(void);
 void Eval_default_type_from_with_in_entity_scope_w_default_type(void);
@@ -338,6 +339,16 @@ void Eval_add_component_as_tag_pair_w_invalid_ctor(void);
 void Eval_interpolated_name_w_nested_for_loop(void);
 void Eval_interpolated_name_w_nested_for_loop_no_dollar_sign(void);
 void Eval_interpolated_name_w_nested_for_loop_wrong_dollar_sign(void);
+void Eval_interpolated_string_as_tag(void);
+void Eval_interpolated_string_as_relationship(void);
+void Eval_interpolated_string_as_target(void);
+void Eval_interpolated_string_as_relationship_and_target(void);
+void Eval_interpolated_string_as_relationship_component(void);
+void Eval_interpolated_string_as_target_component(void);
+void Eval_interpolated_string_as_relationship_and_target_component(void);
+void Eval_dynamic_interpolated_string_as_tag(void);
+void Eval_dynamic_interpolated_string_as_relationship(void);
+void Eval_dynamic_interpolated_string_as_target(void);
 void Eval_assign_new_to_const_to_entity_member(void);
 void Eval_assign_new_w_component_to_const_to_entity_member(void);
 void Eval_assign_new_w_component_w_vars_to_const_to_entity_member(void);
@@ -361,6 +372,9 @@ void Eval_assign_new_w_child_w_name_to_const(void);
 void Eval_assign_new_w_child_w_name_to_entity_member(void);
 void Eval_assign_new_to_const_in_scope(void);
 void Eval_assign_new_to_const_in_for(void);
+void Eval_implicit_var_as_tag(void);
+void Eval_implicit_var_as_relationship(void);
+void Eval_implicit_var_as_target(void);
 void Eval_export_const_var(void);
 void Eval_export_const_var_w_type(void);
 void Eval_export_const_var_w_struct(void);
@@ -781,6 +795,8 @@ void Expr_component_expr_string(void);
 void Expr_component_member_expr_string(void);
 void Expr_component_elem_expr_string(void);
 void Expr_component_inline_elem_expr_string(void);
+void Expr_component_expr_in_object(void);
+void Expr_component_member_expr_in_object(void);
 void Expr_var_expr(void);
 void Expr_var_member_expr(void);
 void Expr_var_elem_expr(void);
@@ -903,6 +919,16 @@ void Serialize_entity(void);
 void Serialize_entity_10k(void);
 void Serialize_id(void);
 void Serialize_enum(void);
+void Serialize_enum_underlying_i8(void);
+void Serialize_enum_underlying_i16(void);
+void Serialize_enum_underlying_i32(void);
+void Serialize_enum_underlying_iptr(void);
+void Serialize_enum_underlying_i64(void);
+void Serialize_enum_underlying_u8(void);
+void Serialize_enum_underlying_u16(void);
+void Serialize_enum_underlying_u32(void);
+void Serialize_enum_underlying_uptr(void);
+void Serialize_enum_underlying_u64(void);
 void Serialize_bitmask(void);
 void Serialize_float_nan(void);
 void Serialize_float_inf(void);
@@ -1593,6 +1619,10 @@ bake_test_case Eval_testcases[] = {
     {
         "enum_type_w_default_child_component",
         Eval_enum_type_w_default_child_component
+    },
+    {
+        "enum_type_w_underlying_type",
+        Eval_enum_type_w_underlying_type
     },
     {
         "default_type_from_with",
@@ -2403,6 +2433,46 @@ bake_test_case Eval_testcases[] = {
         Eval_interpolated_name_w_nested_for_loop_wrong_dollar_sign
     },
     {
+        "interpolated_string_as_tag",
+        Eval_interpolated_string_as_tag
+    },
+    {
+        "interpolated_string_as_relationship",
+        Eval_interpolated_string_as_relationship
+    },
+    {
+        "interpolated_string_as_target",
+        Eval_interpolated_string_as_target
+    },
+    {
+        "interpolated_string_as_relationship_and_target",
+        Eval_interpolated_string_as_relationship_and_target
+    },
+    {
+        "interpolated_string_as_relationship_component",
+        Eval_interpolated_string_as_relationship_component
+    },
+    {
+        "interpolated_string_as_target_component",
+        Eval_interpolated_string_as_target_component
+    },
+    {
+        "interpolated_string_as_relationship_and_target_component",
+        Eval_interpolated_string_as_relationship_and_target_component
+    },
+    {
+        "dynamic_interpolated_string_as_tag",
+        Eval_dynamic_interpolated_string_as_tag
+    },
+    {
+        "dynamic_interpolated_string_as_relationship",
+        Eval_dynamic_interpolated_string_as_relationship
+    },
+    {
+        "dynamic_interpolated_string_as_target",
+        Eval_dynamic_interpolated_string_as_target
+    },
+    {
         "assign_new_to_const_to_entity_member",
         Eval_assign_new_to_const_to_entity_member
     },
@@ -2493,6 +2563,18 @@ bake_test_case Eval_testcases[] = {
     {
         "assign_new_to_const_in_for",
         Eval_assign_new_to_const_in_for
+    },
+    {
+        "implicit_var_as_tag",
+        Eval_implicit_var_as_tag
+    },
+    {
+        "implicit_var_as_relationship",
+        Eval_implicit_var_as_relationship
+    },
+    {
+        "implicit_var_as_target",
+        Eval_implicit_var_as_target
     },
     {
         "export_const_var",
@@ -4156,6 +4238,14 @@ bake_test_case Expr_testcases[] = {
         Expr_component_inline_elem_expr_string
     },
     {
+        "component_expr_in_object",
+        Expr_component_expr_in_object
+    },
+    {
+        "component_member_expr_in_object",
+        Expr_component_member_expr_in_object
+    },
+    {
         "var_expr",
         Expr_var_expr
     },
@@ -4627,6 +4717,46 @@ bake_test_case Serialize_testcases[] = {
     {
         "enum",
         Serialize_enum
+    },
+    {
+        "enum_underlying_i8",
+        Serialize_enum_underlying_i8
+    },
+    {
+        "enum_underlying_i16",
+        Serialize_enum_underlying_i16
+    },
+    {
+        "enum_underlying_i32",
+        Serialize_enum_underlying_i32
+    },
+    {
+        "enum_underlying_iptr",
+        Serialize_enum_underlying_iptr
+    },
+    {
+        "enum_underlying_i64",
+        Serialize_enum_underlying_i64
+    },
+    {
+        "enum_underlying_u8",
+        Serialize_enum_underlying_u8
+    },
+    {
+        "enum_underlying_u16",
+        Serialize_enum_underlying_u16
+    },
+    {
+        "enum_underlying_u32",
+        Serialize_enum_underlying_u32
+    },
+    {
+        "enum_underlying_uptr",
+        Serialize_enum_underlying_uptr
+    },
+    {
+        "enum_underlying_u64",
+        Serialize_enum_underlying_u64
     },
     {
         "bitmask",
@@ -5354,7 +5484,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        376,
+        390,
         Eval_testcases
     },
     {
@@ -5375,7 +5505,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        294,
+        296,
         Expr_testcases,
         1,
         Expr_params
@@ -5398,7 +5528,7 @@ static bake_test_suite suites[] = {
         "Serialize",
         NULL,
         NULL,
-        61,
+        71,
         Serialize_testcases
     },
     {

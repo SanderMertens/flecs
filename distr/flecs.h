@@ -35,7 +35,7 @@
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
 #define FLECS_VERSION_MINOR 1  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 0  /**< Flecs patch version. */
+#define FLECS_VERSION_PATCH 1  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
@@ -1593,6 +1593,12 @@ extern "C" {
 /** This computes the offset of an index inside a page */
 #define FLECS_SPARSE_OFFSET(index) ((int32_t)index & (FLECS_SPARSE_PAGE_SIZE - 1))
 
+typedef struct ecs_sparse_page_t {
+    int32_t *sparse;            /* Sparse array with indices to dense array */
+    void *data;                 /* Store data in sparse array to reduce  
+                                 * indirection and provide stable pointers. */
+} ecs_sparse_page_t;
+
 typedef struct ecs_sparse_t {
     ecs_vec_t dense;         /* Dense array with indices to sparse array. The
                               * dense array stores both alive and not alive
@@ -2046,7 +2052,6 @@ typedef struct ecs_map_iter_t {
 
 typedef struct ecs_map_params_t {
     struct ecs_allocator_t *allocator;
-    struct ecs_block_allocator_t entry_allocator;
 } ecs_map_params_t;
 
 /* Function/macro postfixes meaning:
@@ -2061,10 +2066,6 @@ FLECS_API
 void ecs_map_params_init(
     ecs_map_params_t *params,
     struct ecs_allocator_t *allocator);
-
-FLECS_API
-void ecs_map_params_fini(
-    ecs_map_params_t *params);
 
 /** Initialize new map. */
 FLECS_API
@@ -13582,6 +13583,17 @@ FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldSummary);   /**< Component id for
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsSystemStats);    /**< Component id for EcsSystemStats. */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsPipelineStats);  /**< Component id for EcsPipelineStats. */
 
+/* Memory statistics components */
+FLECS_API extern ECS_COMPONENT_DECLARE(ecs_entities_memory_t);    /**< Component id for ecs_entities_memory_t. */
+FLECS_API extern ECS_COMPONENT_DECLARE(ecs_component_index_memory_t); /**< Component id for ecs_component_index_memory_t. */
+FLECS_API extern ECS_COMPONENT_DECLARE(ecs_query_memory_t);           /**< Component id for ecs_query_memory_t. */
+FLECS_API extern ECS_COMPONENT_DECLARE(ecs_component_memory_t);       /**< Component id for ecs_component_memory_t. */
+FLECS_API extern ECS_COMPONENT_DECLARE(ecs_table_memory_t);           /**< Component id for ecs_table_memory_t. */
+FLECS_API extern ECS_COMPONENT_DECLARE(ecs_commands_memory_t);        /**< Component id for ecs_commands_memory_t. */
+FLECS_API extern ECS_COMPONENT_DECLARE(ecs_table_histogram_t);        /**< Component id for ecs_table_histogram_t. */
+FLECS_API extern ECS_COMPONENT_DECLARE(ecs_allocator_memory_t); /**< Component id for ecs_allocator_memory_t. */
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldMemory);               /**< Component id for EcsWorldMemory. */
+
 FLECS_API extern ecs_entity_t EcsPeriod1s;                 /**< Tag used for metrics collected in last second. */
 FLECS_API extern ecs_entity_t EcsPeriod1m;                 /**< Tag used for metrics collected in last minute. */
 FLECS_API extern ecs_entity_t EcsPeriod1h;                 /**< Tag used for metrics collected in last hour. */
@@ -13597,7 +13609,7 @@ typedef struct {
 /** Component that stores world statistics. */
 typedef struct {
     EcsStatsHeader hdr;
-    ecs_world_stats_t stats;
+    ecs_world_stats_t *stats;
 } EcsWorldStats;
 
 /** Component that stores system statistics. */
@@ -13634,6 +13646,187 @@ typedef struct {
     /* Build info */
     ecs_build_info_t build_info; /**< Build info */
 } EcsWorldSummary;
+
+/** Entity memory. */
+typedef struct {
+    int32_t alive_count;                 /** Number of alive entities. */
+    int32_t not_alive_count;             /** Number of not alive entities. */
+    ecs_size_t bytes_alive;              /** Bytes used by alive entities. */
+    ecs_size_t bytes_not_alive;          /** Bytes used by not alive entities. */
+    ecs_size_t bytes_unused;             /** Allocated but unused bytes. */
+    ecs_size_t bytes_names;              /** Bytes used by names. */
+    ecs_size_t bytes_doc_names;          /** Bytes used by doc names. */
+} ecs_entities_memory_t;
+
+/* Component memory. */
+typedef struct {
+    int32_t instances;                  /** Total number of component instances. */
+    ecs_size_t bytes_table_components;  /** Bytes used by table columns. */
+    ecs_size_t bytes_table_components_unused; /** Unused bytes in table columns. */
+    ecs_size_t bytes_toggle_bitsets;    /** Bytes used in bitsets (toggled components). */
+    ecs_size_t bytes_sparse_components; /** Bytes used in component sparse sets. */
+    ecs_size_t bytes_sparse_components_unused; /** Unused bytes in component sparse sets. */
+    ecs_size_t bytes_sparse_overhead;   /** Sparse set overhead. */
+    ecs_size_t bytes_builtin;           /** Bytes used in table columns with builtin entities. */
+} ecs_component_memory_t;
+
+/** Component index memory. */
+typedef struct {
+    int32_t count;                      /** Number of component records. */
+    ecs_size_t bytes_component_record;  /** Bytes used by ecs_component_record_t struct. */
+    ecs_size_t bytes_table_cache;       /** Bytes used by table cache. */
+    ecs_size_t bytes_name_index;        /** Bytes used by name index. */
+    ecs_size_t bytes_ordered_children;  /** Bytes used by ordered children vector. */
+    ecs_size_t bytes_reachable_cache;   /** Bytes used by reachable cache. */
+    ecs_size_t bytes_type_info;         /** Bytes used in type info. */
+} ecs_component_index_memory_t;
+
+/** Query memory. */
+typedef struct {
+    int32_t count;                      /** Number of queries. */
+    int32_t cached_count;               /** Number of queries with caches. */
+    ecs_size_t bytes_query;             /** Bytes used by ecs_query_impl_t struct. */
+    ecs_size_t bytes_cache;             /** Bytes used by query cache. */
+    ecs_size_t bytes_group_by;          /** Bytes used by query cache groups (excludes cache elements). */
+    ecs_size_t bytes_order_by;          /** Bytes used by table_slices. */
+    ecs_size_t bytes_plan;              /** Bytes used by query plan. */
+    ecs_size_t bytes_terms;             /** Bytes used by terms array. */
+    ecs_size_t bytes_misc;              /** Bytes used by remaining misc arrays. */
+} ecs_query_memory_t;
+
+/** Table memory histogram constants */
+#define ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT 14
+#define ECS_TABLE_MEMORY_HISTOGRAM_MAX_COUNT (1 << ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT)
+
+/** Table memory */
+typedef struct {
+    int32_t count;                      /** Total number of tables. */
+    int32_t empty_count;                /** Number of empty tables. */
+    int32_t column_count;               /** Number of table columns. */
+    ecs_size_t bytes_table;             /** Bytes used by ecs_table_t struct. */
+    ecs_size_t bytes_type;              /** Bytes used by type vector. */
+    ecs_size_t bytes_entities;          /** Bytes used by entity vectors. */
+    ecs_size_t bytes_overrides;         /** Bytes used by table overrides. */
+    ecs_size_t bytes_columns;           /** Bytes used by table columns (excluding component data). */
+    ecs_size_t bytes_table_records;     /** Bytes used by table records. */
+    ecs_size_t bytes_column_map;        /** Bytes used by column map. */
+    ecs_size_t bytes_component_map;     /** Bytes used by column map. */
+    ecs_size_t bytes_dirty_state;       /** Bytes used by column map. */
+    ecs_size_t bytes_edges;             /** Bytes used by table graph edges. */
+} ecs_table_memory_t;
+
+/** Table size histogram */
+typedef struct {
+    int32_t entity_counts[ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT];
+} ecs_table_histogram_t;
+
+/** Commands memory */
+typedef struct {
+    ecs_size_t bytes_queue;             /** Queue size */
+    ecs_size_t bytes_entries;           /** Size of sparse set used for command batching */
+    ecs_size_t bytes_stack;             /** Stack allocator memory for temporary command data */
+} ecs_commands_memory_t;
+
+/** Allocator memory.
+ * Returns memory that's allocated by allocators but not in use. */
+typedef struct {
+    ecs_size_t bytes_graph_edge;        /** Graph edge allocator. */
+    ecs_size_t bytes_component_record;  /** Component record allocator. */
+    ecs_size_t bytes_pair_record;       /** Pair record allocator. */
+    ecs_size_t bytes_table_diff;        /** Table diff allocator. */
+    ecs_size_t bytes_sparse_chunk;      /** Sparse chunk allocator. */
+    ecs_size_t bytes_hashmap;           /** Hashmap allocator. */
+    ecs_size_t bytes_allocator;         /** Generic allocator. */
+    ecs_size_t bytes_cmd_entry_chunk;   /** Command batching entry chunk allocator. */
+    ecs_size_t bytes_query_impl;        /** Query struct allocator. */
+    ecs_size_t bytes_query_cache;       /** Query cache struct allocator. */
+} ecs_allocator_memory_t;
+
+/** Component with memory statistics. */
+typedef struct {
+    ecs_entities_memory_t entities;
+    ecs_component_memory_t components;
+    ecs_component_index_memory_t component_index;
+    ecs_query_memory_t query;
+    ecs_table_memory_t table;
+    ecs_table_histogram_t table_histogram;
+    ecs_commands_memory_t commands;
+    ecs_allocator_memory_t allocators;
+} EcsWorldMemory;
+
+/** Memory statistics getters. */
+/** Get memory usage statistics for the entity index.
+ * 
+ * @param world The world.
+ * @return Memory statistics for the entity index.
+ */
+FLECS_API
+ecs_entities_memory_t ecs_entity_index_memory_get(
+    const ecs_world_t *world);
+
+/** Get memory usage statistics for the component index.
+ * 
+ * @param world The world.
+ * @return Memory statistics for the component index.
+ */
+FLECS_API
+ecs_component_index_memory_t ecs_component_index_memory_get(
+    const ecs_world_t *world);
+
+/** Get memory usage statistics for queries.
+ * 
+ * @param world The world.
+ * @return Memory statistics for queries.
+ */
+FLECS_API
+ecs_query_memory_t ecs_query_memory_get(
+    const ecs_world_t *world);
+
+/** Get memory usage statistics for components.
+ * 
+ * @param world The world.
+ * @return Memory statistics for components.
+ */
+FLECS_API
+ecs_component_memory_t ecs_component_memory_get(
+    const ecs_world_t *world);
+
+/** Get memory usage statistics for tables.
+ * 
+ * @param world The world.
+ * @return Memory statistics for tables.
+ */
+FLECS_API
+ecs_table_memory_t ecs_table_memory_get(
+    const ecs_world_t *world);
+
+/** Get number of tables by number of entities in the table.
+ * 
+ * @param world The world.
+ * @return Number of tables by number of entities in the table.
+ */
+FLECS_API
+ecs_table_histogram_t ecs_table_histogram_get(
+    const ecs_world_t *world);
+
+/** Get memory usage statistics for commands.
+ * 
+ * @param world The world.
+ * @return Memory statistics for commands.
+ */
+FLECS_API
+ecs_commands_memory_t ecs_commands_memory_get(
+    const ecs_world_t *world);
+
+/** Get memory usage statistics for allocators.
+ * 
+ * @param world The world.
+ * @return Memory statistics for allocators.
+ */
+FLECS_API
+ecs_allocator_memory_t ecs_allocator_memory_get(
+    const ecs_world_t *world);
+
 
 /** Stats module import function.
  * Usage:
@@ -16250,6 +16443,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsTypeSerializer);  /**< Id for comp
 FLECS_API extern const ecs_entity_t ecs_id(EcsPrimitive);       /**< Id for component that stores reflection data for a primitive type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsEnum);            /**< Id for component that stores reflection data for an enum type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsBitmask);         /**< Id for component that stores reflection data for a bitmask type. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsConstants);       /**< Id for component that stores reflection data for a constants. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsMember);          /**< Id for component that stores reflection data for struct members. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsMemberRanges);    /**< Id for component that stores min/max ranges for member values. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);          /**< Id for component that stores reflection data for a struct type. */
@@ -16418,12 +16612,6 @@ typedef struct ecs_enum_constant_t {
 /** Component added to enum type entities */
 typedef struct EcsEnum {
     ecs_entity_t underlying_type;
-
-    /** Populated from child entities with Constant component */
-    ecs_map_t *constants; /**< map<i32_t, ecs_enum_constant_t> */
-
-    /** Stores the constants in registration order */
-    ecs_vec_t ordered_constants; /**< vector<ecs_enum_constants_t> */
 } EcsEnum;
 
 /** Type that describes an bitmask constant */
@@ -16443,11 +16631,17 @@ typedef struct ecs_bitmask_constant_t {
 
 /** Component added to bitmask type entities */
 typedef struct EcsBitmask {
-    /* Populated from child entities with Constant component */
-    ecs_map_t *constants; /**< map<u32_t, ecs_bitmask_constant_t> */
-    /** Stores the constants in registration order */
-    ecs_vec_t ordered_constants; /**< vector<ecs_bitmask_constants_t>  */
+    int32_t dummy_;
 } EcsBitmask;
+
+/** Component with datastructures for looking up enum/bitmask constants. */
+typedef struct EcsConstants {
+    /** Populated from child entities with Constant component */
+    ecs_map_t *constants; /**< map<i32_t, ecs_enum_constant_t> */
+
+    /** Stores the constants in registration order */
+    ecs_vec_t ordered_constants; /**< vector<ecs_enum_constants_t> */
+} EcsConstants;
 
 /** Component added to array type entities */
 typedef struct EcsArray {
@@ -16825,15 +17019,40 @@ int ecs_meta_member(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
+/** Same as ecs_meta_member() but doesn't throw an error.
+ * 
+ * @param cursor The cursor.
+ * @param name The name of the member.
+ * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_member()
+ */
+FLECS_API
+int ecs_meta_try_member(
+    ecs_meta_cursor_t *cursor,
+    const char *name);
+
 /** Move cursor to member.
  * Same as ecs_meta_member(), but with support for "foo.bar" syntax.
  * 
  * @param cursor The cursor.
  * @param name The name of the member.
  * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_member()
  */
 FLECS_API
 int ecs_meta_dotmember(
+    ecs_meta_cursor_t *cursor,
+    const char *name);
+
+/** Same as ecs_meta_dotmember() but doesn't throw an error.
+ * 
+ * @param cursor The cursor.
+ * @param name The name of the member.
+ * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_dotmember()
+ */
+FLECS_API
+int ecs_meta_try_dotmember(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
@@ -17966,6 +18185,7 @@ using component_record_t = ecs_component_record_t;
 using type_info_t = ecs_type_info_t;
 using type_hooks_t = ecs_type_hooks_t;
 using flags32_t = ecs_flags32_t;
+using flags64_t = ecs_flags64_t;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,
@@ -18951,8 +19171,10 @@ public:
         has_contiguous = true;
         contiguous_until = 0;
 
+#if FLECS_CPP_ENUM_REFLECTION_SUPPORT
         enum_reflection<E, reflection_init>::
             template each_enum< static_cast<U>(enum_last<E>::value) >(*this);
+#endif
     }
 
     static enum_type<E>& get() {
@@ -18991,7 +19213,6 @@ public:
 
     int min;
     int max;
-    bool has_contiguous;
 
     // If enum constants start not-sparse, contiguous_until will be the index of
     // the first sparse value, or end of the constants array
@@ -19003,8 +19224,16 @@ public:
             template each_enum< static_cast<U>(enum_last<E>::value) >();
 
     // Constants array is sized to the number of found-constants, or 1 
-    // to avoid 0-sized array
+    // to avoid 0-sized array.
+    #ifdef FLECS_CPP_ENUM_REFLECTION
     enum_constant<U> constants[constants_size? constants_size: 1] = {};
+    bool has_contiguous;
+    #else
+    // If we're not using enum reflection, we cannot statically determine the
+    // upper bound of the enum, so use 128.
+    enum_constant<U> constants[128] = {};
+    bool has_contiguous = true; // Assume contiguous ids
+    #endif
 };
 
 template <typename E, if_t< is_enum<E>::value > = 0>
@@ -19062,6 +19291,7 @@ struct enum_data {
         if (impl_.max < 0) {
             return -1;
         }
+
         // Check if value is in contiguous lookup section
         if (impl_.has_contiguous && value < impl_.contiguous_until && value >= 0) {
             return static_cast<int>(value);
@@ -19101,6 +19331,30 @@ struct enum_data {
     flecs::entity entity() const;
     flecs::entity entity(U value) const;
     flecs::entity entity(E value) const;
+
+    /**
+     * @brief Manually register constant for enum.
+     * 
+     * If automatic enum reflection is not supported, provide method for 
+     * manually registering constant.
+     */
+    #ifdef FLECS_CPP_NO_ENUM_REFLECTION
+    void register_constant(flecs::world_t *world, U v, flecs::entity_t e) {
+        if (v < 128) {
+            if (!impl_.constants[v].index) {
+                impl_.constants[v].index = flecs_component_ids_index_get();
+            }
+
+            flecs_component_ids_set(world, impl_.constants[v].index, e);
+
+            impl_.max ++;
+
+            if (impl_.contiguous_until <= v) {
+                impl_.contiguous_until = v + 1;
+            }
+        }
+    }
+    #endif
 
     flecs::world_t *world_;
     _::enum_type<E>& impl_;
@@ -23949,7 +24203,7 @@ flecs::entity vector();
  * @memberof flecs::world
  * @ingroup cpp_addons_json
  */
-flecs::string to_json(flecs::entity_t tid, const void* value) {
+flecs::string to_json(flecs::entity_t tid, const void* value) const {
     char *json = ecs_ptr_to_json(world_, tid, value);
     return flecs::string(json);
 }
@@ -23960,7 +24214,7 @@ flecs::string to_json(flecs::entity_t tid, const void* value) {
  * @ingroup cpp_addons_json
  */
 template <typename T>
-flecs::string to_json(const T* value) {
+flecs::string to_json(const T* value) const {
     flecs::entity_t tid = _::type<T>::id(world_);
     return to_json(tid, value);
 }
@@ -23970,7 +24224,7 @@ flecs::string to_json(const T* value) {
  * @memberof flecs::world
  * @ingroup cpp_addons_json
  */
-flecs::string to_json() {
+flecs::string to_json() const {
     return flecs::string( ecs_world_to_json(world_, nullptr) );
 }
 
@@ -30042,6 +30296,12 @@ component<T>& constant(const char *name, T value) {
     *ptr = static_cast<U>(value);
     ecs_modified_id(world_, eid, pair);
 
+    // If we're not using automatic enum reflection, manually set static data
+    #ifdef FLECS_CPP_NO_ENUM_REFLECTION
+    auto et = enum_type<T>(world_);
+    et.register_constant(world_, static_cast<U>(value), eid);
+    #endif
+
     return *this;
 }
 
@@ -31401,6 +31661,7 @@ namespace _ {
 } // namespace _
 } // namespace flecs
 
+#include <stdio.h>
 
 namespace flecs 
 {
@@ -31463,7 +31724,7 @@ struct term_ref_builder_i {
     }
 
     /* Override term id flags */
-    Base& flags(flecs::flags32_t flags) {
+    Base& flags(flecs::flags64_t flags) {
         this->assert_term_ref();
         term_ref_->id = flags;
         return *this;

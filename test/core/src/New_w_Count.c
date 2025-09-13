@@ -1,5 +1,8 @@
 #include <core.h>
 
+static ECS_COMPONENT_DECLARE(Position);
+static ECS_COMPONENT_DECLARE(Velocity);
+
 void New_w_Count_empty(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -715,6 +718,81 @@ void New_w_Count_bulk_ids_w_2_exceed_32_bits(void) {
     ecs_set_entity_range(world, UINT32_MAX, 0);
     test_expect_abort();
     ecs_bulk_new_w_id(world, Tag, 2);
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_init_w_alive_entity(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t ents[] = {ecs_new(world)};
+
+    test_expect_abort();
+
+    ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .entities = ents,
+        .count = 1
+    });
+}
+
+static void hook_w_add(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], Velocity, {1, 2});
+    }
+}
+
+void New_w_Count_bulk_init_w_cmd_in_on_add_hook(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = hook_w_add
+    });
+
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)}
+    });
+
+    for (int i = 0; i < 3; i ++) {
+        const Velocity *v = ecs_get(world, entities[i], Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_init_w_cmd_in_on_add_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position) },
+        },
+        .callback = hook_w_add,
+        .events = { EcsOnAdd }
+    });
+
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)}
+    });
+
+    for (int i = 0; i < 3; i ++) {
+        const Velocity *v = ecs_get(world, entities[i], Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
 
     ecs_fini(world);
 }

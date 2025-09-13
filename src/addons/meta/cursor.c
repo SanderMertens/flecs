@@ -359,12 +359,14 @@ int ecs_meta_elem(
     return 0;
 }
 
-int ecs_meta_member(
+static
+int flecs_meta_member(
     ecs_meta_cursor_t *cursor,
-    const char *name)
+    const char *name,
+    bool try)
 {
     if (cursor->depth == 0) {
-        ecs_err("cannot move to member in root scope (push first)");
+        if (!try) ecs_err("cannot move to member in root scope (push first)");
         return -1;
     }
 
@@ -375,14 +377,14 @@ int ecs_meta_member(
     const ecs_world_t *world = cursor->world;
 
     if (!members) {
-        ecs_err("cannot move to member '%s' for non-struct type '%s'", 
+        if (!try) ecs_err("cannot move to member '%s' for non-struct type '%s'", 
             name, flecs_errstr(ecs_get_path(world, scope->type)));
         return -1;
     }
 
     const uint64_t *cur_ptr = flecs_name_index_find_ptr(members, name, 0, 0);
     if (!cur_ptr) {
-        ecs_err("unknown member '%s' for type '%s'", 
+        if (!try) ecs_err("unknown member '%s' for type '%s'", 
             name, flecs_errstr(ecs_get_path(world, scope->type)));
         return -1;
     }
@@ -392,12 +394,26 @@ int ecs_meta_member(
     const EcsOpaque *opaque = scope->opaque;
     if (opaque) {
         if (!opaque->ensure_member) {
-            ecs_err("missing ensure_member for opaque type %s",
+            if (!try) ecs_err("missing ensure_member for opaque type %s",
                 flecs_errstr(ecs_get_path(world, scope->type)));
         }
     }
 
     return 0;
+}
+
+int ecs_meta_member(
+    ecs_meta_cursor_t *cursor,
+    const char *name)
+{
+    return flecs_meta_member(cursor, name, false);
+}
+
+int ecs_meta_try_member(
+    ecs_meta_cursor_t *cursor,
+    const char *name)
+{
+    return flecs_meta_member(cursor, name, true);
 }
 
 static
@@ -423,9 +439,11 @@ const char* flecs_meta_parse_member(
     return ptr;
 }
 
-int ecs_meta_dotmember(
+static
+int flecs_meta_dotmember(
     ecs_meta_cursor_t *cursor,
-    const char *name)
+    const char *name,
+    bool try)
 {
     ecs_meta_scope_t *cur_scope = flecs_cursor_get_scope(cursor);
     flecs_cursor_restore_scope(cursor, cur_scope);
@@ -440,7 +458,7 @@ int ecs_meta_dotmember(
             ecs_meta_push(cursor);
         }
 
-        if (ecs_meta_member(cursor, token)) {
+        if (flecs_meta_member(cursor, token, try)) {
             goto error;
         }
 
@@ -459,6 +477,20 @@ int ecs_meta_dotmember(
     return 0;
 error:
     return -1;
+}
+
+int ecs_meta_dotmember(
+    ecs_meta_cursor_t *cursor,
+    const char *name)
+{
+    return flecs_meta_dotmember(cursor, name, false);
+}
+
+int ecs_meta_try_dotmember(
+    ecs_meta_cursor_t *cursor,
+    const char *name)
+{
+    return flecs_meta_dotmember(cursor, name, true);
 }
 
 int ecs_meta_push(
@@ -1423,16 +1455,30 @@ int ecs_meta_set_string(
             goto error;
         }
 
-        const ecs_i32_t *v = ecs_get_pair_second(
-            cursor->world, c, EcsConstant, ecs_i32_t);
-        if (v == NULL) {
+        ecs_entity_t underlying = ecs_get_target(
+            cursor->world, c, EcsConstant, 0);
+        if (!underlying) {
             char *path = ecs_get_path(cursor->world, op->type);
             ecs_err("'%s' is not an enum constant for type '%s'", value, path);
             ecs_os_free(path);
             goto error;
         }
 
-        set_T(ecs_i32_t, ptr, v[0]);
+        const void *cptr = ecs_get_id(
+            cursor->world, c, ecs_pair(EcsConstant, underlying));
+        if (!cptr) {
+            char *path = ecs_get_path(cursor->world, op->type);
+            ecs_err("constant '%s' enum '%s' is of an invalid underlying type", 
+                value, path);
+            ecs_os_free(path);
+            goto error;
+        }
+
+        ecs_value_t cv = { 
+            .type = underlying, 
+            .ptr = ECS_CONST_CAST(void*, cptr) 
+        };
+        ecs_meta_set_value(cursor, &cv);
         break;
     }
     case EcsOpBitmask:
