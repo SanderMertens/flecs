@@ -200,7 +200,7 @@ public:
 	template <typename T>
 	SOLID_INLINE const FSelfType& Set(T&& InValue) const
 	{
-		GetEntity().set(std::forward<T>(InValue));
+		GetEntity().set(MoveTempIfPossible(InValue));
 		return *this;
 	}
 	

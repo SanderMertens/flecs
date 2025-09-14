@@ -28,7 +28,8 @@ EDataValidationResult UFlecsCollectionDataAsset::IsDataValid(FDataValidationCont
 
 EDataValidationResult UFlecsCollectionDataAsset::ValidateCollections(FDataValidationContext& Context) const
 {
-	for (const UFlecsCollectionDataAsset* Collection : Collections)
+	// @TODO: Implement collection validation!
+	/*for (const UFlecsCollectionDataAsset* Collection : Collections)
 	{
 		if UNLIKELY_IF(!IsValid(Collection))
 		{
@@ -49,6 +50,8 @@ EDataValidationResult UFlecsCollectionDataAsset::ValidateCollections(FDataValida
 		return EDataValidationResult::Invalid;
 	}
 	
+	return EDataValidationResult::Valid;*/
+
 	return EDataValidationResult::Valid;
 }
 

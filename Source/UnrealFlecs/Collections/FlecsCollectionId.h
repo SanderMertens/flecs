@@ -26,6 +26,11 @@ public:
 		: NameId(InNameId)
 	{
 	}
+
+	FORCEINLINE explicit FFlecsCollectionId(const FString& InStringId)
+		: NameId(FName(InStringId))
+	{
+	}
 	
 	FORCEINLINE bool operator==(const FFlecsCollectionId& Other) const
 	{

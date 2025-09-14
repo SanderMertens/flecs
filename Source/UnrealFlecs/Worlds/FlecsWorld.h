@@ -810,6 +810,8 @@ public:
 	}
 
 	FFlecsEntityHandle CreatePrefab(const TSolidNotNull<UClass*> InClass) const;
+	FFlecsEntityHandle CreatePrefabWithRecord(const FFlecsEntityRecord& InRecord,
+	                                          const TSolidNotNull<UClass*> InClass) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	void DestroyPrefab(const FFlecsEntityHandle& InPrefab) const;

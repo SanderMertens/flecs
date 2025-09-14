@@ -7,6 +7,7 @@
 #include "Engine/DataAsset.h"
 
 #include "Entities/FlecsEntityRecord.h"
+#include "FlecsCollectionTypes.h"
 
 #include "FlecsCollectionDataAsset.generated.h"
 
@@ -21,7 +22,7 @@ public:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override final;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
-	TArray<TObjectPtr<UFlecsCollectionDataAsset>> Collections;
+	TArray<FFlecsCollectionReference> Collections;
 
 	UPROPERTY(EditAnywhere, Category = "Collections")
 	FFlecsEntityRecord Record;

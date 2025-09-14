@@ -1492,6 +1492,18 @@ FFlecsEntityHandle UFlecsWorld::CreatePrefab(const TSolidNotNull<UClass*> InClas
 	return PrefabEntity;
 }
 
+FFlecsEntityHandle UFlecsWorld::CreatePrefabWithRecord(const FFlecsEntityRecord& InRecord,
+	const TSolidNotNull<UClass*> InClass) const
+{
+	const FFlecsEntityHandle PrefabEntity = CreatePrefab(InClass);
+	solid_checkf(PrefabEntity.IsPrefab(), TEXT("Entity is not a prefab"));
+
+	InRecord.ApplyRecordToEntity(this, PrefabEntity);
+	PrefabEntity.Set<FFlecsEntityRecord>(InRecord);
+		
+	return PrefabEntity;
+}
+
 void UFlecsWorld::DestroyPrefab(const FFlecsEntityHandle& InPrefab) const
 {
 	solid_checkf(InPrefab.IsValid(), TEXT("Prefab entity is not valid"));

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "Entities/FlecsEntityRecord.h"
-#include "FlecsCollectionId.h"
+#include "FlecsCollectionTypes.h"
 
 #include "FlecsCollectionDefinition.generated.h"
 
@@ -16,9 +16,12 @@ struct UNREALFLECS_API FFlecsCollectionDefinition
 
 public:
 	UPROPERTY(EditAnywhere, Category = "Flecs")
+	FName Name;
+	
+	UPROPERTY(EditAnywhere, Category = "Flecs")
 	FFlecsEntityRecord Record;
 
 	UPROPERTY(EditAnywhere, Category = "Flecs")
-	TArray<FFlecsCollectionId> Collections;
+	TArray<FFlecsCollectionReference> Collections;
 	
 }; // struct FFlecsCollectionDefinition

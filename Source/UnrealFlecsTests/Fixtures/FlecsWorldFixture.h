@@ -113,7 +113,7 @@ struct UNREALFLECSTESTS_API FFlecsTestFixtureRAII
 	AfterEach([this]() \
 	{ \
 		FixtureName.TearDown(); \
-	}) \
+	})
 
 #define FLECS_FIXTURE_LIFECYCLE_LATENT(FixtureName) \
 	LatentBeforeEach([this](const FDoneDelegate& Done) \

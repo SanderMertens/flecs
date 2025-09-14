@@ -3,12 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FlecsCollectionBuilder.h"
+#include "FlecsCollectionDefinition.h"
+#include "FlecsCollectionId.h"
 
 #include "Worlds/FlecsAbstractWorldSubsystem.h"
 
 #include "FlecsCollectionWorldSubsystem.generated.h"
 
+class IFlecsCollectionInterface;
 class UFlecsCollectionDataAsset;
+
+namespace Unreal::Flecs::Collections
+{
+	template <typename FuncType>
+	concept TCollectionBuilderFunc = requires(FuncType Func, FFlecsCollectionBuilder& Builder)
+	{
+		{ Func(Builder) } -> std::same_as<void>;
+	};
+	
+} // namespace Unreal::Flecs::Collections
 
 UCLASS()
 class UNREALFLECS_API UFlecsCollectionWorldSubsystem final : public UFlecsAbstractWorldSubsystem
@@ -20,10 +34,32 @@ public:
 	virtual void Deinitialize() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
-	FFlecsEntityHandle RegisterCollectionAsset(const UFlecsCollectionDataAsset* Asset);
+	FFlecsEntityHandle RegisterCollectionAsset(const UFlecsCollectionDataAsset* InAsset);
+
+	FFlecsEntityHandle RegisterCollectionDefinition(const FName& InName, const FFlecsCollectionDefinition& InDefinition);
+	FFlecsEntityHandle RegisterCollectionClass(const TSolidNotNull<UClass*> InClass, const FFlecsCollectionBuilder& InBuilder);
+	//FFlecsEntityHandle RegisterCollectionClass(const TSolidNotNull<TScriptInterface<IFlecsCollectionInterface>*> InInterfaceObject, FFlecsCollectionBuilder& OutBuilder);
+
+	template <Solid::TStaticStructConcept T>
+	FORCEINLINE FFlecsEntityHandle RegisterTypedCollection()
+	{
+		return RegisterCollectionStruct(T::StaticStruct());
+	}
+
+	template <Solid::TStaticClassConcept T>
+	FORCEINLINE FFlecsEntityHandle RegisterTypedCollection()
+	{
+		return RegisterCollectionClass(T::StaticClass());
+	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
 	FFlecsEntityHandle GetPrefabByAsset(const UFlecsCollectionDataAsset* Asset) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
+	FFlecsEntityHandle GetPrefabById(const FFlecsCollectionId& Id) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
+	FFlecsEntityHandle GetPrefabByClass(const TSubclassOf<UObject> InClass) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
 	FORCEINLINE FFlecsEntityHandle GetCollectionScope() const
@@ -31,27 +67,52 @@ public:
 		return CollectionScopeEntity;
 	}
 
+	template <Unreal::Flecs::Collections::TCollectionBuilderFunc FuncType>
+	FFlecsEntityHandle RegisterCollectionBuilder(FuncType&& InBuildFunc)
+	{
+		FFlecsCollectionDefinition Definition;
+
+		FFlecsCollectionBuilder Builder = FFlecsCollectionBuilder::Create(Definition);
+		InBuildFunc(Builder);
+
+		return RegisterCollectionDefinition(Builder.IdName, Definition);
+	}
+
+	template <Unreal::Flecs::Collections::TCollectionBuilderFunc FuncType>
+	FFlecsEntityHandle RegisterCollectionClass(const TSolidNotNull<UClass*> InClass, FuncType&& InBuildFunc)
+	{
+		FFlecsCollectionDefinition Definition;
+		
+		FFlecsCollectionBuilder Builder = FFlecsCollectionBuilder::Create(Definition);
+		InBuildFunc(Builder);
+		
+		return RegisterCollectionClass(InClass, Builder);
+	}
+
 private:
-	/** Get (or build) the compiled prefab for a given collection asset */
-	FFlecsEntityHandle GetOrBuildPrefab(const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset);
+	// Ensure a shell entity exists for the collection (without any components, just the id)
+	NO_DISCARD FFlecsEntityHandle EnsurePrefabShell(const FFlecsCollectionId& Id);
+
+	// Create/Find the collection entity referenced in the @Reference
+	NO_DISCARD FFlecsEntityHandle ResolveCollectionReference(const FFlecsCollectionReference& Reference);
+
+	// Make sure any Collection References Child Entities may have of this collection are cleaned up/created (is called recursively)
+	void ExpandChildCollectionReferences(const FFlecsEntityHandle& InCollectionEntity);
+
+	NO_DISCARD FFlecsEntityHandle CreatePrefabEntity(const FString& Name, const FFlecsEntityRecord& Record) const;
+	NO_DISCARD FFlecsEntityHandle CreatePrefabEntity(const TSolidNotNull<UClass*> InClass,
+		const FFlecsEntityRecord& Record) const;
+
+	UPROPERTY()
+	TMap<FFlecsCollectionId, FFlecsEntityHandle> RegisteredCollections;
+
+	// Recursion guard
+	TSet<FFlecsCollectionId> InProgressCollections;
 	
 	FDelegateHandle AssetAddedHandle;
 	FDelegateHandle AssetRemovedHandle;
 
 	UPROPERTY()
 	FFlecsEntityHandle CollectionScopeEntity;
-	
-	TMap<TObjectKey<UFlecsCollectionDataAsset>, FFlecsEntityHandle> AssetToPrefab;
-	TMap<FPrimaryAssetId, FFlecsEntityHandle> IdToPrefab;
-
-	FFlecsEntityHandle BuildPrefabFromRecord(const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset,
-		OUT TSet<const UFlecsCollectionDataAsset*>& BuildStack);
-
-	void ResolveRootCollections(const FFlecsEntityHandle& RootPrefab,
-		const TSolidNotNull<const UFlecsCollectionDataAsset*> Asset,
-		OUT TSet<const UFlecsCollectionDataAsset*>& BuildStack);
-
-	void ResolveChildCollections(const FFlecsEntityHandle& NodePrefab,
-		OUT TSet<const UFlecsCollectionDataAsset*>& BuildStack);
 	
 }; // class UFlecsCollectionWorldSubsystem

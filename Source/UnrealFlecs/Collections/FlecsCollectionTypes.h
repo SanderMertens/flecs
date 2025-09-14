@@ -18,7 +18,6 @@ enum class EFlecsCollectionReferenceMode : uint8
 	Asset = 0,
 	Id = 1,
 	UClass = 2,
-	UScriptStruct = 3,
 	
 }; // enum class EFlecsCollectionReferenceMode
 
@@ -28,6 +27,8 @@ struct UNREALFLECS_API FFlecsCollectionReference
 	GENERATED_BODY()
 
 public:
+	FORCEINLINE FFlecsCollectionReference() = default;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
 	EFlecsCollectionReferenceMode Mode = EFlecsCollectionReferenceMode::Asset;
 
@@ -40,8 +41,8 @@ public:
 	TSubclassOf<UObject> Class;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs",
-		meta = (EditCondition = "Mode == EFlecsCollectionReferenceMode::UScriptStruct", EditConditionHides))
-	TObjectPtr<UScriptStruct> ScriptStruct;
+		meta = (EditCondition = "Mode == EFlecsCollectionReferenceMode::Id", EditConditionHides))
+	FFlecsCollectionId Id;
 	
 }; // struct FFlecsCollectionReference
 
@@ -52,8 +53,10 @@ struct UNREALFLECS_API FFlecsCollectionReferenceComponent
 	GENERATED_BODY()
 
 public:
+	FORCEINLINE FFlecsCollectionReferenceComponent() = default;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
-	FFlecsCollectionReference Collection;
+	TArray<FFlecsCollectionReference> Collections;
 	
 }; // struct FFlecsCollectionReferenceComponent
 
@@ -61,6 +64,7 @@ REGISTER_FLECS_COMPONENT(FFlecsCollectionReferenceComponent,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
 	{
 		InComponentHandle
+			.Add(flecs::Sparse)
 			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
 	});
 

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FlecsCollectionDefinition.h"
 
 #include "Entities/FlecsEntityRecord.h"
 #include "FlecsCollectionTypes.h"
@@ -21,7 +22,7 @@ struct UNREALFLECS_API FFlecsPairBuilder
 		return *this;
 	}
 
-	template <Solid::TStaticStructConcept T>
+	template <Solid::TScriptStructConcept T>
 	FORCEINLINE FFlecsPairBuilder& First()
 	{
 		Pair.First.PairNodeType = EFlecsPairNodeType::ScriptStruct;
@@ -30,7 +31,7 @@ struct UNREALFLECS_API FFlecsPairBuilder
 		return *this;
 	}
 	
-	template <Solid::TStaticStructConcept T>
+	template <Solid::TScriptStructConcept T>
 	FORCEINLINE FFlecsPairBuilder& First(const T& ScriptStructValue)
 	{
 		Pair.First.PairNodeType = EFlecsPairNodeType::ScriptStruct;
@@ -55,7 +56,7 @@ struct UNREALFLECS_API FFlecsPairBuilder
 		return *this;
 	}
 	
-	template <Solid::TStaticStructConcept T>
+	template <Solid::TScriptStructConcept T>
 	FORCEINLINE FFlecsPairBuilder& Second(const T& ScriptStructValue)
 	{
 		Pair.Second.PairNodeType = EFlecsPairNodeType::ScriptStruct;
@@ -85,9 +86,11 @@ USTRUCT()
 struct UNREALFLECS_API FFlecsSubEntityBuilder
 {
 	GENERATED_BODY()
+	
 public:
-	FFlecsCollectionBuilder* ParentBuilder = nullptr;
-	FFlecsRecordSubEntity SubEntity;
+	FORCEINLINE FFlecsSubEntityBuilder()
+	{
+	}
 
 	FORCEINLINE explicit FFlecsSubEntityBuilder(FFlecsCollectionBuilder& InParentBuilder)
 		: ParentBuilder(&InParentBuilder)
@@ -100,7 +103,7 @@ public:
 		return *this;
 	}
 
-	template <Solid::TStaticStructConcept T>
+	template <Solid::TScriptStructConcept T>
 	FORCEINLINE FFlecsSubEntityBuilder& Add()
 	{
 		FFlecsComponentTypeInfo NewComponent;
@@ -113,7 +116,7 @@ public:
 		return *this;
 	}
 
-	template <Solid::TStaticStructConcept T>
+	template <Solid::TScriptStructConcept T>
 	FORCEINLINE FFlecsSubEntityBuilder& Add(const T& InComponent)
 	{
 		FFlecsComponentTypeInfo NewComponent;
@@ -174,34 +177,22 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsSubEntityBuilder& ReferenceCollection(const TSolidNotNull<UFlecsCollectionDataAsset*> InAsset, bool bMarkAsSlot)
+	/*FORCEINLINE FFlecsSubEntityBuilder& ReferenceCollection(
+		const TSolidNotNull<UFlecsCollectionDataAsset*> InAsset, bool bMarkAsSlot)
 	{
-		FFlecsCollectionReferenceComponent Ref;
-		Ref.Collection.Mode = EFlecsCollectionReferenceMode::Asset;
-		Ref.Collection.Asset = InAsset;
+		FFlecsCollectionReference Ref;
+		Ref.Mode = EFlecsCollectionReferenceMode::Asset;
+		Ref.Asset = InAsset;
 		
-		// Add ref component
-		{
-			FFlecsComponentTypeInfo Info;
-			
-			Info.NodeType = EFlecsComponentNodeType::ScriptStruct;
-			Info.ScriptStruct = FInstancedStruct::Make<FFlecsCollectionReferenceComponent>(Ref);
-			
-			SubEntity.Components.Add(MoveTemp(Info));
-		}
+		SubEntity.Collections.Add(Ref);
 
 		if (bMarkAsSlot)
 		{
-			FFlecsComponentTypeInfo Info;
-			
-			Info.NodeType = EFlecsComponentNodeType::ScriptStruct;
-			Info.ScriptStruct = FInstancedStruct::Make<FFlecsCollectionSlotTag>(FFlecsCollectionSlotTag{});
-			
-			SubEntity.Components.Add(MoveTemp(Info));
+			MarkSlot();
 		}
 		
 		return *this;
-	}
+	}*/
 
 	FORCEINLINE FFlecsSubEntityBuilder& MarkSlot()
 	{
@@ -216,6 +207,9 @@ public:
 	}
 
 	FFlecsCollectionBuilder& End() const;
+
+	FFlecsCollectionBuilder* ParentBuilder = nullptr;
+	FFlecsRecordSubEntity SubEntity;
 	
 }; // struct FFlecsSubEntityBuilder
 
@@ -223,50 +217,66 @@ USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsCollectionBuilder
 {
 	GENERATED_BODY()
-public:
-	FName IdName;
-	
-	FFlecsEntityRecord Record;
-	TArray<FFlecsCollectionReference> Collections;
 
-	NO_DISCARD static FORCEINLINE FFlecsCollectionBuilder Create()
+	NO_DISCARD static FORCEINLINE FFlecsCollectionBuilder Create(FFlecsCollectionDefinition& InDefinition)
 	{
-		return FFlecsCollectionBuilder();
+		return FFlecsCollectionBuilder(InDefinition);
+	}
+	
+public:
+	FORCEINLINE FFlecsCollectionBuilder()
+		: CollectionDefinition(nullptr)
+	{
 	}
 
-	template <Solid::TStaticStructConcept T>
+	FORCEINLINE explicit FFlecsCollectionBuilder(FFlecsCollectionDefinition& InDefinition)
+		: CollectionDefinition(&InDefinition)
+	{
+	}
+
+	template <Solid::TScriptStructConcept T>
 	FORCEINLINE FFlecsCollectionBuilder& Add()
 	{
-		Record.AddComponent<T>();
+		solid_check(CollectionDefinition);
+		
+		GetCollectionDefinition().Record.AddComponent<T>();
 		
 		return *this;
 	}
 	
-	template <Solid::TStaticStructConcept T>
+	template <Solid::TScriptStructConcept T>
 	FORCEINLINE FFlecsCollectionBuilder& Add(const T& InComponent)
 	{
-		Record.AddComponent<T>(InComponent);
+		solid_check(CollectionDefinition);
+		
+		GetCollectionDefinition().Record.AddComponent<T>(InComponent);
 		
 		return *this;
 	}
 
 	FORCEINLINE FFlecsCollectionBuilder& Add(const FFlecsId InId)
 	{
-		Record.AddComponent(InId);
+		solid_check(CollectionDefinition);
+		
+		GetCollectionDefinition().Record.AddComponent(InId);
 		
 		return *this;
 	}
 
 	FORCEINLINE FFlecsCollectionBuilder& Add(const FGameplayTag& InGameplayTag)
 	{
-		Record.AddComponent(InGameplayTag);
+		solid_check(CollectionDefinition);
+		
+		GetCollectionDefinition().Record.AddComponent(InGameplayTag);
 		
 		return *this;
 	}
 
 	FORCEINLINE FFlecsCollectionBuilder& Add(const FFlecsRecordPair& InPair)
 	{
-		Record.AddComponent(InPair);
+		solid_check(CollectionDefinition);
+		
+		GetCollectionDefinition().Record.AddComponent(InPair);
 		
 		return *this;
 	}
@@ -282,7 +292,7 @@ public:
 		Ref.Mode = EFlecsCollectionReferenceMode::Asset;
 		Ref.Asset = InAsset;
 		
-		Collections.Add(Ref);
+		GetCollectionDefinition().Collections.Add(Ref);
 		
 		return *this;
 	}
@@ -291,8 +301,9 @@ public:
 	{
 		FFlecsCollectionReference Ref;
 		Ref.Mode = EFlecsCollectionReferenceMode::Id;
+		Ref.Id = InId;
 		
-		Collections.Add(Ref);
+		GetCollectionDefinition().Collections.Add(Ref);
 		
 		return *this;
 	}
@@ -304,7 +315,7 @@ public:
 		Ref.Mode = EFlecsCollectionReferenceMode::UClass;
 		Ref.Class = T::StaticClass();
 
-		Collections.Add(Ref);
+		GetCollectionDefinition().Collections.Add(Ref);
 
 		return *this;
 	}
@@ -315,5 +326,18 @@ public:
 		
 		return *this;
 	}
+
+	NO_DISCARD FORCEINLINE FFlecsCollectionDefinition& GetCollectionDefinition() const
+	{
+		solid_check(CollectionDefinition);
+		UE_ASSUME(CollectionDefinition);
+		
+		return *CollectionDefinition;
+	}
+
+	UPROPERTY()
+	FName IdName;
+	
+	FFlecsCollectionDefinition* CollectionDefinition;
 	
 }; // struct FFlecsCollectionBuilder
