@@ -27,7 +27,7 @@ void test_singlethreaded_no_conflicts(void) {
     ecs_set(world, e, Position, {10, 20});
     
     ecs_table_t *table = ecs_get_table(world, e);
-    int16_t pos_column = ecs_table_get_column_index(world, table, ecs_id(Position));
+    int32_t pos_column = ecs_table_get_column_index(world, table, ecs_id(Position));
     ecs_component_record_t *cr = flecs_components_get(world, ecs_id(Position));
     
     bool result;
@@ -83,7 +83,7 @@ void test_singlethreaded_with_conflicts(void) {
     ecs_set(world, e, Position, {10, 20});
     
     ecs_table_t *table = ecs_get_table(world, e);
-    int16_t pos_column = ecs_table_get_column_index(world, table, ecs_id(Position));
+    int32_t pos_column = ecs_table_get_column_index(world, table, ecs_id(Position));
     ecs_component_record_t *cr = flecs_components_get(world, ecs_id(Position));
     
     bool result;
@@ -142,7 +142,7 @@ void test_multithreaded_no_conflicts(void) {
     ecs_set(world, e, Position, {10, 20});
     
     ecs_table_t *table = ecs_get_table(world, e);
-    int16_t pos_column = ecs_table_get_column_index(world, table, ecs_id(Position));
+    int32_t pos_column = ecs_table_get_column_index(world, table, ecs_id(Position));
     ecs_component_record_t *cr = flecs_components_get(world, ecs_id(Position));
     
     bool result;
@@ -187,7 +187,7 @@ void test_multithreaded_with_conflicts(void) {
     ecs_set(world, e, Position, {10, 20});
     
     ecs_table_t *table = ecs_get_table(world, e);
-    int16_t pos_column = ecs_table_get_column_index(world, table, ecs_id(Position));
+    int32_t pos_column = ecs_table_get_column_index(world, table, ecs_id(Position));
     ecs_component_record_t *cr = flecs_components_get(world, ecs_id(Position));
     
     bool result;
@@ -229,7 +229,7 @@ void test_resizing(void) {
     ecs_set(world, e, Position, {10, 20});
     
     ecs_table_t *table = ecs_get_table(world, e);
-    int16_t pos_column = ecs_table_get_column_index(world, table, ecs_id(Position));
+    int32_t pos_column = ecs_table_get_column_index(world, table, ecs_id(Position));
     
     bool result;
     
@@ -267,6 +267,8 @@ void test_resizing(void) {
 }
 
 int main(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
     test_singlethreaded_no_conflicts();
     test_singlethreaded_with_conflicts();
     test_multithreaded_no_conflicts();
