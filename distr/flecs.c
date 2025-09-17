@@ -3965,9 +3965,20 @@ static
 bool flecs_set_id_flag(
     ecs_world_t *world,
     ecs_component_record_t *cr, 
-    ecs_flags32_t flag)
+    ecs_flags32_t flag,
+    ecs_entity_t trait)
 {
+    (void)trait;
+
     if (!(cr->flags & flag)) {
+        if (!(world->flags & EcsWorldInit)) {
+            ecs_check(!cr->keep_alive, ECS_INVALID_OPERATION, 
+                "cannot set '%s' trait for component '%s' because it is already"
+                    " queried for (apply traits before creating queries)",
+                        flecs_errstr(ecs_get_path(world, trait)),
+                        flecs_errstr_1(ecs_id_str(world, cr->id)));
+        }
+
         cr->flags |= flag;
         if (flag == EcsIdIsSparse) {
             flecs_component_init_sparse(world, cr);
@@ -3990,6 +4001,7 @@ bool flecs_set_id_flag(
         return true;
     }
 
+error:
     return false;
 }
 
@@ -4013,7 +4025,7 @@ bool flecs_unset_id_flag(
 static
 void flecs_register_id_flag_for_relation(
     ecs_iter_t *it,
-    ecs_entity_t prop,
+    ecs_entity_t trait,
     ecs_flags32_t flag,
     ecs_flags32_t not_flag,
     ecs_flags32_t entity_flag)
@@ -4032,12 +4044,12 @@ void flecs_register_id_flag_for_relation(
                 !ecs_has_id(world, e, EcsTarget)) 
             {
                 cr = flecs_components_ensure(world, e);
-                changed |= flecs_set_id_flag(world, cr, flag);
+                changed |= flecs_set_id_flag(world, cr, flag, trait);
             }
 
             cr = flecs_components_ensure(world, ecs_pair(e, EcsWildcard));
             do {
-                changed |= flecs_set_id_flag(world, cr, flag);
+                changed |= flecs_set_id_flag(world, cr, flag, trait);
             } while ((cr = flecs_component_first_next(cr)));
             if (entity_flag) flecs_add_flag(world, e, entity_flag);
         } else if (event == EcsOnRemove) {
@@ -4052,7 +4064,7 @@ void flecs_register_id_flag_for_relation(
         }
 
         if (changed) {
-            flecs_assert_relation_unused(world, e, prop);
+            flecs_assert_relation_unused(world, e, trait);
         }
     }
 }
@@ -4070,9 +4082,18 @@ void flecs_register_final(ecs_iter_t *it) {
                 "cannot change trait 'Final' for '%s': already inherited from",
                     e_str);
             ecs_os_free(e_str);
+        }
+
+        ecs_component_record_t *cr = flecs_components_get(world, e);
+        if (cr) {
+            ecs_check(!cr->keep_alive, ECS_INVALID_OPERATION, "cannot change "
+                "trait 'Final' for '%s': already queried for (apply traits "
+                "before creating queries)", 
+                    flecs_errstr(ecs_get_path(world, e)));
+        }
+
         error:
             continue;
-        }
     }
 }
 
@@ -37062,7 +37083,7 @@ int flecs_query_finalize_terms(
         }
 
         bool is_sparse = false;
-        bool keep_alive = true;
+        bool keep_alive = term->src.id != EcsIsEntity;
 
         ecs_component_record_t *cr = flecs_components_get(world, term->id);
         if (!cr) {
@@ -38079,6 +38100,16 @@ ecs_component_record_t* flecs_component_new(
                         "cannot add '(IsA, %s)': '%s' has the Final trait",
                             flecs_errstr(ecs_get_path(world, tgt)),
                             flecs_errstr_1(ecs_get_path(world, tgt)));
+                }
+
+                ecs_component_record_t *cr_tgt = flecs_components_get(world, tgt);
+                if (cr_tgt && cr_tgt->keep_alive) {
+                    if (!ecs_has_id(world, tgt, EcsInheritable)) {
+                        ecs_throw(ECS_INVALID_OPERATION, 
+                            "cannot add '(IsA, %s)': '%s' is already queried for",
+                                    flecs_errstr(ecs_get_path(world, tgt)),
+                                    flecs_errstr_1(ecs_get_path(world, tgt)));
+                    }
                 }
             }
         }
@@ -81939,7 +81970,10 @@ void flecs_meta_enum_init(
         .dtor = ecs_dtor(EcsConstants),
         .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
-    
+
+    ecs_add_pair(world, ecs_id(EcsEnum), EcsWith, ecs_id(EcsConstants));
+    ecs_add_pair(world, ecs_id(EcsBitmask), EcsWith, ecs_id(EcsConstants));
+
     ecs_observer(world, {
         .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsEnum) },
@@ -81967,9 +82001,6 @@ void flecs_meta_enum_init(
         .events = {EcsOnSet},
         .callback = flecs_add_constant
     });
-
-    ecs_add_pair(world, ecs_id(EcsEnum), EcsWith, ecs_id(EcsConstants));
-    ecs_add_pair(world, ecs_id(EcsBitmask), EcsWith, ecs_id(EcsConstants));
 
     ecs_set(world, ecs_id(EcsEnum),    EcsDefaultChildComponent, {EcsConstant});
     ecs_set(world, ecs_id(EcsBitmask), EcsDefaultChildComponent, {EcsConstant});
@@ -83573,6 +83604,9 @@ void flecs_meta_units_init(
         .dtor = ecs_dtor(EcsUnitPrefix)
     });
 
+    ecs_add_id(world, EcsQuantity, EcsExclusive);
+    ecs_add_id(world, EcsQuantity, EcsPairIsTag);
+
     ecs_observer(world, {
         .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsUnit) },
@@ -83590,8 +83624,7 @@ void flecs_meta_units_init(
         .callback = flecs_unit_quantity_monitor
     });
 
-    ecs_add_id(world, EcsQuantity, EcsExclusive);
-    ecs_add_id(world, EcsQuantity, EcsPairIsTag);
+
 }
 
 #endif
