@@ -4077,11 +4077,9 @@ void flecs_register_final(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         if (flecs_components_get(world, ecs_pair(EcsIsA, e)) != NULL) {
-            char *e_str = ecs_get_path(world, e);
             ecs_throw(ECS_INVALID_OPERATION,
                 "cannot change trait 'Final' for '%s': already inherited from",
-                    e_str);
-            ecs_os_free(e_str);
+                    flecs_errstr(ecs_get_path(world, e)));
         }
 
         ecs_component_record_t *cr = flecs_components_get(world, e);
