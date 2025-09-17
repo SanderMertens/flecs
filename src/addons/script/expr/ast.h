@@ -156,6 +156,10 @@ ecs_expr_value_node_t* flecs_expr_bool(
     ecs_parser_t *parser,
     bool value);
 
+ecs_expr_value_node_t *flecs_expr_char(
+    ecs_parser_t *parser,
+    const char *value);
+
 ecs_expr_value_node_t* flecs_expr_int(
     ecs_parser_t *parser,
     int64_t value);

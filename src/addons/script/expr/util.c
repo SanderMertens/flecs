@@ -314,6 +314,7 @@ int flecs_value_binary(
     case EcsTokRange:
     case EcsTokIdentifier:
     case EcsTokString:
+    case EcsTokChar:
     case EcsTokNumber:
     case EcsTokKeywordModule:
     case EcsTokKeywordUsing:

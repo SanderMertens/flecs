@@ -67,6 +67,27 @@ ecs_expr_value_node_t* flecs_expr_bool(
     return result;
 }
 
+ecs_expr_value_node_t* flecs_expr_char(
+    ecs_parser_t *parser,
+    const char *value)
+{
+    ecs_expr_value_node_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_value_node_t, EcsExprValue);
+    if(value[0] == '\\' && value[1] == '\'') {
+        result->storage.char_ = '\'';
+    } else {
+        char ch = 0;
+        const char *ptr = flecs_chrparse(value, &ch);
+        if(!ptr) {
+            return NULL;
+        }
+        result->storage.char_ = ch;
+    }
+    result->ptr = &result->storage.char_;
+    result->node.type = ecs_id(ecs_char_t);
+    return result;
+}
+
 ecs_expr_value_node_t* flecs_expr_int(
     ecs_parser_t *parser,
     int64_t value)
