@@ -379,6 +379,16 @@ ecs_component_record_t* flecs_component_new(
                             flecs_errstr(ecs_get_path(world, tgt)),
                             flecs_errstr_1(ecs_get_path(world, tgt)));
                 }
+
+                ecs_component_record_t *cr_tgt = flecs_components_get(world, tgt);
+                if (cr_tgt && cr_tgt->keep_alive) {
+                    if (!ecs_has_id(world, tgt, EcsInheritable)) {
+                        ecs_throw(ECS_INVALID_OPERATION, 
+                            "cannot add '(IsA, %s)': '%s' is already queried for",
+                                    flecs_errstr(ecs_get_path(world, tgt)),
+                                    flecs_errstr_1(ecs_get_path(world, tgt)));
+                    }
+                }
             }
         }
 #endif

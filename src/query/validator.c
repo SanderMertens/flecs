@@ -1292,7 +1292,7 @@ int flecs_query_finalize_terms(
         }
 
         bool is_sparse = false;
-        bool keep_alive = true;
+        bool keep_alive = term->src.id != EcsIsEntity;
 
         ecs_component_record_t *cr = flecs_components_get(world, term->id);
         if (!cr) {

@@ -622,7 +622,10 @@ void flecs_meta_enum_init(
         .dtor = ecs_dtor(EcsConstants),
         .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
-    
+
+    ecs_add_pair(world, ecs_id(EcsEnum), EcsWith, ecs_id(EcsConstants));
+    ecs_add_pair(world, ecs_id(EcsBitmask), EcsWith, ecs_id(EcsConstants));
+
     ecs_observer(world, {
         .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsEnum) },
@@ -650,9 +653,6 @@ void flecs_meta_enum_init(
         .events = {EcsOnSet},
         .callback = flecs_add_constant
     });
-
-    ecs_add_pair(world, ecs_id(EcsEnum), EcsWith, ecs_id(EcsConstants));
-    ecs_add_pair(world, ecs_id(EcsBitmask), EcsWith, ecs_id(EcsConstants));
 
     ecs_set(world, ecs_id(EcsEnum),    EcsDefaultChildComponent, {EcsConstant});
     ecs_set(world, ecs_id(EcsBitmask), EcsDefaultChildComponent, {EcsConstant});

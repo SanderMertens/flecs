@@ -2273,7 +2273,20 @@
                 "rename_flecs",
                 "reparent_flecs_core",
                 "rename_flecs_core",
-                "user_entity_w_flecs_parent"
+                "user_entity_w_flecs_parent",
+                "add_exclusive_after_query",
+                "add_with_after_query",
+                "add_final_after_query",
+                "add_isa_after_query",
+                "add_isa_after_query_tgt",
+                "add_inheritable_after_query",
+                "add_isa_after_query_after_inheritable",
+                "add_isa_after_query_after_isa",
+                "add_on_instantiate_inherit_after_query",
+                "add_sparse_after_query",
+                "add_dont_fragment_after_query",
+                "add_can_toggle_after_query",
+                "add_traversable_after_query"
             ]
         }, {
             "id": "ExclusiveAccess",

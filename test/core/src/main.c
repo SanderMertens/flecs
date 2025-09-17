@@ -2195,6 +2195,19 @@ void World_rename_flecs(void);
 void World_reparent_flecs_core(void);
 void World_rename_flecs_core(void);
 void World_user_entity_w_flecs_parent(void);
+void World_add_exclusive_after_query(void);
+void World_add_with_after_query(void);
+void World_add_final_after_query(void);
+void World_add_isa_after_query(void);
+void World_add_isa_after_query_tgt(void);
+void World_add_inheritable_after_query(void);
+void World_add_isa_after_query_after_inheritable(void);
+void World_add_isa_after_query_after_isa(void);
+void World_add_on_instantiate_inherit_after_query(void);
+void World_add_sparse_after_query(void);
+void World_add_dont_fragment_after_query(void);
+void World_add_can_toggle_after_query(void);
+void World_add_traversable_after_query(void);
 
 // Testsuite 'ExclusiveAccess'
 void ExclusiveAccess_self(void);
@@ -11210,6 +11223,58 @@ bake_test_case World_testcases[] = {
     {
         "user_entity_w_flecs_parent",
         World_user_entity_w_flecs_parent
+    },
+    {
+        "add_exclusive_after_query",
+        World_add_exclusive_after_query
+    },
+    {
+        "add_with_after_query",
+        World_add_with_after_query
+    },
+    {
+        "add_final_after_query",
+        World_add_final_after_query
+    },
+    {
+        "add_isa_after_query",
+        World_add_isa_after_query
+    },
+    {
+        "add_isa_after_query_tgt",
+        World_add_isa_after_query_tgt
+    },
+    {
+        "add_inheritable_after_query",
+        World_add_inheritable_after_query
+    },
+    {
+        "add_isa_after_query_after_inheritable",
+        World_add_isa_after_query_after_inheritable
+    },
+    {
+        "add_isa_after_query_after_isa",
+        World_add_isa_after_query_after_isa
+    },
+    {
+        "add_on_instantiate_inherit_after_query",
+        World_add_on_instantiate_inherit_after_query
+    },
+    {
+        "add_sparse_after_query",
+        World_add_sparse_after_query
+    },
+    {
+        "add_dont_fragment_after_query",
+        World_add_dont_fragment_after_query
+    },
+    {
+        "add_can_toggle_after_query",
+        World_add_can_toggle_after_query
+    },
+    {
+        "add_traversable_after_query",
+        World_add_traversable_after_query
     }
 };
 
@@ -13351,7 +13416,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        93,
+        106,
         World_testcases
     },
     {
