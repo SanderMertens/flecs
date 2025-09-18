@@ -26,7 +26,7 @@ void componenttraits_Cleanup_traits_01(void) {
         test_assert(true);
 }
 
-void componenttraits_derive_Component_01(void) {
+void componenttraits_Cleanup_traits_02(void) {
     flecs::world world;
     flecs::entity Archer = world.entity();
     world.remove_all(Archer);
@@ -34,7 +34,7 @@ void componenttraits_derive_Component_01(void) {
         test_assert(true);
 }
 
-void componenttraits_derive_Component_02(void) {
+void componenttraits_Cleanup_traits_03(void) {
     flecs::world world;
     flecs::entity Archer = world.entity();
     world.remove_all(Archer);
@@ -135,8 +135,10 @@ void componenttraits_Final_trait_01(void) {
     auto e = ecs.entity()
       .add(flecs::Final);
 
+    if (false) {
     auto i = ecs.entity()
       .is_a(e); // not allowed
+    }
 
         test_assert(true);
 }
@@ -170,8 +172,10 @@ void componenttraits_OneOf_trait_01(void) {
     // This is ok, Apples is a child of Food
     auto a = world.entity().add(Food, Apples);
 
+    if (false) {
     // This is not ok, Fork is not a child of Food
     auto b = world.entity().add(Food, Fork);
+    }
 
         test_assert(true);
 }
@@ -187,8 +191,10 @@ void componenttraits_OneOf_trait_02(void) {
     // This is ok, Apples is a child of Food
     auto a = world.entity().add(Eats, Apples);
 
+    if (false) {
     // This is not ok, Fork is not a child of Food
     auto b = world.entity().add(Eats, Fork);
+    }
 
         test_assert(true);
 }
@@ -210,12 +216,12 @@ void componenttraits_Inherit_01(void) {
     // Register component with trait
     ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Inherit);
 
-    ecs_entity_t base = ecs.entity().set(Mass, { 100 });
-    ecs_entity_t inst = ecs.entity().is_a(base);
+    flecs::entity base = ecs.entity().set(Mass { 100 });
+    flecs::entity inst = ecs.entity().is_a(base);
 
     test_assert(inst.has<Mass>());
     test_assert(!inst.owns<Mass>());
-    test_assert(base.try_get<Mass>() != inst.try_get<Mass>());
+    test_assert(base.try_get<Mass>() == inst.try_get<Mass>());
 }
 
 void componenttraits_DontInherit_01(void) {
@@ -223,8 +229,8 @@ void componenttraits_DontInherit_01(void) {
     // Register component with trait
     ecs.component<Mass>().add(flecs::OnInstantiate, flecs::DontInherit);
 
-    ecs_entity_t base = ecs.entity().set(Mass, { 100 });
-    ecs_entity_t inst = ecs.entity().is_a(base);
+    flecs::entity base = ecs.entity().set(Mass { 100 });
+    flecs::entity inst = ecs.entity().is_a(base);
 
     test_assert(!inst.has<Mass>());
     test_assert(!inst.owns<Mass>());
@@ -269,14 +275,14 @@ void componenttraits_PairIsTag_trait_01(void) {
     const Position& p = e.get<Position>();
 
     // Gets (unintended) value from (Serializable, Position) pair
-    const Position& p = e.get<Serializable, Position>();
+    const Position& p2 = e.get<flecs::pair<Serializable, Position>>();
 
         test_assert(true);
 }
 
-void componenttraits_derive_Component_01(void) {
+void componenttraits_PairIsTag_trait_02(void) {
     flecs::world ecs;
-    struct Serializable { };
+    struct Serializable { }; // Tag, contains no data
     // Ensure that Serializable never contains data
     ecs.component<Serializable>()
       .add(flecs::PairIsTag);
@@ -290,8 +296,10 @@ void componenttraits_derive_Component_01(void) {
     // Gets value from Position component
     const Position& p = e.get<Position>();
 
+    if (false) {
     // This no longer works, the pair has no data
-    const Position& p = e.get<Serializable, Position>();
+    const Position& p2 = e.get<flecs::pair<Serializable, Position>>();
+    }
 
         test_assert(true);
 }
@@ -303,15 +311,17 @@ void componenttraits_Relationship_trait_01(void) {
 
     world.component<Likes>().add(flecs::Relationship);
 
+    if (false) {
     flecs::entity e = world.entity()
       .add<Likes>()          // Panic, 'Likes' is not used as relationship
       .add<Apples, Likes>()  // Panic, 'Likes' is not used as relationship
       .add<Likes, Apples>(); // OK
+    }
 
         test_assert(true);
 }
 
-void componenttraits_derive_Component_01(void) {
+void componenttraits_Relationship_trait_02(void) {
     flecs::world world;
     struct Likes { };
     struct Loves { };
@@ -347,7 +357,7 @@ void componenttraits_Singleton_trait_02(void) {
     auto q = world.query<Position, Velocity, const TimeOfDay>();
 
     // Is the same as
-    auto q = world.query_builder<Position, Velocity, const TimeOfDay>()
+    auto q2 = world.query_builder<Position, Velocity, const TimeOfDay>()
       .term_at(2).src<TimeOfDay>()
       .build();
 
@@ -362,10 +372,10 @@ void componenttraits_Sparse_trait_01(void) {
 }
 
 void componenttraits_Symmetric_trait_01(void) {
-    flecs::world ecs;
+    flecs::world world;
     auto MarriedTo = world.entity().add(flecs::Symmetric);
-    auto Bob = ecs.entity();
-    auto Alice = ecs.entity();
+    auto Bob = world.entity();
+    auto Alice = world.entity();
     Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 
         test_assert(true);
@@ -378,10 +388,12 @@ void componenttraits_Target_trait_01(void) {
 
     world.component<Apples>().add(flecs::Target);
 
+    if (false) {
     flecs::entity e = world.entity()
       .add<Apples>()         // Panic, 'Apples' is not used as target
       .add<Apples, Likes>()  // Panic, 'Apples' is not used as target
       .add<Likes, Apples>(); // OK
+    }
 
         test_assert(true);
 }

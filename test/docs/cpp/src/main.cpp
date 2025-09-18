@@ -14,8 +14,8 @@ void quickstart_Entity_01(void);
 // Testsuite 'componenttraits'
 void componenttraits_CanToggle_trait_01(void);
 void componenttraits_Cleanup_traits_01(void);
-void componenttraits_derive_Component_01(void);
-void componenttraits_derive_Component_02(void);
+void componenttraits_Cleanup_traits_02(void);
+void componenttraits_Cleanup_traits_03(void);
 void componenttraits_OnDelete_Remove_01(void);
 void componenttraits_OnDelete_Delete_01(void);
 void componenttraits_OnDeleteTarget_Delete_01(void);
@@ -32,9 +32,9 @@ void componenttraits_Inherit_01(void);
 void componenttraits_DontInherit_01(void);
 void componenttraits_OrderedChildren_trait_01(void);
 void componenttraits_PairIsTag_trait_01(void);
-void componenttraits_derive_Component_01(void);
+void componenttraits_PairIsTag_trait_02(void);
 void componenttraits_Relationship_trait_01(void);
-void componenttraits_derive_Component_01(void);
+void componenttraits_Relationship_trait_02(void);
 void componenttraits_Singleton_trait_01(void);
 void componenttraits_Singleton_trait_02(void);
 void componenttraits_Sparse_trait_01(void);
@@ -63,12 +63,12 @@ bake_test_case componenttraits_testcases[] = {
         componenttraits_Cleanup_traits_01
     },
     {
-        "derive_Component_01",
-        componenttraits_derive_Component_01
+        "Cleanup_traits_02",
+        componenttraits_Cleanup_traits_02
     },
     {
-        "derive_Component_02",
-        componenttraits_derive_Component_02
+        "Cleanup_traits_03",
+        componenttraits_Cleanup_traits_03
     },
     {
         "OnDelete_Remove_01",
@@ -135,16 +135,16 @@ bake_test_case componenttraits_testcases[] = {
         componenttraits_PairIsTag_trait_01
     },
     {
-        "derive_Component_01",
-        componenttraits_derive_Component_01
+        "PairIsTag_trait_02",
+        componenttraits_PairIsTag_trait_02
     },
     {
         "Relationship_trait_01",
         componenttraits_Relationship_trait_01
     },
     {
-        "derive_Component_01",
-        componenttraits_derive_Component_01
+        "Relationship_trait_02",
+        componenttraits_Relationship_trait_02
     },
     {
         "Singleton_trait_01",

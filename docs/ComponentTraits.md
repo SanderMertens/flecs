@@ -712,8 +712,10 @@ HIDE: flecs::world ecs;
 auto e = ecs.entity()
   .add(flecs::Final);
 
+HIDE: if (false) {
 auto i = ecs.entity()
   .is_a(e); // not allowed
+HIDE: }
 ```
 
 </li>
@@ -848,8 +850,10 @@ ecs_entity_t Fork = ecs_new(world);
 // This is ok, Apples is a child of Food
 ecs_entity_t a = ecs_new_w_pair(world, Food, Apples);
 
+HIDE: if (false) {
 // This is not ok, Fork is not a child of Food
 ecs_entity_t b = ecs_new_w_pair(world, Food, Fork);
+HIDE: }
 ```
 
 </li>
@@ -865,8 +869,10 @@ auto Fork = world.entity();
 // This is ok, Apples is a child of Food
 auto a = world.entity().add(Food, Apples);
 
+HIDE: if (false) {
 // This is not ok, Fork is not a child of Food
 auto b = world.entity().add(Food, Fork);
+HIDE: }
 ```
 
 </li>
@@ -924,8 +930,10 @@ ecs_entity_t Fork = ecs_new(world);
 // This is ok, Apples is a child of Food
 ecs_entity_t a = ecs_new_w_pair(world, Eats, Apples);
 
+HIDE: if (false) {
 // This is not ok, Fork is not a child of Food
 ecs_entity_t b = ecs_new_w_pair(world, Eats, Fork);
+HIDE: }
 ```
 
 </li>
@@ -942,8 +950,10 @@ auto Fork = world.entity();
 // This is ok, Apples is a child of Food
 auto a = world.entity().add(Eats, Apples);
 
+HIDE: if (false) {
 // This is not ok, Fork is not a child of Food
 auto b = world.entity().add(Eats, Fork);
+HIDE: }
 ```
 
 </li>
@@ -1104,12 +1114,12 @@ HIDE: flecs::world ecs;
 // Register component with trait
 ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Inherit);
 
-ecs_entity_t base = ecs.entity().set(Mass { 100 });
-ecs_entity_t inst = ecs.entity().is_a(base);
+flecs::entity base = ecs.entity().set(Mass { 100 });
+flecs::entity inst = ecs.entity().is_a(base);
 
 assert(inst.has<Mass>());
 assert(!inst.owns<Mass>());
-assert(base.try_get<Mass>() != inst.try_get<Mass>());
+assert(base.try_get<Mass>() == inst.try_get<Mass>());
 ```
 
 </li>
@@ -1184,8 +1194,8 @@ HIDE: flecs::world ecs;
 // Register component with trait
 ecs.component<Mass>().add(flecs::OnInstantiate, flecs::DontInherit);
 
-ecs_entity_t base = ecs.entity().set(Mass { 100 });
-ecs_entity_t inst = ecs.entity().is_a(base);
+flecs::entity base = ecs.entity().set(Mass { 100 });
+flecs::entity inst = ecs.entity().is_a(base);
 
 assert(!inst.has<Mass>());
 assert(!inst.owns<Mass>());
@@ -1383,7 +1393,7 @@ auto e = ecs.entity()
 const Position& p = e.get<Position>();
 
 // Gets (unintended) value from (Serializable, Position) pair
-const Position& p = e.get<Serializable, Position>();
+const Position& p2 = e.get<flecs::pair<Serializable, Position>>();
 ```
 
 </li>
@@ -1467,7 +1477,7 @@ const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
 
 ```cpp test
 HIDE: flecs::world ecs;
-HIDE: struct Serializable { };
+HIDE: struct Serializable { }; // Tag, contains no data
 // Ensure that Serializable never contains data
 ecs.component<Serializable>()
   .add(flecs::PairIsTag);
@@ -1481,8 +1491,10 @@ auto e = ecs.entity()
 // Gets value from Position component
 const Position& p = e.get<Position>();
 
+HIDE: if (false) {
 // This no longer works, the pair has no data
-const Position& p = e.get<Serializable, Position>();
+const Position& p2 = e.get<flecs::pair<Serializable, Position>>();
+HIDE: }
 ```
 
 </li>
@@ -1533,8 +1545,10 @@ ECS_TAG(world, Apples);
 ecs_add_id(world, Likes, EcsRelationship);
 
 ecs_entity_t e = ecs_new_id(world);
+HIDE: if (false) {
 ecs_add(world, Likes);              // Panic, 'Likes' is not used as relationship
 ecs_add_pair(world, Apples, Likes); // Panic, 'Likes' is not used as relationship
+HIDE: }
 ecs_add_pair(world, Likes, Apples); // OK
 ```
 
@@ -1548,10 +1562,12 @@ struct Apples { };
 
 world.component<Likes>().add(flecs::Relationship);
 
+HIDE: if (false) {
 flecs::entity e = world.entity()
   .add<Likes>()          // Panic, 'Likes' is not used as relationship
   .add<Apples, Likes>()  // Panic, 'Likes' is not used as relationship
   .add<Likes, Apples>(); // OK
+HIDE: }
 ```
 
 </li>
@@ -1803,7 +1819,7 @@ world.component<TimeOfDay>().add(flecs::Singleton);
 auto q = world.query<Position, Velocity, const TimeOfDay>();
 
 // Is the same as
-auto q = world.query_builder<Position, Velocity, const TimeOfDay>()
+auto q2 = world.query_builder<Position, Velocity, const TimeOfDay>()
   .term_at(2).src<TimeOfDay>()
   .build();
 ```
@@ -1907,10 +1923,10 @@ ecs_add_pair(world, Bob, MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Ali
 <li><b class="tab-title">C++</b>
 
 ```cpp test
-HIDE: flecs::world ecs;
+HIDE: flecs::world world;
 auto MarriedTo = world.entity().add(flecs::Symmetric);
-auto Bob = ecs.entity();
-auto Alice = ecs.entity();
+auto Bob = world.entity();
+auto Alice = world.entity();
 Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 ```
 
@@ -1967,10 +1983,12 @@ struct Apples { };
 
 world.component<Apples>().add(flecs::Target);
 
+HIDE: if (false) {
 flecs::entity e = world.entity()
   .add<Apples>()         // Panic, 'Apples' is not used as target
   .add<Apples, Likes>()  // Panic, 'Apples' is not used as target
   .add<Likes, Apples>(); // OK
+HIDE: }
 ```
 
 </li>
