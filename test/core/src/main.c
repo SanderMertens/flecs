@@ -1796,6 +1796,9 @@ void Observer_1_term_on_set_yield_existing_is_set(void);
 void Observer_2_terms_on_add_yield_existing_is_set(void);
 void Observer_2_terms_on_add_yield_existing_is_set_component(void);
 void Observer_2_terms_on_set_yield_existing_is_set(void);
+void Observer_2_singleton_terms_on_add(void);
+void Observer_2_singleton_terms_on_remove(void);
+void Observer_2_singleton_terms_on_set(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -9676,6 +9679,18 @@ bake_test_case Observer_testcases[] = {
         Observer_2_terms_on_set_yield_existing_is_set
     },
     {
+        "2_singleton_terms_on_add",
+        Observer_2_singleton_terms_on_add
+    },
+    {
+        "2_singleton_terms_on_remove",
+        Observer_2_singleton_terms_on_remove
+    },
+    {
+        "2_singleton_terms_on_set",
+        Observer_2_singleton_terms_on_set
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -13367,7 +13382,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        266,
+        269,
         Observer_testcases
     },
     {

@@ -1,5 +1,8 @@
 #include <core.h>
 
+static ECS_COMPONENT_DECLARE(Position);
+static ECS_COMPONENT_DECLARE(Velocity);
+
 static
 void Observer(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
@@ -8866,8 +8869,6 @@ void Observer_notify_after_defer_batched_2_entities_in_table_w_tgt(void) {
     ecs_fini(world);
 }
 
-ECS_COMPONENT_DECLARE(Velocity);
-
 static
 void AddVelocity(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
@@ -10887,6 +10888,123 @@ void Observer_2_terms_on_set_yield_existing_is_set(void) {
     });
 
     test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+static int is_singleton_observer_invoked = 0;
+
+static void SingletonObserver(ecs_iter_t *it) {
+    test_uint(ecs_field_src(it, 0), ecs_id(Position));
+    test_uint(ecs_field_src(it, 1), ecs_id(Velocity));
+    test_int(it->count, 0);
+
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
+    test_assert(p != NULL);
+    test_assert(v != NULL);
+
+    is_singleton_observer_invoked ++;
+}
+
+static void SingletonObserver_w_value(ecs_iter_t *it) {
+    test_uint(ecs_field_src(it, 0), ecs_id(Position));
+    test_uint(ecs_field_src(it, 1), ecs_id(Velocity));
+    test_int(it->count, 0);
+
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
+    test_assert(p != NULL);
+    test_assert(v != NULL);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+    is_singleton_observer_invoked ++;
+}
+
+void Observer_2_singleton_terms_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnAdd },
+        .callback = SingletonObserver
+    });
+
+    test_int(is_singleton_observer_invoked, 0);
+
+    ecs_singleton_set(world, Position, {10, 20});
+
+    test_int(is_singleton_observer_invoked, 0);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+    test_int(is_singleton_observer_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_2_singleton_terms_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    ecs_singleton_set(world, Position, {10, 20});
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnRemove },
+        .callback = SingletonObserver_w_value
+    });
+
+    ecs_singleton_remove(world, Position);
+
+    test_int(is_singleton_observer_invoked, 1);
+
+    ecs_singleton_remove(world, Velocity);
+
+    test_int(is_singleton_observer_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_2_singleton_terms_on_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = SingletonObserver_w_value
+    });
+
+    test_int(is_singleton_observer_invoked, 0);
+
+    ecs_singleton_set(world, Position, {10, 20});
+
+    test_int(is_singleton_observer_invoked, 0);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+    test_int(is_singleton_observer_invoked, 1);
 
     ecs_fini(world);
 }
