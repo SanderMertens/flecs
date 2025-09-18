@@ -13,3 +13,4 @@ bazel-*
 out
 docs/html
 MODULE.bazel.lock
+/docs/scripts/__pycache__
