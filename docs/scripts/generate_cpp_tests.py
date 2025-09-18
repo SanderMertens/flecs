@@ -32,55 +32,33 @@ class CppTestGenerator(TestSnippetExtractor):
         """Generate a C++ test file content from snippets from the same markdown file."""
         # Get the file name without extension for the test file
         file_stem = Path(file_path).stem.lower()
-        
-        # Generate function declarations and implementations
-        function_declarations = []
+    # Generate only the prefixed function implementations
         function_implementations = []
-        test_names = []
-        
         for snippet in snippets:
-            if snippet.language == 'cpp':
-                test_names.append(snippet.test_name)
-                function_declarations.append(f"void {snippet.test_name}();")
-                
-                # Generate function implementation containing only the snippet
-                func_impl = f"""void {snippet.test_name}() {{
-{self._indent_code(snippet.get_clean_code(), "    ")}
+            if snippet.language != 'cpp':
+                continue
+
+            symbol = f"{file_stem}_{snippet.test_name}"
+            snippet_code = snippet.get_clean_code()
+            # Replace plain asserts with bake test assertions
+            snippet_code = snippet_code.replace('assert(', 'test_assert(')
+
+            # If the snippet doesn't contain any bake test macros (test_*),
+            # append a dummy assertion so bake doesn't mark the testcase EMPTY.
+            if not any(tok in snippet_code for tok in ("test_", "test_assert", "test_int", "test_str", "test_bool")):
+                snippet_code = snippet_code.rstrip() + "\n\n    test_assert(true);"
+
+            func_impl = f"""void {symbol}(void) {{
+{self._indent_code(snippet_code, "    ")}
 }}"""
-                function_implementations.append(func_impl)
-        
-        if not test_names:
+            function_implementations.append(func_impl)
+
+        if not function_implementations:
             return None
-        
-        # Generate complete file content
-        test_content = f"""/* 
- * Tests generated from: {file_path}
- * Contains {len(test_names)} test(s) from documentation code snippets
- */
 
-#include <flecs.h>
-#include <iostream>
-#include <cassert>
-
-// (No hardcoded component or world setup is injected)
-
-// Test function declarations
-{'\n'.join(function_declarations)}
-
-// Test function implementations
-
-{'\n\n'.join(function_implementations)}
-
-// Test runner for this file
-void run_{file_stem}_tests() {{
-    std::cout << "Running {file_stem} tests..." << std::endl;
-    
-{'\n'.join(f"    {name}();" for name in test_names)}
-    
-    std::cout << "All {file_stem} tests passed!" << std::endl;
-}}
-"""
-        return test_content
+        body = "\n\n".join(function_implementations) + "\n"
+        header = "#include <cpp.h>\n\n"
+        return header + body
     
     def _indent_code(self, code: str, indent: str) -> str:
         """Indent code block."""
@@ -126,8 +104,11 @@ int main(int argc, char *argv[]) {{
 """
         return main_content
     
-    def update_project_json(self, all_test_names: List[str]):
-        """Update project.json with test cases."""
+    def update_project_json(self, suites_map):
+        """Update project.json with test suites mapping.
+
+        `suites_map` is a dict mapping suite_id -> list of test case names.
+        """
         project_file = Path(self.test_root) / "project.json"
         
         # Read existing project.json
@@ -154,85 +135,64 @@ int main(int argc, char *argv[]) {{
                 }
             }
         
-        # Add test section if it doesn't exist
-        if "test" not in project_data:
-            project_data["test"] = {"testsuites": []}
-        
-        # Find or create documentation test suite
-        doc_suite = None
-        for suite in project_data["test"]["testsuites"]:
-            if suite["id"] == "Documentation":
-                doc_suite = suite
-                break
-        
-        if doc_suite is None:
-            doc_suite = {
-                "id": "Documentation", 
-                "testcases": []
-            }
-            project_data["test"]["testsuites"].append(doc_suite)
-        
-        # Update test cases (replace existing ones)
-        doc_suite["testcases"] = all_test_names
+        # Build testsuites list from suites_map
+        testsuites = []
+        for suite_id, testcases in suites_map.items():
+            testsuites.append({
+                "id": suite_id,
+                "testcases": testcases
+            })
+
+        project_data["test"] = {"testsuites": testsuites}
         
         # Write updated project.json
         with open(project_file, 'w') as f:
             json.dump(project_data, f, indent=4)
-        
-        print(f"Updated {project_file} with {len(all_test_names)} test cases")
     
     def generate_all_tests(self):
         """Generate all C++ test files from documentation snippets."""
         # Extract C++ snippets grouped by file
         snippets_by_file = self.extract_all_snippets(['cpp'])
-        
+
         if not snippets_by_file:
             print("No C++ test snippets found in documentation")
             return
-        
+
         # Ensure directories exist
         self.ensure_directories()
-        
+
         # Generate test files (one per markdown file)
         test_file_runners = []
-        all_test_names = []
-        
+        suites_map = {}
+
         for md_file_path, snippets in snippets_by_file.items():
             cpp_snippets = [s for s in snippets if s.language == 'cpp']
-            
+
             if not cpp_snippets:
                 continue
-            
+
             # Generate test file content
             file_stem = Path(md_file_path).stem.lower()
             test_content = self.generate_test_file_content(md_file_path, cpp_snippets)
-            
+
             if test_content:
                 test_file = self.src_dir / f"{file_stem}.cpp"
-                
+
                 with open(test_file, 'w') as f:
                     f.write(test_content)
-                
+
                 print(f"Generated {test_file} with {len(cpp_snippets)} test(s)")
-                
+
                 # Track the runner function and test names
                 test_file_runners.append(f"run_{file_stem}_tests")
-                all_test_names.extend([s.test_name for s in cpp_snippets])
-        
-        # Generate main test runner
+                suites_map[file_stem] = [s.test_name for s in cpp_snippets]
+
+        # Generate main test runner (optional)
         if test_file_runners:
-            main_content = self.generate_main_test_file(test_file_runners)
-            main_file = self.src_dir / "main.cpp"
-            
-            with open(main_file, 'w') as f:
-                f.write(main_content)
-            
-            print(f"Generated {main_file}")
-            
-            # Update project.json
-            self.update_project_json(all_test_names)
-            
-            print(f"\\nGenerated {len(test_file_runners)} C++ test file(s) with {len(all_test_names)} total tests in {self.test_root}")
+            # Do not generate a main runner; bake generates the runnable main. Update project.json instead.
+            self.update_project_json(suites_map)
+
+            print(f"\nGenerated {len(test_file_runners)} C++ test file(s) with {sum(len(v) for v in suites_map.values())} total tests in {self.test_root}")
         else:
             print("No C++ test files generated")
 
@@ -243,12 +203,12 @@ def main():
         docs_root = sys.argv[1]
     else:
         docs_root = "docs"
-    
+
     if len(sys.argv) > 2:
         test_root = sys.argv[2]
     else:
         test_root = "test/docs/cpp"
-    
+
     generator = CppTestGenerator(docs_root, test_root)
     generator.generate_all_tests()
 

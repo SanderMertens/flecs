@@ -26,3 +26,5 @@ struct Rotation {
 };
 
 struct Tag { };
+
+#endif
