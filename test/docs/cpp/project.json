@@ -1,0 +1,27 @@
+{
+    "id": "cpp",
+    "type": "application",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "tests for the docs C++ code samples of flecs",
+        "public": false,
+        "coverage": false,
+        "language": "c++",
+        "use": [
+            "flecs"
+        ]
+    },
+    "lang.cpp": {
+        "cpp-standard": "c++17"
+    },
+    "test": {
+        "testsuites": [
+            {
+                "id": "Documentation",
+                "testcases": [
+                    "CanToggle_trait_01"
+                ]
+            }
+        ]
+    }
+}

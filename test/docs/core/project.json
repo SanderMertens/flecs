@@ -1,0 +1,13 @@
+{
+    "id": "core",
+    "type": "application",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "tests for the docs C code samples of flecs",
+        "public": false,
+        "coverage": false,
+        "use": [
+            "flecs"
+        ]
+    }
+}

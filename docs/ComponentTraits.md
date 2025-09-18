@@ -33,7 +33,8 @@ assert(ecs_is_enabled(world, e, Position));
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 world.component<Position>().add(flecs::CanToggle);
 
 flecs::entity e = world.entity().set(Position{10, 20});
