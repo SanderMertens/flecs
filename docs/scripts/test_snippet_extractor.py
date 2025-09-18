@@ -97,12 +97,32 @@ class TestSnippetExtractor:
         test_counters = {lang: 0 for lang in target_languages}
         
         i = 0
+        def _extract_markdown_heading(line: str) -> Optional[str]:
+            """Return heading text if `line` is a markdown heading, otherwise None.
+
+            Matches headings like `# Title` or `### Subtitle` requiring at least one
+            space after the leading hashes. This intentionally ignores attribute-like
+            lines such as `#[derive(...)]` or `#(derive...)` which should not be
+            treated as section titles.
+            """
+            # Ignore attribute-like lines that start with "#[" or "#("
+            stripped = line.lstrip()
+            if stripped.startswith('#[') or stripped.startswith('#('):
+                return None
+
+            m = re.match(r'^\s{0,3}(#{1,6})\s+(.*\S)\s*$', line)
+            if not m:
+                return None
+
+            return m.group(2).strip()
+
         while i < len(lines):
             line = lines[i]
-            
-            # Track section headings
-            if line.startswith('#'):
-                current_section = line.lstrip('#').strip()
+
+            # Track section headings (only valid markdown headings)
+            heading = _extract_markdown_heading(line)
+            if heading is not None:
+                current_section = heading
                 # Reset test counters for new section
                 test_counters = {lang: 0 for lang in target_languages}
             
