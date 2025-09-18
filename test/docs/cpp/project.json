@@ -12,14 +12,56 @@
         ]
     },
     "lang.cpp": {
-        "cpp-standard": "c++17"
+        "cpp-standard": "c++17",
+        "flags": [
+            "-Wunused-variable",
+            "-Wno-unused-variable"
+        ]
     },
     "test": {
         "testsuites": [
             {
-                "id": "Documentation",
+                "id": "quickstart",
                 "testcases": [
-                    "CanToggle_trait_01"
+                    "Entity_01"
+                ]
+            },
+            {
+                "id": "componenttraits",
+                "testcases": [
+                    "CanToggle_trait_01",
+                    "Cleanup_traits_01",
+                    "derive_Component_01",
+                    "derive_Component_02",
+                    "OnDelete_Remove_01",
+                    "OnDelete_Delete_01",
+                    "OnDeleteTarget_Delete_01",
+                    "Cleanup_order_01",
+                    "DontFragment_trait_01",
+                    "Exclusive_trait_01",
+                    "Exclusive_trait_02",
+                    "Final_trait_01",
+                    "Inheritable_trait_01",
+                    "OneOf_trait_01",
+                    "OneOf_trait_02",
+                    "Override_01",
+                    "Inherit_01",
+                    "DontInherit_01",
+                    "OrderedChildren_trait_01",
+                    "PairIsTag_trait_01",
+                    "derive_Component_01",
+                    "Relationship_trait_01",
+                    "derive_Component_01",
+                    "Singleton_trait_01",
+                    "Singleton_trait_02",
+                    "Sparse_trait_01",
+                    "Symmetric_trait_01",
+                    "Target_trait_01",
+                    "Trait_trait_01",
+                    "Transitive_trait_01",
+                    "Transitive_trait_02",
+                    "With_trait_01",
+                    "With_trait_02"
                 ]
             }
         ]

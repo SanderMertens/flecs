@@ -93,7 +93,7 @@ When entities that are used as tags, components, relationships or relationship t
 <ul>
 <li><b class="tab-title">C</b>
 
-```cpp
+```c
 struct MyComponent {
   ecs_entity_t e; // Not covered by cleanup traits
 }
@@ -104,12 +104,15 @@ ecs_add_pair(world, e, EcsChildOf, parent); // covered by cleanup traits
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity parent = world.entity();
+HIDE: flecs::entity e = world.entity();
 struct MyComponent {
   flecs::entity e; // Not covered by cleanup traits
-}
+};
 
-e.add(ChildOf, parent); // Covered by cleanup traits
+e.add(flecs::ChildOf, parent); // Covered by cleanup traits
 ```
 
 </li>
@@ -153,7 +156,9 @@ ecs_remove_all(world, Archer);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity Archer = world.entity();
 world.remove_all(Archer);
 ```
 
@@ -190,7 +195,9 @@ ecs_remove_all(world, ecs_pair(EcsWildcard, Archer));
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity Archer = world.entity();
 world.remove_all(Archer);
 world.remove_all(Archer, flecs::Wildcard);
 world.remove_all(flecs::Wildcard, Archer);
@@ -262,7 +269,9 @@ ecs_delete(world, Archer);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: struct Archer {};
 // Remove Archer from entities when Archer is deleted
 world.component<Archer>()
   .add(flecs::OnDelete, flecs::Remove);
@@ -321,7 +330,9 @@ ecs_delete(world, Archer);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: struct Archer {};
 // Delete entities with Archer when Archer is deleted
 world.component<Archer>()
   .add(flecs::OnDelete, flecs::Delete);
@@ -386,7 +397,9 @@ ecs_delete(world, p);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: struct ChildOf {};
 // Delete children when deleting parent
 world.component<ChildOf>()
   .add(flecs::OnDeleteTarget, flecs::Delete);
@@ -458,10 +471,13 @@ ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: struct Node {};
+
 world.observer<Node>()
   .event(flecs::OnRemove)
-  .each([](flecs::entity e) { });
+  .each([](flecs::entity e, Node n) { });
 
 flecs::entity p = world.entity().add<Node>();
 flecs::entity c = world.entity().add<Node>().child_of(p);
@@ -546,7 +562,8 @@ ecs_add_id(world, ecs_id(Position), EcsDontFragment);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 world.component<Position>().add(flecs::DontFragment);
 ```
 
@@ -602,7 +619,11 @@ ecs_add_pair(world, child, EcsChildOf, parent_b); // replaces (ChildOf, parent_a
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity parent_a = world.entity();
+HIDE: flecs::entity parent_b = world.entity();
+flecs::entity e = world.entity();
 e.child_of(parent_a);
 e.child_of(parent_b); // replaces (ChildOf, parent_a)
 ```
@@ -643,7 +664,8 @@ ecs_add_id(world, MarriedTo, EcsExclusive);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity MarriedTo = world.entity()
   .add(flecs::Exclusive);
 ```
@@ -685,7 +707,8 @@ ecs_add_pair(world, e, i, EcsIsA, e); // not allowed
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world ecs;
 auto e = ecs.entity()
   .add(flecs::Final);
 
@@ -744,7 +767,10 @@ ecs_iter_t it = ecs_query_iter(world, q);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: struct Unit {};
+HIDE: struct Warrior {};
 world.component<Unit>().add(flecs::Inheritable);
 
 auto q = world.query_builder()
@@ -829,7 +855,8 @@ ecs_entity_t b = ecs_new_w_pair(world, Food, Fork);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 // Enforce that target of relationship is child of Food
 auto Food = world.entity().add(flecs::OneOf);
 auto Apples = world.entity().child_of(Food);
@@ -904,7 +931,8 @@ ecs_entity_t b = ecs_new_w_pair(world, Eats, Fork);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 // Enforce that target of relationship is child of Food
 auto Food = world.entity();
 auto Eats = world.entity().add(flecs::OneOf, Food);
@@ -984,7 +1012,7 @@ ECS_COMPONENT(ecs, Mass);
 // Set trait on Mass. Optional, since this is the default behavior
 ecs_add_pair(ecs, ecs_id(Mass), EcsOnInstantiate, EcsOverride);
 
-ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass, { 100 }));
+ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass { 100 }));
 ecs_entity_t inst = ecs_insert(ecs, { ecs_isa(base) }); // Mass is copied to inst
 
 assert(ecs_owns(ecs, inst, Mass));
@@ -994,12 +1022,13 @@ assert(ecs_get(ecs, base, Mass) != ecs_get(ecs, inst, Mass));
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world ecs;
 // Register component with trait. Optional, since this is the default behavior.
 ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Override);
 
-ecs_entity_t base = ecs.entity().set(Mass, { 100 });
-ecs_entity_t inst = ecs.entity().is_a(base); // Mass is copied to inst
+flecs::entity base = ecs.entity().set(Mass { 100 });
+flecs::entity inst = ecs.entity().is_a(base); // Mass is copied to inst
 
 assert(inst.owns<Mass>());
 assert(base.try_get<Mass>() != inst.try_get<Mass>());
@@ -1059,7 +1088,7 @@ ECS_COMPONENT(ecs, Mass);
 // Set trait on Mass
 ecs_add_pair(ecs, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
 
-ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass, { 100 }));
+ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass { 100 }));
 ecs_entity_t inst = ecs_insert(ecs, { ecs_isa(base) }); // Mass is copied to inst
 
 assert(ecs_has(ecs, inst, Mass));
@@ -1070,11 +1099,12 @@ assert(ecs_get(ecs, base, Mass) != ecs_get(ecs, inst, Mass));
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world ecs;
 // Register component with trait
 ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Inherit);
 
-ecs_entity_t base = ecs.entity().set(Mass, { 100 });
+ecs_entity_t base = ecs.entity().set(Mass { 100 });
 ecs_entity_t inst = ecs.entity().is_a(base);
 
 assert(inst.has<Mass>());
@@ -1138,7 +1168,7 @@ ECS_COMPONENT(ecs, Mass);
 // Set trait on Mass
 ecs_add_pair(ecs, ecs_id(Mass), EcsOnInstantiate, EcsDontInherit);
 
-ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass, { 100 }));
+ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass { 100 }));
 ecs_entity_t inst = ecs_insert(ecs, { ecs_isa(base) }); // Mass is copied to inst
 
 assert(!ecs_has(ecs, inst, Mass));
@@ -1149,11 +1179,12 @@ assert(ecs_get(ecs, inst, Mass) == NULL);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world ecs;
 // Register component with trait
 ecs.component<Mass>().add(flecs::OnInstantiate, flecs::DontInherit);
 
-ecs_entity_t base = ecs.entity().set(Mass, { 100 });
+ecs_entity_t base = ecs.entity().set(Mass { 100 });
 ecs_entity_t inst = ecs.entity().is_a(base);
 
 assert(!inst.has<Mass>());
@@ -1238,7 +1269,8 @@ while (ecs_children_next(&it)) {
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity parent = world.entity().add(flecs::OrderedChildren);
 
 flecs::entity child_1 = world.entity().child_of(parent);
@@ -1334,7 +1366,8 @@ const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world ecs;
 struct Serializable { }; // Tag, contains no data
 
 struct Position {
@@ -1432,7 +1465,9 @@ const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world ecs;
+HIDE: struct Serializable { };
 // Ensure that Serializable never contains data
 ecs.component<Serializable>()
   .add(flecs::PairIsTag);
@@ -1506,7 +1541,8 @@ ecs_add_pair(world, Likes, Apples); // OK
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 struct Likes { };
 struct Apples { };
 
@@ -1578,7 +1614,8 @@ ecs_add_pair(world, Loves, EcsWith, Likes);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 struct Likes { };
 struct Loves { };
 
@@ -1681,7 +1718,9 @@ ecs_set(world, ecs_id(TimeOfDay), TimeOfDay, {0});
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: struct TimeOfDay { int hour; };
 world.component<TimeOfDay>().add(flecs::Singleton);
 
 world.set(TimeOfDay{0});
@@ -1755,7 +1794,9 @@ The singleton component data is accessed in the same way a component from a stat
 
 A singleton query can be created by specifying the same id as component and source:
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: struct TimeOfDay { int hour; };
 world.component<TimeOfDay>().add(flecs::Singleton);
 
 // Automatically matches TimeOfDay as singleton
@@ -1822,7 +1863,8 @@ ecs_add_id(world, ecs_id(Position), EcsSparse);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 world.component<Position>().add(flecs::Sparse);
 ```
 
@@ -1864,7 +1906,8 @@ ecs_add_pair(world, Bob, MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Ali
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world ecs;
 auto MarriedTo = world.entity().add(flecs::Symmetric);
 auto Bob = ecs.entity();
 auto Alice = ecs.entity();
@@ -1917,7 +1960,8 @@ ecs_add_pair(world, Likes, Apples); // OK
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 struct Likes { };
 struct Apples { };
 
@@ -1983,7 +2027,8 @@ ecs_add_id(world, Serializable, EcsTrait);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 struct Serializable { };
 
 world.component<Serializable>().add(flecs::Trait);
@@ -2052,7 +2097,8 @@ ecs_add_pair(world, NewYork, LocatedIn, USA);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 auto LocatedIn = world.entity();
 auto Manhattan = world.entity();
 auto NewYork = world.entity();
@@ -2105,7 +2151,9 @@ ecs_add_id(world, LocatedIn, Transitive);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity LocatedIn = world.entity();
 LocatedIn.add(flecs::Transitive);
 ```
 
@@ -2152,7 +2200,8 @@ ecs_entity_t e = ecs_new_w_id(world, Power);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 auto Responsibility = world.entity();
 auto Power = world.entity().add(flecs::With, Responsibility);
 
@@ -2204,7 +2253,8 @@ ecs_entity_t e = ecs_new_w_pair(world, Loves, Pears);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 auto Likes = world.entity();
 auto Loves = world.entity().add(flecs::With, Likes);
 auto Pears = world.entity();

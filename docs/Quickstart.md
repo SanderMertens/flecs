@@ -223,7 +223,8 @@ ecs_is_alive(world, e); // false!
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 auto e = world.entity();
 e.is_alive(); // true!
 
