@@ -691,6 +691,9 @@ int flecs_world_memory_serialize(
     flecs_poly_assert(world, ecs_world_t);
 
     EcsWorldMemory value;
+
+    ecs_time_t t = {0};
+    ecs_time_measure(&t);
     
     value.entities = ecs_entity_index_memory_get(world);
     value.components = ecs_component_memory_get(world);
@@ -718,6 +721,8 @@ int flecs_world_memory_serialize(
     s->value(s, ecs_id(ecs_commands_memory_t), &value.commands);
     s->member(s, "allocators");
     s->value(s, ecs_id(ecs_allocator_memory_t), &value.allocators);
+
+    value.collection_time = ecs_time_measure(&t);
     
     return 0;
 }
@@ -852,7 +857,8 @@ void flecs_stats_memory_register_reflection(
             { .name = "table", .type = ecs_id(ecs_table_memory_t) },
             { .name = "table_histogram", .type = ecs_id(ecs_table_histogram_t) },
             { .name = "commands", .type = ecs_id(ecs_commands_memory_t) },
-            { .name = "allocators", .type = ecs_id(ecs_allocator_memory_t) }
+            { .name = "allocators", .type = ecs_id(ecs_allocator_memory_t) },
+            { .name = "collection_time", .type = ecs_id(ecs_f32_t) }
         }
     });
 

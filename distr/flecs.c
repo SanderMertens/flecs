@@ -28144,6 +28144,37 @@ bool flecs_rest_script(
 }
 
 static
+void flecs_rest_shrink_memory(
+    ecs_world_t *world,
+    void *ctx)
+{
+    (void)ctx;
+    ecs_shrink(world);
+}
+
+static
+bool flecs_rest_action(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    (void)path;
+
+    char *action = &req->path[7];
+    ecs_dbg_2("rest: run action '%s'", action);
+
+    if (ecs_os_strcmp(action, "shrink_memory") == 0) {
+        ecs_run_post_frame(world, flecs_rest_shrink_memory, NULL);
+    } else {
+        flecs_reply_error(reply, "unknown action '%s'", action);
+        reply->code = 400;
+    }
+
+    return true;
+}
+
+static
 void flecs_rest_reply_set_captured_log(
     ecs_http_reply_t *reply)
 {
@@ -29099,6 +29130,10 @@ bool flecs_rest_reply(
         /* Script endpoint */
         } else if (!ecs_os_strncmp(req->path, "script/", 7)) {
             return flecs_rest_script(world, req, reply, &req->path[7]);
+
+        /* Action endpoint */
+        } else if (!ecs_os_strncmp(req->path, "action/", 7)) {
+            return flecs_rest_action(world, req, reply, &req->path[7]);
         }
     } else if (req->method == EcsHttpDelete) {
         /* Entity DELETE endpoint */
@@ -67851,6 +67886,9 @@ int flecs_world_memory_serialize(
     flecs_poly_assert(world, ecs_world_t);
 
     EcsWorldMemory value;
+
+    ecs_time_t t = {0};
+    ecs_time_measure(&t);
     
     value.entities = ecs_entity_index_memory_get(world);
     value.components = ecs_component_memory_get(world);
@@ -67878,6 +67916,8 @@ int flecs_world_memory_serialize(
     s->value(s, ecs_id(ecs_commands_memory_t), &value.commands);
     s->member(s, "allocators");
     s->value(s, ecs_id(ecs_allocator_memory_t), &value.allocators);
+
+    value.collection_time = ecs_time_measure(&t);
     
     return 0;
 }
@@ -68012,7 +68052,8 @@ void flecs_stats_memory_register_reflection(
             { .name = "table", .type = ecs_id(ecs_table_memory_t) },
             { .name = "table_histogram", .type = ecs_id(ecs_table_histogram_t) },
             { .name = "commands", .type = ecs_id(ecs_commands_memory_t) },
-            { .name = "allocators", .type = ecs_id(ecs_allocator_memory_t) }
+            { .name = "allocators", .type = ecs_id(ecs_allocator_memory_t) },
+            { .name = "collection_time", .type = ecs_id(ecs_f32_t) }
         }
     });
 

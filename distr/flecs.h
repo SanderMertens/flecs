@@ -13660,6 +13660,7 @@ typedef struct {
     ecs_table_histogram_t table_histogram;
     ecs_commands_memory_t commands;
     ecs_allocator_memory_t allocators;
+    double collection_time; /** Time spent collecting statistics. */
 } EcsWorldMemory;
 
 /** Memory statistics getters. */
