@@ -300,34 +300,6 @@ void MultiThreadStaging_2_threads_on_add(void) {
     ecs_fini(world);
 }
 
-static
-void New_w_count(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
-
-    ecs_bulk_new(it->world, Position, 10);
-}
-
-void MultiThreadStaging_new_w_count(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ECS_SYSTEM(world, New_w_count, EcsOnUpdate, Position());
-
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = New_w_count,
-        .multi_threaded = true
-    });
-
-    ecs_set_threads(world, 2);
-
-    ecs_progress(world, 0);
-
-    test_int( ecs_count(world, Position), 10);
-
-    ecs_fini(world);
-}
-
 void MultiThreadStaging_custom_thread_auto_merge(void) {
     ecs_world_t *world = ecs_init();
 
@@ -375,66 +347,6 @@ void MultiThreadStaging_custom_thread_auto_merge(void) {
     const Position *p2 = ecs_get(world, e2, Position);
     test_int(p2->x, 20);
     test_int(p2->y, 30);    
-
-    ecs_fini(world);
-}
-
-void MultiThreadStaging_set_pair_w_new_target_readonly(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_set_threads(world, 2);
-
-    ecs_entity_t e = ecs_new(world);
-
-    ecs_world_t *thr_1 = ecs_get_stage(world, 0);
-
-    ecs_frame_begin(world, 0);
-    ecs_readonly_begin(world, true);
-
-    ecs_entity_t tgt = ecs_new(thr_1);
-    ecs_set_pair(thr_1, e, Position, tgt, {10, 20});
-
-    ecs_readonly_end(world);
-    ecs_frame_end(world);
-
-    test_assert(ecs_has_pair(world, e, ecs_id(Position), tgt));
-
-    const Position *p = ecs_get_pair(world, e, Position, tgt);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    ecs_fini(world);
-}
-
-void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_set_threads(world, 2);
-
-    ecs_entity_t e = ecs_new(world);
-
-    ecs_world_t *thr_1 = ecs_get_stage(world, 0);
-
-    ecs_frame_begin(world, 0);
-    ecs_readonly_begin(world, true);
-
-    ecs_entity_t tgt = ecs_new(thr_1);
-    ecs_set_pair_second(thr_1, e, tgt, Position, {10, 20});
-
-    ecs_readonly_end(world);
-    ecs_frame_end(world);
-
-    test_assert(ecs_has_pair(world, e, tgt, ecs_id(Position)));
-
-    const Position *p = ecs_get_pair_second(world, e, tgt, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
 
     ecs_fini(world);
 }

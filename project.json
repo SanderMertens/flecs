@@ -4,7 +4,8 @@
     "value": {
         "author": "Sander Mertens",
         "description": "Entity Component System written in C99/C++11",
-        "amalgamate": true
+        "amalgamate": true,
+        "amalgamate-path": "distr"
     },
     "dependee": {
         "lang.c": {
@@ -20,7 +21,13 @@
     },
     "lang.c": {
         "${os linux}": {
-            "lib": ["rt", "pthread"]
+            "lib": ["rt", "pthread", "m"],
+            "${cfg debug}": {
+                "export-symbols": true
+            },
+            "${cfg sanitize}": {
+                "export-symbols": true
+            }
         },
         "${os windows}": {
             "lib": ["ws2_32"]

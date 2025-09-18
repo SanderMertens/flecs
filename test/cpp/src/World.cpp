@@ -23,7 +23,13 @@ typedef struct TestInteropModule {
 static
 void TestInteropModuleImport(ecs_world_t *world) {
     ECS_MODULE(world, TestInteropModule);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+}
 
+static
+void TestInteropModule2Import(ecs_world_t *world) {
+    ECS_MODULE(world, TestInteropModule2);
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 }
@@ -41,6 +47,19 @@ public:
         ecs.module<test::interop::module>();
         ecs.component<Position>("::test::interop::module::Position");
         ecs.component<Velocity>("::test::interop::module::Velocity");
+    }
+};
+
+class module2 {
+public:
+    struct Velocity : ::Velocity { };
+
+    module2(flecs::world& ecs) {
+        TestInteropModule2Import(ecs);
+
+        ecs.module<test::interop::module2>();
+        ecs.component<Position>();
+        ecs.component<Velocity>();
     }
 };
 
@@ -109,13 +128,52 @@ void World_multi_world_component(void) {
     auto v_1 = w1.component<Velocity>();
     auto v_2 = w2.component<Velocity>();
     auto m_2 = w2.component<Mass>();
+    w2.component<Mass>();
 
-    test_assert(v_1.id() == v_2.id());
-    test_assert(p_1.id() != m_2.id());
-    test_assert(m_2.id() > v_2.id());
+    test_assert(p_1 == v_2);
+    test_assert(v_1 == m_2);
 
-    auto m_1 = w2.component<Mass>();
-    test_assert(m_1.id() == m_2.id());
+    flecs::entity w1_e = w1.entity()
+        .set(Position{10, 20})
+        .set(Velocity{1, 2})
+        .set(Mass{100});
+
+    flecs::entity w2_e = w2.entity()
+        .set(Position{10, 20})
+        .set(Velocity{1, 2})
+        .set(Mass{100});
+
+    {
+        const Position *p = w1_e.try_get<Position>();
+        test_assert(p != nullptr);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+
+        const Velocity *v = w1_e.try_get<Velocity>();
+        test_assert(v != nullptr);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+
+        const Mass *m = w1_e.try_get<Mass>();
+        test_assert(m != nullptr);
+        test_int(m->value, 100);
+    }
+
+    {
+        const Position *p = w2_e.try_get<Position>();
+        test_assert(p != nullptr);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+
+        const Velocity *v = w2_e.try_get<Velocity>();
+        test_assert(v != nullptr);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+
+        const Mass *m = w2_e.try_get<Mass>();
+        test_assert(m != nullptr);
+        test_int(m->value, 100);
+    }
 }
 
 namespace A {
@@ -157,23 +215,6 @@ void World_multi_world_module(void) {
     test_int(ns::namespace_module::system_invoke_count, 2);
 }
 
-void World_multi_world_recycled_component(void) {
-    flecs::entity c;
-    {
-        flecs::world ecs;
-        for (int i = 0; i < FLECS_HI_COMPONENT_ID; i ++) {
-            ecs_new_low_id(ecs);
-        }
-
-        ecs.entity().destruct();
-        c = ecs.component<Position>();
-    }
-    {
-        flecs::world ecs;
-        test_assert((c == ecs.component<Position>()));
-    }
-}
-
 void World_multi_world_recycled_component_different_generation(void) {
     flecs::entity c;
     {
@@ -201,7 +242,7 @@ void World_type_id(void) {
 
     auto p = ecs.component<Position>();
 
-    test_assert(p.id() == flecs::type_id<Position>());
+    test_assert(p.id() == ecs.id<Position>());
 }
 
 void World_different_comp_same_name(void) {
@@ -233,14 +274,14 @@ void World_implicit_reregister_after_reset(void) {
 
     ecs.entity().add<Position>();
 
-    flecs::entity_t p_id_1 = flecs::type_id<Position>();
+    flecs::entity_t p_id_1 = ecs.id<Position>();
 
     // Simulate different binary
     flecs::_::type<Position>::reset();
 
     ecs.entity().add<Position>();
 
-    flecs::entity_t p_id_2 = flecs::type_id<Position>();
+    flecs::entity_t p_id_2 = ecs.id<Position>();
 
     test_assert(p_id_1 == p_id_2);
 }
@@ -250,14 +291,14 @@ void World_reregister_after_reset_w_namespace(void) {
 
     ecs.component<ns::FooComp>();
 
-    flecs::entity_t p_id_1 = flecs::type_id<ns::FooComp>();
+    flecs::entity_t p_id_1 = ecs.id<ns::FooComp>();
 
     // Simulate different binary
     flecs::_::type<ns::FooComp>::reset();
 
     ecs.component<ns::FooComp>();
 
-    flecs::entity_t p_id_2 = flecs::type_id<ns::FooComp>();
+    flecs::entity_t p_id_2 = ecs.id<ns::FooComp>();
 
     test_assert(p_id_1 == p_id_2);
 }
@@ -267,11 +308,11 @@ void World_reregister_namespace(void) {
 
     ecs.component<ns::FooComp>();
 
-    flecs::entity_t p_id_1 = flecs::type_id<ns::FooComp>();
+    flecs::entity_t p_id_1 = ecs.id<ns::FooComp>();
 
     ecs.component<ns::FooComp>();
 
-    flecs::entity_t p_id_2 = flecs::type_id<ns::FooComp>();
+    flecs::entity_t p_id_2 = ecs.id<ns::FooComp>();
 
     test_assert(p_id_1 == p_id_2);
 }
@@ -291,6 +332,27 @@ void World_reregister_after_reset_different_name(void) {
     ecs.component<Position>("Velocity");
 }
 
+void World_reregister_after_delete(void) {
+    flecs::world ecs;
+
+    auto c = ecs.component<Position>();
+    test_str(c.name(), "Position");
+    test_str(c.path(), "::Position");
+    test_str(c.symbol(), "Position");
+
+    c.destruct();
+
+    test_assert(!c.is_alive());
+
+    auto d = ecs.component<Position>();
+    test_assert(!c.is_alive());
+    test_assert(d.is_alive());
+
+    test_str(d.name(), "Position");
+    test_str(d.path(), "::Position");
+    test_str(d.symbol(), "Position");
+}
+
 void World_register_component_w_reset_in_multithreaded(void) {
     flecs::world ecs;
 
@@ -307,7 +369,7 @@ void World_register_component_w_reset_in_multithreaded(void) {
 
     test_assert(e.has<Position>());
     test_assert(e.has(pos));
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_assert(p != nullptr);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -334,7 +396,7 @@ void World_register_short_template(void) {
     test_assert(c != 0);
     test_str(c.name(), "Tmp<Test>");
 
-    const EcsComponent *ptr = c.get<flecs::Component>();
+    const EcsComponent *ptr = c.try_get<flecs::Component>();
     test_assert(ptr != NULL);
     test_int(ptr->size, 4);
     test_int(ptr->alignment, 4);
@@ -419,13 +481,22 @@ void World_c_interop_after_reset(void) {
     ecs.import<test::interop::module>();
 }
 
+void World_c_interop_module_no_names(void) {
+    flecs::world ecs;
+
+    ecs.import<test::interop::module2>();
+
+    auto e_pos = ecs.lookup("test::interop::module2::Position");
+    test_assert(e_pos.id() != 0);
+}
+
 void World_implicit_register_w_new_world(void) {
     {
         flecs::world ecs;
 
         auto e = ecs.entity().set<Position>({10, 20});
         test_assert(e.has<Position>());
-        auto *p = e.get<Position>();
+        auto *p = e.try_get<Position>();
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
@@ -437,7 +508,7 @@ void World_implicit_register_w_new_world(void) {
 
         auto e = ecs.entity().set<Position>({10, 20});
         test_assert(e.has<Position>());
-        auto *p = e.get<Position>();
+        auto *p = e.try_get<Position>();
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
@@ -450,7 +521,7 @@ void World_implicit_register_after_reset_register_w_custom_name(void) {
     flecs::entity c = ecs.component<Position>("MyPosition");
     test_str(c.name(), "MyPosition");
 
-    flecs::reset(); // Simulate working across boundary
+    flecs::_::type<Position>().reset(); // Simulate working across boundary
 
     auto e = ecs.entity().add<Position>();
     test_assert(e.has<Position>());
@@ -463,7 +534,7 @@ void World_register_after_reset_register_w_custom_name(void) {
     flecs::entity c1 = ecs.component<Position>("MyPosition");
     test_str(c1.name(), "MyPosition");
 
-    flecs::reset(); // Simulate working across boundary
+    flecs::_::type<Position>().reset(); // Simulate working across boundary
 
     flecs::entity c2 = ecs.component<Position>();
     test_str(c2.name(), "MyPosition");
@@ -475,7 +546,7 @@ void World_register_builtin_after_reset(void) {
     auto c1 = ecs.component<flecs::Component>();
     test_assert(c1 == ecs_id(EcsComponent));
 
-    flecs::reset(); // Simulate working across boundary
+    flecs::_::type<flecs::Component>().reset(); // Simulate working across boundary
 
     auto c2 = ecs.component<flecs::Component>();
     test_assert(c2 == ecs_id(EcsComponent));
@@ -487,7 +558,7 @@ void World_register_meta_after_reset(void) {
 
     auto c1 = ecs.component<Position>();
 
-    flecs::reset(); // Simulate working across boundary
+    flecs::_::type<Position>().reset(); // Simulate working across boundary
 
     auto c2 = ecs.component<Position>()
         .member<float>("x")
@@ -1534,27 +1605,7 @@ void World_make_alive(void) {
 }
 
 void World_reset_all(void) {
-    flecs::entity pos, vel;
 
-    {
-        flecs::world ecs;
-        pos = ecs.component<Position>();
-        vel = ecs.component<Velocity>();
-    }
-
-    test_assert(flecs::type_id<Position>() == pos);
-    test_assert(flecs::type_id<Velocity>() == vel);
-
-    flecs::reset();
-
-    test_assert(flecs::type_id<Position>() == 0);
-
-    /* Register components in opposite order, should result in different ids */
-    {
-        flecs::world ecs;
-        test_assert(ecs.component<Position>() != 0);
-        test_assert(ecs.component<Velocity>() != 0);
-    }
 }
 
 void World_get_tick(void) {
@@ -1675,7 +1726,7 @@ void World_reregister_after_reset_w_hooks_and_in_use(void) {
     ecs.entity().add<Pod>();
     test_int(1, Pod::ctor_invoked);
 
-    flecs::reset();
+    flecs::_::type<Pod>().reset();
 
     ecs.component<Pod>();
 
@@ -1691,7 +1742,7 @@ void World_reregister_after_reset_w_hooks_and_in_use_implicit(void) {
     ecs.entity().add<Pod>();
     test_int(1, Pod::ctor_invoked);
 
-    flecs::reset();
+    flecs::_::type<Pod>().reset();
 
     ecs.entity().add<Pod>();
     test_int(2, Pod::ctor_invoked);
@@ -1863,8 +1914,8 @@ void World_register_nested_component_in_module(void) {
 
     ecs.import<nested_component_module>();
 
-    test_assert(flecs::type_id<nested_component_module::Foo>() != 0);
-    test_assert(flecs::type_id<nested_component_module::Foo::Bar>() != 0);
+    test_assert(ecs.id<nested_component_module::Foo>() != 0);
+    test_assert(ecs.id<nested_component_module::Foo::Bar>() != 0);
 
     flecs::entity foo = ecs.component<nested_component_module::Foo>();
     flecs::entity bar = ecs.component<nested_component_module::Foo::Bar>();
@@ -1903,12 +1954,12 @@ void World_atfini_w_ctx(void) {
 void World_get_mut_T(void) {
     flecs::world world;
 
-    Position *p = world.get_mut<Position>();
+    Position *p = world.try_get_mut<Position>();
 
     test_assert(p == nullptr);
 
     world.set<Position>({10, 20});
-    p = world.get_mut<Position>();
+    p = world.try_get_mut<Position>();
 
     test_assert(p != nullptr);
     test_int(p->x, 10);
@@ -1920,12 +1971,12 @@ void World_get_mut_R_T(void) {
 
     struct Tgt { };
 
-    Position *p = world.get_mut<Position, Tgt>();
+    Position *p = world.try_get_mut<Position, Tgt>();
     test_assert(p == nullptr);
 
     world.set<Position, Tgt>({10, 20});
     
-    p = world.get_mut<Position, Tgt>();
+    p = world.try_get_mut<Position, Tgt>();
     test_assert(p != nullptr);
 
     test_int(p->x, 10);
@@ -1990,4 +2041,261 @@ void World_fini_reentrancy(void) {
     }
     test_assert(true); // if this runs, ecs_fini did not abort and we're good.
 
+}
+
+// Test whether overwriting a world instance with another via
+// copy-assign or move-assign properly destroys the overwritten instance
+void World_fini_copy_move_assign(void) {
+    // helper component to tag worlds:
+    struct ID {
+        int id;
+    };
+
+    auto fini_handler = [](ecs_world_t *world, void *ctx) {
+    bool *finished = (bool *) ctx;
+    *finished = true;
+    };
+
+    auto get_world_id = [](const flecs::world &world) { return world.try_get<ID>()->id; };
+
+    bool finished_1 = false;
+    bool finished_2 = false;
+    bool finished_3 = false;
+
+    // Create three worlds '1', '2' and '3', that initially start in 'A', 'B' and 'C' respectively:
+    flecs::world world_A;
+    world_A.set<ID>({1});
+    world_A.atfini(fini_handler, &finished_1);
+
+    flecs::world world_B;
+    world_B.set<ID>(ID{2});
+    world_B.atfini(fini_handler, &finished_2);
+
+    flecs::world world_C;
+    world_C.set<ID>(ID{3});
+    world_C.atfini(fini_handler, &finished_3);
+
+    // now overwrite one with another using copy-assign
+    world_A = world_B;  // (copy assign). Overwrite world_A with world_B
+    // world with ID '1' contained in world_A should have been destroyed:
+    test_assert(finished_1 == true);
+
+    // now world_A and world_B point to the same world '2'
+    test_assert(world_A.c_ptr() == world_B.c_ptr());
+    test_assert(get_world_id(world_A) == 2);
+    test_assert(get_world_id(world_B) == 2);
+
+    // test move-assign properly releases existing world '3' in C:
+    world_C = FLECS_MOV(world_B);        // move-assign, overwrite what is in C.
+    test_assert(world_B.c_ptr() == nullptr);  // B is now empty
+    test_assert(finished_2 == false);         // still '2' is alive (in 'A')
+    test_assert(finished_3 == true);          // world '3' destroyed after being overwritten
+    test_assert(get_world_id(world_C) == 2);  // world '2' is now in 'C'
+
+    world_A.release();
+    test_assert(world_A.c_ptr() == nullptr);  // A is now empty
+    test_assert(finished_2 == false);         // '2' is still alive in 'C', though.
+
+    world_C.release();
+    test_assert(finished_2 == true);  // '2' is now finished as well.
+}
+
+static
+void test_log(
+    int32_t level,
+    const char *file, 
+    int32_t line,  
+    const char *msg)
+{ }
+
+void World_world_init_fini_log_all(void) {
+    flecs::log::set_level(4);
+
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = test_log;
+    ecs_os_set_api(&os_api);
+
+    flecs::world ecs;
+
+    ecs.import<flecs::stats>();
+    ecs.import<flecs::units>();
+    ecs.import<flecs::metrics>();
+    ecs.import<flecs::alerts>();
+
+    test_assert(true);
+}
+
+void World_exclusive_access_self_mutate(void) {
+    flecs::world ecs;
+
+    ecs.exclusive_access_begin();
+
+    flecs::entity e = ecs.entity();
+
+    e.add<Position>();
+    test_assert(e.has<Position>());
+
+    ecs.exclusive_access_end();
+}
+
+void* thread_exclusive_access_other_fini(void *arg) {
+    flecs::world *world = static_cast<flecs::world*>(arg);
+    test_expect_abort();
+    world->entity();
+    return NULL;
+}
+
+void World_exclusive_access_other_mutate(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.exclusive_access_begin();
+
+    ecs_os_thread_t thr = 
+        ecs_os_thread_new(thread_exclusive_access_other_fini, &ecs);
+
+    ecs_os_thread_join(thr);
+
+    test_assert(false); // should not get here
+}
+
+void World_id_if_registered(void) {
+    {
+        flecs::world world;
+
+        test_assert(world.id_if_registered<Position>() == 0);
+        test_assert(world.id_if_registered<Position>() == 0);
+
+        auto c = world.component<Position>();
+
+        test_assert(world.id_if_registered<Position>() == c);
+    }
+
+    {
+        flecs::world world;
+
+        test_assert(world.id_if_registered<Position>() == 0);
+        test_assert(world.id_if_registered<Position>() == 0);
+
+        auto c = world.component<Position>();
+
+        test_assert(world.id_if_registered<Position>() == c);
+    }
+}
+
+void World_get_type_info_t(void) {
+    flecs::world world;
+
+    flecs::entity c = world.component<Position>();
+
+    const flecs::type_info_t *ti = world.type_info(c);
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_T(void) {
+    flecs::world world;
+
+    const flecs::type_info_t *ti = world.type_info<Position>();
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == world.component<Position>());
+}
+
+void World_get_type_info_r_t(void) {
+    flecs::world world;
+
+    flecs::entity c = world.component<Position>();
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info(c, tgt);
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_R_t(void) {
+    flecs::world world;
+
+    flecs::entity c = world.component<Position>();
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info<Position>(tgt);
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_R_T(void) {
+    flecs::world world;
+
+    struct Tgt {};
+
+    flecs::entity c = world.component<Position>();
+
+    const flecs::type_info_t *ti = world.type_info<Position, Tgt>();
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_t_tag(void) {
+    flecs::world world;
+
+    struct Tag {};
+
+    flecs::entity c = world.component<Tag>();
+
+    const flecs::type_info_t *ti = world.type_info(c);
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_T_tag(void) {
+    flecs::world world;
+
+    struct Tag {};
+
+    const flecs::type_info_t *ti = world.type_info<Tag>();
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_r_t_tag(void) {
+    flecs::world world;
+
+    struct Tag {};
+
+    flecs::entity c = world.component<Tag>();
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info(c, tgt);
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_R_t_tag(void) {
+    flecs::world world;
+
+    struct Tag {};
+
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info<Tag>(tgt);
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_R_T_tag(void) {
+    flecs::world world;
+
+    struct Tag {};
+    struct Tgt {};
+
+    const flecs::type_info_t *ti = world.type_info<Tag, Tgt>();
+    test_assert(ti == nullptr);
 }

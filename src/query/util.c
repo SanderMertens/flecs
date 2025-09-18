@@ -1,4 +1,4 @@
- /**
+/**
  * @file query/util.c
  * @brief Query utilities.
  */
@@ -174,18 +174,17 @@ const char* flecs_query_op_str(
     uint16_t kind)
 {
     switch(kind) {
+    case EcsQueryAll:            return "all       ";
     case EcsQueryAnd:            return "and       ";
-    case EcsQueryAndId:          return "andid     ";
-    case EcsQueryAndAny:         return "andany    ";
+    case EcsQueryAndAny:         return "and_any   ";
+    case EcsQueryAndWcTgt:       return "and_wct   ";
     case EcsQueryTriv:           return "triv      ";
     case EcsQueryCache:          return "cache     ";
     case EcsQueryIsCache:        return "xcache    ";
-    case EcsQueryOnlyAny:        return "any       ";
     case EcsQueryUp:             return "up        ";
-    case EcsQueryUpId:           return "upid      ";
     case EcsQuerySelfUp:         return "selfup    ";
-    case EcsQuerySelfUpId:       return "selfupid  ";
     case EcsQueryWith:           return "with      ";
+    case EcsQueryWithWcTgt:      return "with_wct  ";
     case EcsQueryTrav:           return "trav      ";
     case EcsQueryAndFrom:        return "andfrom   ";
     case EcsQueryOrFrom:         return "orfrom    ";
@@ -212,11 +211,11 @@ const char* flecs_query_op_str(
     case EcsQueryMemberNeq:      return "memberneq ";
     case EcsQueryToggle:         return "toggle    ";
     case EcsQueryToggleOption:   return "togglopt  ";
-    case EcsQueryUnionEq:        return "union     ";
-    case EcsQueryUnionEqWith:    return "union_w   ";
-    case EcsQueryUnionNeq:       return "unionneq  ";
-    case EcsQueryUnionEqUp:      return "union_up  ";
-    case EcsQueryUnionEqSelfUp:  return "union_sup ";
+    case EcsQuerySparse:         return "spars     ";
+    case EcsQuerySparseWith:     return "spars_w   ";
+    case EcsQuerySparseNot:      return "spars_not ";
+    case EcsQuerySparseSelfUp:   return "spars_sup ";
+    case EcsQuerySparseUp:       return "spars_up  ";
     case EcsQueryLookup:         return "lookup    ";
     case EcsQuerySetVars:        return "setvars   ";
     case EcsQuerySetThis:        return "setthis   ";
@@ -302,6 +301,11 @@ void flecs_query_plan_w_profile(
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_op_t *ops = impl->ops;
     int32_t i, count = impl->op_count, indent = 0;
+    if (!count) {
+        ecs_strbuf_append(buf, "");
+        return; /* No plan */
+    }
+
     for (i = 0; i < count; i ++) {
         ecs_query_op_t *op = &ops[i];
         ecs_flags16_t flags = op->flags;
@@ -434,11 +438,6 @@ char* ecs_query_plan_w_profile(
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
     flecs_query_plan_w_profile(q, it, &buf);
-    // ecs_query_impl_t *impl = flecs_query_impl(q);
-    // if (impl->cache) {
-    //     ecs_strbuf_appendch(&buf, '\n');
-    //     flecs_query_plan_w_profile(impl->cache->query, it, &buf);
-    // }
 
 #ifdef FLECS_LOG
     char *str = ecs_strbuf_get(&buf);
@@ -476,7 +475,7 @@ void flecs_query_str_add_id(
     } else if (ref->name) {
         ecs_strbuf_appendstr(buf, ref->name);
     } else {
-        ecs_strbuf_appendlit(buf, "0");
+        ecs_strbuf_appendlit(buf, "#0");
     }
     is_added = true;
 
@@ -526,11 +525,9 @@ void flecs_term_to_buf(
     ecs_strbuf_t *buf,
     int32_t t)
 {
-    const ecs_term_ref_t *src = &term->src;
     const ecs_term_ref_t *first = &term->first;
     const ecs_term_ref_t *second = &term->second;
 
-    ecs_entity_t src_id = ECS_TERM_REF_ID(src);
     ecs_entity_t first_id = ECS_TERM_REF_ID(first);
 
     bool src_set = !ecs_term_match_0(term);
@@ -554,7 +551,11 @@ void flecs_term_to_buf(
         {
             ecs_strbuf_appendlit(buf, "this");
         } else if (term->src.id & EcsIsVariable) {
-            ecs_strbuf_appendstr(buf, term->src.name);
+            if (term->src.name) {
+                ecs_strbuf_appendstr(buf, term->src.name);
+            } else {
+                ecs_strbuf_appendstr(buf, "<<invalid variable name>>");
+            }
         } else {
             /* Shouldn't happen */
         }
@@ -571,8 +572,8 @@ void flecs_term_to_buf(
 
         if (term->second.id & EcsIsEntity) {
             if (term->second.id != 0) {
-                ecs_get_path_w_sep_buf(
-                    world, 0, ECS_TERM_REF_ID(&term->second), ".", NULL, buf);
+                ecs_get_path_w_sep_buf(world, 0, ECS_TERM_REF_ID(&term->second), 
+                    ".", NULL, buf, false);
             }
         } else {
             if (term->second.id & EcsIsVariable) {
@@ -633,11 +634,7 @@ void flecs_term_to_buf(
 
         flecs_query_str_add_id(world, buf, term, &term->first, false);
         ecs_strbuf_appendlit(buf, "(");
-        if (term->src.id & EcsIsEntity && src_id == first_id) {
-            ecs_strbuf_appendlit(buf, "$");
-        } else {
-            flecs_query_str_add_id(world, buf, term, &term->src, true);
-        }
+        flecs_query_str_add_id(world, buf, term, &term->src, true);
         if (second_set) {
             ecs_strbuf_appendlit(buf, ",");
             flecs_query_str_add_id(world, buf, term, &term->second, false);
@@ -688,61 +685,11 @@ error:
     return NULL;
 }
 
-int32_t flecs_query_pivot_term(
-    const ecs_world_t *world,
-    const ecs_query_t *query)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    const ecs_term_t *terms = query->terms;
-    int32_t i, term_count = query->term_count;
-    int32_t pivot_term = -1, min_count = -1, self_pivot_term = -1;
-
-    for (i = 0; i < term_count; i ++) {
-        const ecs_term_t *term = &terms[i];
-        ecs_id_t id = term->id;
-
-        if ((term->oper != EcsAnd) || (i && (term[-1].oper == EcsOr))) {
-            continue;
-        }
-
-        if (!ecs_term_match_this(term)) {
-            continue;
-        }
-
-        ecs_id_record_t *idr = flecs_id_record_get(world, id);
-        if (!idr) {
-            /* If one of the terms does not match with any data, iterator 
-             * should not return anything */
-            return -2; /* -2 indicates query doesn't match anything */
-        }
-
-        int32_t table_count = flecs_table_cache_count(&idr->cache);
-        if (min_count == -1 || table_count < min_count) {
-            min_count = table_count;
-            pivot_term = i;
-            if ((term->src.id & EcsTraverseFlags) == EcsSelf) {
-                self_pivot_term = i;
-            }
-        }
-    }
-
-    if (self_pivot_term != -1) {
-        pivot_term = self_pivot_term;
-    }
-
-    return pivot_term;
-error:
-    return -2;
-}
-
 void flecs_query_apply_iter_flags(
     ecs_iter_t *it,
     const ecs_query_t *query)
 {
-    ECS_BIT_COND(it->flags, EcsIterNoData,
-        ECS_BIT_IS_SET(query->flags, EcsQueryNoData));
     ECS_BIT_COND(it->flags, EcsIterHasCondSet, 
         ECS_BIT_IS_SET(query->flags, EcsQueryHasCondSet));
+    ECS_BIT_COND(it->flags, EcsIterNoData, query->data_fields == 0);
 }

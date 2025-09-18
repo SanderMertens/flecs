@@ -278,7 +278,7 @@ void ecs_world_stats_get(
     ECS_GAUGE_RECORD(&s->components.tag_count, t, world->info.tag_id_count);
     ECS_GAUGE_RECORD(&s->components.component_count, t, world->info.component_id_count);
     ECS_GAUGE_RECORD(&s->components.pair_count, t, world->info.pair_id_count);
-    ECS_GAUGE_RECORD(&s->components.type_count, t, ecs_sparse_count(&world->type_info));
+    ECS_GAUGE_RECORD(&s->components.type_count, t, ecs_map_count(&world->type_info));
     ECS_COUNTER_RECORD(&s->components.create_count, t, world->info.id_create_total);
     ECS_COUNTER_RECORD(&s->components.delete_count, t, world->info.id_delete_total);
 
@@ -290,7 +290,6 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->tables.create_count, t, world->info.table_create_total);
     ECS_COUNTER_RECORD(&s->tables.delete_count, t, world->info.table_delete_total);
     ECS_GAUGE_RECORD(&s->tables.count, t, world->info.table_count);
-    ECS_GAUGE_RECORD(&s->tables.empty_count, t, world->info.empty_table_count);
 
     ECS_COUNTER_RECORD(&s->commands.add_count, t, world->info.cmd.add_count);
     ECS_COUNTER_RECORD(&s->commands.remove_count, t, world->info.cmd.remove_count);
@@ -515,7 +514,7 @@ bool ecs_pipeline_stats_get(
     /* Count number of active systems */
     ecs_iter_t it = ecs_query_iter(stage, pq->query);
     while (ecs_query_next(&it)) {
-        if (flecs_id_record_get_table(pq->idr_inactive, it.table) != NULL) {
+        if (flecs_component_get_table(pq->cr_inactive, it.table) != NULL) {
             continue;
         }
         active_sys_count += it.count;
@@ -549,7 +548,7 @@ bool ecs_pipeline_stats_get(
             
             int32_t i, i_system = 0, ran_since_merge = 0;
             while (ecs_query_next(&it)) {
-                if (flecs_id_record_get_table(pq->idr_inactive, it.table) != NULL) {
+                if (flecs_component_get_table(pq->cr_inactive, it.table) != NULL) {
                     continue;
                 }
 

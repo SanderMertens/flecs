@@ -56,12 +56,20 @@ struct type {
         return flecs::id(world_, type_->array[index]);
     }
 
-    flecs::id_t* begin() const {
-        return type_->array;
+    const flecs::id_t* begin() const {
+        if (type_ && type_->count) {
+            return type_->array;
+        } else {
+            return &empty_;
+        }
     }
 
-    flecs::id_t* end() const {
-        return &type_->array[type_->count];
+    const flecs::id_t* end() const {
+        if (type_ && type_->count) {
+            return &type_->array[type_->count];
+        } else {
+            return &empty_;
+        }
     }
 
     /** Implicit conversion to type_t */
@@ -71,6 +79,7 @@ struct type {
 private:
     world_t *world_;
     const type_t *type_;
+    flecs::id_t empty_;
 };
 
 /** #} */

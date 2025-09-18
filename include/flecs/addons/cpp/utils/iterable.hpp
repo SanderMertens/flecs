@@ -12,7 +12,7 @@ template <typename ... Components>
 struct page_iterable;
 
 template <typename ... Components>
-struct worker_iterable; 
+struct worker_iterable;
 
 template <typename ... Components>
 struct iterable {
@@ -110,34 +110,34 @@ struct iterable {
         return this->iter().first();
     }
 
-    iter_iterable<Components...> set_var(int var_id, flecs::entity_t value) {
+    iter_iterable<Components...> set_var(int var_id, flecs::entity_t value) const {
         return this->iter().set_var(var_id, value);
     }
 
-    iter_iterable<Components...> set_var(const char *name, flecs::entity_t value) {
+    iter_iterable<Components...> set_var(const char *name, flecs::entity_t value) const {
         return this->iter().set_var(name, value);
     }
 
-    iter_iterable<Components...> set_var(const char *name, flecs::table_t *value) {
+    iter_iterable<Components...> set_var(const char *name, flecs::table_t *value) const {
         return this->iter().set_var(name, value);
     }
 
-    iter_iterable<Components...> set_var(const char *name, ecs_table_range_t value) {
+    iter_iterable<Components...> set_var(const char *name, ecs_table_range_t value) const {
         return this->iter().set_var(name, value);
     }
 
-    iter_iterable<Components...> set_var(const char *name, flecs::table_range value) {
+    iter_iterable<Components...> set_var(const char *name, flecs::table_range value) const {
         return this->iter().set_var(name, value);
     }
 
     // Limit results to tables with specified group id (grouped queries only)
-    iter_iterable<Components...> set_group(uint64_t group_id) {
+    iter_iterable<Components...> set_group(uint64_t group_id) const {
         return this->iter().set_group(group_id);
     }
 
     // Limit results to tables with specified group id (grouped queries only)
     template <typename Group>
-    iter_iterable<Components...> set_group() {
+    iter_iterable<Components...> set_group() const {
         return this->iter().template set_group<Group>();
     }
 
@@ -170,24 +170,21 @@ struct iter_iterable final : iterable<Components...> {
     }
 
     iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
-        ecs_query_iter_t *qit = &it_.priv_.iter.query;
-        int var_id = ecs_query_find_var(qit->query, name);
+        int var_id = ecs_query_find_var(it_.query, name);
         ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
         ecs_iter_set_var(&it_, var_id, value);
         return *this;
     }
 
     iter_iterable<Components...>& set_var(const char *name, flecs::table_t *value) {
-        ecs_query_iter_t *qit = &it_.priv_.iter.query;
-        int var_id = ecs_query_find_var(qit->query, name);
+        int var_id = ecs_query_find_var(it_.query, name);
         ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
         ecs_iter_set_var_as_table(&it_, var_id, value);
         return *this;
     }
 
     iter_iterable<Components...>& set_var(const char *name, ecs_table_range_t value) {
-        ecs_query_iter_t *qit = &it_.priv_.iter.query;
-        int var_id = ecs_query_find_var(qit->query, name);
+        int var_id = ecs_query_find_var(it_.query, name);
         ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
         ecs_iter_set_var_as_range(&it_, var_id, &value);
         return *this;

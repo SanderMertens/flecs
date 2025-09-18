@@ -69,10 +69,36 @@ int main(int argc, char *argv[]) {
             ecs_set(ecs, moon, Position, {0.1, 0.1});
 
     // Is the Moon a child of Earth?
-    printf("Child of Earth? %d\n", ecs_has_pair(ecs, moon, EcsChildOf, earth));
+    printf("Child of Earth? %d\n\n", ecs_has_pair(ecs, moon, EcsChildOf, earth));
+
+    // Lookup moon by name
+    ecs_entity_t e = ecs_lookup(ecs, "Sun.Earth.Moon");
+    char *path = ecs_get_path(ecs, e);
+    printf("Moon found: %s\n\n", path);
+    ecs_os_free(path);
 
     // Do a depth-first walk of the tree
     iterate_tree(ecs, sun, (Position){0, 0});
 
     return ecs_fini(ecs);
+
+    // Output:
+    //   Child of Earth? 1
+    //   
+    //   Moon found: Sun.Earth.Moon
+    //   
+    //   Sun [Position, Star, (Identifier,Name)]
+    //   {1.000000, 1.000000}
+    //   
+    //   Sun.Mercury [Position, Planet, (Identifier,Name), (ChildOf,Sun)]
+    //   {2.000000, 2.000000}
+    //   
+    //   Sun.Venus [Position, Planet, (Identifier,Name), (ChildOf,Sun)]
+    //   {3.000000, 3.000000}
+    //   
+    //   Sun.Earth [Position, Planet, (Identifier,Name), (ChildOf,Sun)]
+    //   {4.000000, 4.000000}
+    //   
+    //   Sun.Earth.Moon [Position, Sun.Earth.Moon, (Identifier,Name), (ChildOf,Sun.Earth)]
+    //   {4.100000, 4.100000}
 }

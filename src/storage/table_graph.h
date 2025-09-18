@@ -15,12 +15,9 @@
 typedef struct ecs_table_diff_builder_t {
     ecs_vec_t added;
     ecs_vec_t removed;
+    ecs_flags32_t added_flags;
+    ecs_flags32_t removed_flags;
 } ecs_table_diff_builder_t;
-
-typedef struct ecs_table_diff_t {
-    ecs_type_t added;                /* Components added between tables */
-    ecs_type_t removed;              /* Components removed between tables */
-} ecs_table_diff_t;
 
 /** Edge linked list (used to keep track of incoming edges) */
 typedef struct ecs_graph_edge_hdr_t {
@@ -33,7 +30,7 @@ typedef struct ecs_graph_edge_t {
     ecs_graph_edge_hdr_t hdr;
     ecs_table_t *from;               /* Edge source table */
     ecs_table_t *to;                 /* Edge destination table */
-    ecs_table_diff_t *diff;          /* Index into diff vector, if non trivial edge */
+    ecs_table_diff_t *diff;          /* Added/removed components for edge */
     ecs_id_t id;                     /* Id associated with edge */
 } ecs_graph_edge_t;
 
@@ -53,12 +50,27 @@ typedef struct ecs_graph_node_t {
     ecs_graph_edge_hdr_t refs;
 } ecs_graph_node_t;
 
-/* Find table by adding id to current table */
-ecs_table_t *flecs_table_traverse_add(
+/** Add to existing type */
+void flecs_type_add(
     ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t *id_ptr,
-    ecs_table_diff_t *diff);
+    ecs_type_t *type,
+    ecs_id_t add);
+
+/* Remove from existing type */
+void flecs_type_remove(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t remove);
+
+/** Copy type. */
+ecs_type_t flecs_type_copy(
+    ecs_world_t *world,
+    const ecs_type_t *src);
+
+/** Free type. */
+void flecs_type_free(
+    ecs_world_t *world,
+    ecs_type_t *type);
 
 /* Find table by removing id from current table */
 ecs_table_t *flecs_table_traverse_remove(
@@ -100,5 +112,26 @@ void flecs_table_diff_build(
 void flecs_table_diff_build_noalloc(
     ecs_table_diff_builder_t *builder,
     ecs_table_diff_t *diff);
+
+void flecs_table_edges_add_flags(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_flags32_t flags);
+
+ecs_table_t* flecs_find_table_add(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_table_diff_builder_t *diff);
+
+void flecs_table_hashmap_init(
+    ecs_world_t *world,
+    ecs_hashmap_t *hm);
+
+void flecs_table_clear_edges_for_id(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t component);
 
 #endif

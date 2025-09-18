@@ -8,7 +8,6 @@
  */
 
 #include "private_api.h"
-#include <ctype.h>
 #include <time.h>
 
 void ecs_os_api_impl(ecs_os_api_t *api);
@@ -63,7 +62,7 @@ void ecs_os_fini(void) {
 
 /* Assume every non-glibc Linux target has no execinfo.
    This mainly fixes musl support, as musl doesn't define any preprocessor macro specifying its presence. */ 
-#if defined(ECS_TARGET_LINUX) && !defined(__GLIBC__)
+#if (defined(ECS_TARGET_LINUX) && !defined(__GLIBC__)) || defined(__COSMOCC__)
 #define HAVE_EXECINFO 0
 #elif !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID)
 #define HAVE_EXECINFO 1
@@ -348,6 +347,26 @@ void ecs_os_strset(char **str, const char *value) {
     char *old = str[0];
     str[0] = ecs_os_strdup(value);
     ecs_os_free(old);
+}
+
+void ecs_os_perf_trace_push_(
+    const char *file,
+    size_t line,
+    const char *name)
+{
+    if (ecs_os_api.perf_trace_push_) {
+        ecs_os_api.perf_trace_push_(file, line, name);
+    }
+}
+
+void ecs_os_perf_trace_pop_(
+    const char *file,
+    size_t line,
+    const char *name)
+{
+    if (ecs_os_api.perf_trace_pop_) {
+        ecs_os_api.perf_trace_pop_(file, line, name);
+    }
 }
 
 /* Replace dots with underscores */

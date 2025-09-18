@@ -7,10 +7,16 @@
 
 namespace flecs {
 
-template <typename T>
-flecs::entity ref<T>::entity() const {
-    return flecs::entity(world_, ref_.entity);
+inline untyped_ref::untyped_ref(flecs::entity entity, flecs::id_t id) 
+    : untyped_ref(entity.world(), entity.id(), id) { }
+
+inline flecs::entity untyped_ref::entity() const {
+        return flecs::entity(world_, ref_.entity);
 }
+
+template <typename T>
+flecs::ref<T>::ref(flecs::entity entity, flecs::id_t id)
+        : ref(entity.world(), entity.id(), id) { }
 
 template <typename Self>
 template <typename Func>
@@ -20,21 +26,10 @@ inline const Self& entity_builder<Self>::insert(const Func& func) const  {
     return to_base();
 }
 
-template <typename T, if_t< is_enum<T>::value > >
-const T* entity_view::get() const {
-    entity_t r = _::type<T>::id(world_);
-    entity_t c = ecs_get_target(world_, id_, r, 0);
-
-    if (c) {
-        // Get constant value from constant entity
-        const T* v = static_cast<const T*>(ecs_get_id(world_, c, r));
-        ecs_assert(v != NULL, ECS_INTERNAL_ERROR, 
-            "missing enum constant value");
-        return v;
-    } else {
-        // If there is no matching pair for (r, *), try just r
-        return static_cast<const T*>(ecs_get_id(world_, id_, r));
-    }
+template<typename Enum>
+inline Enum entity_view::get_constant() const {
+    flecs::entity tgt = this->target<Enum>();
+    return tgt.to_constant<Enum>();
 }
 
 template<typename First>
@@ -71,7 +66,7 @@ inline flecs::entity entity_view::target_for(flecs::entity_t relationship) const
 }
 
 inline flecs::entity entity_view::parent() const {
-    return target(flecs::ChildOf);
+    return flecs::entity(world_, ecs_get_parent(world_, id_));
 }
 
 inline flecs::entity entity_view::mut(const flecs::world& stage) const {
@@ -210,8 +205,7 @@ inline flecs::entity world::entity(E value) const {
 
 template <typename T>
 inline flecs::entity world::entity(const char *name) const {
-    return flecs::entity(world_, 
-        _::type<T>::id_explicit(world_, name, true, 0, false) );
+    return flecs::entity(world_, _::type<T>::register_id(world_, name, true, false) );
 }
 
 template <typename... Args>
@@ -223,7 +217,7 @@ inline flecs::entity world::prefab(Args &&... args) const {
 
 template <typename T>
 inline flecs::entity world::prefab(const char *name) const {
-    flecs::entity result = flecs::component<T>(world_, name, true);
+    flecs::entity result = this->entity<T>(name);
     result.add(flecs::Prefab);
     return result;
 }

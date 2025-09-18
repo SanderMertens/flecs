@@ -116,9 +116,6 @@ typedef struct ecs_system_t {
     /** System query */
     ecs_query_t *query;
 
-    /** Entity associated with query */
-    ecs_entity_t query_entity;
-
     /** Tick source associated with system */
     ecs_entity_t tick_source;
 
@@ -127,6 +124,9 @@ typedef struct ecs_system_t {
 
     /** Is system ran in immediate mode */
     bool immediate;
+
+    /** Cached system name (for perf tracing) */
+    const char *name;
 
     /** Userdata for system */
     void *ctx;
@@ -156,8 +156,6 @@ typedef struct ecs_system_t {
     int64_t last_frame;
 
     /* Mixins */
-    ecs_world_t *world;
-    ecs_entity_t entity;
     flecs_poly_dtor_t dtor;      
 } ecs_system_t;
 

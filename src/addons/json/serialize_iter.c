@@ -19,13 +19,13 @@ void flecs_json_serialize_id_str(
         ecs_entity_t first = ecs_pair_first(world, id);
         ecs_entity_t second = ecs_pair_first(world, id);
         ecs_strbuf_appendch(buf, '(');
-        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf);
+        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf, true);
         ecs_strbuf_appendch(buf, ',');
-        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf);
+        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf, true);
         ecs_strbuf_appendch(buf, ')');
     } else {
         ecs_get_path_w_sep_buf(
-            world, 0, id & ECS_COMPONENT_MASK, ".", "", buf);
+            world, 0, id & ECS_COMPONENT_MASK, ".", "", buf, true);
     }
     ecs_strbuf_appendch(buf, '"');
 }
@@ -125,13 +125,49 @@ void flecs_json_serialize_query_plan(
 
     const ecs_query_t *q = desc->query;
     flecs_poly_assert(q, ecs_query_t);
-
+    const ecs_query_t *cq = ecs_query_get_cache_query(q);
+    
     flecs_json_memberl(buf, "query_plan");
 
     bool prev_color = ecs_log_enable_colors(true);
     char *plan = ecs_query_plan(q);
-    flecs_json_string_escape(buf, plan);
+    char *cache_plan = NULL;
+    if (cq) {
+        flecs_poly_assert(cq, ecs_query_t);
+        cache_plan = ecs_query_plan(cq);
+    }
+
+    ecs_strbuf_t plan_buf = ECS_STRBUF_INIT;
+    if (plan) {
+        ecs_strbuf_appendstr(&plan_buf, plan);
+    } else {
+        if (q->term_count) {
+            ecs_strbuf_append(&plan_buf, "   %sOptimized out (trivial query)\n", ECS_GREY);
+        }
+    }
+
+    if (cq) {
+        ecs_strbuf_appendstr(&plan_buf, "\n\n");
+        ecs_strbuf_appendstr(&plan_buf, "   Cache plan\n");
+        ecs_strbuf_appendstr(&plan_buf, "   ---\n");
+        
+        if (cache_plan) {
+            ecs_strbuf_appendstr(&plan_buf, cache_plan);
+        } else {
+            ecs_strbuf_append(&plan_buf, "   %sOptimized out (trivial query)\n", ECS_GREY);
+        }
+    }
+
+    char *plan_str = ecs_strbuf_get(&plan_buf);
+    if (plan_str) {
+        flecs_json_string_escape(buf, plan_str);
+        ecs_os_free(plan_str);
+    } else {
+        flecs_json_null(buf);
+    }
+
     ecs_os_free(plan);
+    ecs_os_free(cache_plan);
     ecs_log_enable_colors(prev_color);
 }
 
@@ -245,13 +281,13 @@ int ecs_iter_to_json_buf(
 {
     ecs_world_t *world = it->real_world;
 
-    /* Cache id record for flecs.doc ids */
+    /* Cache component record for flecs.doc ids */
     ecs_json_ser_ctx_t ser_ctx;
     ecs_os_zeromem(&ser_ctx);
 #ifdef FLECS_DOC
-    ser_ctx.idr_doc_name = flecs_id_record_get(world, 
+    ser_ctx.cr_doc_name = flecs_components_get(world, 
         ecs_pair_t(EcsDocDescription, EcsName));
-    ser_ctx.idr_doc_color = flecs_id_record_get(world, 
+    ser_ctx.cr_doc_color = flecs_components_get(world, 
         ecs_pair_t(EcsDocDescription, EcsDocColor));
 #endif
 

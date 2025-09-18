@@ -56,7 +56,7 @@ void* assert_mixin(
     
     const ecs_header_t *hdr = poly;
     ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+    ecs_assert(hdr->type != 0, ECS_INVALID_PARAMETER,
         "invalid/freed pointer to flecs object detected");
 
     const ecs_mixins_t *mixins = hdr->mixins;
@@ -83,7 +83,6 @@ void* flecs_poly_init_(
     ecs_header_t *hdr = poly;
     ecs_os_memset(poly, 0, size);
 
-    hdr->magic = ECS_OBJECT_MAGIC;
     hdr->type = type;
     hdr->refcount = 1;
     hdr->mixins = mixins;
@@ -101,11 +100,9 @@ void flecs_poly_fini_(
     ecs_header_t *hdr = poly;
 
     /* Don't deinit poly that wasn't initialized */
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
-        "invalid/freed pointer to flecs object detected");
     ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER,
         "incorrect function called to free flecs object");
-    hdr->magic = 0;
+    hdr->type = 0;
 }
 
 int32_t flecs_poly_claim_(
@@ -113,7 +110,7 @@ int32_t flecs_poly_claim_(
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_header_t *hdr = poly;
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+    ecs_assert(hdr->type != 0, ECS_INVALID_PARAMETER,
         "invalid/freed pointer to flecs object detected");
     if (ecs_os_has_threading()) {
         return ecs_os_ainc(&hdr->refcount);
@@ -127,7 +124,7 @@ int32_t flecs_poly_release_(
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_header_t *hdr = poly;
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+    ecs_assert(hdr->type != 0, ECS_INVALID_PARAMETER,
         "invalid/freed pointer to flecs object detected");
     if (ecs_os_has_threading()) {
         return ecs_os_adec(&hdr->refcount);
@@ -141,7 +138,7 @@ int32_t flecs_poly_refcount(
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_header_t *hdr = poly;
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+    ecs_assert(hdr->type != 0, ECS_INVALID_PARAMETER,
         "invalid/freed pointer to flecs object detected");
     return hdr->refcount;
 }
@@ -210,12 +207,12 @@ bool flecs_poly_is_(
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_header_t *hdr = poly;
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+    ecs_assert(hdr->type != 0, ECS_INVALID_PARAMETER,
         "invalid/freed pointer to flecs object detected");
     return hdr->type == type;    
 }
 
-ecs_observable_t* ecs_get_observable(
+ecs_observable_t* flecs_get_observable(
     const ecs_poly_t *poly)
 {
     return (ecs_observable_t*)assert_mixin(poly, EcsMixinObservable);
@@ -236,7 +233,7 @@ ecs_entity_t ecs_get_entity(
     return *(ecs_entity_t*)assert_mixin(poly, EcsMixinEntity);
 }
 
-flecs_poly_dtor_t* ecs_get_dtor(
+flecs_poly_dtor_t* flecs_get_dtor(
     const ecs_poly_t *poly)
 {
     return (flecs_poly_dtor_t*)assert_mixin(poly, EcsMixinDtor);

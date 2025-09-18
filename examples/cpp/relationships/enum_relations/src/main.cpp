@@ -50,8 +50,8 @@ int main(int, char *[]) {
     printf("%s\n", tile.has(Tile::Stone) ? "true" : "false"); // true
 
     // Get the current value of the enum
-    const Tile* v = tile.get<Tile>();
-    printf("%s\n", (v[0] == Tile::Stone) ? "true" : "false"); // true
+    Tile v = tile.get_constant<Tile>();
+    printf("%s\n", (v == Tile::Stone) ? "true" : "false"); // true
 
     // Create a few more entities that we can query
     ecs.entity().add(Tile::Grass).add(TileStatus::Free);
@@ -86,5 +86,5 @@ int main(int, char *[]) {
     //  ::Tile::Sand
 
     // Remove any instance of the TileStatus relationship
-    tile.remove<TileStatus>();
+    tile.remove<TileStatus>(flecs::Wildcard);
 }

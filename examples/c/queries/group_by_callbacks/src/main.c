@@ -113,8 +113,10 @@ int main(int argc, char *argv[]) {
     while (ecs_query_next(&it)) {
         Position *p = ecs_field(&it, Position, 0);
         char *table_str = ecs_table_str(ecs, it.table);
-        char *group_str = ecs_get_path(ecs, it.group_id);
-        group_ctx *ctx = ecs_query_get_group_ctx(q, it.group_id);
+
+        uint64_t group_id = ecs_iter_get_group(&it);
+        char *group_str = ecs_get_path(ecs, group_id);
+        group_ctx *ctx = ecs_query_get_group_ctx(q, group_id);
 
         printf(" - group %s: table [%s]\n", group_str, table_str);
         printf("   counter: %d\n", ctx->counter);

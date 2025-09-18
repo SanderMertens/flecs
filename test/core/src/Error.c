@@ -61,7 +61,6 @@ void Error_assert_false_w_param(void) {
 
 void Error_error_codes(void) {
     test_assert(ecs_strerror(ECS_INVALID_PARAMETER) != NULL);
-    test_assert(ecs_strerror(ECS_NOT_A_COMPONENT) != NULL);
     test_assert(ecs_strerror(ECS_INTERNAL_ERROR) != NULL);
     test_assert(ecs_strerror(ECS_ALREADY_DEFINED) != NULL);
     test_assert(ecs_strerror(ECS_INVALID_COMPONENT_SIZE) != NULL);
@@ -106,4 +105,10 @@ void Error_last_error(void) {
     int err = ecs_log_last_error();
     test_int(10, err);
     test_int(0, ecs_log_last_error());
+}
+
+void Error_set_log_level_return(void) {
+    ecs_log_set_level(1);
+    int prev = ecs_log_set_level(-1);
+    test_int(prev, 1);
 }

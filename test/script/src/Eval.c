@@ -3,7 +3,7 @@
 void Eval_null(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, NULL) == 0);
+    test_assert(ecs_script_run(world, NULL, NULL, NULL) == 0);
 
     ecs_fini(world);
 }
@@ -11,7 +11,7 @@ void Eval_null(void) {
 void Eval_empty(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "") == 0);
+    test_assert(ecs_script_run(world, NULL, "", NULL) == 0);
 
     ecs_fini(world);
 }
@@ -19,7 +19,7 @@ void Eval_empty(void) {
 void Eval_space(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, " ") == 0);
+    test_assert(ecs_script_run(world, NULL, " ", NULL) == 0);
 
     ecs_fini(world);
 }
@@ -27,7 +27,7 @@ void Eval_space(void) {
 void Eval_space_newline(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, " \n \n") == 0);
+    test_assert(ecs_script_run(world, NULL, " \n \n", NULL) == 0);
 
     ecs_fini(world);
 }
@@ -35,7 +35,7 @@ void Eval_space_newline(void) {
 void Eval_two_empty_newlines(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "\n\n") == 0);
+    test_assert(ecs_script_run(world, NULL, "\n\n", NULL) == 0);
 
     ecs_fini(world);
 }
@@ -43,7 +43,7 @@ void Eval_two_empty_newlines(void) {
 void Eval_three_empty_newlines(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "\n\n\n") == 0);
+    test_assert(ecs_script_run(world, NULL, "\n\n\n", NULL) == 0);
 
     ecs_fini(world);
 }
@@ -51,7 +51,7 @@ void Eval_three_empty_newlines(void) {
 void Eval_newline_trailing_space(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "\n ") == 0);
+    test_assert(ecs_script_run(world, NULL, "\n ", NULL) == 0);
 
     ecs_fini(world);
 }
@@ -59,7 +59,7 @@ void Eval_newline_trailing_space(void) {
 void Eval_newline_trailing_spaces(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "\n   ") == 0);
+    test_assert(ecs_script_run(world, NULL, "\n   ", NULL) == 0);
 
     ecs_fini(world);
 }
@@ -67,7 +67,60 @@ void Eval_newline_trailing_spaces(void) {
 void Eval_multiple_trailing_newlines(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "Foo{}\n\n\n") == 0);
+    test_assert(ecs_script_run(world, NULL, "Foo{}\n\n\n", NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_str(ecs_get_name(world, foo), "Foo");
+    test_int(ecs_get_type(world, foo)->count, 1);
+
+    ecs_fini(world);
+}
+
+void Eval_space_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, " \r\n \r\n", NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_two_empty_crlfs(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "\r\n\r\n", NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_three_empty_crlfs(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "\r\n\r\n\r\n", NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_crlf_trailing_space(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "\r\n ", NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_crlf_trailing_spaces(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "\r\n   ", NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_multiple_trailing_crlfs(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "Foo{}\r\n\r\n\r\n", NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -80,7 +133,33 @@ void Eval_multiple_trailing_newlines(void) {
 void Eval_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "Foo{}") == 0);
+    test_assert(ecs_script_run(world, NULL, "Foo{}", NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_str(ecs_get_name(world, foo), "Foo");
+    test_int(ecs_get_type(world, foo)->count, 1);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "Foo{}\n", NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_str(ecs_get_name(world, foo), "Foo");
+    test_int(ecs_get_type(world, foo)->count, 1);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "Foo{}\r\n", NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -93,7 +172,7 @@ void Eval_entity(void) {
 void Eval_entity_w_core_name(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "World{}") == 0);
+    test_assert(ecs_script_run(world, NULL, "World{}", NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup_child(world, 0, "World");
     test_assert(foo != 0);
@@ -107,7 +186,19 @@ void Eval_entity_w_core_name(void) {
 void Eval_2_entities(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "Foo{}\nBar{}\n") == 0);
+    test_assert(ecs_script_run(world, NULL, "Foo{}\nBar{}\n", NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "Foo");
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "Foo");
+
+    ecs_fini(world);
+}
+
+void Eval_2_entities_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "Foo{}\r\nBar{}\r\n", NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "Foo");
     test_assert(e != 0);
@@ -119,7 +210,7 @@ void Eval_2_entities(void) {
 void Eval_line_comment(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "// Foo{}\n") == 0);
+    test_assert(ecs_script_run(world, NULL, "// Foo{}\n", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Foo") == 0);
 
@@ -129,7 +220,7 @@ void Eval_line_comment(void) {
 void Eval_line_comment_before_stmt(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "// Hello\nFoo {}\n") == 0);
+    test_assert(ecs_script_run(world, NULL, "// Hello\nFoo {}\n", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
@@ -140,7 +231,7 @@ void Eval_line_comment_before_stmt(void) {
 void Eval_line_comment_after_stmt(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "Foo{}\n// Hello\n") == 0);
+    test_assert(ecs_script_run(world, NULL, "Foo{}\n// Hello\n", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
@@ -151,7 +242,7 @@ void Eval_line_comment_after_stmt(void) {
 void Eval_line_comment_between_stmt(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "Foo{}\n// Hello\nBar{}\n") == 0);
+    test_assert(ecs_script_run(world, NULL, "Foo{}\n// Hello\nBar{}\n", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
@@ -163,7 +254,7 @@ void Eval_line_comment_between_stmt(void) {
 void Eval_multiple_line_comment(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "// Hello\n// World\nFoo{}") == 0);
+    test_assert(ecs_script_run(world, NULL, "// Hello\n// World\nFoo{}", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup_child(world, 0, "World") == 0);
@@ -175,7 +266,7 @@ void Eval_multiple_line_comment(void) {
 void Eval_multiple_line_comment_w_newlines(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "// Hello\n\n// World\n\nFoo{}") == 0);
+    test_assert(ecs_script_run(world, NULL, "// Hello\n\n// World\n\nFoo{}", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup_child(world, 0, "World") == 0);
@@ -187,7 +278,7 @@ void Eval_multiple_line_comment_w_newlines(void) {
 void Eval_line_comment_after_stmt_same_line(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "Foo{} // Hello\nBar{}\n") == 0);
+    test_assert(ecs_script_run(world, NULL, "Foo{} // Hello\nBar{}\n", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
@@ -206,7 +297,7 @@ void Eval_line_comment_before_scope_open(void) {
     LINE "}"
     LINE "Foo{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -235,7 +326,7 @@ void Eval_line_comment_after_newline_before_scope_open(void) {
     LINE "}"
     LINE "Foo{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -265,7 +356,7 @@ void Eval_line_comment_after_newline_before_newline_scope_open(void) {
     LINE "}"
     LINE "Foo{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -286,7 +377,7 @@ void Eval_line_comment_after_newline_before_newline_scope_open(void) {
 void Eval_multi_line_comment(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "/* Foo{} */") == 0);
+    test_assert(ecs_script_run(world, NULL, "/* Foo{} */", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Foo") == 0);
 
@@ -296,7 +387,7 @@ void Eval_multi_line_comment(void) {
 void Eval_multi_line_comment_before_stmt(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "/* Hello */\nFoo {}") == 0);
+    test_assert(ecs_script_run(world, NULL, "/* Hello */\nFoo {}", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
@@ -307,7 +398,7 @@ void Eval_multi_line_comment_before_stmt(void) {
 void Eval_multi_line_comment_after_stmt(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "Foo{}\n/* Hello */") == 0);
+    test_assert(ecs_script_run(world, NULL, "Foo{}\n/* Hello */", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
@@ -318,7 +409,7 @@ void Eval_multi_line_comment_after_stmt(void) {
 void Eval_multi_line_comment_between_stmt(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "Foo{}\n /* Hello */ Bar{}\n") == 0);
+    test_assert(ecs_script_run(world, NULL, "Foo{}\n /* Hello */ Bar{}\n", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
@@ -330,7 +421,7 @@ void Eval_multi_line_comment_between_stmt(void) {
 void Eval_multiple_multi_line_comment(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "/* Hello *//* World*/ Foo{}") == 0);
+    test_assert(ecs_script_run(world, NULL, "/* Hello *//* World*/ Foo{}", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup_child(world, 0, "World") == 0);
@@ -342,7 +433,7 @@ void Eval_multiple_multi_line_comment(void) {
 void Eval_multiple_multi_line_comment_w_newlines(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "/* Hello */\n/* World */ Foo{}") == 0);
+    test_assert(ecs_script_run(world, NULL, "/* Hello */\n/* World */ Foo{}", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup_child(world, 0, "World") == 0);
@@ -354,7 +445,7 @@ void Eval_multiple_multi_line_comment_w_newlines(void) {
 void Eval_multi_line_comment_after_stmt_same_line(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "Foo{} /* Hello */\nBar{}\n") == 0);
+    test_assert(ecs_script_run(world, NULL, "Foo{} /* Hello */\nBar{}\n", NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
@@ -373,7 +464,7 @@ void Eval_multi_line_comment_before_scope_open(void) {
     LINE "}"
     LINE "Foo{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -402,7 +493,7 @@ void Eval_multi_line_comment_after_newline_before_scope_open(void) {
     LINE "}"
     LINE "Foo{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -432,7 +523,7 @@ void Eval_multi_line_comment_multiple_lines(void) {
     LINE ""
     LINE "Bar {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Foo") != 0);
     test_assert(ecs_lookup(world, "Bar") != 0);
@@ -453,7 +544,7 @@ void Eval_hierarchy_1_child(void) {
     LINE " Child {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -477,7 +568,7 @@ void Eval_hierarchy_2_children(void) {
     LINE " ChildB{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "ChildA") == 0);
     test_assert(ecs_lookup(world, "ChildB") == 0);
@@ -502,7 +593,7 @@ void Eval_hierarchy_1_child_same_line(void) {
     const char *expr =
     HEAD "Parent { Child{} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -523,7 +614,7 @@ void Eval_hierarchy_2_children_same_line(void) {
     const char *expr =
     HEAD "Parent { ChildA, ChildB, }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "ChildA") == 0);
     test_assert(ecs_lookup(world, "ChildB") == 0);
@@ -548,7 +639,7 @@ void Eval_hierarchy_2_children_same_line_no_trailing_comma(void) {
     const char *expr =
     HEAD "Parent { ChildA, ChildB }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "ChildA") == 0);
     test_assert(ecs_lookup(world, "ChildB") == 0);
@@ -576,7 +667,7 @@ void Eval_entity_after_hierarchy(void) {
     LINE "}"
     LINE "Foo{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -605,7 +696,7 @@ void Eval_newline_before_scope_open(void) {
     LINE "}"
     LINE "Foo{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -630,7 +721,7 @@ void Eval_newline_w_whitespace_before_scope_open(void) {
     LINE "}"
     LINE "Foo{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -656,7 +747,7 @@ void Eval_2_newline_before_scope_open(void) {
     LINE "}"
     LINE "Foo{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -682,7 +773,7 @@ void Eval_2_newline_w_whitespace_before_scope_open(void) {
     LINE "}"
     LINE "Foo{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -707,7 +798,7 @@ void Eval_hierarchy_2_levels(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
     test_assert(ecs_lookup(world, "GrandChild") == 0);
@@ -739,7 +830,7 @@ void Eval_hierarchy_2_levels_2_subtrees(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "ChildA") == 0);
     test_assert(ecs_lookup(world, "ChildB") == 0);
@@ -777,7 +868,7 @@ void Eval_create_in_scope(void) {
     const char *expr =
     HEAD "Parent { Child{} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_get_scope(world) == Root);
 
@@ -807,7 +898,7 @@ void Eval_hierarchy_w_pred_subj(void) {
     LINE " Child{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -833,7 +924,7 @@ void Eval_hierarchy_custom_relation(void) {
     LINE " Child{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -867,7 +958,7 @@ void Eval_hierarchy_custom_relation_2_levels(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -917,7 +1008,7 @@ void Eval_entity_after_hierarchy_custom_relation(void) {
     LINE "}"
     LINE "Hello{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -956,7 +1047,7 @@ void Eval_entity_after_hierarchy_custom_relation_2_levels(void) {
     LINE "}"
     LINE "TestB{}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1019,7 +1110,7 @@ void Eval_hierarchy_custom_relation_apply_to_object(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t rel = ecs_lookup(world, "Rel");
     ecs_entity_t obj_a = ecs_lookup(world, "ObjA");
@@ -1050,7 +1141,7 @@ void Eval_hierarchy_custom_relation_apply_to_object_2_levels(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t rel = ecs_lookup(world, "Rel");
     ecs_entity_t obj_a = ecs_lookup(world, "ObjA");
@@ -1084,7 +1175,7 @@ void Eval_with_tag(void) {
     LINE "  Foo{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t tag = ecs_lookup(world, "Tag");
@@ -1108,7 +1199,7 @@ void Eval_with_tag_2_entities(void) {
     LINE "  Bar{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1132,7 +1223,7 @@ void Eval_with_tag_same_line(void) {
     const char *expr =
     HEAD "with Tag { Foo{} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t tag = ecs_lookup(world, "Tag");
@@ -1153,7 +1244,7 @@ void Eval_with_tag_2_entities_same_line(void) {
     const char *expr =
     HEAD "with Tag { Foo, Bar, }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1177,7 +1268,7 @@ void Eval_with_tag_2_entities_same_line_no_trailing_comma(void) {
     const char *expr =
     HEAD "with Tag { Foo, Bar }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1206,7 +1297,7 @@ void Eval_with_tag_2_levels(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t tag_a = ecs_lookup(world, "TagA");
@@ -1241,7 +1332,7 @@ void Eval_with_tag_2_levels_2_subtrees(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t tag_a = ecs_lookup(world, "TagA");
@@ -1284,7 +1375,7 @@ void Eval_with_n_tags(void) {
     LINE " Bar {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1330,7 +1421,7 @@ void Eval_with_n_tags_2_levels(void) {
     LINE "}"
     LINE "HelloC {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t tag_a = ecs_lookup(world, "TagA");
     ecs_entity_t tag_b = ecs_lookup(world, "TagB");
@@ -1423,7 +1514,7 @@ void Eval_with_after_scope(void) {
     LINE "  E4 { }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e1 = ecs_lookup(world, "E1");
     ecs_entity_t e2 = ecs_lookup(world, "E2");
@@ -1459,7 +1550,7 @@ void Eval_with_after_with(void) {
     LINE "  E4 { }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e1 = ecs_lookup(world, "E1");
     ecs_entity_t e2 = ecs_lookup(world, "E2");
@@ -1496,7 +1587,7 @@ void Eval_scope_inside_with_inside_scope(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t sun = ecs_lookup(world, "Sun");
     ecs_entity_t planet = ecs_lookup(world, "Planet");
@@ -1535,7 +1626,7 @@ void Eval_with_tag_core_name(void) {
     LINE "  Hello {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t hello = ecs_lookup(world, "Hello");
     test_assert(hello != 0);
@@ -1557,7 +1648,7 @@ void Eval_with_inside_scope(void) {
     LINE "  Europe {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t earth = ecs_lookup(world, "Earth");
     ecs_entity_t continent = ecs_lookup(world, "Continent");
@@ -1583,15 +1674,8 @@ void Eval_inherit(void) {
     const char *expr =
     HEAD "Foo : Bar";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
-
-    test_assert(foo != 0);
-    test_assert(bar != 0);
-
-    test_assert(ecs_has_pair(world, foo, EcsIsA, bar));
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1604,15 +1688,8 @@ void Eval_inherit_newline(void) {
     const char *expr =
     HEAD "Foo : Bar\n";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
-
-    test_assert(foo != 0);
-    test_assert(bar != 0);
-
-    test_assert(ecs_has_pair(world, foo, EcsIsA, bar));
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1625,7 +1702,7 @@ void Eval_inherit_w_colon(void) {
     const char *expr =
     HEAD "Foo : Bar {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1646,7 +1723,7 @@ void Eval_inherit_w_colon_w_scope(void) {
     const char *expr =
     HEAD "Foo : Bar { Child{} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1665,8 +1742,8 @@ void Eval_inherit_w_colon_w_scope(void) {
 void Eval_assign_component_w_value(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -1676,7 +1753,7 @@ void Eval_assign_component_w_value(void) {
     const char *expr =
     HEAD "Foo = Position: {10, 20}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(foo != 0);
@@ -1702,7 +1779,7 @@ void Eval_assign_tag_in_assign_scope(void) {
     LINE "  Bar"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1721,7 +1798,7 @@ void Eval_assign_tag_in_assign_scope_same_line(void) {
     const char *expr =
     HEAD "Foo { Bar }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1740,7 +1817,7 @@ void Eval_assign_tag_in_assign_scope_core_name(void) {
     LINE "  World"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t hello = ecs_lookup(world, "Hello");
     test_assert(hello != 0);
@@ -1752,8 +1829,8 @@ void Eval_assign_tag_in_assign_scope_core_name(void) {
 void Eval_assign_component_value_in_assign_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -1765,7 +1842,7 @@ void Eval_assign_component_value_in_assign_scope(void) {
     LINE "  Position: {10, 20}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(foo != 0);
@@ -1784,15 +1861,15 @@ void Eval_assign_component_value_in_assign_scope(void) {
 void Eval_assign_2_component_values_in_assign_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
         }
     });
 
-    ecs_entity_t ecs_id(Velocity) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Velocity"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -1806,7 +1883,7 @@ void Eval_assign_2_component_values_in_assign_scope(void) {
     LINE " Velocity:{1, 2}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(foo != 0);
@@ -1844,7 +1921,7 @@ void Eval_type_and_assign_in_plecs(void) {
     LINE "  Position: {10, 20}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -1876,7 +1953,7 @@ void Eval_type_and_assign_in_plecs_w_2_members(void) {
     LINE "  Position: {x: 10, y: 20}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -1915,7 +1992,7 @@ void Eval_type_and_assign_in_plecs_w_3_members(void) {
     LINE "  Position: {x: 10, y: 20, z: 30}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(Position3D) = ecs_lookup(world, "Position");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -1948,9 +2025,9 @@ void Eval_type_and_assign_in_plecs_w_enum(void) {
 
     const char *expr =
     HEAD "flecs.meta.enum Color {"
-    LINE "  flecs.meta.constant Red"
-    LINE "  flecs.meta.constant Green"
-    LINE "  flecs.meta.constant Blue"
+    LINE "  flecs.core.constant Red"
+    LINE "  flecs.core.constant Green"
+    LINE "  flecs.core.constant Blue"
     LINE "}"
     LINE ""
     LINE "flecs.meta.struct SomeType {"
@@ -1961,7 +2038,7 @@ void Eval_type_and_assign_in_plecs_w_enum(void) {
     LINE "  SomeType: {value: Blue}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(SomeType) = ecs_lookup(world, "SomeType");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -2005,7 +2082,7 @@ void Eval_type_and_assign_in_plecs_w_enum_using_meta(void) {
     LINE
     LINE "Foo { SomeType: {value: Blue} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(SomeType) = ecs_lookup(world, "SomeType");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -2048,7 +2125,7 @@ void Eval_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
     LINE ""
     LINE "Foo { Color: {Blue} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(Color) = ecs_lookup(world, "Color");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -2100,7 +2177,7 @@ void Eval_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
     LINE "  Color: {Green}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
     ecs_entity_t ecs_id(Color) = ecs_lookup(world, "Color");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -2167,7 +2244,7 @@ void Eval_type_and_assign_in_plecs_nested_member(void) {
     LINE
     LINE "l { Line: {start: {x: 10, y: 20}, stop: {x: 30, y: 40}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
     ecs_entity_t l = ecs_lookup(world, "l");
 
@@ -2220,7 +2297,7 @@ void Eval_dot_assign_nested_member(void) {
     LINE
     LINE "l { Line: {start.x: 10, start.y: 20, stop.x: 30, stop.y: 40} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
     ecs_entity_t l = ecs_lookup(world, "l");
 
@@ -2272,7 +2349,7 @@ void Eval_dot_assign_binary_expr(void) {
     LINE
     LINE "l { Line: {start.x: 2 + 8, start.y: 5 + 15, stop.x: 10 + 20, stop.y: 15 + 25} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
     ecs_entity_t l = ecs_lookup(world, "l");
 
@@ -2297,16 +2374,18 @@ void Eval_dot_assign_binary_expr(void) {
 void Eval_open_scope_no_parent(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Tag);
+
     const char *expr =
     HEAD "Foo {"
     LINE "  Bar {}"
     LINE "}"
     LINE "{"
-    LINE "  Zoo {}"
+    LINE "  Zoo { Tag }"
     LINE "}"
     LINE "Hello {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t zoo = ecs_lookup(world, "Zoo");
@@ -2314,11 +2393,16 @@ void Eval_open_scope_no_parent(void) {
 
     test_assert(foo != 0);
     test_assert(bar != 0);
-    test_assert(zoo != 0);
+    test_assert(zoo == 0);
     test_assert(hello != 0);
 
+    ecs_iter_t it = ecs_each(world, Tag);
+    zoo = ecs_iter_first(&it);
+    test_assert(zoo != 0);
+    test_str("Zoo", ecs_get_name(world, zoo));
+
     test_assert(ecs_has_pair(world, bar, EcsChildOf, foo));
-    test_assert(!ecs_has_pair(world, zoo, EcsChildOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, zoo, EcsChildOf, EcsWildcard));
     test_assert(!ecs_has_pair(world, hello, EcsChildOf, EcsWildcard));
 
     ecs_fini(world);
@@ -2330,7 +2414,7 @@ void Eval_create_subject_in_root_scope_w_resolvable_id(void) {
     const char *expr =
     HEAD "Tag {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t tag = ecs_lookup_child(world, 0, "Tag");
     test_assert(tag != 0);
     test_assert(tag != EcsPairIsTag);
@@ -2346,7 +2430,7 @@ void Eval_create_subject_in_scope_w_resolvable_id(void) {
     LINE "  Tag {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
@@ -2373,7 +2457,7 @@ void Eval_create_subject_in_scope_w_resolvable_id_using(void) {
     LINE
     LINE "Hello Bar {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t root_bar = ecs_lookup(world, "Bar");
@@ -2404,7 +2488,7 @@ void Eval_using_scope(void) {
     LINE "Bar Hello {}"
     LINE "Foo.Bar World {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t not_bar = ecs_lookup(world, "Bar");
@@ -2440,7 +2524,7 @@ void Eval_using_nested_scope(void) {
     LINE "Zoo Hello {}"
     LINE "Foo.Bar.Zoo World {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t zoo = ecs_lookup(world, "Foo.Bar.Zoo");
@@ -2469,6 +2553,7 @@ void Eval_using_nested_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Zoo);
+    ECS_TAG(world, Tag);
 
     const char *expr =
     HEAD "Foo {"
@@ -2478,11 +2563,11 @@ void Eval_using_nested_in_scope(void) {
     LINE "}"
     LINE "{"
     LINE "  using Foo.Bar"
-    LINE "  Zoo Hello {}"
+    LINE "  Zoo Hello { Tag }"
     LINE "}"
     LINE "Zoo World {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t zoo = ecs_lookup(world, "Foo.Bar.Zoo");
@@ -2494,10 +2579,14 @@ void Eval_using_nested_in_scope(void) {
     test_assert(foo != 0);
     test_assert(bar != 0);
     test_assert(zoo != 0);
-    test_assert(hello != 0);
+    test_assert(hello == 0);
     test_assert(_world != 0);
     test_assert(not_bar == 0);
     test_assert(zoo_root != 0);
+
+    ecs_iter_t it = ecs_each(world, Tag);
+    hello = ecs_iter_first(&it);
+    test_assert(hello != 0);
 
     test_assert(_world != EcsWorld); /* sanity check, verified by other tests */
 
@@ -2523,7 +2612,7 @@ void Eval_using_with_scope(void) {
     LINE ""
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t scope = ecs_lookup(world, "Scope");
     ecs_entity_t foo = ecs_lookup(world, "Scope.Foo");
     ecs_entity_t bar = ecs_lookup(world, "Scope.Bar");
@@ -2560,7 +2649,7 @@ void Eval_using_w_entity_ref_in_value_2_members(void) {
     LINE ""
     LINE "Foo { Position: {x: 10, y: 20} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -2599,7 +2688,7 @@ void Eval_using_w_entity_ref_in_value_3_members(void) {
     LINE
     LINE "Foo { Position: {x: 10, y: 20, z: 30} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t ecs_id(Position3D) = ecs_lookup(world, "Position");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -2622,7 +2711,7 @@ void Eval_using_w_entity_ref_in_value_3_members(void) {
 void Eval_script_w_only_using(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_script_run(world, NULL, "using flecs") == 0);
+    test_assert(ecs_script_run(world, NULL, "using flecs", NULL) == 0);
 
     ecs_fini(world);
 }
@@ -2645,7 +2734,7 @@ void Eval_2_using_scope(void) {
     LINE "Hello E1 {}"
     LINE "TheWorld E2 {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -2705,7 +2794,7 @@ void Eval_2_using_in_different_scope(void) {
     LINE "TheWorld RootChild {}"
     LINE;
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -2754,8 +2843,8 @@ void Eval_2_using_in_different_scope(void) {
 void Eval_scope_after_assign(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -2767,7 +2856,7 @@ void Eval_scope_after_assign(void) {
     LINE "  Bar {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
@@ -2787,8 +2876,8 @@ void Eval_scope_after_assign(void) {
 void Eval_assign_after_inherit(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -2799,7 +2888,7 @@ void Eval_assign_after_inherit(void) {
     HEAD "Foo : Position {}"
     LINE "Bar { Position: {10, 20} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -2830,7 +2919,7 @@ void Eval_multiple_tags_single_line(void) {
     const char *expr =
     HEAD "Foo { Hello; Bar }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2857,7 +2946,7 @@ void Eval_multiple_pairs_single_line(void) {
     const char *expr =
     HEAD "Foo { (Rel, Hello); (Rel, Bar) }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2880,15 +2969,15 @@ void Eval_multiple_pairs_single_line(void) {
 void Eval_multiple_assignments_single_line(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
         }
     });
 
-    ecs_entity_t ecs_id(Velocity) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Velocity"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -2899,7 +2988,7 @@ void Eval_multiple_assignments_single_line(void) {
     const char *expr =
     HEAD "Foo { Position: {10, 20}; Velocity: {1, 2} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2921,18 +3010,50 @@ void Eval_multiple_assignments_single_line(void) {
     ecs_fini(world);
 }
 
-void Eval_multiple_vars_single_line(void) {
+void Eval_var_single_line_no_newline(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    const char *expr =
+    HEAD "const v = i32: 10"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_var_single_line_composite_type_no_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
         }
     });
 
-    ecs_entity_t ecs_id(Velocity) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    const char *expr =
+    HEAD "const v = Position: {10, 20}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_multiple_vars_single_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Velocity"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -2945,7 +3066,7 @@ void Eval_multiple_vars_single_line(void) {
     LINE "const vel = Velocity: {1, 2}"
     LINE "Foo { $pos; $vel }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2970,25 +3091,38 @@ void Eval_multiple_vars_single_line(void) {
 void Eval_2_stmts_in_scope_w_no_parent(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Tag);
+
     const char *expr =
     HEAD "{"
-    LINE "Bar { }"
-    LINE "Foo { }"
+    LINE "Bar { Tag }"
+    LINE "Foo { Tag }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(foo == 0);
+    test_assert(bar == 0);
 
+    ecs_iter_t it = ecs_each(world, Tag);
+    ecs_entity_t p = ecs_iter_first(&it);
+    test_assert(p != 0);
+    p = ecs_get_target(world, p, EcsChildOf, 0);
+
+    foo = ecs_lookup_from(world, p, "Foo");
+    bar = ecs_lookup_from(world, p, "Bar");
     test_assert(foo != 0);
     test_assert(bar != 0);
 
     test_assert( !ecs_has_id(world, foo, bar));
-    test_assert( !ecs_has_pair(world, foo, EcsChildOf, bar));
+    test_assert( ecs_has_id(world, foo, Tag));
+    test_assert( ecs_has_pair(world, foo, EcsChildOf, p));
 
     test_assert( !ecs_has_id(world, bar, foo));
-    test_assert( !ecs_has_pair(world, bar, EcsChildOf, foo));
+    test_assert( ecs_has_id(world, bar, Tag));
+    test_assert( ecs_has_pair(world, bar, EcsChildOf, p));
 
     ecs_fini(world);
 }
@@ -2996,17 +3130,23 @@ void Eval_2_stmts_in_scope_w_no_parent(void) {
 void Eval_empty_scope_after_using(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Tag);
+
     const char *expr =
     HEAD "using flecs.meta"
     LINE "{"
-    LINE "  Foo {}"
+    LINE "  Foo { Tag }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
-    test_assert( foo != 0);
-    test_assert( !ecs_has_pair(world, foo, EcsChildOf, EcsWildcard));
+    test_assert( foo == 0);
+
+    ecs_iter_t it = ecs_each(world, Tag);
+    foo = ecs_iter_first(&it);
+
+    test_assert( ecs_has_pair(world, foo, EcsChildOf, EcsWildcard));
 
     ecs_fini(world);
 }
@@ -3022,7 +3162,7 @@ void Eval_assign_tag_to_parent(void) {
     LINE "  Child {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3043,8 +3183,8 @@ void Eval_assign_tag_to_parent(void) {
 void Eval_assign_component_to_parent(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -3057,7 +3197,7 @@ void Eval_assign_component_to_parent(void) {
     LINE "  Child {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t child = ecs_lookup(world, "Foo.Child");
@@ -3089,7 +3229,7 @@ void Eval_assign_to_parent_pair_w_new_entities_in_scope(void) {
     LINE "  (Rel, Obj)"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t rel = ecs_lookup(world, "Rel");
@@ -3115,7 +3255,7 @@ void Eval_assign_to_parent_pair_w_existing_entities_in_scope(void) {
     LINE "  (Rel, Obj)"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t rel = ecs_lookup(world, "Rel");
@@ -3143,7 +3283,7 @@ void Eval_default_child_component(void) {
     LINE "  ChildB"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3176,8 +3316,8 @@ void Eval_default_child_component(void) {
 void Eval_default_child_component_w_assign(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -3191,7 +3331,7 @@ void Eval_default_child_component_w_assign(void) {
     LINE "  ChildB = 10, 20"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     
@@ -3231,7 +3371,7 @@ void Eval_struct_type_w_default_child_component(void) {
     LINE "}"
     LINE "Foo { Position: {x: 10, y: 20} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
@@ -3290,7 +3430,7 @@ void Eval_struct_type_w_default_child_component_nested_member(void) {
     LINE
     LINE "Foo { Line: {start: {10, 20}, stop: {30, 40}} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
@@ -3326,7 +3466,7 @@ void Eval_enum_type_w_default_child_component(void) {
     LINE
     LINE "Foo { Color: {Green} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ecs_id(Color) = ecs_lookup(world, "Color");
@@ -3343,11 +3483,47 @@ void Eval_enum_type_w_default_child_component(void) {
     ecs_fini(world);
 }
 
+void Eval_enum_type_w_underlying_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "enum Color(underlying_type: u32) {"
+    LINE "  Red, Green, Blue"
+    LINE "}"
+    LINE
+    LINE "Foo { Color: {Green} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ecs_id(Color) = ecs_lookup(world, "Color");
+    ecs_entity_t green = ecs_lookup_child(world, ecs_id(Color), "Green");
+    test_assert(green != 0);
+    test_assert(ecs_has_pair(world, green, EcsConstant, ecs_id(ecs_u32_t)));
+
+    test_assert(foo != 0);
+    test_assert(ecs_id(Color) != 0);
+
+    test_assert( ecs_has(world, foo, Color));
+
+    const Color *ptr = ecs_get(world, foo, Color);
+    test_assert(ptr != NULL);
+    test_int(*ptr, Green);
+
+    ecs_fini(world);
+}
+
 void Eval_default_type_from_with(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -3360,7 +3536,7 @@ void Eval_default_type_from_with(void) {
     LINE "  e2 = 30, 40"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e1 = ecs_lookup(world, "e1");
     ecs_entity_t e2 = ecs_lookup(world, "e2");
@@ -3384,15 +3560,15 @@ void Eval_default_type_from_with(void) {
 void Eval_default_type_from_nested_with(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
         }
     });
 
-    ecs_entity_t ecs_id(Velocity) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Velocity"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -3410,7 +3586,7 @@ void Eval_default_type_from_nested_with(void) {
     LINE "  e4 = 3, 4"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e1 = ecs_lookup(world, "e1");
     ecs_entity_t e2 = ecs_lookup(world, "e2");
@@ -3448,15 +3624,15 @@ void Eval_default_type_from_nested_with(void) {
 void Eval_default_type_from_with_in_entity_scope_w_default_type(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
         }
     });
 
-    ecs_entity_t ecs_id(Velocity) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Velocity"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -3475,7 +3651,7 @@ void Eval_default_type_from_with_in_entity_scope_w_default_type(void) {
     LINE "  e4 = 2, 3"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e1 = ecs_lookup(world, "Bar.e1");
     ecs_entity_t e2 = ecs_lookup(world, "Bar.e2");
@@ -3523,8 +3699,8 @@ void Eval_default_type_from_with_in_entity_scope_w_default_type(void) {
 void Eval_default_type_from_entity_scope_in_with(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -3543,7 +3719,7 @@ void Eval_default_type_from_entity_scope_in_with(void) {
     LINE "}"
     LINE "e3 = Velocity: {1, 2}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e1 = ecs_lookup(world, "e1");
     ecs_entity_t e2 = ecs_lookup(world, "e2");
@@ -3588,7 +3764,7 @@ void Eval_scope_w_1_subj_and_2_pairs(void) {
     LINE " Foo { (RelB, Bar) }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "Parent");
     ecs_entity_t rel_a = ecs_lookup(world, "RelA");
@@ -3617,7 +3793,7 @@ void Eval_inherit_from_multiple(void) {
     const char *expr =
     HEAD "Inst : Foo, Bar {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t inst = ecs_lookup(world, "Inst");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -3648,7 +3824,7 @@ void Eval_assign_pair_component(void) {
     LINE
     LINE "Foo { (Position, Bar): {x: 10, y: 20} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3687,7 +3863,7 @@ void Eval_assign_pair_component_in_scope(void) {
     LINE "  (Position, Bar): {x: 20, y: 30}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "Parent");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -3796,6 +3972,388 @@ void Eval_assign_pair_component_in_script_update(void) {
     ecs_fini(world);
 }
 
+void Eval_assign_pair_component_w_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  (Position, Foo): {\nx: 10,\n y: 20\n}"
+    LINE "  (Position, Bar): {\nx: 20,\n y: 30\n}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), foo));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get_pair(world, parent, Position, foo);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_w_newline_and_spaces(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  (Position, Foo): {\nx: 10,  \n y: 20\n  }"
+    LINE "  (Position, Bar): {  \nx: 20,\n y: 30  \n}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), foo));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get_pair(world, parent, Position, foo);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_w_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  (Position, Foo): {}"
+    LINE "  (Position, Bar): {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), foo));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get_pair(world, parent, Position, foo);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_w_newline_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  (Position, Foo): {\n}"
+    LINE "  (Position, Bar): {\n}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), foo));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get_pair(world, parent, Position, foo);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_w_newline_and_spaces_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  (Position, Foo): { \n}"
+    LINE "  (Position, Bar): {\n }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), foo));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get_pair(world, parent, Position, foo);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_after_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  Position: {10, 20}"
+    LINE "  (Position, Bar): {x: 20, y: 30}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has(world, parent, Position));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get(world, parent, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_after_int_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  i32: {10}"
+    LINE "  (Position, Bar): {x: 20, y: 30}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has(world, parent, ecs_i32_t));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    {
+        const int32_t *ptr = ecs_get(world, parent, ecs_i32_t);
+        test_assert(ptr != NULL);
+        test_int(*ptr, 10);
+    }
+
+    {
+        const Position *ptr = ecs_get_pair(world, parent, Position, bar);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 20);
+        test_int(ptr->y, 30);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_after_entity_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  entity: {flecs.core}"
+    LINE "  (Position, Bar): {x: 20, y: 30}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has(world, parent, ecs_entity_t));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    {
+        const ecs_entity_t *ptr = ecs_get(world, parent, ecs_entity_t);
+        test_assert(ptr != NULL);
+        test_int(*ptr, EcsFlecsCore);
+    }
+
+    {
+        const Position *ptr = ecs_get_pair(world, parent, Position, bar);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 20);
+        test_int(ptr->y, 30);
+    }
+
+    ecs_fini(world);
+}
+
 void Eval_set_entity_names(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3808,7 +4366,7 @@ void Eval_set_entity_names(void) {
     LINE "foo down {}"
     LINE "foo up {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t self = ecs_lookup(world, "self");
     ecs_entity_t down = ecs_lookup(world, "down");
@@ -3837,13 +4395,13 @@ void Eval_oneof(void) {
 
     const char *expr =
     HEAD "flecs.meta.enum Color {"
-    LINE "  flecs.meta.constant Red"
-    LINE "  flecs.meta.constant Green"
-    LINE "  flecs.meta.constant Blue"
+    LINE "  flecs.core.constant Red"
+    LINE "  flecs.core.constant Green"
+    LINE "  flecs.core.constant Blue"
     LINE "}"
     LINE "e { (Color, Green) }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t color = ecs_lookup(world, "Color");
     ecs_entity_t green = ecs_lookup(world, "Color.Green");
@@ -3872,7 +4430,7 @@ void Eval_brief_annotation(void) {
     LINE "@brief Another description"
     LINE "Baz {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3900,7 +4458,7 @@ void Eval_name_annotation(void) {
     LINE "@name Another name"
     LINE "Baz {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3928,7 +4486,7 @@ void Eval_link_annotation(void) {
     LINE "@link Another link"
     LINE "Baz {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3956,7 +4514,7 @@ void Eval_color_annotation(void) {
     LINE "@color rgb(10, 20, 30, 1.0)"
     LINE "Baz {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3988,7 +4546,7 @@ void Eval_multiple_annotations(void) {
     LINE "@name Another name"
     LINE "Baz {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -4016,7 +4574,7 @@ void Eval_annotation_w_trailing_space(void) {
     HEAD "@brief   A description  "
     LINE "Foo {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4033,7 +4591,7 @@ typedef struct String {
 void Eval_multiline_string(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(String) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t ecs_id(String) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "String"}),
         .members = {
             {"value", ecs_id(ecs_string_t)}
@@ -4044,10 +4602,10 @@ void Eval_multiline_string(void) {
     HEAD "Foo { String: {value: `start"
     LINE "Hello World"
     LINE "Foo Bar"
-    LINE "Special characters }{\"\"'',"
+    LINE "Special characters }\\{\"\"'',"
     LINE "`}}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4063,8 +4621,6 @@ void Eval_multiline_string(void) {
         "Special characters }{\"\"'',\n"
     );
 
-    ecs_os_free(ptr->value);
-
     ecs_fini(world);
 }
 
@@ -4077,7 +4633,7 @@ void Eval_annotate_declaration(void) {
     HEAD "@brief A brief description"
     LINE "Foo Bar";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4102,7 +4658,7 @@ void Eval_declaration_w_underscore_name(void) {
     const char *expr =
     HEAD "Foo _Bar";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4124,7 +4680,7 @@ void Eval_anonymous_entity(void) {
     const char *expr =
     HEAD "_ { Foo }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4150,7 +4706,7 @@ void Eval_anonymous_entity_in_scope(void) {
     LINE "  _ { Foo }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4177,7 +4733,7 @@ void Eval_anonymous_declaration(void) {
     const char *expr =
     HEAD "Foo _";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4197,7 +4753,38 @@ void Eval_const_var_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const var_x: 10"
+    LINE "const var_y: 20"
+    LINE ""
+    LINE "e { Position: {$var_x, $var_y} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_const_var_int_deprecated_notation(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4210,7 +4797,9 @@ void Eval_const_var_int(void) {
     LINE ""
     LINE "e { Position: {$var_x, $var_y} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    ecs_log_set_level(-3);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_log_set_level(-1);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4228,7 +4817,7 @@ void Eval_const_var_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4236,12 +4825,12 @@ void Eval_const_var_float(void) {
     });
 
     const char *expr =
-    HEAD "const var_x = 10.5"
-    LINE "const var_y = 20.5"
+    HEAD "const var_x: 10.5"
+    LINE "const var_y: 20.5"
     LINE ""
     LINE "e { Position: {$var_x, $var_y} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4272,12 +4861,12 @@ void Eval_const_var_bool(void) {
     });
 
     const char *expr =
-    HEAD "const var_x = true"
-    LINE "const var_y = false"
+    HEAD "const var_x: true"
+    LINE "const var_y: false"
     LINE ""
     LINE "e { Bools: {$var_x, $var_y} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4295,7 +4884,7 @@ void Eval_const_var_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4303,12 +4892,12 @@ void Eval_const_var_string(void) {
     });
 
     const char *expr =
-    HEAD "const var_x = \"10.5\""
-    LINE "const var_y = \"20.5\""
+    HEAD "const var_x: \"10.5\""
+    LINE "const var_y: \"20.5\""
     LINE ""
     LINE "e { Position: {$var_x, $var_y} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4347,7 +4936,7 @@ void Eval_const_var_struct(void) {
     LINE ""
     LINE "e { Line: {start: $var_start, stop: $var_stop} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4367,7 +4956,7 @@ void Eval_const_var_scoped(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4375,19 +4964,19 @@ void Eval_const_var_scoped(void) {
     });
 
     const char *expr =
-    HEAD "const var_x = 10"
+    HEAD "const var_x: 10"
     LINE "a { Position: {$var_x, $var_x} }"
     LINE "a {"
-    LINE "  const var_x = 20"
-    LINE "  const var_y = 30"
+    LINE "  const var_x: 20"
+    LINE "  const var_y: 30"
     LINE "  b { Position: {$var_x, $var_y} }"
     LINE "}"
     LINE "a {"
-    LINE "  const var_y = 20"
+    LINE "  const var_y: 20"
     LINE "  c { Position: {$var_x, $var_y} }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t a = ecs_lookup(world, "a");
     test_assert(a != 0);
@@ -4423,7 +5012,7 @@ void Eval_assign_component_from_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4435,7 +5024,7 @@ void Eval_assign_component_from_var(void) {
     LINE "a { $var_pos }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
@@ -4455,7 +5044,7 @@ void Eval_assign_component_from_var_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4469,7 +5058,7 @@ void Eval_assign_component_from_var_in_scope(void) {
     LINE "}"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
@@ -4489,7 +5078,7 @@ void Eval_scope_w_component_after_const_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4498,11 +5087,11 @@ void Eval_scope_w_component_after_const_var(void) {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  const var = 5"
+    LINE "  const var: 5"
     LINE "  Position: {x: 10, y: $var}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4520,7 +5109,7 @@ void Eval_component_after_const_add_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4529,11 +5118,11 @@ void Eval_component_after_const_add_expr(void) {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  const var = 5 + 15"
+    LINE "  const var: 5 + 15"
     LINE "  Position: {x: 10, y: $var}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4551,7 +5140,7 @@ void Eval_component_after_const_sub_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4560,11 +5149,11 @@ void Eval_component_after_const_sub_expr(void) {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  const var = 25 - 5"
+    LINE "  const var: 25 - 5"
     LINE "  Position: {x: 10, y: $var}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4582,7 +5171,7 @@ void Eval_component_after_const_mul_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4591,11 +5180,11 @@ void Eval_component_after_const_mul_expr(void) {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  const var = 2 * 10"
+    LINE "  const var: 2 * 10"
     LINE "  Position: {x: 10, y: $var}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4613,7 +5202,7 @@ void Eval_component_after_const_div_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4622,11 +5211,11 @@ void Eval_component_after_const_div_expr(void) {
 
     const char *expr =
     HEAD "Foo {"
-    LINE "  const var = 40 / 2"
+    LINE "  const var: 40 / 2"
     LINE "  Position: {x: 10, y: $var}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4655,11 +5244,11 @@ void Eval_component_after_const_paren_expr(void) {
 
     const char *expr =
     LINE "e {"
-    LINE "  const val = (10 + 20)"
+    LINE "  const val: (10 + 20)"
     LINE "  Position: {$val, $val * 2}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4685,7 +5274,7 @@ void Eval_parse_with(void) {
     ECS_TAG(world, Tag);
 
     ecs_set_with(world, Tag);
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_set_with(world, 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -4718,7 +5307,7 @@ void Eval_parse_with_w_with(void) {
     LINE "}";
 
     ecs_set_with(world, TagA);
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_set_with(world, 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -4757,7 +5346,7 @@ void Eval_parse_with_w_tag(void) {
     LINE "}";
 
     ecs_set_with(world, TagA);
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     ecs_set_with(world, 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -4800,7 +5389,7 @@ void Eval_parse_with_value(void) {
     LINE "  Bar {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -4853,7 +5442,7 @@ void Eval_parse_with_2_values(void) {
     LINE "  Bar {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -4920,7 +5509,7 @@ void Eval_parse_with_2_nested_values(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -4977,7 +5566,7 @@ void Eval_parse_with_var(void) {
     LINE "  Bar {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -5031,7 +5620,7 @@ void Eval_parse_with_2_vars(void) {
     LINE "  Bar {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -5100,7 +5689,7 @@ void Eval_parse_with_2_nested_vars(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -5159,7 +5748,7 @@ void Eval_parse_with_var_in_scope(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "Parent");
     ecs_entity_t foo = ecs_lookup(world, "Parent.Foo");
@@ -5190,7 +5779,7 @@ void Eval_assign_const_w_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -5198,10 +5787,10 @@ void Eval_assign_const_w_expr(void) {
     });
 
     const char *expr =
-    LINE "const var = 5 + 1"
+    LINE "const var: 5 + 1"
     LINE "e { Position: {x: $var, y: $var * 2} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -5219,7 +5808,7 @@ void Eval_const_w_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -5230,7 +5819,7 @@ void Eval_const_w_type(void) {
     LINE "const var = flecs.meta.i32: 5 / 2"
     LINE "e { Position: {x: $var, y: $var * 3} }";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -5248,7 +5837,7 @@ void Eval_typed_const_w_composite_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -5260,7 +5849,7 @@ void Eval_typed_const_w_composite_type(void) {
     LINE "a { $var_pos }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
@@ -5280,7 +5869,7 @@ void Eval_assign_var_to_typed_const_w_composite_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -5289,11 +5878,11 @@ void Eval_assign_var_to_typed_const_w_composite_type(void) {
 
     const char *expr =
     HEAD "const var_pos_a = Position: {10, 20}"
-    HEAD "const var_pos_b = $var_pos_a"
+    HEAD "const var_pos_b: $var_pos_a"
     LINE "a { $var_pos_b }"
     LINE "";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
@@ -5343,7 +5932,7 @@ void Eval_using_wildcard(void) {
     LINE "using foo.*\n"
     LINE "e { Position: {10, 20} }\n"
     LINE "e { Velocity: {1, 2} }\n";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t pos = ecs_lookup(world, "foo.p1.Position");
     test_assert(pos == ecs_id(Position));
@@ -5390,7 +5979,7 @@ void Eval_single_line_comment_in_value(void) {
     LINE "  //foo\n"
     LINE "  y: 20\n"
     LINE "}}";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -5424,7 +6013,7 @@ void Eval_single_line_comment_in_value_after_scope(void) {
     LINE "  x: 10\n"
     LINE "  y: 20\n"
     LINE "}}";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -5460,7 +6049,7 @@ void Eval_multi_line_comment_in_value(void) {
     LINE "   */\n"
     LINE "  y: 20\n"
     LINE "}}";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -5496,7 +6085,7 @@ void Eval_multi_line_comment_in_value_after_scope(void) {
     LINE "  x: 10\n"
     LINE "  y: 20\n"
     LINE "}}";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -5529,7 +6118,7 @@ void Eval_module_stmt(void) {
     LINE "Foo {}\n"
     LINE "e { Position: {10, 20} }\n"
     LINE "e { Foo }\n";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     test_assert(ecs_get_scope(world) == 0);
 
     ecs_entity_t hello = ecs_lookup(world, "hello");
@@ -5572,7 +6161,7 @@ void Eval_nested_module_stmt(void) {
     LINE "Foo {}\n"
     LINE "e { Position: {10, 20} }\n"
     LINE "e { Foo }\n";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t hello = ecs_lookup(world, "hello");
     test_assert(hello != 0);
@@ -5622,7 +6211,7 @@ void Eval_module_stmt_w_scope(void) {
     LINE "f { Position: {30, 40} }\n"
     LINE "f { Foo }\n"
     LINE "";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t hello = ecs_lookup(world, "hello");
     test_assert(hello != 0);
@@ -5686,7 +6275,7 @@ void Eval_module_stmt_w_nested_scope(void) {
     LINE "f { Position: {30, 40} }\n"
     LINE "f { Foo }\n"
     LINE "";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t hello = ecs_lookup(world, "hello");
     test_assert(hello != 0);
@@ -5734,7 +6323,7 @@ void Eval_assign_singleton_tag(void) {
 
     const char *expr =
     LINE "$ { Foo }\n";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -5759,7 +6348,7 @@ void Eval_assign_singleton_component(void) {
 
     const char *expr =
     LINE "$ = Position: {10, 20}\n";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_has(world, ecs_id(Position), Position));
 
@@ -5780,7 +6369,7 @@ void Eval_assign_singleton_tag_w_scope(void) {
     LINE "$ {\n"
     LINE "  Foo\n"
     LINE "}\n";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -5801,7 +6390,7 @@ void Eval_assign_singleton_2_tags_w_scope(void) {
     LINE "  Foo\n"
     LINE "  Bar\n"
     LINE "}\n";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -5831,7 +6420,7 @@ void Eval_assign_singleton_component_w_scope(void) {
     LINE "$ {\n"
     LINE "  Position: {10, 20}\n"
     LINE "}\n";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_has(world, ecs_id(Position), Position));
 
@@ -5870,7 +6459,7 @@ void Eval_assign_singleton_2_components_w_scope(void) {
     LINE "  Position: {10, 20}\n"
     LINE "  Velocity: {1, 2}\n"
     LINE "}\n";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     const Position *p = ecs_get(world, ecs_id(Position), Position);
     test_assert(p != NULL);
@@ -5898,7 +6487,7 @@ void Eval_with_pair_in_scope(void) {
     LINE "  }\n"
     LINE "}\n";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "Parent");
     ecs_entity_t child = ecs_lookup(world, "Parent.Child");
@@ -5938,7 +6527,7 @@ void Eval_with_pair_component_in_scope(void) {
     LINE "  }\n"
     LINE "}\n";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "Parent");
     ecs_entity_t child = ecs_lookup(world, "Parent.Child");
@@ -5968,13 +6557,13 @@ void Eval_pair_w_rel_var(void) {
     ECS_TAG(world, Tgt);
 
     const char *expr =
-    LINE "const rel = Rel\n"
+    LINE "const rel: Rel\n"
     LINE "ent {\n"
     LINE "  ($rel, Tgt)\n"
     LINE "}\n"
     LINE "\n";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t ent = ecs_lookup(world, "ent");
 
@@ -5990,57 +6579,17 @@ void Eval_pair_w_tgt_var(void) {
     ECS_TAG(world, Tgt);
 
     const char *expr =
-    LINE "const tgt = Tgt\n"
+    LINE "const tgt: Tgt\n"
     LINE "ent {\n"
     LINE "  (Rel, $tgt)\n"
     LINE "}\n"
     LINE "\n";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t ent = ecs_lookup(world, "ent");
 
     test_assert(ecs_has_pair(world, ent, Rel, Tgt));
-
-    ecs_fini(world);
-}
-
-void Eval_component_in_with_scope_in_scope(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Bar);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "foo {\n"
-    LINE "  Position: {10, 20}\n"
-    LINE "  with Position(30, 40) {\n"
-    LINE "    Bar\n"
-    LINE "  }\n"
-    LINE "}\n";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "foo");
-    test_assert(foo != 0);
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
-    test_assert(bar != 0);
-
-    test_assert(ecs_has(world, foo, Position));
-    test_assert(ecs_has_id(world, foo, bar));
-
-    const Position *p = ecs_get(world, foo, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
 
     ecs_fini(world);
 }
@@ -6058,7 +6607,7 @@ void Eval_array_component(void) {
 
     const char *expr =
     LINE "foo { Position: [10, 20] }\n";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -6102,7 +6651,7 @@ void Eval_on_set_w_kind_paren_no_reflection(void) {
 
     test_int(on_set_position_invoked, 0);
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6139,7 +6688,7 @@ void Eval_on_set_w_kind_paren(void) {
 
     test_int(on_set_position_invoked, 0);
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6176,7 +6725,7 @@ void Eval_on_set_w_kind_no_paren(void) {
 
     test_int(on_set_position_invoked, 0);
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6205,7 +6754,7 @@ void Eval_on_set_w_kind_no_paren_no_reflection(void) {
 
     test_int(on_set_position_invoked, 0);
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6234,7 +6783,7 @@ void Eval_on_set_w_single_assign(void) {
 
     test_int(on_set_position_invoked, 0);
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6263,7 +6812,7 @@ void Eval_on_set_w_single_assign_scoped_w_value(void) {
 
     test_int(on_set_position_invoked, 0);
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6292,7 +6841,7 @@ void Eval_on_set_w_single_assign_scoped_no_value(void) {
 
     test_int(on_set_position_invoked, 0);
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6316,7 +6865,7 @@ void Eval_if_true(void) {
     LINE "  b{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     test_assert(ecs_lookup(world, "a") != 0);
     test_assert(ecs_lookup(world, "b") == 0);
 
@@ -6331,7 +6880,7 @@ void Eval_if_true_no_else(void) {
     LINE "  a{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     test_assert(ecs_lookup(world, "a") != 0);
 
     ecs_fini(world);
@@ -6347,7 +6896,7 @@ void Eval_if_false(void) {
     LINE "  b{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     test_assert(ecs_lookup(world, "a") == 0);
     test_assert(ecs_lookup(world, "b") != 0);
 
@@ -6364,7 +6913,7 @@ void Eval_if_10(void) {
     LINE "  b{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     test_assert(ecs_lookup(world, "a") != 0);
     test_assert(ecs_lookup(world, "b") == 0);
 
@@ -6381,7 +6930,7 @@ void Eval_if_256(void) {
     LINE "  b{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     test_assert(ecs_lookup(world, "a") != 0);
     test_assert(ecs_lookup(world, "b") == 0);
 
@@ -6398,7 +6947,7 @@ void Eval_if_0(void) {
     LINE "  b{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     test_assert(ecs_lookup(world, "a") == 0);
     test_assert(ecs_lookup(world, "b") != 0);
 
@@ -6409,14 +6958,14 @@ void Eval_if_true_var(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const v = true"
+    HEAD "const v: true"
     LINE "if $v {"
     LINE "  a{}"
     LINE "} else {"
     LINE "  b{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     test_assert(ecs_lookup(world, "a") != 0);
     test_assert(ecs_lookup(world, "b") == 0);
 
@@ -6427,14 +6976,14 @@ void Eval_if_false_var(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const v = false"
+    HEAD "const v: false"
     LINE "if $v {"
     LINE "  a{}"
     LINE "} else {"
     LINE "  b{}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     test_assert(ecs_lookup(world, "a") == 0);
     test_assert(ecs_lookup(world, "b") != 0);
 
@@ -6456,7 +7005,7 @@ void Eval_if_true_in_scope(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6480,7 +7029,7 @@ void Eval_if_false_in_scope(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6500,7 +7049,7 @@ void Eval_if_lt(void) {
         LINE "  b{}"
         LINE "}";
 
-        test_assert(ecs_script_run(world, NULL, expr) == 0);
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
         test_assert(ecs_lookup(world, "a") == 0);
         test_assert(ecs_lookup(world, "b") != 0);
     }
@@ -6513,7 +7062,7 @@ void Eval_if_lt(void) {
         LINE "  d{}"
         LINE "}";
 
-        test_assert(ecs_script_run(world, NULL, expr) == 0);
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
         test_assert(ecs_lookup(world, "c") != 0);
         test_assert(ecs_lookup(world, "d") == 0);
     }
@@ -6526,31 +7075,131 @@ void Eval_if_lt_const(void) {
 
     {
         const char *expr =
-        HEAD "const v = 2.0"
+        HEAD "const v: 2.0"
         LINE "if $v > 3.0 {"
         LINE "  a{}"
         LINE "} else {"
         LINE "  b{}"
         LINE "}";
 
-        test_assert(ecs_script_run(world, NULL, expr) == 0);
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
         test_assert(ecs_lookup(world, "a") == 0);
         test_assert(ecs_lookup(world, "b") != 0);
     }
 
     {
         const char *expr =
-        HEAD "const v = 3.0"
+        HEAD "const v: 3.0"
         LINE "if $v > 2.0 {"
         LINE "  c{}"
         LINE "} else {"
         LINE "  d{}"
         LINE "}";
 
-        test_assert(ecs_script_run(world, NULL, expr) == 0);
+        test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
         test_assert(ecs_lookup(world, "c") != 0);
         test_assert(ecs_lookup(world, "d") == 0);
     }
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else if $v == 0 {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_if_else(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else if $v == 0 {"
+    LINE "  b{}"
+    LINE "} else {"
+    LINE "  c{}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_assert(ecs_lookup(world, "c") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_if_else_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else if $v == 0 {"
+    LINE "  b{}"
+    LINE "} else if $v == 2 {"
+    LINE "  c{}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_assert(ecs_lookup(world, "c") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_newline_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else"
+    LINE "if $v == 0 {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_space_newline_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else "
+    LINE "if $v == 0 {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
 
     ecs_fini(world);
 }
@@ -6565,7 +7214,7 @@ void Eval_isa_in_module(void) {
     LINE "  (IsA, Animal)"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup_child(world, 0, "IsA") == 0);
     test_assert(ecs_lookup(world, "things.IsA") == 0);
@@ -6598,7 +7247,7 @@ void Eval_isa_hierarchy(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup_child(world, 0, "IsA") == 0);
 
@@ -6649,7 +7298,7 @@ void Eval_isa_hierarchy_in_module(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup_child(world, 0, "IsA") == 0);
     test_assert(ecs_lookup(world, "things.IsA") == 0);
@@ -6702,7 +7351,7 @@ void Eval_custom_isa_hierarchy_in_module(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup_child(world, 0, "IsA") == 0);
 
@@ -6756,7 +7405,7 @@ void Eval_custom_isa_hierarchy_in_subtree(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup_child(world, 0, "IsA") == 0);
 
@@ -6799,7 +7448,7 @@ void Eval_inherit_w_kind(void) {
     HEAD "Prefab Foo"
     LINE "Prefab Bar : Foo";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -6821,7 +7470,7 @@ void Eval_inherit_w_kind_scope(void) {
     LINE "  Child {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -6839,8 +7488,8 @@ void Eval_inherit_w_kind_scope(void) {
 void Eval_inherit_w_kind_value(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -6851,7 +7500,7 @@ void Eval_inherit_w_kind_value(void) {
     HEAD "Prefab Foo"
     LINE "Position Bar : Foo (10, 20)";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -6872,8 +7521,8 @@ void Eval_inherit_w_kind_value(void) {
 void Eval_inherit_w_kind_value_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -6886,7 +7535,7 @@ void Eval_inherit_w_kind_value_scope(void) {
     LINE "  Child {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -6914,7 +7563,7 @@ void Eval_multiple_inherit_w_kind(void) {
     LINE "Prefab World"
     LINE "Prefab Foo : Hello, World";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t hello = ecs_lookup(world, "Hello");
@@ -6941,7 +7590,7 @@ void Eval_multiple_inherit_w_kind_scope(void) {
     LINE "  Child {}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t hello = ecs_lookup(world, "Hello");
@@ -6970,7 +7619,7 @@ void Eval_auto_override_tag(void) {
     LINE "  auto_override | Tag"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -6984,8 +7633,8 @@ void Eval_auto_override_tag(void) {
 void Eval_auto_override_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -6997,7 +7646,7 @@ void Eval_auto_override_component(void) {
     LINE "  auto_override | Position: {10, 20}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -7024,7 +7673,7 @@ void Eval_auto_override_pair(void) {
     LINE "  auto_override | (Rel, Tgt)"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -7038,8 +7687,8 @@ void Eval_auto_override_pair(void) {
 void Eval_auto_override_pair_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7053,7 +7702,7 @@ void Eval_auto_override_pair_component(void) {
     LINE "  auto_override | (Position, Tgt): {10, 20}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -7079,7 +7728,7 @@ void Eval_lowercase_prefab_kind(void) {
     LINE "  Tag"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     
     test_assert(ecs_lookup(world, "prefab") == 0);
 
@@ -7094,8 +7743,8 @@ void Eval_lowercase_prefab_kind(void) {
 void Eval_assign_component_to_const(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7106,12 +7755,12 @@ void Eval_assign_component_to_const(void) {
     ecs_set(world, e, Position, {10, 20});
 
     const char *expr =
-    HEAD "const pos = e[Position]"
+    HEAD "const pos: e[Position]"
     LINE "foo {"
     LINE "  Position: {$pos.y, $pos.x}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -7128,7 +7777,7 @@ void Eval_assign_component_member_to_const(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7139,14 +7788,14 @@ void Eval_assign_component_member_to_const(void) {
     ecs_set(world, e, Position, {10, 20});
 
     const char *expr =
-    HEAD "const px = e[Position].x"
-    LINE "const py = e[Position].y"
+    HEAD "const px: e[Position].x"
+    LINE "const py: e[Position].y"
     LINE ""
     LINE "foo {"
     LINE "  Position: {$py, $px}"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -7163,7 +7812,7 @@ void Eval_prefab_w_slot(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7179,9 +7828,9 @@ void Eval_prefab_w_slot(void) {
     LINE "  slot Cannon {}"
     LINE "}"
     LINE ""
-    LINE "inst : Turret";
+    LINE "inst : Turret {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t turret = ecs_lookup(world, "Turret");
     test_assert(turret != 0);
@@ -7227,7 +7876,7 @@ void Eval_prefab_w_slot_variant(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t head = ecs_lookup(world, "Turret.Head");
     ecs_entity_t variant = ecs_lookup(world, "Variant");
@@ -7247,8 +7896,8 @@ void Eval_prefab_w_slot_variant(void) {
 void Eval_const_w_component_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7259,12 +7908,12 @@ void Eval_const_w_component_expr(void) {
     ecs_set(world, e, Position, {10, 20});
 
     const char *expr =
-    HEAD "const pos = e[Position]"
+    HEAD "const pos: e[Position]"
     LINE "foo {"
     LINE "  $pos"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -7281,8 +7930,8 @@ void Eval_const_w_component_expr(void) {
 void Eval_const_w_component_expr_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7294,13 +7943,13 @@ void Eval_const_w_component_expr_in_scope(void) {
 
     const char *expr =
     HEAD "parent {"
-    LINE "  const pos = e[Position]"
+    LINE "  const pos: e[Position]"
     LINE "  foo {"
     LINE "    $pos"
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "parent");
     test_assert(parent != 0);
@@ -7320,8 +7969,8 @@ void Eval_const_w_component_expr_in_scope(void) {
 void Eval_const_w_component_expr_in_module(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7333,12 +7982,12 @@ void Eval_const_w_component_expr_in_module(void) {
 
     const char *expr =
     HEAD "module parent"
-    LINE "const pos = e[Position]"
+    LINE "const pos: e[Position]"
     LINE "foo {"
     LINE "  $pos"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "parent");
     test_assert(parent != 0);
@@ -7361,7 +8010,7 @@ void Eval_const_w_component_in_scope_expr_in_scope(void) {
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     test_assert(parent != 0);
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Position", .parent = parent }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -7374,13 +8023,13 @@ void Eval_const_w_component_in_scope_expr_in_scope(void) {
 
     const char *expr =
     HEAD "parent {"
-    LINE "  const pos = e[Position]"
+    LINE "  const pos: e[Position]"
     LINE "  foo {"
     LINE "    $pos"
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "parent.foo");
     test_assert(foo != 0);
@@ -7400,7 +8049,7 @@ void Eval_const_w_component_in_scope_expr_in_module(void) {
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     test_assert(parent != 0);
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Position", .parent = parent }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -7413,12 +8062,12 @@ void Eval_const_w_component_in_scope_expr_in_module(void) {
 
     const char *expr =
     HEAD "module parent"
-    LINE "const pos = e[Position]"
+    LINE "const pos: e[Position]"
     LINE "foo {"
     LINE "  $pos"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "parent.foo");
     test_assert(foo != 0);
@@ -7438,7 +8087,7 @@ void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void) {
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     test_assert(parent != 0);
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Position", .parent = parent }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -7451,13 +8100,13 @@ void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void) {
 
     const char *expr =
     HEAD "parent {"
-    LINE "  const pos = e[Position]"
+    LINE "  const pos: e[Position]"
     LINE "  foo {"
     LINE "    $pos"
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "parent.foo");
     test_assert(foo != 0);
@@ -7477,7 +8126,7 @@ void Eval_const_w_component_and_entity_in_scope_expr_in_module(void) {
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     test_assert(parent != 0);
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Position", .parent = parent }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -7490,12 +8139,12 @@ void Eval_const_w_component_and_entity_in_scope_expr_in_module(void) {
 
     const char *expr =
     HEAD "module parent"
-    LINE "const pos = e[Position]"
+    LINE "const pos: e[Position]"
     LINE "foo {"
     LINE "  $pos"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "parent.foo");
     test_assert(foo != 0);
@@ -7522,7 +8171,7 @@ void Eval_path_tag_in_scope(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "parent.Hello.World") == 0);
 
@@ -7546,7 +8195,7 @@ void Eval_path_tag_in_module(void) {
     LINE "  Hello.World"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "parent.Hello.World") == 0);
 
@@ -7571,7 +8220,7 @@ void Eval_path_tag_in_nested_scope(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "parent.Hello.World") == 0);
 
@@ -7595,7 +8244,7 @@ void Eval_path_tag_in_nested_module(void) {
     LINE "  Hello.World"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     test_assert(ecs_lookup(world, "Hello.parent.Hello") == 0);
     test_assert(ecs_lookup(world, "Hello.parent.Hello.World") == 0);
@@ -7646,7 +8295,7 @@ void Eval_update_script_w_anonymous(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7692,7 +8341,7 @@ void Eval_update_script_w_anonymous_paren(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7738,7 +8387,7 @@ void Eval_clear_script(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7782,7 +8431,7 @@ void Eval_clear_script_w_anonymous(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7822,7 +8471,7 @@ void Eval_clear_script_w_anonymous_paren(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7860,7 +8509,7 @@ void Eval_partial_assign(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -7889,22 +8538,15 @@ typedef struct Strings {
     char *b;
 } Strings;
 
-static int strings_ctor_invoked = 0;
-static int strings_dtor_invoked = 0;
-static int strings_move_invoked = 0;
-static int strings_copy_invoked = 0;
-
 ECS_CTOR(Strings, ptr, {
     ptr->a = NULL;
     ptr->b = NULL;
-    strings_ctor_invoked ++;
-});
+})
 
 ECS_DTOR(Strings, ptr, {
     ecs_os_free(ptr->a);
     ecs_os_free(ptr->b);
-    strings_dtor_invoked ++;
-});
+})
 
 ECS_MOVE(Strings, dst, src, {
     ecs_os_free(dst->a);
@@ -7913,16 +8555,14 @@ ECS_MOVE(Strings, dst, src, {
     dst->b = src->b;
     src->a = NULL;
     dst->a = NULL;
-    strings_move_invoked ++;
-});
+})
 
 ECS_COPY(Strings, dst, src, {
     ecs_os_free(dst->a);
     ecs_os_free(dst->b);
     dst->a = ecs_os_strdup(src->a);
     dst->b = ecs_os_strdup(src->b);
-    strings_copy_invoked ++;
-});
+})
 
 void Eval_partial_assign_nontrivial(void) {
     ecs_world_t *world = ecs_init();
@@ -7950,9 +8590,6 @@ void Eval_partial_assign_nontrivial(void) {
     });
     test_assert(s != 0);
 
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 2);
-
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
     
@@ -7962,18 +8599,13 @@ void Eval_partial_assign_nontrivial(void) {
     test_str(p->b, "bar");
 
     ecs_fini(world);
-
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 3);
-    test_int(strings_move_invoked, 0);
-    test_int(strings_copy_invoked, 0);
 }
 
 void Eval_partial_assign_with(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+        .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -8038,11 +8670,6 @@ void Eval_partial_assign_nontrivial_with(void) {
     });
     test_assert(s != 0);
 
-    test_int(strings_ctor_invoked, 4);
-    test_int(strings_dtor_invoked, 2);
-    test_int(strings_move_invoked, 0);
-    test_int(strings_copy_invoked, 4);
-
     {
         ecs_entity_t e = ecs_lookup(world, "foo");
         test_assert(e != 0);
@@ -8063,11 +8690,6 @@ void Eval_partial_assign_nontrivial_with(void) {
     }
 
     ecs_fini(world);
-
-    test_int(strings_ctor_invoked, 4);
-    test_int(strings_dtor_invoked, 4);
-    test_int(strings_move_invoked, 0);
-    test_int(strings_copy_invoked, 4);
 }
 
 typedef struct LargeArray {
@@ -8144,11 +8766,6 @@ void Eval_non_trivial_var_component(void) {
     });
     test_assert(s != 0);
 
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 1);
-    test_int(strings_copy_invoked, 2);
-    test_int(strings_move_invoked, 0);
-
     {
         ecs_entity_t e = ecs_lookup(world, "foo");
         test_assert(e != 0);
@@ -8169,11 +8786,6 @@ void Eval_non_trivial_var_component(void) {
     }
 
     ecs_fini(world);
-
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 3);
-    test_int(strings_copy_invoked, 2);
-    test_int(strings_move_invoked, 0);
 }
 
 void Eval_non_trivial_var_with(void) {
@@ -8210,11 +8822,6 @@ void Eval_non_trivial_var_with(void) {
     });
     test_assert(s != 0);
 
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 1);
-    test_int(strings_copy_invoked, 2);
-    test_int(strings_move_invoked, 0);
-
     {
         ecs_entity_t e = ecs_lookup(world, "foo");
         test_assert(e != 0);
@@ -8235,9 +8842,4086 @@ void Eval_non_trivial_var_with(void) {
     }
 
     ecs_fini(world);
+}
 
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 3);
-    test_int(strings_copy_invoked, 2);
-    test_int(strings_move_invoked, 0);
+void Eval_update_template_w_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE
+    LINE "template Bar {"
+    LINE "  Foo"
+    LINE "}"
+    LINE
+    LINE "Bar e()";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_script_update(world, s, 0, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(e != 0);
+
+    test_assert(ecs_has_id(world, e, foo));
+    test_assert(ecs_has_id(world, e, bar));
+
+    ecs_fini(world);
+}
+
+static
+void func_sqr(
+    const ecs_function_ctx_t *ctx,
+    int argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    int32_t v = *(int32_t*)argv[0].ptr;
+    *(int32_t*)result->ptr = v * v;
+}
+
+void Eval_assign_call_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_function(world, {
+        .name = "sqr",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{ "x", ecs_id(ecs_i32_t) }},
+        .callback = func_sqr,
+    });
+
+    const char *expr =
+    HEAD "Foo = Position: {sqr(2), sqr(3)}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+
+    test_int(ptr->x, 4);
+    test_int(ptr->y, 9);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_call_scoped_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+
+    ecs_function(world, {
+        .name = "sqr",
+        .parent = parent,
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{ "x", ecs_id(ecs_i32_t) }},
+        .callback = func_sqr,
+    });
+
+    const char *expr =
+    HEAD "Foo = Position: {parent.sqr(2), parent.sqr(3)}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+
+    test_int(ptr->x, 4);
+    test_int(ptr->y, 9);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_call_scoped_func_w_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+
+    ecs_function(world, {
+        .name = "sqr",
+        .parent = parent,
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{ "x", ecs_id(ecs_i32_t) }},
+        .callback = func_sqr,
+    });
+
+    const char *expr =
+    HEAD "using parent"
+    LINE "Foo = Position: {sqr(2), sqr(3)}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+
+    test_int(ptr->x, 4);
+    test_int(ptr->y, 9);
+
+    ecs_fini(world);
+}
+
+void Eval_eval_w_vars(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_i32_t);
+    *(int32_t*)foo->value.ptr = 10;
+
+    ecs_script_eval_desc_t desc = { .vars = vars };
+
+    const char *expr =
+    LINE "e = Position: {$foo, $foo * 2}";
+
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+    test_assert(s != NULL);
+
+    {
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    *(int32_t*)foo->value.ptr = 20;
+
+    {
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 40);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_eval_w_other_vars(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_t *s;
+
+    const char *expr =
+    LINE "e = Position: {$foo, $bar * 2}";
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_i32_t);
+        *(int32_t*)foo->value.ptr = 10;
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", ecs_i32_t);
+        *(int32_t*)bar->value.ptr = 20;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+        test_assert(s != NULL);
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 40);
+
+        ecs_script_vars_fini(vars);
+    }
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_i32_t);
+        *(int32_t*)foo->value.ptr = 20;
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", ecs_i32_t);
+        *(int32_t*)bar->value.ptr = 30;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 60);
+
+        ecs_script_vars_fini(vars);
+    }
+
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_eval_w_vars_different_order(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_t *s;
+
+    const char *expr =
+    LINE "e = Position: {$foo, $bar * 2}";
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_i32_t);
+        *(int32_t*)foo->value.ptr = 10;
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", ecs_i32_t);
+        *(int32_t*)bar->value.ptr = 20;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+        test_assert(s != NULL);
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 40);
+
+        ecs_script_vars_fini(vars);
+    }
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", ecs_i32_t);
+        *(int32_t*)bar->value.ptr = 30;
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_i32_t);
+        *(int32_t*)foo->value.ptr = 20;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 60);
+
+        ecs_script_vars_fini(vars);
+    }
+
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_eval_w_vars_different_order_var_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+
+    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Velocity"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_t *s;
+
+    const char *expr =
+    LINE "e {"
+    LINE "  $foo"
+    LINE "  $bar"
+    LINE "}"
+    ;
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", Position);
+        ((Position*)foo->value.ptr)->x = 10;
+        ((Position*)foo->value.ptr)->y = 20;
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", Velocity);
+        ((Velocity*)bar->value.ptr)->x = 1;
+        ((Velocity*)bar->value.ptr)->y = 2;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+        test_assert(s != NULL);
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+
+        ecs_script_vars_fini(vars);
+    }
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", Velocity);
+        ((Velocity*)bar->value.ptr)->x = 1;
+        ((Velocity*)bar->value.ptr)->y = 2;
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", Position);
+        ((Position*)foo->value.ptr)->x = 10;
+        ((Position*)foo->value.ptr)->y = 20;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+
+        ecs_script_vars_fini(vars);
+    }
+
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_eval_w_vars_different_order_with_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+
+    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Velocity"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_t *s;
+
+    const char *expr =
+    LINE "with $foo, $bar {"
+    LINE "  e {}"
+    LINE "}"
+    ;
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", Position);
+        ((Position*)foo->value.ptr)->x = 10;
+        ((Position*)foo->value.ptr)->y = 20;
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", Velocity);
+        ((Velocity*)bar->value.ptr)->x = 1;
+        ((Velocity*)bar->value.ptr)->y = 2;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+        test_assert(s != NULL);
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+
+        ecs_script_vars_fini(vars);
+    }
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", Velocity);
+        ((Velocity*)bar->value.ptr)->x = 1;
+        ((Velocity*)bar->value.ptr)->y = 2;
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", Position);
+        ((Position*)foo->value.ptr)->x = 10;
+        ((Position*)foo->value.ptr)->y = 20;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+
+        ecs_script_vars_fini(vars);
+    }
+
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_eval_w_vars_different_order_pair_w_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_script_t *s;
+
+    const char *expr =
+    LINE "e {"
+    LINE "  ($foo, $bar)"
+    LINE "}"
+    ;
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_entity_t);
+        *((ecs_entity_t*)foo->value.ptr) = Rel;
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", ecs_entity_t);
+        *((ecs_entity_t*)bar->value.ptr) = Tgt;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+        test_assert(s != NULL);
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        test_assert(ecs_has_pair(world, e, Rel, Tgt));
+        ecs_script_vars_fini(vars);
+    }
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", ecs_entity_t);
+        *((ecs_entity_t*)bar->value.ptr) = Tgt;
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_entity_t);
+        *((ecs_entity_t*)foo->value.ptr) = Rel;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        test_assert(ecs_has_pair(world, e, Rel, Tgt));
+        ecs_script_vars_fini(vars);
+    }
+
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_eval_w_vars_different_order_pair_scope_w_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_script_t *s;
+
+    const char *expr =
+    LINE "($foo, $bar) {"
+    LINE "  e {}"
+    LINE "}"
+    ;
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_entity_t);
+        *((ecs_entity_t*)foo->value.ptr) = Rel;
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", ecs_entity_t);
+        *((ecs_entity_t*)bar->value.ptr) = Tgt;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+        test_assert(s != NULL);
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        test_assert(ecs_has_pair(world, e, Rel, Tgt));
+        ecs_script_vars_fini(vars);
+    }
+
+    {
+        ecs_script_vars_t *vars = ecs_script_vars_init(world);
+        ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", ecs_entity_t);
+        *((ecs_entity_t*)bar->value.ptr) = Tgt;
+        ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_entity_t);
+        *((ecs_entity_t*)foo->value.ptr) = Rel;
+        ecs_script_eval_desc_t desc = { .vars = vars };
+
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        test_assert(ecs_has_pair(world, e, Rel, Tgt));
+        ecs_script_vars_fini(vars);
+    }
+
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_eval_w_runtime(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_runtime_t *rt = ecs_script_runtime_new();
+    ecs_script_eval_desc_t desc = { .runtime = rt };
+
+    const char *expr =
+    LINE "e = Position: {10, 20}";
+
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+    test_assert(s != NULL);
+
+    {
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        Position *p = ecs_get_mut(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        p->x = 0;
+        p->y = 0;
+    }
+
+    {
+        test_int(0, ecs_script_eval(s, &desc, NULL));
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_script_runtime_free(rt);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_component_in_entity_in_with_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "with Foo {"
+    LINE "  e {"
+    LINE "    Position: {10, 20}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has_id(world, e, foo));
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "\"e\" { }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_interpolated_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "\"e_{10 + 20}\" { }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_interpolated_name_w_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const i: 10"
+    LINE "\"e_{$i + 20}\" { }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_inherit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr =
+    HEAD "\"e_{10 + 20}\" : Foo";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_inherit_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr =
+    HEAD "\"e_{10 + 20}\" : Foo { }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, EcsIsA, Foo));
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_kind(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position \"e_{10 + 20}\"";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_kind_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position \"e_{10 + 20}\"(10, 20)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_kind_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position \"e_{10 + 20}\" { }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_kind_value_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position \"e_{10 + 20}\"(10, 20) { }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_interpolated_name_w_var_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  const i: 10"
+    LINE "  \"e_{$i + 20}\" { }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "parent.e_30");
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_for_range(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for i in 0..3 {"
+    LINE "  \"e_{$i}\" {"
+    LINE "    Position: {$i, $i * 2}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    ecs_entity_t e_2 = ecs_lookup(world, "e_2");
+    ecs_entity_t e_3 = ecs_lookup(world, "e_3");
+
+    test_assert(e_0 != 0);
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 == 0);
+
+    {
+        const Position *p = ecs_get(world, e_0, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 0);
+        test_int(p->y, 0);
+    }
+
+    {
+        const Position *p = ecs_get(world, e_1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    {
+        const Position *p = ecs_get(world, e_2, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 2);
+        test_int(p->y, 4);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_for_range_vars(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x: 0"
+    LINE "const y: 3"
+    LINE "for i in $x..$y {"
+    LINE "  \"e_{$i}\" {"
+    LINE "    Position: {$i, $i * 2}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    ecs_entity_t e_2 = ecs_lookup(world, "e_2");
+    ecs_entity_t e_3 = ecs_lookup(world, "e_3");
+
+    test_assert(e_0 != 0);
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 == 0);
+
+    {
+        const Position *p = ecs_get(world, e_0, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 0);
+        test_int(p->y, 0);
+    }
+
+    {
+        const Position *p = ecs_get(world, e_1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    {
+        const Position *p = ecs_get(world, e_2, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 2);
+        test_int(p->y, 4);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_for_range_1_4(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for i in 1..4 {"
+    LINE "  \"e_{$i}\" {"
+    LINE "    Position: {$i, $i * 2}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    ecs_entity_t e_2 = ecs_lookup(world, "e_2");
+    ecs_entity_t e_3 = ecs_lookup(world, "e_3");
+    ecs_entity_t e_4 = ecs_lookup(world, "e_4");
+
+    test_assert(e_0 == 0);
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 != 0);
+    test_assert(e_4 == 0);
+
+    {
+        const Position *p = ecs_get(world, e_1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    {
+        const Position *p = ecs_get(world, e_2, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 2);
+        test_int(p->y, 4);
+    }
+
+    {
+        const Position *p = ecs_get(world, e_3, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 3);
+        test_int(p->y, 6);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_for_range_min_1_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for i in -1..2 {"
+    LINE "  \"e_{$i}\" {"
+    LINE "    Position: {$i, $i * 2}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_min_1 = ecs_lookup(world, "e_-1");
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    ecs_entity_t e_2 = ecs_lookup(world, "e_2");
+
+    test_assert(e_min_1 != 0);
+    test_assert(e_0 != 0);
+    test_assert(e_1 != 0);
+    test_assert(e_2 == 0);
+
+    {
+        const Position *p = ecs_get(world, e_min_1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, -1);
+        test_int(p->y, -2);
+    }
+
+    {
+        const Position *p = ecs_get(world, e_0, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 0);
+        test_int(p->y, 0);
+    }
+
+    {
+        const Position *p = ecs_get(world, e_1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_variable_assign_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "const v: $v"
+    LINE ""
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+static
+void func_is_component(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result) 
+{
+    test_assert(result != NULL);
+    test_int(argc, 1);
+    test_assert(argv != NULL);
+
+    *(bool*)result->ptr = (*(ecs_entity_t*)argv[0].ptr) == ecs_id(EcsComponent);
+}
+
+void Eval_func_w_entity_arg(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, True);
+    ECS_TAG(world, False);
+
+    ecs_function(world, {
+        .name = "is_component",
+        .return_type = ecs_id(ecs_bool_t),
+        .params = {
+            { "a", ecs_id(ecs_entity_t) }
+        },
+        .callback = func_is_component
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (bool, True): {is_component(flecs.core.Component)}"
+    LINE "  (bool, False): {is_component(flecs.core.Relationship)}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, True);
+        test_assert(v != NULL);
+        test_bool(*v, true);
+    }
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, False);
+        test_assert(v != NULL);
+        test_bool(*v, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_func_w_entity_arg_w_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, True);
+    ECS_TAG(world, False);
+
+    ecs_function(world, {
+        .name = "is_component",
+        .return_type = ecs_id(ecs_bool_t),
+        .params = {
+            { "a", ecs_id(ecs_entity_t) }
+        },
+        .callback = func_is_component
+    });
+
+    const char *expr =
+    HEAD "using flecs"
+    LINE "e {"
+    LINE "  (bool, True): {is_component(core.Component)}"
+    LINE "  (bool, False): {is_component(core.Relationship)}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, True);
+        test_assert(v != NULL);
+        test_bool(*v, true);
+    }
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, False);
+        test_assert(v != NULL);
+        test_bool(*v, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_method_w_entity_arg(void) {
+   ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, True);
+    ECS_TAG(world, False);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (bool, True): {flecs.core.Component.has(flecs.core.Component)}"
+    LINE "  (bool, False): {flecs.core.Component.has(flecs.core.Relationship)}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, True);
+        test_assert(v != NULL);
+        test_bool(*v, true);
+    }
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, False);
+        test_assert(v != NULL);
+        test_bool(*v, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_method_w_entity_arg_w_using(void) {
+   ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, True);
+    ECS_TAG(world, False);
+
+    const char *expr =
+    HEAD "using flecs"
+    LINE "e {"
+    LINE "  (bool, True): {core.Component.has(core.Component)}"
+    LINE "  (bool, False): {core.Component.has(core.Relationship)}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, True);
+        test_assert(v != NULL);
+        test_bool(*v, true);
+    }
+    {
+        const bool *v = ecs_get_pair(world, e, ecs_bool_t, False);
+        test_assert(v != NULL);
+        test_bool(*v, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_assign_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_id_t value;
+    } Id;
+
+    ecs_entity_t ecs_id(Id) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Id"}),
+        .members = {
+            {"value", ecs_id(ecs_id_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo = Id: {flecs.core.Component}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Id));
+
+    const Id *ptr = ecs_get(world, foo, Id);
+    test_assert(ptr != NULL);
+
+    test_int(ptr->value, ecs_id(EcsComponent));
+
+    ecs_fini(world);
+}
+
+void Eval_assign_id_w_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_id_t value;
+    } Id;
+
+    ecs_entity_t ecs_id(Id) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Id"}),
+        .members = {
+            {"value", ecs_id(ecs_id_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "using flecs"
+    LINE "Foo = Id: {core.Component}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Id));
+
+    const Id *ptr = ecs_get(world, foo, Id);
+    test_assert(ptr != NULL);
+
+    test_int(ptr->value, ecs_id(EcsComponent));
+
+    ecs_fini(world);
+}
+
+void Eval_const_assign_empty_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const x: {}"
+    LINE;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_const_assign_empty_collection_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const x: []"
+    LINE;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_const_i32_assign_empty_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const x: i32: {}"
+    LINE;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_const_i32_assign_empty_collection_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const x: i32: []"
+    LINE;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_component_w_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Position: match $i {"
+    LINE "    1: {10, 20}"
+    LINE "    2: {20, 30}"
+    LINE "    3: {30, 40}"
+    LINE "    _: {40, 50}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+
+    ecs_script_eval_desc_t desc = { .vars = vars };
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 1;
+        test_assert(ecs_script_eval(s, &desc, NULL) == 0);
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    {
+        *(int32_t*)var->value.ptr = 2;
+        test_assert(ecs_script_eval(s, &desc, NULL) == 0);
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 20);
+        test_int(ptr->y, 30);
+    }
+
+    {
+        *(int32_t*)var->value.ptr = 3;
+        test_assert(ecs_script_eval(s, &desc, NULL) == 0);
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 30);
+        test_int(ptr->y, 40);
+    }
+
+    {
+        *(int32_t*)var->value.ptr = 4;
+        test_assert(ecs_script_eval(s, &desc, NULL) == 0);
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 40);
+        test_int(ptr->y, 50);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_component_w_match_invalid(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Position: match $i {"
+    LINE "    1: {10, 20}"
+    LINE "    2: {20, 30}"
+    LINE "    3: {30, 40}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+
+    ecs_script_eval_desc_t desc = { .vars = vars };
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 4;
+        ecs_log_set_level(-4);
+        test_assert(ecs_script_eval(s, &desc, NULL) != 0);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_pair_component_w_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tgt);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  (Position, Tgt): match $i {"
+    LINE "    1: {10, 20}"
+    LINE "    2: {20, 30}"
+    LINE "    3: {30, 40}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+
+    ecs_script_eval_desc_t desc = { .vars = vars };
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 4;
+        ecs_log_set_level(-4);
+        test_assert(ecs_script_eval(s, &desc, NULL) != 0);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_component_assign_w_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo = Position: match $i {"
+    LINE "  1: {10, 20}"
+    LINE "  2: {20, 30}"
+    LINE "  3: {30, 40}"
+    LINE "}"
+    ;
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+
+    ecs_script_eval_desc_t desc = { .vars = vars };
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 4;
+        ecs_log_set_level(-4);
+        test_assert(ecs_script_eval(s, &desc, NULL) != 0);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_const_w_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const x: match $i {"
+    LINE "  1: 10"
+    LINE "  2: 20"
+    LINE "  3: 30"
+    LINE "}"
+    LINE "Foo {"
+    LINE "  $x"
+    LINE "}"
+    ;
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+
+    ecs_script_eval_desc_t desc = { .vars = vars };
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, &desc, NULL);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 1;
+        test_assert(ecs_script_eval(s, &desc, NULL) == 0);
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+        const int64_t *ptr = ecs_get(world, foo, ecs_i64_t);
+        test_assert(ptr != NULL);
+        test_int(*ptr, 10);
+    }
+
+    {
+        *(int32_t*)var->value.ptr = 2;
+        test_assert(ecs_script_eval(s, &desc, NULL) == 0);
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+        const int64_t *ptr = ecs_get(world, foo, ecs_i64_t);
+        test_assert(ptr != NULL);
+        test_int(*ptr, 20);
+    }
+
+    {
+        *(int32_t*)var->value.ptr = 3;
+        test_assert(ecs_script_eval(s, &desc, NULL) == 0);
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+        const int64_t *ptr = ecs_get(world, foo, ecs_i64_t);
+        test_assert(ptr != NULL);
+        test_int(*ptr, 30);
+    }
+
+    {
+        *(int32_t*)var->value.ptr = 4;
+        ecs_log_set_level(-4);
+        test_assert(ecs_script_eval(s, &desc, NULL) != 0);
+        ecs_log_set_level(-1);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_component_w_assign_add(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Position: {10, 20}"
+    LINE "  Position: {x += 1, y += 2}"
+    LINE "}"
+    ;
+
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, NULL, NULL);
+    test_assert(s != NULL);
+
+    test_assert(ecs_script_eval(s, NULL, NULL) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 11);
+    test_int(ptr->y, 22);
+
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_component_w_assign_mul(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  Position: {10, 20}"
+    LINE "  Position: {x *= 2, y *= 4}"
+    LINE "}"
+    ;
+
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, NULL, NULL);
+    test_assert(s != NULL);
+
+    test_assert(ecs_script_eval(s, NULL, NULL) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 80);
+
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+typedef struct {
+    int32_t _dummy_1;
+    int32_t x;
+    int32_t _dummy_2;
+    int32_t y;
+} OpaqueStruct;
+
+static void* OpaqueStruct_member(void *ptr, const char *member) {
+    OpaqueStruct *data = ptr;
+    if (!strcmp(member, "x")) {
+        return &data->x;
+    } else if (!strcmp(member, "y")) {
+        return &data->y;
+    } else {
+        return NULL;
+    }
+}
+
+void Eval_opaque_struct_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, OpaqueStruct);
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(OpaqueStruct),
+        .type.as_type = s,
+        .type.ensure_member = OpaqueStruct_member
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  OpaqueStruct: {10, 20}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const OpaqueStruct *p = ecs_get(world, e, OpaqueStruct);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+typedef struct Opaque_string {
+    int32_t len;
+    char *value;
+} Opaque_string;
+
+static void Opaque_string_set(void *ptr, const char *value) {
+    ((Opaque_string*)ptr)->value = ecs_os_strdup(value);
+}
+
+void Eval_opaque_string_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_string);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_string),
+        .type.as_type = ecs_id(ecs_string_t),
+        .type.assign_string = Opaque_string_set
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Opaque_string: {\"Hello World\"}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Opaque_string *p = ecs_get(world, e, Opaque_string);
+    test_assert(p != NULL);
+    test_str(p->value, "Hello World");
+    
+    ecs_os_free(p->value);
+
+    ecs_fini(world);
+}
+
+void Eval_add_component_w_invalid_ctor(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_add_component_pair_w_invalid_ctor(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (Position, Tgt): {10, 20}"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_add_component_as_tag_w_invalid_ctor(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Position"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_add_component_as_tag_pair_w_invalid_ctor(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (Position, Tgt)"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_name_w_nested_for_loop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for x in 0..3 {"
+    LINE "  for y in 0..2 {"
+    LINE "    \"e_{$x}_{$y}\" {"
+    LINE "      Position: {x, y}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_0_0");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 0);
+        test_int(p->y, 0);
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_0_1");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 0);
+        test_int(p->y, 1);
+    }
+
+    test_assert(ecs_lookup(world, "e_0_2") == 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_1_0");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 1);
+        test_int(p->y, 0);
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_1_1");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 1);
+        test_int(p->y, 1);
+    }
+
+    test_assert(ecs_lookup(world, "e_1_2") == 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_2_0");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 2);
+        test_int(p->y, 0);
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_2_1");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 2);
+        test_int(p->y, 1);
+    }
+
+    test_assert(ecs_lookup(world, "e_2_2") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_name_w_nested_for_loop_no_dollar_sign(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "for x in 0..3 {"
+    LINE "  for y in 0..2 {"
+    LINE "    \"e_{x}_{y}\" {"
+    LINE "      Position: {x, y}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_0_0");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 0);
+        test_int(p->y, 0);
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_0_1");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 0);
+        test_int(p->y, 1);
+    }
+
+    test_assert(ecs_lookup(world, "e_0_2") == 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_1_0");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 1);
+        test_int(p->y, 0);
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_1_1");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 1);
+        test_int(p->y, 1);
+    }
+
+    test_assert(ecs_lookup(world, "e_1_2") == 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_2_0");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 2);
+        test_int(p->y, 0);
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e_2_1");
+        test_assert(e != 0);
+        const Position *p = ecs_get(world, e, Position);
+        test_int(p->x, 2);
+        test_int(p->y, 1);
+    }
+
+    test_assert(ecs_lookup(world, "e_2_2") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_name_w_nested_for_loop_wrong_dollar_sign(void) {
+    ecs_world_t *world = ecs_init();
+    const char *expr =
+    HEAD "for x in 0..3 {"
+    LINE "  for y in 0..2 {"
+    LINE "    \"e_${x}_${y}\" { }"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  \"Tag_{10}\""
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Tag_10));
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (\"Tag_{10}\", Tgt)"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Tag_10, Tgt));
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (Rel, \"Tag_{10}\")"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Rel, Tag_10));
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_relationship_and_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+    ECS_TAG(world, Tag_20);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (\"Tag_{10}\", \"Tag_{20}\")"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Tag_10, Tag_20));
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_relationship_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (\"Tag_{10}\", Position): {10, 20}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Tag_10, ecs_id(Position)));
+
+    {
+        const Position *p = ecs_get_pair_second(world, e, Tag_10, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_target_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (Position, \"Tag_{10}\"): {10, 20}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), Tag_10));
+
+    {
+        const Position *p = ecs_get_pair(world, e, Position, Tag_10);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_interpolated_string_as_relationship_and_target_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_10);
+    ECS_TAG(world, Tag_20);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (\"Tag_{10}\", \"Tag_{20}\"): {10, 20}"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_dynamic_interpolated_string_as_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_0);
+    ECS_TAG(world, Tag_1);
+
+    const char *expr =
+    HEAD "for i in 0..2 {"
+    LINE "  \"e_{i}\" {"
+    LINE "    \"Tag_{i}\""
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    test_assert(e_0 != 0);
+    test_assert(ecs_has(world, e_0, Tag_0));
+
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    test_assert(e_1 != 0);
+    test_assert(ecs_has(world, e_1, Tag_1));
+
+    ecs_fini(world);
+}
+
+void Eval_dynamic_interpolated_string_as_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_0);
+    ECS_TAG(world, Tag_1);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "for i in 0..2 {"
+    LINE "  \"e_{i}\" {"
+    LINE "    (\"Tag_{i}\", Tgt)"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    test_assert(e_0 != 0);
+    test_assert(ecs_has_pair(world, e_0, Tag_0, Tgt));
+
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    test_assert(e_1 != 0);
+    test_assert(ecs_has_pair(world, e_1, Tag_1, Tgt));
+
+    ecs_fini(world);
+}
+
+void Eval_dynamic_interpolated_string_as_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag_0);
+    ECS_TAG(world, Tag_1);
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    HEAD "for i in 0..2 {"
+    LINE "  \"e_{i}\" {"
+    LINE "    (Rel, \"Tag_{i}\")"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    test_assert(e_0 != 0);
+    test_assert(ecs_has_pair(world, e_0, Rel, Tag_0));
+
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    test_assert(e_1 != 0);
+    test_assert(ecs_has_pair(world, e_1, Rel, Tag_1));
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_to_const_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const x: new {}"
+    LINE ""
+    LINE "e {"
+    LINE "  entity: {x}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_int(ecs_get_type(world, x)->count, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_component_to_const_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x: new {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  entity: {x}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_int(ecs_get_type(world, x)->count, 1);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_component_w_vars_to_const_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const a: 10"
+    LINE "const b: 20"
+    LINE "const x: new {"
+    LINE "  Position: {a, b}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  entity: {x}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_int(ecs_get_type(world, x)->count, 1);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_kind_to_const_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x: new Position(10, 20)"
+    LINE ""
+    LINE "e {"
+    LINE "  entity: {x}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_int(ecs_get_type(world, x)->count, 1);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_name_to_const_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const x: new Foo {}"
+    LINE ""
+    LINE "e {"
+    LINE "  entity: {x}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_name_w_component_to_const_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x: new Foo {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  entity: {x}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_name_w_component_w_vars_to_const_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const a: 10"
+    LINE "const b: 20"
+    LINE "const x: new Foo {"
+    LINE "  Position: {a, b}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  entity: {x}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_name_w_kind_to_const_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x: new Position Foo(10, 20)"
+    LINE ""
+    LINE "e {"
+    LINE "  entity: {x}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  entity: { new {} }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_int(ecs_get_type(world, x)->count, 1);
+    test_uint(ecs_get_parent(world, x), e);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_component_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  entity: { new { Position: {10, 20} } }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_int(ecs_get_type(world, x)->count, 2);
+    test_uint(ecs_get_parent(world, x), e);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_component_to_entity_member_w_newlines(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  entity: {"
+    LINE "    new {"
+    LINE "      Position: {10, 20}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_int(ecs_get_type(world, x)->count, 2);
+    test_uint(ecs_get_parent(world, x), e);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_component_w_vars_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const a: 10"
+    LINE "const b: 20"
+    LINE "e {"
+    LINE "  entity: { new { Position: {a, b} } }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_int(ecs_get_type(world, x)->count, 2);
+    test_uint(ecs_get_parent(world, x), e);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_kind_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  entity: { new Position(10, 20) }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_int(ecs_get_type(world, x)->count, 2);
+    test_uint(ecs_get_parent(world, x), e);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_name_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  entity: { new Foo {} }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+    test_uint(ecs_get_parent(world, x), e);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_name_w_component_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  entity: { new Foo { Position: {10, 20} } }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+    test_uint(ecs_get_parent(world, x), e);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_name_w_component_w_vars_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const a: 10"
+    LINE "const b: 20"
+    LINE "e {"
+    LINE "  entity: { new Foo { Position: {a, b} } }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+    test_uint(ecs_get_parent(world, x), e);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_name_w_kind_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  entity: { new Position Foo(10, 20) }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+    test_uint(ecs_get_parent(world, x), e);
+
+    const Position *p = ecs_get(world, x, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_name_w_inheritance_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  entity: { new _ : base {} }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), NULL);
+    test_uint(ecs_get_parent(world, x), e);
+    test_assert(ecs_has_pair(world, x, EcsIsA, base));
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_inheritance_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  entity: { new Foo : base {} }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+    test_uint(ecs_get_parent(world, x), e);
+    test_assert(ecs_has_pair(world, x, EcsIsA, base));
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_child_w_name_to_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x: new Foo {"
+    LINE "  Position: {10, 20}"
+    LINE "  child {"
+    LINE "    Position: {30, 40}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "child") == 0);
+
+    ecs_entity_t x = ecs_lookup(world, "Foo");
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+    test_uint(ecs_get_parent(world, x), 0);
+
+    {
+        const Position *p = ecs_get(world, x, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_entity_t child = ecs_lookup_child(world, x, "child");
+    test_assert(child != 0);
+
+    {
+        const Position *p = ecs_get(world, child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_w_child_w_name_to_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  entity: {"
+    LINE "    new Foo {"
+    LINE "      Position: {10, 20}"
+    LINE "      child {"
+    LINE "        Position: {30, 40}"
+    LINE "      }"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_entity_t *ptr = ecs_get(world, e, ecs_entity_t);
+    test_assert(ptr != NULL);
+    ecs_entity_t x = *ptr;
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+    test_uint(ecs_get_parent(world, x), e);
+
+    {
+        const Position *p = ecs_get(world, x, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_entity_t child = ecs_lookup_child(world, x, "child");
+    test_assert(child != 0);
+
+    {
+        const Position *p = ecs_get(world, child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_to_const_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  const x: new Foo {"
+    LINE "    Position: {10, 20}"
+    LINE "    child {"
+    LINE "      Position: {30, 40}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "child") == 0);
+
+    ecs_entity_t x = ecs_lookup(world, "parent.Foo");
+    test_assert(x != 0);
+    test_assert(ecs_is_alive(world, x));
+    test_str(ecs_get_name(world, x), "Foo");
+
+    {
+        const Position *p = ecs_get(world, x, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_entity_t child = ecs_lookup_child(world, x, "child");
+    test_assert(child != 0);
+
+    {
+        const Position *p = ecs_get(world, child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_assign_new_to_const_in_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, DockedTo);
+
+    const char *expr = 
+    HEAD "for i in 0..2 {\n"
+    LINE "  const v: new \"Enterprise_{i}\" {}\n"
+    LINE "\n"
+    LINE "  \"Shuttle_{i}\" {\n"
+    LINE "    (DockedTo, $v)\n"
+    LINE "  }\n"
+    LINE "}\n"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e0 = ecs_lookup(world, "Enterprise_0");
+    test_assert(e0 != 0);
+    ecs_entity_t s0 = ecs_lookup(world, "Shuttle_0");
+    test_assert(s0 != 0);
+    ecs_entity_t t0 = ecs_get_target(world, s0, DockedTo, 0);
+    test_assert(t0 == e0);
+
+    ecs_entity_t e1 = ecs_lookup(world, "Enterprise_1");
+    test_assert(e1 != 0);
+    ecs_entity_t s1 = ecs_lookup(world, "Shuttle_1");
+    test_assert(s1 != 0);
+    ecs_entity_t t1 = ecs_get_target(world, s1, DockedTo, 0);
+    test_assert(t1 == e1);
+
+    ecs_fini(world);
+}
+
+void Eval_implicit_var_as_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, DockedTo);
+
+    const char *expr = 
+    HEAD "const v: new foo {}\n"
+    LINE "e {\n"
+    LINE "  v\n"
+    LINE "}\n"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has_id(world, e, foo));
+
+    ecs_fini(world);
+}
+
+void Eval_implicit_var_as_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tgt);
+
+    const char *expr = 
+    HEAD "const v: new foo {}\n"
+    LINE "e {\n"
+    LINE "  (v, Tgt)\n"
+    LINE "}\n"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has_pair(world, e, foo, Tgt));
+
+    ecs_fini(world);
+}
+
+void Eval_implicit_var_as_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, DockedTo);
+
+    const char *expr = 
+    HEAD "const v: new foo {}\n"
+    LINE "e {\n"
+    LINE "  (DockedTo, v)\n"
+    LINE "}\n"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has_pair(world, e, DockedTo, foo));
+
+    ecs_fini(world);
+}
+
+void Eval_export_const_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v: 10"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(ecs_i64_t));
+    test_int(*(int64_t*)value.ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_export_const_var_w_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = i32: 10"
+    LINE ""
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(ecs_i32_t));
+    test_int(*(ecs_i32_t*)value.ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_export_const_var_w_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export const v = Position: {10, 20}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(Position));
+    Position *p = value.ptr;
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_const_var_redeclared(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v: 10"
+    LINE "export const v: 20"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_export_const_var_redeclared_w_local_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 10"
+    LINE "export const v: 20"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_local_const_var_redeclared_w_export_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v: 10"
+    LINE "const v: 20"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_export_const_var_used_by_other_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr_1 =
+    HEAD "export const x: 10"
+    LINE "export const y: 20"
+    ;
+
+    const char *expr_2 =
+    HEAD "export const v = Position: {x, y}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr_1, NULL) == 0);
+    test_assert(ecs_script_run(world, NULL, expr_2, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(Position));
+    Position *p = value.ptr;
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_const_var_as_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export const v = Position: {10, 20}"
+    LINE ""
+    LINE "e {"
+    LINE "  $v"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_scoped_const_var_as_component(void) {
+    test_quarantine("22 Jul 2025");
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  export const v = Position: {10, 20}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  parent.$v"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_const_var_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  export const v = i32: 10"
+    LINE "}"
+    LINE ""
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "parent.v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(ecs_i32_t));
+    test_int(*(ecs_i32_t*)value.ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_export_scoped_const_var_used_by_other_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr_1 =
+    HEAD "parent {"
+    LINE "  export const x: 10"
+    LINE "  export const y: 20"
+    LINE "}"
+    ;
+
+    const char *expr_2 =
+    HEAD "export const v = Position: {parent.x, parent.y}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr_1, NULL) == 0);
+    test_assert(ecs_script_run(world, NULL, expr_2, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(Position));
+    Position *p = value.ptr;
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_run_script_w_module_from_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "module foo"
+    LINE "e {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    ;
+
+    ecs_entity_t scope = ecs_new(world);
+    ecs_set_scope(world, scope);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_set_scope(world, 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup_child(world, foo, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_run_script_w_nested_module_from_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "module foo.bar"
+    LINE "e {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    ;
+
+    ecs_entity_t scope = ecs_new(world);
+    ecs_set_scope(world, scope);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_set_scope(world, 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo.bar");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup_child(world, foo, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_run_script_w_nested_module_from_named_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "module foo.bar"
+    LINE "e {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    ;
+
+    ecs_entity_t scope = ecs_entity(world, { .name = "scope" });
+    ecs_set_scope(world, scope);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_set_scope(world, 0);
+
+    test_assert(ecs_lookup(world, "scope.foo.bar.e") == 0);
+    test_assert(ecs_lookup(world, "scope.foo.bar") == 0);
+    test_assert(ecs_lookup(world, "scope.foo") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo.bar");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup_child(world, foo, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_run_script_w_nested_module_from_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "module foo.bar"
+    LINE "e {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    ;
+
+    ecs_entity_t scope = ecs_entity(world, { .name = "scope" });
+    ecs_add_id(world, scope, EcsModule);
+
+    ecs_set_scope(world, scope);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_set_scope(world, 0);
+
+    test_assert(ecs_lookup(world, "scope.foo.bar.e") == 0);
+    test_assert(ecs_lookup(world, "scope.foo.bar") == 0);
+    test_assert(ecs_lookup(world, "scope.foo") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo.bar");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup_child(world, foo, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_run_script_w_nested_module_from_named_scope_managed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "module foo.bar"
+    LINE "e {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    ;
+
+    ecs_entity_t scope = ecs_entity(world, { .name = "scope" });
+    ecs_set_scope(world, scope);
+    ecs_entity_t s = ecs_script(world, {
+        .code = expr
+    });
+    test_assert(s != 0);
+    ecs_set_scope(world, 0);
+
+    test_assert(ecs_lookup(world, "scope.foo.bar.e") == 0);
+    test_assert(ecs_lookup(world, "scope.foo.bar") == 0);
+    test_assert(ecs_lookup(world, "scope.foo") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo.bar");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup_child(world, foo, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_i32_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Vector: [10, 20, 30]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_vec_t *ptr = ecs_get_id(world, e, v);
+    test_assert(ptr != NULL);
+    test_int(ecs_vec_count(ptr), 3);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 0), 10);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 1), 20);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 2), 30);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_string_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(ecs_string_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Vector: [\"Hello\", \"World\", \"Foo\"]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_vec_t *ptr = ecs_get_id(world, e, v);
+    test_assert(ptr != NULL);
+    test_int(ecs_vec_count(ptr), 3);
+    test_str(*ecs_vec_get_t(ptr, char*, 0), "Hello");
+    test_str(*ecs_vec_get_t(ptr, char*, 1), "World");
+    test_str(*ecs_vec_get_t(ptr, char*, 2), "Foo");
+
+    ecs_fini(world);
+}
+
+void Eval_vector_struct_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(Position) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Vector: [{10, 20}, {30, 40}, {50, 60}]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_vec_t *ptr = ecs_get_id(world, e, v);
+    test_assert(ptr != NULL);
+    test_int(ecs_vec_count(ptr), 3);
+    test_int(ecs_vec_get_t(ptr, Position, 0)->x, 10);
+    test_int(ecs_vec_get_t(ptr, Position, 0)->y, 20);
+    test_int(ecs_vec_get_t(ptr, Position, 1)->x, 30);
+    test_int(ecs_vec_get_t(ptr, Position, 1)->y, 40);
+    test_int(ecs_vec_get_t(ptr, Position, 2)->x, 50);
+    test_int(ecs_vec_get_t(ptr, Position, 2)->y, 60);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_i32_export_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "export const v = Vector: [10, 20, 30]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "v");
+    test_assert(e != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, e);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, v);
+
+    const ecs_vec_t *ptr = value.ptr;
+    test_int(ecs_vec_count(ptr), 3);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 0), 10);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 1), 20);
+    test_int(*ecs_vec_get_t(ptr, int32_t, 2), 30);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_string_export_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(ecs_string_t) 
+    });
+
+    const char *expr =
+    HEAD "export const v = Vector: [\"Hello\", \"World\"]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "v");
+    test_assert(e != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, e);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, v);
+
+    const ecs_vec_t *ptr = value.ptr;
+    test_int(ecs_vec_count(ptr), 2);
+    test_str(*ecs_vec_get_t(ptr, char*, 0), "Hello");
+    test_str(*ecs_vec_get_t(ptr, char*, 1), "World");
+
+    ecs_fini(world);
+}
+
+void Eval_vector_struct_export_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t v = ecs_vector(world, { 
+        .entity = ecs_entity(world, { .name = "Vector" }),
+        .type = ecs_id(Position) 
+    });
+
+    const char *expr =
+    HEAD "export const v = Vector: [{10, 20}, {30, 40}]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "v");
+    test_assert(e != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, e);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, v);
+
+    const ecs_vec_t *ptr = value.ptr;
+    test_int(ecs_vec_count(ptr), 2);
+    test_int(ecs_vec_get_t(ptr, Position, 0)->x, 10);
+    test_int(ecs_vec_get_t(ptr, Position, 0)->y, 20);
+    test_int(ecs_vec_get_t(ptr, Position, 1)->x, 30);
+    test_int(ecs_vec_get_t(ptr, Position, 1)->y, 40);
+
+    ecs_fini(world);
+}
+
+typedef struct IntVec {
+    bool _dummy; // make sure type doesn't accidentally line up with ecs_vec_t 
+    size_t count;
+    int32_t *array;
+} IntVec;
+
+static 
+size_t IntVec_count(const void *ptr) {
+    const IntVec *data = ptr;
+    return data->count;
+}
+
+static 
+void* IntVec_ensure(void *ptr, size_t index) {
+    IntVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count <= index) {
+        data->count = index + 1;
+        data->array = ecs_os_realloc_n(data->array, int32_t, data->count);
+    }
+    return &data->array[index];
+}
+
+static 
+void IntVec_resize(void *ptr, size_t size) {
+    IntVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count != size) {
+        data->count = size;
+        if (!data->count) {
+            ecs_os_free(data->array);
+            data->array = NULL;
+        } else {
+            data->array = ecs_os_realloc_n(data->array, int32_t, size);
+        }
+    }
+}
+
+void Eval_opaque_vector_i32_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+
+    ecs_entity_t v = ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.ensure_element = IntVec_ensure,
+        .type.count = IntVec_count,
+        .type.resize = IntVec_resize
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " IntVec: [10, 20, 30]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const IntVec *ptr = ecs_get_id(world, e, v);
+    test_assert(ptr != NULL);
+    test_int(ptr->count, 3);
+    test_int(ptr->array[0], 10);
+    test_int(ptr->array[1], 20);
+    test_int(ptr->array[2], 30);
+
+    ecs_os_free(ptr->array);
+
+    ecs_fini(world);
+}
+
+void Eval_opaque_vector_i32_export_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.ensure_element = IntVec_ensure,
+        .type.count = IntVec_count,
+        .type.resize = IntVec_resize
+    });
+
+    const char *expr =
+    HEAD "export const v = IntVec: [10, 20, 30]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "v");
+    test_assert(e != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, e);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(IntVec));
+
+    const IntVec *ptr = value.ptr;
+    test_int(ptr->count, 3);
+    test_int(ptr->array[0], 10);
+    test_int(ptr->array[1], 20);
+    test_int(ptr->array[2], 30);
+
+    ecs_os_free(ptr->array);
+
+    ecs_fini(world);
 }

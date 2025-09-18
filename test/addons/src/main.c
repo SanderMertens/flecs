@@ -14,11 +14,13 @@ void Doc_get_entity_name(void);
 void Doc_get_set_brief(void);
 void Doc_get_set_detail(void);
 void Doc_get_set_link(void);
+void Doc_get_set_uuid(void);
 void Doc_set_name_nullptr(void);
 void Doc_set_brief_nullptr(void);
 void Doc_set_detail_nullptr(void);
 void Doc_set_link_nullptr(void);
 void Doc_set_color_nullptr(void);
+void Doc_set_uuid_nullptr(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -104,6 +106,10 @@ void Pipeline_run_pipeline_multithreaded_tasks(void);
 void Pipeline_pipeline_init_no_terms(void);
 void Pipeline_pipeline_init_no_system_term(void);
 void Pipeline_disable_component_from_immediate_system(void);
+void Pipeline_run_w_empty_query(void);
+void Pipeline_run_w_0_src_query(void);
+void Pipeline_inout_none_after_write(void);
+void Pipeline_empty_pipeline_after_disable_phase(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -168,12 +174,14 @@ void SystemMisc_system_w_short_notation(void);
 void SystemMisc_update_interval_w_system_init(void);
 void SystemMisc_update_rate_w_system_init(void);
 void SystemMisc_system_w_interval_rate_stop_timer(void);
+void SystemMisc_system_w_rate_filter_self(void);
 void SystemMisc_system_same_interval_same_tick(void);
 void SystemMisc_system_no_id_in_scope(void);
 void SystemMisc_register_callback_after_run(void);
 void SystemMisc_register_run_after_callback(void);
 void SystemMisc_register_callback_after_run_ctx(void);
 void SystemMisc_register_run_after_callback_ctx(void);
+void SystemMisc_run_w_query_next(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -197,6 +205,7 @@ void SystemPeriodic_match_2_systems_w_populated_table(void);
 void SystemPeriodic_on_period(void);
 void SystemPeriodic_on_period_long_delta(void);
 void SystemPeriodic_disabled(void);
+void SystemPeriodic_2_disabled(void);
 void SystemPeriodic_disabled_feature(void);
 void SystemPeriodic_disabled_nested_feature(void);
 void SystemPeriodic_two_refs(void);
@@ -317,6 +326,17 @@ void Stats_get_entity_count(void);
 void Stats_get_pipeline_stats_w_task_system(void);
 void Stats_get_not_alive_entity_count(void);
 void Stats_progress_stats_systems(void);
+void Stats_progress_stats_systems_w_empty_table_flag(void);
+
+// Testsuite 'Memory'
+void Memory_query_memory_no_cache(void);
+void Memory_query_memory_trivial_cache(void);
+void Memory_query_memory_non_trivial_cache(void);
+void Memory_query_memory_with_groups(void);
+void Memory_query_memory_with_variables(void);
+void Memory_query_memory_with_monitors(void);
+void Memory_commands_memory(void);
+void Memory_table_memory_histogram(void);
 
 // Testsuite 'Run'
 void Run_setup(void);
@@ -387,10 +407,7 @@ void MultiThreadStaging_4_threads_add_to_current(void);
 void MultiThreadStaging_5_threads_add_to_current(void);
 void MultiThreadStaging_6_threads_add_to_current(void);
 void MultiThreadStaging_2_threads_on_add(void);
-void MultiThreadStaging_new_w_count(void);
 void MultiThreadStaging_custom_thread_auto_merge(void);
-void MultiThreadStaging_set_pair_w_new_target_readonly(void);
-void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly(void);
 void MultiThreadStaging_set_pair_w_new_target_defer(void);
 void MultiThreadStaging_set_pair_w_new_target_tgt_component_defer(void);
 
@@ -450,8 +467,13 @@ void Rest_request_commands_no_frames(void);
 void Rest_request_commands_no_commands(void);
 void Rest_request_commands_garbage_collect(void);
 void Rest_script_error(void);
+void Rest_script_update(void);
+void Rest_script_update_w_body(void);
 void Rest_import_rest_after_mini(void);
 void Rest_get_pipeline_stats_after_delete_system(void);
+void Rest_request_world_summary_before_monitor_sys_run(void);
+void Rest_escape_backslash(void);
+void Rest_request_small_buffer_plus_one(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -552,6 +574,10 @@ bake_test_case Doc_testcases[] = {
         Doc_get_set_link
     },
     {
+        "get_set_uuid",
+        Doc_get_set_uuid
+    },
+    {
         "set_name_nullptr",
         Doc_set_name_nullptr
     },
@@ -570,6 +596,10 @@ bake_test_case Doc_testcases[] = {
     {
         "set_color_nullptr",
         Doc_set_color_nullptr
+    },
+    {
+        "set_uuid_nullptr",
+        Doc_set_uuid_nullptr
     }
 };
 
@@ -905,6 +935,22 @@ bake_test_case Pipeline_testcases[] = {
     {
         "disable_component_from_immediate_system",
         Pipeline_disable_component_from_immediate_system
+    },
+    {
+        "run_w_empty_query",
+        Pipeline_run_w_empty_query
+    },
+    {
+        "run_w_0_src_query",
+        Pipeline_run_w_0_src_query
+    },
+    {
+        "inout_none_after_write",
+        Pipeline_inout_none_after_write
+    },
+    {
+        "empty_pipeline_after_disable_phase",
+        Pipeline_empty_pipeline_after_disable_phase
     }
 };
 
@@ -1158,6 +1204,10 @@ bake_test_case SystemMisc_testcases[] = {
         SystemMisc_system_w_interval_rate_stop_timer
     },
     {
+        "system_w_rate_filter_self",
+        SystemMisc_system_w_rate_filter_self
+    },
+    {
         "system_same_interval_same_tick",
         SystemMisc_system_same_interval_same_tick
     },
@@ -1180,6 +1230,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "register_run_after_callback_ctx",
         SystemMisc_register_run_after_callback_ctx
+    },
+    {
+        "run_w_query_next",
+        SystemMisc_run_w_query_next
     }
 };
 
@@ -1267,6 +1321,10 @@ bake_test_case SystemPeriodic_testcases[] = {
     {
         "disabled",
         SystemPeriodic_disabled
+    },
+    {
+        "2_disabled",
+        SystemPeriodic_2_disabled
     },
     {
         "disabled_feature",
@@ -1694,6 +1752,45 @@ bake_test_case Stats_testcases[] = {
     {
         "progress_stats_systems",
         Stats_progress_stats_systems
+    },
+    {
+        "progress_stats_systems_w_empty_table_flag",
+        Stats_progress_stats_systems_w_empty_table_flag
+    }
+};
+
+bake_test_case Memory_testcases[] = {
+    {
+        "query_memory_no_cache",
+        Memory_query_memory_no_cache
+    },
+    {
+        "query_memory_trivial_cache",
+        Memory_query_memory_trivial_cache
+    },
+    {
+        "query_memory_non_trivial_cache",
+        Memory_query_memory_non_trivial_cache
+    },
+    {
+        "query_memory_with_groups",
+        Memory_query_memory_with_groups
+    },
+    {
+        "query_memory_with_variables",
+        Memory_query_memory_with_variables
+    },
+    {
+        "query_memory_with_monitors",
+        Memory_query_memory_with_monitors
+    },
+    {
+        "commands_memory",
+        Memory_commands_memory
+    },
+    {
+        "table_memory_histogram",
+        Memory_table_memory_histogram
     }
 };
 
@@ -1949,20 +2046,8 @@ bake_test_case MultiThreadStaging_testcases[] = {
         MultiThreadStaging_2_threads_on_add
     },
     {
-        "new_w_count",
-        MultiThreadStaging_new_w_count
-    },
-    {
         "custom_thread_auto_merge",
         MultiThreadStaging_custom_thread_auto_merge
-    },
-    {
-        "set_pair_w_new_target_readonly",
-        MultiThreadStaging_set_pair_w_new_target_readonly
-    },
-    {
-        "set_pair_w_new_target_tgt_component_readonly",
-        MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly
     },
     {
         "set_pair_w_new_target_defer",
@@ -2177,12 +2262,32 @@ bake_test_case Rest_testcases[] = {
         Rest_script_error
     },
     {
+        "script_update",
+        Rest_script_update
+    },
+    {
+        "script_update_w_body",
+        Rest_script_update_w_body
+    },
+    {
         "import_rest_after_mini",
         Rest_import_rest_after_mini
     },
     {
         "get_pipeline_stats_after_delete_system",
         Rest_get_pipeline_stats_after_delete_system
+    },
+    {
+        "request_world_summary_before_monitor_sys_run",
+        Rest_request_world_summary_before_monitor_sys_run
+    },
+    {
+        "escape_backslash",
+        Rest_escape_backslash
+    },
+    {
+        "request_small_buffer_plus_one",
+        Rest_request_small_buffer_plus_one
     }
 };
 
@@ -2498,28 +2603,28 @@ static bake_test_suite suites[] = {
         "Doc",
         NULL,
         NULL,
-        10,
+        12,
         Doc_testcases
     },
     {
         "Pipeline",
         NULL,
         NULL,
-        83,
+        87,
         Pipeline_testcases
     },
     {
         "SystemMisc",
         NULL,
         NULL,
-        68,
+        70,
         SystemMisc_testcases
     },
     {
         "SystemPeriodic",
         NULL,
         NULL,
-        47,
+        48,
         SystemPeriodic_testcases
     },
     {
@@ -2582,8 +2687,15 @@ static bake_test_suite suites[] = {
         "Stats",
         NULL,
         NULL,
-        12,
+        13,
         Stats_testcases
+    },
+    {
+        "Memory",
+        NULL,
+        NULL,
+        8,
+        Memory_testcases
     },
     {
         "Run",
@@ -2605,7 +2717,7 @@ static bake_test_suite suites[] = {
         "MultiThreadStaging",
         MultiThreadStaging_setup,
         NULL,
-        12,
+        9,
         MultiThreadStaging_testcases,
         1,
         MultiThreadStaging_params
@@ -2635,7 +2747,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        16,
+        21,
         Rest_testcases
     },
     {
@@ -2655,5 +2767,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 22);
+    return bake_test_run("addons", argc, argv, suites, 23);
 }

@@ -95,7 +95,7 @@ void SystemManual_dont_run_w_unmatching_entity_query(void) {
 
     ECS_TAG(world, Tag);
 
-    ECS_SYSTEM(world, DummySystem, 0, !Tag($));
+    ECS_SYSTEM(world, DummySystem, 0, !Tag(Tag));
 
     ecs_run(world, DummySystem, 0, NULL);
     test_int(dummy_ran, 1);

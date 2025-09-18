@@ -1156,7 +1156,7 @@ void Iter_worker_iter_w_task_query(void) {
 void Iter_worker_iter_w_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Singleton);
+    ECS_ENTITY(world, Singleton, Singleton);
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
@@ -1165,7 +1165,7 @@ void Iter_worker_iter_w_singleton(void) {
     ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
-    ecs_query_t *q = ecs_query(world, { .expr = "Position, Singleton($)" });
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, Singleton" });
 
     Position *p;
 
@@ -1204,7 +1204,7 @@ void Iter_worker_iter_w_singleton(void) {
 void Iter_worker_iter_w_singleton_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Singleton);
+    ECS_ENTITY(world, Singleton, Singleton);
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
@@ -1214,7 +1214,7 @@ void Iter_worker_iter_w_singleton_instanced(void) {
     ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, Singleton($)"
+        .expr = "Position, Singleton"
     });
 
     Position *p;
@@ -1255,6 +1255,8 @@ void Iter_worker_iter_w_singleton_component_instanced(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+    
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
 
     ecs_singleton_set(world, Velocity, {1, 2});
     ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
@@ -1263,7 +1265,7 @@ void Iter_worker_iter_w_singleton_component_instanced(void) {
     ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, Velocity($)"
+        .expr = "Position, Velocity"
     });
 
     Position *p;
@@ -1309,7 +1311,7 @@ void Iter_worker_iter_w_singleton_component_instanced(void) {
 void Iter_paged_iter_w_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Singleton);
+    ECS_ENTITY(world, Singleton, Singleton);
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
@@ -1318,7 +1320,7 @@ void Iter_paged_iter_w_singleton(void) {
     ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
-    ecs_query_t *q = ecs_query(world, { .expr = "Position, Singleton($)" });
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, Singleton" });
 
     Position *p;
 
@@ -1356,7 +1358,7 @@ void Iter_paged_iter_w_singleton(void) {
 void Iter_paged_iter_w_singleton_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Singleton);
+    ECS_ENTITY(world, Singleton, Singleton);
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
@@ -1366,7 +1368,7 @@ void Iter_paged_iter_w_singleton_instanced(void) {
     ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, Singleton($)"
+        .expr = "Position, Singleton"
     });
 
     Position *p;
@@ -1408,6 +1410,8 @@ void Iter_paged_iter_w_singleton_component_instanced(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
     ecs_singleton_set(world, Velocity, {1, 2});
     ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
@@ -1415,7 +1419,7 @@ void Iter_paged_iter_w_singleton_component_instanced(void) {
     ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, Velocity($)"
+        .expr = "Position, Velocity"
     });
 
     Position *p;
@@ -2305,7 +2309,7 @@ void Iter_interleaved_iter(void) {
     /* Bit of whitebox testing, check whether the stack cursor is restored to
      * its original position after the 2nd iterator is done */
     ecs_iter_t it_1 = ecs_query_iter(world, f);
-    ecs_stack_cursor_t cursor = *it_1.priv_.cache.stack_cursor;
+    ecs_stack_cursor_t cursor = *it_1.priv_.stack_cursor;
     ecs_iter_t it_2 = ecs_query_iter(world, f);
 
     test_bool(true, ecs_query_next(&it_1));
@@ -2322,8 +2326,8 @@ void Iter_interleaved_iter(void) {
     test_bool(false, ecs_query_next(&it_2));
 
     it_1 = ecs_query_iter(world, f);
-    test_assert(it_1.priv_.cache.stack_cursor->page == cursor.page);
-    test_assert(it_1.priv_.cache.stack_cursor->sp == cursor.sp);
+    test_assert(it_1.priv_.stack_cursor->page == cursor.page);
+    test_assert(it_1.priv_.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it_1);
 
     ecs_query_fini(f);
@@ -2341,12 +2345,12 @@ void Iter_iter_restore_stack_iter(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, f);
-    ecs_stack_cursor_t cursor = *it.priv_.cache.stack_cursor;
+    ecs_stack_cursor_t cursor = *it.priv_.stack_cursor;
     ecs_iter_fini(&it);
 
     it = ecs_query_iter(world, f);
-    test_assert(it.priv_.cache.stack_cursor->page == cursor.page);
-    test_assert(it.priv_.cache.stack_cursor->sp == cursor.sp);
+    test_assert(it.priv_.stack_cursor->page == cursor.page);
+    test_assert(it.priv_.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
     ecs_query_fini(f);

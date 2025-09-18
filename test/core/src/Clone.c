@@ -10,8 +10,11 @@ void Clone_empty(void) {
     test_assert(e2 != 0);
     test_assert(e1 != e2);
 
-    test_assert(!ecs_get_type(world, e1));
-    test_assert(!ecs_get_type(world, e2));
+    test_assert(ecs_get_type(world, e1) != NULL);
+    test_int(ecs_get_type(world, e1)->count, 0);
+
+    test_assert(ecs_get_type(world, e2) != NULL);
+    test_int(ecs_get_type(world, e2)->count, 0);
 
     ecs_fini(world);
 }
@@ -26,8 +29,11 @@ void Clone_empty_w_value(void) {
     test_assert(e2 != 0);
     test_assert(e1 != e2);
 
-    test_assert(!ecs_get_type(world, e1));
-    test_assert(!ecs_get_type(world, e2));
+    test_assert(ecs_get_type(world, e1) != NULL);
+    test_int(ecs_get_type(world, e1)->count, 0);
+
+    test_assert(ecs_get_type(world, e2) != NULL);
+    test_int(ecs_get_type(world, e2)->count, 0);
 
     ecs_fini(world);
 }
@@ -261,6 +267,83 @@ void Clone_3_component_w_value(void) {
     test_int(*m_2, 50);
 
     ecs_fini(world);
+}
+
+static int ctor_position = 0;
+static
+ECS_CTOR(Position, ptr, {
+    ptr->x = 7;
+    ptr->y = 9;
+    ctor_position ++;
+})
+
+static int dtor_position = 0;
+static
+ECS_DTOR(Position, ptr, {
+    dtor_position ++;
+})
+
+static int copy_position = 0;
+static
+ECS_COPY(Position, dst, src, {
+    copy_position ++;
+    *dst = *src;
+})
+
+static int move_position = 0;
+static
+ECS_MOVE(Position, dst, src, {
+    move_position ++;
+    *dst = *src;
+})
+
+void Clone_1_component_w_lifecycle(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+        ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .dtor = ecs_dtor(Position),
+        .copy = ecs_copy(Position),
+        .move = ecs_move(Position)
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    test_assert(e1 != 0);
+
+    Position * p = ecs_ensure(world, e1, Position);
+    test_int(1, ctor_position);
+    /* Check we get the special default values as per the ctor above */
+    test_int(7, p->x);
+    test_int(9, p->y);
+
+    /* Change the values to something different than default */
+    p->x = 1;
+    p->y = 2;
+
+    ecs_entity_t e2 = ecs_clone(world, 0, e1, true);
+
+    /* Test for leaks. Only 2 position objects should be alive */
+    test_int(2, ctor_position - dtor_position);
+    test_assert(e2 != 0);
+    test_assert(e1 != e2);
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e2, Position));
+
+    const Position *p_1 = ecs_get(world, e1, Position);
+    test_assert(p_1 != NULL);
+    test_int(1, p_1->x);
+    test_int(2, p_1->y);
+
+    const Position *p_2 = ecs_get(world, e2, Position);
+    test_assert(p_2 != NULL);
+    test_assert(p_1 != p_2);
+    test_int(1, p_2->x);
+    test_int(2, p_2->y);
+
+    ecs_fini(world);
+    test_int(0, ctor_position - dtor_position); /* test for leaks */
 }
 
 void Clone_tag(void) {

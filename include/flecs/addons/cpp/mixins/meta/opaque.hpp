@@ -5,8 +5,6 @@
 
 #pragma once
 
-#include <stdio.h>
-
 namespace flecs {
 
 /**
@@ -26,6 +24,15 @@ using serialize_t = ecs_meta_serialize_t;
 /** Type safe variant of serializer function */
 template <typename T>
 using serialize = int(*)(const serializer *, const T*);
+
+/** Type safe variant of serialize_member function */
+template <typename T>
+using serialize_member = int(*)(const serializer *, const T*, const char* name);
+
+/** Type safe variant of serialize_element function */
+template <typename T>
+using serialize_element = int(*)(const serializer *, const T*, size_t element);
+
 
 /** Type safe interface for opaque types */
 template <typename T, typename ElemType = void>
@@ -47,6 +54,22 @@ struct opaque {
         this->desc.type.serialize =
             reinterpret_cast<decltype(
                 this->desc.type.serialize)>(func);
+        return *this;
+    }
+
+    /** Serialize member function */
+    opaque& serialize_member(flecs::serialize_member<T> func) {
+        this->desc.type.serialize_member =
+            reinterpret_cast<decltype(
+                this->desc.type.serialize_member)>(func);
+        return *this;
+    }
+
+    /** Serialize element function */
+    opaque& serialize_element(flecs::serialize_element<T> func) {
+        this->desc.type.serialize_element =
+            reinterpret_cast<decltype(
+                this->desc.type.serialize_element)>(func);
         return *this;
     }
 

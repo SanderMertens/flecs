@@ -111,11 +111,11 @@ Yes it can! See the reflection examples:
 - https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection
 
 ## Why is Flecs so large?
-If you look at the size of the flecs.c and flecs.h files you might wonder why they are so large. There are a few reasons:
+If you look at the size of the [distr/flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.c) and [distr/flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.c) files you might wonder why they are so large. There are a few reasons:
 
 - The files contain a _lot_ of comments and in-code documentation!
-- Flecs has a small core with a lot of addons. The flecs.c and flecs.h files are the full source code, including addons.
-- The flecs.h file contains the full C++ API.
+- Flecs has a small core with a lot of addons. The [distr/flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.c) and [distr/flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.c) files are the full source code, including addons.
+- The [distr/flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.c) file contains the full C++ API.
 - Flecs implements its own data structures like vectors and maps, vs. depending on something like the STL.
 - C tends to be a bit more verbose than other languages.
 

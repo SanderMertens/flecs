@@ -10,39 +10,47 @@
 
 ECS_COMPONENT_DECLARE(EcsWorldSummary);
 
+static 
+void flecs_copy_world_summary(
+    ecs_world_t *world,
+    EcsWorldSummary *dst)
+{
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+
+    dst->target_fps = (double)info->target_fps;
+    dst->time_scale = (double)info->time_scale;
+
+    dst->frame_time_last = (double)info->frame_time_total - dst->frame_time_total;
+    dst->system_time_last = (double)info->system_time_total - dst->system_time_total;
+    dst->merge_time_last = (double)info->merge_time_total - dst->merge_time_total;
+
+    dst->frame_time_total = (double)info->frame_time_total;
+    dst->system_time_total = (double)info->system_time_total;
+    dst->merge_time_total = (double)info->merge_time_total;
+
+    dst->frame_count ++;
+    dst->command_count +=
+        info->cmd.add_count +
+        info->cmd.remove_count +
+        info->cmd.delete_count +
+        info->cmd.clear_count +
+        info->cmd.set_count +
+        info->cmd.ensure_count +
+        info->cmd.modified_count +
+        info->cmd.discard_count +
+        info->cmd.event_count +
+        info->cmd.other_count;
+
+    dst->build_info = *ecs_get_build_info();
+}
+
 static
 void UpdateWorldSummary(ecs_iter_t *it) {
     EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 0);
 
-    const ecs_world_info_t *info = ecs_get_world_info(it->world);
-
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
-        summary[i].target_fps = (double)info->target_fps;
-        summary[i].time_scale = (double)info->time_scale;
-
-        summary[i].frame_time_last = (double)info->frame_time_total - summary[i].frame_time_total;
-        summary[i].system_time_last = (double)info->system_time_total - summary[i].system_time_total;
-        summary[i].merge_time_last = (double)info->merge_time_total - summary[i].merge_time_total;
-
-        summary[i].frame_time_total = (double)info->frame_time_total;
-        summary[i].system_time_total = (double)info->system_time_total;
-        summary[i].merge_time_total = (double)info->merge_time_total;
-
-        summary[i].frame_count ++;
-        summary[i].command_count +=
-            info->cmd.add_count +
-            info->cmd.remove_count +
-            info->cmd.delete_count +
-            info->cmd.clear_count +
-            info->cmd.set_count +
-            info->cmd.ensure_count +
-            info->cmd.modified_count +
-            info->cmd.discard_count +
-            info->cmd.event_count +
-            info->cmd.other_count;
-
-        summary[i].build_info = *ecs_get_build_info();
+        flecs_copy_world_summary(it->world, &summary[i]);
     }
 }
 
@@ -63,7 +71,7 @@ void FlecsWorldSummaryImport(
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 
 #if defined(FLECS_META) && defined(FLECS_UNITS) 
-    ecs_entity_t build_info = ecs_lookup(world, "flecs.core.build_info_t");
+    ecs_entity_t build_info = ecs_lookup(world, "flecs.core.BuildInfo");
     ecs_struct(world, {
         .entity = ecs_id(EcsWorldSummary),
         .members = {
@@ -105,6 +113,10 @@ void FlecsWorldSummaryImport(
         .target_fps = (double)info->target_fps,
         .time_scale = (double)info->time_scale
     });
+
+    EcsWorldSummary *summary = ecs_ensure(world, EcsWorld, EcsWorldSummary);
+    flecs_copy_world_summary(world, summary);
+    ecs_modified(world, EcsWorld, EcsWorldSummary);    
 }
 
 #endif

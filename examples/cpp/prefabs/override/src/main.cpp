@@ -36,7 +36,7 @@ int main() {
     ecs.component<Attack>().add(flecs::OnInstantiate, flecs::Inherit);
     ecs.component<Defense>().add(flecs::OnInstantiate, flecs::Inherit);
 
-    // Attack and Damage are properties that can be shared across many 
+    // Attack and Defense are properties that can be shared across many 
     // spaceships. This saves memory, and speeds up prefab creation as we don't
     // have to copy the values of Attack and Defense to private components.
     flecs::entity SpaceShip = ecs.prefab("SpaceShip")
@@ -62,13 +62,13 @@ int main() {
     // We can get all components on the instance, regardless of whether they
     // are overridden or not. Note that the overridden components (Attack and
     // Damage) are initialized with the values from the prefab component:
-    const Attack *a = inst.get<Attack>();
-    const Defense *d = inst.get<Defense>();
-    const Damage *dmg = inst.get<Damage>();
+    const Attack& a = inst.get<Attack>();
+    const Defense& d = inst.get<Defense>();
+    const Damage& dmg = inst.get<Damage>();
 
-    std::cout << "attack: " << a->value << "\n";
-    std::cout << "defense: " << d->value << "\n";
-    std::cout << "damage: " << dmg->value << "\n";
+    std::cout << "attack: " << a.value << "\n";
+    std::cout << "defense: " << d.value << "\n";
+    std::cout << "damage: " << dmg.value << "\n";
 
     // Output:
     //  Damage, (Identifier,Name), (IsA,SpaceShip)

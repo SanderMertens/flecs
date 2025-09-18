@@ -1,0 +1,10 @@
+{
+    "id": "iter_targets",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

@@ -64,8 +64,6 @@
  * @{
  */
 
-#include <stddef.h>
-
 #ifndef FLECS_MODULE
 #define FLECS_MODULE
 #endif
@@ -117,6 +115,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsTypeSerializer);  /**< Id for comp
 FLECS_API extern const ecs_entity_t ecs_id(EcsPrimitive);       /**< Id for component that stores reflection data for a primitive type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsEnum);            /**< Id for component that stores reflection data for an enum type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsBitmask);         /**< Id for component that stores reflection data for a bitmask type. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsConstants);       /**< Id for component that stores reflection data for a constants. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsMember);          /**< Id for component that stores reflection data for struct members. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsMemberRanges);    /**< Id for component that stores min/max ranges for member values. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);          /**< Id for component that stores reflection data for a struct type. */
@@ -125,7 +124,6 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsVector);          /**< Id for comp
 FLECS_API extern const ecs_entity_t ecs_id(EcsOpaque);          /**< Id for component that stores reflection data for an opaque type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnit);            /**< Id for component that stores unit data. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);      /**< Id for component that stores unit prefix data. */
-FLECS_API extern const ecs_entity_t EcsConstant;                /**< Tag added to enum/bitmask constants. */
 FLECS_API extern const ecs_entity_t EcsQuantity;                /**< Tag added to unit quantities. */
 
 /* Primitive type component ids */
@@ -199,9 +197,10 @@ typedef struct EcsPrimitive {
 /** Component added to member entities */
 typedef struct EcsMember {
     ecs_entity_t type;                             /**< Member type. */
-    int32_t count;                                 /**< Number of elements (for inline arrays). */
+    int32_t count;                                 /**< Number of elements for inline arrays. Leave to 0 for non-array members. */
     ecs_entity_t unit;                             /**< Member unit. */
     int32_t offset;                                /**< Member offset. */
+    bool use_offset;                               /**< If offset should be explicitly used. */
 } EcsMember;
 
 /** Type expressing a range for a member value */
@@ -225,7 +224,8 @@ typedef struct ecs_member_t {
     /** Member type. */
     ecs_entity_t type;
 
-    /** Element count (for inline arrays). May be set when used with ecs_struct_desc_t */
+    /** Element count (for inline arrays). May be set when used with 
+     * ecs_struct_desc_t. Leave to 0 for non-array members. */
     int32_t count;
 
     /** May be set when used with ecs_struct_desc_t. Member offset. */
@@ -234,6 +234,11 @@ typedef struct ecs_member_t {
     /** May be set when used with ecs_struct_desc_t, will be auto-populated if
      * type entity is also a unit */
     ecs_entity_t unit;
+
+    /** Set to true to prevent automatic offset computation. This option should
+     * be used when members are registered out of order or where calculation of
+     * member offsets doesn't match C type offsets. */
+    bool use_offset;
 
     /** Numerical range that specifies which values member can assume. This
      * range may be used by UI elements such as a progress bar or slider. The
@@ -267,7 +272,10 @@ typedef struct ecs_enum_constant_t {
     const char *name;
 
     /** May be set when used with ecs_enum_desc_t */
-    int32_t value;
+    int64_t value;
+
+    /** For when the underlying type is unsigned */
+    uint64_t value_unsigned;
 
     /** Should not be set by ecs_enum_desc_t */
     ecs_entity_t constant;
@@ -275,8 +283,7 @@ typedef struct ecs_enum_constant_t {
 
 /** Component added to enum type entities */
 typedef struct EcsEnum {
-    /** Populated from child entities with Constant component */
-    ecs_map_t constants; /**< map<i32_t, ecs_enum_constant_t> */
+    ecs_entity_t underlying_type;
 } EcsEnum;
 
 /** Type that describes an bitmask constant */
@@ -285,7 +292,10 @@ typedef struct ecs_bitmask_constant_t {
     const char *name;
 
     /** May be set when used with ecs_bitmask_desc_t */
-    ecs_flags32_t value;
+    ecs_flags64_t value;
+
+    /** Keep layout the same with ecs_enum_constant_t */
+    int64_t _unused;
 
     /** Should not be set by ecs_bitmask_desc_t */
     ecs_entity_t constant;
@@ -293,9 +303,17 @@ typedef struct ecs_bitmask_constant_t {
 
 /** Component added to bitmask type entities */
 typedef struct EcsBitmask {
-    /* Populated from child entities with Constant component */
-    ecs_map_t constants; /**< map<u32_t, ecs_bitmask_constant_t> */
+    int32_t dummy_;
 } EcsBitmask;
+
+/** Component with datastructures for looking up enum/bitmask constants. */
+typedef struct EcsConstants {
+    /** Populated from child entities with Constant component */
+    ecs_map_t *constants; /**< map<i32_t, ecs_enum_constant_t> */
+
+    /** Stores the constants in registration order */
+    ecs_vec_t ordered_constants; /**< vector<ecs_enum_constants_t> */
+} EcsConstants;
 
 /** Component added to array type entities */
 typedef struct EcsArray {
@@ -369,6 +387,19 @@ typedef int (*ecs_meta_serialize_t)(
     const ecs_serializer_t *ser,
     const void *src);                  /**< Pointer to value to serialize */
 
+
+/** Callback invoked to serialize an opaque struct member */
+typedef int (*ecs_meta_serialize_member_t)(
+    const ecs_serializer_t *ser,
+    const void *src,                   /**< Pointer to value to serialize */
+    const char* name);                 /**< Name of member to serialize */
+    
+/** Callback invoked to serialize an opaque vector/array element */
+typedef int (*ecs_meta_serialize_element_t)(
+    const ecs_serializer_t *ser,
+    const void *src,                   /**< Pointer to value to serialize */
+    size_t elem);                      /**< Element index to serialize */
+    
 /** Opaque type reflection data. 
  * An opaque type is a type with an unknown layout that can be mapped to a type
  * known to the reflection framework. See the opaque type reflection examples.
@@ -376,6 +407,8 @@ typedef int (*ecs_meta_serialize_t)(
 typedef struct EcsOpaque {
     ecs_entity_t as_type;              /**< Type that describes the serialized output */
     ecs_meta_serialize_t serialize;    /**< Serialize action */
+    ecs_meta_serialize_member_t serialize_member; /**< Serialize member action */
+    ecs_meta_serialize_element_t serialize_element; /**< Serialize element action */
 
     /* Deserializer interface
      * Only override the callbacks that are valid for the opaque type. If a
@@ -491,19 +524,24 @@ typedef struct EcsUnitPrefix {
  * instructions that tells a serializer what kind of fields can be found in a
  * type at which offsets.
 */
-typedef enum ecs_meta_type_op_kind_t {
-    EcsOpArray,
-    EcsOpVector,
-    EcsOpOpaque,
-    EcsOpPush,
-    EcsOpPop,
+typedef enum ecs_meta_op_kind_t {
+    EcsOpPushStruct,   /**< Push struct. */
+    EcsOpPushArray,    /**< Push array. */
+    EcsOpPushVector,   /**< Push vector. */
+    EcsOpPop,          /**< Pop scope. */
 
-    EcsOpScope, /**< Marks last constant that can open/close a scope */
+    EcsOpOpaqueStruct, /**< Opaque struct. */
+    EcsOpOpaqueArray,  /**< Opaque array. */
+    EcsOpOpaqueVector, /**< Opaque vector. */
+    EcsOpForward,      /**< Forward to type. Allows for recursive types. */
 
+    EcsOpScope,        /**< Marks last constant that can open/close a scope */
+
+    EcsOpOpaqueValue,  /**< Opaque value. */
     EcsOpEnum,
     EcsOpBitmask,
 
-    EcsOpPrimitive, /**< Marks first constant that's a primitive */
+    EcsOpPrimitive,    /**< Marks first constant that's a primitive */
 
     EcsOpBool,
     EcsOpChar,
@@ -524,26 +562,31 @@ typedef enum ecs_meta_type_op_kind_t {
     EcsOpEntity,
     EcsOpId,
     EcsMetaTypeOpKindLast = EcsOpId
-} ecs_meta_type_op_kind_t;
+} ecs_meta_op_kind_t;
 
 /** Meta type serializer instruction data. */
-typedef struct ecs_meta_type_op_t {
-    ecs_meta_type_op_kind_t kind;                  /**< Instruction opcode. */
-    ecs_size_t offset;                             /**< Offset of current field */
-    int32_t count;                                 /**< Number of elements (for inline arrays). */
+typedef struct ecs_meta_op_t {
+    ecs_meta_op_kind_t kind;                       /**< Instruction opcode. */
+    ecs_meta_op_kind_t underlying_kind;            /**< Underlying type kind (for enums). */
+    ecs_size_t offset;                             /**< Offset of current field. */
     const char *name;                              /**< Name of value (only used for struct members) */
-    int32_t op_count;                              /**< Number of operations until next field or end */
-    ecs_size_t size;                               /**< Size of type of operation */
+    ecs_size_t elem_size;                          /**< Element size (for PushArray/PushVector) and element count (for PopArray) */
+    int16_t op_count;                              /**< Number of operations until next field or end */
+    int16_t member_index;                          /**< Index of member in struct */
     ecs_entity_t type;                             /**< Type entity */
-    int32_t member_index;                          /**< Index of member in struct */
-    ecs_hashmap_t *members;                        /**< string -> member index (structs only) */
-} ecs_meta_type_op_t;
+    const ecs_type_info_t *type_info;              /**< Type info */
+    union {
+        ecs_hashmap_t *members;                    /**< string -> member index (structs) */
+        ecs_map_t *constants;                      /**< (u)int -> constant entity (enums/bitmasks) */
+        ecs_meta_serialize_t opaque;               /**< Serialize callback for opaque types */
+    } is;
+} ecs_meta_op_t;
 
 /** Component that stores the type serializer.
- * Added to all types with reflection data.
- */
+ * Added to all types with reflection data. */
 typedef struct EcsTypeSerializer {
-    ecs_vec_t ops;      /**< vector<ecs_meta_type_op_t> */
+    ecs_type_kind_t kind;         /**< Quick access to type kind (same as EcsType) */
+    ecs_vec_t ops;                /**< vector<ecs_meta_op_t> */
 } EcsTypeSerializer;
 
 
@@ -557,33 +600,37 @@ typedef struct EcsTypeSerializer {
 /** Type with information about currently serialized scope. */
 typedef struct ecs_meta_scope_t {
     ecs_entity_t type;                             /**< The type being iterated */
-    ecs_meta_type_op_t *ops;                       /**< The type operations (see ecs_meta_type_op_t) */
-    int32_t op_count;                              /**< Number of operations in ops array to process */
-    int32_t op_cur;                                /**< Current operation */
-    int32_t elem_cur;                              /**< Current element (for collections) */
-    int32_t prev_depth;                            /**< Depth to restore, in case dotmember was used */
-    void *ptr;                                     /**< Pointer to the value being iterated */
-    const EcsComponent *comp;                      /**< Pointer to component, in case size/alignment is needed */
+    ecs_meta_op_t *ops;                       /**< The type operations (see ecs_meta_op_t) */
+    int16_t ops_count;                             /**< Number of elements in ops */
+    int16_t ops_cur;                               /**< Current element in ops */
+    int16_t prev_depth;                            /**< Depth to restore, in case dotmember was used */
+    void *ptr;                                     /**< Pointer to ops[0] */
     const EcsOpaque *opaque;                       /**< Opaque type interface */
-    ecs_vec_t *vector;                             /**< Current vector, in case a vector is iterated */
     ecs_hashmap_t *members;                        /**< string -> member index */
     bool is_collection;                            /**< Is the scope iterating elements? */
-    bool is_inline_array;                          /**< Is the scope iterating an inline array? */
-    bool is_empty_scope;                           /**< Was scope populated (for collections) */
+    bool is_empty_scope;                           /**< Was scope populated (for vectors) */
+    bool is_moved_scope;                           /**< Was scope moved in (with ecs_meta_elem, for vectors) */
+    int32_t elem, elem_count;                      /**< Set for collections */
 } ecs_meta_scope_t;
 
 /** Type that enables iterating/populating a value using reflection data. */
 typedef struct ecs_meta_cursor_t {
     const ecs_world_t *world;                      /**< The world. */
     ecs_meta_scope_t scope[ECS_META_MAX_SCOPE_DEPTH]; /**< Cursor scope stack. */
-    int32_t depth;                                 /**< Current scope depth. */
+    int16_t depth;                                 /**< Current scope depth. */
     bool valid;                                    /**< Does the cursor point to a valid field. */
     bool is_primitive_scope;                       /**< If in root scope, this allows for a push for primitive types */
 
     /** Custom entity lookup action for overriding default ecs_lookup */
-    ecs_entity_t (*lookup_action)(const ecs_world_t*, const char*, void*);
+    ecs_entity_t (*lookup_action)(ecs_world_t*, const char*, void*);
     void *lookup_ctx;                              /**< Context for lookup_action */
 } ecs_meta_cursor_t;
+
+/** Convert serializer to string. */
+FLECS_API
+char* ecs_meta_serializer_to_str(
+    ecs_world_t *world,
+    ecs_entity_t type);
 
 /** Create meta cursor.
  * A meta cursor allows for walking over, reading and writing a value without
@@ -644,15 +691,40 @@ int ecs_meta_member(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
+/** Same as ecs_meta_member() but doesn't throw an error.
+ * 
+ * @param cursor The cursor.
+ * @param name The name of the member.
+ * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_member()
+ */
+FLECS_API
+int ecs_meta_try_member(
+    ecs_meta_cursor_t *cursor,
+    const char *name);
+
 /** Move cursor to member.
  * Same as ecs_meta_member(), but with support for "foo.bar" syntax.
  * 
  * @param cursor The cursor.
  * @param name The name of the member.
  * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_member()
  */
 FLECS_API
 int ecs_meta_dotmember(
+    ecs_meta_cursor_t *cursor,
+    const char *name);
+
+/** Same as ecs_meta_dotmember() but doesn't throw an error.
+ * 
+ * @param cursor The cursor.
+ * @param name The name of the member.
+ * @return Zero if success, non-zero if failed.
+ * @see ecs_meta_dotmember()
+ */
+FLECS_API
+int ecs_meta_try_dotmember(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
@@ -916,6 +988,7 @@ ecs_entity_t ecs_meta_get_entity(
  * @param cursor The cursor.
  * @return The value of the current field.
  */
+FLECS_API
 ecs_id_t ecs_meta_get_id(
     const ecs_meta_cursor_t *cursor);
 
@@ -928,6 +1001,19 @@ ecs_id_t ecs_meta_get_id(
 FLECS_API
 double ecs_meta_ptr_to_float(
     ecs_primitive_kind_t type_kind,
+    const void *ptr);
+
+/** Get element count for array/vector operations. 
+ * The operation must either be EcsOpPushArray or EcsOpPushVector. If the 
+ * operation is EcsOpPushArray, the provided pointer may be NULL.
+ * 
+ * @param op The serializer operation.
+ * @param ptr Pointer to the array/vector value.
+ * @return The number of elements.
+ */
+FLECS_API
+ecs_size_t ecs_meta_op_get_elem_count(
+    const ecs_meta_op_t *op,
     const void *ptr);
 
 /* API functions for creating meta types */
@@ -954,6 +1040,7 @@ ecs_entity_t ecs_primitive_init(
 typedef struct ecs_enum_desc_t {
     ecs_entity_t entity;       /**< Existing entity to use for type (optional). */
     ecs_enum_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE]; /**< Enum constants. */
+    ecs_entity_t underlying_type;
 } ecs_enum_desc_t;
 
 /** Create a new enum type. 

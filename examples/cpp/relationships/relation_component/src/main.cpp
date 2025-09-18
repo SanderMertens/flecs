@@ -29,13 +29,13 @@ int main(int, char*[]) {
     // When one element of a pair is a component and the other element is a tag, 
     // the pair assumes the type of the component. 
     flecs::entity e1 = ecs.entity().set<Requires, Gigawatts>({1.21});
-    const Requires *r = e1.get<Requires, Gigawatts>();
-    std::cout << "requires: " << r->amount << std::endl;
+    const Requires& r1 = e1.get<Requires, Gigawatts>();
+    std::cout << "requires: " << r1.amount << std::endl;
 
     // The component can be either the first or second part of a pair:
     flecs::entity e2 = ecs.entity().set<Gigawatts, Requires>({1.21});
-    r = e2.get<Gigawatts, Requires>();
-    std::cout << "requires: " << r->amount << std::endl;
+    const Requires& r2 = e2.get<Gigawatts, Requires>();
+    std::cout << "requires: " << r2.amount << std::endl;
 
     // Note that <Requires, Gigawatts> and <Gigawatts, Requires> are two 
     // different pairs, and can be added to an entity at the same time.
@@ -43,8 +43,8 @@ int main(int, char*[]) {
     // If both parts of a pair are components, the pair assumes the type of
     // the first element:
     flecs::entity e3 = ecs.entity().set<Expires, Position>({0.5});
-    const Expires *e = e3.get<Expires, Position>();
-    std::cout << "expires: " << e->timeout << std::endl;
+    const Expires& e = e3.get<Expires, Position>();
+    std::cout << "expires: " << e.timeout << std::endl;
 
     // You can prevent a pair from assuming the type of a component by adding
     // the Tag property to a relationship:

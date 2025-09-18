@@ -23,7 +23,7 @@ int main(int, char *[]) {
 
     s.run();
 
-    const Position *p = e.get<Position>();
-    assert(p->x == 11);
-    assert(p->y == 22);
+    const Position& p = e.get<Position>();
+    assert(p.x == 11);
+    assert(p.y == 22);
 }

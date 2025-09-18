@@ -249,25 +249,6 @@
 #define ecs_component(world, ...)\
     ecs_component_init(world, &(ecs_component_desc_t) __VA_ARGS__ )
 
-/** Shorthand for creating a component from a type.
- *
- * Example:
- *
- * @code
- * ecs_component_t(world, Position);
- * @endcode
- */
-#define ecs_component_t(world, T)\
-    ecs_component_init(world, &(ecs_component_desc_t) { \
-        .entity = ecs_entity(world, { \
-            .name = #T, \
-            .symbol = #T, \
-            .use_low_id = true \
-        }), \
-        .type.size = ECS_SIZEOF(T), \
-        .type.alignment = ECS_ALIGNOF(T) \
-    })
-
 /** Shorthand for creating a query with ecs_query_cache_init.
  *
  * Example:
@@ -383,10 +364,10 @@
 /* emplace */
 
 #define ecs_emplace(world, entity, T, is_new)\
-    (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T), is_new)))
+    (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T), sizeof(T), is_new)))
 
 #define ecs_emplace_pair(world, entity, First, second, is_new)\
-    (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second), is_new)))
+    (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second), sizeof(First), is_new)))
 
 /* get */
 
@@ -420,26 +401,15 @@
 /* ensure */
 
 #define ecs_ensure(world, entity, T)\
-    (ECS_CAST(T*, ecs_ensure_id(world, entity, ecs_id(T))))
+    (ECS_CAST(T*, ecs_ensure_id(world, entity, ecs_id(T), sizeof(T))))
 
 #define ecs_ensure_pair(world, subject, First, second)\
     (ECS_CAST(First*, ecs_ensure_id(world, subject,\
-        ecs_pair(ecs_id(First), second))))
+        ecs_pair(ecs_id(First), second), sizeof(First))))
 
 #define ecs_ensure_pair_second(world, subject, first, Second)\
     (ECS_CAST(Second*, ecs_ensure_id(world, subject,\
-        ecs_pair(first, ecs_id(Second)))))
-
-#define ecs_ensure(world, entity, T)\
-    (ECS_CAST(T*, ecs_ensure_id(world, entity, ecs_id(T))))
-
-#define ecs_ensure_pair(world, subject, First, second)\
-    (ECS_CAST(First*, ecs_ensure_id(world, subject,\
-        ecs_pair(ecs_id(First), second))))
-
-#define ecs_ensure_pair_second(world, subject, first, Second)\
-    (ECS_CAST(Second*, ecs_ensure_id(world, subject,\
-        ecs_pair(first, ecs_id(Second)))))
+        ecs_pair(first, ecs_id(Second)), sizeof(Second))))
 
 /* modified */
 
@@ -480,7 +450,7 @@
     ecs_ref_init_id(world, entity, ecs_id(T))
 
 #define ecs_ref_get(world, ref, T)\
-    (ECS_CAST(const T*, ecs_ref_get_id(world, ref, ecs_id(T))))
+    (ECS_CAST(T*, ecs_ref_get_id(world, ref, ecs_id(T))))
 
 /** @} */
 
@@ -498,6 +468,9 @@
 #define ecs_singleton_get(world, comp)\
     ecs_get(world, ecs_id(comp), comp)
 
+#define ecs_singleton_get_mut(world, comp)\
+    ecs_get_mut(world, ecs_id(comp), comp)
+
 #define ecs_singleton_set_ptr(world, comp, ptr)\
     ecs_set_ptr(world, ecs_id(comp), comp, ptr)
 
@@ -506,6 +479,9 @@
 
 #define ecs_singleton_ensure(world, comp)\
     ecs_ensure(world, ecs_id(comp), comp)
+
+#define ecs_singleton_emplace(world, comp, is_new)\
+    ecs_emplace(world, ecs_id(comp), comp, is_new)
 
 #define ecs_singleton_modified(world, comp)\
     ecs_modified(world, ecs_id(comp), comp)
@@ -578,7 +554,7 @@
     ecs_get_path_w_sep(world, 0, child, ".", NULL)
 
 #define ecs_get_path_buf(world, child, buf)\
-    ecs_get_path_w_sep_buf(world, 0, child, ".", NULL, buf)
+    ecs_get_path_w_sep_buf(world, 0, child, ".", NULL, buf, false)
 
 #define ecs_new_from_path(world, parent, path)\
     ecs_new_from_path_w_sep(world, parent, path, ".", NULL)

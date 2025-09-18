@@ -20,8 +20,8 @@ void Serialized_primitive_constants(void) {
     test_int(EcsEntity + EcsOpPrimitive, EcsOpEntity);
 }
 
-static ecs_meta_type_op_t* ops_get(const ecs_vec_t *ops, int32_t index) {
-    ecs_meta_type_op_t* op = ecs_vec_get_t(ops, ecs_meta_type_op_t, index);
+static ecs_meta_op_t* ops_get(const ecs_vec_t *ops, int32_t index) {
+    ecs_meta_op_t* op = ecs_vec_get_t(ops, ecs_meta_op_t, index);
     test_assert(op != NULL);
     return op;
 }
@@ -29,16 +29,16 @@ static ecs_meta_type_op_t* ops_get(const ecs_vec_t *ops, int32_t index) {
 static void test_op(
     const ecs_vec_t *ops, 
     int32_t index, 
-    ecs_meta_type_op_kind_t kind, 
+    ecs_meta_op_kind_t kind, 
     int32_t count, 
     int32_t op_count, 
     ecs_entity_t type)
 {
-    ecs_meta_type_op_t *op = ops_get(ops, index);
+    (void)count;
+    ecs_meta_op_t *op = ops_get(ops, index);
     test_assert(op != NULL);
 
     test_int(op->kind, kind);
-    test_int(op->count, count);
     test_int(op->op_count, op_count);
     test_str(op->name, NULL);
     test_int(op->type, type);
@@ -48,18 +48,19 @@ static void test_op(
 static void _test_member_op(
     const ecs_vec_t *ops, 
     int32_t index, 
-    ecs_meta_type_op_kind_t kind, 
+    ecs_meta_op_kind_t kind, 
     int32_t count, 
     int32_t op_count, 
     const char *name, 
     ecs_entity_t type,
     ecs_size_t offset)
 {
-    ecs_meta_type_op_t *op = ops_get(ops, index);
+    (void)count;
+
+    ecs_meta_op_t *op = ops_get(ops, index);
     test_assert(op != NULL);
 
     test_int(op->kind, kind);
-    test_int(op->count, count);
     test_int(op->op_count, op_count);
     test_str(op->name, name);
     test_int(op->type, type);
@@ -72,7 +73,7 @@ static void _test_member_op(
 
 #define test_mn(ops, index, kind, count, op_count, offset, T, name, type)\
     _test_member_op(ops, index, kind, count, op_count, #name, type, \
-        offset + offsetof(T, name))
+        offsetof(T, name))
 
 void Serialized_ops_bool(void) {
     ecs_world_t *world = ecs_init();
@@ -327,7 +328,7 @@ void Serialized_ops_struct_bool(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 3);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 3, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 3, t);
     test_mp(&s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
     test_op(&s->ops, 2, EcsOpPop, 1, 1, t);
 
@@ -355,7 +356,7 @@ void Serialized_ops_struct_bool_bool(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 4);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 4, t);
     test_mp(&s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
     test_mp(&s->ops, 2, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
@@ -382,7 +383,7 @@ void Serialized_ops_struct_i32(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 3);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 3, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 3, t);
     test_mp(&s->ops, 1, EcsOpI32, 1, 1, T, x, ecs_id(ecs_i32_t));
     test_op(&s->ops, 2, EcsOpPop, 1, 1, t);
 
@@ -410,7 +411,7 @@ void Serialized_ops_struct_i32_i32(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 4);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 4, t);
     test_mp(&s->ops, 1, EcsOpI32, 1, 1, T, x, ecs_id(ecs_i32_t));
     test_mp(&s->ops, 2, EcsOpI32, 1, 1, T, y, ecs_id(ecs_i32_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
@@ -439,7 +440,7 @@ void Serialized_ops_struct_i32_bool(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 4);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 4, t);
     test_mp(&s->ops, 1, EcsOpI32, 1, 1, T, x, ecs_id(ecs_i32_t));
     test_mp(&s->ops, 2, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
@@ -468,7 +469,7 @@ void Serialized_ops_struct_bool_i32(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 4);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 4, t);
     test_mp(&s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
     test_mp(&s->ops, 2, EcsOpI32, 1, 1, T, y, ecs_id(ecs_i32_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
@@ -507,8 +508,8 @@ void Serialized_ops_nested_struct_1_bool(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 5);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 5, t);
-    test_mp(&s->ops, 1, EcsOpPush, 1, 3, T, n_1, n1);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 5, t);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 3, T, n_1, n1);
     test_mn(&s->ops, 2, EcsOpBool, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_bool_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, n1);
     test_op(&s->ops, 4, EcsOpPop, 1, 1, t);
@@ -547,8 +548,8 @@ void Serialized_ops_nested_struct_1_i32(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 5);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 5, t);
-    test_mp(&s->ops, 1, EcsOpPush, 1, 3, T, n_1, n1);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 5, t);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 3, T, n_1, n1);
     test_mn(&s->ops, 2, EcsOpI32, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_i32_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, n1);
     test_op(&s->ops, 4, EcsOpPop, 1, 1, t);
@@ -589,8 +590,8 @@ void Serialized_ops_nested_struct_1_bool_w_bool_member(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 6);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 6, t);
-    test_mp(&s->ops, 1, EcsOpPush, 1, 3, T, n_1, n1);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 6, t);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 3, T, n_1, n1);
     test_mn(&s->ops, 2, EcsOpBool, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_bool_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, n1);
     test_mp(&s->ops, 4, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
@@ -632,8 +633,8 @@ void Serialized_ops_nested_struct_1_bool_w_i32_member(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 6);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 6, t);
-    test_mp(&s->ops, 1, EcsOpPush, 1, 3, T, n_1, n1);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 6, t);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 3, T, n_1, n1);
     test_mn(&s->ops, 2, EcsOpBool, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_bool_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, n1);
     test_mp(&s->ops, 4, EcsOpI32, 1, 1, T, x, ecs_id(ecs_i32_t));
@@ -682,11 +683,11 @@ void Serialized_ops_nested_struct_1_bool_2_bool(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 8);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 8, t);
-    test_mp(&s->ops, 1, EcsOpPush, 1, 3, T, n_1, n1);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 8, t);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 3, T, n_1, n1);
     test_mn(&s->ops, 2, EcsOpBool, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_bool_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, n1);
-    test_mp(&s->ops, 4, EcsOpPush, 1, 3, T, n_2, n2);
+    test_mp(&s->ops, 4, EcsOpPushStruct, 1, 3, T, n_2, n2);
     test_mn(&s->ops, 5, EcsOpBool, 1, 1, offsetof(T, n_2), N1, x, ecs_id(ecs_bool_t));
     test_op(&s->ops, 6, EcsOpPop, 1, 1, n2);
     test_op(&s->ops, 7, EcsOpPop, 1, 1, t);
@@ -737,11 +738,11 @@ void Serialized_ops_nested_struct_1_i32_2_bool(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 8);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 8, t);
-    test_mp(&s->ops, 1, EcsOpPush, 1, 3, T, n_1, n1);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 8, t);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 3, T, n_1, n1);
     test_mn(&s->ops, 2, EcsOpI32, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_i32_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, n1);
-    test_mp(&s->ops, 4, EcsOpPush, 1, 3, T, n_2, n2);
+    test_mp(&s->ops, 4, EcsOpPushStruct, 1, 3, T, n_2, n2);
     test_mn(&s->ops, 5, EcsOpBool, 1, 1, offsetof(T, n_2), N2, x, ecs_id(ecs_bool_t));
     test_op(&s->ops, 6, EcsOpPop, 1, 1, n2);
     test_op(&s->ops, 7, EcsOpPop, 1, 1, t);
@@ -796,12 +797,12 @@ void Serialized_ops_nested_struct_1_i32_i32_2_bool_bool(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 10);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 10, t);
-    test_mp(&s->ops, 1, EcsOpPush, 1, 4, T, n_1, n1);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 10, t);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 4, T, n_1, n1);
     test_mn(&s->ops, 2, EcsOpI32, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_i32_t));
     test_mn(&s->ops, 3, EcsOpI32, 1, 1, offsetof(T, n_1), N1, y, ecs_id(ecs_i32_t));
     test_op(&s->ops, 4, EcsOpPop, 1, 1, n1);
-    test_mp(&s->ops, 5, EcsOpPush, 1, 4, T, n_2, n2);
+    test_mp(&s->ops, 5, EcsOpPushStruct, 1, 4, T, n_2, n2);
     test_mn(&s->ops, 6, EcsOpBool, 1, 1, offsetof(T, n_2), N2, x, ecs_id(ecs_bool_t));
     test_mn(&s->ops, 7, EcsOpBool, 1, 1, offsetof(T, n_2), N2, y, ecs_id(ecs_bool_t));
     test_op(&s->ops, 8, EcsOpPop, 1, 1, n2);
@@ -857,12 +858,12 @@ void Serialized_ops_nested_struct_1_bool_bool_2_i32_i32(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 10);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 10, t);
-    test_mp(&s->ops, 1, EcsOpPush, 1, 4, T, n_1, n1);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 10, t);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 4, T, n_1, n1);
     test_mn(&s->ops, 2, EcsOpBool, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_bool_t));
     test_mn(&s->ops, 3, EcsOpBool, 1, 1, offsetof(T, n_1), N1, y, ecs_id(ecs_bool_t));
     test_op(&s->ops, 4, EcsOpPop, 1, 1, n1);
-    test_mp(&s->ops, 5, EcsOpPush, 1, 4, T, n_2, n2);
+    test_mp(&s->ops, 5, EcsOpPushStruct, 1, 4, T, n_2, n2);
     test_mn(&s->ops, 6, EcsOpI32, 1, 1, offsetof(T, n_2), N2, x, ecs_id(ecs_i32_t));
     test_mn(&s->ops, 7, EcsOpI32, 1, 1, offsetof(T, n_2), N2, y, ecs_id(ecs_i32_t));
     test_op(&s->ops, 8, EcsOpPop, 1, 1, n2);
@@ -918,12 +919,12 @@ void Serialized_ops_nested_struct_1_i32_bool_2_bool_i32(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 10);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 10, t);
-    test_mp(&s->ops, 1, EcsOpPush, 1, 4, T, n_1, n1);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 10, t);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 4, T, n_1, n1);
     test_mn(&s->ops, 2, EcsOpI32, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_i32_t));
     test_mn(&s->ops, 3, EcsOpBool, 1, 1, offsetof(T, n_1), N1, y, ecs_id(ecs_bool_t));
     test_op(&s->ops, 4, EcsOpPop, 1, 1, n1);
-    test_mp(&s->ops, 5, EcsOpPush, 1, 4, T, n_2, n2);
+    test_mp(&s->ops, 5, EcsOpPushStruct, 1, 4, T, n_2, n2);
     test_mn(&s->ops, 6, EcsOpBool, 1, 1, offsetof(T, n_2), N2, x, ecs_id(ecs_bool_t));
     test_mn(&s->ops, 7, EcsOpI32, 1, 1, offsetof(T, n_2), N2, y, ecs_id(ecs_i32_t));
     test_op(&s->ops, 8, EcsOpPop, 1, 1, n2);
@@ -979,12 +980,12 @@ void Serialized_ops_nested_struct_1_bool_i32_2_i32_bool(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 10);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 10, t);
-    test_mp(&s->ops, 1, EcsOpPush, 1, 4, T, n_1, n1);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 10, t);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 4, T, n_1, n1);
     test_mn(&s->ops, 2, EcsOpBool, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_bool_t));
     test_mn(&s->ops, 3, EcsOpI32, 1, 1, offsetof(T, n_1), N1, y, ecs_id(ecs_i32_t));
     test_op(&s->ops, 4, EcsOpPop, 1, 1, n1);
-    test_mp(&s->ops, 5, EcsOpPush, 1, 4, T, n_2, n2);
+    test_mp(&s->ops, 5, EcsOpPushStruct, 1, 4, T, n_2, n2);
     test_mn(&s->ops, 6, EcsOpI32, 1, 1, offsetof(T, n_2), N2, x, ecs_id(ecs_i32_t));
     test_mn(&s->ops, 7, EcsOpBool, 1, 1, offsetof(T, n_2), N2, y, ecs_id(ecs_bool_t));
     test_op(&s->ops, 8, EcsOpPop, 1, 1, n2);
@@ -1059,16 +1060,16 @@ void Serialized_ops_nested_2_lvls_bool(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 12);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 12, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 12, t);
 
-    test_mp(&s->ops, 1, EcsOpPush, 1, 5, T, n_1, n1);
-    test_mn(&s->ops, 2, EcsOpPush, 1, 3, offsetof(T, n_1), N1, nn_1, nn1);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 5, T, n_1, n1);
+    test_mn(&s->ops, 2, EcsOpPushStruct, 1, 3, offsetof(T, n_1), N1, nn_1, nn1);
     test_mn(&s->ops, 3, EcsOpBool, 1, 1, offsetof(T, n_1) + offsetof(N1, nn_1), NN1, x, ecs_id(ecs_bool_t));
     test_op(&s->ops, 4, EcsOpPop, 1, 1, nn1);
     test_op(&s->ops, 5, EcsOpPop, 1, 1, n1);
 
-    test_mp(&s->ops, 6, EcsOpPush, 1, 5, T, n_2, n2);
-    test_mn(&s->ops, 7, EcsOpPush, 1, 3, offsetof(T, n_2), N2, nn_2, nn2);
+    test_mp(&s->ops, 6, EcsOpPushStruct, 1, 5, T, n_2, n2);
+    test_mn(&s->ops, 7, EcsOpPushStruct, 1, 3, offsetof(T, n_2), N2, nn_2, nn2);
     test_mn(&s->ops, 8, EcsOpBool, 1, 1, offsetof(T, n_2) + offsetof(N2, nn_2), NN2, x, ecs_id(ecs_bool_t));
     test_op(&s->ops, 9, EcsOpPop, 1, 1, nn2);
     test_op(&s->ops, 10, EcsOpPop, 1, 1, n2);
@@ -1148,17 +1149,17 @@ void Serialized_ops_nested_2_lvls_bool_bool(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 14);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 14, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 14, t);
 
-    test_mp(&s->ops, 1, EcsOpPush, 1, 6, T, n_1, n1);
-    test_mn(&s->ops, 2, EcsOpPush, 1, 4, offsetof(T, n_1), N1, nn_1, nn1);
+    test_mp(&s->ops, 1, EcsOpPushStruct, 1, 6, T, n_1, n1);
+    test_mn(&s->ops, 2, EcsOpPushStruct, 1, 4, offsetof(T, n_1), N1, nn_1, nn1);
     test_mn(&s->ops, 3, EcsOpBool, 1, 1, offsetof(T, n_1) + offsetof(N1, nn_1), NN1, x, ecs_id(ecs_bool_t));
     test_mn(&s->ops, 4, EcsOpBool, 1, 1, offsetof(T, n_1) + offsetof(N1, nn_1), NN1, y, ecs_id(ecs_bool_t));
     test_op(&s->ops, 5, EcsOpPop, 1, 1, nn1);
     test_op(&s->ops, 6, EcsOpPop, 1, 1, n1);
 
-    test_mp(&s->ops, 7, EcsOpPush, 1, 6, T, n_2, n2);
-    test_mn(&s->ops, 8, EcsOpPush, 1, 4, offsetof(T, n_2), N2, nn_2, nn2);
+    test_mp(&s->ops, 7, EcsOpPushStruct, 1, 6, T, n_2, n2);
+    test_mn(&s->ops, 8, EcsOpPushStruct, 1, 4, offsetof(T, n_2), N2, nn_2, nn2);
     test_mn(&s->ops, 9, EcsOpBool, 1, 1, offsetof(T, n_2) + offsetof(N2, nn_2), NN2, x, ecs_id(ecs_bool_t));
     test_mn(&s->ops, 10, EcsOpBool, 1, 1, offsetof(T, n_2) + offsetof(N2, nn_2), NN2, y, ecs_id(ecs_bool_t));
     test_op(&s->ops, 11, EcsOpPop, 1, 1, nn2);
@@ -1247,21 +1248,21 @@ void Serialized_ops_nested_2_lvls_i32_i32_w_member_before(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 18);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 18, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 18, t);
 
     test_mp(&s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
-    test_mp(&s->ops, 2, EcsOpPush, 1, 7, T, n_1, n1);
+    test_mp(&s->ops, 2, EcsOpPushStruct, 1, 7, T, n_1, n1);
     test_mn(&s->ops, 3, EcsOpBool, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_bool_t));
-    test_mn(&s->ops, 4, EcsOpPush, 1, 4, offsetof(T, n_1), N1, nn_1, nn1);
+    test_mn(&s->ops, 4, EcsOpPushStruct, 1, 4, offsetof(T, n_1), N1, nn_1, nn1);
     test_mn(&s->ops, 5, EcsOpI32, 1, 1, offsetof(T, n_1) + offsetof(N1, nn_1), NN1, x, ecs_id(ecs_i32_t));
     test_mn(&s->ops, 6, EcsOpI32, 1, 1, offsetof(T, n_1) + offsetof(N1, nn_1), NN1, y, ecs_id(ecs_i32_t));
     test_op(&s->ops, 7, EcsOpPop, 1, 1, nn1);
     test_op(&s->ops, 8, EcsOpPop, 1, 1, n1);
 
     test_mp(&s->ops, 9, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
-    test_mp(&s->ops, 10, EcsOpPush, 1, 7, T, n_2, n2);
+    test_mp(&s->ops, 10, EcsOpPushStruct, 1, 7, T, n_2, n2);
     test_mn(&s->ops, 11, EcsOpBool, 1, 1, offsetof(T, n_2), N2, x, ecs_id(ecs_bool_t));
-    test_mn(&s->ops, 12, EcsOpPush, 1, 4, offsetof(T, n_2), N2, nn_2, nn2);
+    test_mn(&s->ops, 12, EcsOpPushStruct, 1, 4, offsetof(T, n_2), N2, nn_2, nn2);
     test_mn(&s->ops, 13, EcsOpI32, 1, 1, offsetof(T, n_2) + offsetof(N2, nn_2), NN2, x, ecs_id(ecs_i32_t));
     test_mn(&s->ops, 14, EcsOpI32, 1, 1, offsetof(T, n_2) + offsetof(N2, nn_2), NN2, y, ecs_id(ecs_i32_t));
     test_op(&s->ops, 15, EcsOpPop, 1, 1, nn2);
@@ -1350,21 +1351,21 @@ void Serialized_ops_nested_2_lvls_1_bool_i32_2_i32_bool_w_member_before(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 18);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 18, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 18, t);
 
     test_mp(&s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
-    test_mp(&s->ops, 2, EcsOpPush, 1, 7, T, n_1, n1);
+    test_mp(&s->ops, 2, EcsOpPushStruct, 1, 7, T, n_1, n1);
     test_mn(&s->ops, 3, EcsOpBool, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_bool_t));
-    test_mn(&s->ops, 4, EcsOpPush, 1, 4, offsetof(T, n_1), N1, nn_1, nn1);
+    test_mn(&s->ops, 4, EcsOpPushStruct, 1, 4, offsetof(T, n_1), N1, nn_1, nn1);
     test_mn(&s->ops, 5, EcsOpBool, 1, 1, offsetof(T, n_1) + offsetof(N1, nn_1), NN1, x, ecs_id(ecs_bool_t));
     test_mn(&s->ops, 6, EcsOpI32, 1, 1, offsetof(T, n_1) + offsetof(N1, nn_1), NN1, y, ecs_id(ecs_i32_t));
     test_op(&s->ops, 7, EcsOpPop, 1, 1, nn1);
     test_op(&s->ops, 8, EcsOpPop, 1, 1, n1);
 
     test_mp(&s->ops, 9, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
-    test_mp(&s->ops, 10, EcsOpPush, 1, 7, T, n_2, n2);
+    test_mp(&s->ops, 10, EcsOpPushStruct, 1, 7, T, n_2, n2);
     test_mn(&s->ops, 11, EcsOpBool, 1, 1, offsetof(T, n_2), N2, x, ecs_id(ecs_bool_t));
-    test_mn(&s->ops, 12, EcsOpPush, 1, 4, offsetof(T, n_2), N2, nn_2, nn2);
+    test_mn(&s->ops, 12, EcsOpPushStruct, 1, 4, offsetof(T, n_2), N2, nn_2, nn2);
     test_mn(&s->ops, 13, EcsOpI32, 1, 1, offsetof(T, n_2) + offsetof(N2, nn_2), NN2, x, ecs_id(ecs_i32_t));
     test_mn(&s->ops, 14, EcsOpBool, 1, 1, offsetof(T, n_2) + offsetof(N2, nn_2), NN2, y, ecs_id(ecs_bool_t));
     test_op(&s->ops, 15, EcsOpPop, 1, 1, nn2);
@@ -1453,21 +1454,21 @@ void Serialized_ops_nested_2_lvls_1_i32_bool_2_bool_i32_w_member_before(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 18);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 18, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 18, t);
 
     test_mp(&s->ops, 1, EcsOpI64, 1, 1, T, x, ecs_id(ecs_i64_t));
-    test_mp(&s->ops, 2, EcsOpPush, 1, 7, T, n_1, n1);
+    test_mp(&s->ops, 2, EcsOpPushStruct, 1, 7, T, n_1, n1);
     test_mn(&s->ops, 3, EcsOpBool, 1, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_bool_t));
-    test_mn(&s->ops, 4, EcsOpPush, 1, 4, offsetof(T, n_1), N1, nn_1, nn1);
+    test_mn(&s->ops, 4, EcsOpPushStruct, 1, 4, offsetof(T, n_1), N1, nn_1, nn1);
     test_mn(&s->ops, 5, EcsOpI32, 1, 1, offsetof(T, n_1) + offsetof(N1, nn_1), NN1, x, ecs_id(ecs_i32_t));
     test_mn(&s->ops, 6, EcsOpBool, 1, 1, offsetof(T, n_1) + offsetof(N1, nn_1), NN1, y, ecs_id(ecs_bool_t));
     test_op(&s->ops, 7, EcsOpPop, 1, 1, nn1);
     test_op(&s->ops, 8, EcsOpPop, 1, 1, n1);
 
     test_mp(&s->ops, 9, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
-    test_mp(&s->ops, 10, EcsOpPush, 1, 7, T, n_2, n2);
+    test_mp(&s->ops, 10, EcsOpPushStruct, 1, 7, T, n_2, n2);
     test_mn(&s->ops, 11, EcsOpI64, 1, 1, offsetof(T, n_2), N2, x, ecs_id(ecs_i64_t));
-    test_mn(&s->ops, 12, EcsOpPush, 1, 4, offsetof(T, n_2), N2, nn_2, nn2);
+    test_mn(&s->ops, 12, EcsOpPushStruct, 1, 4, offsetof(T, n_2), N2, nn_2, nn2);
     test_mn(&s->ops, 13, EcsOpBool, 1, 1, offsetof(T, n_2) + offsetof(N2, nn_2), NN2, x, ecs_id(ecs_bool_t));
     test_mn(&s->ops, 14, EcsOpI32, 1, 1, offsetof(T, n_2) + offsetof(N2, nn_2), NN2, y, ecs_id(ecs_i32_t));
     test_op(&s->ops, 15, EcsOpPop, 1, 1, nn2);
@@ -1495,11 +1496,13 @@ void Serialized_ops_struct_array_bool_1(void) {
 
     const EcsTypeSerializer *s = ecs_get(world, t, EcsTypeSerializer);
     test_assert(s != NULL);
-    test_int(ecs_vec_count(&s->ops), 3);
+    test_int(ecs_vec_count(&s->ops), 5);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 3, t);
-    test_mp(&s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
-    test_op(&s->ops, 2, EcsOpPop, 1, 1, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 5, t);
+    test_mp(&s->ops, 1, EcsOpPushArray, 1, 3, T, x, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 2, EcsOpBool, 1, 1, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 3, EcsOpPop, 1, 1, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 4, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
 }
@@ -1521,11 +1524,13 @@ void Serialized_ops_struct_array_bool_2(void) {
 
     const EcsTypeSerializer *s = ecs_get(world, t, EcsTypeSerializer);
     test_assert(s != NULL);
-    test_int(ecs_vec_count(&s->ops), 3);
+    test_int(ecs_vec_count(&s->ops), 5);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 3, t);
-    test_mp(&s->ops, 1, EcsOpBool, 2, 1, T, x, ecs_id(ecs_bool_t));
-    test_op(&s->ops, 2, EcsOpPop, 1, 1, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 5, t);
+    test_mp(&s->ops, 1, EcsOpPushArray, 1, 3, T, x, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 2, EcsOpBool, 1, 1, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 3, EcsOpPop, 1, 1, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 4, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
 }
@@ -1547,11 +1552,13 @@ void Serialized_ops_struct_array_bool_3(void) {
 
     const EcsTypeSerializer *s = ecs_get(world, t, EcsTypeSerializer);
     test_assert(s != NULL);
-    test_int(ecs_vec_count(&s->ops), 3);
+    test_int(ecs_vec_count(&s->ops), 5);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 3, t);
-    test_mp(&s->ops, 1, EcsOpBool, 3, 1, T, x, ecs_id(ecs_bool_t));
-    test_op(&s->ops, 2, EcsOpPop, 1, 1, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 5, t);
+    test_mp(&s->ops, 1, EcsOpPushArray, 1, 3, T, x, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 2, EcsOpBool, 1, 1, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 3, EcsOpPop, 1, 1, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 4, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
 }
@@ -1575,12 +1582,14 @@ void Serialized_ops_struct_array_bool_1_w_i32_after(void) {
 
     const EcsTypeSerializer *s = ecs_get(world, t, EcsTypeSerializer);
     test_assert(s != NULL);
-    test_int(ecs_vec_count(&s->ops), 4);
+    test_int(ecs_vec_count(&s->ops), 6);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
-    test_mp(&s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
-    test_mp(&s->ops, 2, EcsOpI32, 1, 1, T, y, ecs_id(ecs_i32_t));
-    test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 6, t);
+    test_mp(&s->ops, 1, EcsOpPushArray, 1, 3, T, x, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 2, EcsOpBool, 1, 1, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 3, EcsOpPop, 1, 1, ecs_id(ecs_bool_t));
+    test_mp(&s->ops, 4, EcsOpI32, 1, 1, T, y, ecs_id(ecs_i32_t));
+    test_op(&s->ops, 5, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
 }
@@ -1604,12 +1613,14 @@ void Serialized_ops_struct_array_bool_2_w_i32_after(void) {
 
     const EcsTypeSerializer *s = ecs_get(world, t, EcsTypeSerializer);
     test_assert(s != NULL);
-    test_int(ecs_vec_count(&s->ops), 4);
+    test_int(ecs_vec_count(&s->ops), 6);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
-    test_mp(&s->ops, 1, EcsOpBool, 2, 1, T, x, ecs_id(ecs_bool_t));
-    test_mp(&s->ops, 2, EcsOpI32, 1, 1, T, y, ecs_id(ecs_i32_t));
-    test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 6, t);
+    test_mp(&s->ops, 1, EcsOpPushArray, 1, 3, T, x, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 2, EcsOpBool, 1, 1, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 3, EcsOpPop, 1, 1, ecs_id(ecs_bool_t));
+    test_mp(&s->ops, 4, EcsOpI32, 1, 1, T, y, ecs_id(ecs_i32_t));
+    test_op(&s->ops, 5, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
 }
@@ -1633,12 +1644,14 @@ void Serialized_ops_struct_array_bool_3_w_i32_after(void) {
 
     const EcsTypeSerializer *s = ecs_get(world, t, EcsTypeSerializer);
     test_assert(s != NULL);
-    test_int(ecs_vec_count(&s->ops), 4);
+    test_int(ecs_vec_count(&s->ops), 6);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
-    test_mp(&s->ops, 1, EcsOpBool, 3, 1, T, x, ecs_id(ecs_bool_t));
-    test_mp(&s->ops, 2, EcsOpI32, 1, 1, T, y, ecs_id(ecs_i32_t));
-    test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 6, t);
+    test_mp(&s->ops, 1, EcsOpPushArray, 1, 3, T, x, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 2, EcsOpBool, 1, 1, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 3, EcsOpPop, 1, 1, ecs_id(ecs_bool_t));
+    test_mp(&s->ops, 4, EcsOpI32, 1, 1, T, y, ecs_id(ecs_i32_t));
+    test_op(&s->ops, 5, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
 }
@@ -1674,14 +1687,18 @@ void Serialized_ops_struct_array_struct_bool_3_w_i32_after(void) {
 
     const EcsTypeSerializer *s = ecs_get(world, t, EcsTypeSerializer);
     test_assert(s != NULL);
-    test_int(ecs_vec_count(&s->ops), 6);
+    test_int(ecs_vec_count(&s->ops), 10);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 6, t);
-    test_mp(&s->ops, 1, EcsOpPush, 3, 3, T, n_1, n);
-    test_mn(&s->ops, 2, EcsOpBool, 2, 1, offsetof(T, n_1), N1, x, ecs_id(ecs_bool_t));
-    test_op(&s->ops, 3, EcsOpPop, 1, 1, n);
-    test_mp(&s->ops, 4, EcsOpI32, 1, 1, T, x, ecs_id(ecs_i32_t));
-    test_op(&s->ops, 5, EcsOpPop, 1, 1, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 10, t);
+        test_mp(&s->ops, 1, EcsOpPushArray, 1, 7, T, n_1, n);
+            test_op(&s->ops, 2, EcsOpPushStruct, 3, 5, n);
+                test_mp(&s->ops, 3, EcsOpPushArray, 1, 3, N1, x, ecs_id(ecs_bool_t));
+                    test_op(&s->ops, 4, EcsOpBool, 2, 1, ecs_id(ecs_bool_t));
+                test_op(&s->ops, 5, EcsOpPop, 1, 1, ecs_id(ecs_bool_t));
+            test_op(&s->ops, 6, EcsOpPop, 1, 1, n);
+        test_op(&s->ops, 7, EcsOpPop, 1, 1, n);
+        test_mp(&s->ops, 8, EcsOpI32, 1, 1, T, x, ecs_id(ecs_i32_t));
+    test_op(&s->ops, 9, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
 }
@@ -1713,8 +1730,8 @@ void Serialized_ops_standalone_array_bool_1(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 3);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 3, t);
-    test_mp(&s->ops, 1, EcsOpArray, 1, 1, T, x, a);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 3, t);
+    test_mp(&s->ops, 1, EcsOpForward, 1, 1, T, x, a);
     test_op(&s->ops, 2, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
@@ -1747,8 +1764,8 @@ void Serialized_ops_standalone_array_bool_2(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 3);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 3, t);
-    test_mp(&s->ops, 1, EcsOpArray, 1, 1, T, x, a);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 3, t);
+    test_mp(&s->ops, 1, EcsOpForward, 1, 1, T, x, a);
     test_op(&s->ops, 2, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
@@ -1781,8 +1798,8 @@ void Serialized_ops_standalone_array_bool_3(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 3);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 3, t);
-    test_mp(&s->ops, 1, EcsOpArray, 1, 1, T, x, a);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 3, t);
+    test_mp(&s->ops, 1, EcsOpForward, 1, 1, T, x, a);
     test_op(&s->ops, 2, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
@@ -1817,8 +1834,8 @@ void Serialized_ops_standalone_array_bool_1_w_bool_after(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 4);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
-    test_mp(&s->ops, 1, EcsOpArray, 1, 1, T, x, a);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 4, t);
+    test_mp(&s->ops, 1, EcsOpForward, 1, 1, T, x, a);
     test_mp(&s->ops, 2, EcsOpBool, 1, 1, T, y, ecs_id(ecs_bool_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
 
@@ -1854,8 +1871,8 @@ void Serialized_ops_standalone_array_bool_2_w_bool_after(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 4);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
-    test_mp(&s->ops, 1, EcsOpArray, 1, 1, T, x, a);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 4, t);
+    test_mp(&s->ops, 1, EcsOpForward, 1, 1, T, x, a);
     test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
@@ -1890,8 +1907,8 @@ void Serialized_ops_standalone_array_bool_3_w_bool_after(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 4);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
-    test_mp(&s->ops, 1, EcsOpArray, 1, 1, T, x, a);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 4, t);
+    test_mp(&s->ops, 1, EcsOpForward, 1, 1, T, x, a);
     test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
@@ -1909,9 +1926,11 @@ void Serialized_ops_vector(void) {
 
     const EcsTypeSerializer *s = ecs_get(world, v, EcsTypeSerializer);
     test_assert(s != NULL);
-    test_int(ecs_vec_count(&s->ops), 1);
+    test_int(ecs_vec_count(&s->ops), 3);
 
-    test_op(&s->ops, 0, EcsOpVector, 1, 1, v);
+    test_op(&s->ops, 0, EcsOpPushVector, 1, 3, v);
+    test_op(&s->ops, 1, EcsOpBool, 1, 1, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 2, EcsOpPop, 1, 1, v);
 
     ecs_fini(world);
 }
@@ -1942,8 +1961,8 @@ void Serialized_ops_struct_w_vector(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 3);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 3, t);
-    test_mp(&s->ops, 1, EcsOpVector, 1, 1, T, v, v);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 3, t);
+    test_mp(&s->ops, 1, EcsOpForward, 1, 1, T, v, v);
     test_op(&s->ops, 2, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
@@ -1977,9 +1996,9 @@ void Serialized_ops_struct_w_vector_w_bool_before(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 4);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 4, t);
     test_mp(&s->ops, 1, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
-    test_mp(&s->ops, 2, EcsOpVector, 1, 1, T, v, v);
+    test_mp(&s->ops, 2, EcsOpForward, 1, 1, T, v, v);
     test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);
@@ -2013,8 +2032,8 @@ void Serialized_ops_struct_w_vector_w_bool_after(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 4);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 4, t);
-    test_mp(&s->ops, 1, EcsOpVector, 1, 1, T, v, v);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 4, t);
+    test_mp(&s->ops, 1, EcsOpForward, 1, 1, T, v, v);
     test_mp(&s->ops, 2, EcsOpBool, 1, 1, T, x, ecs_id(ecs_bool_t));
     test_op(&s->ops, 3, EcsOpPop, 1, 1, t);
 
@@ -2072,7 +2091,7 @@ void Serialized_ops_struct_w_bitmask(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 5);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 5, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 5, t);
     test_mp(&s->ops, 1, EcsOpBool, 1, 1, T, before, ecs_id(ecs_bool_t));
     test_mp(&s->ops, 2, EcsOpBitmask, 1, 1, T, v, b);
     test_mp(&s->ops, 3, EcsOpBool, 1, 1, T, after, ecs_id(ecs_bool_t));
@@ -2132,7 +2151,7 @@ void Serialized_ops_struct_w_enum(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 5);
 
-    test_op(&s->ops, 0, EcsOpPush, 1, 5, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 5, t);
     test_mp(&s->ops, 1, EcsOpBool, 1, 1, T, before, ecs_id(ecs_bool_t));
     test_mp(&s->ops, 2, EcsOpEnum, 1, 1, T, v, e);
     test_mp(&s->ops, 3, EcsOpBool, 1, 1, T, after, ecs_id(ecs_bool_t));
@@ -2163,7 +2182,7 @@ void Serialized_ops_missing_metatype(void) {
     test_assert(s != NULL);
     test_int(ecs_vec_count(&s->ops), 2);
     
-    test_op(&s->ops, 0, EcsOpPush, 1, 2, t);
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 2, t);
     test_op(&s->ops, 1, EcsOpPop, 1, 1, t);
 
     ecs_fini(world);

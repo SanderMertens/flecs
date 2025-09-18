@@ -39,6 +39,14 @@ void flecs_doc_set(
     }
 }
 
+void ecs_doc_set_uuid(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name)
+{
+    flecs_doc_set(world, entity, EcsDocUuid, name);
+}
+
 void ecs_doc_set_name(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -77,6 +85,19 @@ void ecs_doc_set_color(
     const char *color)
 {
     flecs_doc_set(world, entity, EcsDocColor, color);
+}
+
+const char* ecs_doc_get_uuid(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    const EcsDocDescription *ptr = ecs_get_pair(
+        world, entity, EcsDocDescription, EcsDocUuid);
+    if (ptr) {
+        return ptr->value;
+    } else {
+        return NULL;
+    }
 }
 
 const char* ecs_doc_get_name(
@@ -197,8 +218,6 @@ void flecs_doc_import_core_definitions(
     ecs_doc_set_brief(world, EcsOnRemove, "Event emitted when component is removed");
     ecs_doc_set_brief(world, EcsOnSet, "Event emitted when component is set");
     ecs_doc_set_brief(world, EcsMonitor, "Marker used to create monitor observers");
-    ecs_doc_set_brief(world, EcsOnTableFill, "Event emitted when table becomes non-empty");
-    ecs_doc_set_brief(world, EcsOnTableEmpty, "Event emitted when table becomes empty");
     ecs_doc_set_brief(world, EcsOnTableCreate, "Event emitted when table is created");
     ecs_doc_set_brief(world, EcsOnTableDelete, "Event emitted when table is deleted");
 
@@ -241,6 +260,7 @@ void FlecsDocImport(
     ecs_set_name_prefix(world, "EcsDoc");
 
     flecs_bootstrap_component(world, EcsDocDescription);
+    flecs_bootstrap_tag(world, EcsDocUuid);
     flecs_bootstrap_tag(world, EcsDocBrief);
     flecs_bootstrap_tag(world, EcsDocDetail);
     flecs_bootstrap_tag(world, EcsDocLink);

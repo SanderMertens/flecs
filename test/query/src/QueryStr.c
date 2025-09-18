@@ -249,7 +249,8 @@ void QueryStr_one_term_w_cascade(void) {
     ECS_TAG(world, Foo);
 
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ .id = Foo, .src.id = EcsCascade }}
+        .terms = {{ .id = Foo, .src.id = EcsCascade }},
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 
@@ -311,7 +312,7 @@ void QueryStr_one_term_w_singleton(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "Foo($)");
+    test_str(str, "Foo(Foo)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -666,6 +667,40 @@ void QueryStr_pred_neq_m(void) {
 
     char *str = ecs_query_str(q);
     test_str(str, "$this ~= \"!TagA\"");
+    ecs_os_free(str);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void QueryStr_not_childof_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(EcsChildOf, EcsAny), .oper = EcsNot }}
+    });
+    test_assert(q != NULL);
+
+    char *str = ecs_query_str(q);
+    test_str(str, "ChildOf($this,#0)");
+    ecs_os_free(str);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void QueryStr_childof_0(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(EcsChildOf, 0) }}
+    });
+    test_assert(q != NULL);
+
+    char *str = ecs_query_str(q);
+    test_str(str, "ChildOf($this,#0)");
     ecs_os_free(str);
 
     ecs_query_fini(q);

@@ -18,11 +18,13 @@
                 "get_set_brief",
                 "get_set_detail",
                 "get_set_link",
+                "get_set_uuid",
                 "set_name_nullptr",
                 "set_brief_nullptr",
                 "set_detail_nullptr",
                 "set_link_nullptr",
-                "set_color_nullptr"
+                "set_color_nullptr",
+                "set_uuid_nullptr"
             ]
         }, {
             "id": "Pipeline",
@@ -109,7 +111,11 @@
                 "run_pipeline_multithreaded_tasks",
                 "pipeline_init_no_terms",
                 "pipeline_init_no_system_term",
-                "disable_component_from_immediate_system"
+                "disable_component_from_immediate_system",
+                "run_w_empty_query",
+                "run_w_0_src_query",
+                "inout_none_after_write",
+                "empty_pipeline_after_disable_phase"
             ]
         }, {
             "id": "SystemMisc",
@@ -129,7 +135,7 @@
                 "invalid_entity_id",
                 "invalid_null_string",
                 "invalid_empty_string",
-                "invalid_empty_string_w_space",        
+                "invalid_empty_string_w_space",
                 "redefine_row_system",
                 "system_w_or_prefab",
                 "system_w_or_disabled",
@@ -176,12 +182,14 @@
                 "update_interval_w_system_init",
                 "update_rate_w_system_init",
                 "system_w_interval_rate_stop_timer",
+                "system_w_rate_filter_self",
                 "system_same_interval_same_tick",
                 "system_no_id_in_scope",
                 "register_callback_after_run",
                 "register_run_after_callback",
                 "register_callback_after_run_ctx",
-                "register_run_after_callback_ctx"
+                "register_run_after_callback_ctx",
+                "run_w_query_next"
             ]
         }, {
             "id": "SystemPeriodic",
@@ -207,6 +215,7 @@
                 "on_period",
                 "on_period_long_delta",
                 "disabled",
+                "2_disabled",
                 "disabled_feature",
                 "disabled_nested_feature",
                 "two_refs",
@@ -344,7 +353,20 @@
                 "get_entity_count",
                 "get_pipeline_stats_w_task_system",
                 "get_not_alive_entity_count",
-                "progress_stats_systems"
+                "progress_stats_systems",
+                "progress_stats_systems_w_empty_table_flag"
+            ]
+        }, {
+            "id": "Memory",
+            "testcases": [
+                "query_memory_no_cache",
+                "query_memory_trivial_cache",
+                "query_memory_non_trivial_cache",
+                "query_memory_with_groups",
+                "query_memory_with_variables",
+                "query_memory_with_monitors",
+                "commands_memory",
+                "table_memory_histogram"
             ]
         }, {
             "id": "Run",
@@ -427,10 +449,7 @@
                 "5_threads_add_to_current",
                 "6_threads_add_to_current",
                 "2_threads_on_add",
-                "new_w_count",
                 "custom_thread_auto_merge",
-                "set_pair_w_new_target_readonly",
-                "set_pair_w_new_target_tgt_component_readonly",
                 "set_pair_w_new_target_defer",
                 "set_pair_w_new_target_tgt_component_defer"
             ]
@@ -498,8 +517,13 @@
                 "request_commands_no_commands",
                 "request_commands_garbage_collect",
                 "script_error",
+                "script_update",
+                "script_update_w_body",
                 "import_rest_after_mini",
-                "get_pipeline_stats_after_delete_system"
+                "get_pipeline_stats_after_delete_system",
+                "request_world_summary_before_monitor_sys_run",
+                "escape_backslash",
+                "request_small_buffer_plus_one"
             ]
         }, {
             "id": "Metrics",

@@ -40,32 +40,6 @@ void WorldInfo_table_count(void) {
     ecs_fini(world);
 }
 
-void WorldInfo_empty_table_count(void) {
-    ecs_world_t *world = ecs_mini();
-
-    const ecs_world_info_t *cur = ecs_get_world_info(world);
-    test_assert(cur != NULL);
-
-    ecs_world_info_t prev = *cur;
-
-    ecs_entity_t c = ecs_new(world);
-    ecs_entity_t e = ecs_new(world);
-
-    ecs_add_id(world, e, c);
-    ecs_run_aperiodic(world, 0);
-    test_delta(&prev, cur, empty_table_count, 0);
-
-    ecs_delete(world, e);
-    ecs_run_aperiodic(world, 0);
-    test_delta(&prev, cur, empty_table_count, 1);
-
-    ecs_delete(world, c);
-    ecs_run_aperiodic(world, 0);
-    test_delta(&prev, cur, empty_table_count, -1);
-
-    ecs_fini(world);
-}
-
 void WorldInfo_table_create_count(void) {
     ecs_world_t *world = ecs_mini();
 

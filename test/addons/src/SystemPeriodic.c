@@ -725,9 +725,9 @@ void SystemPeriodic_2_type_1_and_1_optional(void) {
     test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e1);
-    test_int(ctx.e[1], e2);
-    test_int(ctx.e[2], e3);
+    test_int(ctx.e[0], e3);
+    test_int(ctx.e[1], e1);
+    test_int(ctx.e[2], e2);
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_id(Velocity));
@@ -1158,6 +1158,54 @@ void SystemPeriodic_disabled(void) {
     ecs_progress(world, 0);
 
     test_int(normal_count, 2);
+
+    ecs_fini(world);
+}
+
+void SystemPeriodic_2_disabled(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_ENTITY(world, e, Position);
+
+    ECS_SYSTEM(world, NormalSystem, EcsOnUpdate, Position);
+    ECS_SYSTEM(world, NormalSystem2, EcsOnUpdate, Position);
+
+    ecs_enable(world, NormalSystem2, false);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 1);
+    test_int(normal_count_2, 0);
+
+    ecs_enable(world, NormalSystem, false);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 1);
+    test_int(normal_count_2, 0);
+
+    ecs_enable(world, NormalSystem, true);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 2);
+    test_int(normal_count_2, 0);
+
+    ecs_enable(world, NormalSystem, false);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 2);
+    test_int(normal_count_2, 0);
+
+    ecs_enable(world, NormalSystem, true);
+
+    ecs_progress(world, 0);
+
+    test_int(normal_count, 3);
+    test_int(normal_count_2, 0);
 
     ecs_fini(world);
 }

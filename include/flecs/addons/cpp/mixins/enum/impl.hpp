@@ -9,7 +9,9 @@ namespace flecs {
 
 template <typename E>
 inline E entity_view::to_constant() const {
-    const E* ptr = this->get<E>();
+    using U = typename std::underlying_type<E>::type;
+    const E* ptr = static_cast<const E*>(ecs_get_id(world_, id_, 
+        ecs_pair(flecs::Constant, _::type<U>::id(world_))));
     ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, "entity is not a constant");
     return ptr[0];
 }

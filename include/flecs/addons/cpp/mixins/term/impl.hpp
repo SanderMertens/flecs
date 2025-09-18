@@ -32,42 +32,43 @@ struct term final : term_builder_i<term> {
             this->set_term(&value);
         }
 
-    term(flecs::world_t *world_ptr, id_t id)
+    term(flecs::world_t *world_ptr, id_t component_id)
         : term_builder_i<term>(&value)
         , value({})
         , world_(world_ptr) {
-            if (id & ECS_ID_FLAGS_MASK) {
-                value.id = id;
+            if (component_id & ECS_ID_FLAGS_MASK) {
+                value.id = component_id;
             } else {
-                value.first.id = id;
+                value.first.id = component_id;
             }
             this->set_term(&value);
         }
 
-    term(flecs::world_t *world_ptr, entity_t r, entity_t o)
+    term(flecs::world_t *world_ptr, entity_t first, entity_t second)
         : term_builder_i<term>(&value)
         , value({})
         , world_(world_ptr) {
-            value.id = ecs_pair(r, o);
+            value.id = ecs_pair(first, second);
             this->set_term(&value);
         }
 
-    term(id_t id) 
+    term(id_t component_id) 
         : term_builder_i<term>(&value)
         , value({})
         , world_(nullptr) { 
-            if (id & ECS_ID_FLAGS_MASK) {
-                value.id = id;
+            if (component_id & ECS_ID_FLAGS_MASK) {
+                value.id = component_id;
             } else {
-                value.first.id = id;
+                value.first.id = component_id;
             }
         }
 
-    term(id_t r, id_t o) 
+    term(id_t first, id_t second) 
         : term_builder_i<term>(&value)
         , value({})
         , world_(nullptr) { 
-            value.id = ecs_pair(r, o);
+            value.first.id = first;
+            value.second.id = second;
         }
 
     void reset() {

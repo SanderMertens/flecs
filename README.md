@@ -18,7 +18,7 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - Automatic component registration that works out of the box across shared libraries/DLLs
 - Write free functions with [queries](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/basics) or run code automatically in [systems](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/pipeline)
 - Run games on multiple CPU cores with a fast lockless scheduler
-- Verified on all major compilers and platforms with [CI](https://github.com/SanderMertens/flecs/actions) running more than 8000 tests
+- Verified on all major compilers and platforms with [CI](https://github.com/SanderMertens/flecs/actions) running more than 10000 tests
 - Integrated [reflection framework](https://www.flecs.dev/flecs/group__c__addons__meta.html) with [JSON serializer](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/basics_json) and support for [runtime components](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/runtime_component)
 - [Unit annotations](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/units) for components
 - Powerful [query language](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries) with support for [joins](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/setting_variables) and [inheritance](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/component_inheritance)
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 
   ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, Velocity);
 
-  ecs_entity_t e = ecs_insert(ecs, 
+  ecs_entity_t e = ecs_insert(ecs,
     ecs_value(Position, {10, 20}),
     ecs_value(Velocity, {1, 2}));
 
@@ -103,24 +103,35 @@ int main(int argc, char *argv[]) {
 ## Projects using Flecs
 If you have a project you'd like to share, let me know on [Discord](https://discord.gg/BEzP5Rgrrp)!
 
-### [Hytale](https://hytale.com/)
-[![Hytale](docs/img/projects/hytale.png)](https://hytale.com/)
-
-> We knew that we wanted to build Hytale around an Entity-Component-System (ECS). When we analyzed the options, FLECS rose to the top. FLECS provides the backbone of the Hytale Game Engine. Its flexibility has allowed us to build highly varied gameplay while supporting our vision for empowering Creators.
-
--- Dann Webster, Hypixel studios
-
 ### Tempest Rising
 [![Tempest Rising](docs/img/projects/tempest_rising.png)](https://store.steampowered.com/app/1486920/Tempest_Rising/)
 
 ### Territory Control 2
 [![image](docs/img/projects/territory_control.jpg)](https://store.steampowered.com/app/690290/Territory_Control_2/)
 
-### The Forge
-[![image](docs/img/projects/the_forge.jpg)](https://github.com/ConfettiFX/The-Forge)
+### Resistance is Brutal
+[![image](docs/img/projects/resistance_is_brutal.jpg)](https://store.steampowered.com/app/3378140/Resistance_Is_Brutal/)
+
+### Age of Respair
+[![image](docs/img/projects/age_of_respair.png)](https://store.steampowered.com/app/3164360/Age_of_Respair/)
+
+### FEAST
+[![image](docs/img/projects/feast.jpg)](https://store.steampowered.com/app/3823480/FEAST/)
+
+### Gloam Vault
+[![image](docs/img/projects/gloam_vault.png)](https://store.steampowered.com/app/3460840/Gloamvault/)
 
 ### Extermination Shock
 [![image](docs/img/projects/extermination_shock.png)](https://store.steampowered.com/app/2510820/Extermination_Shock/)
+
+### The Forge
+[![image](docs/img/projects/the_forge.jpg)](https://github.com/ConfettiFX/The-Forge)
+
+### ECS survivors
+[![image](docs/img/projects/ecs_survivors.png)](https://laurent-voisard.itch.io/ecs-survivors/)
+
+### Ascendant
+[![image](docs/img/projects/ascendant.jpg)](https://vkguide.dev/docs/ascendant/)
 
 ### Tome Tumble Tournament
 [![image](docs/img/projects/tome_tumble.png)](https://terzalo.itch.io/tome-tumble-tournament)
@@ -165,11 +176,10 @@ The following language bindings have been developed with Flecs! Note that these 
 - Rust:
   - [Flecs-Rust](https://github.com/Indra-db/Flecs-Rust)
   - [flecs-polyglot](https://github.com/flecs-hub/flecs-polyglot)
-  - [flecs-rs](https://github.com/jazzay/flecs-rs)
 - Zig:
-  - [michal-z/zig-gamedev](https://github.com/michal-z/zig-gamedev/tree/main/libs/zflecs)
-  - [foxnne/zig-flecs](https://github.com/foxnne/zig-flecs)
-  - [prime31/zig-flecs](https://github.com/prime31/zig-flecs)
+  - [zig-gamedev/zflecs](https://github.com/zig-gamedev/zflecs)
 - Lua:
   - [sro5h/flecs-luajit](https://github.com/sro5h/flecs-luajit)
   - [flecs-hub/flecs-lua](https://github.com/flecs-hub/flecs-lua)
+- Clojure
+  - [vybe-flecs](https://vybegame.dev/vybe-flecs)

@@ -16,6 +16,9 @@ void probe_system_w_ctx(
     ctx->offset = 0;
     ctx->term_count = it->field_count;
     ctx->term_index = it->term_index;
+    ctx->ref_fields = it->ref_fields;
+    ctx->up_fields = it->up_fields;
+    ctx->row_fields = it->row_fields;
 
     int i;
     for (i = 0; i < ctx->term_count; i ++) {

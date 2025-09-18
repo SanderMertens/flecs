@@ -1,0 +1,10 @@
+{
+    "id": "script_managed",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

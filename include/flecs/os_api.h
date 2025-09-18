@@ -21,10 +21,6 @@
  * @{
  */
 
-#include <stdarg.h>
-#include <errno.h>
-#include <stdio.h>
-
 #if defined(ECS_TARGET_WINDOWS)
 #include <malloc.h>
 #elif defined(ECS_TARGET_FREEBSD)
@@ -240,6 +236,12 @@ typedef
 char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
+/* Performance tracing */
+typedef void (*ecs_os_api_perf_trace_t)(
+    const char *filename,
+    size_t line,
+    const char *name);
+
 /* Prefix members of struct with 'ecs_' as some system headers may define
  * macros for functions like "strdup", "log" or "_free" */
 
@@ -316,6 +318,12 @@ typedef struct ecs_os_api_t {
      * path that contains module-specif resources or assets */
     ecs_os_api_module_to_path_t module_to_etc_;    /**< module_to_etc callback. */
 
+    /* Performance tracing */
+    ecs_os_api_perf_trace_t perf_trace_push_;
+
+    /* Performance tracing */
+    ecs_os_api_perf_trace_t perf_trace_pop_;
+
     int32_t log_level_;                            /**< Tracing level. */
     int32_t log_indent_;                           /**< Tracing indentation level. */
     int32_t log_last_error_;                       /**< Last logged error code. */
@@ -323,7 +331,7 @@ typedef struct ecs_os_api_t {
 
     ecs_flags32_t flags_;                          /**< OS API flags */
 
-    FILE *log_out_;                                /**< File used for logging output 
+    void *log_out_;                                /**< File used for logging output (type is FILE*)
                                                     * (hint, log_ decides where to write) */
 } ecs_os_api_t;
 
@@ -505,6 +513,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_now() ecs_os_api.now_()
 #define ecs_os_get_time(time_out) ecs_os_api.get_time_(time_out)
 
+#ifndef FLECS_DISABLE_COUNTERS
 #ifdef FLECS_ACCURATE_COUNTERS
 #define ecs_os_inc(v)  (ecs_os_ainc(v))
 #define ecs_os_linc(v) (ecs_os_lainc(v))
@@ -516,6 +525,13 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_dec(v)  (--(*v))
 #define ecs_os_ldec(v) (--(*v))
 #endif
+#else
+#define ecs_os_inc(v)
+#define ecs_os_linc(v)
+#define ecs_os_dec(v)
+#define ecs_os_ldec(v)
+#endif
+
 
 #ifdef ECS_TARGET_MINGW
 /* mingw bug: without this a conversion error is thrown, but isnan/isinf should
@@ -625,6 +641,25 @@ FLECS_API
 void ecs_os_strset(
     char **str, 
     const char *value);
+
+/* Profile tracing */
+#ifdef FLECS_PERF_TRACE
+#define ecs_os_perf_trace_push(name) ecs_os_perf_trace_push_(__FILE__, __LINE__, name)
+#define ecs_os_perf_trace_pop(name) ecs_os_perf_trace_pop_(__FILE__, __LINE__, name)
+#else
+#define ecs_os_perf_trace_push(name)
+#define ecs_os_perf_trace_pop(name)
+#endif
+
+void ecs_os_perf_trace_push_(
+    const char *file,
+    size_t line,
+    const char *name);
+
+void ecs_os_perf_trace_pop_(
+    const char *file,
+    size_t line,
+    const char *name);
 
 /** Sleep with floating point time. 
  * 

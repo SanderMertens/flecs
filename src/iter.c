@@ -9,23 +9,11 @@
  */
 
 #include "private_api.h"
-#include <stddef.h>
 
 /* Utility macros to enforce consistency when initializing iterator fields */
 
 /* If term count is smaller than cache size, initialize with inline array,
  * otherwise allocate. */
-#define INIT_CACHE(it, stack, fields, f, T, count)\
-    if (!it->f && (fields & flecs_iter_cache_##f) && count) {\
-        it->f = flecs_stack_calloc_n(stack, T, count);\
-        it->priv_.cache.used |= flecs_iter_cache_##f;\
-    }
-
-/* If array is allocated, free it when finalizing the iterator */
-#define FINI_CACHE(it, f, T, count)\
-    if (it->priv_.cache.used & flecs_iter_cache_##f) {\
-        flecs_stack_free_n((void*)it->f, T, count);\
-    }
 
 void* flecs_iter_calloc(
     ecs_iter_t *it,
@@ -48,7 +36,7 @@ void flecs_iter_free(
 void flecs_iter_init(
     const ecs_world_t *world,
     ecs_iter_t *it,
-    ecs_flags8_t fields)
+    bool alloc_resources)
 {
     ecs_assert(!ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
         ECS_INTERNAL_ERROR, NULL);
@@ -57,38 +45,47 @@ void flecs_iter_init(
         ECS_CONST_CAST(ecs_world_t**, &world));
     ecs_stack_t *stack = &stage->allocators.iter_stack;
 
-    it->priv_.cache.used = 0;
-    it->priv_.cache.allocated = 0;
-    it->priv_.cache.stack_cursor = flecs_stack_get_cursor(stack);
+    it->priv_.stack_cursor = flecs_stack_get_cursor(stack);
 
-    INIT_CACHE(it, stack, fields, ids, ecs_id_t, it->field_count);
-    INIT_CACHE(it, stack, fields, sources, ecs_entity_t, it->field_count);
-    INIT_CACHE(it, stack, fields, trs, ecs_table_record_t*, it->field_count);
-    INIT_CACHE(it, stack, fields, variables, ecs_var_t, it->variable_count);
+    if (alloc_resources && it->field_count) {
+        ecs_assert(it->ids == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(it->sources == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(it->trs == NULL, ECS_INTERNAL_ERROR, NULL);
+
+        it->ids = flecs_stack_calloc_n(stack, ecs_id_t, it->field_count);
+        it->sources = flecs_stack_calloc_n(
+            stack, ecs_entity_t, it->field_count);
+        it->trs = flecs_stack_calloc_n(
+            stack, ecs_table_record_t*, it->field_count);
+    }
 }
 
 void ecs_iter_fini(
     ecs_iter_t *it)
 {
-    ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
-
     if (it->fini) {
         it->fini(it);
     }
+
+    ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
 
     ecs_world_t *world = it->world;
     if (!world) {
         return;
     }
 
-    FINI_CACHE(it, ids, ecs_id_t, it->field_count);
-    FINI_CACHE(it, sources, ecs_entity_t, it->field_count);
-    FINI_CACHE(it, trs, ecs_table_record_t*, it->field_count);
-    FINI_CACHE(it, variables, ecs_var_t, it->variable_count);
+    /* Make sure arrays are below stack page size, which means they don't have
+     * to get freed explicitly. */
+    ecs_assert(ECS_SIZEOF(ecs_id_t) * it->field_count < FLECS_STACK_PAGE_SIZE,
+        ECS_UNSUPPORTED, NULL);
+    ecs_assert(ECS_SIZEOF(ecs_entity_t) * it->field_count < FLECS_STACK_PAGE_SIZE,
+        ECS_UNSUPPORTED, NULL);
+    ecs_assert(ECS_SIZEOF(ecs_table_record_t*) * it->field_count < FLECS_STACK_PAGE_SIZE,
+        ECS_UNSUPPORTED, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
-        it->priv_.cache.stack_cursor);
+        it->priv_.stack_cursor);
 }
 
 /* --- Public API --- */
@@ -104,10 +101,34 @@ void* ecs_field_w_size(
         "invalid field index %d", index);
     ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
         "field index %d out of bounds", index);
-    ecs_check(!size || ecs_field_size(it, index) == size || 
+    ecs_check(size != 0, ECS_INVALID_PARAMETER, 
+        "missing size for field %d", index);
+    ecs_check(ecs_field_size(it, index) == size || 
         !ecs_field_size(it, index),
             ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
     (void)size;
+
+    if (it->ptrs && !it->offset) {
+        void *ptr = it->ptrs[index];
+        if (ptr) {
+#ifdef FLECS_DEBUG
+            if (it->trs[index]) {
+                /* Make sure that address in ptrs array is the same as what this 
+                * function would have returned if no ptrs array was set. */
+                void **temp_ptrs = it->ptrs;
+                ECS_CONST_CAST(ecs_iter_t*, it)->ptrs = NULL;
+                ecs_assert(ptr == ecs_field_w_size(it, size, index), 
+                    ECS_INTERNAL_ERROR, NULL);
+                ECS_CONST_CAST(ecs_iter_t*, it)->ptrs = temp_ptrs;
+            } else {
+                /* We're just passing in a pointer to a value that may not be
+                 * a component on the entity (such as a pointer to a new value
+                 * in an on_replace hook). */
+            }
+#endif
+            return ptr;
+        }
+    }
 
     const ecs_table_record_t *tr = it->trs[index];
     if (!tr) {
@@ -115,10 +136,9 @@ void* ecs_field_w_size(
         return NULL;
     }
 
-    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-    ecs_assert(!(idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
-        "use ecs_field_at to access fields for sparse components");
-    (void)idr;
+    ecs_assert(!(tr->hdr.cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+        "field %d: use ecs_field_at to access fields for sparse components", 
+        index);
 
     ecs_entity_t src = it->sources[index];
     ecs_table_t *table;
@@ -136,18 +156,17 @@ void* ecs_field_w_size(
     ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
 
     int32_t column_index = tr->column;
-    ecs_assert(column_index != -1, ECS_NOT_A_COMPONENT, 
-        "only components can be fetched with fields");
+    ecs_assert(column_index != -1, ECS_INVALID_PARAMETER, 
+        "field %d: only components can be fetched with fields", index);
     ecs_assert(column_index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *column = &table->data.columns[column_index];
-    ecs_assert((row < ecs_vec_count(&column->data)) ||
+    ecs_assert((row < table->data.count) ||
         (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
             ECS_INTERNAL_ERROR, NULL);
 
-    void *data = ecs_vec_first(&column->data);
-    return ECS_ELEM(data, column->size, row);
+    return ECS_ELEM(column->data, (ecs_size_t)size, row);
 error:
     return NULL;
 }
@@ -168,23 +187,25 @@ void* ecs_field_at_w_size(
         !ecs_field_size(it, index),
             ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
 
+    ecs_component_record_t *cr = NULL;
     const ecs_table_record_t *tr = it->trs[index];
     if (!tr) {
-        ecs_assert(!ecs_field_is_set(it, index), ECS_INTERNAL_ERROR, NULL);
-        return NULL;
+        cr = flecs_components_get(it->real_world, it->ids[index]);
+        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    } else {
+        cr = tr->hdr.cr;
     }
 
-    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-    ecs_assert((idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_assert((cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field to access fields for non-sparse components");
     ecs_assert(it->row_fields & (1ull << index), ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t src = it->sources[index];
     if (!src) {
-        src = flecs_table_entities_array(it->table)[row];
+        src = ecs_table_entities(it->table)[row + it->offset];
     }
 
-    return flecs_sparse_get_any(idr->sparse, flecs_uto(int32_t, size), src);
+    return flecs_sparse_get(cr->sparse, flecs_uto(int32_t, size), src);
 error:
     return NULL;
 }
@@ -195,8 +216,11 @@ bool ecs_field_is_readonly(
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
         "operation invalid before calling next()");
-    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER,
-        "operation only valid for query iterators");
+
+    if (!it->query) {
+        return false;
+    }
+
     ecs_check(it->query->terms != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
         "invalid field index %d", index);
@@ -376,16 +400,18 @@ char* ecs_iter_str(
         ecs_strbuf_list_pop(&buf, "\n");
     }
 
-    if (it->variable_count && it->variable_names) {
+    int32_t var_count = ecs_iter_get_var_count(it);
+
+    if (var_count) {
         int32_t actual_count = 0;
-        for (i = 0; i < it->variable_count; i ++) {
-            const char *var_name = it->variable_names[i];
+        for (i = 0; i < var_count; i ++) {
+            const char *var_name = ecs_iter_get_var_name(it, i);
             if (!var_name || var_name[0] == '_' || !strcmp(var_name, "this")) {
                 /* Skip anonymous variables */
                 continue;
             }
 
-            ecs_var_t var = it->variables[i];
+            ecs_var_t var = ecs_iter_get_vars(it)[i];
             if (!var.entity) {
                 /* Skip table variables */
                 continue;
@@ -487,11 +513,11 @@ ecs_entity_t ecs_iter_get_var(
 {
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
         "invalid variable index %d", var_id);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER,
+    ecs_check(var_id < ecs_iter_get_var_count(it), ECS_INVALID_PARAMETER,
         "variable index %d out of bounds", var_id);
-    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_iter_get_vars(it) != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_var_t *var = &it->variables[var_id];
+    ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     ecs_entity_t e = var->entity;
     if (!e) {
         ecs_table_t *table = var->range.table;
@@ -502,8 +528,7 @@ ecs_entity_t ecs_iter_get_var(
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
                     ECS_INTERNAL_ERROR, NULL);
-                e = ecs_vec_get_t(&table->data.entities, ecs_entity_t,
-                    var->range.offset)[0];
+                e = ecs_table_entities(table)[var->range.offset];
             }
         }
     } else {
@@ -521,11 +546,11 @@ ecs_table_t* ecs_iter_get_var_as_table(
 {
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
         "invalid variable index %d", var_id);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+    ecs_check(var_id < ecs_iter_get_var_count(it), ECS_INVALID_PARAMETER, 
         "variable index %d out of bounds", var_id);
-    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_iter_get_vars(it) != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_var_t *var = &it->variables[var_id];
+    ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     ecs_table_t *table = var->range.table;
     if (!table && !var_id) {
         table = it->table;
@@ -569,13 +594,13 @@ ecs_table_range_t ecs_iter_get_var_as_range(
 {
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
         "invalid variable index %d", var_id);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+    ecs_check(var_id < ecs_iter_get_var_count(it), ECS_INVALID_PARAMETER, 
         "variable index %d out of bounds", var_id);
-    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_iter_get_vars(it) != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_table_range_t result = { 0 };
 
-    ecs_var_t *var = &it->variables[var_id];
+    ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     ecs_table_t *table = var->range.table;
     if (!table && !var_id) {
         table = it->table;
@@ -605,23 +630,80 @@ error:
     return (ecs_table_range_t){0};
 }
 
+const char* ecs_iter_get_var_name(
+    const ecs_iter_t *it,
+    int32_t var_id)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (var_id == 0) {
+        return "this";
+    }
+
+    const ecs_query_t *query = it->query;
+    ecs_check(query != NULL, ECS_INVALID_PARAMETER,
+        "can only obtain variable name for iterators that iterate query");
+    ecs_check(var_id < query->var_count, ECS_INVALID_PARAMETER,
+        "variable index out of range for query");
+
+    return query->vars[var_id];
+error:
+    return NULL;
+}
+
+int32_t ecs_iter_get_var_count(
+    const ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (it->query) {
+        return it->query->var_count;
+    }
+
+    return 1;
+error:
+    return 0;
+}
+
+ecs_var_t* ecs_iter_get_vars(
+    const ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (!it->query) {
+        return NULL;
+    }
+
+    if (it->chain_it) {
+        return ecs_iter_get_vars(it->chain_it);
+    }
+
+    return it->priv_.iter.query.vars;
+error:
+    return NULL;
+}
+
 void ecs_iter_set_var(
     ecs_iter_t *it,
     int32_t var_id,
     ecs_entity_t entity)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (it->chain_it) {
+        ecs_iter_set_var(it->chain_it, var_id, entity);
+        return;
+    }
+
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
         "invalid variable index %d", var_id);
     ecs_check(var_id < FLECS_QUERY_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+    ecs_check(var_id < ecs_iter_get_var_count(it), ECS_INVALID_PARAMETER, 
         "variable index %d out of bounds", var_id);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER,
         "cannot constrain variable while iterating");
-    ecs_check(it->variables != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(ecs_iter_get_vars(it) != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_var_t *var = &it->variables[var_id];
+    ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     var->entity = entity;
 
     ecs_record_t *r = flecs_entities_get(it->real_world, entity);
@@ -659,9 +741,15 @@ void ecs_iter_set_var_as_range(
     const ecs_table_range_t *range)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (it->chain_it) {
+        ecs_iter_set_var_as_range(it->chain_it, var_id, range);
+        return;
+    }
+
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
         "invalid variable index %d", var_id);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+    ecs_check(var_id < ecs_iter_get_var_count(it), ECS_INVALID_PARAMETER, 
         "variable index %d out of bounds", var_id);
     ecs_check(range != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(range->table != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -673,13 +761,12 @@ void ecs_iter_set_var_as_range(
     ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_OPERATION, 
         "cannot set query variables while iterating");
 
-    ecs_var_t *var = &it->variables[var_id];
+    ecs_var_t *var = &ecs_iter_get_vars(it)[var_id];
     var->range = *range;
 
     if (range->count == 1) {
         ecs_table_t *table = range->table;
-        var->entity = ecs_vec_get_t(
-            &table->data.entities, ecs_entity_t, range->offset)[0];
+        var->entity = ecs_table_entities(table)[range->offset];
     } else {
         var->entity = 0;
     }
@@ -697,7 +784,32 @@ bool ecs_iter_var_is_constrained(
     ecs_iter_t *it,
     int32_t var_id)
 {
+    if (it->chain_it) {
+        return ecs_iter_var_is_constrained(it->chain_it, var_id);
+    }
+
     return (it->constrained_vars & (flecs_uto(uint64_t, 1 << var_id))) != 0;
+}
+
+uint64_t ecs_iter_get_group(
+    const ecs_iter_t *it)
+{
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (it->chain_it) {
+        return ecs_iter_get_group(it->chain_it);
+    }
+
+    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, 
+        "ecs_iter_get_group must be called on iterator that iterates a query");
+    const ecs_query_iter_t *qit = &it->priv_.iter.query;
+    ecs_check(qit->group != NULL, ECS_INVALID_PARAMETER,
+        "ecs_iter_get_group must be called on iterator that iterates a cached "
+        "query (query is uncached)");
+
+    return qit->group->info.id;
+error:
+    return 0;
 }
 
 static
@@ -721,7 +833,7 @@ ecs_iter_t ecs_page_iter(
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
-    result.priv_.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
+    result.priv_.stack_cursor = NULL; /* Don't copy allocator cursor */
 
     result.priv_.iter.page = (ecs_page_iter_t){
         .offset = offset,
@@ -784,7 +896,7 @@ bool ecs_page_next(
                 it->offset = offset;
                 count = it->count -= offset;
                 it->entities = 
-                    &(flecs_table_entities_array(it->table)[it->offset]);
+                    &(ecs_table_entities(it->table)[it->offset]);
             }
         }
 
@@ -826,7 +938,7 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
-    result.priv_.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
+    result.priv_.stack_cursor = NULL; /* Don't copy allocator cursor */
     
     result.priv_.iter.worker = (ecs_worker_iter_t){
         .index = index,
@@ -891,7 +1003,7 @@ bool ecs_worker_next(
     it->count = per_worker;
     it->offset += first;
 
-    it->entities = &(flecs_table_entities_array(it->table)[it->offset]);
+    it->entities = &(ecs_table_entities(it->table)[it->offset]);
 
     return true;
 error:

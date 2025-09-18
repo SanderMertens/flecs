@@ -457,7 +457,7 @@ void Scopes_term_w_not_scope_3_terms_w_or(void) {
 }
 
 void Scopes_term_w_not_scope_2_terms_w_before_after(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
     ecs_add_pair(world, TagA, EcsOnInstantiate, on_instantiate);

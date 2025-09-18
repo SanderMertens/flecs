@@ -112,7 +112,8 @@ void Type_get_type_from_empty(void) {
     ecs_entity_t e = ecs_new(world);
 
     const ecs_type_t *t = ecs_get_type(world, e);
-    test_assert(t == NULL);
+    test_assert(t != NULL);
+    test_int(t->count, 0);
 
     ecs_fini(world);
 }

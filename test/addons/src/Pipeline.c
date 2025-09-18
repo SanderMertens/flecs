@@ -1707,15 +1707,15 @@ void Pipeline_stack_allocator_after_progress(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, f);
-    ecs_stack_cursor_t cursor = *it.priv_.cache.stack_cursor;
+    ecs_stack_cursor_t cursor = *it.priv_.stack_cursor;
     ecs_iter_fini(&it);
 
     ecs_progress(world, 1);
     test_int(sys_a_invoked, 1);
 
     it = ecs_query_iter(world, f);
-    test_assert(it.priv_.cache.stack_cursor->page == cursor.page);
-    test_assert(it.priv_.cache.stack_cursor->sp == cursor.sp);
+    test_assert(it.priv_.stack_cursor->page == cursor.page);
+    test_assert(it.priv_.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
     ecs_query_fini(f);
@@ -1737,7 +1737,7 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, f);
-    ecs_stack_cursor_t cursor = *it.priv_.cache.stack_cursor;
+    ecs_stack_cursor_t cursor = *it.priv_.stack_cursor;
     ecs_iter_fini(&it);
 
     ecs_progress(world, 1);
@@ -1745,8 +1745,8 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change(void) {
     test_int(sys_b_invoked, 1);
 
     it = ecs_query_iter(world, f);
-    test_assert(it.priv_.cache.stack_cursor->page == cursor.page);
-    test_assert(it.priv_.cache.stack_cursor->sp == cursor.sp);
+    test_assert(it.priv_.stack_cursor->page == cursor.page);
+    test_assert(it.priv_.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
     ecs_enable(world, SysB, false);
@@ -1756,8 +1756,8 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change(void) {
     test_int(sys_b_invoked, 1);
 
     it = ecs_query_iter(world, f);
-    test_assert(it.priv_.cache.stack_cursor->page == cursor.page);
-    test_assert(it.priv_.cache.stack_cursor->sp == cursor.sp);
+    test_assert(it.priv_.stack_cursor->page == cursor.page);
+    test_assert(it.priv_.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
     ecs_query_fini(f);
@@ -3243,6 +3243,129 @@ void Pipeline_disable_component_from_immediate_system(void) {
     ecs_progress(world, 0);
     test_int(toggle_immediate_system_invoked, 1);
     test_bool(ecs_is_deferred(world), false);
+
+    ecs_fini(world);
+}
+
+void Pipeline_run_w_empty_query(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate))
+        }),
+        .run = SysA
+    });
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Pipeline_run_w_0_src_query(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate))
+        }),
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsIsEntity }
+        },
+        .run = SysA
+    });
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_fini(world);
+}
+
+static
+void AddPosition(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Position);
+    }
+}
+
+static int check_position_invoked = 0;
+
+static void CheckPosition(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        test_assert(ecs_has(it->world, it->entities[i], Position));
+        check_position_invoked ++;
+    }
+}
+
+void Pipeline_inout_none_after_write(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate))
+        }),
+        .query.terms = {{ Foo }, { ecs_id(Position), .src.id = EcsIsEntity, .inout = EcsOut }},
+        .callback = AddPosition
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate))
+        }),
+        .query.terms = { { ecs_id(Position), .inout = EcsInOutNone } },
+        .callback = CheckPosition
+    });
+
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e2, Position));
+    test_int(check_position_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_empty_pipeline_after_disable_phase(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_IMPORT(world, FlecsPipeline);
+
+    ecs_entity_t CustomPhase = ecs_new_w_id(world, EcsPhase);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids(ecs_pair(EcsDependsOn, CustomPhase))
+        }),
+        .callback = SysA
+    });
+
+    ecs_enable(world,  CustomPhase, false);
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 0);
+
+    ecs_enable(world,  CustomPhase, true);
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_enable(world,  CustomPhase, false);
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_enable(world,  CustomPhase, true);
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 2);
 
     ecs_fini(world);
 }

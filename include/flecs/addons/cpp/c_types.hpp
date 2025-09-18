@@ -27,9 +27,13 @@ using query_group_info_t = ecs_query_group_info_t;
 using observer_t = ecs_observer_t;
 using iter_t = ecs_iter_t;
 using ref_t = ecs_ref_t;
+using table_record_t = ecs_table_record_t;
+using table_records_t = ecs_table_records_t;
+using component_record_t = ecs_component_record_t;
 using type_info_t = ecs_type_info_t;
 using type_hooks_t = ecs_type_hooks_t;
 using flags32_t = ecs_flags32_t;
+using flags64_t = ecs_flags64_t;
 
 enum inout_kind_t {
     InOutDefault = EcsInOutDefault,
@@ -84,6 +88,7 @@ static const flecs::entity_t Monitor = EcsMonitor;
 static const flecs::entity_t System = EcsSystem;
 static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
 static const flecs::entity_t Phase = EcsPhase;
+static const flecs::entity_t Constant = EcsConstant;
 
 /* Builtin event tags */
 static const flecs::entity_t OnAdd = EcsOnAdd;
@@ -116,6 +121,7 @@ static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
 static const flecs::entity_t Reflexive = EcsReflexive;
 static const flecs::entity_t Final = EcsFinal;
+static const flecs::entity_t Inheritable = EcsInheritable;
 static const flecs::entity_t PairIsTag = EcsPairIsTag;
 static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Acyclic = EcsAcyclic;
@@ -147,13 +153,17 @@ static const flecs::entity_t ChildOf = EcsChildOf;
 static const flecs::entity_t DependsOn = EcsDependsOn;
 static const flecs::entity_t SlotOf = EcsSlotOf;
 
+/* Misc */
+static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
+static const flecs::entity_t Singleton = EcsSingleton;
+
 /* Builtin identifiers */
 static const flecs::entity_t Name = EcsName;
 static const flecs::entity_t Symbol = EcsSymbol;
 
 /* Storage */
 static const flecs::entity_t Sparse = EcsSparse;
-static const flecs::entity_t Union = EcsUnion;
+static const flecs::entity_t DontFragment = EcsDontFragment;
 
 /* Builtin predicates for comparing entity ids in queries. */
 static const flecs::entity_t PredEq = EcsPredEq;

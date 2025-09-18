@@ -8,6 +8,8 @@
 
 #include "../private/api_defines.h"
 
+typedef struct ecs_map_t ecs_map_t;
+
 typedef struct ecs_block_allocator_block_t {
     void *memory;
     struct ecs_block_allocator_block_t *next;
@@ -18,14 +20,18 @@ typedef struct ecs_block_allocator_chunk_header_t {
 } ecs_block_allocator_chunk_header_t;
 
 typedef struct ecs_block_allocator_t {
-    ecs_block_allocator_chunk_header_t *head;
-    ecs_block_allocator_block_t *block_head;
-    ecs_block_allocator_block_t *block_tail;
-    int32_t chunk_size;
     int32_t data_size;
+#ifndef FLECS_USE_OS_ALLOC
+    int32_t chunk_size;
     int32_t chunks_per_block;
     int32_t block_size;
+    ecs_block_allocator_chunk_header_t *head;
+    ecs_block_allocator_block_t *block_head;
+#ifdef FLECS_SANITIZE
     int32_t alloc_count;
+    ecs_map_t *outstanding;
+#endif
+#endif
 } ecs_block_allocator_t;
 
 FLECS_API
@@ -60,8 +66,18 @@ void* flecs_balloc(
     ecs_block_allocator_t *allocator);
 
 FLECS_API
+void* flecs_balloc_w_dbg_info(
+    ecs_block_allocator_t *allocator,
+    const char *type_name);
+
+FLECS_API
 void* flecs_bcalloc(
     ecs_block_allocator_t *allocator);
+
+FLECS_API
+void* flecs_bcalloc_w_dbg_info(
+    ecs_block_allocator_t *allocator,
+    const char *type_name);
 
 FLECS_API
 void flecs_bfree(
@@ -79,6 +95,13 @@ void* flecs_brealloc(
     ecs_block_allocator_t *dst, 
     ecs_block_allocator_t *src, 
     void *memory);
+
+FLECS_API
+void* flecs_brealloc_w_dbg_info(
+    ecs_block_allocator_t *dst, 
+    ecs_block_allocator_t *src, 
+    void *memory,
+    const char *type_name);
 
 FLECS_API
 void* flecs_bdup(

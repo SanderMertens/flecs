@@ -26,15 +26,12 @@ int main(int argc, char *argv[]) {
     ecs_add_pair(world, ecs_id(Dirty), EcsOnInstantiate, EcsInherit);
 
     // Create a query that just reads a component. We'll use this query for
-    // change tracking. Change tracking for a query is automatically enabled
-    // when query::changed() is called.
+    // change tracking.
     // Each query has its own private dirty state which is reset only when the
     // query is iterated.
     ecs_query_t *q_read = ecs_query(world, {
         .terms = {{ .id = ecs_id(Position), .inout = EcsIn }},
-        
-        // Change detection is only supported on cached queries.
-        .cache_kind = EcsQueryCacheAuto
+        .flags = EcsQueryDetectChanges // Enable change detection
     });
 
     // Create a query that writes the component based on a Dirty state.

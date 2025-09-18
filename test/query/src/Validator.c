@@ -1,5 +1,82 @@
 #include <query.h>
 
+static
+void query_flags_to_str(uint64_t value) {
+    if (value & EcsQueryMatchPrefab) {
+        printf("EcsQueryMatchPrefab|");
+    }
+    if (value & EcsQueryMatchDisabled) {
+        printf("EcsQueryMatchDisabled|");
+    }
+    if (value & EcsQueryMatchEmptyTables) {
+        printf("EcsQueryMatchEmptyTables|");
+    }
+    if (value & EcsQueryAllowUnresolvedByName) {
+        printf("EcsQueryAllowUnresolvedByName|");
+    }
+    if (value & EcsQueryTableOnly) {
+        printf("EcsQueryTableOnly|");
+    }
+    if (value & EcsQueryMatchThis) {
+        printf("EcsQueryMatchThis|");
+    }
+    if (value & EcsQueryMatchOnlyThis) {
+        printf("EcsQueryMatchOnlyThis|");
+    }
+    if (value & EcsQueryMatchOnlySelf) {
+        printf("EcsQueryMatchOnlySelf|");
+    }
+    if (value & EcsQueryMatchWildcards) {
+        printf("EcsQueryMatchWildcards|");
+    }
+    if (value & EcsQueryHasCondSet) {
+        printf("EcsQueryHasCondSet|");
+    }
+    if (value & EcsQueryHasPred) {
+        printf("EcsQueryHasPred|");
+    }
+    if (value & EcsQueryHasScopes) {
+        printf("EcsQueryHasScopes|");
+    }
+    if (value & EcsQueryHasRefs) {
+        printf("EcsQueryHasRefs|");
+    }
+    if (value & EcsQueryHasOutTerms) {
+        printf("EcsQueryHasOutTerms|");
+    }
+    if (value & EcsQueryHasNonThisOutTerms) {
+        printf("EcsQueryHasNonThisOutTerms|");
+    }
+    if (value & EcsQueryHasChangeDetection) {
+        printf("EcsQueryHasChangeDetection|");
+    }
+    if (value & EcsQueryIsTrivial) {
+        printf("EcsQueryIsTrivial|");
+    }
+    if (value & EcsQueryHasCacheable) {
+        printf("EcsQueryHasCacheable|");
+    }
+    if (value & EcsQueryIsCacheable) {
+        printf("EcsQueryIsCacheable|");
+    }
+    if (value & EcsQueryHasTableThisVar) {
+        printf("EcsQueryHasTableThisVar|");
+    }
+    if (value & EcsQueryCacheYieldEmptyTables) {
+        printf("EcsQueryCacheYieldEmptyTables|");
+    }
+    printf("\n");
+}
+
+#define test_query_flags(expect, value)\
+    if ((expect) != (value)) {\
+        printf("expected: ");\
+        query_flags_to_str(expect);\
+        printf("got:      ");\
+        query_flags_to_str(value);\
+        test_uint(expect, value);\
+    }
+
 void Validator_validate_1_term(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -708,7 +785,8 @@ void Validator_validate_1_term_cascade_implicit_trav(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ .id = Tag, .src.id = EcsCascade }}
+        .terms = {{ .id = Tag, .src.id = EcsCascade }},
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 
@@ -736,7 +814,8 @@ void Validator_validate_1_term_cascade_isa(void) {
         .terms = {{ 
             .id = Tag, 
             .trav = EcsIsA, .src.id = EcsCascade
-        }}
+        }},
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 
@@ -763,7 +842,8 @@ void Validator_validate_1_term_cascade_childof(void) {
         .terms = {{ 
             .id = Tag, 
             .trav = EcsChildOf, .src.id = EcsCascade
-        }}
+        }},
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 
@@ -791,7 +871,8 @@ void Validator_validate_1_term_cascade_down(void) {
         .terms = {{ 
             .id = Tag, 
             .trav = EcsChildOf, .src.id = EcsCascade
-        }}
+        }},
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 
@@ -1732,15 +1813,13 @@ void Validator_validate_filter(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
-            {TagA}
-        },
-        .flags = EcsQueryNoData
+            {TagA, .inout = EcsInOutNone}
+        }
     });
 
     test_int(q->term_count, 1);
     test_uint(q->terms[0].id, TagA);
     test_int(q->terms[0].oper, EcsAnd);
-    test_int(q->terms[0].inout, EcsInOutNone);
 
     ecs_query_fini(q);
 
@@ -1765,7 +1844,7 @@ void Validator_validate_double_init(void) {
     test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_desc_t desc = {0};
-    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, FLECS_TERM_COUNT_MAX);
+    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, q_1->term_count);
     ecs_query_t *q_2 = ecs_query_init(world, &desc);
     test_assert(q_2 != NULL);
 
@@ -1800,7 +1879,7 @@ void Validator_validate_double_init_w_expr(void) {
     test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_desc_t desc = {0};
-    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, FLECS_TERM_COUNT_MAX);
+    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, q_1->term_count);
     ecs_query_t *q_2 = ecs_query_init(world, &desc);
     test_assert(q_2 != NULL);
 
@@ -1835,7 +1914,7 @@ void Validator_validate_double_init_w_expr_optional(void) {
     test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_desc_t desc = {0};
-    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, FLECS_TERM_COUNT_MAX);
+    ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, q_1->term_count);
     ecs_query_t *q_2 = ecs_query_init(world, &desc);
     test_assert(q_2 != NULL);
 
@@ -1861,8 +1940,6 @@ void Validator_validate_w_tag_term_is_no_data(void) {
         .terms = {{ Foo }}
     });
 
-    test_assert(q->flags & EcsQueryNoData);
-
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(it.flags & EcsIterNoData);
     ecs_iter_fini(&it);
@@ -1880,8 +1957,6 @@ void Validator_validate_w_inout_none_term_is_no_data(void) {
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ ecs_id(Position), .inout = EcsInOutNone }}
     });
-
-    test_assert(q->flags & EcsQueryNoData);
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(it.flags & EcsIterNoData);
@@ -1905,8 +1980,6 @@ void Validator_validate_w_tag_and_inout_none_term_is_no_data(void) {
         }
     });
 
-    test_assert(q->flags & EcsQueryNoData);
-
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(it.flags & EcsIterNoData);
     ecs_iter_fini(&it);
@@ -1927,8 +2000,6 @@ void Validator_validate_w_not_term_is_no_data(void) {
             { ecs_id(Position), .oper = EcsNot }
         }
     });
-
-    test_assert(q->flags & EcsQueryNoData);
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(it.flags & EcsIterNoData);
@@ -2223,6 +2294,77 @@ void Validator_validate_not_childof_any(void) {
     test_uint(q->terms[0].first.id, EcsChildOf|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, EcsSelf|EcsIsEntity);
+
+    test_query_flags(EcsQueryMatchThis|EcsQueryMatchOnlyThis|
+        EcsQueryMatchOnlySelf|EcsQueryIsTrivial|EcsQueryHasTableThisVar,
+        q->flags);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world); 
+}
+
+void Validator_validate_not_childof_any_non_trivial(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            {
+                .first.id = EcsChildOf, 
+                .second.id = EcsAny,
+                .oper = EcsNot
+            },
+            {
+                .first.id = Foo, 
+                .oper = EcsOptional
+            },
+        }
+    });
+
+    test_int(q->term_count, 2);
+    test_int(q->field_count, 2);
+    test_uint(q->terms[0].id, ecs_pair(EcsChildOf, 0));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].inout, EcsInOutDefault);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, EcsChildOf|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].second.id, EcsSelf|EcsIsEntity);
+
+    test_query_flags(EcsQueryMatchThis|EcsQueryMatchOnlyThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasCondSet|EcsQueryHasCacheable|
+        EcsQueryHasTableThisVar,
+        q->flags);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world); 
+}
+
+void Validator_validate_not_childof_any_expr(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!(ChildOf, _)"
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, ecs_pair(EcsChildOf, 0));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].inout, EcsInOutDefault);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, EcsChildOf|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].second.id, EcsSelf|EcsIsEntity);
+
+    test_query_flags(EcsQueryMatchThis|EcsQueryMatchOnlyThis|
+        EcsQueryMatchOnlySelf|EcsQueryIsTrivial|EcsQueryHasTableThisVar,
+        q->flags);
 
     ecs_query_fini(q);
 
@@ -2561,11 +2703,11 @@ void Validator_not_wildcard(void) {
 
     test_int(q->term_count, 1);
     test_int(q->field_count, 1);
-    test_uint(q->terms[0].id, EcsAny);
+    test_uint(q->terms[0].id, EcsWildcard);
     test_int(q->terms[0].oper, EcsNot);
     test_int(q->terms[0].inout, EcsInOutNone);
     test_int(q->terms[0].field_index, 0);
-    test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].first.id, EcsWildcard|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
@@ -2584,11 +2726,11 @@ void Validator_not_first_wildcard(void) {
 
     test_int(q->term_count, 1);
     test_int(q->field_count, 1);
-    test_uint(q->terms[0].id, ecs_pair(EcsAny, ecs_id(Position)));
+    test_uint(q->terms[0].id, ecs_pair(EcsWildcard, ecs_id(Position)));
     test_int(q->terms[0].oper, EcsNot);
     test_int(q->terms[0].inout, EcsInOutNone);
     test_int(q->terms[0].field_index, 0);
-    test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].first.id, EcsWildcard|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
@@ -2608,12 +2750,12 @@ void Validator_not_second_wildcard(void) {
 
     test_int(q->term_count, 1);
     test_int(q->field_count, 1);
-    test_uint(q->terms[0].id, ecs_pair(ecs_id(Position), EcsAny));
+    test_uint(q->terms[0].id, ecs_pair(ecs_id(Position), EcsWildcard));
     test_int(q->terms[0].oper, EcsNot);
     test_int(q->terms[0].inout, EcsInOutNone);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].second.id, EcsAny|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].second.id, EcsWildcard|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
@@ -2632,11 +2774,11 @@ void Validator_not_wildcard_id(void) {
 
     test_int(q->term_count, 1);
     test_int(q->field_count, 1);
-    test_uint(q->terms[0].id, EcsAny);
+    test_uint(q->terms[0].id, EcsWildcard);
     test_int(q->terms[0].oper, EcsNot);
     test_int(q->terms[0].inout, EcsInOutNone);
     test_int(q->terms[0].field_index, 0);
-    test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].first.id, EcsWildcard|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
@@ -2655,11 +2797,11 @@ void Validator_not_wildcard_first_pair(void) {
 
     test_int(q->term_count, 1);
     test_int(q->field_count, 1);
-    test_uint(q->terms[0].id, ecs_pair(EcsAny, ecs_id(Position)));
+    test_uint(q->terms[0].id, ecs_pair(EcsWildcard, ecs_id(Position)));
     test_int(q->terms[0].oper, EcsNot);
     test_int(q->terms[0].inout, EcsInOutNone);
     test_int(q->terms[0].field_index, 0);
-    test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].first.id, EcsWildcard|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
@@ -2679,12 +2821,12 @@ void Validator_not_wildcard_second_pair(void) {
 
     test_int(q->term_count, 1);
     test_int(q->field_count, 1);
-    test_uint(q->terms[0].id, ecs_pair_t(Position, EcsAny));
+    test_uint(q->terms[0].id, ecs_pair_t(Position, EcsWildcard));
     test_int(q->terms[0].oper, EcsNot);
     test_int(q->terms[0].inout, EcsInOutNone);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].second.id, EcsAny|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].second.id, EcsWildcard|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
@@ -2930,6 +3072,753 @@ void Validator_validate_custom_trav_w_inherit_id_w_up(void) {
     test_uint(q->terms[0].src.id, EcsThis|EcsUp|EcsIsVariable);
     test_uint(q->terms[0].trav, Rel);
     
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_1_term_is_cacheable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_id(Position));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermIsCacheable|EcsTermIsTrivial|EcsTermKeepAlive);
+
+    test_assert((q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryIsTrivial|EcsQueryIsCacheable|
+        EcsQueryHasCacheable|EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar|EcsQueryHasOutTerms,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_1_term_tag_is_cacheable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_new_w(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Tag },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, Tag);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermIsCacheable|EcsTermIsTrivial|EcsTermKeepAlive);
+
+    test_assert(!(q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryIsTrivial|EcsQueryIsCacheable|
+        EcsQueryHasCacheable|EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_1_term_pair_is_cacheable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_entity_t tgt = ecs_new(world);
+
+    ecs_new_w_pair(world, rel, tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_pair(rel, tgt) },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_pair(rel, tgt));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, rel|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].second.id, tgt|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermIsCacheable|EcsTermIsTrivial|EcsTermKeepAlive);
+
+    test_assert(!(q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryIsTrivial|EcsQueryIsCacheable|
+        EcsQueryHasCacheable|EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_1_term_pair_recycled_is_cacheable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_delete(world, rel);
+    rel = ecs_new(world);
+    test_assert((uint32_t)rel != rel);
+
+    ecs_entity_t tgt = ecs_new(world);
+    ecs_delete(world, tgt);
+    tgt = ecs_new(world);
+    test_assert((uint32_t)tgt != tgt);
+
+    ecs_new_w_pair(world, rel, tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_pair(rel, tgt) },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_pair(rel, tgt));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, rel|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].second.id, tgt|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermIsCacheable|EcsTermIsTrivial|EcsTermKeepAlive);
+
+    test_assert(!(q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryIsTrivial|EcsQueryIsCacheable|
+        EcsQueryHasCacheable|EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_2_term_is_cacheable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity) },
+        }
+    });
+
+    test_int(q->term_count, 2);
+    test_int(q->field_count, 2);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_id(Position));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermIsCacheable|EcsTermIsTrivial|EcsTermKeepAlive);
+
+    test_uint(q->terms[1].id, ecs_id(Velocity));
+    test_int(q->terms[1].oper, EcsAnd);
+    test_int(q->terms[1].field_index, 1);
+    test_uint(q->terms[1].first.id, ecs_id(Velocity)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[1].flags_, EcsTermIsCacheable|EcsTermIsTrivial|EcsTermKeepAlive);
+
+    test_assert((q->data_fields & (1 << 0)));
+    test_assert((q->data_fields & (1 << 1)));
+
+    test_query_flags(EcsQueryIsTrivial|EcsQueryIsCacheable|
+        EcsQueryHasCacheable|EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar|EcsQueryHasOutTerms,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_w_can_inherit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_id(Position));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermIsCacheable|EcsTermIsTrivial|EcsTermKeepAlive);
+
+    test_assert((q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryIsTrivial|EcsQueryIsCacheable|
+        EcsQueryHasCacheable|EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryHasTableThisVar|EcsQueryHasOutTerms,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_w_can_toggle(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_id(Position));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermKeepAlive|EcsTermIsToggle|EcsTermIsCacheable);
+
+    test_assert((q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryMatchOnlyThis|EcsQueryMatchThis|EcsQueryHasCacheable|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar|EcsQueryHasOutTerms,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_w_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_id(Position));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermKeepAlive|EcsTermIsSparse);
+
+    test_assert((q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar|EcsQueryHasOutTerms,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_w_transitive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsTransitive);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_id(Position));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermIsCacheable|EcsTermIsTrivial|EcsTermKeepAlive);
+
+    test_assert((q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryIsTrivial|EcsQueryIsCacheable|
+        EcsQueryHasCacheable|EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar|EcsQueryHasOutTerms,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_w_transitive_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_add_id(world, ecs_id(Position), EcsTransitive);
+
+    ecs_new_w_pair(world, ecs_id(Position), Tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_pair_t(Position, Tgt) },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_pair_t(Position, Tgt));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermKeepAlive|EcsTermTransitive);
+
+    test_assert((q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar|EcsQueryHasOutTerms,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_w_reflexive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsReflexive);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_id(Position));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermIsCacheable|EcsTermIsTrivial|EcsTermKeepAlive);
+
+    test_assert((q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryIsTrivial|EcsQueryIsCacheable|
+        EcsQueryHasCacheable|EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar|EcsQueryHasOutTerms,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_w_reflexive_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_add_id(world, ecs_id(Position), EcsReflexive);
+
+    ecs_new_w_pair(world, ecs_id(Position), Tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_pair_t(Position, Tgt) },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_pair_t(Position, Tgt));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermKeepAlive|EcsTermReflexive);
+
+    test_assert((q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar|EcsQueryHasOutTerms,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_simple_w_inherited_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_ENTITY(world, MeleeUnit, (IsA, Unit));
+
+    ecs_new_w(world, Unit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Unit },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_int(q->var_count, 1);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, Unit);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Unit|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].flags_, EcsTermKeepAlive|EcsTermIdInherited);
+
+    test_assert(!(q->data_fields & (1 << 0)));
+
+    test_query_flags(EcsQueryMatchOnlyThis|EcsQueryMatchThis|
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar,
+        q->flags);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_eq_this_not_a_var_w_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            {
+                .first.id = EcsPredEq, 
+                .src.name = "$foo",
+                .second.name = "this"
+            },
+            { .id = EcsWildcard }
+        }
+    });
+
+    test_int(q->term_count, 2);
+    test_int(q->field_count, 2);
+    test_int(q->var_count, 2);
+    test_assert(q->vars != NULL);
+    test_assert(q->vars[0] == NULL);
+
+    test_uint(q->terms[0].id, ecs_pair(EcsPredEq, EcsThis));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, EcsPredEq|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsSelf|EcsIsVariable);
+    test_str(q->terms[0].src.name, "foo");
+    test_uint(q->terms[0].second.id, EcsThis|EcsSelf|EcsIsEntity);
+    
+    test_uint(q->terms[1].id, EcsWildcard);
+    test_int(q->terms[1].oper, EcsAnd);
+    test_int(q->terms[1].field_index, 1);
+    test_uint(q->terms[1].first.id, EcsWildcard|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsIsVariable);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_term_1_w_singleton_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo }}
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, Foo);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsIsEntity);
+    test_str(q->terms[0].src.name, NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_term_2_w_singleton_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Bar }, { Foo }}
+    });
+
+    test_int(q->term_count, 2);
+    test_int(q->field_count, 2);
+
+    test_uint(q->terms[0].id, Bar);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Bar|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_str(q->terms[0].src.name, NULL);
+
+    test_uint(q->terms[1].id, Foo);
+    test_int(q->terms[1].oper, EcsAnd);
+    test_int(q->terms[1].field_index, 1);
+    test_uint(q->terms[1].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[1].src.id, Foo|EcsSelf|EcsIsEntity);
+    test_str(q->terms[1].src.name, NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_term_pair_w_singleton_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Tgt);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Bar }, { ecs_pair(Foo, Tgt) }}
+    });
+
+    test_int(q->term_count, 2);
+    test_int(q->field_count, 2);
+
+    test_uint(q->terms[0].id, Bar);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Bar|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_str(q->terms[0].src.name, NULL);
+
+    test_uint(q->terms[1].id, ecs_pair(Foo, Tgt));
+    test_int(q->terms[1].oper, EcsAnd);
+    test_int(q->terms[1].field_index, 1);
+    test_uint(q->terms[1].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[1].src.id, Foo|EcsSelf|EcsIsEntity);
+    test_str(q->terms[1].src.name, NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_or_term_w_singleton_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+    ecs_add_id(world, Bar, EcsSingleton);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Bar, .oper = EcsOr }, { Foo }}
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_term_w_singleton_trait_w_explicit_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = Bar }}
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, Foo);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, Bar|EcsSelf|EcsIsEntity);
+    test_str(q->terms[0].src.name, NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_term_w_singleton_trait_w_explicit_self_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = Foo }}
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, Foo);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsIsEntity);
+    test_str(q->terms[0].src.name, NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_term_w_singleton_trait_w_pair_w_explicit_self_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair(Foo, EcsWildcard), .src.id = Foo }}
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, ecs_pair(Foo, EcsWildcard));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsIsEntity);
+    test_str(q->terms[0].src.name, NULL);
+
     ecs_query_fini(q);
 
     ecs_fini(world);

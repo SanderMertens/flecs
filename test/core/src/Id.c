@@ -267,3 +267,118 @@ void Id_make_pair_of_pair_tgt(void) {
     test_expect_abort();
     ecs_make_pair(r, id);
 }
+
+void Id_0_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_id_t id = ecs_id_from_str(world, "#0");
+    test_assert(id == 0);
+
+    ecs_fini(world);
+}
+
+void Id_entity_from_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_id_t id = ecs_id_from_str(world, "Foo");
+    test_assert(id != 0);
+    test_assert(id == Foo);
+
+    ecs_fini(world);
+}
+
+void Id_unresolved_entity_from_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_id_t id = ecs_id_from_str(world, "Foo");
+    test_assert(id == 0);
+
+    ecs_fini(world);
+}
+
+void Id_scoped_entity_from_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, {.name = "Parent"});
+    ecs_entity_t child = ecs_entity(world, {.name = "Child", .parent = parent});
+
+    ecs_id_t id = ecs_id_from_str(world, "Parent.Child");
+    test_assert(id != 0);
+    test_assert(id == child);
+
+    ecs_fini(world);
+}
+
+void Id_template_entity_from_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t foo = ecs_entity(world, {.name = "Foo<Bar>"});
+
+    ecs_id_t id = ecs_id_from_str(world, "Foo<Bar>");
+    test_assert(id != 0);
+    test_assert(id == foo);
+
+    ecs_fini(world);
+}
+
+void Id_pair_from_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_id_t id = ecs_id_from_str(world, "(Rel, Tgt)");
+    test_assert(id != 0);
+    test_assert(id == ecs_pair(Rel, Tgt));
+
+    ecs_fini(world);
+}
+
+void Id_unresolved_pair_from_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_id_t id = ecs_id_from_str(world, "(Rel, Tgt)");
+    test_assert(id == 0);
+
+    ecs_fini(world);
+}
+
+void Id_wildcard_pair_from_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_id_t id = ecs_id_from_str(world, "(Rel, *)");
+    test_assert(id != 0);
+    test_assert(id == ecs_pair(Rel, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Id_any_pair_from_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_id_t id = ecs_id_from_str(world, "(Rel, _)");
+    test_assert(id != 0);
+    test_assert(id == ecs_pair(Rel, EcsAny));
+
+    ecs_fini(world);
+}
+
+void Id_invalid_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_id_t id = ecs_id_from_str(world, "(Rel, Tgt");
+    test_assert(id == 0);
+
+    ecs_fini(world);
+}

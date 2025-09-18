@@ -39,6 +39,21 @@ struct table {
         return ecs_table_count(table_);
     }
 
+    /** Get number of allocated elements in table. */
+    int32_t size() const {
+        return ecs_table_size(table_);
+    }
+
+    /** Get array with entity ids. */
+    const flecs::entity_t* entities() const {
+        return ecs_table_entities(table_);
+    }
+
+    /** Delete entities in table. */
+    void clear_entities() const {
+        ecs_table_clear_entities(world_, table_);
+    }
+
     /** Find type index for (component) id.
      *
      * @param id The (component) id.
@@ -195,6 +210,67 @@ struct table {
         return ecs_table_get_column(table_, index, 0);
     }
 
+
+    /* get */
+
+    /** Get pointer to component array by component.
+     *
+     * @param id The component id.
+     * @return Pointer to the column, NULL if not found.
+     */
+    void* try_get(flecs::id_t id) const {
+        int32_t index = column_index(id);
+        if (index == -1) {
+            return NULL;
+        }
+        return get_column(index);
+    }
+
+    /** Get pointer to component array by pair.
+     *
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
+     * @return Pointer to the column, NULL if not found.
+     */
+    void* try_get(flecs::entity_t first, flecs::entity_t second) const {
+        return try_get(ecs_pair(first, second));
+    }
+
+    /** Get pointer to component array by component.
+     *
+     * @tparam T The component.
+     * @return Pointer to the column, NULL if not found.
+     */
+    template <typename T, if_t< is_actual<T>::value > = 0>
+    T* try_get() const {
+        return static_cast<T*>(try_get(_::type<T>::id(world_)));
+    }
+
+    /** Get pointer to component array by component.
+     *
+     * @tparam T The component.
+     * @return Pointer to the column, NULL if not found.
+     */
+    template <typename T, typename A = actual_type_t<T>,
+        if_t< flecs::is_pair<T>::value > = 0>
+    A* try_get() const {
+        return static_cast<A*>(try_get(_::type<T>::id(world_)));
+    }
+
+    /** Get pointer to component array by pair.
+     *
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
+     * @return Pointer to the column, NULL if not found.
+     */
+    template <typename First>
+    First* try_get(flecs::entity_t second) const {
+        return static_cast<First*>(try_get(_::type<First>::id(world_), second));
+    }
+
+
+    /* get */
+
     /** Get pointer to component array by component.
      *
      * @param id The component id.
@@ -205,7 +281,10 @@ struct table {
         if (index == -1) {
             return NULL;
         }
-        return get_column(index);
+        void *r = get_column(index);
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
+            "invalid get_mut: table does not have component (use try_get)");
+        return r;
     }
 
     /** Get pointer to component array by pair.
@@ -224,16 +303,6 @@ struct table {
      * @return Pointer to the column, NULL if not found.
      */
     template <typename T, if_t< is_actual<T>::value > = 0>
-    T* get() const {
-        return static_cast<T*>(get(_::type<T>::id(world_)));
-    }
-
-    /** Get pointer to component array by (enum) component.
-     *
-     * @tparam T The (enum) component.
-     * @return Pointer to the column, NULL if not found.
-     */
-    template <typename T, if_t< is_enum<T>::value > = 0>
     T* get() const {
         return static_cast<T*>(get(_::type<T>::id(world_)));
     }
@@ -260,6 +329,7 @@ struct table {
         return static_cast<First*>(get(_::type<First>::id(world_), second));
     }
 
+
     /** Get pointer to component array by pair.
      *
      * @tparam First The first element of the pair.
@@ -272,8 +342,8 @@ struct table {
         return static_cast<A*>(get<First>(_::type<Second>::id(world_)));
     }
 
-    /** Get column size */
-    size_t column_size(int32_t index) {
+    /** Get column size. */
+    size_t column_size(int32_t index) const {
         return ecs_table_get_column_size(table_, index);
     }
 
@@ -282,7 +352,7 @@ struct table {
      * @param rel The relationship.
      * @return The depth.
      */
-    int32_t depth(flecs::entity_t rel) {
+    int32_t depth(flecs::entity_t rel) const  {
         return ecs_table_get_depth(world_, table_, rel);
     }
 
@@ -292,8 +362,33 @@ struct table {
      * @return The depth.
      */
     template <typename Rel>
-    int32_t depth() {
+    int32_t depth() const {
         return depth(_::type<Rel>::id(world_));
+    }
+
+    /** Get table records array */
+    ecs_table_records_t records() const {
+        return flecs_table_records(table_);
+    }
+
+    /** Get table id. */
+    uint64_t id() const {
+        return flecs_table_id(table_);
+    }
+
+    /** Lock table. */
+    void lock() const {
+        ecs_table_lock(world_, table_);
+    }
+
+    /** Unlock table. */
+    void unlock() const {
+        ecs_table_unlock(world_, table_);
+    }
+
+    /** Check if table has flags. */
+    bool has_flags(ecs_flags32_t flags) const {
+        return ecs_table_has_flags(table_, flags);
     }
 
     /** Get table.

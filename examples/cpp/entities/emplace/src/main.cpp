@@ -20,8 +20,8 @@ int main(int, char *[]) {
     flecs::entity e = ecs.entity()
         .emplace<NoDefaultCtor>(10.0, 20.0);
 
-    const NoDefaultCtor *ptr = e.get<NoDefaultCtor>();
-    std::cout << "{" << ptr->x << ", " << ptr->y << "}" << "\n";
+    const NoDefaultCtor& c = e.get<NoDefaultCtor>();
+    std::cout << "{" << c.x << ", " << c.y << "}" << "\n";
 
     // Output
     //  {10, 20}

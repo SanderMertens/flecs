@@ -5,7 +5,7 @@ void Union_add_case(void) {
 
     auto Standing = world.entity("Standing");
     auto Walking = world.entity("Walking");
-    auto Movement = world.entity().add(flecs::Union);
+    auto Movement = world.entity().add(flecs::DontFragment).add(flecs::Exclusive);
 
     auto e = world.entity()
         .add(Movement, Standing);
@@ -25,7 +25,7 @@ void Union_get_case(void) {
 
     auto Standing = world.entity("Standing");
     world.entity("Walking");
-    auto Movement = world.entity().add(flecs::Union);
+    auto Movement = world.entity().add(flecs::DontFragment).add(flecs::Exclusive);
 
     auto e = world.entity()
         .add(Movement, Standing);
@@ -41,7 +41,7 @@ struct Walking { };
 void Union_add_case_w_type(void) {
     flecs::world world;
 
-    world.component<Movement>().add(flecs::Union);
+    world.component<Movement>().add(flecs::DontFragment).add(flecs::Exclusive);
 
     auto e = world.entity().add<Movement, Standing>();
     test_assert((e.has<Movement, Standing>()));
@@ -55,7 +55,7 @@ void Union_add_case_w_type(void) {
 void Union_add_switch_w_type(void) {
     flecs::world world;
 
-    world.component<Movement>().add(flecs::Union);
+    world.component<Movement>().add(flecs::DontFragment).add(flecs::Exclusive);
 
     auto e = world.entity().add<Movement, Standing>();
     test_assert((e.has<Movement, Standing>()));
@@ -69,7 +69,7 @@ void Union_add_switch_w_type(void) {
 void Union_add_remove_switch_w_type(void) {
     flecs::world world;
 
-    world.component<Movement>().add(flecs::Union);
+    world.component<Movement>().add(flecs::DontFragment).add(flecs::Exclusive);
 
     auto e = world.entity().add<Movement, Standing>();
     test_assert(e.has<Movement>(flecs::Wildcard));
@@ -90,7 +90,7 @@ void Union_add_remove_switch_w_type(void) {
     e.remove<Movement>(flecs::Wildcard);
     test_assert(!e.has<Movement>(flecs::Wildcard));
     test_assert((!e.has<Movement, Walking>()));
-    test_assert(e.table() != table);
+    test_assert(e.table() == table);
 }
 
 enum Color {
@@ -102,7 +102,7 @@ enum Color {
 void Union_switch_enum_type(void) {
     flecs::world world;
 
-    world.component<Color>().add(flecs::Union);
+    world.component<Color>().add(flecs::DontFragment).add(flecs::Exclusive);
 
     auto e = world.entity().add(Red);
     test_assert(e.has(Red));
@@ -126,10 +126,10 @@ void Union_switch_enum_type(void) {
     test_assert(e.has<Color>(flecs::Wildcard));
     test_assert(e.table() == table);
 
-    e.remove<Color>();
+    e.remove<Color>(flecs::Wildcard);
     test_assert(!e.has(Red));
     test_assert(!e.has(Green));
     test_assert(!e.has(Blue));
     test_assert(!e.has<Color>(flecs::Wildcard));
-    test_assert(e.table() != table);
+    test_assert(e.table() == table);
 }

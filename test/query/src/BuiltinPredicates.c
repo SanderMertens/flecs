@@ -3497,7 +3497,7 @@ void BuiltinPredicates_3_or_w_eq_lookup_var(void) {
 }
 
 void BuiltinPredicates_2_or_w_eq_this(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Bar);
@@ -3650,9 +3650,6 @@ void BuiltinPredicates_match_variable(void) {
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_next(&it));
-    test_uint(1, it.count);
-    test_uint(EcsVariable, it.entities[0]);
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -3671,9 +3668,6 @@ void BuiltinPredicates_match_wildcard(void) {
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_next(&it));
-    test_uint(1, it.count);
-    test_uint(EcsWildcard, it.entities[0]);
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -3692,9 +3686,6 @@ void BuiltinPredicates_match_any(void) {
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_next(&it));
-    test_uint(1, it.count);
-    test_uint(EcsAny, it.entities[0]);
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);

@@ -432,7 +432,8 @@ void Cursor_set_string_to_null_as_signed(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
     test_ok( ecs_meta_set_int(&cur, 0) );
 
-    test_str(value, 0);
+    test_str(value, "0");
+    ecs_os_free(value);
 
     ecs_fini(world);
 }
@@ -445,7 +446,188 @@ void Cursor_set_string_to_null_as_unsigned(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
     test_ok( ecs_meta_set_uint(&cur, 0) );
 
-    test_str(value, 0);
+    test_str(value, "0");
+    ecs_os_free(value);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_string_to_bool(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("Hello");
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+
+    test_ok( ecs_meta_set_bool(&cur, true) );
+    test_str(value, "true");
+
+    test_ok( ecs_meta_set_bool(&cur, false) );
+    test_str(value, "false");
+    ecs_os_free(value);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_string_to_char(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("Hello");
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+
+    test_ok( ecs_meta_set_char(&cur, 'a') );
+    test_str(value, "a");
+
+    test_ok( ecs_meta_set_char(&cur, '-') );
+    test_str(value, "-");
+    ecs_os_free(value);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_string_to_signed(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("Hello");
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+
+    test_ok( ecs_meta_set_int(&cur, 0) );
+    test_str(value, "0");
+
+    test_ok( ecs_meta_set_int(&cur, 10) );
+    test_str(value, "10");
+
+    test_ok( ecs_meta_set_int(&cur, -10) );
+    test_str(value, "-10");
+
+    test_ok( ecs_meta_set_int(&cur, INT64_MAX) );
+    test_str(value, "9223372036854775807");
+
+    test_ok( ecs_meta_set_int(&cur, INT64_MIN) );
+    test_str(value, "-9223372036854775808");
+
+    ecs_os_free(value);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_string_to_unsigned(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("Hello");
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+
+    test_ok( ecs_meta_set_uint(&cur, 0) );
+    test_str(value, "0");
+
+    test_ok( ecs_meta_set_uint(&cur, 10) );
+    test_str(value, "10");
+
+    test_ok( ecs_meta_set_uint(&cur, UINT64_MAX) );
+    test_str(value, "18446744073709551615");
+
+    ecs_os_free(value);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_string_to_float(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("Hello");
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+
+    test_ok( ecs_meta_set_float(&cur, 0) );
+    test_str(value, "0.000000");
+
+    test_ok( ecs_meta_set_float(&cur, 10) );
+    test_str(value, "10.000000");
+
+    test_ok( ecs_meta_set_float(&cur, 10.5) );
+    test_str(value, "10.500000");
+
+    test_ok( ecs_meta_set_float(&cur, 100000) );
+    test_str(value, "100000.000000");
+
+    ecs_os_free(value);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_string_to_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("Hello");
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+
+    test_ok( ecs_meta_set_string(&cur, 0) );
+    test_str(value, NULL);
+
+    test_ok( ecs_meta_set_string(&cur, "Hello World") );
+    test_str(value, "Hello World");
+
+    ecs_os_free(value);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_string_to_string_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("Hello");
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+
+    test_fail( ecs_meta_set_string_literal(&cur, 0) );
+
+    test_ok( ecs_meta_set_string_literal(&cur, "\"Hello World\"") );
+    test_str(value, "Hello World");
+
+    ecs_os_free(value);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_string_to_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("Hello");
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+
+    test_ok( ecs_meta_set_entity(&cur, 0) );
+    test_str(value, "#0");
+
+    test_ok( ecs_meta_set_entity(&cur, EcsFlecsCore) );
+    test_str(value, "flecs.core");
+
+    ecs_os_free(value);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_string_to_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = ecs_os_strdup("Hello");
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+
+    test_ok( ecs_meta_set_id(&cur, 0) );
+    test_str(value, "#0");
+
+    test_ok( ecs_meta_set_id(&cur, EcsFlecsCore) );
+    test_str(value, "flecs.core");
+
+    test_ok( ecs_meta_set_id(&cur, ecs_childof(EcsFlecsCore)) );
+    test_str(value, "(ChildOf,flecs.core)");
+
+    ecs_os_free(value);
 
     ecs_fini(world);
 }
@@ -2249,7 +2431,7 @@ void Cursor_struct_pop_after_dotmember(void) {
         }
     });
 
-    T value = {{0}};
+    T value = {{{0, 0},{0, 0}}, {{0, 0},{0, 0}}};
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
     test_ok( ecs_meta_push(&cur) );
@@ -2797,6 +2979,503 @@ void Cursor_array_move_out_of_range(void) {
     ecs_fini(world);
 }
 
+void Cursor_vector_i32_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .type = ecs_id(ecs_i32_t),
+    });
+
+    ecs_vec_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.count, 0);
+    test_assert(value.array == NULL);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_vector_i32_1(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .type = ecs_id(ecs_i32_t),
+    });
+
+    ecs_vec_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.count, 1);
+    test_assert(value.array != NULL);
+    test_int(((int32_t*)value.array)[0], 10);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_vector_i32_1_next(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .type = ecs_id(ecs_i32_t),
+    });
+
+    ecs_vec_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.count, 2);
+    test_assert(value.array != NULL);
+    test_int(((int32_t*)value.array)[0], 10);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_vector_i32_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .type = ecs_id(ecs_i32_t),
+    });
+
+    ecs_vec_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 30));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.count, 3);
+    test_assert(value.array != NULL);
+    test_int(((int32_t*)value.array)[0], 10);
+    test_int(((int32_t*)value.array)[1], 20);
+    test_int(((int32_t*)value.array)[2], 30);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_vector_i32_empty_after_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .type = ecs_id(ecs_i32_t),
+    });
+
+    ecs_vec_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 30));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.count, 3);
+    test_assert(value.array != NULL);
+    test_int(((int32_t*)value.array)[0], 10);
+    test_int(((int32_t*)value.array)[1], 20);
+    test_int(((int32_t*)value.array)[2], 30);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_vector_struct_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x, y;
+    } N;
+
+    ecs_entity_t n = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .type = n,
+    });
+
+    ecs_vec_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 20));
+        test_int(0, ecs_meta_pop(&cur));
+
+        test_int(0, ecs_meta_next(&cur));
+
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 30));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 40));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.count, 2);
+    test_assert(value.array != NULL);
+
+    test_int(((N*)value.array)[0].x, 10);
+    test_int(((N*)value.array)[0].y, 20);
+    test_int(((N*)value.array)[1].x, 30);
+    test_int(((N*)value.array)[1].y, 40);
+    
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_vector_move_primitive(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .type = ecs_id(ecs_i32_t),
+    });
+
+    ecs_vec_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_int(0, ecs_meta_push(&cur));
+
+    test_int(0, ecs_meta_elem(&cur, 2));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_elem(&cur, 0));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_elem(&cur, 1));
+    test_int(0, ecs_meta_set_int(&cur, 30));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.count, 3);
+    test_assert(value.array != NULL);
+    test_int(((int32_t*)value.array)[0], 20);
+    test_int(((int32_t*)value.array)[1], 30);
+    test_int(((int32_t*)value.array)[2], 10);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_vector_move_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } N;
+
+    ecs_entity_t n = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t v = ecs_vector(world, {
+        .type = n
+    });
+
+    ecs_vec_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, v, &value);
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_elem(&cur, 2));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 20));
+        test_int(0, ecs_meta_pop(&cur));
+
+        test_int(0, ecs_meta_elem(&cur, 0));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 30));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 40));
+        test_int(0, ecs_meta_pop(&cur));
+
+        test_int(0, ecs_meta_elem(&cur, 1));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 50));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 60));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.count, 3);
+    test_int(((N*)value.array)[0].x, 30);
+    test_int(((N*)value.array)[0].y, 40);
+    test_int(((N*)value.array)[1].x, 50);
+    test_int(((N*)value.array)[1].y, 60);
+    test_int(((N*)value.array)[2].x, 10);
+    test_int(((N*)value.array)[2].y, 20);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_struct_w_vector_i32_3(void) {
+    typedef struct {
+        ecs_vec_t x;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .type = ecs_id(ecs_i32_t),
+    });
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .members = {
+            { "x", t }
+        }
+    });
+
+    S value = {{0}};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(S), &value);
+    
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 30));
+    test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.x.count, 3);
+    test_assert(value.x.array != NULL);
+    test_int(((int32_t*)value.x.array)[0], 10);
+    test_int(((int32_t*)value.x.array)[1], 20);
+    test_int(((int32_t*)value.x.array)[2], 30);
+    ecs_os_free(value.x.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_struct_w_vector_struct_3(void) {
+    typedef struct {
+        ecs_vec_t x;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x, y;
+    } N;
+
+    ecs_entity_t n = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .type = n,
+    });
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .members = {
+            { "x", t }
+        }
+    });
+
+    S value = {{0}};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(S), &value);
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_push(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 10));
+                test_int(0, ecs_meta_next(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 20));
+            test_int(0, ecs_meta_pop(&cur));
+
+            test_int(0, ecs_meta_next(&cur));
+
+            test_int(0, ecs_meta_push(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 30));
+                test_int(0, ecs_meta_next(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 40));
+            test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.x.count, 2);
+    test_assert(value.x.array != NULL);
+
+    test_int(((N*)value.x.array)[0].x, 10);
+    test_int(((N*)value.x.array)[0].y, 20);
+    test_int(((N*)value.x.array)[1].x, 30);
+    test_int(((N*)value.x.array)[1].y, 40);
+    
+    ecs_os_free(value.x.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_struct_w_vector_move_primitive(void) {
+    typedef struct {
+        ecs_vec_t x;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .type = ecs_id(ecs_i32_t),
+    });
+
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .members = {
+            { "x", t }
+        }
+    });
+
+    S value = {{0}};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(S), &value);
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_push(&cur));
+
+    test_int(0, ecs_meta_elem(&cur, 2));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_elem(&cur, 0));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_elem(&cur, 1));
+    test_int(0, ecs_meta_set_int(&cur, 30));
+
+    test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.x.count, 3);
+    test_assert(value.x.array != NULL);
+    test_int(((int32_t*)value.x.array)[0], 20);
+    test_int(((int32_t*)value.x.array)[1], 30);
+    test_int(((int32_t*)value.x.array)[2], 10);
+    ecs_os_free(value.x.array);
+
+    ecs_fini(world);
+}
+
+void Cursor_struct_w_vector_move_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } N;
+
+    typedef struct {
+        ecs_vec_t v;
+    } T;
+
+    ecs_entity_t n = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t v = ecs_vector(world, {
+        .type = n
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", v}
+        }
+    });
+
+
+    T value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_push(&cur));
+
+            test_int(0, ecs_meta_elem(&cur, 2));
+            test_int(0, ecs_meta_push(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 10));
+                test_int(0, ecs_meta_next(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 20));
+            test_int(0, ecs_meta_pop(&cur));
+
+            test_int(0, ecs_meta_elem(&cur, 0));
+            test_int(0, ecs_meta_push(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 30));
+                test_int(0, ecs_meta_next(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 40));
+            test_int(0, ecs_meta_pop(&cur));
+
+            test_int(0, ecs_meta_elem(&cur, 1));
+            test_int(0, ecs_meta_push(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 50));
+                test_int(0, ecs_meta_next(&cur));
+                test_int(0, ecs_meta_set_int(&cur, 60));
+            test_int(0, ecs_meta_pop(&cur));
+        
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.v.count, 3);
+    test_int(((N*)value.v.array)[0].x, 30);
+    test_int(((N*)value.v.array)[0].y, 40);
+    test_int(((N*)value.v.array)[1].x, 50);
+    test_int(((N*)value.v.array)[1].y, 60);
+    test_int(((N*)value.v.array)[2].x, 10);
+    test_int(((N*)value.v.array)[2].y, 20);
+    ecs_os_free(value.v.array);
+
+    ecs_fini(world);
+}
+
 typedef const char* const_string_t;
 
 #define OpaqueType(t)\
@@ -2941,7 +3620,14 @@ void Cursor_opaque_set_float(void) {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_string(void) {
+static
+int const_string_t_serialize(const ecs_serializer_t *ser, const void *ptr) {
+    char **data = ECS_CONST_CAST(char**, ptr);
+    ser->value(ser, ecs_id(ecs_string_t), data);
+    return 0;
+}
+
+void Cursor_opaque_get_set_string(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_const_string_t);
@@ -2949,7 +3635,8 @@ void Cursor_opaque_set_string(void) {
     ecs_opaque(world, {
         .entity = ecs_id(Opaque_const_string_t),
         .type.as_type = ecs_id(ecs_string_t),
-        .type.assign_string = const_string_t_set
+        .type.assign_string = const_string_t_set,
+        .type.serialize = const_string_t_serialize
     });
 
     Opaque_const_string_t v = { 0 };
@@ -2957,6 +3644,9 @@ void Cursor_opaque_set_string(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_const_string_t), &v);
     test_int(0, ecs_meta_set_string(&cur, "Hello World"));
     test_str(v.value, "Hello World");
+
+    const char* str = ecs_meta_get_string(&cur);
+    test_str(str, "Hello World");
 
     ecs_fini(world);
 }
@@ -3046,9 +3736,11 @@ void Cursor_opaque_set_int_vec(void) {
 
     ECS_COMPONENT(world, IntVec);
 
+    ecs_entity_t vectype = ecs_vector(world, { .type = ecs_id(ecs_i32_t) });
+
     ecs_opaque(world, {
         .entity = ecs_id(IntVec),
-        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.as_type = vectype,
         .type.ensure_element = IntVec_ensure,
         .type.count = IntVec_count,
         .type.resize = IntVec_resize
@@ -4562,6 +5254,46 @@ void Cursor_get_member_id(void) {
     test_assert(ecs_meta_get_member_id(&cur) != 0);
     test_assert(ecs_meta_get_member_id(&cur) == ecs_lookup(world, "T.y"));
     test_ok( ecs_meta_pop(&cur) );
+
+    ecs_fini(world);
+}
+
+void Cursor_get_array_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, NULL);
+    test_assert(ecs_meta_get_type(&cur) == t);
+    
+    test_int(0, ecs_meta_push(&cur));
+    test_assert(ecs_meta_get_type(&cur) == ecs_id(ecs_i32_t));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_assert(ecs_meta_get_type(&cur) == t);
+
+    ecs_fini(world);
+}
+
+void Cursor_get_vector_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "foo" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, NULL);
+    test_assert(ecs_meta_get_type(&cur) == t);
+    
+    test_int(0, ecs_meta_push(&cur));
+    test_assert(ecs_meta_get_type(&cur) == ecs_id(ecs_i32_t));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_assert(ecs_meta_get_type(&cur) == t);
 
     ecs_fini(world);
 }

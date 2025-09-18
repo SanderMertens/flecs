@@ -37,6 +37,10 @@ ecs_script_vars_t* flecs_script_vars_push(
     result->parent = parent;
     if (parent) {
         result->world = parent->world;
+        result->sp =
+            parent->sp + ecs_vec_count(&parent->vars);
+    } else {
+        result->sp = 0;
     }
     result->stack = stack;
     result->allocator = allocator;
@@ -112,11 +116,13 @@ ecs_script_var_t* ecs_script_vars_declare(
     ecs_script_vars_t *vars,
     const char *name)
 {
-    if (!ecs_vec_count(&vars->vars)) {
-        flecs_name_index_init(&vars->var_index, vars->allocator);
-    } else {
-        if (flecs_name_index_find(&vars->var_index, name, 0, 0) != 0) {
-            goto error;
+    if (name) {
+        if (flecs_name_index_is_init(&vars->var_index)) {
+            if (flecs_name_index_find(&vars->var_index, name, 0, 0) != 0) {
+                goto error;
+            }
+        } else {
+            flecs_name_index_init(&vars->var_index, vars->allocator);
         }
     }
 
@@ -126,13 +132,26 @@ ecs_script_var_t* ecs_script_vars_declare(
     var->value.ptr = NULL;
     var->value.type = 0;
     var->type_info = NULL;
+    var->sp = ecs_vec_count(&vars->vars) + vars->sp - 1;
+    var->is_const = false;
 
-    flecs_name_index_ensure(&vars->var_index,
-        flecs_ito(uint64_t, ecs_vec_count(&vars->vars)), name, 0, 0);
+    if (name) {
+        flecs_name_index_ensure(&vars->var_index,
+            flecs_ito(uint64_t, ecs_vec_count(&vars->vars)), name, 0, 0);
+    }
 
     return var;
 error:
     return NULL;
+}
+
+void ecs_script_vars_set_size(
+    ecs_script_vars_t *vars,
+    int32_t count)
+{
+    ecs_assert(!ecs_vec_count(&vars->vars), ECS_INVALID_OPERATION, 
+        "variable scope must be empty for resize operation");
+    ecs_vec_set_size_t(vars->allocator, &vars->vars, ecs_script_var_t, count);
 }
 
 ecs_script_var_t* ecs_script_vars_define_id(
@@ -169,9 +188,15 @@ ecs_script_var_t* ecs_script_vars_lookup(
     const ecs_script_vars_t *vars,
     const char *name)
 {
+    if (!vars) {
+        return NULL;
+    }
+
     uint64_t var_id = 0;
     if (ecs_vec_count(&vars->vars)) {
-        var_id = flecs_name_index_find(&vars->var_index, name, 0, 0);
+        if (flecs_name_index_is_init(&vars->var_index)) {
+            var_id = flecs_name_index_find(&vars->var_index, name, 0, 0);
+        }
     }
 
     if (!var_id) {
@@ -183,6 +208,47 @@ ecs_script_var_t* ecs_script_vars_lookup(
 
     return ecs_vec_get_t(&vars->vars, ecs_script_var_t, 
         flecs_uto(int32_t, var_id - 1));
+}
+
+ecs_script_var_t* ecs_script_vars_from_sp(
+    const ecs_script_vars_t *vars,
+    int32_t sp)
+{
+    ecs_check(sp >= 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (sp < vars->sp) {
+        ecs_assert(vars->parent != NULL, ECS_INTERNAL_ERROR, NULL);
+        return ecs_script_vars_from_sp(vars->parent, sp);
+    }
+
+    sp -= vars->sp;
+    ecs_check(sp < ecs_vec_count(&vars->vars), 
+        ECS_INVALID_PARAMETER, NULL);
+
+    return ecs_vec_get_t(&vars->vars, ecs_script_var_t, sp);
+error:
+    return NULL;
+}
+
+void ecs_script_vars_print(
+    const ecs_script_vars_t *vars)
+{
+    if (vars->parent) {
+        ecs_script_vars_print(vars->parent);
+    }
+
+    int32_t i, count = ecs_vec_count(&vars->vars);
+    ecs_script_var_t *array = ecs_vec_first(&vars->vars);
+    for (i = 0; i < count; i ++) {
+        ecs_script_var_t *var = &array[i];
+        if (!i) {
+            printf("FRAME ");
+        } else {
+            printf("      ");
+        }
+
+        printf("%2d: %s\n", var->sp, var->name);
+    }
 }
 
 /* Static names for iterator fields */
@@ -207,7 +273,9 @@ void ecs_script_vars_from_iter(
             var = ecs_script_vars_declare(vars, "this");
             var->value.type = ecs_id(ecs_entity_t);
         }
-        var->value.ptr = &it->entities[offset];
+
+        /* Safe, variable value will never be written */
+        var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, &it->entities[offset]);
     }
 
     /* Set variables for fields */
@@ -243,33 +311,39 @@ void ecs_script_vars_from_iter(
 
     /* Set variables for query variables */
     {
-        int32_t i, var_count = it->variable_count;
-        for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
-            ecs_entity_t *e_ptr = NULL;
-            ecs_var_t *query_var = &it->variables[i];
-            if (query_var->entity) {
-                e_ptr = &query_var->entity;
-            } else {
-                ecs_table_range_t *range = &query_var->range;
-                if (range->count == 1) {
-                    ecs_entity_t *entities = range->table->data.entities.array;
-                    e_ptr = &entities[range->offset];
+        if (it->query) {
+            char **variable_names = it->query->vars;
+            int32_t i, var_count = ecs_iter_get_var_count(it);
+            for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
+                const ecs_entity_t *e_ptr = NULL;
+                ecs_var_t *query_var = &ecs_iter_get_vars(it)[i];
+                if (query_var->entity) {
+                    e_ptr = &query_var->entity;
+                } else {
+                    ecs_table_range_t *range = &query_var->range;
+                    if (range->count == 1) {
+                        const ecs_entity_t *entities = 
+                            ecs_table_entities(range->table);
+                        e_ptr = &entities[range->offset];
+                    }
                 }
-            }
-            if (!e_ptr) {
-                continue;
-            }
+                if (!e_ptr) {
+                    continue;
+                }
 
-            ecs_script_var_t *var = ecs_script_vars_lookup(
-                vars, it->variable_names[i]);
-            if (!var) {
-                var = ecs_script_vars_declare(vars, it->variable_names[i]);
-                var->value.type = ecs_id(ecs_entity_t);
-            } else {
-                ecs_check(var->value.type == ecs_id(ecs_entity_t), 
-                    ECS_INVALID_PARAMETER, NULL);
+                ecs_script_var_t *var = ecs_script_vars_lookup(
+                    vars, variable_names[i]);
+                if (!var) {
+                    var = ecs_script_vars_declare(vars, variable_names[i]);
+                    var->value.type = ecs_id(ecs_entity_t);
+                } else {
+                    ecs_check(var->value.type == ecs_id(ecs_entity_t), 
+                        ECS_INVALID_PARAMETER, NULL);
+                }
+
+                /* Safe, variable value will never be written */
+                var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, e_ptr);
             }
-            var->value.ptr = e_ptr;
         }
     }
 

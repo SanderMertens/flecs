@@ -12,7 +12,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [":util", ":bake"],
 
-    srcs = glob(["drivers/test/src/**/*.c", "drivers/test/src/**/*.h"]),
+    srcs = glob(["drivers/test/src/**/*.c"]),
     hdrs = glob(["drivers/test/include/**/*.h"]),
     includes = ["drivers/test/include"],
 )
@@ -49,4 +49,3 @@ cc_library(
 )
 """
 )
-

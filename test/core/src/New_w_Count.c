@@ -1,5 +1,8 @@
 #include <core.h>
 
+static ECS_COMPONENT_DECLARE(Position);
+static ECS_COMPONENT_DECLARE(Velocity);
+
 void New_w_Count_empty(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -21,7 +24,7 @@ void New_w_Count_component(void) {
 
     const ecs_entity_t *ids = ecs_bulk_new(world, Position, 1000);
     test_assert(ids != NULL);
-    
+
     int i;
     for (i = 0; i < 1000; i ++) {
         ecs_entity_t e = ids[i];
@@ -74,6 +77,10 @@ void New_w_Count_bulk_init_empty(void) {
     test_assert(ecs_is_alive(world, entities[0]));
     test_assert(ecs_is_alive(world, entities[1]));
     test_assert(ecs_is_alive(world, entities[2]));
+
+    test_assert(ecs_get_table(world, entities[0]) != NULL);
+    test_assert(ecs_get_table(world, entities[1]) != NULL);
+    test_assert(ecs_get_table(world, entities[2]) != NULL);
 
     ecs_fini(world);
 }
@@ -141,7 +148,7 @@ void New_w_Count_bulk_init_1_tag_w_entities(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    
+
     ecs_entity_t ents[] = {1000, 1001, 1002};
 
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
@@ -326,7 +333,7 @@ void New_w_Count_bulk_init_1_component_w_value(void) {
     test_assert(ecs_has(world, entities[0], Position));
     test_assert(ecs_has(world, entities[1], Position));
     test_assert(ecs_has(world, entities[2], Position));
-    
+
 
     const Position *ptr;
     ptr = ecs_get(world, entities[0], Position);
@@ -684,6 +691,108 @@ void New_w_Count_bulk_init_w_table(void) {
 
     ecs_delete_with(world, Tag);
     test_int(0, ecs_count(world, Tag));
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_ids_w_1_exceed_32_bits(void) {
+	install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Tag, 0);
+
+    ecs_set_entity_range(world, UINT32_MAX, 0);
+    ecs_bulk_new_w_id(world, Tag, 1);
+    test_expect_abort();
+    ecs_bulk_new_w_id(world, Tag, 1);
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_ids_w_2_exceed_32_bits(void) {
+	install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Tag, 0);
+
+    ecs_set_entity_range(world, UINT32_MAX, 0);
+    test_expect_abort();
+    ecs_bulk_new_w_id(world, Tag, 2);
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_init_w_alive_entity(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t ents[] = {ecs_new(world)};
+
+    test_expect_abort();
+
+    ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .entities = ents,
+        .count = 1
+    });
+}
+
+static void hook_w_add(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_set(it->world, it->entities[i], Velocity, {1, 2});
+    }
+}
+
+void New_w_Count_bulk_init_w_cmd_in_on_add_hook(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = hook_w_add
+    });
+
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)}
+    });
+
+    for (int i = 0; i < 3; i ++) {
+        const Velocity *v = ecs_get(world, entities[i], Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_init_w_cmd_in_on_add_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position) },
+        },
+        .callback = hook_w_add,
+        .events = { EcsOnAdd }
+    });
+
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)}
+    });
+
+    for (int i = 0; i < 3; i ++) {
+        const Velocity *v = ecs_get(world, entities[i], Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
 
     ecs_fini(world);
 }

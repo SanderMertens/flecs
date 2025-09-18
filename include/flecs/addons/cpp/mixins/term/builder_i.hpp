@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../../utils/signature.hpp"
+#include <stdio.h>
 
 namespace flecs 
 {
@@ -68,7 +69,7 @@ struct term_ref_builder_i {
     }
 
     /* Override term id flags */
-    Base& flags(flecs::flags32_t flags) {
+    Base& flags(flecs::flags64_t flags) {
         this->assert_term_ref();
         term_ref_->id = flags;
         return *this;
@@ -281,7 +282,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
     /** Set read/write access of term. */
     Base& inout(flecs::inout_kind_t inout) {
         this->assert_term();
-        term_->inout = static_cast<ecs_inout_kind_t>(inout);
+        term_->inout = static_cast<int16_t>(inout);
         return *this;
     }
 
@@ -295,7 +296,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
      */
     Base& inout_stage(flecs::inout_kind_t inout) {
         this->assert_term();
-        term_->inout = static_cast<ecs_inout_kind_t>(inout);
+        term_->inout = static_cast<int16_t>(inout);
         if (term_->oper != EcsNot) {
             this->src().entity(0);
         }
@@ -346,7 +347,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
     /** Set operator of term. */
     Base& oper(flecs::oper_kind_t oper) {
         this->assert_term();
-        term_->oper = static_cast<ecs_oper_kind_t>(oper);
+        term_->oper = static_cast<int16_t>(oper);
         return *this;
     }
 
@@ -383,27 +384,6 @@ struct term_builder_i : term_ref_builder_i<Base> {
     /* Short for oper(flecs::NotFrom) */
     Base& not_from() {
         return this->oper(flecs::NotFrom);
-    }
-
-    /** Match singleton. */
-    Base& singleton() {
-        this->assert_term();
-        ecs_assert(term_->id || term_->first.id, ECS_INVALID_PARAMETER, 
-                "no component specified for singleton");
-        
-        flecs::id_t sid = term_->id;
-        if (!sid) {
-            sid = term_->first.id;
-        }
-
-        ecs_assert(sid != 0, ECS_INVALID_PARAMETER, NULL);
-
-        if (!ECS_IS_PAIR(sid)) {
-            term_->src.id = sid;
-        } else {
-            term_->src.id = ecs_pair_first(world(), sid);
-        }
-        return *this;
     }
 
     /* Query terms are not triggered on by observers */

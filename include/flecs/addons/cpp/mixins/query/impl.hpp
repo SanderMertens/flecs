@@ -39,12 +39,19 @@ struct query_base {
 
     query_base(const query_base& obj) {
         this->query_ = obj.query_;
-        flecs_poly_claim(this->query_);
+        if (this->query_)
+        {
+            flecs_poly_claim(this->query_);
+        }
     }
 
     query_base& operator=(const query_base& obj) {
+        this->~query_base();
         this->query_ = obj.query_;
-        flecs_poly_claim(this->query_);
+        if (this->query_)
+        {
+            flecs_poly_claim(this->query_);
+        }
         return *this; 
     }
 
@@ -177,6 +184,10 @@ struct query_base {
 
     operator query<>() const;
 
+#   ifdef FLECS_JSON
+#   include "../json/query.inl"
+#   endif
+
 protected:
     query_t *query_ = nullptr;
 };
@@ -203,6 +214,11 @@ public:
     query& operator=(query&& obj) noexcept {
         query_base::operator=(FLECS_FWD(obj));
         return *this;
+    }
+
+    flecs::query<> cache_query() const {
+        const flecs::query_t *q = ecs_query_get_cache_query(query_);
+        return flecs::query<>(q);
     }
 
 private:
@@ -294,7 +310,7 @@ inline void world::each(Func&& func) const {
 
 template <typename T, typename Func>
 inline void world::each(Func&& func) const {
-    ecs_iter_t it = ecs_each_id(world_, _::type<T>::id());
+    ecs_iter_t it = ecs_each_id(world_, _::type<T>::id(world_));
 
     while (ecs_each_next(&it)) {
         _::each_delegate<Func, T>(func).invoke(&it);

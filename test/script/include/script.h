@@ -4,6 +4,9 @@
 /* This generated file contains includes for project dependencies */
 #include "script/bake_config.h"
 
+#include <stdio.h>
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -66,6 +69,8 @@ typedef struct {
 typedef struct {
     float x, y, z;
 } Vec3;
+
+void install_test_abort(void);
 
 #ifdef __cplusplus
 }

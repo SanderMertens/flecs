@@ -13,15 +13,13 @@
 ecs_mixins_t ecs_system_t_mixins = {
     .type_name = "ecs_system_t",
     .elems = {
-        [EcsMixinWorld] = offsetof(ecs_system_t, world),
-        [EcsMixinEntity] = offsetof(ecs_system_t, entity),
         [EcsMixinDtor] = offsetof(ecs_system_t, dtor)
     }
 };
 
 /* -- Public API -- */
 
-ecs_entity_t flecs_run_intern(
+ecs_entity_t flecs_run_system(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t system,
@@ -31,6 +29,7 @@ ecs_entity_t flecs_run_intern(
     ecs_ftime_t delta_time,
     void *param) 
 {
+    flecs_poly_assert(world, ecs_world_t);
     ecs_ftime_t time_elapsed = delta_time;
     ecs_entity_t tick_source = system_data->tick_source;
 
@@ -59,6 +58,8 @@ ecs_entity_t flecs_run_intern(
         }
     }
 
+    ecs_os_perf_trace_push(system_data->name);
+
     if (ecs_should_log_3()) {
         char *path = ecs_get_path(world, system);
         ecs_dbg_3("worker %d: %s", stage_index, path);
@@ -78,6 +79,8 @@ ecs_entity_t flecs_run_intern(
         stage = world->stages[0];
     }
 
+    flecs_poly_assert(stage, ecs_stage_t);
+
     /* Prepare the query iterator */
     ecs_iter_t wit, qit = ecs_query_iter(thread_ctx, system_data->query);
     ecs_iter_t *it = &qit;
@@ -90,8 +93,6 @@ ecs_entity_t flecs_run_intern(
     qit.callback_ctx = system_data->callback_ctx;
     qit.run_ctx = system_data->run_ctx;
 
-    flecs_defer_begin(world, stage);
-
     if (stage_count > 1 && system_data->multi_threaded) {
         wit = ecs_worker_iter(it, stage_index, stage_count);
         it = &wit;
@@ -103,18 +104,30 @@ ecs_entity_t flecs_run_intern(
 
     ecs_run_action_t run = system_data->run;
     if (run) {
-        if (!system_data->query->term_count) {
+        /* If system query matches nothing, the system run callback doesn't have
+         * anything to iterate, so the iterator resources don't get cleaned up
+         * automatically, so clean it up here. */
+        if (system_data->query->flags & EcsQueryMatchNothing) {
             it->next = flecs_default_next_callback; /* Return once */
             run(it);
             ecs_iter_fini(&qit);
         } else {
+            if (it == &qit && (qit.flags & EcsIterTrivialCached)) {
+                it->next = flecs_query_trivial_cached_next;
+            }
             run(it);
         }
     } else {
         if (system_data->query->term_count) {
             if (it == &qit) {
-                while (ecs_query_next(&qit)) {
-                    action(&qit);
+                if (qit.flags & EcsIterTrivialCached) {
+                    while (flecs_query_trivial_cached_next(&qit)) {
+                        action(&qit);
+                    }
+                } else {
+                    while (ecs_query_next(&qit)) {
+                        action(&qit);
+                    }
                 }
             } else {
                 while (ecs_iter_next(it)) {
@@ -133,10 +146,11 @@ ecs_entity_t flecs_run_intern(
         system_data->time_spent += (ecs_ftime_t)ecs_time_measure(&time_start);
     }
 
-    flecs_defer_end(world, stage);
+    ecs_os_perf_trace_pop(system_data->name);
 
     return it->interrupted_by;
 }
+
 
 /* -- Public API -- */
 
@@ -151,10 +165,12 @@ ecs_entity_t ecs_run_worker(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    return flecs_run_intern(
+    flecs_defer_begin(world, stage);
+    ecs_entity_t result = flecs_run_system(
         world, stage, system, system_data, stage_index, stage_count, 
         delta_time, param);
+    flecs_defer_end(world, stage);
+    return result;
 }
 
 ecs_entity_t ecs_run(
@@ -166,8 +182,11 @@ ecs_entity_t ecs_run(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
-    return flecs_run_intern(
+    flecs_defer_begin(world, stage);
+    ecs_entity_t result = flecs_run_system(
         world, stage, system, system_data, 0, 0, delta_time, param);
+    flecs_defer_end(world, stage);
+    return result;
 }
 
 /* System deinitialization */
@@ -185,6 +204,9 @@ void flecs_system_fini(ecs_system_t *sys) {
         sys->run_ctx_free(sys->run_ctx);
     }
 
+    /* Safe cast, type owns name */
+    ecs_os_free(ECS_CONST_CAST(char*, sys->name));
+
     flecs_poly_free(sys, ecs_system_t);
 }
 
@@ -196,11 +218,18 @@ void flecs_system_poly_fini(void *sys)
 }
 
 static
-void flecs_system_init_timer(
+int flecs_system_init_timer(
     ecs_world_t *world,
     ecs_entity_t entity,
     const ecs_system_desc_t *desc)
 {
+    if (ECS_NEQZERO(desc->interval) && ECS_NEQZERO(desc->rate)) {
+        char *name = ecs_get_path(world, entity);
+        ecs_err("system %s cannot have both interval and rate set", name);
+        ecs_os_free(name);
+        return -1;
+    }
+
     if (ECS_NEQZERO(desc->interval) || ECS_NEQZERO(desc->rate) || 
         ECS_NEQZERO(desc->tick_source)) 
     {
@@ -211,9 +240,6 @@ void flecs_system_init_timer(
 
         if (desc->rate) {
             ecs_entity_t tick_source = desc->tick_source;
-            if (!tick_source) {
-                tick_source = entity;
-            }
             ecs_set_rate(world, entity, desc->rate, tick_source);
         } else if (desc->tick_source) {
             ecs_set_tick_source(world, entity, desc->tick_source);
@@ -224,6 +250,8 @@ void flecs_system_init_timer(
         ecs_abort(ECS_UNSUPPORTED, "timer module not available");
 #endif
     }
+
+    return 0;
 }
 
 ecs_entity_t ecs_system_init(
@@ -248,9 +276,7 @@ ecs_entity_t ecs_system_init(
         ecs_assert(system != NULL, ECS_INTERNAL_ERROR, NULL);
         
         poly->poly = system;
-        system->world = world;
         system->dtor = flecs_system_poly_fini;
-        system->entity = entity;
 
         ecs_query_desc_t query_desc = desc->query;
         query_desc.entity = entity;
@@ -265,7 +291,6 @@ ecs_entity_t ecs_system_init(
         flecs_defer_begin(world, world->stages[0]);
 
         system->query = query;
-        system->query_entity = query->entity;
 
         system->run = desc->run;
         system->action = desc->callback;
@@ -283,14 +308,20 @@ ecs_entity_t ecs_system_init(
         system->multi_threaded = desc->multi_threaded;
         system->immediate = desc->immediate;
 
-        flecs_system_init_timer(world, entity, desc);
+        system->name = ecs_get_path(world, entity);
+
+        if (flecs_system_init_timer(world, entity, desc)) {
+            ecs_delete(world, entity);
+            ecs_defer_end(world);
+            goto error;
+        }
 
         if (ecs_get_name(world, entity)) {
             ecs_trace("#[green]system#[reset] %s created", 
                 ecs_get_name(world, entity));
         }
 
-        ecs_defer_end(world);            
+        ecs_defer_end(world);
     } else {
         flecs_poly_assert(poly->poly, ecs_system_t);
         ecs_system_t *system = (ecs_system_t*)poly->poly;
@@ -363,7 +394,9 @@ ecs_entity_t ecs_system_init(
             system->immediate = desc->immediate;
         }
 
-        flecs_system_init_timer(world, entity, desc);
+        if (flecs_system_init_timer(world, entity, desc)) {
+            return 0;
+        }
     }
 
     flecs_poly_modified(world, entity, ecs_system_t);
@@ -394,6 +427,10 @@ void FlecsSystemImport(
 
     flecs_bootstrap_tag(world, EcsSystem);
     flecs_bootstrap_component(world, EcsTickSource);
+
+    ecs_set_hooks(world, EcsTickSource, {
+        .ctor = flecs_default_ctor
+    });
 
     /* Make sure to never inherit system component. This makes sure that any
      * term created for the System component will default to 'self' traversal,

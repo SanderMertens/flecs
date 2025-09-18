@@ -128,7 +128,7 @@ static
 void win_cond_free(
     ecs_os_cond_t c) 
 {
-    (void)c;
+    ecs_os_free((CONDITION_VARIABLE*)(uintptr_t)c);
 }
 
 static 

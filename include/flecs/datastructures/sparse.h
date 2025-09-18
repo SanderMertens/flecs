@@ -21,6 +21,12 @@ extern "C" {
 /** This computes the offset of an index inside a page */
 #define FLECS_SPARSE_OFFSET(index) ((int32_t)index & (FLECS_SPARSE_PAGE_SIZE - 1))
 
+typedef struct ecs_sparse_page_t {
+    int32_t *sparse;            /* Sparse array with indices to dense array */
+    void *data;                 /* Store data in sparse array to reduce  
+                                 * indirection and provide stable pointers. */
+} ecs_sparse_page_t;
+
 typedef struct ecs_sparse_t {
     ecs_vec_t dense;         /* Dense array with indices to sparse array. The
                               * dense array stores both alive and not alive
@@ -76,20 +82,22 @@ uint64_t flecs_sparse_new_id(
 
 /** Remove an element */
 FLECS_DBG_API
-void flecs_sparse_remove(
+bool flecs_sparse_remove(
     ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
+    ecs_size_t size,
     uint64_t id);
 
 #define flecs_sparse_remove_t(sparse, T, id)\
     flecs_sparse_remove(sparse, ECS_SIZEOF(T), id)
 
-/** Remove an element without liveliness checking */
-FLECS_DBG_API
-void* flecs_sparse_remove_fast(
+/** Remove an element, increase generation */
+bool flecs_sparse_remove_w_gen(
     ecs_sparse_t *sparse,
     ecs_size_t size,
-    uint64_t index);
+    uint64_t id);
+
+#define flecs_sparse_remove_w_gen_t(sparse, T, id)\
+    flecs_sparse_remove_w_gen(sparse, ECS_SIZEOF(T), id)
 
 /** Test if id is alive, which requires the generation count to match. */
 FLECS_DBG_API
@@ -113,8 +121,12 @@ FLECS_DBG_API
 int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse);
 
-/** Get element by (sparse) id. The returned pointer is stable for the duration
- * of the sparse set, as it is stored in the sparse array. */
+/** Check if sparse set has id */
+bool flecs_sparse_has(
+    const ecs_sparse_t *sparse,
+    uint64_t id);
+
+/** Like get_sparse, but don't care whether element is alive or not. */
 FLECS_DBG_API
 void* flecs_sparse_get(
     const ecs_sparse_t *sparse,
@@ -124,35 +136,26 @@ void* flecs_sparse_get(
 #define flecs_sparse_get_t(sparse, T, index)\
     ECS_CAST(T*, flecs_sparse_get(sparse, ECS_SIZEOF(T), index))
 
-/** Same as flecs_sparse_get, but doesn't assert if id is not alive. */
+/** Create element by (sparse) id. */
 FLECS_DBG_API
-void* flecs_sparse_try(
-    const ecs_sparse_t *sparse,
+void* flecs_sparse_insert(
+    ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t id);
 
-#define flecs_sparse_try_t(sparse, T, index)\
-    ECS_CAST(T*, flecs_sparse_try(sparse, ECS_SIZEOF(T), index))
-
-/** Like get_sparse, but don't care whether element is alive or not. */
-FLECS_DBG_API
-void* flecs_sparse_get_any(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);
-
-#define flecs_sparse_get_any_t(sparse, T, index)\
-    ECS_CAST(T*, flecs_sparse_get_any(sparse, ECS_SIZEOF(T), index))
+#define flecs_sparse_insert_t(sparse, T, index)\
+    ECS_CAST(T*, flecs_sparse_insert(sparse, ECS_SIZEOF(T), index))
 
 /** Get or create element by (sparse) id. */
 FLECS_DBG_API
 void* flecs_sparse_ensure(
     ecs_sparse_t *sparse,
     ecs_size_t elem_size,
-    uint64_t id);
+    uint64_t id,
+    bool *is_new);
 
-#define flecs_sparse_ensure_t(sparse, T, index)\
-    ECS_CAST(T*, flecs_sparse_ensure(sparse, ECS_SIZEOF(T), index))
+#define flecs_sparse_ensure_t(sparse, T, index, is_new)\
+    ECS_CAST(T*, flecs_sparse_ensure(sparse, ECS_SIZEOF(T), index, is_new))
 
 /** Fast version of ensure, no liveliness checking */
 FLECS_DBG_API
@@ -168,6 +171,10 @@ void* flecs_sparse_ensure_fast(
 FLECS_DBG_API
 const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse);
+
+FLECS_DBG_API
+void flecs_sparse_shrink(
+    ecs_sparse_t *sparse);
 
 /* Publicly exposed APIs 
  * These APIs are not part of the public API and as a result may change without

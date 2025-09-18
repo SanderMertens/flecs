@@ -279,7 +279,8 @@ void Delete_clear_1_component(void) {
     test_assert(e != 0);
 
     ecs_clear(world, e);
-    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     ecs_entity_t e2 = ecs_new(world);
     test_assert(e2 > e);
@@ -298,7 +299,8 @@ void Delete_clear_2_components(void) {
     test_assert(e != 0);
 
     ecs_clear(world, e);
-    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     ecs_entity_t e2 = ecs_new(world);
     test_assert(e2 > e);
@@ -334,7 +336,8 @@ void Delete_alive_after_clear(void) {
 
     ecs_clear(world, e);
 
-    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_exists(world, e));
     

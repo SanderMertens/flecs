@@ -1,0 +1,17 @@
+files.extend-exclude = ["distr/*", "test/script/src/Fuzzing.c"]
+
+# typos can't handle "2nd" as a word (yet?)
+default.extend-ignore-identifiers-re = ["_2nd"]
+
+[default.extend-words]
+ser = "ser" # serialization
+thr = "thr" # thread
+
+[default.extend-identifiers]
+ba = "ba"           # block_allocator
+ecs_eis = "ecs_eis" # entity index store (entity_index.h)
+numer = "numer"     # numerator (posix_impl.inl)
+ot = "ot"           # Opaque Type or Other Table
+Fo = "Fo"           # used in test cases/examples
+UE4 = "UE4"
+PNGs = "PNGs"

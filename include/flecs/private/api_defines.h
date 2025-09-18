@@ -14,6 +14,8 @@
 
 #if defined(_WIN32) || defined(_MSC_VER)
 #define ECS_TARGET_WINDOWS
+#elif defined(__COSMOCC__)
+#define ECS_TARGET_POSIX
 #elif defined(__ANDROID__)
 #define ECS_TARGET_ANDROID
 #define ECS_TARGET_POSIX
@@ -67,6 +69,13 @@
     #endif
 #endif
 
+/* Define noreturn attribute only for GCC or Clang. */
+#if defined(ECS_TARGET_GNU) || defined(ECS_TARGET_CLANG)
+    #define ECS_NORETURN __attribute__((noreturn))
+#else
+    #define ECS_NORETURN
+#endif
+
 /* Ignored warnings */
 #if defined(ECS_TARGET_CLANG)
 /* Ignore unknown options so we don't have to care about the compiler version */
@@ -97,6 +106,11 @@
 /* Useful, but not reliable enough. It can incorrectly flag macro's as unused
  * in standalone builds. */
 #pragma clang diagnostic ignored "-Wunused-macros"
+/* This warning gets thrown by clang even when a code is handling all case
+ * values but not all cases (for example, when the switch contains a LastValue
+ * case). Adding a "default" case fixes the warning, but silences future 
+ * warnings about unhandled cases, which is worse. */
+#pragma clang diagnostic ignored "-Wswitch-default"
 #if __clang_major__ == 13
 /* clang 13 can throw this warning for a define in ctype.h */
 #pragma clang diagnostic ignored "-Wreserved-identifier"
@@ -104,9 +118,6 @@
 /* Filenames aren't consistent across targets as they can use different casing 
  * (e.g. WinSock2 vs winsock2). */
 #pragma clang diagnostic ignored "-Wnonportable-system-include-path"
-/* Enum reflection relies on testing constant values that may not be valid for
- * the enumeration. */
-#pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
 /* Very difficult to workaround this warning in C, especially for an ECS. */
 #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 /* This warning gets thrown when trying to cast pointer returned from dlproc */
@@ -118,6 +129,11 @@
  * code paths are reached where values are uninitialized. */
 #ifdef FLECS_SOFT_ASSERT
 #pragma clang diagnostic ignored "-Wsometimes-uninitialized"
+#endif
+
+/* Allows for enum reflection support on legacy compilers */
+#if __clang_major__ < 16
+#pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
 #endif
 
 #elif defined(ECS_TARGET_GNU)
@@ -136,12 +152,26 @@
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 /* Produces false positives in addons/cpp/delegate.hpp. */
 #pragma GCC diagnostic ignored "-Warray-bounds"
+/* Produces false positives in queries/src/cache.c */
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#pragma GCC diagnostic ignored "-Wrestrict"
+
+#elif defined(ECS_TARGET_MSVC)
+/* recursive on all control paths, function will cause runtime stack overflow
+ * This warning is incorrectly thrown on enum reflection code. */
+#pragma warning(disable: 4717)
+#endif
+
+/* Allows for enum reflection support on legacy compilers */
+#if defined(__GNUC__) && __GNUC__ <= 10
+#pragma GCC diagnostic ignored "-Wconversion"
 #endif
 
 /* Standard library dependencies */
 #include <assert.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdlib.h>
 
 /* Non-standard but required. If not provided by platform, add manually. */
 #include <stdint.h>
@@ -223,8 +253,22 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_ALIGNOF(T) (int64_t)__alignof(T)
 #elif defined(ECS_TARGET_GNU)
 #define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
+#elif defined(ECS_TARGET_CLANG)
+#define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
 #else
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
+#endif
+
+#ifndef FLECS_NO_ALWAYS_INLINE
+    #if defined(ECS_TARGET_CLANG) || defined(ECS_TARGET_GCC)
+        #define FLECS_ALWAYS_INLINE __attribute__((always_inline))
+    #elif defined(ECS_TARGET_MSVC)
+        #define FLECS_ALWAYS_INLINE
+    #else
+        #define FLECS_ALWAYS_INLINE
+    #endif
+#else
+    #define FLECS_ALWAYS_INLINE
 #endif
 
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
@@ -354,14 +398,6 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_TABLE_UNLOCK(world, table)
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////
-//// Actions that drive iteration
-////////////////////////////////////////////////////////////////////////////////
-
-#define EcsIterNextYield  (0)   /* Move to next table, yield current */
-#define EcsIterYield      (-1)  /* Stay on current table, yield */
-#define EcsIterNext  (1)   /* Move to next table, don't yield */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Convenience macros for ctor, dtor, move and copy

@@ -56,7 +56,7 @@ flecs::system sys = world.system<Position, const Velocity>("Move")
 
 ```cs
 // System declaration
-Routine sys = world.Routine<Position, Velocity>("Move")
+System<Position, Velocity> sys = world.System<Position, Velocity>("Move")
     .Each((ref Position p, ref Velocity v) =>
     {
         // Each is invoked for each entity
@@ -99,7 +99,7 @@ sys.run();
 <li><b class="tab-title">C#</b>
 
 ```cs
-Routine sys = ...;
+System_ sys = ...;
 sys.Run();
 ```
 </li>
@@ -166,7 +166,7 @@ flecs::system sys = world.system<Position, const Velocity>("Move")
 <li><b class="tab-title">C#</b>
 
 ```cs
-Routine sys = world.Routine<Position, Velocity>("Move")
+System<Position, Velocity> sys = world.System<Position, Velocity>("Move")
     .Kind(0)
     .Each((ref Position p, ref Velocity v) => { /* ... */ });
 ```
@@ -271,7 +271,7 @@ Note that there is no significant performance difference between `iter()` and `e
 q.Each((ref Position p, ref Velocity v) => { /* ... */ });
 
 // System iteration (Each)
-world.Routine<Position, Velocity>("Move")
+world.System<Position, Velocity>("Move")
     .Each((ref Position p, ref Velocity v) => { /* ... */ });
 ```
 ```cs
@@ -286,7 +286,7 @@ q.Iter((Iter it, Field<Position> p, Field<Velocity> v) =>
 });
 
 // System iteration (Iter)
-world.Routine<Position, Velocity>("Move")
+world.System<Position, Velocity>("Move")
     .Iter((Iter it, Field<Position> p, Field<Velocity> v) =>
     {
         foreach (int i in it)
@@ -418,14 +418,14 @@ world.system<Position, const Velocity>("Move")
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.Routine<Position, Velocity>("Move")
+world.System<Position, Velocity>("Move")
     .Each((Iter it, int i, ref Position p, ref Velocity v) =>
     {
         p.X += v.X * it.DeltaTime();
         p.Y += v.Y * it.DeltaTime();
     });
 
-world.Routine<Position, Velocity>("Move")
+world.System<Position, Velocity>("Move")
     .Iter((Iter it, Field<Position> p, Field<Velocity> v) =>
     {
         foreach (int i in it)
@@ -565,7 +565,7 @@ world.progress();
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.Routine("PrintTime")
+world.System("PrintTime")
     .Kind(Ecs.OnUpdate)
     .Iter((Iter it) =>
     {
@@ -636,8 +636,8 @@ world.system<Game>("PrintTime")
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.Routine<Game>("PrintTime")
-    .TermAt(1).Singleton()
+world.System<Game>("PrintTime")
+    .TermAt(0).Singleton()
     .Kind(Ecs.OnUpdate)
     .Each((ref Game g) =>
     {
@@ -696,7 +696,7 @@ world.system<Position, Velocity>("Move")
 
 ```cs
 // System is created with (DependsOn, OnUpdate)
-world.Routine<Position, Velocity>("Move")
+world.System<Position, Velocity>("Move")
     .Kind(Ecs.OnUpdate)
     .Each((ref Position p, ref Velocity v) =>
     {
@@ -791,12 +791,12 @@ An application can create custom phases, which can be (but don't need to be) bra
 
 ```c
 // Phases must have the EcsPhase tag
-ecs_entity_t Physics = ecs_new_w_id(ecs, EcsPhase);
-ecs_entity_t Collisions = ecs_new_w_id(ecs, EcsPhase);
+ecs_entity_t Physics = ecs_new_w_id(world, EcsPhase);
+ecs_entity_t Collisions = ecs_new_w_id(world, EcsPhase);
 
 // Phases can (but don't have to) depend on other phases which forces ordering
-ecs_add_pair(ecs, Physics, EcsDependsOn, EcsOnUpdate);
-ecs_add_pair(ecs, Collisions, EcsDependsOn, Physics);
+ecs_add_pair(world, Physics, EcsDependsOn, EcsOnUpdate);
+ecs_add_pair(world, Collisions, EcsDependsOn, Physics);
 
 // Custom phases can be used just like regular phases
 ECS_SYSTEM(world, Collide, Collisions, Position, Velocity);
@@ -928,7 +928,7 @@ Pipeline pipeline = world.Pipeline()
 world.SetPipeline(pipeline);
 
 // Create system
-Routine move = world.Routine<Position, Velocity>("Move")
+System<Position, Velocity> move = world.System<Position, Velocity>("Move")
     .Kind(foo) // or .Kind<Foo>() if a type
     .Each(...);
 
@@ -997,14 +997,6 @@ move_sys.add::<Foo>();
 ```
 </ul>
 </div>
-
-#### Pipeline switching performance
-When running a multithreaded application, switching pipelines can be an expensive operation. The reason for this is that it requires tearing down and recreating the worker threads with the new pipeline context. For this reason it can be more efficient to use queries that allow for enabling/disabling groups of systems vs. switching pipelines.
-
-For example, the builtin pipeline excludes groups of systems from the schedule that:
-- have the `Disabled` tag
-- have a parent (module) with the `Disabled` tag
-- depend on a phase with the `Disabled` tag
 
 ### Disabling systems
 Because pipelines use regular ECS queries, adding the `EcsDisabled`/`flecs::Disabled` tag to a system entity will exclude the system from the pipeline. An application can use the `ecs_enable` function or `entity::enable`/`entity::disable` methods to enable/disable a system:
@@ -1158,7 +1150,7 @@ world.system<Position>()
 
 ```cs
 // In the C# API, use the write method to indicate commands could be inserted.
-world.Routine<Position>()
+world.System<Position>()
     .Write<Transform>()
     .Each( /* ... */);
 ```
@@ -1211,7 +1203,7 @@ world.system<Position>()
 
 ```cs
 // In the C# API, use the read method to indicate a component is read using .Get
-world.Routine<Position>()
+world.System<Position>()
     .Read<Transform>()
     .Each( /* ... */);
 ```
@@ -1271,7 +1263,7 @@ ecs_system(ecs, {
 <li><b class="tab-title">C#</b>
 
 ```cs
-ecs.Routine("AssignPlate")
+ecs.System("AssignPlate")
     .With<Plate>()
     .NoReadonly() // disable readonly mode for this system
     .Iter((Iter it) => { /* ... */ })
@@ -1422,7 +1414,7 @@ world.system<Position>()
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.Routine<Position>()
+world.System<Position>()
   .MultiThreaded()
   .Each( /* ... */ );
 ```
@@ -1522,7 +1514,7 @@ world.system<Position, const Velocity>()
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.Routine<Position, Velocity>()
+world.System<Position, Velocity>()
     .Interval(1.0f) // Run at 1Hz
     .Each(...);
 ```
@@ -1578,7 +1570,7 @@ world.system<Position, const Velocity>()
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.Routine<Position, Velocity>()
+world.System<Position, Velocity>()
     .Rate(2) // Run every other frame
     .Each(...);
 ```
@@ -1653,7 +1645,7 @@ world.system<Position, const Velocity>()
 TimerEntity tickSource = world.Timer()
     .Interval(1.0f);
 
-world.Routine<Position, Velocity>()
+world.System<Position, Velocity>()
     .TickSource(tickSource) // Set tick source for system
     .Each(...);
 ```
@@ -1835,18 +1827,18 @@ flecs::entity each_hour = world.system("EachHour")
 
 ```cs
 // Tick at 1Hz
-Routine eachSecond = world.Routine("EachSecond")
+System_ eachSecond = world.System("EachSecond")
     .Interval(1.0f)
     .Iter((Iter it) => { /* ... */ });
 
 // Tick each minute
-Routine eachMinute = world.Routine("EachMinute")
+System_ eachMinute = world.System("EachMinute")
     .TickSource(eachSecond)
     .Rate(60)
     .Iter((Iter it) => { /* ... */ });
 
 // Tick each hour
-Routine eachHour = world.Routine("EachHour")
+System_ eachHour = world.System("EachHour")
     .TickSource(eachMinute)
     .Rate(60)
     .Iter((Iter it) => { /* ... */ });

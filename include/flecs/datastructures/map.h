@@ -27,15 +27,13 @@ typedef struct ecs_bucket_t {
     ecs_bucket_entry_t *first;
 } ecs_bucket_t;
 
-typedef struct ecs_map_t {
-    uint8_t bucket_shift;
-    bool shared_allocator;
+struct ecs_map_t {
     ecs_bucket_t *buckets;
     int32_t bucket_count;
-    int32_t count;
-    struct ecs_block_allocator_t *entry_allocator;
+    unsigned count : 26;
+    unsigned bucket_shift : 6;
     struct ecs_allocator_t *allocator;
-} ecs_map_t;
+};
 
 typedef struct ecs_map_iter_t {
     const ecs_map_t *map;
@@ -46,7 +44,6 @@ typedef struct ecs_map_iter_t {
 
 typedef struct ecs_map_params_t {
     struct ecs_allocator_t *allocator;
-    struct ecs_block_allocator_t entry_allocator;
 } ecs_map_params_t;
 
 /* Function/macro postfixes meaning:
@@ -61,10 +58,6 @@ FLECS_API
 void ecs_map_params_init(
     ecs_map_params_t *params,
     struct ecs_allocator_t *allocator);
-
-FLECS_API
-void ecs_map_params_fini(
-    ecs_map_params_t *params);
 
 /** Initialize new map. */
 FLECS_API
@@ -174,6 +167,7 @@ void ecs_map_copy(
 
 #define ecs_map_get_ref(m, T, k) ECS_CAST(T**, ecs_map_get(m, k))
 #define ecs_map_get_deref(m, T, k) ECS_CAST(T*, ecs_map_get_deref_(m, k))
+#define ecs_map_get_ptr(m, k) ECS_CAST(void*, ecs_map_get_deref_(m, k))
 #define ecs_map_ensure_ref(m, T, k) ECS_CAST(T**, ecs_map_ensure(m, k))
 
 #define ecs_map_insert_ptr(m, k, v) ecs_map_insert(m, k, ECS_CAST(ecs_map_val_t, ECS_PTR_CAST(uintptr_t, v)))

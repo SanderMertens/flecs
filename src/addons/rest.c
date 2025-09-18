@@ -5,7 +5,7 @@
 
 #include "../private_api.h"
 
-#include "script/script.h"
+#include "query_dsl/query_dsl.h"
 #include "pipeline/pipeline.h"
 
 #ifdef FLECS_REST
@@ -63,6 +63,16 @@ static ECS_DTOR(EcsRest, ptr, {
 
 static char *rest_last_err;
 static ecs_os_api_log_t rest_prev_log;
+static ecs_os_api_log_t rest_prev_fatal_log;
+
+static
+void flecs_rest_set_prev_log(
+    ecs_os_api_log_t prev_log,
+    bool try)
+{
+    rest_prev_log = try ? NULL : prev_log;
+    rest_prev_fatal_log = prev_log;
+}
 
 static 
 void flecs_rest_capture_log(
@@ -73,7 +83,20 @@ void flecs_rest_capture_log(
 {
     (void)file; (void)line;
 
+    if (level <= -4) {
+        /* Make sure to always log fatal errors */
+        if (rest_prev_fatal_log) {
+            ecs_log_enable_colors(true);
+            rest_prev_fatal_log(level, file, line, msg);
+            ecs_log_enable_colors(false);
+            return;
+        } else {
+            fprintf(stderr, "%s:%d: %s", file, line, msg);
+        }
+    }
+
 #ifdef FLECS_DEBUG
+    /* In debug mode, log unexpected errors to the console */
     if (level < 0) {
         /* Also log to previous log function in debug mode */
         if (rest_prev_log) {
@@ -84,7 +107,7 @@ void flecs_rest_capture_log(
     }
 #endif
 
-    if (!rest_last_err && level < 0) {
+    if (!rest_last_err && level <= -3) {
         rest_last_err = ecs_os_strdup(msg);
     }
 }
@@ -370,20 +393,21 @@ bool flecs_rest_put_component(
         return true;
     }
 
-    ecs_entity_t type = ecs_get_typeid(world, id);
-    if (!type) {
+    const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+    if (!ti) {
         flecs_reply_error(reply, "component '%s' is not a type", component);
         reply->code = 400;
         return true;
     }
 
-    void *ptr = ecs_ensure_id(world, e, id);
+    void *ptr = ecs_ensure_id(world, e, id, flecs_ito(size_t, ti->size));
     if (!ptr) {
         flecs_reply_error(reply, "failed to create component '%s'", component);
         reply->code = 500;
         return true;
     }
 
+    ecs_entity_t type = ti->component;
     if (!ecs_ptr_from_json(world, type, ptr, data, NULL)) {
         flecs_reply_error(reply, "invalid value for component '%s'", component);
         reply->code = 400;
@@ -498,48 +522,87 @@ bool flecs_rest_script(
     (void)world;
     (void)req;
     (void)reply;
+    (void)path;
 #ifdef FLECS_SCRIPT
     ecs_entity_t script = flecs_rest_entity_from_path(world, reply, path);
     if (!script) {
         script = ecs_entity(world, { .name = path });
     }
 
+    /* If true, check if file changed */
+    bool check_file = false;
+    flecs_rest_bool_param(req, "check_file", &check_file);
+
+    /* If true, save code to file */
+    bool save_file = false;
+    flecs_rest_bool_param(req, "save_file", &save_file);
+
     const char *code = ecs_http_get_param(req, "code");
     if (!code) {
-        flecs_reply_error(reply, "missing data parameter");
-        return true;
+        code = req->body;
     }
 
     bool try = false;
     flecs_rest_bool_param(req, "try", &try);
 
-    bool prev_color = ecs_log_enable_colors(false);
-    ecs_os_api_log_t prev_log = ecs_os_api.log_;
-    rest_prev_log = try ? NULL : prev_log;
-    ecs_os_api.log_ = flecs_rest_capture_log;
+    if (!code) {
+        code = "";
+    }
 
-    script = ecs_script(world, {
+    ecs_strbuf_appendlit(&reply->body, "{");
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+
+    if (s && s->filename && save_file) {
+        FILE *f;
+        ecs_os_fopen(&f, s->filename, "w");
+        fwrite(code, strlen(code), 1, f);
+        fclose(f);
+    }
+
+    if (s && check_file) {
+        ecs_strbuf_appendlit(&reply->body, "\"changed\": ");
+        if (s->filename) {
+            bool file_is_same;
+            char *file_code = flecs_load_from_file(s->filename);
+            if (!file_code) {
+                file_is_same = code[0] == '\0';
+            } else {
+                file_is_same = !ecs_os_strcmp(code, file_code);
+                ecs_os_free(file_code);
+            }
+
+            ecs_strbuf_appendstr(&reply->body, file_is_same ? "false" : "true");
+        } else {
+            ecs_strbuf_appendstr(&reply->body, "false");
+        }
+    }
+
+    /* Update script code */
+    ecs_script(world, {
         .entity = script,
         .code = code
     });
 
-    if (!script) {
-        char *err = flecs_rest_get_captured_log();
-        char *escaped_err = flecs_astresc('"', err);
-        if (escaped_err) {
-            flecs_reply_error(reply, escaped_err);
-        } else {
-            flecs_reply_error(reply, "error parsing script");
+    /* Refetch in case it moved around */
+    s = ecs_get(world, script, EcsScript);
+
+    if (!s || s->error) {
+        if (check_file) {
+            ecs_strbuf_appendlit(&reply->body, ", ");
         }
-        if (!try) {
-            reply->code = 400; /* bad request */
-        }
+
+        char *escaped_err = flecs_astresc('"', s->error);
+        ecs_strbuf_append(&reply->body, 
+            "\"error\": \"%s\"", escaped_err);
         ecs_os_free(escaped_err);
-        ecs_os_free(err);
+
+        if (!try) {
+            reply->code = 400;
+        }
     }
 
-    ecs_os_api.log_ = prev_log;
-    ecs_log_enable_colors(prev_color);
+    ecs_strbuf_appendlit(&reply->body, "}");
 
     return true;
 #else
@@ -554,7 +617,7 @@ void flecs_rest_reply_set_captured_log(
     char *err = flecs_rest_get_captured_log();
     if (err) {
         char *escaped_err = flecs_astresc('"', err);
-        flecs_reply_error(reply, escaped_err);
+        flecs_reply_error(reply, "%s", escaped_err);
         ecs_os_free(escaped_err);
         ecs_os_free(err);
     }
@@ -606,6 +669,9 @@ bool flecs_rest_reply_existing_query(
         return true;
     }
 
+    bool try = false;
+    flecs_rest_bool_param(req, "try", &try);
+
     ecs_query_t *q = NULL;
     const EcsPoly *poly_comp = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
     if (!poly_comp) {
@@ -632,12 +698,13 @@ bool flecs_rest_reply_existing_query(
 
     ecs_dbg_2("rest: request query '%s'", name);
     bool prev_color = ecs_log_enable_colors(false);
-    rest_prev_log = ecs_os_api.log_;
+    ecs_os_api_log_t prev_log = ecs_os_api.log_;
+    flecs_rest_set_prev_log(ecs_os_api.log_, try);
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     const char *vars = ecs_http_get_param(req, "vars");
     if (vars) {
-    #ifdef FLECS_SCRIPT
+    #ifdef FLECS_QUERY_DSL
         if (ecs_query_args_parse(q, &it, vars) == NULL) {
             flecs_rest_reply_set_captured_log(reply);
             return true;
@@ -652,7 +719,7 @@ bool flecs_rest_reply_existing_query(
 
     flecs_rest_iter_to_reply(req, reply, q, &it);
 
-    ecs_os_api.log_ = rest_prev_log;
+    ecs_os_api.log_ = prev_log;
     ecs_log_enable_colors(prev_color);    
 
     return true;
@@ -682,7 +749,7 @@ bool flecs_rest_get_query(
     ecs_dbg_2("rest: request query '%s'", expr);
     bool prev_color = ecs_log_enable_colors(false);
     ecs_os_api_log_t prev_log = ecs_os_api.log_;
-    rest_prev_log = try ? NULL : prev_log;
+    flecs_rest_set_prev_log(ecs_os_api.log_, try);
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     ecs_query_t *q = ecs_query(world, { .expr = expr });
@@ -790,7 +857,7 @@ void flecs_world_stats_to_json(
     ecs_strbuf_t *reply,
     const EcsWorldStats *monitor_stats)
 {
-    const ecs_world_stats_t *stats = &monitor_stats->stats;
+    const ecs_world_stats_t *stats = monitor_stats->stats;
 
     ecs_strbuf_list_push(reply, "{", ",");
     ECS_GAUGE_APPEND(reply, stats, entities.count, "Alive entity ids in the world");
@@ -871,7 +938,7 @@ void flecs_system_stats_to_json(
 {
     ecs_strbuf_list_push(reply, "{", ",");
     ecs_strbuf_list_appendlit(reply, "\"name\":\"");
-    ecs_get_path_w_sep_buf(world, 0, system, ".", NULL, reply);
+    ecs_get_path_w_sep_buf(world, 0, system, ".", NULL, reply, true);
     ecs_strbuf_appendch(reply, '"');
 
     bool disabled = ecs_has_id(world, system, EcsDisabled);
@@ -977,15 +1044,17 @@ void flecs_pipeline_stats_to_json(
     ecs_strbuf_list_push(&reply->body, "[", ",");
 
     ecs_pipeline_op_t *ops = ecs_vec_first_t(&p->state->ops, ecs_pipeline_op_t);
-    ecs_entity_t *systems = ecs_vec_first_t(&p->state->systems, ecs_entity_t);
+    ecs_system_t **systems = ecs_vec_first_t(&p->state->systems, ecs_system_t*);
     ecs_sync_stats_t *syncs = ecs_vec_first_t(
         &pstats->sync_points, ecs_sync_stats_t);
 
     int32_t s, o, op_count = ecs_vec_count(&p->state->ops);
+
     for (o = 0; o < op_count; o ++) {
         ecs_pipeline_op_t *op = &ops[o];
         for (s = op->offset; s < (op->offset + op->count); s ++) {
-            ecs_entity_t system = systems[s];
+            ecs_system_t *system_data = systems[s];
+            ecs_entity_t system = system_data->query->entity;
 
             if (!ecs_is_alive(world, system)) {
                 continue;
@@ -1083,16 +1152,17 @@ void flecs_rest_reply_table_append_memory(
     const ecs_table_t *table)
 {
     int32_t used = 0, allocated = 0;
+    int32_t count = ecs_table_count(table), size = ecs_table_size(table);
 
-    used += table->data.entities.count * ECS_SIZEOF(ecs_entity_t);
-    allocated += table->data.entities.size * ECS_SIZEOF(ecs_entity_t);
+    used += count * ECS_SIZEOF(ecs_entity_t);
+    allocated += size * ECS_SIZEOF(ecs_entity_t);
 
     int32_t i, storage_count = table->column_count;
     ecs_column_t *columns = table->data.columns;
 
     for (i = 0; i < storage_count; i ++) {
-        used += columns[i].data.count * columns[i].ti->size;
-        allocated += columns[i].data.size * columns[i].ti->size;
+        used += count * columns[i].ti->size;
+        allocated += size * columns[i].ti->size;
     }
 
     ecs_strbuf_list_push(reply, "{", ",");
@@ -1533,6 +1603,14 @@ ecs_http_server_t* ecs_rest_server_init(
     srv_ctx->srv = srv;
     srv_ctx->rc = 1;
     srv_ctx->srv = srv;
+
+    /* Set build info on world so clients know which version they're using */
+    ecs_id_t build_info = ecs_lookup(world, "flecs.core.BuildInfo");
+    if (build_info) {
+        const ecs_build_info_t *bi = ecs_get_build_info();
+        ecs_set_id(world, EcsWorld, build_info, sizeof(ecs_build_info_t), bi);
+    }
+
     return srv;
 }
 

@@ -1,0 +1,53 @@
+"A fast entity component system (ECS) for C & C++"
+module(name = "flecs")
+
+git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+    name = "bake",
+    remote = "https://github.com/SanderMertens/bake.git",
+    commit = "10c02123d6e3e200578128d73c3fa3bb996dff4f",
+    build_file_content = """
+cc_library(
+    name = "driver-test",
+    visibility = ["//visibility:public"],
+    deps = [":util", ":bake"],
+    defines = ["__BAKE__", "bake_test_EXPORTS"],
+
+    srcs = glob(["drivers/test/src/**/*.c"]),
+    hdrs = glob(["drivers/test/include/**/*.h"]),
+    includes = ["drivers/test/include"],
+)
+
+cc_library(
+    name = "bake",
+    visibility = ["//visibility:public"],
+    deps = [":util"],
+
+    srcs = glob(["src/*.c", "src/*.h"]),
+    hdrs = glob(["include/*.h", "include/bake/*.h"]),
+    includes = ["include"],
+)
+
+cc_library(
+    name = "util",
+    visibility = ["//visibility:public"],
+    defines = ["__BAKE__", "_XOPEN_SOURCE=600", "bake_util_EXPORTS", "UT_IMPL"],
+
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": ["Dbghelp.lib", "Shell32.lib", "Shlwapi.lib"],
+        "//conditions:default": ["-lrt -lpthread -ldl"],
+    }),
+
+    srcs = glob(["util/src/*.c"]) + select({
+        "@bazel_tools//src/conditions:windows": glob(["util/src/win/*.c"]),
+        "//conditions:default": glob(["util/src/posix/*.c"]),
+    }),
+    hdrs = glob(["util/include/*.h", "util/include/bake-util/*.h"]) + select({
+        "@bazel_tools//src/conditions:windows": glob(["util/include/bake-util/win/*.h"]),
+        "//conditions:default": glob(["util/include/bake-util/posix/*.h"]),
+    }),
+    includes = ["util/include"],
+)
+""",
+)

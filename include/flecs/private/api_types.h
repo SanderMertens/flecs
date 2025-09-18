@@ -24,7 +24,10 @@ extern "C" {
 typedef struct ecs_data_t ecs_data_t;
 
 /* Cached query table data */
-typedef struct ecs_query_cache_table_match_t ecs_query_cache_table_match_t;
+typedef struct ecs_query_cache_match_t ecs_query_cache_match_t;
+
+/* Cached query group */
+typedef struct ecs_query_cache_group_t ecs_query_cache_group_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
@@ -45,6 +48,7 @@ struct ecs_observable_t {
     ecs_event_record_t on_set;
     ecs_event_record_t on_wildcard;
     ecs_sparse_t events;  /* sparse<event, ecs_event_record_t> */
+    uint64_t last_observer_id;
 };
 
 /** Range in table */
@@ -67,13 +71,14 @@ typedef struct ecs_var_t {
 
 /** Cached reference. */
 struct ecs_ref_t {
-    ecs_entity_t entity;    /* Entity */
-    ecs_entity_t id;        /* Component id */
-    uint64_t table_id;      /* Table id for detecting ABA issues */
-    struct ecs_table_record_t *tr; /* Table record for component */
-    ecs_record_t *record;   /* Entity index record */
+    ecs_entity_t entity;         /* Entity */
+    ecs_entity_t id;             /* Component id */
+    uint64_t table_id;           /* Table id for detecting ABA issues */
+    uint32_t table_version_fast; /* Fast change detection w/false positives */
+    uint16_t table_version;      /* Change detection */
+    ecs_record_t *record;        /* Entity index record */
+    void *ptr;                   /* Cached component pointer */
 };
-
 
 /* Page-iterator specific data */
 typedef struct ecs_page_iter_t {
@@ -90,8 +95,9 @@ typedef struct ecs_worker_iter_t {
 
 /* Convenience struct to iterate table array for id */
 typedef struct ecs_table_cache_iter_t {
-    struct ecs_table_cache_hdr_t *cur, *next;
-    struct ecs_table_cache_hdr_t *next_list;
+    const struct ecs_table_cache_hdr_t *cur, *next;
+    bool iter_fill;
+    bool iter_empty;
 } ecs_table_cache_iter_t;
 
 /** Each iterator */
@@ -112,37 +118,24 @@ typedef struct ecs_query_op_profile_t {
 
 /** Query iterator */
 typedef struct ecs_query_iter_t {
-    const ecs_query_t *query;
-    struct ecs_var_t *vars;               /* Variable storage */
-    const struct ecs_query_var_t *query_vars;
-    const struct ecs_query_op_t *ops;
-    struct ecs_query_op_ctx_t *op_ctx;    /* Operation-specific state */
-    ecs_query_cache_table_match_t *node, *prev, *last; /* For cached iteration */
+    struct ecs_var_t *vars;                   /* Variable storage */
+    const struct ecs_query_var_t *query_vars; /* Query variable metadata */
+    const struct ecs_query_op_t *ops;         /* Query plan operations */
+    struct ecs_query_op_ctx_t *op_ctx;        /* Operation-specific state */
     uint64_t *written;
-    int32_t skip_count;
+
+    /* Cached iteration */
+    ecs_query_cache_group_t *group;           /* Currently iterated group */
+    ecs_vec_t *tables;                        /* Currently iterated table vector (vec<ecs_query_cache_match_t>) */
+    ecs_vec_t *all_tables;                    /* Different from .tables if iterating wildcard matches (vec<ecs_query_cache_match_t>) */
+    ecs_query_cache_match_t *elem;            /* Current cache entry */
+    int32_t cur, all_cur;                     /* Indices into tables & all_tables */
 
     ecs_query_op_profile_t *profile;
 
-    int16_t op;
-    int16_t sp;
+    int16_t op;                               /* Currently iterated query plan operation (index into ops) */
+    bool iter_single_group;
 } ecs_query_iter_t;
-
-/* Bits for tracking whether a cache was used/whether the array was allocated.
- * Used by flecs_iter_init, flecs_iter_validate and ecs_iter_fini. 
- * Constants are named to enable easy macro substitution. */
-#define flecs_iter_cache_ids           (1u << 0u)
-#define flecs_iter_cache_trs           (1u << 1u)
-#define flecs_iter_cache_sources       (1u << 2u)
-#define flecs_iter_cache_ptrs          (1u << 3u)
-#define flecs_iter_cache_variables     (1u << 4u)
-#define flecs_iter_cache_all           (255)
-
-/* Inline iterator arrays to prevent allocations for small array sizes */
-typedef struct ecs_iter_cache_t {
-    ecs_stack_cursor_t *stack_cursor; /* Stack cursor to restore to */
-    ecs_flags8_t used;       /* For which fields is the cache used */
-    ecs_flags8_t allocated;  /* Which fields are allocated */
-} ecs_iter_cache_t;
 
 /* Private iterator data. Used by iterator implementations to keep track of
  * progress & to provide builtin storage. */
@@ -155,12 +148,18 @@ typedef struct ecs_iter_private_t {
     } iter;                       /* Iterator specific data */
 
     void *entity_iter;            /* Query applied after matching a table */
-    ecs_iter_cache_t cache;       /* Inline arrays to reduce allocations */
+    ecs_stack_cursor_t *stack_cursor; /* Stack cursor to restore to */
 } ecs_iter_private_t;
+
+/* Data structures that store the command queue */
+typedef struct ecs_commands_t {
+    ecs_vec_t queue;
+    ecs_stack_t stack;          /* Temp memory used by deferred commands */
+    ecs_sparse_t entries;       /* <entity, op_entry_t> - command batching */
+} ecs_commands_t;
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

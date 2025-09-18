@@ -4,7 +4,6 @@
  */
 
 #include "json.h"
-#include <ctype.h>
 
 #ifdef FLECS_JSON
 
@@ -489,6 +488,11 @@ void flecs_json_string_escape(
     ecs_strbuf_t *buf,
     const char *value)
 {
+    if (!value) {
+        ecs_strbuf_appendlit(buf, "null");
+        return;
+    }
+
     ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
     if (length == ecs_os_strlen(value)) {
         ecs_strbuf_appendch(buf, '"');
@@ -528,7 +532,7 @@ void flecs_json_path(
     ecs_entity_t e)
 {
     ecs_strbuf_appendch(buf, '"');
-    ecs_get_path_w_sep_buf(world, 0, e, ".", "", buf);
+    ecs_get_path_w_sep_buf(world, 0, e, ".", "", buf, true);
     ecs_strbuf_appendch(buf, '"');
 }
 
@@ -611,15 +615,15 @@ void flecs_json_id(
         ecs_entity_t first = ecs_pair_first(world, id);
         ecs_entity_t second = ecs_pair_second(world, id);
         ecs_strbuf_appendch(buf, '"');
-        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf);
+        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf, true);
         ecs_strbuf_appendch(buf, '"');
         ecs_strbuf_appendch(buf, ',');
         ecs_strbuf_appendch(buf, '"');
-        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf);
+        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf, true);
         ecs_strbuf_appendch(buf, '"');
     } else {
         ecs_strbuf_appendch(buf, '"');
-        ecs_get_path_w_sep_buf(world, 0, id & ECS_COMPONENT_MASK, ".", "", buf);
+        ecs_get_path_w_sep_buf(world, 0, id & ECS_COMPONENT_MASK, ".", "", buf, true);
         ecs_strbuf_appendch(buf, '"');
     }
 
@@ -636,12 +640,12 @@ void flecs_json_id_member_fullpath(
         ecs_strbuf_appendch(buf, '(');
         ecs_entity_t first = ecs_pair_first(world, id);
         ecs_entity_t second = ecs_pair_second(world, id);
-        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf);
+        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf, true);
         ecs_strbuf_appendch(buf, ',');
-        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf);
+        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf, true);
         ecs_strbuf_appendch(buf, ')');
     } else {
-        ecs_get_path_w_sep_buf(world, 0, id & ECS_COMPONENT_MASK, ".", "", buf);
+        ecs_get_path_w_sep_buf(world, 0, id & ECS_COMPONENT_MASK, ".", "", buf, true);
     }
 }
 
@@ -651,6 +655,18 @@ void flecs_json_id_member(
     ecs_id_t id,
     bool fullpath)
 {
+    ecs_id_t flags = id & ECS_ID_FLAGS_MASK;
+
+    if (flags & ECS_AUTO_OVERRIDE) {
+        ecs_strbuf_appendlit(buf, "auto_override|");
+        id &= ~ECS_AUTO_OVERRIDE;
+    }
+
+    if (flags & ECS_TOGGLE) {
+        ecs_strbuf_appendlit(buf, "toggle|");
+        id &= ~ECS_TOGGLE;
+    }
+
     if (fullpath) {
         flecs_json_id_member_fullpath(buf, world, id);
         return;
@@ -683,7 +699,7 @@ void flecs_json_id_member(
 }
 
 ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
-    ecs_meta_type_op_kind_t kind) 
+    ecs_meta_op_kind_t kind) 
 {
     return kind - EcsOpPrimitive;
 }

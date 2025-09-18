@@ -37,7 +37,7 @@ ecs_trav_down_t* flecs_query_get_down_cache(
     ecs_trav_up_cache_t *cache,
     ecs_entity_t trav,
     ecs_entity_t entity,
-    ecs_id_record_t *idr_with,
+    ecs_component_record_t *cr_with,
     bool self,
     bool empty);
 
@@ -52,8 +52,8 @@ ecs_trav_up_t* flecs_query_get_up_cache(
     ecs_table_t *table,
     ecs_id_t with,
     ecs_entity_t trav,
-    ecs_id_record_t *idr_with,
-    ecs_id_record_t *idr_trav);
+    ecs_component_record_t *cr_with,
+    ecs_component_record_t *cr_trav);
 
 /* Free up traversal cache */
 void flecs_query_up_cache_fini(

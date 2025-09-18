@@ -10,14 +10,6 @@
 #ifdef FLECS_TIMER
 
 static
-void AddTickSource(ecs_iter_t *it) {
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_set(it->world, it->entities[i], EcsTickSource, {0});
-    }
-}
-
-static
 void ProgressTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_field(it, EcsTimer, 0);
     EcsTickSource *tick_source = ecs_field(it, EcsTickSource, 1);
@@ -312,16 +304,8 @@ void FlecsTimerImport(
         .ctor = flecs_default_ctor
     });
 
-    /* Add EcsTickSource to timers and rate filters */
-    ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "AddTickSource", .add = ecs_ids( ecs_dependson(EcsPreFrame) )}),
-        .query.terms = {
-            { .id = ecs_id(EcsTimer), .oper = EcsOr },
-            { .id = ecs_id(EcsRateFilter), .oper = EcsAnd },
-            { .id = ecs_id(EcsTickSource), .oper = EcsNot, .inout = EcsOut}
-        },
-        .callback = AddTickSource
-    });
+    ecs_add_pair(world, ecs_id(EcsTimer), EcsWith, ecs_id(EcsTickSource));
+    ecs_add_pair(world, ecs_id(EcsRateFilter), EcsWith, ecs_id(EcsTickSource));
 
     /* Timer handling */
     ecs_system(world, {

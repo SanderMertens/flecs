@@ -41,13 +41,13 @@ int main() {
 
     // Because of the IsA relationship, the instance now shares the Defense
     // component with the prefab, and can be retrieved as a regular component:
-    const Defense *d_inst = inst.get<Defense>();
-    std::cout << "defense: " << d_inst->value << "\n";
+    const Defense& d_inst = inst.get<Defense>();
+    std::cout << "defense: " << d_inst.value << "\n";
 
     // Because the component is shared, changing the value on the prefab will
     // also change the value for the instance:
     SpaceShip.set<Defense>({ 100 });
-    std::cout << "defense after set: " << d_inst->value << "\n";
+    std::cout << "defense after set: " << d_inst.value << "\n";
 
     // Prefab components can be iterated like regular components:
     ecs.each([](flecs::entity e, Defense& d) {

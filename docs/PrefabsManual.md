@@ -55,7 +55,7 @@ flecs::entity inst_1 = world.entity().is_a(SpaceShip);
 flecs::entity inst_2 = world.entity().is_a(SpaceShip);
 
 // Get instantiated component
-const Defense *d = inst_1.get<Defense>();
+const Defense& d = inst_1.get<Defense>();
 ```
 
 </li>
@@ -105,7 +105,7 @@ println!("Defense value: {}", defense.value);
 The following sections go over the different aspects of the prefab feature.
 
 ## The Prefab tag
-Prefabs are regular entities with as only difference that prefabs by default are not matched by queries. This allows prefab entities to coexist with regular entities in the same world without impacting game logic. The mechanism used to exclude prefabs from queries is a builtin `Prefab` tag. The following example shows how to create a prefab:
+Prefabs are regular entities; the only difference is that queries don't match them by default. This allows prefab entities to coexist with regular entities in the same world without impacting game logic. The mechanism used to exclude prefabs from queries is a builtin `Prefab` tag. The following example shows how to create a prefab:
 
 <div class="flecs-snippet-tabs">
 <ul>
@@ -191,12 +191,16 @@ world.QueryBuilder<Position>()
 
 ```rust
 // Only match prefab entities
-world.query::<&Position>().with::<flecs::Prefab>().build();
+world.query::<&Position>()
+    .with::<flecs::Prefab>()
+    .build();
 ```
 
 </li>
 </ul>
 </div>
+
+> Prefabs are only ignored by queries when they are matched on the `$this` variable, which is the default for query terms. If a prefab component is matched through query traversal, a fixed term source or variable non-`$this` source, the query will not ignore the prefab.
 
 To match both regular and prefab entities, make the prefab term optional:
 
@@ -239,11 +243,10 @@ world.QueryBuilder<Position>()
 
 ```rust
 // Only match prefab entities
-world
-.query::<&Position>()
-.with::<flecs::Prefab>()
-.optional()
-.build();
+world.query::<&Position>()
+    .with::<flecs::Prefab>()
+    .optional()
+    .build();
 ```
 
 </li>
@@ -290,10 +293,9 @@ world.QueryBuilder()
 
 ```rust
 // Only match prefab entities
-world
-.query::<&Position>()
-.query_flags(QueryFlags::MatchPrefab)
-.build();
+world.query::<&Position>()
+    .query_flags(QueryFlags::MatchPrefab)
+    .build();
 ```
 
 </li>
@@ -353,10 +355,10 @@ flecs::entity SpaceShip = world.prefab()
 flecs::entity inst = world.entity().is_a(SpaceShip);
 
 // Component is retrieved from instance
-const Health *health = inst.get<Health>();
+const Health& health = inst.get<Health>();
 
 // Component is retrieved from prefab
-const Defense *defense = inst.get<Defense>();
+const Defense& defense = inst.get<Defense>();
 ```
 
 </li>
@@ -834,8 +836,8 @@ flecs::entity Freighter = world.prefab("Freighter")
 
 // Create prefab instance
 flecs::entity inst = world.entity().is_a(Freighter);
-const Health *health = inst.get<Health>(); // 150
-const Defense *defense = inst.get<Defense>(); // 50
+const Health& health = inst.get<Health>(); // 150
+const Defense& defense = inst.get<Defense>(); // 50
 ```
 
 </li>
@@ -969,7 +971,7 @@ When a prefab hierarchy is instantiated often code will want to refer to a speci
 
 While it is possible to lookup a child by name and store it on a component, this adds boilerplate and reduces efficiency. Prefab slots make this easier.
 
-A prefab child can be created as a slot. Slots are created as relationships on the instance, with as target of the relationship the instantiated child. The slot is added as a union relationship which doesn't fragment archetypes.
+A prefab child can be created as a slot. Slots are created as relationships on the instance, with as target of the relationship the instantiated child. The slot is added as a `DontFragment` relationship which doesn't fragment archetypes.
 
 The following example shows how to create and use a prefab slot:
 

@@ -9,7 +9,8 @@ void New_empty(void) {
 
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
-    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     ecs_fini(world);
 }
@@ -131,7 +132,8 @@ void New_new_id(void) {
 
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
-    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     ecs_fini(world);
 }
@@ -142,7 +144,8 @@ void New_new_component_id(void) {
     ecs_entity_t e = ecs_new_low_id(world);
     test_assert(e != 0);
     test_assert(e < FLECS_HI_COMPONENT_ID);
-    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     ecs_fini(world);
 }
@@ -155,7 +158,8 @@ void New_new_component_id_skip_used(void) {
     ecs_entity_t e = ecs_new_low_id(world);
     test_assert(e != 0);
     test_assert(e < FLECS_HI_COMPONENT_ID);
-    test_assert(!ecs_get_type(world, e));
+    test_assert(ecs_get_type(world, e) != NULL);
+    test_int(ecs_get_type(world, e)->count, 0);
 
     /* Explicitly set an id that is one above the last issued id */
     ecs_make_alive(world, e + 1);
@@ -164,7 +168,8 @@ void New_new_component_id_skip_used(void) {
     ecs_entity_t e2 = ecs_new_low_id(world);
     test_assert(e2 != 0);
     test_assert(e2 < FLECS_HI_COMPONENT_ID);
-    test_assert(!ecs_get_type(world, e2));    
+    test_assert(ecs_get_type(world, e2) != NULL);
+    test_int(ecs_get_type(world, e2)->count, 0);  
     test_assert(e2 != (e + 1));
 
     ecs_fini(world);
@@ -188,12 +193,14 @@ void New_new_component_id_skip_to_hi_id(void) {
     ecs_entity_t e2 = ecs_new_low_id(world);
     test_assert(e2 != 0);
     test_assert(e2 > FLECS_HI_COMPONENT_ID);
-    test_assert(!ecs_get_type(world, e2));
+    test_assert(ecs_get_type(world, e2) != NULL);
+    test_int(ecs_get_type(world, e2)->count, 0);
 
     ecs_entity_t e3 = ecs_new(world);
     test_assert(e3 != e2);
     test_assert(e3 > e2);
-    test_assert(!ecs_get_type(world, e3));
+    test_assert(ecs_get_type(world, e3) != NULL);
+    test_int(ecs_get_type(world, e3)->count, 0);
 
     ecs_fini(world);
 }
@@ -348,6 +355,7 @@ void New_new_w_id_w_with_defer_w_scope(void) {
 
     ecs_entity_t e = ecs_new_w_id(world, Tag2);
     test_assert(e != 0);
+    test_assert(ecs_get_table(world, e) != NULL);
 
     test_assert(!ecs_has(world, e, Tag));
     test_assert(!ecs_has(world, e, Tag2));
@@ -460,6 +468,93 @@ void New_new_w_type_w_with_defer_w_scope(void) {
 
     test_int(ecs_set_with(world, 0), Tag);
     test_int(ecs_set_scope(world, 0), parent);
+
+    ecs_fini(world);
+}
+
+void New_new_w_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, Foo);
+    table = ecs_table_add_id(world, table, Bar);
+
+    ecs_entity_t e = ecs_new_w_table(world, table);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(table == ecs_get_table(world, e));
+
+    ecs_fini(world);
+}
+
+void New_new_w_null_table(void) {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    test_expect_abort();
+    ecs_new_w_table(world, NULL);
+}
+
+void New_new_w_table_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+    table = ecs_table_add_id(world, table, Bar);
+
+    ecs_entity_t e = ecs_new_w_table(world, table);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(ecs_get(world, e, Position) != NULL);
+    test_assert(table == ecs_get_table(world, e));
+
+    ecs_fini(world);
+}
+
+void New_new_w_table_sparse_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+    table = ecs_table_add_id(world, table, Bar);
+
+    ecs_entity_t e = ecs_new_w_table(world, table);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(ecs_get(world, e, Position) != NULL);
+    test_assert(table == ecs_get_table(world, e));
+
+    ecs_fini(world);
+}
+
+void New_new_w_table_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_pair(EcsIsA, base));
+
+    ecs_entity_t inst = ecs_new_w_table(world, table);
+    test_assert(ecs_has(world, inst, Position));
+    test_assert(ecs_has_pair(world, inst, EcsIsA, base));
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }

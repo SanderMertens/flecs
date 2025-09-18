@@ -44,7 +44,7 @@ void ImplicitComponents_set(void) {
 
     test_str(e.type().str().c_str(), "Position");
     test_assert(e.has<Position>());
-    auto *p = e.get<Position>();
+    auto *p = e.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 
@@ -57,7 +57,7 @@ void ImplicitComponents_get(void) {
 
     auto e = world.entity();
 
-    auto *p = e.get<Position>();
+    auto *p = e.try_get<Position>();
     test_assert(p == nullptr);
 
     auto position = world.lookup("Position");
@@ -188,7 +188,7 @@ void ImplicitComponents_system_const(void) {
 
     test_int(count, 1);
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
@@ -223,7 +223,7 @@ void ImplicitComponents_reinit(void) {
 
     auto comp_1 = world.component<Position>();
 
-    test_assert(flecs::type_id<Position>() == comp_1.id());
+    test_assert(world.id<Position>() == comp_1.id());
 
     // Reset component id using internals (currently the only way to simulate
     // registration across translation units)
@@ -232,7 +232,7 @@ void ImplicitComponents_reinit(void) {
     world.entity()
         .add<Position>();
 
-    test_assert(flecs::type_id<Position>() == comp_1.id());
+    test_assert(world.id<Position>() == comp_1.id());
 }
 
 namespace Foo {
@@ -247,7 +247,7 @@ void ImplicitComponents_reinit_scoped(void) {
 
     auto comp_1 = world.component<Foo::Position>();
 
-    test_assert(flecs::type_id<Foo::Position>() == comp_1.id());
+    test_assert(world.id<Foo::Position>() == comp_1.id());
 
     // Reset component id using internals (currently the only way to simulate
     // registration across translation units)
@@ -256,7 +256,7 @@ void ImplicitComponents_reinit_scoped(void) {
     world.entity()
         .add<Foo::Position>();
 
-    test_assert(flecs::type_id<Foo::Position>() == comp_1.id());
+    test_assert(world.id<Foo::Position>() == comp_1.id());
 }
 
 static int position_ctor_invoked = 0;
@@ -270,7 +270,7 @@ void ImplicitComponents_reinit_w_lifecycle(void) {
 
     auto comp_1 = world.component<Position>();
 
-    test_assert(flecs::type_id<Position>() == comp_1.id());
+    test_assert(world.id<Position>() == comp_1.id());
 
     // Explicitly register constructor
     ecs_type_hooks_t cl{};
@@ -291,7 +291,7 @@ void ImplicitComponents_reinit_w_lifecycle(void) {
     test_assert(e.has<Position>());
     test_int(position_ctor_invoked, 2);
 
-    test_assert(flecs::type_id<Position>() == comp_1.id());
+    test_assert(world.id<Position>() == comp_1.id());
 }
 
 void ImplicitComponents_first_use_in_system(void) {
@@ -365,7 +365,7 @@ void ImplicitComponents_use_const(void) {
 
     test_assert(e.has<Position>());
 
-    const Position *p = e.get<Position>();
+    const Position *p = e.try_get<Position>();
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
@@ -387,7 +387,7 @@ void ImplicitComponents_use_const_w_stage(void) {
 
     test_assert(e.has<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -411,7 +411,7 @@ void ImplicitComponents_use_const_w_threads(void) {
 
     test_assert(e.has<Velocity>());
 
-    const Velocity *v = e.get<Velocity>();
+    const Velocity *v = e.try_get<Velocity>();
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -421,9 +421,9 @@ void ImplicitComponents_implicit_base(void) {
 
     auto v = world.use<Position>();
 
-    test_int(v.id(), flecs::type_id<Position>());
-    test_int(v.id(), flecs::type_id<const Position>());
-    test_int(v.id(), flecs::type_id<Position&>());
+    test_int(v.id(), world.id<Position>());
+    test_int(v.id(), world.id<const Position>());
+    test_int(v.id(), world.id<Position&>());
 }
 
 void ImplicitComponents_implicit_const(void) {
@@ -431,9 +431,9 @@ void ImplicitComponents_implicit_const(void) {
 
     auto v = world.use<const Position>();
 
-    test_int(v.id(), flecs::type_id<Position>());
-    test_int(v.id(), flecs::type_id<const Position>());
-    test_int(v.id(), flecs::type_id<Position&>());
+    test_int(v.id(), world.id<Position>());
+    test_int(v.id(), world.id<const Position>());
+    test_int(v.id(), world.id<Position&>());
 }
 
 void ImplicitComponents_implicit_ref(void) {
@@ -441,9 +441,9 @@ void ImplicitComponents_implicit_ref(void) {
 
     auto v = world.use<Position&>();
 
-    test_int(v.id(), flecs::type_id<Position>());
-    test_int(v.id(), flecs::type_id<const Position>());
-    test_int(v.id(), flecs::type_id<Position&>());
+    test_int(v.id(), world.id<Position>());
+    test_int(v.id(), world.id<const Position>());
+    test_int(v.id(), world.id<Position&>());
 }
 
 void ImplicitComponents_implicit_const_ref(void) {
@@ -451,9 +451,9 @@ void ImplicitComponents_implicit_const_ref(void) {
 
     auto v = world.use<const Position&>();
 
-    test_int(v.id(), flecs::type_id<Position>());
-    test_int(v.id(), flecs::type_id<const Position>());
-    test_int(v.id(), flecs::type_id<Position&>());
+    test_int(v.id(), world.id<Position>());
+    test_int(v.id(), world.id<const Position>());
+    test_int(v.id(), world.id<Position&>());
 }
 
 
@@ -465,10 +465,24 @@ void ImplicitComponents_vector_elem_type(void) {
         test_assert(v != 0);
     }
 
-    flecs::reset();
-
     {
         flecs::entity v = world.vector<int>();
         test_assert(v != 0);
     }
+}
+
+struct EmptyType { };
+
+void ImplicitComponents_tag_has_component(void) {
+    flecs::world world;
+
+    flecs::id c = world.id<EmptyType>();
+    test_assert(c.entity().has<flecs::Component>());
+}
+
+void ImplicitComponents_component_has_component(void) {
+    flecs::world world;
+
+    flecs::id c = world.id<Position>();
+    test_assert(c.entity().has<flecs::Component>());
 }

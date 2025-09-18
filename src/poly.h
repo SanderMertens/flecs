@@ -6,7 +6,38 @@
 #ifndef FLECS_POLY_H
 #define FLECS_POLY_H
 
-#include <stddef.h>
+/* Tags associated with poly for (Poly, tag) components */
+#define ecs_world_t_tag     invalid
+#define ecs_stage_t_tag     invalid
+#define ecs_query_t_tag     EcsQuery
+#define ecs_observer_t_tag  EcsObserver
+
+/* Mixin kinds */
+typedef enum ecs_mixin_kind_t {
+    EcsMixinWorld,
+    EcsMixinEntity,
+    EcsMixinObservable,
+    EcsMixinDtor,
+    EcsMixinMax
+} ecs_mixin_kind_t;
+
+/* The mixin array contains pointers to mixin members for different kinds of
+ * flecs objects. This allows the API to retrieve data from an object regardless
+ * of its type. Each mixin array is only stored once per type */
+struct ecs_mixins_t {
+    const char *type_name; /* Include name of mixin type so debug code doesn't
+                            * need to know about every object */
+    ecs_size_t elems[EcsMixinMax];                        
+};
+
+/* Mixin tables */
+extern ecs_mixins_t ecs_world_t_mixins;
+extern ecs_mixins_t ecs_stage_t_mixins;
+extern ecs_mixins_t ecs_query_t_mixins;
+extern ecs_mixins_t ecs_observer_t_mixins;
+
+/* Types that have no mixins */
+#define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
 
 /* Initialize poly */
 void* flecs_poly_init_(
@@ -43,6 +74,7 @@ EcsPoly* flecs_poly_bind_(
 #define flecs_poly_bind(world, entity, T) \
     flecs_poly_bind_(world, entity, T##_tag)
 
+/* Send modified event for (Poly, Tag) pair. */
 void flecs_poly_modified_(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -60,6 +92,7 @@ const EcsPoly* flecs_poly_bind_get_(
 #define flecs_poly_bind_get(world, entity, T) \
     flecs_poly_bind_get_(world, entity, T##_tag)
 
+/* Get (Poly, Tag) poly object from entity. */
 ecs_poly_t* flecs_poly_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -75,17 +108,18 @@ ecs_poly_t* flecs_poly_get_(
         ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);\
         const ecs_header_t *hdr = (const ecs_header_t *)object;\
         const char *type_name = hdr->mixins->type_name;\
-        ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, type_name);\
         ecs_assert(hdr->type == ty##_magic, ECS_INVALID_PARAMETER, type_name);\
     } while (0)
 #else
 #define flecs_poly_assert(object, ty)
 #endif
 
-ecs_observable_t* ecs_get_observable(
+/* Get observable mixin from poly object. */
+ecs_observable_t* flecs_get_observable(
     const ecs_poly_t *object);
 
-flecs_poly_dtor_t* ecs_get_dtor(
+/* Get dtor mixin from poly object. */
+flecs_poly_dtor_t* flecs_get_dtor(
     const ecs_poly_t *poly);
 
 #endif

@@ -28,6 +28,6 @@ int main(int, char *[]) {
         .set<TypeWithEnum>({Green});
 
     // Convert TypeWithEnum component to flecs expression string
-    const TypeWithEnum *ptr = e.get<TypeWithEnum>();
-    std::cout << ecs.to_expr(ptr).c_str() << "\n"; // {color: Green}
+    const TypeWithEnum& c = e.get<TypeWithEnum>();
+    std::cout << ecs.to_expr(&c).c_str() << "\n"; // {color: Green}
 }

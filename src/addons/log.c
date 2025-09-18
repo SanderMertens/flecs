@@ -7,7 +7,81 @@
 
 #ifdef FLECS_LOG
 
-#include <ctype.h>
+static char *flecs_log_last_err = NULL;
+static ecs_os_api_log_t flecs_log_prev_log = NULL;
+static ecs_os_api_log_t flecs_log_prev_fatal_log = NULL;
+static bool flecs_log_prev_color = false;
+static int flecs_log_prev_level = 0;
+
+static
+void flecs_set_prev_log(
+    ecs_os_api_log_t prev_log,
+    bool try)
+{
+    flecs_log_prev_log = try ? NULL : prev_log;
+    flecs_log_prev_fatal_log = prev_log;
+}
+
+static 
+void flecs_log_capture_log(
+    int32_t level, 
+    const char *file,
+    int32_t line, 
+    const char *msg)
+{
+    (void)file; (void)line;
+
+    if (level <= -4) {
+        /* Make sure to always log fatal errors */
+        if (flecs_log_prev_fatal_log) {
+            ecs_log_enable_colors(true);
+            flecs_log_prev_fatal_log(level, file, line, msg);
+            ecs_log_enable_colors(false);
+            return;
+        } else {
+            fprintf(stderr, "%s:%d: %s", file, line, msg);
+        }
+    }
+
+#ifdef FLECS_DEBUG
+    /* In debug mode, log unexpected errors to the console */
+    if (level < 0) {
+        /* Also log to previous log function in debug mode */
+        if (flecs_log_prev_log) {
+            ecs_log_enable_colors(true);
+            flecs_log_prev_log(level, file, line, msg);
+            ecs_log_enable_colors(false);
+        }
+    }
+#endif
+
+    if (!flecs_log_last_err && level <= -3) {
+        flecs_log_last_err = ecs_os_strdup(msg);
+    }
+}
+
+static
+char* flecs_log_get_captured_log(void) {
+    char *result = flecs_log_last_err;
+    flecs_log_last_err = NULL;
+    return result;
+}
+
+void ecs_log_start_capture(bool try) {
+    flecs_log_prev_color = ecs_log_enable_colors(false);
+    flecs_log_prev_log = ecs_os_api.log_;
+    flecs_log_prev_level = ecs_os_api.log_level_;
+    flecs_set_prev_log(ecs_os_api.log_, try);
+    ecs_os_api.log_ = flecs_log_capture_log;
+    ecs_os_api.log_level_ = -1; /* Ignore debug tracing, log warnings/errors */
+}
+
+char* ecs_log_stop_capture(void) {
+    ecs_os_api.log_ = flecs_log_prev_fatal_log;
+    ecs_os_api.log_level_ = flecs_log_prev_level;
+    ecs_log_enable_colors(flecs_log_prev_color);
+    return flecs_log_get_captured_log();
+}
 
 void flecs_colorize_buf(
     char *msg,
@@ -226,12 +300,14 @@ void ecs_log_pop_(
     }
 }
 
-void ecs_parser_errorv_(
+static
+void flecs_parser_errorv(
     const char *name,
     const char *expr, 
     int64_t column_arg,
     const char *fmt,
-    va_list args)
+    va_list args,
+    bool is_warning)
 {
     if (column_arg > 65536) {
         /* Limit column size, which prevents the code from throwing up when the
@@ -307,9 +383,33 @@ void ecs_parser_errorv_(
         }
 
         char *msg = ecs_strbuf_get(&msg_buf);
-        ecs_os_err(name, 0, msg);
+        if (is_warning) {
+            ecs_os_warn(name, 0, msg);
+        } else {
+            ecs_os_err(name, 0, msg);
+        }
         ecs_os_free(msg);
     }
+}
+
+void ecs_parser_errorv_(
+    const char *name,
+    const char *expr, 
+    int64_t column_arg,
+    const char *fmt,
+    va_list args)
+{
+    flecs_parser_errorv(name, expr, column_arg, fmt, args, false);
+}
+
+void ecs_parser_warningv_(
+    const char *name,
+    const char *expr, 
+    int64_t column_arg,
+    const char *fmt,
+    va_list args)
+{
+    flecs_parser_errorv(name, expr, column_arg, fmt, args, true);
 }
 
 void ecs_parser_error_(
@@ -327,6 +427,21 @@ void ecs_parser_error_(
     }
 }
 
+void ecs_parser_warning_(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    ...)
+{
+    if (ecs_os_api.log_level_  >= -2) {
+        va_list args;
+        va_start(args, fmt);
+        ecs_parser_warningv_(name, expr, column, fmt, args);
+        va_end(args);
+    }
+}
+
 void ecs_abort_(
     int32_t err,
     const char *file,
@@ -339,10 +454,12 @@ void ecs_abort_(
         va_start(args, fmt);
         char *msg = flecs_vasprintf(fmt, args);
         va_end(args);
-        ecs_fatal_(file, line, "%s (%s)", msg, ecs_strerror(err));
+        ecs_fatal_(file, line, "#[red]abort()#[reset]: %s (#[blue]%s#[reset])", 
+            msg, ecs_strerror(err));
         ecs_os_free(msg);
     } else {
-        ecs_fatal_(file, line, "%s", ecs_strerror(err));
+        ecs_fatal_(file, line, "#[red]abort()#[reset]: #[blue]%s#[reset]", 
+            ecs_strerror(err));
     }
     ecs_os_api.log_last_error_ = err;
 }
@@ -360,11 +477,11 @@ void ecs_assert_log_(
         va_start(args, fmt);
         char *msg = flecs_vasprintf(fmt, args);
         va_end(args);
-        ecs_fatal_(file, line, "assert: %s %s (%s)",
+        ecs_fatal_(file, line, "#[red]assert(%s)#[reset]: %s (#[blue]%s#[reset])",
             cond_str, msg, ecs_strerror(err));
         ecs_os_free(msg);
     } else {
-        ecs_fatal_(file, line, "assert: %s %s",
+        ecs_fatal_(file, line, "#[red]assert(%s)#[reset] (#[blue]%s#[reset])",
             cond_str, ecs_strerror(err));
     }
     ecs_os_api.log_last_error_ = err;
@@ -405,7 +522,6 @@ const char* ecs_strerror(
 {
     switch (error_code) {
     ECS_ERR_STR(ECS_INVALID_PARAMETER);
-    ECS_ERR_STR(ECS_NOT_A_COMPONENT);
     ECS_ERR_STR(ECS_INTERNAL_ERROR);
     ECS_ERR_STR(ECS_ALREADY_DEFINED);
     ECS_ERR_STR(ECS_INVALID_COMPONENT_SIZE);
@@ -437,7 +553,6 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_INVALID_OPERATION);
     ECS_ERR_STR(ECS_CONSTRAINT_VIOLATED);
     ECS_ERR_STR(ECS_LOCKED_STORAGE);
-    ECS_ERR_STR(ECS_ID_IN_USE);
     }
 
     return "unknown error code";
@@ -487,6 +602,34 @@ void ecs_parser_errorv_(
     (void)args;
 }
 
+
+void ecs_parser_warning_(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    ...)
+{
+    (void)name;
+    (void)expr;
+    (void)column;
+    (void)fmt;
+}
+
+void ecs_parser_warningv_(
+    const char *name,
+    const char *expr, 
+    int64_t column,
+    const char *fmt,
+    va_list args)
+{
+    (void)name;
+    (void)expr;
+    (void)column;
+    (void)fmt;
+    (void)args;
+}
+
 void ecs_abort_(
     int32_t error_code,
     const char *file,
@@ -515,6 +658,14 @@ void ecs_assert_log_(
     (void)fmt;
 }
 
+void ecs_log_start_capture(bool try) {
+    (void)try;
+}
+
+char* ecs_log_stop_capture(void) {
+    return NULL;
+}
+
 #endif
 
 int ecs_log_get_level(void) {
@@ -524,7 +675,7 @@ int ecs_log_get_level(void) {
 int ecs_log_set_level(
     int level)
 {
-    int prev = level;
+    int prev = ecs_os_api.log_level_;
     ecs_os_api.log_level_ = level;
     return prev;
 }

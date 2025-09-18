@@ -362,7 +362,7 @@ void Set_ensure_tag_new(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_ensure_tag_existing(void) {
@@ -378,7 +378,7 @@ void Set_ensure_tag_existing(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_ensure_tag_new_w_comp(void) {
@@ -394,7 +394,7 @@ void Set_ensure_tag_new_w_comp(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_ensure_tag_existing_w_comp(void) {
@@ -412,7 +412,7 @@ void Set_ensure_tag_existing_w_comp(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_ensure_tag_new_w_pair(void) {
@@ -429,7 +429,7 @@ void Set_ensure_tag_new_w_pair(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_ensure_tag_existing_w_pair(void) {
@@ -448,7 +448,7 @@ void Set_ensure_tag_existing_w_pair(void) {
 
     test_expect_abort();
 
-    ecs_ensure_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag, 0);
 }
 
 void Set_get_mut_not_existing(void) {
@@ -478,14 +478,15 @@ void Set_get_mut_existing(void) {
 }
 
 void Set_get_mut_tag(void) {
+    install_test_abort();
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
 
     ecs_entity_t e = ecs_new_w(world, Foo);
-    test_assert(NULL == ecs_get_mut_id(world, e, Foo));
-    
-    ecs_fini(world);
+
+    test_expect_abort();
+    ecs_get_mut_id(world, e, Foo);
 }
 
 void Set_get_mut_pair(void) {
@@ -803,6 +804,22 @@ void Set_emplace_existing_w_check(void) {
     test_bool(is_new, true);
     ecs_emplace(world, e, Position, &is_new);
     test_bool(is_new, false);
+
+    ecs_fini(world);
+}
+
+void Set_emplace_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_new(world);
+
+    Position *p = ecs_emplace_pair(world, e, Position, Tgt, NULL);
+    test_assert(p != NULL);
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), Tgt));
+    test_assert(p == ecs_get_pair(world, e, Position, Tgt));
 
     ecs_fini(world);
 }

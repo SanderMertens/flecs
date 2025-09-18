@@ -33,7 +33,8 @@ int ecs_value_init(
 {
     flecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity '%s' is not a type", 
+        flecs_errstr(ecs_get_path(world, type)));
     return ecs_value_init_w_type_info(world, ti, ptr);
 error:
     return -1;
@@ -47,7 +48,8 @@ void* ecs_value_new_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    void *result = flecs_alloc(&world->allocator, ti->size);
+    void *result = flecs_alloc_w_dbg_info(
+        &world->allocator, ti->size, ti->name);
     if (ecs_value_init_w_type_info(world, ti, result) != 0) {
         flecs_free(&world->allocator, ti->size, result);
         goto error;

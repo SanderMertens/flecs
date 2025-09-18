@@ -38,7 +38,7 @@ void MonitorStats(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
     ecs_monitor_stats_ctx_t *ctx = it->ctx;
 
-    EcsStatsHeader *hdr = ecs_field_w_size(it, 0, 0);
+    EcsStatsHeader *hdr = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
 
     ecs_ftime_t elapsed = hdr->elapsed;
     hdr->elapsed += it->delta_time;
@@ -65,6 +65,9 @@ void MonitorStats(ecs_iter_t *it) {
     } else {
         /* No query, so tracking stats for single element */
         stats = ECS_OFFSET_T(hdr, EcsStatsHeader);
+        if (ctx->api.is_pointer) {
+            stats = *((void**)stats);
+        }
     }
 
     do {
@@ -78,6 +81,10 @@ void MonitorStats(ecs_iter_t *it) {
 
                 cur = 0;
                 count = qit.count;
+                if (!count) {
+                    cur = -1;
+                    continue;
+                }
             } else {
                 cur ++;
             }
@@ -124,13 +131,17 @@ static
 void ReduceStats(ecs_iter_t *it) {
     ecs_reduce_stats_ctx_t *ctx = it->ctx;
 
-    void *dst = ecs_field_w_size(it, 0, 0);
-    void *src = ecs_field_w_size(it, 0, 1);
+    void *dst = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
+    void *src = ecs_field_w_size(it, ecs_field_size(it, 1), 1);
 
     dst = ECS_OFFSET_T(dst, EcsStatsHeader);
     src = ECS_OFFSET_T(src, EcsStatsHeader);
 
     if (!ctx->api.query_component_id) {
+        if (ctx->api.is_pointer) {
+            dst = *((void**)dst);
+            src = *((void**)src);
+        }
         ctx->api.reduce(dst, src);
     } else {
         ecs_map_iter_t mit = ecs_map_iter(src);
@@ -148,8 +159,8 @@ void AggregateStats(ecs_iter_t *it) {
     ecs_aggregate_stats_ctx_t *ctx = it->ctx;
     int32_t interval = ctx->interval;
 
-    EcsStatsHeader *dst_hdr = ecs_field_w_size(it, 0, 0);
-    EcsStatsHeader *src_hdr = ecs_field_w_size(it, 0, 1);
+    EcsStatsHeader *dst_hdr = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
+    EcsStatsHeader *src_hdr = ecs_field_w_size(it, ecs_field_size(it, 1), 1);
 
     void *dst = ECS_OFFSET_T(dst_hdr, EcsStatsHeader);
     void *src = ECS_OFFSET_T(src_hdr, EcsStatsHeader);
@@ -160,6 +171,11 @@ void AggregateStats(ecs_iter_t *it) {
         src_map = src;
         dst = NULL;
         src = NULL;
+    } else {
+        if (ctx->api.is_pointer) {
+            dst = *((void**)dst);
+            src = *((void**)src);
+        }
     }
 
     void *stats_storage = ecs_os_alloca(ctx->api.stats_size);
@@ -399,6 +415,10 @@ void FlecsStatsImport(
     FlecsWorldMonitorImport(world);
     FlecsSystemMonitorImport(world);
     FlecsPipelineMonitorImport(world);
+    
+    flecs_stats_memory_register_reflection(world);
+
+    ecs_add(world, ecs_id(EcsWorldMemory), EcsWorldMemory);
     
     if (ecs_os_has_time()) {
         ecs_measure_frame_time(world, true);

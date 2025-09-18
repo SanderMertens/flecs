@@ -329,7 +329,8 @@ void Internals_table_observed_after_add(void) {
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
-    test_assert(pt == NULL);
+    test_assert(pt != NULL);
+    test_int(ecs_table_get_type(pt)->count, 0);
     test_assert(ct != NULL);
     test_int(flecs_table_observed_count(ct), 0);
 
@@ -357,7 +358,8 @@ void Internals_table_observed_after_remove(void) {
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
-    test_assert(pt == NULL);
+    test_assert(pt != NULL);
+    test_int(ecs_table_get_type(pt)->count, 0);
     test_assert(ct != NULL);
     test_int(flecs_table_observed_count(ct), 0);
 
@@ -392,7 +394,8 @@ void Internals_table_observed_after_clear(void) {
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
-    test_assert(pt == NULL);
+    test_assert(pt != NULL);
+    test_int(ecs_table_get_type(pt)->count, 0);
     test_assert(ct != NULL);
     test_int(flecs_table_observed_count(ct), 0);
 
@@ -419,7 +422,8 @@ void Internals_table_observed_after_delete(void) {
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
-    test_assert(pt == NULL);
+    test_assert(pt != NULL);
+    test_int(ecs_table_get_type(pt)->count, 0);
     test_assert(ct != NULL);
     test_int(flecs_table_observed_count(ct), 0);
 
@@ -443,7 +447,8 @@ void Internals_table_observed_after_on_remove(void) {
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
-    test_assert(pt == NULL);
+    test_assert(pt != NULL);
+    test_int(ecs_table_get_type(pt)->count, 0);
     test_assert(ct != NULL);
     test_int(flecs_table_observed_count(ct), 0);
 
@@ -501,6 +506,8 @@ void Internals_table_create_leak_check(void) {
     ecs_entity_t tag = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, tag);
     ecs_delete(world, tag);
+    
+    test_assert(ecs_get_table(world, e) != NULL);
 
     max_block_count = ecs_block_allocator_alloc_count - 
         ecs_block_allocator_free_count;
@@ -513,6 +520,159 @@ void Internals_table_create_leak_check(void) {
 
     test_int(max_block_count, ecs_block_allocator_alloc_count - 
         ecs_block_allocator_free_count);
+
+    ecs_fini(world);
+}
+
+void Internals_component_record_has_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+
+    ecs_table_t *table_1 = ecs_table_add_id(world, NULL, ecs_id(Position));
+    test_assert(table_1 != NULL);
+    ecs_table_t *table_2 = ecs_table_add_id(world, table_1, ecs_id(Velocity));
+    test_assert(table_2 != NULL);
+    ecs_table_t *table_3 = ecs_table_add_id(world, table_2, Tag);
+    test_assert(table_3 != NULL);
+
+    ecs_component_record_t *pos_cr = flecs_components_get(world, ecs_id(Position));
+    ecs_component_record_t *vel_cr = flecs_components_get(world, ecs_id(Velocity));
+    ecs_component_record_t *tag_cr = flecs_components_get(world, Tag);
+    test_assert(pos_cr != NULL);
+    test_assert(vel_cr != NULL);
+    test_assert(tag_cr != NULL);
+
+    {
+        const ecs_table_record_t *tr = flecs_component_get_table(pos_cr, table_1);
+        test_assert(tr != NULL);
+        test_int(tr->column, 0);
+        test_int(tr->index, 0);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_1);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cr, table_1);
+        test_assert(tr == NULL);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cr, table_1);
+        test_assert(tr == NULL);
+    }
+
+    {
+        const ecs_table_record_t *tr = flecs_component_get_table(pos_cr, table_2);
+        test_assert(tr != NULL);
+        test_int(tr->column, 0);
+        test_int(tr->index, 0);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_2);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cr, table_2);
+        test_assert(tr != NULL);
+        test_int(tr->column, 1);
+        test_int(tr->index, 1);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_2);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(tag_cr, table_2);
+        test_assert(tr == NULL);
+    }
+
+    {
+        const ecs_table_record_t *tr = flecs_component_get_table(pos_cr, table_3);
+        test_assert(tr != NULL);
+        test_int(tr->column, 0);
+        test_int(tr->index, 0);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_3);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(vel_cr, table_3);
+        test_assert(tr != NULL);
+        test_int(tr->column, 1);
+        test_int(tr->index, 1);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_3);
+    } {
+        const ecs_table_record_t *tr = flecs_component_get_table(tag_cr, table_3);
+        test_assert(tr != NULL);
+        test_int(tr->column, -1);
+        test_int(tr->index, 2);
+        test_int(tr->count, 1);
+        test_assert(tr->hdr.table == table_3);
+    }
+
+    ecs_fini(world);
+}
+
+void Internals_component_record_iter_tables(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+
+    ecs_table_t *table_1 = ecs_table_add_id(world, NULL, ecs_id(Position));
+    test_assert(table_1 != NULL);
+    ecs_table_t *table_2 = ecs_table_add_id(world, table_1, ecs_id(Velocity));
+    test_assert(table_2 != NULL);
+    ecs_table_t *table_3 = ecs_table_add_id(world, table_2, Tag);
+    test_assert(table_3 != NULL);
+
+    ecs_component_record_t *pos_cr = flecs_components_get(world, ecs_id(Position));
+    test_assert(pos_cr != NULL);
+
+    ecs_table_cache_iter_t it;
+    if (flecs_component_iter(pos_cr, &it)) {
+        const ecs_table_record_t *tr;
+
+        tr = flecs_component_next(&it);
+        test_assert(tr != NULL);
+        test_assert(tr->hdr.table == table_1);
+
+        tr = flecs_component_next(&it);
+        test_assert(tr != NULL);
+        test_assert(tr->hdr.table == table_2);
+
+        tr = flecs_component_next(&it);
+        test_assert(tr != NULL);
+        test_assert(tr->hdr.table == table_3);
+
+        tr = flecs_component_next(&it);
+        test_assert(tr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Internals_table_get_records(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+    test_assert(table != NULL);
+    table = ecs_table_add_id(world, table, ecs_id(Velocity));
+    test_assert(table != NULL);
+    table = ecs_table_add_id(world, table, Tag);
+    test_assert(table != NULL);
+
+    ecs_table_records_t r = flecs_table_records(table);
+    test_int(r.count, 5); /* Including *, (ChildOf, 0) */
+
+    test_int(r.array[0].column, 0);
+    test_int(r.array[0].index, 0);
+    test_int(r.array[0].count, 1);
+
+    test_int(r.array[1].column, 1);
+    test_int(r.array[1].index, 1);
+    test_int(r.array[1].count, 1);
+
+    test_int(r.array[2].column, -1);
+    test_int(r.array[2].index, 2);
+    test_int(r.array[2].count, 1);
 
     ecs_fini(world);
 }

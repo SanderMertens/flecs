@@ -5,8 +5,7 @@
 
 #include "../../private_api.h"
 #include "json.h"
-#include "../script/script.h"
-#include <ctype.h>
+#include "../query_dsl/query_dsl.h"
 
 #ifdef FLECS_JSON
 
@@ -109,9 +108,10 @@ static
 ecs_entity_t flecs_json_ensure_entity(
     ecs_world_t *world,
     const char *name,
-    ecs_map_t *anonymous_ids)
+    void *ctx)
 {
     ecs_entity_t e = 0;
+    ecs_map_t *anonymous_ids = ctx;
 
     if (flecs_name_is_id(name)) {
         /* Anonymous entity, find or create mapping to new id */
@@ -377,7 +377,7 @@ const char* flecs_json_deser_components(
         } else {
             char token_buffer[256];
             ecs_term_t term = {0};
-            if (!flecs_term_parse(world, NULL, token, &term, token_buffer)) {
+            if (!flecs_term_parse(world, NULL, token, token_buffer, &term)) {
                 goto error;
             }
 
@@ -392,40 +392,58 @@ const char* flecs_json_deser_components(
             id = ecs_pair(rel, tgt);
         }
 
+        bool skip = false;
+        if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)) {
+            skip = true;
+        }
+
         lah = flecs_json_parse(json, &token_kind, token);
         if (token_kind != JsonNull) {
-            ecs_entity_t type = ecs_get_typeid(world, id);
-            if (!type) {
+            const ecs_type_info_t *ti = ecs_get_type_info(world, id);
+            if (!ti) {
                 flecs_json_missing_reflection(world, id, json, ctx, desc);
                 if (desc->strict) {
                     goto error;
                 }
+
+                json = flecs_parse_ws_eol(json);
 
                 json = flecs_json_skip_object(json + 1, token, desc);
                 if (!json) {
                     goto error;
                 }
             } else {
-                void *ptr = ecs_ensure_id(world, e, id);
+                void *ptr = ecs_ensure_id(world, e, id, 
+                    flecs_ito(size_t, ti->size));
 
                 lah = flecs_json_parse(json, &token_kind, token);
                 if (token_kind != JsonNull) {
-                    const char *next = ecs_ptr_from_json(
-                        world, type, ptr, json, desc);
-                    if (!next) {
-                        flecs_json_missing_reflection(
-                            world, id, json, ctx, desc);
-                        if (desc->strict) {
-                            goto error;
-                        }
+                    if (!skip) {
+                        ecs_entity_t type = ti->component;
+                        const char *next = ecs_ptr_from_json(
+                            world, type, ptr, json, desc);
+                        if (!next) {
+                            flecs_json_missing_reflection(
+                                world, id, json, ctx, desc);
+                            if (desc->strict) {
+                                goto error;
+                            }
 
+                            json = flecs_parse_ws_eol(json);
+
+                            json = flecs_json_skip_object(json + 1, token, desc);
+                            if (!json) {
+                                goto error;
+                            }
+                        } else {
+                            json = next;
+                            ecs_modified_id(world, e, id);
+                        }
+                    } else {
                         json = flecs_json_skip_object(json + 1, token, desc);
                         if (!json) {
                             goto error;
                         }
-                    } else {
-                        json = next;
-                        ecs_modified_id(world, e, id);
                     }
                 } else {
                     json = lah;
@@ -587,7 +605,7 @@ const char* flecs_entity_from_json(
         return NULL;
     }
 
-    if (!ecs_os_strcmp(token, "alerts")) {
+    if (!ecs_os_strcmp(token, "has_alerts")) {
         json = flecs_json_expect(json, JsonBoolean, token, desc);
         if (!json) {
             goto error;
@@ -732,8 +750,7 @@ const char* ecs_entity_from_json(
     ctx.expr = json;
 
     if (!desc.lookup_action) {
-        desc.lookup_action = (ecs_entity_t(*)(
-            const ecs_world_t*, const char*, void*))flecs_json_ensure_entity;
+        desc.lookup_action = flecs_json_ensure_entity;
         desc.lookup_ctx = &ctx.anonymous_ids;
     }
 
@@ -766,8 +783,7 @@ const char* ecs_world_from_json(
     ctx.expr = expr;
 
     if (!desc.lookup_action) {
-        desc.lookup_action = (ecs_entity_t(*)(
-            const ecs_world_t*, const char*, void*))flecs_json_ensure_entity;
+        desc.lookup_action = flecs_json_ensure_entity;
         desc.lookup_ctx = &ctx.anonymous_ids;
     }
 

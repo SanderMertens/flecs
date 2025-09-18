@@ -153,12 +153,16 @@ static int copy_position = 0;
 static
 ECS_COPY(Position, dst, src, {
     copy_position ++;
+    dst->x = src->x;
+    dst->y = src->y;
 })
 
 static int move_position = 0;
 static
 ECS_MOVE(Position, dst, src, {
     move_position ++;
+    dst->x = src->x;
+    dst->y = src->y;
 })
 
 static int on_add_position = 0;
@@ -175,7 +179,7 @@ static void ecs_on_add(Position)(ecs_iter_t *it) {
     }
 }
 
-static void on_add_position_emplace(ecs_iter_t *it) {
+static void on_add_position_count(ecs_iter_t *it) {
     on_add_position += it->count;
 }
 
@@ -1254,7 +1258,7 @@ void ComponentLifecycle_on_add_w_emplace(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .on_add = on_add_position_emplace
+        .on_add = on_add_position_count
     });
 
     ecs_entity_t e = ecs_new(world);
@@ -1276,7 +1280,7 @@ void ComponentLifecycle_on_add_w_emplace_existing(void) {
 
     ecs_set_hooks(world, Position, {
         .ctor = ecs_ctor(Position),
-        .on_add = on_add_position_emplace
+        .on_add = on_add_position_count
     });
 
     ecs_entity_t e = ecs_new_w(world, Velocity);
@@ -1298,7 +1302,7 @@ void ComponentLifecycle_on_add_w_emplace_defer(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .on_add = on_add_position_emplace
+        .on_add = on_add_position_count
     });
 
     ecs_entity_t e = ecs_new(world);
@@ -1527,6 +1531,8 @@ void ComponentLifecycle_merge_async_stage_w_emplace(void) {
 }
 
 void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1547,21 +1553,8 @@ void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void) {
     p->y = 20;
 
     ecs_defer_begin(world);
+    test_expect_abort();
     ecs_merge(async);
-    test_assert(!ecs_has(world, e, Position));
-    test_int(ctor_position, 0);
-
-    ecs_defer_end(world);
-    test_assert(ecs_has(world, e, Position));
-    test_int(ctor_position, 0);
-
-    const Position *ptr = ecs_get(world, e, Position);
-    test_int(ptr->x, 10);
-    test_int(ptr->y, 20);
-
-    ecs_stage_free(async);
-
-    ecs_fini(world);
 }
 
 static void invalid_ctor(void *ptr, int count, const ecs_type_info_t *ti) {
@@ -2392,12 +2385,13 @@ void ComponentLifecycle_ctor_move_dtor_after_resize(void) {
     ecs_fini(world);
 }
 
+static int component_user_ctx = 0;
+static int component_binding_ctx = 0;
 static int component_lifecycle_ctx = 0;
-static int component_lifecycle_binding_ctx = 0;
 
-static void component_lifecycle_ctx_free(void *ctx) {
-    test_assert(ctx == &component_lifecycle_ctx);
-    component_lifecycle_ctx ++;
+static void component_ctx_free(void *ctx) {
+    test_assert(ctx == &component_user_ctx);
+    component_user_ctx ++;
 }
 
 void ComponentLifecycle_ctx_free(void) {
@@ -2406,13 +2400,13 @@ void ComponentLifecycle_ctx_free(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .ctx = &component_lifecycle_ctx,
-        .ctx_free = component_lifecycle_ctx_free
+        .ctx = &component_user_ctx,
+        .ctx_free = component_ctx_free
     });
 
     ecs_fini(world);
 
-    test_int(1, component_lifecycle_ctx);
+    test_int(1, component_user_ctx);
 }
 
 void ComponentLifecycle_binding_ctx_free(void) {
@@ -2421,13 +2415,28 @@ void ComponentLifecycle_binding_ctx_free(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .binding_ctx = &component_lifecycle_ctx,
-        .binding_ctx_free = component_lifecycle_ctx_free
+        .binding_ctx = &component_user_ctx,
+        .binding_ctx_free = component_ctx_free
     });
 
     ecs_fini(world);
 
-    test_int(1, component_lifecycle_ctx);
+    test_int(1, component_user_ctx);
+}
+
+void ComponentLifecycle_lifecycle_ctx_free(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .lifecycle_ctx = &component_user_ctx,
+        .lifecycle_ctx_free = component_ctx_free
+    });
+
+    ecs_fini(world);
+
+    test_int(1, component_user_ctx);
 }
 
 void ComponentLifecycle_ctx_free_after_delete_component(void) {
@@ -2436,14 +2445,14 @@ void ComponentLifecycle_ctx_free_after_delete_component(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .ctx = &component_lifecycle_ctx,
-        .ctx_free = component_lifecycle_ctx_free
+        .ctx = &component_user_ctx,
+        .ctx_free = component_ctx_free
     });
 
     ecs_remove_pair(world, ecs_id(Position), EcsOnDelete, EcsPanic);
     ecs_delete(world, ecs_id(Position));
 
-    test_int(1, component_lifecycle_ctx);
+    test_int(1, component_user_ctx);
 
     ecs_fini(world);
 }
@@ -2454,23 +2463,42 @@ void ComponentLifecycle_binding_ctx_free_after_delete_component(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .binding_ctx = &component_lifecycle_ctx,
-        .binding_ctx_free = component_lifecycle_ctx_free
+        .binding_ctx = &component_user_ctx,
+        .binding_ctx_free = component_ctx_free
     });
 
     ecs_remove_pair(world, ecs_id(Position), EcsOnDelete, EcsPanic);
     ecs_delete(world, ecs_id(Position));
 
-    test_int(1, component_lifecycle_ctx);
+    test_int(1, component_user_ctx);
 
     ecs_fini(world);
 }
 
-static void test_lifecycle_ctx(ecs_iter_t *it) {
-    test_assert(it->ctx == &component_lifecycle_ctx);
-    test_assert(it->callback_ctx == &component_lifecycle_binding_ctx);
+void ComponentLifecycle_lifecycle_ctx_free_after_delete_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .lifecycle_ctx = &component_user_ctx,
+        .lifecycle_ctx_free = component_ctx_free
+    });
+
+    ecs_remove_pair(world, ecs_id(Position), EcsOnDelete, EcsPanic);
+    ecs_delete(world, ecs_id(Position));
+
+    test_int(1, component_user_ctx);
+
+    ecs_fini(world);
+}
+
+static void test_hook_ctx(ecs_iter_t *it) {
+    test_assert(it->ctx == &component_user_ctx);
+    test_assert(it->callback_ctx == &component_binding_ctx);
+    component_user_ctx ++;
+    component_binding_ctx ++;
     component_lifecycle_ctx ++;
-    component_lifecycle_binding_ctx ++;
 }
 
 void ComponentLifecycle_on_add_ctx(void) {
@@ -2479,19 +2507,22 @@ void ComponentLifecycle_on_add_ctx(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .on_add = test_lifecycle_ctx,
-        .ctx = &component_lifecycle_ctx,
-        .binding_ctx = &component_lifecycle_binding_ctx
+        .on_add = test_hook_ctx,
+        .ctx = &component_user_ctx,
+        .binding_ctx = &component_binding_ctx,
+        .lifecycle_ctx = &component_lifecycle_ctx
     });
 
     ecs_new_w(world, Position);
+    test_int(1, component_user_ctx);
+    test_int(1, component_binding_ctx);
     test_int(1, component_lifecycle_ctx);
-    test_int(1, component_lifecycle_binding_ctx);
 
     ecs_fini(world);
 
+    test_int(1, component_user_ctx);
+    test_int(1, component_binding_ctx);
     test_int(1, component_lifecycle_ctx);
-    test_int(1, component_lifecycle_binding_ctx);
 }
 
 void ComponentLifecycle_on_remove_ctx(void) {
@@ -2500,23 +2531,27 @@ void ComponentLifecycle_on_remove_ctx(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .on_remove = test_lifecycle_ctx,
-        .ctx = &component_lifecycle_ctx,
-        .binding_ctx = &component_lifecycle_binding_ctx
+        .on_remove = test_hook_ctx,
+        .ctx = &component_user_ctx,
+        .binding_ctx = &component_binding_ctx,
+        .lifecycle_ctx = &component_lifecycle_ctx
     });
 
     ecs_entity_t e = ecs_new_w(world, Position);
+    test_int(0, component_user_ctx);
+    test_int(0, component_binding_ctx);
     test_int(0, component_lifecycle_ctx);
-    test_int(0, component_lifecycle_binding_ctx);
 
     ecs_remove(world, e, Position);
+    test_int(1, component_user_ctx);
+    test_int(1, component_binding_ctx);
     test_int(1, component_lifecycle_ctx);
-    test_int(1, component_lifecycle_binding_ctx);
 
     ecs_fini(world);
 
+    test_int(1, component_user_ctx);
+    test_int(1, component_binding_ctx);
     test_int(1, component_lifecycle_ctx);
-    test_int(1, component_lifecycle_binding_ctx);
 }
 
 void ComponentLifecycle_on_set_ctx(void) {
@@ -2525,23 +2560,27 @@ void ComponentLifecycle_on_set_ctx(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .on_set = test_lifecycle_ctx,
-        .ctx = &component_lifecycle_ctx,
-        .binding_ctx = &component_lifecycle_binding_ctx
+        .on_set = test_hook_ctx,
+        .ctx = &component_user_ctx,
+        .binding_ctx = &component_binding_ctx,
+        .lifecycle_ctx = &component_lifecycle_ctx
     });
 
     ecs_entity_t e = ecs_new_w(world, Position);
+    test_int(0, component_user_ctx);
+    test_int(0, component_binding_ctx);
     test_int(0, component_lifecycle_ctx);
-    test_int(0, component_lifecycle_binding_ctx);
 
     ecs_set(world, e, Position, {10, 20});
+    test_int(1, component_user_ctx);
+    test_int(1, component_binding_ctx);
     test_int(1, component_lifecycle_ctx);
-    test_int(1, component_lifecycle_binding_ctx);
 
     ecs_fini(world);
 
+    test_int(1, component_user_ctx);
+    test_int(1, component_binding_ctx);
     test_int(1, component_lifecycle_ctx);
-    test_int(1, component_lifecycle_binding_ctx);
 }
 
 static int test_on_event_invoked = 0;
@@ -3364,6 +3403,953 @@ void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(
 
     test_int(ctx.move_dtor.invoked, 0);
     test_int(ctx.ctor_move_dtor.invoked, 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_new_w_table_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position)
+    });
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+    table = ecs_table_add_id(world, table, Bar);
+
+    test_int(ctor_position, 0);
+
+    ecs_entity_t e = ecs_new_w_table(world, table);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(ecs_get(world, e, Position) != NULL);
+    test_assert(table == ecs_get_table(world, e));
+    test_int(ctor_position, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_new_w_table_on_add_hook(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = on_add_position_count
+    });
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+    table = ecs_table_add_id(world, table, Bar);
+
+    test_int(ctor_position, 0);
+
+    ecs_entity_t e = ecs_new_w_table(world, table);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(ecs_get(world, e, Position) != NULL);
+    test_assert(table == ecs_get_table(world, e));
+    test_int(on_add_position, 1);
+
+    ecs_fini(world);
+}
+
+static int hook_count = 0;
+static void hook_w_count(ecs_iter_t *it) {
+    hook_count = ecs_count_id(it->world, ecs_field_id(it, 0));
+    test_int(hook_count, 1);
+}
+
+void ComponentLifecycle_count_in_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = hook_w_count
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    test_int(hook_count, 1);
+
+    ecs_iter_t it = ecs_each(world, Position);
+    test_bool(true, ecs_each_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_count_in_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = hook_w_count
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    test_int(hook_count, 0);
+
+    ecs_delete(world, e);
+    test_int(hook_count, 1);
+
+    ecs_iter_t it = ecs_each(world, Position);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_illegal_ctor(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.ctor != NULL);
+
+    /* Make sure hook panics */
+    test_expect_abort();
+    ti->hooks.ctor(&(Position){10, 20}, 1, ti);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_illegal_dtor(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_DTOR_ILLEGAL
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.dtor != NULL);
+
+    /* Make sure hook panics */
+    test_expect_abort();
+    ti->hooks.dtor(&(Position){10, 20}, 1, ti);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_illegal_move(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_MOVE_ILLEGAL
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.move != NULL);
+
+    /* Make sure hook panics */
+    test_expect_abort();
+    ti->hooks.move(&(Position){10, 20}, &(Position){10, 20}, 1, ti);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_illegal_copy(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.copy != NULL);
+
+    /* Make sure hook panics */
+    test_expect_abort();
+    ti->hooks.copy(&(Position){10, 20}, &(Position){10, 20}, 1, ti);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_illegal_move_ctor(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.move_ctor != NULL);
+
+    /* Make sure hook panics */
+    test_expect_abort();
+    ti->hooks.move_ctor(&(Position){10, 20}, &(Position){10, 20}, 1, ti);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_illegal_move_and_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL|ECS_TYPE_HOOK_MOVE_ILLEGAL
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.ctor != NULL);
+    test_assert(ti->hooks.move != NULL);
+
+    /* Trivial move ctor hook allowed */
+    test_assert(ti->hooks.move_ctor == NULL);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_illegal_copy_ctor(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.copy_ctor != NULL);
+
+    /* Make sure hook panics */
+    test_expect_abort();
+    ti->hooks.copy_ctor(&(Position){10, 20}, &(Position){10, 20}, 1, ti);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_illegal_copy_and_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.ctor != NULL);
+    test_assert(ti->hooks.copy != NULL);
+
+    /* Trivial copy ctor hook allowed */
+    test_assert(ti->hooks.copy_ctor == NULL);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_illegal_ctor_w_ctor(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .flags = ECS_TYPE_HOOK_CTOR_ILLEGAL
+    });
+}
+
+void ComponentLifecycle_illegal_dtor_w_dtor(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+
+    ecs_set_hooks(world, Position, {
+        .dtor = ecs_dtor(Position),
+        .flags = ECS_TYPE_HOOK_DTOR_ILLEGAL
+    });
+}
+
+void ComponentLifecycle_illegal_move_w_move(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+
+    ecs_set_hooks(world, Position, {
+        .move = ecs_move(Position),
+        .flags = ECS_TYPE_HOOK_MOVE_ILLEGAL
+    });
+}
+
+void ComponentLifecycle_illegal_copy_w_copy(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+
+    ecs_set_hooks(world, Position, {
+        .copy = ecs_copy(Position),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+}
+
+void ComponentLifecycle_illegal_move_ctor_w_move_ctor(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+
+    ecs_set_hooks(world, Position, {
+        .move_ctor = ecs_move(Position),
+        .flags = ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL
+    });
+}
+
+void ComponentLifecycle_illegal_copy_ctor_w_copy_ctor(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+
+    ecs_set_hooks(world, Position, {
+        .copy_ctor = ecs_copy(Position),
+        .flags = ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
+    });
+}
+
+void ComponentLifecycle_illegal_move_ctor_w_ctor_and_move(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .move = ecs_move(Position),
+        .flags = ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.ctor != NULL);
+    test_assert(ti->hooks.move != NULL);
+    test_assert(ti->hooks.move_ctor != NULL);
+
+    /* Make sure hook panics */
+    test_expect_abort();
+    ti->hooks.move_ctor(&(Position){10, 20}, &(Position){10, 20}, 1, ti);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_illegal_copy_ctor_w_ctor_and_copy(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .copy = ecs_copy(Position),
+        .flags = ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.ctor != NULL);
+    test_assert(ti->hooks.copy != NULL);
+    test_assert(ti->hooks.copy_ctor != NULL);
+
+    /* Make sure hook panics */
+    test_expect_abort();
+    ti->hooks.copy_ctor(&(Position){10, 20}, &(Position){10, 20}, 1, ti);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_ctor_flags(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.ctor != NULL);
+    test_assert(ti->hooks.flags == (ECS_TYPE_HOOK_CTOR|
+                    ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS|
+                    ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_dtor_flags(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .dtor = ecs_ctor(Position),
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.ctor != NULL);
+    test_assert(ti->hooks.dtor != NULL);
+    test_assert(ti->hooks.move_dtor != NULL);
+    test_assert(ti->hooks.flags == 
+        (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|ECS_TYPE_HOOK_MOVE_DTOR|
+        ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS|
+        ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_move_flags(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .move = ecs_move(Position),
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.move != NULL);
+    test_assert(ti->hooks.flags == 
+        (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_MOVE_CTOR|
+         ECS_TYPE_HOOK_CTOR_MOVE_DTOR|ECS_TYPE_HOOK_MOVE_DTOR|
+         ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS|
+         ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_flags(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .copy = ecs_copy(Position),
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.copy != NULL);
+    test_assert(ti->hooks.flags == 
+        (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_COPY_CTOR|
+         ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS|
+         ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_ctor_move_dtor_flags(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .dtor = ecs_dtor(Position),
+        .move = ecs_move(Position)
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.ctor != NULL);
+    test_assert(ti->hooks.dtor != NULL);
+    test_assert(ti->hooks.move != NULL);
+    test_assert(ti->hooks.move_ctor != NULL);
+    test_assert(ti->hooks.ctor_move_dtor != NULL);
+    test_assert(ti->hooks.move_dtor != NULL);
+    test_assert(ti->hooks.flags == 
+        (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|ECS_TYPE_HOOK_MOVE|
+        ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|ECS_TYPE_HOOK_MOVE_DTOR|
+        ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS|
+        ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_move_dtor_flags(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .dtor = ecs_dtor(Position),
+        .move = ecs_move(Position)
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.dtor != NULL);
+    test_assert(ti->hooks.move != NULL);
+    test_assert(ti->hooks.move_dtor != NULL);
+    test_assert(ti->hooks.flags == 
+        (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|
+         ECS_TYPE_HOOK_DTOR|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_MOVE_DTOR|
+         ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS|
+         ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    ecs_fini(world);
+}
+
+int compare_Position(const void *a, const void *b, const ecs_type_info_t *ti) {
+    Position *pa = (Position*) a;
+    Position *pb = (Position*) b;
+    double ma = (pa->x) * (pa->x) + (pa->y) * (pa->y);
+    double mb = (pb->x) * (pb->x) + (pb->y) * (pb->y);
+    return ma<mb ? -1 : ma>mb ? 1 : 0;
+}
+
+bool equals_Position(const void *a, const void *b, const ecs_type_info_t *ti) {
+    Position *pa = (Position*) a;
+    Position *pb = (Position*) b;
+    return (pa->x == pb->x) && (pa->y == pb->y);
+}
+
+void ComponentLifecycle_cmp_flags(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .cmp = compare_Position,
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.cmp != NULL);
+    
+    /* equals is autogenerated from valid cmp */
+    test_assert(ti->hooks.equals != NULL); 
+    
+    test_assert(ti->hooks.flags == (ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_equals_flags(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .equals = equals_Position,
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.equals != NULL);
+        
+    test_assert(ti->hooks.flags == (
+         ECS_TYPE_HOOK_CMP|
+         ECS_TYPE_HOOK_EQUALS|
+         ECS_TYPE_HOOK_CMP_ILLEGAL
+         ));
+
+    ecs_fini(world);
+}
+
+static int replace_Position_invoked = 0;
+
+static
+void replace_Position(ecs_iter_t *it) {
+    Position *old = ecs_field(it, Position, 0);
+    Position *new = ecs_field(it, Position, 1);
+
+    ecs_assert(old != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    test_int(it->count, 1);
+
+    switch(replace_Position_invoked) {
+    case 0:
+        test_int(old->x, 0); test_int(old->y, 0);
+        test_int(new->x, 10); test_int(new->y, 20);
+        break;
+    case 1:
+        test_int(old->x, 10); test_int(old->y, 20);
+        test_int(new->x, 11); test_int(new->y, 21);
+        break;
+    default:
+        test_assert(false);
+        break;
+    }
+
+    replace_Position_invoked ++;
+}
+
+void ComponentLifecycle_on_replace_w_get_mut(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_get_mut(world, e, Position);
+}
+
+void ComponentLifecycle_on_replace_w_ensure(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_ensure(world, e, Position);
+}
+
+void ComponentLifecycle_on_replace_w_emplace(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
+    ecs_emplace(world, e, Position, NULL);
+}
+
+void ComponentLifecycle_on_replace_w_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_replace_w_set_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+
+    ecs_set(world, e, Position, {11, 21});
+    test_int(replace_Position_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_replace_set_2_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+    ecs_set(world, e1, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+    ecs_set(world, e1, Position, {11, 21});
+    test_int(replace_Position_invoked, 2);
+
+    replace_Position_invoked = 0;
+
+    ecs_entity_t e2 = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+    ecs_set(world, e2, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+    ecs_set(world, e2, Position, {11, 21});
+    test_int(replace_Position_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_ctor_w_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .copy_ctor = ecs_copy(Position)
+    });
+
+    test_int(ctor_position, 0);
+    test_int(copy_position, 0);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has(world, i, Position));
+    {
+        const Position *ptr = ecs_get(world, i, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 1);
+    
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_ctor_w_override_w_emplace(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .copy_ctor = ecs_copy(Position)
+    });
+
+    test_int(ctor_position, 0);
+    test_int(copy_position, 0);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has(world, i, Position));
+    {
+        const Position *ptr = ecs_get(world, i, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+
+    bool is_new = false;
+    Position *ptr = ecs_emplace(world, i, Position, &is_new);
+    test_assert(ptr != NULL);
+    test_bool(is_new, true);
+    test_assert(ecs_owns(world, i, Position));
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+    
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_copy_ctor_w_override_w_ensure(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .copy_ctor = ecs_copy(Position)
+    });
+
+    test_int(ctor_position, 0);
+    test_int(copy_position, 0);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has(world, i, Position));
+    {
+        const Position *ptr = ecs_get(world, i, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 0);
+
+    Position *ptr = ecs_ensure(world, i, Position);
+    test_assert(ptr != NULL);
+    test_assert(ecs_owns(world, i, Position));
+
+    test_int(ctor_position, 1);
+    test_int(copy_position, 1);
+
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_shrink(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .move = ecs_move(Position),
+        .copy = ecs_copy(Position),
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {11, 20}));
+    test_int(ctor_position, 1);
+    test_int(dtor_position, 0);
+    test_int(move_position, 0);
+    test_int(copy_position, 1);
+
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {12, 20}));
+    test_int(ctor_position, 2);
+    test_int(dtor_position, 0);
+    test_int(move_position, 0);
+    test_int(copy_position, 2);
+
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {13, 20}));
+    test_int(ctor_position, 5); // grow
+    test_int(dtor_position, 2);
+    test_int(move_position, 2);
+    test_int(copy_position, 3);
+
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {14, 20}));
+    test_int(ctor_position, 6);
+    test_int(dtor_position, 2);
+    test_int(move_position, 2);
+    test_int(copy_position, 4);
+
+    ecs_delete(world, e4);
+    ecs_delete(world, e3);
+    ecs_delete(world, e2);
+
+    test_int(ctor_position, 6);
+    test_int(dtor_position, 5);
+    test_int(move_position, 2);
+    test_int(copy_position, 4);
+
+    ctor_position = 0;
+    dtor_position = 0;
+    move_position = 0;
+    copy_position = 0;
+
+    test_int(ecs_table_size(ecs_get_table(world, e1)), 4);
+    test_int(ecs_table_count(ecs_get_table(world, e1)), 1);
+
+    ecs_shrink(world);
+
+    test_int(ctor_position, 1);
+    test_int(dtor_position, 1);
+    test_int(move_position, 1);
+    test_int(copy_position, 0);
+
+    test_int(ecs_table_size(ecs_get_table(world, e1)), 2);
+    test_int(ecs_table_count(ecs_get_table(world, e1)), 1);
 
     ecs_fini(world);
 }

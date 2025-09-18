@@ -8,7 +8,6 @@
 #ifdef FLECS_MODULE
 
 #include "../private_api.h"
-#include <ctype.h>
 
 char* flecs_module_path_from_c(
     const char *c_name)
@@ -36,6 +35,7 @@ ecs_entity_t ecs_import(
     ecs_module_action_t module,
     const char *module_name)
 {
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(!(world->flags & EcsWorldReadonly), 
         ECS_INVALID_WHILE_READONLY, NULL);
 

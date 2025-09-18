@@ -362,7 +362,7 @@ This section describes the different ways queries can be iterated.
 <ul>
 <li><b class="tab-title">C</b>
 
-In the C API an iterator object of type `ecs_iter_t` can be created for each of the query kinds, using the `ecs_query_iter`, `ecs_query_iter` and `ecs_query_iter` functions. This iterator can then be iterated with the respective `next` functions: `ecs_query_next`, `ecs_query_next` and `ecs_query_next`.
+In the C API an iterator object of type `ecs_iter_t` can be created using the `ecs_query_iter` function. This iterator can then be iterated with `ecs_query_next`.
 
 An iterator can also be iterated with the `ecs_iter_next` function which is slightly slower, but does not require knowledge about the source the iterator was created for.
 
@@ -2332,15 +2332,11 @@ while (ecs_query_next(&it)) {
   SimTime *st = ecs_field(&it, SimTime, 2);
   
   for (int i = 0; i < it.count; i ++) {
-    p[i].x += v[i].x * st[i].value;
-    p[i].y += v[i].y * st[i].value;
+    p[i].x += v[i].x * st->value;
+    p[i].y += v[i].y * st->value;
   }
 }
 ```
-
-Note how in this example all components can be accessed as arrays. When a query has mixed fields (fields with both arrays and single values), behavior defaults to entity-based iteration where entities are returned one at a time. As a result, `i` in the previous example will never be larger than `0`, which is why this code works even though there is only a single instance of the `SimTime` component.
-
-Returning entities one at a time can negatively affect performance, especially for large tables. To learn more about why this behavior exists and how to ensure that mixed results use table-based iteration, see [Instancing](#instancing). 
 
 A source may also be specified by name by setting the `src.name` member:
 
@@ -2401,18 +2397,14 @@ q.run([](flecs::iter& it) {
     auto st = it.field<SimTime>(2);
     
     for (auto i : it) {
-      p[i].x += v[i].x * st[i].value;
-      p[i].y += v[i].y * st[i].value;
+      p[i].x += v[i].x * st->value;
+      p[i].y += v[i].y * st->value;
     }
   }
 });
 ```
 
-Note how in this example all components can be accessed as arrays. When a query has mixed fields (fields with both arrays and single values), behavior defaults to entity-based iteration where entities are returned one at a time. As a result, `i` in the previous example will never be larger than `0`, which is why this code works even though there is only a single instance of the `SimTime` component.
-
-Returning entities one at a time can negatively affect performance, especially for large tables. To learn more about why this behavior exists and how to ensure that mixed results use table-based iteration, see [Instancing](#instancing). 
-
-The next example shows how queries with mixed `$this` and fixed sources can be iterated with `each`. The `each` function does not have the performance drawback of the last `run` example, as it uses [instancing](#instancing) by default.
+Note that since `SimTime` is matched on a single entity, it is accessed as a pointer, not an array. The next example shows how queries with mixed `$this` and fixed sources can be iterated with `each`:
 
 ```cpp
 flecs::query<Position, Velocity, SimTime> q = 
@@ -2427,7 +2419,9 @@ q.each([](flecs::entity e, Position& p, Velocity& v, SimTime& st) {
 });
 ```
 
-When a query has no terms for the `$this` source, it must be iterated with the `run` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
+Note how `each` abstracts away the difference between components matched on the (default) `$this` source and components matched on a single entity.
+
+When a query has no terms for the (default) `$this` source, it must be iterated with the `run` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
 
 ```cpp
 flecs::query<SimConfig, SimTime> q = 
@@ -2491,18 +2485,14 @@ q.run(|mut it| {
         let v = it.field::<Velocity>(1).unwrap();
         let st = it.field::<SimTime>(2).unwrap();
         for i in it.iter() {
-            p[i].x += v[i].x * st[i].value;
-            p[i].y += v[i].y * st[i].value;
+            p[i].x += v[i].x * st.value;
+            p[i].y += v[i].y * st.value;
         }
     }
 });
 ```
 
-Note how in this example all components can be accessed as arrays. When a query has mixed fields (fields with both arrays and single values), behavior defaults to entity-based iteration where entities are returned one at a time. As a result, `i` in the previous example will never be larger than `0`, which is why this code works even though there is only a single instance of the `SimTime` component.
-
-Returning entities one at a time can negatively affect performance, especially for large tables. To learn more about why this behavior exists and how to ensure that mixed results use table-based iteration, see [Instancing](#instancing). 
-
-The next example shows how queries with mixed `$this` and fixed sources can be iterated with `each`. The `each` function does not have the performance drawback of the last `run` example, as it uses [instancing](#instancing) by default.
+The next example shows how queries with mixed `$this` and fixed sources can be iterated with `each`:
 
 ```rust
 let q = world
@@ -2518,7 +2508,9 @@ q.each_entity(|e, (p, v, st)| {
 });
 ```
 
-When a query has no terms for the `$this` source, it must be iterated with the `run` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
+Note how `each` abstracts away the difference between components matched on the (default) `$this` source and components matched on a single entity.
+
+When a query has no terms for the (default) `$this` source, it must be iterated with the `run` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
 
 ```rust
 let q = world
@@ -2591,104 +2583,6 @@ In the previous example the source for `(Color, Diffuse)` is implicit. The follo
 
 ```
 Color($this, Diffuse), Color(Game, Sky)
-```
-
-</li>
-</ul>
-</div>
-
-### Singletons
-Singletons are components that are added to themselves, which can be matched by providing the component id as [source](#source). 
-
-The following sections show how to use singletons in the different language bindings.
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-A singleton query is created by specifying the same id as component and source:
-
-```c
-ecs_query_t *q = ecs_query(world, {
-  .terms = {
-    { Player },
-    { ecs_id(Position) },
-    { ecs_id(Input), .src = ecs_id(Input) } // match Input on itself
-  }
-});
-```
-
-The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
-
-</li>
-<li><b class="tab-title">C++</b>
-
-A singleton query can be created by specifying the same id as component and source:
-
-```cpp
-flecs::query<Player, Position> q = world.query_builder<Player, Position>()
-  .with<Input>().src<Input>() // match Input on itself
-  .build();
-```
-
-The builder API provides a `singleton` convenience function:
-
-```cpp
-flecs::query<Player, Position> q = world.query_builder<Player, Position>()
-  .with<Input>().singleton() // match Input on itself
-  .build();
-```
-
-The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-A singleton query can be created by specifying the same id as component and source:
-
-```rust
-let q = world
-    .query::<(&Player, &Position)>()
-    .with::<Input>()
-    .set_src::<Input>() // match Input on itself
-    .build();
-```
-
-The builder API provides a `singleton` convenience function:
-
-```rust
-let q = world
-    .query::<(&Player, &Position)>()
-    .with::<Input>()
-    .singleton() // match Input on itself
-    .build();
-```
-
-The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
-
-The builder API provides a `term_at` function which allows specifying characteristics of a term at a specific index in the generic terms.
-
-```rust
-let q = world
-    .query::<(&Player, &Position, &Input)>()
-    .term_at(2)
-    .singleton() // match Input on itself
-    .build();
-```
-
-</li>
-<li><b class="tab-title">Flecs Query Language</b>
-
-A singleton query can be created by specifying the same id as component and source:
-
-```
-Player, Position, Input(Input)
-```
-
-For convenience the `$` character may be used as source, which resolves to the component id:
-
-```
-Player, Position, Input($)
 ```
 
 </li>
@@ -2921,21 +2815,11 @@ let q = world
 
 When a component is matched through traversal and its [access modifier](#access-modifiers) is not explicitly set, it defaults to `flecs::In`. This behavior is consistent with terms that have a fixed [source](#source).
 
-#### Iteration
-When a component is matched through traversal, the behavior is the same as though the component was matched through a fixed [source](#source): iteration will switch from table-based to entity-based. This happens on a per-result basis: if all terms are matched on the matched entity the entire table will be returned by the iterator. If one of the terms was matched through traversal, entities are returned one by one.
-
-While returning entities one by one is measurably slower than iterating entire tables, this default behavior enables matching inherited components by default without requiring the user code to be explicitly aware of the difference between a regular component and an inherited component. An advantage of this approach is that applications that use inherited components can interoperate with third party systems that do not explicitly handle them.
-
-To ensure fast table-based iteration an application can enable [instancing](#instancing). Instanced iteration is as fast as, and often faster than regular iteration. Using inherited components that are shared across many entities can improve cache efficiency as less data needs to be loaded from main RAM, and values are more likely to already be stored in the cache.
-
-> Note: the C++ `each` API always uses [instancing](#instancing), which guarantees fast table-based iteration.
-
 #### Limitations
 This list is an overview of current relationship traversal limitations:
 
 - The `Cascade` and `Desc` flags require caching.
 - Traversal flags can only be specified for the term source.
-- Union relationship queries that are not wildcards are not supported for traversal.
 
 The following sections show how to use traversal in the different language bindings.
 
@@ -3183,15 +3067,6 @@ Serializable($Component), $Component($this)
 
 This query returns serializable components for all entities that have at least one.
 
-#### Setting Variables
-By default variables are assigned while the query is being iterated, but variables can be set before query iteration to constrain the results of a query. Consider the previous example:
-
-```
-SpaceShip($this), DockedTo($this, $Location)
-```
-
-An application can set the `$this` variable or `$Location` variables, or both, before starting iteration to constrain the results returned by the query. This makes it possible to reuse a single query for multiple purposes, which provides better performance when compared to creating multiple queries.
-
 #### Lookup variables
 Variables can be used as the starting point of a by-name lookup. This can be useful when matching hierarchies that have a well-defined structure. An example:
 
@@ -3202,7 +3077,16 @@ SpaceShip($this), !Powered($this.cockpit)
 
 This query will look for an child entity named `cockpit` in the scope of the matched entity for `$this`, and use that entity to match with `Powered`. If no entity with the name `cockpit` is found, the term will evaluate to false.
 
-The following sections show how to use queries in the different language bindings.
+#### Setting Variables
+By default variables are assigned while the query is being iterated, but variables can be set before query iteration to constrain the results of a query. Consider the previous example:
+
+```
+SpaceShip($this), DockedTo($this, $Location)
+```
+
+An application can set the `$this` variable or `$Location` variables, or both, before starting iteration to constrain the results returned by the query. This makes it possible to reuse a single query for multiple purposes, which provides better performance when compared to creating multiple queries.
+
+The following sections show how to use query variables in the different language bindings.
 
 <div class="flecs-snippet-tabs">
 <ul>
@@ -3372,7 +3256,7 @@ q.iterable().set_var_expr("$Location", earth).each(|it| {
 </div>
 
 ### Member Value Queries
-Queries can match against the values of component members if they are of the `ecs_entity_t` type, and the component type is described with the reflection framework. Member value queries make it possible to query on values that can change rapidly without requiring structural changes in the ECS. The tradeoff is that other than with the regular, union and toggle storage options there are no acceleration structures to speed up query evaluation, which means that a query has to evaluate each instance of the component.
+Queries can match against the values of component members if they are of the `ecs_entity_t` type, and the component type is described with the reflection framework. Member value queries make it possible to query on values that can change rapidly without requiring structural changes in the ECS. The tradeoff is that other than with the regular, `DontFragment` and `CanToggle` storage options there are no acceleration structures to speed up query evaluation, which means that a query has to evaluate each instance of the component.
 
 The following sections show how to use queries in the different language bindings.
 
@@ -3486,7 +3370,7 @@ The following scenarios are not detected by change detection:
 
 A query with change detection enabled will only report a change for the components it matched with, or when an entity got added/removed to a matched table. A change to a component in a matched table that is not matched by the query will not be reported by the query.
 
-By default queries do not use change detection. Change detection is automatically enabled when a function that requires change detection is called on the query, for example if an application calls `changed()` on the query. Once change detection is enabled it will stay enabled for both the query and the tables the query is matched with.
+Change detection needs to be explicitly enabled on queries. See the examples below for how to do this in the different language bindings.
 
 When a change occurred in a table matching a query, the query state for that table will remain changed until the table is iterated by the query.
 
@@ -3503,10 +3387,10 @@ The following sections show how to use change detection in the different languag
 The following example shows how the change detection API is used in C:
 
 ```c
-// Query used for change detection. Note that change detection is not enabled on
-// the query itself, but by calling change detection functions for the query.
+// Query used for change detection.
 ecs_query_cache_t *q_read = ecs_query(world, {
-    .terms = {{ .id = ecs_id(Position), .inout = EcsIn }}
+    .terms = {{ .id = ecs_id(Position), .inout = EcsIn }},
+    .flags = EcsQueryDetectChanges
 });
 
 // Query used to create changes
@@ -3514,8 +3398,7 @@ ecs_query_cache_t *q_write = ecs_query(world, {
     .terms = {{ .id = ecs_id(Position) }} // defaults to inout
 });
 
-// Test if changes have occurred for anything matching the query. If this is the
-// first call to the function, it will enable change detection for the query.
+// Test if changes have occurred for anything matching the query. 
 bool changed = ecs_query_changed(q_read, NULL);
 
 // Setting a component will update the changed state
@@ -3553,15 +3436,15 @@ while (ecs_query_next(&it)) {
 The following example shows how the change detection API is used in C++:
 
 ```cpp
-// Query used for change detection. Note that change detection is not enabled on
-// the query itself, but by calling change detection functions for the query.
-flecs::query<const Position> q_read = world.query<const Position>();
+// Query used for change detection.
+flecs::query<const Position> q_read = world.query_builder<const Position>()
+  .detect_changes()
+  .build();
 
 // Query used to create changes
 flecs::query<Position> q_write = world.query<Position>(); // defaults to inout
 
-// Test if changes have occurred for anything matching the query. If this is the
-// first call to the function, it will enable change detection for the query.
+// Test if changes have occurred for anything matching the query.
 bool changed = q_read.changed();
 
 // Setting a component will update the changed state
@@ -3570,7 +3453,7 @@ flecs::entity e = world.entity()
 
 q_write.run([](flecs::iter& it) {
   if (it.next()) {
-    if !changed {
+    if (!changed) {
       // If no changes are made to the iterated table, the skip function can be
       // called to prevent marking the matched components as dirty.
       it.skip();
@@ -3599,15 +3482,15 @@ q_read.run([](flecs::iter& it) {
 The following example shows how the change detection API is used in C++:
 
 ```rust
-// Query used for change detection. Note that change detection is not enabled on
-// the query itself, but by calling change detection functions for the query.
-let q_read = world.new_query::<&Position>();
+// Query used for change detection.
+let q_read = world.query::<&Position>()
+  .detect_changes()
+  .build();
 
 // Query used to create changes
 let q_write = world.new_query::<&mut Position>(); // defaults to inout
 
-// Test if changes have occurred for anything matching the query. If this is the
-// first call to the function, it will enable change detection for the query.
+// Test if changes have occurred for anything matching the query.
 let changed = q_read.is_changed();
 
 // Setting a component will update the changed state
@@ -4024,7 +3907,7 @@ ecs_query_t *q = ecs_query(world, {
 The following example shows a query that uses component inheritance to match entities:
 
 ```cpp
-flecs::entity Unit = ecs_new(world);
+flecs::entity Unit = world.entity();
 flecs::entity MeleeUnit = world.entity().is_a(Unit);
 flecs::entity RangedUnit = world.entity().is_a(Unit);
 

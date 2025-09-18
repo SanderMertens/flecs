@@ -23,6 +23,9 @@
 #define FLECS_DOC
 #endif
 
+#ifndef FLECS_PARSER
+#define FLECS_PARSER
+#endif
 
 #ifndef FLECS_SCRIPT_H
 #define FLECS_SCRIPT_H
@@ -31,9 +34,24 @@
 extern "C" {
 #endif
 
+#define FLECS_SCRIPT_FUNCTION_ARGS_MAX (16)
+
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
 
+FLECS_API
+extern ECS_DECLARE(EcsScriptTemplate);
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptConstVar);
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptFunction);
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptMethod);
+
+/* Script template. */
 typedef struct ecs_script_template_t ecs_script_template_t;
 
 /** Script variable. */
@@ -41,11 +59,15 @@ typedef struct ecs_script_var_t {
     const char *name;
     ecs_value_t value;
     const ecs_type_info_t *type_info;
+    int32_t sp;
+    bool is_const;
 } ecs_script_var_t;
 
 /** Script variable scope. */
 typedef struct ecs_script_vars_t {
     struct ecs_script_vars_t *parent;
+    int32_t sp;
+
     ecs_hashmap_t var_index;
     ecs_vec_t vars;
 
@@ -62,41 +84,130 @@ typedef struct ecs_script_t {
     const char *code;
 } ecs_script_t;
 
+/* Runtime for executing scripts */
+typedef struct ecs_script_runtime_t ecs_script_runtime_t;
+
 /** Script component. 
  * This component is added to the entities of managed scripts and templates.
  */
 typedef struct EcsScript {
+    char *filename;
+    char *code;
+    char *error; /* Set if script evaluation had errors */
     ecs_script_t *script;
     ecs_script_template_t *template_; /* Only set for template scripts */
 } EcsScript;
 
+/** Script function context. */
+typedef struct ecs_function_ctx_t {
+    ecs_world_t *world;
+    ecs_entity_t function;
+    void *ctx;
+} ecs_function_ctx_t;
+
+/** Script function callback. */
+typedef void(*ecs_function_callback_t)(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result);
+
+/** Function argument type. */
+typedef struct ecs_script_parameter_t {
+    const char *name;
+    ecs_entity_t type;
+} ecs_script_parameter_t;
+
+/** Const component.
+ * This component describes a const variable that can be used from scripts.
+ */
+typedef struct EcsScriptConstVar {
+    ecs_value_t value;
+    const ecs_type_info_t *type_info;
+} EcsScriptConstVar;
+
+/** Function component.
+ * This component describes a function that can be called from a script.
+ */
+typedef struct EcsScriptFunction {
+    ecs_entity_t return_type;
+    ecs_vec_t params; /* vec<ecs_script_parameter_t> */
+    ecs_function_callback_t callback;
+    void *ctx;
+} EcsScriptFunction;
+
+/** Method component. 
+ * This component describes a method that can be called from a script. Methods
+ * are functions that can be called on instances of a type. A method entity is
+ * stored in the scope of the type it belongs to.
+ */
+typedef struct EcsScriptMethod {
+    ecs_entity_t return_type;
+    ecs_vec_t params; /* vec<ecs_script_parameter_t> */
+    ecs_function_callback_t callback;
+    void *ctx;
+} EcsScriptMethod;
 
 /* Parsing & running scripts */
+
+/** Used with ecs_script_parse() and ecs_script_eval() */
+typedef struct ecs_script_eval_desc_t {
+    ecs_script_vars_t *vars;       /**< Variables used by script */
+    ecs_script_runtime_t *runtime; /**< Reusable runtime (optional) */
+} ecs_script_eval_desc_t;
+
+/** Used to capture error output from script evaluation. */
+typedef struct ecs_script_eval_result_t {
+    char *error;
+} ecs_script_eval_result_t;
 
 /** Parse script.
  * This operation parses a script and returns a script object upon success. To
  * run the script, call ecs_script_eval().
  * 
+ * If the script uses outside variables, an ecs_script_vars_t object must be
+ * provided in the vars member of the desc object that defines all variables 
+ * with the correct types.
+ * 
+ * When the result parameter is not NULL, the script will capture errors and 
+ * return them in the output struct. If result.error is set, it must be freed
+ * by the application.
+ * 
  * @param world The world.
  * @param name Name of the script (typically a file/module name).
  * @param code The script code.
+ * @param desc Parameters for script runtime.
+ * @param result Output of script evaluation.
  * @return Script object if success, NULL if failed.
 */
 FLECS_API
 ecs_script_t* ecs_script_parse(
     ecs_world_t *world,
     const char *name,
-    const char *code);
+    const char *code,
+    const ecs_script_eval_desc_t *desc,
+    ecs_script_eval_result_t *result);
 
 /** Evaluate script.
  * This operation evaluates (runs) a parsed script.
  * 
+ * If variables were provided to ecs_script_parse(), an application may pass
+ * a different ecs_script_vars_t object to ecs_script_eval(), as long as the
+ * object has all referenced variables and they are of the same type.
+ * 
+ * When the result parameter is not NULL, the script will capture errors and 
+ * return them in the output struct. If result.error is set, it must be freed
+ * by the application.
+ * 
  * @param script The script.
+ * @param desc Parameters for script runtime.
  * @return Zero if success, non-zero if failed.
 */
 FLECS_API
 int ecs_script_eval(
-    ecs_script_t *script);
+    const ecs_script_t *script,
+    const ecs_script_eval_desc_t *desc,
+    ecs_script_eval_result_t *result);
 
 /** Free script.
  * This operation frees a script object.
@@ -130,7 +241,8 @@ FLECS_API
 int ecs_script_run(
     ecs_world_t *world,
     const char *name,
-    const char *code);
+    const char *code,
+    ecs_script_eval_result_t *result);
 
 /** Parse script file.
  * This parses a script file and instantiates the entities in the world. This
@@ -146,6 +258,31 @@ int ecs_script_run_file(
     ecs_world_t *world,
     const char *filename);
 
+/** Create runtime for script.
+ * A script runtime is a container for any data created during script 
+ * evaluation. By default calling ecs_script_run() or ecs_script_eval() will
+ * create a runtime on the spot. A runtime can be created in advance and reused
+ * across multiple script evaluations to improve performance.
+ * 
+ * When scripts are evaluated on multiple threads, each thread should have its
+ * own script runtime.
+ * 
+ * A script runtime must be deleted with ecs_script_runtime_free().
+ * 
+ * @return A new script runtime.
+ */
+FLECS_API
+ecs_script_runtime_t* ecs_script_runtime_new(void);
+
+/** Free script runtime.
+ * This operation frees a script runtime created by ecs_script_runtime_new().
+ * 
+ * @param runtime The runtime to free.
+ */
+FLECS_API
+void ecs_script_runtime_free(
+    ecs_script_runtime_t *runtime);
+
 /** Convert script AST to string.
  * This operation converts the script abstract syntax tree to a string, which
  * can be used to debug a script.
@@ -157,7 +294,8 @@ int ecs_script_run_file(
 FLECS_API
 int ecs_script_ast_to_buf(
     ecs_script_t *script,
-    ecs_strbuf_t *buf);
+    ecs_strbuf_t *buf,
+    bool colors);
 
 /** Convert script AST to string.
  * This operation converts the script abstract syntax tree to a string, which
@@ -168,7 +306,8 @@ int ecs_script_ast_to_buf(
  */
 FLECS_API
 char* ecs_script_ast_to_str(
-    ecs_script_t *script);
+    ecs_script_t *script,
+    bool colors);
 
 
 /* Managed scripts (script associated with entity that outlives the function) */
@@ -339,6 +478,45 @@ ecs_script_var_t* ecs_script_vars_lookup(
     const ecs_script_vars_t *vars,
     const char *name);
 
+/** Lookup a variable by stack pointer.
+ * This operation provides a faster way to lookup variables that are always 
+ * declared in the same order in a ecs_script_vars_t scope.
+ * 
+ * The stack pointer of a variable can be obtained from the ecs_script_var_t 
+ * type. The provided frame offset must be valid for the provided variable  
+ * stack. If the frame offset is not valid, this operation will panic.
+ * 
+ * @param vars The variable scope.
+ * @param sp The stack pointer to the variable.
+ * @return The variable.
+ */
+FLECS_API
+ecs_script_var_t* ecs_script_vars_from_sp(
+    const ecs_script_vars_t *vars,
+    int32_t sp);
+
+/** Print variables.
+ * This operation prints all variables in the vars scope and parent scopes.asm
+ * 
+ * @param vars The variable scope.
+ */
+FLECS_API
+void ecs_script_vars_print(
+    const ecs_script_vars_t *vars);
+
+/** Preallocate space for variables.
+ * This operation preallocates space for the specified number of variables. This
+ * is a performance optimization only, and is not necessary before declaring
+ * variables in a scope.
+ * 
+ * @param vars The variable scope.
+ * @param count The number of variables to preallocate space for.
+ */
+FLECS_API
+void ecs_script_vars_set_size(
+    ecs_script_vars_t *vars,
+    int32_t count);
+
 /** Convert iterator to vars
  * This operation converts an iterator to a variable array. This allows for
  * using iterator results in expressions. The operation only converts a
@@ -380,38 +558,90 @@ void ecs_script_vars_from_iter(
 
 /* Standalone expression evaluation */
 
-/** Used with ecs_script_expr_run(). */
-typedef struct ecs_script_expr_run_desc_t {
-    const char *name;
-    const char *expr;
-    ecs_entity_t (*lookup_action)(
+/** Used with ecs_expr_run(). */
+typedef struct ecs_expr_eval_desc_t {
+    const char *name;                /**< Script name */
+    const char *expr;                /**< Full expression string */
+    const ecs_script_vars_t *vars;   /**< Variables accessible in expression */
+    ecs_entity_t type;               /**< Type of parsed value (optional) */
+    ecs_entity_t (*lookup_action)(   /**< Function for resolving entity identifiers */
         const ecs_world_t*,
         const char *value,
         void *ctx);
-    void *lookup_ctx;
-    ecs_script_vars_t *vars;
-} ecs_script_expr_run_desc_t;
+    void *lookup_ctx;                /**< Context passed to lookup function */
 
-/** Parse standalone expression into value.
- * This operation parses a flecs expression into the provided pointer. The
- * memory pointed to must be large enough to contain a value of the used type.
+    /** Disable constant folding (slower evaluation, faster parsing) */
+    bool disable_folding;
+
+    /** This option instructs the expression runtime to lookup variables by 
+     * stack pointer instead of by name, which improves performance. Only enable 
+     * when provided variables are always declared in the same order. */
+    bool disable_dynamic_variable_binding;
+
+    /** Allow for unresolved identifiers when parsing. Useful when entities can
+     * be created in between parsing & evaluating. */
+    bool allow_unresolved_identifiers;
+
+    ecs_script_runtime_t *runtime;   /**< Reusable runtime (optional) */
+
+    void *script_visitor;            /**< For internal usage */
+} ecs_expr_eval_desc_t;
+
+/** Run expression.
+ * This operation runs an expression and stores the result in the provided 
+ * value. If the value contains a type that is different from the type of the
+ * expression, the expression will be cast to the value.
  *
- * If no type and pointer are provided for the value argument, the operation
- * will discover the type from the expression and allocate storage for the
- * value. The allocated value must be freed with ecs_value_free().
+ * If the provided value for value.ptr is NULL, the value must be freed with 
+ * ecs_value_free() afterwards.
  *
  * @param world The world.
  * @param ptr The pointer to the expression to parse.
  * @param value The value containing type & pointer to write to.
- * @param desc Configuration parameters for deserializer.
+ * @param desc Configuration parameters for the parser.
  * @return Pointer to the character after the last one read, or NULL if failed.
  */
 FLECS_API
-const char* ecs_script_expr_run(
+const char* ecs_expr_run(
     ecs_world_t *world,
     const char *ptr,
     ecs_value_t *value,
-    const ecs_script_expr_run_desc_t *desc);
+    const ecs_expr_eval_desc_t *desc);
+
+/** Parse expression.
+ * This operation parses an expression and returns an object that can be 
+ * evaluated multiple times with ecs_expr_eval().
+ * 
+ * @param world The world.
+ * @param expr The expression string.
+ * @param desc Configuration parameters for the parser.
+ * @return A script object if parsing is successful, NULL if parsing failed.
+ */
+FLECS_API
+ecs_script_t* ecs_expr_parse(
+    ecs_world_t *world,
+    const char *expr,
+    const ecs_expr_eval_desc_t *desc);
+
+/** Evaluate expression.
+ * This operation evaluates an expression parsed with ecs_expr_parse() 
+ * and stores the result in the provided value. If the value contains a type 
+ * that is different from the type of the expression, the expression will be 
+ * cast to the value.
+ * 
+ * If the provided value for value.ptr is NULL, the value must be freed with 
+ * ecs_value_free() afterwards.
+ * 
+ * @param script The script containing the expression.
+ * @param value The value in which to store the expression result.
+ * @param desc Configuration parameters for the parser.
+ * @return Zero if successful, non-zero if failed.
+ */
+FLECS_API
+int ecs_expr_eval(
+    const ecs_script_t *script,
+    ecs_value_t *value,
+    const ecs_expr_eval_desc_t *desc);
 
 /** Evaluate interpolated expressions in string.
  * This operation evaluates expressions in a string, and replaces them with
@@ -430,6 +660,111 @@ char* ecs_script_string_interpolate(
     ecs_world_t *world,
     const char *str,
     const ecs_script_vars_t *vars);
+
+
+/* Global const variables */
+
+/** Used with ecs_const_var_init */
+typedef struct ecs_const_var_desc_t {
+    /* Variable name. */
+    const char *name;
+
+    /* Variable parent (namespace). */
+    ecs_entity_t parent;
+
+    /* Variable type. */
+    ecs_entity_t type;
+
+    /* Pointer to value of variable. The value will be copied to an internal
+     * storage and does not need to be kept alive. */
+    void *value;
+} ecs_const_var_desc_t;
+
+/** Create a const variable that can be accessed by scripts.
+ * 
+ * @param world The world.
+ * @param desc Const var parameters.
+ * @return The const var, or 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_const_var_init(
+    ecs_world_t *world,
+    ecs_const_var_desc_t *desc);
+
+#define ecs_const_var(world, ...)\
+    ecs_const_var_init(world, &(ecs_const_var_desc_t)__VA_ARGS__)
+
+
+/** Returns value for a const variable. 
+ * This returns the value for a const variable that is created either with
+ * ecs_const_var_init, or in a script with "export const v: ...".
+ * 
+ * @param world The world.
+ * @param var The variable associated with the entity. 
+ */
+FLECS_API
+ecs_value_t ecs_const_var_get(
+    const ecs_world_t *world,
+    ecs_entity_t var);
+
+/* Functions */
+
+/** Used with ecs_function_init and ecs_method_init */
+typedef struct ecs_function_desc_t {
+    /** Function name. */
+    const char *name;
+    
+    /** Parent of function. For methods the parent is the type for which the 
+     * method will be registered. */
+    ecs_entity_t parent;
+
+    /** Function parameters. */
+    ecs_script_parameter_t params[FLECS_SCRIPT_FUNCTION_ARGS_MAX];
+
+    /** Function return type. */
+    ecs_entity_t return_type;
+
+    /** Function implementation. */
+    ecs_function_callback_t callback;
+
+    /** Context passed to function implementation. */
+    void *ctx;
+} ecs_function_desc_t;
+
+/** Create new function. 
+ * This operation creates a new function that can be called from a script.
+ * 
+ * @param world The world.
+ * @param desc Function init parameters.
+ * @return The function, or 0 if failed.
+*/
+FLECS_API
+ecs_entity_t ecs_function_init(
+    ecs_world_t *world,
+    const ecs_function_desc_t *desc);
+
+#define ecs_function(world, ...)\
+    ecs_function_init(world, &(ecs_function_desc_t)__VA_ARGS__)
+
+/** Create new method. 
+ * This operation creates a new method that can be called from a script. A 
+ * method is like a function, except that it can be called on every instance of
+ * a type.
+ * 
+ * Methods automatically receive the instance on which the method is invoked as
+ * first argument.
+ * 
+ * @param world Method The world.
+ * @param desc Method init parameters.
+ * @return The function, or 0 if failed.
+*/
+FLECS_API
+ecs_entity_t ecs_method_init(
+    ecs_world_t *world,
+    const ecs_function_desc_t *desc);
+
+#define ecs_method(world, ...)\
+    ecs_method_init(world, &(ecs_function_desc_t)__VA_ARGS__)
 
 
 /* Value serialization */
@@ -497,6 +832,8 @@ int ecs_ptr_to_str_buf(
     ecs_entity_t type,
     const void *data,
     ecs_strbuf_t *buf);
+
+typedef struct ecs_expr_node_t ecs_expr_node_t; 
 
 /** Script module import function.
  * Usage:

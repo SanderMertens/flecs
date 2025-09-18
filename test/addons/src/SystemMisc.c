@@ -5,7 +5,7 @@ int32_t dummy_invoked = false;
 
 static
 void Dummy(ecs_iter_t *it) {
-    dummy_invoked = true;
+    dummy_invoked ++;
     probe_iter(it);
 }
 
@@ -1559,6 +1559,8 @@ void SystemMisc_update_rate_w_system_init(void) {
 void SystemMisc_system_w_interval_rate_stop_timer(void) {
     ecs_world_t *world = ecs_init();
 
+    ecs_log_set_level(-4);
+
     ecs_entity_t system = ecs_system(world, {
         .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
         .interval = 1.0,
@@ -1566,26 +1568,31 @@ void SystemMisc_system_w_interval_rate_stop_timer(void) {
         .callback = Dummy
     });
 
-    for (int i = 0; i < 5; i ++) {
-        ecs_progress(world, 0.5);
-        test_assert(dummy_invoked == 0);
-    }
+    test_assert(system == 0);
 
-    ecs_progress(world, 0.5);
+    ecs_fini(world);
+}
 
-    test_assert(dummy_invoked == 1);
-    dummy_invoked = 0;
+void SystemMisc_system_w_rate_filter_self(void) {
+    ecs_world_t *world = ecs_init();
 
-    ecs_stop_timer(world, system);
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
+        .rate = 2.0,
+        .callback = Dummy
+    });
 
-    for (int i = 0; i < 5; i ++) {
-        ecs_progress(world, 0.5);
-        test_assert(dummy_invoked == 0);
-    }
+    ecs_progress(world, 0);
+    test_int(dummy_invoked, 0);
 
-    ecs_progress(world, 0.5);
+    ecs_progress(world, 0);
+    test_int(dummy_invoked, 1);
 
-    test_assert(dummy_invoked == 0);
+    ecs_progress(world, 0);
+    test_int(dummy_invoked, 1);
+
+    ecs_progress(world, 0);
+    test_int(dummy_invoked, 2);
 
     ecs_fini(world);
 }
@@ -1789,4 +1796,46 @@ void SystemMisc_register_run_after_callback_ctx(void) {
 
     test_int(callback_ctx, 1);
     test_int(run_ctx, 1);
+}
+
+static void Run_w_query_next(ecs_iter_t *it) {
+    while (ecs_query_next(it)) {
+        probe_iter(it);
+    }
+
+    run_invoked ++;
+}
+
+void SystemMisc_run_w_query_next(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
+        .query.terms = {{ .id = TagA }},
+        .run = Run_w_query_next,
+        .callback = Dummy,
+        .ctx = &ctx,
+    });
+    test_assert(system != 0);
+
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
+    ecs_entity_t e3 = ecs_new_w(world, TagA);
+    ecs_add(world, e3, TagB); // 2 tables
+
+    ecs_run(world, system, 0, NULL);
+
+    test_bool(dummy_invoked, false);
+    test_int(run_invoked, 1);
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 3);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+
+    ecs_fini(world);
 }

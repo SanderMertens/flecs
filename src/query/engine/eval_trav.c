@@ -15,7 +15,7 @@ bool flecs_query_trav_fixed_src_reflexive(
 {
     ecs_table_t *table = range->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_entity_t *entities = table->data.entities.array;
+    const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t count = range->count;
     if (!count) {
         count = ecs_table_count(table);
@@ -167,7 +167,7 @@ bool flecs_query_trav_unknown_src_up_fixed_second(
     ecs_trav_elem_t *elems = ecs_vec_first(&trav_ctx->cache.entities);
     for (; trav_ctx->index < count; trav_ctx->index ++) {
         ecs_trav_elem_t *el = &elems[trav_ctx->index];
-        trav_ctx->and.idr = el->idr; /* prevents lookup by select */
+        trav_ctx->and.cr = el->cr; /* prevents lookup by select */
         if (flecs_query_select_w_id(op, redo, ctx, ecs_pair(trav, el->entity),
             (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled))) 
         {
@@ -203,8 +203,7 @@ bool flecs_query_trav_yield_reflexive_src(
         return false;
     }
 
-    ecs_entity_t entity = ecs_vec_get_t(
-        &range->table->data.entities, ecs_entity_t, trav_ctx->index)[0];
+    ecs_entity_t entity = ecs_table_entities(range->table)[trav_ctx->index];
     flecs_query_set_trav_match(op, NULL, trav, entity, ctx);
 
     /* Hijack existing variable to return one result at a time */

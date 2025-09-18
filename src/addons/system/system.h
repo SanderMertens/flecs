@@ -23,7 +23,7 @@ void ecs_system_activate(
     const ecs_system_t *system_data);
 
 /* Internal function to run a system */
-ecs_entity_t flecs_run_intern(
+ecs_entity_t flecs_run_system(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t system,

@@ -943,7 +943,7 @@ void Misc_counter_id_metric(void) {
     ecs.progress(1.0);
 
     {
-        const flecs::metrics::Value *v = m.get<flecs::metrics::Value>();
+        const flecs::metrics::Value *v = m.try_get<flecs::metrics::Value>();
         test_assert(v != nullptr);
         test_int(v->value, 1);
     }
@@ -954,7 +954,7 @@ void Misc_counter_id_metric(void) {
     ecs.progress(1.0);
 
     {
-        const flecs::metrics::Value *v = m.get<flecs::metrics::Value>();
+        const flecs::metrics::Value *v = m.try_get<flecs::metrics::Value>();
         test_assert(v != nullptr);
         test_int(v->value, 4);
     }
@@ -981,7 +981,7 @@ void Misc_counter_target_metric(void) {
     {
         flecs::entity red = ecs.lookup("metrics::color::Red");
         test_assert(red != 0);
-        const flecs::metrics::Value *v = red.get<flecs::metrics::Value>();
+        const flecs::metrics::Value *v = red.try_get<flecs::metrics::Value>();
         test_assert(v != nullptr);
         test_int(v->value, 1);
     }
@@ -989,7 +989,7 @@ void Misc_counter_target_metric(void) {
     {
         flecs::entity green = ecs.lookup("metrics::color::Green");
         test_assert(green != 0);
-        const flecs::metrics::Value *v = green.get<flecs::metrics::Value>();
+        const flecs::metrics::Value *v = green.try_get<flecs::metrics::Value>();
         test_assert(v != nullptr);
         test_int(v->value, 1);
     }
@@ -997,7 +997,7 @@ void Misc_counter_target_metric(void) {
     {
         flecs::entity blue = ecs.lookup("metrics::color::Blue");
         test_assert(blue != 0);
-        const flecs::metrics::Value *v = blue.get<flecs::metrics::Value>();
+        const flecs::metrics::Value *v = blue.try_get<flecs::metrics::Value>();
         test_assert(v != nullptr);
         test_int(v->value, 2);
     }
@@ -1034,7 +1034,7 @@ void Misc_alert(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e2);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e2);
         test_assert(ai.parent() == a);
     }
 
@@ -1083,9 +1083,9 @@ void Misc_alert_w_message(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e2);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e2);
         test_assert(ai.parent() == a);
-        test_str(ai.get<flecs::alerts::Instance>()->message, 
+        test_str(ai.try_get<flecs::alerts::Instance>()->message, 
             "e2 has position but not velocity");
     }
 
@@ -1224,7 +1224,7 @@ void Misc_alert_w_retain_period(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e2);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e2);
         test_assert(ai.parent() == a);
     }
 
@@ -1275,7 +1275,7 @@ void Misc_alert_w_severity_filter(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1296,7 +1296,7 @@ void Misc_alert_w_severity_filter(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
         test_assert(ai.parent() == a);
     }
@@ -1317,7 +1317,7 @@ void Misc_alert_w_severity_filter(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1352,7 +1352,7 @@ void Misc_alert_w_severity_filter_severity_type(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1373,7 +1373,7 @@ void Misc_alert_w_severity_filter_severity_type(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
         test_assert(ai.parent() == a);
     }
@@ -1394,7 +1394,7 @@ void Misc_alert_w_severity_filter_severity_type(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1429,7 +1429,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1450,7 +1450,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
         test_assert(ai.parent() == a);
     }
@@ -1471,7 +1471,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1506,7 +1506,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1527,7 +1527,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
         test_assert(ai.parent() == a);
     }
@@ -1548,7 +1548,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1569,7 +1569,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1606,7 +1606,7 @@ void Misc_alert_w_severity_filter_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1627,7 +1627,7 @@ void Misc_alert_w_severity_filter_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
         test_assert(ai.parent() == a);
     }
@@ -1648,7 +1648,7 @@ void Misc_alert_w_severity_filter_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1685,7 +1685,7 @@ void Misc_alert_w_severity_filter_severity_type_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1706,7 +1706,7 @@ void Misc_alert_w_severity_filter_severity_type_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
         test_assert(ai.parent() == a);
     }
@@ -1727,7 +1727,7 @@ void Misc_alert_w_severity_filter_severity_type_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1764,7 +1764,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1785,7 +1785,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
         test_assert(ai.parent() == a);
     }
@@ -1806,7 +1806,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1843,7 +1843,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1864,7 +1864,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Warning>()));
         test_assert(ai.parent() == a);
     }
@@ -1885,7 +1885,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert((ai.has<flecs::alerts::Alert, flecs::alerts::Error>()));
         test_assert(ai.parent() == a);
     }
@@ -1930,9 +1930,9 @@ void Misc_alert_for_member_range(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert(ai.parent() == a);
-        test_str(ai.get<flecs::alerts::Instance>()->message, 
+        test_str(ai.try_get<flecs::alerts::Instance>()->message, 
             "e1 has high mass");
     }
 
@@ -1990,7 +1990,7 @@ void Misc_alert_w_member_range_from_var(void) {
         test_assert(ai != 0);
         test_assert(ai.has<flecs::alerts::Instance>());
         test_assert(ai.has<flecs::metrics::Source>());
-        test_assert(ai.get<flecs::metrics::Source>()->entity == e1);
+        test_assert(ai.try_get<flecs::metrics::Source>()->entity == e1);
         test_assert(ai.parent() == a);
     }
 
@@ -2219,4 +2219,281 @@ void Misc_member_metric_w_pair_r_T(void) {
         });
 
     test_int(count, 2);
+}
+
+void Misc_get_const_var(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export const x: 10")
+        .run();
+
+    double v = world.get_const_var<double>("x");
+    test_int(v, 10);
+}
+
+void Misc_get_const_var_struct(void) {
+    flecs::world world;
+
+    world.component<Position>()
+        .member("x", &Position::x)
+        .member("y", &Position::y);
+
+    world.script()
+        .code("export const x = Position: {10, 20}")
+        .run();
+
+    Position v = world.get_const_var<Position>("x");
+    test_int(v.x, 10);
+    test_int(v.y, 20);
+}
+
+void Misc_get_const_var_as_f32(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export const x: 10")
+        .run();
+
+    float v = world.get_const_var<float>("x");
+    test_int(v, 10);
+}
+
+void Misc_get_const_var_as_i32(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export const x: 10")
+        .run();
+
+    int32_t v = world.get_const_var<int32_t>("x");
+    test_int(v, 10);
+}
+
+void Misc_get_const_var_as_u32(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export const x: 10")
+        .run();
+
+    uint32_t v = world.get_const_var<uint32_t>("x");
+    test_uint(v, 10);
+}
+
+void Misc_get_const_var_w_out(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export const x: 10")
+        .run();
+
+    double v;
+    world.get_const_var("x", v);
+    test_int(v, 10);
+}
+
+void Misc_get_const_var_as_f32_w_out(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export const x: 10")
+        .run();
+
+    float v;
+    world.get_const_var("x", v);
+    test_int(v, 10);
+}
+
+void Misc_get_const_var_as_i32_w_out(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export const x: 10")
+        .run();
+
+    int32_t v;
+    world.get_const_var("x", v);
+    test_int(v, 10);
+}
+
+void Misc_get_const_var_as_u32_w_out(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export const x: 10")
+        .run();
+
+    uint32_t v;
+    world.get_const_var("x", v);
+    test_int(v, 10);
+}
+
+void Misc_get_const_var_struct_w_out(void) {
+    flecs::world world;
+
+    world.component<Position>()
+        .member("x", &Position::x)
+        .member("y", &Position::y);
+
+    world.script()
+        .code("export const x = Position: {10, 20}")
+        .run();
+
+    Position v;
+    world.get_const_var<Position>("x", v, {30, 40});
+    test_int(v.x, 10);
+    test_int(v.y, 20);
+}
+
+void Misc_get_const_var_struct_w_out_not_found(void) {
+    flecs::world world;
+
+    world.component<Position>()
+        .member("x", &Position::x)
+        .member("y", &Position::y);
+
+    Position v;
+    flecs::log::set_level(-4);
+    world.get_const_var<Position>("x", v, {30, 40});
+    test_int(v.x, 30);
+    test_int(v.y, 40);
+}
+
+void Misc_get_const_var_not_found(void) {
+    flecs::world world;
+
+    double v;
+    flecs::log::set_level(-4);
+    world.get_const_var<double>("x", v, 20);
+    test_int(v, 20);
+}
+
+void Misc_get_const_var_not_a_var(void) {
+    flecs::world world;
+
+    world.entity("x");
+
+    double v;
+
+    flecs::log::set_level(-4);
+    world.get_const_var<double>("x", v, 20);
+    test_int(v, 20);
+}
+
+void Misc_get_scoped_const_var(void) {
+    flecs::world world;
+
+    world.script()
+        .code("parent { export const x: 10 }")
+        .run();
+
+    double v = world.get_const_var<double>("parent::x");
+    test_int(v, 10);
+}
+
+struct test_module {
+    static double ScriptVariable;
+
+    test_module(flecs::world& world) {
+        world.script()
+            .code("export const ScriptVariable: 10\n")
+            .run();
+
+        world.get_const_var("ScriptVariable", ScriptVariable, 20.0);
+
+        test_int(ScriptVariable, 10);
+    }
+};
+
+double test_module::ScriptVariable = 0;
+
+void Misc_get_module_const_var(void) {
+    flecs::world world;
+
+    world.import<test_module>();
+
+    test_int(test_module::ScriptVariable, 10);
+}
+
+struct script_module {
+    static double ScriptVariable;
+
+    script_module(flecs::world& world) {
+        world.script()
+            .code("module script_module\n"
+                  "export const ScriptVariable: 10\n")
+            .run();
+
+        world.get_const_var("ScriptVariable", ScriptVariable, 20.0);
+
+        test_int(ScriptVariable, 10);
+    }
+};
+
+double script_module::ScriptVariable = 0;
+
+void Misc_get_module_const_var_from_script_module(void) {
+    flecs::world world;
+
+    world.import<script_module>();
+
+    test_int(script_module::ScriptVariable, 10);
+}
+
+namespace nested {
+
+struct script_module {
+    static double ScriptVariable;
+
+    script_module(flecs::world& world) {
+        world.script()
+            .code("module nested.script_module\n"
+                  "export const ScriptVariable: 10\n")
+            .run();
+
+        world.get_const_var("ScriptVariable", ScriptVariable, 20.0);
+
+        test_int(ScriptVariable, 10);
+    }
+};
+
+double script_module::ScriptVariable = 0;
+
+}
+
+void Misc_get_module_const_var_from_nested_script_module(void) {
+    flecs::world world;
+
+    world.import<nested::script_module>();
+
+    test_int(nested::script_module::ScriptVariable, 10);
+}
+
+namespace nested {
+
+struct test_module {
+    static double ScriptVariable;
+
+    test_module(flecs::world& world) {
+        world.script()
+            .code("export const ScriptVariable: 10\n")
+            .run();
+
+        world.get_const_var("ScriptVariable", ScriptVariable, 20.0);
+
+        test_int(ScriptVariable, 10);
+    }
+};
+
+double test_module::ScriptVariable = 0;
+
+}
+
+void Misc_get_module_const_var_from_nested_module_no_script_module(void) {
+    flecs::world world;
+
+    world.import<nested::test_module>();
+
+    test_int(nested::test_module::ScriptVariable, 10);
 }

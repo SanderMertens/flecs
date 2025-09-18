@@ -319,12 +319,14 @@ void SystemBuilder_singleton_term(void) {
         int32_t value;
     };
 
+    ecs.component<Singleton>().add(flecs::Singleton);
+
     ecs.set<Singleton>({10});
 
     int32_t count = 0;
 
     auto s = ecs.system<Entity>()
-        .with<Singleton>().singleton().in()
+        .with<Singleton>().in()
         .run([&](flecs::iter& it) {
             while (it.next()) {
                 auto e = it.field<Entity>(0);

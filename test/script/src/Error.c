@@ -13,7 +13,7 @@ void Error_multi_line_comment_after_newline_before_newline_scope_open(void) {
     LINE "Foo{}";
 
     ecs_log_set_level(-4); /* Newline after multiline comment is not ignored */
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -26,7 +26,7 @@ void Error_missing_end_of_scope(void) {
     HEAD "Parent {"
     LINE " Child {}";
 
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     test_assert(ecs_get_scope(world) == 0);
     test_assert(ecs_get_with(world) == 0);
@@ -57,7 +57,7 @@ void Error_with_n_tags_2_levels_invalid_tag(void) {
     LINE "HelloC {}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -69,7 +69,7 @@ void Error_assignment_to_non_component(void) {
     HEAD "Foo { Position: {x: 10, y: 20} }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -83,7 +83,7 @@ void Error_struct_w_member_w_assignment_to_nothing(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -97,7 +97,7 @@ void Error_struct_w_member_w_assignment_to_empty_scope(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -110,7 +110,7 @@ void Error_invalid_nested_assignment(void) {
     LINE "Bar { Hello }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -122,7 +122,7 @@ void Error_invalid_partial_pair_assignment(void) {
     HEAD "Foo { (Hello, }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -134,7 +134,7 @@ void Error_empty_assignment(void) {
     HEAD "Foo {";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -146,7 +146,7 @@ void Error_empty_assignment_before_end_of_scope(void) {
     HEAD "{Foo {}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -161,7 +161,7 @@ void Error_default_type_with_tag(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -173,13 +173,13 @@ void Error_invalid_oneof(void) {
 
     const char *expr =
     HEAD "flecs.meta.enum Color {"
-    LINE "  flecs.meta.constant Red"
-    LINE "  flecs.meta.constant Green"
-    LINE "  flecs.meta.constant Blue"
+    LINE "  flecs.core.constant Red"
+    LINE "  flecs.core.constant Green"
+    LINE "  flecs.core.constant Blue"
     LINE "}"
     LINE "e { (Color, Foo) }";
 
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_entity_t color = ecs_lookup(world, "Color");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -212,7 +212,26 @@ void Error_unterminated_multiline_string(void) {
     LINE "}}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_invalid_assign_multiline_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "String"}),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo { String: {value: `foo`} }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -225,7 +244,7 @@ void Error_const_var_redeclare(void) {
     LINE "const var_x = 20";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -247,7 +266,7 @@ void Error_typed_const_w_composite_type_invalid_assignment(void) {
     LINE "";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -273,7 +292,7 @@ void Error_unterminated_multi_line_comment_in_value(void) {
     LINE "  y: 20\n"
     LINE "}}";
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -292,7 +311,7 @@ void Error_pair_w_rel_var_invalid_type(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -311,7 +330,7 @@ void Error_pair_w_tgt_var_invalid_type(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -326,12 +345,12 @@ void Error_with_value_not_a_component(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
 
-void Error_component_in_with_scope(void) {
+void Error_tag_in_with_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -351,7 +370,256 @@ void Error_component_in_with_scope(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_tag_in_with_scope_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE ""
+    LINE "e {"
+    LINE "  with Foo {"
+    LINE "    Foo"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_pair_tag_in_with_scope_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "Bar"
+    LINE ""
+    LINE "e {"
+    LINE "  with Foo {"
+    LINE "    (Foo, Bar)"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "with Position(10, 20) {\n"
+    LINE "  Position: {10, 20}\n"
+    LINE "}\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Frame {\n"
+    LINE "  with Position {\n"
+    LINE "    Position: {}\n"
+    LINE "  }\n"
+    LINE "}\n"
+    LINE "\n"
+    LINE "template Room { }\n"
+    LINE "\n"
+    LINE "template House {\n"
+    LINE "  building {\n"
+    LINE "    walls = Frame: {}\n"
+    LINE "  }\n"
+    LINE "}\n"
+    LINE "\n"
+    LINE "prefab HouseWithSide {\n"
+    LINE "  House: {}\n"
+    LINE "  _ {\n"
+    LINE "    Room: {}\n"
+    LINE "  }\n"
+    LINE "}\n"
+    LINE "\n"
+    LINE "e : HouseWithSide\n"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  with Position {"
+    LINE "    Position: {10, 20}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope_4(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "Foo {}"
+    LINE ""
+    LINE "e {"
+    LINE "  with Position {"
+    LINE "    (Foo, Position): {10, 20}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope_5(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "Foo {}"
+    LINE ""
+    LINE "e {"
+    LINE "  const pos = Position: {10, 20}"
+    LINE "  with Position {"
+    LINE "    $pos"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_in_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "template Foo {"
+    LINE "  with Position {"
+    LINE "    Position: {10, 20}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  Foo: {}"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -387,7 +655,59 @@ void Error_component_in_with_scope_nested(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope_after_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "with Position(10, 20) {"
+    LINE "  _ {}"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    LINE "";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_var_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const pos = Position: {10, 20}"
+    LINE "with $pos {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    LINE "";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -423,7 +743,7 @@ void Error_assign_after_with_in_scope(void) {
     LINE "}\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -461,7 +781,7 @@ void Error_not_an_array_component(void) {
     LINE "foo { Position: [10, 20] }\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -481,7 +801,7 @@ void Error_array_component_w_curly_brackets(void) {
     LINE "foo { Position: {10, 20} }\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -499,7 +819,7 @@ void Error_unknown_identifier(void) {
     LINE "Foo { Comp: {A} }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -517,7 +837,7 @@ void Error_unknown_identifier_for_int_field(void) {
     LINE "Foo { Comp: {A} }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -529,7 +849,7 @@ void Error_prefab_w_slot_no_parent(void) {
     HEAD "slot Base {}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -543,7 +863,7 @@ void Error_tag_not_found(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -557,7 +877,7 @@ void Error_component_not_found(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -573,7 +893,7 @@ void Error_pair_first_not_found(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -589,7 +909,7 @@ void Error_pair_second_not_found(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -603,7 +923,7 @@ void Error_kind_not_found(void) {
     HEAD "Foo Bar";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -617,7 +937,7 @@ void Error_base_not_found(void) {
     HEAD "Foo : Bar";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -635,14 +955,16 @@ void Error_entity_w_anonymous_tag(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code = expr
     });
-    test_assert(s == 0);
+    test_assert(s != 0);
+
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->error != NULL);
 
     ecs_fini(world);
 }
 
 void Error_member_expr_without_value_end_of_scope(void) {
-    test_quarantine("Mon Aug 5"); // address when porting expressions over to new parser
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -655,14 +977,13 @@ void Error_member_expr_without_value_end_of_scope(void) {
         }
     });
 
-    test_assert(ecs_script_run(world, NULL, "Position(x:)") != 0);
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, "Position(x:)", NULL) != 0);
 
     ecs_fini(world);
 }
 
 void Error_member_expr_without_value_comma(void) {
-    test_quarantine("Mon Aug 5"); // address when porting expressions over to new parser
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -675,14 +996,13 @@ void Error_member_expr_without_value_comma(void) {
         }
     });
 
-    test_assert(ecs_script_run(world, NULL, "Position(x:,0)") != 0);
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, "Position(x:,0)", NULL) != 0);
 
     ecs_fini(world);
 }
 
 void Error_member_expr_without_value_newline(void) {
-    test_quarantine("Mon Aug 5"); // address when porting expressions over to new parser
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -695,14 +1015,13 @@ void Error_member_expr_without_value_newline(void) {
         }
     });
 
-    test_assert(ecs_script_run(world, NULL, "Position(x:\n)") != 0);
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, "Position(x:\n)", NULL) != 0);
 
     ecs_fini(world);
 }
 
 void Error_2_member_expr_without_value(void) {
-    test_quarantine("Mon Aug 5"); // address when porting expressions over to new parser
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -715,7 +1034,8 @@ void Error_2_member_expr_without_value(void) {
         }
     });
 
-    test_assert(ecs_script_run(world, NULL, "Position(x:y:)") != 0);
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, "Position(x:y:)", NULL) != 0);
 
     ecs_fini(world);
 }
@@ -734,7 +1054,7 @@ void Error_expr_junk_after_number(void) {
     });
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, "Position(0abc)") != 0);
+    test_assert(ecs_script_run(world, NULL, "Position(0abc)", NULL) != 0);
 
     ecs_fini(world);
 }
@@ -753,14 +1073,12 @@ void Error_expr_junk_after_unary_minus(void) {
     });
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, "Position(-abc)") != 0);
+    test_assert(ecs_script_run(world, NULL, "Position(-abc)", NULL) != 0);
 
     ecs_fini(world);
 }
 
 void Error_expr_comma_after_nothing(void) {
-    test_quarantine("Mon Aug 5"); // address when porting expressions over to new parser
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -773,7 +1091,8 @@ void Error_expr_comma_after_nothing(void) {
         }
     });
 
-    test_assert(ecs_script_run(world, NULL, "Position(,)") != 0);
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, "Position(,)", NULL) != 0);
 
     ecs_fini(world);
 }
@@ -792,7 +1111,7 @@ void Error_expr_digit_with_two_dots(void) {
     });
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, "Position(10.10.10)") != 0);
+    test_assert(ecs_script_run(world, NULL, "Position(10.10.10)", NULL) != 0);
 
     ecs_fini(world);
 }
@@ -805,7 +1124,7 @@ void Error_template_empty(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -823,7 +1142,7 @@ void Error_template_unresolved_tag(void) {
     LINE "Tree ent()";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -842,7 +1161,7 @@ void Error_template_unresolved_component(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -858,7 +1177,7 @@ void Error_template_unresolved_pair_relationship(void) {
     LINE "Tree ent()";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -874,7 +1193,7 @@ void Error_template_unresolved_pair_target(void) {
     LINE "Tree ent()";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -890,7 +1209,7 @@ void Error_template_unresolved_with_tag(void) {
     LINE "Tree ent()";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -910,7 +1229,7 @@ void Error_template_unresolved_with_component(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -927,7 +1246,7 @@ void Error_template_unresolved_with_pair_relationship(void) {
     LINE "Tree ent()";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -944,7 +1263,7 @@ void Error_template_unresolved_with_pair_target(void) {
     LINE "Tree ent()";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -961,7 +1280,7 @@ void Error_template_unresolved_tag_in_child(void) {
     LINE "Tree ent()";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -985,31 +1304,7 @@ void Error_template_prop_no_type(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Error_template_prop_no_default(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "template Tree {"
-    LINE "  prop height: flecs.meta.f32"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1036,7 +1331,7 @@ void Error_template_w_composite_prop_invalid_assignment(void) {
     LINE "t { Tree: {pos: {20, 30}} }";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1054,7 +1349,7 @@ void Error_template_redeclare_prop_as_const(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1072,7 +1367,7 @@ void Error_template_redeclare_prop_as_prop(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1090,7 +1385,7 @@ void Error_template_redeclare_const_as_const(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
@@ -1110,7 +1405,7 @@ void Error_run_template_after_error(void) {
     LINE "  Fo"
     LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     {
         ecs_entity_t tree = ecs_lookup(world, "Tree");
@@ -1121,7 +1416,7 @@ void Error_run_template_after_error(void) {
     }
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr_err) != 0);
+    test_assert(ecs_script_run(world, NULL, expr_err, NULL) != 0);
     ecs_log_set_level(-1);
 
     /* Because script is not managed, entiites created by script aren't deleted */
@@ -1134,7 +1429,7 @@ void Error_run_template_after_error(void) {
         test_assert(foo != 0);
     }
 
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     {
         ecs_entity_t tree = ecs_lookup(world, "Tree");
@@ -1208,7 +1503,422 @@ void Error_template_in_template(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_unterminated_binary(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_expr_run(world, "10 +", 
+        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Error_reload_script_w_component_w_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            "struct Position {\n"
+            "  x = f32\n"
+            "  y = f32\n"
+            "}\n"
+            "\n"
+            "e {\n"
+            "  Position: {10, 20}\n"
+            "}\n"
+    });
+
+    test_assert(s != 0);
+
+    ecs_log_set_level(-4);
+
+    test_assert(0 != ecs_script_update(world, s, 0, 
+        "struct Position {\n"
+        "  x = f32\n"
+        "  y = f32\n"
+        "}\n"
+        "\n"
+        "e {\n"
+        "  Position: {10, 20}\n"
+        "}\n"
+        "\n"
+        "f\n"
+    ));
+
+    ecs_fini(world);
+}
+
+void Error_reload_script_w_component_w_error_again(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            "struct Position {\n"
+            "  x = f32\n"
+            "  y = f32\n"
+            "}\n"
+            "\n"
+            "e {\n"
+            "  Position: {10, 20}\n"
+            "}\n"
+    });
+
+    test_assert(s != 0);
+
+    ecs_log_set_level(-4);
+
+    test_assert(0 != ecs_script_update(world, s, 0, 
+        "struct Position {\n"
+        "  x = f32\n"
+        "  y = f32\n"
+        "}\n"
+        "\n"
+        "e {\n"
+        "  Position: {10, 20}\n"
+        "}\n"
+        "\n"
+        "f\n"
+    ));
+
+    ecs_log_set_level(-1);
+
+    test_assert(0 == ecs_script_update(world, s, 0, 
+        "struct Position {\n"
+        "  x = f32\n"
+        "  y = f32\n"
+        "}\n"
+        "\n"
+        "e {\n"
+        "  Position: {10, 20}\n"
+        "}\n"
+    ));
+
+    ecs_fini(world);
+}
+
+void Error_template_w_invalid_var_in_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop height = f32: 10"
+    LINE "  e {"
+    LINE "    Position: {0, $h / 2, 0}"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_initializer_w_int_to_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    Position v = {0};
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_expr_run(world, "10", 
+        &ecs_value_ptr(Position, &v), NULL));
+
+    ecs_fini(world);
+}
+
+void Error_script_initializer_w_int_to_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Line"}),
+        .members = {
+            {"start", ecs_id(Position)},
+            {"stop", ecs_id(Position)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Line: {10}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_capture_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent {"
+    LINE " Child {}";
+
+    ecs_script_eval_result_t result = {0};
+    ecs_script_t *script = ecs_script_parse(world, "foo", expr, NULL, &result);
+    test_assert(script == NULL);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_unresolved_component_error_w_script_run(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Foo: {}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_unresolved_component_error_w_script_init(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Foo: {}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = expr
+    });
+
+    test_assert(s != 0);
+
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->error != NULL);
+
+    ecs_fini(world);
+}
+
+void Error_unresolved_component_error_w_script_init_existing(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Foo: {}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = ""
+    });
+
+    test_assert(s != 0);
+
+    ecs_entity_t r = ecs_script(world, {
+        .entity = s,
+        .code = expr
+    });
+
+    test_assert(r != 0);
+    test_assert(r == s);
+
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->script == NULL);
+    test_assert(script->error != NULL);
+
+    ecs_fini(world);
+}
+
+void Error_unresolved_component_error_w_script_eval(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Foo: {}"
+    LINE "}";
+
+    ecs_script_eval_result_t result = {0};
+    ecs_script_t *script = ecs_script_parse(world, "foo", expr, NULL, &result);
+
+    test_assert(script != NULL);
+    test_assert(result.error == NULL);
+
+    int r = ecs_script_eval(script, NULL, &result);
+    test_assert(r != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    ecs_script_free(script);
+
+    ecs_fini(world);
+}
+
+void Error_unresolved_component_error_w_script_eval_multiple_times(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Foo: {}"
+    LINE "}";
+
+    ecs_script_eval_result_t result = {0};
+    ecs_script_t *script = ecs_script_parse(world, "foo", expr, NULL, &result);
+    test_assert(script != NULL);
+    test_assert(result.error == NULL);
+
+    int r = ecs_script_eval(script, NULL, &result);
+    test_assert(r != 0);
+    test_assert(result.error != NULL);
+
+    ecs_os_free(result.error);
+
+    r = ecs_script_eval(script, NULL, &result);
+    test_assert(r != 0);
+    test_assert(result.error != NULL);
+
+    ecs_os_free(result.error);
+    ecs_script_free(script);
+
+    ecs_fini(world);
+}
+
+void Error_annotation_without_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "@name Some annotation"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, "foo", expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_annotation_without_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "@name Some annotation"
+    LINE ""
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, "foo", expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+
+void Error_annotation_to_unresolved_identifier(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "@name Some annotation"
+    LINE "Foo"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, "foo", expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_annotation_to_unresolved_identifier_managed_parse_twice(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "@name Some annotation"
+    LINE "Foo"
+    ;
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_script_update(world, s, 0, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_annotation_to_unresolved_identifier_managed_parse_twice_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD ""
+    LINE "notes {"
+    LINE "  @abcde"
+    LINE "  Note"
+    LINE "}"
+    LINE ""
+    LINE ""
+    ;
+
+    ecs_entity_t s = ecs_new(world);
+
+    ecs_script(world, {
+        .entity = s,
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_script(world, {
+        .entity = s,
+        .code = expr
+    });
+
+    test_assert(s != 0);
+
+    ecs_fini(world);
+}
+
+void Error_annotation_to_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Note {}"
+    LINE "notes {"
+    LINE "  @abcde"
+    LINE "  Note"
+    LINE "}"
+    LINE ""
+    LINE ""
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, "foo", expr, NULL) != 0);
 
     ecs_fini(world);
 }

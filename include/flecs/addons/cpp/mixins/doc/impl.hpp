@@ -8,6 +8,18 @@
 namespace flecs {
 namespace doc {
 
+/** Get UUID for an entity.
+ *
+ * @see ecs_doc_get_uuid()
+ * @see flecs::doc::set_uuid()
+ * @see flecs::entity_view::doc_uuid()
+ *
+ * @ingroup cpp_addons_doc
+ */
+inline const char* get_uuid(const flecs::entity_view& e) {
+    return ecs_doc_get_uuid(e.world(), e);
+}
+
 /** Get human readable name for an entity.
  *
  * @see ecs_doc_get_name()
@@ -66,6 +78,18 @@ inline const char* get_link(const flecs::entity_view& e) {
  */
 inline const char* get_color(const flecs::entity_view& e) {
     return ecs_doc_get_color(e.world(), e);
+}
+
+/** Set UUID for an entity.
+ *
+ * @see ecs_doc_set_uuid()
+ * @see flecs::doc::get_uuid()
+ * @see flecs::entity_builder::set_doc_uuid()
+ *
+ * @ingroup cpp_addons_doc
+ */
+inline void set_uuid(flecs::entity& e, const char *uuid) {
+    ecs_doc_set_uuid(e.world(), e, uuid);
 }
 
 /** Set human readable name for an entity.

@@ -66,43 +66,25 @@ const char* ecs_cpp_trim_module(
     const char *type_name);
 
 FLECS_API
-void ecs_cpp_component_validate(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    const char *name,
-    const char *symbol,
-    size_t size,
-    size_t alignment,
-    bool implicit_name);
-
-FLECS_API
 ecs_entity_t ecs_cpp_component_register(
     ecs_world_t *world,
     ecs_entity_t id,
+    int32_t ids_index,
     const char *name,
-    const char *symbol,
-    ecs_size_t size,
-    ecs_size_t alignment,
-    bool implicit_name,
-    bool *existing_out);
-
-FLECS_API
-ecs_entity_t ecs_cpp_component_register_explicit(
-    ecs_world_t *world,
-    ecs_entity_t s_id,
-    ecs_entity_t id,
-    const char *name,
-    const char *type_name,
-    const char *symbol,
+    const char *cpp_name,
+    const char *cpp_symbol,
     size_t size,
     size_t alignment,
     bool is_component,
+    bool explicit_registration,
+    bool *registered_out,
     bool *existing_out);
 
 FLECS_API
 void ecs_cpp_enum_init(
     ecs_world_t *world,
-    ecs_entity_t id);
+    ecs_entity_t id,
+    ecs_entity_t underlying_type);
 
 FLECS_API
 ecs_entity_t ecs_cpp_enum_constant_register(
@@ -110,13 +92,30 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_entity_t parent,
     ecs_entity_t id,
     const char *name,
-    int value);
+    void *value,
+    ecs_entity_t value_type,
+    size_t value_size);
 
-FLECS_API 
-int32_t ecs_cpp_reset_count_get(void);
+typedef struct ecs_cpp_get_mut_t {
+    void *ptr;
+    bool call_modified;
+} ecs_cpp_get_mut_t;
 
 FLECS_API
-int32_t ecs_cpp_reset_count_inc(void);
+FLECS_ALWAYS_INLINE ecs_cpp_get_mut_t ecs_cpp_set(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    const void *new_ptr,
+    size_t size);
+
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_cpp_get_mut_t ecs_cpp_assign(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    const void *new_ptr,
+    size_t size);
 
 #ifdef FLECS_META
 FLECS_API

@@ -44,16 +44,44 @@ There is a misconception that ECS components can only be plain data types, and s
 Queries are the primary method in Flecs for finding the entities for a set of components (or more specifically: a component expression). Queries are easy to use, but there a few things to keep in mind.
 
 ### Use the right query
-Flecs has cached queries and uncached queries. Cached queries (`ecs_query_cache_t` and `flecs::query`) are expensive to create but very cheap to iterate. Uncached queries (`ecs_query_t`, `flecs::query`) are fast to create, but more expensive to iterate. If you need to do a quick ad-hoc query for which you couldn't know in advance what you had to query for, an uncached query is the best option. If you have a query that you know in advance and need to iterate many times, a cached query is preferred.
+Flecs has cached queries and uncached queries. Cached queries are expensive to create but very cheap to iterate. Uncached queries are fast to create, but more expensive to iterate. If you need to do a quick ad-hoc query for which you couldn't know in advance what you had to query for, an uncached query is the best option. If you have a query that you know in advance and need to iterate many times, a cached query is preferred.
 
 Another difference is that uncached queries can be created from systems, while cached queries cannot. If you need a cached query in a system, it has to be created in advance and passed into the system, either by setting it as system context, adding a component to the system with the query, or passing it in the lambda capture list (C++ only). Systems themselves use cached queries.
 
-Make sure to not repeatedly create and destroy cached queries! For more information, see [the query manual](Queries.md#types) for more details.
+Make sure to not repeatedly create and destroy cached queries!
+
+Here is an example of how to create uncached and cached queries:
+
+```cpp
+// An uncached query:
+flecs::query<Position, Velocity> q = world.query<Position, Velocity>();
+
+// A cached query:
+flecs::query<Position, Velocity> q = world.query_builder<Position, Velocity>()
+  .cached()
+  .build();
+
+// Named queries are cached:
+flecs::query<Position, Velocity> q = world.query<Position, Velocity>("Move");
+
+// Queries that use cascade(), group_by() or order_by() are cached:
+flecs::query<Position, Velocity> q = world.query_builder<Position, Velocity>()
+  .group_by<WorldCell>()
+  .build();
+
+// System queries are automatically cached:
+world.system<Position, Velocity>("Move")
+  .each([](Position& p, Velocity& v) {
+    p += v;
+  });
+```
+
+For more information, see [the query manual](https://www.flecs.dev/flecs/md_docs_2Queries.html#performance-and-caching) for more details.
 
 ### Use in/inout/out annotations
 Flecs analyzes how components are read and written by queries and uses this for things like change tracking and deciding when to merge command buffers. By default components are marked as `inout`. If a system only reads a component, make sure to mark it as `in`, as this can reduce the time spent by other parts of the application that rely on change detection and sync points.
 
-For more information, see [the query manual](Queries.md#access-modifiers).
+For more information, see [the query manual](https://www.flecs.dev/flecs/md_docs_2Queries.html#access-modifiers).
 
 ### Annotations
 You can further annotate queries with components that are not matched with the query, but that are written using ECS operations (like add, remove, set etc.). Such operations are automatically deferred and merged at the end of the frame. With annotations you can enforce merging at an earlier point, by specifying that a component modification has been queued. When Flecs sees this, it will merge back the modifications before the next read.
@@ -172,4 +200,4 @@ In many cases you might want to use your own relationships. Here are a few signs
 - You are looking to group entities by something like world cells or layers, and want to be able to lookup all entities for a cell.
 - You're adding an enumeration type as component, but want to query for enumeration constants.
 
-See the [relationships blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c) and [relationships manual](Relationships.md) for more information.
+See the [relationships blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c) and [relationships manual](https://www.flecs.dev/flecs/md_docs_2Relationships.html) for more information.
