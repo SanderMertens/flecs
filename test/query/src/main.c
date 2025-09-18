@@ -159,6 +159,17 @@ void Validator_validate_or_term_w_singleton_trait(void);
 void Validator_validate_term_w_singleton_trait_w_explicit_src(void);
 void Validator_validate_term_w_singleton_trait_w_explicit_self_src(void);
 void Validator_validate_term_w_singleton_trait_w_pair_w_explicit_self_src(void);
+void Validator_validator_1_singleton_terms_match_this(void);
+void Validator_validator_2_singleton_terms_match_this(void);
+void Validator_validator_2_singleton_terms_match_this_w_in(void);
+void Validator_validator_2_terms_1_singleton_match_this(void);
+void Validator_validator_1_fixed_src_terms_match_this(void);
+void Validator_validator_2_fixed_src_terms_match_this(void);
+void Validator_validator_2_terms_1_fixed_src_match_this(void);
+void Validator_validator_1_var_src_terms_match_this(void);
+void Validator_validator_2_var_src_terms_match_this(void);
+void Validator_validator_2_terms_1_var_src_match_this(void);
+void Validator_validator_1_tag_term_this_src_match_this(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -2938,6 +2949,50 @@ bake_test_case Validator_testcases[] = {
     {
         "validate_term_w_singleton_trait_w_pair_w_explicit_self_src",
         Validator_validate_term_w_singleton_trait_w_pair_w_explicit_self_src
+    },
+    {
+        "validator_1_singleton_terms_match_this",
+        Validator_validator_1_singleton_terms_match_this
+    },
+    {
+        "validator_2_singleton_terms_match_this",
+        Validator_validator_2_singleton_terms_match_this
+    },
+    {
+        "validator_2_singleton_terms_match_this_w_in",
+        Validator_validator_2_singleton_terms_match_this_w_in
+    },
+    {
+        "validator_2_terms_1_singleton_match_this",
+        Validator_validator_2_terms_1_singleton_match_this
+    },
+    {
+        "validator_1_fixed_src_terms_match_this",
+        Validator_validator_1_fixed_src_terms_match_this
+    },
+    {
+        "validator_2_fixed_src_terms_match_this",
+        Validator_validator_2_fixed_src_terms_match_this
+    },
+    {
+        "validator_2_terms_1_fixed_src_match_this",
+        Validator_validator_2_terms_1_fixed_src_match_this
+    },
+    {
+        "validator_1_var_src_terms_match_this",
+        Validator_validator_1_var_src_terms_match_this
+    },
+    {
+        "validator_2_var_src_terms_match_this",
+        Validator_validator_2_var_src_terms_match_this
+    },
+    {
+        "validator_2_terms_1_var_src_match_this",
+        Validator_validator_2_terms_1_var_src_match_this
+    },
+    {
+        "validator_1_tag_term_this_src_match_this",
+        Validator_validator_1_tag_term_this_src_match_this
     }
 };
 
@@ -11538,7 +11593,7 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        150,
+        161,
         Validator_testcases
     },
     {
