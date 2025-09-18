@@ -375,17 +375,14 @@ void flecs_component_memory_get_sparse(
         return;
     }
 
-    ecs_size_t component_size = cr->type_info->size;
-    if (cr->type_info && component_size > 0) {
+    ecs_size_t component_size = cr->type_info ? cr->type_info->size : 0;
+    flecs_sparse_memory_get(sparse, component_size, 
+        &result->bytes_sparse_components, 
+        &result->bytes_sparse_components_unused, 
+        &result->bytes_sparse_overhead);
 
-        flecs_sparse_memory_get(sparse, component_size, 
-            &result->bytes_sparse_components, 
-            &result->bytes_sparse_components_unused, 
-            &result->bytes_sparse_overhead);
-
-        if (component_size) {
-            result->instances += flecs_sparse_count(sparse);
-        }
+    if (component_size) {
+        result->instances += flecs_sparse_count(sparse);
     }
 }
 
