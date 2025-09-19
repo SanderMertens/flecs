@@ -23,7 +23,7 @@
             {
                 "id": "quickstart",
                 "testcases": [
-                    "Entity_01"
+                    "Concepts_Entity_01"
                 ]
             },
             {
@@ -33,10 +33,10 @@
                     "Cleanup_traits_01",
                     "Cleanup_traits_02",
                     "Cleanup_traits_03",
-                    "OnDelete_Remove_01",
-                    "OnDelete_Delete_01",
-                    "OnDeleteTarget_Delete_01",
-                    "Cleanup_order_01",
+                    "Cleanup_traits_Examples_OnDelete_Remove_01",
+                    "Cleanup_traits_Examples_OnDelete_Delete_01",
+                    "Cleanup_traits_Examples_OnDeleteTarget_Delete_01",
+                    "Cleanup_traits_Cleanup_order_01",
                     "DontFragment_trait_01",
                     "Exclusive_trait_01",
                     "Exclusive_trait_02",
@@ -44,9 +44,9 @@
                     "Inheritable_trait_01",
                     "OneOf_trait_01",
                     "OneOf_trait_02",
-                    "Override_01",
-                    "Inherit_01",
-                    "DontInherit_01",
+                    "OnInstantiate_trait_Override_01",
+                    "OnInstantiate_trait_Inherit_01",
+                    "OnInstantiate_trait_DontInherit_01",
                     "OrderedChildren_trait_01",
                     "PairIsTag_trait_01",
                     "PairIsTag_trait_02",
@@ -62,6 +62,47 @@
                     "Transitive_trait_02",
                     "With_trait_01",
                     "With_trait_02"
+                ]
+            },
+            {
+                "id": "entitiescomponents",
+                "testcases": [
+                    "Entities_Creation_01",
+                    "Entities_Deletion_01",
+                    "Entities_Deletion_02",
+                    "Entities_Deletion_03",
+                    "Entities_Clearing_01",
+                    "Entities_Liveliness_Checking_01",
+                    "Entities_Liveliness_Checking_02",
+                    "Entities_Manual_Ids_01",
+                    "Entities_Manual_Versioning_01",
+                    "Entities_Ranges_01",
+                    "Entities_Ranges_02",
+                    "Entities_Ranges_03",
+                    "Entities_Names_01",
+                    "Entities_Names_02",
+                    "Entities_Names_03",
+                    "Entities_Names_04",
+                    "Entities_Names_05",
+                    "Entities_Names_06",
+                    "Entities_Names_07",
+                    "Entities_Disabling_01",
+                    "Entities_Disabling_02",
+                    "Entities_Disabling_03",
+                    "Entities_Disabling_04",
+                    "Components_Hooks_01",
+                    "Components_Hooks_02",
+                    "Components_Components_have_entity_handles_01",
+                    "Components_Components_have_entity_handles_02",
+                    "Components_Registration_01",
+                    "Components_Registration_02",
+                    "Components_Registration_03",
+                    "Components_Registration_Runtime_Type_Registration_01",
+                    "Components_Registration_Runtime_Type_Registration_02",
+                    "Components_Unregistration_01",
+                    "Components_Singletons_01",
+                    "Components_Singletons_02",
+                    "Components_Disabling_01"
                 ]
             }
         ]

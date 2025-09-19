@@ -32,7 +32,8 @@ ecs_entity_t my_entity = ecs_new(world);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity my_entity = world.entity();
 ```
 
@@ -71,7 +72,9 @@ ecs_delete(world, my_entity);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+flecs::world world;
+HIDE: flecs::entity my_entity = world.entity();
 my_entity.destruct();
 ```
 
@@ -108,20 +111,27 @@ ecs_delete(world, e1); // Recycle 500
 
 ecs_entity_t e2 = ecs_new(world); // Returns 500v1
 
+HIDE: if (false) {
 ecs_add(world, e1, Npc); // Fails, 500v0 is not alive
+HIDE: }
 ecs_add(world, e2, Npc); // OK, 500v1 is alive
 ```
 
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+flecs::world world;
+HIDE: struct Npc {};
+
 flecs::entity e1 = world.entity(); // Returns 500v0
 e1.destruct(); // Recycles 500
 
 flecs::entity e2 = world.entity(); // Returns 500v1
 
+HIDE: if (false) {
 e1.add<Npc>(); // Fails, 500v0 is not alive
+HIDE: }
 e2.add<Npc>(); // OK, 500v1 is alive
 ```
 
@@ -169,7 +179,8 @@ ecs_delete(world, e1); // OK: post condition is satisfied
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity e1 = world.entity();
 e1.destruct();
 e1.destruct(); // OK: post condition is satisfied
@@ -210,7 +221,9 @@ ecs_clear(world, my_entity);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity my_entity = world.entity();
 my_entity.clear();
 ```
 
@@ -250,7 +263,8 @@ ecs_is_alive(world, e2); // True
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity e1 = world.entity();
 flecs::entity e2 = world.entity();
 e1.destruct();
@@ -304,7 +318,8 @@ ecs_is_valid(world, 0); // False
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity e1 = world.entity();
 flecs::entity e2 = world.entity();
 e1.destruct();
@@ -354,7 +369,8 @@ ecs_make_alive(world, 1000); // Make id 1000 alive
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity e = world.make_alive(1000);
 ```
 
@@ -391,7 +407,9 @@ ecs_set_version(world, versioned_id);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+flecs::world world;
+HIDE: flecs::entity versioned_id = world.entity();
 world.set_version(versioned_id);
 ```
 
@@ -427,7 +445,8 @@ ecs_set_entity_range(world, 5000, 0);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 world.set_entity_range(5000, 0);
 ```
 
@@ -461,7 +480,8 @@ ecs_set_entity_range(world, 5000, 10000);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 world.set_entity_range(5000, 10000);
 ```
 
@@ -499,7 +519,8 @@ ecs_enable_range_check(world, true);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 world.enable_range_check();
 ```
 
@@ -542,7 +563,8 @@ printf("%s\n", ecs_get_name(world, e));
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity e = world.entity("MyEntity");
 
 if (e == world.lookup("MyEntity")) {
@@ -597,7 +619,8 @@ if (e == ecs_lookup(world, "Parent.Child")) {
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity p = world.entity("Parent");
 flecs::entity e = world.entity("Child").child_of(p);
 
@@ -650,7 +673,8 @@ if (e == ecs_lookup_from(world, p, "Child")) {
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity p = world.entity("Parent");
 flecs::entity e = world.entity("Child").child_of(p);
 
@@ -708,7 +732,8 @@ ecs_os_free(path);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity p = world.entity("Parent");
 flecs::entity e = world.entity("Child").child_of(p);
 
@@ -768,7 +793,8 @@ if (e1 == e2) {
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity e1 = world.entity("Parent::Child");
 flecs::entity e2 = world.entity("Parent::Child");
 
@@ -819,7 +845,8 @@ ecs_set_name(world, e, "Bar");
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity e = world.entity("Foo");
 
 // Change name
@@ -861,7 +888,8 @@ ecs_entity_t twenty = ecs_entity(world, { .name = "20" });
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity ten = world.entity("10");
 flecs::entity twenty = world.entity("20");
 ```
@@ -907,7 +935,8 @@ ecs_enable(world, e, false);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity e = world.entity();
 
 // Enable entity
@@ -972,7 +1001,8 @@ ecs_enable(world, p, true);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 // Three entities to disable
 flecs::entity e1 = world.entity();
 flecs::entity e2 = world.entity();
@@ -1069,14 +1099,17 @@ ecs_enable(world, p1, true);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: test_quarantine("19 Sept 2025 - assert happening");
+HIDE: flecs::world world;
 // Three entities to disable
 flecs::entity e1 = world.entity();
 flecs::entity e2 = world.entity();
 flecs::entity e3 = world.entity();
 
 // Create prefab hierarchy with the three entities
-flecs::entity p1 = world.prefab()
+flecs::entity p1 = world.prefab();
+p1
     .add(e1);
 
 flecs::entity p2 = world.prefab()
@@ -1152,7 +1185,9 @@ ecs_add_id(world, e, EcsDisabled);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity e = world.entity();
 e.add(flecs::Disabled);
 ```
 
@@ -1295,8 +1330,9 @@ ecs_set_hooks(world, Position, {
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
-ecs.component<Position>()
+```cpp test
+HIDE: flecs::world world;
+world.component<Position>()
     .on_set([](Position& p) {
         std::cout << "{" << p.x << ", " << p.y << "}" << std::endl;
     });
@@ -1360,8 +1396,9 @@ ecs_set_hooks(world, Position, {
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
-ecs.component<Position>()
+```cpp test
+HIDE: flecs::world world;
+world.component<Position>()
     .on_replace([](Position& prev, Position& next) {
         std::cout << "prev = {" << prev.x << ", " << prev.y << "}" << std::endl;
         std::cout << "next = {" << next.x << ", " << next.y << "}" << std::endl;
@@ -1415,7 +1452,8 @@ printf("{size: %d, alignment: %d}\n",
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 // Get the entity for the Position component
 flecs::entity pos = world.component<Position>();
 
@@ -1473,7 +1511,8 @@ ecs_add_id(world, ecs_id(Position), EcsSparse);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 // Register a sparse component
 world.component<Position>().add(flecs::Sparse);
 ```
@@ -1596,22 +1635,18 @@ int main(int argc, char *argv[]) {
 ```
 
 </li>
-<li><b class="tab-title">C++</b>
+<li><b class="tab-title">C++</b>`
 
 In C++ components are automatically registered upon first usage. The following example shows how:
 
-```cpp
-int main(int argc, char *argv[]) {
-    flecs::world world;
-
-    flecs::entity e1 = world.entity()
-        .set(Position{10, 20}) // Position registered here
-        .set(Velocity{1, 2}); // Velocity registered here
-
-    flecs::entity e1 = world.entity()
-        .set(Position{10, 20}) // Position already registered
-        .set(Velocity{1, 2}); // Velocity already registered
-}
+```cpp test
+flecs::world world;
+flecs::entity e1 = world.entity()
+    .set(Position{10, 20}) // Position registered here
+    .set(Velocity{1, 2}); // Velocity registered here
+flecs::entity e2 = world.entity()
+    .set(Position{10, 20}) // Position already registered
+    .set(Velocity{1, 2}); // Velocity already registered
 ```
 
 Components can be registered in advance, which can be done for several reasons:
@@ -1622,7 +1657,8 @@ Components can be registered in advance, which can be done for several reasons:
 
 To register a component in advance, do:
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 world.component<Position>();
 ```
 
@@ -1630,7 +1666,7 @@ In general it is recommended to register components in advance, and to only use 
 
 A convenient way to organize component registration code is to use Flecs modules. An example:
 
-```cpp
+```cpp test
 struct movement {
     movement(flecs::world& world) {
         world.component<Position>();
@@ -1638,11 +1674,9 @@ struct movement {
     }
 };
 
-int main(int argc, char *argv[]) {
     flecs::world world;
 
     world.import<movement>();
-}
 
 ```
 
@@ -1788,7 +1822,8 @@ const void *ptr = ecs_get_id(world, e, comp);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 ecs_component_desc_t desc = {0};
 desc.type.size = 8;
 desc.type.alignment = 8;
@@ -1851,7 +1886,8 @@ const void *ptr = ecs_get_id(world, e, comp);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 ecs_component_desc_t desc = {0};
 desc.entity = world.entity("MyComponent");
 desc.type.size = 8;
@@ -1911,7 +1947,8 @@ ecs_delete(world, ecs_id(Position));
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity pos = world.component<Position>();
 
 // Create entity with Position
@@ -1977,7 +2014,9 @@ const TimeOfDay *t = ecs_singleton_get(world, TimeOfDay);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: struct TimeOfDay { float value; };
 // Set singleton
 world.set<TimeOfDay>({ 0.5 });
 
@@ -2030,12 +2069,14 @@ ecs_set(world, ecs_id(TimeOfDay), TimeOfDay, {0.5});
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: struct TimeOfDay { float value; };
 // Set singleton
 world.set<TimeOfDay>({ 0.5 });
 
 // Equivalent to:
-world.component<TimeOfDay>().set(TimeOfDay{ 0.5 })
+world.component<TimeOfDay>().set(TimeOfDay{ 0.5 });
 ```
 
 </li>
@@ -2090,7 +2131,8 @@ ecs_is_enabled(world, e, Position); // True
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 // Register toggle-able component
 world.component<Position>().add(flecs::CanToggle);
 
@@ -2102,7 +2144,7 @@ e.enabled<Position>(); // False
 
 // Enable component
 e.enable<Position>();
-e.enabled<Position>()  // True
+e.enabled<Position>();  // True
 ```
 
 </li>

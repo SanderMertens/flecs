@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <stddef.h>
+#include <iostream>
 
 struct Position {
     float x;

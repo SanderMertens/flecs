@@ -44,7 +44,7 @@ void componenttraits_Cleanup_traits_03(void) {
         test_assert(true);
 }
 
-void componenttraits_OnDelete_Remove_01(void) {
+void componenttraits_Cleanup_traits_Examples_OnDelete_Remove_01(void) {
     flecs::world world;
     struct Archer {};
     // Remove Archer from entities when Archer is deleted
@@ -59,7 +59,7 @@ void componenttraits_OnDelete_Remove_01(void) {
         test_assert(true);
 }
 
-void componenttraits_OnDelete_Delete_01(void) {
+void componenttraits_Cleanup_traits_Examples_OnDelete_Delete_01(void) {
     flecs::world world;
     struct Archer {};
     // Delete entities with Archer when Archer is deleted
@@ -74,7 +74,7 @@ void componenttraits_OnDelete_Delete_01(void) {
         test_assert(true);
 }
 
-void componenttraits_OnDeleteTarget_Delete_01(void) {
+void componenttraits_Cleanup_traits_Examples_OnDeleteTarget_Delete_01(void) {
     flecs::world world;
     struct ChildOf {};
     // Delete children when deleting parent
@@ -90,7 +90,7 @@ void componenttraits_OnDeleteTarget_Delete_01(void) {
         test_assert(true);
 }
 
-void componenttraits_Cleanup_order_01(void) {
+void componenttraits_Cleanup_traits_Cleanup_order_01(void) {
     flecs::world world;
     struct Node {};
 
@@ -199,7 +199,7 @@ void componenttraits_OneOf_trait_02(void) {
         test_assert(true);
 }
 
-void componenttraits_Override_01(void) {
+void componenttraits_OnInstantiate_trait_Override_01(void) {
     flecs::world ecs;
     // Register component with trait. Optional, since this is the default behavior.
     ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Override);
@@ -211,7 +211,7 @@ void componenttraits_Override_01(void) {
     test_assert(base.try_get<Mass>() != inst.try_get<Mass>());
 }
 
-void componenttraits_Inherit_01(void) {
+void componenttraits_OnInstantiate_trait_Inherit_01(void) {
     flecs::world ecs;
     // Register component with trait
     ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Inherit);
@@ -224,7 +224,7 @@ void componenttraits_Inherit_01(void) {
     test_assert(base.try_get<Mass>() == inst.try_get<Mass>());
 }
 
-void componenttraits_DontInherit_01(void) {
+void componenttraits_OnInstantiate_trait_DontInherit_01(void) {
     flecs::world ecs;
     // Register component with trait
     ecs.component<Mass>().add(flecs::OnInstantiate, flecs::DontInherit);
