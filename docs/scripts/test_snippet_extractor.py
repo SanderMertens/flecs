@@ -18,28 +18,53 @@ class CodeSnippet:
     """Represents a code snippet found in documentation."""
     
     def __init__(self, language: str, code: str, file_path: str, line_number: int, 
-                 section_title: str = "", test_number: int = 1):
+                 section_title: str = "", test_number: int = 1, h2_title: str = "", h3_title: str = "", h4_title: str = ""):
         self.language = language
         self.code = code
         self.file_path = file_path
         self.line_number = line_number
         self.section_title = section_title
         self.test_number = test_number
+        self.h2_title = h2_title
+        self.h3_title = h3_title
+        self.h4_title = h4_title
         self.test_name = self._generate_test_name()
     
     def _generate_test_name(self) -> str:
-        """Generate test name based on section title and test number."""
-        # Clean up section title to make it a valid identifier
-        clean_title = re.sub(r'[^a-zA-Z0-9_]', '_', self.section_title)
-        clean_title = re.sub(r'_+', '_', clean_title)  # Remove multiple underscores
-        clean_title = clean_title.strip('_')  # Remove leading/trailing underscores
+        """Generate test name based on H2/H3/H4 titles and test number."""
+        parts = []
         
-        if not clean_title:
-            # Fallback to file name if no section title
+        if self.h2_title:
+            # Clean up H2 title to make it a valid identifier
+            clean_h2 = re.sub(r'[^a-zA-Z0-9_]', '_', self.h2_title)
+            clean_h2 = re.sub(r'_+', '_', clean_h2).strip('_')
+            if clean_h2:
+                parts.append(clean_h2)
+        
+        if self.h3_title:
+            # Clean up H3 title
+            clean_h3 = re.sub(r'[^a-zA-Z0-9_]', '_', self.h3_title)
+            clean_h3 = re.sub(r'_+', '_', clean_h3).strip('_')
+            if clean_h3:
+                parts.append(clean_h3)
+        
+        if self.h4_title:
+            # Clean up H4 title
+            clean_h4 = re.sub(r'[^a-zA-Z0-9_]', '_', self.h4_title)
+            clean_h4 = re.sub(r'_+', '_', clean_h4).strip('_')
+            if clean_h4:
+                parts.append(clean_h4)
+        
+        # Always include test number
+        parts.append(f"{self.test_number:02d}")
+        
+        if not parts:
+            # Fallback to file name if no titles
             file_stem = Path(self.file_path).stem
-            clean_title = re.sub(r'[^a-zA-Z0-9_]', '_', file_stem)
+            clean_file = re.sub(r'[^a-zA-Z0-9_]', '_', file_stem)
+            parts = [clean_file, "01"]
         
-        return f"{clean_title}_{self.test_number:02d}"
+        return '_'.join(parts)
     
     def get_clean_code(self) -> str:
         """Get code with HIDE: prefix removed but keeping the rest of the line."""
@@ -94,11 +119,14 @@ class TestSnippetExtractor:
         
         lines = content.split('\n')
         current_section = ""
+        h2_title = ""
+        h3_title = ""
+        h4_title = ""
         test_counters = {lang: 0 for lang in target_languages}
         
         i = 0
-        def _extract_markdown_heading(line: str) -> Optional[str]:
-            """Return heading text if `line` is a markdown heading, otherwise None.
+        def _extract_markdown_heading(line: str) -> Optional[Tuple[str, int]]:
+            """Return (heading_text, level) if `line` is a markdown heading, otherwise None.
 
             Matches headings like `# Title` or `### Subtitle` requiring at least one
             space after the leading hashes. This intentionally ignores attribute-like
@@ -114,15 +142,27 @@ class TestSnippetExtractor:
             if not m:
                 return None
 
-            return m.group(2).strip()
+            level = len(m.group(1))
+            heading = m.group(2).strip()
+            return (heading, level)
 
         while i < len(lines):
             line = lines[i]
 
             # Track section headings (only valid markdown headings)
-            heading = _extract_markdown_heading(line)
-            if heading is not None:
+            heading_info = _extract_markdown_heading(line)
+            if heading_info is not None:
+                heading, level = heading_info
                 current_section = heading
+                if level == 2:
+                    h2_title = heading
+                    h3_title = ""  # Reset H3 when new H2
+                    h4_title = ""  # Reset H4 when new H2
+                elif level == 3:
+                    h3_title = heading
+                    h4_title = ""  # Reset H4 when new H3
+                elif level == 4:
+                    h4_title = heading
                 # Reset test counters for new section
                 test_counters = {lang: 0 for lang in target_languages}
             
@@ -152,7 +192,10 @@ class TestSnippetExtractor:
                             file_path=file_path,
                             line_number=line_number,
                             section_title=current_section,
-                            test_number=test_counters[lang]
+                            test_number=test_counters[lang],
+                            h2_title=h2_title,
+                            h3_title=h3_title,
+                            h4_title=h4_title
                         )
                         snippets.append(snippet)
                     
@@ -193,6 +236,9 @@ class TestSnippetExtractor:
                     'file_path': snippet.file_path,
                     'line_number': snippet.line_number,
                     'section_title': snippet.section_title,
+                    'h2_title': snippet.h2_title,
+                    'h3_title': snippet.h3_title,
+                    'h4_title': snippet.h4_title,
                     'test_number': snippet.test_number,
                     'code': snippet.code,
                     'clean_code': snippet.get_clean_code()

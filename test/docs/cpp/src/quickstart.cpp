@@ -1,6 +1,6 @@
 #include <cpp.h>
 
-void quickstart_Entity_01(void) {
+void quickstart_Concepts_Entity_01(void) {
     flecs::world world;
     auto e = world.entity();
     e.is_alive(); // true!
