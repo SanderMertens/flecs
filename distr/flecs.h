@@ -13612,6 +13612,7 @@ typedef struct {
     int32_t empty_count;                /** Number of empty tables. */
     int32_t column_count;               /** Number of table columns. */
     ecs_size_t bytes_table;             /** Bytes used by ecs_table_t struct. */
+    ecs_size_t bytes_table_overhead;    /** Overhead bytes from table sparse set. */
     ecs_size_t bytes_type;              /** Bytes used by type vector. */
     ecs_size_t bytes_entities;          /** Bytes used by entity vectors. */
     ecs_size_t bytes_overrides;         /** Bytes used by table overrides. */

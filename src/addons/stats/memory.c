@@ -498,6 +498,11 @@ ecs_table_memory_t ecs_table_memory_get(
 
     result.count = count;
 
+    flecs_sparse_memory_get(tables, ECS_SIZEOF(ecs_table_t), 
+        &result.bytes_table, 
+        &result.bytes_table_overhead, 
+        &result.bytes_table_overhead);
+
     for (i = 0; i < count; i++) {
         ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
         ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -509,7 +514,6 @@ ecs_table_memory_t ecs_table_memory_get(
         
         result.column_count += column_count;
 
-        /* Populate entity count histogram using power-of-2 buckets */
         if (entity_count == 0) {
             result.empty_count++;
         }
@@ -803,6 +807,7 @@ void flecs_stats_memory_register_reflection(
             { .name = "empty_count", .type = ecs_id(ecs_i32_t) },
             { .name = "column_count", .type = ecs_id(ecs_i32_t) },
             { .name = "bytes_table", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_table_overhead", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_type", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_entities", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_overrides", .type = ecs_id(ecs_i32_t), .unit = unit },
