@@ -611,6 +611,37 @@ bool flecs_rest_script(
 }
 
 static
+void flecs_rest_shrink_memory(
+    ecs_world_t *world,
+    void *ctx)
+{
+    (void)ctx;
+    ecs_shrink(world);
+}
+
+static
+bool flecs_rest_action(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    (void)path;
+
+    char *action = &req->path[7];
+    ecs_dbg_2("rest: run action '%s'", action);
+
+    if (ecs_os_strcmp(action, "shrink_memory") == 0) {
+        ecs_run_post_frame(world, flecs_rest_shrink_memory, NULL);
+    } else {
+        flecs_reply_error(reply, "unknown action '%s'", action);
+        reply->code = 400;
+    }
+
+    return true;
+}
+
+static
 void flecs_rest_reply_set_captured_log(
     ecs_http_reply_t *reply)
 {
@@ -1566,6 +1597,10 @@ bool flecs_rest_reply(
         /* Script endpoint */
         } else if (!ecs_os_strncmp(req->path, "script/", 7)) {
             return flecs_rest_script(world, req, reply, &req->path[7]);
+
+        /* Action endpoint */
+        } else if (!ecs_os_strncmp(req->path, "action/", 7)) {
+            return flecs_rest_action(world, req, reply, &req->path[7]);
         }
     } else if (req->method == EcsHttpDelete) {
         /* Entity DELETE endpoint */
