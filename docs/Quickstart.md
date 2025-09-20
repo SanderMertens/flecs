@@ -166,7 +166,7 @@ ecs_fini(world);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
 flecs::world world;
 
 // Do the ECS stuff
@@ -282,7 +282,8 @@ printf("Entity name: %s\n", ecs_get_name(world, e));
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 auto e = world.entity("Bob");
 
 std::cout << "Entity name: " << e.name() << std::endl;
@@ -326,7 +327,8 @@ ecs_entity_t e = ecs_lookup(world, "Bob");
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 auto e = world.lookup("Bob");
 ```
 </li>
@@ -386,7 +388,8 @@ ecs_remove(world, e, Position);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 auto e = world.entity();
 
 // Add a component. This creates the component in the ECS storage, but does not
@@ -502,7 +505,9 @@ ecs_add(world, pos_e, Serializable);
 <li><b class="tab-title">C++</b>
 
 C++ applications can use the `world::entity` function.
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: struct Serializable { };
 flecs::entity pos_e = world.entity<Position>();
 std::cout << "Name: " << pos_e.name() << std::endl;  // outputs 'Name: Position'
 
@@ -566,11 +571,12 @@ printf("Component size: %u\n", c->size);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::entity pos_e = world.entity<Position>();
 
 const EcsComponent& c = pos_e.get<flecs::Component>();
-std::cout << "Component size: " << c->size << std::endl;
+std::cout << "Component size: " << c.size << std::endl;
 ```
 </li>
 <li><b class="tab-title">C#</b>
@@ -628,7 +634,8 @@ ecs_has_id(world, e, Enemy); // false!
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 // Option 1: create Tag as empty struct
 struct Enemy { };
 
@@ -644,11 +651,11 @@ e.has<Enemy>(); // false!
 auto Enemy = world.entity();
 
 // Create entity, add Enemy tag
-auto e = world.entity().add(Enemy);
-e.has(Enemy); // true!
+auto e2 = world.entity().add(Enemy);
+e2.has(Enemy); // true!
 
-e.remove(Enemy);
-e.has(Enemy); // false!
+e2.remove(Enemy);
+e2.has(Enemy); // false!
 ```
 </li>
 <li><b class="tab-title">C#</b>
@@ -745,7 +752,8 @@ ecs_has_pair(world, Bob, Likes, Alice); // false!
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 // Create Likes relationship as empty type (tag)
 struct Likes { };
 
@@ -828,7 +836,9 @@ ecs_id_t id = ecs_pair(Likes, Bob);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity Bob = world.entity();
 flecs::id id = world.pair<Likes>(Bob);
 ```
 </li>
@@ -866,8 +876,10 @@ if (ecs_id_is_pair(id)) {
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
-flecs::id id = ...;
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity Bob = world.entity();
+flecs::id id = world.pair<Likes>(Bob);
 if (id.is_pair()) {
     auto relationship = id.first();
     auto target = id.second();
@@ -924,8 +936,13 @@ ecs_has_pair(world, Bob, Grows, Pears); // true!
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
-flecs::entity bob = ...;
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity Apples = world.entity();
+HIDE: flecs::entity Pears = world.entity();
+HIDE: flecs::entity Eats = world.entity();
+HIDE: flecs::entity Grows = world.entity();
+flecs::entity bob = world.entity();
 bob.add(Eats, Apples);
 bob.add(Eats, Pears);
 bob.add(Grows, Pears);
@@ -983,8 +1000,11 @@ ecs_entity_t o = ecs_get_target(world, Alice, Likes, 0); // Returns Bob
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
-flecs::entity alice = ...;
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity Bob = world.entity();
+flecs::entity alice = world.entity();
+HIDE: alice.add<Likes>(Bob);
 auto o = alice.target<Likes>(); // Returns Bob
 ```
 </li>
@@ -1032,7 +1052,8 @@ ecs_delete(world, parent);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 auto parent = world.entity();
 auto child = world.entity().child_of(parent);
 
@@ -1104,7 +1125,8 @@ ecs_lookup_from(world, parent, "child");   // returns child
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 auto parent = world.entity("parent");
 auto child = world.entity("child").child_of(parent);
 std::cout << child.path() << std::endl; // output: 'parent::child'
@@ -1174,7 +1196,8 @@ while (ecs_query_next(&it)) {
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 auto q = world.query_builder<Position, Position>()
     .term_at(1).parent().cascade()
     .build();
@@ -1250,8 +1273,9 @@ ecs_os_free(type_str);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
-auto e = ecs.entity()
+```cpp test
+HIDE: flecs::world world;
+auto e = world.entity()
     .add<Position>()
     .add<Velocity>();
 
@@ -1303,7 +1327,9 @@ for (int i = 0; i < type->count; i++) {
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+auto e = world.entity();
 e.each([&](flecs::id id) {
     if (id == world.id<Position>()) {
         // Found Position component!
@@ -1343,14 +1369,18 @@ e.each_component(|id| {
 </ul>
 </div>
 
-### Singleton
-A singleton is a single instance of a component that can be retrieved without an entity. The functions for singletons are very similar to the regular API:
+``### Singleton
+A singleton is a single instance of a component that can be retrieved without an entity. The functions for singletons are very similar to the regular API:``
 
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
 
 ```c
+
+// Register singleton component
+ecs_add_id(world, ecs_id(Gravity), EcsSingleton);
+
 // Set singleton component
 ecs_singleton_set(world, Gravity, { 9.81 });
 
@@ -1361,6 +1391,11 @@ const Gravity *g = ecs_singleton_get(world, Gravity);
 <li><b class="tab-title">C++</b>
 
 ```cpp
+HIDE: flecs::world world;
+
+// Register singleton component
+world.component<Gravity>().add(flecs::Singleton);
+
 // Set singleton component
 world.set<Gravity>({ 9.81 });
 
@@ -1415,10 +1450,12 @@ const Gravity *g = ecs_get(world, ecs_id(Gravity), Gravity);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: world.component<Gravity>().add(flecs::Singleton);
 flecs::entity grav_e = world.entity<Gravity>();
 
-grav_e.set<Gravity>({10, 20});
+grav_e.set<Gravity>({9.81});
 
 const Gravity& g = grav_e.get<Gravity>();
 ```
@@ -1461,6 +1498,9 @@ The following examples show how to query for a singleton component:
 <li><b class="tab-title">C</b>
 
 ```c
+
+ecs_add_id(world, ecs_id(Gravity), EcsSingleton);
+
 // Create query that matches Gravity as singleton
 ecs_query_t *q = ecs_query(ecs, {
     .terms = {
@@ -1477,18 +1517,17 @@ ECS_SYSTEM(world, ApplyGravity, EcsOnUpdate, Velocity, Gravity($));
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: world.component<Gravity>().add(flecs::Singleton);
 world.query_builder<Velocity, Gravity>()
-    .term_at(1).singleton()
     .build();
 ```
 </li>
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.QueryBuilder<Velocity, Gravity>()
-    .TermAt(1).Singleton()
-    .Build();
+world.QueryBuilder<Velocity, Gravity>().Build();
 ```
 </li>
 <li><b class="tab-title">Rust</b>
@@ -1496,8 +1535,6 @@ world.QueryBuilder<Velocity, Gravity>()
 ```rust
 world
     .query::<(&Velocity, &Gravity)>()
-    .term_at(1)
-    .singleton()
     .build();
 ```
 </li>
@@ -1547,7 +1584,9 @@ ecs_query_fini(f);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: flecs::entity parent = world.entity();
 // For simple queries the world::each function can be used
 world.each([](Position& p, Velocity& v) { // flecs::entity argument is optional
     p.x += v.x;
@@ -1688,7 +1727,8 @@ ecs_query_t *q = ecs_query(world, {
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 flecs::query<> q = world.query_builder()
     .with(flecs::ChildOf, flecs::Wildcard)
     .with<Position>().oper(flecs::Not)
@@ -1771,7 +1811,8 @@ void Move(ecs_iter_t *it) {
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 // Use each() function that iterates each individual entity
 auto move_sys = world.system<Position, Velocity>()
     .each([](flecs::iter& it, size_t, Position& p, Velocity& v) {
@@ -1863,7 +1904,9 @@ ecs_delete(world, move_sys);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: auto move_sys = world.system<>().each([](){});
 std::cout << "System: " << move_sys.name() << std::endl;
 move_sys.add(flecs::OnUpdate);
 move_sys.destruct();
@@ -1917,14 +1960,14 @@ EcsOnStore
 <li><b class="tab-title">C++</b>
 
 ```cpp
-flecs::OnLoad
-flecs::PostLoad
-flecs::PreUpdate
-flecs::OnUpdate
-flecs::OnValidate
-flecs::PostUpdate
-flecs::PreStore
-flecs::OnStore
+flecs::OnLoad;
+flecs::PostLoad;
+flecs::PreUpdate;
+flecs::OnUpdate;
+flecs::OnValidate;
+flecs::PostUpdate;
+flecs::PreStore;
+flecs::OnStore;
 ```
 </li>
 <li><b class="tab-title">C#</b>
@@ -2072,7 +2115,9 @@ ecs_add_id(world, Move, EcsPostUpdate);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
+HIDE: auto move_sys = world.system<>().each([](){});
 move_sys.add(flecs::OnUpdate);
 move_sys.remove(flecs::PostUpdate);
 ```
@@ -2130,12 +2175,14 @@ ecs_set(world, e, Position, {20, 40}); // Invokes the observer
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
+HIDE: flecs::world world;
 world.observer<Position, Velocity>("OnSetPosition")
     .event(flecs::OnSet)
-    .each( ... ); // Callback code is same as system
+    // Callback code is same as system
+    .each([](Position& p, Velocity& v) { });
 
-auto e = ecs.entity();     // Doesn't invoke the observer
+auto e = world.entity();     // Doesn't invoke the observer
 e.set<Position>({10, 20}); // Doesn't invoke the observer
 e.set<Velocity>({1, 2});   // Invokes the observer
 e.set<Position>({20, 30}); // Invokes the observer
@@ -2226,7 +2273,7 @@ ECS_IMPORT(world, MyModule);
 </li>
 <li><b class="tab-title">C++</b>
 
-```cpp
+```cpp test
 struct my_module {
     my_module(flecs::world& world) {
         world.module<my_module>();
@@ -2235,6 +2282,8 @@ struct my_module {
         // automatically created inside the scope of the module.
     }
 };
+
+HIDE: flecs::world world;
 
 // Import code
 world.import<my_module>();

@@ -28,4 +28,9 @@ struct Rotation {
 
 struct Tag { };
 
+struct Likes { };
+
+struct Gravity {
+    float value;
+};
 #endif
