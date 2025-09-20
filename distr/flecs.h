@@ -35326,7 +35326,7 @@ namespace flecs
 {
 
 template <typename T>
-inline field<T>::field(iter &iter, int32_t index) {
+inline field<T>::field(iter &iter, int index) {
     *this = iter.field<T>(index);
 }
 
