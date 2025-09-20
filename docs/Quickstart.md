@@ -1849,10 +1849,12 @@ HIDE: ecs_world_t *world = ecs_init();
 HIDE: ECS_COMPONENT(world, Position);
 HIDE: ECS_COMPONENT(world, Velocity);
 HIDE: float delta_time = 0.016f;
+
+HIDE: {
 // Option 1, use the ECS_SYSTEM convenience macro
 ECS_SYSTEM(world, Move, 0, Position, Velocity);
 ecs_run(world, Move, delta_time, NULL); // Run system
-
+HIDE: }
 // Option 2, use the ecs_system_init function/ecs_system macro
 ecs_entity_t move_sys = ecs_system(world, {
     .query.terms = {
