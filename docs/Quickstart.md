@@ -156,7 +156,7 @@ The world is the container for all ECS data. It stores the entities and their co
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
 ecs_world_t *world = ecs_init();
 
 // Do the ECS stuff
@@ -213,12 +213,14 @@ An entity is a unique thing in the world, and is represented by a 64 bit id. Ent
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
 ecs_entity_t e = ecs_new(world);
 ecs_is_alive(world, e); // true!
 
 ecs_delete(world, e);
 ecs_is_alive(world, e); // false!
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -274,10 +276,12 @@ Entities can have names which makes it easier to identify them in an application
 <li><b class="tab-title">C</b>
 
 In C a name can be assigned with the `ecs_entity_init` function or `ecs_entity` macro. 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
 ecs_entity_t e = ecs_entity(world, { .name = "Bob" });
 
 printf("Entity name: %s\n", ecs_get_name(world, e));
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -321,8 +325,11 @@ Entities can be looked up by name with the `lookup` function:
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ecs_entity_t bob = ecs_entity(world, { .name = "Bob" });
 ecs_entity_t e = ecs_lookup(world, "Bob");
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -364,7 +371,8 @@ A component is a type of which instances can be added and removed to entities. E
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
 ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Velocity);
 
@@ -384,6 +392,7 @@ const Position *p = ecs_get(world, e, Position);
 
 // Remove component
 ecs_remove(world, e, Position);
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -492,14 +501,17 @@ Each component is associated by a unique entity identifier by Flecs. This makes 
 <li><b class="tab-title">C</b>
 
 C applications can use the `ecs_id` macro to get the entity id for a component.
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
 ECS_COMPONENT(world, Position);
+HIDE: ECS_TAG(world, Serializable);
 
 ecs_entity_t pos_e = ecs_id(Position);
 printf("Name: %s\n", ecs_get_name(world, pos_e)); // outputs 'Name: Position'
 
 // It's possible to add components like you would for any entity
 ecs_add(world, pos_e, Serializable);
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -560,13 +572,15 @@ The thing that makes an ordinary entity a component is the `EcsComponent` (or `f
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
 ECS_COMPONENT(world, Position);
 
 ecs_entity_t pos_e = ecs_id(Position);
 
 const EcsComponent *c = ecs_get(world, pos_e, EcsComponent);
 printf("Component size: %u\n", c->size);
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -618,7 +632,8 @@ A tag is a component that does not have any data. In Flecs tags can be either em
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
 // Create Enemy tag
 ecs_entity_t Enemy = ecs_new(world);
 
@@ -630,6 +645,7 @@ ecs_has_id(world, e, Enemy); // true!
 
 ecs_remove_id(world, e, Enemy);
 ecs_has_id(world, e, Enemy); // false!
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -734,7 +750,8 @@ A pair is a combination of two entity ids. Pairs can be used to store entity rel
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
 // Create Likes relationship
 ecs_entity_t Likes = ecs_new(world);
 
@@ -748,6 +765,7 @@ ecs_has_pair(world, Bob, Likes, Alice); // true!
 
 ecs_remove_pair(world, Bob, Likes, Alice);
 ecs_has_pair(world, Bob, Likes, Alice); // false!
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -830,8 +848,12 @@ A pair can be encoded in a single 64 bit identifier by using the `ecs_pair` macr
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ecs_entity_t Likes = ecs_new(world);
+HIDE: ecs_entity_t Bob = ecs_new(world);
 ecs_id_t id = ecs_pair(Likes, Bob);
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -867,11 +889,16 @@ The following examples show how to get back the elements from a pair:
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ecs_entity_t Likes = ecs_new(world);
+HIDE: ecs_entity_t Bob = ecs_new(world);
+HIDE: ecs_id_t id = ecs_pair(Likes, Bob);
 if (ecs_id_is_pair(id)) {
     ecs_entity_t relationship = ecs_pair_first(world, id);
     ecs_entity_t target = ecs_pair_second(world, id);
 }
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -924,7 +951,13 @@ A component or tag can be added multiple times to the same entity as long as it 
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ecs_entity_t Bob = ecs_new(world);
+HIDE: ecs_entity_t Eats = ecs_new(world);
+HIDE: ecs_entity_t Grows = ecs_new(world);
+HIDE: ecs_entity_t Apples = ecs_new(world);
+HIDE: ecs_entity_t Pears = ecs_new(world);
 ecs_add_pair(world, Bob, Eats, Apples);
 ecs_add_pair(world, Bob, Eats, Pears);
 ecs_add_pair(world, Bob, Grows, Pears);
@@ -932,6 +965,7 @@ ecs_add_pair(world, Bob, Grows, Pears);
 ecs_has_pair(world, Bob, Eats, Apples); // true!
 ecs_has_pair(world, Bob, Eats, Pears);  // true!
 ecs_has_pair(world, Bob, Grows, Pears); // true!
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -994,8 +1028,14 @@ The `target` function can be used in C and C++ to get the object for a relations
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ecs_entity_t Likes = ecs_new(world);
+HIDE: ecs_entity_t Alice = ecs_new(world);
+HIDE: ecs_entity_t Bob = ecs_new(world);
+HIDE: ecs_add_pair(world, Alice, Likes, Bob);
 ecs_entity_t o = ecs_get_target(world, Alice, Likes, 0); // Returns Bob
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1040,7 +1080,8 @@ Flecs has builtin support for hierarchies with the builtin `EcsChildOf` (or `fle
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
 ecs_entity_t parent = ecs_new(world);
 
 // ecs_new_w_pair is the same as ecs_new_id + ecs_add_pair
@@ -1048,6 +1089,7 @@ ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 
 // Deleting the parent also deletes its children
 ecs_delete(world, parent);
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1104,7 +1146,8 @@ When entities have names, they can be used together with hierarchies to generate
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
 ecs_entity_t parent = ecs_entity(world, {
     .name = "parent"
 });
@@ -1121,6 +1164,7 @@ ecs_os_free(path);
 
 ecs_lookup(world, "parent.child");         // returns child
 ecs_lookup_from(world, parent, "child");   // returns child
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1173,15 +1217,16 @@ Queries (see below) can use hierarchies to order data breadth-first, which can c
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ECS_COMPONENT(world, Position);
 ecs_query_t *q = ecs_query(world, {
     .terms = {
-        { ecs_id(Position) },
-        { ecs_id(Position), .src = {
-            .flags = EcsCascade,       // Breadth-first order
-            .trav = EcsChildOf // Use ChildOf relationship for traversal
+        { .id = ecs_id(Position) },
+        { .id = ecs_id(Position), 
+            .trav = EcsChildOf, // Use ChildOf relationship for traversal
+            .src.id = EcsCascade // Breadth-first order
         }}
-    }
 });
 
 ecs_iter_t it = ecs_query_iter(world, q);
@@ -1192,6 +1237,7 @@ while (ecs_query_next(&it)) {
         // Do the thing
     }
 }
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1257,7 +1303,8 @@ The type (often referred to as "archetype") is the list of ids an entity has. Ty
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
 ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Velocity);
 
@@ -1269,6 +1316,7 @@ const ecs_type_t *type = ecs_get_type(world, e);
 char *type_str = ecs_type_str(world, type);
 printf("Type: %s\n", type_str); // output: 'Position,Velocity'
 ecs_os_free(type_str);
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1316,13 +1364,17 @@ A type can also be iterated by an application:
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ECS_COMPONENT(world, Position);
+HIDE: ecs_entity_t e = ecs_new(world);
 const ecs_type_t *type = ecs_get_type(world, e);
 for (int i = 0; i < type->count; i++) {
     if (type->array[i] == ecs_id(Position)) {
         // Found Position component!
     }
 }
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1376,8 +1428,9 @@ A singleton is a single instance of a component that can be retrieved without an
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
-
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ECS_COMPONENT(world, Gravity);
 // Register singleton component
 ecs_add_id(world, ecs_id(Gravity), EcsSingleton);
 
@@ -1386,6 +1439,7 @@ ecs_singleton_set(world, Gravity, { 9.81 });
 
 // Get singleton component
 const Gravity *g = ecs_singleton_get(world, Gravity);
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1442,10 +1496,13 @@ Singleton components are created by adding the component to its own entity id. T
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
-ecs_set(world, ecs_id(Gravity), Gravity, {10, 20});
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ECS_COMPONENT(world, Gravity);
+ecs_set(world, ecs_id(Gravity), Gravity, {9.81});
 
 const Gravity *g = ecs_get(world, ecs_id(Gravity), Gravity);
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1498,11 +1555,10 @@ The following examples show how to query for a singleton component:
 <li><b class="tab-title">C</b>
 
 ```c
-
 ecs_add_id(world, ecs_id(Gravity), EcsSingleton);
 
 // Create query that matches Gravity as singleton
-ecs_query_t *q = ecs_query(ecs, {
+ecs_query_t *q = ecs_query(world, {
     .terms = {
         // Regular component
         { .id = ecs_id(Velocity) },
@@ -1556,11 +1612,14 @@ Queries are the main mechanism for finding and iterating through entities. Queri
 <ul>
 <li><b class="tab-title">C</b>
     
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ECS_COMPONENT(world, Position);
+HIDE: ecs_entity_t parent = ecs_new(world);
 ecs_query_t *q = ecs_query(world, {
     .terms = {
-        { ecs_id(Position) },
-        { ecs_pair(EcsChildOf, parent) }
+        { .id = ecs_id(Position) },
+        { .id = ecs_pair(EcsChildOf, parent) }
     }
 });
 
@@ -1579,7 +1638,8 @@ while (ecs_query_next(&it)) {
     }
 }
 
-ecs_query_fini(f);
+ecs_query_fini(q);
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1714,15 +1774,18 @@ The following example shows a query that matches all entities with a parent that
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ECS_COMPONENT(world, Position);
 ecs_query_t *q = ecs_query(world, {
     .terms = {
-        { ecs_pair(EcsChildOf, EcsWildcard) }
+        { ecs_pair(EcsChildOf, EcsWildcard) },
         { ecs_id(Position), .oper = EcsNot },
     }
 });
 
 // Iteration code is the same
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1781,7 +1844,11 @@ A system is a query combined with a callback. Systems can be either ran manually
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ECS_COMPONENT(world, Position);
+HIDE: ECS_COMPONENT(world, Velocity);
+HIDE: float delta_time = 0.016f;
 // Option 1, use the ECS_SYSTEM convenience macro
 ECS_SYSTEM(world, Move, 0, Position, Velocity);
 ecs_run(world, Move, delta_time, NULL); // Run system
@@ -1798,6 +1865,7 @@ ecs_entity_t move_sys = ecs_system(world, {
 ecs_run(world, move_sys, delta_time, NULL); // Run system
 
 // The callback code (same for both options)
+HIDE: /*
 void Move(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = ecs_field(it, Velocity, 1);
@@ -1807,6 +1875,8 @@ void Move(ecs_iter_t *it) {
         p[i].y += v[i].y * it->delta_time;
     }
 }
+HIDE: */
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1960,14 +2030,14 @@ EcsOnStore
 <li><b class="tab-title">C++</b>
 
 ```cpp
-flecs::OnLoad;
-flecs::PostLoad;
-flecs::PreUpdate;
-flecs::OnUpdate;
-flecs::OnValidate;
-flecs::PostUpdate;
-flecs::PreStore;
-flecs::OnStore;
+flecs::OnLoad
+flecs::PostLoad
+flecs::PreUpdate
+flecs::OnUpdate
+flecs::OnValidate
+flecs::PostUpdate
+flecs::PreStore
+flecs::OnStore
 ```
 </li>
 <li><b class="tab-title">C#</b>
@@ -2108,9 +2178,14 @@ Because phases are just tags that are added to systems, applications can use the
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ECS_COMPONENT(world, Position);
+HIDE: ECS_COMPONENT(world, Velocity);
+HIDE: ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 ecs_remove_id(world, Move, EcsOnUpdate);
 ecs_add_id(world, Move, EcsPostUpdate);
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -2158,10 +2233,13 @@ An example of an observer with two components:
 <ul>
 <li><b class="tab-title">C</b>
 
-```c
+```c test
+HIDE: ecs_world_t *world = ecs_init();
+HIDE: ECS_COMPONENT(world, Position);
+HIDE: ECS_COMPONENT(world, Velocity);
 ecs_observer(world, {
     .query.terms = { { ecs_id(Position) }, { ecs_id(Velocity) }},
-    .event = { EcsOnSet },
+    .events = { EcsOnSet },
     .callback = OnSetPosition
 });
 
@@ -2171,6 +2249,7 @@ ecs_entity_t e = ecs_new(world);    // Doesn't invoke the observer
 ecs_set(world, e, Position, {10, 20}); // Doesn't invoke the observer
 ecs_set(world, e, Velocity, {1, 2});   // Invokes the observer
 ecs_set(world, e, Position, {20, 40}); // Invokes the observer
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -2248,6 +2327,7 @@ A module is a function that imports and organizes components, systems, triggers,
 <li><b class="tab-title">C</b>
 
 ```c
+HIDE: ecs_world_t *world = ecs_init();
 // Module header (e.g. MyModule.h)
 typedef struct {
     float x;
@@ -2262,13 +2342,17 @@ void MyModuleImport(ecs_world_t *world);
 // Module source (e.g. MyModule.c)
 ECS_COMPONENT_DECLARE(Position);
 
+HIDE: /*
 void MyModuleImport(ecs_world_t *world) {
     ECS_MODULE(world, MyModule);
     ECS_COMPONENT_DEFINE(world, Position);
 }
+HIDE: */
 
 // Import code
 ECS_IMPORT(world, MyModule);
+
+HIDE: ecs_fini(world);
 ```
 </li>
 <li><b class="tab-title">C++</b>

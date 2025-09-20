@@ -23,6 +23,26 @@ typedef float Mass;
 
 typedef float Rotation;
 
+typedef struct Tag { } Tag;
+
+typedef struct Likes { } Likes;
+
+typedef struct Gravity {
+    float value;
+} Gravity;
+
+static inline void Move(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
+
+    for (int i = 0; i < it->count; i++) {
+        p[i].x += v[i].x * it->delta_time;
+        p[i].y += v[i].y * it->delta_time;
+    }
+}
+
+static inline void OnSetPosition(ecs_iter_t *it) {}
+
 #ifdef __cplusplus
 }
 #endif

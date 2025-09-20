@@ -8,7 +8,7 @@ repo_root = Path(__file__).resolve().parents[3]  # Go up 3 levels: c_cpp -> scri
 sys.path.insert(0, str(repo_root))
 
 from docs.scripts.common.snippet_extractor import SnippetExtractor, CodeSnippet
-from docs.scripts.c_cpp.code_utils import indent_code
+from docs.scripts.c_cpp.code_utils import indent_code, replace_asserts
 from docs.scripts.c_cpp.project_json import update_testsuite_with_cases
 
 
@@ -34,11 +34,18 @@ class CTestGenerator(SnippetExtractor):
             if snippet.language != 'c':
                 continue
 
+            symbol = f"{file_stem}_{snippet.test_name}"
             test_names.append(snippet.test_name)
-            function_declarations.append(f"void {snippet.test_name}(void);")
+            function_declarations.append(f"void {symbol}(void);")
 
-            func_impl = f"""void {snippet.test_name}(void) {{
-{indent_code(snippet.get_clean_code(), '    ')}
+            snippet_code = snippet.get_clean_code()
+            snippet_code = replace_asserts(snippet_code)
+
+            if not any(tok in snippet_code for tok in ("test_", "test_assert", "test_int", "test_str", "test_bool")):
+                snippet_code = snippet_code.rstrip() + "\n\ntest_assert(true);"
+
+            func_impl = f"""void {symbol}(void) {{
+{indent_code(snippet_code, '    ')}
 }}"""
             function_implementations.append(func_impl)
 
@@ -58,12 +65,6 @@ class CTestGenerator(SnippetExtractor):
 // Test implementations
 
 {('\n\n'.join(function_implementations))}
-
-void run_{file_stem}_tests(void) {{
-    printf("Running {file_stem} tests...\n");
-{('\n'.join(f'    {name}();' for name in test_names))}
-    printf("All {file_stem} tests passed!\n");
-}}
 """
 
         return content
@@ -76,7 +77,7 @@ void run_{file_stem}_tests(void) {{
 
         self.ensure_directories()
 
-        all_test_names = []
+        suites_map = {}
 
         for md_file_path, snippets in snippets_by_file.items():
             c_snippets = [s for s in snippets if s.language == 'c']
@@ -90,12 +91,14 @@ void run_{file_stem}_tests(void) {{
                 with open(test_file, 'w') as f:
                     f.write(test_content)
                 print(f"Generated {test_file} with {len(c_snippets)} test(s)")
-                all_test_names.extend([s.test_name for s in c_snippets])
+                suites_map[file_stem] = [s.test_name for s in c_snippets]
 
-        if all_test_names:
+        # update project.json per suite
+        if suites_map:
             project_file = Path(self.test_root) / "project.json"
-            update_testsuite_with_cases(project_file, "Documentation", all_test_names)
-            print(f"\nGenerated {len(all_test_names)} C test(s) in {self.test_root}")
+            for suite_id, testcases in suites_map.items():
+                update_testsuite_with_cases(project_file, suite_id, testcases)
+            print(f"\nGenerated {len(suites_map)} C test file(s) with {sum(len(v) for v in suites_map.values())} total tests in {self.test_root}")
         else:
             print("No C test files generated")
 

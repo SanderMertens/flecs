@@ -9,5 +9,39 @@
         "use": [
             "flecs"
         ]
+    },
+    "test": {
+        "testsuites": [
+            {
+                "id": "quickstart",
+                "testcases": [
+                    "Concepts_World_01",
+                    "Concepts_Entity_01",
+                    "Concepts_Entity_02",
+                    "Concepts_Entity_03",
+                    "Concepts_Component_01",
+                    "Concepts_Component_02",
+                    "Concepts_Component_03",
+                    "Concepts_Tag_01",
+                    "Concepts_Pair_01",
+                    "Concepts_Pair_02",
+                    "Concepts_Pair_03",
+                    "Concepts_Pair_04",
+                    "Concepts_Pair_05",
+                    "Concepts_Hierarchies_01",
+                    "Concepts_Hierarchies_02",
+                    "Concepts_Hierarchies_03",
+                    "Concepts_Type_01",
+                    "Concepts_Type_02",
+                    "Concepts_Type_03",
+                    "Concepts_Type_04",
+                    "Concepts_Query_01",
+                    "Concepts_Query_02",
+                    "Concepts_System_01",
+                    "Concepts_Pipeline_01",
+                    "Concepts_Observer_01"
+                ]
+            }
+        ]
     }
 }
