@@ -559,6 +559,54 @@ void Expr_bool_to_uint(void) {
     ecs_fini(world);
 }
 
+void Expr_char(void) {
+    ecs_world_t *world = ecs_init();
+
+    char c = 0;
+    ecs_value_t v = { .type = ecs_id(ecs_char_t), .ptr = &c };
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "'a'", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_char_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_char_t*)v.ptr, 'a');
+
+    test_assert(ecs_expr_run(world, "'\\''", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_char_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_char_t*)v.ptr, '\'');
+
+    test_assert(ecs_expr_run(world, "'\\\\'", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_char_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_char_t*)v.ptr, '\\');
+
+    ecs_fini(world);
+}
+
+void Expr_char_to_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t c = 0;
+    ecs_value_t v = { .type = ecs_id(ecs_i32_t), .ptr = &c };
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "'a'", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_i32_t*)v.ptr, 'a');
+
+    test_assert(ecs_expr_run(world, "'\\''", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_i32_t*)v.ptr, '\'');
+
+    test_assert(ecs_expr_run(world, "'\\\\'", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_i32_t*)v.ptr, '\\');
+
+    ecs_fini(world);
+}
+
 void Expr_add_mul_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
