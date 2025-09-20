@@ -682,6 +682,17 @@ jobs:
       - name: build flecs
         run: bake --strict
 
+      - name: generate documentation tests
+        run: |
+          python3 docs/scripts/c_cpp/generate_c_tests.py
+          python3 docs/scripts/c_cpp/generate_cpp_tests.py
+
+      - name: test docs (C)
+        run: bake run test/docs/core -- -j 8
+
+      - name: test docs (C++)
+        run: bake run test/docs/cpp -- -j 8
+
       - name: test core
         run: bake run test/core -- -j 8
 
@@ -749,6 +760,17 @@ jobs:
       - name: build flecs
         run: bake --strict
 
+      - name: generate documentation tests
+        run: |
+          python3 docs/scripts/c_cpp/generate_c_tests.py
+          python3 docs/scripts/c_cpp/generate_cpp_tests.py
+
+      - name: test docs (C)
+        run: bake run test/docs/core -- -j 8
+
+      - name: test docs (C++)
+        run: bake run test/docs/cpp -- -j 8
+
       - name: test c++
         run: bake run test/cpp -- -j 8
 
@@ -788,6 +810,17 @@ jobs:
       - name: build flecs
         run: bake --strict
 
+      - name: generate documentation tests
+        run: |
+          python3 docs/scripts/c_cpp/generate_c_tests.py
+          python3 docs/scripts/c_cpp/generate_cpp_tests.py
+
+      - name: test docs (C)
+        run: bake run test/docs/core -- -j 8
+
+      - name: test docs (C++)
+        run: bake run test/docs/cpp -- -j 8
+
       - name: test c++
         run: bake run test/cpp -- -j 8
 
@@ -811,6 +844,17 @@ jobs:
 
       - name: build flecs
         run: bake/bake
+
+      - name: generate documentation tests
+        run: |
+          python docs/scripts/c_cpp/generate_c_tests.py
+          python docs/scripts/c_cpp/generate_cpp_tests.py
+
+      - name: test docs (C)
+        run: bake/bake run test\docs\core -- -j 8
+
+      - name: test docs (C++)
+        run: bake/bake run test\docs\cpp -- -j 8
 
       - name: test core
         run: bake/bake run test\core -- -j 8
@@ -872,6 +916,17 @@ jobs:
 
       - name: build flecs
         run: bake/bake --strict
+
+      - name: generate documentation tests
+        run: |
+          python3 docs/scripts/c_cpp/generate_c_tests.py
+          python3 docs/scripts/c_cpp/generate_cpp_tests.py
+
+      - name: test docs (C)
+        run: bake/bake run test/docs/core -- -j 8
+
+      - name: test docs (C++)
+        run: bake/bake run test/docs/cpp -- -j 8
 
       - name: test core
         run: bake/bake run test/core -- -j 8
