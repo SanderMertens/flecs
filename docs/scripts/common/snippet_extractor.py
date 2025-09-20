@@ -13,6 +13,12 @@ import json
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 
+# Add repo root to Python path so we can import docs.scripts modules
+repo_root = Path(__file__).resolve().parents[3]  # Go up 3 levels: common -> scripts -> docs -> repo_root
+sys.path.insert(0, str(repo_root))
+
+from docs.scripts.common.name_utils import make_test_name
+
 
 class CodeSnippet:
     """Represents a code snippet found in documentation."""
@@ -28,43 +34,8 @@ class CodeSnippet:
         self.h2_title = h2_title
         self.h3_title = h3_title
         self.h4_title = h4_title
-        self.test_name = self._generate_test_name()
+        self.test_name = make_test_name(self.h2_title, self.h3_title, self.h4_title, self.test_number, self.file_path)
     
-    def _generate_test_name(self) -> str:
-        """Generate test name based on H2/H3/H4 titles and test number."""
-        parts = []
-        
-        if self.h2_title:
-            # Clean up H2 title to make it a valid identifier
-            clean_h2 = re.sub(r'[^a-zA-Z0-9_]', '_', self.h2_title)
-            clean_h2 = re.sub(r'_+', '_', clean_h2).strip('_')
-            if clean_h2:
-                parts.append(clean_h2)
-        
-        if self.h3_title:
-            # Clean up H3 title
-            clean_h3 = re.sub(r'[^a-zA-Z0-9_]', '_', self.h3_title)
-            clean_h3 = re.sub(r'_+', '_', clean_h3).strip('_')
-            if clean_h3:
-                parts.append(clean_h3)
-        
-        if self.h4_title:
-            # Clean up H4 title
-            clean_h4 = re.sub(r'[^a-zA-Z0-9_]', '_', self.h4_title)
-            clean_h4 = re.sub(r'_+', '_', clean_h4).strip('_')
-            if clean_h4:
-                parts.append(clean_h4)
-        
-        # Always include test number
-        parts.append(f"{self.test_number:02d}")
-        
-        if not parts:
-            # Fallback to file name if no titles
-            file_stem = Path(self.file_path).stem
-            clean_file = re.sub(r'[^a-zA-Z0-9_]', '_', file_stem)
-            parts = [clean_file, "01"]
-        
-        return '_'.join(parts)
     
     def get_clean_code(self) -> str:
         """Get code with HIDE: prefix removed but keeping the rest of the line."""
@@ -84,8 +55,8 @@ class CodeSnippet:
         return '\n'.join(clean_lines)
 
 
-class TestSnippetExtractor:
-    """Base class for extracting test snippets from documentation."""
+class SnippetExtractor:
+    """Language-agnostic extractor for test snippets from documentation."""
     
     def __init__(self, docs_root: str = "docs"):
         self.docs_root = docs_root
@@ -251,33 +222,39 @@ class TestSnippetExtractor:
 
 
 def main():
-    """Main function for testing the base extractor."""
-    if len(sys.argv) != 3:
-        print("Usage: python3 test_snippet_extractor.py <docs_root> <output_json>")
+    """Main function for extracting snippets - language-agnostic demo."""
+    if len(sys.argv) < 3:
+        print("Usage: python3 snippet_extractor.py <docs_root> <output_json> [languages...]")
+        print("Example: python3 snippet_extractor.py docs output.json c cpp rust")
         sys.exit(1)
     
     docs_root = sys.argv[1]
     output_file = sys.argv[2]
     
-    # Test with both C and C++
-    extractor = TestSnippetExtractor(docs_root)
-    snippets_by_file = extractor.extract_all_snippets(['c', 'cpp'])
+    # Get target languages from command line or default to c and cpp
+    if len(sys.argv) > 3:
+        target_languages = sys.argv[3:]
+    else:
+        target_languages = ['c', 'cpp']
+    
+    print(f"Extracting snippets for languages: {', '.join(target_languages)}")
+    
+    extractor = SnippetExtractor(docs_root)
+    snippets_by_file = extractor.extract_all_snippets(target_languages)
     extractor.save_snippets_json(output_file)
     
-    # Print summary
-    c_count = 0
-    cpp_count = 0
+    # Print summary by language
+    language_counts = {}
     for snippets in snippets_by_file.values():
         for snippet in snippets:
-            if snippet.language == 'c':
-                c_count += 1
-            elif snippet.language == 'cpp':
-                cpp_count += 1
+            language_counts[snippet.language] = language_counts.get(snippet.language, 0) + 1
     
     print(f"\nSummary:")
-    print(f"C snippets: {c_count}")
-    print(f"C++ snippets: {cpp_count}")
-    print(f"Total: {c_count + cpp_count}")
+    total = 0
+    for lang, count in sorted(language_counts.items()):
+        print(f"{lang.upper()} snippets: {count}")
+        total += count
+    print(f"Total: {total}")
 
 
 if __name__ == "__main__":

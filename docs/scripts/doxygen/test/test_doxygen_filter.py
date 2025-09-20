@@ -26,20 +26,21 @@ def run_filter(input_content):
     with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as temp_file:
         temp_file.write(input_content)
         temp_file_path = temp_file.name
-    
+
     try:
         # Get the directory containing this test script
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        filter_script = os.path.join(script_dir, 'doxygen_filter.py')
-        
+        # filter script is in the parent directory
+        filter_script = os.path.join(script_dir, '..', 'doxygen_filter.py')
+
         # Run the filter script
         result = subprocess.run([
             sys.executable, filter_script, temp_file_path
         ], capture_output=True, text=True)
-        
+
         if result.returncode != 0:
             raise Exception(f"Filter script failed: {result.stderr}")
-        
+
         return result.stdout
     finally:
         # Clean up the temporary file
