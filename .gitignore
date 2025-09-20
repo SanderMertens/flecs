@@ -13,3 +13,10 @@ bazel-*
 out
 docs/html
 MODULE.bazel.lock
+
+# Python
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd

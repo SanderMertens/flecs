@@ -679,8 +679,17 @@ jobs:
           make -C bake/build-$(uname)
           bake/bake setup
 
+      - name: generate documentation tests
+        run: python3 docs/scripts/c_cpp/generate_tests.py
+
       - name: build flecs
         run: bake --strict
+
+      - name: test docs (C)
+        run: bake run test/docs/core -- -j 8
+
+      - name: test docs (C++)
+        run: bake run test/docs/cpp -- -j 8
 
       - name: test core
         run: bake run test/core -- -j 8
@@ -746,8 +755,14 @@ jobs:
           make -C bake/build-$(uname)
           bake/bake setup
 
+      - name: generate documentation tests
+        run: python3 docs/scripts/c_cpp/generate_tests.py
+
       - name: build flecs
         run: bake --strict
+
+      - name: test docs (C++)
+        run: bake run test/docs/cpp -- -j 8
 
       - name: test c++
         run: bake run test/cpp -- -j 8
@@ -785,8 +800,14 @@ jobs:
           make -C bake/build-$(uname)
           bake/bake setup
 
+      - name: generate documentation tests
+        run: python3 docs/scripts/c_cpp/generate_tests.py
+
       - name: build flecs
         run: bake --strict
+
+      - name: test docs (C++)
+        run: bake run test/docs/cpp -- -j 8
 
       - name: test c++
         run: bake run test/cpp -- -j 8
@@ -809,8 +830,17 @@ jobs:
           cd ..
           ./bake setup --local
 
+      - name: generate documentation tests
+        run: python docs/scripts/c_cpp/generate_tests.py
+
       - name: build flecs
         run: bake/bake
+
+      - name: test docs (C)
+        run: bake/bake run test\docs\core -- -j 8
+
+      - name: test docs (C++)
+        run: bake/bake run test\docs\cpp -- -j 8
 
       - name: test core
         run: bake/bake run test\core -- -j 8
@@ -870,8 +900,17 @@ jobs:
           make -C bake/build-Mingw
           bake/bake setup
 
+      - name: generate documentation tests
+        run: python3 docs/scripts/c_cpp/generate_tests.py
+
       - name: build flecs
         run: bake/bake --strict
+
+      - name: test docs (C)
+        run: bake/bake run test/docs/core -- -j 8
+
+      - name: test docs (C++)
+        run: bake/bake run test/docs/cpp -- -j 8
 
       - name: test core
         run: bake/bake run test/core -- -j 8

@@ -1,0 +1,136 @@
+{
+    "id": "cpp",
+    "type": "application",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "tests for the docs C++ code samples of flecs",
+        "public": false,
+        "coverage": false,
+        "language": "c++",
+        "use": [
+            "flecs"
+        ]
+    },
+    "lang.cpp": {
+        "cpp-standard": "c++17",
+        "flags": [
+            "-Wunused-variable",
+            "-Wno-unused-variable"
+        ]
+    },
+    "test": {
+        "testsuites": [
+            {
+                "id": "quickstart",
+                "testcases": [
+                    "Concepts_World_01",
+                    "Concepts_Entity_01",
+                    "Concepts_Entity_02",
+                    "Concepts_Entity_03",
+                    "Concepts_Component_01",
+                    "Concepts_Component_02",
+                    "Concepts_Component_03",
+                    "Concepts_Tag_01",
+                    "Concepts_Pair_01",
+                    "Concepts_Pair_02",
+                    "Concepts_Pair_03",
+                    "Concepts_Pair_04",
+                    "Concepts_Pair_05",
+                    "Concepts_Hierarchies_01",
+                    "Concepts_Hierarchies_02",
+                    "Concepts_Hierarchies_03",
+                    "Concepts_Type_01",
+                    "Concepts_Type_02",
+                    "Concepts_Type_03",
+                    "Concepts_Type_04",
+                    "Concepts_Query_01",
+                    "Concepts_Query_02",
+                    "Concepts_System_01",
+                    "Concepts_System_02",
+                    "Concepts_Pipeline_01",
+                    "Concepts_Observer_01",
+                    "Concepts_Module_01"
+                ]
+            },
+            {
+                "id": "componenttraits",
+                "testcases": [
+                    "CanToggle_trait_01",
+                    "Cleanup_traits_01",
+                    "Cleanup_traits_02",
+                    "Cleanup_traits_03",
+                    "Cleanup_traits_Examples_OnDelete_Remove_01",
+                    "Cleanup_traits_Examples_OnDelete_Delete_01",
+                    "Cleanup_traits_Examples_OnDeleteTarget_Delete_01",
+                    "Cleanup_traits_Cleanup_order_01",
+                    "DontFragment_trait_01",
+                    "Exclusive_trait_01",
+                    "Exclusive_trait_02",
+                    "Final_trait_01",
+                    "Inheritable_trait_01",
+                    "OneOf_trait_01",
+                    "OneOf_trait_02",
+                    "OnInstantiate_trait_Override_01",
+                    "OnInstantiate_trait_Inherit_01",
+                    "OnInstantiate_trait_DontInherit_01",
+                    "OrderedChildren_trait_01",
+                    "PairIsTag_trait_01",
+                    "PairIsTag_trait_02",
+                    "Relationship_trait_01",
+                    "Relationship_trait_02",
+                    "Singleton_trait_01",
+                    "Singleton_trait_02",
+                    "Sparse_trait_01",
+                    "Symmetric_trait_01",
+                    "Target_trait_01",
+                    "Trait_trait_01",
+                    "Transitive_trait_01",
+                    "Transitive_trait_02",
+                    "With_trait_01",
+                    "With_trait_02"
+                ]
+            },
+            {
+                "id": "entitiescomponents",
+                "testcases": [
+                    "Entities_Creation_01",
+                    "Entities_Deletion_01",
+                    "Entities_Deletion_02",
+                    "Entities_Deletion_03",
+                    "Entities_Clearing_01",
+                    "Entities_Liveliness_Checking_01",
+                    "Entities_Liveliness_Checking_02",
+                    "Entities_Manual_Ids_01",
+                    "Entities_Manual_Versioning_01",
+                    "Entities_Ranges_01",
+                    "Entities_Ranges_02",
+                    "Entities_Ranges_03",
+                    "Entities_Names_01",
+                    "Entities_Names_02",
+                    "Entities_Names_03",
+                    "Entities_Names_04",
+                    "Entities_Names_05",
+                    "Entities_Names_06",
+                    "Entities_Names_07",
+                    "Entities_Disabling_01",
+                    "Entities_Disabling_02",
+                    "Entities_Disabling_03",
+                    "Entities_Disabling_04",
+                    "Components_Hooks_01",
+                    "Components_Hooks_02",
+                    "Components_Components_have_entity_handles_01",
+                    "Components_Components_have_entity_handles_02",
+                    "Components_Registration_01",
+                    "Components_Registration_02",
+                    "Components_Registration_03",
+                    "Components_Registration_Runtime_Type_Registration_01",
+                    "Components_Registration_Runtime_Type_Registration_02",
+                    "Components_Unregistration_01",
+                    "Components_Singletons_01",
+                    "Components_Singletons_02",
+                    "Components_Disabling_01"
+                ]
+            }
+        ]
+    }
+}
