@@ -1,3 +1,8 @@
+/*
+ * Tests generated from: docs/EntitiesComponents.md
+ * Contains 36 test(s) from documentation code snippets  
+ */
+
 #include <cpp.h>
 
 void entitiescomponents_Entities_Creation_01(void) {

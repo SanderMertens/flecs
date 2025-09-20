@@ -1,3 +1,8 @@
+/*
+ * Tests generated from: docs/Quickstart.md
+ * Contains 27 test(s) from documentation code snippets  
+ */
+
 #include <cpp.h>
 
 void quickstart_Concepts_World_01(void) {

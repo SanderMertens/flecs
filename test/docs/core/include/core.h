@@ -23,10 +23,6 @@ typedef float Mass;
 
 typedef float Rotation;
 
-typedef struct Tag { } Tag;
-
-typedef struct Likes { } Likes;
-
 typedef struct Gravity {
     float value;
 } Gravity;

@@ -43,7 +43,6 @@ void quickstart_Concepts_World_01(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Entity_01(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t e = ecs_new(world);
@@ -55,7 +54,6 @@ void quickstart_Concepts_Entity_01(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Entity_02(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t e = ecs_entity(world, { .name = "Bob" });
@@ -65,7 +63,6 @@ void quickstart_Concepts_Entity_02(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Entity_03(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t bob = ecs_entity(world, { .name = "Bob" });
@@ -74,7 +71,6 @@ void quickstart_Concepts_Entity_03(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Component_01(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
@@ -100,7 +96,6 @@ void quickstart_Concepts_Component_01(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Component_02(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
@@ -115,7 +110,6 @@ void quickstart_Concepts_Component_02(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Component_03(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
@@ -128,7 +122,6 @@ void quickstart_Concepts_Component_03(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Tag_01(void) {
     ecs_world_t *world = ecs_init();
     // Create Enemy tag
@@ -146,7 +139,6 @@ void quickstart_Concepts_Tag_01(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Pair_01(void) {
     ecs_world_t *world = ecs_init();
     // Create Likes relationship
@@ -166,7 +158,6 @@ void quickstart_Concepts_Pair_01(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Pair_02(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t Likes = ecs_new(world);
@@ -176,7 +167,6 @@ void quickstart_Concepts_Pair_02(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Pair_03(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t Likes = ecs_new(world);
@@ -190,7 +180,6 @@ void quickstart_Concepts_Pair_03(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Pair_04(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t Bob = ecs_new(world);
@@ -209,7 +198,6 @@ void quickstart_Concepts_Pair_04(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Pair_05(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t Likes = ecs_new(world);
@@ -221,7 +209,6 @@ void quickstart_Concepts_Pair_05(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Hierarchies_01(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t parent = ecs_new(world);
@@ -235,7 +222,6 @@ void quickstart_Concepts_Hierarchies_01(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Hierarchies_02(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t parent = ecs_entity(world, {
@@ -258,7 +244,6 @@ void quickstart_Concepts_Hierarchies_02(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Hierarchies_03(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
@@ -283,7 +268,6 @@ void quickstart_Concepts_Hierarchies_03(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Type_01(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
@@ -301,7 +285,6 @@ void quickstart_Concepts_Type_01(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Type_02(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
@@ -316,7 +299,6 @@ void quickstart_Concepts_Type_02(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Type_03(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Gravity);
@@ -332,7 +314,6 @@ void quickstart_Concepts_Type_03(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Type_04(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Gravity);
@@ -343,7 +324,6 @@ void quickstart_Concepts_Type_04(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Query_01(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
@@ -375,7 +355,6 @@ void quickstart_Concepts_Query_01(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Query_02(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
@@ -391,7 +370,6 @@ void quickstart_Concepts_Query_02(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_System_01(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
@@ -430,7 +408,6 @@ void quickstart_Concepts_System_01(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Pipeline_01(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
@@ -442,7 +419,6 @@ void quickstart_Concepts_Pipeline_01(void) {
 
     test_assert(true);
 }
-
 void quickstart_Concepts_Observer_01(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);

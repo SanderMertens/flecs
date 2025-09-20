@@ -1,3 +1,8 @@
+/*
+ * Tests generated from: docs/ComponentTraits.md
+ * Contains 33 test(s) from documentation code snippets  
+ */
+
 #include <cpp.h>
 
 void componenttraits_CanToggle_trait_01(void) {
