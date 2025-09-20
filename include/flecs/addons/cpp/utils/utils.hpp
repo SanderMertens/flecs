@@ -68,10 +68,21 @@ inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      n
 namespace flecs
 {
 
+// faster (compile time) alternative to std::conditional
+template <bool> struct condition;
+
+template <> struct condition<false> {
+    template <typename T, typename F> using type = F;
+};
+
+template <> struct condition<true> {
+    template <typename T, typename F> using type = T;
+};
+
 // C++11/C++14 convenience template replacements
 
-template <bool V, typename T, typename F>
-using conditional_t = typename std::conditional<V, T, F>::type;
+template <bool C, typename T, typename F>
+using conditional_t = typename condition<C>::template type<T, F>;
 
 template <typename T>
 using decay_t = typename std::decay<T>::type;
