@@ -351,6 +351,9 @@ void flecs_meta_units_init(
         .dtor = ecs_dtor(EcsUnitPrefix)
     });
 
+    ecs_add_id(world, EcsQuantity, EcsExclusive);
+    ecs_add_id(world, EcsQuantity, EcsPairIsTag);
+
     ecs_observer(world, {
         .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsUnit) },
@@ -368,8 +371,7 @@ void flecs_meta_units_init(
         .callback = flecs_unit_quantity_monitor
     });
 
-    ecs_add_id(world, EcsQuantity, EcsExclusive);
-    ecs_add_id(world, EcsQuantity, EcsPairIsTag);
+
 }
 
 #endif

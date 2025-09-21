@@ -32,6 +32,7 @@ typedef enum ecs_token_kind_t {
     EcsTokOptional = '?',
     EcsTokAnnotation = '@',
     EcsTokNewline = '\n',
+    EcsTokChar = '\'',
     EcsTokEq = 100,
     EcsTokNeq = 101,
     EcsTokGt = 102,

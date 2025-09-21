@@ -455,6 +455,11 @@ const char* flecs_script_parse_lhs(
             break;
         }
 
+        case EcsTokChar: {
+            *out = (ecs_expr_node_t*)flecs_expr_char(parser, Token(0));
+            break;
+        }
+
         case EcsTokString: {
             if (flecs_string_is_interpolated(Token(0))) {
                 *out = (ecs_expr_node_t*)flecs_expr_interpolated_string(

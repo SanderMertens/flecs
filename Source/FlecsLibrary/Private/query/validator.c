@@ -1194,12 +1194,6 @@ int flecs_query_finalize_terms(
             ECS_TERMSET_SET(q->static_id_fields, 1u << term->field_index);
         }
 
-        if (ecs_term_match_this(term)) {
-            ECS_BIT_SET(q->flags, EcsQueryMatchThis);
-        } else {
-            ECS_BIT_CLEAR(q->flags, EcsQueryMatchOnlyThis);
-        }
-
         if (ECS_TERM_REF_ID(term) == EcsPrefab) {
             ECS_BIT_SET(q->flags, EcsQueryMatchPrefab);
         }
@@ -1292,7 +1286,7 @@ int flecs_query_finalize_terms(
         }
 
         bool is_sparse = false;
-        bool keep_alive = true;
+        bool keep_alive = term->src.id != EcsIsEntity;
 
         ecs_component_record_t *cr = flecs_components_get(world, term->id);
         if (!cr) {
@@ -1343,6 +1337,12 @@ int flecs_query_finalize_terms(
             if (type && ecs_has_id(world, type, EcsSparse)) {
                 is_sparse = true;
             }
+        }
+
+        if (ecs_term_match_this(term)) {
+            ECS_BIT_SET(q->flags, EcsQueryMatchThis);
+        } else {
+            ECS_BIT_CLEAR(q->flags, EcsQueryMatchOnlyThis);
         }
 
         if (ECS_TERM_REF_ID(&term->src) && (term->src.id & EcsIsEntity)) {
@@ -1678,6 +1678,7 @@ bool flecs_query_finalize_simple(
     /* Simple query that only queries for component ids */
 
     /* Populate terms */
+    bool has_this = false, has_only_this = true;
     int8_t cacheable_count = 0, trivial_count = 0, up_count = 0;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &q->terms[i];
@@ -1744,9 +1745,14 @@ bool flecs_query_finalize_simple(
             if (cr->flags & EcsIdSingleton) {
                 if (default_src) {
                     term->src.id = term->first.id|EcsSelf|EcsIsEntity;
+                    has_only_this = false;
                     cacheable = false; trivial = false;
                 }
+            } else {
+                has_this = true;
             }
+        } else {
+            has_this = true;
         }
 
         if (ECS_IS_PAIR(id)) {
@@ -1788,7 +1794,14 @@ bool flecs_query_finalize_simple(
     q->field_count = term_count;
     q->set_fields = (ecs_termset_t)((1llu << i) - 1);
     q->static_id_fields = (ecs_termset_t)((1llu << i) - 1);
-    q->flags |= EcsQueryMatchThis|EcsQueryMatchOnlyThis|EcsQueryHasTableThisVar;
+
+    if (has_this) {
+        q->flags |= EcsQueryHasTableThisVar|EcsQueryMatchThis;
+    }
+
+    if (has_only_this) {
+        q->flags |= EcsQueryMatchOnlyThis;
+    }
 
     if (cacheable_count) {
         q->flags |= EcsQueryHasCacheable;

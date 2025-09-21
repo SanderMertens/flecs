@@ -121,9 +121,20 @@ static
 bool flecs_set_id_flag(
     ecs_world_t *world,
     ecs_component_record_t *cr, 
-    ecs_flags32_t flag)
+    ecs_flags32_t flag,
+    ecs_entity_t trait)
 {
+    (void)trait;
+
     if (!(cr->flags & flag)) {
+        if (!(world->flags & EcsWorldInit)) {
+            ecs_check(!cr->keep_alive, ECS_INVALID_OPERATION, 
+                "cannot set '%s' trait for component '%s' because it is already"
+                    " queried for (apply traits before creating queries)",
+                        flecs_errstr(ecs_get_path(world, trait)),
+                        flecs_errstr_1(ecs_id_str(world, cr->id)));
+        }
+
         cr->flags |= flag;
         if (flag == EcsIdIsSparse) {
             flecs_component_init_sparse(world, cr);
@@ -146,6 +157,7 @@ bool flecs_set_id_flag(
         return true;
     }
 
+error:
     return false;
 }
 
@@ -169,7 +181,7 @@ bool flecs_unset_id_flag(
 static
 void flecs_register_id_flag_for_relation(
     ecs_iter_t *it,
-    ecs_entity_t prop,
+    ecs_entity_t trait,
     ecs_flags32_t flag,
     ecs_flags32_t not_flag,
     ecs_flags32_t entity_flag)
@@ -188,12 +200,12 @@ void flecs_register_id_flag_for_relation(
                 !ecs_has_id(world, e, EcsTarget)) 
             {
                 cr = flecs_components_ensure(world, e);
-                changed |= flecs_set_id_flag(world, cr, flag);
+                changed |= flecs_set_id_flag(world, cr, flag, trait);
             }
 
             cr = flecs_components_ensure(world, ecs_pair(e, EcsWildcard));
             do {
-                changed |= flecs_set_id_flag(world, cr, flag);
+                changed |= flecs_set_id_flag(world, cr, flag, trait);
             } while ((cr = flecs_component_first_next(cr)));
             if (entity_flag) flecs_add_flag(world, e, entity_flag);
         } else if (event == EcsOnRemove) {
@@ -208,7 +220,7 @@ void flecs_register_id_flag_for_relation(
         }
 
         if (changed) {
-            flecs_assert_relation_unused(world, e, prop);
+            flecs_assert_relation_unused(world, e, trait);
         }
     }
 }
@@ -221,14 +233,21 @@ void flecs_register_final(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         if (flecs_components_get(world, ecs_pair(EcsIsA, e)) != NULL) {
-            char *e_str = ecs_get_path(world, e);
             ecs_throw(ECS_INVALID_OPERATION,
                 "cannot change trait 'Final' for '%s': already inherited from",
-                    e_str);
-            ecs_os_free(e_str);
+                    flecs_errstr(ecs_get_path(world, e)));
+        }
+
+        ecs_component_record_t *cr = flecs_components_get(world, e);
+        if (cr) {
+            ecs_check(!cr->keep_alive, ECS_INVALID_OPERATION, "cannot change "
+                "trait 'Final' for '%s': already queried for (apply traits "
+                "before creating queries)", 
+                    flecs_errstr(ecs_get_path(world, e)));
+        }
+
         error:
             continue;
-        }
     }
 }
 
