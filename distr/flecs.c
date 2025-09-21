@@ -45532,6 +45532,7 @@ typedef enum ecs_token_kind_t {
     EcsTokOptional = '?',
     EcsTokAnnotation = '@',
     EcsTokNewline = '\n',
+    EcsTokChar = '\'',
     EcsTokEq = 100,
     EcsTokNeq = 101,
     EcsTokGt = 102,
@@ -46121,6 +46122,10 @@ ecs_expr_variable_t* flecs_expr_variable_from(
 ecs_expr_value_node_t* flecs_expr_bool(
     ecs_parser_t *parser,
     bool value);
+
+ecs_expr_value_node_t *flecs_expr_char(
+    ecs_parser_t *parser,
+    const char *value);
 
 ecs_expr_value_node_t* flecs_expr_int(
     ecs_parser_t *parser,
@@ -56699,6 +56704,8 @@ const char* flecs_token_kind_str(
         return "identifier ";
     case EcsTokString:
         return "string ";
+    case EcsTokChar:
+        return "char ";
     case EcsTokNumber:
         return "number ";
     case EcsTokNewline:
@@ -56766,6 +56773,7 @@ const char* flecs_token_str(
     case EcsTokKeywordModule: return "module";
     case EcsTokIdentifier: return "identifier";
     case EcsTokString: return "string";
+    case EcsTokChar: return "char";
     case EcsTokNumber: return "number";
     case EcsTokNewline: return "newline";
     case EcsTokMember: return "member";
@@ -57046,6 +57054,40 @@ const char* flecs_script_skip_string(
 }
 
 static
+const char* flecs_script_char(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_token_t *out)
+{
+    const char *end = flecs_script_skip_string(parser, pos + 1, '\'');
+    if (!end) {
+        return NULL;
+    }
+
+    ecs_assert(end[0] == '\'', ECS_INTERNAL_ERROR, NULL);
+    end --;
+
+    int32_t len = flecs_ito(int32_t, end - pos);
+    if(len == 0) {
+        ecs_parser_error(parser->name, parser->code,
+            pos - parser->code, "Empty char");
+        return NULL;
+    } else if((len > 2) || (len == 2 && parser->token_cur[0] == '\\')) {
+        ecs_parser_error(parser->name, parser->code,
+            pos - parser->code, "only one char allowed");
+        return NULL;
+    }
+
+    ecs_os_memcpy(parser->token_cur, pos + 1, len);
+    parser->token_cur[len] = '\0';
+
+    out->kind = EcsTokChar;
+    out->value = parser->token_cur;
+    parser->token_cur += len + 1;
+    return end + 2;
+}
+
+static
 const char* flecs_script_string(
     ecs_parser_t *parser,
     const char *pos,
@@ -57235,6 +57277,9 @@ const char* flecs_token(
     Keyword           ("new",      EcsTokKeywordNew)
     Keyword           ("export",   EcsTokKeywordExport)
     Keyword           ("module",   EcsTokKeywordModule)
+
+    } else if (pos[0] == '\'') {
+        return flecs_script_char(parser, pos, out);
 
     } else if (pos[0] == '"') {
         return flecs_script_string(parser, pos, out);
@@ -83754,6 +83799,27 @@ ecs_expr_value_node_t* flecs_expr_bool(
     return result;
 }
 
+ecs_expr_value_node_t* flecs_expr_char(
+    ecs_parser_t *parser,
+    const char *value)
+{
+    ecs_expr_value_node_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_value_node_t, EcsExprValue);
+    if(value[0] == '\\' && value[1] == '\'') {
+        result->storage.char_ = '\'';
+    } else {
+        char ch = 0;
+        const char *ptr = flecs_chrparse(value, &ch);
+        if(!ptr) {
+            return NULL;
+        }
+        result->storage.char_ = ch;
+    }
+    result->ptr = &result->storage.char_;
+    result->node.type = ecs_id(ecs_char_t);
+    return result;
+}
+
 ecs_expr_value_node_t* flecs_expr_int(
     ecs_parser_t *parser,
     int64_t value)
@@ -84476,6 +84542,11 @@ const char* flecs_script_parse_lhs(
                 *out = (ecs_expr_node_t*)flecs_expr_uint(parser, 
                     strtoull(expr, &end, base));
             }
+            break;
+        }
+
+        case EcsTokChar: {
+            *out = (ecs_expr_node_t*)flecs_expr_char(parser, Token(0));
             break;
         }
 
@@ -85281,6 +85352,7 @@ int flecs_value_binary(
     case EcsTokRange:
     case EcsTokIdentifier:
     case EcsTokString:
+    case EcsTokChar:
     case EcsTokNumber:
     case EcsTokKeywordModule:
     case EcsTokKeywordUsing:
@@ -88128,6 +88200,7 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokMatch:
     case EcsTokRange:
     case EcsTokIdentifier:
+    case EcsTokChar:
     case EcsTokString:
     case EcsTokNumber:
     case EcsTokKeywordModule:
@@ -88239,6 +88312,7 @@ int flecs_expr_type_for_operator(
     case EcsTokMatch:
     case EcsTokRange:
     case EcsTokIdentifier:
+    case EcsTokChar:
     case EcsTokString:
     case EcsTokNumber:
     case EcsTokKeywordModule:
