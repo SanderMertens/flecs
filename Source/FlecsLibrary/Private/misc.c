@@ -60,7 +60,8 @@ int32_t flecs_next_pow_of_2(
 double ecs_time_to_double(
     ecs_time_t t)
 {
-    const double result = t.sec;
+    double result;
+    result = t.sec;
     return result + (double)t.nanosec / (double)1000000000;
 }
 
@@ -96,8 +97,8 @@ double ecs_time_measure(
 {
     ecs_time_t stop, temp;
     ecs_os_get_time(&stop);
-    stop = ecs_time_sub(stop, *start);
     temp = stop;
+    stop = ecs_time_sub(stop, *start);
     *start = temp;
     return ecs_time_to_double(stop);
 }
@@ -137,12 +138,13 @@ char* flecs_vasprintf(
     const char *fmt,
     va_list args)
 {
+    ecs_size_t size = 0;
     char *result  = NULL;
     va_list tmpa;
 
     va_copy(tmpa, args);
 
-    ecs_size_t size = vsnprintf(result, 0, fmt, tmpa);
+    size = vsnprintf(result, 0, fmt, tmpa);
 
     va_end(tmpa);
 
@@ -377,8 +379,6 @@ ecs_size_t flecs_stresc(
     const char *in) 
 {
     const char *ptr = in;
-    ecs_assert(ptr, ECS_INTERNAL_ERROR, NULL);
-    
     char ch, *bptr = out, buff[3];
     ecs_size_t written = 0;
     while ((ch = *ptr++)) {
