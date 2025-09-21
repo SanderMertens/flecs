@@ -797,7 +797,8 @@
                 "serialize_auto_override_pair_fullpath",
                 "serialize_toggle",
                 "serialize_toggle_pair",
-                "serialize_null_doc_name"
+                "serialize_null_doc_name",
+                "serialize_base_w_invalid_component"
             ]
         }, {
             "id": "SerializeIterToJson",

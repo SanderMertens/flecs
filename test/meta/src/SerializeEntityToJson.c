@@ -2166,3 +2166,37 @@ void SerializeEntityToJson_serialize_null_doc_name(void) {
 
     ecs_fini(world);
 }
+
+void SerializeEntityToJson_serialize_base_w_invalid_component(void) {
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Color) = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_add_pair(world, ecs_id(Color), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+    ecs_set(world, base, Color, {100});
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, EcsIsA, base);
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_inherited = true,
+        .serialize_values = true
+    };
+
+    ecs_log_set_level(-4);
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json == NULL);
+
+    ecs_fini(world);
+}

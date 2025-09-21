@@ -529,7 +529,7 @@ int flecs_meta_serialize_type(
     const EcsType *ptr = ecs_get(world, type, EcsType);
     if (!ptr) {
         char *path = ecs_get_path(world, type);
-        ecs_err("missing EcsType for type %s'", path);
+        ecs_err("missing reflection data for type '%s'", path);
         ecs_os_free(path);
         return -1;
     }
@@ -561,7 +561,7 @@ void flecs_meta_type_serializer_init(
         const EcsType *type_ptr = ecs_get(world, type, EcsType);
         if (!type_ptr) {
             char *path = ecs_get_path(world, type);
-            ecs_err("missing EcsType for type %s'", path);
+            ecs_err("missing reflection data for type '%s'", path);
             ecs_os_free(path);
             continue;
         }
