@@ -446,7 +446,7 @@ void flecs_uni_observer_invoke(
 
     ecs_log_pop_3();
 
-    world->info.observers_ran_frame ++;
+    world->info.observers_ran_total ++;
 }
 
 void flecs_observers_invoke(

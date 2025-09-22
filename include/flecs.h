@@ -1483,8 +1483,9 @@ typedef struct ecs_world_info_t {
     int64_t table_create_total;       /**< Total number of times a table was created */
     int64_t table_delete_total;       /**< Total number of times a table was deleted */
     int64_t pipeline_build_count_total; /**< Total number of pipeline builds */
-    int64_t systems_ran_frame;        /**< Total number of systems ran in last frame */
-    int64_t observers_ran_frame;      /**< Total number of times observer was invoked */
+    int64_t systems_ran_total;        /**< Total number of systems ran */
+    int64_t observers_ran_total;      /**< Total number of times observer was invoked */
+    int64_t queries_ran_total;        /**< Total number of times a query was evaluated */
 
     int32_t tag_id_count;             /**< Number of tag (no data) ids in the world */
     int32_t component_id_count;       /**< Number of component (data) ids in the world */

@@ -260,6 +260,7 @@ bool ecs_query_next(
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
+    ecs_os_linc(&it->world->info.queries_ran_total);
     return false;
 
 trivial_search_yield:
@@ -305,6 +306,7 @@ bool flecs_query_trivial_cached_next(
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
+    ecs_os_linc(&it->world->info.queries_ran_total);
     return false;
 }
 

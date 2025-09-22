@@ -5233,8 +5233,9 @@ typedef struct ecs_world_info_t {
     int64_t table_create_total;       /**< Total number of times a table was created */
     int64_t table_delete_total;       /**< Total number of times a table was deleted */
     int64_t pipeline_build_count_total; /**< Total number of pipeline builds */
-    int64_t systems_ran_frame;        /**< Total number of systems ran in last frame */
-    int64_t observers_ran_frame;      /**< Total number of times observer was invoked */
+    int64_t systems_ran_total;        /**< Total number of systems ran */
+    int64_t observers_ran_total;      /**< Total number of times observer was invoked */
+    int64_t queries_ran_total;        /**< Total number of times a query was evaluated */
 
     int32_t tag_id_count;             /**< Number of tag (no data) ids in the world */
     int32_t component_id_count;       /**< Number of component (data) ids in the world */
@@ -13538,19 +13539,35 @@ typedef struct {
     double target_fps;          /**< Target FPS */
     double time_scale;          /**< Simulation time scale */
 
-    /* Total time */
+    /* Totals */
     double frame_time_total;    /**< Total time spent processing a frame */
     double system_time_total;   /**< Total time spent in systems */
     double merge_time_total;    /**< Total time spent in merges */
 
-    /* Last frame time */
-    double frame_time_last;     /**< Time spent processing a frame */
-    double system_time_last;    /**< Time spent in systems */
-    double merge_time_last;     /**< Time spent in merges */
-
+    int64_t entity_count;
+    int64_t table_count;
     int64_t frame_count;        /**< Number of frames processed */
     int64_t command_count;      /**< Number of commands processed */
-    int64_t command_count_last; /**< Number of commands processed in last frame */
+    int64_t merge_count;        /**< Number of merges executed */
+
+    int64_t systems_ran_total;
+    int64_t observers_ran_total;
+    int64_t queries_ran_total;
+
+    int32_t tag_count;           /**< Number of tag (no data) ids in the world */
+    int32_t component_count;     /**< Number of component (data) ids in the world */
+    int32_t pair_count;          /**< Number of pair ids in the world */
+
+    /* Per frame */
+    double frame_time_frame;    /**< Time spent processing a frame */
+    double system_time_frame;   /**< Time spent in systems */
+    double merge_time_frame;    /**< Time spent in merges */
+
+    int64_t merge_count_frame;
+    int64_t systems_ran_frame;
+    int64_t observers_ran_frame;
+    int64_t queries_ran_frame;
+    int64_t command_count_frame; /**< Number of commands processed in last frame */
 
     /* Build info */
     ecs_build_info_t build_info; /**< Build info */
