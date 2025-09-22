@@ -13550,6 +13550,7 @@ typedef struct {
 
     int64_t frame_count;        /**< Number of frames processed */
     int64_t command_count;      /**< Number of commands processed */
+    int64_t command_count_last; /**< Number of commands processed in last frame */
 
     /* Build info */
     ecs_build_info_t build_info; /**< Build info */

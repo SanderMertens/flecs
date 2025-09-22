@@ -29,7 +29,8 @@ void flecs_copy_world_summary(
     dst->merge_time_total = (double)info->merge_time_total;
 
     dst->frame_count ++;
-    dst->command_count +=
+
+    int64_t command_count = 
         info->cmd.add_count +
         info->cmd.remove_count +
         info->cmd.delete_count +
@@ -40,6 +41,9 @@ void flecs_copy_world_summary(
         info->cmd.discard_count +
         info->cmd.event_count +
         info->cmd.other_count;
+
+    dst->command_count_last = command_count - dst->command_count;
+    dst->command_count = command_count;
 
     dst->build_info = *ecs_get_build_info();
 }
@@ -85,6 +89,7 @@ void FlecsWorldSummaryImport(
             { .name = "merge_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "frame_count", .type = ecs_id(ecs_u64_t) },
             { .name = "command_count", .type = ecs_id(ecs_u64_t) },
+            { .name = "command_count_last", .type = ecs_id(ecs_u64_t) },
             { .name = "build_info", .type = build_info }
         }
     });
