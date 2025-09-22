@@ -463,6 +463,7 @@ void Rest_try_query(void);
 void Rest_query(void);
 void Rest_named_query(void);
 void Rest_tables(void);
+void Rest_components(void);
 void Rest_request_commands(void);
 void Rest_request_commands_2_syncs(void);
 void Rest_request_commands_no_frames(void);
@@ -2248,6 +2249,10 @@ bake_test_case Rest_testcases[] = {
         Rest_tables
     },
     {
+        "components",
+        Rest_components
+    },
+    {
         "request_commands",
         Rest_request_commands
     },
@@ -2757,7 +2762,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        21,
+        22,
         Rest_testcases
     },
     {

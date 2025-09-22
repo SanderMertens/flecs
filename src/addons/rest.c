@@ -7,6 +7,7 @@
 
 #include "query_dsl/query_dsl.h"
 #include "pipeline/pipeline.h"
+#include "json/json.h"
 
 #ifdef FLECS_REST
 
@@ -1160,6 +1161,92 @@ bool flecs_rest_get_stats(
 #endif
 
 static
+void flecs_rest_append_component(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_strbuf_t *reply)
+{
+    ecs_strbuf_list_next(reply);
+    ecs_strbuf_appendlit(reply, "\n");
+    ecs_strbuf_list_push(reply, "{", ",");
+    ecs_strbuf_list_appendlit(reply, "\"expr\":");
+    char *str = ecs_id_str(world, cr->id);
+    flecs_json_string_escape(reply, str);
+    ecs_os_free(str);
+
+    ecs_strbuf_list_appendlit(reply, "\"tables\":");
+    ecs_strbuf_list_push(reply, "{", ",");
+    ecs_strbuf_list_appendlit(reply, "\"count\":");
+    ecs_strbuf_appendint(reply, flecs_table_cache_count(&cr->cache));
+    ecs_strbuf_list_appendlit(reply, "\"ids\":");
+    ecs_strbuf_list_push(reply, "[", ",");
+    ecs_table_cache_iter_t it;
+    int32_t entity_count = 0;
+    flecs_table_cache_iter(&cr->cache, &it);
+    const ecs_table_record_t *tr;
+    while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+        ecs_strbuf_list_next(reply);
+        ecs_strbuf_appendint(reply, (int64_t)tr->hdr.table->id);
+        entity_count += ecs_table_count(tr->hdr.table);
+    }
+    ecs_strbuf_list_pop(reply, "]");
+    ecs_strbuf_list_appendlit(reply, "\"entity_count\":");
+    ecs_strbuf_appendint(reply, entity_count);
+    ecs_strbuf_list_pop(reply, "}");
+
+    if (cr->sparse) {
+        int32_t i, count = flecs_sparse_count(cr->sparse);
+        ecs_strbuf_list_appendlit(reply, "\"sparse\":");
+        ecs_strbuf_list_push(reply, "{", ",");
+        ecs_strbuf_list_appendlit(reply, "\"count\":");
+        ecs_strbuf_appendint(reply, count);
+        ecs_strbuf_list_appendlit(reply, "\"entities\":");
+        ecs_strbuf_list_push(reply, "[", ",");
+        
+        for (i = 0; i < count; i ++) {
+            ecs_strbuf_list_next(reply);
+            ecs_strbuf_appendint(reply, (int64_t)
+                flecs_sparse_ids(cr->sparse)[i]);
+        }
+
+        ecs_strbuf_list_pop(reply, "]");
+        ecs_strbuf_list_pop(reply, "}");
+    }
+
+    ecs_strbuf_list_pop(reply, "}");
+}
+
+static
+bool flecs_rest_get_components(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    (void)req;
+
+    ecs_strbuf_list_push(&reply->body, "[", ",");
+
+    int32_t i;
+    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
+        ecs_component_record_t *cr = world->id_index_lo[i];
+        if (cr) {
+            flecs_rest_append_component(world, cr, &reply->body);
+        }
+    }
+    
+    ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
+    while (ecs_map_next(&it)) {
+        ecs_component_record_t *cr = ecs_map_ptr(&it);
+        flecs_rest_append_component(world, cr, &reply->body);
+    }
+
+    ecs_strbuf_list_pop(&reply->body, "]");
+
+    return true;
+}
+
+
+static
 void flecs_rest_reply_table_append_type(
     ecs_world_t *world,
     ecs_strbuf_t *reply,
@@ -1211,6 +1298,7 @@ void flecs_rest_reply_table_append(
     const ecs_table_t *table)
 {
     ecs_strbuf_list_next(reply);
+    ecs_strbuf_appendlit(reply, "\n");
     ecs_strbuf_list_push(reply, "{", ",");
     ecs_strbuf_list_appendlit(reply, "\"id\":");
     ecs_strbuf_appendint(reply, (uint32_t)table->id);
@@ -1567,6 +1655,10 @@ bool flecs_rest_reply(
         /* Stats endpoint */
         } else if (!ecs_os_strncmp(req->path, "stats/", 6)) {
             return flecs_rest_get_stats(world, req, reply);
+
+        /* Components endpoint */
+        } else if (!ecs_os_strncmp(req->path, "components", 10)) {
+            return flecs_rest_get_components(world, req, reply);
 
         /* Tables endpoint */
         } else if (!ecs_os_strncmp(req->path, "tables", 6)) {

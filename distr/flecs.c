@@ -27540,6 +27540,304 @@ void flecs_wait_for_sync(
 
 #endif
 
+/**
+ * @file addons/json/json.h
+ * @brief Internal functions for JSON addon.
+ */
+
+#ifndef FLECS_JSON_PRIVATE_H
+#define FLECS_JSON_PRIVATE_H
+
+
+#ifdef FLECS_JSON
+
+/* Deserialize from JSON */
+typedef enum ecs_json_token_t {
+    JsonObjectOpen,
+    JsonObjectClose,
+    JsonArrayOpen,
+    JsonArrayClose,
+    JsonColon,
+    JsonComma,
+    JsonNumber,
+    JsonString,
+    JsonBoolean,
+    JsonTrue,
+    JsonFalse,
+    JsonNull,
+    JsonLargeInt,
+    JsonLargeString,
+    JsonInvalid
+} ecs_json_token_t;
+
+typedef struct ecs_json_value_ser_ctx_t {
+    ecs_entity_t type;
+    const EcsTypeSerializer *ser;
+    char *id_label;
+    bool initialized;
+} ecs_json_value_ser_ctx_t;
+
+/* Cached data for serializer */
+typedef struct ecs_json_ser_ctx_t {
+    ecs_component_record_t *cr_doc_name;
+    ecs_component_record_t *cr_doc_color;
+    ecs_json_value_ser_ctx_t value_ctx[64];
+} ecs_json_ser_ctx_t;
+
+typedef struct ecs_json_this_data_t {
+    const ecs_entity_t *ids;
+    const EcsIdentifier *names;
+    const EcsDocDescription *label;
+    const EcsDocDescription *brief;
+    const EcsDocDescription *detail;
+    const EcsDocDescription *color;
+    const EcsDocDescription *link;
+    bool has_alerts;
+} ecs_json_this_data_t;
+
+const char* flecs_json_parse(
+    const char *json,
+    ecs_json_token_t *token_kind,
+    char *token);
+
+const char* flecs_json_parse_large_string(
+    const char *json,
+    ecs_strbuf_t *buf);
+
+const char* flecs_json_parse_next_member(
+    const char *json,
+    char *token,
+    ecs_json_token_t *token_kind,
+    const ecs_from_json_desc_t *desc);
+
+const char* flecs_json_expect(
+    const char *json,
+    ecs_json_token_t token_kind,
+    char *token,
+    const ecs_from_json_desc_t *desc);
+
+const char* flecs_json_expect_string(
+    const char *json,
+    char *token,
+    char **out,
+    const ecs_from_json_desc_t *desc);
+
+const char* flecs_json_expect_member(
+    const char *json,
+    char *token,
+    const ecs_from_json_desc_t *desc);
+
+const char* flecs_json_expect_next_member(
+    const char *json,
+    char *token,
+    const ecs_from_json_desc_t *desc);
+
+const char* flecs_json_expect_member_name(
+    const char *json,
+    char *token,
+    const char *member_name,
+    const ecs_from_json_desc_t *desc);
+
+const char* flecs_json_skip_object(
+    const char *json,
+    char *token,
+    const ecs_from_json_desc_t *desc);
+
+const char* flecs_json_skip_array(
+    const char *json,
+    char *token,
+    const ecs_from_json_desc_t *desc);
+
+/* Serialize to JSON */
+void flecs_json_next(
+    ecs_strbuf_t *buf);
+
+void flecs_json_number(
+    ecs_strbuf_t *buf,
+    double value);
+
+void flecs_json_u32(
+    ecs_strbuf_t *buf,
+    uint32_t value);
+
+void flecs_json_true(
+    ecs_strbuf_t *buf);
+
+void flecs_json_false(
+    ecs_strbuf_t *buf);
+
+void flecs_json_bool(
+    ecs_strbuf_t *buf,
+    bool value);
+
+void flecs_json_null(
+    ecs_strbuf_t *buf);
+
+void flecs_json_array_push(
+    ecs_strbuf_t *buf);
+
+void flecs_json_array_pop(
+    ecs_strbuf_t *buf);
+
+void flecs_json_object_push(
+    ecs_strbuf_t *buf);
+
+void flecs_json_object_pop(
+    ecs_strbuf_t *buf);
+
+void flecs_json_string(
+    ecs_strbuf_t *buf,
+    const char *value);
+
+void flecs_json_string_escape(
+    ecs_strbuf_t *buf,
+    const char *value);
+
+void flecs_json_member(
+    ecs_strbuf_t *buf,
+    const char *name);
+
+void flecs_json_membern(
+    ecs_strbuf_t *buf,
+    const char *name,
+    int32_t name_len);
+
+#define flecs_json_memberl(buf, name)\
+    flecs_json_membern(buf, name, sizeof(name) - 1)
+
+void flecs_json_path(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
+void flecs_json_label(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
+void flecs_json_path_or_label(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e,
+    bool path);
+
+void flecs_json_color(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
+void flecs_json_id(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_id_t id);
+
+void flecs_json_id_member(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_id_t id,
+    bool fullpath);
+
+ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
+    ecs_meta_op_kind_t kind);
+
+int flecs_json_serialize_iter_result(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc,
+    ecs_json_ser_ctx_t *ser_ctx);
+
+void flecs_json_serialize_field(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    const ecs_query_t *q,
+    int field,
+    ecs_strbuf_t *buf,
+    ecs_json_ser_ctx_t *ctx);
+
+void flecs_json_serialize_query(
+    const ecs_world_t *world,
+    const ecs_query_t *q,
+    ecs_strbuf_t *buf);
+
+int flecs_json_ser_type(
+    const ecs_world_t *world,
+    const ecs_vec_t *ser,
+    const void *base,
+    ecs_strbuf_t *str);
+
+int flecs_json_serialize_iter_result_fields(
+    const ecs_world_t *world, 
+    const ecs_iter_t *it,
+    int32_t i,
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc,
+    ecs_json_ser_ctx_t *ser_ctx);
+
+bool flecs_json_serialize_get_value_ctx(
+    const ecs_world_t *world,
+    ecs_id_t id,
+    ecs_json_value_ser_ctx_t *ctx,
+    const ecs_iter_to_json_desc_t *desc);
+
+int flecs_json_serialize_iter_result_table(
+    const ecs_world_t *world, 
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc,
+    int32_t count,
+    bool has_this,
+    const char *parent_path,
+    const ecs_json_this_data_t *this_data);
+
+int flecs_json_serialize_iter_result_query(
+    const ecs_world_t *world, 
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf,
+    ecs_json_ser_ctx_t *ser_ctx,
+    const ecs_iter_to_json_desc_t *desc,
+    int32_t count,
+    bool has_this,
+    const char *parent_path,
+    const ecs_json_this_data_t *this_data);
+
+void flecs_json_serialize_iter_this(
+    const ecs_iter_t *it,
+    const char *parent_path,
+    const ecs_json_this_data_t *this_data,
+    int32_t row,
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc);
+
+bool flecs_json_serialize_vars(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc);
+
+int flecs_json_serialize_matches(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_entity_t entity);
+
+int flecs_json_serialize_refs(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_entity_t entity,
+    ecs_entity_t relationship);
+
+int flecs_json_serialize_alerts(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_entity_t entity);
+
+bool flecs_json_is_builtin(
+    ecs_id_t id);
+
+#endif
+
+#endif /* FLECS_JSON_PRIVATE_H */
+
 
 #ifdef FLECS_REST
 
@@ -28693,6 +28991,92 @@ bool flecs_rest_get_stats(
 #endif
 
 static
+void flecs_rest_append_component(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_strbuf_t *reply)
+{
+    ecs_strbuf_list_next(reply);
+    ecs_strbuf_appendlit(reply, "\n");
+    ecs_strbuf_list_push(reply, "{", ",");
+    ecs_strbuf_list_appendlit(reply, "\"expr\":");
+    char *str = ecs_id_str(world, cr->id);
+    flecs_json_string_escape(reply, str);
+    ecs_os_free(str);
+
+    ecs_strbuf_list_appendlit(reply, "\"tables\":");
+    ecs_strbuf_list_push(reply, "{", ",");
+    ecs_strbuf_list_appendlit(reply, "\"count\":");
+    ecs_strbuf_appendint(reply, flecs_table_cache_count(&cr->cache));
+    ecs_strbuf_list_appendlit(reply, "\"ids\":");
+    ecs_strbuf_list_push(reply, "[", ",");
+    ecs_table_cache_iter_t it;
+    int32_t entity_count = 0;
+    flecs_table_cache_iter(&cr->cache, &it);
+    const ecs_table_record_t *tr;
+    while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+        ecs_strbuf_list_next(reply);
+        ecs_strbuf_appendint(reply, (int64_t)tr->hdr.table->id);
+        entity_count += ecs_table_count(tr->hdr.table);
+    }
+    ecs_strbuf_list_pop(reply, "]");
+    ecs_strbuf_list_appendlit(reply, "\"entity_count\":");
+    ecs_strbuf_appendint(reply, entity_count);
+    ecs_strbuf_list_pop(reply, "}");
+
+    if (cr->sparse) {
+        int32_t i, count = flecs_sparse_count(cr->sparse);
+        ecs_strbuf_list_appendlit(reply, "\"sparse\":");
+        ecs_strbuf_list_push(reply, "{", ",");
+        ecs_strbuf_list_appendlit(reply, "\"count\":");
+        ecs_strbuf_appendint(reply, count);
+        ecs_strbuf_list_appendlit(reply, "\"entities\":");
+        ecs_strbuf_list_push(reply, "[", ",");
+        
+        for (i = 0; i < count; i ++) {
+            ecs_strbuf_list_next(reply);
+            ecs_strbuf_appendint(reply, (int64_t)
+                flecs_sparse_ids(cr->sparse)[i]);
+        }
+
+        ecs_strbuf_list_pop(reply, "]");
+        ecs_strbuf_list_pop(reply, "}");
+    }
+
+    ecs_strbuf_list_pop(reply, "}");
+}
+
+static
+bool flecs_rest_get_components(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    (void)req;
+
+    ecs_strbuf_list_push(&reply->body, "[", ",");
+
+    int32_t i;
+    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
+        ecs_component_record_t *cr = world->id_index_lo[i];
+        if (cr) {
+            flecs_rest_append_component(world, cr, &reply->body);
+        }
+    }
+    
+    ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
+    while (ecs_map_next(&it)) {
+        ecs_component_record_t *cr = ecs_map_ptr(&it);
+        flecs_rest_append_component(world, cr, &reply->body);
+    }
+
+    ecs_strbuf_list_pop(&reply->body, "]");
+
+    return true;
+}
+
+
+static
 void flecs_rest_reply_table_append_type(
     ecs_world_t *world,
     ecs_strbuf_t *reply,
@@ -28744,6 +29128,7 @@ void flecs_rest_reply_table_append(
     const ecs_table_t *table)
 {
     ecs_strbuf_list_next(reply);
+    ecs_strbuf_appendlit(reply, "\n");
     ecs_strbuf_list_push(reply, "{", ",");
     ecs_strbuf_list_appendlit(reply, "\"id\":");
     ecs_strbuf_appendint(reply, (uint32_t)table->id);
@@ -29100,6 +29485,10 @@ bool flecs_rest_reply(
         /* Stats endpoint */
         } else if (!ecs_os_strncmp(req->path, "stats/", 6)) {
             return flecs_rest_get_stats(world, req, reply);
+
+        /* Components endpoint */
+        } else if (!ecs_os_strncmp(req->path, "components", 10)) {
+            return flecs_rest_get_components(world, req, reply);
 
         /* Tables endpoint */
         } else if (!ecs_os_strncmp(req->path, "tables", 6)) {
@@ -44306,304 +44695,6 @@ ecs_table_t* ecs_table_find(
  * @file addons/json/deserialize.c
  * @brief Deserialize JSON strings into (component) values.
  */
-
-/**
- * @file addons/json/json.h
- * @brief Internal functions for JSON addon.
- */
-
-#ifndef FLECS_JSON_PRIVATE_H
-#define FLECS_JSON_PRIVATE_H
-
-
-#ifdef FLECS_JSON
-
-/* Deserialize from JSON */
-typedef enum ecs_json_token_t {
-    JsonObjectOpen,
-    JsonObjectClose,
-    JsonArrayOpen,
-    JsonArrayClose,
-    JsonColon,
-    JsonComma,
-    JsonNumber,
-    JsonString,
-    JsonBoolean,
-    JsonTrue,
-    JsonFalse,
-    JsonNull,
-    JsonLargeInt,
-    JsonLargeString,
-    JsonInvalid
-} ecs_json_token_t;
-
-typedef struct ecs_json_value_ser_ctx_t {
-    ecs_entity_t type;
-    const EcsTypeSerializer *ser;
-    char *id_label;
-    bool initialized;
-} ecs_json_value_ser_ctx_t;
-
-/* Cached data for serializer */
-typedef struct ecs_json_ser_ctx_t {
-    ecs_component_record_t *cr_doc_name;
-    ecs_component_record_t *cr_doc_color;
-    ecs_json_value_ser_ctx_t value_ctx[64];
-} ecs_json_ser_ctx_t;
-
-typedef struct ecs_json_this_data_t {
-    const ecs_entity_t *ids;
-    const EcsIdentifier *names;
-    const EcsDocDescription *label;
-    const EcsDocDescription *brief;
-    const EcsDocDescription *detail;
-    const EcsDocDescription *color;
-    const EcsDocDescription *link;
-    bool has_alerts;
-} ecs_json_this_data_t;
-
-const char* flecs_json_parse(
-    const char *json,
-    ecs_json_token_t *token_kind,
-    char *token);
-
-const char* flecs_json_parse_large_string(
-    const char *json,
-    ecs_strbuf_t *buf);
-
-const char* flecs_json_parse_next_member(
-    const char *json,
-    char *token,
-    ecs_json_token_t *token_kind,
-    const ecs_from_json_desc_t *desc);
-
-const char* flecs_json_expect(
-    const char *json,
-    ecs_json_token_t token_kind,
-    char *token,
-    const ecs_from_json_desc_t *desc);
-
-const char* flecs_json_expect_string(
-    const char *json,
-    char *token,
-    char **out,
-    const ecs_from_json_desc_t *desc);
-
-const char* flecs_json_expect_member(
-    const char *json,
-    char *token,
-    const ecs_from_json_desc_t *desc);
-
-const char* flecs_json_expect_next_member(
-    const char *json,
-    char *token,
-    const ecs_from_json_desc_t *desc);
-
-const char* flecs_json_expect_member_name(
-    const char *json,
-    char *token,
-    const char *member_name,
-    const ecs_from_json_desc_t *desc);
-
-const char* flecs_json_skip_object(
-    const char *json,
-    char *token,
-    const ecs_from_json_desc_t *desc);
-
-const char* flecs_json_skip_array(
-    const char *json,
-    char *token,
-    const ecs_from_json_desc_t *desc);
-
-/* Serialize to JSON */
-void flecs_json_next(
-    ecs_strbuf_t *buf);
-
-void flecs_json_number(
-    ecs_strbuf_t *buf,
-    double value);
-
-void flecs_json_u32(
-    ecs_strbuf_t *buf,
-    uint32_t value);
-
-void flecs_json_true(
-    ecs_strbuf_t *buf);
-
-void flecs_json_false(
-    ecs_strbuf_t *buf);
-
-void flecs_json_bool(
-    ecs_strbuf_t *buf,
-    bool value);
-
-void flecs_json_null(
-    ecs_strbuf_t *buf);
-
-void flecs_json_array_push(
-    ecs_strbuf_t *buf);
-
-void flecs_json_array_pop(
-    ecs_strbuf_t *buf);
-
-void flecs_json_object_push(
-    ecs_strbuf_t *buf);
-
-void flecs_json_object_pop(
-    ecs_strbuf_t *buf);
-
-void flecs_json_string(
-    ecs_strbuf_t *buf,
-    const char *value);
-
-void flecs_json_string_escape(
-    ecs_strbuf_t *buf,
-    const char *value);
-
-void flecs_json_member(
-    ecs_strbuf_t *buf,
-    const char *name);
-
-void flecs_json_membern(
-    ecs_strbuf_t *buf,
-    const char *name,
-    int32_t name_len);
-
-#define flecs_json_memberl(buf, name)\
-    flecs_json_membern(buf, name, sizeof(name) - 1)
-
-void flecs_json_path(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_entity_t e);
-
-void flecs_json_label(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_entity_t e);
-
-void flecs_json_path_or_label(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_entity_t e,
-    bool path);
-
-void flecs_json_color(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_entity_t e);
-
-void flecs_json_id(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_id_t id);
-
-void flecs_json_id_member(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_id_t id,
-    bool fullpath);
-
-ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
-    ecs_meta_op_kind_t kind);
-
-int flecs_json_serialize_iter_result(
-    const ecs_world_t *world,
-    const ecs_iter_t *it,
-    ecs_strbuf_t *buf,
-    const ecs_iter_to_json_desc_t *desc,
-    ecs_json_ser_ctx_t *ser_ctx);
-
-void flecs_json_serialize_field(
-    const ecs_world_t *world,
-    const ecs_iter_t *it,
-    const ecs_query_t *q,
-    int field,
-    ecs_strbuf_t *buf,
-    ecs_json_ser_ctx_t *ctx);
-
-void flecs_json_serialize_query(
-    const ecs_world_t *world,
-    const ecs_query_t *q,
-    ecs_strbuf_t *buf);
-
-int flecs_json_ser_type(
-    const ecs_world_t *world,
-    const ecs_vec_t *ser,
-    const void *base,
-    ecs_strbuf_t *str);
-
-int flecs_json_serialize_iter_result_fields(
-    const ecs_world_t *world, 
-    const ecs_iter_t *it,
-    int32_t i,
-    ecs_strbuf_t *buf,
-    const ecs_iter_to_json_desc_t *desc,
-    ecs_json_ser_ctx_t *ser_ctx);
-
-bool flecs_json_serialize_get_value_ctx(
-    const ecs_world_t *world,
-    ecs_id_t id,
-    ecs_json_value_ser_ctx_t *ctx,
-    const ecs_iter_to_json_desc_t *desc);
-
-int flecs_json_serialize_iter_result_table(
-    const ecs_world_t *world, 
-    const ecs_iter_t *it, 
-    ecs_strbuf_t *buf,
-    const ecs_iter_to_json_desc_t *desc,
-    int32_t count,
-    bool has_this,
-    const char *parent_path,
-    const ecs_json_this_data_t *this_data);
-
-int flecs_json_serialize_iter_result_query(
-    const ecs_world_t *world, 
-    const ecs_iter_t *it, 
-    ecs_strbuf_t *buf,
-    ecs_json_ser_ctx_t *ser_ctx,
-    const ecs_iter_to_json_desc_t *desc,
-    int32_t count,
-    bool has_this,
-    const char *parent_path,
-    const ecs_json_this_data_t *this_data);
-
-void flecs_json_serialize_iter_this(
-    const ecs_iter_t *it,
-    const char *parent_path,
-    const ecs_json_this_data_t *this_data,
-    int32_t row,
-    ecs_strbuf_t *buf,
-    const ecs_iter_to_json_desc_t *desc);
-
-bool flecs_json_serialize_vars(
-    const ecs_world_t *world,
-    const ecs_iter_t *it,
-    ecs_strbuf_t *buf,
-    const ecs_iter_to_json_desc_t *desc);
-
-int flecs_json_serialize_matches(
-    const ecs_world_t *world,
-    ecs_strbuf_t *buf,
-    ecs_entity_t entity);
-
-int flecs_json_serialize_refs(
-    const ecs_world_t *world,
-    ecs_strbuf_t *buf,
-    ecs_entity_t entity,
-    ecs_entity_t relationship);
-
-int flecs_json_serialize_alerts(
-    const ecs_world_t *world,
-    ecs_strbuf_t *buf,
-    ecs_entity_t entity);
-
-bool flecs_json_is_builtin(
-    ecs_id_t id);
-
-#endif
-
-#endif /* FLECS_JSON_PRIVATE_H */
 
 
 #ifdef FLECS_JSON
@@ -77700,7 +77791,7 @@ bool ecs_query_next(
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
-    ecs_os_linc(&it->world->info.queries_ran_total);
+    ecs_os_linc(&it->real_world->info.queries_ran_total);
     return false;
 
 trivial_search_yield:
@@ -77746,7 +77837,7 @@ bool flecs_query_trivial_cached_next(
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
     ecs_iter_fini(it);
-    ecs_os_linc(&it->world->info.queries_ran_total);
+    ecs_os_linc(&it->real_world->info.queries_ran_total);
     return false;
 }
 

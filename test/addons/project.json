@@ -513,6 +513,7 @@
                 "query",
                 "named_query",
                 "tables",
+                "components",
                 "request_commands",
                 "request_commands_2_syncs",
                 "request_commands_no_frames",
