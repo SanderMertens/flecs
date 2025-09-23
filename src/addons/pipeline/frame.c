@@ -31,7 +31,7 @@ ecs_ftime_t flecs_insert_sleep(
     ecs_ftime_t sleep_time = sleep / (ecs_ftime_t)8.0;
     if (sleep_time < 0) {
         sleep_time = 0;
-        delta_time = ecs_time_measure(&now);
+        delta_time = (ecs_ftime_t)ecs_time_measure(&now);
     } else {
         do {
             /* Only call sleep when sleep_time is not 0. On some platforms, even

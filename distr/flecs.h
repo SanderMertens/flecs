@@ -13572,6 +13572,7 @@ typedef struct {
     int64_t queries_ran_frame;
     int64_t command_count_frame; /**< Number of commands processed in last frame */
 
+    double simulation_time;     /**< Time spent in simulation */
     uint32_t uptime;            /**< Time since world was created */
 
     /* Build info */

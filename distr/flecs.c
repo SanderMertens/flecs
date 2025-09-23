@@ -57455,7 +57455,7 @@ ecs_ftime_t flecs_insert_sleep(
     ecs_ftime_t sleep_time = sleep / (ecs_ftime_t)8.0;
     if (sleep_time < 0) {
         sleep_time = 0;
-        delta_time = ecs_time_measure(&now);
+        delta_time = (ecs_ftime_t)ecs_time_measure(&now);
     } else {
         do {
             /* Only call sleep when sleep_time is not 0. On some platforms, even
@@ -69860,6 +69860,8 @@ void flecs_copy_world_summary(
     dst->component_count = info->component_id_count;
     dst->pair_count = info->pair_id_count;
 
+    dst->simulation_time += (double)info->delta_time;
+
     ecs_time_t now;
     ecs_os_get_time(&now);
     dst->uptime = now.sec - info->creation_time;
@@ -69932,6 +69934,7 @@ void FlecsWorldSummaryImport(
             { .name = "queries_ran_frame", .type = ecs_id(ecs_i64_t) },
             { .name = "command_count_frame", .type = ecs_id(ecs_i64_t) },
 
+            { .name = "simulation_time", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds },
             { .name = "uptime", .type = ecs_id(ecs_u32_t), .unit = EcsSeconds },
 
             /* Build info */
