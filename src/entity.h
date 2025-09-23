@@ -6,18 +6,33 @@
 #ifndef FLECS_ENTITY_H
 #define FLECS_ENTITY_H
 
+#ifdef FLECS_SAFETY_LOCKS
+    #define FLECS_SI_INIT(cr_, table_, col_) \
+     .si = (ecs_safety_info_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
+#else
+    #define FLECS_SI_INIT(cr_, table_, col_) /* nothing */
+#endif
+
 #define ecs_get_low_id(table, r, id)\
     ecs_assert(table->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
     int16_t column_index = table->component_map[id];\
     if (column_index > 0) {\
-        ecs_column_t *column = &table->data.columns[column_index - 1];\
-        return ECS_ELEM(column->data, column->ti->size, \
+        --column_index;\
+        ecs_column_t *column = &table->data.columns[column_index];\
+        void *ptr = ECS_ELEM(column->data, column->ti->size, \
             ECS_RECORD_TO_ROW(r->row));\
+        return (ecs_get_ptr_t){\
+            .component_ptr = ptr,\
+            FLECS_SI_INIT(NULL, table, column_index)\
+        };\
     }
 
 typedef struct {
     const ecs_type_info_t *ti;
     void *ptr;
+#ifdef FLECS_SAFETY_LOCKS
+    ecs_safety_info_t si;
+#endif
 } flecs_component_ptr_t;
 
 flecs_component_ptr_t flecs_ensure(
@@ -93,7 +108,7 @@ int32_t flecs_relation_depth(
     const ecs_table_t *table);
 
 /* Get component from base entity (follows IsA relationship) */
-void* flecs_get_base_component(
+ecs_get_ptr_t flecs_get_base_component(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,

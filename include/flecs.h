@@ -472,6 +472,18 @@ typedef struct ecs_record_t ecs_record_t;
 /** Information about a (component) id, such as type info and tables with the id */
 typedef struct ecs_component_record_t ecs_component_record_t;
 
+/** the void* returned from flecs_get_id_from_record fns which optionally returns origin of the ptr when FLECS_SAFETY_LOCKS is defined` */
+typedef struct ecs_get_ptr_t ecs_get_ptr_t;
+
+#ifdef FLECS_SAFETY_LOCKS
+/** safety information of where the ptr from `get` functions originates from.
+ * when component record is null, that means it comes from a table.
+ * when table is null, that means it comes from a sparse storage.
+ * this is used for column locking / component record locking.
+ */
+typedef struct ecs_safety_info_t ecs_safety_info_t;
+#endif
+
 /** A poly object.
  * A poly (short for polymorph) object is an object that has a variable list of
  * capabilities, determined by a mixin table. This is the current list of types
@@ -3252,6 +3264,8 @@ bool ecs_is_enabled_id(
  * @return The component pointer, NULL if the entity does not have the component.
  *
  * @see ecs_get_mut_id()
+ * @see flecs_get_id_from_record()
+ * @see flecs_get_mut_id_from_record()
  */
 FLECS_API
 FLECS_ALWAYS_INLINE const void* ecs_get_id(
@@ -3272,6 +3286,10 @@ FLECS_ALWAYS_INLINE const void* ecs_get_id(
  * @param entity The entity.
  * @param component The component to get.
  * @return The component pointer, NULL if the entity does not have the component.
+ * 
+ * @see ecs_get_id()
+ * @see flecs_get_id_from_record()
+ * @see flecs_get_mut_id_from_record()
  */
 FLECS_API
 FLECS_ALWAYS_INLINE void* ecs_get_mut_id(
