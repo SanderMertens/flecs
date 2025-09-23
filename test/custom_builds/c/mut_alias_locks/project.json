@@ -1,5 +1,5 @@
 {
-    "id": "safety_locks",
+    "id": "mut_alias_locks",
     "type": "application",
     "value": {
         "public": false,
@@ -9,6 +9,6 @@
         "standalone": true
     },
     "lang.c": {
-        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_MUT_ALIAS_LOCKS"]
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_OS_API_IMPL","FLECS_MUT_ALIAS_LOCKS"]
     }
 }
