@@ -22,7 +22,7 @@
         void *ptr = ECS_ELEM(column->data, column->ti->size, \
             ECS_RECORD_TO_ROW(r->row));\
         return (ecs_get_ptr_t){\
-            .component_ptr = ptr,\
+            .ptr = ptr,\
             FLECS_SI_INIT(NULL, table, column_index)\
         };\
     }
