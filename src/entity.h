@@ -19,7 +19,7 @@
     if (column_index > 0) {\
         ecs_column_t *column = &table->data.columns[--column_index];\
         return (ecs_get_ptr_t){\
-            .ptr = ECS_ELEM(column->data, column->ti->size, ECS_RECORD_TO_ROW(r->row))\
+            .ptr = ECS_ELEM(column->data, column->ti->size, ECS_RECORD_TO_ROW(r->row)),\
             FLECS_LOCK_TARGET_INIT(NULL, table, column_index)\
         };\
     }
