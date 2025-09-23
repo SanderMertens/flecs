@@ -359,3 +359,13 @@ void Refs_untyped_runtime_component_ref(void) {
     cur.pop();
 
 }
+
+void Refs_ref_world(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().set<Position>({10, 20});
+
+    flecs::ref<Position> r = e.get_ref<Position>();
+    auto w = r.world();
+    test_assert(w == world);
+}
