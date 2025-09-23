@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+#include <flecs.h>
+
 #ifdef __cplusplus
 }
 #endif
