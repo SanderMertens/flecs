@@ -1916,7 +1916,7 @@ error:
     return 0;
 }
 
-ecs_get_ptr_t flecs_get_id_from_record(
+ecs_get_ptr_t flecs_record_get_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     const ecs_record_t *r,
@@ -1991,7 +1991,7 @@ const void* ecs_get_id(
 
     ecs_record_t *r = flecs_entities_get(world, entity);
 
-    return flecs_get_id_from_record(world, entity, r, component).component_ptr;
+    return flecs_record_get_id(world, entity, r, component).component_ptr;
 error:
     return NULL;
 }
@@ -2013,7 +2013,7 @@ error:
 }
 #endif
 
-ecs_get_ptr_t flecs_get_mut_id_from_record(
+ecs_get_ptr_t flecs_record_get_mut_id(
     const ecs_world_t *world,
     const ecs_record_t *r,
     ecs_id_t component)
@@ -2062,7 +2062,7 @@ void* ecs_get_mut_id(
 
     ecs_record_t *r = flecs_entities_get(world, entity);
 
-    return flecs_get_mut_id_from_record(world, r, component).component_ptr;
+    return flecs_record_get_mut_id(world, r, component).component_ptr;
 
 error:
     return NULL;
