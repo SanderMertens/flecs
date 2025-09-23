@@ -182,10 +182,10 @@ void ecs_read_end(
  *
  * @see ecs_get_id()
  * @see ecs_get_mut_id()
- * @see flecs_get_mut_id_from_record()
+ * @see flecs_record_get_mut_id()
  */
 FLECS_API
-FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_get_id_from_record(
+FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_record_get_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
     const ecs_record_t *r,
@@ -196,7 +196,7 @@ FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_get_id_from_record(
  * This operation obtains a mutable pointer to the requested component. The
  * operation accepts the component entity id.
  *
- * Unlike flecs_get_id_from_record(), this operation does not return inherited components.
+ * Unlike flecs_record_get_id(), this operation does not return inherited components.
  * This is to prevent errors where an application accidentally resolves an
  * inherited component shared with many entities and modifies it, while thinking
  * it is modifying an owned component.
@@ -206,12 +206,12 @@ FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_get_id_from_record(
  * @param component The component to get.
  * @return The component pointer, NULL if the entity does not have the component.
  * 
- * @see flecs_get_id_from_record()
+ * @see flecs_record_get_id()
  * @see ecs_get_mut_id()
  * @see ecs_get_id()
  */
 FLECS_API
-FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_get_mut_id_from_record(
+FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_record_get_mut_id(
     const ecs_world_t *world,
     const ecs_record_t *r,
     ecs_id_t component);
