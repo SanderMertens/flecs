@@ -472,10 +472,10 @@ typedef struct ecs_record_t ecs_record_t;
 /** Information about a (component) id, such as type info and tables with the id */
 typedef struct ecs_component_record_t ecs_component_record_t;
 
-/** the void* returned from flecs_record_get_id fns which optionally returns origin of the ptr when FLECS_SAFETY_LOCKS is defined` */
+/** the void* returned from flecs_record_get_id fns which optionally returns origin of the ptr when FLECS_MUT_ALIAS_LOCKS is defined` */
 typedef struct ecs_get_ptr_t ecs_get_ptr_t;
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 /** safety information of where the ptr from `get` functions originates from.
  * when component record is null, that means it comes from a table.
  * when table is null, that means it comes from a sparse storage.

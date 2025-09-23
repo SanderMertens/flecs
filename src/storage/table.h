@@ -160,7 +160,7 @@ struct ecs_table_t {
                                       *  - count(T)..count(C): column -> type index
                                       */
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     int32_t *column_lock;            /* Lock columns for writing and reading */
 #endif
 
@@ -315,7 +315,7 @@ const ecs_ref_t* flecs_table_get_override(
     const ecs_component_record_t *cr,
     ecs_ref_t *storage);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 /* resize column locks for all tables. */
 void flecs_tables_resize_column_locks(

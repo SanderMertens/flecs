@@ -1058,7 +1058,7 @@ ecs_id_t flecs_component_get_id(
     return cr->id;
 }
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 int32_t flecs_sparse_id_record_lock_inc(
     ecs_component_record_t *idr)
