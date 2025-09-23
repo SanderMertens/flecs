@@ -55,11 +55,11 @@ typedef struct ecs_table_diff_t {
  * when table is null, that means it comes from a sparse storage.
  * this is used for column locking / component record locking.
  */
-struct ecs_safety_info_t{
+typedef struct ecs_lock_target_t{
     ecs_component_record_t *cr;
     ecs_table_t *table;
     int16_t column_index;
-};
+} ecs_lock_target_t;
 #endif
 
 /* a wrapper around a void* which represents a component pointer. 
@@ -68,7 +68,7 @@ struct ecs_safety_info_t{
 struct ecs_get_ptr_t{
     void *ptr;
 #ifdef FLECS_MUT_ALIAS_LOCKS
-    ecs_safety_info_t si;
+    ecs_lock_target_t lock_target;
 #endif
 };
 
@@ -411,19 +411,19 @@ FLECS_ALWAYS_INLINE ecs_table_t *flecs_table_traverse_add(
 
 FLECS_API
 FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_begin(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_API
 FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_end(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_API
 FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_begin(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_API
 FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_end(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_API
 FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_begin(
@@ -447,19 +447,19 @@ FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_end(
 
 FLECS_API
 FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_begin_multithreaded(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_API
 FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_end_multithreaded(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_API
 FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_begin_multithreaded(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_API
 FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_end_multithreaded(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_API
 FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_begin_multithreaded(

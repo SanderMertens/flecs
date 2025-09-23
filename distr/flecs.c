@@ -589,16 +589,16 @@ void flecs_component_record_init_exclusive(
 #ifdef FLECS_MUT_ALIAS_LOCKS
 
 FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc_multithreaded(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec_multithreaded(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
     
 #endif
 
@@ -2778,10 +2778,10 @@ void flecs_enqueue(
 #define FLECS_ENTITY_H
 
 #ifdef FLECS_MUT_ALIAS_LOCKS
-    #define FLECS_SI_INIT(cr_, table_, col_) \
-     .si = (ecs_safety_info_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
+    #define FLECS_LOCK_TARGET_INIT(cr_, table_, col_) \
+     .lock_target = (ecs_lock_target_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
 #else
-    #define FLECS_SI_INIT(cr_, table_, col_) /* nothing */
+    #define FLECS_LOCK_TARGET_INIT(cr_, table_, col_) /* nothing */
 #endif
 
 #define ecs_get_low_id(table, r, id)\
@@ -2791,7 +2791,7 @@ void flecs_enqueue(
         ecs_column_t *column = &table->data.columns[--column_index];\
         return (ecs_get_ptr_t){\
             .ptr = ECS_ELEM(column->data, column->ti->size, ECS_RECORD_TO_ROW(r->row))\
-            FLECS_SI_INIT(NULL, table, column_index)\
+            FLECS_LOCK_TARGET_INIT(NULL, table, column_index)\
         };\
     }
 
@@ -2799,7 +2799,7 @@ typedef struct {
     const ecs_type_info_t *ti;
     void *ptr;
 #ifdef FLECS_MUT_ALIAS_LOCKS
-    ecs_safety_info_t si;
+    ecs_lock_target_t lock_target;
 #endif
 } flecs_component_ptr_t;
 
@@ -7353,7 +7353,7 @@ flecs_component_ptr_t flecs_table_get_component(
     return (flecs_component_ptr_t){
         .ti = column->ti,
         .ptr = ECS_ELEM(column->data, column->ti->size, row),
-        FLECS_SI_INIT(NULL, table, column_index)
+        FLECS_LOCK_TARGET_INIT(NULL, table, column_index)
     };
 }
 
@@ -7374,7 +7374,7 @@ flecs_component_ptr_t flecs_get_component_ptr(
         return (flecs_component_ptr_t){
             .ti = cr->type_info,
             .ptr = flecs_component_sparse_get(world, cr, table, entity),
-            FLECS_SI_INIT(cr, NULL, -1)
+            FLECS_LOCK_TARGET_INIT(cr, NULL, -1)
         };
     }
 
@@ -7445,7 +7445,7 @@ ecs_get_ptr_t flecs_get_base_component(
             if (cr->flags & EcsIdDontFragment) {
                 ptr = (ecs_get_ptr_t){
                     .ptr = flecs_component_sparse_get(world, cr, table, base),
-                    FLECS_SI_INIT(cr, NULL, -1)
+                    FLECS_LOCK_TARGET_INIT(cr, NULL, -1)
                 };
             }
 
@@ -7457,15 +7457,14 @@ ecs_get_ptr_t flecs_get_base_component(
             if (cr->flags & EcsIdIsSparse) {
                 return (ecs_get_ptr_t){
                     .ptr = flecs_component_sparse_get(world, cr, table, base),
-                    FLECS_SI_INIT(cr, NULL, -1)
+                    FLECS_LOCK_TARGET_INIT(cr, NULL, -1)
                 };
             } else {
                 int32_t row = ECS_RECORD_TO_ROW(r->row);
                 int16_t column = tr->column;
-                void *get_ptr = flecs_table_get_component(table, column, row).ptr;
                 return (ecs_get_ptr_t){
-                    .ptr = get_ptr,
-                    FLECS_SI_INIT(NULL, table, column)
+                    .ptr = flecs_table_get_component(table, column, row).ptr,
+                    FLECS_LOCK_TARGET_INIT(NULL, table, column)
                 };
             }
         }
@@ -9259,7 +9258,7 @@ ecs_get_ptr_t flecs_record_get_id(
         if (ptr) {
             return (ecs_get_ptr_t){
                 .ptr = ptr,
-                FLECS_SI_INIT(cr, NULL, -1)
+                FLECS_LOCK_TARGET_INIT(cr, NULL, -1)
             };
         }
     }
@@ -9271,7 +9270,7 @@ ecs_get_ptr_t flecs_record_get_id(
         if (cr->flags & EcsIdIsSparse) {
             return (ecs_get_ptr_t){
                 .ptr = flecs_component_sparse_get(world, cr, table, entity),
-                FLECS_SI_INIT(cr, NULL, -1)
+                FLECS_LOCK_TARGET_INIT(cr, NULL, -1)
             };
         }
         ecs_check(tr->column != -1, ECS_INVALID_PARAMETER,
@@ -9281,10 +9280,9 @@ ecs_get_ptr_t flecs_record_get_id(
 
     int32_t row = ECS_RECORD_TO_ROW(r->row);
     int32_t column_index = tr->column;
-    void *get_ptr = flecs_table_get_component(table, column_index, row).ptr;
     return (ecs_get_ptr_t){
-        .ptr = get_ptr,
-        FLECS_SI_INIT(NULL, table, column_index)
+        .ptr = flecs_table_get_component(table, column_index, row).ptr,
+        FLECS_LOCK_TARGET_INIT(NULL, table, column_index)
     };
 error:
     return (ecs_get_ptr_t){0};
@@ -9352,7 +9350,7 @@ ecs_get_ptr_t flecs_record_get_mut_id(
     return (ecs_get_ptr_t) {
         .ptr = component_ptr.ptr
         #ifdef FLECS_MUT_ALIAS_LOCKS
-        , .si = component_ptr.si
+        , .lock_target = component_ptr.lock_target
         #endif  
     };
 error:
@@ -38732,77 +38730,77 @@ ecs_id_t flecs_component_get_id(
 #ifdef FLECS_MUT_ALIAS_LOCKS
 
 int32_t flecs_sparse_id_record_lock_inc(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
     return ++idr->sparse_lock;
 }
 
 int32_t flecs_sparse_id_record_lock_inc_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_os_ainc(&idr->sparse_lock);
 }
 
 int32_t flecs_sparse_id_record_lock_dec(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
     return --idr->sparse_lock;
 }
 
 int32_t flecs_sparse_id_record_lock_dec_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_os_adec(&idr->sparse_lock);
 }
 
 bool flecs_sparse_id_record_lock_read_begin(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     return flecs_sparse_id_record_lock_inc(idr) <= 0;
 }
 
 bool flecs_sparse_id_record_lock_read_begin_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     return flecs_sparse_id_record_lock_inc_multithreaded(idr) <= 0;
 }
 
 bool flecs_sparse_id_record_lock_read_end(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     return flecs_sparse_id_record_lock_dec(idr) < 0;
 }
 
 bool flecs_sparse_id_record_lock_read_end_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     return flecs_sparse_id_record_lock_dec_multithreaded(idr) < 0;
 }
 
 bool flecs_sparse_id_record_lock_write_begin(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     return flecs_sparse_id_record_lock_dec(idr) != -1;
 }
 
 bool flecs_sparse_id_record_lock_write_begin_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     return flecs_sparse_id_record_lock_dec_multithreaded(idr) != -1;
 }
 
 bool flecs_sparse_id_record_lock_write_end(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     return flecs_sparse_id_record_lock_inc(idr) != 0;
 }
 
 bool flecs_sparse_id_record_lock_write_end_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
     return flecs_sparse_id_record_lock_inc_multithreaded(idr) != 0;
 }
