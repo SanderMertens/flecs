@@ -1,4 +1,4 @@
-#include <safety_locks.h>
+#include <mut_alias_locks.h>
 #include <stdio.h>
 #include <assert.h>
 
@@ -262,7 +262,7 @@ void test_resizing(void) {
 // 
 
 
-void test_table_component_safety_info(void) {
+void test_table_component_lock_target(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -276,7 +276,7 @@ void test_table_component_safety_info(void) {
     
     ecs_get_ptr_t result = flecs_record_get_id(world, e, r, ecs_id(Position));
     assert(result.ptr != NULL);
-    
+
     // For table components: table should be set, cr should be NULL, column_index should be valid
     assert(result.lock_target.table != NULL);
     assert(result.lock_target.cr == NULL);
@@ -285,7 +285,7 @@ void test_table_component_safety_info(void) {
     ecs_fini(world);
 }
 
-void test_sparse_fragmenting_safety_info(void) {
+void test_sparse_fragmenting_lock_target(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -308,7 +308,7 @@ void test_sparse_fragmenting_safety_info(void) {
     ecs_fini(world);
 }
 
-void test_sparse_non_fragmenting_safety_info(void) {
+void test_sparse_non_fragmenting_lock_target(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -331,7 +331,7 @@ void test_sparse_non_fragmenting_safety_info(void) {
     ecs_fini(world);
 }
 
-void test_get_vs_get_mut_safety_info(void) {
+void test_get_vs_get_mut_lock_target(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -357,7 +357,7 @@ void test_get_vs_get_mut_safety_info(void) {
     ecs_fini(world);
 }
 
-void test_null_component_safety_info(void) {
+void test_null_component_lock_target(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -388,11 +388,11 @@ int main(int argc, char *argv[]) {
     test_multithreaded_with_conflicts();
     test_resizing();
 
-    test_table_component_safety_info();
-    test_sparse_non_fragmenting_safety_info();
-    test_sparse_fragmenting_safety_info();
-    test_get_vs_get_mut_safety_info();
-    test_null_component_safety_info();
+    test_table_component_lock_target();
+    test_sparse_non_fragmenting_lock_target();
+    test_sparse_fragmenting_lock_target();
+    test_get_vs_get_mut_lock_target();
+    test_null_component_lock_target();
 
     return 0;
 }
