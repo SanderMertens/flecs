@@ -1493,6 +1493,8 @@ typedef struct ecs_world_info_t {
 
     int32_t table_count;              /**< Number of tables */
 
+    uint32_t creation_time;           /**< Time when world was created */
+
     /* -- Command counts -- */
     struct {
         int64_t add_count;             /**< Add commands processed */

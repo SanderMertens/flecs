@@ -20836,6 +20836,12 @@ ecs_world_t *ecs_mini(void) {
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
     flecs_poly_init(world, ecs_world_t);
 
+    if (ecs_os_has_time()) {
+        ecs_time_t now;
+        ecs_os_get_time(&now);
+        world->info.creation_time = now.sec;
+    }
+
     world->flags |= EcsWorldInit;
 
     flecs_world_allocators_init(world);
@@ -69809,6 +69815,7 @@ void flecs_copy_world_summary(
 
     dst->target_fps = (double)info->target_fps;
     dst->time_scale = (double)info->time_scale;
+    dst->fps = 1.0 / (double)info->delta_time_raw;
 
     dst->frame_time_frame = (double)info->frame_time_total - dst->frame_time_total;
     dst->system_time_frame = (double)info->system_time_total - dst->system_time_total;
@@ -69849,6 +69856,10 @@ void flecs_copy_world_summary(
     dst->component_count = info->component_id_count;
     dst->pair_count = info->pair_id_count;
 
+    ecs_time_t now;
+    ecs_os_get_time(&now);
+    dst->uptime = now.sec - info->creation_time;
+
     dst->build_info = *ecs_get_build_info();
 }
 
@@ -69886,6 +69897,7 @@ void FlecsWorldSummaryImport(
             /* Time */
             { .name = "target_fps", .type = ecs_id(ecs_f64_t), .unit = EcsHertz },
             { .name = "time_scale", .type = ecs_id(ecs_f64_t) },
+            { .name = "fps", .type = ecs_id(ecs_f64_t), .unit = EcsHertz },
 
             /* Totals */
             { .name = "frame_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds },
@@ -69915,6 +69927,8 @@ void FlecsWorldSummaryImport(
             { .name = "observers_ran_frame", .type = ecs_id(ecs_i64_t) },
             { .name = "queries_ran_frame", .type = ecs_id(ecs_i64_t) },
             { .name = "command_count_frame", .type = ecs_id(ecs_i64_t) },
+
+            { .name = "uptime", .type = ecs_id(ecs_u32_t), .unit = EcsSeconds },
 
             /* Build info */
             { .name = "build_info", .type = build_info }

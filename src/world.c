@@ -906,6 +906,12 @@ ecs_world_t *ecs_mini(void) {
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
     flecs_poly_init(world, ecs_world_t);
 
+    if (ecs_os_has_time()) {
+        ecs_time_t now;
+        ecs_os_get_time(&now);
+        world->info.creation_time = now.sec;
+    }
+
     world->flags |= EcsWorldInit;
 
     flecs_world_allocators_init(world);

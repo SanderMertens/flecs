@@ -5243,6 +5243,8 @@ typedef struct ecs_world_info_t {
 
     int32_t table_count;              /**< Number of tables */
 
+    uint32_t creation_time;           /**< Time when world was created */
+
     /* -- Command counts -- */
     struct {
         int64_t add_count;             /**< Add commands processed */
@@ -13538,6 +13540,7 @@ typedef struct {
     /* Time */
     double target_fps;          /**< Target FPS */
     double time_scale;          /**< Simulation time scale */
+    double fps;                 /**< FPS */
 
     /* Totals */
     double frame_time_total;    /**< Total time spent processing a frame */
@@ -13568,6 +13571,8 @@ typedef struct {
     int64_t observers_ran_frame;
     int64_t queries_ran_frame;
     int64_t command_count_frame; /**< Number of commands processed in last frame */
+
+    uint32_t uptime;            /**< Time since world was created */
 
     /* Build info */
     ecs_build_info_t build_info; /**< Build info */
