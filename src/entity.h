@@ -17,12 +17,9 @@
     ecs_assert(table->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
     int16_t column_index = table->component_map[id];\
     if (column_index > 0) {\
-        --column_index;\
-        ecs_column_t *column = &table->data.columns[column_index];\
-        void *ptr = ECS_ELEM(column->data, column->ti->size, \
-            ECS_RECORD_TO_ROW(r->row));\
+        ecs_column_t *column = &table->data.columns[--column_index];\
         return (ecs_get_ptr_t){\
-            .ptr = ptr,\
+            .ptr = ECS_ELEM(column->data, column->ti->size, ECS_RECORD_TO_ROW(r->row))\
             FLECS_SI_INIT(NULL, table, column_index)\
         };\
     }
