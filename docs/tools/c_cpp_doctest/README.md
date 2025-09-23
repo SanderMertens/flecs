@@ -23,39 +23,9 @@ cargo run -- --help
 cargo run -- --remote https://github.com/SanderMertens/flecs/tree/master/docs
 ```
 
-## Output Structure
-
-The generator creates the following structure:
-
-```
-tmp/doctest/c_cpp/
-├── c/
-│   ├── src/
-│   │   ├── quickstart.c
-│   │   └── manual.c
-│   └── include/
-└── cpp/
-    ├── src/
-    │   ├── quickstart.cpp
-    │   └── manual.cpp
-    └── include/
-```
-
-## Generated File Format
-
-### C Files
-- Include function declarations at the top
-- Include `<core.h>` header
-- Generate void functions with unique names per snippet
-
-### C++ Files  
-- No function declarations needed
-- Include `<cpp.h>` header
-- Generate void functions with unique names per snippet
-
 ## Code Processing
 
-- Replaces `assert()` and `ecs_assert()` with `test_assert()`
+- Replaces `assert()` with `test_assert()`
 - Adds `test_assert(true)` if no test assertions are found
 - Preserves original code structure and indentation
 - Processes configurable hide prefixes (removes prefix but keeps line content)

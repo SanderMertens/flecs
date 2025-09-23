@@ -679,9 +679,6 @@ jobs:
           make -C bake/build-$(uname)
           bake/bake setup
 
-      - name: generate documentation tests
-        run: python3 docs/scripts/c_cpp/generate_tests.py
-
       - name: build flecs
         run: bake --strict
 
@@ -755,9 +752,6 @@ jobs:
           make -C bake/build-$(uname)
           bake/bake setup
 
-      - name: generate documentation tests
-        run: python3 docs/scripts/c_cpp/generate_tests.py
-
       - name: build flecs
         run: bake --strict
 
@@ -800,9 +794,6 @@ jobs:
           make -C bake/build-$(uname)
           bake/bake setup
 
-      - name: generate documentation tests
-        run: python3 docs/scripts/c_cpp/generate_tests.py
-
       - name: build flecs
         run: bake --strict
 
@@ -829,9 +820,6 @@ jobs:
           nmake
           cd ..
           ./bake setup --local
-
-      - name: generate documentation tests
-        run: python docs/scripts/c_cpp/generate_tests.py
 
       - name: build flecs
         run: bake/bake
@@ -899,9 +887,6 @@ jobs:
           git clone https://github.com/SanderMertens/bake
           make -C bake/build-Mingw
           bake/bake setup
-
-      - name: generate documentation tests
-        run: python3 docs/scripts/c_cpp/generate_tests.py
 
       - name: build flecs
         run: bake/bake --strict
