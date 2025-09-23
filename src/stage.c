@@ -209,7 +209,7 @@ void ecs_set_stage_count(
     ecs_assert(stage_count >= 1 || (world->flags & EcsWorldFini), 
         ECS_INTERNAL_ERROR, NULL);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     flecs_tables_resize_column_locks(world,world->stage_count,stage_count);
 #endif
 

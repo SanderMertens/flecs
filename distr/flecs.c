@@ -499,7 +499,7 @@ struct ecs_component_record_t {
      * queried for. */
     int32_t keep_alive;
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     /* lock for when sparse components are read or written to */
     int32_t sparse_lock;
 #endif
@@ -592,7 +592,7 @@ void flecs_component_record_init_exclusive(
 void flecs_component_shrink(
     ecs_component_record_t *cr);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc(
     ecs_component_record_t *idr);
@@ -606,8 +606,6 @@ FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec(
 FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec_multithreaded(
     ecs_component_record_t *idr);
     
-#endif
-
 #endif
 
 /**
@@ -909,7 +907,7 @@ struct ecs_table_t {
                                       *  - count(T)..count(C): column -> type index
                                       */
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     int32_t *column_lock;            /* Lock columns for writing and reading */
 #endif
 
@@ -1064,7 +1062,7 @@ const ecs_ref_t* flecs_table_get_override(
     const ecs_component_record_t *cr,
     ecs_ref_t *storage);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 /* resize column locks for all tables. */
 void flecs_tables_resize_column_locks(
@@ -2784,7 +2782,7 @@ void flecs_enqueue(
 #ifndef FLECS_ENTITY_H
 #define FLECS_ENTITY_H
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     #define FLECS_SI_INIT(cr_, table_, col_) \
      .si = (ecs_safety_info_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
 #else
@@ -2808,7 +2806,7 @@ void flecs_enqueue(
 typedef struct {
     const ecs_type_info_t *ti;
     void *ptr;
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     ecs_safety_info_t si;
 #endif
 } flecs_component_ptr_t;
@@ -9491,7 +9489,7 @@ ecs_get_ptr_t flecs_record_get_mut_id(
     flecs_component_ptr_t component_ptr = flecs_get_component_ptr(world, r->table, row, cr);
     return (ecs_get_ptr_t) {
         .component_ptr = component_ptr.ptr
-        #ifdef FLECS_SAFETY_LOCKS
+        #ifdef FLECS_MUT_ALIAS_LOCKS
         , .si = component_ptr.si
         #endif  
     };
@@ -19116,7 +19114,7 @@ void ecs_set_stage_count(
     ecs_assert(stage_count >= 1 || (world->flags & EcsWorldFini), 
         ECS_INTERNAL_ERROR, NULL);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     flecs_tables_resize_column_locks(world,world->stage_count,stage_count);
 #endif
 
@@ -38369,7 +38367,7 @@ ecs_id_t flecs_component_get_id(
     return cr->id;
 }
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 int32_t flecs_sparse_id_record_lock_inc(
     ecs_component_record_t *idr)
@@ -39636,7 +39634,7 @@ void* flecs_component_sparse_emplace(
  */
 
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 void flecs_table_init_column_locks(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -39822,7 +39820,7 @@ void flecs_table_init_data(
 {
     flecs_table_init_columns(world, table, table->column_count);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     flecs_table_init_column_locks(world, table,ecs_get_stage_count(world));
 #endif
 
@@ -40771,7 +40769,7 @@ void flecs_table_fini_data(
             flecs_wfree_n(world, ecs_column_t, table->column_count, columns);
             table->data.columns = NULL;
 
-        #ifdef FLECS_SAFETY_LOCKS
+        #ifdef FLECS_MUT_ALIAS_LOCKS
             if(table->column_lock)
             {
                 flecs_wfree_n(world, int32_t, ecs_get_stage_count(world) * column_count, table->column_lock);
@@ -42544,7 +42542,7 @@ char* ecs_table_str(
     }
 }
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 void flecs_table_init_column_locks(
     ecs_world_t *world,
