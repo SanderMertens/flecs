@@ -1,6 +1,6 @@
 /**
  * @file addons/cpp/flecs.hpp
- * @brief Flecs C++11 API.
+ * @brief Flecs C++17 API.
  */
 
 #pragma once

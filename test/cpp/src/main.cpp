@@ -371,6 +371,11 @@ void Entity_defer_on_replace_w_assign_batched_existing_twice(void);
 void Entity_set_lvalue_to_mutable(void);
 void Entity_set_lvalue_to_const(void);
 void Entity_set_rvalue(void);
+void Entity_assign_rvalue(void);
+void Entity_set_non_copy_assignable(void);
+void Entity_set_non_copy_assignable_w_move_assign(void);
+void Entity_assign_non_copy_assignable(void);
+void Entity_assign_non_copy_assignable_w_move_assign(void);
 
 // Testsuite 'OrderedChildren'
 void OrderedChildren_iter_no_children(void);
@@ -3086,6 +3091,26 @@ bake_test_case Entity_testcases[] = {
     {
         "set_rvalue",
         Entity_set_rvalue
+    },
+    {
+        "assign_rvalue",
+        Entity_assign_rvalue
+    },
+    {
+        "set_non_copy_assignable",
+        Entity_set_non_copy_assignable
+    },
+    {
+        "set_non_copy_assignable_w_move_assign",
+        Entity_set_non_copy_assignable_w_move_assign
+    },
+    {
+        "assign_non_copy_assignable",
+        Entity_assign_non_copy_assignable
+    },
+    {
+        "assign_non_copy_assignable_w_move_assign",
+        Entity_assign_non_copy_assignable_w_move_assign
     }
 };
 
@@ -8067,7 +8092,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        358,
+        363,
         Entity_testcases
     },
     {

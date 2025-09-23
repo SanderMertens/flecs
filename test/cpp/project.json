@@ -381,7 +381,12 @@
                 "defer_on_replace_w_assign_batched_existing_twice",
                 "set_lvalue_to_mutable",
                 "set_lvalue_to_const",
-                "set_rvalue"
+                "set_rvalue",
+                "assign_rvalue",
+                "set_non_copy_assignable",
+                "set_non_copy_assignable_w_move_assign",
+                "assign_non_copy_assignable",
+                "assign_non_copy_assignable_w_move_assign"
             ]
         }, {
             "id": "OrderedChildren",

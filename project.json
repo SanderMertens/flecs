@@ -3,7 +3,7 @@
     "type":"package",
     "value": {
         "author": "Sander Mertens",
-        "description": "Entity Component System written in C99/C++11",
+        "description": "Entity Component System written in C99/C++17",
         "amalgamate": true,
         "amalgamate-path": "distr"
     },

@@ -9,7 +9,7 @@
 Flecs is a fast and lightweight Entity Component System that lets you build games and simulations with millions of entities ([join the Discord!](https://discord.gg/BEzP5Rgrrp)). Here are some of the framework's highlights:
 
 - Fast and [portable](#language-bindings) zero dependency [C99 API](https://www.flecs.dev/flecs/group__c.html)
-- Modern type-safe [C++11 API](https://www.flecs.dev/flecs/group__cpp.html) that doesn't use STL containers
+- Modern type-safe [C++17 API](https://www.flecs.dev/flecs/group__cpp.html) that doesn't use STL containers
 - First open source ECS with full support for [Entity Relationships](https://www.flecs.dev/flecs/md_docs_2Relationships.html)!
 - Fast native support for [hierarchies](https://www.flecs.dev/flecs/md_docs_2Relationships.html#the-childof-relationship) and [prefabs](https://www.flecs.dev/flecs/md_docs_2Relationships.html#the-isa-relationship)
 - Code base that builds in less than 5 seconds
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-Same example in C++11:
+Same example in C++:
 
 ```cpp
 struct Position {
