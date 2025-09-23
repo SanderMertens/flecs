@@ -475,15 +475,6 @@ typedef struct ecs_component_record_t ecs_component_record_t;
 /** the void* returned from flecs_record_get_id fns which optionally returns origin of the ptr when FLECS_MUT_ALIAS_LOCKS is defined` */
 typedef struct ecs_get_ptr_t ecs_get_ptr_t;
 
-#ifdef FLECS_MUT_ALIAS_LOCKS
-/** safety information of where the ptr from `get` functions originates from.
- * when component record is null, that means it comes from a table.
- * when table is null, that means it comes from a sparse storage.
- * this is used for column locking / component record locking.
- */
-typedef struct ecs_safety_info_t ecs_safety_info_t;
-#endif
-
 /** A poly object.
  * A poly (short for polymorph) object is an object that has a variable list of
  * capabilities, determined by a mixin table. This is the current list of types

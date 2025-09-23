@@ -7,10 +7,10 @@
 #define FLECS_ENTITY_H
 
 #ifdef FLECS_MUT_ALIAS_LOCKS
-    #define FLECS_SI_INIT(cr_, table_, col_) \
-     .si = (ecs_safety_info_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
+    #define FLECS_LOCK_TARGET_INIT(cr_, table_, col_) \
+     .lock_target = (ecs_lock_target_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
 #else
-    #define FLECS_SI_INIT(cr_, table_, col_) /* nothing */
+    #define FLECS_LOCK_TARGET_INIT(cr_, table_, col_) /* nothing */
 #endif
 
 #define ecs_get_low_id(table, r, id)\
@@ -20,7 +20,7 @@
         ecs_column_t *column = &table->data.columns[--column_index];\
         return (ecs_get_ptr_t){\
             .ptr = ECS_ELEM(column->data, column->ti->size, ECS_RECORD_TO_ROW(r->row))\
-            FLECS_SI_INIT(NULL, table, column_index)\
+            FLECS_LOCK_TARGET_INIT(NULL, table, column_index)\
         };\
     }
 
@@ -28,7 +28,7 @@ typedef struct {
     const ecs_type_info_t *ti;
     void *ptr;
 #ifdef FLECS_MUT_ALIAS_LOCKS
-    ecs_safety_info_t si;
+    ecs_lock_target_t lock_target;
 #endif
 } flecs_component_ptr_t;
 
