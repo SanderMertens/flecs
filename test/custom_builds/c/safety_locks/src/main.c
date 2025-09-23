@@ -275,7 +275,7 @@ void test_table_component_safety_info(void) {
     assert(r != NULL);
     
     ecs_get_ptr_t result = flecs_record_get_id(world, e, r, ecs_id(Position));
-    assert(result.component_ptr != NULL);
+    assert(result.ptr != NULL);
     
     // For table components: table should be set, cr should be NULL, column_index should be valid
     assert(result.si.table != NULL);
@@ -298,7 +298,7 @@ void test_sparse_fragmenting_safety_info(void) {
     assert(r != NULL);
     
     ecs_get_ptr_t result = flecs_record_get_id(world, e, r, ecs_id(Position));
-    assert(result.component_ptr != NULL);
+    assert(result.ptr != NULL);
     
     // For sparse fragmenting components: cr should be set, table should be NULL, column_index should be -1
     assert(result.si.cr != NULL);
@@ -321,7 +321,7 @@ void test_sparse_non_fragmenting_safety_info(void) {
     assert(r != NULL);
     
     ecs_get_ptr_t result = flecs_record_get_id(world, e, r, ecs_id(Position));
-    assert(result.component_ptr != NULL);
+    assert(result.ptr != NULL);
 
     // For sparse non-fragmenting components: cr should be set, table should be NULL, column_index should be -1
     assert(result.si.cr != NULL);
@@ -346,8 +346,8 @@ void test_get_vs_get_mut_safety_info(void) {
     ecs_get_ptr_t get_result = flecs_record_get_id(world, e, r, ecs_id(Position));
     ecs_get_ptr_t get_mut_result = flecs_record_get_mut_id(world, r, ecs_id(Position));
     
-    assert(get_result.component_ptr != NULL);
-    assert(get_mut_result.component_ptr != NULL);
+    assert(get_result.ptr != NULL);
+    assert(get_mut_result.ptr != NULL);
     
     // Safety info should be the same for owned components
     assert(get_result.si.table == get_mut_result.si.table);
@@ -371,7 +371,7 @@ void test_null_component_safety_info(void) {
     ecs_get_ptr_t result = flecs_record_get_id(world, e, r, ecs_id(Position));
     
     // Should return null pointer and zeroed safety info
-    assert(result.component_ptr == NULL);
+    assert(result.ptr == NULL);
     assert(result.si.table == NULL);
     assert(result.si.cr == NULL);
     assert(result.si.column_index == 0);
