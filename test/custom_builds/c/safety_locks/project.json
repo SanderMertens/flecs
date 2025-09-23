@@ -9,6 +9,6 @@
         "standalone": true
     },
     "lang.c": {
-        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_SAFETY_LOCKS"]
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_MUT_ALIAS_LOCKS"]
     }
 }

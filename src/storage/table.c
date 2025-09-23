@@ -21,7 +21,7 @@
 
 const int16_t flecs_table_empty_component_map[FLECS_HI_COMPONENT_ID] = {0};
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 void flecs_table_init_column_locks(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -214,7 +214,7 @@ void flecs_table_init_data(
 {
     flecs_table_init_columns(world, table, table->column_count);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     flecs_table_init_column_locks(world, table,ecs_get_stage_count(world));
 #endif
 
@@ -1204,7 +1204,7 @@ void flecs_table_fini_data(
             flecs_wfree_n(world, ecs_column_t, table->column_count, columns);
             table->data.columns = NULL;
 
-        #ifdef FLECS_SAFETY_LOCKS
+        #ifdef FLECS_MUT_ALIAS_LOCKS
             if(table->column_lock)
             {
                 flecs_wfree_n(world, int32_t, ecs_get_stage_count(world) * column_count, table->column_lock);
@@ -3082,7 +3082,7 @@ char* ecs_table_str(
     }
 }
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 void flecs_table_init_column_locks(
     ecs_world_t *world,
