@@ -9,6 +9,6 @@
         "standalone": true
     },
     "lang.c": {
-        "defines": ["FLECS_SAFETY_LOCKS", "FLECS_KEEP_ASSERT"]
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_SAFETY_LOCKS"]
     }
 }

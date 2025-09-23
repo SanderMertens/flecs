@@ -392,7 +392,7 @@ void* flecs_defer_ensure(
         void *base = NULL;
         if (table && (table->flags & EcsTableHasIsA)) {
             ecs_component_record_t *cr = flecs_components_get(world, id);
-            base = flecs_get_base_component(world, table, id, cr, 0);
+            base = flecs_get_base_component(world, table, id, cr, 0).component_ptr;
         }
 
         if (!base) {
