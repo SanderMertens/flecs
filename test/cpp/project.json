@@ -1237,7 +1237,8 @@
                 "get_component",
                 "untyped_get_ref_by_method",
                 "untyped_pair_ref",
-                "untyped_runtime_component_ref"
+                "untyped_runtime_component_ref",
+                "ref_world"
             ]
         }, {
             "id": "Module",
