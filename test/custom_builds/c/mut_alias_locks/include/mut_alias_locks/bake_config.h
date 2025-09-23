@@ -14,8 +14,8 @@
  * dependencies will automatically show up in this file. Include bake_config.h
  * in your main project file. Do not edit! */
 
-#ifndef SAFETY_LOCKS_BAKE_CONFIG_H
-#define SAFETY_LOCKS_BAKE_CONFIG_H
+#ifndef MUT_ALIAS_LOCKS_BAKE_CONFIG_H
+#define MUT_ALIAS_LOCKS_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
 #include "../../deps/flecs.h"
