@@ -6545,3 +6545,119 @@ void Entity_set_rvalue(void) {
     test_false(src.copied_into() || src.copied_from());
     test_int(src.times_destructed, 0);
 }
+
+void Entity_assign_rvalue(void) {
+    flecs::world world;
+
+    auto e = world.entity();
+
+    LifecycleTracker src;
+
+    e.add<LifecycleTracker>();
+    e.assign(std::move(src));
+
+    const auto* attached = e.try_get<LifecycleTracker>();
+    test_assert(attached != nullptr);
+    
+    test_assert(attached->constructed_via == LifecycleTracker::Constructor::default_);
+    test_int(attached->times_move_assigned_into, 1);
+    test_int(attached->times_move_assigned_from, 0);
+    test_int(attached->times_move_constructed_from, 0);
+    test_false(attached->copied_into() || attached->copied_from());
+    test_int(attached->times_destructed, 0);
+    
+    test_assert(src.constructed_via == LifecycleTracker::Constructor::default_);
+    test_int(src.times_move_assigned_into, 0);
+    test_int(src.times_move_assigned_from, 1);
+    test_int(src.times_move_constructed_from, 0);
+    test_false(src.copied_into() || src.copied_from());
+    test_int(src.times_destructed, 0);
+}
+
+struct NonCopyAssignable {
+    NonCopyAssignable() { }
+    NonCopyAssignable(const NonCopyAssignable& obj) = delete;
+    NonCopyAssignable& operator=(const NonCopyAssignable& obj) = delete;
+
+    NonCopyAssignable(NonCopyAssignable&& obj) = default;
+    NonCopyAssignable& operator=(NonCopyAssignable&& obj) = default;
+    
+    int x;
+};
+
+struct NonCopyAssignableWMoveAssign {
+    NonCopyAssignableWMoveAssign() { }
+    NonCopyAssignableWMoveAssign(const NonCopyAssignableWMoveAssign& obj) = delete;
+    NonCopyAssignableWMoveAssign& operator=(const NonCopyAssignableWMoveAssign& obj) = delete;
+
+    NonCopyAssignableWMoveAssign(NonCopyAssignableWMoveAssign&& obj) {
+        x = obj.x;
+        moved = 1;
+    }
+    NonCopyAssignableWMoveAssign& operator=(NonCopyAssignableWMoveAssign&& obj) {
+        x = obj.x;
+        moved = 1;
+        return *this;
+    }
+    
+    int x;
+    int moved = 0;
+};
+
+void Entity_set_non_copy_assignable(void) {
+    flecs::world world;
+
+    NonCopyAssignable v;
+    v.x = 10;
+
+    flecs::entity e = world.entity().set(v);
+
+    const NonCopyAssignable* comp = e.try_get<NonCopyAssignable>();
+    test_assert(comp != nullptr);
+    test_int(comp->x, 10);
+}
+
+void Entity_set_non_copy_assignable_w_move_assign(void) {
+    flecs::world world;
+
+    NonCopyAssignableWMoveAssign v;
+    v.x = 10;
+    test_int(v.moved, 0);
+
+    flecs::entity e = world.entity().set(v);
+
+    const NonCopyAssignableWMoveAssign* comp = e.try_get<NonCopyAssignableWMoveAssign>();
+    test_assert(comp != nullptr);
+    test_int(comp->x, 10);
+    test_int(comp->moved, 1);
+}
+
+void Entity_assign_non_copy_assignable(void) {
+    flecs::world world;
+
+    NonCopyAssignable v;
+    v.x = 10;
+
+    flecs::entity e = world.entity().add<NonCopyAssignable>();
+    e.assign(v);
+
+    const NonCopyAssignable* comp = e.try_get<NonCopyAssignable>();
+    test_assert(comp != nullptr);
+    test_int(comp->x, 10);
+}
+
+void Entity_assign_non_copy_assignable_w_move_assign(void) {
+    flecs::world world;
+
+    NonCopyAssignableWMoveAssign v;
+    v.x = 10;
+    test_int(v.moved, 0);
+
+    flecs::entity e = world.entity().add<NonCopyAssignableWMoveAssign>();
+    e.assign(v);
+
+    const NonCopyAssignableWMoveAssign* comp = e.try_get<NonCopyAssignableWMoveAssign>();
+    test_assert(comp != nullptr);
+    test_int(comp->x, 10);
+    test_int(comp->moved, 1);
+}
