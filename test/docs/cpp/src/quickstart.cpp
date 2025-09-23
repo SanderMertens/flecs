@@ -1,19 +1,19 @@
 /*
- * Tests generated from: docs/Quickstart.md
- * Contains 27 test(s) from documentation code snippets  
+ * Tests generated from: ../../../docs/Quickstart.md
+ * Contains 27 test(s) from documentation code snippets
  */
 
 #include <cpp.h>
 
-void quickstart_Concepts_World_01(void) {
+void quickstart_flecs_quickstart_concepts_world_01(void) {
     flecs::world world;
 
     // Do the ECS stuff
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Entity_01(void) {
+void quickstart_flecs_quickstart_concepts_entity_02(void) {
     flecs::world world;
     auto e = world.entity();
     e.is_alive(); // true!
@@ -21,26 +21,26 @@ void quickstart_Concepts_Entity_01(void) {
     e.destruct();
     e.is_alive(); // false!
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Entity_02(void) {
+void quickstart_flecs_quickstart_concepts_entity_03(void) {
     flecs::world world;
     auto e = world.entity("Bob");
 
     std::cout << "Entity name: " << e.name() << std::endl;
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Entity_03(void) {
+void quickstart_flecs_quickstart_concepts_entity_04(void) {
     flecs::world world;
     auto e = world.lookup("Bob");
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Component_01(void) {
+void quickstart_flecs_quickstart_concepts_component_05(void) {
     flecs::world world;
     auto e = world.entity();
 
@@ -68,10 +68,10 @@ void quickstart_Concepts_Component_01(void) {
     // Remove component
     e.remove<Position>();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Component_02(void) {
+void quickstart_flecs_quickstart_concepts_component_06(void) {
     flecs::world world;
     struct Serializable { };
     flecs::entity pos_e = world.entity<Position>();
@@ -80,20 +80,20 @@ void quickstart_Concepts_Component_02(void) {
     // It's possible to add components like you would for any entity
     pos_e.add<Serializable>();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Component_03(void) {
+void quickstart_flecs_quickstart_concepts_component_07(void) {
     flecs::world world;
     flecs::entity pos_e = world.entity<Position>();
 
     const EcsComponent& c = pos_e.get<flecs::Component>();
     std::cout << "Component size: " << c.size << std::endl;
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Tag_01(void) {
+void quickstart_flecs_quickstart_concepts_tag_08(void) {
     flecs::world world;
     // Option 1: create Tag as empty struct
     struct Enemy { };
@@ -116,10 +116,10 @@ void quickstart_Concepts_Tag_01(void) {
     e2.remove(Enemy);
     e2.has(Enemy); // false!
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Pair_01(void) {
+void quickstart_flecs_quickstart_concepts_pair_09(void) {
     flecs::world world;
     // Create Likes relationship as empty type (tag)
     struct Likes { };
@@ -135,18 +135,18 @@ void quickstart_Concepts_Pair_01(void) {
     Bob.remove<Likes>(Alice);
     Bob.has<Likes>(Alice); // false!
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Pair_02(void) {
+void quickstart_flecs_quickstart_concepts_pair_10(void) {
     flecs::world world;
     flecs::entity Bob = world.entity();
     flecs::id id = world.pair<Likes>(Bob);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Pair_03(void) {
+void quickstart_flecs_quickstart_concepts_pair_11(void) {
     flecs::world world;
     flecs::entity Bob = world.entity();
     flecs::id id = world.pair<Likes>(Bob);
@@ -155,10 +155,10 @@ void quickstart_Concepts_Pair_03(void) {
         auto target = id.second();
     }
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Pair_04(void) {
+void quickstart_flecs_quickstart_concepts_pair_12(void) {
     flecs::world world;
     flecs::entity Apples = world.entity();
     flecs::entity Pears = world.entity();
@@ -173,20 +173,20 @@ void quickstart_Concepts_Pair_04(void) {
     bob.has(Eats, Pears);  // true!
     bob.has(Grows, Pears); // true!
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Pair_05(void) {
+void quickstart_flecs_quickstart_concepts_pair_13(void) {
     flecs::world world;
     flecs::entity Bob = world.entity();
     flecs::entity alice = world.entity();
     alice.add<Likes>(Bob);
     auto o = alice.target<Likes>(); // Returns Bob
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Hierarchies_01(void) {
+void quickstart_flecs_quickstart_concepts_hierarchies_14(void) {
     flecs::world world;
     auto parent = world.entity();
     auto child = world.entity().child_of(parent);
@@ -194,10 +194,10 @@ void quickstart_Concepts_Hierarchies_01(void) {
     // Deleting the parent also deletes its children
     parent.destruct();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Hierarchies_02(void) {
+void quickstart_flecs_quickstart_concepts_hierarchies_15(void) {
     flecs::world world;
     auto parent = world.entity("parent");
     auto child = world.entity("child").child_of(parent);
@@ -206,10 +206,10 @@ void quickstart_Concepts_Hierarchies_02(void) {
     world.lookup("parent::child"); // returns child
     parent.lookup("child"); // returns child
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Hierarchies_03(void) {
+void quickstart_flecs_quickstart_concepts_hierarchies_16(void) {
     flecs::world world;
     auto q = world.query_builder<Position, Position>()
         .term_at(1).parent().cascade()
@@ -219,10 +219,10 @@ void quickstart_Concepts_Hierarchies_03(void) {
         // Do the thing
     });
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Type_01(void) {
+void quickstart_flecs_quickstart_concepts_type_17(void) {
     flecs::world world;
     auto e = world.entity()
         .add<Position>()
@@ -230,10 +230,10 @@ void quickstart_Concepts_Type_01(void) {
 
     std::cout << e.type().str() << std::endl; // output: 'Position,Velocity'
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Type_02(void) {
+void quickstart_flecs_quickstart_concepts_type_18(void) {
     flecs::world world;
     auto e = world.entity();
     e.each([&](flecs::id id) {
@@ -242,10 +242,10 @@ void quickstart_Concepts_Type_02(void) {
         }
     });
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Type_03(void) {
+void quickstart_flecs_quickstart_concepts_type_19(void) {
     flecs::world world;
     world.component<Gravity>().add(flecs::Singleton);
     flecs::entity grav_e = world.entity<Gravity>();
@@ -254,19 +254,19 @@ void quickstart_Concepts_Type_03(void) {
 
     const Gravity& g = grav_e.get<Gravity>();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Type_04(void) {
+void quickstart_flecs_quickstart_concepts_type_20(void) {
     flecs::world world;
     world.component<Gravity>().add(flecs::Singleton);
     world.query_builder<Velocity, Gravity>()
         .build();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Query_01(void) {
+void quickstart_flecs_quickstart_concepts_query_21(void) {
     flecs::world world;
     flecs::entity parent = world.entity();
     // For simple queries the world::each function can be used
@@ -297,10 +297,10 @@ void quickstart_Concepts_Query_01(void) {
         }
     });
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Query_02(void) {
+void quickstart_flecs_quickstart_concepts_query_22(void) {
     flecs::world world;
     flecs::query<> q = world.query_builder()
         .with(flecs::ChildOf, flecs::Wildcard)
@@ -309,10 +309,10 @@ void quickstart_Concepts_Query_02(void) {
 
     // Iteration code is the same
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_System_01(void) {
+void quickstart_flecs_quickstart_concepts_system_23(void) {
     flecs::world world;
     // Use each() function that iterates each individual entity
     auto move_sys = world.system<Position, Velocity>()
@@ -326,29 +326,29 @@ void quickstart_Concepts_System_01(void) {
 
     move_sys.run();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_System_02(void) {
+void quickstart_flecs_quickstart_concepts_system_24(void) {
     flecs::world world;
     auto move_sys = world.system<>().each([](){});
     std::cout << "System: " << move_sys.name() << std::endl;
     move_sys.add(flecs::OnUpdate);
     move_sys.destruct();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Pipeline_01(void) {
+void quickstart_flecs_quickstart_concepts_pipeline_25(void) {
     flecs::world world;
     auto move_sys = world.system<>().each([](){});
     move_sys.add(flecs::OnUpdate);
     move_sys.remove(flecs::PostUpdate);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Observer_01(void) {
+void quickstart_flecs_quickstart_concepts_observer_26(void) {
     flecs::world world;
     world.observer<Position, Velocity>("OnSetPosition")
         .event(flecs::OnSet)
@@ -360,10 +360,10 @@ void quickstart_Concepts_Observer_01(void) {
     e.set<Velocity>({1, 2});   // Invokes the observer
     e.set<Position>({20, 30}); // Invokes the observer
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void quickstart_Concepts_Module_01(void) {
+void quickstart_flecs_quickstart_concepts_module_27(void) {
     struct my_module {
         my_module(flecs::world& world) {
             world.module<my_module>();
@@ -378,5 +378,5 @@ void quickstart_Concepts_Module_01(void) {
     // Import code
     world.import<my_module>();
 
-        test_assert(true);
+    test_assert(true);
 }

@@ -1,11 +1,11 @@
 /*
- * Tests generated from: docs/ComponentTraits.md
- * Contains 33 test(s) from documentation code snippets  
+ * Tests generated from: ../../../docs/ComponentTraits.md
+ * Contains 33 test(s) from documentation code snippets
  */
 
 #include <cpp.h>
 
-void componenttraits_CanToggle_trait_01(void) {
+void componenttraits_component_traits_cantoggle_trait_01(void) {
     flecs::world world;
     world.component<Position>().add(flecs::CanToggle);
 
@@ -18,7 +18,7 @@ void componenttraits_CanToggle_trait_01(void) {
     test_assert(e.enabled<Position>());
 }
 
-void componenttraits_Cleanup_traits_01(void) {
+void componenttraits_component_traits_cleanup_traits_02(void) {
     flecs::world world;
     flecs::entity parent = world.entity();
     flecs::entity e = world.entity();
@@ -28,28 +28,28 @@ void componenttraits_Cleanup_traits_01(void) {
 
     e.add(flecs::ChildOf, parent); // Covered by cleanup traits
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Cleanup_traits_02(void) {
+void componenttraits_component_traits_cleanup_traits_03(void) {
     flecs::world world;
     flecs::entity Archer = world.entity();
     world.remove_all(Archer);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Cleanup_traits_03(void) {
+void componenttraits_component_traits_cleanup_traits_04(void) {
     flecs::world world;
     flecs::entity Archer = world.entity();
     world.remove_all(Archer);
     world.remove_all(Archer, flecs::Wildcard);
     world.remove_all(flecs::Wildcard, Archer);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Cleanup_traits_Examples_OnDelete_Remove_01(void) {
+void componenttraits_component_traits_cleanup_traits_examples_ondelete_remove_05(void) {
     flecs::world world;
     struct Archer {};
     // Remove Archer from entities when Archer is deleted
@@ -61,10 +61,10 @@ void componenttraits_Cleanup_traits_Examples_OnDelete_Remove_01(void) {
     // This will remove Archer from e
     world.component<Archer>().destruct();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Cleanup_traits_Examples_OnDelete_Delete_01(void) {
+void componenttraits_component_traits_cleanup_traits_examples_ondelete_delete_06(void) {
     flecs::world world;
     struct Archer {};
     // Delete entities with Archer when Archer is deleted
@@ -76,10 +76,10 @@ void componenttraits_Cleanup_traits_Examples_OnDelete_Delete_01(void) {
     // This will delete e
     world.component<Archer>().destruct();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Cleanup_traits_Examples_OnDeleteTarget_Delete_01(void) {
+void componenttraits_component_traits_cleanup_traits_examples_ondeletetarget_delete_07(void) {
     flecs::world world;
     struct ChildOf {};
     // Delete children when deleting parent
@@ -92,10 +92,10 @@ void componenttraits_Cleanup_traits_Examples_OnDeleteTarget_Delete_01(void) {
     // This will delete both p and e
     p.destruct();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Cleanup_traits_Cleanup_order_01(void) {
+void componenttraits_component_traits_cleanup_traits_cleanup_order_08(void) {
     flecs::world world;
     struct Node {};
 
@@ -106,17 +106,17 @@ void componenttraits_Cleanup_traits_Cleanup_order_01(void) {
     flecs::entity p = world.entity().add<Node>();
     flecs::entity c = world.entity().add<Node>().child_of(p);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_DontFragment_trait_01(void) {
+void componenttraits_component_traits_dontfragment_trait_09(void) {
     flecs::world world;
     world.component<Position>().add(flecs::DontFragment);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Exclusive_trait_01(void) {
+void componenttraits_component_traits_exclusive_trait_10(void) {
     flecs::world world;
     flecs::entity parent_a = world.entity();
     flecs::entity parent_b = world.entity();
@@ -124,18 +124,18 @@ void componenttraits_Exclusive_trait_01(void) {
     e.child_of(parent_a);
     e.child_of(parent_b); // replaces (ChildOf, parent_a)
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Exclusive_trait_02(void) {
+void componenttraits_component_traits_exclusive_trait_11(void) {
     flecs::world world;
     flecs::entity MarriedTo = world.entity()
       .add(flecs::Exclusive);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Final_trait_01(void) {
+void componenttraits_component_traits_final_trait_12(void) {
     flecs::world ecs;
     auto e = ecs.entity()
       .add(flecs::Final);
@@ -145,10 +145,10 @@ void componenttraits_Final_trait_01(void) {
       .is_a(e); // not allowed
     }
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Inheritable_trait_01(void) {
+void componenttraits_component_traits_inheritable_trait_13(void) {
     flecs::world world;
     struct Unit {};
     struct Warrior {};
@@ -164,10 +164,10 @@ void componenttraits_Inheritable_trait_01(void) {
         // ...
     });
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_OneOf_trait_01(void) {
+void componenttraits_component_traits_oneof_trait_14(void) {
     flecs::world world;
     // Enforce that target of relationship is child of Food
     auto Food = world.entity().add(flecs::OneOf);
@@ -182,10 +182,10 @@ void componenttraits_OneOf_trait_01(void) {
     auto b = world.entity().add(Food, Fork);
     }
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_OneOf_trait_02(void) {
+void componenttraits_component_traits_oneof_trait_15(void) {
     flecs::world world;
     // Enforce that target of relationship is child of Food
     auto Food = world.entity();
@@ -201,10 +201,10 @@ void componenttraits_OneOf_trait_02(void) {
     auto b = world.entity().add(Eats, Fork);
     }
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_OnInstantiate_trait_Override_01(void) {
+void componenttraits_component_traits_oninstantiate_trait_override_16(void) {
     flecs::world ecs;
     // Register component with trait. Optional, since this is the default behavior.
     ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Override);
@@ -216,7 +216,7 @@ void componenttraits_OnInstantiate_trait_Override_01(void) {
     test_assert(base.try_get<Mass>() != inst.try_get<Mass>());
 }
 
-void componenttraits_OnInstantiate_trait_Inherit_01(void) {
+void componenttraits_component_traits_oninstantiate_trait_inherit_17(void) {
     flecs::world ecs;
     // Register component with trait
     ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Inherit);
@@ -229,7 +229,7 @@ void componenttraits_OnInstantiate_trait_Inherit_01(void) {
     test_assert(base.try_get<Mass>() == inst.try_get<Mass>());
 }
 
-void componenttraits_OnInstantiate_trait_DontInherit_01(void) {
+void componenttraits_component_traits_oninstantiate_trait_dontinherit_18(void) {
     flecs::world ecs;
     // Register component with trait
     ecs.component<Mass>().add(flecs::OnInstantiate, flecs::DontInherit);
@@ -242,7 +242,7 @@ void componenttraits_OnInstantiate_trait_DontInherit_01(void) {
     test_assert(inst.try_get<Mass>() == nullptr);
 }
 
-void componenttraits_OrderedChildren_trait_01(void) {
+void componenttraits_component_traits_orderedchildren_trait_19(void) {
     flecs::world world;
     flecs::entity parent = world.entity().add(flecs::OrderedChildren);
 
@@ -260,10 +260,10 @@ void componenttraits_OrderedChildren_trait_01(void) {
         // 3rd result: child_3
     });
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_PairIsTag_trait_01(void) {
+void componenttraits_component_traits_pairistag_trait_20(void) {
     flecs::world ecs;
     struct Serializable { }; // Tag, contains no data
 
@@ -282,10 +282,10 @@ void componenttraits_PairIsTag_trait_01(void) {
     // Gets (unintended) value from (Serializable, Position) pair
     const Position& p2 = e.get<flecs::pair<Serializable, Position>>();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_PairIsTag_trait_02(void) {
+void componenttraits_component_traits_pairistag_trait_21(void) {
     flecs::world ecs;
     struct Serializable { }; // Tag, contains no data
     // Ensure that Serializable never contains data
@@ -306,10 +306,10 @@ void componenttraits_PairIsTag_trait_02(void) {
     const Position& p2 = e.get<flecs::pair<Serializable, Position>>();
     }
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Relationship_trait_01(void) {
+void componenttraits_component_traits_relationship_trait_22(void) {
     flecs::world world;
     struct Likes { };
     struct Apples { };
@@ -323,10 +323,10 @@ void componenttraits_Relationship_trait_01(void) {
       .add<Likes, Apples>(); // OK
     }
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Relationship_trait_02(void) {
+void componenttraits_component_traits_relationship_trait_23(void) {
     flecs::world world;
     struct Likes { };
     struct Loves { };
@@ -337,10 +337,10 @@ void componenttraits_Relationship_trait_02(void) {
     // won't panic as With is marked as trait.
     world.component<Loves>().add(flecs::With, world.component<Likes>());
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Singleton_trait_01(void) {
+void componenttraits_component_traits_singleton_trait_24(void) {
     flecs::world world;
     struct TimeOfDay { int hour; };
     world.component<TimeOfDay>().add(flecs::Singleton);
@@ -350,10 +350,10 @@ void componenttraits_Singleton_trait_01(void) {
     // This is the same as adding TimeOfDay to itself:
     world.component<TimeOfDay>().set(TimeOfDay{0});
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Singleton_trait_02(void) {
+void componenttraits_component_traits_singleton_trait_25(void) {
     flecs::world world;
     struct TimeOfDay { int hour; };
     world.component<TimeOfDay>().add(flecs::Singleton);
@@ -366,27 +366,27 @@ void componenttraits_Singleton_trait_02(void) {
       .term_at(2).src<TimeOfDay>()
       .build();
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Sparse_trait_01(void) {
+void componenttraits_component_traits_sparse_trait_26(void) {
     flecs::world world;
     world.component<Position>().add(flecs::Sparse);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Symmetric_trait_01(void) {
+void componenttraits_component_traits_symmetric_trait_27(void) {
     flecs::world world;
     auto MarriedTo = world.entity().add(flecs::Symmetric);
     auto Bob = world.entity();
     auto Alice = world.entity();
     Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Target_trait_01(void) {
+void componenttraits_component_traits_target_trait_28(void) {
     flecs::world world;
     struct Likes { };
     struct Apples { };
@@ -400,19 +400,19 @@ void componenttraits_Target_trait_01(void) {
       .add<Likes, Apples>(); // OK
     }
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Trait_trait_01(void) {
+void componenttraits_component_traits_trait_trait_29(void) {
     flecs::world world;
     struct Serializable { };
 
     world.component<Serializable>().add(flecs::Trait);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Transitive_trait_01(void) {
+void componenttraits_component_traits_transitive_trait_30(void) {
     flecs::world world;
     auto LocatedIn = world.entity();
     auto Manhattan = world.entity();
@@ -422,18 +422,18 @@ void componenttraits_Transitive_trait_01(void) {
     Manhattan.add(LocatedIn, NewYork);
     NewYork.add(LocatedIn, USA);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_Transitive_trait_02(void) {
+void componenttraits_component_traits_transitive_trait_31(void) {
     flecs::world world;
     flecs::entity LocatedIn = world.entity();
     LocatedIn.add(flecs::Transitive);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_With_trait_01(void) {
+void componenttraits_component_traits_with_trait_32(void) {
     flecs::world world;
     auto Responsibility = world.entity();
     auto Power = world.entity().add(flecs::With, Responsibility);
@@ -441,10 +441,10 @@ void componenttraits_With_trait_01(void) {
     // Create new entity that has both Power and Responsibility
     auto e = world.entity().add(Power);
 
-        test_assert(true);
+    test_assert(true);
 }
 
-void componenttraits_With_trait_02(void) {
+void componenttraits_component_traits_with_trait_33(void) {
     flecs::world world;
     auto Likes = world.entity();
     auto Loves = world.entity().add(flecs::With, Likes);
@@ -453,5 +453,5 @@ void componenttraits_With_trait_02(void) {
     // Create new entity with both (Loves, Pears) and (Likes, Pears)
     auto e = world.entity().add(Loves, Pears);
 
-        test_assert(true);
+    test_assert(true);
 }

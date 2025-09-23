@@ -1,40 +1,11 @@
 /*
- * Tests generated from: docs/Quickstart.md
+ * Tests generated from: ../../../docs/Quickstart.md
  * Contains 25 test(s) from documentation code snippets
  */
 
 #include <core.h>
 
-// Test declarations
-void quickstart_Concepts_World_01(void);
-void quickstart_Concepts_Entity_01(void);
-void quickstart_Concepts_Entity_02(void);
-void quickstart_Concepts_Entity_03(void);
-void quickstart_Concepts_Component_01(void);
-void quickstart_Concepts_Component_02(void);
-void quickstart_Concepts_Component_03(void);
-void quickstart_Concepts_Tag_01(void);
-void quickstart_Concepts_Pair_01(void);
-void quickstart_Concepts_Pair_02(void);
-void quickstart_Concepts_Pair_03(void);
-void quickstart_Concepts_Pair_04(void);
-void quickstart_Concepts_Pair_05(void);
-void quickstart_Concepts_Hierarchies_01(void);
-void quickstart_Concepts_Hierarchies_02(void);
-void quickstart_Concepts_Hierarchies_03(void);
-void quickstart_Concepts_Type_01(void);
-void quickstart_Concepts_Type_02(void);
-void quickstart_Concepts_Type_03(void);
-void quickstart_Concepts_Type_04(void);
-void quickstart_Concepts_Query_01(void);
-void quickstart_Concepts_Query_02(void);
-void quickstart_Concepts_System_01(void);
-void quickstart_Concepts_Pipeline_01(void);
-void quickstart_Concepts_Observer_01(void);
-
-// Test implementations
-
-void quickstart_Concepts_World_01(void) {
+void quickstart_flecs_quickstart_concepts_world_01(void) {
     ecs_world_t *world = ecs_init();
 
     // Do the ECS stuff
@@ -43,7 +14,8 @@ void quickstart_Concepts_World_01(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Entity_01(void) {
+
+void quickstart_flecs_quickstart_concepts_entity_02(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t e = ecs_new(world);
     ecs_is_alive(world, e); // true!
@@ -54,7 +26,8 @@ void quickstart_Concepts_Entity_01(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Entity_02(void) {
+
+void quickstart_flecs_quickstart_concepts_entity_03(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t e = ecs_entity(world, { .name = "Bob" });
 
@@ -63,7 +36,8 @@ void quickstart_Concepts_Entity_02(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Entity_03(void) {
+
+void quickstart_flecs_quickstart_concepts_entity_04(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t bob = ecs_entity(world, { .name = "Bob" });
     ecs_entity_t e = ecs_lookup(world, "Bob");
@@ -71,7 +45,8 @@ void quickstart_Concepts_Entity_03(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Component_01(void) {
+
+void quickstart_flecs_quickstart_concepts_component_05(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -96,7 +71,8 @@ void quickstart_Concepts_Component_01(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Component_02(void) {
+
+void quickstart_flecs_quickstart_concepts_component_06(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Serializable);
@@ -110,7 +86,8 @@ void quickstart_Concepts_Component_02(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Component_03(void) {
+
+void quickstart_flecs_quickstart_concepts_component_07(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
 
@@ -122,7 +99,8 @@ void quickstart_Concepts_Component_03(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Tag_01(void) {
+
+void quickstart_flecs_quickstart_concepts_tag_08(void) {
     ecs_world_t *world = ecs_init();
     // Create Enemy tag
     ecs_entity_t Enemy = ecs_new(world);
@@ -139,7 +117,8 @@ void quickstart_Concepts_Tag_01(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Pair_01(void) {
+
+void quickstart_flecs_quickstart_concepts_pair_09(void) {
     ecs_world_t *world = ecs_init();
     // Create Likes relationship
     ecs_entity_t Likes = ecs_new(world);
@@ -158,7 +137,8 @@ void quickstart_Concepts_Pair_01(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Pair_02(void) {
+
+void quickstart_flecs_quickstart_concepts_pair_10(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t Likes = ecs_new(world);
     ecs_entity_t Bob = ecs_new(world);
@@ -167,7 +147,8 @@ void quickstart_Concepts_Pair_02(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Pair_03(void) {
+
+void quickstart_flecs_quickstart_concepts_pair_11(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t Likes = ecs_new(world);
     ecs_entity_t Bob = ecs_new(world);
@@ -180,7 +161,8 @@ void quickstart_Concepts_Pair_03(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Pair_04(void) {
+
+void quickstart_flecs_quickstart_concepts_pair_12(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t Bob = ecs_new(world);
     ecs_entity_t Eats = ecs_new(world);
@@ -198,7 +180,8 @@ void quickstart_Concepts_Pair_04(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Pair_05(void) {
+
+void quickstart_flecs_quickstart_concepts_pair_13(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t Likes = ecs_new(world);
     ecs_entity_t Alice = ecs_new(world);
@@ -209,7 +192,8 @@ void quickstart_Concepts_Pair_05(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Hierarchies_01(void) {
+
+void quickstart_flecs_quickstart_concepts_hierarchies_14(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t parent = ecs_new(world);
 
@@ -222,7 +206,8 @@ void quickstart_Concepts_Hierarchies_01(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Hierarchies_02(void) {
+
+void quickstart_flecs_quickstart_concepts_hierarchies_15(void) {
     ecs_world_t *world = ecs_init();
     ecs_entity_t parent = ecs_entity(world, {
         .name = "parent"
@@ -244,7 +229,8 @@ void quickstart_Concepts_Hierarchies_02(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Hierarchies_03(void) {
+
+void quickstart_flecs_quickstart_concepts_hierarchies_16(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ecs_query_t *q = ecs_query(world, {
@@ -268,7 +254,8 @@ void quickstart_Concepts_Hierarchies_03(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Type_01(void) {
+
+void quickstart_flecs_quickstart_concepts_type_17(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -285,7 +272,8 @@ void quickstart_Concepts_Type_01(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Type_02(void) {
+
+void quickstart_flecs_quickstart_concepts_type_18(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ecs_entity_t e = ecs_new(world);
@@ -299,7 +287,8 @@ void quickstart_Concepts_Type_02(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Type_03(void) {
+
+void quickstart_flecs_quickstart_concepts_type_19(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Gravity);
     // Register singleton component
@@ -314,7 +303,8 @@ void quickstart_Concepts_Type_03(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Type_04(void) {
+
+void quickstart_flecs_quickstart_concepts_type_20(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Gravity);
     ecs_set(world, ecs_id(Gravity), Gravity, {9.81});
@@ -324,7 +314,8 @@ void quickstart_Concepts_Type_04(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Query_01(void) {
+
+void quickstart_flecs_quickstart_concepts_query_21(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ecs_entity_t parent = ecs_new(world);
@@ -355,7 +346,8 @@ void quickstart_Concepts_Query_01(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Query_02(void) {
+
+void quickstart_flecs_quickstart_concepts_query_22(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ecs_query_t *q = ecs_query(world, {
@@ -370,7 +362,8 @@ void quickstart_Concepts_Query_02(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_System_01(void) {
+
+void quickstart_flecs_quickstart_concepts_system_23(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -408,7 +401,8 @@ void quickstart_Concepts_System_01(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Pipeline_01(void) {
+
+void quickstart_flecs_quickstart_concepts_pipeline_24(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -419,7 +413,8 @@ void quickstart_Concepts_Pipeline_01(void) {
 
     test_assert(true);
 }
-void quickstart_Concepts_Observer_01(void) {
+
+void quickstart_flecs_quickstart_concepts_observer_25(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);

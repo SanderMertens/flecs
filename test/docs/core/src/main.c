@@ -9,132 +9,132 @@
 #include <core.h>
 
 // Testsuite 'quickstart'
-void quickstart_Concepts_World_01(void);
-void quickstart_Concepts_Entity_01(void);
-void quickstart_Concepts_Entity_02(void);
-void quickstart_Concepts_Entity_03(void);
-void quickstart_Concepts_Component_01(void);
-void quickstart_Concepts_Component_02(void);
-void quickstart_Concepts_Component_03(void);
-void quickstart_Concepts_Tag_01(void);
-void quickstart_Concepts_Pair_01(void);
-void quickstart_Concepts_Pair_02(void);
-void quickstart_Concepts_Pair_03(void);
-void quickstart_Concepts_Pair_04(void);
-void quickstart_Concepts_Pair_05(void);
-void quickstart_Concepts_Hierarchies_01(void);
-void quickstart_Concepts_Hierarchies_02(void);
-void quickstart_Concepts_Hierarchies_03(void);
-void quickstart_Concepts_Type_01(void);
-void quickstart_Concepts_Type_02(void);
-void quickstart_Concepts_Type_03(void);
-void quickstart_Concepts_Type_04(void);
-void quickstart_Concepts_Query_01(void);
-void quickstart_Concepts_Query_02(void);
-void quickstart_Concepts_System_01(void);
-void quickstart_Concepts_Pipeline_01(void);
-void quickstart_Concepts_Observer_01(void);
+void quickstart_flecs_quickstart_concepts_world_01(void);
+void quickstart_flecs_quickstart_concepts_entity_02(void);
+void quickstart_flecs_quickstart_concepts_entity_03(void);
+void quickstart_flecs_quickstart_concepts_entity_04(void);
+void quickstart_flecs_quickstart_concepts_component_05(void);
+void quickstart_flecs_quickstart_concepts_component_06(void);
+void quickstart_flecs_quickstart_concepts_component_07(void);
+void quickstart_flecs_quickstart_concepts_tag_08(void);
+void quickstart_flecs_quickstart_concepts_pair_09(void);
+void quickstart_flecs_quickstart_concepts_pair_10(void);
+void quickstart_flecs_quickstart_concepts_pair_11(void);
+void quickstart_flecs_quickstart_concepts_pair_12(void);
+void quickstart_flecs_quickstart_concepts_pair_13(void);
+void quickstart_flecs_quickstart_concepts_hierarchies_14(void);
+void quickstart_flecs_quickstart_concepts_hierarchies_15(void);
+void quickstart_flecs_quickstart_concepts_hierarchies_16(void);
+void quickstart_flecs_quickstart_concepts_type_17(void);
+void quickstart_flecs_quickstart_concepts_type_18(void);
+void quickstart_flecs_quickstart_concepts_type_19(void);
+void quickstart_flecs_quickstart_concepts_type_20(void);
+void quickstart_flecs_quickstart_concepts_query_21(void);
+void quickstart_flecs_quickstart_concepts_query_22(void);
+void quickstart_flecs_quickstart_concepts_system_23(void);
+void quickstart_flecs_quickstart_concepts_pipeline_24(void);
+void quickstart_flecs_quickstart_concepts_observer_25(void);
 
 bake_test_case quickstart_testcases[] = {
     {
-        "Concepts_World_01",
-        quickstart_Concepts_World_01
+        "flecs_quickstart_concepts_world_01",
+        quickstart_flecs_quickstart_concepts_world_01
     },
     {
-        "Concepts_Entity_01",
-        quickstart_Concepts_Entity_01
+        "flecs_quickstart_concepts_entity_02",
+        quickstart_flecs_quickstart_concepts_entity_02
     },
     {
-        "Concepts_Entity_02",
-        quickstart_Concepts_Entity_02
+        "flecs_quickstart_concepts_entity_03",
+        quickstart_flecs_quickstart_concepts_entity_03
     },
     {
-        "Concepts_Entity_03",
-        quickstart_Concepts_Entity_03
+        "flecs_quickstart_concepts_entity_04",
+        quickstart_flecs_quickstart_concepts_entity_04
     },
     {
-        "Concepts_Component_01",
-        quickstart_Concepts_Component_01
+        "flecs_quickstart_concepts_component_05",
+        quickstart_flecs_quickstart_concepts_component_05
     },
     {
-        "Concepts_Component_02",
-        quickstart_Concepts_Component_02
+        "flecs_quickstart_concepts_component_06",
+        quickstart_flecs_quickstart_concepts_component_06
     },
     {
-        "Concepts_Component_03",
-        quickstart_Concepts_Component_03
+        "flecs_quickstart_concepts_component_07",
+        quickstart_flecs_quickstart_concepts_component_07
     },
     {
-        "Concepts_Tag_01",
-        quickstart_Concepts_Tag_01
+        "flecs_quickstart_concepts_tag_08",
+        quickstart_flecs_quickstart_concepts_tag_08
     },
     {
-        "Concepts_Pair_01",
-        quickstart_Concepts_Pair_01
+        "flecs_quickstart_concepts_pair_09",
+        quickstart_flecs_quickstart_concepts_pair_09
     },
     {
-        "Concepts_Pair_02",
-        quickstart_Concepts_Pair_02
+        "flecs_quickstart_concepts_pair_10",
+        quickstart_flecs_quickstart_concepts_pair_10
     },
     {
-        "Concepts_Pair_03",
-        quickstart_Concepts_Pair_03
+        "flecs_quickstart_concepts_pair_11",
+        quickstart_flecs_quickstart_concepts_pair_11
     },
     {
-        "Concepts_Pair_04",
-        quickstart_Concepts_Pair_04
+        "flecs_quickstart_concepts_pair_12",
+        quickstart_flecs_quickstart_concepts_pair_12
     },
     {
-        "Concepts_Pair_05",
-        quickstart_Concepts_Pair_05
+        "flecs_quickstart_concepts_pair_13",
+        quickstart_flecs_quickstart_concepts_pair_13
     },
     {
-        "Concepts_Hierarchies_01",
-        quickstart_Concepts_Hierarchies_01
+        "flecs_quickstart_concepts_hierarchies_14",
+        quickstart_flecs_quickstart_concepts_hierarchies_14
     },
     {
-        "Concepts_Hierarchies_02",
-        quickstart_Concepts_Hierarchies_02
+        "flecs_quickstart_concepts_hierarchies_15",
+        quickstart_flecs_quickstart_concepts_hierarchies_15
     },
     {
-        "Concepts_Hierarchies_03",
-        quickstart_Concepts_Hierarchies_03
+        "flecs_quickstart_concepts_hierarchies_16",
+        quickstart_flecs_quickstart_concepts_hierarchies_16
     },
     {
-        "Concepts_Type_01",
-        quickstart_Concepts_Type_01
+        "flecs_quickstart_concepts_type_17",
+        quickstart_flecs_quickstart_concepts_type_17
     },
     {
-        "Concepts_Type_02",
-        quickstart_Concepts_Type_02
+        "flecs_quickstart_concepts_type_18",
+        quickstart_flecs_quickstart_concepts_type_18
     },
     {
-        "Concepts_Type_03",
-        quickstart_Concepts_Type_03
+        "flecs_quickstart_concepts_type_19",
+        quickstart_flecs_quickstart_concepts_type_19
     },
     {
-        "Concepts_Type_04",
-        quickstart_Concepts_Type_04
+        "flecs_quickstart_concepts_type_20",
+        quickstart_flecs_quickstart_concepts_type_20
     },
     {
-        "Concepts_Query_01",
-        quickstart_Concepts_Query_01
+        "flecs_quickstart_concepts_query_21",
+        quickstart_flecs_quickstart_concepts_query_21
     },
     {
-        "Concepts_Query_02",
-        quickstart_Concepts_Query_02
+        "flecs_quickstart_concepts_query_22",
+        quickstart_flecs_quickstart_concepts_query_22
     },
     {
-        "Concepts_System_01",
-        quickstart_Concepts_System_01
+        "flecs_quickstart_concepts_system_23",
+        quickstart_flecs_quickstart_concepts_system_23
     },
     {
-        "Concepts_Pipeline_01",
-        quickstart_Concepts_Pipeline_01
+        "flecs_quickstart_concepts_pipeline_24",
+        quickstart_flecs_quickstart_concepts_pipeline_24
     },
     {
-        "Concepts_Observer_01",
-        quickstart_Concepts_Observer_01
+        "flecs_quickstart_concepts_observer_25",
+        quickstart_flecs_quickstart_concepts_observer_25
     }
 };
 

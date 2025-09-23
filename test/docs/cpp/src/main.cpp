@@ -9,497 +9,497 @@
 #include <cpp.h>
 
 // Testsuite 'quickstart'
-void quickstart_Concepts_World_01(void);
-void quickstart_Concepts_Entity_01(void);
-void quickstart_Concepts_Entity_02(void);
-void quickstart_Concepts_Entity_03(void);
-void quickstart_Concepts_Component_01(void);
-void quickstart_Concepts_Component_02(void);
-void quickstart_Concepts_Component_03(void);
-void quickstart_Concepts_Tag_01(void);
-void quickstart_Concepts_Pair_01(void);
-void quickstart_Concepts_Pair_02(void);
-void quickstart_Concepts_Pair_03(void);
-void quickstart_Concepts_Pair_04(void);
-void quickstart_Concepts_Pair_05(void);
-void quickstart_Concepts_Hierarchies_01(void);
-void quickstart_Concepts_Hierarchies_02(void);
-void quickstart_Concepts_Hierarchies_03(void);
-void quickstart_Concepts_Type_01(void);
-void quickstart_Concepts_Type_02(void);
-void quickstart_Concepts_Type_03(void);
-void quickstart_Concepts_Type_04(void);
-void quickstart_Concepts_Query_01(void);
-void quickstart_Concepts_Query_02(void);
-void quickstart_Concepts_System_01(void);
-void quickstart_Concepts_System_02(void);
-void quickstart_Concepts_Pipeline_01(void);
-void quickstart_Concepts_Observer_01(void);
-void quickstart_Concepts_Module_01(void);
+void quickstart_flecs_quickstart_concepts_world_01(void);
+void quickstart_flecs_quickstart_concepts_entity_02(void);
+void quickstart_flecs_quickstart_concepts_entity_03(void);
+void quickstart_flecs_quickstart_concepts_entity_04(void);
+void quickstart_flecs_quickstart_concepts_component_05(void);
+void quickstart_flecs_quickstart_concepts_component_06(void);
+void quickstart_flecs_quickstart_concepts_component_07(void);
+void quickstart_flecs_quickstart_concepts_tag_08(void);
+void quickstart_flecs_quickstart_concepts_pair_09(void);
+void quickstart_flecs_quickstart_concepts_pair_10(void);
+void quickstart_flecs_quickstart_concepts_pair_11(void);
+void quickstart_flecs_quickstart_concepts_pair_12(void);
+void quickstart_flecs_quickstart_concepts_pair_13(void);
+void quickstart_flecs_quickstart_concepts_hierarchies_14(void);
+void quickstart_flecs_quickstart_concepts_hierarchies_15(void);
+void quickstart_flecs_quickstart_concepts_hierarchies_16(void);
+void quickstart_flecs_quickstart_concepts_type_17(void);
+void quickstart_flecs_quickstart_concepts_type_18(void);
+void quickstart_flecs_quickstart_concepts_type_19(void);
+void quickstart_flecs_quickstart_concepts_type_20(void);
+void quickstart_flecs_quickstart_concepts_query_21(void);
+void quickstart_flecs_quickstart_concepts_query_22(void);
+void quickstart_flecs_quickstart_concepts_system_23(void);
+void quickstart_flecs_quickstart_concepts_system_24(void);
+void quickstart_flecs_quickstart_concepts_pipeline_25(void);
+void quickstart_flecs_quickstart_concepts_observer_26(void);
+void quickstart_flecs_quickstart_concepts_module_27(void);
 
 // Testsuite 'componenttraits'
-void componenttraits_CanToggle_trait_01(void);
-void componenttraits_Cleanup_traits_01(void);
-void componenttraits_Cleanup_traits_02(void);
-void componenttraits_Cleanup_traits_03(void);
-void componenttraits_Cleanup_traits_Examples_OnDelete_Remove_01(void);
-void componenttraits_Cleanup_traits_Examples_OnDelete_Delete_01(void);
-void componenttraits_Cleanup_traits_Examples_OnDeleteTarget_Delete_01(void);
-void componenttraits_Cleanup_traits_Cleanup_order_01(void);
-void componenttraits_DontFragment_trait_01(void);
-void componenttraits_Exclusive_trait_01(void);
-void componenttraits_Exclusive_trait_02(void);
-void componenttraits_Final_trait_01(void);
-void componenttraits_Inheritable_trait_01(void);
-void componenttraits_OneOf_trait_01(void);
-void componenttraits_OneOf_trait_02(void);
-void componenttraits_OnInstantiate_trait_Override_01(void);
-void componenttraits_OnInstantiate_trait_Inherit_01(void);
-void componenttraits_OnInstantiate_trait_DontInherit_01(void);
-void componenttraits_OrderedChildren_trait_01(void);
-void componenttraits_PairIsTag_trait_01(void);
-void componenttraits_PairIsTag_trait_02(void);
-void componenttraits_Relationship_trait_01(void);
-void componenttraits_Relationship_trait_02(void);
-void componenttraits_Singleton_trait_01(void);
-void componenttraits_Singleton_trait_02(void);
-void componenttraits_Sparse_trait_01(void);
-void componenttraits_Symmetric_trait_01(void);
-void componenttraits_Target_trait_01(void);
-void componenttraits_Trait_trait_01(void);
-void componenttraits_Transitive_trait_01(void);
-void componenttraits_Transitive_trait_02(void);
-void componenttraits_With_trait_01(void);
-void componenttraits_With_trait_02(void);
+void componenttraits_component_traits_cantoggle_trait_01(void);
+void componenttraits_component_traits_cleanup_traits_02(void);
+void componenttraits_component_traits_cleanup_traits_03(void);
+void componenttraits_component_traits_cleanup_traits_04(void);
+void componenttraits_component_traits_cleanup_traits_examples_ondelete_remove_05(void);
+void componenttraits_component_traits_cleanup_traits_examples_ondelete_delete_06(void);
+void componenttraits_component_traits_cleanup_traits_examples_ondeletetarget_delete_07(void);
+void componenttraits_component_traits_cleanup_traits_cleanup_order_08(void);
+void componenttraits_component_traits_dontfragment_trait_09(void);
+void componenttraits_component_traits_exclusive_trait_10(void);
+void componenttraits_component_traits_exclusive_trait_11(void);
+void componenttraits_component_traits_final_trait_12(void);
+void componenttraits_component_traits_inheritable_trait_13(void);
+void componenttraits_component_traits_oneof_trait_14(void);
+void componenttraits_component_traits_oneof_trait_15(void);
+void componenttraits_component_traits_oninstantiate_trait_override_16(void);
+void componenttraits_component_traits_oninstantiate_trait_inherit_17(void);
+void componenttraits_component_traits_oninstantiate_trait_dontinherit_18(void);
+void componenttraits_component_traits_orderedchildren_trait_19(void);
+void componenttraits_component_traits_pairistag_trait_20(void);
+void componenttraits_component_traits_pairistag_trait_21(void);
+void componenttraits_component_traits_relationship_trait_22(void);
+void componenttraits_component_traits_relationship_trait_23(void);
+void componenttraits_component_traits_singleton_trait_24(void);
+void componenttraits_component_traits_singleton_trait_25(void);
+void componenttraits_component_traits_sparse_trait_26(void);
+void componenttraits_component_traits_symmetric_trait_27(void);
+void componenttraits_component_traits_target_trait_28(void);
+void componenttraits_component_traits_trait_trait_29(void);
+void componenttraits_component_traits_transitive_trait_30(void);
+void componenttraits_component_traits_transitive_trait_31(void);
+void componenttraits_component_traits_with_trait_32(void);
+void componenttraits_component_traits_with_trait_33(void);
 
 // Testsuite 'entitiescomponents'
-void entitiescomponents_Entities_Creation_01(void);
-void entitiescomponents_Entities_Deletion_01(void);
-void entitiescomponents_Entities_Deletion_02(void);
-void entitiescomponents_Entities_Deletion_03(void);
-void entitiescomponents_Entities_Clearing_01(void);
-void entitiescomponents_Entities_Liveliness_Checking_01(void);
-void entitiescomponents_Entities_Liveliness_Checking_02(void);
-void entitiescomponents_Entities_Manual_Ids_01(void);
-void entitiescomponents_Entities_Manual_Versioning_01(void);
-void entitiescomponents_Entities_Ranges_01(void);
-void entitiescomponents_Entities_Ranges_02(void);
-void entitiescomponents_Entities_Ranges_03(void);
-void entitiescomponents_Entities_Names_01(void);
-void entitiescomponents_Entities_Names_02(void);
-void entitiescomponents_Entities_Names_03(void);
-void entitiescomponents_Entities_Names_04(void);
-void entitiescomponents_Entities_Names_05(void);
-void entitiescomponents_Entities_Names_06(void);
-void entitiescomponents_Entities_Names_07(void);
-void entitiescomponents_Entities_Disabling_01(void);
-void entitiescomponents_Entities_Disabling_02(void);
-void entitiescomponents_Entities_Disabling_03(void);
-void entitiescomponents_Entities_Disabling_04(void);
-void entitiescomponents_Components_Hooks_01(void);
-void entitiescomponents_Components_Hooks_02(void);
-void entitiescomponents_Components_Components_have_entity_handles_01(void);
-void entitiescomponents_Components_Components_have_entity_handles_02(void);
-void entitiescomponents_Components_Registration_01(void);
-void entitiescomponents_Components_Registration_02(void);
-void entitiescomponents_Components_Registration_03(void);
-void entitiescomponents_Components_Registration_Runtime_Type_Registration_01(void);
-void entitiescomponents_Components_Registration_Runtime_Type_Registration_02(void);
-void entitiescomponents_Components_Unregistration_01(void);
-void entitiescomponents_Components_Singletons_01(void);
-void entitiescomponents_Components_Singletons_02(void);
-void entitiescomponents_Components_Disabling_01(void);
+void entitiescomponents_entities_and_components_entities_creation_01(void);
+void entitiescomponents_entities_and_components_entities_deletion_02(void);
+void entitiescomponents_entities_and_components_entities_deletion_03(void);
+void entitiescomponents_entities_and_components_entities_deletion_04(void);
+void entitiescomponents_entities_and_components_entities_clearing_05(void);
+void entitiescomponents_entities_and_components_entities_liveliness_checking_06(void);
+void entitiescomponents_entities_and_components_entities_liveliness_checking_07(void);
+void entitiescomponents_entities_and_components_entities_manual_ids_08(void);
+void entitiescomponents_entities_and_components_entities_manual_versioning_09(void);
+void entitiescomponents_entities_and_components_entities_ranges_10(void);
+void entitiescomponents_entities_and_components_entities_ranges_11(void);
+void entitiescomponents_entities_and_components_entities_ranges_12(void);
+void entitiescomponents_entities_and_components_entities_names_13(void);
+void entitiescomponents_entities_and_components_entities_names_14(void);
+void entitiescomponents_entities_and_components_entities_names_15(void);
+void entitiescomponents_entities_and_components_entities_names_16(void);
+void entitiescomponents_entities_and_components_entities_names_17(void);
+void entitiescomponents_entities_and_components_entities_names_18(void);
+void entitiescomponents_entities_and_components_entities_names_19(void);
+void entitiescomponents_entities_and_components_entities_disabling_20(void);
+void entitiescomponents_entities_and_components_entities_disabling_21(void);
+void entitiescomponents_entities_and_components_entities_disabling_22(void);
+void entitiescomponents_entities_and_components_entities_disabling_23(void);
+void entitiescomponents_entities_and_components_components_hooks_24(void);
+void entitiescomponents_entities_and_components_components_hooks_25(void);
+void entitiescomponents_entities_and_components_components_components_have_entity_handles_26(void);
+void entitiescomponents_entities_and_components_components_components_have_entity_handles_27(void);
+void entitiescomponents_entities_and_components_components_registration_28(void);
+void entitiescomponents_entities_and_components_components_registration_29(void);
+void entitiescomponents_entities_and_components_components_registration_30(void);
+void entitiescomponents_entities_and_components_components_registration_runtime_type_registration_31(void);
+void entitiescomponents_entities_and_components_components_registration_runtime_type_registration_32(void);
+void entitiescomponents_entities_and_components_components_unregistration_33(void);
+void entitiescomponents_entities_and_components_components_singletons_34(void);
+void entitiescomponents_entities_and_components_components_singletons_35(void);
+void entitiescomponents_entities_and_components_components_disabling_36(void);
 
 bake_test_case quickstart_testcases[] = {
     {
-        "Concepts_World_01",
-        quickstart_Concepts_World_01
+        "flecs_quickstart_concepts_world_01",
+        quickstart_flecs_quickstart_concepts_world_01
     },
     {
-        "Concepts_Entity_01",
-        quickstart_Concepts_Entity_01
+        "flecs_quickstart_concepts_entity_02",
+        quickstart_flecs_quickstart_concepts_entity_02
     },
     {
-        "Concepts_Entity_02",
-        quickstart_Concepts_Entity_02
+        "flecs_quickstart_concepts_entity_03",
+        quickstart_flecs_quickstart_concepts_entity_03
     },
     {
-        "Concepts_Entity_03",
-        quickstart_Concepts_Entity_03
+        "flecs_quickstart_concepts_entity_04",
+        quickstart_flecs_quickstart_concepts_entity_04
     },
     {
-        "Concepts_Component_01",
-        quickstart_Concepts_Component_01
+        "flecs_quickstart_concepts_component_05",
+        quickstart_flecs_quickstart_concepts_component_05
     },
     {
-        "Concepts_Component_02",
-        quickstart_Concepts_Component_02
+        "flecs_quickstart_concepts_component_06",
+        quickstart_flecs_quickstart_concepts_component_06
     },
     {
-        "Concepts_Component_03",
-        quickstart_Concepts_Component_03
+        "flecs_quickstart_concepts_component_07",
+        quickstart_flecs_quickstart_concepts_component_07
     },
     {
-        "Concepts_Tag_01",
-        quickstart_Concepts_Tag_01
+        "flecs_quickstart_concepts_tag_08",
+        quickstart_flecs_quickstart_concepts_tag_08
     },
     {
-        "Concepts_Pair_01",
-        quickstart_Concepts_Pair_01
+        "flecs_quickstart_concepts_pair_09",
+        quickstart_flecs_quickstart_concepts_pair_09
     },
     {
-        "Concepts_Pair_02",
-        quickstart_Concepts_Pair_02
+        "flecs_quickstart_concepts_pair_10",
+        quickstart_flecs_quickstart_concepts_pair_10
     },
     {
-        "Concepts_Pair_03",
-        quickstart_Concepts_Pair_03
+        "flecs_quickstart_concepts_pair_11",
+        quickstart_flecs_quickstart_concepts_pair_11
     },
     {
-        "Concepts_Pair_04",
-        quickstart_Concepts_Pair_04
+        "flecs_quickstart_concepts_pair_12",
+        quickstart_flecs_quickstart_concepts_pair_12
     },
     {
-        "Concepts_Pair_05",
-        quickstart_Concepts_Pair_05
+        "flecs_quickstart_concepts_pair_13",
+        quickstart_flecs_quickstart_concepts_pair_13
     },
     {
-        "Concepts_Hierarchies_01",
-        quickstart_Concepts_Hierarchies_01
+        "flecs_quickstart_concepts_hierarchies_14",
+        quickstart_flecs_quickstart_concepts_hierarchies_14
     },
     {
-        "Concepts_Hierarchies_02",
-        quickstart_Concepts_Hierarchies_02
+        "flecs_quickstart_concepts_hierarchies_15",
+        quickstart_flecs_quickstart_concepts_hierarchies_15
     },
     {
-        "Concepts_Hierarchies_03",
-        quickstart_Concepts_Hierarchies_03
+        "flecs_quickstart_concepts_hierarchies_16",
+        quickstart_flecs_quickstart_concepts_hierarchies_16
     },
     {
-        "Concepts_Type_01",
-        quickstart_Concepts_Type_01
+        "flecs_quickstart_concepts_type_17",
+        quickstart_flecs_quickstart_concepts_type_17
     },
     {
-        "Concepts_Type_02",
-        quickstart_Concepts_Type_02
+        "flecs_quickstart_concepts_type_18",
+        quickstart_flecs_quickstart_concepts_type_18
     },
     {
-        "Concepts_Type_03",
-        quickstart_Concepts_Type_03
+        "flecs_quickstart_concepts_type_19",
+        quickstart_flecs_quickstart_concepts_type_19
     },
     {
-        "Concepts_Type_04",
-        quickstart_Concepts_Type_04
+        "flecs_quickstart_concepts_type_20",
+        quickstart_flecs_quickstart_concepts_type_20
     },
     {
-        "Concepts_Query_01",
-        quickstart_Concepts_Query_01
+        "flecs_quickstart_concepts_query_21",
+        quickstart_flecs_quickstart_concepts_query_21
     },
     {
-        "Concepts_Query_02",
-        quickstart_Concepts_Query_02
+        "flecs_quickstart_concepts_query_22",
+        quickstart_flecs_quickstart_concepts_query_22
     },
     {
-        "Concepts_System_01",
-        quickstart_Concepts_System_01
+        "flecs_quickstart_concepts_system_23",
+        quickstart_flecs_quickstart_concepts_system_23
     },
     {
-        "Concepts_System_02",
-        quickstart_Concepts_System_02
+        "flecs_quickstart_concepts_system_24",
+        quickstart_flecs_quickstart_concepts_system_24
     },
     {
-        "Concepts_Pipeline_01",
-        quickstart_Concepts_Pipeline_01
+        "flecs_quickstart_concepts_pipeline_25",
+        quickstart_flecs_quickstart_concepts_pipeline_25
     },
     {
-        "Concepts_Observer_01",
-        quickstart_Concepts_Observer_01
+        "flecs_quickstart_concepts_observer_26",
+        quickstart_flecs_quickstart_concepts_observer_26
     },
     {
-        "Concepts_Module_01",
-        quickstart_Concepts_Module_01
+        "flecs_quickstart_concepts_module_27",
+        quickstart_flecs_quickstart_concepts_module_27
     }
 };
 
 bake_test_case componenttraits_testcases[] = {
     {
-        "CanToggle_trait_01",
-        componenttraits_CanToggle_trait_01
+        "component_traits_cantoggle_trait_01",
+        componenttraits_component_traits_cantoggle_trait_01
     },
     {
-        "Cleanup_traits_01",
-        componenttraits_Cleanup_traits_01
+        "component_traits_cleanup_traits_02",
+        componenttraits_component_traits_cleanup_traits_02
     },
     {
-        "Cleanup_traits_02",
-        componenttraits_Cleanup_traits_02
+        "component_traits_cleanup_traits_03",
+        componenttraits_component_traits_cleanup_traits_03
     },
     {
-        "Cleanup_traits_03",
-        componenttraits_Cleanup_traits_03
+        "component_traits_cleanup_traits_04",
+        componenttraits_component_traits_cleanup_traits_04
     },
     {
-        "Cleanup_traits_Examples_OnDelete_Remove_01",
-        componenttraits_Cleanup_traits_Examples_OnDelete_Remove_01
+        "component_traits_cleanup_traits_examples_ondelete_remove_05",
+        componenttraits_component_traits_cleanup_traits_examples_ondelete_remove_05
     },
     {
-        "Cleanup_traits_Examples_OnDelete_Delete_01",
-        componenttraits_Cleanup_traits_Examples_OnDelete_Delete_01
+        "component_traits_cleanup_traits_examples_ondelete_delete_06",
+        componenttraits_component_traits_cleanup_traits_examples_ondelete_delete_06
     },
     {
-        "Cleanup_traits_Examples_OnDeleteTarget_Delete_01",
-        componenttraits_Cleanup_traits_Examples_OnDeleteTarget_Delete_01
+        "component_traits_cleanup_traits_examples_ondeletetarget_delete_07",
+        componenttraits_component_traits_cleanup_traits_examples_ondeletetarget_delete_07
     },
     {
-        "Cleanup_traits_Cleanup_order_01",
-        componenttraits_Cleanup_traits_Cleanup_order_01
+        "component_traits_cleanup_traits_cleanup_order_08",
+        componenttraits_component_traits_cleanup_traits_cleanup_order_08
     },
     {
-        "DontFragment_trait_01",
-        componenttraits_DontFragment_trait_01
+        "component_traits_dontfragment_trait_09",
+        componenttraits_component_traits_dontfragment_trait_09
     },
     {
-        "Exclusive_trait_01",
-        componenttraits_Exclusive_trait_01
+        "component_traits_exclusive_trait_10",
+        componenttraits_component_traits_exclusive_trait_10
     },
     {
-        "Exclusive_trait_02",
-        componenttraits_Exclusive_trait_02
+        "component_traits_exclusive_trait_11",
+        componenttraits_component_traits_exclusive_trait_11
     },
     {
-        "Final_trait_01",
-        componenttraits_Final_trait_01
+        "component_traits_final_trait_12",
+        componenttraits_component_traits_final_trait_12
     },
     {
-        "Inheritable_trait_01",
-        componenttraits_Inheritable_trait_01
+        "component_traits_inheritable_trait_13",
+        componenttraits_component_traits_inheritable_trait_13
     },
     {
-        "OneOf_trait_01",
-        componenttraits_OneOf_trait_01
+        "component_traits_oneof_trait_14",
+        componenttraits_component_traits_oneof_trait_14
     },
     {
-        "OneOf_trait_02",
-        componenttraits_OneOf_trait_02
+        "component_traits_oneof_trait_15",
+        componenttraits_component_traits_oneof_trait_15
     },
     {
-        "OnInstantiate_trait_Override_01",
-        componenttraits_OnInstantiate_trait_Override_01
+        "component_traits_oninstantiate_trait_override_16",
+        componenttraits_component_traits_oninstantiate_trait_override_16
     },
     {
-        "OnInstantiate_trait_Inherit_01",
-        componenttraits_OnInstantiate_trait_Inherit_01
+        "component_traits_oninstantiate_trait_inherit_17",
+        componenttraits_component_traits_oninstantiate_trait_inherit_17
     },
     {
-        "OnInstantiate_trait_DontInherit_01",
-        componenttraits_OnInstantiate_trait_DontInherit_01
+        "component_traits_oninstantiate_trait_dontinherit_18",
+        componenttraits_component_traits_oninstantiate_trait_dontinherit_18
     },
     {
-        "OrderedChildren_trait_01",
-        componenttraits_OrderedChildren_trait_01
+        "component_traits_orderedchildren_trait_19",
+        componenttraits_component_traits_orderedchildren_trait_19
     },
     {
-        "PairIsTag_trait_01",
-        componenttraits_PairIsTag_trait_01
+        "component_traits_pairistag_trait_20",
+        componenttraits_component_traits_pairistag_trait_20
     },
     {
-        "PairIsTag_trait_02",
-        componenttraits_PairIsTag_trait_02
+        "component_traits_pairistag_trait_21",
+        componenttraits_component_traits_pairistag_trait_21
     },
     {
-        "Relationship_trait_01",
-        componenttraits_Relationship_trait_01
+        "component_traits_relationship_trait_22",
+        componenttraits_component_traits_relationship_trait_22
     },
     {
-        "Relationship_trait_02",
-        componenttraits_Relationship_trait_02
+        "component_traits_relationship_trait_23",
+        componenttraits_component_traits_relationship_trait_23
     },
     {
-        "Singleton_trait_01",
-        componenttraits_Singleton_trait_01
+        "component_traits_singleton_trait_24",
+        componenttraits_component_traits_singleton_trait_24
     },
     {
-        "Singleton_trait_02",
-        componenttraits_Singleton_trait_02
+        "component_traits_singleton_trait_25",
+        componenttraits_component_traits_singleton_trait_25
     },
     {
-        "Sparse_trait_01",
-        componenttraits_Sparse_trait_01
+        "component_traits_sparse_trait_26",
+        componenttraits_component_traits_sparse_trait_26
     },
     {
-        "Symmetric_trait_01",
-        componenttraits_Symmetric_trait_01
+        "component_traits_symmetric_trait_27",
+        componenttraits_component_traits_symmetric_trait_27
     },
     {
-        "Target_trait_01",
-        componenttraits_Target_trait_01
+        "component_traits_target_trait_28",
+        componenttraits_component_traits_target_trait_28
     },
     {
-        "Trait_trait_01",
-        componenttraits_Trait_trait_01
+        "component_traits_trait_trait_29",
+        componenttraits_component_traits_trait_trait_29
     },
     {
-        "Transitive_trait_01",
-        componenttraits_Transitive_trait_01
+        "component_traits_transitive_trait_30",
+        componenttraits_component_traits_transitive_trait_30
     },
     {
-        "Transitive_trait_02",
-        componenttraits_Transitive_trait_02
+        "component_traits_transitive_trait_31",
+        componenttraits_component_traits_transitive_trait_31
     },
     {
-        "With_trait_01",
-        componenttraits_With_trait_01
+        "component_traits_with_trait_32",
+        componenttraits_component_traits_with_trait_32
     },
     {
-        "With_trait_02",
-        componenttraits_With_trait_02
+        "component_traits_with_trait_33",
+        componenttraits_component_traits_with_trait_33
     }
 };
 
 bake_test_case entitiescomponents_testcases[] = {
     {
-        "Entities_Creation_01",
-        entitiescomponents_Entities_Creation_01
+        "entities_and_components_entities_creation_01",
+        entitiescomponents_entities_and_components_entities_creation_01
     },
     {
-        "Entities_Deletion_01",
-        entitiescomponents_Entities_Deletion_01
+        "entities_and_components_entities_deletion_02",
+        entitiescomponents_entities_and_components_entities_deletion_02
     },
     {
-        "Entities_Deletion_02",
-        entitiescomponents_Entities_Deletion_02
+        "entities_and_components_entities_deletion_03",
+        entitiescomponents_entities_and_components_entities_deletion_03
     },
     {
-        "Entities_Deletion_03",
-        entitiescomponents_Entities_Deletion_03
+        "entities_and_components_entities_deletion_04",
+        entitiescomponents_entities_and_components_entities_deletion_04
     },
     {
-        "Entities_Clearing_01",
-        entitiescomponents_Entities_Clearing_01
+        "entities_and_components_entities_clearing_05",
+        entitiescomponents_entities_and_components_entities_clearing_05
     },
     {
-        "Entities_Liveliness_Checking_01",
-        entitiescomponents_Entities_Liveliness_Checking_01
+        "entities_and_components_entities_liveliness_checking_06",
+        entitiescomponents_entities_and_components_entities_liveliness_checking_06
     },
     {
-        "Entities_Liveliness_Checking_02",
-        entitiescomponents_Entities_Liveliness_Checking_02
+        "entities_and_components_entities_liveliness_checking_07",
+        entitiescomponents_entities_and_components_entities_liveliness_checking_07
     },
     {
-        "Entities_Manual_Ids_01",
-        entitiescomponents_Entities_Manual_Ids_01
+        "entities_and_components_entities_manual_ids_08",
+        entitiescomponents_entities_and_components_entities_manual_ids_08
     },
     {
-        "Entities_Manual_Versioning_01",
-        entitiescomponents_Entities_Manual_Versioning_01
+        "entities_and_components_entities_manual_versioning_09",
+        entitiescomponents_entities_and_components_entities_manual_versioning_09
     },
     {
-        "Entities_Ranges_01",
-        entitiescomponents_Entities_Ranges_01
+        "entities_and_components_entities_ranges_10",
+        entitiescomponents_entities_and_components_entities_ranges_10
     },
     {
-        "Entities_Ranges_02",
-        entitiescomponents_Entities_Ranges_02
+        "entities_and_components_entities_ranges_11",
+        entitiescomponents_entities_and_components_entities_ranges_11
     },
     {
-        "Entities_Ranges_03",
-        entitiescomponents_Entities_Ranges_03
+        "entities_and_components_entities_ranges_12",
+        entitiescomponents_entities_and_components_entities_ranges_12
     },
     {
-        "Entities_Names_01",
-        entitiescomponents_Entities_Names_01
+        "entities_and_components_entities_names_13",
+        entitiescomponents_entities_and_components_entities_names_13
     },
     {
-        "Entities_Names_02",
-        entitiescomponents_Entities_Names_02
+        "entities_and_components_entities_names_14",
+        entitiescomponents_entities_and_components_entities_names_14
     },
     {
-        "Entities_Names_03",
-        entitiescomponents_Entities_Names_03
+        "entities_and_components_entities_names_15",
+        entitiescomponents_entities_and_components_entities_names_15
     },
     {
-        "Entities_Names_04",
-        entitiescomponents_Entities_Names_04
+        "entities_and_components_entities_names_16",
+        entitiescomponents_entities_and_components_entities_names_16
     },
     {
-        "Entities_Names_05",
-        entitiescomponents_Entities_Names_05
+        "entities_and_components_entities_names_17",
+        entitiescomponents_entities_and_components_entities_names_17
     },
     {
-        "Entities_Names_06",
-        entitiescomponents_Entities_Names_06
+        "entities_and_components_entities_names_18",
+        entitiescomponents_entities_and_components_entities_names_18
     },
     {
-        "Entities_Names_07",
-        entitiescomponents_Entities_Names_07
+        "entities_and_components_entities_names_19",
+        entitiescomponents_entities_and_components_entities_names_19
     },
     {
-        "Entities_Disabling_01",
-        entitiescomponents_Entities_Disabling_01
+        "entities_and_components_entities_disabling_20",
+        entitiescomponents_entities_and_components_entities_disabling_20
     },
     {
-        "Entities_Disabling_02",
-        entitiescomponents_Entities_Disabling_02
+        "entities_and_components_entities_disabling_21",
+        entitiescomponents_entities_and_components_entities_disabling_21
     },
     {
-        "Entities_Disabling_03",
-        entitiescomponents_Entities_Disabling_03
+        "entities_and_components_entities_disabling_22",
+        entitiescomponents_entities_and_components_entities_disabling_22
     },
     {
-        "Entities_Disabling_04",
-        entitiescomponents_Entities_Disabling_04
+        "entities_and_components_entities_disabling_23",
+        entitiescomponents_entities_and_components_entities_disabling_23
     },
     {
-        "Components_Hooks_01",
-        entitiescomponents_Components_Hooks_01
+        "entities_and_components_components_hooks_24",
+        entitiescomponents_entities_and_components_components_hooks_24
     },
     {
-        "Components_Hooks_02",
-        entitiescomponents_Components_Hooks_02
+        "entities_and_components_components_hooks_25",
+        entitiescomponents_entities_and_components_components_hooks_25
     },
     {
-        "Components_Components_have_entity_handles_01",
-        entitiescomponents_Components_Components_have_entity_handles_01
+        "entities_and_components_components_components_have_entity_handles_26",
+        entitiescomponents_entities_and_components_components_components_have_entity_handles_26
     },
     {
-        "Components_Components_have_entity_handles_02",
-        entitiescomponents_Components_Components_have_entity_handles_02
+        "entities_and_components_components_components_have_entity_handles_27",
+        entitiescomponents_entities_and_components_components_components_have_entity_handles_27
     },
     {
-        "Components_Registration_01",
-        entitiescomponents_Components_Registration_01
+        "entities_and_components_components_registration_28",
+        entitiescomponents_entities_and_components_components_registration_28
     },
     {
-        "Components_Registration_02",
-        entitiescomponents_Components_Registration_02
+        "entities_and_components_components_registration_29",
+        entitiescomponents_entities_and_components_components_registration_29
     },
     {
-        "Components_Registration_03",
-        entitiescomponents_Components_Registration_03
+        "entities_and_components_components_registration_30",
+        entitiescomponents_entities_and_components_components_registration_30
     },
     {
-        "Components_Registration_Runtime_Type_Registration_01",
-        entitiescomponents_Components_Registration_Runtime_Type_Registration_01
+        "entities_and_components_components_registration_runtime_type_registration_31",
+        entitiescomponents_entities_and_components_components_registration_runtime_type_registration_31
     },
     {
-        "Components_Registration_Runtime_Type_Registration_02",
-        entitiescomponents_Components_Registration_Runtime_Type_Registration_02
+        "entities_and_components_components_registration_runtime_type_registration_32",
+        entitiescomponents_entities_and_components_components_registration_runtime_type_registration_32
     },
     {
-        "Components_Unregistration_01",
-        entitiescomponents_Components_Unregistration_01
+        "entities_and_components_components_unregistration_33",
+        entitiescomponents_entities_and_components_components_unregistration_33
     },
     {
-        "Components_Singletons_01",
-        entitiescomponents_Components_Singletons_01
+        "entities_and_components_components_singletons_34",
+        entitiescomponents_entities_and_components_components_singletons_34
     },
     {
-        "Components_Singletons_02",
-        entitiescomponents_Components_Singletons_02
+        "entities_and_components_components_singletons_35",
+        entitiescomponents_entities_and_components_components_singletons_35
     },
     {
-        "Components_Disabling_01",
-        entitiescomponents_Components_Disabling_01
+        "entities_and_components_components_disabling_36",
+        entitiescomponents_entities_and_components_components_disabling_36
     }
 };
 

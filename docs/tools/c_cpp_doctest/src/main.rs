@@ -17,14 +17,14 @@ fn main() -> anyhow::Result<()> {
     let output_base = args
         .output
         .clone()
-        .unwrap_or_else(|| std::path::PathBuf::from("tmp/doctest/c_cpp"));
+        .unwrap_or_else(|| std::path::PathBuf::from("../../../test/docs"));
 
     // Create args for C generator
     let c_args = CliArgs {
         local: args.local.clone(),
         remote: args.remote.clone(),
         recursive: args.recursive,
-        output: Some(output_base.join("c")),
+        output: Some(output_base.join("core")),
         hide_prefix: args.hide_prefix.clone(),
     };
 

@@ -24,7 +24,7 @@ pub fn generate_test_files(
 
         let file_stem = extract_file_stem(&source_file.source_file)?;
 
-        let content = generate_file_content(source_file, target)?;
+        let content = generate_file_content(&file_stem, source_file, target)?;
 
         let filename = format!("{}{}", file_stem, target.file_extension());
         fs::write(src_dir.join(filename), content)?;
@@ -38,6 +38,7 @@ pub fn generate_test_files(
 
 /// Generate the content for a single test file
 fn generate_file_content(
+    file_stem: &str,
     source_file: &SourceFileSnippets,
     target: LanguageTarget,
 ) -> Result<String> {
@@ -49,20 +50,29 @@ fn generate_file_content(
     );
 
     // Generate function implementations
-    content.push_str(&generate_function_implementations(&source_file.snippets)?);
+    content.push_str(&generate_function_implementations(
+        file_stem,
+        &source_file.snippets,
+    )?);
 
     Ok(content)
 }
 
 /// Generate function implementations for both C and C++
-fn generate_function_implementations(snippets: &[poly_doctest::CodeSnippet]) -> Result<String> {
+fn generate_function_implementations(
+    file_stem: &str,
+    snippets: &[poly_doctest::CodeSnippet],
+) -> Result<String> {
     let mut implementations = Vec::new();
 
     for snippet in snippets {
         let processed_code = process_snippet_code(&snippet.code);
         let indented = indent_code(&processed_code, 4);
 
-        let function = format!("void {}(void) {{\n{}\n}}", snippet.name, indented);
+        let function = format!(
+            "void {}_{}(void) {{\n{}\n}}",
+            file_stem, snippet.name, indented
+        );
 
         implementations.push(function);
     }
