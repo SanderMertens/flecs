@@ -1342,8 +1342,8 @@ e.each_component(|id| {
 </ul>
 </div>
 
-``### Singleton
-A singleton is a single instance of a component that can be retrieved without an entity. The functions for singletons are very similar to the regular API:``
+### Singleton
+A singleton is a single instance of a component that can be retrieved without an entity. The functions for singletons are very similar to the regular API:
 
 <div class="flecs-snippet-tabs">
 <ul>
