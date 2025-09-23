@@ -1246,7 +1246,8 @@ void flecs_component_update_childof_depth(
 
     flecs_component_update_childof_w_depth(world, cr, new_depth);
 }
-#ifdef FLECS_SAFETY_LOCKS
+
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 int32_t flecs_sparse_id_record_lock_inc(
     ecs_component_record_t *idr)

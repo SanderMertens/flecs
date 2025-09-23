@@ -6,7 +6,7 @@
 #ifndef FLECS_ENTITY_H
 #define FLECS_ENTITY_H
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     #define FLECS_SI_INIT(cr_, table_, col_) \
      .si = (ecs_safety_info_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
 #else
@@ -30,7 +30,7 @@
 typedef struct {
     const ecs_type_info_t *ti;
     void *ptr;
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     ecs_safety_info_t si;
 #endif
 } flecs_component_ptr_t;
