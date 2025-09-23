@@ -337,6 +337,8 @@ void Memory_query_memory_with_variables(void);
 void Memory_query_memory_with_monitors(void);
 void Memory_commands_memory(void);
 void Memory_table_memory_histogram(void);
+void Memory_sparse_component_memory(void);
+void Memory_sparse_tag_memory(void);
 
 // Testsuite 'Run'
 void Run_setup(void);
@@ -461,6 +463,7 @@ void Rest_try_query(void);
 void Rest_query(void);
 void Rest_named_query(void);
 void Rest_tables(void);
+void Rest_components(void);
 void Rest_request_commands(void);
 void Rest_request_commands_2_syncs(void);
 void Rest_request_commands_no_frames(void);
@@ -1791,6 +1794,14 @@ bake_test_case Memory_testcases[] = {
     {
         "table_memory_histogram",
         Memory_table_memory_histogram
+    },
+    {
+        "sparse_component_memory",
+        Memory_sparse_component_memory
+    },
+    {
+        "sparse_tag_memory",
+        Memory_sparse_tag_memory
     }
 };
 
@@ -2236,6 +2247,10 @@ bake_test_case Rest_testcases[] = {
     {
         "tables",
         Rest_tables
+    },
+    {
+        "components",
+        Rest_components
     },
     {
         "request_commands",
@@ -2694,7 +2709,7 @@ static bake_test_suite suites[] = {
         "Memory",
         NULL,
         NULL,
-        8,
+        10,
         Memory_testcases
     },
     {
@@ -2747,7 +2762,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        21,
+        22,
         Rest_testcases
     },
     {

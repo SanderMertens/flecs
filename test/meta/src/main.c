@@ -767,6 +767,7 @@ void SerializeEntityToJson_serialize_auto_override_pair_fullpath(void);
 void SerializeEntityToJson_serialize_toggle(void);
 void SerializeEntityToJson_serialize_toggle_pair(void);
 void SerializeEntityToJson_serialize_null_doc_name(void);
+void SerializeEntityToJson_serialize_base_w_invalid_component(void);
 
 // Testsuite 'SerializeIterToJson'
 void SerializeIterToJson_serialize_1_comps_empty(void);
@@ -4096,6 +4097,10 @@ bake_test_case SerializeEntityToJson_testcases[] = {
     {
         "serialize_null_doc_name",
         SerializeEntityToJson_serialize_null_doc_name
+    },
+    {
+        "serialize_base_w_invalid_component",
+        SerializeEntityToJson_serialize_base_w_invalid_component
     }
 };
 
@@ -5595,7 +5600,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        76,
+        77,
         SerializeEntityToJson_testcases
     },
     {

@@ -2259,6 +2259,7 @@
                 "init_create_delete_entities_shrink_fini",
                 "init_create_delete_random_1_entities_shrink_fini",
                 "init_create_delete_random_2_entities_shrink_fini",
+                "recreate_tables_after_shrink",
                 "mini_all_tables_builtin",
                 "mini_all_tables_builtin_after_add",
                 "user_component_not_builtin",

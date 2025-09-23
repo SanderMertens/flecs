@@ -419,3 +419,57 @@ void Memory_table_memory_histogram(void) {
 
     ecs_fini(world);
 }
+
+void Memory_sparse_component_memory(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    {
+        ecs_component_memory_t mem = ecs_component_memory_get(world);
+        test_assert(mem.bytes_sparse_components == 0);
+        test_assert(mem.bytes_sparse_components_unused == 0);
+        test_assert(mem.bytes_sparse_overhead > 0);
+    }
+
+    ecs_new_w(world, Position);
+
+    {
+        ecs_component_memory_t mem = ecs_component_memory_get(world);
+        test_int(mem.bytes_sparse_components, 8);
+        test_assert(mem.bytes_sparse_components_unused > 0);
+        test_assert(mem.bytes_sparse_overhead > 0);
+    }
+
+    ecs_fini(world);
+}
+
+void Memory_sparse_tag_memory(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, ecs_id(Foo), EcsSparse);
+
+    {
+        ecs_component_memory_t mem = ecs_component_memory_get(world);
+        test_assert(mem.bytes_sparse_components == 0);
+        test_assert(mem.bytes_sparse_components_unused == 0);
+        test_assert(mem.bytes_sparse_overhead > 0);
+    }
+
+    ecs_add_id(world, Foo, EcsSparse);
+
+    ecs_new_w(world, Foo);
+
+    {
+        ecs_component_memory_t mem = ecs_component_memory_get(world);
+        test_int(mem.bytes_sparse_components, 0);
+        test_int(mem.bytes_sparse_components_unused, 0);
+        test_assert(mem.bytes_sparse_overhead > 0);
+    }
+
+    ecs_fini(world);
+}

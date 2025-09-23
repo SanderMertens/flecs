@@ -619,6 +619,8 @@
                 "int_to_bool",
                 "bool_to_int",
                 "bool_to_uint",
+                "char",
+                "char_to_int",
                 "add_mul_3_int_literals",
                 "sub_mul_3_int_literals",
                 "div_mul_3_int_literals",
