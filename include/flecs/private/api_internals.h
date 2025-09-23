@@ -49,7 +49,7 @@ typedef struct ecs_table_diff_t {
 } ecs_table_diff_t;
 
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 /** safety information of where the ptr from `get` functions originates from.
  * when component record is null, that means it comes from a table.
  * when table is null, that means it comes from a sparse storage.
@@ -63,11 +63,11 @@ struct ecs_safety_info_t{
 #endif
 
 /* a wrapper around a void* which represents a component pointer. 
- * When FLECS_SAFETY_LOCKS is defined, then this also provides additional safety information about the pointer.
+ * When FLECS_MUT_ALIAS_LOCKS is defined, then this also provides additional safety information about the pointer.
  */
 struct ecs_get_ptr_t{
     void *component_ptr;
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     ecs_safety_info_t si;
 #endif
 };
@@ -407,7 +407,7 @@ FLECS_ALWAYS_INLINE ecs_table_t *flecs_table_traverse_add(
     ecs_id_t *id_ptr,
     ecs_table_diff_t *diff);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 FLECS_API
 FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_begin(

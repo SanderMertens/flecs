@@ -2028,7 +2028,7 @@ ecs_get_ptr_t flecs_record_get_mut_id(
     flecs_component_ptr_t component_ptr = flecs_get_component_ptr(world, r->table, row, cr);
     return (ecs_get_ptr_t) {
         .component_ptr = component_ptr.ptr
-        #ifdef FLECS_SAFETY_LOCKS
+        #ifdef FLECS_MUT_ALIAS_LOCKS
         , .si = component_ptr.si
         #endif  
     };

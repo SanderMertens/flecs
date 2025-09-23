@@ -87,7 +87,7 @@ struct ecs_component_record_t {
      * queried for. */
     int32_t keep_alive;
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     /* lock for when sparse components are read or written to */
     int32_t sparse_lock;
 #endif
@@ -172,7 +172,7 @@ void flecs_component_record_init_exclusive(
     ecs_world_t *world,
     ecs_component_record_t *cr);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc(
     ecs_component_record_t *idr);

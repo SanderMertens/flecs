@@ -429,10 +429,10 @@ jobs:
           bake rebuild --strict -D FLECS_NO_LOG
           bake rebuild --strict --cfg release -D FLECS_NO_LOG
 
-      - name: FLECS_SAFETY_LOCKS
+      - name: FLECS_MUT_ALIAS_LOCKS
         run: |
-          bake rebuild --strict -D FLECS_SAFETY_LOCKS
-          bake rebuild --strict --cfg release -D FLECS_SAFETY_LOCKS
+          bake rebuild --strict -D FLECS_MUT_ALIAS_LOCKS
+          bake rebuild --strict --cfg release -D FLECS_MUT_ALIAS_LOCKS
 
       - name: FLECS_DEFAULT
         run: |
@@ -1109,7 +1109,7 @@ jobs:
           bake/bake setup
 
       - name: build flecs
-        run: bake --cfg sanitize -D FLECS_SAFETY_LOCKS
+        run: bake --cfg sanitize -D FLECS_MUT_ALIAS_LOCKS
 
       - name: run tests
         run: |
