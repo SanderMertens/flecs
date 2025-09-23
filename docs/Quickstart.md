@@ -10,7 +10,7 @@ To use Flecs, copy the [distr/flecs.c](https://raw.githubusercontent.com/SanderM
 
 - When compiling Flecs with `gcc`/`clang`, add `-std=gnu99` to the compiler command. This ensures that addons that rely on time & socket functions are compiled correctly.
 
-- C++ files that use Flecs must be compiled with `-std=c++0x` (C++11) or higher.
+- C++ files that use Flecs must be compiled with `-std=c++17` or higher.
 
 ### Dynamic linking
 To build Flecs as a dynamic library, remove this line from the top of the [distr/flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.h) file:
@@ -122,7 +122,7 @@ The following addons can be configured:
 
 Addon         | Description                                      | Define              |
 --------------|--------------------------------------------------|---------------------|
-[Cpp](/flecs/group__cpp.html)                              | C++11 API                                        | FLECS_CPP           |
+[Cpp](/flecs/group__cpp.html)                              | C++17 API                                        | FLECS_CPP           |
 [Module](/flecs/group__c__addons__module.html)             | Organize game logic into reusable modules        | FLECS_MODULE        |
 [System](/flecs/group__c__addons__system.html)             | Create & run systems                             | FLECS_SYSTEM        |
 [Pipeline](/flecs/group__c__addons__pipeline.html)         | Automatically schedule & multithread systems     | FLECS_PIPELINE      |

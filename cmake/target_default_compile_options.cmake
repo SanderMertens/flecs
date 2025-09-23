@@ -1,7 +1,7 @@
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(FLECS_STRICT "Stricter warning options and Werror" OFF)
@@ -20,7 +20,7 @@ function(target_default_compile_options_cxx THIS)
 
     set_target_properties(${THIS} PROPERTIES
             LINKER_LANGUAGE CXX
-            CXX_STANDARD 11
+            CXX_STANDARD 17
             CXX_STANDARD_REQUIRED ON)
 
 endfunction()
