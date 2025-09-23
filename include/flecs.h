@@ -59,10 +59,6 @@
 #define ecs_ftime_t ecs_float_t
 #endif
 
-/** @def FLECS_LEGACY
- * Define when building for C89
- */
-// #define FLECS_LEGACY
 
 /** @def FLECS_ACCURATE_COUNTERS
  * Define to ensure that global counters used for statistics (such as the
@@ -238,9 +234,9 @@
  * cost of decreased performance. */
 // #define FLECS_LOW_FOOTPRINT
 #ifdef FLECS_LOW_FOOTPRINT
-#define FLECS_HI_COMPONENT_ID (16)
-#define FLECS_HI_ID_RECORD_ID (16)
-#define FLECS_ENTITY_PAGE_BITS (6)
+#define FLECS_HI_COMPONENT_ID 16
+#define FLECS_HI_ID_RECORD_ID 16
+#define FLECS_ENTITY_PAGE_BITS 6
 #define FLECS_USE_OS_ALLOC
 #define FLECS_DEFAULT_TO_UNCACHED_QUERIES
 #endif
@@ -260,7 +256,7 @@
  * that is not a power of two will degrade performance.
  */
 #ifndef FLECS_HI_COMPONENT_ID
-#define FLECS_HI_COMPONENT_ID (256)
+#define FLECS_HI_COMPONENT_ID 256
 #endif
 
 /** @def FLECS_HI_ID_RECORD_ID
@@ -270,7 +266,7 @@
  * lookup, which is slower but more memory efficient.
  */
 #ifndef FLECS_HI_ID_RECORD_ID
-#define FLECS_HI_ID_RECORD_ID (1024)
+#define FLECS_HI_ID_RECORD_ID 1024
 #endif
 
 /** @def FLECS_SPARSE_PAGE_BITS
@@ -279,13 +275,13 @@
  * determines the page size, which is (1 << bits).
  * Lower values decrease memory utilization, at the cost of more allocations. */
 #ifndef FLECS_SPARSE_PAGE_BITS
-#define FLECS_SPARSE_PAGE_BITS (6)
+#define FLECS_SPARSE_PAGE_BITS 6
 #endif
 
 /** @def FLECS_ENTITY_PAGE_BITS
  * Same as FLECS_SPARSE_PAGE_BITS, but for the entity index. */
 #ifndef FLECS_ENTITY_PAGE_BITS
-#define FLECS_ENTITY_PAGE_BITS (10)
+#define FLECS_ENTITY_PAGE_BITS 10
 #endif
 
 /** @def FLECS_USE_OS_ALLOC
@@ -297,18 +293,18 @@
 /** @def FLECS_ID_DESC_MAX
  * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
 #ifndef FLECS_ID_DESC_MAX
-#define FLECS_ID_DESC_MAX (32)
+#define FLECS_ID_DESC_MAX 32
 #endif
 
 /** @def FLECS_EVENT_DESC_MAX
  * Maximum number of events in ecs_observer_desc_t */
 #ifndef FLECS_EVENT_DESC_MAX
-#define FLECS_EVENT_DESC_MAX (8)
+#define FLECS_EVENT_DESC_MAX 8
 #endif
 
 /** @def FLECS_VARIABLE_COUNT_MAX
  * Maximum number of query variables per query */
-#define FLECS_VARIABLE_COUNT_MAX (64)
+#define FLECS_VARIABLE_COUNT_MAX 64
 
 /** @def FLECS_TERM_COUNT_MAX 
  * Maximum number of terms in queries. Should not exceed 64. */
@@ -319,19 +315,19 @@
 /** @def FLECS_TERM_ARG_COUNT_MAX 
  * Maximum number of arguments for a term. */
 #ifndef FLECS_TERM_ARG_COUNT_MAX
-#define FLECS_TERM_ARG_COUNT_MAX (16)
+#define FLECS_TERM_ARG_COUNT_MAX 16
 #endif
 
 /** @def FLECS_QUERY_VARIABLE_COUNT_MAX
  * Maximum number of query variables per query. Should not exceed 128. */
 #ifndef FLECS_QUERY_VARIABLE_COUNT_MAX
-#define FLECS_QUERY_VARIABLE_COUNT_MAX (64)
+#define FLECS_QUERY_VARIABLE_COUNT_MAX 64
 #endif
 
 /** @def FLECS_QUERY_SCOPE_NESTING_MAX
  * Maximum nesting depth of query scopes */
 #ifndef FLECS_QUERY_SCOPE_NESTING_MAX
-#define FLECS_QUERY_SCOPE_NESTING_MAX (8)
+#define FLECS_QUERY_SCOPE_NESTING_MAX 8
 #endif
 
 /** @def FLECS_DAG_DEPTH_MAX
@@ -339,7 +335,7 @@
  * depth larger than this is encountered, a CYCLE_DETECTED panic is thrown.
  */
 #ifndef FLECS_DAG_DEPTH_MAX
-#define FLECS_DAG_DEPTH_MAX (128)
+#define FLECS_DAG_DEPTH_MAX 128
 #endif
 
 /** @} */
@@ -1446,6 +1442,7 @@ typedef struct ecs_event_desc_t {
 typedef struct ecs_build_info_t {
     const char *compiler;           /**< Compiler used to compile flecs */
     const char **addons;            /**< Addons included in build */
+    const char **flags;             /**< Compile time settings */
     const char *version;            /**< Stringified version */
     int16_t version_major;          /**< Major flecs version */
     int16_t version_minor;          /**< Minor flecs version */
