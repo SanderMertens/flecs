@@ -3281,8 +3281,6 @@ bool ecs_is_enabled_id(
  * @return The component pointer, NULL if the entity does not have the component.
  *
  * @see ecs_get_mut_id()
-
- * @see flecs_record_get_mut_id()
  */
 FLECS_API
 FLECS_ALWAYS_INLINE const void* ecs_get_id(
@@ -3305,8 +3303,6 @@ FLECS_ALWAYS_INLINE const void* ecs_get_id(
  * @return The component pointer, NULL if the entity does not have the component.
  * 
  * @see ecs_get_id()
-
- * @see flecs_record_get_mut_id()
  */
 FLECS_API
 FLECS_ALWAYS_INLINE void* ecs_get_mut_id(

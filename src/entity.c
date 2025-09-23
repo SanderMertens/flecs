@@ -117,9 +117,8 @@ ecs_get_ptr_t flecs_get_base_component(
         const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
         if (!tr) {
             if (cr->flags & EcsIdDontFragment) {
-                void *sparse_ptr = flecs_component_sparse_get(world, cr, table, base);
                 ptr = (ecs_get_ptr_t){
-                    .ptr = sparse_ptr,
+                    .ptr = flecs_component_sparse_get(world, cr, table, base),
                     FLECS_SI_INIT(cr, NULL, -1)
                 };
             }
@@ -130,9 +129,8 @@ ecs_get_ptr_t flecs_get_base_component(
             }
         } else {
             if (cr->flags & EcsIdSparse) {
-                void *sparse_ptr = flecs_component_sparse_get(world, cr, table, base);
                 return (ecs_get_ptr_t){
-                    .ptr = sparse_ptr,
+                    .ptr = flecs_component_sparse_get(world, cr, table, base),
                     FLECS_SI_INIT(cr, NULL, -1)
                 };
             } else {
@@ -1958,9 +1956,8 @@ ecs_get_ptr_t flecs_record_get_id(
         return flecs_get_base_component(world, table, component, cr, 0);
     } else {
         if (cr->flags & EcsIdSparse) {
-            void *sparse_ptr = flecs_component_sparse_get(world, cr, table, entity);
             return (ecs_get_ptr_t){
-                .ptr = sparse_ptr,
+                .ptr = flecs_component_sparse_get(world, cr, table, entity),
                 FLECS_SI_INIT(cr, NULL, -1)
             };
         }
