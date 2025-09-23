@@ -278,9 +278,9 @@ void test_table_component_safety_info(void) {
     assert(result.ptr != NULL);
     
     // For table components: table should be set, cr should be NULL, column_index should be valid
-    assert(result.si.table != NULL);
-    assert(result.si.cr == NULL);
-    assert(result.si.column_index >= 0);
+    assert(result.lock_target.table != NULL);
+    assert(result.lock_target.cr == NULL);
+    assert(result.lock_target.column_index >= 0);
     
     ecs_fini(world);
 }
@@ -301,9 +301,9 @@ void test_sparse_fragmenting_safety_info(void) {
     assert(result.ptr != NULL);
     
     // For sparse fragmenting components: cr should be set, table should be NULL, column_index should be -1
-    assert(result.si.cr != NULL);
-    assert(result.si.table == NULL);
-    assert(result.si.column_index == -1);
+    assert(result.lock_target.cr != NULL);
+    assert(result.lock_target.table == NULL);
+    assert(result.lock_target.column_index == -1);
     
     ecs_fini(world);
 }
@@ -324,9 +324,9 @@ void test_sparse_non_fragmenting_safety_info(void) {
     assert(result.ptr != NULL);
 
     // For sparse non-fragmenting components: cr should be set, table should be NULL, column_index should be -1
-    assert(result.si.cr != NULL);
-    assert(result.si.table == NULL);
-    assert(result.si.column_index == -1);
+    assert(result.lock_target.cr != NULL);
+    assert(result.lock_target.table == NULL);
+    assert(result.lock_target.column_index == -1);
     
     ecs_fini(world);
 }
@@ -350,9 +350,9 @@ void test_get_vs_get_mut_safety_info(void) {
     assert(get_mut_result.ptr != NULL);
     
     // Safety info should be the same for owned components
-    assert(get_result.si.table == get_mut_result.si.table);
-    assert(get_result.si.cr == get_mut_result.si.cr);
-    assert(get_result.si.column_index == get_mut_result.si.column_index);
+    assert(get_result.lock_target.table == get_mut_result.lock_target.table);
+    assert(get_result.lock_target.cr == get_mut_result.lock_target.cr);
+    assert(get_result.lock_target.column_index == get_mut_result.lock_target.column_index);
     
     ecs_fini(world);
 }
@@ -372,9 +372,9 @@ void test_null_component_safety_info(void) {
     
     // Should return null pointer and zeroed safety info
     assert(result.ptr == NULL);
-    assert(result.si.table == NULL);
-    assert(result.si.cr == NULL);
-    assert(result.si.column_index == 0);
+    assert(result.lock_target.table == NULL);
+    assert(result.lock_target.cr == NULL);
+    assert(result.lock_target.column_index == 0);
     
     ecs_fini(world);
 }
