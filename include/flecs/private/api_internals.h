@@ -66,7 +66,7 @@ struct ecs_safety_info_t{
  * When FLECS_MUT_ALIAS_LOCKS is defined, then this also provides additional safety information about the pointer.
  */
 struct ecs_get_ptr_t{
-    void *component_ptr;
+    void *ptr;
 #ifdef FLECS_MUT_ALIAS_LOCKS
     ecs_safety_info_t si;
 #endif
