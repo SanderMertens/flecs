@@ -1,0 +1,20 @@
+[package]
+name = "c_cpp_doctest"
+version = "0.1.0"
+edition = "2024"
+description = "C/C++ documentation snippet test generator using poly_doctest"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Indra-db/Flecs-Rust"
+keywords = ["c", "cpp", "documentation", "testing", "code-generation", "snippets"]
+
+[[bin]]
+name = "c-cpp-doctest"
+path = "src/main.rs"
+
+[dependencies]
+poly_doctest = "0.1.0"
+anyhow = "1.0.100"
+regex = "1.11.2"
+clap = { version = "4.5.48", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+thiserror = "2.0.16"

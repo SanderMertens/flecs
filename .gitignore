@@ -20,3 +20,6 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+
+docs/tools/c_cpp_doctest/target
+docs/tools/c_cpp_doctest/Cargo.lock
