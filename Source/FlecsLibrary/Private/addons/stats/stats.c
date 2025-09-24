@@ -253,8 +253,8 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->frame.merge_count, t, world->info.merge_count_total);
     ECS_COUNTER_RECORD(&s->frame.rematch_count, t, world->info.rematch_count_total);
     ECS_COUNTER_RECORD(&s->frame.pipeline_build_count, t, world->info.pipeline_build_count_total);
-    ECS_COUNTER_RECORD(&s->frame.systems_ran, t, world->info.systems_ran_frame);
-    ECS_COUNTER_RECORD(&s->frame.observers_ran, t, world->info.observers_ran_frame);
+    ECS_COUNTER_RECORD(&s->frame.systems_ran, t, world->info.systems_ran_total);
+    ECS_COUNTER_RECORD(&s->frame.observers_ran, t, world->info.observers_ran_total);
     ECS_COUNTER_RECORD(&s->frame.event_emit_count, t, world->event_id);
 
     double delta_world_time = 

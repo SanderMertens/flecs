@@ -576,7 +576,7 @@ int32_t flecs_run_pipeline_ops(
         flecs_run_system(world, s, sys->query->entity, sys, stage_index,
             stage_count, delta_time, NULL);
 
-        ecs_os_linc(&world->info.systems_ran_frame);
+        ecs_os_linc(&world->info.systems_ran_total);
         ran_since_merge++;
 
         if (ran_since_merge == op->count) {

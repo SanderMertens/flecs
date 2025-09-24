@@ -381,7 +381,12 @@
                 "defer_on_replace_w_assign_batched_existing_twice",
                 "set_lvalue_to_mutable",
                 "set_lvalue_to_const",
-                "set_rvalue"
+                "set_rvalue",
+                "assign_rvalue",
+                "set_non_copy_assignable",
+                "set_non_copy_assignable_w_move_assign",
+                "assign_non_copy_assignable",
+                "assign_non_copy_assignable_w_move_assign"
             ]
         }, {
             "id": "OrderedChildren",
@@ -1237,7 +1242,8 @@
                 "get_component",
                 "untyped_get_ref_by_method",
                 "untyped_pair_ref",
-                "untyped_runtime_component_ref"
+                "untyped_runtime_component_ref",
+                "ref_world"
             ]
         }, {
             "id": "Module",

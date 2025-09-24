@@ -130,6 +130,7 @@ void flecs_meta_import_core_definitions(
         .members = {
             { .name = "compiler", .type = const_string },
             { .name = "addons", .type = addon_vec },
+            { .name = "flags", .type = addon_vec },
             { .name = "version", .type = const_string },
             { .name = "version_major", .type = ecs_id(ecs_i16_t) },
             { .name = "version_minor", .type = ecs_id(ecs_i16_t) },

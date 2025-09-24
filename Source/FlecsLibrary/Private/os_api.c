@@ -70,9 +70,42 @@ void ecs_os_fini(void) {
 #define HAVE_EXECINFO 0
 #endif
 
-#if HAVE_EXECINFO
-#include <execinfo.h>
 #define ECS_BT_BUF_SIZE 100
+
+#ifdef ECS_TARGET_WINDOWS
+#include <windows.h>
+#include <DbgHelp.h>
+
+#ifdef ECS_TARGET_MSVC
+#pragma comment(lib, "DbgHelp.lib")
+#endif
+
+void flecs_dump_backtrace(
+    void *stream) 
+{
+    void* stack[ECS_BT_BUF_SIZE];
+    unsigned short frames;
+    SYMBOL_INFO *symbol;
+    HANDLE hProcess = GetCurrentProcess();
+
+    SymInitialize(hProcess, NULL, TRUE);
+
+    frames = CaptureStackBackTrace(0, ECS_BT_BUF_SIZE, stack, NULL);
+    symbol = (SYMBOL_INFO*)ecs_os_malloc(
+        sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+    symbol->MaxNameLen = 255;
+    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+
+    for (int i = 0; i < frames; i++) {
+        SymFromAddr(hProcess, (DWORD)(uintptr_t)stack[i], NULL, symbol);
+        fprintf(stream, "%s\n", symbol->Name);
+    }
+
+    free(symbol);
+}
+
+#elif HAVE_EXECINFO
+#include <execinfo.h>
 
 void flecs_dump_backtrace(
     void *stream) 
