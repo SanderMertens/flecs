@@ -77,7 +77,7 @@ target_compile_definitions(
   _XOPEN_SOURCE=600)
 
 if(WIN32)
-  target_link_libraries(bake_base PUBLIC Dbghelp Shlwapi Ws2_32)
+  target_link_libraries(bake_base PUBLIC Dbghelp Shlwapi Ws2_32 DbgHelp)
 endif()
 if(UNIX AND NOT APPLE)
   target_link_libraries(bake_base PUBLIC m)
