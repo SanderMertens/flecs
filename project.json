@@ -30,7 +30,7 @@
             }
         },
         "${os windows}": {
-            "lib": ["ws2_32"]
+            "lib": ["ws2_32", "dbgHelp"]
         },
         "${cfg sanitize}": {
             "defines": ["FLECS_SANITIZE"]

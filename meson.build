@@ -16,6 +16,7 @@ cc = meson.get_compiler('c')
 
 if host_machine.system() == 'windows'
     flecs_deps += cc.find_library('ws2_32') # Required for http addon
+    flecs_deps += cc.find_library('dbgHelp') # Required for backtraces
 endif
 
 flecs_src = files(
