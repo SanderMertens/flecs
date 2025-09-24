@@ -1596,7 +1596,7 @@ int main(int argc, char *argv[]) {
 ```
 
 </li>
-<li><b class="tab-title">C++</b>`
+<li><b class="tab-title">C++</b>
 
 In C++ components are automatically registered upon first usage. The following example shows how:
 
