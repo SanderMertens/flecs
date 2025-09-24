@@ -248,6 +248,36 @@ struct Position {
         int x_;
     };
 
+    struct NonCopyAssignable {
+        NonCopyAssignable() { }
+        NonCopyAssignable(const NonCopyAssignable& obj) = delete;
+        NonCopyAssignable& operator=(const NonCopyAssignable& obj) = delete;
+
+        NonCopyAssignable(NonCopyAssignable&& obj) = default;
+        NonCopyAssignable& operator=(NonCopyAssignable&& obj) = default;
+
+        int x;
+    };
+
+    struct NonCopyAssignableWMoveAssign {
+        NonCopyAssignableWMoveAssign() { }
+        NonCopyAssignableWMoveAssign(const NonCopyAssignableWMoveAssign& obj) = delete;
+        NonCopyAssignableWMoveAssign& operator=(const NonCopyAssignableWMoveAssign& obj) = delete;
+
+        NonCopyAssignableWMoveAssign(NonCopyAssignableWMoveAssign&& obj) {
+            x = obj.x;
+            moved = 1;
+        }
+        NonCopyAssignableWMoveAssign& operator=(NonCopyAssignableWMoveAssign&& obj) {
+            x = obj.x;
+            moved = 1;
+            return *this;
+        }
+
+        int x;
+        int moved = 0;
+    };
+
     struct FlecsCtor {
         FlecsCtor(flecs::world&, flecs::entity e) : x_(89), e_(e) { }
 
@@ -455,6 +485,8 @@ struct Position {
         ecs.component<NoCopyAssign>();
         ecs.component<NoMoveCtor>();
         ecs.component<NoMoveAssign>();
+        ecs.component<NonCopyAssignable>();
+        ecs.component<NonCopyAssignableWMoveAssign>();
         ecs.component<FlecsCtor>();
         ecs.component<FlecsCtorDefaultCtor>();
         ecs.component<FlecsCtorValueCtor>();

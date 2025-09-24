@@ -397,6 +397,16 @@ void Refs_untyped_runtime_component_ref(void) {
 
 }
 
+void Refs_ref_world(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().set<Position>({10, 20});
+
+    flecs::ref<Position> r = e.get_ref<Position>();
+    auto w = r.world();
+    test_assert(w == world);
+}
+
 END_DEFINE_SPEC(FFlecsRefsTestsSpec);
 
 /*"id": "Refs",
@@ -426,7 +436,8 @@ END_DEFINE_SPEC(FFlecsRefsTestsSpec);
     "get_component",
     "untyped_get_ref_by_method",
     "untyped_pair_ref",
-    "untyped_runtime_component_ref"
+    "untyped_runtime_component_ref",
+    "ref_world"
 ]*/
 
 void FFlecsRefsTestsSpec::Define()
@@ -457,6 +468,7 @@ void FFlecsRefsTestsSpec::Define()
     It("Refs_untyped_get_ref_by_method", [this]() { Refs_untyped_get_ref_by_method(); });
     It("Refs_untyped_pair_ref", [this]() { Refs_untyped_pair_ref(); });
     It("Refs_untyped_runtime_component_ref", [this]() { Refs_untyped_runtime_component_ref(); });
+    It("Refs_ref_world", [this]() { Refs_ref_world(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS

@@ -6150,6 +6150,68 @@ void Entity_set_rvalue(void) {
     test_int(src.times_destructed, 0);
 }
 
+void Entity_set_non_copy_assignable(void) {
+	flecs::world world;
+	world.component<NonCopyAssignable>();
+
+	NonCopyAssignable v;
+	v.x = 10;
+
+	flecs::entity e = world.entity().set(v);
+
+	const NonCopyAssignable* comp = e.try_get<NonCopyAssignable>();
+	test_assert(comp != nullptr);
+	test_int(comp->x, 10);
+}
+
+void Entity_set_non_copy_assignable_w_move_assign(void) {
+	flecs::world world;
+	world.component<NonCopyAssignableWMoveAssign>();
+
+	NonCopyAssignableWMoveAssign v;
+	v.x = 10;
+	test_int(v.moved, 0);
+
+	flecs::entity e = world.entity().set(v);
+
+	const NonCopyAssignableWMoveAssign* comp = e.try_get<NonCopyAssignableWMoveAssign>();
+	test_assert(comp != nullptr);
+	test_int(comp->x, 10);
+	test_int(comp->moved, 1);
+}
+
+void Entity_assign_non_copy_assignable(void) {
+	flecs::world world;
+	world.component<NonCopyAssignable>();
+
+	NonCopyAssignable v;
+	v.x = 10;
+
+	flecs::entity e = world.entity().add<NonCopyAssignable>();
+	e.assign(v);
+
+	const NonCopyAssignable* comp = e.try_get<NonCopyAssignable>();
+	test_assert(comp != nullptr);
+	test_int(comp->x, 10);
+}
+
+void Entity_assign_non_copy_assignable_w_move_assign(void) {
+	flecs::world world;
+	world.component<NonCopyAssignableWMoveAssign>();
+
+	NonCopyAssignableWMoveAssign v;
+	v.x = 10;
+	test_int(v.moved, 0);
+
+	flecs::entity e = world.entity().add<NonCopyAssignableWMoveAssign>();
+	e.assign(v);
+
+	const NonCopyAssignableWMoveAssign* comp = e.try_get<NonCopyAssignableWMoveAssign>();
+	test_assert(comp != nullptr);
+	test_int(comp->x, 10);
+	test_int(comp->moved, 1);
+}
+
 END_DEFINE_SPEC(FFlecsEntityTestsSpec);
 
 /*""id": "Entity",
@@ -6505,7 +6567,11 @@ END_DEFINE_SPEC(FFlecsEntityTestsSpec);
                 "defer_on_replace_w_assign_batched_existing_twice",
                 "set_lvalue_to_mutable",
                 "set_lvalue_to_const",
-                "set_rvalue"
+                "set_rvalue",
+                "set_non_copy_assignable",
+                "set_non_copy_assignable_w_move_assign",
+                "assign_non_copy_assignable",
+                "assign_non_copy_assignable_w_move_assign"
                 
             ]*/
 
@@ -6818,7 +6884,10 @@ void FFlecsEntityTestsSpec::Define()
 	It("Entity_set_lvalue_to_mutable", [&]() { Entity_set_lvalue_to_mutable(); });
 	It("Entity_set_lvalue_to_const", [&]() { Entity_set_lvalue_to_const(); });
 	It("Entity_set_rvalue", [&]() { Entity_set_rvalue(); });
-	
+	It("Entity_set_non_copy_assignable", [&]() { Entity_set_non_copy_assignable(); });
+	It("Entity_set_non_copy_assignable_w_move_assign", [&]() { Entity_set_non_copy_assignable_w_move_assign(); });
+	It("Entity_assign_non_copy_assignable", [&]() { Entity_assign_non_copy_assignable(); });
+	It("Entity_assign_non_copy_assignable_w_move_assign", [&]() { Entity_assign_non_copy_assignable_w_move_assign(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS
