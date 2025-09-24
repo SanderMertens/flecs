@@ -92,7 +92,7 @@ When entities that are used as tags, components, relationships or relationship t
 <ul>
 <li><b class="tab-title">C</b>
 
-```cpp
+```c
 struct MyComponent {
   ecs_entity_t e; // Not covered by cleanup traits
 }
@@ -106,9 +106,9 @@ ecs_add_pair(world, e, EcsChildOf, parent); // covered by cleanup traits
 ```cpp
 struct MyComponent {
   flecs::entity e; // Not covered by cleanup traits
-}
+};
 
-e.add(ChildOf, parent); // Covered by cleanup traits
+e.add(flecs::ChildOf, parent); // Covered by cleanup traits
 ```
 
 </li>
@@ -458,9 +458,10 @@ ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
 <li><b class="tab-title">C++</b>
 
 ```cpp
+
 world.observer<Node>()
   .event(flecs::OnRemove)
-  .each([](flecs::entity e) { });
+  .each([](flecs::entity e, Node n) { });
 
 flecs::entity p = world.entity().add<Node>();
 flecs::entity c = world.entity().add<Node>().child_of(p);
@@ -983,7 +984,7 @@ ECS_COMPONENT(ecs, Mass);
 // Set trait on Mass. Optional, since this is the default behavior
 ecs_add_pair(ecs, ecs_id(Mass), EcsOnInstantiate, EcsOverride);
 
-ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass, { 100 }));
+ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass { 100 }));
 ecs_entity_t inst = ecs_insert(ecs, { ecs_isa(base) }); // Mass is copied to inst
 
 assert(ecs_owns(ecs, inst, Mass));
@@ -997,8 +998,8 @@ assert(ecs_get(ecs, base, Mass) != ecs_get(ecs, inst, Mass));
 // Register component with trait. Optional, since this is the default behavior.
 ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Override);
 
-ecs_entity_t base = ecs.entity().set(Mass, { 100 });
-ecs_entity_t inst = ecs.entity().is_a(base); // Mass is copied to inst
+flecs::entity base = ecs.entity().set(Mass { 100 });
+flecs::entity inst = ecs.entity().is_a(base); // Mass is copied to inst
 
 assert(inst.owns<Mass>());
 assert(base.try_get<Mass>() != inst.try_get<Mass>());
@@ -1058,7 +1059,7 @@ ECS_COMPONENT(ecs, Mass);
 // Set trait on Mass
 ecs_add_pair(ecs, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
 
-ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass, { 100 }));
+ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass { 100 }));
 ecs_entity_t inst = ecs_insert(ecs, { ecs_isa(base) }); // Mass is copied to inst
 
 assert(ecs_has(ecs, inst, Mass));
@@ -1073,12 +1074,12 @@ assert(ecs_get(ecs, base, Mass) != ecs_get(ecs, inst, Mass));
 // Register component with trait
 ecs.component<Mass>().add(flecs::OnInstantiate, flecs::Inherit);
 
-ecs_entity_t base = ecs.entity().set(Mass, { 100 });
-ecs_entity_t inst = ecs.entity().is_a(base);
+flecs::entity base = ecs.entity().set(Mass { 100 });
+flecs::entity inst = ecs.entity().is_a(base);
 
 assert(inst.has<Mass>());
 assert(!inst.owns<Mass>());
-assert(base.try_get<Mass>() != inst.try_get<Mass>());
+assert(base.try_get<Mass>() == inst.try_get<Mass>());
 ```
 
 </li>
@@ -1137,7 +1138,7 @@ ECS_COMPONENT(ecs, Mass);
 // Set trait on Mass
 ecs_add_pair(ecs, ecs_id(Mass), EcsOnInstantiate, EcsDontInherit);
 
-ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass, { 100 }));
+ecs_entity_t base = ecs_insert(ecs, ecs_value(Mass { 100 }));
 ecs_entity_t inst = ecs_insert(ecs, { ecs_isa(base) }); // Mass is copied to inst
 
 assert(!ecs_has(ecs, inst, Mass));
@@ -1152,8 +1153,8 @@ assert(ecs_get(ecs, inst, Mass) == NULL);
 // Register component with trait
 ecs.component<Mass>().add(flecs::OnInstantiate, flecs::DontInherit);
 
-ecs_entity_t base = ecs.entity().set(Mass, { 100 });
-ecs_entity_t inst = ecs.entity().is_a(base);
+flecs::entity base = ecs.entity().set(Mass { 100 });
+flecs::entity inst = ecs.entity().is_a(base);
 
 assert(!inst.has<Mass>());
 assert(!inst.owns<Mass>());
@@ -1349,7 +1350,7 @@ auto e = ecs.entity()
 const Position& p = e.get<Position>();
 
 // Gets (unintended) value from (Serializable, Position) pair
-const Position& p = e.get<Serializable, Position>();
+const Position& p2 = e.get<flecs::pair<Serializable, Position>>();
 ```
 
 </li>
@@ -1446,7 +1447,7 @@ auto e = ecs.entity()
 const Position& p = e.get<Position>();
 
 // This no longer works, the pair has no data
-const Position& p = e.get<Serializable, Position>();
+const Position& p2 = e.get<flecs::pair<Serializable, Position>>();
 ```
 
 </li>
@@ -1761,7 +1762,7 @@ world.component<TimeOfDay>().add(flecs::Singleton);
 auto q = world.query<Position, Velocity, const TimeOfDay>();
 
 // Is the same as
-auto q = world.query_builder<Position, Velocity, const TimeOfDay>()
+auto q2 = world.query_builder<Position, Velocity, const TimeOfDay>()
   .term_at(2).src<TimeOfDay>()
   .build();
 ```
@@ -1865,8 +1866,8 @@ ecs_add_pair(world, Bob, MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Ali
 
 ```cpp
 auto MarriedTo = world.entity().add(flecs::Symmetric);
-auto Bob = ecs.entity();
-auto Alice = ecs.entity();
+auto Bob = world.entity();
+auto Alice = world.entity();
 Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 ```
 
