@@ -399,6 +399,7 @@ void Refs_untyped_runtime_component_ref(void) {
 
 void Refs_ref_world(void) {
     flecs::world world;
+    world.component<Position>();
 
     flecs::entity e = world.entity().set<Position>({10, 20});
 
