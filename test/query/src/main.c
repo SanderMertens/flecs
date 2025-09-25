@@ -2241,7 +2241,17 @@ void NonFragmentingChildOf_this_src_not_childof_wildcard(void);
 void NonFragmentingChildOf_this_src_not_childof_any(void);
 void NonFragmentingChildOf_this_src_childof_parent(void);
 void NonFragmentingChildOf_this_src_childof_parent_w_tag(void);
+void NonFragmentingChildOf_this_src_childof_parent_w_tag_single_child(void);
+void NonFragmentingChildOf_this_src_childof_parent_w_tag_single_child_table(void);
 void NonFragmentingChildOf_this_src_childof_parent_w_component(void);
+void NonFragmentingChildOf_this_src_childof_parent_w_component_single_child(void);
+void NonFragmentingChildOf_this_src_childof_parent_w_component_single_child_table(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_parent(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_table(void);
+void NonFragmentingChildOf_this_src_childof_component_w_parent(void);
+void NonFragmentingChildOf_this_src_childof_component_w_parent_single_child(void);
+void NonFragmentingChildOf_this_src_childof_component_w_parent_single_child_table(void);
 void NonFragmentingChildOf_this_src_childof_wildcard(void);
 void NonFragmentingChildOf_this_src_childof_wildcard_w_tag(void);
 void NonFragmentingChildOf_this_src_childof_wildcard_w_component(void);
@@ -11158,8 +11168,48 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_this_src_childof_parent_w_tag
     },
     {
+        "this_src_childof_parent_w_tag_single_child",
+        NonFragmentingChildOf_this_src_childof_parent_w_tag_single_child
+    },
+    {
+        "this_src_childof_parent_w_tag_single_child_table",
+        NonFragmentingChildOf_this_src_childof_parent_w_tag_single_child_table
+    },
+    {
         "this_src_childof_parent_w_component",
         NonFragmentingChildOf_this_src_childof_parent_w_component
+    },
+    {
+        "this_src_childof_parent_w_component_single_child",
+        NonFragmentingChildOf_this_src_childof_parent_w_component_single_child
+    },
+    {
+        "this_src_childof_parent_w_component_single_child_table",
+        NonFragmentingChildOf_this_src_childof_parent_w_component_single_child_table
+    },
+    {
+        "this_src_childof_tag_w_parent",
+        NonFragmentingChildOf_this_src_childof_tag_w_parent
+    },
+    {
+        "this_src_childof_tag_w_parent_single_child",
+        NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child
+    },
+    {
+        "this_src_childof_tag_w_parent_single_child_table",
+        NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_table
+    },
+    {
+        "this_src_childof_component_w_parent",
+        NonFragmentingChildOf_this_src_childof_component_w_parent
+    },
+    {
+        "this_src_childof_component_w_parent_single_child",
+        NonFragmentingChildOf_this_src_childof_component_w_parent_single_child
+    },
+    {
+        "this_src_childof_component_w_parent_single_child_table",
+        NonFragmentingChildOf_this_src_childof_component_w_parent_single_child_table
     },
     {
         "this_src_childof_wildcard",
@@ -11993,7 +12043,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        27,
+        37,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

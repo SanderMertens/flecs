@@ -77390,7 +77390,7 @@ bool flecs_query_select_w_id(
     }
 
 repeat:
-    if (!redo || !op_ctx->remaining) {
+    if (!redo || (op_ctx->remaining <= 0)) {
         tr = flecs_table_cache_next(&op_ctx->it, ecs_table_record_t);
         if (!tr) {
             return false;
@@ -81448,7 +81448,8 @@ bool flecs_query_children(
 
     if (redo) {
         if (!op_ctx->tgt) {
-            return flecs_query_and(op, redo, ctx);
+            bool result = flecs_query_and(op, redo, ctx);
+            return result;
         }
         return false;
     }
