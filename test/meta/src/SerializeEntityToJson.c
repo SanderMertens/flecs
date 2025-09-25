@@ -1983,6 +1983,26 @@ void SerializeEntityToJson_serialize_sparse_w_type_info(void) {
     ecs_fini(world);
 }
 
+void SerializeEntityToJson_serialize_sparse_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, SparseTag, Sparse);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, SparseTag);
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_values = true,
+        .serialize_type_info = true
+    };
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_str(json, "{\"name\":\"e\", \"type_info\":{}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeEntityToJson_serialize_auto_override_w_inherited(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2200,3 +2220,4 @@ void SerializeEntityToJson_serialize_base_w_invalid_component(void) {
 
     ecs_fini(world);
 }
+

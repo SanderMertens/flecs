@@ -49247,7 +49247,9 @@ bool flecs_json_serialize_table_type_info(
         }
 
         const ecs_type_info_t *ti = cr->type_info;
-        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!ti) {
+            continue;
+        }
 
         flecs_json_next(buf);
         ecs_strbuf_appendlit(buf, "\"");
