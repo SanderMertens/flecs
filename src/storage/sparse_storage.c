@@ -433,6 +433,7 @@ void* flecs_component_sparse_insert(
     ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t entity = ecs_table_entities(table)[row];
+
     void *ptr = flecs_sparse_insert(cr->sparse, 0, entity);
 
     ecs_id_t component_id = cr->id;

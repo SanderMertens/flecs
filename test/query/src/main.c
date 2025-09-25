@@ -2205,6 +2205,14 @@ void DontFragment_this_written_tgt_var_w_component(void);
 void DontFragment_this_written_sparse_any(void);
 void DontFragment_this_written_sparse_exclusive_any(void);
 void DontFragment_add_to_self_while_iterate(void);
+void DontFragment_this_sparse_recycled(void);
+void DontFragment_this_sparse_pair_recycled(void);
+void DontFragment_this_sparse_wildcard_pair_recycled(void);
+void DontFragment_this_sparse_any_pair_recycled(void);
+void DontFragment_this_written_sparse_recycled(void);
+void DontFragment_this_written_sparse_pair_recycled(void);
+void DontFragment_this_written_sparse_wildcard_pair_recycled(void);
+void DontFragment_this_written_sparse_any_pair_recycled(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -10976,6 +10984,38 @@ bake_test_case DontFragment_testcases[] = {
     {
         "add_to_self_while_iterate",
         DontFragment_add_to_self_while_iterate
+    },
+    {
+        "this_sparse_recycled",
+        DontFragment_this_sparse_recycled
+    },
+    {
+        "this_sparse_pair_recycled",
+        DontFragment_this_sparse_pair_recycled
+    },
+    {
+        "this_sparse_wildcard_pair_recycled",
+        DontFragment_this_sparse_wildcard_pair_recycled
+    },
+    {
+        "this_sparse_any_pair_recycled",
+        DontFragment_this_sparse_any_pair_recycled
+    },
+    {
+        "this_written_sparse_recycled",
+        DontFragment_this_written_sparse_recycled
+    },
+    {
+        "this_written_sparse_pair_recycled",
+        DontFragment_this_written_sparse_pair_recycled
+    },
+    {
+        "this_written_sparse_wildcard_pair_recycled",
+        DontFragment_this_written_sparse_wildcard_pair_recycled
+    },
+    {
+        "this_written_sparse_any_pair_recycled",
+        DontFragment_this_written_sparse_any_pair_recycled
     }
 };
 
@@ -11764,7 +11804,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        119,
+        127,
         DontFragment_testcases,
         1,
         DontFragment_params
