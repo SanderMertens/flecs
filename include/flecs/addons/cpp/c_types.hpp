@@ -75,6 +75,7 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
 using DefaultChildComponent = EcsDefaultChildComponent;
+using Parent = EcsParent;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
