@@ -49,7 +49,7 @@ bool flecs_query_select_w_id(
     }
 
 repeat:
-    if (!redo || !op_ctx->remaining) {
+    if (!redo || (op_ctx->remaining <= 0)) {
         tr = flecs_table_cache_next(&op_ctx->it, ecs_table_record_t);
         if (!tr) {
             return false;
