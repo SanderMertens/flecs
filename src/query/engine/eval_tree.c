@@ -270,7 +270,8 @@ bool flecs_query_children(
 
     if (redo) {
         if (!op_ctx->tgt) {
-            return flecs_query_and(op, redo, ctx);
+            bool result = flecs_query_and(op, redo, ctx);
+            return result;
         }
         return false;
     }
