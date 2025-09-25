@@ -18302,6 +18302,7 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
 using DefaultChildComponent = EcsDefaultChildComponent;
+using Parent = EcsParent;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
@@ -35569,6 +35570,7 @@ inline void world::init_builtin_components() {
     this->component<Component>();
     this->component<Identifier>();
     this->component<Poly>();
+    this->component<Parent>();
 
     /* If meta is not defined and we're using enum reflection, make sure that
      * primitive types are registered. This makes sure we can set components of
