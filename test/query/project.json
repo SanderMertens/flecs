@@ -2292,7 +2292,15 @@
                 "this_written_tgt_var_w_component",
                 "this_written_sparse_any",
                 "this_written_sparse_exclusive_any",
-                "add_to_self_while_iterate"
+                "add_to_self_while_iterate",
+                "this_sparse_recycled",
+                "this_sparse_pair_recycled",
+                "this_sparse_wildcard_pair_recycled",
+                "this_sparse_any_pair_recycled",
+                "this_written_sparse_recycled",
+                "this_written_sparse_pair_recycled",
+                "this_written_sparse_wildcard_pair_recycled",
+                "this_written_sparse_any_pair_recycled"
             ]
         }, {
             "id": "OrderBy",

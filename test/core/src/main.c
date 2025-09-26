@@ -626,6 +626,7 @@ void Sparse_remove_pair_before_recycle_sparse_relationship(void);
 void Sparse_remove_pair_before_recycle_sparse_target(void);
 void Sparse_recycle_after_delete_table(void);
 void Sparse_recycle_pair_after_delete_table(void);
+void Sparse_add_sparse_pair_to_recycled(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5107,6 +5108,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "recycle_pair_after_delete_table",
         Sparse_recycle_pair_after_delete_table
+    },
+    {
+        "add_sparse_pair_to_recycled",
+        Sparse_add_sparse_pair_to_recycled
     }
 };
 
@@ -13266,7 +13271,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        178,
+        179,
         Sparse_testcases,
         1,
         Sparse_params

@@ -5893,3 +5893,24 @@ void Sparse_recycle_pair_after_delete_table(void) {
 
     ecs_fini(world);
 }
+
+void Sparse_add_sparse_pair_to_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Rel, e);
+    test_assert(ecs_has_pair(world, e, Rel, e));
+    ecs_delete(world, e);
+    test_assert(!ecs_is_alive(world, e));
+
+    e = ecs_new(world);
+    test_assert(!ecs_has_pair(world, e, Rel, e));
+    ecs_add_pair(world, e, Rel, e);
+    test_assert(ecs_has_pair(world, e, Rel, e));
+
+    ecs_fini(world);
+}
