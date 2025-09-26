@@ -67,7 +67,8 @@ System<Position, Velocity> sys = world.System<Position, Velocity>("Move")
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // System declaration
 world
     .system_named::<(&mut Position, &Velocity)>("Move")
@@ -105,8 +106,17 @@ sys.Run();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let sys = world
+HIDE:     .system_named::<(&mut Position, &Velocity)>("Move")
+HIDE:     .each(|(p, v)| {
+HIDE:         p.x += v.x;
+HIDE:         p.y += v.y;
+HIDE:     });
+HIDE: /*
 let sys = ...;
+HIDE: */
 sys.run();
 ```
 </li>
@@ -138,7 +148,8 @@ world.Progress();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let world = World::new();
 world.progress();
 ```
@@ -173,10 +184,11 @@ System<Position, Velocity> sys = world.System<Position, Velocity>("Move")
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world
     .system_named::<(&mut Position, &Velocity)>("Move")
-    .kind_id(0)
+    .kind(0)
     .each(|(p, v)| { /* ... */ });
 ```
 </li>
@@ -301,8 +313,11 @@ The `Iter` function can be invoked multiple times per frame, once for each match
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // `.each_entity` if you need the associated entity.
+
+HIDE: let q = world.query::<(&Position, &Velocity)>().build();
 
 // Query iteration (each)
 q.each(|(p, v)| { /* ... */ });
@@ -312,16 +327,15 @@ world
     .system_named::<(&mut Position, &Velocity)>("Move")
     .each(|(p, v)| { /* ... */ });
 ```
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let q = world.query::<(&Position, &Velocity)>().build();
 // Query iteration (run)
 q.run(|mut it| {
     while it.next() {
-        let mut p = it
-            .field::<Position>(0)
-            .expect("query term changed and not at the same index anymore");
-        let v = it
-            .field::<Velocity>(1)
-            .expect("query term changed and not at the same index anymore");
+        let mut p = it.field_mut::<Position>(0);
+        let v = it.field::<Velocity>(1);
+
         for i in it.iter() {
             p[i].x += v[i].x;
             p[i].y += v[i].y;
@@ -334,12 +348,8 @@ world
     .system_named::<(&mut Position, &Velocity)>("Move")
     .run(|mut it| {
         while it.next() {
-            let mut p = it
-                .field::<Position>(0)
-                .expect("query term changed and not at the same index anymore");
-            let v = it
-                .field::<Velocity>(1)
-                .expect("query term changed and not at the same index anymore");
+            let mut p = it.field_mut::<Position>(0);
+            let v = it.field::<Velocity>(1);
             for i in it.iter() {
                 p[i].x += v[i].x;
                 p[i].y += v[i].y;
@@ -347,23 +357,30 @@ world
         }
     });
 ```
-```rust
-// Query iteration (run_iter)
-q.run_iter(|it, (p, v)| {
-    for i in it.iter() {
-        p[i].x += v[i].x;
-        p[i].y += v[i].y;
-    }
-});
+```rust test
+HIDE: let world = World::new();
 
-// System iteration (run_iter)
+HIDE: let q = world.query::<(&mut Position, &Velocity)>().build();
+// Query iteration (run_each_iter)
+    q.run_each_iter(|mut it| {
+        while it.next() {
+            it.each();
+        }
+    }, |it,i,(p, v)| {
+            p.x += v.x;
+            p.y += v.y;
+    });
+
+// System iteration (run_each_iter)
 world
     .system_named::<(&mut Position, &Velocity)>("Move")
-    .run_iter(|it, (p, v)| {
-        for i in it.iter() {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
+    .run_each_iter(|mut it| {
+        while it.next() {
+            it.each();
         }
+    }, |it,i,(p, v)| {
+            p.x += v.x;
+            p.y += v.y;
     });
 ```
 
@@ -438,21 +455,13 @@ world.System<Position, Velocity>("Move")
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world
     .system_named::<(&mut Position, &Velocity)>("Move")
     .each_iter(|it, i, (p, v)| {
         p.x += v.x * it.delta_time();
         p.y += v.y * it.delta_time();
-    });
-    
-world
-    .system_named::<(&mut Position, &Velocity)>("Move")
-    .run_iter(|it, (p, v)| {
-        for i in it.iter() {
-            p[i].x += v[i].x * it.delta_time();
-            p[i].y += v[i].y * it.delta_time();
-        }
     });
 ```
 </li>
@@ -482,7 +491,9 @@ world.Progress(deltaTime);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let delta_time = 0.016;
 world.progress_time(delta_time);
 ```
 </li>
@@ -512,7 +523,8 @@ world.Progress();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world.progress();
 ```
 </li>
@@ -578,7 +590,8 @@ world.progress();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world.system_named::<()>("PrintTime").run(|mut it| {
     while it.next() {
         println!("Time: {}", it.delta_time());
@@ -647,14 +660,16 @@ world.System<Game>("PrintTime")
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+
+world.component::<Game>().add_trait::<flecs::Singleton>();
+
 world
     .system_named::<&Game>("PrintTime")
-    .term_at(0)
-    .singleton()
-    .kind::<flecs::pipeline::OnUpdate>()
-    .run_iter(|it, game| {
-        println!("Time: {}", game[0].time);
+    .kind(flecs::pipeline::OnUpdate::id())
+    .each(|game| {
+        println!("Time: {}", game.time);
     });
 ```
 </li>
@@ -706,11 +721,12 @@ world.System<Position, Velocity>("Move")
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
  // System is created with (DependsOn, OnUpdate)
  world
      .system_named::<(&mut Position, &Velocity)>("Move")
-     .kind::<flecs::pipeline::OnUpdate>()
+     .kind(flecs::pipeline::OnUpdate::id())
      .each(|(p, v)| {
          // ...
      });
@@ -850,16 +866,17 @@ world.Pipeline()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world
     .pipeline()
-    .with::<flecs::system::System>()
-    .with::<flecs::pipeline::Phase>()
-    .cascade_type::<flecs::DependsOn>()
-    .without::<flecs::Disabled>()
-    .up_type::<flecs::DependsOn>()
-    .without::<flecs::Disabled>()
-    .up_type::<flecs::ChildOf>()
+    .with(flecs::system::System::id())
+    .with(flecs::pipeline::Phase::id())
+    .cascade_id(flecs::DependsOn::id())
+    .without(flecs::Disabled::id())
+    .up_id(flecs::DependsOn::id())
+    .without(flecs::Disabled::id())
+    .up_id(flecs::ChildOf::id())
     .build();
 ```
 
@@ -938,21 +955,22 @@ world.Progress();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Create custom pipeline
 let pipeline = world
     .pipeline()
-    .with::<flecs::system::System>()
-    .with::<Foo>() // or `.with_id(foo) if an id`
+    .with(flecs::system::System::id())
+    .with(Foo::id()) // or `.with(foo) if an id`
     .build();
 
 // Configure the world to use the custom pipeline
-world.set_pipeline_id(pipeline);
+world.set_pipeline(pipeline);
 
 // Create system
 world
     .system_named::<(&mut Position, &Velocity)>("Move")
-    .kind::<Foo>() // or `.kind_id(foo) if an id`
+    .kind(Foo::id())
     .each(|(p, v)| {
         p.x += v.x;
         p.y += v.y;
@@ -992,8 +1010,14 @@ move.Entity.Add(foo);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-move_sys.add::<Foo>();
+```rust test
+HIDE: let world = World::new();
+HIDE: let move_sys = world
+HIDE: .system_named::<(&mut Position, &Velocity)>("Move").run(|mut it| {
+HIDE: while it.next() {
+HIDE: }
+HIDE: });
+move_sys.add(Foo::id());
 ```
 </ul>
 </div>
@@ -1031,7 +1055,12 @@ s.Entity.Enable();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let s = world.system_named::<(&mut Position, &Velocity)>("Move").each(|(p, v)| {
+HIDE:     p.x += v.x;
+HIDE:     p.y += v.y;
+HIDE: });
 // Disable system
 s.disable_self();
 // Enable system
@@ -1064,8 +1093,15 @@ s.Entity.Add(Ecs.Disabled);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-sys.add::<flecs::Disabled>();
+```rust test
+HIDE: let world = World::new();
+HIDE: let sys = world
+HIDE:     .system_named::<(&mut Position, &Velocity)>("Move")
+HIDE:     .each(|(p, v)| {
+HIDE:         p.x += v.x;
+HIDE:         p.y += v.y;
+HIDE:     });
+sys.add(flecs::Disabled::id());
 ```
 </li>
 </ul>
@@ -1157,9 +1193,10 @@ world.System<Position>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // In the Rust API, use the write method to indicate commands could be inserted.
-world.system::<&Position>().write::<Transform>().each(|p| {
+world.system::<&Position>().write(Transform::id()).each(|p| {
     // ...
 });
 ```
@@ -1210,9 +1247,10 @@ world.System<Position>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // In the Rust API, use the read method to indicate a component is read using .get
-world.system::<&Position>().read::<Transform>().each(|p| {
+world.system::<&Position>().read(Transform::id()).each(|p| {
     // ...
 });
 ```
@@ -1271,7 +1309,8 @@ ecs.System("AssignPlate")
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world
     .system_named::<&Plate>("AssignPlate")
     .immediate(true) // disable readonly mode for this system
@@ -1337,7 +1376,11 @@ void AssignPlate(ecs_iter_t *it) {
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: world
+HIDE: .system_named::<&Plate>("AssignPlate")
+HIDE: .immediate(true) // disable readonly mode for this system
 .run(|mut it| {
     while it.next() {
         // ECS operations ran here are visible after running the system
@@ -1378,7 +1421,8 @@ world.SetThreads(4);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world.set_threads(4);
 ```
 </li>
@@ -1421,8 +1465,9 @@ world.System<Position>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-world.system::<&Position>().multi_threaded().each(|p| {
+```rust test
+HIDE: let world = World::new();
+world.system::<&Position>().par_each(|p| {
     // ...
 });
 ```
@@ -1459,7 +1504,8 @@ world.SetTaskThreads(4);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world.set_task_threads(4);
 ```
 </li>
@@ -1521,9 +1567,10 @@ world.System<Position, Velocity>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world.system::<&Position>()
-    .interval(1.0) // Run at 1Hz
+    .set_interval(1.0) // Run at 1Hz
     .each(|p| {
     // ...
 });
@@ -1577,10 +1624,11 @@ world.System<Position, Velocity>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world
     .system::<&Position>()
-    .rate(2) // Run every other frame
+    .set_rate(2) // Run every other frame
     .each(|p| {
         // ...
     });
@@ -1652,8 +1700,14 @@ world.System<Position, Velocity>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-// Timer not yet implemented in Rust
+```rust test
+HIDE: let world = World::new();
+
+let tick_source = world.timer().set_interval(1.0);
+
+world.system::<(&mut Position, &Velocity)>()
+.set_tick_source(tick_source)
+.each(|(p,v)| { /* ... */});
 ```
 </li>
 </ul>
@@ -1694,8 +1748,15 @@ tickSource.Start();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-// Timer addon yet to be implemented in rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let tick_source = world.timer().set_interval(1.0);
+
+// Pause timer
+tick_source.stop();
+
+// Resume timer
+tick_source.start();
 ```
 </li>
 </ul>
@@ -1756,8 +1817,17 @@ TimerEntity eachHour = world.Timer()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-// Timer not yet implemented in Rust
+```rust test
+HIDE: let world = World::new();
+
+// tick at 1Hz
+let each_second = world.timer().set_interval(1.0);
+
+// tick each minute
+let each_minute = world.timer().set_rate_w_tick_source(60, each_second);
+
+// tick each hour
+let each_hour = world.timer().set_rate_w_tick_source(60, each_minute);
 ```
 </li>
 </ul>
@@ -1846,8 +1916,25 @@ System_ eachHour = world.System("EachHour")
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-// Timer not yet implemented in Rust
+```rust test
+HIDE: let world = World::new();
+let each_second = world.system_named::<()>("EachSecond")
+    .set_interval(1.0)
+    .run(|mut it| {
+        /* ... */
+    });
+let each_minute = world.system_named::<()>("EachMinute")
+    .set_tick_source(each_second)
+    .set_rate(60)
+    .run(|mut it| {
+        /* ... */
+    });
+let each_hour = world.system_named::<()>("EachHour")
+    .set_tick_source(each_minute)
+    .set_rate(60)
+    .run(|mut it| {
+        /* ... */
+    });
 ```
 </li>
 </ul>

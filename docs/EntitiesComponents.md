@@ -46,7 +46,8 @@ Entity myEntity world.Entity();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let my_entity = world.entity();
 ```
 </li>
@@ -85,7 +86,9 @@ myEntity.Destruct();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let my_entity = world.entity();
 my_entity.destruct();
 ```
 </li>
@@ -141,14 +144,17 @@ e2.Add<Npc>(); // OK, 500v1 is alive
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e1 = world.entity(); // Returns 500v0
 e1.destruct(); // Recycles 500
 let e2 = world.entity(); // Returns 500v1
+HIDE: /*
 // Fails, 500v0 is not alive
-e1.add::<Npc>();
+e1.add(Npc::id());
+HIDE: */
 // OK, 500v1 is alive
-e2.add::<Npc>();
+e2.add(Npc::id());
 ```
 </li>
 </ul>
@@ -187,7 +193,8 @@ e1.Destruct(); // OK: post condition is satisfied
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e1 = world.entity();
 e1.destruct();
 e1.destruct(); // OK: post condition is satisfied
@@ -224,7 +231,9 @@ myEntity.Clear();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let my_entity = world.entity();
 my_entity.clear();
 ```
 </li>
@@ -274,7 +283,8 @@ e2.IsAlive(); // True
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e1 = world.entity();
 let e2 = world.entity();
 e1.destruct();
@@ -329,7 +339,8 @@ world.Entity(0).IsValid(); // False
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e1 = world.entity();
 let e2 = world.entity();
 e1.destruct();
@@ -368,7 +379,8 @@ Entity e = world.MakeAlive(1000);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e = world.make_alive(1000);
 ```
 </li>
@@ -405,9 +417,10 @@ world.SetVersion(versionedId);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-//TODO does not exist yet
-//world.set_version(versioned_id);
+```rust test
+HIDE: let world = World::new();
+HIDE: let versioned_id = 1000;
+world.set_version(versioned_id);
 ```
 </li>
 </ul>
@@ -441,7 +454,8 @@ world.SetEntityRange(5000, 0);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world.set_entity_range(5000, 0);
 ```
 </li>
@@ -475,7 +489,8 @@ world.SetEntityRange(5000, 10000);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world.set_entity_range(5000, 10000);
 ```
 </li>
@@ -513,7 +528,8 @@ world.EnableRangeCheck(true);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world.enable_range_check(true);
 ```
 </li>
@@ -568,7 +584,8 @@ Console.WriteLine(e.Name());
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e = world.entity_named("MyEntity");
 if e == world.lookup("MyEntity") {
     // true
@@ -621,9 +638,10 @@ if (e == world.Lookup("Parent.Child")) {
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let p = world.entity_named("Parent");
-let e = world.entity_named("Child").child_of_id(p);
+let e = world.entity_named("Child").child_of(p);
 if e == world.lookup("Parent::Child") {
     // true
 }
@@ -674,9 +692,10 @@ if (e == p.Lookup("Child")) {
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let p = world.entity_named("Parent");
-let e = world.entity_named("Child").child_of_id(p);
+let e = world.entity_named("Child").child_of(p);
 if e == p.lookup("Child") {
     // true
 }
@@ -736,9 +755,10 @@ Console.WriteLine(e.Path()); // Parent.Child
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let p = world.entity_named("Parent");
-let e = world.entity_named("Child").child_of_id(p);
+let e = world.entity_named("Child").child_of(p);
 // Returns entity name, does not allocate
 println!("{}", e.name()); // Child
 // Returns entity path, does allocate
@@ -792,7 +812,8 @@ if (e1 == e2) {
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e1 = world.entity_named("Parent::Child");
 let e2 = world.entity_named("Parent::Child");
 if e1 == e2 {
@@ -838,7 +859,8 @@ e.SetName("Bar");
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e = world.entity_named("Foo");
 // Change name
 e.set_name("Bar");
@@ -877,7 +899,8 @@ Entity twenty = world.Entity("20");
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let ten = world.entity_named("10");
 let twenty = world.entity_named("20");
 ```
@@ -933,7 +956,8 @@ e.Disable();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e = world.entity();
 // Enable entity
 e.enable_self();
@@ -1016,7 +1040,8 @@ p.Enable();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Three entities to disable
 let e1 = world.entity();
 let e2 = world.entity();
@@ -1024,9 +1049,9 @@ let e3 = world.entity();
 
 // Create prefab that has the three entities
 let p = world.prefab();
-p.add_id(e1);
-p.add_id(e2);
-p.add_id(e3);
+p.add(e1);
+p.add(e2);
+p.add(e3);
 
 // Disable entities
 p.disable_self();
@@ -1119,15 +1144,17 @@ p1.Enable();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: return; //TODO bug flecs upstream
+HIDE: let world = World::new();
 // Three entities to disable
 let e1 = world.entity();
 let e2 = world.entity();
 let e3 = world.entity();
 
 // Create prefab hierarchy with the three entities
-let p1 = world.prefab().add_id(e1);
-let p2 = world.prefab().is_a_id(p1).add_id(e2).add_id(e3);
+let p1 = world.prefab().add(e1);
+let p2 = world.prefab().is_a(p1).add(e2).add(e3);
 
 // Disable e1, e2, e3
 p2.disable_self();
@@ -1166,8 +1193,10 @@ e.Add(Ecs.Disabled);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-e.add::<flecs::Disabled>();
+```rust test
+HIDE: let world = World::new();
+HIDE: let e = world.entity();
+e.add(flecs::Disabled);
 ```
 </li>
 </ul>
@@ -1322,7 +1351,8 @@ file struct Position(float x, float y) :
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world
     .component::<Position>()
     .on_set(|entity, pos| {
@@ -1378,7 +1408,8 @@ world.component<Position>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world
     .component::<Position>()
     .on_replace(|entity, prev, next| {
@@ -1442,7 +1473,8 @@ Console.WriteLine($"Size: {compData.size}, Alignment: {compData.alignment}");
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Get the entity for the Position component
 let pos = world.component::<Position>();
 // Component entities have the Component component
@@ -1489,7 +1521,8 @@ world.Component<Position>().Entity.add(Ecs.Sparse);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Register a sparse component
 world.component::<Position>().add_trait::<flecs::Sparse>();
 ```
@@ -1702,7 +1735,8 @@ public static void Main()
 
 In Rust components are automatically registered upon first usage. The following example shows how:
 
-```rust
+```rust test
+HIDE: let world = World::new();
 fn main() {
     let world = World::new();
     let e1 = world
@@ -1725,7 +1759,8 @@ Components can be registered in advance, which can be done for several reasons:
 
 To register a component in advance, do:
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world.component::<Position>();
 ```
 
@@ -1733,7 +1768,8 @@ In general it is recommended to register components in advance, and to only use 
 
 A convenient way to organize component registration code is to use Flecs modules. An example:
 
-```rust
+```rust test
+HIDE: let world = World::new();
 
 use flecs_ecs::prelude::*;
 
@@ -1810,6 +1846,7 @@ TODO
 <li><b class="tab-title">Rust</b>
 
 ```rust
+HIDE: let world = World::new();
 TODO
 ```
 
@@ -1874,6 +1911,7 @@ TODO
 <li><b class="tab-title">Rust</b>
 
 ```rust
+HIDE: let world = World::new();
 TODO
 ```
 
@@ -1937,11 +1975,12 @@ pos.Destruct();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let pos = world.component::<Position>();
 
 // Create entity with Position
-let e = world.entity().add::<Position>();
+let e = world.entity().add(Position::id());
 
 // Unregister the component
 pos.destruct();
@@ -1995,12 +2034,16 @@ ref readonly TimeOfDay t = ref world.Get<TimeOfDay>();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+
+world.component::<TimeOfDay>().add_trait::<flecs::Singleton>();
+
 // Set singleton
-world.set(TimeOfDay { value: 0.5 });
+world.set(TimeOfDay(0.5));
 
 // Get singleton
-world.get::<&TimeOfDay>(|time| println!("{}", time.value));
+world.get::<&TimeOfDay>(|time| println!("{}", time.0));
 ```
 
 </li>
@@ -2048,12 +2091,16 @@ world.Component<TimeOfDay>().Entity.Set(new TimeOfDay(0.5));
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+
+world.component::<TimeOfDay>().add_trait::<flecs::Singleton>();
+
 // Set singleton
-world.set(TimeOfDay { value: 0.5 });
+world.set(TimeOfDay(0.5));
 
 // Equivalent to:
-world.component::<TimeOfDay>().set(TimeOfDay { value: 0.5 });
+world.component::<TimeOfDay>().set(TimeOfDay(0.5));
 ```
 
 </li>
@@ -2123,7 +2170,8 @@ e.IsEnabled<Position>(); // True
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Register toggle-able component
 world
     .component::<Position>()
@@ -2132,14 +2180,14 @@ world
 let e = world.entity().set(Position { x: 10.0, y: 20.0 });
 
 // Disable component
-e.disable::<Position>();
+e.disable(Position::id());
 
-e.enabled::<Position>(); // False
+e.is_enabled(Position::id()); // False
 
 // Enable component
-e.enable::<Position>();
+e.enable(Position::id());
 
-e.enabled::<Position>(); // True
+e.is_enabled(Position::id()); // True
 ```
 </li>
 </ul>
