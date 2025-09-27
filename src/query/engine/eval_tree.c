@@ -255,7 +255,27 @@ bool flecs_query_tree_with(
             flecs_query_set_vars(op, actual_id, ctx);
         }     
     } else {
-        ecs_abort(ECS_UNSUPPORTED, NULL);
+        if (tgt == EcsWildcard) {
+            ecs_abort(ECS_UNSUPPORTED, NULL);
+        } else {
+            ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
+            ecs_component_record_t *cr = op_ctx->cr;
+            if (!cr) {
+                op_ctx->cr = cr = flecs_components_get(
+                    ctx->world, ecs_pair(EcsChildOf, tgt));
+                if (!cr) {
+                    return false;
+                }
+            }
+
+            printf("find nfr for table %u [%s]\n", range.table->id,
+                ecs_table_str(ctx->world, table));
+
+            ecs_parent_record_t *nfr = ecs_map_get_ptr(
+                &cr->pair->children_tables, range.table->id);
+            ecs_assert(nfr != NULL, ECS_INTERNAL_ERROR, NULL);
+            printf("find for parent: %s\n", ecs_id_str(ctx->world, cr->id));
+        }
     }
 
     return true;
