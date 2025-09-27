@@ -1,6 +1,68 @@
 #include "../private_api.h"
 
 static
+void flecs_add_non_fragmenting_child_to_table(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_entity_t entity,
+    const ecs_table_t *table)
+{
+    ecs_map_init_if(&cr->pair->children_tables, &world->allocator);
+    ecs_parent_record_t *elem = (ecs_parent_record_t*)
+        ecs_map_ensure(&cr->pair->children_tables, table->id);
+    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Encode id of first entity in table + the total number of entities in the
+     * table for this parent in a single uint64 so everything fits in a map
+     * element without having to allocate. */
+    if (!elem->first_entity) {
+        elem->first_entity = (uint32_t)entity;
+        elem->count = 1;
+    } else {
+        elem->count ++;
+    }
+}
+
+static
+void flecs_remove_non_fragmenting_child_from_table(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_entity_t parent,
+    ecs_entity_t entity,
+    const ecs_table_t *table,
+    int32_t row)
+{
+    ecs_parent_record_t *elem = flecs_component_get_parent_record(cr, table);
+    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    elem->count --;
+    if (!elem->count) {
+        ecs_map_remove(&cr->pair->children_tables, table->id);
+    } else {
+        if (elem->first_entity == (uint32_t)entity) {
+            EcsParent *parents = ecs_table_get(world, table, EcsParent, 0);
+            int32_t i, count = ecs_table_count(table);
+
+            for (i = 0; i < count; i ++) {
+                row --;
+                if (row < 0) {
+                    row = count - 1;
+                }
+
+                if (parents[row].value == parent) {
+                    elem->first_entity = 
+                        (uint32_t)ecs_table_entities(table)[row];
+                    break;
+                }
+            }
+
+            /* Table should contain other children for parent */
+            ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
+        }
+    }
+}
+
+static
 void flecs_add_non_fragmenting_child(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -23,9 +85,9 @@ void flecs_add_non_fragmenting_child(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_map_init_if(&cr->pair->non_fragmenting_tables, &world->allocator);
-    ecs_non_fragmenting_record_t *elem = (ecs_non_fragmenting_record_t*)
-        ecs_map_ensure(&cr->pair->non_fragmenting_tables, r->table->id);
+    ecs_map_init_if(&cr->pair->children_tables, &world->allocator);
+    ecs_parent_record_t *elem = (ecs_parent_record_t*)
+        ecs_map_ensure(&cr->pair->children_tables, r->table->id);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Encode id of first entity in table + the total number of entities in the
@@ -65,36 +127,8 @@ void flecs_remove_non_fragmenting_child(
     ecs_table_t *table = r->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_non_fragmenting_record_t *elem = (ecs_non_fragmenting_record_t*)
-        ecs_map_get(&cr->pair->non_fragmenting_tables, r->table->id);
-    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    elem->count --;
-    if (!elem->count) {
-        ecs_map_remove(&cr->pair->non_fragmenting_tables, r->table->id);
-    } else {
-        if (elem->first_entity == (uint32_t)entity) {
-            EcsParent *parents = ecs_table_get(world, table, EcsParent, 0);
-            int32_t i, row = ECS_RECORD_TO_ROW(r->row);
-            int32_t count = ecs_table_count(table);
-
-            for (i = 0; i < count; i ++) {
-                row --;
-                if (row < 0) {
-                    row = count - 1;
-                }
-
-                if (parents[row].value == parent) {
-                    elem->first_entity = 
-                        (uint32_t)ecs_table_entities(table)[row];
-                    break;
-                }
-            }
-
-            /* Table should contain other children for parent */
-            ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
-        }
-    }
+    flecs_remove_non_fragmenting_child_from_table(
+        world, cr, parent, entity, table, ECS_RECORD_TO_ROW(r->row));
 }
 
 static
@@ -141,4 +175,53 @@ void flecs_bootstrap_parent_component(
         .on_remove = flecs_on_parent,
         .on_replace = flecs_on_replace_parent
     });
+}
+
+void flecs_on_non_fragmenting_child_move_add(
+    ecs_world_t *world,
+    const ecs_table_t *dst,
+    const ecs_table_t *src,
+    int32_t row,
+    int32_t count)
+{
+    ecs_assert(dst->flags & EcsTableHasParent, ECS_INTERNAL_ERROR, NULL);
+
+    EcsParent *parents = ecs_table_get(world, dst, EcsParent, 0);
+    int32_t i = row, end = i + count;
+    for (; i < end; i ++) {
+        ecs_entity_t e = ecs_table_entities(dst)[i];
+        ecs_entity_t p = parents[i].value;
+        ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(p));
+        if (src->flags & EcsTableHasParent) {
+            flecs_remove_non_fragmenting_child_from_table(
+                world, cr, p, e, src, 0);
+        }
+        flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
+    }
+}
+
+void flecs_on_non_fragmenting_child_move_remove(
+    ecs_world_t *world,
+    const ecs_table_t *dst,
+    const ecs_table_t *src,
+    int32_t row,
+    int32_t count)
+{
+    if (!(dst->flags & EcsTableHasParent)) {
+        return;
+    }
+
+    EcsParent *parents = ecs_table_get(world, src, EcsParent, 0);
+    int32_t i = row, end = i + count;
+    for (; i < end; i ++) {
+        ecs_entity_t e = ecs_table_entities(src)[i];
+        ecs_entity_t p = parents[i].value;
+        ecs_component_record_t *cr = flecs_components_ensure(world, ecs_childof(p));        
+        flecs_remove_non_fragmenting_child_from_table(
+            world, cr, p, e, src, 0);
+
+        if (dst->flags & EcsTableHasParent) {
+            flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
+        }
+    }
 }
