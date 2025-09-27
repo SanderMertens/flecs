@@ -309,7 +309,7 @@ void flecs_remove_from_table(
                 }
             }
 
-            flecs_notify_on_remove(world, table, NULL, 0, table_count, &td);
+            flecs_notify_on_remove(world, table, dst_table, 0, table_count, &td);
             ecs_log_pop_3();
         }
 
