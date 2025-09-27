@@ -726,7 +726,19 @@
                 "remove_ordered_children_trait_w_deleted_children",
                 "remove_ordered_children_trait_w_deleted_children_reverse",
                 "get_parent",
-                "get_target"
+                "get_target",
+                "table_child_count",
+                "table_child_count_set_parent_after_tag",
+                "table_child_count_after_add",
+                "table_child_count_after_remove",
+                "table_child_count_after_remove_all",
+                "table_child_count_after_clear",
+                "table_child_count_after_delete",
+                "table_child_count_n_children",
+                "table_child_count_n_children_remove_parent",
+                "table_child_count_n_children_delete_children",
+                "table_child_count_n_children_remove_parent_reverse",
+                "table_child_count_n_children_delete_children_reverse"
             ]
         }, {
             "id": "Hierarchies",

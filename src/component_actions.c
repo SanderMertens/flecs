@@ -306,9 +306,14 @@ void flecs_notify_on_add(
 
     if (added->count) {
         ecs_flags32_t diff_flags = 
-            diff->added_flags|(table->flags & EcsTableHasTraversable);
+            diff->added_flags|(table->flags & (EcsTableHasTraversable|EcsTableHasParent));
         if (!diff_flags) {
             return;
+        }
+
+        if (diff_flags & EcsTableHasParent) {
+            flecs_on_non_fragmenting_child_move_add(
+                world, table, other_table, row, count);
         }
 
         if (diff_flags & EcsTableEdgeReparent) {
@@ -356,9 +361,14 @@ void flecs_notify_on_remove(
         }
 
         ecs_flags32_t diff_flags = 
-            diff->removed_flags|(table->flags & EcsTableHasTraversable);
+            diff->removed_flags|(table->flags & (EcsTableHasTraversable|EcsTableHasParent));
         if (!diff_flags) {
             return;
+        }
+
+        if (diff_flags & EcsTableHasParent) {
+            flecs_on_non_fragmenting_child_move_remove(
+                world, other_table, table, row, count);
         }
 
         if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {

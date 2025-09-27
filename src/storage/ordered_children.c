@@ -13,7 +13,7 @@ void flecs_ordered_children_fini(
     ecs_component_record_t *cr)
 {
     /* If parent has non-fragmenting children, make sure they're deleted */
-    if (ecs_map_count(&cr->pair->non_fragmenting_tables)) {
+    if (ecs_map_count(&cr->pair->children_tables)) {
         int32_t i, count = ecs_vec_count(&cr->pair->ordered_children);
         ecs_entity_t *children = ecs_vec_first(&cr->pair->ordered_children);
 
@@ -24,7 +24,7 @@ void flecs_ordered_children_fini(
 
     ecs_vec_fini_t(
         &world->allocator, &cr->pair->ordered_children, ecs_entity_t);
-    ecs_map_fini(&cr->pair->non_fragmenting_tables);
+    ecs_map_fini(&cr->pair->children_tables);
 }
 
 void flecs_ordered_children_populate(
@@ -56,7 +56,7 @@ void flecs_ordered_children_clear(
         ECS_INTERNAL_ERROR, NULL);
 
     if (!(cr->flags & EcsIdMarkedForDelete)) {
-        ecs_assert(!ecs_map_count(&cr->pair->non_fragmenting_tables),
+        ecs_assert(!ecs_map_count(&cr->pair->children_tables),
             ECS_UNSUPPORTED,
             "cannot remove OrderedChildren trait from parent that has "
             "children which use the Parent component");

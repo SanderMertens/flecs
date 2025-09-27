@@ -27,12 +27,6 @@ typedef struct ecs_reachable_cache_t {
     ecs_vec_t ids; /* vec<reachable_elem_t> */
 } ecs_reachable_cache_t;
 
-/* Tracks which non-fragmenting children are stored in table for parent. */
-typedef struct ecs_non_fragmenting_record_t {
-    uint32_t first_entity;
-    int32_t count;
-} ecs_non_fragmenting_record_t;
-
 /* Component index data that just applies to pairs */
 typedef struct ecs_pair_record_t {
     /* Name lookup index (currently only used for ChildOf pairs) */
@@ -42,7 +36,7 @@ typedef struct ecs_pair_record_t {
     ecs_vec_t ordered_children;
 
     /* Tables with non-fragmenting children */
-    ecs_map_t non_fragmenting_tables; /* map<table_id, {first_entity|count} */
+    ecs_map_t children_tables; /* map<table_id, ecs_parent_record_t */
 
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
