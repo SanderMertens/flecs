@@ -903,3 +903,23 @@ ecs_id_t flecs_component_get_id(
     ecs_assert(cr != NULL, ECS_INVALID_PARAMETER, NULL);
     return cr->id;
 }
+
+ecs_parent_record_t* flecs_component_get_parent_record(
+    const ecs_component_record_t *cr,
+    const ecs_table_t *table)
+{
+    ecs_assert(cr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_pair_record_t *pair = cr->pair;
+
+    if (!pair) {
+        return NULL;
+    }
+
+    if (!ecs_map_is_init(&pair->children_tables)) {
+        return NULL;
+    }
+
+    return (ecs_parent_record_t*)ecs_map_get(&pair->children_tables, table->id);
+}
