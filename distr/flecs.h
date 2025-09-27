@@ -4467,6 +4467,11 @@ typedef struct ecs_table_diff_t {
     ecs_flags32_t removed_flags;
 } ecs_table_diff_t;
 
+/* Tracks which/how many non-fragmenting children are stored in table for parent. */
+typedef struct ecs_parent_record_t {
+    uint32_t first_entity;
+    int32_t count;
+} ecs_parent_record_t;
 
 /** Find record for entity. 
  * An entity record contains the table and row for the entity.
@@ -4671,6 +4676,11 @@ ecs_flags32_t flecs_component_get_flags(
  */
 FLECS_API
 FLECS_ALWAYS_INLINE const ecs_table_record_t* flecs_component_get_table(
+    const ecs_component_record_t *cr,
+    const ecs_table_t *table);
+
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_parent_record_t* flecs_component_get_parent_record(
     const ecs_component_record_t *cr,
     const ecs_table_t *table);
 
