@@ -168,7 +168,8 @@ typedef struct {
     ecs_component_record_t *cr;
     uint32_t tgt;
     ecs_entity_t *entities;
-    int32_t count;
+    const EcsParent *parents;
+    ecs_table_range_t range;
     int32_t cur;
 } ecs_query_tree_ctx_t;
 
