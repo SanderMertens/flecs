@@ -6067,19 +6067,14 @@ FLECS_API
 void ecs_readonly_end(
     ecs_world_t *world);
 
-/** Merge world or stage.
- * When automatic merging is disabled, an application can call this
- * operation on either an individual stage, or on the world which will merge
- * all stages. This operation may only be called when staging is not enabled
- * (either after ecs_progress() or after ecs_readonly_end()).
+/** Merge stage.
+ * This will merge all commands enqueued for a stage.
  *
- * This operation may be called on an already merged stage or world.
- *
- * @param world The world.
+ * @param stage The stage.
  */
 FLECS_API
 void ecs_merge(
-    ecs_world_t *world);
+    ecs_world_t *stage);
 
 /** Defer operations until end of frame.
  * When this operation is invoked while iterating, operations inbetween the
