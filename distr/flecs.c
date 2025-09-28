@@ -17410,7 +17410,7 @@ void ecs_os_fini(void) {
 
 #ifdef ECS_TARGET_WINDOWS
 #include <windows.h>
-#include <DbgHelp.h>
+#include <dbghelp.h>
 
 #ifdef ECS_TARGET_MSVC
 #pragma comment(lib, "DbgHelp.lib")
