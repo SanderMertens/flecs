@@ -177,26 +177,44 @@ void flecs_query_var_set_range(
     };
 }
 
-void flecs_query_var_narrow_range(
-    ecs_var_id_t var_id,
-    ecs_table_t *table,
-    int32_t offset,
-    int32_t count,
+void flecs_query_src_set_single(
+    const ecs_query_op_t *op,
+    int32_t row,
     const ecs_query_run_ctx_t *ctx)
-{    
-    ecs_var_t *var = &ctx->vars[var_id];
+{
+    if (!(op->flags & (EcsQueryIsVar << EcsQuerySrc))) {
+        return;
+    }
+
+    ecs_var_id_t src = op->src.var;
+    ecs_var_t *var = &ctx->vars[src];
+
+    ecs_assert(var->range.table != NULL, ECS_INTERNAL_ERROR, NULL);
+    var->range.offset = row;
+    var->range.count = 1;
+
+    var->entity = ecs_table_entities(var->range.table)[row];
+}
+
+void flecs_query_src_set_range(
+    const ecs_query_op_t *op,
+    const ecs_table_range_t *range,
+    const ecs_query_run_ctx_t *ctx)
+{
+    if (!(op->flags & (EcsQueryIsVar << EcsQuerySrc))) {
+        return;
+    }
+
+    ecs_var_id_t src = op->src.var;
+    ecs_var_t *var = &ctx->vars[src];
     
     var->entity = 0;
-    var->range = (ecs_table_range_t){ 
-        .table = table,
-        .offset = offset,
-        .count = count
-    };
+    ecs_assert(var->range.table == range->table, ECS_INTERNAL_ERROR, NULL);
+    var->range = *range;
 
-    ecs_assert(var_id < ctx->query->var_count, ECS_INTERNAL_ERROR, NULL);
-    if (ctx->query_vars[var_id].kind != EcsVarTable) {    
-        ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
-        var->entity = ecs_table_entities(table)[offset];
+    if (ctx->query_vars[src].kind != EcsVarTable) {    
+        ecs_assert(range->count == 1, ECS_INTERNAL_ERROR, NULL);
+        var->entity = ecs_table_entities(range->table)[range->offset];
     }
 }
 

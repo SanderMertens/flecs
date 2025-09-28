@@ -273,21 +273,18 @@ next_block:
         goto done;
     }
 
-    if (op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
-        flecs_query_var_narrow_range(op->src.var, table, row, cur - row, ctx);
-    }
+    flecs_query_src_set_range(op, &(ecs_table_range_t){
+        .table = table, .offset = row, .count = cur - row
+    }, ctx);
     op_ctx->cur = cur;
 
     return true;
 
 done:
     /* Restore range & set fields */
-    if (op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
-        flecs_query_var_narrow_range(op->src.var, 
-            table, op_ctx->range.offset, op_ctx->range.count, ctx);
-    }
-
+    flecs_query_src_set_range(op, &op_ctx->range, ctx);
     it->set_fields = op_ctx->prev_set_fields;
+
     return false;
 }
 

@@ -4441,6 +4441,38 @@ void NonFragmentingChildOf_this_src_1_table_n_children_mixed_parents_w_tag(void)
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_this_src_1_table_no_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_new_w(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo }, { ecs_childof(p) }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_new_w(world, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_this_src_written_1_table_1_child(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -4549,7 +4581,7 @@ void NonFragmentingChildOf_this_src_written_1_table_2_children_mixed_parents(voi
 
     {
         ecs_query_t *q = ecs_query(world, {
-            .terms = {{ ecs_childof(p2) }, { Foo }},
+            .terms = {{ Foo }, { ecs_childof(p2) }},
             .cache_kind = cache_kind
         });
 

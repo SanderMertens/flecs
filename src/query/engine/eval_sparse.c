@@ -61,10 +61,7 @@ next:
     op_ctx->cur ++;
 
     if (op_ctx->cur == end) {
-        if (op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
-            flecs_query_var_narrow_range(op->src.var, op_ctx->range.table, 
-                op_ctx->range.offset, op_ctx->range.count, ctx);
-        }
+        flecs_query_src_set_range(op, &op_ctx->range, ctx);
         return false;
     }
 
@@ -87,10 +84,7 @@ next:
         goto next;
     }
 
-    if (op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
-        flecs_query_var_narrow_range(op->src.var, op_ctx->range.table, 
-            op_ctx->cur, 1, ctx);
-    }
+    flecs_query_src_set_single(op, op_ctx->cur, ctx);
 
     return true;
 }
