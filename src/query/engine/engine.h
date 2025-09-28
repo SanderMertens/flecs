@@ -61,11 +61,14 @@ void flecs_query_var_set_range(
     int32_t count,
     const ecs_query_run_ctx_t *ctx);
 
-void flecs_query_var_narrow_range(
-    ecs_var_id_t var_id,
-    ecs_table_t *table,
-    int32_t offset,
-    int32_t count,
+void flecs_query_src_set_single(
+    const ecs_query_op_t *op,
+    int32_t row,
+    const ecs_query_run_ctx_t *ctx);
+
+void flecs_query_src_set_range(
+    const ecs_query_op_t *op,
+    const ecs_table_range_t *range,
     const ecs_query_run_ctx_t *ctx);
 
 void flecs_query_var_set_entity(
