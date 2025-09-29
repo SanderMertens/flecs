@@ -82106,8 +82106,15 @@ repeat:
         }
     }
 
-    if (op_ctx->parents[op_ctx->cur].value != op_ctx->tgt) {
-        goto repeat;
+    ecs_entity_t tgt = op_ctx->tgt;
+    ecs_entity_t parent = op_ctx->parents[op_ctx->cur].value;
+    if (tgt == EcsWildcard) {
+        ecs_iter_t *it = ctx->it;
+        it->ids[op->field_index] = ecs_childof(parent);
+    } else {
+        if (parent != op_ctx->tgt) {
+            goto repeat;
+        }
     }
 
     flecs_query_src_set_single(op, op_ctx->cur, ctx);
@@ -82406,7 +82413,13 @@ bool flecs_query_tree_with(
     } else {
         /* Wildcard query */
         if (tgt == EcsWildcard) {
-            ecs_abort(ECS_UNSUPPORTED, NULL);
+            if (op->match_flags & EcsTermMatchAny) {
+                it->ids[op->field_index] = ecs_childof(EcsWildcard);
+            } else {
+                op_ctx->parents = parents;
+                op_ctx->tgt = tgt;
+                return flecs_query_tree_with_parent(op, redo, ctx);
+            }
 
         /* Parent query */
         } else {
