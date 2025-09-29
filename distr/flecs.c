@@ -78906,6 +78906,25 @@ bool flecs_query_or_from(
 }
 
 static
+bool flecs_query_ids_check(
+    ecs_component_record_t *cur)
+{
+    if (!cur->cache.tables.count) {
+        if (!(cur->flags & EcsIdOrderedChildren)) {
+            return false;
+        }
+
+        ecs_assert(cur->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!ecs_vec_count(&cur->pair->ordered_children)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static
 bool flecs_query_ids(
     const ecs_query_op_t *op,
     bool redo,
@@ -78920,7 +78939,11 @@ bool flecs_query_ids(
 
     {
         cur = flecs_components_get(ctx->world, id);
-        if (!cur || !cur->cache.tables.count) {
+        if (!cur) {
+            return false;
+        }
+
+        if (!flecs_query_ids_check(cur)) {
             return false;
         }
     }
@@ -78945,18 +78968,22 @@ bool flecs_query_idsright(
 {
     ecs_query_ids_ctx_t *op_ctx = flecs_op_ctx(ctx, ids);
     ecs_component_record_t *cur;
+    ecs_iter_t *it = ctx->it;
 
     if (!redo) {
         ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        cur = op_ctx->cur = flecs_components_get(ctx->world, id);
         if (!ecs_id_is_wildcard(id)) {
             /* If id is not a wildcard, we can directly return it. This can 
              * happen if a variable was constrained by an iterator. */
             op_ctx->cur = NULL;
             flecs_query_set_vars(op, id, ctx);
-            return true;
+            it->ids[op->field_index] = id;
+            it->sources[op->field_index] = EcsWildcard;
+            ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
+            return flecs_query_ids_check(cur);
         }
 
-        cur = op_ctx->cur = flecs_components_get(ctx->world, id);
         if (!cur) {
             return false;
         }
@@ -78969,7 +78996,7 @@ bool flecs_query_idsright(
 next:
     do {
         cur = op_ctx->cur = flecs_component_first_next(op_ctx->cur);
-    } while (cur && !cur->cache.tables.count); /* Skip empty ids */
+    } while (cur && !flecs_query_ids_check(cur)); /* Skip empty ids */
 
     if (!cur) {
         return false;
@@ -78984,7 +79011,6 @@ next:
     flecs_query_set_vars(op, cur->id, ctx);
 
     if (op->field_index != -1) {
-        ecs_iter_t *it = ctx->it;
         ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
