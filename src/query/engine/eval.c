@@ -681,6 +681,25 @@ bool flecs_query_or_from(
 }
 
 static
+bool flecs_query_ids_check(
+    ecs_component_record_t *cur)
+{
+    if (!cur->cache.tables.count) {
+        if (!(cur->flags & EcsIdOrderedChildren)) {
+            return false;
+        }
+
+        ecs_assert(cur->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!ecs_vec_count(&cur->pair->ordered_children)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static
 bool flecs_query_ids(
     const ecs_query_op_t *op,
     bool redo,
@@ -695,7 +714,11 @@ bool flecs_query_ids(
 
     {
         cur = flecs_components_get(ctx->world, id);
-        if (!cur || !cur->cache.tables.count) {
+        if (!cur) {
+            return false;
+        }
+
+        if (!flecs_query_ids_check(cur)) {
             return false;
         }
     }
@@ -744,7 +767,7 @@ bool flecs_query_idsright(
 next:
     do {
         cur = op_ctx->cur = flecs_component_first_next(op_ctx->cur);
-    } while (cur && !cur->cache.tables.count); /* Skip empty ids */
+    } while (cur && !flecs_query_ids_check(cur)); /* Skip empty ids */
 
     if (!cur) {
         return false;
