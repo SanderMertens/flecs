@@ -2241,6 +2241,11 @@ void NonFragmentingChildOf_fixed_src_childof_wildcard_w_component(void);
 void NonFragmentingChildOf_fixed_src_childof_any(void);
 void NonFragmentingChildOf_fixed_src_childof_var(void);
 void NonFragmentingChildOf_fixed_src_childof_set_var(void);
+void NonFragmentingChildOf_any_src_childof_parent(void);
+void NonFragmentingChildOf_any_src_childof_var(void);
+void NonFragmentingChildOf_any_src_childof_var_written(void);
+void NonFragmentingChildOf_any_src_childof_var_set(void);
+void NonFragmentingChildOf_any_src_childof_wildcard(void);
 void NonFragmentingChildOf_this_src_childof_0(void);
 void NonFragmentingChildOf_this_src_1_table_no_children(void);
 void NonFragmentingChildOf_this_src_1_table_1_child(void);
@@ -11210,6 +11215,26 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_fixed_src_childof_set_var
     },
     {
+        "any_src_childof_parent",
+        NonFragmentingChildOf_any_src_childof_parent
+    },
+    {
+        "any_src_childof_var",
+        NonFragmentingChildOf_any_src_childof_var
+    },
+    {
+        "any_src_childof_var_written",
+        NonFragmentingChildOf_any_src_childof_var_written
+    },
+    {
+        "any_src_childof_var_set",
+        NonFragmentingChildOf_any_src_childof_var_set
+    },
+    {
+        "any_src_childof_wildcard",
+        NonFragmentingChildOf_any_src_childof_wildcard
+    },
+    {
         "this_src_childof_0",
         NonFragmentingChildOf_this_src_childof_0
     },
@@ -12253,7 +12278,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        74,
+        79,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params
