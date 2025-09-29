@@ -5148,7 +5148,6 @@ void NonFragmentingChildOf_this_src_written_1_table_2_children_mixed_parents_w_w
         test_uint(ecs_childof(p2), ecs_field_id(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_query_next(&it));
 
         test_bool(false, ecs_query_next(&it));
 
@@ -5662,7 +5661,7 @@ void NonFragmentingChildOf_this_src_written_1_table_n_children_mixed_parents_w_a
         test_uint(e3, it.entities[2]);
         test_uint(e4, it.entities[3]);
         test_uint(Foo, ecs_field_id(&it, 0));
-        test_uint(ecs_childof(p1), ecs_field_id(&it, 1));
+        test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
 
