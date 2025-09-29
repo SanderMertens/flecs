@@ -82157,6 +82157,51 @@ bool flecs_query_tree_select(
     return flecs_query_tree_select_tgt(op, redo, ctx);
 }
 
+bool flecs_query_tree_select_any(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_tree_wildcard_ctx_t *op_ctx = flecs_op_ctx(ctx, tree_wildcard);
+    ecs_iter_t *it = ctx->it;
+    int8_t field_index = op->field_index;
+    ecs_assert(field_index >= 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (!redo) {
+        op_ctx->cr = ctx->world->cr_childof_wildcard;
+        ecs_assert(op_ctx->cr != NULL, ECS_INTERNAL_ERROR, NULL);
+        op_ctx->state = EcsQueryTreeIterEntities;
+    }
+
+next:
+    switch(op_ctx->state) {
+    case EcsQueryTreeIterEntities: {
+        bool result = flecs_query_select_w_id(
+            op, redo, ctx, ecs_id(EcsParent), 
+                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
+        if (!result) {
+            op_ctx->state = EcsQueryTreeIterTables;
+            redo = false;
+            goto next;
+        }
+        it->ids[field_index] = ecs_pair(EcsChildOf, EcsWildcard);
+        return true;
+    }
+    case EcsQueryTreeIterTables: {
+        bool result = flecs_query_select_w_id(
+            op, redo, ctx, ecs_pair(EcsChildOf, EcsWildcard), 
+                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
+        if (!result) {
+            return false;
+        }
+        it->ids[field_index] = ecs_pair(EcsChildOf, EcsWildcard);
+        return true;
+    }
+    default:
+        return false;
+    }
+}
+
 bool flecs_query_tree_select_wildcard(
     const ecs_query_op_t *op,
     bool redo,
@@ -82371,10 +82416,12 @@ bool flecs_query_tree_with(
                 return false;
             }
 
-            /* Table has Parent component, so there should be a parent record */
             ecs_parent_record_t *pr = flecs_component_get_parent_record(
                 cr, range.table);
-            ecs_assert(pr != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (!pr) {
+                /* Table doesn't have entities with parent */
+                return false;
+            }
 
             ecs_record_t *r = flecs_entities_get_any(
                 ctx->world, pr->first_entity);
@@ -82465,7 +82512,11 @@ bool flecs_query_tree_and_wildcard(
     if (written & (1ull << op->src.var)) {
         return flecs_query_tree_with(op, redo, ctx);
     } else {
-        return flecs_query_tree_select_wildcard(op, redo, ctx, bulk_return);
+        if (op->match_flags & EcsTermMatchAny) {
+            return flecs_query_tree_select_any(op, redo, ctx);
+        } else {
+            return flecs_query_tree_select_wildcard(op, redo, ctx, bulk_return);
+        }
     }
 }
 
