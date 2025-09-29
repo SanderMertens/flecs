@@ -606,6 +606,8 @@ void Expr_mod_by_0_var(void);
 void Expr_int_to_bool(void);
 void Expr_bool_to_int(void);
 void Expr_bool_to_uint(void);
+void Expr_char(void);
+void Expr_char_to_int(void);
 void Expr_add_mul_3_int_literals(void);
 void Expr_sub_mul_3_int_literals(void);
 void Expr_div_mul_3_int_literals(void);
@@ -3482,6 +3484,14 @@ bake_test_case Expr_testcases[] = {
         Expr_bool_to_uint
     },
     {
+        "char",
+        Expr_char
+    },
+    {
+        "char_to_int",
+        Expr_char_to_int
+    },
+    {
         "add_mul_3_int_literals",
         Expr_add_mul_3_int_literals
     },
@@ -5505,7 +5515,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        296,
+        298,
         Expr_testcases,
         1,
         Expr_params

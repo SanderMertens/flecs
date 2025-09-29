@@ -790,6 +790,7 @@
                 "serialize_sparse_inherited_pair",
                 "serialize_sparse_inherited_mixed",
                 "serialize_sparse_w_type_info",
+                "serialize_sparse_tag",
                 "serialize_auto_override_w_inherited",
                 "serialize_auto_override",
                 "serialize_auto_override_pair",
@@ -797,7 +798,8 @@
                 "serialize_auto_override_pair_fullpath",
                 "serialize_toggle",
                 "serialize_toggle_pair",
-                "serialize_null_doc_name"
+                "serialize_null_doc_name",
+                "serialize_base_w_invalid_component"
             ]
         }, {
             "id": "SerializeIterToJson",

@@ -390,7 +390,7 @@ void* flecs_sparse_ensure(
                 unused_page, dense_array, unused, dense_count);
         }
 
-        flecs_sparse_assign_index(page, dense_array, index, count);
+        flecs_sparse_assign_index(page, dense_array, id, count);
     }
 
     return DATA(page->data, sparse->size, offset);
@@ -668,6 +668,10 @@ void flecs_sparse_shrink(
         sparse->allocator, &sparse->pages, ecs_sparse_page_t, 
         max_page_index + 1);
     ecs_vec_reclaim_t(sparse->allocator, &sparse->pages, ecs_sparse_page_t);
+
+    ecs_vec_set_count_t(
+        sparse->allocator, &sparse->dense, uint64_t, sparse->count);
+    ecs_vec_reclaim_t(sparse->allocator, &sparse->dense, uint64_t);
 }
 
 void ecs_sparse_init(

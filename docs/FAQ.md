@@ -12,8 +12,8 @@ There are a lot of reasons, but the main ones are:
 - The rules and limitations of the ECS aren't dictated by any type system
 - You can create a zero-overhead C++ API on top of C, but not the other way around
 
-## Can I use Flecs with C++14 or higher?
-You can! Even though the C++ API is C++11, you can use it with any revision at or above 11.
+## Can I use Flecs with C++20 or higher?
+You can! Even though the C++ API is C++17, you can use it with any revision at or above 17.
 
 ## Can I use std::vector or other types inside components?
 You can! Components can contain almost any C++ type.

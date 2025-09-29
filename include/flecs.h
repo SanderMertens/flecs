@@ -59,10 +59,6 @@
 #define ecs_ftime_t ecs_float_t
 #endif
 
-/** @def FLECS_LEGACY
- * Define when building for C89
- */
-// #define FLECS_LEGACY
 
 /** @def FLECS_ACCURATE_COUNTERS
  * Define to ensure that global counters used for statistics (such as the
@@ -238,9 +234,9 @@
  * cost of decreased performance. */
 // #define FLECS_LOW_FOOTPRINT
 #ifdef FLECS_LOW_FOOTPRINT
-#define FLECS_HI_COMPONENT_ID (16)
-#define FLECS_HI_ID_RECORD_ID (16)
-#define FLECS_ENTITY_PAGE_BITS (6)
+#define FLECS_HI_COMPONENT_ID 16
+#define FLECS_HI_ID_RECORD_ID 16
+#define FLECS_ENTITY_PAGE_BITS 6
 #define FLECS_USE_OS_ALLOC
 #define FLECS_DEFAULT_TO_UNCACHED_QUERIES
 #endif
@@ -260,7 +256,7 @@
  * that is not a power of two will degrade performance.
  */
 #ifndef FLECS_HI_COMPONENT_ID
-#define FLECS_HI_COMPONENT_ID (256)
+#define FLECS_HI_COMPONENT_ID 256
 #endif
 
 /** @def FLECS_HI_ID_RECORD_ID
@@ -270,7 +266,7 @@
  * lookup, which is slower but more memory efficient.
  */
 #ifndef FLECS_HI_ID_RECORD_ID
-#define FLECS_HI_ID_RECORD_ID (1024)
+#define FLECS_HI_ID_RECORD_ID 1024
 #endif
 
 /** @def FLECS_SPARSE_PAGE_BITS
@@ -279,13 +275,13 @@
  * determines the page size, which is (1 << bits).
  * Lower values decrease memory utilization, at the cost of more allocations. */
 #ifndef FLECS_SPARSE_PAGE_BITS
-#define FLECS_SPARSE_PAGE_BITS (6)
+#define FLECS_SPARSE_PAGE_BITS 6
 #endif
 
 /** @def FLECS_ENTITY_PAGE_BITS
  * Same as FLECS_SPARSE_PAGE_BITS, but for the entity index. */
 #ifndef FLECS_ENTITY_PAGE_BITS
-#define FLECS_ENTITY_PAGE_BITS (10)
+#define FLECS_ENTITY_PAGE_BITS 10
 #endif
 
 /** @def FLECS_USE_OS_ALLOC
@@ -297,18 +293,18 @@
 /** @def FLECS_ID_DESC_MAX
  * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
 #ifndef FLECS_ID_DESC_MAX
-#define FLECS_ID_DESC_MAX (32)
+#define FLECS_ID_DESC_MAX 32
 #endif
 
 /** @def FLECS_EVENT_DESC_MAX
  * Maximum number of events in ecs_observer_desc_t */
 #ifndef FLECS_EVENT_DESC_MAX
-#define FLECS_EVENT_DESC_MAX (8)
+#define FLECS_EVENT_DESC_MAX 8
 #endif
 
 /** @def FLECS_VARIABLE_COUNT_MAX
  * Maximum number of query variables per query */
-#define FLECS_VARIABLE_COUNT_MAX (64)
+#define FLECS_VARIABLE_COUNT_MAX 64
 
 /** @def FLECS_TERM_COUNT_MAX 
  * Maximum number of terms in queries. Should not exceed 64. */
@@ -319,19 +315,19 @@
 /** @def FLECS_TERM_ARG_COUNT_MAX 
  * Maximum number of arguments for a term. */
 #ifndef FLECS_TERM_ARG_COUNT_MAX
-#define FLECS_TERM_ARG_COUNT_MAX (16)
+#define FLECS_TERM_ARG_COUNT_MAX 16
 #endif
 
 /** @def FLECS_QUERY_VARIABLE_COUNT_MAX
  * Maximum number of query variables per query. Should not exceed 128. */
 #ifndef FLECS_QUERY_VARIABLE_COUNT_MAX
-#define FLECS_QUERY_VARIABLE_COUNT_MAX (64)
+#define FLECS_QUERY_VARIABLE_COUNT_MAX 64
 #endif
 
 /** @def FLECS_QUERY_SCOPE_NESTING_MAX
  * Maximum nesting depth of query scopes */
 #ifndef FLECS_QUERY_SCOPE_NESTING_MAX
-#define FLECS_QUERY_SCOPE_NESTING_MAX (8)
+#define FLECS_QUERY_SCOPE_NESTING_MAX 8
 #endif
 
 /** @def FLECS_DAG_DEPTH_MAX
@@ -339,7 +335,7 @@
  * depth larger than this is encountered, a CYCLE_DETECTED panic is thrown.
  */
 #ifndef FLECS_DAG_DEPTH_MAX
-#define FLECS_DAG_DEPTH_MAX (128)
+#define FLECS_DAG_DEPTH_MAX 128
 #endif
 
 /** @} */
@@ -963,7 +959,6 @@ struct ecs_type_hooks_t {
      * will be set that panics when called. */
     ecs_flags32_t flags;
     
-
     /** Callback that is invoked when an instance of a component is added. This
      * callback is invoked before triggers are invoked. */
     ecs_iter_action_t on_add;
@@ -1446,6 +1441,7 @@ typedef struct ecs_event_desc_t {
 typedef struct ecs_build_info_t {
     const char *compiler;           /**< Compiler used to compile flecs */
     const char **addons;            /**< Addons included in build */
+    const char **flags;             /**< Compile time settings */
     const char *version;            /**< Stringified version */
     int16_t version_major;          /**< Major flecs version */
     int16_t version_minor;          /**< Minor flecs version */
@@ -1483,14 +1479,17 @@ typedef struct ecs_world_info_t {
     int64_t table_create_total;       /**< Total number of times a table was created */
     int64_t table_delete_total;       /**< Total number of times a table was deleted */
     int64_t pipeline_build_count_total; /**< Total number of pipeline builds */
-    int64_t systems_ran_frame;        /**< Total number of systems ran in last frame */
-    int64_t observers_ran_frame;      /**< Total number of times observer was invoked */
+    int64_t systems_ran_total;        /**< Total number of systems ran */
+    int64_t observers_ran_total;      /**< Total number of times observer was invoked */
+    int64_t queries_ran_total;        /**< Total number of times a query was evaluated */
 
     int32_t tag_id_count;             /**< Number of tag (no data) ids in the world */
     int32_t component_id_count;       /**< Number of component (data) ids in the world */
     int32_t pair_id_count;            /**< Number of pair ids in the world */
 
     int32_t table_count;              /**< Number of tables */
+
+    uint32_t creation_time;           /**< Time when world was created */
 
     /* -- Command counts -- */
     struct {
@@ -2297,19 +2296,14 @@ FLECS_API
 void ecs_readonly_end(
     ecs_world_t *world);
 
-/** Merge world or stage.
- * When automatic merging is disabled, an application can call this
- * operation on either an individual stage, or on the world which will merge
- * all stages. This operation may only be called when staging is not enabled
- * (either after ecs_progress() or after ecs_readonly_end()).
+/** Merge stage.
+ * This will merge all commands enqueued for a stage.
  *
- * This operation may be called on an already merged stage or world.
- *
- * @param world The world.
+ * @param stage The stage.
  */
 FLECS_API
 void ecs_merge(
-    ecs_world_t *world);
+    ecs_world_t *stage);
 
 /** Defer operations until end of frame.
  * When this operation is invoked while iterating, operations inbetween the

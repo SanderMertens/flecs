@@ -2050,6 +2050,45 @@ void World_init_create_delete_random_2_entities_shrink_fini(void) {
     ecs_fini(world);
 }
 
+void World_recreate_tables_after_shrink(void) {
+    ecs_world_t *world = ecs_mini();
+
+    int32_t COUNT = 1000;
+
+    ecs_entity_t *tags = ecs_os_malloc_n(ecs_entity_t, COUNT);
+    for (int32_t i = 0; i < COUNT; i ++) {
+        tags[i] = ecs_new(world);
+    }
+
+    ecs_entity_t e = ecs_new(world);
+    for (int32_t i = 0; i < COUNT; i ++) {
+        ecs_add_id(world, e, tags[i]);
+        if (i) {
+            ecs_remove_id(world, e, tags[i - 1]);
+        }
+    }
+
+    ecs_delete(world, e);
+
+    ecs_shrink(world);
+
+    e = ecs_new(world);
+    for (int32_t i = 0; i < COUNT; i ++) {
+        ecs_add_id(world, e, tags[i]);
+        if (i) {
+            ecs_remove_id(world, e, tags[i - 1]);
+        }
+    }
+
+    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_get_type(world, e)->count == 1);
+    test_assert(ecs_has_id(world, e, tags[COUNT - 1]));
+
+    ecs_os_free(tags);
+
+    ecs_fini(world);
+}
+
 void World_mini_all_tables_builtin(void) {
     ecs_world_t *world = ecs_mini();
 

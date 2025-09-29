@@ -51,7 +51,9 @@ bool flecs_json_serialize_table_type_info(
         }
 
         const ecs_type_info_t *ti = cr->type_info;
-        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!ti) {
+            continue;
+        }
 
         flecs_json_next(buf);
         ecs_strbuf_appendlit(buf, "\"");
@@ -337,14 +339,15 @@ error:
 }
 
 static
-bool flecs_json_serialize_table_inherited_type(
+int flecs_json_serialize_table_inherited_type(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_strbuf_t *buf,
-    const ecs_iter_to_json_desc_t *desc)
+    const ecs_iter_to_json_desc_t *desc,
+    bool *has_inherited)
 {
     if (!(table->flags & EcsTableHasIsA)) {
-        return false;
+        return 0;
     }
 
     const ecs_table_record_t *tr = flecs_component_get_table(
@@ -360,7 +363,11 @@ bool flecs_json_serialize_table_inherited_type(
         }
 
         ecs_table_t *base_table = base_record->table;
-        flecs_json_serialize_table_inherited_type(world, base_table, buf, desc);
+        if (flecs_json_serialize_table_inherited_type(
+            world, base_table, buf, desc, has_inherited)) 
+        {
+            return -1;      
+        }
 
         char *base_name = ecs_get_path(world, base);
         flecs_json_member(buf, base_name);
@@ -375,9 +382,12 @@ bool flecs_json_serialize_table_inherited_type(
             buf, desc);
 
         int32_t component_count = 0;
-        flecs_json_serialize_table_components(
+        if (flecs_json_serialize_table_components(
             world, base_table, table, buf, NULL, desc, 
-                ECS_RECORD_TO_ROW(base_record->row), &component_count);
+                ECS_RECORD_TO_ROW(base_record->row), &component_count)) 
+        {
+            return -1;
+        }
 
         if (desc->serialize_type_info) {
             flecs_json_serialize_table_type_info(
@@ -387,56 +397,69 @@ bool flecs_json_serialize_table_inherited_type(
         flecs_json_object_pop(buf);
     }
 
-    return true;
+    *has_inherited = true;
+    return 0;
 }
 
 static
-bool flecs_json_serialize_table_inherited(
+int flecs_json_serialize_table_inherited(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_strbuf_t *buf,
-    const ecs_iter_to_json_desc_t *desc)
+    const ecs_iter_to_json_desc_t *desc,
+    bool *has_inherited)
 {
     if (!(table->flags & EcsTableHasIsA)) {
-        return false;
+        return 0;
     }
 
     flecs_json_memberl(buf, "inherited");
     flecs_json_object_push(buf);
-    flecs_json_serialize_table_inherited_type(world, table, buf, desc);
+    if (flecs_json_serialize_table_inherited_type(
+        world, table, buf, desc, has_inherited)) 
+    {
+        return -1;
+    }
     flecs_json_object_pop(buf);
-    return true;
+    return 0;
 }
 
 static
-bool flecs_json_serialize_table_tags_pairs_vars(
+int flecs_json_serialize_table_tags_pairs_vars(
     const ecs_world_t *world,
     const ecs_iter_t *it,
     ecs_table_t *table,
     int32_t row,
     ecs_strbuf_t *buf,
-    const ecs_iter_to_json_desc_t *desc)
+    const ecs_iter_to_json_desc_t *desc,
+    bool *result_out)
 {
-    bool result = false;
+    *result_out = false;
     ecs_strbuf_list_push(buf, "", ",");
-    result |= flecs_json_serialize_table_tags(world, table, NULL, buf, desc);
-    result |= flecs_json_serialize_table_pairs(world, table, NULL, row, buf, desc);
-    result |= flecs_json_serialize_vars(world, it, buf, desc);
+    *result_out |= flecs_json_serialize_table_tags(world, table, NULL, buf, desc);
+    *result_out |= flecs_json_serialize_table_pairs(world, table, NULL, row, buf, desc);
+    *result_out |= flecs_json_serialize_vars(world, it, buf, desc);
+
     if (desc->serialize_inherited) {
-        result |= flecs_json_serialize_table_inherited(world, table, buf, desc);
+        if (flecs_json_serialize_table_inherited(
+            world, table, buf, desc, result_out)) 
+        {
+            return -1;
+        }
     }
 
     if (desc->serialize_type_info) {
         /* If we're serializing tables and are requesting type info, it must be
          * added to each result. */
-        result |= flecs_json_serialize_table_type_info(world, table, buf, desc);
+         *result_out |= flecs_json_serialize_table_type_info(world, table, buf, desc);
     }
 
     ecs_strbuf_list_pop(buf, "");
-    if (!result) {
+    if (!*result_out) {
         ecs_strbuf_reset(buf);
     }
-    return result;
+
+    return 0;
 }
 
 int flecs_json_serialize_iter_result_table(
@@ -459,9 +482,14 @@ int flecs_json_serialize_iter_result_table(
     int32_t tags_pairs_vars_len = 0;
     char *tags_pairs_vars = NULL;
 
+    bool has_tags_pairs_vars = false;
     if (flecs_json_serialize_table_tags_pairs_vars(
-        world, it, table, 0, &tags_pairs_vars_buf, desc)) 
+        world, it, table, 0, &tags_pairs_vars_buf, desc, &has_tags_pairs_vars)) 
     {
+        return -1;
+    }
+
+    if (has_tags_pairs_vars) {
         tags_pairs_vars_len = ecs_strbuf_written(&tags_pairs_vars_buf);
         tags_pairs_vars = ecs_strbuf_get(&tags_pairs_vars_buf);
     }

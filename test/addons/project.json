@@ -366,7 +366,9 @@
                 "query_memory_with_variables",
                 "query_memory_with_monitors",
                 "commands_memory",
-                "table_memory_histogram"
+                "table_memory_histogram",
+                "sparse_component_memory",
+                "sparse_tag_memory"
             ]
         }, {
             "id": "Run",
@@ -511,6 +513,7 @@
                 "query",
                 "named_query",
                 "tables",
+                "components",
                 "request_commands",
                 "request_commands_2_syncs",
                 "request_commands_no_frames",

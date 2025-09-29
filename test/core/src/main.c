@@ -626,6 +626,7 @@ void Sparse_remove_pair_before_recycle_sparse_relationship(void);
 void Sparse_remove_pair_before_recycle_sparse_target(void);
 void Sparse_recycle_after_delete_table(void);
 void Sparse_recycle_pair_after_delete_table(void);
+void Sparse_add_sparse_pair_to_recycled(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -2180,6 +2181,7 @@ void World_init_shrink_twice_fini(void);
 void World_init_create_delete_entities_shrink_fini(void);
 void World_init_create_delete_random_1_entities_shrink_fini(void);
 void World_init_create_delete_random_2_entities_shrink_fini(void);
+void World_recreate_tables_after_shrink(void);
 void World_mini_all_tables_builtin(void);
 void World_mini_all_tables_builtin_after_add(void);
 void World_user_component_not_builtin(void);
@@ -5106,6 +5108,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "recycle_pair_after_delete_table",
         Sparse_recycle_pair_after_delete_table
+    },
+    {
+        "add_sparse_pair_to_recycled",
+        Sparse_add_sparse_pair_to_recycled
     }
 };
 
@@ -11168,6 +11174,10 @@ bake_test_case World_testcases[] = {
         World_init_create_delete_random_2_entities_shrink_fini
     },
     {
+        "recreate_tables_after_shrink",
+        World_recreate_tables_after_shrink
+    },
+    {
         "mini_all_tables_builtin",
         World_mini_all_tables_builtin
     },
@@ -13261,7 +13271,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        178,
+        179,
         Sparse_testcases,
         1,
         Sparse_params
@@ -13431,7 +13441,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        106,
+        107,
         World_testcases
     },
     {

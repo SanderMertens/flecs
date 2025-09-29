@@ -10,7 +10,7 @@ To use Flecs, copy the [distr/flecs.c](https://raw.githubusercontent.com/SanderM
 
 - When compiling Flecs with `gcc`/`clang`, add `-std=gnu99` to the compiler command. This ensures that addons that rely on time & socket functions are compiled correctly.
 
-- C++ files that use Flecs must be compiled with `-std=c++0x` (C++11) or higher.
+- C++ files that use Flecs must be compiled with `-std=c++17` or higher.
 
 ### Dynamic linking
 To build Flecs as a dynamic library, remove this line from the top of the [distr/flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.h) file:
@@ -122,7 +122,7 @@ The following addons can be configured:
 
 Addon         | Description                                      | Define              |
 --------------|--------------------------------------------------|---------------------|
-[Cpp](/flecs/group__cpp.html)                              | C++11 API                                        | FLECS_CPP           |
+[Cpp](/flecs/group__cpp.html)                              | C++17 API                                        | FLECS_CPP           |
 [Module](/flecs/group__c__addons__module.html)             | Organize game logic into reusable modules        | FLECS_MODULE        |
 [System](/flecs/group__c__addons__system.html)             | Create & run systems                             | FLECS_SYSTEM        |
 [Pipeline](/flecs/group__c__addons__pipeline.html)         | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
@@ -569,7 +569,7 @@ printf("Component size: %u\n", c->size);
 flecs::entity pos_e = world.entity<Position>();
 
 const EcsComponent& c = pos_e.get<flecs::Component>();
-std::cout << "Component size: " << c->size << std::endl;
+std::cout << "Component size: " << c.size << std::endl;
 ```
 </li>
 <li><b class="tab-title">C#</b>
@@ -643,11 +643,11 @@ e.has<Enemy>(); // false!
 auto Enemy = world.entity();
 
 // Create entity, add Enemy tag
-auto e = world.entity().add(Enemy);
-e.has(Enemy); // true!
+auto e2 = world.entity().add(Enemy);
+e2.has(Enemy); // true!
 
-e.remove(Enemy);
-e.has(Enemy); // false!
+e2.remove(Enemy);
+e2.has(Enemy); // false!
 ```
 </li>
 <li><b class="tab-title">C#</b>
@@ -866,7 +866,7 @@ if (ecs_id_is_pair(id)) {
 <li><b class="tab-title">C++</b>
 
 ```cpp
-flecs::id id = ...;
+flecs::id id = world.pair<Likes>(Bob);
 if (id.is_pair()) {
     auto relationship = id.first();
     auto target = id.second();
@@ -924,7 +924,7 @@ ecs_has_pair(world, Bob, Grows, Pears); // true!
 <li><b class="tab-title">C++</b>
 
 ```cpp
-flecs::entity bob = ...;
+flecs::entity bob = world.entity();
 bob.add(Eats, Apples);
 bob.add(Eats, Pears);
 bob.add(Grows, Pears);
@@ -983,7 +983,7 @@ ecs_entity_t o = ecs_get_target(world, Alice, Likes, 0); // Returns Bob
 <li><b class="tab-title">C++</b>
 
 ```cpp
-flecs::entity alice = ...;
+flecs::entity alice = world.entity();
 auto o = alice.target<Likes>(); // Returns Bob
 ```
 </li>
@@ -1153,12 +1153,11 @@ Queries (see below) can use hierarchies to order data breadth-first, which can c
 ```c
 ecs_query_t *q = ecs_query(world, {
     .terms = {
-        { ecs_id(Position) },
-        { ecs_id(Position), .src = {
-            .flags = EcsCascade,       // Breadth-first order
-            .trav = EcsChildOf // Use ChildOf relationship for traversal
+        { .id = ecs_id(Position) },
+        { .id = ecs_id(Position), 
+            .trav = EcsChildOf, // Use ChildOf relationship for traversal
+            .src.id = EcsCascade // Breadth-first order
         }}
-    }
 });
 
 ecs_iter_t it = ecs_query_iter(world, q);
@@ -1250,7 +1249,7 @@ ecs_os_free(type_str);
 <li><b class="tab-title">C++</b>
 
 ```cpp
-auto e = ecs.entity()
+auto e = world.entity()
     .add<Position>()
     .add<Velocity>();
 
@@ -1303,6 +1302,7 @@ for (int i = 0; i < type->count; i++) {
 <li><b class="tab-title">C++</b>
 
 ```cpp
+auto e = world.entity();
 e.each([&](flecs::id id) {
     if (id == world.id<Position>()) {
         // Found Position component!
@@ -1350,6 +1350,9 @@ A singleton is a single instance of a component that can be retrieved without an
 <li><b class="tab-title">C</b>
 
 ```c
+// Register singleton component
+ecs_add_id(world, ecs_id(Gravity), EcsSingleton);
+
 // Set singleton component
 ecs_singleton_set(world, Gravity, { 9.81 });
 
@@ -1360,6 +1363,10 @@ const Gravity *g = ecs_singleton_get(world, Gravity);
 <li><b class="tab-title">C++</b>
 
 ```cpp
+
+// Register singleton component
+world.component<Gravity>().add(flecs::Singleton);
+
 // Set singleton component
 world.set<Gravity>({ 9.81 });
 
@@ -1407,7 +1414,7 @@ Singleton components are created by adding the component to its own entity id. T
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_set(world, ecs_id(Gravity), Gravity, {10, 20});
+ecs_set(world, ecs_id(Gravity), Gravity, {9.81});
 
 const Gravity *g = ecs_get(world, ecs_id(Gravity), Gravity);
 ```
@@ -1417,7 +1424,7 @@ const Gravity *g = ecs_get(world, ecs_id(Gravity), Gravity);
 ```cpp
 flecs::entity grav_e = world.entity<Gravity>();
 
-grav_e.set<Gravity>({10, 20});
+grav_e.set<Gravity>({9.81});
 
 const Gravity& g = grav_e.get<Gravity>();
 ```
@@ -1460,8 +1467,10 @@ The following examples show how to query for a singleton component:
 <li><b class="tab-title">C</b>
 
 ```c
+ecs_add_id(world, ecs_id(Gravity), EcsSingleton);
+
 // Create query that matches Gravity as singleton
-ecs_query_t *q = ecs_query(ecs, {
+ecs_query_t *q = ecs_query(world, {
     .terms = {
         // Regular component
         { .id = ecs_id(Velocity) },
@@ -1478,16 +1487,13 @@ ECS_SYSTEM(world, ApplyGravity, EcsOnUpdate, Velocity, Gravity($));
 
 ```cpp
 world.query_builder<Velocity, Gravity>()
-    .term_at(1).singleton()
     .build();
 ```
 </li>
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.QueryBuilder<Velocity, Gravity>()
-    .TermAt(1).Singleton()
-    .Build();
+world.QueryBuilder<Velocity, Gravity>().Build();
 ```
 </li>
 <li><b class="tab-title">Rust</b>
@@ -1495,8 +1501,6 @@ world.QueryBuilder<Velocity, Gravity>()
 ```rust
 world
     .query::<(&Velocity, &Gravity)>()
-    .term_at(1)
-    .singleton()
     .build();
 ```
 </li>
@@ -1521,8 +1525,8 @@ Queries are the main mechanism for finding and iterating through entities. Queri
 ```c
 ecs_query_t *q = ecs_query(world, {
     .terms = {
-        { ecs_id(Position) },
-        { ecs_pair(EcsChildOf, parent) }
+        { .id = ecs_id(Position) },
+        { .id = ecs_pair(EcsChildOf, parent) }
     }
 });
 
@@ -1541,7 +1545,7 @@ while (ecs_query_next(&it)) {
     }
 }
 
-ecs_query_fini(f);
+ecs_query_fini(q);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1677,7 +1681,7 @@ The following example shows a query that matches all entities with a parent that
 ```c
 ecs_query_t *q = ecs_query(world, {
     .terms = {
-        { ecs_pair(EcsChildOf, EcsWildcard) }
+        { ecs_pair(EcsChildOf, EcsWildcard) },
         { ecs_id(Position), .oper = EcsNot },
     }
 });
@@ -1741,10 +1745,10 @@ A system is a query combined with a callback. Systems can be either ran manually
 <li><b class="tab-title">C</b>
 
 ```c
+
 // Option 1, use the ECS_SYSTEM convenience macro
 ECS_SYSTEM(world, Move, 0, Position, Velocity);
 ecs_run(world, Move, delta_time, NULL); // Run system
-
 // Option 2, use the ecs_system_init function/ecs_system macro
 ecs_entity_t move_sys = ecs_system(world, {
     .query.terms = {
@@ -2115,7 +2119,7 @@ An example of an observer with two components:
 ```c
 ecs_observer(world, {
     .query.terms = { { ecs_id(Position) }, { ecs_id(Velocity) }},
-    .event = { EcsOnSet },
+    .events = { EcsOnSet },
     .callback = OnSetPosition
 });
 
@@ -2132,9 +2136,10 @@ ecs_set(world, e, Position, {20, 40}); // Invokes the observer
 ```cpp
 world.observer<Position, Velocity>("OnSetPosition")
     .event(flecs::OnSet)
-    .each( ... ); // Callback code is same as system
+    // Callback code is same as system
+    .each([](Position& p, Velocity& v) { });
 
-auto e = ecs.entity();     // Doesn't invoke the observer
+auto e = world.entity();     // Doesn't invoke the observer
 e.set<Position>({10, 20}); // Doesn't invoke the observer
 e.set<Velocity>({1, 2});   // Invokes the observer
 e.set<Position>({20, 30}); // Invokes the observer

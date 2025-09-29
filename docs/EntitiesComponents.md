@@ -1296,7 +1296,7 @@ ecs_set_hooks(world, Position, {
 <li><b class="tab-title">C++</b>
 
 ```cpp
-ecs.component<Position>()
+world.component<Position>()
     .on_set([](Position& p) {
         std::cout << "{" << p.x << ", " << p.y << "}" << std::endl;
     });
@@ -1361,7 +1361,7 @@ ecs_set_hooks(world, Position, {
 <li><b class="tab-title">C++</b>
 
 ```cpp
-ecs.component<Position>()
+world.component<Position>()
     .on_replace([](Position& prev, Position& next) {
         std::cout << "prev = {" << prev.x << ", " << prev.y << "}" << std::endl;
         std::cout << "next = {" << next.x << ", " << next.y << "}" << std::endl;
@@ -1601,17 +1601,15 @@ int main(int argc, char *argv[]) {
 In C++ components are automatically registered upon first usage. The following example shows how:
 
 ```cpp
-int main(int argc, char *argv[]) {
-    flecs::world world;
+flecs::world world;
 
-    flecs::entity e1 = world.entity()
-        .set(Position{10, 20}) // Position registered here
-        .set(Velocity{1, 2}); // Velocity registered here
-
-    flecs::entity e1 = world.entity()
-        .set(Position{10, 20}) // Position already registered
-        .set(Velocity{1, 2}); // Velocity already registered
-}
+flecs::entity e1 = world.entity()
+    .set(Position{10, 20}) // Position registered here
+    .set(Velocity{1, 2}); // Velocity registered here
+    
+flecs::entity e2 = world.entity()
+    .set(Position{10, 20}) // Position already registered
+    .set(Velocity{1, 2}); // Velocity already registered
 ```
 
 Components can be registered in advance, which can be done for several reasons:
@@ -1638,11 +1636,9 @@ struct movement {
     }
 };
 
-int main(int argc, char *argv[]) {
     flecs::world world;
 
     world.import<movement>();
-}
 
 ```
 
@@ -2035,7 +2031,7 @@ ecs_set(world, ecs_id(TimeOfDay), TimeOfDay, {0.5});
 world.set<TimeOfDay>({ 0.5 });
 
 // Equivalent to:
-world.component<TimeOfDay>().set(TimeOfDay{ 0.5 })
+world.component<TimeOfDay>().set(TimeOfDay{ 0.5 });
 ```
 
 </li>
@@ -2102,7 +2098,7 @@ e.enabled<Position>(); // False
 
 // Enable component
 e.enable<Position>();
-e.enabled<Position>()  // True
+e.enabled<Position>();  // True
 ```
 
 </li>

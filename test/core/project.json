@@ -655,7 +655,8 @@
                 "remove_pair_before_recycle_sparse_relationship",
                 "remove_pair_before_recycle_sparse_target",
                 "recycle_after_delete_table",
-                "recycle_pair_after_delete_table"
+                "recycle_pair_after_delete_table",
+                "add_sparse_pair_to_recycled"
             ]
         }, {
             "id": "Hierarchies",
@@ -2259,6 +2260,7 @@
                 "init_create_delete_entities_shrink_fini",
                 "init_create_delete_random_1_entities_shrink_fini",
                 "init_create_delete_random_2_entities_shrink_fini",
+                "recreate_tables_after_shrink",
                 "mini_all_tables_builtin",
                 "mini_all_tables_builtin_after_add",
                 "user_component_not_builtin",

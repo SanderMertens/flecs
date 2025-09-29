@@ -392,3 +392,35 @@ void Sparse_remove_low_after_ensure_high(void) {
 
     flecs_sparse_free(sp);
 }
+
+void Sparse_recreate_pages_after_shrink(void) {
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
+    test_assert(sp != NULL);
+    test_int(flecs_sparse_count(sp), 0);
+
+    populate(sp, 1000);
+
+    flecs_sparse_clear(sp);
+
+    flecs_sparse_shrink(sp);
+
+    populate(sp, 1000);
+
+    flecs_sparse_free(sp);
+}
+
+void Sparse_create_low_page_after_high(void) {
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
+
+    bool is_new = true;
+    void *ptr = flecs_sparse_ensure_t(sp, int, 1000, &is_new);
+    test_assert(ptr != NULL);
+    test_bool(is_new, true);
+
+    test_assert(ptr == flecs_sparse_ensure_t(sp, int, 1000, &is_new));
+    test_bool(is_new, false);
+
+    populate(sp, 1000);
+
+    flecs_sparse_free(sp);
+}

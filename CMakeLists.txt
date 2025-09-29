@@ -43,7 +43,7 @@ macro(add_flecs_target TARGET CONFIG)
     target_default_compile_options_c(${TARGET})
     target_default_compile_warnings_c(${TARGET})
     if(WIN32)
-        target_link_libraries(${TARGET} wsock32 ws2_32)
+        target_link_libraries(${TARGET} wsock32 ws2_32 dbghelp)
     endif()
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Android")
