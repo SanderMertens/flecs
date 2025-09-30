@@ -17,14 +17,6 @@
 static ECS_TAG_DECLARE(EcsRestPlecs);
 
 typedef struct {
-    ecs_world_t *world;
-    ecs_http_server_t *srv;
-    int32_t rc;
-    ecs_map_t cmd_captures;
-    double last_time;
-} ecs_rest_ctx_t;
-
-typedef struct {
     char *cmds;
     ecs_time_t start_time;
     ecs_strbuf_t buf;
