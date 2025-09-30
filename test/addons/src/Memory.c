@@ -240,7 +240,7 @@ void Memory_commands_memory(void) {
     ECS_COMPONENT(world, Velocity);
 
     /* Get initial commands memory statistics */
-    ecs_commands_memory_t mem = ecs_commands_memory_get(world);
+    ecs_misc_memory_t mem = ecs_commands_memory_get(world);
     
     /* Initial state should have minimal memory usage */
     ecs_size_t initial_queue = mem.bytes_queue;
