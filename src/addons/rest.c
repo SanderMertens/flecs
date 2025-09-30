@@ -1307,9 +1307,9 @@ void flecs_rest_reply_table_append_type(
     ecs_id_t *ids = table->type.array;
     for (i = 0; i < count; i ++) {
         ecs_strbuf_list_next(reply);
-        ecs_strbuf_appendch(reply, '"');
-        ecs_id_str_buf(world, ids[i], reply);
-        ecs_strbuf_appendch(reply, '"');
+        char *idstr = ecs_id_str(world, ids[i]);
+        flecs_json_string_escape(reply, idstr);
+        ecs_os_free(idstr);
     }
     ecs_strbuf_list_pop(reply, "]");
 }
