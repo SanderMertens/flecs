@@ -27,6 +27,29 @@ int32_t flecs_hashmap_find_key(
     return -1;
 }
 
+static
+ecs_hm_bucket_t* flecs_hm_bucket_new(
+    ecs_hashmap_t *map)
+{
+    if (map->impl.allocator) {
+        return flecs_calloc_t(map->impl.allocator, ecs_hm_bucket_t);
+    } else {
+        return ecs_os_calloc_t(ecs_hm_bucket_t);
+    }
+}
+
+static
+void flecs_hm_bucket_free(
+    ecs_hashmap_t *map,
+    ecs_hm_bucket_t *bucket)
+{
+    if (map->impl.allocator) {
+        flecs_free_t(map->impl.allocator, ecs_hm_bucket_t, bucket);
+    } else {
+        ecs_os_free(bucket);
+    }
+}
+
 void flecs_hashmap_init_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
@@ -39,7 +62,6 @@ void flecs_hashmap_init_(
     map->value_size = value_size;
     map->hash = hash;
     map->compare = compare;
-    flecs_ballocator_init_t(&map->bucket_allocator, ecs_hm_bucket_t);
     ecs_map_init(&map->impl, allocator);
 }
 
@@ -53,12 +75,9 @@ void flecs_hashmap_fini(
         ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
         ecs_vec_fini(a, &bucket->keys, map->key_size);
         ecs_vec_fini(a, &bucket->values, map->value_size);
-#if defined(FLECS_SANITIZE) || defined(FLECS_USE_OS_ALLOC)
-        flecs_bfree(&map->bucket_allocator, bucket);
-#endif
+        flecs_hm_bucket_free(map, bucket);
     }
 
-    flecs_ballocator_fini(&map->bucket_allocator);
     ecs_map_fini(&map->impl);
 }
 
@@ -77,7 +96,7 @@ void flecs_hashmap_copy(
     while (ecs_map_next(&it)) {
         ecs_hm_bucket_t **bucket_ptr = ecs_map_ref(&it, ecs_hm_bucket_t);
         ecs_hm_bucket_t *src_bucket = bucket_ptr[0];
-        ecs_hm_bucket_t *dst_bucket = flecs_balloc(&dst->bucket_allocator);
+        ecs_hm_bucket_t *dst_bucket = flecs_hm_bucket_new(dst);
         bucket_ptr[0] = dst_bucket;
         dst_bucket->keys = ecs_vec_copy(a, &src_bucket->keys, dst->key_size);
         dst_bucket->values = ecs_vec_copy(a, &src_bucket->values, dst->value_size);
@@ -121,7 +140,7 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
     ecs_hm_bucket_t **r = ecs_map_ensure_ref(&map->impl, ecs_hm_bucket_t, hash);
     ecs_hm_bucket_t *bucket = r[0];
     if (!bucket) {
-        bucket = r[0] = flecs_bcalloc(&map->bucket_allocator);
+        bucket = r[0] = flecs_hm_bucket_new(map);
     }
 
     ecs_allocator_t *a = map->impl.allocator;
@@ -190,7 +209,7 @@ void flecs_hm_bucket_remove(
         ecs_vec_fini(a, &bucket->values, map->value_size);
         ecs_hm_bucket_t *b = ecs_map_remove_ptr(&map->impl, hash);
         ecs_assert(bucket == b, ECS_INTERNAL_ERROR, NULL); (void)b;
-        flecs_bfree(&map->bucket_allocator, bucket);
+        flecs_hm_bucket_free(map, bucket);
     }
 }
 

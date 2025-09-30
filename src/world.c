@@ -709,7 +709,6 @@ void flecs_world_allocators_init(
     flecs_ballocator_init_t(&a->pair_record, ecs_pair_record_t);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
-    flecs_ballocator_init_t(&a->hashmap, ecs_hashmap_t);
     flecs_table_diff_builder_init(world, &world->allocators.diff_builder);
 }
 
@@ -725,7 +724,6 @@ void flecs_world_allocators_fini(
     flecs_ballocator_fini(&a->pair_record);
     flecs_ballocator_fini(&a->table_diff);
     flecs_ballocator_fini(&a->sparse_chunk);
-    flecs_ballocator_fini(&a->hashmap);
     flecs_table_diff_builder_fini(world, &world->allocators.diff_builder);
 
     flecs_allocator_fini(&world->allocator);

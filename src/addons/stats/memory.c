@@ -5,7 +5,10 @@
 #include "flecs.h"
 #include "stats.h"
 #include "../pipeline/pipeline.h"
+
+#ifdef FLECS_REST
 #include "../http/http.h"
+#endif
 
 #ifdef FLECS_STATS
 
@@ -67,7 +70,6 @@ ecs_size_t flecs_hashmap_memory_get(
         ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
         result += ecs_vec_size(&bucket->keys) * key_size;
         result += ecs_vec_size(&bucket->values) * value_size;
-        result += flecs_ballocator_memory_get(&name_index->bucket_allocator);
     }
 
     return result;
@@ -129,7 +131,7 @@ void flecs_sparse_memory_get(
     *unused += total_size - (count * element_size);
 }
 
-ecs_entities_memory_t ecs_entities_memory_get(
+ecs_entities_memory_t ecs_entity_memory_get(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -714,6 +716,7 @@ void flecs_rematch_monitor_memory_get(
     }
 }
 
+#ifdef FLECS_META
 static
 void flecs_reflection_memory_get(
     const ecs_world_t *world,
@@ -787,6 +790,7 @@ void flecs_reflection_memory_get(
         }
     }
 }
+#endif
 
 static
 void flecs_stats_memory_get(
@@ -830,6 +834,7 @@ void flecs_stats_memory_get(
     }
 }
 
+#ifdef FLECS_REST
 static
 void flecs_http_memory_get(
     ecs_http_server_t *srv,
@@ -864,7 +869,9 @@ void flecs_http_memory_get(
         }
     }
 }
+#endif
 
+#ifdef FLECS_REST
 static
 void flecs_rest_memory_get(
     const ecs_world_t *world,
@@ -881,6 +888,7 @@ void flecs_rest_memory_get(
         }
     }
 }
+#endif
 
 ecs_misc_memory_t ecs_misc_memory_get(
     const ecs_world_t *world)
@@ -899,9 +907,13 @@ ecs_misc_memory_t ecs_misc_memory_get(
     flecs_system_memory_get(world, &result);
     flecs_pipeline_memory_get(world, &result);
     flecs_rematch_monitor_memory_get(world, &result);
-    flecs_reflection_memory_get(world, &result);
+    #ifdef FLECS_META
+        flecs_reflection_memory_get(world, &result);
+    #endif
     flecs_stats_memory_get(world, &result);
-    flecs_rest_memory_get(world, &result);
+    #ifdef FLECS_REST
+        flecs_rest_memory_get(world, &result);
+    #endif
 
     result.bytes_component_ids += 
         ecs_vec_size(&world->component_ids) * ECS_SIZEOF(ecs_entity_t);
@@ -957,8 +969,6 @@ ecs_allocator_memory_t ecs_allocator_memory_get(
         &world->allocators.table_diff);
     result.bytes_sparse_chunk = flecs_ballocator_memory_get(
         &world->allocators.sparse_chunk);
-    result.bytes_hashmap = flecs_ballocator_memory_get(
-        &world->allocators.hashmap);
 
     result.bytes_allocator = flecs_allocator_memory_get(&world->allocator);
 
@@ -995,11 +1005,11 @@ int flecs_world_memory_serialize(
     ecs_time_t t = {0};
     ecs_time_measure(&t);
     
-    value.entities = ecs_entities_memory_get(world);
+    value.entities = ecs_entity_memory_get(world);
     value.components = ecs_component_memory_get(world);
     value.component_index = ecs_component_index_memory_get(world);
-    value.query = ecs_query_memory_get(world);
-    value.table = ecs_table_memory_get(world);
+    value.queries = ecs_query_memory_get(world);
+    value.tables = ecs_table_memory_get(world);
     value.table_histogram = ecs_table_histogram_get(world);
     value.misc = ecs_misc_memory_get(world);
     value.allocators = ecs_allocator_memory_get(world);
@@ -1011,10 +1021,10 @@ int flecs_world_memory_serialize(
     s->value(s, ecs_id(ecs_component_memory_t), &value.components);
     s->member(s, "component_index");
     s->value(s, ecs_id(ecs_component_index_memory_t), &value.component_index);
-    s->member(s, "query");
-    s->value(s, ecs_id(ecs_query_memory_t), &value.query);
-    s->member(s, "table");
-    s->value(s, ecs_id(ecs_table_memory_t), &value.table);
+    s->member(s, "queries");
+    s->value(s, ecs_id(ecs_query_memory_t), &value.queries);
+    s->member(s, "tables");
+    s->value(s, ecs_id(ecs_table_memory_t), &value.tables);
     s->member(s, "table_histogram");
     s->value(s, ecs_id(ecs_table_histogram_t), &value.table_histogram);
     s->member(s, "misc");
@@ -1150,7 +1160,6 @@ void flecs_stats_memory_register_reflection(
             { .name = "bytes_pair_record", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_table_diff", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_sparse_chunk", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_hashmap", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_allocator", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_cmd_entry_chunk", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_query_impl", .type = ecs_id(ecs_i32_t), .unit = unit },
@@ -1164,8 +1173,8 @@ void flecs_stats_memory_register_reflection(
             { .name = "entities", .type = ecs_id(ecs_entities_memory_t) },
             { .name = "components", .type = ecs_id(ecs_component_memory_t) },
             { .name = "component_index", .type = ecs_id(ecs_component_index_memory_t) },
-            { .name = "query", .type = ecs_id(ecs_query_memory_t) },
-            { .name = "table", .type = ecs_id(ecs_table_memory_t) },
+            { .name = "queries", .type = ecs_id(ecs_query_memory_t) },
+            { .name = "tables", .type = ecs_id(ecs_table_memory_t) },
             { .name = "table_histogram", .type = ecs_id(ecs_table_histogram_t) },
             { .name = "misc", .type = ecs_id(ecs_misc_memory_t) },
             { .name = "allocators", .type = ecs_id(ecs_allocator_memory_t) },

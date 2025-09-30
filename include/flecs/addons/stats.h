@@ -599,7 +599,6 @@ typedef struct {
     ecs_size_t bytes_pair_record;       /** Pair record allocator. */
     ecs_size_t bytes_table_diff;        /** Table diff allocator. */
     ecs_size_t bytes_sparse_chunk;      /** Sparse chunk allocator. */
-    ecs_size_t bytes_hashmap;           /** Hashmap allocator. */
     ecs_size_t bytes_allocator;         /** Generic allocator. */
     ecs_size_t bytes_cmd_entry_chunk;   /** Command batching entry chunk allocator. */
     ecs_size_t bytes_query_impl;        /** Query struct allocator. */
@@ -611,8 +610,8 @@ typedef struct {
     ecs_entities_memory_t entities;
     ecs_component_memory_t components;
     ecs_component_index_memory_t component_index;
-    ecs_query_memory_t query;
-    ecs_table_memory_t table;
+    ecs_query_memory_t queries;
+    ecs_table_memory_t tables;
     ecs_table_histogram_t table_histogram;
     ecs_misc_memory_t misc;
     ecs_allocator_memory_t allocators;
@@ -626,7 +625,7 @@ typedef struct {
  * @return Memory statistics for the entity index.
  */
 FLECS_API
-ecs_entities_memory_t ecs_entity_index_memory_get(
+ecs_entities_memory_t ecs_entity_memory_get(
     const ecs_world_t *world);
 
 /** Get memory usage statistics for the component index.
@@ -680,7 +679,7 @@ ecs_table_histogram_t ecs_table_histogram_get(
  * @return Memory statistics for commands.
  */
 FLECS_API
-ecs_misc_memory_t ecs_commands_memory_get(
+ecs_misc_memory_t ecs_misc_memory_get(
     const ecs_world_t *world);
 
 /** Get memory usage statistics for allocators.

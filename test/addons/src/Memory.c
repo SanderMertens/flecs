@@ -240,16 +240,16 @@ void Memory_commands_memory(void) {
     ECS_COMPONENT(world, Velocity);
 
     /* Get initial commands memory statistics */
-    ecs_misc_memory_t mem = ecs_commands_memory_get(world);
+    ecs_misc_memory_t mem = ecs_misc_memory_get(world);
     
     /* Initial state should have minimal memory usage */
-    ecs_size_t initial_queue = mem.bytes_queue;
-    ecs_size_t initial_entries = mem.bytes_entries;
-    ecs_size_t initial_stack = mem.bytes_stack;
+    ecs_size_t initial_queue = mem.bytes_cmd_queue;
+    ecs_size_t initial_entries = mem.bytes_cmd_entries;
+    ecs_size_t initial_stack = mem.bytes_cmd_stack;
     
-    test_assert(mem.bytes_queue >= 0);
-    test_assert(mem.bytes_entries >= 0);
-    test_assert(mem.bytes_stack >= 0);
+    test_assert(mem.bytes_cmd_queue >= 0);
+    test_assert(mem.bytes_cmd_entries >= 0);
+    test_assert(mem.bytes_cmd_stack >= 0);
 
     /* Create deferred operations to test command memory usage */
     ecs_defer_begin(world);
@@ -272,25 +272,25 @@ void Memory_commands_memory(void) {
     ecs_add_pair(world, e1, EcsChildOf, e2);
     
     /* Get memory statistics while deferred (should show increased usage) */
-    mem = ecs_commands_memory_get(world);
+    mem = ecs_misc_memory_get(world);
     
-    test_assert(mem.bytes_queue >= initial_queue); /* Should have command queue data */
-    test_assert(mem.bytes_entries >= initial_entries); /* Should have entity batching data */
-    test_assert(mem.bytes_stack >= initial_stack); /* Should have stack allocator data */
+    test_assert(mem.bytes_cmd_queue >= initial_queue); /* Should have command queue data */
+    test_assert(mem.bytes_cmd_entries >= initial_entries); /* Should have entity batching data */
+    test_assert(mem.bytes_cmd_stack >= initial_stack); /* Should have stack allocator data */
     
     /* At least one category should have increased */
-    test_assert(mem.bytes_queue > initial_queue || 
-               mem.bytes_entries > initial_entries || 
-               mem.bytes_stack > initial_stack);
+    test_assert(mem.bytes_cmd_queue > initial_queue || 
+               mem.bytes_cmd_entries > initial_entries || 
+               mem.bytes_cmd_stack > initial_stack);
 
     ecs_defer_end(world);
     
     /* Get statistics after flush - some memory might be retained for reuse */
-    mem = ecs_commands_memory_get(world);
+    mem = ecs_misc_memory_get(world);
     
-    test_assert(mem.bytes_queue >= 0);
-    test_assert(mem.bytes_entries >= 0);
-    test_assert(mem.bytes_stack >= 0);
+    test_assert(mem.bytes_cmd_queue >= 0);
+    test_assert(mem.bytes_cmd_entries >= 0);
+    test_assert(mem.bytes_cmd_stack >= 0);
 
     /* Test with multiple defer levels */
     ecs_defer_begin(world);
@@ -299,10 +299,10 @@ void Memory_commands_memory(void) {
     ecs_entity_t nested_e = ecs_new(world);
     ecs_set(world, nested_e, Position, {100.0f, 200.0f});
     
-    mem = ecs_commands_memory_get(world);
-    test_assert(mem.bytes_queue >= 0);
-    test_assert(mem.bytes_entries >= 0);
-    test_assert(mem.bytes_stack >= 0);
+    mem = ecs_misc_memory_get(world);
+    test_assert(mem.bytes_cmd_queue >= 0);
+    test_assert(mem.bytes_cmd_entries >= 0);
+    test_assert(mem.bytes_cmd_stack >= 0);
     
     ecs_defer_end(world);
     ecs_defer_end(world);

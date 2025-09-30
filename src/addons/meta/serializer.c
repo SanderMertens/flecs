@@ -470,8 +470,7 @@ int flecs_meta_serialize_struct(
 
     ecs_hashmap_t *member_index = NULL;
     if (count) {        
-        op->is.members = member_index = flecs_name_index_new(
-            world, &world->allocator);
+        op->is.members = member_index = flecs_name_index_new(&world->allocator);
     }
 
     for (i = 0; i < count; i ++) {
