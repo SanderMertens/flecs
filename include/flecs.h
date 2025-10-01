@@ -1495,7 +1495,7 @@ typedef struct ecs_world_info_t {
     struct {
         int64_t add_count;             /**< Add commands processed */
         int64_t remove_count;          /**< Remove commands processed */
-        int64_t delete_count;          /**< Selete commands processed */
+        int64_t delete_count;          /**< Delete commands processed */
         int64_t clear_count;           /**< Clear commands processed */
         int64_t set_count;             /**< Set commands processed */
         int64_t ensure_count;          /**< Ensure/emplace commands processed */

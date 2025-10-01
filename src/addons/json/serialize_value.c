@@ -439,6 +439,8 @@ int ecs_array_to_json_buf(
     int32_t count,
     ecs_strbuf_t *buf)
 {
+    ecs_assert(type != 0, ECS_INVALID_PARAMETER, NULL);
+    
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
     if (!comp) {
         char *path = ecs_get_path(world, type);
