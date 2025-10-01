@@ -5243,7 +5243,7 @@ typedef struct ecs_world_info_t {
     struct {
         int64_t add_count;             /**< Add commands processed */
         int64_t remove_count;          /**< Remove commands processed */
-        int64_t delete_count;          /**< Selete commands processed */
+        int64_t delete_count;          /**< Delete commands processed */
         int64_t clear_count;           /**< Clear commands processed */
         int64_t set_count;             /**< Set commands processed */
         int64_t ensure_count;          /**< Ensure/emplace commands processed */
@@ -13705,6 +13705,15 @@ FLECS_API
 ecs_entities_memory_t ecs_entity_memory_get(
     const ecs_world_t *world);
 
+/** Get memory usage statistics for single component record.
+ * 
+ * @param cr The component record.
+ * @param result Memory statistics for component record (out).
+ */
+void ecs_component_record_memory_get(
+    const ecs_component_record_t *cr,
+    ecs_component_index_memory_t *result);
+
 /** Get memory usage statistics for the component index.
  * 
  * @param world The world.
@@ -13720,8 +13729,17 @@ ecs_component_index_memory_t ecs_component_index_memory_get(
  * @return Memory statistics for queries.
  */
 FLECS_API
-ecs_query_memory_t ecs_query_memory_get(
+ecs_query_memory_t ecs_queries_memory_get(
     const ecs_world_t *world);
+
+/** Get component memory for table.
+ *
+ * @param table The table.
+ * @param result The memory used by components stored in this table (out).
+ */
+void ecs_table_component_memory_get(
+    const ecs_table_t *table,
+    ecs_component_memory_t *result);
 
 /** Get memory usage statistics for components.
  * 
@@ -13732,13 +13750,22 @@ FLECS_API
 ecs_component_memory_t ecs_component_memory_get(
     const ecs_world_t *world);
 
+/** Get memory usage statistics for single table.
+ *
+ * @param table The table.
+ * @param result Memory statistics for table (out).
+ */
+void ecs_table_memory_get(
+    const ecs_table_t *table,
+    ecs_table_memory_t *result);
+
 /** Get memory usage statistics for tables.
  * 
  * @param world The world.
  * @return Memory statistics for tables.
  */
 FLECS_API
-ecs_table_memory_t ecs_table_memory_get(
+ecs_table_memory_t ecs_tables_memory_get(
     const ecs_world_t *world);
 
 /** Get number of tables by number of entities in the table.

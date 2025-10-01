@@ -1172,6 +1172,43 @@ void flecs_rest_append_type_hook(
 }
 
 static
+void flecs_rest_append_component_memory(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_strbuf_t *reply,
+    int32_t storage_bytes)
+{
+    (void)world;
+    (void)cr;
+    (void)reply;
+    (void)storage_bytes;
+
+#ifdef FLECS_STATS
+    if (!ecs_id(ecs_component_index_memory_t)) {
+        return;
+    }
+
+    ecs_component_index_memory_t component_index_memory = {0};
+    ecs_component_record_memory_get(cr, &component_index_memory);
+
+    ecs_strbuf_list_appendlit(reply, "\"memory\":");
+
+    ecs_strbuf_list_push(reply, "{", ",");
+    ecs_strbuf_list_appendlit(reply, "\"component_index\":");
+    ecs_ptr_to_json_buf(
+        world, ecs_id(ecs_component_index_memory_t), &component_index_memory, reply);
+
+    /* Only count storage for actual components, not wildcards */
+    if (ecs_id_is_wildcard(cr->id)) {
+        storage_bytes = 0;
+    }
+    ecs_strbuf_list_appendlit(reply, "\"storage\":");
+    ecs_strbuf_append(reply, "%d", storage_bytes);
+    ecs_strbuf_list_pop(reply, "}");
+#endif
+}
+
+static
 void flecs_rest_append_component(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -1180,30 +1217,29 @@ void flecs_rest_append_component(
     ecs_strbuf_list_next(reply);
     ecs_strbuf_appendlit(reply, "\n");
     ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_appendlit(reply, "\"expr\":");
+    ecs_strbuf_list_appendlit(reply, "\"name\":");
     char *str = ecs_id_str(world, cr->id);
     flecs_json_string_escape(reply, str);
     ecs_os_free(str);
 
     ecs_strbuf_list_appendlit(reply, "\"tables\":");
-    ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_appendlit(reply, "\"count\":");
-    ecs_strbuf_appendint(reply, flecs_table_cache_count(&cr->cache));
-    ecs_strbuf_list_appendlit(reply, "\"ids\":");
     ecs_strbuf_list_push(reply, "[", ",");
     ecs_table_cache_iter_t it;
-    int32_t entity_count = 0;
+    int32_t entity_count = 0, entity_size = 0, storage_bytes = 0;
     flecs_table_cache_iter(&cr->cache, &it);
     const ecs_table_record_t *tr;
     while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
         ecs_strbuf_list_next(reply);
         ecs_strbuf_appendint(reply, (int64_t)tr->hdr.table->id);
         entity_count += ecs_table_count(tr->hdr.table);
+        entity_size += ecs_table_size(tr->hdr.table);
     }
     ecs_strbuf_list_pop(reply, "]");
+
     ecs_strbuf_list_appendlit(reply, "\"entity_count\":");
     ecs_strbuf_appendint(reply, entity_count);
-    ecs_strbuf_list_pop(reply, "}");
+    ecs_strbuf_list_appendlit(reply, "\"entity_size\":");
+    ecs_strbuf_appendint(reply, entity_size);
 
     if (cr->type_info) {
         ecs_strbuf_list_appendlit(reply, "\"type\":");
@@ -1242,6 +1278,8 @@ void flecs_rest_append_component(
         ecs_strbuf_list_appendlit(reply, "\"on_replace\":");
         ecs_strbuf_appendbool(reply, cr->type_info->hooks.on_replace != NULL);
         ecs_strbuf_list_pop(reply, "}");
+
+        storage_bytes += entity_size * cr->type_info->size;
     }
 
     if (cr->sparse) {
@@ -1261,8 +1299,14 @@ void flecs_rest_append_component(
 
         ecs_strbuf_list_pop(reply, "]");
         ecs_strbuf_list_pop(reply, "}");
+
+        if (cr->type_info) {
+            storage_bytes += count * cr->type_info->size;
+        }
     }
 
+    flecs_rest_append_component_memory(world, cr, reply, storage_bytes);
+    
     ecs_strbuf_list_pop(reply, "}");
 }
 
@@ -1295,7 +1339,6 @@ bool flecs_rest_get_components(
     return true;
 }
 
-
 static
 void flecs_rest_reply_table_append_type(
     ecs_world_t *world,
@@ -1307,38 +1350,43 @@ void flecs_rest_reply_table_append_type(
     ecs_id_t *ids = table->type.array;
     for (i = 0; i < count; i ++) {
         ecs_strbuf_list_next(reply);
-        ecs_strbuf_appendch(reply, '"');
-        ecs_id_str_buf(world, ids[i], reply);
-        ecs_strbuf_appendch(reply, '"');
+        char *idstr = ecs_id_str(world, ids[i]);
+        flecs_json_string_escape(reply, idstr);
+        ecs_os_free(idstr);
     }
     ecs_strbuf_list_pop(reply, "]");
 }
 
 static
 void flecs_rest_reply_table_append_memory(
+    const ecs_world_t *world,
     ecs_strbuf_t *reply,
     const ecs_table_t *table)
 {
-    int32_t used = 0, allocated = 0;
-    int32_t count = ecs_table_count(table), size = ecs_table_size(table);
+    (void)world;
+    (void)reply;
+    (void)table;
 
-    used += count * ECS_SIZEOF(ecs_entity_t);
-    allocated += size * ECS_SIZEOF(ecs_entity_t);
-
-    int32_t i, storage_count = table->column_count;
-    ecs_column_t *columns = table->data.columns;
-
-    for (i = 0; i < storage_count; i ++) {
-        used += count * columns[i].ti->size;
-        allocated += size * columns[i].ti->size;
+#ifdef FLECS_STATS
+    if (!ecs_id(ecs_table_memory_t) || !ecs_id(ecs_component_memory_t)) {
+        return;
     }
+    ecs_table_memory_t table_memory = {0};
+    ecs_table_memory_get(table, &table_memory);
+
+    ecs_component_memory_t component_memory = {0};
+    ecs_table_component_memory_get(table, &component_memory);
 
     ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_appendlit(reply, "\"used\":");
-    ecs_strbuf_appendint(reply, used);
-    ecs_strbuf_list_appendlit(reply, "\"allocated\":");
-    ecs_strbuf_appendint(reply, allocated);
+    ecs_strbuf_list_appendlit(reply, "\"table\":");
+    ecs_ptr_to_json_buf(
+        world, ecs_id(ecs_table_memory_t), &table_memory, reply);
+
+    ecs_strbuf_list_appendlit(reply, "\"components\":");
+    ecs_ptr_to_json_buf(
+        world, ecs_id(ecs_component_memory_t), &component_memory, reply);
     ecs_strbuf_list_pop(reply, "}");
+#endif
 }
 
 static
@@ -1356,8 +1404,10 @@ void flecs_rest_reply_table_append(
     flecs_rest_reply_table_append_type(world, reply, table);
     ecs_strbuf_list_appendlit(reply, "\"count\":");
     ecs_strbuf_appendint(reply, ecs_table_count(table));
+    ecs_strbuf_list_appendlit(reply, "\"size\":");
+    ecs_strbuf_appendint(reply, ecs_table_size(table));
     ecs_strbuf_list_appendlit(reply, "\"memory\":");
-    flecs_rest_reply_table_append_memory(reply, table);
+    flecs_rest_reply_table_append_memory(world, reply, table);
     ecs_strbuf_list_pop(reply, "}");
 }
 

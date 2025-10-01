@@ -15,3 +15,4 @@ ot = "ot"           # Opaque Type or Other Table
 Fo = "Fo"           # used in test cases/examples
 UE4 = "UE4"
 PNGs = "PNGs"
+Collet = "Collet"

@@ -27328,6 +27328,43 @@ void flecs_rest_append_type_hook(
 }
 
 static
+void flecs_rest_append_component_memory(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_strbuf_t *reply,
+    int32_t storage_bytes)
+{
+    (void)world;
+    (void)cr;
+    (void)reply;
+    (void)storage_bytes;
+
+#ifdef FLECS_STATS
+    if (!ecs_id(ecs_component_index_memory_t)) {
+        return;
+    }
+
+    ecs_component_index_memory_t component_index_memory = {0};
+    ecs_component_record_memory_get(cr, &component_index_memory);
+
+    ecs_strbuf_list_appendlit(reply, "\"memory\":");
+
+    ecs_strbuf_list_push(reply, "{", ",");
+    ecs_strbuf_list_appendlit(reply, "\"component_index\":");
+    ecs_ptr_to_json_buf(
+        world, ecs_id(ecs_component_index_memory_t), &component_index_memory, reply);
+
+    /* Only count storage for actual components, not wildcards */
+    if (ecs_id_is_wildcard(cr->id)) {
+        storage_bytes = 0;
+    }
+    ecs_strbuf_list_appendlit(reply, "\"storage\":");
+    ecs_strbuf_append(reply, "%d", storage_bytes);
+    ecs_strbuf_list_pop(reply, "}");
+#endif
+}
+
+static
 void flecs_rest_append_component(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -27336,30 +27373,29 @@ void flecs_rest_append_component(
     ecs_strbuf_list_next(reply);
     ecs_strbuf_appendlit(reply, "\n");
     ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_appendlit(reply, "\"expr\":");
+    ecs_strbuf_list_appendlit(reply, "\"name\":");
     char *str = ecs_id_str(world, cr->id);
     flecs_json_string_escape(reply, str);
     ecs_os_free(str);
 
     ecs_strbuf_list_appendlit(reply, "\"tables\":");
-    ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_appendlit(reply, "\"count\":");
-    ecs_strbuf_appendint(reply, flecs_table_cache_count(&cr->cache));
-    ecs_strbuf_list_appendlit(reply, "\"ids\":");
     ecs_strbuf_list_push(reply, "[", ",");
     ecs_table_cache_iter_t it;
-    int32_t entity_count = 0;
+    int32_t entity_count = 0, entity_size = 0, storage_bytes = 0;
     flecs_table_cache_iter(&cr->cache, &it);
     const ecs_table_record_t *tr;
     while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
         ecs_strbuf_list_next(reply);
         ecs_strbuf_appendint(reply, (int64_t)tr->hdr.table->id);
         entity_count += ecs_table_count(tr->hdr.table);
+        entity_size += ecs_table_size(tr->hdr.table);
     }
     ecs_strbuf_list_pop(reply, "]");
+
     ecs_strbuf_list_appendlit(reply, "\"entity_count\":");
     ecs_strbuf_appendint(reply, entity_count);
-    ecs_strbuf_list_pop(reply, "}");
+    ecs_strbuf_list_appendlit(reply, "\"entity_size\":");
+    ecs_strbuf_appendint(reply, entity_size);
 
     if (cr->type_info) {
         ecs_strbuf_list_appendlit(reply, "\"type\":");
@@ -27398,6 +27434,8 @@ void flecs_rest_append_component(
         ecs_strbuf_list_appendlit(reply, "\"on_replace\":");
         ecs_strbuf_appendbool(reply, cr->type_info->hooks.on_replace != NULL);
         ecs_strbuf_list_pop(reply, "}");
+
+        storage_bytes += entity_size * cr->type_info->size;
     }
 
     if (cr->sparse) {
@@ -27417,8 +27455,14 @@ void flecs_rest_append_component(
 
         ecs_strbuf_list_pop(reply, "]");
         ecs_strbuf_list_pop(reply, "}");
+
+        if (cr->type_info) {
+            storage_bytes += count * cr->type_info->size;
+        }
     }
 
+    flecs_rest_append_component_memory(world, cr, reply, storage_bytes);
+    
     ecs_strbuf_list_pop(reply, "}");
 }
 
@@ -27451,7 +27495,6 @@ bool flecs_rest_get_components(
     return true;
 }
 
-
 static
 void flecs_rest_reply_table_append_type(
     ecs_world_t *world,
@@ -27463,38 +27506,43 @@ void flecs_rest_reply_table_append_type(
     ecs_id_t *ids = table->type.array;
     for (i = 0; i < count; i ++) {
         ecs_strbuf_list_next(reply);
-        ecs_strbuf_appendch(reply, '"');
-        ecs_id_str_buf(world, ids[i], reply);
-        ecs_strbuf_appendch(reply, '"');
+        char *idstr = ecs_id_str(world, ids[i]);
+        flecs_json_string_escape(reply, idstr);
+        ecs_os_free(idstr);
     }
     ecs_strbuf_list_pop(reply, "]");
 }
 
 static
 void flecs_rest_reply_table_append_memory(
+    const ecs_world_t *world,
     ecs_strbuf_t *reply,
     const ecs_table_t *table)
 {
-    int32_t used = 0, allocated = 0;
-    int32_t count = ecs_table_count(table), size = ecs_table_size(table);
+    (void)world;
+    (void)reply;
+    (void)table;
 
-    used += count * ECS_SIZEOF(ecs_entity_t);
-    allocated += size * ECS_SIZEOF(ecs_entity_t);
-
-    int32_t i, storage_count = table->column_count;
-    ecs_column_t *columns = table->data.columns;
-
-    for (i = 0; i < storage_count; i ++) {
-        used += count * columns[i].ti->size;
-        allocated += size * columns[i].ti->size;
+#ifdef FLECS_STATS
+    if (!ecs_id(ecs_table_memory_t) || !ecs_id(ecs_component_memory_t)) {
+        return;
     }
+    ecs_table_memory_t table_memory = {0};
+    ecs_table_memory_get(table, &table_memory);
+
+    ecs_component_memory_t component_memory = {0};
+    ecs_table_component_memory_get(table, &component_memory);
 
     ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_appendlit(reply, "\"used\":");
-    ecs_strbuf_appendint(reply, used);
-    ecs_strbuf_list_appendlit(reply, "\"allocated\":");
-    ecs_strbuf_appendint(reply, allocated);
+    ecs_strbuf_list_appendlit(reply, "\"table\":");
+    ecs_ptr_to_json_buf(
+        world, ecs_id(ecs_table_memory_t), &table_memory, reply);
+
+    ecs_strbuf_list_appendlit(reply, "\"components\":");
+    ecs_ptr_to_json_buf(
+        world, ecs_id(ecs_component_memory_t), &component_memory, reply);
     ecs_strbuf_list_pop(reply, "}");
+#endif
 }
 
 static
@@ -27512,8 +27560,10 @@ void flecs_rest_reply_table_append(
     flecs_rest_reply_table_append_type(world, reply, table);
     ecs_strbuf_list_appendlit(reply, "\"count\":");
     ecs_strbuf_appendint(reply, ecs_table_count(table));
+    ecs_strbuf_list_appendlit(reply, "\"size\":");
+    ecs_strbuf_appendint(reply, ecs_table_size(table));
     ecs_strbuf_list_appendlit(reply, "\"memory\":");
-    flecs_rest_reply_table_append_memory(reply, table);
+    flecs_rest_reply_table_append_memory(world, reply, table);
     ecs_strbuf_list_pop(reply, "}");
 }
 
@@ -50798,6 +50848,8 @@ int ecs_array_to_json_buf(
     int32_t count,
     ecs_strbuf_t *buf)
 {
+    ecs_assert(type != 0, ECS_INVALID_PARAMETER, NULL);
+    
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
     if (!comp) {
         char *path = ecs_get_path(world, type);
@@ -67754,8 +67806,7 @@ error:
     return result;
 }
 
-static
-void flecs_component_index_memory_record_get(
+void ecs_component_record_memory_get(
     const ecs_component_record_t *cr,
     ecs_component_index_memory_t *result)
 {
@@ -67801,14 +67852,14 @@ ecs_component_index_memory_t ecs_component_index_memory_get(
     for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
         ecs_component_record_t *cr = world->id_index_lo[i];
         if (cr) {
-            flecs_component_index_memory_record_get(cr, &result);
+            ecs_component_record_memory_get(cr, &result);
         }
     }
     
     ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
     while (ecs_map_next(&it)) {
         ecs_component_record_t *cr = ecs_map_ptr(&it);
-        flecs_component_index_memory_record_get(cr, &result);
+        ecs_component_record_memory_get(cr, &result);
     }
 
     result.bytes_type_info += flecs_map_memory_get(
@@ -67916,7 +67967,7 @@ void flecs_query_memory_get(
     }
 }
 
-ecs_query_memory_t ecs_query_memory_get(
+ecs_query_memory_t ecs_queries_memory_get(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -67959,6 +68010,40 @@ void flecs_component_memory_get_sparse(
     }
 }
 
+void ecs_table_component_memory_get(
+    const ecs_table_t *table,
+    ecs_component_memory_t *result)
+{
+    int32_t count = ecs_table_count(table);
+    int32_t size = ecs_table_size(table);
+    ecs_column_t *columns = table->data.columns;
+
+    int32_t col;
+    for (col = 0; col < table->column_count; col++) {
+        ecs_column_t *column = &columns[col];
+        
+        ecs_size_t component_size = column->ti->size;
+        ecs_size_t used = count * component_size;
+        ecs_size_t allocated = size * component_size;
+        
+        result->bytes_table_components += used;
+        result->bytes_table_components_unused += allocated - used;
+
+        if (table->flags & EcsTableHasBuiltins) {
+            result->bytes_builtin += used;
+        }
+    }
+
+    result->instances += count * table->column_count;
+
+    if (table->_) {
+        result->bytes_toggle_bitsets += 
+            table->_->bs_count * ECS_SIZEOF(ecs_bitset_t);
+        result->bytes_toggle_bitsets += 
+            (count / 64) * ECS_SIZEOF(uint64_t) * table->_->bs_count;
+    }
+}
+
 ecs_component_memory_t ecs_component_memory_get(
     const ecs_world_t *world)
 {
@@ -67972,35 +68057,7 @@ ecs_component_memory_t ecs_component_memory_get(
     
     for (i = 0; i < table_count; i++) {
         ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
-
-        int32_t count = ecs_table_count(table);
-        int32_t size = ecs_table_size(table);
-        ecs_column_t *columns = table->data.columns;
-
-        int32_t col;
-        for (col = 0; col < table->column_count; col++) {
-            ecs_column_t *column = &columns[col];
-            
-            ecs_size_t component_size = column->ti->size;
-            ecs_size_t used = count * component_size;
-            ecs_size_t allocated = size * component_size;
-            
-            result.bytes_table_components += used;
-            result.bytes_table_components_unused += allocated - used;
-
-            if (table->flags & EcsTableHasBuiltins) {
-                result.bytes_builtin += used;
-            }
-        }
-
-        result.instances += count * table->column_count;
-
-        if (table->_) {
-            result.bytes_toggle_bitsets += 
-                table->_->bs_count * ECS_SIZEOF(ecs_bitset_t);
-            result.bytes_toggle_bitsets += 
-                (count / 64) * ECS_SIZEOF(uint64_t) * table->_->bs_count;
-        }
+        ecs_table_component_memory_get(table, &result);
     }
 
     /* Sparse components */
@@ -68023,7 +68080,7 @@ error:
 
 static
 void flecs_table_graph_edge_memory_get(
-    ecs_graph_edge_t *edge,
+    const ecs_graph_edge_t *edge,
     ecs_table_memory_t *result)
 {
     result->bytes_edges += ECS_SIZEOF(ecs_graph_edge_t);
@@ -68038,7 +68095,7 @@ void flecs_table_graph_edge_memory_get(
 
 static
 void flecs_table_graph_edges_memory_get(
-    ecs_graph_edges_t *edges,
+    const ecs_graph_edges_t *edges,
     ecs_table_memory_t *result)
 {
     if (edges->lo) {
@@ -68060,7 +68117,63 @@ void flecs_table_graph_edges_memory_get(
     }
 }
 
-ecs_table_memory_t ecs_table_memory_get(
+void ecs_table_memory_get(
+    const ecs_table_t *table,
+    ecs_table_memory_t *result)
+{
+    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    result->bytes_table += ECS_SIZEOF(ecs_table_t);
+    
+    int32_t entity_count = ecs_table_count(table);
+    int32_t entity_size = ecs_table_size(table);
+    int32_t type_count = table->type.count;
+    int32_t column_count = table->column_count;
+    
+    result->column_count += column_count;
+
+    if (entity_count == 0) {
+        result->empty_count++;
+    }
+    
+    result->bytes_type += type_count * ECS_SIZEOF(ecs_id_t);
+
+    result->bytes_entities += 
+        entity_size * ECS_SIZEOF(ecs_entity_t);
+    
+    if (table->data.overrides) {
+        result->bytes_overrides += ECS_SIZEOF(ecs_table_overrides_t);
+        result->bytes_overrides += column_count * ECS_SIZEOF(ecs_ref_t);
+    }
+    
+    result->bytes_columns += column_count * ECS_SIZEOF(ecs_column_t);
+
+    if (table->_) {
+        result->bytes_table += ECS_SIZEOF(ecs_table__t);
+        result->bytes_table_records += 
+            table->_->record_count * ECS_SIZEOF(ecs_table_record_t);
+    }
+
+    result->bytes_column_map += 
+        (type_count + column_count) * ECS_SIZEOF(int16_t);
+    if (table->component_map) {
+        result->bytes_component_map += 
+            FLECS_HI_COMPONENT_ID * ECS_SIZEOF(int16_t);
+    }
+
+    if (table->dirty_state) {
+        result->bytes_dirty_state += 
+            (column_count + 1) * ECS_SIZEOF(int32_t);
+    }
+    
+    const ecs_graph_edges_t *add_edges = &table->node.add;
+    const ecs_graph_edges_t *remove_edges = &table->node.remove;
+    
+    flecs_table_graph_edges_memory_get(add_edges, result);
+    flecs_table_graph_edges_memory_get(remove_edges, result);
+}
+
+ecs_table_memory_t ecs_tables_memory_get(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -68078,54 +68191,9 @@ ecs_table_memory_t ecs_table_memory_get(
 
     for (i = 0; i < count; i++) {
         ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
-        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-        
-        int32_t entity_count = ecs_table_count(table);
-        int32_t entity_size = ecs_table_size(table);
-        int32_t type_count = table->type.count;
-        int32_t column_count = table->column_count;
-        
-        result.column_count += column_count;
-
-        if (entity_count == 0) {
-            result.empty_count++;
-        }
-        
-        result.bytes_type += type_count * ECS_SIZEOF(ecs_id_t);
-
-        result.bytes_entities += 
-            entity_size * ECS_SIZEOF(ecs_entity_t);
-        
-        if (table->data.overrides) {
-            result.bytes_overrides += ECS_SIZEOF(ecs_table_overrides_t);
-            result.bytes_overrides += column_count * ECS_SIZEOF(ecs_ref_t);
-        }
-        
-        result.bytes_columns += column_count * ECS_SIZEOF(ecs_column_t);
-
-        if (table->_) {
-            result.bytes_table += ECS_SIZEOF(ecs_table__t);
-            result.bytes_table_records += 
-                table->_->record_count * ECS_SIZEOF(ecs_table_record_t);
-        }
-
-        result.bytes_column_map += 
-            (type_count + column_count) * ECS_SIZEOF(int16_t);
-        if (table->component_map) {
-            result.bytes_component_map += 
-                FLECS_HI_COMPONENT_ID * ECS_SIZEOF(int16_t);
-        }
-
-        if (table->dirty_state) {
-            result.bytes_dirty_state += 
-                (column_count + 1) * ECS_SIZEOF(int32_t);
-        }
-        
-        ecs_graph_edges_t *add_edges = &table->node.add;
-        ecs_graph_edges_t *remove_edges = &table->node.remove;
-        
-        flecs_table_graph_edges_memory_get(add_edges, &result);
-        flecs_table_graph_edges_memory_get(remove_edges, &result);
+        ecs_table_memory_get(table, &result);
+        /* Already accounted for by flecs_sparse_memory_get */
+        result.bytes_table -= ECS_SIZEOF(ecs_table_t);
     }
 
 error:
@@ -68206,11 +68274,11 @@ void flecs_observer_memory_get(
         while (ecs_map_next(&mit)) {
             ecs_event_id_record_t *eir = ecs_map_ptr(&mit);
             result->bytes_observer_index += 
-                flecs_map_memory_get(&eir->self, ECS_SIZEOF(void*));
+                flecs_map_memory_get(&eir->self, 0);
             result->bytes_observer_index += 
-                flecs_map_memory_get(&eir->self_up, ECS_SIZEOF(void*));
+                flecs_map_memory_get(&eir->self_up, 0);
             result->bytes_observer_index += 
-                flecs_map_memory_get(&eir->up, ECS_SIZEOF(void*));
+                flecs_map_memory_get(&eir->up, 0);
         }
     }
 }
@@ -68335,7 +68403,7 @@ void flecs_reflection_memory_get(
                         op->kind == EcsOpBitmask) 
                     {
                         result->bytes_reflection += flecs_map_memory_get(
-                            op->is.constants, ECS_SIZEOF(ecs_entity_t));
+                            op->is.constants, 0);
                     }
                 }
             }
@@ -68560,8 +68628,8 @@ int flecs_world_memory_serialize(
     value.entities = ecs_entity_memory_get(world);
     value.components = ecs_component_memory_get(world);
     value.component_index = ecs_component_index_memory_get(world);
-    value.queries = ecs_query_memory_get(world);
-    value.tables = ecs_table_memory_get(world);
+    value.queries = ecs_queries_memory_get(world);
+    value.tables = ecs_tables_memory_get(world);
     value.table_histogram = ecs_table_histogram_get(world);
     value.misc = ecs_misc_memory_get(world);
     value.allocators = ecs_allocator_memory_get(world);
@@ -82501,7 +82569,7 @@ void flecs_add_enum(ecs_iter_t *it) {
         const EcsComponent *uc = ecs_get(world, underlying_type, EcsComponent);
         if (!uc) {
             char *str = ecs_get_path(world, underlying_type);
-            ecs_err("uderlying_type entity for enum '%s' is not a type", str);
+            ecs_err("underlying_type entity for enum '%s' is not a type", str);
             ecs_os_free(str);
             continue;
         }

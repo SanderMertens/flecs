@@ -14,7 +14,7 @@ void Memory_query_memory_no_cache(void) {
     test_assert(q != NULL);
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
@@ -51,7 +51,7 @@ void Memory_query_memory_trivial_cache(void) {
     }
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
@@ -95,7 +95,7 @@ void Memory_query_memory_non_trivial_cache(void) {
     }
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
@@ -139,7 +139,7 @@ void Memory_query_memory_with_groups(void) {
     }
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
@@ -181,7 +181,7 @@ void Memory_query_memory_with_variables(void) {
     }
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
@@ -221,7 +221,7 @@ void Memory_query_memory_with_monitors(void) {
     }
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
