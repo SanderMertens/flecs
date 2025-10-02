@@ -656,7 +656,15 @@
                 "remove_pair_before_recycle_sparse_target",
                 "recycle_after_delete_table",
                 "recycle_pair_after_delete_table",
-                "add_sparse_pair_to_recycled"
+                "add_sparse_pair_to_recycled",
+                "entity_w_sparse_pair_to_child_delete_child",
+                "entity_w_sparse_pair_to_child_delete_parent",
+                "entity_w_sparse_pair_to_recycled_child_delete_child",
+                "entity_w_sparse_pair_to_recycled_child_delete_parent",
+                "entity_w_sparse_pair_to_child_delete_child_exclusive",
+                "entity_w_sparse_pair_to_child_delete_parent_exclusive",
+                "entity_w_sparse_pair_to_recycled_child_delete_child_exclusive",
+                "entity_w_sparse_pair_to_recycled_child_delete_parent_exclusive"
             ]
         }, {
             "id": "Hierarchies",
