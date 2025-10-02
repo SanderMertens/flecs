@@ -38339,7 +38339,13 @@ void flecs_component_sparse_dont_fragment_pair_remove(
     }
 
     ecs_entity_t tgt = ecs_pair_second(world, cr->id);
-    ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+    if (!tgt) {
+        /* It's possible that the target entity is cleaned up as part of the 
+         * same entity that holds the relationship. If that's the case, the
+         * relationship will get cleaned up later anyway so we can exit here. */
+        ecs_assert(cr->flags & EcsIdMarkedForDelete, ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
 
     ecs_type_t *type = flecs_sparse_get_t(
         parent->sparse, ecs_type_t, entity);
@@ -38349,7 +38355,10 @@ void flecs_component_sparse_dont_fragment_pair_remove(
 
     ecs_assert(type->count > 0, ECS_INTERNAL_ERROR, NULL);
 
+    int32_t old_type_count = type->count;
     flecs_type_remove(world, type, tgt);
+    ecs_assert(type->count != old_type_count, ECS_INTERNAL_ERROR, NULL);
+    (void)old_type_count;
 
     if (!type->count) {
         flecs_sparse_remove(parent->sparse, 0, entity);
@@ -38430,17 +38439,12 @@ void flecs_component_sparse_remove(
     }
 }
 
-void flecs_component_sparse_remove_all(
+static
+void flecs_component_sparse_remove_all_id(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
-    ecs_assert(cr->flags & EcsIdDontFragment, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
-
     ecs_id_t component_id = cr->id;
-    if (ecs_id_is_wildcard(component_id)) {
-        return;
-    }
 
     ecs_sparse_t *sparse = cr->sparse;
     const ecs_entity_t *entities = flecs_sparse_ids(sparse);
@@ -38481,6 +38485,44 @@ void flecs_component_sparse_remove_all(
                 flecs_component_sparse_dont_fragment_pair_remove(world, cr, e);
             }
         }
+    }
+}
+
+static
+void flecs_component_sparse_remove_all_wildcard(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_id_t component_id = cr->id;
+    
+    if (!ECS_IS_PAIR(component_id)) {
+        return;
+    }
+
+    if (cr->flags & EcsIdExclusive) {
+        return;
+    }
+
+    ecs_sparse_t *sparse = cr->sparse;
+    int32_t i, count = flecs_sparse_count(sparse);
+    for (i = 0; i < count; i ++) {
+        ecs_type_t *type = flecs_sparse_get_dense_t(sparse, ecs_type_t, i);
+        flecs_type_free(world, type);
+    }
+}
+
+void flecs_component_sparse_remove_all(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr->flags & EcsIdDontFragment, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_id_t component_id = cr->id;
+    if (ecs_id_is_wildcard(component_id)) {
+        flecs_component_sparse_remove_all_wildcard(world, cr);
+    } else {
+        flecs_component_sparse_remove_all_id(world, cr);
     }
 }
 
