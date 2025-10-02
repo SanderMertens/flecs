@@ -6331,3 +6331,33 @@ void DeserializeFromJson_deser_unknown_member_w_strict(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_deser_pretty_printed_identifier_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = 
+    HEAD ""
+    LINE "{"
+    LINE "    \"results\":"
+    LINE "    ["
+    LINE "        {"
+    LINE "            \"name\": \"e\","
+    LINE "            \"components\":"
+    LINE "            {"
+    LINE "                \"(flecs.core.Identifier,flecs.core.Symbol)\":"
+    LINE "                {"
+    LINE "                    \"value\": \"E\""
+    LINE "                }"
+    LINE "            }"
+    LINE "        }"
+    LINE "    ]"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_world_from_json(world, expr, NULL) != NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_str(ecs_get_name(world, e), "e");
+
+    ecs_fini(world);
+}

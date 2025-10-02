@@ -218,6 +218,7 @@ const char* flecs_json_expect(
             ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
                 "expected %s, got %s",
                 flecs_json_token_str(token_kind), flecs_json_token_str(kind));
+            flecs_dump_backtrace(stdout);
             return NULL;
         }
     }
