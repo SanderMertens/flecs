@@ -27589,6 +27589,7 @@ void flecs_rest_reply_table_append_memory(
     ecs_component_memory_t component_memory = {0};
     ecs_table_component_memory_get(table, &component_memory);
 
+    ecs_strbuf_list_appendlit(reply, "\"memory\":");
     ecs_strbuf_list_push(reply, "{", ",");
     ecs_strbuf_list_appendlit(reply, "\"table\":");
     ecs_ptr_to_json_buf(
@@ -27618,7 +27619,6 @@ void flecs_rest_reply_table_append(
     ecs_strbuf_appendint(reply, ecs_table_count(table));
     ecs_strbuf_list_appendlit(reply, "\"size\":");
     ecs_strbuf_appendint(reply, ecs_table_size(table));
-    ecs_strbuf_list_appendlit(reply, "\"memory\":");
     flecs_rest_reply_table_append_memory(world, reply, table);
     ecs_strbuf_list_pop(reply, "}");
 }
