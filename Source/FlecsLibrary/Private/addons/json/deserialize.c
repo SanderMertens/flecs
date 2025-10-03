@@ -440,6 +440,7 @@ const char* flecs_json_deser_components(
                             ecs_modified_id(world, e, id);
                         }
                     } else {
+                        json = flecs_parse_ws_eol(json);
                         json = flecs_json_skip_object(json + 1, token, desc);
                         if (!json) {
                             goto error;

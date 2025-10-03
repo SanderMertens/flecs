@@ -425,12 +425,11 @@ void flecs_resume_readonly(
 }
 
 void ecs_merge(
-    ecs_world_t *world)
+    ecs_world_t *stage)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(flecs_poly_is(world, ecs_world_t) || 
-               flecs_poly_is(world, ecs_stage_t), ECS_INVALID_PARAMETER, NULL);
-    flecs_stage_merge(world);
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(flecs_poly_is(stage, ecs_stage_t), ECS_INVALID_PARAMETER, NULL);
+    flecs_stage_merge(stage);
 error:
     return;
 }

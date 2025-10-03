@@ -394,7 +394,7 @@ void* flecs_sparse_ensure(
                 unused_page, dense_array, unused, dense_count);
         }
 
-        flecs_sparse_assign_index(page, dense_array, index, count);
+        flecs_sparse_assign_index(page, dense_array, id, count);
     }
 
     return DATA(page->data, sparse->size, offset);

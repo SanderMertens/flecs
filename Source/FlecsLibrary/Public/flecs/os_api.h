@@ -45,6 +45,14 @@ extern int64_t ecs_os_api_realloc_count;           /**< realloc count. */
 extern int64_t ecs_os_api_calloc_count;            /**< calloc count. */
 extern int64_t ecs_os_api_free_count;              /**< free count. */
 
+/* Enabling this flag will add a header to each allocation that allows the code
+ * to track exactly how much memory has been allocated. Increases memory 
+ * utilization by 16 bytes per allocation, and is not thread safe. */
+// #define FLECS_TRACK_OS_ALLOC
+#ifdef FLECS_TRACK_OS_ALLOC
+FLECS_API extern ecs_size_t ecs_os_allocated_bytes;
+#endif
+
 /* Use handle types that _at least_ can store pointers */
 typedef uintptr_t ecs_os_thread_t;                 /**< OS thread. */
 typedef uintptr_t ecs_os_cond_t;                   /**< OS cond. */

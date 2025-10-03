@@ -57,12 +57,10 @@ bool flecs_name_index_is_init(
 }
 
 ecs_hashmap_t* flecs_name_index_new(
-    ecs_world_t *world,
     ecs_allocator_t *allocator) 
 {
-    ecs_hashmap_t *result = flecs_bcalloc(&world->allocators.hashmap);
+    ecs_hashmap_t *result = flecs_alloc_t(allocator, ecs_hashmap_t);
     flecs_name_index_init(result, allocator);
-    result->hashmap_allocator = &world->allocators.hashmap;
     return result;
 }
 
@@ -76,16 +74,16 @@ void flecs_name_index_free(
     ecs_hashmap_t *map)
 {
     if (map) {
+        ecs_allocator_t *a = map->impl.allocator;
         flecs_name_index_fini(map);
-        flecs_bfree(map->hashmap_allocator, map);
+        flecs_free_t(a, ecs_hashmap_t, map);
     }
 }
 
 ecs_hashmap_t* flecs_name_index_copy(
     ecs_hashmap_t *map)
 {
-    ecs_hashmap_t *result = flecs_bcalloc(map->hashmap_allocator);
-    result->hashmap_allocator = map->hashmap_allocator;
+    ecs_hashmap_t *result = flecs_alloc_t(map->impl.allocator, ecs_hashmap_t);
     flecs_hashmap_copy(result, map);
     return result;
 }

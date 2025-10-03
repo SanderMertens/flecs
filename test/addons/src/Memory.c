@@ -14,7 +14,7 @@ void Memory_query_memory_no_cache(void) {
     test_assert(q != NULL);
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
@@ -51,7 +51,7 @@ void Memory_query_memory_trivial_cache(void) {
     }
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
@@ -95,7 +95,7 @@ void Memory_query_memory_non_trivial_cache(void) {
     }
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
@@ -139,7 +139,7 @@ void Memory_query_memory_with_groups(void) {
     }
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
@@ -181,7 +181,7 @@ void Memory_query_memory_with_variables(void) {
     }
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
@@ -221,7 +221,7 @@ void Memory_query_memory_with_monitors(void) {
     }
 
     /* Get memory statistics */
-    ecs_query_memory_t mem = ecs_query_memory_get(world);
+    ecs_query_memory_t mem = ecs_queries_memory_get(world);
     
     test_assert(mem.count >= 1); /* May have other queries in the world */
     test_assert(mem.bytes_query > 0);
@@ -240,16 +240,11 @@ void Memory_commands_memory(void) {
     ECS_COMPONENT(world, Velocity);
 
     /* Get initial commands memory statistics */
-    ecs_commands_memory_t mem = ecs_commands_memory_get(world);
+    ecs_misc_memory_t mem = ecs_misc_memory_get(world);
     
     /* Initial state should have minimal memory usage */
-    ecs_size_t initial_queue = mem.bytes_queue;
-    ecs_size_t initial_entries = mem.bytes_entries;
-    ecs_size_t initial_stack = mem.bytes_stack;
-    
-    test_assert(mem.bytes_queue >= 0);
-    test_assert(mem.bytes_entries >= 0);
-    test_assert(mem.bytes_stack >= 0);
+    ecs_size_t initial_commands = mem.bytes_commands;
+    test_assert(mem.bytes_commands >= 0);
 
     /* Create deferred operations to test command memory usage */
     ecs_defer_begin(world);
@@ -272,25 +267,17 @@ void Memory_commands_memory(void) {
     ecs_add_pair(world, e1, EcsChildOf, e2);
     
     /* Get memory statistics while deferred (should show increased usage) */
-    mem = ecs_commands_memory_get(world);
+    mem = ecs_misc_memory_get(world);
     
-    test_assert(mem.bytes_queue >= initial_queue); /* Should have command queue data */
-    test_assert(mem.bytes_entries >= initial_entries); /* Should have entity batching data */
-    test_assert(mem.bytes_stack >= initial_stack); /* Should have stack allocator data */
-    
-    /* At least one category should have increased */
-    test_assert(mem.bytes_queue > initial_queue || 
-               mem.bytes_entries > initial_entries || 
-               mem.bytes_stack > initial_stack);
+    test_assert(mem.bytes_commands >= initial_commands); /* Should have command queue data */
+    test_assert(mem.bytes_commands > initial_commands);
 
     ecs_defer_end(world);
     
     /* Get statistics after flush - some memory might be retained for reuse */
-    mem = ecs_commands_memory_get(world);
+    mem = ecs_misc_memory_get(world);
     
-    test_assert(mem.bytes_queue >= 0);
-    test_assert(mem.bytes_entries >= 0);
-    test_assert(mem.bytes_stack >= 0);
+    test_assert(mem.bytes_commands >= 0);
 
     /* Test with multiple defer levels */
     ecs_defer_begin(world);
@@ -299,10 +286,8 @@ void Memory_commands_memory(void) {
     ecs_entity_t nested_e = ecs_new(world);
     ecs_set(world, nested_e, Position, {100.0f, 200.0f});
     
-    mem = ecs_commands_memory_get(world);
-    test_assert(mem.bytes_queue >= 0);
-    test_assert(mem.bytes_entries >= 0);
-    test_assert(mem.bytes_stack >= 0);
+    mem = ecs_misc_memory_get(world);
+    test_assert(mem.bytes_commands >= 0);
     
     ecs_defer_end(world);
     ecs_defer_end(world);
@@ -423,24 +408,25 @@ void Memory_table_memory_histogram(void) {
 void Memory_sparse_component_memory(void) {
     ecs_world_t *world = ecs_init();
 
+    {
+        ecs_component_memory_t mem = ecs_component_memory_get(world);
+        test_assert(mem.bytes_sparse_components == 0);
+    }
+
     ECS_COMPONENT(world, Position);
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
     {
         ecs_component_memory_t mem = ecs_component_memory_get(world);
-        test_assert(mem.bytes_sparse_components == 0);
-        test_assert(mem.bytes_sparse_components_unused == 0);
-        test_assert(mem.bytes_sparse_overhead > 0);
+        test_assert(mem.bytes_sparse_components > 0);
     }
 
     ecs_new_w(world, Position);
 
     {
         ecs_component_memory_t mem = ecs_component_memory_get(world);
-        test_int(mem.bytes_sparse_components, 8);
-        test_assert(mem.bytes_sparse_components_unused > 0);
-        test_assert(mem.bytes_sparse_overhead > 0);
+        test_assert(mem.bytes_sparse_components > 0);
     }
 
     ecs_fini(world);
@@ -451,13 +437,16 @@ void Memory_sparse_tag_memory(void) {
 
     ECS_TAG(world, Foo);
 
+    {
+        ecs_component_memory_t mem = ecs_component_memory_get(world);
+        test_assert(mem.bytes_sparse_components == 0);
+    }
+
     ecs_add_id(world, ecs_id(Foo), EcsSparse);
 
     {
         ecs_component_memory_t mem = ecs_component_memory_get(world);
-        test_assert(mem.bytes_sparse_components == 0);
-        test_assert(mem.bytes_sparse_components_unused == 0);
-        test_assert(mem.bytes_sparse_overhead > 0);
+        test_assert(mem.bytes_sparse_components > 0);
     }
 
     ecs_add_id(world, Foo, EcsSparse);
@@ -466,9 +455,7 @@ void Memory_sparse_tag_memory(void) {
 
     {
         ecs_component_memory_t mem = ecs_component_memory_get(world);
-        test_int(mem.bytes_sparse_components, 0);
-        test_int(mem.bytes_sparse_components_unused, 0);
-        test_assert(mem.bytes_sparse_overhead > 0);
+        test_assert(mem.bytes_sparse_components > 0);
     }
 
     ecs_fini(world);

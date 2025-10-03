@@ -737,8 +737,7 @@ ecs_hashmap_t* flecs_component_name_index_ensure(
     ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_hashmap_t *map = cr->pair->name_index;
     if (!map) {
-        map = cr->pair->name_index = 
-            flecs_name_index_new(world, &world->allocator);
+        map = cr->pair->name_index = flecs_name_index_new(&world->allocator);
     }
 
     return map;

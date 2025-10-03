@@ -74,7 +74,7 @@ void ecs_os_fini(void) {
 
 #ifdef ECS_TARGET_WINDOWS
 #include <windows.h>
-#include <DbgHelp.h>
+#include <dbghelp.h>
 
 #ifdef ECS_TARGET_MSVC
 #pragma comment(lib, "DbgHelp.lib")
@@ -327,6 +327,62 @@ void ecs_os_gettime(ecs_time_t *time) {
     time->nanosec = (uint32_t)(now - sec * 1000000000);
 }
 
+#ifdef FLECS_TRACK_OS_ALLOC
+ecs_size_t ecs_os_allocated_bytes = 0;
+static
+void* ecs_os_api_malloc(ecs_size_t size) {
+    ecs_os_linc(&ecs_os_api_malloc_count);
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
+    void *result = malloc((size_t)size + 16);
+    *(ecs_size_t*)result = size;
+    ecs_os_allocated_bytes += size;
+    return ECS_OFFSET(result, 16);
+}
+
+static
+void* ecs_os_api_calloc(ecs_size_t size) {
+    ecs_os_linc(&ecs_os_api_calloc_count);
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
+    void *result = calloc(1, (size_t)size + 16);
+    *(ecs_size_t*)result = size;
+    ecs_os_allocated_bytes += size;
+    return ECS_OFFSET(result, 16);
+}
+
+static
+void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (ptr) {
+        ecs_os_linc(&ecs_os_api_realloc_count);
+        ptr = ECS_OFFSET(ptr, -16);
+        ecs_os_allocated_bytes -= *(ecs_size_t*)ptr;
+    } else {
+        /* If not actually reallocing, treat as malloc */
+        ecs_os_linc(&ecs_os_api_malloc_count);
+    }
+    
+    if (!size) {
+        return NULL;
+    }
+
+    ptr = realloc(ptr, (size_t)size + 16);
+    *(ecs_size_t*)ptr = size;
+    ecs_os_allocated_bytes += size;
+    return ECS_OFFSET(ptr, 16);
+}
+
+static
+void ecs_os_api_free(void *ptr) {
+    if (ptr) {
+        ptr = ECS_OFFSET(ptr, -16);
+        ecs_size_t size = *(ecs_size_t*)ptr;
+        ecs_os_allocated_bytes -= size;
+        ecs_os_linc(&ecs_os_api_free_count);
+    }
+    free(ptr);
+}
+#else
 static
 void* ecs_os_api_malloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_malloc_count);
@@ -362,6 +418,7 @@ void ecs_os_api_free(void *ptr) {
     }
     free(ptr);
 }
+#endif
 
 static
 char* ecs_os_api_strdup(const char *str) {

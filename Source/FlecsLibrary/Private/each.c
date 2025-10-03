@@ -167,7 +167,7 @@ int32_t ecs_count_id(
     int32_t count = 0;
     ecs_iter_t it = ecs_each_id(world, id);
     while (ecs_each_next(&it)) {
-        count += it.count;
+        count += it.count * it.trs[0]->count;
     }
 
     return count;

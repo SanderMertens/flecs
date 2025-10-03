@@ -111,7 +111,7 @@ void flecs_strfree(
     flecs_free_n(a, char, len + 1, str);
 #else
     (void)a;
-    free(str);
+    ecs_os_free(str);
 #endif
 }
 

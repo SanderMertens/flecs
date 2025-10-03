@@ -16,7 +16,7 @@ ecs_entity_index_page_t* flecs_entity_index_ensure_page(
         ecs_entity_index_page_t*, page_index);
     ecs_entity_index_page_t *page = *page_ptr;
     if (!page) {
-        page = *page_ptr = flecs_bcalloc(&index->page_allocator);
+        page = *page_ptr = ecs_os_calloc_t(ecs_entity_index_page_t);
         ecs_assert(page != NULL, ECS_OUT_OF_MEMORY, NULL);
     }
 
@@ -32,8 +32,6 @@ void flecs_entity_index_init(
     ecs_vec_init_t(allocator, &index->dense, uint64_t, 1);
     ecs_vec_set_count_t(allocator, &index->dense, uint64_t, 1);
     ecs_vec_init_t(allocator, &index->pages, ecs_entity_index_page_t*, 0);
-    flecs_ballocator_init(&index->page_allocator,
-        ECS_SIZEOF(ecs_entity_index_page_t));
 }
 
 void flecs_entity_index_fini(
@@ -43,10 +41,9 @@ void flecs_entity_index_fini(
     int32_t i, count = ecs_vec_count(&index->pages);
     ecs_entity_index_page_t **pages = ecs_vec_first(&index->pages);
     for (i = 0; i < count; i ++) {
-        flecs_bfree(&index->page_allocator, pages[i]);
+        ecs_os_free(pages[i]);
     }
     ecs_vec_fini_t(index->allocator, &index->pages, ecs_entity_index_page_t*);
-    flecs_ballocator_fini(&index->page_allocator);
 }
 
 ecs_record_t* flecs_entity_index_get_any(
@@ -393,7 +390,7 @@ void flecs_entity_index_shrink(
         }
 
         if (!has_alive) {
-            flecs_bfree(&index->page_allocator, page);
+            ecs_os_free(pages[i]);
             pages[i] = NULL;
         } else {
             max_page_index = i;

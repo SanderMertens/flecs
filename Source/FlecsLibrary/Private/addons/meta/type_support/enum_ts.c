@@ -371,7 +371,7 @@ void flecs_add_enum(ecs_iter_t *it) {
         const EcsComponent *uc = ecs_get(world, underlying_type, EcsComponent);
         if (!uc) {
             char *str = ecs_get_path(world, underlying_type);
-            ecs_err("uderlying_type entity for enum '%s' is not a type", str);
+            ecs_err("underlying_type entity for enum '%s' is not a type", str);
             ecs_os_free(str);
             continue;
         }
