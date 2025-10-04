@@ -337,7 +337,7 @@ void flecs_instantiate_dont_fragment(
     ecs_component_record_t *cur = world->cr_non_fragmenting_head;
 
     while (cur) {
-        ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
         if (cur->sparse && !(cur->flags & EcsIdOnInstantiateInherit) && 
             !ecs_id_is_wildcard(cur->id)) 
         {

@@ -156,7 +156,7 @@ void flecs_table_init_columns(
         ecs_component_record_t *cr = tr->hdr.cr;
         const ecs_type_info_t *ti = cr->type_info;
 
-        if (!ti || (cr->flags & EcsIdIsSparse)) {
+        if (!ti || (cr->flags & EcsIdSparse)) {
             t2s[i] = -1;
             continue;
         }
@@ -744,7 +744,7 @@ void flecs_table_init(
         }
 
         if ((i < table->type.count) && (cr->type_info != NULL)) {
-            if (!(cr->flags & EcsIdIsSparse)) {
+            if (!(cr->flags & EcsIdSparse)) {
                 column_count ++;
             }
         }
@@ -2494,7 +2494,7 @@ const ecs_ref_t* flecs_table_get_override(
         return NULL;
     }
 
-    if (cr->flags & EcsIdIsSparse) {
+    if (cr->flags & EcsIdSparse) {
         ecs_entity_t base = 0;
         if (ecs_search_relation(world, table, 0, id, EcsIsA, EcsUp, 
             &base, NULL, NULL) != -1) 

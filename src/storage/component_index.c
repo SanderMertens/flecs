@@ -140,7 +140,7 @@ void flecs_component_init_sparse(
 {
     if (!ecs_id_is_wildcard(cr->id)) {
         if (!cr->sparse) {
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 cr->sparse = flecs_walloc_t(world, ecs_sparse_t);
                 if (cr->type_info) {
                     flecs_sparse_init(cr->sparse, NULL, NULL, cr->type_info->size);
@@ -246,7 +246,7 @@ void flecs_component_fini_sparse(
     ecs_component_record_t *cr)
 {
     if (cr->sparse) {
-        ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
         if (cr->flags & EcsIdDontFragment) {
             flecs_component_sparse_remove_all(world, cr);
         }
@@ -434,7 +434,7 @@ ecs_component_record_t* flecs_component_new(
 
     /* Initialize type info if id is not a tag */
     if (!is_wildcard && (!role || is_pair)) {
-        if (!(cr->flags & EcsIdTag)) {
+        if (!(cr->flags & EcsIdPairIsTag)) {
             const ecs_type_info_t *ti = flecs_type_info_get(world, rel);
             if (!ti && tgt) {
                 ti = flecs_type_info_get(world, tgt);
@@ -467,7 +467,7 @@ ecs_component_record_t* flecs_component_new(
          * should be stored as a sparse component. */
         if (cr->type_info && cr->type_info->component == tgt) {
             if (ecs_has_id(world, tgt, EcsSparse)) {
-                cr->flags |= EcsIdIsSparse;
+                cr->flags |= EcsIdSparse;
             }
             if (ecs_has_id(world, tgt, EcsDontFragment)) {
                 cr->flags |= EcsIdDontFragment;
@@ -492,7 +492,7 @@ ecs_component_record_t* flecs_component_new(
 
     cr->flags |= flecs_component_event_flags(world, id);
 
-    if (cr->flags & EcsIdIsSparse) {
+    if (cr->flags & EcsIdSparse) {
         flecs_component_init_sparse(world, cr);
     }
 
@@ -854,7 +854,7 @@ void flecs_component_delete_sparse(
     ecs_component_record_t *cr)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
     int32_t i, count = flecs_sparse_count(cr->sparse);
     const uint64_t *entities = flecs_sparse_ids(cr->sparse);
     for (i = 0; i < count; i ++) {

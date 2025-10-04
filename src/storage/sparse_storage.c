@@ -45,7 +45,7 @@ bool flecs_component_sparse_has(
 
         return false;
     } else {
-        ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
         return flecs_sparse_has(cr->sparse, entity);
     }
@@ -58,7 +58,7 @@ void* flecs_component_sparse_get(
     ecs_entity_t entity)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (!ecs_id_is_wildcard(cr->id)) {
@@ -120,7 +120,7 @@ ecs_entity_t flecs_component_sparse_remove_intern(
     int32_t row)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t entity = ecs_table_entities(table)[row];
     const ecs_type_info_t *ti = cr->type_info;
@@ -472,7 +472,7 @@ void* flecs_component_sparse_insert(
     int32_t row)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t entity = ecs_table_entities(table)[row];
 
@@ -526,7 +526,7 @@ void* flecs_component_sparse_emplace(
     int32_t row)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t entity = ecs_table_entities(table)[row];
     void *ptr = flecs_sparse_ensure(cr->sparse, 0, entity, NULL);

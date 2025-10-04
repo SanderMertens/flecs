@@ -50,7 +50,7 @@ void flecs_invoke_hook(
     it.real_world = world;
     it.table = table;
     it.trs = &tr;
-    it.row_fields = !!(tr->hdr.cr->flags & EcsIdIsSparse);
+    it.row_fields = !!(tr->hdr.cr->flags & EcsIdSparse);
     it.ref_fields = it.row_fields;
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
     it.ids = &id;
@@ -150,7 +150,7 @@ bool flecs_sparse_on_add_cr(
 {
     bool is_new = false;
 
-    if (cr && cr->flags & EcsIdIsSparse) {
+    if (cr && cr->flags & EcsIdSparse) {
         void *result = NULL;
         int32_t sparse_count = flecs_sparse_count(cr->sparse);
 
@@ -215,7 +215,7 @@ void flecs_sparse_on_remove(
     for (i = 0; i < removed->count; i ++) {
         ecs_id_t id = removed->array[i];
         ecs_component_record_t *cr = flecs_components_get(world, id);
-        if (cr && cr->flags & EcsIdIsSparse) {
+        if (cr && cr->flags & EcsIdSparse) {
             for (j = 0; j < count; j ++) {
                 flecs_component_sparse_remove(world, cr, table, row + j);
             }
@@ -264,7 +264,7 @@ void flecs_entity_remove_non_fragmenting(
 
     ecs_component_record_t *cur = world->cr_non_fragmenting_head;
     while (cur) {
-        ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
         if (cur->sparse && !(ecs_id_is_wildcard(cur->id))) {
             if (flecs_sparse_has(cur->sparse, e)) {
                 ecs_type_t type = { .count = 1, .array = &cur->id };
@@ -432,7 +432,7 @@ void flecs_notify_on_set_ids(
             tr = &dummy_tr;
         }
 
-        if (cr->flags & EcsIdIsSparse) {
+        if (cr->flags & EcsIdSparse) {
             int32_t j;
             for (j = 0; j < count; j ++) {
                 flecs_invoke_hook(world, table, cr, tr, 1, row, 
@@ -493,7 +493,7 @@ void flecs_notify_on_set(
                 tr = &dummy_tr;
             }
     
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 flecs_invoke_hook(world, table, cr, tr, 1, row, 
                     entities, id, ti, EcsOnSet, on_set);
             } else {
