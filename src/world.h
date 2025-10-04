@@ -22,7 +22,6 @@ typedef struct ecs_world_allocators_t {
     ecs_block_allocator_t pair_record;
     ecs_block_allocator_t table_diff;
     ecs_block_allocator_t sparse_chunk;
-    ecs_block_allocator_t hashmap;
 
     /* Temporary vectors used for creating table diff id sequences */
     ecs_table_diff_builder_t diff_builder;

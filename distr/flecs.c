@@ -141,7 +141,6 @@ bool flecs_name_index_is_init(
     const ecs_hashmap_t *hm);
 
 ecs_hashmap_t* flecs_name_index_new(
-    ecs_world_t *world,
     ecs_allocator_t *allocator);
 
 void flecs_name_index_fini(
@@ -212,7 +211,6 @@ typedef struct ecs_entity_index_t {
     ecs_vec_t pages;
     int32_t alive_count;
     uint64_t max_id;
-    ecs_block_allocator_t page_allocator;
     ecs_allocator_t *allocator;
 } ecs_entity_index_t;
 
@@ -2914,14 +2912,6 @@ typedef struct ecs_event_id_record_t {
     ecs_map_t self_up;               /* map<trigger_id, trigger_t> */
     ecs_map_t up;                    /* map<trigger_id, trigger_t> */
 
-    ecs_map_t observers;             /* map<trigger_id, trigger_t> */
-
-    /* Triggers for SuperSet, SubSet */
-    ecs_map_t set_observers;         /* map<trigger_id, trigger_t> */
-
-    /* Triggers for Self with non-This subject */
-    ecs_map_t entity_observers;      /* map<trigger_id, trigger_t> */
-
     /* Number of active observers for (component) id */
     int32_t observer_count;
 } ecs_event_id_record_t;
@@ -3317,7 +3307,6 @@ typedef struct ecs_world_allocators_t {
     ecs_block_allocator_t pair_record;
     ecs_block_allocator_t table_diff;
     ecs_block_allocator_t sparse_chunk;
-    ecs_block_allocator_t hashmap;
 
     /* Temporary vectors used for creating table diff id sequences */
     ecs_table_diff_builder_t diff_builder;
@@ -3980,7 +3969,7 @@ bool flecs_set_id_flag(
         }
 
         cr->flags |= flag;
-        if (flag == EcsIdIsSparse) {
+        if (flag == EcsIdSparse) {
             flecs_component_init_sparse(world, cr);
         }
 
@@ -4097,7 +4086,7 @@ void flecs_register_final(ecs_iter_t *it) {
 
 static
 void flecs_register_tag(ecs_iter_t *it) {
-    flecs_register_id_flag_for_relation(it, EcsPairIsTag, EcsIdTag, EcsIdTag, 0);
+    flecs_register_id_flag_for_relation(it, EcsPairIsTag, EcsIdPairIsTag, EcsIdPairIsTag, 0);
 
     /* Ensure that all id records for tag have type info set to NULL */
     ecs_world_t *world = it->real_world;
@@ -4503,13 +4492,13 @@ ecs_table_t* flecs_bootstrap_component_table(
      * can no longer be done after they are in use. */
     ecs_component_record_t *cr = flecs_components_ensure(world, EcsChildOf);
     cr->flags |= EcsIdOnDeleteTargetDelete | EcsIdOnInstantiateDontInherit |
-        EcsIdTraversable | EcsIdTag;
+        EcsIdTraversable | EcsIdPairIsTag;
 
     /* Initialize id records cached on world */
     world->cr_childof_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, EcsWildcard));
     world->cr_childof_wildcard->flags |= EcsIdOnDeleteTargetDelete | 
-        EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdTag | EcsIdExclusive;
+        EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdPairIsTag | EcsIdExclusive;
     cr = flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsWildcard));
     cr->flags |= EcsIdOnInstantiateDontInherit;
     world->cr_identifier_name = 
@@ -4884,7 +4873,7 @@ void flecs_bootstrap(
         .callback = flecs_register_final
     });
 
-    static ecs_on_trait_ctx_t inheritable_trait = { EcsIdIsInheritable, 0 };
+    static ecs_on_trait_ctx_t inheritable_trait = { EcsIdInheritable, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsInheritable }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
@@ -4972,7 +4961,7 @@ void flecs_bootstrap(
         .ctx = &with_trait
     });
 
-    static ecs_on_trait_ctx_t sparse_trait = { EcsIdIsSparse, 0 };
+    static ecs_on_trait_ctx_t sparse_trait = { EcsIdSparse, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsSparse }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
@@ -6595,7 +6584,7 @@ void flecs_invoke_hook(
     it.real_world = world;
     it.table = table;
     it.trs = &tr;
-    it.row_fields = !!(tr->hdr.cr->flags & EcsIdIsSparse);
+    it.row_fields = !!(tr->hdr.cr->flags & EcsIdSparse);
     it.ref_fields = it.row_fields;
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
     it.ids = &id;
@@ -6695,7 +6684,7 @@ bool flecs_sparse_on_add_cr(
 {
     bool is_new = false;
 
-    if (cr && cr->flags & EcsIdIsSparse) {
+    if (cr && cr->flags & EcsIdSparse) {
         void *result = NULL;
         int32_t sparse_count = flecs_sparse_count(cr->sparse);
 
@@ -6760,7 +6749,7 @@ void flecs_sparse_on_remove(
     for (i = 0; i < removed->count; i ++) {
         ecs_id_t id = removed->array[i];
         ecs_component_record_t *cr = flecs_components_get(world, id);
-        if (cr && cr->flags & EcsIdIsSparse) {
+        if (cr && cr->flags & EcsIdSparse) {
             for (j = 0; j < count; j ++) {
                 flecs_component_sparse_remove(world, cr, table, row + j);
             }
@@ -6809,7 +6798,7 @@ void flecs_entity_remove_non_fragmenting(
 
     ecs_component_record_t *cur = world->cr_non_fragmenting_head;
     while (cur) {
-        ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
         if (cur->sparse && !(ecs_id_is_wildcard(cur->id))) {
             if (flecs_sparse_has(cur->sparse, e)) {
                 ecs_type_t type = { .count = 1, .array = &cur->id };
@@ -6977,7 +6966,7 @@ void flecs_notify_on_set_ids(
             tr = &dummy_tr;
         }
 
-        if (cr->flags & EcsIdIsSparse) {
+        if (cr->flags & EcsIdSparse) {
             int32_t j;
             for (j = 0; j < count; j ++) {
                 flecs_invoke_hook(world, table, cr, tr, 1, row, 
@@ -7038,7 +7027,7 @@ void flecs_notify_on_set(
                 tr = &dummy_tr;
             }
     
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 flecs_invoke_hook(world, table, cr, tr, 1, row, 
                     entities, id, ti, EcsOnSet, on_set);
             } else {
@@ -7234,7 +7223,7 @@ int32_t ecs_count_id(
     int32_t count = 0;
     ecs_iter_t it = ecs_each_id(world, id);
     while (ecs_each_next(&it)) {
-        count += it.count;
+        count += it.count * it.trs[0]->count;
     }
 
     return count;
@@ -7316,7 +7305,7 @@ flecs_component_ptr_t flecs_get_component_ptr(
         return (flecs_component_ptr_t){0};
     }
 
-    if (cr->flags & (EcsIdIsSparse|EcsIdDontFragment)) {
+    if (cr->flags & (EcsIdSparse|EcsIdDontFragment)) {
         ecs_entity_t entity = ecs_table_entities(table)[row];
         return (flecs_component_ptr_t){
             .ti = cr->type_info,
@@ -7397,7 +7386,7 @@ void* flecs_get_base_component(
                     recur_depth + 1);
             }
         } else {
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 return flecs_component_sparse_get(world, cr, table, base);
             } else {
                 int32_t row = ECS_RECORD_TO_ROW(r->row);
@@ -7640,7 +7629,7 @@ const ecs_entity_t* flecs_bulk_new(
             int32_t size = ti->size;
             void *ptr;
 
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 int32_t e;
                 for (e = 0; e < count; e ++) {
                     ptr = flecs_component_sparse_get(
@@ -7831,7 +7820,7 @@ flecs_component_ptr_t flecs_ensure(
             column_index = flecs_ito(int16_t, -column_index - 1);
             const ecs_table_record_t *tr = &table->_->records[column_index];
             cr = tr->hdr.cr;
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 dst.ptr = flecs_component_sparse_get(
                     world, cr, r->table, entity);
                 dst.ti = cr->type_info;
@@ -9143,7 +9132,7 @@ ecs_entity_t ecs_clone(
     if (src_r->row & EcsEntityHasDontFragment) {
         ecs_component_record_t *cur = world->cr_non_fragmenting_head;
         while (cur) {
-            ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
             if (cur->sparse) {
                 void *src_ptr = flecs_sparse_get(cur->sparse, 0, src);
                 if (src_ptr) {
@@ -9203,7 +9192,7 @@ const void* ecs_get_id(
     if (!tr) {
         return flecs_get_base_component(world, table, component, cr, 0);
     } else {
-        if (cr->flags & EcsIdIsSparse) {
+        if (cr->flags & EcsIdSparse) {
             return flecs_component_sparse_get(world, cr, table, entity);
         }
         ecs_check(tr->column != -1, ECS_INVALID_PARAMETER,
@@ -12215,7 +12204,7 @@ void flecs_instantiate_dont_fragment(
     ecs_component_record_t *cur = world->cr_non_fragmenting_head;
 
     while (cur) {
-        ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
         if (cur->sparse && !(cur->flags & EcsIdOnInstantiateInherit) && 
             !ecs_id_is_wildcard(cur->id)) 
         {
@@ -12451,7 +12440,7 @@ void* ecs_field_w_size(
         return NULL;
     }
 
-    ecs_assert(!(tr->hdr.cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_assert(!(tr->hdr.cr->flags & EcsIdSparse), ECS_INVALID_OPERATION,
         "field %d: use ecs_field_at to access fields for sparse components", 
         index);
 
@@ -12511,7 +12500,7 @@ void* ecs_field_at_w_size(
         cr = tr->hdr.cr;
     }
 
-    ecs_assert((cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_assert((cr->flags & EcsIdSparse), ECS_INVALID_OPERATION,
         "use ecs_field to access fields for non-sparse components");
     ecs_assert(it->row_fields & (1ull << index), ECS_INTERNAL_ERROR, NULL);
 
@@ -16461,11 +16450,6 @@ ecs_observer_t* flecs_observer_init(
         "observers with only non-$this variable sources are not yet supported");
     (void)var_count;
 
-    ecs_observable_t *observable = desc->observable;
-    if (!observable) {
-        observable = flecs_get_observable(world);
-    }
-
     o->run = desc->run;
     o->callback = desc->callback;
     o->ctx = desc->ctx;
@@ -16474,7 +16458,7 @@ ecs_observer_t* flecs_observer_init(
     o->ctx_free = desc->ctx_free;
     o->callback_ctx_free = desc->callback_ctx_free;
     o->run_ctx_free = desc->run_ctx_free;
-    o->observable = observable;
+    o->observable = flecs_get_observable(world);
     o->entity = entity;
     o->world = world;
     impl->term_index = desc->term_index_;
@@ -17663,6 +17647,62 @@ void ecs_os_gettime(ecs_time_t *time) {
     time->nanosec = (uint32_t)(now - sec * 1000000000);
 }
 
+#ifdef FLECS_TRACK_OS_ALLOC
+ecs_size_t ecs_os_allocated_bytes = 0;
+static
+void* ecs_os_api_malloc(ecs_size_t size) {
+    ecs_os_linc(&ecs_os_api_malloc_count);
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
+    void *result = malloc((size_t)size + 16);
+    *(ecs_size_t*)result = size;
+    ecs_os_allocated_bytes += size;
+    return ECS_OFFSET(result, 16);
+}
+
+static
+void* ecs_os_api_calloc(ecs_size_t size) {
+    ecs_os_linc(&ecs_os_api_calloc_count);
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
+    void *result = calloc(1, (size_t)size + 16);
+    *(ecs_size_t*)result = size;
+    ecs_os_allocated_bytes += size;
+    return ECS_OFFSET(result, 16);
+}
+
+static
+void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
+    ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (ptr) {
+        ecs_os_linc(&ecs_os_api_realloc_count);
+        ptr = ECS_OFFSET(ptr, -16);
+        ecs_os_allocated_bytes -= *(ecs_size_t*)ptr;
+    } else {
+        /* If not actually reallocing, treat as malloc */
+        ecs_os_linc(&ecs_os_api_malloc_count);
+    }
+    
+    if (!size) {
+        return NULL;
+    }
+
+    ptr = realloc(ptr, (size_t)size + 16);
+    *(ecs_size_t*)ptr = size;
+    ecs_os_allocated_bytes += size;
+    return ECS_OFFSET(ptr, 16);
+}
+
+static
+void ecs_os_api_free(void *ptr) {
+    if (ptr) {
+        ptr = ECS_OFFSET(ptr, -16);
+        ecs_size_t size = *(ecs_size_t*)ptr;
+        ecs_os_allocated_bytes -= size;
+        ecs_os_linc(&ecs_os_api_free_count);
+    }
+    free(ptr);
+}
+#else
 static
 void* ecs_os_api_malloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_malloc_count);
@@ -17698,6 +17738,7 @@ void ecs_os_api_free(void *ptr) {
     }
     free(ptr);
 }
+#endif
 
 static
 char* ecs_os_api_strdup(const char *str) {
@@ -19625,7 +19666,7 @@ bool flecs_type_info_init_id(
     /* Set type info for component record of component */
     ecs_component_record_t *cr = flecs_components_ensure(world, component);
     changed |= flecs_component_set_type_info(world, cr, ti);
-    bool is_tag = cr->flags & EcsIdTag;
+    bool is_tag = cr->flags & EcsIdPairIsTag;
 
     /* All id records with component as relationship inherit type info */
     cr = flecs_components_ensure(world, ecs_pair(component, EcsWildcard));
@@ -19645,7 +19686,7 @@ bool flecs_type_info_init_id(
      * if relationship doesn't have type info */
     cr = flecs_components_ensure(world, ecs_pair(EcsWildcard, component));
     do {
-        if (!(cr->flags & EcsIdTag) && !cr->type_info) {
+        if (!(cr->flags & EcsIdPairIsTag) && !cr->type_info) {
             changed |= flecs_component_set_type_info(world, cr, ti);
         }
     } while ((cr = flecs_component_first_next(cr)));
@@ -20671,7 +20712,6 @@ void flecs_world_allocators_init(
     flecs_ballocator_init_t(&a->pair_record, ecs_pair_record_t);
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
-    flecs_ballocator_init_t(&a->hashmap, ecs_hashmap_t);
     flecs_table_diff_builder_init(world, &world->allocators.diff_builder);
 }
 
@@ -20687,7 +20727,6 @@ void flecs_world_allocators_fini(
     flecs_ballocator_fini(&a->pair_record);
     flecs_ballocator_fini(&a->table_diff);
     flecs_ballocator_fini(&a->sparse_chunk);
-    flecs_ballocator_fini(&a->hashmap);
     flecs_table_diff_builder_fini(world, &world->allocators.diff_builder);
 
     flecs_allocator_fini(&world->allocator);
@@ -23750,1798 +23789,6 @@ error:
 #endif
 
 /**
- * @file addons/http.c
- * @brief HTTP addon.
- *
- * This is a heavily modified version of the EmbeddableWebServer (see copyright
- * below). This version has been stripped from everything not strictly necessary
- * for receiving/replying to simple HTTP requests, and has been modified to use
- * the Flecs OS API.
- *
- * EmbeddableWebServer Copyright (c) 2016, 2019, 2020 Forrest Heller, and 
- * CONTRIBUTORS (see below) - All rights reserved.
- *
- * CONTRIBUTORS:
- * Martin Pulec - bug fixes, warning fixes, IPv6 support
- * Daniel Barry - bug fix (ifa_addr != NULL)
- * 
- * Released under the BSD 2-clause license:
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions are met:
- * 1. Redistributions of source code must retain the above copyright notice, 
- * this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice, 
- * this list of conditions and the following disclaimer in the documentation 
- * and/or other materials provided with the distribution. THIS SOFTWARE IS 
- * PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS 
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN 
- * NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY 
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND 
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- */
-
-#include <errno.h>
-
-#ifdef FLECS_HTTP
-
-#ifdef ECS_TARGET_MSVC
-#pragma comment(lib, "Ws2_32.lib")
-#endif
-
-#if defined(ECS_TARGET_WINDOWS)
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <windows.h>
-typedef SOCKET ecs_http_socket_t;
-#else
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <netdb.h>
-#include <strings.h>
-#include <signal.h>
-#include <fcntl.h>
-#ifdef __FreeBSD__
-#include <netinet/in.h>
-#endif
-typedef int ecs_http_socket_t;
-
-#if !defined(MSG_NOSIGNAL)
-#define MSG_NOSIGNAL (0)
-#endif
-
-#endif
-
-/* Max length of request method */
-#define ECS_HTTP_METHOD_LEN_MAX (8) 
-
-/* Timeout (s) before connection purge */
-#define ECS_HTTP_CONNECTION_PURGE_TIMEOUT (1.0)
-
-/* Number of dequeues before purging */
-#define ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT (5)
-
-/* Number of retries receiving request */
-#define ECS_HTTP_REQUEST_RECV_RETRY (10)
-
-/* Minimum interval between dequeueing requests (ms) */
-#define ECS_HTTP_MIN_DEQUEUE_INTERVAL (50)
-
-/* Minimum interval between printing statistics (ms) */
-#define ECS_HTTP_MIN_STATS_INTERVAL (10 * 1000)
-
-/* Receive buffer size */
-#define ECS_HTTP_SEND_RECV_BUFFER_SIZE (64 * 1024)
-
-/* Max length of request (path + query + headers + body) */
-#define ECS_HTTP_REQUEST_LEN_MAX (10 * 1024 * 1024)
-
-/* Total number of outstanding send requests */
-#define ECS_HTTP_SEND_QUEUE_MAX (256)
-
-/* Global statistics */
-int64_t ecs_http_request_received_count = 0;
-int64_t ecs_http_request_invalid_count = 0;
-int64_t ecs_http_request_handled_ok_count = 0;
-int64_t ecs_http_request_handled_error_count = 0;
-int64_t ecs_http_request_not_handled_count = 0;
-int64_t ecs_http_request_preflight_count = 0;
-int64_t ecs_http_send_ok_count = 0;
-int64_t ecs_http_send_error_count = 0;
-int64_t ecs_http_busy_count = 0;
-
-/* Send request queue */
-typedef struct ecs_http_send_request_t {
-    ecs_http_socket_t sock;
-    char *headers;
-    int32_t header_length;
-    char *content;
-    int32_t content_length;
-} ecs_http_send_request_t;
-
-typedef struct ecs_http_send_queue_t {
-    ecs_http_send_request_t requests[ECS_HTTP_SEND_QUEUE_MAX];
-    int32_t head;
-    int32_t tail;
-    ecs_os_thread_t thread;
-    int32_t wait_ms;
-} ecs_http_send_queue_t;
-
-typedef struct ecs_http_request_key_t {
-    const char *array;
-    ecs_size_t count;
-} ecs_http_request_key_t;
-
-typedef struct ecs_http_request_entry_t {
-    char *content;
-    int32_t content_length;
-    int code;
-    double time;
-} ecs_http_request_entry_t;
-
-/* HTTP server struct */
-struct ecs_http_server_t {
-    bool should_run;
-    bool running;
-
-    ecs_http_socket_t sock;
-    ecs_os_mutex_t lock;
-    ecs_os_thread_t thread;
-
-    ecs_http_reply_action_t callback;
-    void *ctx;
-
-    double cache_timeout;
-    double cache_purge_timeout;
-
-    ecs_sparse_t connections; /* sparse<http_connection_t> */
-    ecs_sparse_t requests; /* sparse<http_request_t> */
-
-    bool initialized;
-
-    uint16_t port;
-    const char *ipaddr;
-
-    double dequeue_timeout; /* used to not lock request queue too often */
-    double stats_timeout; /* used for periodic reporting of statistics */
-
-    double request_time; /* time spent on requests in last stats interval */
-    double request_time_total; /* total time spent on requests */
-    int32_t requests_processed; /* requests processed in last stats interval */
-    int32_t requests_processed_total; /* total requests processed */
-    int32_t dequeue_count; /* number of dequeues in last stats interval */ 
-    ecs_http_send_queue_t send_queue;
-
-    ecs_hashmap_t request_cache;
-};
-
-/** Fragment state, used by HTTP request parser */
-typedef enum  {
-    HttpFragStateBegin,
-    HttpFragStateMethod,
-    HttpFragStatePath,
-    HttpFragStateVersion,
-    HttpFragStateHeaderStart,
-    HttpFragStateHeaderName,
-    HttpFragStateHeaderValueStart,
-    HttpFragStateHeaderValue,
-    HttpFragStateCR,
-    HttpFragStateCRLF,
-    HttpFragStateCRLFCR,
-    HttpFragStateBody,
-    HttpFragStateDone
-} HttpFragState;
-
-/** A fragment is a partially received HTTP request */
-typedef struct {
-    HttpFragState state;
-    ecs_strbuf_t buf;
-    ecs_http_method_t method;
-    int32_t body_offset;
-    int32_t query_offset;
-    int32_t header_offsets[ECS_HTTP_HEADER_COUNT_MAX];
-    int32_t header_value_offsets[ECS_HTTP_HEADER_COUNT_MAX];
-    int32_t header_count;
-    int32_t param_offsets[ECS_HTTP_QUERY_PARAM_COUNT_MAX];
-    int32_t param_value_offsets[ECS_HTTP_QUERY_PARAM_COUNT_MAX];
-    int32_t param_count;
-    int32_t content_length;
-    char *header_buf_ptr;
-    char header_buf[32];
-    bool parse_content_length;
-    bool invalid;
-} ecs_http_fragment_t;
-
-/** Extend public connection type with fragment data */
-typedef struct {
-    ecs_http_connection_t pub;
-    ecs_http_socket_t sock;
-
-    /* Connection is purged after both timeout expires and connection has
-     * exceeded retry count. This ensures that a connection does not immediately
-     * timeout when a frame takes longer than usual */
-    double dequeue_timeout;
-    int32_t dequeue_retries;    
-} ecs_http_connection_impl_t;
-
-typedef struct {
-    ecs_http_request_t pub;
-    uint64_t conn_id; /* for sanity check */
-    char *res;
-    int32_t req_len;
-} ecs_http_request_impl_t;
-
-static
-ecs_size_t http_send(
-    ecs_http_socket_t sock, 
-    const void *buf, 
-    ecs_size_t size, 
-    int flags)
-{
-    ecs_assert(size >= 0, ECS_INTERNAL_ERROR, NULL);
-#ifdef ECS_TARGET_POSIX
-    ssize_t send_bytes = send(sock, buf, flecs_itosize(size), 
-        flags | MSG_NOSIGNAL);
-    return flecs_itoi32(send_bytes);
-#else
-    int send_bytes = send(sock, buf, size, flags);
-    return flecs_itoi32(send_bytes);
-#endif
-}
-
-static
-ecs_size_t http_recv(
-    ecs_http_socket_t sock,
-    void *buf,
-    ecs_size_t size,
-    int flags)
-{
-    ecs_size_t ret;
-#ifdef ECS_TARGET_POSIX
-    ssize_t recv_bytes = recv(sock, buf, flecs_itosize(size), flags);
-    ret = flecs_itoi32(recv_bytes);
-#else
-    int recv_bytes = recv(sock, buf, size, flags);
-    ret = flecs_itoi32(recv_bytes);
-#endif
-    if (ret == -1) {
-        ecs_dbg("recv failed: %s (sock = %d)", ecs_os_strerror(errno), sock);
-    } else if (ret == 0) {
-        ecs_dbg("recv: received 0 bytes (sock = %d)", sock);
-    }
-
-    return ret;
-}
-
-static
-void http_sock_set_timeout(
-    ecs_http_socket_t sock,
-    int32_t timeout_ms)
-{
-    int r;
-#ifdef ECS_TARGET_POSIX
-    struct timeval tv;
-    tv.tv_sec = timeout_ms * 1000;
-    tv.tv_usec = 0;
-    r = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
-#else
-    DWORD t = (DWORD)timeout_ms;
-    r = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&t, sizeof t);
-#endif
-    if (r) {
-        ecs_warn("http: failed to set socket timeout: %s", 
-            ecs_os_strerror(errno));
-    }
-}
-
-static
-void http_sock_keep_alive(
-    ecs_http_socket_t sock)
-{
-    int v = 1;
-    if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&v, sizeof v)) {
-        ecs_warn("http: failed to set socket KEEPALIVE: %s",
-            ecs_os_strerror(errno));
-    }
-}
-
-static
-void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
-    (void)sock;
-    (void)enable;
-#ifdef ECS_TARGET_POSIX
-    int flags;
-    flags = fcntl(sock,F_GETFL,0);
-    if (flags == -1) {
-        ecs_warn("http: failed to set socket NONBLOCK: %s",
-            ecs_os_strerror(errno));
-        return;
-    }
-    if (enable) {
-        flags = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
-    } else {
-        flags = fcntl(sock, F_SETFL, flags & ~O_NONBLOCK);
-    }
-    if (flags == -1) {
-        ecs_warn("http: failed to set socket NONBLOCK: %s",
-            ecs_os_strerror(errno));
-        return;
-    }
-#endif
-}
-
-static
-int http_getnameinfo(
-    const struct sockaddr* addr,
-    ecs_size_t addr_len,
-    char *host,
-    ecs_size_t host_len,
-    char *port,
-    ecs_size_t port_len,
-    int flags)
-{
-    ecs_assert(addr_len > 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(host_len > 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(port_len > 0, ECS_INTERNAL_ERROR, NULL);
-#if defined(ECS_TARGET_WINDOWS)
-    return getnameinfo(addr, addr_len, host, 
-        flecs_ito(uint32_t, host_len), port, flecs_ito(uint32_t, port_len), 
-        flags);
-#else
-    return getnameinfo(addr, flecs_ito(uint32_t, addr_len), host, 
-        flecs_ito(uint32_t, host_len), port, flecs_ito(uint32_t, port_len), 
-        flags);
-#endif
-}
-
-static
-int http_bind(
-    ecs_http_socket_t sock,
-    const struct sockaddr* addr,
-    ecs_size_t addr_len)
-{
-    ecs_assert(addr_len > 0, ECS_INTERNAL_ERROR, NULL);
-#if defined(ECS_TARGET_WINDOWS)
-    return bind(sock, addr, addr_len);
-#else
-    return bind(sock, addr, flecs_ito(uint32_t, addr_len));
-#endif
-}
-
-static
-bool http_socket_is_valid(
-    ecs_http_socket_t sock)
-{
-#if defined(ECS_TARGET_WINDOWS)
-    return sock != INVALID_SOCKET;
-#else
-    return sock >= 0;
-#endif
-}
-
-#if defined(ECS_TARGET_WINDOWS)
-#define HTTP_SOCKET_INVALID INVALID_SOCKET
-#else
-#define HTTP_SOCKET_INVALID (-1)
-#endif
-
-static
-void http_close(
-    ecs_http_socket_t *sock)
-{
-    ecs_assert(sock != NULL, ECS_INTERNAL_ERROR, NULL);
-
-#if defined(ECS_TARGET_WINDOWS)
-    closesocket(*sock);
-#else
-    ecs_dbg_2("http: closing socket %u", *sock);
-    shutdown(*sock, SHUT_RDWR);
-    close(*sock);
-#endif
-    *sock = HTTP_SOCKET_INVALID;
-}
-
-static
-ecs_http_socket_t http_accept(
-    ecs_http_socket_t sock,
-    struct sockaddr* addr,
-    ecs_size_t *addr_len)
-{
-    socklen_t len = (socklen_t)addr_len[0];
-    ecs_http_socket_t result = accept(sock, addr, &len);
-    addr_len[0] = (ecs_size_t)len;
-    return result;
-}
-
-static
-void http_reply_fini(ecs_http_reply_t* reply) {
-    ecs_assert(reply != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_os_free(reply->body.content);
-}
-
-static
-void http_request_fini(ecs_http_request_impl_t *req) {
-    ecs_assert(req != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(req->pub.conn != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(req->pub.conn->server != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(req->pub.conn->id == req->conn_id, ECS_INTERNAL_ERROR, NULL);
-    ecs_os_free(req->res);
-    flecs_sparse_remove_t(&req->pub.conn->server->requests, 
-        ecs_http_request_impl_t, req->pub.id);
-}
-
-static
-void http_connection_free(ecs_http_connection_impl_t *conn) {
-    ecs_assert(conn != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(conn->pub.id != 0, ECS_INTERNAL_ERROR, NULL);
-    uint64_t conn_id = conn->pub.id;
-
-    if (http_socket_is_valid(conn->sock)) {
-        http_close(&conn->sock);
-    }
-
-    flecs_sparse_remove_t(&conn->pub.server->connections, 
-        ecs_http_connection_impl_t, conn_id);
-}
-
-// https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int
-static
-char http_hex_2_int(char a, char b){
-    a = (a <= '9') ? (char)(a - '0') : (char)((a & 0x7) + 9);
-    b = (b <= '9') ? (char)(b - '0') : (char)((b & 0x7) + 9);
-    return (char)((a << 4) + b);
-}
-
-static
-void http_decode_url_str(
-    char *str) 
-{
-    char ch, *ptr, *dst = str;
-    for (ptr = str; (ch = *ptr); ptr++) {
-        if (ch == '%') {
-            dst[0] = http_hex_2_int(ptr[1], ptr[2]);
-            dst ++;
-            ptr += 2;
-        } else {
-            dst[0] = ptr[0];
-            dst ++;
-        }
-    }
-    dst[0] = '\0';
-}
-
-static
-void http_parse_method(
-    ecs_http_fragment_t *frag)
-{
-    char *method = ecs_strbuf_get_small(&frag->buf);
-    if (!ecs_os_strcmp(method, "GET")) frag->method = EcsHttpGet;
-    else if (!ecs_os_strcmp(method, "POST")) frag->method = EcsHttpPost;
-    else if (!ecs_os_strcmp(method, "PUT")) frag->method = EcsHttpPut;
-    else if (!ecs_os_strcmp(method, "DELETE")) frag->method = EcsHttpDelete;
-    else if (!ecs_os_strcmp(method, "OPTIONS")) frag->method = EcsHttpOptions;
-    else {
-        frag->method = EcsHttpMethodUnsupported;
-        frag->invalid = true;
-    }
-    ecs_strbuf_reset(&frag->buf);
-}
-
-static
-bool http_header_writable(
-    ecs_http_fragment_t *frag)
-{
-    return frag->header_count < ECS_HTTP_HEADER_COUNT_MAX;
-}
-
-static
-void http_header_buf_reset(
-    ecs_http_fragment_t *frag)
-{
-    frag->header_buf[0] = '\0';
-    frag->header_buf_ptr = frag->header_buf;
-}
-
-static
-void http_header_buf_append(
-    ecs_http_fragment_t *frag,
-    char ch)
-{
-    if ((frag->header_buf_ptr - frag->header_buf) < 
-        ECS_SIZEOF(frag->header_buf)) 
-    {
-        frag->header_buf_ptr[0] = ch;
-        frag->header_buf_ptr ++;
-    } else {
-        frag->header_buf_ptr[0] = '\0';
-    }
-}
-
-static
-uint64_t http_request_key_hash(const void *ptr) {
-    const ecs_http_request_key_t *key = ptr;
-    const char *array = key->array;
-    int32_t count = key->count;
-    return flecs_hash(array, count * ECS_SIZEOF(char));
-}
-
-static
-int http_request_key_compare(const void *ptr_1, const void *ptr_2) {
-    const ecs_http_request_key_t *type_1 = ptr_1;
-    const ecs_http_request_key_t *type_2 = ptr_2;
-
-    int32_t count_1 = type_1->count;
-    int32_t count_2 = type_2->count;
-
-    if (count_1 != count_2) {
-        return (count_1 > count_2) - (count_1 < count_2);
-    }
-
-    return ecs_os_memcmp(type_1->array, type_2->array, count_1);
-}
-
-static
-ecs_http_request_entry_t* http_find_request_entry(
-    ecs_http_server_t *srv,
-    const char *array,
-    int32_t count)
-{
-    ecs_http_request_key_t key;
-    key.array = array;
-    key.count = count;
-
-    ecs_time_t t = {0, 0};
-    ecs_http_request_entry_t *entry = flecs_hashmap_get(
-        &srv->request_cache, &key, ecs_http_request_entry_t);
-
-    if (entry) {
-        double tf = ecs_time_measure(&t);
-        if ((tf - entry->time) < srv->cache_timeout) {
-            return entry;
-        }
-    }
-    return NULL;
-}
-
-static
-void http_insert_request_entry(
-    ecs_http_server_t *srv,
-    ecs_http_request_impl_t *req,
-    ecs_http_reply_t *reply)
-{
-    int32_t content_length = ecs_strbuf_written(&reply->body);
-    if (!content_length) {
-        return;
-    }
-
-    ecs_http_request_key_t key;
-    key.array = req->res;
-    key.count = req->req_len;
-    ecs_http_request_entry_t *entry = flecs_hashmap_get(
-        &srv->request_cache, &key, ecs_http_request_entry_t);
-    if (!entry) {
-        flecs_hashmap_result_t elem = flecs_hashmap_ensure(
-            &srv->request_cache, &key, ecs_http_request_entry_t);
-        ecs_http_request_key_t *elem_key = elem.key;
-        elem_key->array = ecs_os_memdup_n(key.array, char, key.count);
-        entry = elem.value;
-    } else {
-        ecs_os_free(entry->content);
-    }
-
-    ecs_time_t t = {0, 0};
-    entry->time = ecs_time_measure(&t);
-    entry->content_length = ecs_strbuf_written(&reply->body);
-    entry->content = ecs_strbuf_get(&reply->body);
-    entry->code = reply->code;
-    ecs_strbuf_appendstrn(&reply->body, 
-            entry->content, entry->content_length);
-}
-
-static
-char* http_decode_request(
-    ecs_http_request_impl_t *req,
-    ecs_http_fragment_t *frag)
-{
-    ecs_os_zeromem(req);
-
-    ecs_size_t req_len = frag->buf.length;
-    char *res = ecs_strbuf_get(&frag->buf);
-    if (!res) {
-        return NULL;
-    }
-
-    req->pub.method = frag->method;
-    req->pub.path = res + 1;
-    http_decode_url_str(req->pub.path);
-
-    if (frag->body_offset) {
-        req->pub.body = &res[frag->body_offset];
-    }
-    int32_t i, count = frag->header_count;
-    for (i = 0; i < count; i ++) {
-        req->pub.headers[i].key = &res[frag->header_offsets[i]];
-        req->pub.headers[i].value = &res[frag->header_value_offsets[i]];
-    }
-    count = frag->param_count;
-    for (i = 0; i < count; i ++) {
-        req->pub.params[i].key = &res[frag->param_offsets[i]];
-        req->pub.params[i].value = &res[frag->param_value_offsets[i]];
-        /* Safe, member is only const so that end-user can't change it */
-        http_decode_url_str(ECS_CONST_CAST(char*, req->pub.params[i].value));
-    }
-
-    req->pub.header_count = frag->header_count;
-    req->pub.param_count = frag->param_count;
-    req->res = res;
-    req->req_len = frag->header_offsets[0];
-    if (!req->req_len) {
-        req->req_len = req_len;
-    }
-
-    return res;
-}
-
-static
-ecs_http_request_entry_t* http_enqueue_request(
-    ecs_http_connection_impl_t *conn,
-    uint64_t conn_id,
-    ecs_http_fragment_t *frag)
-{
-    ecs_http_server_t *srv = conn->pub.server;
-
-    ecs_os_mutex_lock(srv->lock);
-    bool is_alive = conn->pub.id == conn_id;
-
-    if (!is_alive || frag->invalid) { 
-        /* Don't enqueue invalid requests or requests for purged connections */
-        ecs_strbuf_reset(&frag->buf);
-    } else {
-        ecs_http_request_impl_t req;
-        char *res = http_decode_request(&req, frag);
-        if (res) {
-            req.pub.conn = (ecs_http_connection_t*)conn;
-
-            /* Check cache for GET requests */
-            if (frag->method == EcsHttpGet) {
-                ecs_http_request_entry_t *entry = 
-                    http_find_request_entry(srv, res, frag->header_offsets[0]);
-                if (entry) {
-                    /* If an entry is found, don't enqueue a request. Instead
-                     * return the cached response immediately. */
-                    ecs_os_free(res);
-                    return entry;
-                }
-            }
-
-            ecs_http_request_impl_t *req_ptr = flecs_sparse_add_t(
-                &srv->requests, ecs_http_request_impl_t);
-            *req_ptr = req;
-            req_ptr->pub.id = flecs_sparse_last_id(&srv->requests);
-            req_ptr->conn_id = conn->pub.id;
-            ecs_os_linc(&ecs_http_request_received_count);
-        }
-    }
-
-    ecs_os_mutex_unlock(srv->lock);
-    return NULL;
-}
-
-static
-bool http_parse_request(
-    ecs_http_fragment_t *frag,
-    const char* req_frag, 
-    ecs_size_t req_frag_len) 
-{
-    int32_t i;
-    for (i = 0; i < req_frag_len; i++) {
-        char c = req_frag[i];
-        switch (frag->state) {
-        case HttpFragStateBegin:
-            ecs_os_memset_t(frag, 0, ecs_http_fragment_t);
-            frag->state = HttpFragStateMethod;
-            frag->header_buf_ptr = frag->header_buf;
-
-            /* fall through */
-        case HttpFragStateMethod:
-            if (c == ' ') {
-                http_parse_method(frag);
-                ecs_strbuf_reset(&frag->buf);
-                frag->state = HttpFragStatePath;
-                frag->buf.content = NULL;
-            } else {
-                ecs_strbuf_appendch(&frag->buf, c);
-            }
-            break;
-        case HttpFragStatePath:
-            if (c == ' ') {
-                frag->state = HttpFragStateVersion;
-                ecs_strbuf_appendch(&frag->buf, '\0');
-            } else {
-                if (c == '?' || c == '=' || c == '&') {
-                    ecs_strbuf_appendch(&frag->buf, '\0');
-                    int32_t offset = ecs_strbuf_written(&frag->buf);
-                    if (c == '?' || c == '&') {
-                        frag->param_offsets[frag->param_count] = offset;
-                    } else {
-                        frag->param_value_offsets[frag->param_count] = offset;
-                        frag->param_count ++;
-                    }
-                } else {
-                    ecs_strbuf_appendch(&frag->buf, c);
-                }
-            }
-            break;
-        case HttpFragStateVersion:
-            if (c == '\r') {
-                frag->state = HttpFragStateCR;
-            } /* version is not stored */
-            break;
-        case HttpFragStateHeaderStart:
-            if (http_header_writable(frag)) {
-                frag->header_offsets[frag->header_count] = 
-                    ecs_strbuf_written(&frag->buf);
-            }
-            http_header_buf_reset(frag);
-            frag->state = HttpFragStateHeaderName;
-
-            /* fall through */
-        case HttpFragStateHeaderName:
-            if (c == ':') {
-                frag->state = HttpFragStateHeaderValueStart;
-                http_header_buf_append(frag, '\0');
-                frag->parse_content_length = !ecs_os_strcmp(
-                    frag->header_buf, "Content-Length");
-
-                if (http_header_writable(frag)) {
-                    ecs_strbuf_appendch(&frag->buf, '\0');
-                    frag->header_value_offsets[frag->header_count] =
-                        ecs_strbuf_written(&frag->buf);
-                }
-            } else if (c == '\r') {
-                frag->state = HttpFragStateCR;
-            } else  {
-                http_header_buf_append(frag, c);
-                if (http_header_writable(frag)) {
-                    ecs_strbuf_appendch(&frag->buf, c);
-                }
-            }
-            break;
-        case HttpFragStateHeaderValueStart:
-            http_header_buf_reset(frag);
-            frag->state = HttpFragStateHeaderValue;
-            if (c == ' ') { /* skip first space */
-                break;
-            }
-
-            /* fall through */
-        case HttpFragStateHeaderValue:
-            if (c == '\r') {
-                if (frag->parse_content_length) {
-                    http_header_buf_append(frag, '\0');
-                    int32_t len = atoi(frag->header_buf);
-                    if (len < 0) {
-                        frag->invalid = true;
-                    } else {
-                        frag->content_length = len;
-                    }
-                    frag->parse_content_length = false;
-                }
-                if (http_header_writable(frag)) {
-                    int32_t cur = ecs_strbuf_written(&frag->buf);
-                    if (frag->header_offsets[frag->header_count] < cur &&
-                        frag->header_value_offsets[frag->header_count] < cur)
-                    {
-                        ecs_strbuf_appendch(&frag->buf, '\0');
-                        frag->header_count ++;
-                    }
-                }
-                frag->state = HttpFragStateCR;
-            } else {
-                if (frag->parse_content_length) {
-                    http_header_buf_append(frag, c);
-                }
-                if (http_header_writable(frag)) {
-                    ecs_strbuf_appendch(&frag->buf, c);
-                }
-            }
-            break;
-        case HttpFragStateCR:
-            if (c == '\n') {
-                frag->state = HttpFragStateCRLF;
-            } else {
-                frag->state = HttpFragStateHeaderStart;
-            } 
-            break;
-        case HttpFragStateCRLF:
-            if (c == '\r') {
-                frag->state = HttpFragStateCRLFCR;
-            } else {
-                frag->state = HttpFragStateHeaderStart;
-                i--;
-            }
-            break;
-        case HttpFragStateCRLFCR:
-            if (c == '\n') {
-                if (frag->content_length != 0) {
-                    frag->body_offset = ecs_strbuf_written(&frag->buf);
-                    frag->state = HttpFragStateBody;
-                } else {
-                    frag->state = HttpFragStateDone;
-                }
-            } else {
-                frag->state = HttpFragStateHeaderStart;
-            }
-            break;
-        case HttpFragStateBody: {
-                ecs_strbuf_appendch(&frag->buf, c);
-                if ((ecs_strbuf_written(&frag->buf) - frag->body_offset) == 
-                    frag->content_length) 
-                {
-                    frag->state = HttpFragStateDone;
-                }
-            }
-            break;
-        case HttpFragStateDone:
-            break;
-        }
-    }
-
-    if (frag->state == HttpFragStateDone) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-static
-ecs_http_send_request_t* http_send_queue_post(
-    ecs_http_server_t *srv)
-{
-    /* This function should only be called while the server is locked. Before 
-     * the lock is released, the returned element should be populated. */
-    ecs_http_send_queue_t *sq = &srv->send_queue;
-    int32_t next = (sq->head + 1) % ECS_HTTP_SEND_QUEUE_MAX;
-    if (next == sq->tail) {
-        return NULL;
-    }
-
-    /* Don't enqueue new requests if server is shutting down */
-    if (!srv->should_run) {
-        return NULL;
-    }
-
-    /* Return element at end of the queue */
-    ecs_http_send_request_t *result = &sq->requests[sq->head];
-    sq->head = next;
-    return result;
-}
-
-static
-ecs_http_send_request_t* http_send_queue_get(
-    ecs_http_server_t *srv)
-{
-    ecs_os_mutex_lock(srv->lock);
-    ecs_http_send_queue_t *sq = &srv->send_queue;
-    if (sq->tail == sq->head) {
-        return NULL;
-    }
-
-    int32_t next = (sq->tail + 1) % ECS_HTTP_SEND_QUEUE_MAX;
-    ecs_http_send_request_t *result = &sq->requests[sq->tail];
-    sq->tail = next;
-    return result;
-}
-
-static
-void* http_server_send_queue(void* arg) {
-    ecs_http_server_t *srv = arg;
-    int32_t wait_ms = srv->send_queue.wait_ms;
-
-    /* Run for as long as the server is running or there are messages. When the
-     * server is stopping, no new messages will be enqueued */
-    while (srv->should_run || (srv->send_queue.head != srv->send_queue.tail)) {
-        ecs_http_send_request_t* r = http_send_queue_get(srv);
-        if (!r) {
-            ecs_os_mutex_unlock(srv->lock);
-            /* If the queue is empty, wait so we don't run too fast */
-            if (srv->should_run) {
-                ecs_os_sleep(0, wait_ms * 1000 * 1000);
-            }
-        } else {
-            ecs_http_socket_t sock = r->sock;
-            char *headers = r->headers;
-            int32_t headers_length = r->header_length;
-            char *content = r->content;
-            int32_t content_length = r->content_length;
-            ecs_os_mutex_unlock(srv->lock);
-
-            if (http_socket_is_valid(sock)) {
-                bool error = false;
-
-                http_sock_nonblock(sock, false);
-
-                /* Write headers */
-                ecs_size_t written = http_send(sock, headers, headers_length, 0);
-                if (written != headers_length) {
-                    ecs_err("http: failed to write HTTP response headers: %s",
-                        ecs_os_strerror(errno));
-                    ecs_os_linc(&ecs_http_send_error_count);
-                    error = true;
-                } else if (content_length >= 0) {
-                    /* Write content */
-                    written = http_send(sock, content, content_length, 0);
-                    if (written != content_length) {
-                        ecs_err("http: failed to write HTTP response body: %s",
-                            ecs_os_strerror(errno));
-                        ecs_os_linc(&ecs_http_send_error_count);
-                        error = true;
-                    }
-                }
-                if (!error) {
-                    ecs_os_linc(&ecs_http_send_ok_count);
-                }
-
-                http_close(&sock);
-            } else {
-                ecs_err("http: invalid socket\n");
-            }
-
-            ecs_os_free(content);
-            ecs_os_free(headers);
-        }
-    }
-    return NULL;
-}
-
-static
-void http_append_send_headers(
-    ecs_strbuf_t *hdrs,
-    int code, 
-    const char* status, 
-    const char* content_type,  
-    ecs_strbuf_t *extra_headers,
-    ecs_size_t content_len,
-    bool preflight)
-{
-    ecs_strbuf_appendlit(hdrs, "HTTP/1.1 ");
-    ecs_strbuf_appendint(hdrs, code);
-    ecs_strbuf_appendch(hdrs, ' ');
-    ecs_strbuf_appendstr(hdrs, status);
-    ecs_strbuf_appendlit(hdrs, "\r\n");
-
-    if (content_type) {
-        ecs_strbuf_appendlit(hdrs, "Content-Type: ");
-        ecs_strbuf_appendstr(hdrs, content_type);
-        ecs_strbuf_appendlit(hdrs, "\r\n");
-    }
-
-    if (content_len >= 0) {
-        ecs_strbuf_appendlit(hdrs, "Content-Length: ");
-        ecs_strbuf_append(hdrs, "%d", content_len);
-        ecs_strbuf_appendlit(hdrs, "\r\n");
-    }
-
-    ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Origin: *\r\n");
-    if (preflight) {
-        ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Private-Network: true\r\n");
-        ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Methods: GET, PUT, DELETE, OPTIONS\r\n");
-        ecs_strbuf_appendlit(hdrs, "Access-Control-Max-Age: 600\r\n");
-    }
-
-    ecs_strbuf_mergebuff(hdrs, extra_headers);
-
-    ecs_strbuf_appendlit(hdrs, "\r\n");
-}
-
-static
-void http_send_reply(
-    ecs_http_connection_impl_t* conn, 
-    ecs_http_reply_t* reply,
-    bool preflight) 
-{
-    ecs_strbuf_t hdrs = ECS_STRBUF_INIT;
-    int32_t content_length = reply->body.length;
-    char *content = ecs_strbuf_get(&reply->body);
-
-    /* Use asynchronous send queue for outgoing data so send operations won't
-     * hold up main thread */
-    ecs_http_send_request_t *req = NULL;
-
-    if (!preflight) {
-        req = http_send_queue_post(conn->pub.server);
-        if (!req) {
-            reply->code = 503; /* queue full, server is busy */
-            ecs_os_linc(&ecs_http_busy_count);
-        }
-    }
-
-    http_append_send_headers(&hdrs, reply->code, reply->status, 
-        reply->content_type, &reply->headers, content_length, preflight);
-    ecs_size_t headers_length = ecs_strbuf_written(&hdrs);
-    char *headers = ecs_strbuf_get(&hdrs);
-
-    if (!req) {
-        ecs_size_t written = http_send(conn->sock, headers, headers_length, 0);
-        if (written != headers_length) {
-            ecs_err("http: failed to send reply to '%s:%s': %s",
-                conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
-            ecs_os_linc(&ecs_http_send_error_count);
-        }
-        ecs_os_free(content);
-        ecs_os_free(headers);
-        http_close(&conn->sock);
-        return;
-    }
-
-    /* Second, enqueue send request for response body */
-    req->sock = conn->sock;
-    req->headers = headers;
-    req->header_length = headers_length;
-    req->content = content;
-    req->content_length = content_length;
-
-    /* Take ownership of values */
-    reply->body.content = NULL;
-    conn->sock = HTTP_SOCKET_INVALID;
-}
-
-static
-void http_recv_connection(
-    ecs_http_server_t *srv,
-    ecs_http_connection_impl_t *conn, 
-    uint64_t conn_id,
-    ecs_http_socket_t sock)
-{
-    ecs_size_t bytes_read;
-    char *recv_buf = ecs_os_malloc(ECS_HTTP_SEND_RECV_BUFFER_SIZE);
-    ecs_http_fragment_t frag = {0};
-    int32_t retries = 0;
-
-    ecs_os_sleep(0, 10 * 1000 * 1000);
-
-    do {
-        if ((bytes_read = http_recv(
-            sock, recv_buf, ECS_HTTP_SEND_RECV_BUFFER_SIZE, 0)) > 0) 
-        {
-            bool is_alive = conn->pub.id == conn_id;
-            if (!is_alive) {
-                /* Connection has been purged by main thread */
-                goto done;
-            }
-
-            if (http_parse_request(&frag, recv_buf, bytes_read)) {
-                if (frag.method == EcsHttpOptions) {
-                    ecs_http_reply_t reply;
-                    reply.body = ECS_STRBUF_INIT;
-                    reply.code = 200;
-                    reply.content_type = NULL;
-                    reply.headers = ECS_STRBUF_INIT;
-                    reply.status = "OK";
-                    http_send_reply(conn, &reply, true);
-                    ecs_os_linc(&ecs_http_request_preflight_count);
-                } else {
-                    ecs_http_request_entry_t *entry =
-                        http_enqueue_request(conn, conn_id, &frag);
-                    if (entry) {
-                        ecs_http_reply_t reply;
-                        reply.body = ECS_STRBUF_INIT;
-                        reply.code = entry->code;
-                        reply.content_type = "application/json";
-                        reply.headers = ECS_STRBUF_INIT;
-                        reply.status = "OK";
-                        ecs_strbuf_appendstrn(&reply.body, 
-                            entry->content, entry->content_length);
-                        http_send_reply(conn, &reply, false);
-                        http_connection_free(conn);
-
-                        /* Lock was transferred from enqueue_request */
-                        ecs_os_mutex_unlock(srv->lock);
-                    }
-                }
-            } else {
-                ecs_os_linc(&ecs_http_request_invalid_count);
-            }
-        }
-
-        ecs_os_sleep(0, 10 * 1000 * 1000);
-    } while ((bytes_read == -1) && (++retries < ECS_HTTP_REQUEST_RECV_RETRY));
-
-    if (bytes_read == ECS_HTTP_SEND_RECV_BUFFER_SIZE) {
-        ecs_warn("request exceeded receive buffer size (%d)",
-            ECS_HTTP_SEND_RECV_BUFFER_SIZE);
-    }
-
-    if (retries == ECS_HTTP_REQUEST_RECV_RETRY) {
-        http_close(&sock);
-    }
-
-done:
-    ecs_os_free(recv_buf);
-    ecs_strbuf_reset(&frag.buf);
-}
-
-typedef struct {
-    ecs_http_connection_impl_t *conn;
-    uint64_t id;
-} http_conn_res_t;
-
-static
-http_conn_res_t http_init_connection(
-    ecs_http_server_t *srv, 
-    ecs_http_socket_t sock_conn,
-    struct sockaddr_storage *remote_addr, 
-    ecs_size_t remote_addr_len) 
-{
-    http_sock_set_timeout(sock_conn, 100);
-    http_sock_keep_alive(sock_conn);
-    http_sock_nonblock(sock_conn, true);
-
-    /* Create new connection */
-    ecs_os_mutex_lock(srv->lock);
-    ecs_http_connection_impl_t *conn = flecs_sparse_add_t(
-        &srv->connections, ecs_http_connection_impl_t);
-    uint64_t conn_id = conn->pub.id = flecs_sparse_last_id(&srv->connections);
-    conn->pub.server = srv;
-    conn->sock = sock_conn;
-    ecs_os_mutex_unlock(srv->lock);
-
-    char *remote_host = conn->pub.host;
-    char *remote_port = conn->pub.port;
-
-    /* Fetch name & port info */
-    if (http_getnameinfo((struct sockaddr*) remote_addr, remote_addr_len,
-        remote_host, ECS_SIZEOF(conn->pub.host),
-        remote_port, ECS_SIZEOF(conn->pub.port),
-            NI_NUMERICHOST | NI_NUMERICSERV))
-    {
-        ecs_os_strcpy(remote_host, "unknown");
-        ecs_os_strcpy(remote_port, "unknown");
-    }
-
-    ecs_dbg_2("http: connection established from '%s:%s' (socket %u)", 
-        remote_host, remote_port, sock_conn);
-    
-    return (http_conn_res_t){ .conn = conn, .id = conn_id };
-}
-
-static
-int http_accept_connections(
-    ecs_http_server_t* srv, 
-    const struct sockaddr* addr, 
-    ecs_size_t addr_len) 
-{
-#ifdef ECS_TARGET_WINDOWS
-    /* If on Windows, test if winsock needs to be initialized */
-    SOCKET testsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (INVALID_SOCKET == testsocket && WSANOTINITIALISED == WSAGetLastError()){
-        WSADATA data = { 0 };
-        int result = WSAStartup(MAKEWORD(2, 2), &data);
-        if (result) {
-            ecs_warn("http: WSAStartup failed with GetLastError = %d\n", 
-                GetLastError());
-            return 0;
-        }
-    } else {
-        http_close(&testsocket);
-    }
-#endif
-
-    /* Resolve name + port (used for logging) */
-    char addr_host[256];
-    char addr_port[20];
-
-    int ret = 0; /* 0 = ok, 1 = port occupied */
-
-    ecs_http_socket_t sock = HTTP_SOCKET_INVALID;
-    ecs_assert(srv->sock == HTTP_SOCKET_INVALID, ECS_INTERNAL_ERROR, NULL);
-
-    if (http_getnameinfo(
-        addr, addr_len, addr_host, ECS_SIZEOF(addr_host), addr_port, 
-        ECS_SIZEOF(addr_port), NI_NUMERICHOST | NI_NUMERICSERV))
-    {
-        ecs_os_strcpy(addr_host, "unknown");
-        ecs_os_strcpy(addr_port, "unknown");
-    }
-
-    ecs_os_mutex_lock(srv->lock);
-    if (srv->should_run) {
-        ecs_dbg_2("http: initializing connection socket");
-
-        sock = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
-        if (!http_socket_is_valid(sock)) {
-            ecs_err("http: unable to create new connection socket: %s", 
-                ecs_os_strerror(errno));
-            ecs_os_mutex_unlock(srv->lock);
-            goto done;
-        }
-
-        int reuse = 1, result;
-        result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
-            (char*)&reuse, ECS_SIZEOF(reuse)); 
-        if (result) {
-            ecs_warn("http: failed to setsockopt: %s", ecs_os_strerror(errno));
-        }
-
-        if (addr->sa_family == AF_INET6) {
-            int ipv6only = 0;
-            if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, 
-                (char*)&ipv6only, ECS_SIZEOF(ipv6only)))
-            {
-                ecs_warn("http: failed to setsockopt: %s", 
-                    ecs_os_strerror(errno));
-            }
-        }
-
-        result = http_bind(sock, addr, addr_len);
-        if (result) {
-            if (errno == EADDRINUSE) {
-                ret = 1;
-                ecs_warn("http: address '%s:%s' in use, retrying with port %u", 
-                    addr_host, addr_port, srv->port + 1);
-            } else {
-                ecs_err("http: failed to bind to '%s:%s': %s", 
-                    addr_host, addr_port, ecs_os_strerror(errno));
-            }
-
-            ecs_os_mutex_unlock(srv->lock);
-            goto done;
-        }
-
-        http_sock_set_timeout(sock, 1000);
-
-        srv->sock = sock;
-
-        result = listen(srv->sock, SOMAXCONN);
-        if (result) {
-            ecs_warn("http: could not listen for SOMAXCONN (%d) connections: %s", 
-                SOMAXCONN, ecs_os_strerror(errno));
-        }
-
-        ecs_trace("http: listening for incoming connections on '%s:%s'",
-            addr_host, addr_port);
-    } else {
-        ecs_dbg_2("http: server shut down while initializing");
-    }
-    ecs_os_mutex_unlock(srv->lock);
-
-    struct sockaddr_storage remote_addr;
-    ecs_size_t remote_addr_len = 0;
-
-    while (srv->should_run) {
-        remote_addr_len = ECS_SIZEOF(remote_addr);
-        ecs_http_socket_t sock_conn = http_accept(srv->sock, (struct sockaddr*) &remote_addr, 
-            &remote_addr_len);
-
-        if (!http_socket_is_valid(sock_conn)) {
-            if (srv->should_run) {
-                ecs_dbg("http: connection attempt failed: %s", 
-                    ecs_os_strerror(errno));
-            }
-            continue;
-        }
-
-        http_conn_res_t conn = http_init_connection(srv, sock_conn, &remote_addr, remote_addr_len);
-        http_recv_connection(srv, conn.conn, conn.id, sock_conn);
-    }
-
-done:
-    ecs_os_mutex_lock(srv->lock);
-    if (http_socket_is_valid(sock) && errno != EBADF) {
-        http_close(&sock);
-        srv->sock = sock;
-    }
-    ecs_os_mutex_unlock(srv->lock);
-
-    ecs_trace("http: no longer accepting connections on '%s:%s'",
-        addr_host, addr_port);
-
-    return ret;
-}
-
-static
-void* http_server_thread(void* arg) {
-    ecs_http_server_t *srv = arg;
-    struct sockaddr_in addr;
-    ecs_os_zeromem(&addr);
-    addr.sin_family = AF_INET;
-
-    int retries = 0;
-retry:
-    addr.sin_port = htons(srv->port);
-
-    if (!srv->ipaddr) {
-        addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    } else {
-        inet_pton(AF_INET, srv->ipaddr, &(addr.sin_addr));
-    }
-
-    if (http_accept_connections(
-        srv, (struct sockaddr*)&addr, ECS_SIZEOF(addr)) == 1) 
-    {
-        srv->port ++;
-        retries ++;
-        if (retries < 10) {
-            goto retry;
-        } else {
-            ecs_err("http: failed to connect (retried 10 times)");
-        }
-    }
-
-    return NULL;
-}
-
-static
-void http_do_request(
-    ecs_http_server_t *srv,
-    ecs_http_reply_t *reply,
-    const ecs_http_request_impl_t *req)
-{
-    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(srv->callback != NULL, ECS_INVALID_OPERATION, 
-        "missing request handler for server");
-
-    if (srv->callback(ECS_CONST_CAST(ecs_http_request_t*, req), reply, 
-        srv->ctx) == false) 
-    {
-        reply->status = "Resource not found";
-        ecs_os_linc(&ecs_http_request_not_handled_count);
-    } else {
-        if (reply->code >= 400) {
-            ecs_os_linc(&ecs_http_request_handled_error_count);
-        } else {
-            ecs_os_linc(&ecs_http_request_handled_ok_count);
-        }
-    }
-error:
-    return;
-}
-
-static
-void http_handle_request(
-    ecs_http_server_t *srv,
-    ecs_http_request_impl_t *req)
-{
-    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
-    ecs_http_connection_impl_t *conn = 
-        (ecs_http_connection_impl_t*)req->pub.conn;
-
-    if (req->pub.method != EcsHttpOptions) {
-        if (srv->callback((ecs_http_request_t*)req, &reply, srv->ctx) == false) {
-            reply.code = 404;
-            reply.status = "Resource not found";
-            ecs_os_linc(&ecs_http_request_not_handled_count);
-        } else {
-            if (reply.code >= 400) {
-                ecs_os_linc(&ecs_http_request_handled_error_count);
-            } else {
-                ecs_os_linc(&ecs_http_request_handled_ok_count);
-            }
-        }
-
-        if (req->pub.method == EcsHttpGet) {
-            http_insert_request_entry(srv, req, &reply);
-        }
-
-        http_send_reply(conn, &reply, false);
-        ecs_dbg_2("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
-    } else {
-        /* Already taken care of */
-    }
-
-    http_reply_fini(&reply);
-    http_request_fini(req);
-    http_connection_free(conn);
-}
-
-static
-void http_purge_request_cache(
-    ecs_http_server_t *srv,
-    bool fini)
-{
-    ecs_time_t t = {0, 0};
-    double time = ecs_time_measure(&t);
-    ecs_map_iter_t it = ecs_map_iter(&srv->request_cache.impl);
-    while (ecs_map_next(&it)) {
-        ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
-        int32_t i, count = ecs_vec_count(&bucket->values);
-        ecs_http_request_key_t *keys = ecs_vec_first(&bucket->keys);
-        ecs_http_request_entry_t *entries = ecs_vec_first(&bucket->values);
-        for (i = count - 1; i >= 0; i --) {
-            ecs_http_request_entry_t *entry = &entries[i];
-            if (fini || ((time - entry->time) > srv->cache_purge_timeout)) {
-                ecs_http_request_key_t *key = &keys[i];
-                /* Safe, code owns the value */
-                ecs_os_free(ECS_CONST_CAST(char*, key->array));
-                ecs_os_free(entry->content);
-                flecs_hm_bucket_remove(&srv->request_cache, bucket, 
-                    ecs_map_key(&it), i);
-            }
-        }
-    }
-
-    if (fini) {
-        flecs_hashmap_fini(&srv->request_cache);
-    }
-}
-
-static
-int32_t http_dequeue_requests(
-    ecs_http_server_t *srv,
-    double delta_time)
-{
-    ecs_os_mutex_lock(srv->lock);
-
-    int32_t i, request_count = flecs_sparse_count(&srv->requests);
-    for (i = request_count - 1; i >= 1; i --) {
-        ecs_http_request_impl_t *req = flecs_sparse_get_dense_t(
-            &srv->requests, ecs_http_request_impl_t, i);
-        http_handle_request(srv, req);
-    }
-
-    int32_t connections_count = flecs_sparse_count(&srv->connections);
-    for (i = connections_count - 1; i >= 1; i --) {
-        ecs_http_connection_impl_t *conn = flecs_sparse_get_dense_t(
-            &srv->connections, ecs_http_connection_impl_t, i);
-
-        conn->dequeue_timeout += delta_time;
-        conn->dequeue_retries ++;
-        
-        if ((conn->dequeue_timeout > 
-            (double)ECS_HTTP_CONNECTION_PURGE_TIMEOUT) &&
-             (conn->dequeue_retries > ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT)) 
-        {
-            ecs_dbg("http: purging connection '%s:%s' (sock = %d)", 
-                conn->pub.host, conn->pub.port, conn->sock);
-            http_connection_free(conn);
-        }
-    }
-
-    http_purge_request_cache(srv, false);
-    ecs_os_mutex_unlock(srv->lock);
-
-    return request_count - 1;
-}
-
-const char* ecs_http_get_header(
-    const ecs_http_request_t* req,
-    const char* name) 
-{
-    for (ecs_size_t i = 0; i < req->header_count; i++) {
-        if (!ecs_os_strcmp(req->headers[i].key, name)) {
-            return req->headers[i].value;
-        }
-    }
-    return NULL;
-}
-
-const char* ecs_http_get_param(
-    const ecs_http_request_t* req,
-    const char* name) 
-{
-    for (ecs_size_t i = 0; i < req->param_count; i++) {
-        if (!ecs_os_strcmp(req->params[i].key, name)) {
-            return req->params[i].value;
-        }
-    }
-    return NULL;
-}
-
-ecs_http_server_t* ecs_http_server_init(
-    const ecs_http_server_desc_t *desc) 
-{
-    ecs_http_server_t* srv = ecs_os_calloc_t(ecs_http_server_t);
-    if (ecs_os_has_threading()) {
-        srv->lock = ecs_os_mutex_new();
-    }
-    srv->sock = HTTP_SOCKET_INVALID;
-
-    srv->should_run = false;
-    srv->initialized = true;
-
-    srv->cache_timeout = desc->cache_timeout;
-    srv->cache_purge_timeout = desc->cache_purge_timeout;
-
-    if (!ECS_EQZERO(srv->cache_timeout) && 
-         ECS_EQZERO(srv->cache_purge_timeout)) 
-    {
-        srv->cache_purge_timeout = srv->cache_timeout * 10;
-    }
-
-    srv->callback = desc->callback;
-    srv->ctx = desc->ctx;
-    srv->port = desc->port;
-    srv->ipaddr = desc->ipaddr;
-    srv->send_queue.wait_ms = desc->send_queue_wait_ms;
-    if (!srv->send_queue.wait_ms) {
-        srv->send_queue.wait_ms = 1;
-    }
-
-    flecs_sparse_init_t(&srv->connections, NULL, NULL, ecs_http_connection_impl_t);
-    flecs_sparse_init_t(&srv->requests, NULL, NULL, ecs_http_request_impl_t);
-
-    /* Start at id 1 */
-    flecs_sparse_new_id(&srv->connections);
-    flecs_sparse_new_id(&srv->requests);
-
-    /* Initialize request cache */
-    flecs_hashmap_init(&srv->request_cache, 
-        ecs_http_request_key_t, ecs_http_request_entry_t,
-        http_request_key_hash, http_request_key_compare, NULL);
-
-#ifndef ECS_TARGET_WINDOWS
-    /* Ignore pipe signal. SIGPIPE can occur when a message is sent to a client
-     * but te client already disconnected. */
-    signal(SIGPIPE, SIG_IGN);
-#endif
-
-    return srv;
-}
-
-void ecs_http_server_fini(
-    ecs_http_server_t* srv) 
-{
-    if (srv->should_run) {
-        ecs_http_server_stop(srv);
-    }
-    if (ecs_os_has_threading()) {
-        ecs_os_mutex_free(srv->lock);
-    }
-    http_purge_request_cache(srv, true);
-    flecs_sparse_fini(&srv->requests);
-    flecs_sparse_fini(&srv->connections);
-    ecs_os_free(srv);
-}
-
-int ecs_http_server_start(
-    ecs_http_server_t *srv)
-{
-    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!srv->should_run, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!srv->thread, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_os_has_threading(), ECS_UNSUPPORTED,
-        "missing OS API implementation");
-
-    srv->should_run = true;
-
-    ecs_dbg("http: starting server thread");
-
-    srv->thread = ecs_os_thread_new(http_server_thread, srv);
-    if (!srv->thread) {
-        goto error;
-    }
-
-    srv->send_queue.thread = ecs_os_thread_new(http_server_send_queue, srv);
-    if (!srv->send_queue.thread) {
-        goto error;
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-void ecs_http_server_stop(
-    ecs_http_server_t* srv) 
-{
-    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(srv->initialized, ECS_INVALID_OPERATION, 
-        "cannot stop HTTP server: not initialized");
-    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, 
-        "cannot stop HTTP server: already stopped/stopping");
-    ecs_check(ecs_os_has_threading(), ECS_UNSUPPORTED,
-        "missing OS API implementation");
-
-    /* Stop server thread */
-    ecs_dbg("http: shutting down server thread");
-
-    ecs_os_mutex_lock(srv->lock);
-    srv->should_run = false;
-    if (http_socket_is_valid(srv->sock)) {
-        http_close(&srv->sock);
-    }
-    ecs_os_mutex_unlock(srv->lock);
-
-    ecs_os_thread_join(srv->thread);
-    ecs_os_thread_join(srv->send_queue.thread);
-    ecs_trace("http: server threads shut down");
-
-    /* Cleanup all outstanding requests */
-    int i, count = flecs_sparse_count(&srv->requests);
-    for (i = count - 1; i >= 1; i --) {
-        http_request_fini(flecs_sparse_get_dense_t(
-            &srv->requests, ecs_http_request_impl_t, i));
-    }
-
-    /* Close all connections */
-    count = flecs_sparse_count(&srv->connections);
-    for (i = count - 1; i >= 1; i --) {
-        http_connection_free(flecs_sparse_get_dense_t(
-            &srv->connections, ecs_http_connection_impl_t, i));
-    }
-
-    ecs_assert(flecs_sparse_count(&srv->connections) == 1, 
-        ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(flecs_sparse_count(&srv->requests) == 1,
-        ECS_INTERNAL_ERROR, NULL);
-
-    srv->thread = 0;
-error:
-    return;
-}
-
-void ecs_http_server_dequeue(
-    ecs_http_server_t* srv,
-    ecs_ftime_t delta_time)
-{
-    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, NULL);
-    
-    srv->dequeue_timeout += (double)delta_time;
-    srv->stats_timeout += (double)delta_time;
-
-    if ((1000 * srv->dequeue_timeout) > (double)ECS_HTTP_MIN_DEQUEUE_INTERVAL) {
-        srv->dequeue_timeout = 0;
-
-        ecs_time_t t = {0};
-        ecs_time_measure(&t);
-        int32_t request_count = http_dequeue_requests(srv, srv->dequeue_timeout);
-        srv->requests_processed += request_count;
-        srv->requests_processed_total += request_count;
-        double time_spent = ecs_time_measure(&t);
-        srv->request_time += time_spent;
-        srv->request_time_total += time_spent;
-        srv->dequeue_count ++;
-    }
-
-    if ((1000 * srv->stats_timeout) > (double)ECS_HTTP_MIN_STATS_INTERVAL) {
-        srv->stats_timeout = 0;
-        ecs_dbg("http: processed %d requests in %.3fs (avg %.3fs / dequeue)",
-            srv->requests_processed, srv->request_time, 
-            (srv->request_time / (double)srv->dequeue_count));
-        srv->requests_processed = 0;
-        srv->request_time = 0;
-        srv->dequeue_count = 0;
-    }
-
-error:
-    return;
-}
-
-int ecs_http_server_http_request(
-    ecs_http_server_t* srv,
-    const char *req,
-    ecs_size_t len,
-    ecs_http_reply_t *reply_out)
-{
-    if (!len) {
-        len = ecs_os_strlen(req);
-    }
-
-    ecs_http_fragment_t frag = {0};
-    if (!http_parse_request(&frag, req, len)) {
-        ecs_strbuf_reset(&frag.buf);
-        reply_out->code = 400;
-        return -1;
-    }
-
-    ecs_http_request_impl_t request;
-    char *res = http_decode_request(&request, &frag);
-    if (!res) {
-        reply_out->code = 400;
-        return -1;
-    }
-
-    ecs_http_request_entry_t *entry = 
-        http_find_request_entry(srv, request.res, request.req_len);
-    if (entry) {
-        reply_out->body = ECS_STRBUF_INIT;
-        reply_out->code = entry->code;
-        reply_out->content_type = "application/json";
-        reply_out->headers = ECS_STRBUF_INIT;
-        reply_out->status = "OK";
-        ecs_strbuf_appendstrn(&reply_out->body, 
-            entry->content, entry->content_length);
-    } else {
-        http_do_request(srv, reply_out, &request);
-
-        if (request.pub.method == EcsHttpGet) {
-            http_insert_request_entry(srv, &request, reply_out);
-        }
-    }
-
-    ecs_os_free(res);
-
-    http_purge_request_cache(srv, false);
-
-    return (reply_out->code >= 400) ? -1 : 0;
-}
-
-int ecs_http_server_request(
-    ecs_http_server_t* srv,
-    const char *method,
-    const char *req,
-    const char *body,
-    ecs_http_reply_t *reply_out)
-{
-    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(method != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(req != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(reply_out != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    const char *http_ver = " HTTP/1.1\r\n";
-    int32_t method_len = ecs_os_strlen(method);
-    int32_t req_len = ecs_os_strlen(req);
-    int32_t body_len = body ? ecs_os_strlen(body) : 0;
-    int32_t http_ver_len = ecs_os_strlen(http_ver);
-    char reqbuf[1024], *reqstr = reqbuf;
-    char content_length[32] = {0};
-
-    if (body_len) {
-        ecs_os_snprintf(content_length, 32, 
-            "Content-Length: %d\r\n\r\n", body_len);
-    }
-
-    int32_t content_length_len = ecs_os_strlen(content_length);
-
-    int32_t len = method_len + req_len + content_length_len + body_len + 
-        http_ver_len;
-
-    len += 3;
-
-    if (len >= 1024) {
-        reqstr = ecs_os_malloc(len);
-    }
-
-    char *ptr = reqstr;
-    ecs_os_memcpy(ptr, method, method_len); ptr += method_len;
-    ptr[0] = ' '; ptr ++;
-    ecs_os_memcpy(ptr, req, req_len); ptr += req_len;
-    ecs_os_memcpy(ptr, http_ver, http_ver_len); ptr += http_ver_len;
-
-    if (body) {
-        ecs_os_memcpy(ptr, content_length, content_length_len);
-        ptr += content_length_len;
-        ecs_os_memcpy(ptr, body, body_len);
-        ptr += body_len;
-    }
-
-    ptr[0] = '\r';
-    ptr[1] = '\n';
-
-    int result = ecs_http_server_http_request(srv, reqstr, len, reply_out);
-    if (reqbuf != reqstr) {
-        ecs_os_free(reqstr);
-    }
-
-    return result;
-error:
-    return -1;
-}
-
-void* ecs_http_server_ctx(
-    ecs_http_server_t* srv)
-{
-    return srv->ctx;
-}
-
-#endif
-
-/**
  * @file addons/journal.c
  * @brief Journal addon.
  */
@@ -27977,14 +26224,6 @@ bool flecs_json_is_builtin(
 static ECS_TAG_DECLARE(EcsRestPlecs);
 
 typedef struct {
-    ecs_world_t *world;
-    ecs_http_server_t *srv;
-    int32_t rc;
-    ecs_map_t cmd_captures;
-    double last_time;
-} ecs_rest_ctx_t;
-
-typedef struct {
     char *cmds;
     ecs_time_t start_time;
     ecs_strbuf_t buf;
@@ -29140,6 +27379,116 @@ void flecs_rest_append_type_hook(
 }
 
 static
+void flecs_rest_append_component_memory(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_strbuf_t *reply,
+    int32_t storage_bytes)
+{
+    (void)world;
+    (void)cr;
+    (void)reply;
+    (void)storage_bytes;
+
+#ifdef FLECS_STATS
+    if (!ecs_id(ecs_component_index_memory_t)) {
+        return;
+    }
+
+    ecs_component_index_memory_t component_index_memory = {0};
+    ecs_component_record_memory_get(cr, &component_index_memory);
+
+    ecs_strbuf_list_appendlit(reply, "\"memory\":");
+
+    ecs_strbuf_list_push(reply, "{", ",");
+    ecs_strbuf_list_appendlit(reply, "\"component_index\":");
+    ecs_ptr_to_json_buf(
+        world, ecs_id(ecs_component_index_memory_t), &component_index_memory, reply);
+
+    /* Only count storage for actual components, not wildcards */
+    if (ecs_id_is_wildcard(cr->id)) {
+        storage_bytes = 0;
+    }
+    ecs_strbuf_list_appendlit(reply, "\"storage\":");
+    ecs_strbuf_append(reply, "%d", storage_bytes);
+    ecs_strbuf_list_pop(reply, "}");
+#endif
+}
+
+static
+void flecs_rest_append_component_traits(
+    ecs_component_record_t *cr,
+    ecs_strbuf_t *reply)
+{
+    ecs_flags32_t flags = cr->flags;
+    ecs_strbuf_list_appendlit(reply, "\"traits\":");
+    ecs_strbuf_list_push(reply, "[", ",");
+    
+    if (flags & EcsIdOnDeleteRemove) {
+        ecs_strbuf_list_appendlit(reply, "\"(OnDelete,Remove)\"");
+    }
+    if (flags & EcsIdOnDeleteDelete) {
+        ecs_strbuf_list_appendlit(reply, "\"(OnDelete,Delete)\"");
+    }
+    if (flags & EcsIdOnDeletePanic) {
+        ecs_strbuf_list_appendlit(reply, "\"(OnDelete,Panic)\"");
+    }
+    if (flags & EcsIdOnDeleteTargetRemove) {
+        ecs_strbuf_list_appendlit(reply, "\"(OnDeleteTarget,Remove)\"");
+    }
+    if (flags & EcsIdOnDeleteTargetDelete) {
+        ecs_strbuf_list_appendlit(reply, "\"(OnDeleteTarget,Delete)\"");
+    }
+    if (flags & EcsIdOnDeleteTargetPanic) {
+        ecs_strbuf_list_appendlit(reply, "\"(OnDeleteTarget,Panic)\"");
+    }
+    if (flags & EcsIdOnInstantiateOverride) {
+        ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,Override)\"");
+    }
+    if (flags & EcsIdOnInstantiateInherit) {
+        ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,Inherit)\"");
+    }
+    if (flags & EcsIdOnInstantiateDontInherit) {
+        ecs_strbuf_list_appendlit(reply, "\"(OnInstantiate,DontInherit)\"");
+    }
+    if (flags & EcsIdExclusive) {
+        ecs_strbuf_list_appendlit(reply, "\"Exclusive\"");
+    }
+    if (flags & EcsIdTraversable) {
+        ecs_strbuf_list_appendlit(reply, "\"Traversable\"");
+    }
+    if (flags & EcsPairIsTag) {
+        ecs_strbuf_list_appendlit(reply, "\"PairIsTag\"");
+    }
+    if (flags & EcsIdWith) {
+        ecs_strbuf_list_appendlit(reply, "\"With\"");
+    }
+    if (flags & EcsIdCanToggle) {
+        ecs_strbuf_list_appendlit(reply, "\"CanToggle\"");
+    }
+    if (flags & EcsIdIsTransitive) {
+        ecs_strbuf_list_appendlit(reply, "\"IsTransitive\"");
+    }
+    if (flags & EcsIdInheritable) {
+        ecs_strbuf_list_appendlit(reply, "\"Inheritable\"");
+    }
+    if (flags & EcsIdSparse) {
+        ecs_strbuf_list_appendlit(reply, "\"Sparse\"");
+    }
+    if (flags & EcsIdDontFragment) {
+        ecs_strbuf_list_appendlit(reply, "\"DontFragment\"");
+    }
+    if (flags & EcsIdOrderedChildren) {
+        ecs_strbuf_list_appendlit(reply, "\"OrderedChildren\"");
+    }
+    if (flags & EcsIdSingleton) {
+        ecs_strbuf_list_appendlit(reply, "\"Singleton\"");
+    }
+
+    ecs_strbuf_list_pop(reply, "]");
+}
+
+static
 void flecs_rest_append_component(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -29148,30 +27497,29 @@ void flecs_rest_append_component(
     ecs_strbuf_list_next(reply);
     ecs_strbuf_appendlit(reply, "\n");
     ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_appendlit(reply, "\"expr\":");
+    ecs_strbuf_list_appendlit(reply, "\"name\":");
     char *str = ecs_id_str(world, cr->id);
     flecs_json_string_escape(reply, str);
     ecs_os_free(str);
 
     ecs_strbuf_list_appendlit(reply, "\"tables\":");
-    ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_appendlit(reply, "\"count\":");
-    ecs_strbuf_appendint(reply, flecs_table_cache_count(&cr->cache));
-    ecs_strbuf_list_appendlit(reply, "\"ids\":");
     ecs_strbuf_list_push(reply, "[", ",");
     ecs_table_cache_iter_t it;
-    int32_t entity_count = 0;
+    int32_t entity_count = 0, entity_size = 0, storage_bytes = 0;
     flecs_table_cache_iter(&cr->cache, &it);
     const ecs_table_record_t *tr;
     while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
         ecs_strbuf_list_next(reply);
         ecs_strbuf_appendint(reply, (int64_t)tr->hdr.table->id);
         entity_count += ecs_table_count(tr->hdr.table);
+        entity_size += ecs_table_size(tr->hdr.table);
     }
     ecs_strbuf_list_pop(reply, "]");
+
     ecs_strbuf_list_appendlit(reply, "\"entity_count\":");
     ecs_strbuf_appendint(reply, entity_count);
-    ecs_strbuf_list_pop(reply, "}");
+    ecs_strbuf_list_appendlit(reply, "\"entity_size\":");
+    ecs_strbuf_appendint(reply, entity_size);
 
     if (cr->type_info) {
         ecs_strbuf_list_appendlit(reply, "\"type\":");
@@ -29210,6 +27558,8 @@ void flecs_rest_append_component(
         ecs_strbuf_list_appendlit(reply, "\"on_replace\":");
         ecs_strbuf_appendbool(reply, cr->type_info->hooks.on_replace != NULL);
         ecs_strbuf_list_pop(reply, "}");
+
+        storage_bytes += entity_size * cr->type_info->size;
     }
 
     if (cr->sparse) {
@@ -29229,8 +27579,15 @@ void flecs_rest_append_component(
 
         ecs_strbuf_list_pop(reply, "]");
         ecs_strbuf_list_pop(reply, "}");
+
+        if (cr->type_info) {
+            storage_bytes += count * cr->type_info->size;
+        }
     }
 
+    flecs_rest_append_component_memory(world, cr, reply, storage_bytes);
+    flecs_rest_append_component_traits(cr, reply);
+    
     ecs_strbuf_list_pop(reply, "}");
 }
 
@@ -29263,7 +27620,6 @@ bool flecs_rest_get_components(
     return true;
 }
 
-
 static
 void flecs_rest_reply_table_append_type(
     ecs_world_t *world,
@@ -29275,38 +27631,44 @@ void flecs_rest_reply_table_append_type(
     ecs_id_t *ids = table->type.array;
     for (i = 0; i < count; i ++) {
         ecs_strbuf_list_next(reply);
-        ecs_strbuf_appendch(reply, '"');
-        ecs_id_str_buf(world, ids[i], reply);
-        ecs_strbuf_appendch(reply, '"');
+        char *idstr = ecs_id_str(world, ids[i]);
+        flecs_json_string_escape(reply, idstr);
+        ecs_os_free(idstr);
     }
     ecs_strbuf_list_pop(reply, "]");
 }
 
 static
 void flecs_rest_reply_table_append_memory(
+    const ecs_world_t *world,
     ecs_strbuf_t *reply,
     const ecs_table_t *table)
 {
-    int32_t used = 0, allocated = 0;
-    int32_t count = ecs_table_count(table), size = ecs_table_size(table);
+    (void)world;
+    (void)reply;
+    (void)table;
 
-    used += count * ECS_SIZEOF(ecs_entity_t);
-    allocated += size * ECS_SIZEOF(ecs_entity_t);
-
-    int32_t i, storage_count = table->column_count;
-    ecs_column_t *columns = table->data.columns;
-
-    for (i = 0; i < storage_count; i ++) {
-        used += count * columns[i].ti->size;
-        allocated += size * columns[i].ti->size;
+#ifdef FLECS_STATS
+    if (!ecs_id(ecs_table_memory_t) || !ecs_id(ecs_component_memory_t)) {
+        return;
     }
+    ecs_table_memory_t table_memory = {0};
+    ecs_table_memory_get(table, &table_memory);
 
+    ecs_component_memory_t component_memory = {0};
+    ecs_table_component_memory_get(table, &component_memory);
+
+    ecs_strbuf_list_appendlit(reply, "\"memory\":");
     ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_appendlit(reply, "\"used\":");
-    ecs_strbuf_appendint(reply, used);
-    ecs_strbuf_list_appendlit(reply, "\"allocated\":");
-    ecs_strbuf_appendint(reply, allocated);
+    ecs_strbuf_list_appendlit(reply, "\"table\":");
+    ecs_ptr_to_json_buf(
+        world, ecs_id(ecs_table_memory_t), &table_memory, reply);
+
+    ecs_strbuf_list_appendlit(reply, "\"components\":");
+    ecs_ptr_to_json_buf(
+        world, ecs_id(ecs_component_memory_t), &component_memory, reply);
     ecs_strbuf_list_pop(reply, "}");
+#endif
 }
 
 static
@@ -29324,8 +27686,9 @@ void flecs_rest_reply_table_append(
     flecs_rest_reply_table_append_type(world, reply, table);
     ecs_strbuf_list_appendlit(reply, "\"count\":");
     ecs_strbuf_appendint(reply, ecs_table_count(table));
-    ecs_strbuf_list_appendlit(reply, "\"memory\":");
-    flecs_rest_reply_table_append_memory(reply, table);
+    ecs_strbuf_list_appendlit(reply, "\"size\":");
+    ecs_strbuf_appendint(reply, ecs_table_size(table));
+    flecs_rest_reply_table_append_memory(world, reply, table);
     ecs_strbuf_list_pop(reply, "}");
 }
 
@@ -31390,7 +29753,7 @@ void flecs_strfree(
     flecs_free_n(a, char, len + 1, str);
 #else
     (void)a;
-    free(str);
+    ecs_os_free(str);
 #endif
 }
 
@@ -32105,6 +30468,29 @@ int32_t flecs_hashmap_find_key(
     return -1;
 }
 
+static
+ecs_hm_bucket_t* flecs_hm_bucket_new(
+    ecs_hashmap_t *map)
+{
+    if (map->impl.allocator) {
+        return flecs_calloc_t(map->impl.allocator, ecs_hm_bucket_t);
+    } else {
+        return ecs_os_calloc_t(ecs_hm_bucket_t);
+    }
+}
+
+static
+void flecs_hm_bucket_free(
+    ecs_hashmap_t *map,
+    ecs_hm_bucket_t *bucket)
+{
+    if (map->impl.allocator) {
+        flecs_free_t(map->impl.allocator, ecs_hm_bucket_t, bucket);
+    } else {
+        ecs_os_free(bucket);
+    }
+}
+
 void flecs_hashmap_init_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
@@ -32117,7 +30503,6 @@ void flecs_hashmap_init_(
     map->value_size = value_size;
     map->hash = hash;
     map->compare = compare;
-    flecs_ballocator_init_t(&map->bucket_allocator, ecs_hm_bucket_t);
     ecs_map_init(&map->impl, allocator);
 }
 
@@ -32131,12 +30516,9 @@ void flecs_hashmap_fini(
         ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
         ecs_vec_fini(a, &bucket->keys, map->key_size);
         ecs_vec_fini(a, &bucket->values, map->value_size);
-#if defined(FLECS_SANITIZE) || defined(FLECS_USE_OS_ALLOC)
-        flecs_bfree(&map->bucket_allocator, bucket);
-#endif
+        flecs_hm_bucket_free(map, bucket);
     }
 
-    flecs_ballocator_fini(&map->bucket_allocator);
     ecs_map_fini(&map->impl);
 }
 
@@ -32155,7 +30537,7 @@ void flecs_hashmap_copy(
     while (ecs_map_next(&it)) {
         ecs_hm_bucket_t **bucket_ptr = ecs_map_ref(&it, ecs_hm_bucket_t);
         ecs_hm_bucket_t *src_bucket = bucket_ptr[0];
-        ecs_hm_bucket_t *dst_bucket = flecs_balloc(&dst->bucket_allocator);
+        ecs_hm_bucket_t *dst_bucket = flecs_hm_bucket_new(dst);
         bucket_ptr[0] = dst_bucket;
         dst_bucket->keys = ecs_vec_copy(a, &src_bucket->keys, dst->key_size);
         dst_bucket->values = ecs_vec_copy(a, &src_bucket->values, dst->value_size);
@@ -32199,7 +30581,7 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
     ecs_hm_bucket_t **r = ecs_map_ensure_ref(&map->impl, ecs_hm_bucket_t, hash);
     ecs_hm_bucket_t *bucket = r[0];
     if (!bucket) {
-        bucket = r[0] = flecs_bcalloc(&map->bucket_allocator);
+        bucket = r[0] = flecs_hm_bucket_new(map);
     }
 
     ecs_allocator_t *a = map->impl.allocator;
@@ -32268,7 +30650,7 @@ void flecs_hm_bucket_remove(
         ecs_vec_fini(a, &bucket->values, map->value_size);
         ecs_hm_bucket_t *b = ecs_map_remove_ptr(&map->impl, hash);
         ecs_assert(bucket == b, ECS_INTERNAL_ERROR, NULL); (void)b;
-        flecs_bfree(&map->bucket_allocator, bucket);
+        flecs_hm_bucket_free(map, bucket);
     }
 }
 
@@ -32828,12 +31210,10 @@ bool flecs_name_index_is_init(
 }
 
 ecs_hashmap_t* flecs_name_index_new(
-    ecs_world_t *world,
     ecs_allocator_t *allocator) 
 {
-    ecs_hashmap_t *result = flecs_bcalloc(&world->allocators.hashmap);
+    ecs_hashmap_t *result = flecs_alloc_t(allocator, ecs_hashmap_t);
     flecs_name_index_init(result, allocator);
-    result->hashmap_allocator = &world->allocators.hashmap;
     return result;
 }
 
@@ -32847,16 +31227,16 @@ void flecs_name_index_free(
     ecs_hashmap_t *map)
 {
     if (map) {
+        ecs_allocator_t *a = map->impl.allocator;
         flecs_name_index_fini(map);
-        flecs_bfree(map->hashmap_allocator, map);
+        flecs_free_t(a, ecs_hashmap_t, map);
     }
 }
 
 ecs_hashmap_t* flecs_name_index_copy(
     ecs_hashmap_t *map)
 {
-    ecs_hashmap_t *result = flecs_bcalloc(map->hashmap_allocator);
-    result->hashmap_allocator = map->hashmap_allocator;
+    ecs_hashmap_t *result = flecs_alloc_t(map->impl.allocator, ecs_hashmap_t);
     flecs_hashmap_copy(result, map);
     return result;
 }
@@ -37253,7 +35633,7 @@ int flecs_term_finalize(
          * of query creation. To force component inheritance to be evaluated,
          * an application can explicitly set traversal flags. */
         if (flecs_components_get(world, ecs_pair(EcsIsA, first->id)) || 
-            (id_flags & EcsIdIsInheritable) || first_can_isa)
+            (id_flags & EcsIdInheritable) || first_can_isa)
         {
             if (!first_is_self) {
                 term->flags_ |= EcsTermIdInherited;
@@ -37713,7 +36093,7 @@ int flecs_query_finalize_terms(
                 term->flags_ |= EcsTermKeepAlive;
             }
 
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 is_sparse = true;
             }
 
@@ -38141,7 +36521,7 @@ bool flecs_query_finalize_simple(
                 trivial = false;
             }
 
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 term->flags_ |= EcsTermIsSparse;
                 cacheable = false; trivial = false;
                 q->row_fields |= flecs_uto(uint32_t, 1llu << i);
@@ -38489,7 +36869,7 @@ void flecs_component_init_sparse(
 {
     if (!ecs_id_is_wildcard(cr->id)) {
         if (!cr->sparse) {
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 cr->sparse = flecs_walloc_t(world, ecs_sparse_t);
                 if (cr->type_info) {
                     flecs_sparse_init(cr->sparse, NULL, NULL, cr->type_info->size);
@@ -38595,7 +36975,7 @@ void flecs_component_fini_sparse(
     ecs_component_record_t *cr)
 {
     if (cr->sparse) {
-        ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
         if (cr->flags & EcsIdDontFragment) {
             flecs_component_sparse_remove_all(world, cr);
         }
@@ -38783,7 +37163,7 @@ ecs_component_record_t* flecs_component_new(
 
     /* Initialize type info if id is not a tag */
     if (!is_wildcard && (!role || is_pair)) {
-        if (!(cr->flags & EcsIdTag)) {
+        if (!(cr->flags & EcsIdPairIsTag)) {
             const ecs_type_info_t *ti = flecs_type_info_get(world, rel);
             if (!ti && tgt) {
                 ti = flecs_type_info_get(world, tgt);
@@ -38816,7 +37196,7 @@ ecs_component_record_t* flecs_component_new(
          * should be stored as a sparse component. */
         if (cr->type_info && cr->type_info->component == tgt) {
             if (ecs_has_id(world, tgt, EcsSparse)) {
-                cr->flags |= EcsIdIsSparse;
+                cr->flags |= EcsIdSparse;
             }
             if (ecs_has_id(world, tgt, EcsDontFragment)) {
                 cr->flags |= EcsIdDontFragment;
@@ -38841,7 +37221,7 @@ ecs_component_record_t* flecs_component_new(
 
     cr->flags |= flecs_component_event_flags(world, id);
 
-    if (cr->flags & EcsIdIsSparse) {
+    if (cr->flags & EcsIdSparse) {
         flecs_component_init_sparse(world, cr);
     }
 
@@ -39086,8 +37466,7 @@ ecs_hashmap_t* flecs_component_name_index_ensure(
     ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_hashmap_t *map = cr->pair->name_index;
     if (!map) {
-        map = cr->pair->name_index = 
-            flecs_name_index_new(world, &world->allocator);
+        map = cr->pair->name_index = flecs_name_index_new(&world->allocator);
     }
 
     return map;
@@ -39204,7 +37583,7 @@ void flecs_component_delete_sparse(
     ecs_component_record_t *cr)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
     int32_t i, count = flecs_sparse_count(cr->sparse);
     const uint64_t *entities = flecs_sparse_ids(cr->sparse);
     for (i = 0; i < count; i ++) {
@@ -39270,7 +37649,7 @@ ecs_entity_index_page_t* flecs_entity_index_ensure_page(
         ecs_entity_index_page_t*, page_index);
     ecs_entity_index_page_t *page = *page_ptr;
     if (!page) {
-        page = *page_ptr = flecs_bcalloc(&index->page_allocator);
+        page = *page_ptr = ecs_os_calloc_t(ecs_entity_index_page_t);
         ecs_assert(page != NULL, ECS_OUT_OF_MEMORY, NULL);
     }
 
@@ -39286,8 +37665,6 @@ void flecs_entity_index_init(
     ecs_vec_init_t(allocator, &index->dense, uint64_t, 1);
     ecs_vec_set_count_t(allocator, &index->dense, uint64_t, 1);
     ecs_vec_init_t(allocator, &index->pages, ecs_entity_index_page_t*, 0);
-    flecs_ballocator_init(&index->page_allocator,
-        ECS_SIZEOF(ecs_entity_index_page_t));
 }
 
 void flecs_entity_index_fini(
@@ -39297,10 +37674,9 @@ void flecs_entity_index_fini(
     int32_t i, count = ecs_vec_count(&index->pages);
     ecs_entity_index_page_t **pages = ecs_vec_first(&index->pages);
     for (i = 0; i < count; i ++) {
-        flecs_bfree(&index->page_allocator, pages[i]);
+        ecs_os_free(pages[i]);
     }
     ecs_vec_fini_t(index->allocator, &index->pages, ecs_entity_index_page_t*);
-    flecs_ballocator_fini(&index->page_allocator);
 }
 
 ecs_record_t* flecs_entity_index_get_any(
@@ -39647,7 +38023,7 @@ void flecs_entity_index_shrink(
         }
 
         if (!has_alive) {
-            flecs_bfree(&index->page_allocator, page);
+            ecs_os_free(pages[i]);
             pages[i] = NULL;
         } else {
             max_page_index = i;
@@ -39905,7 +38281,7 @@ bool flecs_component_sparse_has(
 
         return false;
     } else {
-        ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
         return flecs_sparse_has(cr->sparse, entity);
     }
@@ -39918,7 +38294,7 @@ void* flecs_component_sparse_get(
     ecs_entity_t entity)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (!ecs_id_is_wildcard(cr->id)) {
@@ -39980,7 +38356,7 @@ ecs_entity_t flecs_component_sparse_remove_intern(
     int32_t row)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t entity = ecs_table_entities(table)[row];
     const ecs_type_info_t *ti = cr->type_info;
@@ -40032,7 +38408,13 @@ void flecs_component_sparse_dont_fragment_pair_remove(
     }
 
     ecs_entity_t tgt = ecs_pair_second(world, cr->id);
-    ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+    if (!tgt) {
+        /* It's possible that the target entity is cleaned up as part of the 
+         * same entity that holds the relationship. If that's the case, the
+         * relationship will get cleaned up later anyway so we can exit here. */
+        ecs_assert(cr->flags & EcsIdMarkedForDelete, ECS_INTERNAL_ERROR, NULL);
+        return;
+    }
 
     ecs_type_t *type = flecs_sparse_get_t(
         parent->sparse, ecs_type_t, entity);
@@ -40042,7 +38424,10 @@ void flecs_component_sparse_dont_fragment_pair_remove(
 
     ecs_assert(type->count > 0, ECS_INTERNAL_ERROR, NULL);
 
+    int32_t old_type_count = type->count;
     flecs_type_remove(world, type, tgt);
+    ecs_assert(type->count != old_type_count, ECS_INTERNAL_ERROR, NULL);
+    (void)old_type_count;
 
     if (!type->count) {
         flecs_sparse_remove(parent->sparse, 0, entity);
@@ -40123,17 +38508,12 @@ void flecs_component_sparse_remove(
     }
 }
 
-void flecs_component_sparse_remove_all(
+static
+void flecs_component_sparse_remove_all_id(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
-    ecs_assert(cr->flags & EcsIdDontFragment, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
-
     ecs_id_t component_id = cr->id;
-    if (ecs_id_is_wildcard(component_id)) {
-        return;
-    }
 
     ecs_sparse_t *sparse = cr->sparse;
     const ecs_entity_t *entities = flecs_sparse_ids(sparse);
@@ -40174,6 +38554,44 @@ void flecs_component_sparse_remove_all(
                 flecs_component_sparse_dont_fragment_pair_remove(world, cr, e);
             }
         }
+    }
+}
+
+static
+void flecs_component_sparse_remove_all_wildcard(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_id_t component_id = cr->id;
+    
+    if (!ECS_IS_PAIR(component_id)) {
+        return;
+    }
+
+    if (cr->flags & EcsIdExclusive) {
+        return;
+    }
+
+    ecs_sparse_t *sparse = cr->sparse;
+    int32_t i, count = flecs_sparse_count(sparse);
+    for (i = 0; i < count; i ++) {
+        ecs_type_t *type = flecs_sparse_get_dense_t(sparse, ecs_type_t, i);
+        flecs_type_free(world, type);
+    }
+}
+
+void flecs_component_sparse_remove_all(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr->flags & EcsIdDontFragment, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_id_t component_id = cr->id;
+    if (ecs_id_is_wildcard(component_id)) {
+        flecs_component_sparse_remove_all_wildcard(world, cr);
+    } else {
+        flecs_component_sparse_remove_all_id(world, cr);
     }
 }
 
@@ -40290,7 +38708,7 @@ void* flecs_component_sparse_insert(
     int32_t row)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t entity = ecs_table_entities(table)[row];
 
@@ -40344,7 +38762,7 @@ void* flecs_component_sparse_emplace(
     int32_t row)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(cr->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t entity = ecs_table_entities(table)[row];
     void *ptr = flecs_sparse_ensure(cr->sparse, 0, entity, NULL);
@@ -40530,7 +38948,7 @@ void flecs_table_init_columns(
         ecs_component_record_t *cr = tr->hdr.cr;
         const ecs_type_info_t *ti = cr->type_info;
 
-        if (!ti || (cr->flags & EcsIdIsSparse)) {
+        if (!ti || (cr->flags & EcsIdSparse)) {
             t2s[i] = -1;
             continue;
         }
@@ -41118,7 +39536,7 @@ void flecs_table_init(
         }
 
         if ((i < table->type.count) && (cr->type_info != NULL)) {
-            if (!(cr->flags & EcsIdIsSparse)) {
+            if (!(cr->flags & EcsIdSparse)) {
                 column_count ++;
             }
         }
@@ -42868,7 +41286,7 @@ const ecs_ref_t* flecs_table_get_override(
         return NULL;
     }
 
-    if (cr->flags & EcsIdIsSparse) {
+    if (cr->flags & EcsIdSparse) {
         ecs_entity_t base = 0;
         if (ecs_search_relation(world, table, 0, id, EcsIsA, EcsUp, 
             &base, NULL, NULL) != -1) 
@@ -44881,6 +43299,1800 @@ ecs_table_t* ecs_table_find(
 }
 
 /**
+ * @file addons/http.c
+ * @brief HTTP addon.
+ *
+ * This is a heavily modified version of the EmbeddableWebServer (see copyright
+ * below). This version has been stripped from everything not strictly necessary
+ * for receiving/replying to simple HTTP requests, and has been modified to use
+ * the Flecs OS API.
+ *
+ * EmbeddableWebServer Copyright (c) 2016, 2019, 2020 Forrest Heller, and 
+ * CONTRIBUTORS (see below) - All rights reserved.
+ *
+ * CONTRIBUTORS:
+ * Martin Pulec - bug fixes, warning fixes, IPv6 support
+ * Daniel Barry - bug fix (ifa_addr != NULL)
+ * 
+ * Released under the BSD 2-clause license:
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ * this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice, 
+ * this list of conditions and the following disclaimer in the documentation 
+ * and/or other materials provided with the distribution. THIS SOFTWARE IS 
+ * PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS 
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN 
+ * NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY 
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND 
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
+#include <errno.h>
+
+#ifdef FLECS_HTTP
+
+
+#ifdef ECS_TARGET_MSVC
+#pragma comment(lib, "Ws2_32.lib")
+#endif
+
+#if defined(ECS_TARGET_WINDOWS)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+typedef SOCKET ecs_http_socket_t;
+#else
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <netdb.h>
+#include <strings.h>
+#include <signal.h>
+#include <fcntl.h>
+#ifdef __FreeBSD__
+#include <netinet/in.h>
+#endif
+typedef int ecs_http_socket_t;
+
+#if !defined(MSG_NOSIGNAL)
+#define MSG_NOSIGNAL (0)
+#endif
+
+#endif
+
+/* Max length of request method */
+#define ECS_HTTP_METHOD_LEN_MAX (8) 
+
+/* Timeout (s) before connection purge */
+#define ECS_HTTP_CONNECTION_PURGE_TIMEOUT (1.0)
+
+/* Number of dequeues before purging */
+#define ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT (5)
+
+/* Number of retries receiving request */
+#define ECS_HTTP_REQUEST_RECV_RETRY (10)
+
+/* Minimum interval between dequeueing requests (ms) */
+#define ECS_HTTP_MIN_DEQUEUE_INTERVAL (50)
+
+/* Minimum interval between printing statistics (ms) */
+#define ECS_HTTP_MIN_STATS_INTERVAL (10 * 1000)
+
+/* Receive buffer size */
+#define ECS_HTTP_SEND_RECV_BUFFER_SIZE (64 * 1024)
+
+/* Max length of request (path + query + headers + body) */
+#define ECS_HTTP_REQUEST_LEN_MAX (10 * 1024 * 1024)
+
+/* Total number of outstanding send requests */
+#define ECS_HTTP_SEND_QUEUE_MAX (256)
+
+/* Send request queue */
+typedef struct ecs_http_send_request_t {
+    ecs_http_socket_t sock;
+    char *headers;
+    int32_t header_length;
+    char *content;
+    int32_t content_length;
+} ecs_http_send_request_t;
+
+typedef struct ecs_http_send_queue_t {
+    ecs_http_send_request_t requests[ECS_HTTP_SEND_QUEUE_MAX];
+    int32_t head;
+    int32_t tail;
+    ecs_os_thread_t thread;
+    int32_t wait_ms;
+} ecs_http_send_queue_t;
+
+typedef struct ecs_http_request_key_t {
+    const char *array;
+    ecs_size_t count;
+} ecs_http_request_key_t;
+
+typedef struct ecs_http_request_entry_t {
+    char *content;
+    int32_t content_length;
+    int code;
+    double time;
+} ecs_http_request_entry_t;
+
+/* HTTP server struct */
+struct ecs_http_server_t {
+    bool should_run;
+    bool running;
+
+    ecs_http_socket_t sock;
+    ecs_os_mutex_t lock;
+    ecs_os_thread_t thread;
+
+    ecs_http_reply_action_t callback;
+    void *ctx;
+
+    double cache_timeout;
+    double cache_purge_timeout;
+
+    ecs_sparse_t connections; /* sparse<http_connection_t> */
+    ecs_sparse_t requests; /* sparse<http_request_t> */
+
+    bool initialized;
+
+    uint16_t port;
+    const char *ipaddr;
+
+    double dequeue_timeout; /* used to not lock request queue too often */
+    double stats_timeout; /* used for periodic reporting of statistics */
+
+    double request_time; /* time spent on requests in last stats interval */
+    double request_time_total; /* total time spent on requests */
+    int32_t requests_processed; /* requests processed in last stats interval */
+    int32_t requests_processed_total; /* total requests processed */
+    int32_t dequeue_count; /* number of dequeues in last stats interval */ 
+    ecs_http_send_queue_t send_queue;
+
+    ecs_hashmap_t request_cache;
+};
+
+/** Fragment state, used by HTTP request parser */
+typedef enum  {
+    HttpFragStateBegin,
+    HttpFragStateMethod,
+    HttpFragStatePath,
+    HttpFragStateVersion,
+    HttpFragStateHeaderStart,
+    HttpFragStateHeaderName,
+    HttpFragStateHeaderValueStart,
+    HttpFragStateHeaderValue,
+    HttpFragStateCR,
+    HttpFragStateCRLF,
+    HttpFragStateCRLFCR,
+    HttpFragStateBody,
+    HttpFragStateDone
+} HttpFragState;
+
+/** A fragment is a partially received HTTP request */
+typedef struct {
+    HttpFragState state;
+    ecs_strbuf_t buf;
+    ecs_http_method_t method;
+    int32_t body_offset;
+    int32_t query_offset;
+    int32_t header_offsets[ECS_HTTP_HEADER_COUNT_MAX];
+    int32_t header_value_offsets[ECS_HTTP_HEADER_COUNT_MAX];
+    int32_t header_count;
+    int32_t param_offsets[ECS_HTTP_QUERY_PARAM_COUNT_MAX];
+    int32_t param_value_offsets[ECS_HTTP_QUERY_PARAM_COUNT_MAX];
+    int32_t param_count;
+    int32_t content_length;
+    char *header_buf_ptr;
+    char header_buf[32];
+    bool parse_content_length;
+    bool invalid;
+} ecs_http_fragment_t;
+
+/** Extend public connection type with fragment data */
+typedef struct {
+    ecs_http_connection_t pub;
+    ecs_http_socket_t sock;
+
+    /* Connection is purged after both timeout expires and connection has
+     * exceeded retry count. This ensures that a connection does not immediately
+     * timeout when a frame takes longer than usual */
+    double dequeue_timeout;
+    int32_t dequeue_retries;    
+} ecs_http_connection_impl_t;
+
+typedef struct {
+    ecs_http_request_t pub;
+    uint64_t conn_id; /* for sanity check */
+    char *res;
+    int32_t req_len;
+} ecs_http_request_impl_t;
+
+
+/* Global statistics */
+int64_t ecs_http_request_received_count = 0;
+int64_t ecs_http_request_invalid_count = 0;
+int64_t ecs_http_request_handled_ok_count = 0;
+int64_t ecs_http_request_handled_error_count = 0;
+int64_t ecs_http_request_not_handled_count = 0;
+int64_t ecs_http_request_preflight_count = 0;
+int64_t ecs_http_send_ok_count = 0;
+int64_t ecs_http_send_error_count = 0;
+int64_t ecs_http_busy_count = 0;
+
+static
+ecs_size_t http_send(
+    ecs_http_socket_t sock, 
+    const void *buf, 
+    ecs_size_t size, 
+    int flags)
+{
+    ecs_assert(size >= 0, ECS_INTERNAL_ERROR, NULL);
+#ifdef ECS_TARGET_POSIX
+    ssize_t send_bytes = send(sock, buf, flecs_itosize(size), 
+        flags | MSG_NOSIGNAL);
+    return flecs_itoi32(send_bytes);
+#else
+    int send_bytes = send(sock, buf, size, flags);
+    return flecs_itoi32(send_bytes);
+#endif
+}
+
+static
+ecs_size_t http_recv(
+    ecs_http_socket_t sock,
+    void *buf,
+    ecs_size_t size,
+    int flags)
+{
+    ecs_size_t ret;
+#ifdef ECS_TARGET_POSIX
+    ssize_t recv_bytes = recv(sock, buf, flecs_itosize(size), flags);
+    ret = flecs_itoi32(recv_bytes);
+#else
+    int recv_bytes = recv(sock, buf, size, flags);
+    ret = flecs_itoi32(recv_bytes);
+#endif
+    if (ret == -1) {
+        ecs_dbg("recv failed: %s (sock = %d)", ecs_os_strerror(errno), sock);
+    } else if (ret == 0) {
+        ecs_dbg("recv: received 0 bytes (sock = %d)", sock);
+    }
+
+    return ret;
+}
+
+static
+void http_sock_set_timeout(
+    ecs_http_socket_t sock,
+    int32_t timeout_ms)
+{
+    int r;
+#ifdef ECS_TARGET_POSIX
+    struct timeval tv;
+    tv.tv_sec = timeout_ms * 1000;
+    tv.tv_usec = 0;
+    r = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+#else
+    DWORD t = (DWORD)timeout_ms;
+    r = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&t, sizeof t);
+#endif
+    if (r) {
+        ecs_warn("http: failed to set socket timeout: %s", 
+            ecs_os_strerror(errno));
+    }
+}
+
+static
+void http_sock_keep_alive(
+    ecs_http_socket_t sock)
+{
+    int v = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&v, sizeof v)) {
+        ecs_warn("http: failed to set socket KEEPALIVE: %s",
+            ecs_os_strerror(errno));
+    }
+}
+
+static
+void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
+    (void)sock;
+    (void)enable;
+#ifdef ECS_TARGET_POSIX
+    int flags;
+    flags = fcntl(sock,F_GETFL,0);
+    if (flags == -1) {
+        ecs_warn("http: failed to set socket NONBLOCK: %s",
+            ecs_os_strerror(errno));
+        return;
+    }
+    if (enable) {
+        flags = fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+    } else {
+        flags = fcntl(sock, F_SETFL, flags & ~O_NONBLOCK);
+    }
+    if (flags == -1) {
+        ecs_warn("http: failed to set socket NONBLOCK: %s",
+            ecs_os_strerror(errno));
+        return;
+    }
+#endif
+}
+
+static
+int http_getnameinfo(
+    const struct sockaddr* addr,
+    ecs_size_t addr_len,
+    char *host,
+    ecs_size_t host_len,
+    char *port,
+    ecs_size_t port_len,
+    int flags)
+{
+    ecs_assert(addr_len > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(host_len > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(port_len > 0, ECS_INTERNAL_ERROR, NULL);
+#if defined(ECS_TARGET_WINDOWS)
+    return getnameinfo(addr, addr_len, host, 
+        flecs_ito(uint32_t, host_len), port, flecs_ito(uint32_t, port_len), 
+        flags);
+#else
+    return getnameinfo(addr, flecs_ito(uint32_t, addr_len), host, 
+        flecs_ito(uint32_t, host_len), port, flecs_ito(uint32_t, port_len), 
+        flags);
+#endif
+}
+
+static
+int http_bind(
+    ecs_http_socket_t sock,
+    const struct sockaddr* addr,
+    ecs_size_t addr_len)
+{
+    ecs_assert(addr_len > 0, ECS_INTERNAL_ERROR, NULL);
+#if defined(ECS_TARGET_WINDOWS)
+    return bind(sock, addr, addr_len);
+#else
+    return bind(sock, addr, flecs_ito(uint32_t, addr_len));
+#endif
+}
+
+static
+bool http_socket_is_valid(
+    ecs_http_socket_t sock)
+{
+#if defined(ECS_TARGET_WINDOWS)
+    return sock != INVALID_SOCKET;
+#else
+    return sock >= 0;
+#endif
+}
+
+#if defined(ECS_TARGET_WINDOWS)
+#define HTTP_SOCKET_INVALID INVALID_SOCKET
+#else
+#define HTTP_SOCKET_INVALID (-1)
+#endif
+
+static
+void http_close(
+    ecs_http_socket_t *sock)
+{
+    ecs_assert(sock != NULL, ECS_INTERNAL_ERROR, NULL);
+
+#if defined(ECS_TARGET_WINDOWS)
+    closesocket(*sock);
+#else
+    ecs_dbg_2("http: closing socket %u", *sock);
+    shutdown(*sock, SHUT_RDWR);
+    close(*sock);
+#endif
+    *sock = HTTP_SOCKET_INVALID;
+}
+
+static
+ecs_http_socket_t http_accept(
+    ecs_http_socket_t sock,
+    struct sockaddr* addr,
+    ecs_size_t *addr_len)
+{
+    socklen_t len = (socklen_t)addr_len[0];
+    ecs_http_socket_t result = accept(sock, addr, &len);
+    addr_len[0] = (ecs_size_t)len;
+    return result;
+}
+
+static
+void http_reply_fini(ecs_http_reply_t* reply) {
+    ecs_assert(reply != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_os_free(reply->body.content);
+}
+
+static
+void http_request_fini(ecs_http_request_impl_t *req) {
+    ecs_assert(req != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(req->pub.conn != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(req->pub.conn->server != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(req->pub.conn->id == req->conn_id, ECS_INTERNAL_ERROR, NULL);
+    ecs_os_free(req->res);
+    flecs_sparse_remove_t(&req->pub.conn->server->requests, 
+        ecs_http_request_impl_t, req->pub.id);
+}
+
+static
+void http_connection_free(ecs_http_connection_impl_t *conn) {
+    ecs_assert(conn != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(conn->pub.id != 0, ECS_INTERNAL_ERROR, NULL);
+    uint64_t conn_id = conn->pub.id;
+
+    if (http_socket_is_valid(conn->sock)) {
+        http_close(&conn->sock);
+    }
+
+    flecs_sparse_remove_t(&conn->pub.server->connections, 
+        ecs_http_connection_impl_t, conn_id);
+}
+
+// https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int
+static
+char http_hex_2_int(char a, char b){
+    a = (a <= '9') ? (char)(a - '0') : (char)((a & 0x7) + 9);
+    b = (b <= '9') ? (char)(b - '0') : (char)((b & 0x7) + 9);
+    return (char)((a << 4) + b);
+}
+
+static
+void http_decode_url_str(
+    char *str) 
+{
+    char ch, *ptr, *dst = str;
+    for (ptr = str; (ch = *ptr); ptr++) {
+        if (ch == '%') {
+            dst[0] = http_hex_2_int(ptr[1], ptr[2]);
+            dst ++;
+            ptr += 2;
+        } else {
+            dst[0] = ptr[0];
+            dst ++;
+        }
+    }
+    dst[0] = '\0';
+}
+
+static
+void http_parse_method(
+    ecs_http_fragment_t *frag)
+{
+    char *method = ecs_strbuf_get_small(&frag->buf);
+    if (!ecs_os_strcmp(method, "GET")) frag->method = EcsHttpGet;
+    else if (!ecs_os_strcmp(method, "POST")) frag->method = EcsHttpPost;
+    else if (!ecs_os_strcmp(method, "PUT")) frag->method = EcsHttpPut;
+    else if (!ecs_os_strcmp(method, "DELETE")) frag->method = EcsHttpDelete;
+    else if (!ecs_os_strcmp(method, "OPTIONS")) frag->method = EcsHttpOptions;
+    else {
+        frag->method = EcsHttpMethodUnsupported;
+        frag->invalid = true;
+    }
+    ecs_strbuf_reset(&frag->buf);
+}
+
+static
+bool http_header_writable(
+    ecs_http_fragment_t *frag)
+{
+    return frag->header_count < ECS_HTTP_HEADER_COUNT_MAX;
+}
+
+static
+void http_header_buf_reset(
+    ecs_http_fragment_t *frag)
+{
+    frag->header_buf[0] = '\0';
+    frag->header_buf_ptr = frag->header_buf;
+}
+
+static
+void http_header_buf_append(
+    ecs_http_fragment_t *frag,
+    char ch)
+{
+    if ((frag->header_buf_ptr - frag->header_buf) < 
+        ECS_SIZEOF(frag->header_buf)) 
+    {
+        frag->header_buf_ptr[0] = ch;
+        frag->header_buf_ptr ++;
+    } else {
+        frag->header_buf_ptr[0] = '\0';
+    }
+}
+
+static
+uint64_t http_request_key_hash(const void *ptr) {
+    const ecs_http_request_key_t *key = ptr;
+    const char *array = key->array;
+    int32_t count = key->count;
+    return flecs_hash(array, count * ECS_SIZEOF(char));
+}
+
+static
+int http_request_key_compare(const void *ptr_1, const void *ptr_2) {
+    const ecs_http_request_key_t *type_1 = ptr_1;
+    const ecs_http_request_key_t *type_2 = ptr_2;
+
+    int32_t count_1 = type_1->count;
+    int32_t count_2 = type_2->count;
+
+    if (count_1 != count_2) {
+        return (count_1 > count_2) - (count_1 < count_2);
+    }
+
+    return ecs_os_memcmp(type_1->array, type_2->array, count_1);
+}
+
+static
+ecs_http_request_entry_t* http_find_request_entry(
+    ecs_http_server_t *srv,
+    const char *array,
+    int32_t count)
+{
+    ecs_http_request_key_t key;
+    key.array = array;
+    key.count = count;
+
+    ecs_time_t t = {0, 0};
+    ecs_http_request_entry_t *entry = flecs_hashmap_get(
+        &srv->request_cache, &key, ecs_http_request_entry_t);
+
+    if (entry) {
+        double tf = ecs_time_measure(&t);
+        if ((tf - entry->time) < srv->cache_timeout) {
+            return entry;
+        }
+    }
+    return NULL;
+}
+
+static
+void http_insert_request_entry(
+    ecs_http_server_t *srv,
+    ecs_http_request_impl_t *req,
+    ecs_http_reply_t *reply)
+{
+    int32_t content_length = ecs_strbuf_written(&reply->body);
+    if (!content_length) {
+        return;
+    }
+
+    ecs_http_request_key_t key;
+    key.array = req->res;
+    key.count = req->req_len;
+    ecs_http_request_entry_t *entry = flecs_hashmap_get(
+        &srv->request_cache, &key, ecs_http_request_entry_t);
+    if (!entry) {
+        flecs_hashmap_result_t elem = flecs_hashmap_ensure(
+            &srv->request_cache, &key, ecs_http_request_entry_t);
+        ecs_http_request_key_t *elem_key = elem.key;
+        elem_key->array = ecs_os_memdup_n(key.array, char, key.count);
+        entry = elem.value;
+    } else {
+        ecs_os_free(entry->content);
+    }
+
+    ecs_time_t t = {0, 0};
+    entry->time = ecs_time_measure(&t);
+    entry->content_length = ecs_strbuf_written(&reply->body);
+    entry->content = ecs_strbuf_get(&reply->body);
+    entry->code = reply->code;
+    ecs_strbuf_appendstrn(&reply->body, 
+            entry->content, entry->content_length);
+}
+
+static
+char* http_decode_request(
+    ecs_http_request_impl_t *req,
+    ecs_http_fragment_t *frag)
+{
+    ecs_os_zeromem(req);
+
+    ecs_size_t req_len = frag->buf.length;
+    char *res = ecs_strbuf_get(&frag->buf);
+    if (!res) {
+        return NULL;
+    }
+
+    req->pub.method = frag->method;
+    req->pub.path = res + 1;
+    http_decode_url_str(req->pub.path);
+
+    if (frag->body_offset) {
+        req->pub.body = &res[frag->body_offset];
+    }
+    int32_t i, count = frag->header_count;
+    for (i = 0; i < count; i ++) {
+        req->pub.headers[i].key = &res[frag->header_offsets[i]];
+        req->pub.headers[i].value = &res[frag->header_value_offsets[i]];
+    }
+    count = frag->param_count;
+    for (i = 0; i < count; i ++) {
+        req->pub.params[i].key = &res[frag->param_offsets[i]];
+        req->pub.params[i].value = &res[frag->param_value_offsets[i]];
+        /* Safe, member is only const so that end-user can't change it */
+        http_decode_url_str(ECS_CONST_CAST(char*, req->pub.params[i].value));
+    }
+
+    req->pub.header_count = frag->header_count;
+    req->pub.param_count = frag->param_count;
+    req->res = res;
+    req->req_len = frag->header_offsets[0];
+    if (!req->req_len) {
+        req->req_len = req_len;
+    }
+
+    return res;
+}
+
+static
+ecs_http_request_entry_t* http_enqueue_request(
+    ecs_http_connection_impl_t *conn,
+    uint64_t conn_id,
+    ecs_http_fragment_t *frag)
+{
+    ecs_http_server_t *srv = conn->pub.server;
+
+    ecs_os_mutex_lock(srv->lock);
+    bool is_alive = conn->pub.id == conn_id;
+
+    if (!is_alive || frag->invalid) { 
+        /* Don't enqueue invalid requests or requests for purged connections */
+        ecs_strbuf_reset(&frag->buf);
+    } else {
+        ecs_http_request_impl_t req;
+        char *res = http_decode_request(&req, frag);
+        if (res) {
+            req.pub.conn = (ecs_http_connection_t*)conn;
+
+            /* Check cache for GET requests */
+            if (frag->method == EcsHttpGet) {
+                ecs_http_request_entry_t *entry = 
+                    http_find_request_entry(srv, res, frag->header_offsets[0]);
+                if (entry) {
+                    /* If an entry is found, don't enqueue a request. Instead
+                     * return the cached response immediately. */
+                    ecs_os_free(res);
+                    return entry;
+                }
+            }
+
+            ecs_http_request_impl_t *req_ptr = flecs_sparse_add_t(
+                &srv->requests, ecs_http_request_impl_t);
+            *req_ptr = req;
+            req_ptr->pub.id = flecs_sparse_last_id(&srv->requests);
+            req_ptr->conn_id = conn->pub.id;
+            ecs_os_linc(&ecs_http_request_received_count);
+        }
+    }
+
+    ecs_os_mutex_unlock(srv->lock);
+    return NULL;
+}
+
+static
+bool http_parse_request(
+    ecs_http_fragment_t *frag,
+    const char* req_frag, 
+    ecs_size_t req_frag_len) 
+{
+    int32_t i;
+    for (i = 0; i < req_frag_len; i++) {
+        char c = req_frag[i];
+        switch (frag->state) {
+        case HttpFragStateBegin:
+            ecs_os_memset_t(frag, 0, ecs_http_fragment_t);
+            frag->state = HttpFragStateMethod;
+            frag->header_buf_ptr = frag->header_buf;
+
+            /* fall through */
+        case HttpFragStateMethod:
+            if (c == ' ') {
+                http_parse_method(frag);
+                ecs_strbuf_reset(&frag->buf);
+                frag->state = HttpFragStatePath;
+                frag->buf.content = NULL;
+            } else {
+                ecs_strbuf_appendch(&frag->buf, c);
+            }
+            break;
+        case HttpFragStatePath:
+            if (c == ' ') {
+                frag->state = HttpFragStateVersion;
+                ecs_strbuf_appendch(&frag->buf, '\0');
+            } else {
+                if (c == '?' || c == '=' || c == '&') {
+                    ecs_strbuf_appendch(&frag->buf, '\0');
+                    int32_t offset = ecs_strbuf_written(&frag->buf);
+                    if (c == '?' || c == '&') {
+                        frag->param_offsets[frag->param_count] = offset;
+                    } else {
+                        frag->param_value_offsets[frag->param_count] = offset;
+                        frag->param_count ++;
+                    }
+                } else {
+                    ecs_strbuf_appendch(&frag->buf, c);
+                }
+            }
+            break;
+        case HttpFragStateVersion:
+            if (c == '\r') {
+                frag->state = HttpFragStateCR;
+            } /* version is not stored */
+            break;
+        case HttpFragStateHeaderStart:
+            if (http_header_writable(frag)) {
+                frag->header_offsets[frag->header_count] = 
+                    ecs_strbuf_written(&frag->buf);
+            }
+            http_header_buf_reset(frag);
+            frag->state = HttpFragStateHeaderName;
+
+            /* fall through */
+        case HttpFragStateHeaderName:
+            if (c == ':') {
+                frag->state = HttpFragStateHeaderValueStart;
+                http_header_buf_append(frag, '\0');
+                frag->parse_content_length = !ecs_os_strcmp(
+                    frag->header_buf, "Content-Length");
+
+                if (http_header_writable(frag)) {
+                    ecs_strbuf_appendch(&frag->buf, '\0');
+                    frag->header_value_offsets[frag->header_count] =
+                        ecs_strbuf_written(&frag->buf);
+                }
+            } else if (c == '\r') {
+                frag->state = HttpFragStateCR;
+            } else  {
+                http_header_buf_append(frag, c);
+                if (http_header_writable(frag)) {
+                    ecs_strbuf_appendch(&frag->buf, c);
+                }
+            }
+            break;
+        case HttpFragStateHeaderValueStart:
+            http_header_buf_reset(frag);
+            frag->state = HttpFragStateHeaderValue;
+            if (c == ' ') { /* skip first space */
+                break;
+            }
+
+            /* fall through */
+        case HttpFragStateHeaderValue:
+            if (c == '\r') {
+                if (frag->parse_content_length) {
+                    http_header_buf_append(frag, '\0');
+                    int32_t len = atoi(frag->header_buf);
+                    if (len < 0) {
+                        frag->invalid = true;
+                    } else {
+                        frag->content_length = len;
+                    }
+                    frag->parse_content_length = false;
+                }
+                if (http_header_writable(frag)) {
+                    int32_t cur = ecs_strbuf_written(&frag->buf);
+                    if (frag->header_offsets[frag->header_count] < cur &&
+                        frag->header_value_offsets[frag->header_count] < cur)
+                    {
+                        ecs_strbuf_appendch(&frag->buf, '\0');
+                        frag->header_count ++;
+                    }
+                }
+                frag->state = HttpFragStateCR;
+            } else {
+                if (frag->parse_content_length) {
+                    http_header_buf_append(frag, c);
+                }
+                if (http_header_writable(frag)) {
+                    ecs_strbuf_appendch(&frag->buf, c);
+                }
+            }
+            break;
+        case HttpFragStateCR:
+            if (c == '\n') {
+                frag->state = HttpFragStateCRLF;
+            } else {
+                frag->state = HttpFragStateHeaderStart;
+            } 
+            break;
+        case HttpFragStateCRLF:
+            if (c == '\r') {
+                frag->state = HttpFragStateCRLFCR;
+            } else {
+                frag->state = HttpFragStateHeaderStart;
+                i--;
+            }
+            break;
+        case HttpFragStateCRLFCR:
+            if (c == '\n') {
+                if (frag->content_length != 0) {
+                    frag->body_offset = ecs_strbuf_written(&frag->buf);
+                    frag->state = HttpFragStateBody;
+                } else {
+                    frag->state = HttpFragStateDone;
+                }
+            } else {
+                frag->state = HttpFragStateHeaderStart;
+            }
+            break;
+        case HttpFragStateBody: {
+                ecs_strbuf_appendch(&frag->buf, c);
+                if ((ecs_strbuf_written(&frag->buf) - frag->body_offset) == 
+                    frag->content_length) 
+                {
+                    frag->state = HttpFragStateDone;
+                }
+            }
+            break;
+        case HttpFragStateDone:
+            break;
+        }
+    }
+
+    if (frag->state == HttpFragStateDone) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static
+ecs_http_send_request_t* http_send_queue_post(
+    ecs_http_server_t *srv)
+{
+    /* This function should only be called while the server is locked. Before 
+     * the lock is released, the returned element should be populated. */
+    ecs_http_send_queue_t *sq = &srv->send_queue;
+    int32_t next = (sq->head + 1) % ECS_HTTP_SEND_QUEUE_MAX;
+    if (next == sq->tail) {
+        return NULL;
+    }
+
+    /* Don't enqueue new requests if server is shutting down */
+    if (!srv->should_run) {
+        return NULL;
+    }
+
+    /* Return element at end of the queue */
+    ecs_http_send_request_t *result = &sq->requests[sq->head];
+    sq->head = next;
+    return result;
+}
+
+static
+ecs_http_send_request_t* http_send_queue_get(
+    ecs_http_server_t *srv)
+{
+    ecs_os_mutex_lock(srv->lock);
+    ecs_http_send_queue_t *sq = &srv->send_queue;
+    if (sq->tail == sq->head) {
+        return NULL;
+    }
+
+    int32_t next = (sq->tail + 1) % ECS_HTTP_SEND_QUEUE_MAX;
+    ecs_http_send_request_t *result = &sq->requests[sq->tail];
+    sq->tail = next;
+    return result;
+}
+
+static
+void* http_server_send_queue(void* arg) {
+    ecs_http_server_t *srv = arg;
+    int32_t wait_ms = srv->send_queue.wait_ms;
+
+    /* Run for as long as the server is running or there are messages. When the
+     * server is stopping, no new messages will be enqueued */
+    while (srv->should_run || (srv->send_queue.head != srv->send_queue.tail)) {
+        ecs_http_send_request_t* r = http_send_queue_get(srv);
+        if (!r) {
+            ecs_os_mutex_unlock(srv->lock);
+            /* If the queue is empty, wait so we don't run too fast */
+            if (srv->should_run) {
+                ecs_os_sleep(0, wait_ms * 1000 * 1000);
+            }
+        } else {
+            ecs_http_socket_t sock = r->sock;
+            char *headers = r->headers;
+            int32_t headers_length = r->header_length;
+            char *content = r->content;
+            int32_t content_length = r->content_length;
+            ecs_os_mutex_unlock(srv->lock);
+
+            if (http_socket_is_valid(sock)) {
+                bool error = false;
+
+                http_sock_nonblock(sock, false);
+
+                /* Write headers */
+                ecs_size_t written = http_send(sock, headers, headers_length, 0);
+                if (written != headers_length) {
+                    ecs_err("http: failed to write HTTP response headers: %s",
+                        ecs_os_strerror(errno));
+                    ecs_os_linc(&ecs_http_send_error_count);
+                    error = true;
+                } else if (content_length >= 0) {
+                    /* Write content */
+                    written = http_send(sock, content, content_length, 0);
+                    if (written != content_length) {
+                        ecs_err("http: failed to write HTTP response body: %s",
+                            ecs_os_strerror(errno));
+                        ecs_os_linc(&ecs_http_send_error_count);
+                        error = true;
+                    }
+                }
+                if (!error) {
+                    ecs_os_linc(&ecs_http_send_ok_count);
+                }
+
+                http_close(&sock);
+            } else {
+                ecs_err("http: invalid socket\n");
+            }
+
+            ecs_os_free(content);
+            ecs_os_free(headers);
+        }
+    }
+    return NULL;
+}
+
+static
+void http_append_send_headers(
+    ecs_strbuf_t *hdrs,
+    int code, 
+    const char* status, 
+    const char* content_type,  
+    ecs_strbuf_t *extra_headers,
+    ecs_size_t content_len,
+    bool preflight)
+{
+    ecs_strbuf_appendlit(hdrs, "HTTP/1.1 ");
+    ecs_strbuf_appendint(hdrs, code);
+    ecs_strbuf_appendch(hdrs, ' ');
+    ecs_strbuf_appendstr(hdrs, status);
+    ecs_strbuf_appendlit(hdrs, "\r\n");
+
+    if (content_type) {
+        ecs_strbuf_appendlit(hdrs, "Content-Type: ");
+        ecs_strbuf_appendstr(hdrs, content_type);
+        ecs_strbuf_appendlit(hdrs, "\r\n");
+    }
+
+    if (content_len >= 0) {
+        ecs_strbuf_appendlit(hdrs, "Content-Length: ");
+        ecs_strbuf_append(hdrs, "%d", content_len);
+        ecs_strbuf_appendlit(hdrs, "\r\n");
+    }
+
+    ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Origin: *\r\n");
+    if (preflight) {
+        ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Private-Network: true\r\n");
+        ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Methods: GET, PUT, DELETE, OPTIONS\r\n");
+        ecs_strbuf_appendlit(hdrs, "Access-Control-Max-Age: 600\r\n");
+    }
+
+    ecs_strbuf_mergebuff(hdrs, extra_headers);
+
+    ecs_strbuf_appendlit(hdrs, "\r\n");
+}
+
+static
+void http_send_reply(
+    ecs_http_connection_impl_t* conn, 
+    ecs_http_reply_t* reply,
+    bool preflight) 
+{
+    ecs_strbuf_t hdrs = ECS_STRBUF_INIT;
+    int32_t content_length = reply->body.length;
+    char *content = ecs_strbuf_get(&reply->body);
+
+    /* Use asynchronous send queue for outgoing data so send operations won't
+     * hold up main thread */
+    ecs_http_send_request_t *req = NULL;
+
+    if (!preflight) {
+        req = http_send_queue_post(conn->pub.server);
+        if (!req) {
+            reply->code = 503; /* queue full, server is busy */
+            ecs_os_linc(&ecs_http_busy_count);
+        }
+    }
+
+    http_append_send_headers(&hdrs, reply->code, reply->status, 
+        reply->content_type, &reply->headers, content_length, preflight);
+    ecs_size_t headers_length = ecs_strbuf_written(&hdrs);
+    char *headers = ecs_strbuf_get(&hdrs);
+
+    if (!req) {
+        ecs_size_t written = http_send(conn->sock, headers, headers_length, 0);
+        if (written != headers_length) {
+            ecs_err("http: failed to send reply to '%s:%s': %s",
+                conn->pub.host, conn->pub.port, ecs_os_strerror(errno));
+            ecs_os_linc(&ecs_http_send_error_count);
+        }
+        ecs_os_free(content);
+        ecs_os_free(headers);
+        http_close(&conn->sock);
+        return;
+    }
+
+    /* Second, enqueue send request for response body */
+    req->sock = conn->sock;
+    req->headers = headers;
+    req->header_length = headers_length;
+    req->content = content;
+    req->content_length = content_length;
+
+    /* Take ownership of values */
+    reply->body.content = NULL;
+    conn->sock = HTTP_SOCKET_INVALID;
+}
+
+static
+void http_recv_connection(
+    ecs_http_server_t *srv,
+    ecs_http_connection_impl_t *conn, 
+    uint64_t conn_id,
+    ecs_http_socket_t sock)
+{
+    ecs_size_t bytes_read;
+    char *recv_buf = ecs_os_malloc(ECS_HTTP_SEND_RECV_BUFFER_SIZE);
+    ecs_http_fragment_t frag = {0};
+    int32_t retries = 0;
+
+    ecs_os_sleep(0, 10 * 1000 * 1000);
+
+    do {
+        if ((bytes_read = http_recv(
+            sock, recv_buf, ECS_HTTP_SEND_RECV_BUFFER_SIZE, 0)) > 0) 
+        {
+            bool is_alive = conn->pub.id == conn_id;
+            if (!is_alive) {
+                /* Connection has been purged by main thread */
+                goto done;
+            }
+
+            if (http_parse_request(&frag, recv_buf, bytes_read)) {
+                if (frag.method == EcsHttpOptions) {
+                    ecs_http_reply_t reply;
+                    reply.body = ECS_STRBUF_INIT;
+                    reply.code = 200;
+                    reply.content_type = NULL;
+                    reply.headers = ECS_STRBUF_INIT;
+                    reply.status = "OK";
+                    http_send_reply(conn, &reply, true);
+                    ecs_os_linc(&ecs_http_request_preflight_count);
+                } else {
+                    ecs_http_request_entry_t *entry =
+                        http_enqueue_request(conn, conn_id, &frag);
+                    if (entry) {
+                        ecs_http_reply_t reply;
+                        reply.body = ECS_STRBUF_INIT;
+                        reply.code = entry->code;
+                        reply.content_type = "application/json";
+                        reply.headers = ECS_STRBUF_INIT;
+                        reply.status = "OK";
+                        ecs_strbuf_appendstrn(&reply.body, 
+                            entry->content, entry->content_length);
+                        http_send_reply(conn, &reply, false);
+                        http_connection_free(conn);
+
+                        /* Lock was transferred from enqueue_request */
+                        ecs_os_mutex_unlock(srv->lock);
+                    }
+                }
+            } else {
+                ecs_os_linc(&ecs_http_request_invalid_count);
+            }
+        }
+
+        ecs_os_sleep(0, 10 * 1000 * 1000);
+    } while ((bytes_read == -1) && (++retries < ECS_HTTP_REQUEST_RECV_RETRY));
+
+    if (bytes_read == ECS_HTTP_SEND_RECV_BUFFER_SIZE) {
+        ecs_warn("request exceeded receive buffer size (%d)",
+            ECS_HTTP_SEND_RECV_BUFFER_SIZE);
+    }
+
+    if (retries == ECS_HTTP_REQUEST_RECV_RETRY) {
+        http_close(&sock);
+    }
+
+done:
+    ecs_os_free(recv_buf);
+    ecs_strbuf_reset(&frag.buf);
+}
+
+typedef struct {
+    ecs_http_connection_impl_t *conn;
+    uint64_t id;
+} http_conn_res_t;
+
+static
+http_conn_res_t http_init_connection(
+    ecs_http_server_t *srv, 
+    ecs_http_socket_t sock_conn,
+    struct sockaddr_storage *remote_addr, 
+    ecs_size_t remote_addr_len) 
+{
+    http_sock_set_timeout(sock_conn, 100);
+    http_sock_keep_alive(sock_conn);
+    http_sock_nonblock(sock_conn, true);
+
+    /* Create new connection */
+    ecs_os_mutex_lock(srv->lock);
+    ecs_http_connection_impl_t *conn = flecs_sparse_add_t(
+        &srv->connections, ecs_http_connection_impl_t);
+    uint64_t conn_id = conn->pub.id = flecs_sparse_last_id(&srv->connections);
+    conn->pub.server = srv;
+    conn->sock = sock_conn;
+    ecs_os_mutex_unlock(srv->lock);
+
+    char *remote_host = conn->pub.host;
+    char *remote_port = conn->pub.port;
+
+    /* Fetch name & port info */
+    if (http_getnameinfo((struct sockaddr*) remote_addr, remote_addr_len,
+        remote_host, ECS_SIZEOF(conn->pub.host),
+        remote_port, ECS_SIZEOF(conn->pub.port),
+            NI_NUMERICHOST | NI_NUMERICSERV))
+    {
+        ecs_os_strcpy(remote_host, "unknown");
+        ecs_os_strcpy(remote_port, "unknown");
+    }
+
+    ecs_dbg_2("http: connection established from '%s:%s' (socket %u)", 
+        remote_host, remote_port, sock_conn);
+    
+    return (http_conn_res_t){ .conn = conn, .id = conn_id };
+}
+
+static
+int http_accept_connections(
+    ecs_http_server_t* srv, 
+    const struct sockaddr* addr, 
+    ecs_size_t addr_len) 
+{
+#ifdef ECS_TARGET_WINDOWS
+    /* If on Windows, test if winsock needs to be initialized */
+    SOCKET testsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (INVALID_SOCKET == testsocket && WSANOTINITIALISED == WSAGetLastError()){
+        WSADATA data = { 0 };
+        int result = WSAStartup(MAKEWORD(2, 2), &data);
+        if (result) {
+            ecs_warn("http: WSAStartup failed with GetLastError = %d\n", 
+                GetLastError());
+            return 0;
+        }
+    } else {
+        http_close(&testsocket);
+    }
+#endif
+
+    /* Resolve name + port (used for logging) */
+    char addr_host[256];
+    char addr_port[20];
+
+    int ret = 0; /* 0 = ok, 1 = port occupied */
+
+    ecs_http_socket_t sock = HTTP_SOCKET_INVALID;
+    ecs_assert(srv->sock == HTTP_SOCKET_INVALID, ECS_INTERNAL_ERROR, NULL);
+
+    if (http_getnameinfo(
+        addr, addr_len, addr_host, ECS_SIZEOF(addr_host), addr_port, 
+        ECS_SIZEOF(addr_port), NI_NUMERICHOST | NI_NUMERICSERV))
+    {
+        ecs_os_strcpy(addr_host, "unknown");
+        ecs_os_strcpy(addr_port, "unknown");
+    }
+
+    ecs_os_mutex_lock(srv->lock);
+    if (srv->should_run) {
+        ecs_dbg_2("http: initializing connection socket");
+
+        sock = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
+        if (!http_socket_is_valid(sock)) {
+            ecs_err("http: unable to create new connection socket: %s", 
+                ecs_os_strerror(errno));
+            ecs_os_mutex_unlock(srv->lock);
+            goto done;
+        }
+
+        int reuse = 1, result;
+        result = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
+            (char*)&reuse, ECS_SIZEOF(reuse)); 
+        if (result) {
+            ecs_warn("http: failed to setsockopt: %s", ecs_os_strerror(errno));
+        }
+
+        if (addr->sa_family == AF_INET6) {
+            int ipv6only = 0;
+            if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, 
+                (char*)&ipv6only, ECS_SIZEOF(ipv6only)))
+            {
+                ecs_warn("http: failed to setsockopt: %s", 
+                    ecs_os_strerror(errno));
+            }
+        }
+
+        result = http_bind(sock, addr, addr_len);
+        if (result) {
+            if (errno == EADDRINUSE) {
+                ret = 1;
+                ecs_warn("http: address '%s:%s' in use, retrying with port %u", 
+                    addr_host, addr_port, srv->port + 1);
+            } else {
+                ecs_err("http: failed to bind to '%s:%s': %s", 
+                    addr_host, addr_port, ecs_os_strerror(errno));
+            }
+
+            ecs_os_mutex_unlock(srv->lock);
+            goto done;
+        }
+
+        http_sock_set_timeout(sock, 1000);
+
+        srv->sock = sock;
+
+        result = listen(srv->sock, SOMAXCONN);
+        if (result) {
+            ecs_warn("http: could not listen for SOMAXCONN (%d) connections: %s", 
+                SOMAXCONN, ecs_os_strerror(errno));
+        }
+
+        ecs_trace("http: listening for incoming connections on '%s:%s'",
+            addr_host, addr_port);
+    } else {
+        ecs_dbg_2("http: server shut down while initializing");
+    }
+    ecs_os_mutex_unlock(srv->lock);
+
+    struct sockaddr_storage remote_addr;
+    ecs_size_t remote_addr_len = 0;
+
+    while (srv->should_run) {
+        remote_addr_len = ECS_SIZEOF(remote_addr);
+        ecs_http_socket_t sock_conn = http_accept(srv->sock, (struct sockaddr*) &remote_addr, 
+            &remote_addr_len);
+
+        if (!http_socket_is_valid(sock_conn)) {
+            if (srv->should_run) {
+                ecs_dbg("http: connection attempt failed: %s", 
+                    ecs_os_strerror(errno));
+            }
+            continue;
+        }
+
+        http_conn_res_t conn = http_init_connection(srv, sock_conn, &remote_addr, remote_addr_len);
+        http_recv_connection(srv, conn.conn, conn.id, sock_conn);
+    }
+
+done:
+    ecs_os_mutex_lock(srv->lock);
+    if (http_socket_is_valid(sock) && errno != EBADF) {
+        http_close(&sock);
+        srv->sock = sock;
+    }
+    ecs_os_mutex_unlock(srv->lock);
+
+    ecs_trace("http: no longer accepting connections on '%s:%s'",
+        addr_host, addr_port);
+
+    return ret;
+}
+
+static
+void* http_server_thread(void* arg) {
+    ecs_http_server_t *srv = arg;
+    struct sockaddr_in addr;
+    ecs_os_zeromem(&addr);
+    addr.sin_family = AF_INET;
+
+    int retries = 0;
+retry:
+    addr.sin_port = htons(srv->port);
+
+    if (!srv->ipaddr) {
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    } else {
+        inet_pton(AF_INET, srv->ipaddr, &(addr.sin_addr));
+    }
+
+    if (http_accept_connections(
+        srv, (struct sockaddr*)&addr, ECS_SIZEOF(addr)) == 1) 
+    {
+        srv->port ++;
+        retries ++;
+        if (retries < 10) {
+            goto retry;
+        } else {
+            ecs_err("http: failed to connect (retried 10 times)");
+        }
+    }
+
+    return NULL;
+}
+
+static
+void http_do_request(
+    ecs_http_server_t *srv,
+    ecs_http_reply_t *reply,
+    const ecs_http_request_impl_t *req)
+{
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->callback != NULL, ECS_INVALID_OPERATION, 
+        "missing request handler for server");
+
+    if (srv->callback(ECS_CONST_CAST(ecs_http_request_t*, req), reply, 
+        srv->ctx) == false) 
+    {
+        reply->status = "Resource not found";
+        ecs_os_linc(&ecs_http_request_not_handled_count);
+    } else {
+        if (reply->code >= 400) {
+            ecs_os_linc(&ecs_http_request_handled_error_count);
+        } else {
+            ecs_os_linc(&ecs_http_request_handled_ok_count);
+        }
+    }
+error:
+    return;
+}
+
+static
+void http_handle_request(
+    ecs_http_server_t *srv,
+    ecs_http_request_impl_t *req)
+{
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    ecs_http_connection_impl_t *conn = 
+        (ecs_http_connection_impl_t*)req->pub.conn;
+
+    if (req->pub.method != EcsHttpOptions) {
+        if (srv->callback((ecs_http_request_t*)req, &reply, srv->ctx) == false) {
+            reply.code = 404;
+            reply.status = "Resource not found";
+            ecs_os_linc(&ecs_http_request_not_handled_count);
+        } else {
+            if (reply.code >= 400) {
+                ecs_os_linc(&ecs_http_request_handled_error_count);
+            } else {
+                ecs_os_linc(&ecs_http_request_handled_ok_count);
+            }
+        }
+
+        if (req->pub.method == EcsHttpGet) {
+            http_insert_request_entry(srv, req, &reply);
+        }
+
+        http_send_reply(conn, &reply, false);
+        ecs_dbg_2("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
+    } else {
+        /* Already taken care of */
+    }
+
+    http_reply_fini(&reply);
+    http_request_fini(req);
+    http_connection_free(conn);
+}
+
+static
+void http_purge_request_cache(
+    ecs_http_server_t *srv,
+    bool fini)
+{
+    ecs_time_t t = {0, 0};
+    double time = ecs_time_measure(&t);
+    ecs_map_iter_t it = ecs_map_iter(&srv->request_cache.impl);
+    while (ecs_map_next(&it)) {
+        ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
+        int32_t i, count = ecs_vec_count(&bucket->values);
+        ecs_http_request_key_t *keys = ecs_vec_first(&bucket->keys);
+        ecs_http_request_entry_t *entries = ecs_vec_first(&bucket->values);
+        for (i = count - 1; i >= 0; i --) {
+            ecs_http_request_entry_t *entry = &entries[i];
+            if (fini || ((time - entry->time) > srv->cache_purge_timeout)) {
+                ecs_http_request_key_t *key = &keys[i];
+                /* Safe, code owns the value */
+                ecs_os_free(ECS_CONST_CAST(char*, key->array));
+                ecs_os_free(entry->content);
+                flecs_hm_bucket_remove(&srv->request_cache, bucket, 
+                    ecs_map_key(&it), i);
+            }
+        }
+    }
+
+    if (fini) {
+        flecs_hashmap_fini(&srv->request_cache);
+    }
+}
+
+static
+int32_t http_dequeue_requests(
+    ecs_http_server_t *srv,
+    double delta_time)
+{
+    ecs_os_mutex_lock(srv->lock);
+
+    int32_t i, request_count = flecs_sparse_count(&srv->requests);
+    for (i = request_count - 1; i >= 1; i --) {
+        ecs_http_request_impl_t *req = flecs_sparse_get_dense_t(
+            &srv->requests, ecs_http_request_impl_t, i);
+        http_handle_request(srv, req);
+    }
+
+    int32_t connections_count = flecs_sparse_count(&srv->connections);
+    for (i = connections_count - 1; i >= 1; i --) {
+        ecs_http_connection_impl_t *conn = flecs_sparse_get_dense_t(
+            &srv->connections, ecs_http_connection_impl_t, i);
+
+        conn->dequeue_timeout += delta_time;
+        conn->dequeue_retries ++;
+        
+        if ((conn->dequeue_timeout > 
+            (double)ECS_HTTP_CONNECTION_PURGE_TIMEOUT) &&
+             (conn->dequeue_retries > ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT)) 
+        {
+            ecs_dbg("http: purging connection '%s:%s' (sock = %d)", 
+                conn->pub.host, conn->pub.port, conn->sock);
+            http_connection_free(conn);
+        }
+    }
+
+    http_purge_request_cache(srv, false);
+    ecs_os_mutex_unlock(srv->lock);
+
+    return request_count - 1;
+}
+
+const char* ecs_http_get_header(
+    const ecs_http_request_t* req,
+    const char* name) 
+{
+    for (ecs_size_t i = 0; i < req->header_count; i++) {
+        if (!ecs_os_strcmp(req->headers[i].key, name)) {
+            return req->headers[i].value;
+        }
+    }
+    return NULL;
+}
+
+const char* ecs_http_get_param(
+    const ecs_http_request_t* req,
+    const char* name) 
+{
+    for (ecs_size_t i = 0; i < req->param_count; i++) {
+        if (!ecs_os_strcmp(req->params[i].key, name)) {
+            return req->params[i].value;
+        }
+    }
+    return NULL;
+}
+
+ecs_http_server_t* ecs_http_server_init(
+    const ecs_http_server_desc_t *desc) 
+{
+    ecs_http_server_t* srv = ecs_os_calloc_t(ecs_http_server_t);
+    if (ecs_os_has_threading()) {
+        srv->lock = ecs_os_mutex_new();
+    }
+    srv->sock = HTTP_SOCKET_INVALID;
+
+    srv->should_run = false;
+    srv->initialized = true;
+
+    srv->cache_timeout = desc->cache_timeout;
+    srv->cache_purge_timeout = desc->cache_purge_timeout;
+
+    if (!ECS_EQZERO(srv->cache_timeout) && 
+         ECS_EQZERO(srv->cache_purge_timeout)) 
+    {
+        srv->cache_purge_timeout = srv->cache_timeout * 10;
+    }
+
+    srv->callback = desc->callback;
+    srv->ctx = desc->ctx;
+    srv->port = desc->port;
+    srv->ipaddr = desc->ipaddr;
+    srv->send_queue.wait_ms = desc->send_queue_wait_ms;
+    if (!srv->send_queue.wait_ms) {
+        srv->send_queue.wait_ms = 1;
+    }
+
+    flecs_sparse_init_t(&srv->connections, NULL, NULL, ecs_http_connection_impl_t);
+    flecs_sparse_init_t(&srv->requests, NULL, NULL, ecs_http_request_impl_t);
+
+    /* Start at id 1 */
+    flecs_sparse_new_id(&srv->connections);
+    flecs_sparse_new_id(&srv->requests);
+
+    /* Initialize request cache */
+    flecs_hashmap_init(&srv->request_cache, 
+        ecs_http_request_key_t, ecs_http_request_entry_t,
+        http_request_key_hash, http_request_key_compare, NULL);
+
+#ifndef ECS_TARGET_WINDOWS
+    /* Ignore pipe signal. SIGPIPE can occur when a message is sent to a client
+     * but te client already disconnected. */
+    signal(SIGPIPE, SIG_IGN);
+#endif
+
+    return srv;
+}
+
+void ecs_http_server_fini(
+    ecs_http_server_t* srv) 
+{
+    if (srv->should_run) {
+        ecs_http_server_stop(srv);
+    }
+    if (ecs_os_has_threading()) {
+        ecs_os_mutex_free(srv->lock);
+    }
+    http_purge_request_cache(srv, true);
+    flecs_sparse_fini(&srv->requests);
+    flecs_sparse_fini(&srv->connections);
+    ecs_os_free(srv);
+}
+
+int ecs_http_server_start(
+    ecs_http_server_t *srv)
+{
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!srv->should_run, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!srv->thread, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_os_has_threading(), ECS_UNSUPPORTED,
+        "missing OS API implementation");
+
+    srv->should_run = true;
+
+    ecs_dbg("http: starting server thread");
+
+    srv->thread = ecs_os_thread_new(http_server_thread, srv);
+    if (!srv->thread) {
+        goto error;
+    }
+
+    srv->send_queue.thread = ecs_os_thread_new(http_server_send_queue, srv);
+    if (!srv->send_queue.thread) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+void ecs_http_server_stop(
+    ecs_http_server_t* srv) 
+{
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->initialized, ECS_INVALID_OPERATION, 
+        "cannot stop HTTP server: not initialized");
+    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, 
+        "cannot stop HTTP server: already stopped/stopping");
+    ecs_check(ecs_os_has_threading(), ECS_UNSUPPORTED,
+        "missing OS API implementation");
+
+    /* Stop server thread */
+    ecs_dbg("http: shutting down server thread");
+
+    ecs_os_mutex_lock(srv->lock);
+    srv->should_run = false;
+    if (http_socket_is_valid(srv->sock)) {
+        http_close(&srv->sock);
+    }
+    ecs_os_mutex_unlock(srv->lock);
+
+    ecs_os_thread_join(srv->thread);
+    ecs_os_thread_join(srv->send_queue.thread);
+    ecs_trace("http: server threads shut down");
+
+    /* Cleanup all outstanding requests */
+    int i, count = flecs_sparse_count(&srv->requests);
+    for (i = count - 1; i >= 1; i --) {
+        http_request_fini(flecs_sparse_get_dense_t(
+            &srv->requests, ecs_http_request_impl_t, i));
+    }
+
+    /* Close all connections */
+    count = flecs_sparse_count(&srv->connections);
+    for (i = count - 1; i >= 1; i --) {
+        http_connection_free(flecs_sparse_get_dense_t(
+            &srv->connections, ecs_http_connection_impl_t, i));
+    }
+
+    ecs_assert(flecs_sparse_count(&srv->connections) == 1, 
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(flecs_sparse_count(&srv->requests) == 1,
+        ECS_INTERNAL_ERROR, NULL);
+
+    srv->thread = 0;
+error:
+    return;
+}
+
+void ecs_http_server_dequeue(
+    ecs_http_server_t* srv,
+    ecs_ftime_t delta_time)
+{
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, NULL);
+    
+    srv->dequeue_timeout += (double)delta_time;
+    srv->stats_timeout += (double)delta_time;
+
+    if ((1000 * srv->dequeue_timeout) > (double)ECS_HTTP_MIN_DEQUEUE_INTERVAL) {
+        srv->dequeue_timeout = 0;
+
+        ecs_time_t t = {0};
+        ecs_time_measure(&t);
+        int32_t request_count = http_dequeue_requests(srv, srv->dequeue_timeout);
+        srv->requests_processed += request_count;
+        srv->requests_processed_total += request_count;
+        double time_spent = ecs_time_measure(&t);
+        srv->request_time += time_spent;
+        srv->request_time_total += time_spent;
+        srv->dequeue_count ++;
+    }
+
+    if ((1000 * srv->stats_timeout) > (double)ECS_HTTP_MIN_STATS_INTERVAL) {
+        srv->stats_timeout = 0;
+        ecs_dbg("http: processed %d requests in %.3fs (avg %.3fs / dequeue)",
+            srv->requests_processed, srv->request_time, 
+            (srv->request_time / (double)srv->dequeue_count));
+        srv->requests_processed = 0;
+        srv->request_time = 0;
+        srv->dequeue_count = 0;
+    }
+
+error:
+    return;
+}
+
+int ecs_http_server_http_request(
+    ecs_http_server_t* srv,
+    const char *req,
+    ecs_size_t len,
+    ecs_http_reply_t *reply_out)
+{
+    if (!len) {
+        len = ecs_os_strlen(req);
+    }
+
+    ecs_http_fragment_t frag = {0};
+    if (!http_parse_request(&frag, req, len)) {
+        ecs_strbuf_reset(&frag.buf);
+        reply_out->code = 400;
+        return -1;
+    }
+
+    ecs_http_request_impl_t request;
+    char *res = http_decode_request(&request, &frag);
+    if (!res) {
+        reply_out->code = 400;
+        return -1;
+    }
+
+    ecs_http_request_entry_t *entry = 
+        http_find_request_entry(srv, request.res, request.req_len);
+    if (entry) {
+        reply_out->body = ECS_STRBUF_INIT;
+        reply_out->code = entry->code;
+        reply_out->content_type = "application/json";
+        reply_out->headers = ECS_STRBUF_INIT;
+        reply_out->status = "OK";
+        ecs_strbuf_appendstrn(&reply_out->body, 
+            entry->content, entry->content_length);
+    } else {
+        http_do_request(srv, reply_out, &request);
+
+        if (request.pub.method == EcsHttpGet) {
+            http_insert_request_entry(srv, &request, reply_out);
+        }
+    }
+
+    ecs_os_free(res);
+
+    http_purge_request_cache(srv, false);
+
+    return (reply_out->code >= 400) ? -1 : 0;
+}
+
+int ecs_http_server_request(
+    ecs_http_server_t* srv,
+    const char *method,
+    const char *req,
+    const char *body,
+    ecs_http_reply_t *reply_out)
+{
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(method != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(req != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(reply_out != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const char *http_ver = " HTTP/1.1\r\n";
+    int32_t method_len = ecs_os_strlen(method);
+    int32_t req_len = ecs_os_strlen(req);
+    int32_t body_len = body ? ecs_os_strlen(body) : 0;
+    int32_t http_ver_len = ecs_os_strlen(http_ver);
+    char reqbuf[1024], *reqstr = reqbuf;
+    char content_length[32] = {0};
+
+    if (body_len) {
+        ecs_os_snprintf(content_length, 32, 
+            "Content-Length: %d\r\n\r\n", body_len);
+    }
+
+    int32_t content_length_len = ecs_os_strlen(content_length);
+
+    int32_t len = method_len + req_len + content_length_len + body_len + 
+        http_ver_len;
+
+    len += 3;
+
+    if (len >= 1024) {
+        reqstr = ecs_os_malloc(len);
+    }
+
+    char *ptr = reqstr;
+    ecs_os_memcpy(ptr, method, method_len); ptr += method_len;
+    ptr[0] = ' '; ptr ++;
+    ecs_os_memcpy(ptr, req, req_len); ptr += req_len;
+    ecs_os_memcpy(ptr, http_ver, http_ver_len); ptr += http_ver_len;
+
+    if (body) {
+        ecs_os_memcpy(ptr, content_length, content_length_len);
+        ptr += content_length_len;
+        ecs_os_memcpy(ptr, body, body_len);
+        ptr += body_len;
+    }
+
+    ptr[0] = '\r';
+    ptr[1] = '\n';
+
+    int result = ecs_http_server_http_request(srv, reqstr, len, reply_out);
+    if (reqbuf != reqstr) {
+        ecs_os_free(reqstr);
+    }
+
+    return result;
+error:
+    return -1;
+}
+
+void* ecs_http_server_ctx(
+    ecs_http_server_t* srv)
+{
+    return srv->ctx;
+}
+
+#endif
+
+/**
  * @file addons/json/deserialize.c
  * @brief Deserialize JSON strings into (component) values.
  */
@@ -45319,6 +45531,7 @@ const char* flecs_json_deser_components(
                             ecs_modified_id(world, e, id);
                         }
                     } else {
+                        json = flecs_parse_ws_eol(json);
                         json = flecs_json_skip_object(json + 1, token, desc);
                         if (!json) {
                             goto error;
@@ -47304,6 +47517,7 @@ const char* flecs_json_expect(
             ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
                 "expected %s, got %s",
                 flecs_json_token_str(token_kind), flecs_json_token_str(kind));
+            flecs_dump_backtrace(stdout);
             return NULL;
         }
     }
@@ -49234,7 +49448,7 @@ bool flecs_json_serialize_table_type_info(
         const ecs_table_record_t *tr = &table->_->records[i];
         ecs_component_record_t *cr = tr->hdr.cr;
         ecs_id_t id = table->type.array[i];
-        if (!(cr->flags & EcsIdIsSparse) && 
+        if (!(cr->flags & EcsIdSparse) && 
              (!table->column_map || (table->column_map[i] == -1))) 
         {
             continue;
@@ -49302,7 +49516,7 @@ bool flecs_json_serialize_table_tags(
                 continue;
             }
         }
-        if (cr->flags & EcsIdIsSparse) {
+        if (cr->flags & EcsIdSparse) {
             continue;
         }
 
@@ -49371,7 +49585,7 @@ bool flecs_json_serialize_table_pairs(
                 continue;
             }
         }
-        if (cr->flags & EcsIdIsSparse) {
+        if (cr->flags & EcsIdSparse) {
             continue;
         }
 
@@ -49471,7 +49685,7 @@ int flecs_json_serialize_table_components(
             ti = column->ti;
             ptr = ECS_ELEM(column->data, ti->size, row);
         } else {
-            if (!(cr->flags & EcsIdIsSparse)) {
+            if (!(cr->flags & EcsIdSparse)) {
                 continue;
             }
             ecs_entity_t e = ecs_table_entities(table)[row];
@@ -50800,6 +51014,8 @@ int ecs_array_to_json_buf(
     int32_t count,
     ecs_strbuf_t *buf)
 {
+    ecs_assert(type != 0, ECS_INVALID_PARAMETER, NULL);
+    
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
     if (!comp) {
         char *path = ecs_get_path(world, type);
@@ -56125,8 +56341,7 @@ int flecs_meta_serialize_struct(
 
     ecs_hashmap_t *member_index = NULL;
     if (count) {        
-        op->is.members = member_index = flecs_name_index_new(
-            world, &world->allocator);
+        op->is.members = member_index = flecs_name_index_new(&world->allocator);
     }
 
     for (i = 0; i < count; i ++) {
@@ -67562,6 +67777,9 @@ void flecs_stats_memory_register_reflection(
 #endif
 
 
+#ifdef FLECS_REST
+#endif
+
 #ifdef FLECS_STATS
 
 ECS_COMPONENT_DECLARE(ecs_entities_memory_t);
@@ -67569,25 +67787,10 @@ ECS_COMPONENT_DECLARE(ecs_component_index_memory_t);
 ECS_COMPONENT_DECLARE(ecs_query_memory_t);
 ECS_COMPONENT_DECLARE(ecs_component_memory_t);
 ECS_COMPONENT_DECLARE(ecs_table_memory_t);
-ECS_COMPONENT_DECLARE(ecs_commands_memory_t);
+ECS_COMPONENT_DECLARE(ecs_misc_memory_t);
 ECS_COMPONENT_DECLARE(ecs_table_histogram_t);
 ECS_COMPONENT_DECLARE(ecs_allocator_memory_t);
 ECS_COMPONENT_DECLARE(EcsWorldMemory);
-
-/* Helper function to calculate memory usage of an ecs_map_t */
-static
-ecs_size_t flecs_map_memory_get(
-    const ecs_map_t *map,
-    ecs_size_t element_size)
-{
-    ecs_size_t result = 0;
-    if (map && map->bucket_count > 0) {
-        result += map->bucket_count * ECS_SIZEOF(ecs_bucket_t);
-        result += ecs_map_count(map) * ECS_SIZEOF(ecs_bucket_entry_t);
-        result += ecs_map_count(map) * element_size;
-    }
-    return result;
-}
 
 static
 ecs_size_t flecs_ballocator_memory_get(
@@ -67609,6 +67812,71 @@ ecs_size_t flecs_ballocator_memory_get(
 }
 
 static
+ecs_size_t flecs_map_memory_get(
+    const ecs_map_t *map,
+    ecs_size_t element_size)
+{
+    ecs_size_t result = 0;
+    if (map && map->bucket_count > 0) {
+        result += map->bucket_count * ECS_SIZEOF(ecs_bucket_t);
+        result += ecs_map_count(map) * ECS_SIZEOF(ecs_bucket_entry_t);
+        result += ecs_map_count(map) * element_size;
+    }
+    return result;
+}
+
+static
+ecs_size_t flecs_hashmap_memory_get(
+    const ecs_hashmap_t *name_index)
+{
+    const ecs_map_t *map = &name_index->impl;
+
+    ecs_size_t key_size = name_index->key_size;
+    ecs_size_t value_size = name_index->value_size;
+    ecs_size_t result = flecs_map_memory_get(map, ECS_SIZEOF(ecs_hm_bucket_t));
+
+    ecs_map_iter_t it = ecs_map_iter(map);
+    while (ecs_map_next(&it)) {
+        ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
+        result += ecs_vec_size(&bucket->keys) * key_size;
+        result += ecs_vec_size(&bucket->values) * value_size;
+    }
+
+    return result;
+}
+
+static
+ecs_size_t flecs_sparse_memory_get(
+    const ecs_sparse_t *sparse,
+    ecs_size_t element_size)
+{
+    if (!sparse) {
+        return 0;
+    }
+
+    ecs_size_t result = 0;
+    
+    result += ecs_vec_size(&sparse->dense) * ECS_SIZEOF(uint64_t);
+    result += ecs_vec_size(&sparse->pages) * ECS_SIZEOF(ecs_sparse_page_t);
+
+    int32_t i, pages_count = ecs_vec_count(&sparse->pages);
+    ecs_sparse_page_t *pages = ecs_vec_first_t(
+        &sparse->pages, ecs_sparse_page_t);
+    int32_t page_count = 0;
+    for (i = 0; i < pages_count; i++) {
+        ecs_sparse_page_t *page = &pages[i];
+        if (page->sparse) {
+            page_count ++;
+        }
+    }
+
+    result += page_count * ECS_SIZEOF(int32_t) * FLECS_SPARSE_PAGE_SIZE;
+    result += page_count * element_size * FLECS_SPARSE_PAGE_SIZE;
+
+    return result;
+}
+
+static
 ecs_size_t flecs_allocator_memory_get(
     const ecs_allocator_t *allocator)
 {
@@ -67623,122 +67891,115 @@ ecs_size_t flecs_allocator_memory_get(
         result += flecs_ballocator_memory_get(ba);
     }
     result += flecs_ballocator_memory_get(&allocator->chunks);
+    
+    result += flecs_sparse_memory_get(&allocator->sizes, 
+        ECS_SIZEOF(ecs_block_allocator_t));
 #endif
 
     return result;
 }
 
 static
-void flecs_sparse_memory_get(
-    const ecs_sparse_t *sparse,
-    ecs_size_t element_size,
-    ecs_size_t *used,
-    ecs_size_t *unused,
-    ecs_size_t *overhead)
+ecs_size_t flecs_stack_memory_get(
+    const ecs_stack_t *stack)
 {
-    *used = 0;
-    *unused = 0;
-    *overhead = 0;
-
-    if (!sparse) {
-        return;
+    ecs_size_t result = 0;
+    ecs_stack_page_t *page = stack->first;
+    while (page) {
+        result += 
+            FLECS_STACK_PAGE_OFFSET + FLECS_STACK_PAGE_SIZE;
+        page = page->next;
     }
-
-    int32_t count = flecs_sparse_count(sparse);
-    int32_t size = ecs_vec_size(&sparse->dense);
-    
-    *overhead = size * ECS_SIZEOF(uint64_t);
-
-    int32_t i, pages_count = ecs_vec_count(&sparse->pages);
-    ecs_sparse_page_t *pages = ecs_vec_first_t(
-        &sparse->pages, ecs_sparse_page_t);
-    int32_t page_count = 0;
-    for (i = 0; i < pages_count; i++) {
-        ecs_sparse_page_t *page = &pages[i];
-        if (page->sparse) {
-            page_count ++;
-        }
-    }
-
-    *overhead += pages_count * ECS_SIZEOF(ecs_sparse_page_t);
-    *overhead += page_count * ECS_SIZEOF(int32_t) * FLECS_SPARSE_PAGE_SIZE;
-
-    int32_t total_size = page_count * element_size * FLECS_SPARSE_PAGE_SIZE;
-    *used = count * element_size;
-    *unused = total_size - (count * element_size);
+    return result;
 }
 
-ecs_entities_memory_t ecs_entity_index_memory_get(
+static
+ecs_size_t flecs_identifier_memory_get(
+    const ecs_world_t *world,
+    ecs_entity_t tag)
+{
+    ecs_size_t result = 0;
+    ecs_iter_t it = ecs_each_id(world, ecs_pair_t(EcsIdentifier, tag));
+    while (ecs_each_next(&it)) {
+        EcsIdentifier *ptr = ecs_field(&it, EcsIdentifier, 0);
+        int32_t i, count = it.count;
+        for (i = 0; i < count; i ++) {
+            if (ptr[i].value) {
+                result += ecs_os_strlen(ptr[i].value) + 1;
+            }
+        }
+    }
+    return result;
+}
+
+#ifdef FLECS_DOC
+static
+ecs_size_t flecs_doc_string_memory_get(
+    const ecs_world_t *world,
+    ecs_entity_t tag)
+{
+    ecs_size_t result = 0;
+    ecs_iter_t it = ecs_each_id(world, ecs_pair_t(EcsDocDescription, tag));
+    while (ecs_each_next(&it)) {
+        EcsDocDescription *ptr = ecs_field(&it, EcsDocDescription, 0);
+        int32_t i, count = it.count;
+        for (i = 0; i < count; i ++) {
+            if (ptr[i].value) {
+                result += ecs_os_strlen(ptr[i].value) + 1;
+            }
+        }
+    }
+    return result;
+}
+#endif
+
+ecs_entities_memory_t ecs_entity_memory_get(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     
     const ecs_entity_index_t *index = &world->store.entity_index;
     ecs_entities_memory_t result = {0};
-    
+
     result.alive_count = index->alive_count - 1;
     result.not_alive_count = ecs_vec_count(&index->dense) - index->alive_count;
-    
-    /* Dense array */
-    int32_t dense_size = ecs_vec_size(&index->dense);
-    int32_t dense_count = ecs_vec_count(&index->dense);
-    result.bytes_alive = result.alive_count * ECS_SIZEOF(uint64_t);
-    result.bytes_not_alive = result.not_alive_count * ECS_SIZEOF(uint64_t);
-    result.bytes_unused = (dense_size - dense_count) * ECS_SIZEOF(uint64_t);
-    
-    /* Pages vector memory */
-    int32_t pages_size = ecs_vec_size(&index->pages);
-    int32_t pages_count = ecs_vec_count(&index->pages);
-    result.bytes_unused += (pages_size - pages_count) * 
+
+    result.bytes_entity_index = 
+        ecs_vec_size(&index->dense) * ECS_SIZEOF(uint64_t);
+    result.bytes_entity_index += ecs_vec_size(&index->pages) * 
         ECS_SIZEOF(ecs_entity_index_page_t*);
-    
-    /* Pages memory */
+
     ecs_entity_index_page_t **pages = ecs_vec_first(&index->pages);
-    int32_t page_count = 0;
-    for (int32_t i = 0; i < pages_count; i++) {
+    int32_t i, page_count = 0, pages_count = ecs_vec_count(&index->pages);
+    for (i = 0; i < pages_count; i++) {
         if (pages[i]) {
             page_count ++;
         }
     }
 
-    ecs_size_t alive_records = ECS_SIZEOF(ecs_record_t) * result.alive_count;
-    ecs_size_t not_alive_records = 
-        ECS_SIZEOF(ecs_record_t) * result.not_alive_count;
-    ecs_size_t total_records = page_count * ECS_SIZEOF(ecs_entity_index_page_t);
-    result.bytes_alive += alive_records;
-    result.bytes_not_alive += not_alive_records;
-    result.bytes_unused += total_records - alive_records - not_alive_records;
+    result.bytes_entity_index += page_count * 
+        ECS_SIZEOF(ecs_entity_index_page_t);
 
-    {
-        ecs_iter_t it = ecs_each_pair_t(world, EcsIdentifier, EcsWildcard);
-        while (ecs_each_next(&it)) {
-            EcsIdentifier *ptr = ecs_field(&it, EcsIdentifier, 0);
-            int32_t i, count = it.count;
-            for (i = 0; i < count; i ++) {
-                result.bytes_names += ecs_os_strlen(ptr[i].value) + 1;
-            }
-        }
-    }
+    /* Entity names, symbols, aliases */
+    result.bytes_names += flecs_identifier_memory_get(world, EcsName);
+    result.bytes_names += flecs_identifier_memory_get(world, EcsSymbol);
+    result.bytes_names += flecs_identifier_memory_get(world, EcsAlias);
 
 #ifdef FLECS_DOC
-    {
-        ecs_iter_t it = ecs_each_pair_t(world, EcsDocDescription, EcsWildcard);
-        while (ecs_each_next(&it)) {
-            EcsDocDescription *ptr = ecs_field(&it, EcsDocDescription, 0);
-            int32_t i, count = it.count;
-            for (i = 0; i < count; i ++) {
-                result.bytes_doc_names += ecs_os_strlen(ptr[i].value) + 1;
-            }
-        }
-    }
+    /* Doc strings */
+    result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsName);
+    result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocBrief);
+    result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocDetail);
+    result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocUuid);
+    result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocLink);
+    result.bytes_doc_strings += flecs_doc_string_memory_get(world, EcsDocColor);
 #endif
-    
+
 error:
     return result;
 }
 
-static
-void flecs_component_index_memory_record_get(
+void ecs_component_record_memory_get(
     const ecs_component_record_t *cr,
     ecs_component_index_memory_t *result)
 {
@@ -67751,7 +68012,13 @@ void flecs_component_index_memory_record_get(
     
     const ecs_map_t *map = &cache->index;
     result->bytes_table_cache += flecs_map_memory_get(map, 0);
-    
+
+#ifdef FLECS_DEBUG_INFO
+    if (cr->str) {
+        result->bytes_component_record += ecs_os_strlen(cr->str);
+    }
+#endif
+
     if (cr->pair) {
         ecs_pair_record_t *pair = cr->pair;
 
@@ -67759,10 +68026,11 @@ void flecs_component_index_memory_record_get(
         
         if (pair->name_index) {
             result->bytes_name_index += ECS_SIZEOF(ecs_hashmap_t);
-            ecs_map_t *hm_map = &pair->name_index->impl;
-            result->bytes_name_index += flecs_map_memory_get(hm_map, 0);
+            result->bytes_name_index += flecs_hashmap_memory_get(
+                pair->name_index);
+
         }
-        
+
         result->bytes_ordered_children += 
             ecs_vec_size(&pair->ordered_children) * ECS_SIZEOF(ecs_entity_t);
         
@@ -67783,19 +68051,14 @@ ecs_component_index_memory_t ecs_component_index_memory_get(
     for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
         ecs_component_record_t *cr = world->id_index_lo[i];
         if (cr) {
-            flecs_component_index_memory_record_get(cr, &result);
+            ecs_component_record_memory_get(cr, &result);
         }
     }
     
     ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
     while (ecs_map_next(&it)) {
         ecs_component_record_t *cr = ecs_map_ptr(&it);
-        flecs_component_index_memory_record_get(cr, &result);
-    }
-
-    it = ecs_map_iter(&world->type_info);
-    while (ecs_map_next(&it)) {
-        result.bytes_type_info += ECS_SIZEOF(ecs_type_info_t);
+        ecs_component_record_memory_get(cr, &result);
     }
     
 error:
@@ -67811,7 +68074,6 @@ void flecs_query_memory_get(
 
     result->count++;
     result->bytes_query += ECS_SIZEOF(ecs_query_impl_t);
-
     result->bytes_terms += query->term_count * ECS_SIZEOF(ecs_term_t);
     
     if (impl->ops) {
@@ -67849,18 +68111,15 @@ void flecs_query_memory_get(
                 ECS_SIZEOF(ecs_query_cache_table_t));
         result->bytes_group_by += 
             flecs_map_memory_get(&cache->groups, 
-                ECS_SIZEOF(ecs_query_cache_group_t*));
+                ECS_SIZEOF(ecs_query_cache_group_t));
         
         ecs_size_t cache_elem_size = flecs_query_cache_elem_size(cache);
         ecs_query_cache_group_t *cur = cache->first_group;
         do {
-            result->bytes_group_by += 
-                ECS_SIZEOF(ecs_query_cache_group_t);
+            result->bytes_cache += ecs_vec_size(&cur->tables) * cache_elem_size;
 
-            int32_t group_table_count = ecs_vec_count(&cur->tables);
-            result->bytes_cache += group_table_count * cache_elem_size;
-            
             if (!(cache->query->flags & EcsQueryTrivialCache)) {
+                int32_t group_table_count = ecs_vec_count(&cur->tables);
                 for (int32_t j = 0; j < group_table_count; j++) {
                     ecs_query_cache_match_t *match = 
                         ecs_vec_get(&cur->tables, cache_elem_size, j);
@@ -67882,7 +68141,7 @@ void flecs_query_memory_get(
             
             cur = cur->next;
         } while (cur && cur != cache->first_group);
-        
+
         result->bytes_order_by += 
             ecs_vec_size(&cache->table_slices) * 
                 ECS_SIZEOF(ecs_table_range_t);
@@ -67896,11 +68155,33 @@ void flecs_query_memory_get(
             result->bytes_cache += query->field_count * ECS_SIZEOF(int8_t);
         }
 
+        result->bytes_cache += flecs_ballocator_memory_get(&cache->allocators.ids);
+        result->bytes_cache += flecs_ballocator_memory_get(&cache->allocators.monitors);
+        result->bytes_cache += flecs_ballocator_memory_get(&cache->allocators.pointers);
+
         flecs_query_memory_get(cache->query, result);
     }
 }
 
-ecs_query_memory_t ecs_query_memory_get(
+static
+ecs_size_t flecs_query_total_memory_get(
+    const ecs_query_t *query)
+{
+    ecs_query_memory_t memory = {0};
+    flecs_query_memory_get(query, &memory);
+    
+    ecs_size_t result = 0;
+    result += memory.bytes_query;
+    result += memory.bytes_cache;
+    result += memory.bytes_group_by;
+    result += memory.bytes_order_by;
+    result += memory.bytes_plan;
+    result += memory.bytes_terms;
+    result += memory.bytes_misc;
+    return result;
+}
+
+ecs_query_memory_t ecs_queries_memory_get(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -67913,6 +68194,10 @@ ecs_query_memory_t ecs_query_memory_get(
 
         for (int32_t i = 0; i < it.count; i++) {
             ecs_query_t *query = queries[i].poly;
+            if (!query) {
+                continue;
+            }
+
             flecs_poly_assert(query, ecs_query_t);
             flecs_query_memory_get(query, &result);
         }
@@ -67933,13 +68218,41 @@ void flecs_component_memory_get_sparse(
     }
 
     ecs_size_t component_size = cr->type_info ? cr->type_info->size : 0;
-    flecs_sparse_memory_get(sparse, component_size, 
-        &result->bytes_sparse_components, 
-        &result->bytes_sparse_components_unused, 
-        &result->bytes_sparse_overhead);
+    result->bytes_sparse_components += flecs_sparse_memory_get(
+        sparse, component_size);
 
     if (component_size) {
         result->instances += flecs_sparse_count(sparse);
+    }
+}
+
+void ecs_table_component_memory_get(
+    const ecs_table_t *table,
+    ecs_component_memory_t *result)
+{
+    int32_t count = ecs_table_count(table);
+    int32_t size = ecs_table_size(table);
+    ecs_column_t *columns = table->data.columns;
+
+    int32_t col;
+    for (col = 0; col < table->column_count; col++) {
+        ecs_column_t *column = &columns[col];
+        
+        ecs_size_t component_size = column->ti->size;
+        ecs_size_t used = count * component_size;
+        ecs_size_t allocated = size * component_size;
+        
+        result->bytes_table_components += used;
+        result->bytes_table_components_unused += allocated - used;
+    }
+
+    result->instances += count * table->column_count;
+
+    if (table->_) {
+        result->bytes_toggle_bitsets += 
+            table->_->bs_count * ECS_SIZEOF(ecs_bitset_t);
+        result->bytes_toggle_bitsets += 
+            (count / 64) * ECS_SIZEOF(uint64_t) * table->_->bs_count;
     }
 }
 
@@ -67956,35 +68269,7 @@ ecs_component_memory_t ecs_component_memory_get(
     
     for (i = 0; i < table_count; i++) {
         ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
-
-        int32_t count = ecs_table_count(table);
-        int32_t size = ecs_table_size(table);
-        ecs_column_t *columns = table->data.columns;
-
-        int32_t col;
-        for (col = 0; col < table->column_count; col++) {
-            ecs_column_t *column = &columns[col];
-            
-            ecs_size_t component_size = column->ti->size;
-            ecs_size_t used = count * component_size;
-            ecs_size_t allocated = size * component_size;
-            
-            result.bytes_table_components += used;
-            result.bytes_table_components_unused += allocated - used;
-
-            if (table->flags & EcsTableHasBuiltins) {
-                result.bytes_builtin += used;
-            }
-        }
-
-        result.instances += count * table->column_count;
-
-        if (table->_) {
-            result.bytes_toggle_bitsets += 
-                table->_->bs_count * ECS_SIZEOF(ecs_bitset_t);
-            result.bytes_toggle_bitsets += 
-                (count / 64) * ECS_SIZEOF(uint64_t) * table->_->bs_count;
-        }
+        ecs_table_component_memory_get(table, &result);
     }
 
     /* Sparse components */
@@ -68007,7 +68292,7 @@ error:
 
 static
 void flecs_table_graph_edge_memory_get(
-    ecs_graph_edge_t *edge,
+    const ecs_graph_edge_t *edge,
     ecs_table_memory_t *result)
 {
     result->bytes_edges += ECS_SIZEOF(ecs_graph_edge_t);
@@ -68022,7 +68307,7 @@ void flecs_table_graph_edge_memory_get(
 
 static
 void flecs_table_graph_edges_memory_get(
-    ecs_graph_edges_t *edges,
+    const ecs_graph_edges_t *edges,
     ecs_table_memory_t *result)
 {
     if (edges->lo) {
@@ -68044,7 +68329,60 @@ void flecs_table_graph_edges_memory_get(
     }
 }
 
-ecs_table_memory_t ecs_table_memory_get(
+void ecs_table_memory_get(
+    const ecs_table_t *table,
+    ecs_table_memory_t *result)
+{
+    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    result->bytes_table += ECS_SIZEOF(ecs_table_t);
+    
+    int32_t entity_count = ecs_table_count(table);
+    int32_t entity_size = ecs_table_size(table);
+    int32_t type_count = table->type.count;
+    int32_t column_count = table->column_count;
+    
+    result->column_count += column_count;
+
+    if (entity_count == 0) {
+        result->empty_count++;
+    }
+    
+    result->bytes_type += type_count * ECS_SIZEOF(ecs_id_t);
+
+    result->bytes_entities += 
+        entity_size * ECS_SIZEOF(ecs_entity_t);
+    
+    if (table->data.overrides) {
+        result->bytes_overrides += ECS_SIZEOF(ecs_table_overrides_t);
+        result->bytes_overrides += column_count * ECS_SIZEOF(ecs_ref_t);
+    }
+    
+    result->bytes_columns += column_count * ECS_SIZEOF(ecs_column_t);
+
+    if (table->_) {
+        result->bytes_table += ECS_SIZEOF(ecs_table__t);
+        result->bytes_table_records += 
+            table->_->record_count * ECS_SIZEOF(ecs_table_record_t);
+    }
+
+    result->bytes_column_map += 
+        (type_count + column_count) * ECS_SIZEOF(int16_t);
+    if (table->component_map) {
+        result->bytes_component_map += 
+            FLECS_HI_COMPONENT_ID * ECS_SIZEOF(int16_t);
+    }
+
+    if (table->dirty_state) {
+        result->bytes_dirty_state += 
+            (column_count + 1) * ECS_SIZEOF(int32_t);
+    }
+    
+    flecs_table_graph_edges_memory_get(&table->node.add, result);
+    flecs_table_graph_edges_memory_get(&table->node.remove, result);
+}
+
+ecs_table_memory_t ecs_tables_memory_get(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -68055,61 +68393,14 @@ ecs_table_memory_t ecs_table_memory_get(
 
     result.count = count;
 
-    flecs_sparse_memory_get(tables, ECS_SIZEOF(ecs_table_t), 
-        &result.bytes_table, 
-        &result.bytes_table_overhead, 
-        &result.bytes_table_overhead);
+    result.bytes_table += 
+        flecs_sparse_memory_get(tables, ECS_SIZEOF(ecs_table_t));
 
     for (i = 0; i < count; i++) {
         ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
-        ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-        
-        int32_t entity_count = ecs_table_count(table);
-        int32_t entity_size = ecs_table_size(table);
-        int32_t type_count = table->type.count;
-        int32_t column_count = table->column_count;
-        
-        result.column_count += column_count;
-
-        if (entity_count == 0) {
-            result.empty_count++;
-        }
-        
-        result.bytes_type += type_count * ECS_SIZEOF(ecs_id_t);
-
-        result.bytes_entities += 
-            entity_size * ECS_SIZEOF(ecs_entity_t);
-        
-        if (table->data.overrides) {
-            result.bytes_overrides += ECS_SIZEOF(ecs_table_overrides_t);
-            result.bytes_overrides += column_count * ECS_SIZEOF(ecs_ref_t);
-        }
-        
-        result.bytes_columns += column_count * ECS_SIZEOF(ecs_column_t);
-
-        if (table->_) {
-            result.bytes_table += ECS_SIZEOF(ecs_table__t);
-            result.bytes_table_records += 
-                table->_->record_count * ECS_SIZEOF(ecs_table_record_t);
-        }
-
-        result.bytes_column_map += 
-            (type_count + column_count) * ECS_SIZEOF(int16_t);
-        if (table->component_map) {
-            result.bytes_component_map += 
-                FLECS_HI_COMPONENT_ID * ECS_SIZEOF(int16_t);
-        }
-
-        if (table->dirty_state) {
-            result.bytes_dirty_state += 
-                (column_count + 1) * ECS_SIZEOF(int32_t);
-        }
-        
-        ecs_graph_edges_t *add_edges = &table->node.add;
-        ecs_graph_edges_t *remove_edges = &table->node.remove;
-        
-        flecs_table_graph_edges_memory_get(add_edges, &result);
-        flecs_table_graph_edges_memory_get(remove_edges, &result);
+        ecs_table_memory_get(table, &result);
+        /* Already accounted for by flecs_sparse_memory_get */
+        result.bytes_table -= ECS_SIZEOF(ecs_table_t);
     }
 
 error:
@@ -68157,17 +68448,382 @@ ecs_table_histogram_t ecs_table_histogram_get(
     return result;
 }
 
-ecs_commands_memory_t ecs_commands_memory_get(
+static
+ecs_size_t flecs_event_record_memory_get(
+    const ecs_event_record_t *er)
+{
+    ecs_size_t result = flecs_map_memory_get(&er->event_ids, 
+        ECS_SIZEOF(ecs_event_id_record_t));
+
+    ecs_map_iter_t mit = ecs_map_iter(&er->event_ids);
+    while (ecs_map_next(&mit)) {
+        ecs_event_id_record_t *eir = ecs_map_ptr(&mit);
+        result += flecs_map_memory_get(&eir->self, 0);
+        result += flecs_map_memory_get(&eir->self_up, 0);
+        result += flecs_map_memory_get(&eir->up, 0);
+    }
+
+    return result;
+}
+
+static
+ecs_size_t flecs_observer_memory_get(
+    const ecs_observer_impl_t *o)
+{
+    ecs_size_t result = ECS_SIZEOF(ecs_observer_impl_t);
+    result += ecs_vec_size(&o->children) * ECS_SIZEOF(void*);
+
+    if (o->pub.query) {
+        result += flecs_query_total_memory_get(o->pub.query);
+    }
+
+    if (o->not_query) {
+        result += flecs_query_total_memory_get(o->not_query);
+    }
+
+    ecs_observer_impl_t **children = ecs_vec_first(&o->children);
+    int32_t i, count = ecs_vec_count(&o->children);
+    for (i = 0; i < count; i ++) {
+        result += flecs_observer_memory_get(children[i]);
+    }
+
+    return result;
+}
+
+static
+ecs_size_t flecs_observers_memory_get(
+    const ecs_world_t *world)
+{
+    ecs_size_t result = 0;
+
+    ecs_iter_t it = ecs_each_pair_t(world, EcsPoly, EcsObserver);
+    while (ecs_each_next(&it)) {
+        EcsPoly *p = ecs_field(&it, EcsPoly, 0);
+        int32_t i, count = it.count;
+        for (i = 0; i < count; i ++) {
+            ecs_observer_impl_t *o = p[i].poly;
+            if (!o) {
+                continue;
+            }
+
+            result += flecs_observer_memory_get(o);
+        }
+    }
+
+    return result;
+}
+
+static
+ecs_size_t flecs_observer_index_memory_get(
+    const ecs_world_t *world)
+{
+    const ecs_observable_t *o = &world->observable;
+    ecs_size_t result = 0;
+    result += flecs_event_record_memory_get(&o->on_add);
+    result += flecs_event_record_memory_get(&o->on_remove);
+    result += flecs_event_record_memory_get(&o->on_set);
+    result += flecs_event_record_memory_get(&o->on_wildcard);
+
+    const ecs_sparse_t *events = &o->events;
+    result += flecs_sparse_memory_get(events,
+        ECS_SIZEOF(ecs_event_record_t));
+
+    int32_t i, count = flecs_sparse_count(events);
+    for (i = 0; i < count; i ++) {
+        ecs_event_record_t *er = flecs_sparse_get_dense_t(
+            events, ecs_event_record_t, i);
+        result += flecs_event_record_memory_get(er);
+    }
+
+    return result;
+}
+
+static
+void flecs_system_memory_get(
+    const ecs_world_t *world,
+    ecs_misc_memory_t *result)
+{
+    ecs_iter_t it = ecs_each_pair_t(world, EcsPoly, EcsSystem);
+    while (ecs_each_next(&it)) {
+        EcsPoly *p = ecs_field(&it, EcsPoly, 0);
+        result->bytes_systems += it.count * ECS_SIZEOF(ecs_system_t);
+        int32_t i, count = it.count;
+        for (i = 0; i < count; i ++) {
+            ecs_system_t *s = p[i].poly;
+            if (!s) {
+                continue;
+            }
+            
+            if (s->name) {
+                result->bytes_systems += ecs_os_strlen(s->name);
+            }
+        }
+    }
+}
+
+static
+void flecs_pipeline_memory_get(
+    const ecs_world_t *world,
+    ecs_misc_memory_t *result)
+{
+    ecs_iter_t it = ecs_each(world, EcsPipeline);
+    while (ecs_each_next(&it)) {
+        EcsPipeline *p = ecs_field(&it, EcsPipeline, 0);
+        result->bytes_pipelines += it.count * ECS_SIZEOF(ecs_pipeline_state_t);
+        int32_t i, count = it.count;
+        for (i = 0; i < count; i ++) {
+            ecs_pipeline_state_t *ps = p[i].state;
+            if (!ps) {
+                continue;
+            }
+            
+            result->bytes_pipelines += ecs_vec_size(&ps->ops) *
+                ECS_SIZEOF(ecs_pipeline_op_t);
+            result->bytes_pipelines += ecs_vec_size(&ps->systems) *
+                ECS_SIZEOF(ecs_entity_t);
+            result->bytes_pipelines += ps->iter_count *
+                ECS_SIZEOF(ecs_iter_t);
+        }
+    }
+}
+
+static
+void flecs_rematch_monitor_memory_get(
+    const ecs_world_t *world,
+    ecs_misc_memory_t *result)
+{
+    ecs_map_iter_t it = ecs_map_iter(&world->monitors.monitors);
+    while (ecs_map_next(&it)) {
+        ecs_monitor_t *m = ecs_map_ptr(&it);
+        result->bytes_rematch_monitor += ECS_SIZEOF(ecs_monitor_t);
+        result->bytes_rematch_monitor += ecs_vec_size(&m->queries) *
+            ECS_SIZEOF(void*);
+    }
+}
+
+#ifdef FLECS_META
+static
+void flecs_reflection_memory_get(
+    const ecs_world_t *world,
+    ecs_misc_memory_t *result)
+{
+    {
+        ecs_iter_t it = ecs_each(world, EcsStruct);
+        while (ecs_each_next(&it)) {
+            EcsStruct *s = ecs_field(&it, EcsStruct, 0);
+            int32_t i, count = it.count;
+            for (i = 0; i < count; i ++) {
+                result->bytes_reflection += ecs_vec_size(&s[i].members) *
+                    ECS_SIZEOF(ecs_member_t);
+
+                int32_t m, mcount = ecs_vec_count(&s[i].members);
+                ecs_member_t *members = ecs_vec_first(&s[i].members);
+                for (m = 0; m < mcount; m ++) {
+                    ecs_member_t *member = &members[m];
+                    result->bytes_reflection += ecs_os_strlen(member->name);
+                }
+            }
+        }
+    }
+
+    {
+        ecs_iter_t it = ecs_each(world, EcsConstants);
+        while (ecs_each_next(&it)) {
+            EcsConstants *c = ecs_field(&it, EcsConstants, 0);
+            int32_t i, count = it.count;
+            for (i = 0; i < count; i ++) {
+                result->bytes_reflection += flecs_map_memory_get(
+                    c[i].constants, ECS_SIZEOF(ecs_enum_constant_t));
+                result->bytes_reflection += 
+                    ecs_vec_size(&c[i].ordered_constants) * 
+                        ECS_SIZEOF(ecs_enum_constant_t);
+
+                ecs_map_iter_t mit = ecs_map_iter(c[i].constants);
+                while (ecs_map_next(&mit)) {
+                    ecs_enum_constant_t *constant = ecs_map_ptr(&mit);
+                    result->bytes_reflection += ecs_os_strlen(constant->name);   
+                }
+            }
+        }
+    }
+
+    {
+        ecs_iter_t it = ecs_each(world, EcsTypeSerializer);
+        while (ecs_each_next(&it)) {
+            EcsTypeSerializer *s = ecs_field(&it, EcsTypeSerializer, 0);
+            int32_t i, count = it.count;
+            for (i = 0; i < count; i ++) {
+                int32_t o, ocount = ecs_vec_count(&s[i].ops);
+                ecs_meta_op_t *ops = ecs_vec_first(&s[i].ops);
+
+                result->bytes_reflection += ecs_vec_size(&s[i].ops) *
+                    ECS_SIZEOF(ecs_meta_op_t);
+
+                for (o = 0; o < ocount; o ++) {
+                    ecs_meta_op_t *op = &ops[o];
+                    if (op->kind == EcsOpPushStruct) {
+                        result->bytes_reflection += flecs_hashmap_memory_get(
+                            op->is.members);
+                    } else if (op->kind == EcsOpEnum || 
+                        op->kind == EcsOpBitmask) 
+                    {
+                        result->bytes_reflection += flecs_map_memory_get(
+                            op->is.constants, 0);
+                    }
+                }
+            }
+        }
+    }
+}
+#endif
+
+static
+void flecs_stats_memory_get(
+    const ecs_world_t *world,
+    ecs_misc_memory_t *result)
+{
+    ecs_entity_t periods[] = {
+        EcsPeriod1s, EcsPeriod1m, EcsPeriod1h, EcsPeriod1d, EcsPeriod1w};
+    int32_t p, period_count = 5;
+
+    result->bytes_stats += ECS_SIZEOF(ecs_world_stats_t) * ecs_count_id(world,
+        ecs_pair_t(EcsWorldStats, EcsWildcard));
+
+    for (p = 0; p < period_count; p ++) {
+        ecs_iter_t it = ecs_each_id(world, 
+            ecs_pair_t(EcsSystemStats, periods[p]));
+        while (ecs_each_next(&it)) {
+            EcsSystemStats *ss = ecs_field(&it, EcsSystemStats, 0);
+            int32_t i, count = it.count;
+            for (i = 0; i < count; i ++) {
+                result->bytes_stats += flecs_map_memory_get(&ss[i].stats,
+                    ECS_SIZEOF(ecs_system_stats_t));
+            }
+        }
+    }
+    for (p = 0; p < period_count; p ++) {
+        ecs_iter_t it = ecs_each_id(world, 
+            ecs_pair_t(EcsPipelineStats, periods[p]));
+        while (ecs_each_next(&it)) {
+            EcsPipelineStats *ps = ecs_field(&it, EcsPipelineStats, 0);
+            int32_t i, count = it.count;
+            for (i = 0; i < count; i ++) {
+                result->bytes_stats += flecs_map_memory_get(&ps[i].stats,
+                    ECS_SIZEOF(ecs_pipeline_stats_t));
+
+                ecs_map_iter_t pit = ecs_map_iter(&ps[i].stats);
+                while (ecs_map_next(&pit)) {
+                    ecs_pipeline_stats_t *stats = ecs_map_ptr(&pit);
+                    result->bytes_stats += ecs_vec_size(&stats->systems) * 
+                        ECS_SIZEOF(ecs_entity_t);
+                    result->bytes_stats += ecs_vec_size(&stats->sync_points) * 
+                        ECS_SIZEOF(ecs_sync_stats_t);
+                }
+            }
+        }
+    }
+}
+
+#ifdef FLECS_REST
+static
+void flecs_http_memory_get(
+    ecs_http_server_t *srv,
+    ecs_misc_memory_t *result)
+{
+    result->bytes_rest += ECS_SIZEOF(ecs_http_server_t);
+
+    result->bytes_rest += flecs_sparse_memory_get(&srv->connections, 
+        ECS_SIZEOF(ecs_http_connection_t));
+
+    result->bytes_rest += flecs_sparse_memory_get(&srv->requests, 
+        ECS_SIZEOF(ecs_http_request_t));
+
+    result->bytes_rest += flecs_hashmap_memory_get(&srv->request_cache);
+
+    ecs_map_iter_t it = ecs_map_iter(&srv->request_cache.impl);
+    while (ecs_map_next(&it)) {
+        ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
+        int32_t i, count = ecs_vec_count(&bucket->values);
+        ecs_http_request_key_t *keys = ecs_vec_first(&bucket->keys);
+        ecs_http_request_entry_t *entries = ecs_vec_first(&bucket->values);
+        for (i = count - 1; i >= 0; i --) {
+            ecs_http_request_entry_t *entry = &entries[i];
+            ecs_http_request_key_t *key = &keys[i];
+
+            result->bytes_rest += key->count;
+            if (entry->content) {
+                result->bytes_rest += ecs_os_strlen(entry->content);
+            }
+        }
+    }
+}
+#endif
+
+#ifdef FLECS_REST
+static
+void flecs_rest_memory_get(
+    const ecs_world_t *world,
+    ecs_misc_memory_t *result)
+{
+    ecs_iter_t it = ecs_each(world, EcsRest);
+    while (ecs_each_next(&it)) {
+        EcsRest *r = ecs_field(&it, EcsRest, 0);
+        
+        int32_t i, count = it.count;
+        for (i = 0; i < count; i ++) {
+            result->bytes_rest += ECS_SIZEOF(ecs_rest_ctx_t);
+            if (!r[i].impl) {
+                continue;
+            }
+            flecs_http_memory_get(r[i].impl->srv, result);
+        }
+    }
+}
+#endif
+
+ecs_misc_memory_t ecs_misc_memory_get(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_commands_memory_t result = {0};
+    ecs_misc_memory_t result = {0};
     
-    /* Access stages array from world */
     int32_t stage_count = world->stage_count;
     ecs_stage_t **stages = world->stages;
+
+    result.bytes_world = ECS_SIZEOF(ecs_world_t) + 
+        ECS_SIZEOF(ecs_stage_t) * stage_count +
+        ECS_SIZEOF(ecs_stage_t*) * stage_count;
     
+    result.bytes_observers = flecs_observers_memory_get(world);
+    result.bytes_observers = flecs_observer_index_memory_get(world);
+    flecs_system_memory_get(world, &result);
+    flecs_pipeline_memory_get(world, &result);
+    flecs_rematch_monitor_memory_get(world, &result);
+
+    #ifdef FLECS_META
+        flecs_reflection_memory_get(world, &result);
+    #endif
+    flecs_stats_memory_get(world, &result);
+    #ifdef FLECS_REST
+        flecs_rest_memory_get(world, &result);
+    #endif
+
+    result.bytes_component_ids += 
+        ecs_vec_size(&world->component_ids) * ECS_SIZEOF(ecs_entity_t);
+    
+    result.bytes_table_lookup += 
+        flecs_hashmap_memory_get(&world->store.table_map);
+
+    result.bytes_component_record_lookup += FLECS_HI_ID_RECORD_ID * 
+        ECS_SIZEOF(ecs_component_record_t*);
+
+    result.bytes_component_record_lookup += flecs_map_memory_get(
+        &world->id_index_hi, 0);
+
+    result.bytes_type_info += flecs_map_memory_get(
+        &world->type_info, ECS_SIZEOF(ecs_type_info_t));
+
     /* Iterate through all stages to collect command memory usage */
     for (int32_t i = 0; i < stage_count; i++) {
         ecs_stage_t *stage = stages[i];
@@ -68175,24 +68831,16 @@ ecs_commands_memory_t ecs_commands_memory_get(
             ecs_commands_t *cmd = &stage->cmd_stack[j];
             
             /* Calculate queue memory (ecs_vec_t) */
-            result.bytes_queue += 
+            result.bytes_commands += 
                 ecs_vec_size(&cmd->queue) * ECS_SIZEOF(ecs_cmd_t);
             
             /* Calculate entries memory (ecs_sparse_t) */
             ecs_sparse_t *entries = &cmd->entries;
-            flecs_sparse_memory_get(entries, 0, 
-                &result.bytes_entries, 
-                &result.bytes_entries, 
-                &result.bytes_entries);
-            
+            result.bytes_commands += flecs_sparse_memory_get(entries, 
+                ECS_SIZEOF(ecs_cmd_entry_t));
+
             /* Calculate stack memory (ecs_stack_t) */
-            ecs_stack_t *stack = &cmd->stack;
-            ecs_stack_page_t *page = stack->first;
-            while (page) {
-                result.bytes_stack += 
-                    FLECS_STACK_PAGE_OFFSET + FLECS_STACK_PAGE_SIZE;
-                page = page->next;
-            }
+            result.bytes_commands += flecs_stack_memory_get(&cmd->stack);
         }
     }
 
@@ -68219,21 +68867,37 @@ ecs_allocator_memory_t ecs_allocator_memory_get(
         &world->allocators.table_diff);
     result.bytes_sparse_chunk = flecs_ballocator_memory_get(
         &world->allocators.sparse_chunk);
-    result.bytes_hashmap = flecs_ballocator_memory_get(
-        &world->allocators.hashmap);
 
     result.bytes_allocator = flecs_allocator_memory_get(&world->allocator);
+    result.bytes_misc += ecs_vec_size(&world->allocators.diff_builder.added) *
+        ECS_SIZEOF(ecs_id_t);
+
+    result.bytes_misc += ecs_vec_size(&world->allocators.diff_builder.removed) *
+        ECS_SIZEOF(ecs_id_t);
+    result.bytes_misc += ecs_vec_size(&world->store.records) *
+        ECS_SIZEOF(ecs_table_record_t);
+    result.bytes_misc += ecs_vec_size(&world->store.marked_ids) *
+        ECS_SIZEOF(ecs_marked_id_t);
+    result.bytes_misc += ecs_vec_size(&world->store.deleted_components) *
+        ECS_SIZEOF(ecs_entity_t);
 
     int32_t i, stage_count = world->stage_count;
     ecs_stage_t **stages = world->stages;
     for (i = 0; i < stage_count; i++) {
         ecs_stage_t *stage = stages[i];
+        result.bytes_allocator += flecs_allocator_memory_get(&stage->allocator);
         result.bytes_cmd_entry_chunk += flecs_ballocator_memory_get(
             &stage->allocators.cmd_entry_chunk);
         result.bytes_query_impl += flecs_ballocator_memory_get(
             &stage->allocators.query_impl);
         result.bytes_query_cache += flecs_ballocator_memory_get(
             &stage->allocators.query_cache);
+        result.bytes_misc += ecs_vec_size(&stage->variables) * 
+            ECS_SIZEOF(ecs_query_var_t);
+        result.bytes_misc += ecs_vec_size(&stage->operations) * 
+            ECS_SIZEOF(ecs_query_op_t);
+        result.bytes_stack_allocator += 
+            flecs_stack_memory_get(&stage->allocators.iter_stack);
     }
 
 error:
@@ -68252,17 +68916,18 @@ int flecs_world_memory_serialize(
     flecs_poly_assert(world, ecs_world_t);
 
     EcsWorldMemory value;
+    ecs_os_zeromem(&value);
 
     ecs_time_t t = {0};
     ecs_time_measure(&t);
     
-    value.entities = ecs_entity_index_memory_get(world);
+    value.entities = ecs_entity_memory_get(world);
     value.components = ecs_component_memory_get(world);
     value.component_index = ecs_component_index_memory_get(world);
-    value.query = ecs_query_memory_get(world);
-    value.table = ecs_table_memory_get(world);
+    value.queries = ecs_queries_memory_get(world);
+    value.tables = ecs_tables_memory_get(world);
     value.table_histogram = ecs_table_histogram_get(world);
-    value.commands = ecs_commands_memory_get(world);
+    value.misc = ecs_misc_memory_get(world);
     value.allocators = ecs_allocator_memory_get(world);
     
     /* Use component IDs directly */
@@ -68272,14 +68937,14 @@ int flecs_world_memory_serialize(
     s->value(s, ecs_id(ecs_component_memory_t), &value.components);
     s->member(s, "component_index");
     s->value(s, ecs_id(ecs_component_index_memory_t), &value.component_index);
-    s->member(s, "query");
-    s->value(s, ecs_id(ecs_query_memory_t), &value.query);
-    s->member(s, "table");
-    s->value(s, ecs_id(ecs_table_memory_t), &value.table);
+    s->member(s, "queries");
+    s->value(s, ecs_id(ecs_query_memory_t), &value.queries);
+    s->member(s, "tables");
+    s->value(s, ecs_id(ecs_table_memory_t), &value.tables);
     s->member(s, "table_histogram");
     s->value(s, ecs_id(ecs_table_histogram_t), &value.table_histogram);
-    s->member(s, "commands");
-    s->value(s, ecs_id(ecs_commands_memory_t), &value.commands);
+    s->member(s, "misc");
+    s->value(s, ecs_id(ecs_misc_memory_t), &value.misc);
     s->member(s, "allocators");
     s->value(s, ecs_id(ecs_allocator_memory_t), &value.allocators);
 
@@ -68307,11 +68972,20 @@ void flecs_stats_memory_register_reflection(
         .members = {
             { .name = "alive_count", .type = ecs_id(ecs_i32_t) },
             { .name = "not_alive_count", .type = ecs_id(ecs_i32_t) },
-            { .name = "bytes_alive", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_not_alive", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_unused", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_entity_index", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_names", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_doc_names", .type = ecs_id(ecs_i32_t), .unit = unit }
+            { .name = "bytes_doc_strings", .type = ecs_id(ecs_i32_t), .unit = unit }
+        }
+    });
+
+    ecs_id(ecs_component_memory_t) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "component_memory_t" }),
+        .members = {
+            { .name = "instances", .type = ecs_id(ecs_i32_t) },
+            { .name = "bytes_table_components", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_table_components_unused", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_toggle_bitset", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_sparse_components", .type = ecs_id(ecs_i32_t), .unit = unit }
         }
     });
 
@@ -68323,8 +68997,7 @@ void flecs_stats_memory_register_reflection(
             { .name = "bytes_table_cache", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_name_index", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_ordered_children", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_reachable_cache", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_type_info", .type = ecs_id(ecs_i32_t), .unit = unit }
+            { .name = "bytes_reachable_cache", .type = ecs_id(ecs_i32_t), .unit = unit }
         }
     });
 
@@ -68343,20 +69016,6 @@ void flecs_stats_memory_register_reflection(
         }
     });
 
-    ecs_id(ecs_component_memory_t) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "component_memory_t" }),
-        .members = {
-            { .name = "instances", .type = ecs_id(ecs_i32_t) },
-            { .name = "bytes_table_components", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_table_components_unused", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_table_bitset", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_sparse_components", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_sparse_components_unused", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_sparse_overhead", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_builtin", .type = ecs_id(ecs_i32_t), .unit = unit }
-        }
-    });
-
     ecs_id(ecs_table_memory_t) = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "table_memory_t" }),
         .members = {
@@ -68364,7 +69023,6 @@ void flecs_stats_memory_register_reflection(
             { .name = "empty_count", .type = ecs_id(ecs_i32_t) },
             { .name = "column_count", .type = ecs_id(ecs_i32_t) },
             { .name = "bytes_table", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_table_overhead", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_type", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_entities", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_overrides", .type = ecs_id(ecs_i32_t), .unit = unit },
@@ -68384,12 +69042,22 @@ void flecs_stats_memory_register_reflection(
         }
     });
 
-    ecs_id(ecs_commands_memory_t) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "commands_memory_t" }),
+    ecs_id(ecs_misc_memory_t) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "misc_memory_t" }),
         .members = {
-            { .name = "bytes_queue", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_entries", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_stack", .type = ecs_id(ecs_i32_t), .unit = unit }
+            { .name = "bytes_world", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_observers", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_systems", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_pipelines", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_table_lookup", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_component_record_lookup", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_type_info", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_commands", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_rematch_monitor", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_component_ids", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_reflection", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_stats", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_rest", .type = ecs_id(ecs_i32_t), .unit = unit },
         }
     });
 
@@ -68401,11 +69069,12 @@ void flecs_stats_memory_register_reflection(
             { .name = "bytes_pair_record", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_table_diff", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_sparse_chunk", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_hashmap", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_allocator", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_stack_allocator", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_cmd_entry_chunk", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_query_impl", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_query_cache", .type = ecs_id(ecs_i32_t), .unit = unit }
+            { .name = "bytes_query_cache", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_misc", .type = ecs_id(ecs_i32_t), .unit = unit }
         }
     });
 
@@ -68415,10 +69084,10 @@ void flecs_stats_memory_register_reflection(
             { .name = "entities", .type = ecs_id(ecs_entities_memory_t) },
             { .name = "components", .type = ecs_id(ecs_component_memory_t) },
             { .name = "component_index", .type = ecs_id(ecs_component_index_memory_t) },
-            { .name = "query", .type = ecs_id(ecs_query_memory_t) },
-            { .name = "table", .type = ecs_id(ecs_table_memory_t) },
+            { .name = "queries", .type = ecs_id(ecs_query_memory_t) },
+            { .name = "tables", .type = ecs_id(ecs_table_memory_t) },
             { .name = "table_histogram", .type = ecs_id(ecs_table_histogram_t) },
-            { .name = "commands", .type = ecs_id(ecs_commands_memory_t) },
+            { .name = "misc", .type = ecs_id(ecs_misc_memory_t) },
             { .name = "allocators", .type = ecs_id(ecs_allocator_memory_t) },
             { .name = "collection_time", .type = ecs_id(ecs_f32_t) }
         }
@@ -68430,6 +69099,83 @@ void flecs_stats_memory_register_reflection(
         .type.serialize = flecs_world_memory_serialize
     });
 #endif
+}
+
+static
+ecs_size_t flecs_get_memory_total(
+    const ecs_world_t *world,
+    const void *ptr,
+    ecs_entity_t type)
+{
+    (void)world;
+    (void)ptr;
+    (void)type;
+
+    if (!type) {
+        ecs_warn("import flecs.stats module before calling ecs_memory_get");
+        return 0;
+    }
+
+    ecs_size_t result = 0;
+#ifdef FLECS_META
+    const EcsTypeSerializer *s = ecs_get(world, type, EcsTypeSerializer);
+    ecs_meta_op_t *ops = ecs_vec_first(&s->ops);
+    int32_t i, count = ecs_vec_count(&s->ops);
+
+    for (i = 0; i < count; i ++) {
+        ecs_meta_op_t *op = &ops[i];
+        if (!op->name) {
+            continue;
+        }
+
+        if (!ecs_os_strncmp(op->name, "bytes_", 6)) {
+            result += *(ecs_size_t*)ECS_OFFSET(ptr, op->offset);
+        }
+    }
+#else
+    ecs_warn("FLECS_META addon required for ecs_memory_get");
+#endif
+
+    return result;
+}
+
+ecs_size_t ecs_memory_get(
+    const ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    
+    ecs_entities_memory_t entities = {0};
+    ecs_component_memory_t component = {0};
+    ecs_component_index_memory_t component_index = {0};
+    ecs_query_memory_t query = {0};
+    ecs_table_memory_t table = {0};
+    ecs_misc_memory_t misc = {0};
+    ecs_allocator_memory_t allocator = {0};
+
+    entities = ecs_entity_memory_get(world);
+    component = ecs_component_memory_get(world);
+    component_index = ecs_component_index_memory_get(world);
+    query = ecs_queries_memory_get(world);
+    table = ecs_tables_memory_get(world);
+    misc = ecs_misc_memory_get(world);
+    allocator = ecs_allocator_memory_get(world);
+
+    ecs_size_t result = 0;
+    result += flecs_get_memory_total(world, &entities, 
+        ecs_id(ecs_entities_memory_t));
+    result += flecs_get_memory_total(world, &component, 
+        ecs_id(ecs_component_memory_t));
+    result += flecs_get_memory_total(world, &component_index, 
+        ecs_id(ecs_component_index_memory_t));
+    result += flecs_get_memory_total(world, &query, 
+        ecs_id(ecs_query_memory_t));
+    result += flecs_get_memory_total(world, &table, 
+        ecs_id(ecs_table_memory_t));
+    result += flecs_get_memory_total(world, &misc, 
+        ecs_id(ecs_misc_memory_t));
+    result += flecs_get_memory_total(world, &allocator, 
+        ecs_id(ecs_allocator_memory_t));
+    return result;
 }
 
 #endif
@@ -82191,7 +82937,7 @@ void flecs_add_enum(ecs_iter_t *it) {
         const EcsComponent *uc = ecs_get(world, underlying_type, EcsComponent);
         if (!uc) {
             char *str = ecs_get_path(world, underlying_type);
-            ecs_err("uderlying_type entity for enum '%s' is not a type", str);
+            ecs_err("underlying_type entity for enum '%s' is not a type", str);
             ecs_os_free(str);
             continue;
         }

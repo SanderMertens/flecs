@@ -45,11 +45,20 @@ extern "C" {
 /** Component that instantiates the REST API. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsRest);
 
+/** Private REST data. */
+typedef struct {
+    ecs_world_t *world;
+    ecs_http_server_t *srv;
+    int32_t rc;
+    ecs_map_t cmd_captures;
+    double last_time;
+} ecs_rest_ctx_t;
+
 /** Component that creates a REST API server when instantiated. */
 typedef struct {
     uint16_t port;      /**< Port of server (optional, default = 27750) */
     char *ipaddr;       /**< Interface address (optional, default = 0.0.0.0) */
-    void *impl;
+    ecs_rest_ctx_t *impl;
 } EcsRest;
 
 /** Create HTTP server for REST API.
