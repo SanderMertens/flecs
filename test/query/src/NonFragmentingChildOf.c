@@ -4452,6 +4452,42 @@ void NonFragmentingChildOf_this_src_1_table_1_child(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_this_src_1_table_1_child_w_expr(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_set_name(world, p, "p");
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_add(world, e, Foo);
+
+    printf("\n\n\n");
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(ChildOf, p)",
+        // .terms = {{ ecs_childof(p) }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    printf("%s\n", ecs_query_plan(q));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_childof(p), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_this_src_1_table_2_children(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -4876,6 +4912,8 @@ void NonFragmentingChildOf_this_src_written_1_table_2_children(void) {
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
+
+    ecs_set_name(world, p, "p");
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ Foo }, { ecs_childof(p) }},

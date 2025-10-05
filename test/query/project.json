@@ -2342,6 +2342,7 @@
                 "this_src_childof_0",
                 "this_src_1_table_no_children",
                 "this_src_1_table_1_child",
+                "this_src_1_table_1_child_w_expr",
                 "this_src_1_table_2_children",
                 "this_src_1_table_2_children_mixed_parents",
                 "this_src_1_table_n_children_mixed_parents",
