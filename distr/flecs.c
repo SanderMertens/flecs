@@ -36873,6 +36873,13 @@ int flecs_query_finalize_terms(
                     ECS_BIT_CLEAR(q->flags, EcsQueryMatchOnlySelf);
                 }
 
+                if (ECS_TERM_REF_ID(&term->first) == EcsChildOf) {
+                    if (ECS_TERM_REF_ID(&term->second) != 0) {
+                        is_trivial = false;
+                        continue;
+                    }
+                }
+
                 if (!(term->flags_ & EcsTermIsTrivial)) {
                     is_trivial = false;
                     continue;
@@ -37140,9 +37147,12 @@ bool flecs_query_finalize_simple(
 
         if (ECS_IS_PAIR(id)) {
             if (first == EcsChildOf) {
-                trivial = false;
-                if (ECS_PAIR_SECOND(id) != EcsWildcard) {
-                    cacheable = false;
+                ecs_entity_t second = ECS_PAIR_SECOND(id);
+                if (second) {
+                    trivial = false;
+                    if (ECS_PAIR_SECOND(id) != EcsWildcard) {
+                        cacheable = false;
+                    }
                 }
             }
 
