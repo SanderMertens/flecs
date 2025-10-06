@@ -993,20 +993,6 @@ int flecs_query_compile(
             }
 
             compiled |= (1ull << compile);
-
-            /* If this is the last term and it's a Tree instruction, replace it 
-             * with Children. If the queried for parent has the OrderedChildren
-             * trait, the Children instruction will return the array with child
-             * entities vs. returning children one by one. */
-            if (term_count == 1) {
-                ecs_query_op_t *op = ecs_vec_last_t(ctx.ops, ecs_query_op_t);
-                ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
-                if (op->kind == EcsQueryTree) {
-                    op->kind = EcsQueryChildren;
-                } else if (op->kind == EcsQueryTreeWildcard) {
-                    op->kind = EcsQueryChildrenWc;
-                }
-            }
         }
 
         if (start_term) {
@@ -1015,6 +1001,20 @@ int flecs_query_compile(
             break;
         }
     } while (true);
+
+    /* If this is the last term and it's a Tree instruction, replace it 
+     * with Children. If the queried for parent has the OrderedChildren
+     * trait, the Children instruction will return the array with child
+     * entities vs. returning children one by one. */
+    if (term_count == 1 && ecs_vec_count(ctx.ops)) {
+        ecs_query_op_t *op = ecs_vec_last_t(ctx.ops, ecs_query_op_t);
+        ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (op->kind == EcsQueryTree) {
+            op->kind = EcsQueryChildren;
+        } else if (op->kind == EcsQueryTreeWildcard) {
+            op->kind = EcsQueryChildrenWc;
+        }
+    }
 
     ecs_var_id_t this_id = flecs_query_find_var_id(query, "this", EcsVarEntity);
     if (this_id != EcsVarNone) {

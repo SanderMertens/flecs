@@ -1743,7 +1743,7 @@ void SerializeIterToRowJson_serialize_scope(void) {
      *       hiding fields within scopes yet. This test is just here to make
      *       the serializer doesn't crash, and will be updated after the query
      *       refactor. */
-    char* expect = "{\"results\":[{\"name\":\"e1\", \"vars\":{\"child\":\"*\"},\"fields\":{\"is_set\":[true, false, true, true, false, true], \"ids\":[0, 0, [\"flecs.core.ChildOf\",\"e1\"], 0, 0, 0]}}, {\"name\":\"e3\", \"vars\":{\"child\":\"*\"},\"fields\":{\"is_set\":[true, false, true, true, false, true], \"ids\":[0, 0, [\"flecs.core.ChildOf\",\"e2\"], 0, 0, 0]}}]}";
+    char* expect = "{\"results\":[{\"name\":\"e1\", \"vars\":{\"child\":\"*\"},\"fields\":{\"is_set\":[true, false, true, true, false, true], \"ids\":[0, 0, [\"flecs.core.ChildOf\",\"e1\"], 0, 0, 0]}}, {\"name\":\"e3\", \"vars\":{\"child\":\"*\"},\"fields\":{\"is_set\":[true, false, true, true, false, true], \"ids\":[0, 0, [\"flecs.core.ChildOf\",\"e3\"], 0, 0, 0]}}]}";
     
     test_json(json, expect);
 

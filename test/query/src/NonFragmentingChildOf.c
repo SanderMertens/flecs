@@ -5017,8 +5017,6 @@ void NonFragmentingChildOf_this_src_written_1_table_2_children(void) {
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
 
-    ecs_set_name(world, p, "p");
-
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ Foo }, { ecs_childof(p) }},
         .cache_kind = cache_kind
