@@ -66019,7 +66019,7 @@ ecs_entity_t flecs_script_get_src(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    if (entity == EcsVariable) { // Singleton ($)
+    if (entity == EcsVariable) {
         if (ECS_IS_PAIR(id)) {
             return ecs_pair_first(v->world, id);
         } else {

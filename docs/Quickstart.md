@@ -1480,7 +1480,7 @@ ecs_query_t *q = ecs_query(world, {
 });
 
 // Create a system using the query DSL with a singleton:
-ECS_SYSTEM(world, ApplyGravity, EcsOnUpdate, Velocity, Gravity($));
+ECS_SYSTEM(world, ApplyGravity, EcsOnUpdate, Velocity, Gravity);
 ```
 </li>
 <li><b class="tab-title">C++</b>
