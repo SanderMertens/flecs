@@ -1552,7 +1552,8 @@ int32_t flecs_table_grow_data(
     ecs_vec_t v_entities = ecs_vec_from_entities(table);
     ecs_vec_set_size_t(&world->allocator, &v_entities, ecs_entity_t, size);
 
-    ecs_entity_t *e = ecs_vec_last_t(&v_entities, ecs_entity_t) + 1;
+    ecs_entity_t *e = ECS_ELEM_T(
+        v_entities.array, ecs_entity_t, v_entities.count);
     v_entities.count += to_add;
     if (v_entities.size > size) {
         size = v_entities.size;

@@ -105,6 +105,7 @@ bool flecs_query_tree_select(
     return flecs_query_tree_select_tgt(op, redo, ctx);
 }
 
+static
 bool flecs_query_tree_select_any(
     const ecs_query_op_t *op,
     bool redo,
@@ -145,11 +146,13 @@ next:
         it->ids[field_index] = ecs_pair(EcsChildOf, EcsWildcard);
         return true;
     }
+    case EcsQueryTreeIterNext:
     default:
         return false;
     }
 }
 
+static
 bool flecs_query_tree_select_wildcard(
     const ecs_query_op_t *op,
     bool redo,
@@ -423,6 +426,7 @@ bool flecs_query_children(
     ecs_entity_t tgt = ECS_PAIR_SECOND(id);
     ecs_assert(tgt != EcsWildcard, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(tgt != EcsAny, ECS_INTERNAL_ERROR, NULL);
+    (void)tgt;
 
     ecs_component_record_t *cr = flecs_components_get(ctx->world, id);
     if (!cr) {
