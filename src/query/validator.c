@@ -1487,6 +1487,7 @@ int flecs_query_finalize_terms(
                 }
 
                 if (ECS_TERM_REF_ID(&term->first) == EcsChildOf) {
+                    printf("not cacheable? %s\n", ecs_id_str(world, ECS_TERM_REF_ID(&term->first)));
                     if (ECS_TERM_REF_ID(&term->second) != EcsAny) {
                         if (term->flags_ & EcsTermIsCacheable) {
                             term->flags_ &= ~EcsTermIsCacheable;
@@ -1770,6 +1771,7 @@ bool flecs_query_finalize_simple(
                 if (second) {
                     trivial = false;
                     if (ECS_PAIR_SECOND(id) != EcsAny) {
+                        printf("not cacheable! %s\n", ecs_id_str(world, id));
                         cacheable = false;
                     }
                 }
