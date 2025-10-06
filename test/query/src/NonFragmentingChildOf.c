@@ -3738,46 +3738,90 @@ void NonFragmentingChildOf_this_src_childof_wildcard_w_tag(void) {
         test_assert(q != NULL);
 
         ecs_iter_t it = ecs_query_iter(world, q);
-        test_bool(true, ecs_query_next(&it));
-        test_int(2, it.count);
-        test_uint(c9, it.entities[0]);
-        test_uint(c10, it.entities[1]);
-        test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(c11, it.entities[0]);
-        test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        if (cache_kind == EcsQueryCacheAuto) {
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c2, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c3, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(c2, it.entities[0]);
-        test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c4, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(c3, it.entities[0]);
-        test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(c9, it.entities[0]);
+            test_uint(c10, it.entities[1]);
+            test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(c4, it.entities[0]);
-        test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c11, it.entities[0]);
+            test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+        } else {
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(c9, it.entities[0]);
+            test_uint(c10, it.entities[1]);
+            test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c11, it.entities[0]);
+            test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c2, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c3, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c4, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+        }
 
         test_bool(false, ecs_query_next(&it));
 
@@ -3833,66 +3877,131 @@ void NonFragmentingChildOf_this_src_childof_wildcard_w_component(void) {
         test_assert(q != NULL);
 
         ecs_iter_t it = ecs_query_iter(world, q);
-        test_bool(true, ecs_query_next(&it));
-        test_int(2, it.count);
-        test_uint(c9, it.entities[0]);
-        test_uint(c10, it.entities[1]);
-        test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        {
-            Position *p = ecs_field(&it, Position, 1);
-            test_int(p[0].x, 5); test_int(p[0].y, 6);
-            test_int(p[1].x, 6); test_int(p[1].y, 7);
-        }
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(c11, it.entities[0]);
-        test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        {
-            Position *p = ecs_field(&it, Position, 1);
-            test_int(p[0].x, 7); test_int(p[0].y, 8);
-        }
+        if (cache_kind == EcsQueryCacheAuto) {
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c2, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            {
+                Position *p = ecs_field(&it, Position, 1);
+                test_int(p[0].x, 1); test_int(p[0].y, 2);
+            }
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(c2, it.entities[0]);
-        test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        {
-            Position *p = ecs_field(&it, Position, 1);
-            test_int(p[0].x, 1); test_int(p[0].y, 2);
-        }
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c3, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            {
+                Position *p = ecs_field(&it, Position, 1);
+                test_int(p[0].x, 2); test_int(p[0].y, 3);
+            }
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(c3, it.entities[0]);
-        test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        {
-            Position *p = ecs_field(&it, Position, 1);
-            test_int(p[0].x, 2); test_int(p[0].y, 3);
-        }
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c4, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            {
+                Position *p = ecs_field(&it, Position, 1);
+                test_int(p[0].x, 3); test_int(p[0].y, 4);
+            }
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(c4, it.entities[0]);
-        test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        {
-            Position *p = ecs_field(&it, Position, 1);
-            test_int(p[0].x, 3); test_int(p[0].y, 4);
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(c9, it.entities[0]);
+            test_uint(c10, it.entities[1]);
+            test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            {
+                Position *p = ecs_field(&it, Position, 1);
+                test_int(p[0].x, 5); test_int(p[0].y, 6);
+                test_int(p[1].x, 6); test_int(p[1].y, 7);
+            }
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c11, it.entities[0]);
+            test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            {
+                Position *p = ecs_field(&it, Position, 1);
+                test_int(p[0].x, 7); test_int(p[0].y, 8);
+            }
+        } else {
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(c9, it.entities[0]);
+            test_uint(c10, it.entities[1]);
+            test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            {
+                Position *p = ecs_field(&it, Position, 1);
+                test_int(p[0].x, 5); test_int(p[0].y, 6);
+                test_int(p[1].x, 6); test_int(p[1].y, 7);
+            }
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c11, it.entities[0]);
+            test_uint(ecs_childof(p3), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            {
+                Position *p = ecs_field(&it, Position, 1);
+                test_int(p[0].x, 7); test_int(p[0].y, 8);
+            }
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c2, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            {
+                Position *p = ecs_field(&it, Position, 1);
+                test_int(p[0].x, 1); test_int(p[0].y, 2);
+            }
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c3, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            {
+                Position *p = ecs_field(&it, Position, 1);
+                test_int(p[0].x, 2); test_int(p[0].y, 3);
+            }
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(c4, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            {
+                Position *p = ecs_field(&it, Position, 1);
+                test_int(p[0].x, 3); test_int(p[0].y, 4);
+            }
         }
 
         test_bool(false, ecs_query_next(&it));
@@ -4463,17 +4572,12 @@ void NonFragmentingChildOf_this_src_1_table_1_child_w_expr(void) {
     ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e, Foo);
 
-    printf("\n\n\n");
-
     ecs_query_t *q = ecs_query(world, {
         .expr = "(ChildOf, p)",
-        // .terms = {{ ecs_childof(p) }},
         .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
-
-    printf("%s\n", ecs_query_plan(q));
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
@@ -5333,21 +5437,40 @@ void NonFragmentingChildOf_this_src_1_table_2_children_mixed_parents_w_tag_w_wil
         test_assert(q != NULL);
 
         ecs_iter_t it = ecs_query_iter(world, q);
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e2, it.entities[0]);
-        test_uint(ecs_childof(p2), ecs_field_id(&it, 0));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e1, it.entities[0]);
-        test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        if (cache_kind == EcsQueryCacheAuto) {
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e1, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e2, it.entities[0]);
+            test_uint(ecs_childof(p2), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+        } else {
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e2, it.entities[0]);
+            test_uint(ecs_childof(p2), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e1, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+        }
 
         test_bool(false, ecs_query_next(&it));
 
@@ -5381,37 +5504,71 @@ void NonFragmentingChildOf_this_src_1_table_n_children_mixed_parents_w_tag_w_wil
         test_assert(q != NULL);
 
         ecs_iter_t it = ecs_query_iter(world, q);
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e2, it.entities[0]);
-        test_uint(ecs_childof(p2), ecs_field_id(&it, 0));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        if (cache_kind == EcsQueryCacheAuto) {
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e1, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e4, it.entities[0]);
-        test_uint(ecs_childof(p2), ecs_field_id(&it, 0));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e2, it.entities[0]);
+            test_uint(ecs_childof(p2), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e1, it.entities[0]);
-        test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e3, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e3, it.entities[0]);
-        test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e4, it.entities[0]);
+            test_uint(ecs_childof(p2), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+        } else {
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e2, it.entities[0]);
+            test_uint(ecs_childof(p2), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e4, it.entities[0]);
+            test_uint(ecs_childof(p2), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e1, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e3, it.entities[0]);
+            test_uint(ecs_childof(p1), ecs_field_id(&it, 0));
+            test_uint(Foo, ecs_field_id(&it, 1));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 1));
+        }
 
         test_bool(false, ecs_query_next(&it));
 
