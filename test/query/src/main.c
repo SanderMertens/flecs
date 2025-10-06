@@ -758,14 +758,17 @@ void Plan_2_trivial_plan_component(void);
 void Plan_3_trivial_plan_w_pair(void);
 void Plan_3_trivial_plan_w_wildcard(void);
 void Plan_3_trivial_plan_w_any(void);
+void Plan_3_trivial_plan_w_pair_childof(void);
 void Plan_3_trivial_plan_w_wildcard_childof(void);
 void Plan_3_trivial_plan_w_any_childof(void);
 void Plan_3_trivial_plan_w_pair_component(void);
 void Plan_3_trivial_plan_w_wildcard_component(void);
 void Plan_3_trivial_plan_w_pair_component_childof(void);
 void Plan_3_trivial_plan_w_wildcard_component_childof(void);
+void Plan_3_trivial_plan_w_any_component_childof(void);
 void Plan_3_trivial_plan_w_any_component(void);
 void Plan_3_trivial_plan_w_any_cached(void);
+void Plan_3_trivial_plan_w_any_cached_no_expr(void);
 void Plan_1_trivial_component_w_none(void);
 void Plan_2_trivial_component_w_none(void);
 void Plan_2_trivial_plan_w_wildcard(void);
@@ -5417,6 +5420,10 @@ bake_test_case Plan_testcases[] = {
         Plan_3_trivial_plan_w_any
     },
     {
+        "3_trivial_plan_w_pair_childof",
+        Plan_3_trivial_plan_w_pair_childof
+    },
+    {
         "3_trivial_plan_w_wildcard_childof",
         Plan_3_trivial_plan_w_wildcard_childof
     },
@@ -5441,12 +5448,20 @@ bake_test_case Plan_testcases[] = {
         Plan_3_trivial_plan_w_wildcard_component_childof
     },
     {
+        "3_trivial_plan_w_any_component_childof",
+        Plan_3_trivial_plan_w_any_component_childof
+    },
+    {
         "3_trivial_plan_w_any_component",
         Plan_3_trivial_plan_w_any_component
     },
     {
         "3_trivial_plan_w_any_cached",
         Plan_3_trivial_plan_w_any_cached
+    },
+    {
+        "3_trivial_plan_w_any_cached_no_expr",
+        Plan_3_trivial_plan_w_any_cached_no_expr
     },
     {
         "1_trivial_component_w_none",
@@ -12164,7 +12179,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        93,
+        96,
         Plan_testcases
     },
     {
