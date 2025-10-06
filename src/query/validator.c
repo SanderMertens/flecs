@@ -929,16 +929,18 @@ int flecs_term_finalize(
         trivial_term = false;
     }
 
+    if (ECS_IS_PAIR(term->id) && (ECS_PAIR_FIRST(term->id) == EcsChildOf)) {
+        if (ECS_PAIR_SECOND(term->id) != EcsAny) {
+            cacheable_term = false;
+        }
+        if (ECS_PAIR_SECOND(term->id)) {
+            trivial_term = false;
+        }
+    }
+
     if (ecs_id_is_wildcard(term->id)) {
         if (ECS_PAIR_FIRST(term->id) == EcsWildcard) {
             cacheable_term = false;
-            trivial_term = false;
-        }
-
-        if (ECS_PAIR_FIRST(term->id) == EcsChildOf) {
-            if (ECS_PAIR_SECOND(term->id) != EcsWildcard) {
-                cacheable_term = false;
-            }
             trivial_term = false;
         }
 
@@ -1487,10 +1489,9 @@ int flecs_query_finalize_terms(
                 }
 
                 if (ECS_TERM_REF_ID(&term->first) == EcsChildOf) {
-                    printf("not cacheable? %s\n", ecs_id_str(world, ECS_TERM_REF_ID(&term->first)));
                     if (ECS_TERM_REF_ID(&term->second) != EcsAny) {
                         if (term->flags_ & EcsTermIsCacheable) {
-                            term->flags_ &= ~EcsTermIsCacheable;
+                            term->flags_ &= (ecs_flags16_t)~EcsTermIsCacheable;
                             cacheable_terms --;
                         }
                     }
@@ -1771,7 +1772,6 @@ bool flecs_query_finalize_simple(
                 if (second) {
                     trivial = false;
                     if (ECS_PAIR_SECOND(id) != EcsAny) {
-                        printf("not cacheable! %s\n", ecs_id_str(world, id));
                         cacheable = false;
                     }
                 }
