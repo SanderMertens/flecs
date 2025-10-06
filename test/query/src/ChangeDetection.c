@@ -3345,6 +3345,62 @@ void ChangeDetection_detect_w_group_by(void) {
     ecs_fini(world);
 }
 
+void ChangeDetection_detect_w_childof_self(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) }, 
+            { ecs_childof(EcsAny), .src.id = EcsSelf }
+        },
+        .flags = EcsQueryDetectChanges
+    });
+
+    test_assert(q != NULL);
+
+    printf("%s\n", ecs_query_plan(q));
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_set(world, e3, Position, {50, 60});
+
+    test_bool(ecs_query_changed(q), true);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it));
+    }
+
+    test_bool(ecs_query_changed(q), false);
+
+    ecs_set(world, e1, Position, {1, 2});
+
+    test_bool(ecs_query_changed(q), false);
+
+    ecs_set(world, e2, Position, {1, 2});
+
+    test_bool(ecs_query_changed(q), true);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void ChangeDetection_detect_w_childof_up(void) {
+    // Implement testcase
+}
+
+void ChangeDetection_detect_w_childof_self_up(void) {
+    // Implement testcase
+}
+
 void ChangeDetection_detect_w_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -3353,12 +3409,14 @@ void ChangeDetection_detect_w_cascade(void) {
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { ecs_id(Position) }, 
-            { ecs_childof(EcsWildcard), .src.id = EcsSelf|EcsCascade }
+            { ecs_childof(EcsAny), .src.id = EcsSelf|EcsCascade }
         },
         .flags = EcsQueryDetectChanges
     });
 
     test_assert(q != NULL);
+
+    printf("%s\n", ecs_query_plan(q));
 
     ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
@@ -3475,6 +3533,54 @@ void ChangeDetection_detect_w_cascade_desc(void) {
     }
 
     test_bool(ecs_query_changed(q), false);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void ChangeDetection_detect_partially_cached(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) }, 
+            { ecs_id(Velocity), .src.id = EcsSelf }
+        },
+        .flags = EcsQueryDetectChanges
+    });
+
+    test_assert(q != NULL);
+
+    printf("%s\n", ecs_query_plan(q));
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_entity_t e2 = ecs_new_w(world, Velocity);
+    ecs_set(world, e2, Position, {30, 40});
+
+    test_bool(ecs_query_changed(q), true);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it));
+    }
+
+    test_bool(ecs_query_changed(q), false);
+
+    ecs_set(world, e1, Position, {1, 2});
+
+    test_bool(ecs_query_changed(q), false);
+
+    ecs_set(world, e2, Position, {1, 2});
+
+    test_bool(ecs_query_changed(q), true);
 
     ecs_query_fini(q);
 

@@ -1805,8 +1805,12 @@ void ChangeDetection_detect_w_fixed_test(void);
 void ChangeDetection_detect_w_wildcard_search(void);
 void ChangeDetection_detect_w_wildcard_test(void);
 void ChangeDetection_detect_w_group_by(void);
+void ChangeDetection_detect_w_childof_self(void);
+void ChangeDetection_detect_w_childof_up(void);
+void ChangeDetection_detect_w_childof_self_up(void);
 void ChangeDetection_detect_w_cascade(void);
 void ChangeDetection_detect_w_cascade_desc(void);
+void ChangeDetection_detect_partially_cached(void);
 
 // Testsuite 'GroupBy'
 void GroupBy_group_by(void);
@@ -9522,12 +9526,28 @@ bake_test_case ChangeDetection_testcases[] = {
         ChangeDetection_detect_w_group_by
     },
     {
+        "detect_w_childof_self",
+        ChangeDetection_detect_w_childof_self
+    },
+    {
+        "detect_w_childof_up",
+        ChangeDetection_detect_w_childof_up
+    },
+    {
+        "detect_w_childof_self_up",
+        ChangeDetection_detect_w_childof_self_up
+    },
+    {
         "detect_w_cascade",
         ChangeDetection_detect_w_cascade
     },
     {
         "detect_w_cascade_desc",
         ChangeDetection_detect_w_cascade_desc
+    },
+    {
+        "detect_partially_cached",
+        ChangeDetection_detect_partially_cached
     }
 };
 
@@ -12233,7 +12253,7 @@ static bake_test_suite suites[] = {
         "ChangeDetection",
         NULL,
         NULL,
-        67,
+        71,
         ChangeDetection_testcases
     },
     {

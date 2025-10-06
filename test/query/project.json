@@ -1871,8 +1871,12 @@
                 "detect_w_wildcard_search",
                 "detect_w_wildcard_test",
                 "detect_w_group_by",
+                "detect_w_childof_self",
+                "detect_w_childof_up",
+                "detect_w_childof_self_up",
                 "detect_w_cascade",
-                "detect_w_cascade_desc"
+                "detect_w_cascade_desc",
+                "detect_partially_cached"
             ]
         }, {
             "id": "GroupBy",
