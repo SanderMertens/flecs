@@ -166,7 +166,7 @@ typedef struct {
 typedef struct {
     ecs_query_and_ctx_t and_; /* For mixed results */
     ecs_component_record_t *cr;
-    uint32_t tgt;
+    ecs_entity_t tgt;
     ecs_entity_t *entities;
     const EcsParent *parents;
     ecs_table_range_t range;
