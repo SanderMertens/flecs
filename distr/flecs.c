@@ -36971,6 +36971,12 @@ int flecs_query_finalize_terms(
                 }
 
                 if (ECS_TERM_REF_ID(&term->first) == EcsChildOf) {
+                    if (ECS_TERM_REF_ID(&term->second) != EcsAny) {
+                        if (term->flags_ & EcsTermIsCacheable) {
+                            term->flags_ &= ~EcsTermIsCacheable;
+                            cacheable_terms --;
+                        }
+                    }
                     if (ECS_TERM_REF_ID(&term->second) != 0) {
                         is_trivial = false;
                         continue;
@@ -37247,7 +37253,7 @@ bool flecs_query_finalize_simple(
                 ecs_entity_t second = ECS_PAIR_SECOND(id);
                 if (second) {
                     trivial = false;
-                    if (ECS_PAIR_SECOND(id) != EcsWildcard) {
+                    if (ECS_PAIR_SECOND(id) != EcsAny) {
                         cacheable = false;
                     }
                 }
