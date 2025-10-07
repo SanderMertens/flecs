@@ -1589,6 +1589,9 @@ FLECS_API extern const ecs_id_t ECS_AUTO_OVERRIDE;
 /** Adds bitset to storage which allows component to be enabled/disabled */
 FLECS_API extern const ecs_id_t ECS_TOGGLE;
 
+/** Indicates that the target of a pair is an integer value. */
+FLECS_API extern const ecs_id_t ECS_VALUE_PAIR;
+
 /** @} */
 
 /**
