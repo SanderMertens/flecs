@@ -1692,7 +1692,9 @@
                 "cascade_w_optional",
                 "remove_all",
                 "recreate_after_remove_all",
-                "nested_target_deletion"
+                "nested_target_deletion",
+                "parent_component",
+                "parent_component_w_childof"
             ]
         }, {
             "id": "Cached",
