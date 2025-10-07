@@ -1687,7 +1687,9 @@
                 "cascade_w_cache_kind_default",
                 "cascade_w_optional",
                 "remove_all",
-                "recreate_after_remove_all"
+                "recreate_after_remove_all",
+                "parent_component",
+                "parent_component_w_childof"
             ]
         }, {
             "id": "Cached",
