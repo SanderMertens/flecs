@@ -190,6 +190,9 @@ ecs_id_t ecs_id_from_str(
 const char* ecs_id_flag_str(
     ecs_entity_t entity)
 {
+    if (ECS_HAS_ID_FLAG(entity, VALUE_PAIR)) {
+        return "VALUE_PAIR";
+    } else
     if (ECS_HAS_ID_FLAG(entity, PAIR)) {
         return "PAIR";
     } else
@@ -222,22 +225,31 @@ void ecs_id_str_buf(
         ecs_strbuf_appendch(buf, '|');
     }
 
+    if (ECS_HAS_ID_FLAG(id, VALUE_PAIR)) {
+        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_VALUE_PAIR));
+        ecs_strbuf_appendch(buf, '|');
+    }
+
     if (ECS_HAS_ID_FLAG(id, PAIR)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
-        ecs_entity_t obj = ECS_PAIR_SECOND(id);
+        ecs_entity_t tgt = ECS_PAIR_SECOND(id);
 
         ecs_entity_t e;
         if ((e = ecs_get_alive(world, rel))) {
             rel = e;
         }
-        if ((e = ecs_get_alive(world, obj))) {
-            obj = e;
-        }
 
         ecs_strbuf_appendch(buf, '(');
         ecs_get_path_w_sep_buf(world, 0, rel, NULL, NULL, buf, false);
         ecs_strbuf_appendch(buf, ',');
-        ecs_get_path_w_sep_buf(world, 0, obj, NULL, NULL, buf, false);
+        if (ECS_HAS_ID_FLAG(id, VALUE_PAIR)) {
+            ecs_strbuf_appendint(buf, (uint32_t)tgt);
+        } else {
+            if ((e = ecs_get_alive(world, tgt))) {
+                tgt = e;
+            }
+            ecs_get_path_w_sep_buf(world, 0, tgt, NULL, NULL, buf, false);
+        }
         ecs_strbuf_appendch(buf, ')');
     } else {
         ecs_entity_t e = id & ECS_COMPONENT_MASK;
