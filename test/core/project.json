@@ -912,7 +912,9 @@
                 "recreate_named_child",
                 "lookup_after_move_to_root",
                 "lookup_after_clear",
-                "bulk_create_ordered_children"
+                "bulk_create_ordered_children",
+                "get_ordered_children_from_prefab_instance_nested_children",
+                "ordered_children_parent_is_traversable"
             ]
         }, {
             "id": "Has",
@@ -2991,6 +2993,16 @@
                 "component_record_depth_nested_after_parent_remove",
                 "component_record_depth_after_parent_add",
                 "component_record_depth_nested_after_parent_add",
+                "non_fragmenting_component_record_depth_parent",
+                "non_fragmenting_component_record_depth_nested_parent",
+                "non_fragmenting_component_record_depth_after_reparent",
+                "non_fragmenting_component_record_depth_after_reparent_different_depth",
+                "non_fragmenting_component_record_depth_nested_after_reparent",
+                "non_fragmenting_component_record_depth_nested_after_reparent_different_depth",
+                "non_fragmenting_component_record_depth_after_parent_remove",
+                "non_fragmenting_component_record_depth_nested_after_parent_remove",
+                "non_fragmenting_component_record_depth_after_parent_add",
+                "non_fragmenting_component_record_depth_nested_after_parent_add",
                 "create_65k_tables"
 
             ]
