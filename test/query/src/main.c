@@ -1630,7 +1630,12 @@ void Cascade_cascade_w_cache_kind_default(void);
 void Cascade_cascade_w_optional(void);
 void Cascade_remove_all(void);
 void Cascade_recreate_after_remove_all(void);
+<<<<<<< HEAD
 void Cascade_nested_target_deletion(void);
+=======
+void Cascade_parent_component(void);
+void Cascade_parent_component_w_childof(void);
+>>>>>>> 344b60baa (Don't call unparent when entity is reparented)
 
 // Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
@@ -8839,8 +8844,17 @@ bake_test_case Cascade_testcases[] = {
         Cascade_recreate_after_remove_all
     },
     {
+<<<<<<< HEAD
         "nested_target_deletion",
         Cascade_nested_target_deletion
+=======
+        "parent_component",
+        Cascade_parent_component
+    },
+    {
+        "parent_component_w_childof",
+        Cascade_parent_component_w_childof
+>>>>>>> 344b60baa (Don't call unparent when entity is reparented)
     }
 };
 
@@ -12254,7 +12268,11 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
+<<<<<<< HEAD
         28,
+=======
+        29,
+>>>>>>> 344b60baa (Don't call unparent when entity is reparented)
         Cascade_testcases
     },
     {

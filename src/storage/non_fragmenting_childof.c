@@ -288,12 +288,11 @@ void flecs_non_fragmenting_childof_unparent(
     int32_t dst_depth = dst_pair ? dst_pair->depth : 0;
     int32_t src_depth = src_pair->depth;
 
-    // TODO: make sure that unparent isn't called for reparent
-    // ecs_assert(src_depth != dst_depth, ECS_INTERNAL_ERROR, NULL);
-
-    if (dst_depth == src_depth) {
-        return; // Temp workaround
-    }
+    /* If unparent is called there has to be a difference in depth, since the
+     * parent is removed from an entity. */
+    ecs_assert(src_depth != dst_depth, ECS_INTERNAL_ERROR, NULL);
+    (void)src_depth;
+    (void)dst_depth;
 
     if (!ecs_table_has_traversable(src)) {
         /* If table doesn't contain any traversable entities (meaning there 
