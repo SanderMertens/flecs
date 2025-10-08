@@ -850,6 +850,7 @@ void OrderedChildren_get_ordered_children_from_stage(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_no_children(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_3_children(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
+void OrderedChildren_ordered_children_parent_is_traversable(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -2795,6 +2796,16 @@ void Internals_component_record_depth_after_parent_remove(void);
 void Internals_component_record_depth_nested_after_parent_remove(void);
 void Internals_component_record_depth_after_parent_add(void);
 void Internals_component_record_depth_nested_after_parent_add(void);
+void Internals_non_fragmenting_component_record_depth_parent(void);
+void Internals_non_fragmenting_component_record_depth_nested_parent(void);
+void Internals_non_fragmenting_component_record_depth_after_reparent(void);
+void Internals_non_fragmenting_component_record_depth_after_reparent_different_depth(void);
+void Internals_non_fragmenting_component_record_depth_nested_after_reparent(void);
+void Internals_non_fragmenting_component_record_depth_nested_after_reparent_different_depth(void);
+void Internals_non_fragmenting_component_record_depth_after_parent_remove(void);
+void Internals_non_fragmenting_component_record_depth_nested_after_parent_remove(void);
+void Internals_non_fragmenting_component_record_depth_after_parent_add(void);
+void Internals_non_fragmenting_component_record_depth_nested_after_parent_add(void);
 void Internals_create_65k_tables(void);
 
 // Testsuite 'Error'
@@ -6098,6 +6109,10 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "get_ordered_children_from_prefab_instance_nested_children",
         OrderedChildren_get_ordered_children_from_prefab_instance_nested_children
+    },
+    {
+        "ordered_children_parent_is_traversable",
+        OrderedChildren_ordered_children_parent_is_traversable
     }
 };
 
@@ -13677,6 +13692,46 @@ bake_test_case Internals_testcases[] = {
         Internals_component_record_depth_nested_after_parent_add
     },
     {
+        "non_fragmenting_component_record_depth_parent",
+        Internals_non_fragmenting_component_record_depth_parent
+    },
+    {
+        "non_fragmenting_component_record_depth_nested_parent",
+        Internals_non_fragmenting_component_record_depth_nested_parent
+    },
+    {
+        "non_fragmenting_component_record_depth_after_reparent",
+        Internals_non_fragmenting_component_record_depth_after_reparent
+    },
+    {
+        "non_fragmenting_component_record_depth_after_reparent_different_depth",
+        Internals_non_fragmenting_component_record_depth_after_reparent_different_depth
+    },
+    {
+        "non_fragmenting_component_record_depth_nested_after_reparent",
+        Internals_non_fragmenting_component_record_depth_nested_after_reparent
+    },
+    {
+        "non_fragmenting_component_record_depth_nested_after_reparent_different_depth",
+        Internals_non_fragmenting_component_record_depth_nested_after_reparent_different_depth
+    },
+    {
+        "non_fragmenting_component_record_depth_after_parent_remove",
+        Internals_non_fragmenting_component_record_depth_after_parent_remove
+    },
+    {
+        "non_fragmenting_component_record_depth_nested_after_parent_remove",
+        Internals_non_fragmenting_component_record_depth_nested_after_parent_remove
+    },
+    {
+        "non_fragmenting_component_record_depth_after_parent_add",
+        Internals_non_fragmenting_component_record_depth_after_parent_add
+    },
+    {
+        "non_fragmenting_component_record_depth_nested_after_parent_add",
+        Internals_non_fragmenting_component_record_depth_nested_after_parent_add
+    },
+    {
         "create_65k_tables",
         Internals_create_65k_tables
     }
@@ -13854,7 +13909,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        37,
+        38,
         OrderedChildren_testcases
     },
     {
@@ -14071,7 +14126,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        32,
+        42,
         Internals_testcases
     },
     {

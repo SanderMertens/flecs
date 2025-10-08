@@ -1333,3 +1333,28 @@ void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(v
 
     ecs_fini(world);
 }
+
+void OrderedChildren_ordered_children_parent_is_traversable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_table_t *table = ecs_get_table(world, parent);
+    test_assert(table != NULL);
+    test_int(1, ecs_table_count(table));
+    test_bool(true, ecs_table_has_traversable(table));
+
+    ecs_add(world, parent, Foo);
+    test_int(0, ecs_table_count(table));
+    test_bool(false, ecs_table_has_traversable(table));
+
+    table = ecs_get_table(world, parent);
+    test_assert(table != NULL);
+    test_int(1, ecs_table_count(table));
+    test_bool(true, ecs_table_has_traversable(table));
+
+    ecs_fini(world);
+}

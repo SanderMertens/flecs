@@ -589,7 +589,7 @@ void flecs_component_update_childof_depth(
     const ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t tgt,
-    const ecs_table_t *tgt_table);
+    const ecs_record_t *tgt_record);
 
 void flecs_component_update_childof_w_depth(
     const ecs_world_t *world,
@@ -37298,6 +37298,7 @@ ecs_component_record_t* flecs_component_new(
 
     ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
     ecs_table_t *tgt_table = NULL;
+    ecs_record_t *tgt_record = NULL;
     if (is_pair) {
         cr->pair = flecs_bcalloc_w_dbg_info(
             &world->allocators.pair_record, "ecs_pair_record_t");
@@ -37313,8 +37314,8 @@ ecs_component_record_t* flecs_component_new(
                     flecs_errstr(ecs_id_str(world, tgt)), 
                     flecs_errstr_1(ecs_id_str(world, cr->id)));
             tgt = alive_tgt;
-            
-            ecs_record_t *tgt_record = flecs_entities_get(world, tgt);
+
+            tgt_record = flecs_entities_get(world, tgt);
             ecs_assert(tgt_record != NULL, ECS_INTERNAL_ERROR, NULL);
             tgt_table = tgt_record->table;
         }
@@ -37322,7 +37323,7 @@ ecs_component_record_t* flecs_component_new(
         rel = ECS_PAIR_FIRST(id);
         if (rel == EcsChildOf) {
             flecs_ordered_children_init(world, cr);
-            flecs_component_update_childof_depth(world, cr, tgt, tgt_table);
+            flecs_component_update_childof_depth(world, cr, tgt, tgt_record);
         } else {
             rel = flecs_entities_get_alive(world, rel);
             ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
@@ -37465,32 +37466,30 @@ ecs_component_record_t* flecs_component_new(
     flecs_add_flag(world, rel, EcsEntityIsId);
     if (tgt) {
         /* Flag for OnDeleteTarget policies */
-        ecs_record_t *tgt_r = flecs_entities_get_any(world, tgt);
-        ecs_assert(tgt_r != NULL, ECS_INTERNAL_ERROR, NULL);
-        flecs_record_add_flag(tgt_r, EcsEntityIsTarget);
+        flecs_record_add_flag(tgt_record, EcsEntityIsTarget);
         if (cr->flags & EcsIdTraversable) {
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
-            flecs_record_add_flag(tgt_r, EcsEntityIsTraversable);
+            flecs_record_add_flag(tgt_record, EcsEntityIsTraversable);
 
             /* Add reference to (*, tgt) component record to entity record */
-            tgt_r->cr = cr_t;
+            tgt_record->cr = cr_t;
         }
 
         /* If second element of pair determines the type, check if the pair 
          * should be stored as a sparse component. */
         if (cr->type_info && cr->type_info->component == tgt) {
-            if (ecs_has_id(world, tgt, EcsSparse)) {
+            if (ecs_table_has_id(world, tgt_table, EcsSparse)) {
                 cr->flags |= EcsIdSparse;
             }
-            if (ecs_has_id(world, tgt, EcsDontFragment)) {
+            if (ecs_table_has_id(world, tgt_table, EcsDontFragment)) {
                 cr->flags |= EcsIdDontFragment;
             }
         }
 
         /* Check if we should keep a list of ordered children for parent */
         if (rel == EcsChildOf) {
-            if (ecs_has_id(world, tgt, EcsOrderedChildren)) {
+            if (ecs_table_has_id(world, tgt_table, EcsOrderedChildren)) {
                 cr->flags |= EcsIdOrderedChildren;
             }
         }
@@ -37967,7 +37966,7 @@ void flecs_entities_update_childof_depth(
                 return;
             }
 
-            flecs_component_update_childof_depth(world, tgt_cr, tgt, r->table);
+            flecs_component_update_childof_depth(world, tgt_cr, tgt, r);
         }
         return;
     }
@@ -37991,7 +37990,8 @@ void flecs_entities_update_childof_depth(
                 return;
             }
 
-            flecs_component_update_childof_depth(world, tgt_cr, tgt, table);
+            ecs_record_t *r = flecs_entities_get(world, tgt);
+            flecs_component_update_childof_depth(world, tgt_cr, tgt, r);
         }
     }
 }
@@ -38001,7 +38001,9 @@ void flecs_component_update_childof_w_depth(
     ecs_component_record_t *cr,
     int32_t depth)
 {
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_pair_record_t *pair = cr->pair;
+    ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* If depth changed, propagate downwards */
     if (depth != pair->depth) {
@@ -38014,7 +38016,7 @@ void flecs_component_update_childof_depth(
     const ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t tgt,
-    const ecs_table_t *tgt_table)
+    const ecs_record_t *tgt_record)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -38022,12 +38024,26 @@ void flecs_component_update_childof_depth(
     ecs_assert(ECS_PAIR_SECOND(cr->id) == (uint32_t)tgt, 
         ECS_INTERNAL_ERROR, NULL);
 
-    ecs_pair_record_t *pair = cr->pair;
     int32_t new_depth;
     if (tgt) {
+        ecs_table_t *tgt_table = tgt_record->table;
         if (tgt_table->flags & EcsTableHasChildOf) {
             ecs_pair_record_t *tgt_childof_pr = tgt_table->_->childof_r;
             new_depth = tgt_childof_pr->depth + 1;
+        } else if (tgt_table->flags & EcsTableHasParent) {
+            int32_t column = tgt_table->component_map[ecs_id(EcsParent)];
+            ecs_assert(column > 0, ECS_INTERNAL_ERROR, NULL);
+
+            EcsParent *data = tgt_table->data.columns[column - 1].data;
+            ecs_entity_t parent = data[ECS_RECORD_TO_ROW(tgt_record->row)].value;
+            ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_component_record_t *cr_parent = flecs_components_get(world,
+                ecs_childof(parent));
+            ecs_assert(cr_parent != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(cr_parent->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            new_depth = cr_parent->pair->depth + 1;
         } else {
             new_depth = 1;
         }
@@ -38513,7 +38529,7 @@ void flecs_remove_non_fragmenting_child_from_table(
 }
 
 static
-void flecs_add_non_fragmenting_child(
+ecs_component_record_t* flecs_add_non_fragmenting_child(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t entity)
@@ -38551,7 +38567,7 @@ void flecs_add_non_fragmenting_child(
     }
 
 error:
-    return;
+    return cr;
 }
 
 static
@@ -38582,19 +38598,23 @@ void flecs_remove_non_fragmenting_child(
 }
 
 static
-void flecs_on_parent(ecs_iter_t *it) {
+void flecs_on_remove_parent(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsParent *p = ecs_field(it, EcsParent, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
         ecs_entity_t parent = p[i].value;
 
-        if (it->event == EcsOnSet) {
-            flecs_add_non_fragmenting_child(world, parent, it->entities[i]);
-        } else {
-            ecs_assert(it->event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
-            flecs_remove_non_fragmenting_child(world, parent, it->entities[i]);
+        ecs_assert(it->event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
+        flecs_remove_non_fragmenting_child(world, parent, e);
+
+        ecs_component_record_t *cr = flecs_components_get(
+            world, ecs_childof(e));
+
+        if (cr) {
+            flecs_component_update_childof_w_depth(world, cr, 1);
         }
     }
 }
@@ -38610,10 +38630,17 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
-        flecs_remove_non_fragmenting_child(
-            world, old[i].value, it->entities[i]);
-        flecs_add_non_fragmenting_child(
-            world, new[i].value, it->entities[i]);
+        ecs_entity_t e = it->entities[i];
+        flecs_remove_non_fragmenting_child(world, old[i].value, e);
+        ecs_component_record_t *cr_parent = 
+            flecs_add_non_fragmenting_child(world, new[i].value, e);
+
+        ecs_component_record_t *cr = flecs_components_get(
+            world, ecs_childof(e));
+        if (cr) {
+            flecs_component_update_childof_w_depth(
+                world, cr, cr_parent->pair->depth + 1);
+        }
     }
 }
 
@@ -38622,7 +38649,7 @@ void flecs_bootstrap_parent_component(
 {
     flecs_type_info_init(world, EcsParent, { 
         .ctor = flecs_default_ctor,
-        .on_remove = flecs_on_parent,
+        .on_remove = flecs_on_remove_parent,
         .on_replace = flecs_on_replace_parent
     });
 }
@@ -38717,7 +38744,8 @@ void flecs_non_fragmenting_childof_reparent(
             continue;
         }
 
-        flecs_component_update_childof_depth(world, cr, e, dst);
+        ecs_record_t *r = flecs_entities_get(world, e);
+        flecs_component_update_childof_depth(world, cr, e, r);
     }
 }
 
