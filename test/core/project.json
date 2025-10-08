@@ -2187,7 +2187,11 @@
                 "instantiate_w_non_fragmenting_component_while_defer_suspended",
                 "instantiate_w_non_fragmenting_tag_while_defer_suspended",
                 "instantiate_w_non_fragmenting_pair_while_defer_suspended",
-                "instantiate_w_non_fragmenting_pair_tag_while_defer_suspended"
+                "instantiate_w_non_fragmenting_pair_tag_while_defer_suspended",
+                "create_instances_w_override_and_ctor",
+                "create_instances_w_override_and_copy_ctor",
+                "create_instances_w_override_and_on_add",
+                "create_instances_w_override_and_on_set"
             ]
         }, {
             "id": "World",

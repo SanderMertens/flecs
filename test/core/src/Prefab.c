@@ -5671,3 +5671,119 @@ void Prefab_instantiate_w_non_fragmenting_pair_tag_while_defer_suspended(void) {
 
     ecs_fini(world);
 }
+
+static
+ECS_CTOR(Position, ptr, {
+    ptr->x = 15;
+    ptr->y = 25;
+});
+
+static
+void Position_custom_copy(void *dst, const void *src, int32_t count, const ecs_type_info_t *ti) {
+    test_int(count, 1);
+    ((Position*)dst)->x = ((Position*)src)->x + 1;
+    ((Position*)dst)->y = ((Position*)src)->y + 1;
+}
+
+static
+ECS_ON_ADD(Position, ptr, {
+    ecs_os_zeromem(ptr);
+});
+
+static
+ECS_ON_SET(Position, ptr, {
+    ptr->x ++;
+    ptr->y ++;
+});
+
+void Prefab_create_instances_w_override_and_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position)
+    });
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+
+    for (int i = 0; i < 8; i ++) {
+        ecs_entity_t i = ecs_new(world);
+        ecs_add_pair(world, i, EcsIsA, p);
+        const Position *p = ecs_get(world, i, Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_create_instances_w_override_and_copy_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .copy = Position_custom_copy
+    });
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+
+    for (int i = 0; i < 8; i ++) {
+        ecs_entity_t i = ecs_new(world);
+        ecs_add_pair(world, i, EcsIsA, p);
+        const Position *p = ecs_get(world, i, Position);
+        test_int(p->x, 12);
+        test_int(p->y, 22);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_create_instances_w_override_and_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = ecs_on_add(Position)
+    });
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+
+    for (int i = 0; i < 8; i ++) {
+        ecs_entity_t i = ecs_new(world);
+        ecs_add_pair(world, i, EcsIsA, p);
+        const Position *p = ecs_get(world, i, Position);
+        test_int(p->x, 0);
+        test_int(p->y, 0);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_create_instances_w_override_and_on_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = ecs_on_set(Position)
+    });
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+
+    for (int i = 0; i < 8; i ++) {
+        ecs_entity_t i = ecs_new(world);
+        ecs_add_pair(world, i, EcsIsA, p);
+        const Position *p = ecs_get(world, i, Position);
+        test_int(p->x, 12);
+        test_int(p->y, 22);
+    }
+
+    ecs_fini(world);
+}
