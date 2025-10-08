@@ -38,6 +38,9 @@ typedef struct ecs_pair_record_t {
     /* Tables with non-fragmenting children */
     ecs_map_t children_tables; /* map<table_id, ecs_parent_record_t */
 
+    /* Hierarchy depth (set for ChildOf pair) */
+    int32_t depth;
+
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
     ecs_id_record_elem_t first;   /* (R, *) */
@@ -172,5 +175,16 @@ void flecs_component_record_init_exclusive(
 
 void flecs_component_shrink(
     ecs_component_record_t *cr);
+
+void flecs_component_update_childof_depth(
+    const ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_entity_t tgt,
+    const ecs_table_t *tgt_table);
+
+void flecs_component_update_childof_w_depth(
+    const ecs_world_t *world,
+    ecs_component_record_t *cr,
+    int32_t depth);
 
 #endif

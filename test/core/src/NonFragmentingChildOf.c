@@ -1157,3 +1157,51 @@ void NonFragmentingChildOf_table_child_count_n_children_delete_children_reverse(
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_depth_after_parent_set(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_depth_after_parent_replace(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_depth_after_parent_replace_different_depth(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_depth_after_parent_remove(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_depth_after_parent_set_parent(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_depth_after_parent_remove_parent(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_depth_after_parent_reparent(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_depth_after_parent_reparent_different_depth(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_depth_after_parent_set_parent_nested(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_depth_after_parent_remove_parent_nested(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_depth_after_parent_reparent_nested(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_depth_after_parent_reparent_different_depth_nested(void) {
+    // Implement testcase
+}

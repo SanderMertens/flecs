@@ -1616,6 +1616,9 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsParent);
 /** DefaultChildComponent component id. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsDefaultChildComponent);
 
+/** Relationship storing the entity's depth in a non-fragmenting hierarchy. */
+FLECS_API extern const ecs_entity_t EcsChildOfDepth;
+
 /** Tag added to queries. */
 FLECS_API extern const ecs_entity_t EcsQuery;
 
