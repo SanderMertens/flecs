@@ -121,9 +121,10 @@ void flecs_on_reparent(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count)
-{    
-    flecs_reparent_name_index(world, other_table, table, row, count);
-    flecs_ordered_children_reparent(world, other_table, table, row, count);
+{
+    flecs_reparent_name_index(world, table, other_table, row, count);
+    flecs_ordered_children_reparent(world, table, other_table, row, count);
+    flecs_non_fragmenting_childof_reparent(world, table, other_table, row, count);
 }
 
 static
@@ -138,6 +139,7 @@ void flecs_on_unparent(
         flecs_unparent_name_index(world, table, other_table, row, count);
     }
     flecs_ordered_children_unparent(world, table, row, count);
+    flecs_non_fragmenting_childof_unparent(world, other_table, table, row, count);
 }
 
 bool flecs_sparse_on_add_cr(

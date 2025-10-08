@@ -4684,6 +4684,10 @@ FLECS_ALWAYS_INLINE ecs_parent_record_t* flecs_component_get_parent_record(
     const ecs_component_record_t *cr,
     const ecs_table_t *table);
 
+FLECS_API
+FLECS_ALWAYS_INLINE int32_t flecs_component_get_childof_depth(
+    const ecs_component_record_t *cr);
+
 /** Create component record iterator.
  * A component record iterator iterates all tables for the specified component
  * record.
@@ -5410,6 +5414,9 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsParent);
 
 /** DefaultChildComponent component id. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsDefaultChildComponent);
+
+/** Relationship storing the entity's depth in a non-fragmenting hierarchy. */
+FLECS_API extern const ecs_entity_t EcsChildOfDepth;
 
 /** Tag added to queries. */
 FLECS_API extern const ecs_entity_t EcsQuery;
