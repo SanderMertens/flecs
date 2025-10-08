@@ -1251,3 +1251,11 @@ void Cascade_recreate_after_remove_all(void) {
 
     ecs_fini(world);
 }
+
+void Cascade_parent_component(void) {
+    // Implement testcase
+}
+
+void Cascade_parent_component_w_childof(void) {
+    // Implement testcase
+}

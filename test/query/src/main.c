@@ -1626,6 +1626,8 @@ void Cascade_cascade_w_cache_kind_default(void);
 void Cascade_cascade_w_optional(void);
 void Cascade_remove_all(void);
 void Cascade_recreate_after_remove_all(void);
+void Cascade_parent_component(void);
+void Cascade_parent_component_w_childof(void);
 
 // Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
@@ -8816,6 +8818,14 @@ bake_test_case Cascade_testcases[] = {
     {
         "recreate_after_remove_all",
         Cascade_recreate_after_remove_all
+    },
+    {
+        "parent_component",
+        Cascade_parent_component
+    },
+    {
+        "parent_component_w_childof",
+        Cascade_parent_component_w_childof
     }
 };
 
@@ -12229,7 +12239,7 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-        27,
+        29,
         Cascade_testcases
     },
     {
