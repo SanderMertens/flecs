@@ -1293,3 +1293,11 @@ void Cascade_nested_target_deletion(void) {
 
     ecs_fini(world);
 }
+
+void Cascade_parent_component(void) {
+    // Implement testcase
+}
+
+void Cascade_parent_component_w_childof(void) {
+    // Implement testcase
+}
