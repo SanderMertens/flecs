@@ -374,7 +374,9 @@ void flecs_notify_on_remove(
         }
 
         if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
-            flecs_on_unparent(world, table, other_table, row, count);
+            if (!other_table || !(other_table->flags & EcsTableHasChildOf)) {
+                flecs_on_unparent(world, table, other_table, row, count);
+            }
         }
 
         if (diff_flags & EcsTableHasDontFragment) {
