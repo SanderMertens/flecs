@@ -225,3 +225,96 @@ void flecs_on_non_fragmenting_child_move_remove(
         }
     }
 }
+
+void flecs_non_fragmenting_childof_reparent(
+    ecs_world_t *world,
+    const ecs_table_t *dst,
+    const ecs_table_t *src,
+    int32_t row,
+    int32_t count)
+{
+    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_pair_record_t *dst_pair = dst->_->childof_r;
+    ecs_assert(dst_pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_pair_record_t *src_pair = src ? src->_->childof_r : NULL;
+
+    int32_t dst_depth = dst_pair->depth;
+    int32_t src_depth = 0;
+    if (src_pair) {
+        src_depth = src_pair->depth;
+    }
+
+    if (dst_depth == src_depth) {
+        /* If src depth is dst depth, no need to update cached depth values */
+        return;
+    }
+
+    if (!ecs_table_has_traversable(dst)) {
+        /* If table doesn't contain any traversable entities (meaning there 
+         * can't be any parents in the table) there can't be any cached depth
+         * values to update. */
+        return;
+    }
+
+    const ecs_entity_t *entities = ecs_table_entities(dst);
+    int32_t i = row, end = i + count;
+    for (i = 0; i < end; i ++) {
+        ecs_entity_t e = entities[i];
+        ecs_component_record_t *cr = flecs_components_get(
+            world, ecs_childof(e));
+        if (!cr) {
+            continue;
+        }
+
+        flecs_component_update_childof_depth(world, cr, e, dst);
+    }
+}
+
+void flecs_non_fragmenting_childof_unparent(
+    ecs_world_t *world,
+    const ecs_table_t *dst,
+    const ecs_table_t *src,
+    int32_t row,
+    int32_t count)
+{
+    ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_pair_record_t *dst_pair = dst ? dst->_->childof_r : NULL;
+    ecs_pair_record_t *src_pair = src->_->childof_r;
+
+    ecs_assert(src_pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    
+    int32_t dst_depth = dst_pair ? dst_pair->depth : 0;
+    int32_t src_depth = src_pair->depth;
+
+    // TODO: make sure that unparent isn't called for reparent
+    // ecs_assert(src_depth != dst_depth, ECS_INTERNAL_ERROR, NULL);
+
+    if (dst_depth == src_depth) {
+        return; // Temp workaround
+    }
+
+    if (!ecs_table_has_traversable(src)) {
+        /* If table doesn't contain any traversable entities (meaning there 
+         * aren't any parents in the table) there can't be any cached depth
+         * values to update. */
+        return;
+    }
+
+    const ecs_entity_t *entities = ecs_table_entities(src);
+    int32_t i = row, end = i + count;
+    for (i = 0; i < end; i ++) {
+        ecs_entity_t e = entities[i];
+        ecs_component_record_t *cr = flecs_components_get(
+            world, ecs_childof(e));
+        if (!cr) {
+            continue;
+        } else {
+            /* Entity is a parent */
+        }
+
+        /* Update depth to 1 if parent is removed */
+        flecs_component_update_childof_w_depth(world, cr, 1);
+    }
+}
