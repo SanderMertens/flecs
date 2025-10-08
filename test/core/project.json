@@ -719,7 +719,19 @@
                 "table_child_count_n_children_remove_parent",
                 "table_child_count_n_children_delete_children",
                 "table_child_count_n_children_remove_parent_reverse",
-                "table_child_count_n_children_delete_children_reverse"
+                "table_child_count_n_children_delete_children_reverse",
+                "depth_after_parent_set",
+                "depth_after_parent_replace",
+                "depth_after_parent_replace_different_depth",
+                "depth_after_parent_remove",
+                "depth_after_parent_set_parent",
+                "depth_after_parent_remove_parent",
+                "depth_after_parent_reparent",
+                "depth_after_parent_reparent_different_depth",
+                "depth_after_parent_set_parent_nested",
+                "depth_after_parent_remove_parent_nested",
+                "depth_after_parent_reparent_nested",
+                "depth_after_parent_reparent_different_depth_nested"
             ]
         }, {
             "id": "Hierarchies",
@@ -2858,7 +2870,6 @@
                 "activate_deactivate_activate_other",
                 "no_double_system_table_after_merge",
                 "recreate_deleted_table",
-                "create_65k_tables",
                 "no_duplicate_root_table_id",
                 "override_os_api_w_addon",
                 "records_resize_on_override",
@@ -2871,7 +2882,20 @@
                 "table_create_leak_check",
                 "component_record_has_table",
                 "component_record_iter_tables",
-                "table_get_records"
+                "table_get_records",
+                "component_record_depth_root",
+                "component_record_depth_parent",
+                "component_record_depth_nested_parent",
+                "component_record_depth_after_reparent",
+                "component_record_depth_after_reparent_different_depth",
+                "component_record_depth_nested_after_reparent",
+                "component_record_depth_nested_after_reparent_different_depth",
+                "component_record_depth_after_parent_remove",
+                "component_record_depth_nested_after_parent_remove",
+                "component_record_depth_after_parent_add",
+                "component_record_depth_nested_after_parent_add",
+                "create_65k_tables"
+
             ]
         }, {
             "id": "Error",

@@ -23,4 +23,18 @@ void flecs_on_non_fragmenting_child_move_remove(
     int32_t row,
     int32_t count);
 
+void flecs_non_fragmenting_childof_reparent(
+    ecs_world_t *world,
+    const ecs_table_t *dst,
+    const ecs_table_t *src,
+    int32_t row,
+    int32_t count);
+
+void flecs_non_fragmenting_childof_unparent(
+    ecs_world_t *world,
+    const ecs_table_t *dst,
+    const ecs_table_t *src,
+    int32_t row,
+    int32_t count);
+
 #endif
