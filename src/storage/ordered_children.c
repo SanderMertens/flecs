@@ -96,8 +96,8 @@ void flecs_ordered_entities_remove(
 
 static
 void flecs_ordered_entities_unparent_internal(
-    const ecs_table_t *table,
     const ecs_table_t *entities_table,
+    const ecs_table_t *table,
     int32_t row,
     int32_t count)
 {
@@ -114,12 +114,12 @@ void flecs_ordered_entities_unparent_internal(
 
 void flecs_ordered_children_reparent(
     ecs_world_t *world,
-    const ecs_table_t *src,
     const ecs_table_t *dst,
+    const ecs_table_t *src,
     int32_t row,
     int32_t count)
 {
-    flecs_ordered_entities_unparent_internal(src, dst, row, count);
+    flecs_ordered_entities_unparent_internal(dst, src, row, count);
 
     if (dst->flags & EcsTableHasOrderedChildren) {
         ecs_pair_record_t *pair = dst->_->childof_r;
