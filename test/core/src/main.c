@@ -877,6 +877,8 @@ void OrderedChildren_recreate_named_child(void);
 void OrderedChildren_lookup_after_move_to_root(void);
 void OrderedChildren_lookup_after_clear(void);
 void OrderedChildren_bulk_create_ordered_children(void);
+void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
+void OrderedChildren_ordered_children_parent_is_traversable(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -2880,9 +2882,7 @@ void Internals_table_create_leak_check(void);
 void Internals_component_record_has_table(void);
 void Internals_component_record_iter_tables(void);
 void Internals_table_get_records(void);
-<<<<<<< HEAD
 void Internals_childof_tgt_exists_after_query(void);
-=======
 void Internals_component_record_depth_root(void);
 void Internals_component_record_depth_parent(void);
 void Internals_component_record_depth_nested_parent(void);
@@ -2894,7 +2894,16 @@ void Internals_component_record_depth_after_parent_remove(void);
 void Internals_component_record_depth_nested_after_parent_remove(void);
 void Internals_component_record_depth_after_parent_add(void);
 void Internals_component_record_depth_nested_after_parent_add(void);
->>>>>>> 2311f74c2 (Cache hierarchy depth on ChildOf component records)
+void Internals_non_fragmenting_component_record_depth_parent(void);
+void Internals_non_fragmenting_component_record_depth_nested_parent(void);
+void Internals_non_fragmenting_component_record_depth_after_reparent(void);
+void Internals_non_fragmenting_component_record_depth_after_reparent_different_depth(void);
+void Internals_non_fragmenting_component_record_depth_nested_after_reparent(void);
+void Internals_non_fragmenting_component_record_depth_nested_after_reparent_different_depth(void);
+void Internals_non_fragmenting_component_record_depth_after_parent_remove(void);
+void Internals_non_fragmenting_component_record_depth_nested_after_parent_remove(void);
+void Internals_non_fragmenting_component_record_depth_after_parent_add(void);
+void Internals_non_fragmenting_component_record_depth_nested_after_parent_add(void);
 void Internals_create_65k_tables(void);
 
 // Testsuite 'Error'
@@ -6306,6 +6315,14 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "bulk_create_ordered_children",
         OrderedChildren_bulk_create_ordered_children
+    },
+    {
+        "get_ordered_children_from_prefab_instance_nested_children",
+        OrderedChildren_get_ordered_children_from_prefab_instance_nested_children
+    },
+    {
+        "ordered_children_parent_is_traversable",
+        OrderedChildren_ordered_children_parent_is_traversable
     }
 };
 
@@ -14117,10 +14134,10 @@ bake_test_case Internals_testcases[] = {
         Internals_table_get_records
     },
     {
-<<<<<<< HEAD
         "childof_tgt_exists_after_query",
         Internals_childof_tgt_exists_after_query
-=======
+    },
+    {
         "component_record_depth_root",
         Internals_component_record_depth_root
     },
@@ -14163,7 +14180,46 @@ bake_test_case Internals_testcases[] = {
     {
         "component_record_depth_nested_after_parent_add",
         Internals_component_record_depth_nested_after_parent_add
->>>>>>> 2311f74c2 (Cache hierarchy depth on ChildOf component records)
+    },
+    {
+        "non_fragmenting_component_record_depth_parent",
+        Internals_non_fragmenting_component_record_depth_parent
+    },
+    {
+        "non_fragmenting_component_record_depth_nested_parent",
+        Internals_non_fragmenting_component_record_depth_nested_parent
+    },
+    {
+        "non_fragmenting_component_record_depth_after_reparent",
+        Internals_non_fragmenting_component_record_depth_after_reparent
+    },
+    {
+        "non_fragmenting_component_record_depth_after_reparent_different_depth",
+        Internals_non_fragmenting_component_record_depth_after_reparent_different_depth
+    },
+    {
+        "non_fragmenting_component_record_depth_nested_after_reparent",
+        Internals_non_fragmenting_component_record_depth_nested_after_reparent
+    },
+    {
+        "non_fragmenting_component_record_depth_nested_after_reparent_different_depth",
+        Internals_non_fragmenting_component_record_depth_nested_after_reparent_different_depth
+    },
+    {
+        "non_fragmenting_component_record_depth_after_parent_remove",
+        Internals_non_fragmenting_component_record_depth_after_parent_remove
+    },
+    {
+        "non_fragmenting_component_record_depth_nested_after_parent_remove",
+        Internals_non_fragmenting_component_record_depth_nested_after_parent_remove
+    },
+    {
+        "non_fragmenting_component_record_depth_after_parent_add",
+        Internals_non_fragmenting_component_record_depth_after_parent_add
+    },
+    {
+        "non_fragmenting_component_record_depth_nested_after_parent_add",
+        Internals_non_fragmenting_component_record_depth_nested_after_parent_add
     },
     {
         "create_65k_tables",
@@ -14343,7 +14399,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        45,
+        47,
         OrderedChildren_testcases
     },
     {
@@ -14560,11 +14616,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-<<<<<<< HEAD
-        22,
-=======
-        32,
->>>>>>> 2311f74c2 (Cache hierarchy depth on ChildOf component records)
+        43,
         Internals_testcases
     },
     {

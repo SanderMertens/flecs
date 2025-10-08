@@ -180,7 +180,7 @@ void flecs_component_update_childof_depth(
     const ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t tgt,
-    const ecs_table_t *tgt_table);
+    const ecs_record_t *tgt_record);
 
 void flecs_component_update_childof_w_depth(
     const ecs_world_t *world,
