@@ -2111,6 +2111,10 @@ void Prefab_instantiate_w_non_fragmenting_component_while_defer_suspended(void);
 void Prefab_instantiate_w_non_fragmenting_tag_while_defer_suspended(void);
 void Prefab_instantiate_w_non_fragmenting_pair_while_defer_suspended(void);
 void Prefab_instantiate_w_non_fragmenting_pair_tag_while_defer_suspended(void);
+void Prefab_create_instances_w_override_and_ctor(void);
+void Prefab_create_instances_w_override_and_copy_ctor(void);
+void Prefab_create_instances_w_override_and_on_add(void);
+void Prefab_create_instances_w_override_and_on_set(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -10909,6 +10913,22 @@ bake_test_case Prefab_testcases[] = {
     {
         "instantiate_w_non_fragmenting_pair_tag_while_defer_suspended",
         Prefab_instantiate_w_non_fragmenting_pair_tag_while_defer_suspended
+    },
+    {
+        "create_instances_w_override_and_ctor",
+        Prefab_create_instances_w_override_and_ctor
+    },
+    {
+        "create_instances_w_override_and_copy_ctor",
+        Prefab_create_instances_w_override_and_copy_ctor
+    },
+    {
+        "create_instances_w_override_and_on_add",
+        Prefab_create_instances_w_override_and_on_add
+    },
+    {
+        "create_instances_w_override_and_on_set",
+        Prefab_create_instances_w_override_and_on_set
     }
 };
 
@@ -13474,7 +13494,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        171,
+        175,
         Prefab_testcases
     },
     {
