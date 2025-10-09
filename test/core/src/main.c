@@ -1960,6 +1960,7 @@ void Prefab_has_on_instantiate_override(void);
 void Prefab_has_on_instantiate_inherit(void);
 void Prefab_has_on_instantiate_dont_inherit(void);
 void Prefab_new_w_count_w_override(void);
+void Prefab_new_w_count_w_override_w_on_set_hook(void);
 void Prefab_override_2_components_different_size(void);
 void Prefab_ignore_prefab_parent_component(void);
 void Prefab_match_table_created_in_progress(void);
@@ -10311,6 +10312,10 @@ bake_test_case Prefab_testcases[] = {
         Prefab_new_w_count_w_override
     },
     {
+        "new_w_count_w_override_w_on_set_hook",
+        Prefab_new_w_count_w_override_w_on_set_hook
+    },
+    {
         "override_2_components_different_size",
         Prefab_override_2_components_different_size
     },
@@ -13494,7 +13499,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        175,
+        176,
         Prefab_testcases
     },
     {
