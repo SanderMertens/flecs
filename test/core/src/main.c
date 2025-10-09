@@ -1484,6 +1484,8 @@ void Pairs_force_relationship_on_relationship(void);
 void Pairs_force_target_on_component(void);
 void Pairs_force_target_on_relationship(void);
 void Pairs_force_target_on_target(void);
+void Pairs_add_value_pair(void);
+void Pairs_value_pair_to_str(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -8523,6 +8525,14 @@ bake_test_case Pairs_testcases[] = {
     {
         "force_target_on_target",
         Pairs_force_target_on_target
+    },
+    {
+        "add_value_pair",
+        Pairs_add_value_pair
+    },
+    {
+        "value_pair_to_str",
+        Pairs_value_pair_to_str
     }
 };
 
@@ -13815,7 +13825,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        125,
+        127,
         Pairs_testcases
     },
     {
