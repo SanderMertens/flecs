@@ -2037,6 +2037,7 @@
                 "has_on_instantiate_inherit",
                 "has_on_instantiate_dont_inherit",
                 "new_w_count_w_override",
+                "new_w_count_w_override_w_on_set_hook",
                 "override_2_components_different_size",
                 "ignore_prefab_parent_component",
                 "match_table_created_in_progress",

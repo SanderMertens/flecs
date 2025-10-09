@@ -39716,18 +39716,18 @@ void flecs_table_invoke_ctor_for_array(
                     } else {
                         ecs_os_memcpy(ptr, base_ptr, size);
                     }
-                    
-                    if (on_set) {
-                        table->data.columns[column_index].data = array;
-
-                        int32_t record_index = table->column_map[table->type.count + column_index];
-                        const ecs_table_record_t *tr = &table->_->records[record_index];
-                        const ecs_entity_t *entities = &ecs_table_entities(table)[row];
-                        flecs_invoke_hook(world, table, tr->hdr.cr, tr, 
-                            count, row, entities, ti->component, ti, EcsOnSet, on_set);
-                    }
 
                     ptr = ECS_OFFSET(ptr, size);
+                }
+
+                if (on_set) {
+                    table->data.columns[column_index].data = array;
+
+                    int32_t record_index = table->column_map[table->type.count + column_index];
+                    const ecs_table_record_t *tr = &table->_->records[record_index];
+                    const ecs_entity_t *entities = &ecs_table_entities(table)[row];
+                    flecs_invoke_hook(world, table, tr->hdr.cr, tr, 
+                        count, row, entities, ti->component, ti, EcsOnSet, on_set);
                 }
 
                 return;

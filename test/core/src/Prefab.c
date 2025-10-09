@@ -2,6 +2,30 @@
 
 static ecs_id_t NamePair;
 
+static
+ECS_CTOR(Position, ptr, {
+    ptr->x = 15;
+    ptr->y = 25;
+});
+
+static
+void Position_custom_copy(void *dst, const void *src, int32_t count, const ecs_type_info_t *ti) {
+    test_int(count, 1);
+    ((Position*)dst)->x = ((Position*)src)->x + 1;
+    ((Position*)dst)->y = ((Position*)src)->y + 1;
+}
+
+static
+ECS_ON_ADD(Position, ptr, {
+    ecs_os_zeromem(ptr);
+});
+
+static
+ECS_ON_SET(Position, ptr, {
+    ptr->x ++;
+    ptr->y ++;
+});
+
 void Prefab_setup(void) {
     NamePair = ecs_pair(ecs_id(EcsIdentifier), EcsName);
 }
@@ -932,6 +956,38 @@ void Prefab_new_w_count_w_override(void) {
         test_assert(v != prefab_v);
         test_int(v->x, 30);
         test_int(v->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Prefab_new_w_count_w_override_w_on_set_hook(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    
+    ecs_set_hooks(world, Position, {
+        .on_set = ecs_on_set(Position)
+    });
+
+    ECS_PREFAB(world, Prefab, Position);
+
+    ecs_set(world, Prefab, Position, {10, 20});
+
+    const ecs_entity_t *ids = ecs_bulk_new_w_id(
+        world, ecs_pair(EcsIsA, Prefab), 100);
+    test_assert(ids != NULL);
+
+    int i;
+    for (i = 0; i < 100; i ++) {
+        ecs_entity_t e = ids[i];
+        test_assert( ecs_has(world, e, Position));
+        test_assert( ecs_has_pair(world, e, EcsIsA, Prefab));
+
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 12);
+        test_int(p->y, 22);
     }
 
     ecs_fini(world);
@@ -5671,30 +5727,6 @@ void Prefab_instantiate_w_non_fragmenting_pair_tag_while_defer_suspended(void) {
 
     ecs_fini(world);
 }
-
-static
-ECS_CTOR(Position, ptr, {
-    ptr->x = 15;
-    ptr->y = 25;
-});
-
-static
-void Position_custom_copy(void *dst, const void *src, int32_t count, const ecs_type_info_t *ti) {
-    test_int(count, 1);
-    ((Position*)dst)->x = ((Position*)src)->x + 1;
-    ((Position*)dst)->y = ((Position*)src)->y + 1;
-}
-
-static
-ECS_ON_ADD(Position, ptr, {
-    ecs_os_zeromem(ptr);
-});
-
-static
-ECS_ON_SET(Position, ptr, {
-    ptr->x ++;
-    ptr->y ++;
-});
 
 void Prefab_create_instances_w_override_and_ctor(void) {
     ecs_world_t *world = ecs_mini();
