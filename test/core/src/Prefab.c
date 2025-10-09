@@ -3857,7 +3857,7 @@ void Prefab_get_component_pair_from_base(void) {
     ECS_TAG(world, Obj);
     ecs_add_pair(world, Obj, EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t base = ecs_insert(world, ecs_value_pair(Position, Obj, {10, 20}));
+    ecs_entity_t base = ecs_insert(world, ecs_pair_value(Position, Obj, {10, 20}));
     test_assert(ecs_has_pair(world, base, ecs_id(Position), Obj));
 
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
