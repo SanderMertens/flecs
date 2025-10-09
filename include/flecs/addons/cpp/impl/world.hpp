@@ -262,6 +262,12 @@ inline bool world::has(flecs::id_t first, flecs::id_t second) const {
     return e.has(first, second);
 }
 
+template <typename E, if_t< is_enum<E>::value > >
+inline bool world::has(E value) const {
+    flecs::entity e(world_, _::type<E>::id(world_));
+    return e.has(value);
+}
+
 template <typename T>
 inline void world::add() const {
     flecs::entity e(world_, _::type<T>::id(world_));
@@ -283,6 +289,12 @@ inline void world::add(flecs::entity_t second) const {
 inline void world::add(flecs::entity_t first, flecs::entity_t second) const {
     flecs::entity e(world_, first);
     e.add(first, second);
+}
+
+template <typename E, if_t< is_enum<E>::value > >
+inline void world::add(E value) const {
+    flecs::entity e(world_, _::type<E>::id(world_));
+    e.add(value);
 }
 
 template <typename T>

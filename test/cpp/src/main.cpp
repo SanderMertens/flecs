@@ -468,6 +468,7 @@ void Enum_get_constant_id(void);
 void Enum_add_enum_constant(void);
 void Enum_add_enum_constant_explicit(void);
 void Enum_add_enum_class_constant(void);
+void Enum_add_singleton_enum_constant(void);
 void Enum_replace_enum_constants(void);
 void Enum_has_enum(void);
 void Enum_has_enum_wildcard(void);
@@ -477,6 +478,7 @@ void Enum_remove_wildcard(void);
 void Enum_enum_as_component(void);
 void Enum_query_enum_wildcard(void);
 void Enum_query_enum_constant(void);
+void Enum_query_singleton_enum_constant(void);
 void Enum_enum_type_from_stage(void);
 void Enum_add_enum_from_stage(void);
 void Enum_enum_w_2_worlds(void);
@@ -3466,6 +3468,10 @@ bake_test_case Enum_testcases[] = {
         Enum_add_enum_class_constant
     },
     {
+        "add_singleton_enum_constant",
+        Enum_add_singleton_enum_constant
+    },
+    {
         "replace_enum_constants",
         Enum_replace_enum_constants
     },
@@ -3500,6 +3506,10 @@ bake_test_case Enum_testcases[] = {
     {
         "query_enum_constant",
         Enum_query_enum_constant
+    },
+    {
+        "query_singleton_enum_constant",
+        Enum_query_singleton_enum_constant
     },
     {
         "enum_type_from_stage",
@@ -8113,7 +8123,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        51,
+        53,
         Enum_testcases
     },
     {
