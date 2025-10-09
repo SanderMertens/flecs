@@ -23059,6 +23059,9 @@ struct world {
 
 
     /** Test if world has singleton component.
+     * 
+     * @tparam T The component to check.
+     * @return Whether the world has the singleton component.
      */
     template <typename T>
     bool has() const;
@@ -23067,6 +23070,7 @@ struct world {
      *
      * @tparam First The first element of the pair
      * @tparam Second The second element of the pair
+     * @return Whether the world has the singleton pair.
      */
     template <typename First, typename Second>
     bool has() const;
@@ -23075,6 +23079,7 @@ struct world {
      *
      * @tparam First The first element of the pair
      * @param second The second element of the pair.
+     * @return Whether the world has the singleton pair.
      */
     template <typename First>
     bool has(flecs::id_t second) const;
@@ -23083,8 +23088,18 @@ struct world {
      *
      * @param first The first element of the pair
      * @param second The second element of the pair
+     * @return Whether the world has the singleton pair.
      */
     bool has(flecs::id_t first, flecs::id_t second) const;
+
+    /** Check for enum singleton constant 
+     * 
+     * @tparam E The enum type.
+     * @param value The enum constant to check.
+     * @return Whether the world has the specified enum constant.
+     */
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    bool has(E value) const;
 
     /** Add singleton component.
      */
@@ -23113,6 +23128,14 @@ struct world {
      * @param second The second element of the pair
      */
     void add(flecs::entity_t first, flecs::entity_t second) const;
+
+    /** Add enum singleton constant 
+     * 
+     * @tparam E The enum type.
+     * @param value The enum constant.
+     */
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    void add(E value) const;
 
     /** Remove singleton component.
      */
@@ -35850,6 +35873,12 @@ inline bool world::has(flecs::id_t first, flecs::id_t second) const {
     return e.has(first, second);
 }
 
+template <typename E, if_t< is_enum<E>::value > >
+inline bool world::has(E value) const {
+    flecs::entity e(world_, _::type<E>::id(world_));
+    return e.has(value);
+}
+
 template <typename T>
 inline void world::add() const {
     flecs::entity e(world_, _::type<T>::id(world_));
@@ -35871,6 +35900,12 @@ inline void world::add(flecs::entity_t second) const {
 inline void world::add(flecs::entity_t first, flecs::entity_t second) const {
     flecs::entity e(world_, first);
     e.add(first, second);
+}
+
+template <typename E, if_t< is_enum<E>::value > >
+inline void world::add(E value) const {
+    flecs::entity e(world_, _::type<E>::id(world_));
+    e.add(value);
 }
 
 template <typename T>
