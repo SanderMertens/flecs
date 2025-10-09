@@ -1522,7 +1522,12 @@ void Pairs_force_relationship_on_relationship(void);
 void Pairs_force_target_on_component(void);
 void Pairs_force_target_on_relationship(void);
 void Pairs_force_target_on_target(void);
+<<<<<<< HEAD
 void Pairs_relationship_with_exclusive(void);
+=======
+void Pairs_add_value_pair(void);
+void Pairs_value_pair_to_str(void);
+>>>>>>> 85e8fbe4e (Implement basic support for value pairs)
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -8781,8 +8786,17 @@ bake_test_case Pairs_testcases[] = {
         Pairs_force_target_on_target
     },
     {
+<<<<<<< HEAD
         "relationship_with_exclusive",
         Pairs_relationship_with_exclusive
+=======
+        "add_value_pair",
+        Pairs_add_value_pair
+    },
+    {
+        "value_pair_to_str",
+        Pairs_value_pair_to_str
+>>>>>>> 85e8fbe4e (Implement basic support for value pairs)
     }
 };
 
@@ -14360,7 +14374,11 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
+<<<<<<< HEAD
         126,
+=======
+        127,
+>>>>>>> 85e8fbe4e (Implement basic support for value pairs)
         Pairs_testcases
     },
     {

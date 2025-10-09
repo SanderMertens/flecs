@@ -135,6 +135,10 @@ const char* flecs_id_invalid_reason(
         if (!ECS_PAIR_SECOND(id)) {
             return "invalid pair: second element is 0";
         }
+    } else if (ECS_HAS_ID_FLAG(id, VALUE_PAIR)) {
+        if (!ECS_PAIR_FIRST(id)) {
+            return "invalid value pair: first element is 0 (is the relationship registered?)";
+        }
     } else if (id & ECS_ID_FLAGS_MASK) {
         if (!ecs_is_valid(world, id & ECS_COMPONENT_MASK)) {
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
@@ -225,12 +229,7 @@ void ecs_id_str_buf(
         ecs_strbuf_appendch(buf, '|');
     }
 
-    if (ECS_HAS_ID_FLAG(id, VALUE_PAIR)) {
-        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_VALUE_PAIR));
-        ecs_strbuf_appendch(buf, '|');
-    }
-
-    if (ECS_HAS_ID_FLAG(id, PAIR)) {
+    if (ECS_HAS_ID_FLAG(id, PAIR) || ECS_HAS_ID_FLAG(id, VALUE_PAIR)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
         ecs_entity_t tgt = ECS_PAIR_SECOND(id);
 
@@ -243,6 +242,7 @@ void ecs_id_str_buf(
         ecs_get_path_w_sep_buf(world, 0, rel, NULL, NULL, buf, false);
         ecs_strbuf_appendch(buf, ',');
         if (ECS_HAS_ID_FLAG(id, VALUE_PAIR)) {
+            ecs_strbuf_appendlit(buf, "@");
             ecs_strbuf_appendint(buf, (uint32_t)tgt);
         } else {
             if ((e = ecs_get_alive(world, tgt))) {
