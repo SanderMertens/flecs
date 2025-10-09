@@ -8,4 +8,5 @@ cc_binary(
     deps = [
         "//:flecs",
     ],
+    copts = ["-std=c++17"],
 )
