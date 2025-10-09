@@ -39692,11 +39692,11 @@ void flecs_table_invoke_ctor_for_array(
     ecs_table_t *table,
     int32_t column_index,
     void *array,
-    void *ptr,
     int32_t row,
     int32_t count,
     const ecs_type_info_t *ti)
 {
+    void *ptr = ECS_ELEM(array, ti->size, row);
     if (table) {
         ecs_table_overrides_t *o = table->data.overrides;
         if (o) {
@@ -39755,7 +39755,7 @@ void flecs_table_invoke_ctor(
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_table_invoke_ctor_for_array(world, table, column_index,
-        column->data, ECS_ELEM(column->data, ti->size, row), row, count, ti);
+        column->data, row, count, ti);
 }
 
 /* Destruct components */
@@ -40275,7 +40275,6 @@ void flecs_table_grow_column(
     int32_t elem_size = ti->size;
     int32_t dst_count = count + to_add;
     bool can_realloc = dst_size != size;
-    void *result = NULL;
 
     ecs_assert(dst_size >= dst_count, ECS_INTERNAL_ERROR, NULL);
 
@@ -40299,10 +40298,8 @@ void flecs_table_grow_column(
 
         if (construct) {
             /* Construct new element(s) */
-            result = ECS_ELEM(dst_buffer, elem_size, count);
-
             flecs_table_invoke_ctor_for_array(
-                world, table, column_index, dst_buffer, result, count, to_add, ti);
+                world, table, column_index, dst_buffer, count, to_add, ti);
         }
 
         /* Free old vector */
@@ -40315,11 +40312,11 @@ void flecs_table_grow_column(
             ecs_vec_set_size(&world->allocator, column, elem_size, dst_size);
         }
 
-        result = ecs_vec_grow(&world->allocator, column, elem_size, to_add);
+        ecs_vec_grow(&world->allocator, column, elem_size, to_add);
 
         if (construct) {
             flecs_table_invoke_ctor_for_array(
-                world, table, column_index, column->array, result, count, to_add, ti);
+                world, table, column_index, column->array, count, to_add, ti);
         }
     }
 
