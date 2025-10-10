@@ -5000,7 +5000,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsSymbol);
     flecs_bootstrap_tag(world, EcsAlias);
 
-    flecs_bootstrap_tag(world, EcsChildOfDepth);
+    flecs_bootstrap_tag(world, EcsParentDepth);
     flecs_bootstrap_tag(world, EcsQuery);
     flecs_bootstrap_tag(world, EcsObserver);
 
@@ -5275,7 +5275,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsOnDelete, EcsExclusive);
     ecs_add_id(world, EcsOnDeleteTarget, EcsExclusive);
     ecs_add_id(world, EcsOnInstantiate, EcsExclusive);
-    ecs_add_id(world, EcsChildOfDepth, EcsExclusive);
+    ecs_add_id(world, EcsParentDepth, EcsExclusive);
 
     /* Unqueryable entities */
     ecs_add_id(world, EcsThis, EcsNotQueryable);
@@ -20448,7 +20448,7 @@ const ecs_entity_t ecs_id(EcsComponent) =                                   1;
 const ecs_entity_t ecs_id(EcsIdentifier) =                                  2;
 const ecs_entity_t ecs_id(EcsPoly) =                                        3;
 const ecs_entity_t ecs_id(EcsParent) =                                      4;
-const ecs_entity_t EcsChildOfDepth =                                        5;
+const ecs_entity_t EcsParentDepth =                                        5;
 
 /* Poly target components */
 const ecs_entity_t EcsQuery =                       FLECS_HI_COMPONENT_ID + 0;
@@ -39353,7 +39353,7 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
             flecs_add_non_fragmenting_child(world, new[i].value, e);
 
         int32_t depth = cr_parent->pair->depth;
-        ecs_add_id(world, e, ecs_value_pair(EcsChildOfDepth, depth));
+        ecs_add_id(world, e, ecs_value_pair(EcsParentDepth, depth));
 
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));
