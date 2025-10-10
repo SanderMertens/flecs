@@ -1602,6 +1602,7 @@ void Meta_entity_to_json_w_default_desc(void);
 void Meta_query_to_json_w_default_desc(void);
 void Meta_script_to_std_vector_int(void);
 void Meta_script_to_std_vector_std_string(void);
+void Meta_ser_deser_alias(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -7907,6 +7908,10 @@ bake_test_case Meta_testcases[] = {
     {
         "script_to_std_vector_std_string",
         Meta_script_to_std_vector_std_string
+    },
+    {
+        "ser_deser_alias",
+        Meta_ser_deser_alias
     }
 };
 
@@ -8266,7 +8271,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        68,
+        69,
         Meta_testcases
     },
     {

@@ -1657,7 +1657,8 @@
                 "entity_to_json_w_default_desc",
                 "query_to_json_w_default_desc",
                 "script_to_std_vector_int",
-                "script_to_std_vector_std_string"
+                "script_to_std_vector_std_string",
+                "ser_deser_alias"
             ]
         }, {
             "id": "Table",
