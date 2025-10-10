@@ -42,7 +42,7 @@ flecs_component_ptr_t flecs_get_component_ptr(
         return (flecs_component_ptr_t){0};
     }
 
-    if (cr->flags & (EcsIdIsSparse|EcsIdDontFragment)) {
+    if (cr->flags & (EcsIdSparse|EcsIdDontFragment)) {
         ecs_entity_t entity = ecs_table_entities(table)[row];
         return (flecs_component_ptr_t){
             .ti = cr->type_info,
@@ -123,7 +123,7 @@ void* flecs_get_base_component(
                     recur_depth + 1);
             }
         } else {
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 return flecs_component_sparse_get(world, cr, table, base);
             } else {
                 int32_t row = ECS_RECORD_TO_ROW(r->row);
@@ -365,7 +365,7 @@ const ecs_entity_t* flecs_bulk_new(
             int32_t size = ti->size;
             void *ptr;
 
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 int32_t e;
                 for (e = 0; e < count; e ++) {
                     ptr = flecs_component_sparse_get(
@@ -556,7 +556,7 @@ flecs_component_ptr_t flecs_ensure(
             column_index = flecs_ito(int16_t, -column_index - 1);
             const ecs_table_record_t *tr = &table->_->records[column_index];
             cr = tr->hdr.cr;
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 dst.ptr = flecs_component_sparse_get(
                     world, cr, r->table, entity);
                 dst.ti = cr->type_info;
@@ -1702,9 +1702,6 @@ void ecs_delete(
                 flecs_table_traversable_add(r->table, -1);
             }
 
-            /* Remove non-fragmenting components */
-            flecs_entity_remove_non_fragmenting(world, entity, r);
-
             /* Merge operations before deleting entity */
             flecs_defer_end(world, stage);
             flecs_defer_begin(world, stage);
@@ -1868,7 +1865,7 @@ ecs_entity_t ecs_clone(
     if (src_r->row & EcsEntityHasDontFragment) {
         ecs_component_record_t *cur = world->cr_non_fragmenting_head;
         while (cur) {
-            ecs_assert(cur->flags & EcsIdIsSparse, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
             if (cur->sparse) {
                 void *src_ptr = flecs_sparse_get(cur->sparse, 0, src);
                 if (src_ptr) {
@@ -1928,7 +1925,7 @@ const void* ecs_get_id(
     if (!tr) {
         return flecs_get_base_component(world, table, component, cr, 0);
     } else {
-        if (cr->flags & EcsIdIsSparse) {
+        if (cr->flags & EcsIdSparse) {
             return flecs_component_sparse_get(world, cr, table, entity);
         }
         ecs_check(tr->column != -1, ECS_INVALID_PARAMETER,

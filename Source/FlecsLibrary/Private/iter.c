@@ -136,7 +136,7 @@ void* ecs_field_w_size(
         return NULL;
     }
 
-    ecs_assert(!(tr->hdr.cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_assert(!(tr->hdr.cr->flags & EcsIdSparse), ECS_INVALID_OPERATION,
         "field %d: use ecs_field_at to access fields for sparse components", 
         index);
 
@@ -196,7 +196,7 @@ void* ecs_field_at_w_size(
         cr = tr->hdr.cr;
     }
 
-    ecs_assert((cr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+    ecs_assert((cr->flags & EcsIdSparse), ECS_INVALID_OPERATION,
         "use ecs_field to access fields for non-sparse components");
     ecs_assert(it->row_fields & (1ull << index), ECS_INTERNAL_ERROR, NULL);
 

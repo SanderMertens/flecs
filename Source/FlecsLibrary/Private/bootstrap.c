@@ -136,7 +136,7 @@ bool flecs_set_id_flag(
         }
 
         cr->flags |= flag;
-        if (flag == EcsIdIsSparse) {
+        if (flag == EcsIdSparse) {
             flecs_component_init_sparse(world, cr);
         }
 
@@ -253,7 +253,7 @@ void flecs_register_final(ecs_iter_t *it) {
 
 static
 void flecs_register_tag(ecs_iter_t *it) {
-    flecs_register_id_flag_for_relation(it, EcsPairIsTag, EcsIdTag, EcsIdTag, 0);
+    flecs_register_id_flag_for_relation(it, EcsPairIsTag, EcsIdPairIsTag, EcsIdPairIsTag, 0);
 
     /* Ensure that all id records for tag have type info set to NULL */
     ecs_world_t *world = it->real_world;
@@ -659,13 +659,13 @@ ecs_table_t* flecs_bootstrap_component_table(
      * can no longer be done after they are in use. */
     ecs_component_record_t *cr = flecs_components_ensure(world, EcsChildOf);
     cr->flags |= EcsIdOnDeleteTargetDelete | EcsIdOnInstantiateDontInherit |
-        EcsIdTraversable | EcsIdTag;
+        EcsIdTraversable | EcsIdPairIsTag;
 
     /* Initialize id records cached on world */
     world->cr_childof_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, EcsWildcard));
     world->cr_childof_wildcard->flags |= EcsIdOnDeleteTargetDelete | 
-        EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdTag | EcsIdExclusive;
+        EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdPairIsTag | EcsIdExclusive;
     cr = flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsWildcard));
     cr->flags |= EcsIdOnInstantiateDontInherit;
     world->cr_identifier_name = 
@@ -1042,7 +1042,7 @@ void flecs_bootstrap(
         .callback = flecs_register_final
     });
 
-    static ecs_on_trait_ctx_t inheritable_trait = { EcsIdIsInheritable, 0 };
+    static ecs_on_trait_ctx_t inheritable_trait = { EcsIdInheritable, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsInheritable }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
@@ -1130,7 +1130,7 @@ void flecs_bootstrap(
         .ctx = &with_trait
     });
 
-    static ecs_on_trait_ctx_t sparse_trait = { EcsIdIsSparse, 0 };
+    static ecs_on_trait_ctx_t sparse_trait = { EcsIdSparse, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsSparse }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,

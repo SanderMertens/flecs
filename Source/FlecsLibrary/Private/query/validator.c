@@ -848,7 +848,7 @@ int flecs_term_finalize(
          * of query creation. To force component inheritance to be evaluated,
          * an application can explicitly set traversal flags. */
         if (flecs_components_get(world, ecs_pair(EcsIsA, first->id)) || 
-            (id_flags & EcsIdIsInheritable) || first_can_isa)
+            (id_flags & EcsIdInheritable) || first_can_isa)
         {
             if (!first_is_self) {
                 term->flags_ |= EcsTermIdInherited;
@@ -1308,7 +1308,7 @@ int flecs_query_finalize_terms(
                 term->flags_ |= EcsTermKeepAlive;
             }
 
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 is_sparse = true;
             }
 
@@ -1736,7 +1736,7 @@ bool flecs_query_finalize_simple(
                 trivial = false;
             }
 
-            if (cr->flags & EcsIdIsSparse) {
+            if (cr->flags & EcsIdSparse) {
                 term->flags_ |= EcsTermIsSparse;
                 cacheable = false; trivial = false;
                 q->row_fields |= flecs_uto(uint32_t, 1llu << i);
