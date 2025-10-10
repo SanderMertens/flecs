@@ -8,5 +8,8 @@ cc_binary(
     deps = [
         "//:flecs",
     ],
-    cxxopts = ["-std=c++17"],
+    cxxopts = select({
+        "@bazel_tools//src/conditions:windows": ["/std:c++17"],
+        "//conditions:default": ["--std=c++17"],
+    }),
 )
