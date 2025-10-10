@@ -719,6 +719,7 @@ void NonFragmentingChildOf_depth_after_parent_set_parent_nested(void);
 void NonFragmentingChildOf_depth_after_parent_remove_parent_nested(void);
 void NonFragmentingChildOf_depth_after_parent_reparent_nested(void);
 void NonFragmentingChildOf_depth_after_parent_reparent_different_depth_nested(void);
+void NonFragmentingChildOf_child_w_base(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5602,6 +5603,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "depth_after_parent_reparent_different_depth_nested",
         NonFragmentingChildOf_depth_after_parent_reparent_different_depth_nested
+    },
+    {
+        "child_w_base",
+        NonFragmentingChildOf_child_w_base
     }
 };
 
@@ -13910,7 +13915,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        50,
+        51,
         NonFragmentingChildOf_testcases
     },
     {

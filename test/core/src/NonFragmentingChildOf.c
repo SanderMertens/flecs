@@ -1468,3 +1468,21 @@ void NonFragmentingChildOf_depth_after_parent_reparent_different_depth_nested(vo
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_child_w_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Bar);
+
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsDontInherit);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t b = ecs_new(world);
+    ecs_add(world, b, Bar);
+    ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_add_pair(world, c_1, EcsIsA, b);
+    ecs_add_id(world, c_1, EcsOrderedChildren);
+    ecs_entity_t gc_1 = ecs_insert(world, ecs_value(EcsParent, {c_1}));
+
+    ecs_fini(world);
+}
