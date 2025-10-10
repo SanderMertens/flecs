@@ -635,6 +635,7 @@ void Sparse_entity_w_sparse_pair_to_child_delete_child_exclusive(void);
 void Sparse_entity_w_sparse_pair_to_child_delete_parent_exclusive(void);
 void Sparse_entity_w_sparse_pair_to_recycled_child_delete_child_exclusive(void);
 void Sparse_entity_w_sparse_pair_to_recycled_child_delete_parent_exclusive(void);
+void Sparse_fini_w_sparse_tgt_in_module(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5157,6 +5158,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "entity_w_sparse_pair_to_recycled_child_delete_parent_exclusive",
         Sparse_entity_w_sparse_pair_to_recycled_child_delete_parent_exclusive
+    },
+    {
+        "fini_w_sparse_tgt_in_module",
+        Sparse_fini_w_sparse_tgt_in_module
     }
 };
 
@@ -13336,7 +13341,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        187,
+        188,
         Sparse_testcases,
         1,
         Sparse_params
