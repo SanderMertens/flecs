@@ -305,7 +305,38 @@ int32_t flecs_relation_depth(
     ecs_entity_t r,
     const ecs_table_t *table)
 {
-    ecs_component_record_t *cr = flecs_components_get(world, ecs_pair(r, EcsWildcard));
+    if (r == EcsChildOf) {
+        if (table->flags & EcsTableHasChildOf) {
+            ecs_component_record_t *cr_wc = world->cr_childof_wildcard;
+            const ecs_table_record_t *tr_wc = 
+                flecs_component_get_table(cr_wc, table);
+            ecs_assert(tr_wc != NULL, ECS_INTERNAL_ERROR, NULL);
+            const ecs_table_record_t *tr = &table->_->records[tr_wc->index];
+            ecs_component_record_t *cr = tr->hdr.cr;
+            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+            return cr->pair->depth;
+        } else if (table->flags & EcsTableHasParent) {
+            ecs_component_record_t *cr_wc = flecs_components_get(
+                world, ecs_pair(EcsParentDepth, EcsWildcard));
+            ecs_assert(cr_wc != NULL, ECS_INTERNAL_ERROR, NULL);
+            const ecs_table_record_t *tr_wc = flecs_component_get_table(
+                cr_wc, table);
+            if (!tr_wc) {
+                return 0;
+            }
+
+            ecs_id_t depth_pair = table->type.array[tr_wc->index];
+            ecs_assert(ECS_PAIR_FIRST(depth_pair) == EcsParentDepth, 
+                ECS_INTERNAL_ERROR, NULL);
+            return ECS_PAIR_SECOND(depth_pair);
+        } else {
+            return 0;
+        }
+    }
+
+    ecs_component_record_t *cr = flecs_components_get(
+        world, ecs_pair(r, EcsWildcard));
     if (!cr) {
         return 0;
     }

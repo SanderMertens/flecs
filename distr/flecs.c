@@ -589,13 +589,13 @@ void flecs_component_shrink(
     ecs_component_record_t *cr);
 
 void flecs_component_update_childof_depth(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t tgt,
     const ecs_record_t *tgt_record);
 
 void flecs_component_update_childof_w_depth(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_component_record_t *cr,
     int32_t depth);
 
@@ -18984,7 +18984,38 @@ int32_t flecs_relation_depth(
     ecs_entity_t r,
     const ecs_table_t *table)
 {
-    ecs_component_record_t *cr = flecs_components_get(world, ecs_pair(r, EcsWildcard));
+    if (r == EcsChildOf) {
+        if (table->flags & EcsTableHasChildOf) {
+            ecs_component_record_t *cr_wc = world->cr_childof_wildcard;
+            const ecs_table_record_t *tr_wc = 
+                flecs_component_get_table(cr_wc, table);
+            ecs_assert(tr_wc != NULL, ECS_INTERNAL_ERROR, NULL);
+            const ecs_table_record_t *tr = &table->_->records[tr_wc->index];
+            ecs_component_record_t *cr = tr->hdr.cr;
+            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+            return cr->pair->depth;
+        } else if (table->flags & EcsTableHasParent) {
+            ecs_component_record_t *cr_wc = flecs_components_get(
+                world, ecs_pair(EcsParentDepth, EcsWildcard));
+            ecs_assert(cr_wc != NULL, ECS_INTERNAL_ERROR, NULL);
+            const ecs_table_record_t *tr_wc = flecs_component_get_table(
+                cr_wc, table);
+            if (!tr_wc) {
+                return 0;
+            }
+
+            ecs_id_t depth_pair = table->type.array[tr_wc->index];
+            ecs_assert(ECS_PAIR_FIRST(depth_pair) == EcsParentDepth, 
+                ECS_INTERNAL_ERROR, NULL);
+            return ECS_PAIR_SECOND(depth_pair);
+        } else {
+            return 0;
+        }
+    }
+
+    ecs_component_record_t *cr = flecs_components_get(
+        world, ecs_pair(r, EcsWildcard));
     if (!cr) {
         return 0;
     }
@@ -38665,7 +38696,7 @@ int32_t flecs_component_get_childof_depth(
 
 static
 void flecs_entities_update_childof_depth(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_component_record_t *cr)
 {
     if (cr->flags & EcsIdOrderedChildren) {
@@ -38674,6 +38705,13 @@ void flecs_entities_update_childof_depth(
         for (i = 0; i < count; i ++) {
             ecs_entity_t tgt = entities[i];
             ecs_record_t *r = flecs_entities_get(world, tgt);
+            ecs_table_t *table = r->table;
+
+            if (table->flags & EcsTableHasParent) {
+                ecs_add_id(world, tgt, 
+                    ecs_value_pair(EcsParentDepth, cr->pair->depth));
+            }
+
             if (!(r->row & EcsEntityIsTraversable)) {
                 continue;
             }
@@ -38715,7 +38753,7 @@ void flecs_entities_update_childof_depth(
 }
 
 void flecs_component_update_childof_w_depth(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_component_record_t *cr,
     int32_t depth)
 {
@@ -38731,7 +38769,7 @@ void flecs_component_update_childof_w_depth(
 }
 
 void flecs_component_update_childof_depth(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t tgt,
     const ecs_record_t *tgt_record)
@@ -39216,7 +39254,9 @@ void flecs_remove_non_fragmenting_child_from_table(
     int32_t row)
 {
     ecs_parent_record_t *elem = flecs_component_get_parent_record(cr, table);
-    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!elem) {
+        return;
+    }
 
     elem->count --;
     if (!elem->count) {
@@ -39326,6 +39366,8 @@ void flecs_on_remove_parent(ecs_iter_t *it) {
 
         ecs_assert(it->event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
         flecs_remove_non_fragmenting_child(world, parent, e);
+
+        ecs_remove_id(world, e, ecs_pair(EcsParentDepth, EcsWildcard));
 
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));
