@@ -169,11 +169,13 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
         ecs_component_record_t *cr_parent = 
             flecs_add_non_fragmenting_child(world, new[i].value, e);
 
+        int32_t depth = cr_parent->pair->depth;
+        ecs_add_id(world, e, ecs_value_pair(EcsChildOfDepth, depth));
+
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));
         if (cr) {
-            flecs_component_update_childof_w_depth(
-                world, cr, cr_parent->pair->depth + 1);
+            flecs_component_update_childof_w_depth(world, cr, depth + 1);
         }
     }
 }
