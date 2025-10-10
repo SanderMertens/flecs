@@ -56,6 +56,37 @@ void Id_unresolved_pair_from_str(void);
 void Id_wildcard_pair_from_str(void);
 void Id_any_pair_from_str(void);
 void Id_invalid_pair(void);
+void Id_value_pair_is_wildcard(void);
+void Id_value_pair_w_rel_wildcard_is_wildcard(void);
+void Id_value_pair_w_obj_wildcard_is_wildcard(void);
+void Id_value_pair_w_wildcard_wildcard_is_wildcard(void);
+void Id_value_pair_w_rel_any_is_wildcard(void);
+void Id_value_pair_w_obj_any_is_wildcard(void);
+void Id_value_pair_w_any_any_is_wildcard(void);
+void Id_value_pair_w_override_is_wildcard(void);
+void Id_value_pair_w_toggle_is_wildcard(void);
+void Id_value_pair_id_is_tag(void);
+void Id_value_pair_id_w_rel_component_is_tag(void);
+void Id_value_pair_id_w_obj_component_is_tag(void);
+void Id_value_pair_id_w_rel_component_obj_wildcard_is_tag(void);
+void Id_value_pair_id_w_obj_wildcard_is_tag(void);
+void Id_value_pair_id_w_tag_property_w_obj_component_is_tag(void);
+void Id_value_pair_id_w_tag_property_w_obj_wildcard_is_tag(void);
+void Id_value_pair_w_rel_wildcard_is_tag(void);
+void Id_value_pair_w_wildcard_wildcard_is_tag(void);
+void Id_value_pair_w_rel_any_is_tag(void);
+void Id_value_pair_w_obj_any_is_tag(void);
+void Id_value_pair_w_rel_tag_obj_any_is_tag(void);
+void Id_value_pair_w_any_any_is_tag(void);
+void Id_value_pair_id_override_is_tag(void);
+void Id_value_pair_id_toggle_is_tag(void);
+void Id_value_pair_from_str(void);
+void Id_value_wildcard_pair_from_str(void);
+void Id_value_any_pair_from_str(void);
+void Id_value_pair_match_pair(void);
+void Id_value_wildcard_pair_match_pair(void);
+void Id_pair_match_value_pair(void);
+void Id_wildcard_pair_match_value_pair(void);
 
 // Testsuite 'Entity'
 void Entity_init_id(void);
@@ -706,6 +737,7 @@ void NonFragmentingChildOf_table_child_count_n_children_delete_children(void);
 void NonFragmentingChildOf_table_child_count_n_children_remove_parent_reverse(void);
 void NonFragmentingChildOf_table_child_count_n_children_delete_children_reverse(void);
 void NonFragmentingChildOf_depth_after_parent_set(void);
+void NonFragmentingChildOf_depth_after_nested_parent_set(void);
 void NonFragmentingChildOf_depth_after_parent_replace(void);
 void NonFragmentingChildOf_depth_after_parent_replace_different_depth(void);
 void NonFragmentingChildOf_depth_after_parent_remove(void);
@@ -1526,12 +1558,14 @@ void Pairs_force_relationship_on_relationship(void);
 void Pairs_force_target_on_component(void);
 void Pairs_force_target_on_relationship(void);
 void Pairs_force_target_on_target(void);
-<<<<<<< HEAD
 void Pairs_relationship_with_exclusive(void);
-=======
 void Pairs_add_value_pair(void);
+void Pairs_add_value_pairs(void);
+void Pairs_add_exclusive_value_pairs(void);
+void Pairs_remove_value_pairs_wildcard(void);
 void Pairs_value_pair_to_str(void);
->>>>>>> 85e8fbe4e (Implement basic support for value pairs)
+void Pairs_has_value_pair_wildcard(void);
+void Pairs_has_value_pair_any(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -2907,6 +2941,7 @@ void Internals_non_fragmenting_component_record_depth_after_parent_remove(void);
 void Internals_non_fragmenting_component_record_depth_nested_after_parent_remove(void);
 void Internals_non_fragmenting_component_record_depth_after_parent_add(void);
 void Internals_non_fragmenting_component_record_depth_nested_after_parent_add(void);
+void Internals_component_record_for_value_pair(void);
 void Internals_create_65k_tables(void);
 
 // Testsuite 'Error'
@@ -3116,6 +3151,130 @@ bake_test_case Id_testcases[] = {
     {
         "invalid_pair",
         Id_invalid_pair
+    },
+    {
+        "value_pair_is_wildcard",
+        Id_value_pair_is_wildcard
+    },
+    {
+        "value_pair_w_rel_wildcard_is_wildcard",
+        Id_value_pair_w_rel_wildcard_is_wildcard
+    },
+    {
+        "value_pair_w_obj_wildcard_is_wildcard",
+        Id_value_pair_w_obj_wildcard_is_wildcard
+    },
+    {
+        "value_pair_w_wildcard_wildcard_is_wildcard",
+        Id_value_pair_w_wildcard_wildcard_is_wildcard
+    },
+    {
+        "value_pair_w_rel_any_is_wildcard",
+        Id_value_pair_w_rel_any_is_wildcard
+    },
+    {
+        "value_pair_w_obj_any_is_wildcard",
+        Id_value_pair_w_obj_any_is_wildcard
+    },
+    {
+        "value_pair_w_any_any_is_wildcard",
+        Id_value_pair_w_any_any_is_wildcard
+    },
+    {
+        "value_pair_w_override_is_wildcard",
+        Id_value_pair_w_override_is_wildcard
+    },
+    {
+        "value_pair_w_toggle_is_wildcard",
+        Id_value_pair_w_toggle_is_wildcard
+    },
+    {
+        "value_pair_id_is_tag",
+        Id_value_pair_id_is_tag
+    },
+    {
+        "value_pair_id_w_rel_component_is_tag",
+        Id_value_pair_id_w_rel_component_is_tag
+    },
+    {
+        "value_pair_id_w_obj_component_is_tag",
+        Id_value_pair_id_w_obj_component_is_tag
+    },
+    {
+        "value_pair_id_w_rel_component_obj_wildcard_is_tag",
+        Id_value_pair_id_w_rel_component_obj_wildcard_is_tag
+    },
+    {
+        "value_pair_id_w_obj_wildcard_is_tag",
+        Id_value_pair_id_w_obj_wildcard_is_tag
+    },
+    {
+        "value_pair_id_w_tag_property_w_obj_component_is_tag",
+        Id_value_pair_id_w_tag_property_w_obj_component_is_tag
+    },
+    {
+        "value_pair_id_w_tag_property_w_obj_wildcard_is_tag",
+        Id_value_pair_id_w_tag_property_w_obj_wildcard_is_tag
+    },
+    {
+        "value_pair_w_rel_wildcard_is_tag",
+        Id_value_pair_w_rel_wildcard_is_tag
+    },
+    {
+        "value_pair_w_wildcard_wildcard_is_tag",
+        Id_value_pair_w_wildcard_wildcard_is_tag
+    },
+    {
+        "value_pair_w_rel_any_is_tag",
+        Id_value_pair_w_rel_any_is_tag
+    },
+    {
+        "value_pair_w_obj_any_is_tag",
+        Id_value_pair_w_obj_any_is_tag
+    },
+    {
+        "value_pair_w_rel_tag_obj_any_is_tag",
+        Id_value_pair_w_rel_tag_obj_any_is_tag
+    },
+    {
+        "value_pair_w_any_any_is_tag",
+        Id_value_pair_w_any_any_is_tag
+    },
+    {
+        "value_pair_id_override_is_tag",
+        Id_value_pair_id_override_is_tag
+    },
+    {
+        "value_pair_id_toggle_is_tag",
+        Id_value_pair_id_toggle_is_tag
+    },
+    {
+        "value_pair_from_str",
+        Id_value_pair_from_str
+    },
+    {
+        "value_wildcard_pair_from_str",
+        Id_value_wildcard_pair_from_str
+    },
+    {
+        "value_any_pair_from_str",
+        Id_value_any_pair_from_str
+    },
+    {
+        "value_pair_match_pair",
+        Id_value_pair_match_pair
+    },
+    {
+        "value_wildcard_pair_match_pair",
+        Id_value_wildcard_pair_match_pair
+    },
+    {
+        "pair_match_value_pair",
+        Id_pair_match_value_pair
+    },
+    {
+        "wildcard_pair_match_value_pair",
+        Id_wildcard_pair_match_value_pair
     }
 };
 
@@ -5648,6 +5807,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "depth_after_parent_set",
         NonFragmentingChildOf_depth_after_parent_set
+    },
+    {
+        "depth_after_nested_parent_set",
+        NonFragmentingChildOf_depth_after_nested_parent_set
     },
     {
         "depth_after_parent_replace",
@@ -8831,17 +8994,36 @@ bake_test_case Pairs_testcases[] = {
         Pairs_force_target_on_target
     },
     {
-<<<<<<< HEAD
         "relationship_with_exclusive",
         Pairs_relationship_with_exclusive
-=======
+    },
+    {
         "add_value_pair",
         Pairs_add_value_pair
     },
     {
+        "add_value_pairs",
+        Pairs_add_value_pairs
+    },
+    {
+        "add_exclusive_value_pairs",
+        Pairs_add_exclusive_value_pairs
+    },
+    {
+        "remove_value_pairs_wildcard",
+        Pairs_remove_value_pairs_wildcard
+    },
+    {
         "value_pair_to_str",
         Pairs_value_pair_to_str
->>>>>>> 85e8fbe4e (Implement basic support for value pairs)
+    },
+    {
+        "has_value_pair_wildcard",
+        Pairs_has_value_pair_wildcard
+    },
+    {
+        "has_value_pair_any",
+        Pairs_has_value_pair_any
     }
 };
 
@@ -14226,6 +14408,10 @@ bake_test_case Internals_testcases[] = {
         Internals_non_fragmenting_component_record_depth_nested_after_parent_add
     },
     {
+        "component_record_for_value_pair",
+        Internals_component_record_for_value_pair
+    },
+    {
         "create_65k_tables",
         Internals_create_65k_tables
     }
@@ -14303,7 +14489,7 @@ static bake_test_suite suites[] = {
         "Id",
         NULL,
         NULL,
-        47,
+        78,
         Id_testcases
     },
     {
@@ -14389,7 +14575,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        49,
+        50,
         NonFragmentingChildOf_testcases
     },
     {
@@ -14494,11 +14680,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-<<<<<<< HEAD
-        126,
-=======
-        127,
->>>>>>> 85e8fbe4e (Implement basic support for value pairs)
+        133,
         Pairs_testcases
     },
     {
@@ -14624,7 +14806,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        43,
+        44,
         Internals_testcases
     },
     {
