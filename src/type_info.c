@@ -654,8 +654,10 @@ const ecs_type_info_t* ecs_get_type_info(
         if (!cr) {
             ecs_entity_t first = ecs_pair_first(world, id);
             if (!first || !ecs_has_id(world, first, EcsPairIsTag)) {
-                cr = flecs_components_get(world, 
-                    ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)));
+                if (!ECS_IS_VALUE_PAIR(id)) {
+                    cr = flecs_components_get(world, 
+                        ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)));
+                }
                 if (!cr || !cr->type_info) {
                     cr = NULL;
                 }
