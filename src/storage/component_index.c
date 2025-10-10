@@ -124,14 +124,19 @@ ecs_id_t flecs_component_hash(
     id = ecs_strip_generation(id);
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t r = ECS_PAIR_FIRST(id);
-        ecs_entity_t o = ECS_PAIR_SECOND(id);
-        if (r == EcsAny) {
-            r = EcsWildcard;
+        ecs_entity_t t = ECS_PAIR_SECOND(id);
+
+        if (ECS_IS_VALUE_PAIR(id)) {
+            id = ecs_value_pair(r, t);
+        } else {
+            if (r == EcsAny) {
+                r = EcsWildcard;
+            }
+            if (t == EcsAny) {
+                t = EcsWildcard;
+            }
+            id = ecs_pair(r, t);
         }
-        if (o == EcsAny) {
-            o = EcsWildcard;
-        }
-        id = ecs_pair(r, o);
     }
     return id;
 }
@@ -549,6 +554,7 @@ ecs_component_record_t* flecs_component_new(
 
     bool is_wildcard = ecs_id_is_wildcard(id);
     bool is_pair = ECS_IS_PAIR(id);
+    bool is_value_pair = ECS_IS_VALUE_PAIR(id);
 
     ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
     ecs_table_t *tgt_table = NULL;
@@ -560,7 +566,10 @@ ecs_component_record_t* flecs_component_new(
 
         /* Relationship object can be 0, as tables without a ChildOf 
          * relationship are added to the (ChildOf, 0) component record */
-        tgt = ECS_PAIR_SECOND(id);
+        if (!is_value_pair) {
+            tgt = ECS_PAIR_SECOND(id);
+        }
+
         if (tgt) {
             ecs_entity_t alive_tgt = flecs_entities_get_alive(world, tgt);
             ecs_assert(alive_tgt != 0, ECS_INVALID_PARAMETER,
@@ -585,17 +594,17 @@ ecs_component_record_t* flecs_component_new(
 
         if (!is_wildcard && (rel != EcsFlag) && is_pair) {
             /* Inherit flags from (relationship, *) record */
-            ecs_component_record_t *cr_r = flecs_components_ensure(
-                world, ecs_pair(rel, EcsWildcard));
+            ecs_id_t parent_id = ecs_pair(rel, EcsWildcard);
+            ecs_component_record_t *cr_r = flecs_components_ensure(world, parent_id);
             cr->pair->parent = cr_r;
             cr->flags = cr_r->flags;
 
             /* If pair is not a wildcard, append it to wildcard lists. These 
              * allow for quickly enumerating all relationships for an object, 
              * or all objects for a relationship. */
-            flecs_insert_id_elem(world, cr, ecs_pair(rel, EcsWildcard), cr_r);
+            flecs_insert_id_elem(world, cr, parent_id, cr_r);
 
-            if (tgt) {
+            if (!is_value_pair && tgt) {
                 cr_t = flecs_components_ensure(world, ecs_pair(EcsWildcard, tgt));
                 flecs_insert_id_elem(world, cr, ecs_pair(EcsWildcard, tgt), cr_t);
             }
@@ -696,7 +705,9 @@ void flecs_component_free(
             if (ECS_PAIR_FIRST(id) != EcsFlag) {
                 /* If id is not a wildcard, remove it from the wildcard lists */
                 flecs_remove_id_elem(cr, ecs_pair(rel, EcsWildcard));
-                flecs_remove_id_elem(cr, ecs_pair(EcsWildcard, tgt));
+                if (!ECS_IS_VALUE_PAIR(id)) {
+                    flecs_remove_id_elem(cr, ecs_pair(EcsWildcard, tgt));
+                }
             }
         } else {
             ecs_log_push_2();

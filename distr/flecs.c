@@ -5275,6 +5275,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsOnDelete, EcsExclusive);
     ecs_add_id(world, EcsOnDeleteTarget, EcsExclusive);
     ecs_add_id(world, EcsOnInstantiate, EcsExclusive);
+    ecs_add_id(world, EcsChildOfDepth, EcsExclusive);
 
     /* Unqueryable entities */
     ecs_add_id(world, EcsThis, EcsNotQueryable);
@@ -10570,10 +10571,13 @@ void ecs_make_alive_id(
                 "first element of pair is not alive");
             ecs_make_alive(world, r);
         }
-        if (flecs_entities_get_alive(world, t) == 0) {
-            ecs_assert(!ecs_exists(world, t), ECS_INVALID_PARAMETER,
-                "second element of pair is not alive");
-            ecs_make_alive(world, t);
+
+        if (!ECS_IS_VALUE_PAIR(component)) {
+            if (flecs_entities_get_alive(world, t) == 0) {
+                ecs_assert(!ecs_exists(world, t), ECS_INVALID_PARAMETER,
+                    "second element of pair is not alive");
+                ecs_make_alive(world, t);
+            }
         }
     } else {
         ecs_make_alive(world, component & ECS_COMPONENT_MASK);
@@ -11902,9 +11906,20 @@ bool ecs_id_match(
             "first element of pair cannot be 0");
         ecs_check(pattern_second != 0, ECS_INVALID_PARAMETER,
             "second element of pair cannot be 0");
+
+        bool pattern_first_wildcard = pattern_first == EcsWildcard;
+        bool pattern_second_wc = pattern_second == EcsWildcard;
+        if (ECS_IS_VALUE_PAIR(pattern)) {
+            if (!ECS_IS_VALUE_PAIR(id)) {
+                return false;
+            }
+
+            pattern_first_wildcard = false;   
+            pattern_second_wc = false;
+        }
         
-        if (pattern_first == EcsWildcard) {
-            if (pattern_second == EcsWildcard || pattern_second == id_second) {
+        if (pattern_first_wildcard) {
+            if (pattern_second_wc || pattern_second == id_second) {
                 return true;
             }
         } else if (pattern_first == EcsFlag) {
@@ -12058,9 +12073,9 @@ ecs_id_t ecs_id_from_str(
 }
 
 const char* ecs_id_flag_str(
-    ecs_entity_t entity)
+    uint64_t entity)
 {
-    if (ECS_HAS_ID_FLAG(entity, VALUE_PAIR)) {
+    if (ECS_IS_VALUE_PAIR(entity)) {
         return "VALUE_PAIR";
     } else
     if (ECS_HAS_ID_FLAG(entity, PAIR)) {
@@ -12095,7 +12110,7 @@ void ecs_id_str_buf(
         ecs_strbuf_appendch(buf, '|');
     }
 
-    if (ECS_HAS_ID_FLAG(id, PAIR) || ECS_HAS_ID_FLAG(id, VALUE_PAIR)) {
+    if (ECS_HAS_ID_FLAG(id, PAIR)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
         ecs_entity_t tgt = ECS_PAIR_SECOND(id);
 
@@ -12107,7 +12122,8 @@ void ecs_id_str_buf(
         ecs_strbuf_appendch(buf, '(');
         ecs_get_path_w_sep_buf(world, 0, rel, NULL, NULL, buf, false);
         ecs_strbuf_appendch(buf, ',');
-        if (ECS_HAS_ID_FLAG(id, VALUE_PAIR)) {
+
+        if (ECS_IS_VALUE_PAIR(id)) {
             ecs_strbuf_appendlit(buf, "@");
             ecs_strbuf_appendint(buf, (uint32_t)tgt);
         } else {
@@ -12116,6 +12132,7 @@ void ecs_id_str_buf(
             }
             ecs_get_path_w_sep_buf(world, 0, tgt, NULL, NULL, buf, false);
         }
+
         ecs_strbuf_appendch(buf, ')');
     } else {
         ecs_entity_t e = id & ECS_COMPONENT_MASK;
@@ -12150,13 +12167,20 @@ bool ecs_id_is_tag(
 {
     if (ecs_id_is_wildcard(id)) {
         /* If id is a wildcard, we can't tell if it's a tag or not, except
-         * when the relationship part of a pair has the Tag property */
+         * when the relationship part of a pair has the PairIsTag property */
         if (ECS_HAS_ID_FLAG(id, PAIR)) {
-            if (ECS_PAIR_FIRST(id) != EcsWildcard) {
+            ecs_entity_t first = ECS_PAIR_FIRST(id);
+            if (first != EcsWildcard && first != EcsAny) {
                 ecs_entity_t rel = ecs_pair_first(world, id);
                 if (ecs_is_valid(world, rel)) {
                     if (ecs_has_id(world, rel, EcsPairIsTag)) {
                         return true;
+                    }
+
+                    if (ECS_IS_VALUE_PAIR(id)) {
+                        if (flecs_type_info_get(world, rel) == NULL) {
+                            return true;
+                        }
                     }
                 } else {
                     /* During bootstrap it's possible that not all ids are valid
@@ -20140,6 +20164,29 @@ const ecs_type_info_t* ecs_get_type_info(
     world = ecs_get_world(world);
 
     ecs_component_record_t *cr = flecs_components_get(world, id);
+<<<<<<< HEAD
+=======
+    if (!cr && ECS_IS_PAIR(id)) {
+        cr = flecs_components_get(world, 
+            ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
+        if (!cr || !cr->type_info) {
+            cr = NULL;
+        }
+        if (!cr) {
+            ecs_entity_t first = ecs_pair_first(world, id);
+            if (!first || !ecs_has_id(world, first, EcsPairIsTag)) {
+                if (!ECS_IS_VALUE_PAIR(id)) {
+                    cr = flecs_components_get(world, 
+                        ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)));
+                }
+                if (!cr || !cr->type_info) {
+                    cr = NULL;
+                }
+            }
+        }
+    }
+
+>>>>>>> f6109cb20 (Improve support for value pairs)
     if (cr) {
         return cr->type_info;
     } else {
@@ -20394,7 +20441,7 @@ error:
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
 const ecs_id_t ECS_AUTO_OVERRIDE =                                 (1ull << 62);
 const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
-const ecs_id_t ECS_VALUE_PAIR =                                    (1ull << 60);
+const ecs_id_t ECS_VALUE_PAIR =                                    ((1ull << 60) | ECS_PAIR);
 
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =                                   1;
@@ -36191,17 +36238,20 @@ int flecs_term_finalize(
 
     if (first->name && (first->id & ~EcsTermRefFlags)) {
         flecs_query_validator_error(ctx, 
-            "first.name and first.id have competing values");
+            "first.name (%s) and first.id have competing values",
+                first->name);
         return -1;
     }
     if (src->name && (src->id & ~EcsTermRefFlags)) {
         flecs_query_validator_error(ctx, 
-            "src.name and src.id have competing values");
+            "src.name (%s) and src.id have competing values",
+                src->name);
         return -1;
     }
     if (second->name && (second->id & ~EcsTermRefFlags)) {
         flecs_query_validator_error(ctx, 
-            "second.name and second.id have competing values");
+            "second.name (%s) and second.id have competing values", 
+                second->name);
         return -1;
     }
 
@@ -37626,14 +37676,19 @@ ecs_id_t flecs_component_hash(
     id = ecs_strip_generation(id);
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t r = ECS_PAIR_FIRST(id);
-        ecs_entity_t o = ECS_PAIR_SECOND(id);
-        if (r == EcsAny) {
-            r = EcsWildcard;
+        ecs_entity_t t = ECS_PAIR_SECOND(id);
+
+        if (ECS_IS_VALUE_PAIR(id)) {
+            id = ecs_value_pair(r, t);
+        } else {
+            if (r == EcsAny) {
+                r = EcsWildcard;
+            }
+            if (t == EcsAny) {
+                t = EcsWildcard;
+            }
+            id = ecs_pair(r, t);
         }
-        if (o == EcsAny) {
-            o = EcsWildcard;
-        }
-        id = ecs_pair(r, o);
     }
     return id;
 }
@@ -38051,6 +38106,7 @@ ecs_component_record_t* flecs_component_new(
 
     bool is_wildcard = ecs_id_is_wildcard(id);
     bool is_pair = ECS_IS_PAIR(id);
+    bool is_value_pair = ECS_IS_VALUE_PAIR(id);
 
     ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
     ecs_table_t *tgt_table = NULL;
@@ -38062,7 +38118,10 @@ ecs_component_record_t* flecs_component_new(
 
         /* Relationship object can be 0, as tables without a ChildOf 
          * relationship are added to the (ChildOf, 0) component record */
-        tgt = ECS_PAIR_SECOND(id);
+        if (!is_value_pair) {
+            tgt = ECS_PAIR_SECOND(id);
+        }
+
         if (tgt) {
             ecs_entity_t alive_tgt = flecs_entities_get_alive(world, tgt);
             ecs_assert(alive_tgt != 0, ECS_INVALID_PARAMETER,
@@ -38087,17 +38146,21 @@ ecs_component_record_t* flecs_component_new(
 
         if (!is_wildcard && (rel != EcsFlag) && is_pair) {
             /* Inherit flags from (relationship, *) record */
-            ecs_component_record_t *cr_r = flecs_components_ensure(
-                world, ecs_pair(rel, EcsWildcard));
+            ecs_id_t parent_id = ecs_pair(rel, EcsWildcard);
+            ecs_component_record_t *cr_r = flecs_components_ensure(world, parent_id);
             cr->pair->parent = cr_r;
             cr->flags = cr_r->flags;
 
             /* If pair is not a wildcard, append it to wildcard lists. These 
              * allow for quickly enumerating all relationships for an object, 
              * or all objects for a relationship. */
-            flecs_insert_id_elem(world, cr, ecs_pair(rel, EcsWildcard), cr_r);
+            flecs_insert_id_elem(world, cr, parent_id, cr_r);
 
+<<<<<<< HEAD
             if (tgt) {
+=======
+            if (!is_value_pair) {
+>>>>>>> f6109cb20 (Improve support for value pairs)
                 cr_t = flecs_components_ensure(world, ecs_pair(EcsWildcard, tgt));
                 flecs_insert_id_elem(world, cr, ecs_pair(EcsWildcard, tgt), cr_t);
             }
@@ -38198,7 +38261,9 @@ void flecs_component_free(
             if (ECS_PAIR_FIRST(id) != EcsFlag) {
                 /* If id is not a wildcard, remove it from the wildcard lists */
                 flecs_remove_id_elem(cr, ecs_pair(rel, EcsWildcard));
-                flecs_remove_id_elem(cr, ecs_pair(EcsWildcard, tgt));
+                if (!ECS_IS_VALUE_PAIR(id)) {
+                    flecs_remove_id_elem(cr, ecs_pair(EcsWildcard, tgt));
+                }
             }
         } else {
             ecs_log_push_2();
@@ -39287,11 +39352,13 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
         ecs_component_record_t *cr_parent = 
             flecs_add_non_fragmenting_child(world, new[i].value, e);
 
+        int32_t depth = cr_parent->pair->depth;
+        ecs_add_id(world, e, ecs_value_pair(EcsChildOfDepth, depth));
+
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));
         if (cr) {
-            flecs_component_update_childof_w_depth(
-                world, cr, cr_parent->pair->depth + 1);
+            flecs_component_update_childof_w_depth(world, cr, depth + 1);
         }
     }
 }
@@ -40887,6 +40954,11 @@ void flecs_table_init(
          * linear scan to find all occurrences for a target. */
         for (dst_i = first_pair; dst_i < last_pair; dst_i ++) {
             ecs_id_t dst_id = dst_ids[dst_i];
+
+            if (ECS_IS_VALUE_PAIR(dst_id)) {
+                continue;
+            }
+
             ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));
 
             flecs_table_append_to_records(
@@ -61314,6 +61386,21 @@ const char* flecs_term_parse_arg(
         // Position(src
         //          ^
         Parse(
+            case '@': {
+                parser->term->id = ECS_VALUE_PAIR;
+                Parse(
+                    case '*':
+                        ref->id = EcsWildcard;
+                        break;
+                    case EcsTokIdentifier:
+                        ref->name = Token(1);
+                        break;
+                    case EcsTokNumber:
+                        ref->id = atoi(Token(1));
+                        break;
+                );
+                break;
+            }
             case EcsTokTermIdentifier: {
                 ref->name = Token(0);
 

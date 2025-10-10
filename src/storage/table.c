@@ -668,6 +668,11 @@ void flecs_table_init(
          * linear scan to find all occurrences for a target. */
         for (dst_i = first_pair; dst_i < last_pair; dst_i ++) {
             ecs_id_t dst_id = dst_ids[dst_i];
+
+            if (ECS_IS_VALUE_PAIR(dst_id)) {
+                continue;
+            }
+
             ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));
 
             flecs_table_append_to_records(

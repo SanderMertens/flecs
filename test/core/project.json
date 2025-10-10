@@ -60,7 +60,38 @@
                 "unresolved_pair_from_str",
                 "wildcard_pair_from_str",
                 "any_pair_from_str",
-                "invalid_pair"
+                "invalid_pair",
+                "value_pair_is_wildcard",
+                "value_pair_w_rel_wildcard_is_wildcard",
+                "value_pair_w_obj_wildcard_is_wildcard",
+                "value_pair_w_wildcard_wildcard_is_wildcard",
+                "value_pair_w_rel_any_is_wildcard",
+                "value_pair_w_obj_any_is_wildcard",
+                "value_pair_w_any_any_is_wildcard",
+                "value_pair_w_override_is_wildcard",
+                "value_pair_w_toggle_is_wildcard",
+                "value_pair_id_is_tag",
+                "value_pair_id_w_rel_component_is_tag",
+                "value_pair_id_w_obj_component_is_tag",
+                "value_pair_id_w_rel_component_obj_wildcard_is_tag",
+                "value_pair_id_w_obj_wildcard_is_tag",
+                "value_pair_id_w_tag_property_w_obj_component_is_tag",
+                "value_pair_id_w_tag_property_w_obj_wildcard_is_tag",
+                "value_pair_w_rel_wildcard_is_tag",
+                "value_pair_w_wildcard_wildcard_is_tag",
+                "value_pair_w_rel_any_is_tag",
+                "value_pair_w_obj_any_is_tag",
+                "value_pair_w_rel_tag_obj_any_is_tag",
+                "value_pair_w_any_any_is_tag",
+                "value_pair_id_override_is_tag",
+                "value_pair_id_toggle_is_tag",
+                "value_pair_from_str",
+                "value_wildcard_pair_from_str",
+                "value_any_pair_from_str",
+                "value_pair_match_pair",
+                "value_wildcard_pair_match_pair",
+                "pair_match_value_pair",
+                "wildcard_pair_match_value_pair"
             ]
         }, {
             "id": "Entity",
@@ -740,6 +771,7 @@
                 "table_child_count_n_children_remove_parent_reverse",
                 "table_child_count_n_children_delete_children_reverse",
                 "depth_after_parent_set",
+                "depth_after_nested_parent_set",
                 "depth_after_parent_replace",
                 "depth_after_parent_replace_different_depth",
                 "depth_after_parent_remove",
@@ -1593,7 +1625,12 @@
                 "force_target_on_target",
                 "relationship_with_exclusive",
                 "add_value_pair",
-                "value_pair_to_str"
+                "add_value_pairs",
+                "add_exclusive_value_pairs",
+                "remove_value_pairs_wildcard",
+                "value_pair_to_str",
+                "has_value_pair_wildcard",
+                "has_value_pair_any"
             ]
         }, {
            "id": "Trigger",
@@ -3005,6 +3042,7 @@
                 "non_fragmenting_component_record_depth_nested_after_parent_remove",
                 "non_fragmenting_component_record_depth_after_parent_add",
                 "non_fragmenting_component_record_depth_nested_after_parent_add",
+                "component_record_for_value_pair",
                 "create_65k_tables"
 
             ]
