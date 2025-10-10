@@ -33,7 +33,9 @@ void flecs_remove_non_fragmenting_child_from_table(
     int32_t row)
 {
     ecs_parent_record_t *elem = flecs_component_get_parent_record(cr, table);
-    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!elem) {
+        return;
+    }
 
     elem->count --;
     if (!elem->count) {
@@ -144,6 +146,8 @@ void flecs_on_remove_parent(ecs_iter_t *it) {
         ecs_assert(it->event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
         flecs_remove_non_fragmenting_child(world, parent, e);
 
+        ecs_remove_id(world, e, ecs_pair(EcsParentDepth, EcsWildcard));
+
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));
 
@@ -170,7 +174,7 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
             flecs_add_non_fragmenting_child(world, new[i].value, e);
 
         int32_t depth = cr_parent->pair->depth;
-        ecs_add_id(world, e, ecs_value_pair(EcsChildOfDepth, depth));
+        ecs_add_id(world, e, ecs_value_pair(EcsParentDepth, depth));
 
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));

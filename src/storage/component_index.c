@@ -1109,7 +1109,7 @@ int32_t flecs_component_get_childof_depth(
 
 static
 void flecs_entities_update_childof_depth(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_component_record_t *cr)
 {
     if (cr->flags & EcsIdOrderedChildren) {
@@ -1118,6 +1118,13 @@ void flecs_entities_update_childof_depth(
         for (i = 0; i < count; i ++) {
             ecs_entity_t tgt = entities[i];
             ecs_record_t *r = flecs_entities_get(world, tgt);
+            ecs_table_t *table = r->table;
+
+            if (table->flags & EcsTableHasParent) {
+                ecs_add_id(world, tgt, 
+                    ecs_value_pair(EcsParentDepth, cr->pair->depth));
+            }
+
             if (!(r->row & EcsEntityIsTraversable)) {
                 continue;
             }
@@ -1159,7 +1166,7 @@ void flecs_entities_update_childof_depth(
 }
 
 void flecs_component_update_childof_w_depth(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_component_record_t *cr,
     int32_t depth)
 {
@@ -1175,7 +1182,7 @@ void flecs_component_update_childof_w_depth(
 }
 
 void flecs_component_update_childof_depth(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t tgt,
     const ecs_record_t *tgt_record)
