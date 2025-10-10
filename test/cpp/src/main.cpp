@@ -1576,6 +1576,9 @@ void Meta_ser_deser_std_string(void);
 void Meta_ser_deser_std_vector_int(void);
 void Meta_ser_deser_std_vector_std_string(void);
 void Meta_ser_deser_type_w_std_string_std_vector_std_string(void);
+void Meta_ser_deser_std_optional_int(void);
+void Meta_ser_deser_std_optional_std_vector_int(void);
+void Meta_ser_deser_std_optional_std_string(void);
 void Meta_std_vector_random_access(void);
 void Meta_struct_random_access(void);
 void Meta_ser_deser_flecs_entity(void);
@@ -7802,6 +7805,18 @@ bake_test_case Meta_testcases[] = {
         Meta_ser_deser_type_w_std_string_std_vector_std_string
     },
     {
+        "ser_deser_std_optional_int",
+        Meta_ser_deser_std_optional_int
+    },
+    {
+        "ser_deser_std_optional_std_vector_int",
+        Meta_ser_deser_std_optional_std_vector_int
+    },
+    {
+        "ser_deser_std_optional_std_string",
+        Meta_ser_deser_std_optional_std_string
+    },
+    {
         "std_vector_random_access",
         Meta_std_vector_random_access
     },
@@ -8251,7 +8266,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        65,
+        68,
         Meta_testcases
     },
     {
