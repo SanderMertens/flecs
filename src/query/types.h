@@ -87,6 +87,8 @@ typedef enum {
     EcsQueryTree,
     EcsQueryTreeWildcard,
     EcsQueryTreeWith,       /* Evaluate (ChildOf, tgt) against fixed or variable source */
+    EcsQueryTreeUp,         /* Return union of up(ChildOf) and tables with Parent */
+    EcsQueryTreeSelfUp,
     EcsQueryChildren,       /* Return children for parent, if possible in order */
     EcsQueryChildrenWc,     /* Return children for parents, if possible in order */
     EcsQueryLookup,         /* Lookup relative to variable */
@@ -190,7 +192,7 @@ typedef struct {
 
 /* Down traversal cache (for resolving up queries w/unknown source) */
 typedef struct {
-    ecs_table_t *table;
+    ecs_table_range_t range;
     bool leaf; /* Table owns and inherits id (for Up queries without Self) */
 } ecs_trav_down_elem_t;
 
