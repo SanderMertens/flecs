@@ -21,4 +21,8 @@ cc_test(
     
     srcs = glob(["cpp/src/*.cpp", "cpp/**/*.h"]),
     includes = ["cpp/include"],
+    cxxopts = select({
+        "@bazel_tools//src/conditions:windows": ["/std:c++17"],
+        "//conditions:default": ["--std=c++17"],
+    }),
 )
