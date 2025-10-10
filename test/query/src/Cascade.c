@@ -1295,7 +1295,30 @@ void Cascade_nested_target_deletion(void) {
 }
 
 void Cascade_parent_component(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p0 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_set(world, p0, Position, {10, 20});
+    ecs_entity_t p1 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_set(world, p1, Position, {11, 21});
+    ecs_entity_t p2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_set(world, p2, Position, {12, 22});
+
+    ecs_entity_t c0 = ecs_insert(world, ecs_value(EcsParent, {p0}));
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p1}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p2}));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsCascade }}
+    });
+
+    test_assert(q != NULL);
+
+    printf("%s\n", ecs_query_plan(ecs_query_get_cache_query(q)));
+
+    ecs_fini(world);
 }
 
 void Cascade_parent_component_w_childof(void) {
