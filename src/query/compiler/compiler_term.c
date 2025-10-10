@@ -1064,6 +1064,7 @@ void flecs_query_mark_last_or_op(
 
 static
 void flecs_query_set_op_kind(
+    ecs_query_impl_t *query,
     ecs_query_op_t *op,
     ecs_term_t *term,
     bool src_is_var)
@@ -1109,8 +1110,18 @@ void flecs_query_set_op_kind(
     } else {
         if ((term->src.id & trav_flags) == EcsUp) {
             op->kind = EcsQueryUp;
+            // if (query->pub.flags & EcsQueryNested) {
+            //     if (term->trav == EcsChildOf) {
+            //         op->kind = EcsQueryTreeUp;
+            //     }
+            // }
         } else if ((term->src.id & trav_flags) == (EcsSelf|EcsUp)) {
             op->kind = EcsQuerySelfUp;
+            // if (query->pub.flags & EcsQueryNested) {
+            //     if (term->trav == EcsChildOf) {
+            //         op->kind = EcsQueryTreeSelfUp;
+            //     }
+            // }
         } else if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op->kind = EcsQueryAndAny;
         } else if (ECS_IS_PAIR(term->id) && 
@@ -1244,7 +1255,7 @@ int flecs_query_compile_term(
     op.field_index = flecs_ito(int8_t, term->field_index);
     op.term_index = flecs_ito(int8_t, term - q->terms);
 
-    flecs_query_set_op_kind(&op, term, src_is_var);
+    flecs_query_set_op_kind(query, &op, term, src_is_var);
 
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
     if (op.kind == EcsQuerySparseNot) {
