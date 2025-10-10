@@ -1642,6 +1642,7 @@ END_DEFINE_SPEC(FFlecsEnumTestsSpec);
                 "enum_as_component",
                 "query_enum_wildcard",
                 "query_enum_constant",
+                "query_singleton_enum_constant",
                 "enum_type_from_stage",
                 "add_enum_from_stage",
                 "enum_w_2_worlds",
@@ -1696,6 +1697,7 @@ void FFlecsEnumTestsSpec::Define()
     It("enum_as_component", [&]() { Enum_enum_as_component(); });
     It("query_enum_wildcard", [&]() { Enum_query_enum_wildcard(); });
     It("query_enum_constant", [&]() { Enum_query_enum_constant(); });
+    It("query_singleton_enum_constant", [&]() { Enum_query_singleton_enum_constant(); });
     It("enum_type_from_stage", [&]() { Enum_enum_type_from_stage(); });
     It("add_enum_from_stage", [&]() { Enum_add_enum_from_stage(); });
     It("enum_w_2_worlds", [&]() { Enum_enum_w_2_worlds(); });

@@ -142,6 +142,44 @@ static flecs::opaque<std::vector<T>, T> std_vector_support(flecs::world& world) 
     return ts;
 }
 
+template <typename T>
+static flecs::opaque<std::optional<T>, T>
+std_optional_support(flecs::world &world) {
+    return flecs::opaque<std::optional<T>, T>()
+      .as_type(world.vector<T>())
+      .serialize(
+        [](const flecs::serializer *s, const std::optional<T> *data) {
+          if (*data) {
+            s->value(**data);
+          }
+          return 0;
+        })
+      .count([](const std::optional<T> *data) -> size_t {
+        return *data ? 1 : 0;
+      })
+      .resize([](std::optional<T> *data, size_t size) {
+        switch (size) {
+        case 0:
+                *data = std::nullopt;
+                break;
+              case 1:
+                if(!data->has_value()) {
+                  *data = T();
+                }
+                break;
+              default:
+                assert(false);
+              }
+            })
+            .ensure_element(
+              [](std::optional<T> *data, size_t) {
+                  if(!data->has_value()) {
+                    *data = T();
+                  }
+                  return &data->value();
+                });
+}
+
 void Meta_struct(void) {
     flecs::world ecs;
 
@@ -1462,6 +1500,69 @@ void Meta_parented_opaque_as_type_parent(void) {
     // Implement testcase
 }
 
+void Meta_ser_deser_std_optional_int(void) {
+    flecs::world world;
+
+    world.component<std::optional<int>>()
+        .opaque(&FFlecsMetaTestsSpec::std_optional_support<int>);
+
+    std::optional<int> o = std::nullopt;
+    test_str(world.to_json(&o).c_str(), "[]");
+
+    o = 1;
+    test_str(world.to_json(&o).c_str(), "[1]");
+
+    world.from_json(&o, "[]");
+    test_str(world.to_json(&o).c_str(), "[]");
+
+    world.from_json(&o, "[2]");
+    test_str(world.to_json(&o).c_str(), "[2]");
+}
+
+void Meta_ser_deser_std_optional_std_vector_int(void) {
+    flecs::world world;
+
+    world.component<std::vector<int>>()
+        .opaque(&std_vector_support<int>);
+
+    world.component<std::optional<std::vector<int>>>()
+        .opaque(&std_optional_support<std::vector<int>>);
+
+    std::optional<std::vector<int>> o = std::nullopt;
+    test_str(world.to_json(&o).c_str(), "[]");
+
+    o = {1, 2, 3};
+    test_str(world.to_json(&o).c_str(), "[[1, 2, 3]]");
+
+    world.from_json(&o, "[]");
+    test_str(world.to_json(&o).c_str(), "[]");
+
+    world.from_json(&o, "[[4, 5, 6]]");
+    test_str(world.to_json(&o).c_str(), "[[4, 5, 6]]");
+}
+
+void Meta_ser_deser_std_optional_std_string(void) {
+    flecs::world world;
+
+    world.component<std::string>()
+        .opaque(&FFlecsMetaTestsSpec::std_string_support);
+
+    world.component<std::optional<std::string>>()
+        .opaque(&FFlecsMetaTestsSpec::std_optional_support<std::string>);
+
+    std::optional<std::string> o = std::nullopt;
+    test_str(world.to_json(&o).c_str(), "[]");
+
+    o = "hello world";
+    test_str(world.to_json(&o).c_str(), "[\"hello world\"]");
+
+    world.from_json(&o, "[]");
+    test_str(world.to_json(&o).c_str(), "[]");
+
+    world.from_json(&o, "[\"foo bar\"]");
+    test_str(world.to_json(&o).c_str(), "[\"foo bar\"]");
+}
+
 END_DEFINE_SPEC(FFlecsMetaTestsSpec);
 
 /*"id": "Meta",
@@ -1529,7 +1630,10 @@ END_DEFINE_SPEC(FFlecsMetaTestsSpec);
                 "script_to_std_vector_std_string",
                 "anonymous_opaque_as_type_parent",
                 "named_opaque_as_type_parent",
-                "parented_opaque_as_type_parent"
+                "parented_opaque_as_type_parent",
+                "ser_deser_std_optional_int",
+                "ser_deser_std_optional_std_vector_int",
+                "ser_deser_std_optional_std_string"
             ]*/
 
 void FFlecsMetaTestsSpec::Define()
@@ -1598,6 +1702,9 @@ void FFlecsMetaTestsSpec::Define()
     It("Meta_anonymous_opaque_as_type_parent", [&]() { Meta_anonymous_opaque_as_type_parent(); });
     It("Meta_named_opaque_as_type_parent", [&]() { Meta_named_opaque_as_type_parent(); });
     It("Meta_parented_opaque_as_type_parent", [&]() { Meta_parented_opaque_as_type_parent(); });
+    It("Meta_ser_deser_std_optional_int", [&]() { Meta_ser_deser_std_optional_int(); });
+    It("Meta_ser_deser_std_optional_std_vector_int", [&]() { Meta_ser_deser_std_optional_std_vector_int(); });
+    It("Meta_ser_deser_std_optional_std_string", [&]() { Meta_ser_deser_std_optional_std_string(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS
