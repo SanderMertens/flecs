@@ -1123,3 +1123,30 @@ void Internals_non_fragmenting_component_record_depth_nested_after_parent_add(vo
 
     ecs_fini(world);
 }
+
+void Internals_component_record_for_value_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_id(world, e, ecs_value_pair(Rel, 10));
+
+    ecs_component_record_t *cr = flecs_components_get(
+        world, ecs_value_pair(Rel, 10));
+    test_assert(cr != NULL);
+    test_uint(ecs_value_pair(Rel, 10), flecs_component_get_id(cr));
+
+    test_assert(flecs_components_get(world, ecs_pair(Rel, 10)) == NULL);
+    test_assert(flecs_components_get(world, ecs_value_pair(Rel, EcsWildcard)) == NULL);
+    test_assert(flecs_components_get(world, ecs_pair(EcsWildcard, 10)) == NULL);
+    test_assert(flecs_components_get(world, ecs_value_pair(EcsWildcard, 10)) == NULL);
+
+    ecs_component_record_t *parent = flecs_components_get(
+        world, ecs_pair(Rel, EcsWildcard));
+    test_assert(parent != NULL);
+    test_uint(ecs_pair(Rel, EcsWildcard), flecs_component_get_id(parent));
+
+    ecs_fini(world);
+}
