@@ -4395,7 +4395,7 @@ ecs_flags32_t ecs_id_get_flags(
  */
 FLECS_API
 const char* ecs_id_flag_str(
-    ecs_id_t component_flags);
+    uint64_t component_flags);
 
 /** Convert component id to string.
  * This operation converts the provided component id to a string. It can output
