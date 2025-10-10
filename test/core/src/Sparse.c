@@ -6100,3 +6100,49 @@ void Sparse_entity_w_sparse_pair_to_recycled_child_delete_parent_exclusive(void)
 
     ecs_fini(world);
 }
+
+void Sparse_fini_w_sparse_tgt_in_module(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t module = ecs_new_w_id(world, EcsModule);
+    ecs_entity_t tag = ecs_new_w_pair(world, EcsChildOf, module);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, Rel, tag);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ ecs_pair(Rel, tag) }}
+        });
+
+        test_assert(q != NULL);
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_int(1, ecs_iter_count(&it));
+        ecs_query_fini(q);
+    }
+
+    ecs_delete(world, parent);
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ ecs_pair(Rel, tag) }}
+        });
+
+        test_assert(q != NULL);
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_int(0, ecs_iter_count(&it));
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+
+    test_assert(true); // no crash
+}
