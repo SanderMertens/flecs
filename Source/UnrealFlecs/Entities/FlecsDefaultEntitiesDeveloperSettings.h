@@ -3,9 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsEntityRecord.h"
+
 #include "Engine/DeveloperSettings.h"
+
 #include "SolidMacros/Macros.h"
+
+#include "FlecsEntityRecord.h"
+
 #include "FlecsDefaultEntitiesDeveloperSettings.generated.h"
 
 namespace Unreal::Flecs

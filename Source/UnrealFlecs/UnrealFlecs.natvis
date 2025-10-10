@@ -1,3 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    
+    <Type Name="FFlecsId">
+        
+        <DisplayString Condition="this->IsPair()">
+            Pair: Relation={this->GetRelation().GetId()} Target={this->GetTarget().GetId()} (RawId={this->GetId()})
+        </DisplayString>
+        <DisplayString>
+            Id={this->GetIndex()} Generation={this->GetGeneration()} RawId={this->GetId()}
+        </DisplayString>
+        
+    </Type>
+
+    <Type Name="FFlecsCommonHandle">
+
+        <!-- One-line display in the Watch/Locals windows -->
+        <DisplayString>
+            {this->IsValid() ? "Valid" : "Invalid"}, Alive={this->IsAlive()},
+            Id={this->GetId().GetIndex()} Generation={this->GetId().GetGeneration()} RawId={this->GetId().GetId()}
+        </DisplayString>
+        
+        <Expand>
+            <Item Name="IsValid">this->IsValid()</Item>
+            <Item Name="IsAlive">this->IsAlive()</Item>
+            <Item Name="IsInStage">this->IsInStage()</Item>
+
+            <Item Name="NativeFlecsWorld">this->GetNativeFlecsWorld()</Item>
+            <Item Name="Entity (flecs::id)">Entity</Item>
+        </Expand>
+            
+    </Type>
+    
 </AutoVisualizer>

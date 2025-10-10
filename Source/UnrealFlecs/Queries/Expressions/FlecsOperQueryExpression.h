@@ -5,9 +5,11 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
+
 #include "FlecsQueryExpression.h"
 #include "Queries/Enums/FlecsQueryOperators.h"
 #include "Types/SolidNotNull.h"
+
 #include "FlecsOperQueryExpression.generated.h"
 
 USTRUCT(BlueprintType, meta = (DisplayName = "Operator Expression"))

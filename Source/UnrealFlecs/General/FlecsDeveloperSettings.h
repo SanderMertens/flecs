@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Engine/DeveloperSettings.h"
+
 #include "FlecsDeveloperSettings.generated.h"
 
 UCLASS(MinimalAPI, BlueprintType, Config = Game, DefaultConfig, Category = "Flecs",

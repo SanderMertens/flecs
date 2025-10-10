@@ -19,6 +19,5 @@ public:
 	{
 		return "Flecs Game Framework Module";
 	}
-
-
+	
 }; // class UFlecsGameFrameworkModule

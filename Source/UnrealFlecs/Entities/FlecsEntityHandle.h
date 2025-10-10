@@ -35,6 +35,10 @@ class UFlecsWorld;
 
 namespace Unreal::Flecs
 {
+	/* @TODO: Documentation
+	 * Global NetSerialize function pointer(also there is an option for a local override using the FFlecs
+	 **/
+	
 	using FEntityNetSerializeFunction
 		= std::function<bool(FFlecsEntityHandle&, TSolidNotNull<UFlecsWorld*>, FArchive&, UPackageMap*, bool&)>;
 
@@ -200,15 +204,7 @@ public:
 	template <typename T>
 	SOLID_INLINE const FSelfType& Set(T&& InValue) const
 	{
-		GetEntity().set(std::forward<T>(InValue));
-		return *this;
-	}
-
-	template <typename TFunction>
-	requires (flecs::is_callable<TFunction>::value)
-	SOLID_INLINE const FSelfType& Set(const TFunction& InFunction) const
-	{
-		GetEntity().set(InFunction);
+		GetEntity().set(MoveTempIfPossible(InValue));
 		return *this;
 	}
 	
@@ -303,9 +299,47 @@ public:
 
 	template <typename TFunction>
 	requires (flecs::is_callable<TFunction>::value)
-	SOLID_INLINE bool Insert(const TFunction& InFunction) const
+	SOLID_INLINE const FSelfType& Insert(const TFunction& InFunction) const
 	{
-		return GetEntity().insert<TFunction>(InFunction);
+		GetEntity().insert(InFunction);
+		return *this;
+	}
+
+	template <typename T, typename ... Args, typename TActual = flecs::actual_type_t<T>>
+	SOLID_INLINE const FSelfType& Emplace(Args&& ... InArgs) const
+	{
+		GetEntity().emplace<T>(std::forward<Args>(InArgs)...);
+		return *this;
+	}
+
+	template <typename TFirst, typename TSecond, typename ... Args, typename TActual = flecs::pair<TFirst, TSecond>>
+	requires (std::is_same<TFirst, TActual>::value)
+	SOLID_INLINE const FSelfType& EmplaceFirst(Args&& ... InArgs) const
+	{
+		GetEntity().emplace<TFirst, TSecond>(std::forward<Args>(InArgs)...);
+		return *this;
+	}
+
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond, typename ... Args>
+	SOLID_INLINE const FSelfType& EmplaceFirst(const TSecond& InSecondType, Args&& ... InArgs) const
+	{
+		GetEntity().emplace_first<TFirst>(FFlecsEntityHandle::GetInputId(*this, InSecondType), std::forward<Args>(InArgs)...);
+		return *this;
+	}
+
+	template <typename TFirst, typename TSecond, typename ... Args, typename TActual = flecs::pair<TFirst, TSecond>>
+	requires (std::is_same<TSecond, TActual>::value)
+	SOLID_INLINE const FSelfType& EmplaceSecond(Args&& ... InArgs) const
+	{
+		GetEntity().emplace<TFirst, TSecond>(std::forward<Args>(InArgs)...);
+		return *this;
+	}
+
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst, typename ... Args>
+	SOLID_INLINE const FSelfType& EmplaceSecond(const TFirst& InFirstType, Args&& ... InArgs) const
+	{
+		GetEntity().emplace_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirstType), std::forward<Args>(InArgs)...);
+		return *this;
 	}
 
 	template <typename T>
@@ -660,7 +694,9 @@ public:
 			AddPair(InFirstTypeValue, InSecondTypeValue);
 		}
 
-		Set(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue), FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
+		Set(FFlecsId::MakePair(
+			FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
+			FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
 				InSecondTypeValue->GetStructureSize(),
 				InValue);
 		return *this;
@@ -850,12 +886,97 @@ public:
 		return *this;
 	}
 
+	NO_DISCARD SOLID_INLINE bool IsA(const FFlecsId InPrefab) const
+	{
+		return HasPair(flecs::IsA, InPrefab);
+	}
+
+	template <typename T>
+	NO_DISCARD SOLID_INLINE bool IsA() const
+	{
+		return HasPairSecond<T>(flecs::IsA);
+	}
+
+	SOLID_INLINE const FSelfType& MarkSlot() const
+	{
+		GetEntity().slot();
+		return *this;
+	}
+
+	SOLID_INLINE const FSelfType& MarkSlot(const FFlecsId InId) const
+	{
+		GetEntity().slot_of(InId);
+		return *this;
+	}
+
+	template <typename T>
+	SOLID_INLINE const FSelfType& MarkSlot() const
+	{
+		GetEntity().slot_of<T>();
+		return *this;
+	}
+
+	template <typename TFunction>
+	SOLID_INLINE const FSelfType& Scope(const TFunction& InFunction) const
+	{
+		GetEntity().scope(std::forward<TFunction>(InFunction));
+		return *this;
+	}
+
 	NO_DISCARD SOLID_INLINE FFlecsEntityView ToView() const
 	{
 		return FFlecsEntityView(GetEntity().view());
 	}
 
-	void AddCollection(TSolidNotNull<UObject*> Collection) const;
+	SOLID_INLINE const FSelfType& AddCollection(const FFlecsId InCollection) const
+	{
+		AddPair(flecs::IsA, InCollection);
+		return *this;
+	}
+
+	SOLID_INLINE const FSelfType& AddCollection(UClass* InCollection) const
+	{
+		return AddCollection(ObtainTypeClass(InCollection));
+	}
+
+	template <Solid::TStaticClassConcept T>
+	SOLID_INLINE const FSelfType& AddCollection() const
+	{
+		return AddCollection(T::StaticClass());
+	}
+
+	NO_DISCARD SOLID_INLINE bool HasCollection(const FFlecsId InCollection) const
+	{
+		return IsA(InCollection);
+	}
+
+	NO_DISCARD SOLID_INLINE bool HasCollection(UClass* InCollection) const
+	{
+		return HasCollection(ObtainTypeClass(InCollection));
+	}
+
+	template <Solid::TStaticClassConcept T>
+	NO_DISCARD SOLID_INLINE bool HasCollection() const
+	{
+		return HasCollection(T::StaticClass());
+	}
+
+	SOLID_INLINE const FSelfType& RemoveCollection(const FFlecsId InCollection) const
+	{
+		RemovePair(flecs::IsA, InCollection);
+		return *this;
+	}
+
+	SOLID_INLINE const FSelfType& RemoveCollection(UClass* InCollection) const
+	{
+		return RemoveCollection(ObtainTypeClass(InCollection));
+	}
+
+	template <Solid::TStaticClassConcept T>
+	SOLID_INLINE const FSelfType& RemoveCollection() const
+	{
+		return RemoveCollection(T::StaticClass());
+	}
 	
 protected:
 	

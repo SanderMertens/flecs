@@ -7,7 +7,7 @@
 #include "UObject/Object.h"
 #include "FlecsGameLoopObject.generated.h"
 
-UCLASS(Abstract, EditInlineNew, BlueprintType, NotBlueprintable, Category="Flecs|GameLoop")
+UCLASS(Abstract, EditInlineNew, BlueprintType, NotBlueprintable, Category = "Flecs|GameLoop")
 class UNREALFLECS_API UFlecsGameLoopObject : public UObject, public IFlecsGameLoopInterface
 {
 	GENERATED_BODY()
@@ -15,4 +15,5 @@ class UNREALFLECS_API UFlecsGameLoopObject : public UObject, public IFlecsGameLo
 public:
 	UFlecsGameLoopObject();
 	UFlecsGameLoopObject(const FObjectInitializer& ObjectInitializer);
+	
 }; // class UFlecsGameLoopObject

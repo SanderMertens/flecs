@@ -137,7 +137,11 @@ public:
 		return GetEntity();
 	}
 
+	NO_DISCARD flecs::world GetNativeFlecsWorld() const;
+	
 	NO_DISCARD TSolidNotNull<UFlecsWorld*> GetFlecsWorld() const;
+	NO_DISCARD bool IsUnrealFlecsWorld() const;
+	
 	NO_DISCARD TSolidNotNull<UWorld*> GetOuterWorld() const;
 	NO_DISCARD FString GetWorldName() const;
 

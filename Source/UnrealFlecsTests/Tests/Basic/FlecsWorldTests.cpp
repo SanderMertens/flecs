@@ -1,10 +1,11 @@
 ﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
-#pragma once
+#include "Misc/AutomationTest.h"
 
 #if WITH_AUTOMATION_TESTS
 
 #include "Tests/FlecsTestTypes.h"
+
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldConverter.h"
 #include "Worlds/UnrealFlecsWorldTag.h"
@@ -15,28 +16,27 @@
  * B. World Tests
  * C. Entity Tests
  */
-TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
+TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1_World",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 	| EAutomationTestFlags::CriticalPriority,
 	"[Flecs][OS-API][World][Entity]")
 {
 	inline static TUniquePtr<FFlecsTestFixtureRAII> Fixture;
 	inline static TObjectPtr<UFlecsWorld> FlecsWorld = nullptr;
-	inline static FFlecsEntityHandle TestEntity;
 
-	BEFORE_ALL()
+	BEFORE_EACH()
 	{
 		Fixture = MakeUnique<FFlecsTestFixtureRAII>();
 		FlecsWorld = Fixture->Fixture.GetFlecsWorld();
 	}
 
-	AFTER_ALL()
+	AFTER_EACH()
 	{
 		Fixture.Reset();
 		FlecsWorld = nullptr;
 	}
 
-	TEST_METHOD_WITH_TAGS(A1_AllocateMemoryOSAPI, "[Flecs][OS-API]")
+	TEST_METHOD(A1_AllocateMemoryOSAPI)
 	{
 		static constexpr uint32 MemorySize = 16;
 		
@@ -47,7 +47,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		Memory = nullptr;
 	}
 
-	TEST_METHOD_WITH_TAGS(A2_ReAllocateMemoryOSAPI, "[Flecs][OS-API]")
+	TEST_METHOD(A2_ReAllocateMemoryOSAPI)
 	{
 		static constexpr uint32 MemorySize = 16;
 		
@@ -60,7 +60,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		ecs_os_free(ReallocatedMemory);
 	}
 
-	TEST_METHOD_WITH_TAGS(A3_CallocOSAPI, "[Flecs][OS-API]")
+	TEST_METHOD(A3_CallocOSAPI)
 	{
 		static constexpr uint32 MemorySize = 16;
 		
@@ -77,13 +77,13 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		ecs_os_free(Memory);
 	}
 
-	TEST_METHOD_WITH_TAGS(A4_GetTimeNowOSAPI, "[Flecs][OS-API]")
+	TEST_METHOD(A4_GetTimeNowOSAPI)
 	{
 		const uint32_t Time = ecs_os_now();
 		ASSERT_THAT(IsTrue(Time > 0));
 	}
 
-	TEST_METHOD_WITH_TAGS(A5_SleepNanoSecondsOSAPI, "[Flecs][OS-API]")
+	TEST_METHOD(A5_SleepNanoSecondsOSAPI)
 	{
 		static FTimespan SleepTime = FTimespan::FromMilliseconds(10);
 		
@@ -94,12 +94,12 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		ASSERT_THAT(IsTrue(EndTime > StartTime));
 	}
 	
-	TEST_METHOD_WITH_TAGS(B1_CanCreateWorld, "[Flecs][World]")
+	TEST_METHOD(B1_CanCreateWorld)
 	{
 		ASSERT_THAT(IsTrue(IsValid(FlecsWorld)));
 	}
 
-	TEST_METHOD_WITH_TAGS(B2_CanGetWorldEntity, "[Flecs][World]")
+	TEST_METHOD(B2_CanGetWorldEntity)
 	{
 		const FFlecsEntityHandle WorldEntity = FlecsWorld->GetWorldEntity();
 		ASSERT_THAT(IsTrue(WorldEntity.IsValid()));
@@ -107,7 +107,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		ASSERT_THAT(AreEqual(FString("World"), WorldEntity.GetName()));
 	}
 
-	TEST_METHOD_WITH_TAGS(B3_CanConvertFlecsWorldToUFlecsWorld, "[Flecs][World]")
+	TEST_METHOD(B3_CanConvertFlecsWorldToUFlecsWorld)
 	{
 		const TSolidNotNull<UFlecsWorld*> ConvertedWorld = Unreal::Flecs::ToFlecsWorld(FlecsWorld->World);
 		ASSERT_THAT(IsTrue(IsValid(ConvertedWorld)));
@@ -115,7 +115,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		ASSERT_THAT(IsTrue(FlecsWorld == ConvertedWorld));
 	}
 
-	TEST_METHOD_WITH_TAGS(B4_IsUnrealFlecsWorld, "[Flecs][World]")
+	TEST_METHOD(B4_IsUnrealFlecsWorld)
 	{
 		ASSERT_THAT(IsTrue(FlecsWorld->HasSingleton<FUnrealFlecsWorldTag>()));
 
@@ -124,13 +124,13 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		ASSERT_THAT(IsFalse(non_unreal_world.has<FUnrealFlecsWorldTag>()));
 	}
 
-	TEST_METHOD_WITH_TAGS(C1_CanCreateEntity, "[Flecs][World][Entity]")
+	TEST_METHOD(C1_CanCreateEntity)
 	{
-		TestEntity = FlecsWorld->CreateEntity();
+		FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
 		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
 	}
 
-	TEST_METHOD_WITH_TAGS(C2_CanCreateEntityWithID, "[Flecs][Entity]")
+	TEST_METHOD(C2_CanCreateEntityWithID)
 	{
 		static constexpr FFlecsId TestId = FLECS_HI_COMPONENT_ID + 10012;
 		
@@ -142,8 +142,9 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		ASSERT_THAT(AreEqual(EntityWithId, FlecsWorld->GetEntity(TestId)));
 	}
 
-	TEST_METHOD_WITH_TAGS(C3_CanAddRemoveTag, "[Flecs][Entity][Tag][Entity-API]")
+	TEST_METHOD(C3_CanAddRemoveTag)
 	{
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
 		const FFlecsEntityHandle Tag = FlecsWorld->CreateEntity();
 		
 		TestEntity.Add(Tag);
@@ -153,7 +154,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		ASSERT_THAT(IsFalse(TestEntity.Has(Tag)));
 	}
 
-	TEST_METHOD_WITH_TAGS(C4_CanCreateNamedEntity, "[Flecs][Entity][Identifier][Entity-Name][Entity-API]")
+	TEST_METHOD(C4_CanCreateNamedEntity)
 	{
 		static FString EntityName = TEXT("MyTestEntity");
 		
@@ -167,9 +168,11 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		));
 	}
 
-	TEST_METHOD_WITH_TAGS(C5_CanSetThenClearEntityName, "[Flecs][Entity][Identifier][Entity-Name][Entity-API]")
+	TEST_METHOD(C5_CanSetThenClearEntityName)
 	{
 		static FString NewEntityName = TEXT("MyRenamedTestEntity");
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
 		
 		TestEntity.SetName(NewEntityName);
 		ASSERT_THAT(AreEqual(NewEntityName, TestEntity.GetName()));
@@ -185,6 +188,6 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1.World",
 		ASSERT_THAT(IsFalse(FlecsWorld->LookupEntity(NewEntityName).IsValid()));
 	}
 	
-}; // End of A1_UnrealFlecsBasicTests
+}; // End of A1_UnrealFlecsBasicTests*/
 
 #endif // #if WITH_AUTOMATION_TESTS

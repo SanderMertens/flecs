@@ -8,6 +8,7 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
+#include "Misc/CoreDelegates.h"
 
 #include "SolidMacros/Macros.h"
 #include "Standard/robin_hood.h"
@@ -16,7 +17,7 @@
 
 namespace Unreal::Flecs
 {
-	using FFlecsComponentFunction = std::function<void(flecs::world, FFlecsComponentHandle&)>;
+	using FFlecsComponentFunction = std::function<void(flecs::world, const FFlecsComponentHandle&)>;
 } // namespace Unreal::Flecs
 
 struct UNREALFLECS_API FFlecsComponentProperties
@@ -55,12 +56,12 @@ public:
 
 	NO_DISCARD const FFlecsComponentProperties& GetComponentProperties(const FString& Name) const;
 
-	robin_hood::unordered_flat_map<std::string, FFlecsComponentProperties> ComponentProperties;
+	robin_hood::unordered_map<std::string, FFlecsComponentProperties> ComponentProperties;
 	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
 	
 }; // struct FFlecsComponentPropertiesRegistry
 
-// std::function<void(flecs::world, FFlecsComponentHandle&)>
+// std::function<void(flecs::world, const FFlecsComponentHandle&)>
 #define REGISTER_FLECS_COMPONENT(Name, RegistrationFunction) \
 	namespace \
 	{ \

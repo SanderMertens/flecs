@@ -10,7 +10,7 @@
 class UFlecsWorld;
 
 // This class does not need to be modified.
-UINTERFACE(BlueprintType, meta=(CannotImplementInterfaceInBlueprint))
+UINTERFACE(BlueprintType, meta = (CannotImplementInterfaceInBlueprint))
 class UFlecsObjectRegistrationInterface : public UInterface
 {
 	GENERATED_BODY()

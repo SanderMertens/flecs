@@ -2,6 +2,10 @@
 
 #include "FlecsAbstractWorldSubsystem.h"
 
+#include "Subsystems/SubsystemCollection.h"
+
+#include "FlecsWorldSubsystem.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsAbstractWorldSubsystem)
 
 void UFlecsAbstractWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -9,7 +13,7 @@ void UFlecsAbstractWorldSubsystem::Initialize(FSubsystemCollectionBase& Collecti
 	Super::Initialize(Collection);
 
 	Collection.InitializeDependency<UFlecsWorldSubsystem>();
-	FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorldStatic(this);
+	FlecsWorldRef = UFlecsWorldSubsystem::GetDefaultWorldStatic(this);
 }
 
 bool UFlecsAbstractWorldSubsystem::DoesSupportWorldType(const EWorldType::Type WorldType) const

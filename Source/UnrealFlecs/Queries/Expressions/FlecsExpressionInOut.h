@@ -3,9 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "Types/SolidNotNull.h"
+
 #include "FlecsQueryExpression.h"
 #include "Queries/Enums/FlecsQueryInOut.h"
-#include "Types/SolidNotNull.h"
+
 #include "FlecsExpressionInOut.generated.h"
 
 USTRUCT(BlueprintType, meta = (DisplayName = "In/Out Expression"))

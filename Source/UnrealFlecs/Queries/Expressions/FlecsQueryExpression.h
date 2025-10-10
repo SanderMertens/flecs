@@ -50,7 +50,8 @@ struct TStructOpsTypeTraits<FFlecsQueryExpression> : public TStructOpsTypeTraits
 	enum
 	{
 		//WithPureVirtual = true
-	};
+	}; // enum
+	
 }; // struct TStructOpsTypeTraits<FFlecsQueryExpression>
 
 namespace Unreal::Flecs::Queries

@@ -21,7 +21,7 @@ UUnrealFlecsObject::UUnrealFlecsObject(const FObjectInitializer& ObjectInitializ
 {
 }
 
-void UUnrealFlecsObject::InitializeFlecsObject(TSolidNotNull<UFlecsWorld*> InFlecsWorld)
+void UUnrealFlecsObject::InitializeFlecsObject(const TSolidNotNull<UFlecsWorld*> InFlecsWorld)
 {
 	FlecsWorld = InFlecsWorld;
 
@@ -47,7 +47,7 @@ UFlecsWorld* UUnrealFlecsObject::GetFlecsWorld() const
 
 UWorld* UUnrealFlecsObject::GetWorld() const
 {
-	if (FlecsWorld.IsValid())
+	if LIKELY_IF(FlecsWorld.IsValid())
 	{
 		return FlecsWorld->GetWorld();
 	}

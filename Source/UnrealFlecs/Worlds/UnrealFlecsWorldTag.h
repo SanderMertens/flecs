@@ -3,9 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "UnrealFlecsWorldTag.generated.h"
 
-USTRUCT(BlueprintType)
+/*
+ * Signifies that a flecs::world is an Unreal Flecs World.
+ */
+USTRUCT()
 struct FUnrealFlecsWorldTag
 {
 	GENERATED_BODY()

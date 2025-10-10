@@ -2,18 +2,21 @@
 
 #pragma once
 
+#include "Misc/AutomationTest.h"
+
 #if WITH_AUTOMATION_TESTS
 
 #include "CoreMinimal.h"
 
 #include "EngineUtils.h"
-#include "Pipelines/FlecsDefaultGameLoop.h"
+#include "UObject/Object.h"
 #include "Tests/AutomationCommon.h"
 #include "Tests/AutomationEditorCommon.h"
-#include "UObject/Object.h"
-#include "Worlds/FlecsWorldInfoSettings.h"
+
+#include "Worlds/Settings/FlecsWorldInfoSettings.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 #include "Worlds/FlecsWorld.h"
+#include "Pipelines/FlecsDefaultGameLoop.h"
 
 namespace Unreal::Flecs::Testing::impl
 {
@@ -113,7 +116,7 @@ struct UNREALFLECSTESTS_API FFlecsTestFixtureRAII
 	AfterEach([this]() \
 	{ \
 		FixtureName.TearDown(); \
-	}) \
+	})
 
 #define FLECS_FIXTURE_LIFECYCLE_LATENT(FixtureName) \
 	LatentBeforeEach([this](const FDoneDelegate& Done) \

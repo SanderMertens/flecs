@@ -19,14 +19,21 @@ struct UNREALFLECS_API FFlecsArchetype
 
 public:
     FORCEINLINE FFlecsArchetype() = default;
-    FORCEINLINE FFlecsArchetype(const flecs::type& InType) : Type(InType) {}
-    FORCEINLINE FFlecsArchetype(const flecs::type* InType) : Type(*InType) {}
+    
+    FORCEINLINE FFlecsArchetype(const flecs::type& InType) : Type(InType)
+    {
+    }
+    
+    FORCEINLINE FFlecsArchetype(const flecs::type* InType)
+        : Type(*InType)
+    {
+    }
 
-    FORCEINLINE void SetType(const flecs::type& InType) { Type = InType; }
-    FORCEINLINE void SetType(const flecs::type* InType) { Type = *InType; }
+    void SetType(const flecs::type& InType);
+    void SetType(const flecs::type* InType);
 
-    FORCEINLINE flecs::type& GetFlecsType() { return Type; }
-    FORCEINLINE const flecs::type& GetFlecsType() const { return Type; }
+    NO_DISCARD FORCEINLINE flecs::type& GetFlecsType() { return Type; }
+    NO_DISCARD FORCEINLINE const flecs::type& GetFlecsType() const { return Type; }
 
     FORCEINLINE operator flecs::type&() { return GetFlecsType(); }
     FORCEINLINE operator const flecs::type&() const { return GetFlecsType(); }

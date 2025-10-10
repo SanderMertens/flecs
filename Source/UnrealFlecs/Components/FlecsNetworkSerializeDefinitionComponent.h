@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "Entities/FlecsComponentHandle.h"
+#include "Properties/FlecsComponentProperties.h"
 
 #include "FlecsNetworkSerializeDefinitionComponent.generated.h"
 
@@ -20,3 +21,9 @@ public:
 	Unreal::Flecs::FEntityNetSerializeFunction NetSerializeFunction = nullptr;
 	
 }; // struct FFlecsNetworkSerializeDefinitionComponent
+
+REGISTER_FLECS_COMPONENT(FFlecsNetworkSerializeDefinitionComponent,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
+	{
+		
+	});

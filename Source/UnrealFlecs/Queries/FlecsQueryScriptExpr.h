@@ -6,7 +6,7 @@
 #include "FlecsQueryScriptExpr.generated.h"
 
 /**
- * We need this type to have a custom PropertyEditor for the FlecsQueryScriptExpr type.
+ * @TODO: We need this type to have a custom PropertyEditor for the FlecsQueryScriptExpr type.
  */
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsQueryScriptExpr
@@ -16,4 +16,5 @@ struct UNREALFLECS_API FFlecsQueryScriptExpr
 public:
 	UPROPERTY(EditAnywhere, Category = "Query")
 	FString Expr;
+	
 }; // struct FFlecsQueryScriptExpr

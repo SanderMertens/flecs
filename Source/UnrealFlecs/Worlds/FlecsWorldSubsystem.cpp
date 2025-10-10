@@ -2,14 +2,15 @@
 
 #include "Worlds/FlecsWorldSubsystem.h"
 
+#include "Engine/Engine.h"
+#include "UnrealEngine.h"
 #include "GameplayTagsManager.h"
 
 #include "Logs/FlecsCategories.h"
 
 #include "FlecsWorld.h"
-#include "FlecsWorldSettings.h"
-#include "FlecsWorldSettingsAsset.h"
-
+#include "Settings/FlecsWorldSettings.h"
+#include "Settings/FlecsWorldSettingsAsset.h"
 #include "UnrealFlecsWorldTag.h"
 
 #include "Entities/FlecsDefaultEntitiesDeveloperSettings.h"
@@ -26,6 +27,8 @@
 #include "Pipelines/FlecsGameLoopInterface.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsWorldSubsystem)
+
+FFlecsOnWorldInitializedGlobal Unreal::Flecs::GOnFlecsWorldInitialized;
 
 bool UFlecsWorldSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
@@ -158,6 +161,7 @@ UFlecsWorld* UFlecsWorldSubsystem::CreateWorld(const FString& Name, const FFlecs
 	            .Add(flecs::Singleton);
 
 	DefaultWorld->AddSingleton<FUnrealFlecsWorldTag>();
+	
 	DefaultWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent{ DefaultWorld });
 	DefaultWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
 
@@ -191,7 +195,7 @@ UFlecsWorld* UFlecsWorldSubsystem::CreateWorld(const FString& Name, const FFlecs
 	}
 	else
 	{
-		DefaultWorld->SetThreads(static_cast<int32>(std::thread::hardware_concurrency()));
+		DefaultWorld->SetThreads(FMath::Max(1, FPlatformMisc::NumberOfCores() - 2));
 	}
 
 	DefaultWorld->WorldStart();
@@ -227,12 +231,19 @@ UFlecsWorld* UFlecsWorldSubsystem::CreateWorld(const FString& Name, const FFlecs
 
 	DefaultWorld->GameLoopInterface->InitializeGameLoop(DefaultWorld);
 	OnWorldCreatedDelegate.Broadcast(DefaultWorld);
+	Unreal::Flecs::GOnFlecsWorldInitialized.Broadcast(DefaultWorld);
 		
 	return DefaultWorld;
 }
 
 UFlecsWorld* UFlecsWorldSubsystem::GetDefaultWorld() const
 {
+	return DefaultWorld;
+}
+
+UFlecsWorld* UFlecsWorldSubsystem::GetDefaultWorldChecked() const
+{
+	solid_checkf(IsValid(DefaultWorld), TEXT("Default Flecs world is not valid"));
 	return DefaultWorld;
 }
 
@@ -244,19 +255,22 @@ bool UFlecsWorldSubsystem::HasValidFlecsWorld() const
 UFlecsWorld* UFlecsWorldSubsystem::GetDefaultWorldStatic(const UObject* WorldContextObject)
 {
 	solid_check(WorldContextObject);
-		
-	return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)->
-	                GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld;
+
+	const TSolidNotNull<const UWorld*> GameWorld = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
+	const TSolidNotNull<const UFlecsWorldSubsystem*> FlecsWorldSubsystem = GameWorld->GetSubsystemChecked<UFlecsWorldSubsystem>();
+	
+	return FlecsWorldSubsystem->DefaultWorld;
 }
 
 bool UFlecsWorldSubsystem::HasValidFlecsWorldStatic(const UObject* WorldContextObject)
 {
 	solid_check(WorldContextObject);
 		
-	if (GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
+	if LIKELY_IF(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull))
 	{
-		return IsValid(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
-		                      ->GetSubsystem<UFlecsWorldSubsystem>()->DefaultWorld);
+		const TSolidNotNull<const UWorld*> GameWorld = GEngine->GetWorldFromContextObjectChecked(WorldContextObject);
+		const TSolidNotNull<const UFlecsWorldSubsystem*> FlecsWorldSubsystem = GameWorld->GetSubsystemChecked<UFlecsWorldSubsystem>();
+		return FlecsWorldSubsystem->HasValidFlecsWorld();
 	}
 	else
 	{

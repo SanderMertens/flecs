@@ -1,5 +1,7 @@
 ﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
+#include "Misc/AutomationTest.h"
+
 #if WITH_AUTOMATION_TESTS
 
 #include "CQTest.h"
@@ -13,7 +15,7 @@
  * Layout of the tests:
  * A. Class Registration as types
  */
-TEST_CLASS_WITH_FLAGS(A7_FlecsUClassTests, "UnrealFlecs.A7.UClass",
+TEST_CLASS_WITH_FLAGS(A7_FlecsUClassTests, "UnrealFlecs.A7_UClass",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 	| EAutomationTestFlags::CriticalPriority)
 {

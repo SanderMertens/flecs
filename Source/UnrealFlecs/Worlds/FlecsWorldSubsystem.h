@@ -11,15 +11,27 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
-#include "Types/SolidNotNull.h"
+
 #include "Subsystems/WorldSubsystem.h"
+
+#include "Types/SolidNotNull.h"
+
 #include "FlecsWorldSubsystem.generated.h"
 
+struct FFlecsWorldSettingsInfo;
 class UFlecsWorld;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldCreated, TSolidNotNull<UFlecsWorld*>);
 DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldBeginPlay, TSolidNotNull<UWorld*>);
 DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldDestroyed, TSolidNotNull<UFlecsWorld*>);
+DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsOnWorldInitializedGlobal, TSolidNotNull<UFlecsWorld*>);
+
+namespace Unreal::Flecs
+{
+	// A Global alternative to be able to register to the delegate outside of a world context.
+	extern UNREALFLECS_API FFlecsOnWorldInitializedGlobal GOnFlecsWorldInitialized;
+	
+} // namespace Unreal::Flecs
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsystem
@@ -44,6 +56,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	UFlecsWorld* GetDefaultWorld() const;
+
+	NO_DISCARD UFlecsWorld* GetDefaultWorldChecked() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	bool HasValidFlecsWorld() const;

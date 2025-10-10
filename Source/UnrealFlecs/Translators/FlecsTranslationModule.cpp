@@ -6,15 +6,16 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsTranslationModule)
 
-void UFlecsTranslationModule::InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
+void UFlecsTranslationModule::InitializeModule(const TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
 	InWorld->RegisterComponentType<FFlecsTranslationPropertyTrait>();
+	
 	InWorld->RegisterComponentType<FFlecsToUnreal>();
 	InWorld->RegisterComponentType<FUnrealToFlecs>();
 	InWorld->RegisterComponentType<FFlecsToBoth>();
 }
 
-void UFlecsTranslationModule::DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld)
+void UFlecsTranslationModule::DeinitializeModule(const TSolidNotNull<UFlecsWorld*> InWorld)
 {
 	
 }

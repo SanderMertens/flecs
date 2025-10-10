@@ -38,8 +38,10 @@ public:
 	UPROPERTY()
 	double TickerAccumulator = 0.0;
 
+	UPROPERTY()
 	double TickerInterval = 0.0;
 
+	// This is a Sparse component, so the memory is stable
 	FFlecsTickerSingletonComponent* TickerComponentPtr = nullptr;
 
 	UPROPERTY()

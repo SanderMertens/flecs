@@ -2,10 +2,12 @@
 
 #include "EntityFunctionLibrary.h"
 
-#include "GameFramework/Actor/FlecsEntityActorComponent.h"
-#include "Interfaces/FlecsEntityInterface.h"
+#include "GameFramework/Actor.h"
 
 #include "Worlds/FlecsWorldSubsystem.h"
+
+#include "Interfaces/FlecsEntityInterface.h"
+#include "GameFramework/Actor/FlecsEntityActorComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(EntityFunctionLibrary)
 

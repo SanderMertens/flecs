@@ -2,6 +2,8 @@
 
 #include "FlecsEntityRecord.h"
 
+#include "Worlds/FlecsWorld.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityRecord)
 
 void FFlecsRecordPair::AddToEntity(const FFlecsEntityHandle& InEntityHandle) const
@@ -19,6 +21,13 @@ void FFlecsRecordPair::AddToEntity(const FFlecsEntityHandle& InEntityHandle) con
 								InEntityHandle.SetPairFirst(First.PairScriptStruct.GetScriptStruct(),
 								                            First.PairScriptStruct.GetMemory(),
 								                            Second.PairScriptStruct.GetScriptStruct());
+							}
+							else
+							{
+								if UNLIKELY_IF(!ensure(First.PairScriptStruct.GetScriptStruct()->GetStructureSize() <= 1))
+								{
+									return;
+								}
 							}
 						}
 						break;
@@ -129,67 +138,53 @@ void FFlecsRecordSubEntity::ApplyRecordToEntity(const FFlecsEntityHandle& InEnti
 				break;
 		}
 	}
-
-	for (UFlecsComponentCollectionObject* Collection : Collections)
-	{
-		InEntityHandle.AddCollection(Collection);
-	}
 }
 
-void FFlecsEntityRecord::ApplyRecordToEntity(const FFlecsEntityHandle& InEntityHandle) const
+void FFlecsEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld, const FFlecsEntityHandle& InEntityHandle) const
 {
 	solid_checkf(InEntityHandle.IsValid(), TEXT("Entity Handle is not valid"));
 
-	for (const auto& [NodeType, ScriptStruct, ScriptEnum,
-		     EntityHandle, GameplayTag, Pair] : Components)
+	InFlecsWorld->Defer([this, &InEntityHandle, InFlecsWorld]()
 	{
-		switch (NodeType)
+		for (const auto& [NodeType, ScriptStruct, ScriptEnum,
+			 EntityHandle, GameplayTag, Pair] : Components)
 		{
-			case EFlecsComponentNodeType::ScriptStruct:
-				{
-					InEntityHandle.Set(ScriptStruct);
-				}
-				break;
-			case EFlecsComponentNodeType::ScriptEnum:
-				{
-					InEntityHandle.Add(ScriptEnum.Class, ScriptEnum.Value);
-				}
-			case EFlecsComponentNodeType::EntityHandle:
-				{
-					InEntityHandle.Add(EntityHandle);
-				}
-				break;
-			case EFlecsComponentNodeType::FGameplayTag:
-				{
-					InEntityHandle.Add(GameplayTag);	
-				}
-				break;
-			case EFlecsComponentNodeType::Pair:
-				{
-					Pair.AddToEntity(InEntityHandle);
-				}
-				break;
+			switch (NodeType)
+			{
+				case EFlecsComponentNodeType::ScriptStruct:
+					{
+						InEntityHandle.Set(ScriptStruct);
+					}
+					break;
+				case EFlecsComponentNodeType::ScriptEnum:
+					{
+						InEntityHandle.Add(ScriptEnum.Class, ScriptEnum.Value);
+					}
+				case EFlecsComponentNodeType::EntityHandle:
+					{
+						InEntityHandle.Add(EntityHandle);
+					}
+					break;
+				case EFlecsComponentNodeType::FGameplayTag:
+					{
+						InEntityHandle.Add(GameplayTag);	
+					}
+					break;
+				case EFlecsComponentNodeType::Pair:
+					{
+						Pair.AddToEntity(InEntityHandle);
+					}
+					break;
+			}
 		}
-	}
 
-	for (UFlecsComponentCollectionObject* Collection : Collections)
-	{
-		if UNLIKELY_IF(!ensureMsgf(Collection, TEXT("Collection is null")))
+		for (const FFlecsRecordSubEntity& SubEntity : SubEntities)
 		{
-			continue;
+			FFlecsEntityHandle NewEntityHandle = InFlecsWorld->CreateEntity()
+				.SetParent(InEntityHandle);
+			
+			SubEntity.ApplyRecordToEntity(NewEntityHandle);
+			InEntityHandle.Add(NewEntityHandle);
 		}
-			
-		InEntityHandle.AddCollection(Collection);
-	}
-
-	for (const FFlecsRecordSubEntity& SubEntity : SubEntities)
-	{
-		FFlecsEntityHandle NewEntityHandle = InEntityHandle
-		                                     .GetEntity().world().entity(Unreal::Flecs::ToCString(SubEntity.Name));
-			
-		NewEntityHandle.SetParent(InEntityHandle);
-			
-		SubEntity.ApplyRecordToEntity(NewEntityHandle);
-		InEntityHandle.Add(NewEntityHandle);
-	}
+	});
 }

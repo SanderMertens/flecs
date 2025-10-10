@@ -18,7 +18,7 @@ class UNREALFLECS_API UDefaultEntitiesLibrary final : public UBlueprintFunctionL
 public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities",
-		meta=(WorldContext="WorldContextObject", CompactNodeTitle="Flecs Null Entity"))
+		meta = (WorldContext = "WorldContextObject", CompactNodeTitle = "Flecs Null Entity"))
 	static FFlecsEntityHandle GetNullEntity(const UObject* WorldContextObject);
 
 }; // class UDefaultEntitiesLibrary

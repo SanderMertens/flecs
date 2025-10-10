@@ -3,7 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "Templates/SubclassOf.h"
+
 #include "Standard/Hashing.h"
+
 #include "FlecsScriptClassComponent.generated.h"
 
 USTRUCT(BlueprintType)

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FFlecsMemberHandle.h"
+#include "FlecsMemberHandle.h"
 #include "FlecsEntityHandle.h"
 #include "FlecsComponentHandle.generated.h"
 

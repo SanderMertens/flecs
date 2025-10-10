@@ -16,10 +16,14 @@
 
 enum class EFlecsAccessorType : uint8
 {
+	// Reference
 	Ref = 1 << 0,
+	// Pointer
 	Ptr = 1 << 1,
-	
+
+	// Mutable
 	Mut = 1 << 2,
+	// Constant
 	Const = 1 << 3,
 
 	ConstRef = (Ref | Const),

@@ -2,6 +2,8 @@
 
 #include "FlecsEntityActorComponent.h"
 
+#include "Engine/World.h"
+
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
 
@@ -80,7 +82,7 @@ void UFlecsEntityActorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	DOREPLIFETIME_WITH_PARAMS_FAST(UFlecsEntityActorComponent, EntityHandle, Params);
 }
 
-#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
 
 bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) const
 {
@@ -89,7 +91,7 @@ bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) cons
 	return bIsEditable;
 }
 
-#endif // WITH_EDITORONLY_DATA
+#endif // WITH_EDITOR
 
 void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 {
@@ -103,7 +105,7 @@ void UFlecsEntityActorComponent::CreateActorEntity(const TSolidNotNull<const UFl
 	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord);
 
 	// @TODO: Should this be the Component or the Owner?
-	EntityHandle.SetPairFirst<FFlecsUObjectComponent, FFlecsActorTag>(FFlecsUObjectComponent{ GetOwner() });
+	EntityHandle.SetPairFirst<FFlecsUObjectComponent, FFlecsActorTag>(FFlecsUObjectComponent(GetOwner()));
 	
 	UE_CLOGFMT(EntityHandle.HasName(), LogFlecsEntity, Log,
 		"Created Actor Entity: {EntityName}", EntityHandle.GetName());
