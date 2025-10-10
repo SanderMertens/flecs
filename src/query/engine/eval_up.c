@@ -244,10 +244,11 @@ next_down_elem:
 
     ecs_trav_down_elem_t *elem = ecs_vec_get_t(
         &down->elems, ecs_trav_down_elem_t, impl->cache_elem);
-    flecs_query_var_set_range(op, op->src.var, elem->table, 0, 0, ctx);
+    flecs_query_var_set_range(op, op->src.var, elem->range.table, 
+        elem->range.offset, elem->range.count, ctx);
     flecs_query_set_vars(op, impl->matched, ctx);
 
-    if (flecs_query_table_filter(elem->table, op->other, 
+    if (flecs_query_table_filter(elem->range.table, op->other, 
         (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
     {
         /* Go to next table if table contains prefabs, disabled entities or
