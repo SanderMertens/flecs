@@ -2242,6 +2242,7 @@ void SerializeEntityToJson_serialize_w_blacklist(void) {
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
     test_json(json, "{\"name\":\"e\"}");
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
@@ -2272,6 +2273,7 @@ void SerializeEntityToJson_serialize_w_allow_blacklist(void) {
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
     test_json(json, "{\"name\":\"e\", \"components\":{\"Position\":{\"x\":2, \"y\":3}}}");
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
@@ -2316,6 +2318,7 @@ void SerializeEntityToJson_serialize_w_partial_blacklist(void) {
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
     test_json(json, "{\"name\":\"e\", \"components\":{\"Position\":{\"x\":2, \"y\":3}}}");
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
