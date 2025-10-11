@@ -19,6 +19,7 @@ Only tested on Version: UE 5.7 MSVC/partially Clang
 
 ## Features:
 Universalized Component Type Registration CPP <--> Meta Type, Works with USTRUCT, UENUM, and UCLASS \
+OS-API implementation for Unreal \
 Tracked ObjectPtr References in Components (needs testing)
 
 
