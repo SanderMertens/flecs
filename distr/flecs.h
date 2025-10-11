@@ -14484,7 +14484,7 @@ typedef struct ecs_entity_to_json_desc_t {
     ecs_entity_t serialize_refs; /**< Serialize references (incoming edges) for relationship */
     bool serialize_matches;    /**< Serialize which queries entity matches with */
     /** Callback for if the component should be serialized */
-    bool (*do_serialize)
+    bool (*component_filter)
         (const ecs_world_t *, ecs_entity_t);
 } ecs_entity_to_json_desc_t;
 
@@ -14501,7 +14501,7 @@ typedef struct ecs_entity_to_json_desc_t {
     .serialize_alerts = false, \
     .serialize_refs = 0, \
     .serialize_matches = false, \
-    .do_serialize = NULL, \
+    .component_filter = NULL, \
 }
 #else
 #define ECS_ENTITY_TO_JSON_INIT {\
@@ -14570,7 +14570,7 @@ typedef struct ecs_iter_to_json_desc_t {
     ecs_entity_t serialize_refs;    /**< Serialize references (incoming edges) for relationship */
     bool serialize_matches;         /**< Serialize which queries entity matches with */
     /** Callback for if the component should be serialized */
-    bool (*do_serialize)
+    bool (*component_filter)
         (const ecs_world_t *, ecs_entity_t);
     ecs_poly_t *query;            /**< Query object (required for serialize_query_[plan|profile]). */
 } ecs_iter_to_json_desc_t;
@@ -14595,7 +14595,7 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_alerts =          false, \
     .serialize_refs =            false, \
     .serialize_matches =         false, \
-    .do_serialize =              NULL, \
+    .component_filter =          NULL, \
     .query =                     NULL \
 }
 #else

@@ -252,7 +252,7 @@ int flecs_json_serialize_table_components(
         }
 
         ecs_id_t id = table->type.array[i];
-        if(desc->do_serialize && !desc->do_serialize(world, id)) {
+        if(desc->component_filter && !desc->component_filter(world, id)) {
             continue;
         }
         if (!desc || !desc->serialize_builtin) {

@@ -2237,7 +2237,7 @@ void SerializeEntityToJson_serialize_w_blacklist(void) {
     ecs_set(world, e, Position, { 2, 3 });
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.do_serialize = &serialize_w_blacklist_blcb;
+    desc.component_filter = &serialize_w_blacklist_blcb;
 
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
@@ -2267,7 +2267,7 @@ void SerializeEntityToJson_serialize_w_allow_blacklist(void) {
     ecs_set(world, e, Position, { 2, 3 });
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.do_serialize = &serialize_w_allow_blacklist_blcb;
+    desc.component_filter = &serialize_w_allow_blacklist_blcb;
 
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
@@ -2311,7 +2311,7 @@ void SerializeEntityToJson_serialize_w_partial_blacklist(void) {
     ecs_set(world, e, Position, { 2, 3 });
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.do_serialize = &serialize_w_allow_blacklist_blcb;
+    desc.component_filter = &serialize_w_allow_blacklist_blcb;
 
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);

@@ -48116,7 +48116,7 @@ int ecs_entity_to_json_buf(
         .serialize_full_paths =   desc ? desc->serialize_full_paths : true,
         .serialize_inherited =    desc ? desc->serialize_inherited : false,
         .serialize_type_info =    desc ? desc->serialize_type_info : false,
-        .do_serialize =           desc ? desc->do_serialize : NULL,
+        .component_filter =       desc ? desc->component_filter : NULL,
     };
 
     if (flecs_json_serialize_iter_result(
@@ -49661,7 +49661,7 @@ int flecs_json_serialize_table_components(
         }
 
         ecs_id_t id = table->type.array[i];
-        if(desc->do_serialize && !desc->do_serialize(world, id)) {
+        if(desc->component_filter && !desc->component_filter(world, id)) {
             continue;
         }
         if (!desc || !desc->serialize_builtin) {
