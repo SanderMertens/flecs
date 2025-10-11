@@ -13,7 +13,7 @@
  * A. Add/Remove/Set Component in Deferred Context Tests
  * B. Scoped Defer Window Tests
  */
-TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9_World.Defer",
+TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9_World_Defer",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 	| EAutomationTestFlags::CriticalPriority)
 {

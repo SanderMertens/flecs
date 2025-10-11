@@ -7,7 +7,7 @@
 #include "Collections/FlecsCollectionWorldSubsystem.h"
 #include "Tests/FlecsTestTypes.h"
 
-TEST_CLASS_WITH_FLAGS(B1_CollectionBasicTests, "UnrealFlecs.B1.CollectionsBasic",
+TEST_CLASS_WITH_FLAGS(B1_CollectionBasicTests, "UnrealFlecs.B1_CollectionsBasic",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 			| EAutomationTestFlags::CriticalPriority)
 {
