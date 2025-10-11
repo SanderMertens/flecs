@@ -2222,7 +2222,7 @@ void SerializeEntityToJson_serialize_base_w_invalid_component(void) {
     ecs_fini(world);
 }
 
-bool serialize_w_blacklist_blcb(ecs_world_t *world, ecs_entity_t e) {
+bool serialize_w_blacklist_blcb(const ecs_world_t *world, ecs_entity_t e) {
     return false;
 }
 
@@ -2246,7 +2246,7 @@ void SerializeEntityToJson_serialize_w_blacklist(void) {
     ecs_fini(world);
 }
 
-bool serialize_w_allow_blacklist_blcb(ecs_world_t *world, ecs_entity_t e) {
+bool serialize_w_allow_blacklist_blcb(const ecs_world_t *world, ecs_entity_t e) {
     return true;
 }
 
@@ -2278,7 +2278,7 @@ void SerializeEntityToJson_serialize_w_allow_blacklist(void) {
 
 ECS_DECLARE(NoSerialize);
 
-bool serialize_w_partial_blacklist_blcb(ecs_world_t *world, ecs_entity_t e) {
+bool serialize_w_partial_blacklist_blcb(const ecs_world_t *world, ecs_entity_t e) {
     return !ecs_has_id(world, e, ecs_id(NoSerialize));
 }
 
