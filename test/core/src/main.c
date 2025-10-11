@@ -642,7 +642,9 @@ void Sparse_entity_w_sparse_pair_to_recycled_child_delete_child_exclusive(void);
 void Sparse_entity_w_sparse_pair_to_recycled_child_delete_parent_exclusive(void);
 void Sparse_fini_w_sparse_tgt_in_module(void);
 void Sparse_add_not_alive_target(void);
-void Sparse_delete_w_symmetric(void);
+void Sparse_deferred_delete_w_symmetric(void);
+void Sparse_query_after_delete(void);
+void Sparse_query_after_delete_symmetric(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5195,8 +5197,16 @@ bake_test_case Sparse_testcases[] = {
         Sparse_add_not_alive_target
     },
     {
-        "delete_w_symmetric",
-        Sparse_delete_w_symmetric
+        "deferred_delete_w_symmetric",
+        Sparse_deferred_delete_w_symmetric
+    },
+    {
+        "query_after_delete",
+        Sparse_query_after_delete
+    },
+    {
+        "query_after_delete_symmetric",
+        Sparse_query_after_delete_symmetric
     }
 };
 
@@ -13376,7 +13386,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        190,
+        192,
         Sparse_testcases,
         1,
         Sparse_params

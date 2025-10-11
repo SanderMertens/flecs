@@ -6164,7 +6164,7 @@ void Sparse_add_not_alive_target(void) {
     ecs_add_pair(world, e, Rel, tgt);
 }
 
-void Sparse_delete_w_symmetric(void) {
+void Sparse_deferred_delete_w_symmetric(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -6188,6 +6188,180 @@ void Sparse_delete_w_symmetric(void) {
     ecs_delete(world, p1);
     ecs_delete(world, p2);
     ecs_defer_end(world);
+
+    ecs_fini(world);
+}
+
+void Sparse_query_after_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world); 
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ ecs_pair(Rel, EcsWildcard) }}
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+        ecs_query_fini(q);
+    }
+
+    ecs_add_pair(world, p1, Rel, e);
+    ecs_add_pair(world, p2, Rel, e);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ ecs_pair(Rel, EcsWildcard) }}
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        if (!fragment) {
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(p2, it.entities[0]);
+            test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(p1, it.entities[0]);
+            test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
+        } else {
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(p1, it.entities[0]);
+            test_uint(p2, it.entities[1]);
+            test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
+        }
+
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_delete(world, p1);
+    ecs_delete(world, p2);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ ecs_pair(Rel, EcsWildcard) }}
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_query_after_delete_symmetric(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+    ecs_add_id(world, Rel, EcsSymmetric);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world); 
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ ecs_pair(Rel, EcsWildcard) }}
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_add_pair(world, p1, Rel, e);
+    ecs_add_pair(world, p2, Rel, e);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ ecs_pair(Rel, EcsWildcard) }}
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        if (!fragment) {
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e, it.entities[0]);
+            test_uint(ecs_pair(Rel, p2), ecs_field_id(&it, 0));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e, it.entities[0]);
+            test_uint(ecs_pair(Rel, p1), ecs_field_id(&it, 0));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(p2, it.entities[0]);
+            test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(p1, it.entities[0]);
+            test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
+        } else {
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(p1, it.entities[0]);
+            test_uint(p2, it.entities[1]);
+            test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e, it.entities[0]);
+            test_uint(ecs_pair(Rel, p1), ecs_field_id(&it, 0));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e, it.entities[0]);
+            test_uint(ecs_pair(Rel, p2), ecs_field_id(&it, 0));
+        }
+
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_delete(world, p1);
+    ecs_delete(world, p2);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ ecs_pair(Rel, EcsWildcard) }}
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
 
     ecs_fini(world);
 }
