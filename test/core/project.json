@@ -109,6 +109,9 @@
                 "is_junk_valid",
                 "is_not_alive_valid",
                 "is_nonzero_gen_valid",
+                "is_get_alive_alive",
+                "get_alive_after_delete",
+                "get_alive_after_delete_twice",
                 "init_w_name_deferred",
                 "init_w_name_twice_deferred",
                 "init_w_nested_name_twice_deferred",
@@ -125,6 +128,8 @@
                 "make_alive_nonzero_gen_exists",
                 "make_alive_zero_gen_exists_alive",
                 "make_alive_nonzero_gen_exists_alive",
+                "make_alive_pair_nonzero_tgt",
+                "make_alive_pair_nonzero_existing_tgt",
                 "set_scope_w_entity_init_from_stage",
                 "entity_init_w_scope_twice",
                 "entity_init_w_childof_twice",
@@ -665,7 +670,8 @@
                 "entity_w_sparse_pair_to_child_delete_parent_exclusive",
                 "entity_w_sparse_pair_to_recycled_child_delete_child_exclusive",
                 "entity_w_sparse_pair_to_recycled_child_delete_parent_exclusive",
-                "fini_w_sparse_tgt_in_module"
+                "fini_w_sparse_tgt_in_module",
+                "add_not_alive_target"
             ]
         }, {
             "id": "Hierarchies",

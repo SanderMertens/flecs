@@ -962,6 +962,53 @@ void Entity_is_nonzero_gen_valid(void) {
     ecs_fini(world);
 }
 
+void Entity_is_get_alive_alive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+
+    e = ecs_new(world);
+    test_assert(e != (uint32_t)e);
+
+    e = ecs_get_alive(world, e);
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+    test_assert(!ecs_is_alive(world, (uint32_t)e));
+
+    ecs_fini(world);
+}
+
+void Entity_get_alive_after_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+
+    e = ecs_get_alive(world, e);
+    test_assert(e == 0);
+
+    ecs_fini(world);
+}
+
+void Entity_get_alive_after_delete_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+
+    e = ecs_new(world);
+    test_assert(e != (uint32_t)e);
+    ecs_delete(world, e);
+
+    test_assert(!ecs_is_alive(world, e));
+
+    e = ecs_get_alive(world, e);
+    test_assert(e == 0);
+
+    ecs_fini(world);
+}
+
 void Entity_init_w_name_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -1306,6 +1353,38 @@ void Entity_make_alive_nonzero_gen_exists_alive(void) {
 
     test_expect_abort();
     ecs_make_alive(world, e); // not allowed, can't ensure gen 2 if gen 1 is alive
+}
+
+void Entity_make_alive_pair_nonzero_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t tgt = 1000;
+    test_assert(!ecs_is_alive(world, tgt));
+    ecs_make_alive_id(world, ecs_pair(Rel, tgt));
+
+    test_assert(ecs_is_alive(world, Rel));
+    test_assert(ecs_is_alive(world, tgt));
+
+    ecs_fini(world);
+}
+
+void Entity_make_alive_pair_nonzero_existing_tgt(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t tgt = ecs_new(world);
+    ecs_delete(world, tgt);
+
+    /* Cannot make existing id alive */
+    test_expect_abort();
+    ecs_make_alive_id(world, ecs_pair(Rel, tgt));
+
+    ecs_fini(world);
 }
 
 void Entity_set_scope_w_entity_init_from_stage(void) {

@@ -7740,6 +7740,7 @@ void flecs_add_id(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
     ecs_table_t *src_table = r->table;
+
     ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, &component, &diff);
 
@@ -10253,6 +10254,7 @@ void ecs_make_alive_id(
     ecs_id_t component)
 {
     flecs_poly_assert(world, ecs_world_t);
+
     if (ECS_HAS_ID_FLAG(component, PAIR)) {
         ecs_entity_t r = ECS_PAIR_FIRST(component);
         ecs_entity_t t = ECS_PAIR_SECOND(component);
@@ -10268,7 +10270,7 @@ void ecs_make_alive_id(
         if (flecs_entities_get_alive(world, t) == 0) {
             ecs_assert(!ecs_exists(world, t), ECS_INVALID_PARAMETER,
                 "second element of pair is not alive");
-                ecs_make_alive(world, t);
+            ecs_make_alive(world, t);
         }
     } else {
         ecs_make_alive(world, component & ECS_COMPONENT_MASK);
@@ -37039,6 +37041,10 @@ ecs_component_record_t* flecs_component_new(
         tgt = ECS_PAIR_SECOND(id);
         if (tgt) {
             tgt = flecs_entities_get_alive(world, tgt);
+            ecs_assert(ecs_is_alive(world, tgt), ECS_INVALID_PARAMETER,
+                "target '%s' of pair '%s' is not alive",
+                    flecs_errstr(ecs_id_str(world, tgt)), 
+                    flecs_errstr_1(ecs_id_str(world, cr->id)));
         }
 
 #ifdef FLECS_DEBUG
@@ -37835,10 +37841,11 @@ uint64_t flecs_entity_index_get_alive(
 {
     ecs_record_t *r = flecs_entity_index_try_get_any(index, entity);
     if (r) {
-        return ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0];
-    } else {
-        return 0;
+        if (r->dense < index->alive_count) {
+            return ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0];
+        }
     }
+    return 0;
 }
 
 bool flecs_entity_index_is_alive(
