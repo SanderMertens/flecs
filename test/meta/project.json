@@ -658,7 +658,8 @@
                 "deser_unknown_member",
                 "deser_valid_after_unknown_member",
                 "deser_unknown_member_w_strict",
-                "deser_pretty_printed_identifier_pair"
+                "deser_pretty_printed_identifier_pair",
+                "ser_deser_alias"
             ]
         }, {
             "id": "SerializeToJson",

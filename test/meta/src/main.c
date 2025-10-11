@@ -632,6 +632,7 @@ void DeserializeFromJson_deser_unknown_member(void);
 void DeserializeFromJson_deser_valid_after_unknown_member(void);
 void DeserializeFromJson_deser_unknown_member_w_strict(void);
 void DeserializeFromJson_deser_pretty_printed_identifier_pair(void);
+void DeserializeFromJson_ser_deser_alias(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -3572,6 +3573,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "deser_pretty_printed_identifier_pair",
         DeserializeFromJson_deser_pretty_printed_identifier_pair
+    },
+    {
+        "ser_deser_alias",
+        DeserializeFromJson_ser_deser_alias
     }
 };
 
@@ -5611,7 +5616,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        142,
+        143,
         DeserializeFromJson_testcases
     },
     {
