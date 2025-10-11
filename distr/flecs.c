@@ -37040,11 +37040,12 @@ ecs_component_record_t* flecs_component_new(
          * relationship are added to the (ChildOf, 0) component record */
         tgt = ECS_PAIR_SECOND(id);
         if (tgt) {
-            tgt = flecs_entities_get_alive(world, tgt);
-            ecs_assert(ecs_is_alive(world, tgt), ECS_INVALID_PARAMETER,
+            ecs_entity_t alive_tgt = flecs_entities_get_alive(world, tgt);
+            ecs_assert(alive_tgt != 0, ECS_INVALID_PARAMETER,
                 "target '%s' of pair '%s' is not alive",
                     flecs_errstr(ecs_id_str(world, tgt)), 
                     flecs_errstr_1(ecs_id_str(world, cr->id)));
+            tgt = alive_tgt;
         }
 
 #ifdef FLECS_DEBUG
@@ -42530,6 +42531,24 @@ void flecs_diff_insert_removed(
 }
 
 static
+bool flecs_id_is_alive(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (ECS_IS_PAIR(id)) {
+        if (!flecs_entities_get_alive(world, ECS_PAIR_FIRST(id))) {
+            return false;
+        }
+        if (!flecs_entities_get_alive(world, ECS_PAIR_SECOND(id))) {
+            return false;
+        }
+        return true;
+    } else {
+        return flecs_entities_get_alive(world, id & ECS_COMPONENT_MASK) != 0;
+    }
+}
+
+static
 void flecs_compute_table_diff(
     ecs_world_t *world,
     ecs_table_t *node,
@@ -42547,6 +42566,10 @@ void flecs_compute_table_diff(
     }
 
     ecs_component_record_t *cr = NULL;
+
+    if (!flecs_id_is_alive(world, id)) {
+        return;
+    }
 
     bool dont_fragment = false;
     if (id < FLECS_HI_COMPONENT_ID) {

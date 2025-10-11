@@ -311,11 +311,12 @@ ecs_component_record_t* flecs_component_new(
          * relationship are added to the (ChildOf, 0) component record */
         tgt = ECS_PAIR_SECOND(id);
         if (tgt) {
-            tgt = flecs_entities_get_alive(world, tgt);
-            ecs_assert(ecs_is_alive(world, tgt), ECS_INVALID_PARAMETER,
+            ecs_entity_t alive_tgt = flecs_entities_get_alive(world, tgt);
+            ecs_assert(alive_tgt != 0, ECS_INVALID_PARAMETER,
                 "target '%s' of pair '%s' is not alive",
                     flecs_errstr(ecs_id_str(world, tgt)), 
                     flecs_errstr_1(ecs_id_str(world, cr->id)));
+            tgt = alive_tgt;
         }
 
 #ifdef FLECS_DEBUG
