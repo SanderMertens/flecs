@@ -1039,6 +1039,15 @@ void flecs_table_invoke_remove_hooks(
     }
 }
 
+static
+void flecs_table_remove_dont_fragment(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_record_t *r = flecs_entities_get(world, e);
+    flecs_entity_remove_non_fragmenting(world, e, r);
+}
+
 /* Destruct all components and/or delete all entities in table */
 static
 void flecs_table_dtor_all(
@@ -1089,6 +1098,7 @@ void flecs_table_dtor_all(
             ecs_assert(!e || ecs_is_valid(world, e), 
                 ECS_INTERNAL_ERROR, NULL);
 
+            flecs_table_remove_dont_fragment(world, e);
             flecs_entities_remove(world, e);
             ecs_assert(ecs_is_valid(world, e) == false, 
                 ECS_INTERNAL_ERROR, NULL);
@@ -1099,6 +1109,7 @@ void flecs_table_dtor_all(
         for (i = 0; i < count; i ++) {
             ecs_entity_t e = entities[i];
             ecs_assert(!e || ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
+            flecs_table_remove_dont_fragment(world, e);
             flecs_entities_remove(world, e);
             ecs_assert(!ecs_is_valid(world, e), ECS_INTERNAL_ERROR, NULL);
         }     

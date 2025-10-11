@@ -158,7 +158,6 @@ ecs_record_t* flecs_entity_index_ensure(
 }
 
 void flecs_entity_index_remove(
-    ecs_world_t *world,
     ecs_entity_index_t *index,
     uint64_t entity)
 {
@@ -167,8 +166,6 @@ void flecs_entity_index_remove(
         /* Entity is not alive or doesn't exist, nothing to be done */
         return;
     }
-
-    flecs_entity_remove_non_fragmenting(world, entity, r);
 
     int32_t dense = r->dense;
     int32_t i_swap = -- index->alive_count;
@@ -204,10 +201,11 @@ uint64_t flecs_entity_index_get_alive(
 {
     ecs_record_t *r = flecs_entity_index_try_get_any(index, entity);
     if (r) {
-        return ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0];
-    } else {
-        return 0;
+        if (r->dense < index->alive_count) {
+            return ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0];
+        }
     }
+    return 0;
 }
 
 bool flecs_entity_index_is_alive(
