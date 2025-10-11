@@ -6163,3 +6163,31 @@ void Sparse_add_not_alive_target(void) {
     test_expect_abort();
     ecs_add_pair(world, e, Rel, tgt);
 }
+
+void Sparse_delete_w_symmetric(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+    ecs_add_id(world, Rel, EcsSymmetric);
+
+    ecs_entity_t p1 = ecs_insert(world, ecs_value(Position, {}));
+    ecs_entity_t p2 = ecs_insert(world, ecs_value(Position, {}));
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, p1, Rel, e);
+    ecs_add_pair(world, p2, Rel, e);
+    
+    test_assert(ecs_has_pair(world, e, Rel, p1));
+    test_assert(ecs_has_pair(world, e, Rel, p2));
+
+    ecs_defer_begin(world);
+    ecs_delete(world, p1);
+    ecs_delete(world, p2);
+    ecs_defer_end(world);
+
+    ecs_fini(world);
+}
