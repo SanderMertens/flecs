@@ -39,8 +39,10 @@ void UFlecsCollectionWorldSubsystem::Initialize(FSubsystemCollectionBase& Collec
 		}
 		else
 		{
-			Unreal::Flecs::GOnFlecsWorldInitialized.AddLambda([this](const TSolidNotNull<const UFlecsWorld*> InWorld)
+			Unreal::Flecs::GOnFlecsWorldInitialized.AddLambda([this](const TSolidNotNull<UFlecsWorld*> InWorld)
 			{
+				SetFlecsWorld(InWorld);
+				
 				InWorld->RegisterComponentType<FFlecsCollectionPrefabTag>();
 				InWorld->RegisterComponentType<FFlecsCollectionReferenceComponent>();
 				InWorld->RegisterComponentType<FFlecsCollectionSlotTag>();

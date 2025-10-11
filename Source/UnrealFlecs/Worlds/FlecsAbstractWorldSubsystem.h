@@ -34,6 +34,11 @@ public:
 		return FlecsWorldRef.Get();
 	}
 
+	void SetFlecsWorld(UFlecsWorld* InWorld)
+	{
+		FlecsWorldRef = InWorld;
+	}
+
 	UPROPERTY()
 	TWeakObjectPtr<UFlecsWorld> FlecsWorldRef;
 	

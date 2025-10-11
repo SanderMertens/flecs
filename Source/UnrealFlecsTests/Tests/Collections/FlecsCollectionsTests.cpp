@@ -43,7 +43,7 @@ TEST_CLASS_WITH_FLAGS(B1_CollectionBasicTests, "UnrealFlecs.B1.CollectionsBasic"
 	{
 		ASSERT_THAT(IsTrue(IsValid(Collections)));
 
-		FlecsWorld->RegisterComponentType<FFlecsCollectionPrefabTag>();
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
 		
 		FFlecsCollectionDefinition Def;
 		{

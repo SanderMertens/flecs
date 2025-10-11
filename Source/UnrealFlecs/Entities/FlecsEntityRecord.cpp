@@ -153,6 +153,14 @@ void FFlecsEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWor
 			{
 				case EFlecsComponentNodeType::ScriptStruct:
 					{
+						if (ScriptStruct.GetScriptStruct()->GetStructureSize() <= 1 &&
+							ScriptStruct.GetScriptStruct()->PropertyLink == nullptr)
+						{
+							// Empty struct, just add the tag
+							InEntityHandle.Add(ScriptStruct.GetScriptStruct());
+							break;
+						}
+							
 						InEntityHandle.Set(ScriptStruct);
 					}
 					break;
@@ -160,6 +168,7 @@ void FFlecsEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWor
 					{
 						InEntityHandle.Add(ScriptEnum.Class, ScriptEnum.Value);
 					}
+					break;
 				case EFlecsComponentNodeType::EntityHandle:
 					{
 						InEntityHandle.Add(EntityHandle);
