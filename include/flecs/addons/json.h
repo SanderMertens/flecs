@@ -230,7 +230,7 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_matches;    /**< Serialize which queries entity matches with */
     /** Callback for if the component should be serialized */
     bool (*do_serialize)
-        (ecs_world_t *, ecs_entity_t);
+        (const ecs_world_t *, ecs_entity_t);
 } ecs_entity_to_json_desc_t;
 
 /** Utility used to initialize JSON entity serializer. */
@@ -316,7 +316,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_matches;         /**< Serialize which queries entity matches with */
     /** Callback for if the component should be serialized */
     bool (*do_serialize)
-        (ecs_world_t *, ecs_entity_t);
+        (const ecs_world_t *, ecs_entity_t);
     ecs_poly_t *query;            /**< Query object (required for serialize_query_[plan|profile]). */
 } ecs_iter_to_json_desc_t;
 
