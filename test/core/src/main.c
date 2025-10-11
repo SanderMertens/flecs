@@ -102,6 +102,9 @@ void Entity_is_0_valid(void);
 void Entity_is_junk_valid(void);
 void Entity_is_not_alive_valid(void);
 void Entity_is_nonzero_gen_valid(void);
+void Entity_is_get_alive_alive(void);
+void Entity_get_alive_after_delete(void);
+void Entity_get_alive_after_delete_twice(void);
 void Entity_init_w_name_deferred(void);
 void Entity_init_w_name_twice_deferred(void);
 void Entity_init_w_nested_name_twice_deferred(void);
@@ -118,6 +121,8 @@ void Entity_make_alive_zero_gen_exists(void);
 void Entity_make_alive_nonzero_gen_exists(void);
 void Entity_make_alive_zero_gen_exists_alive(void);
 void Entity_make_alive_nonzero_gen_exists_alive(void);
+void Entity_make_alive_pair_nonzero_tgt(void);
+void Entity_make_alive_pair_nonzero_existing_tgt(void);
 void Entity_set_scope_w_entity_init_from_stage(void);
 void Entity_entity_init_w_scope_twice(void);
 void Entity_entity_init_w_childof_twice(void);
@@ -636,6 +641,7 @@ void Sparse_entity_w_sparse_pair_to_child_delete_parent_exclusive(void);
 void Sparse_entity_w_sparse_pair_to_recycled_child_delete_child_exclusive(void);
 void Sparse_entity_w_sparse_pair_to_recycled_child_delete_parent_exclusive(void);
 void Sparse_fini_w_sparse_tgt_in_module(void);
+void Sparse_add_not_alive_target(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -3086,6 +3092,18 @@ bake_test_case Entity_testcases[] = {
         Entity_is_nonzero_gen_valid
     },
     {
+        "is_get_alive_alive",
+        Entity_is_get_alive_alive
+    },
+    {
+        "get_alive_after_delete",
+        Entity_get_alive_after_delete
+    },
+    {
+        "get_alive_after_delete_twice",
+        Entity_get_alive_after_delete_twice
+    },
+    {
         "init_w_name_deferred",
         Entity_init_w_name_deferred
     },
@@ -3148,6 +3166,14 @@ bake_test_case Entity_testcases[] = {
     {
         "make_alive_nonzero_gen_exists_alive",
         Entity_make_alive_nonzero_gen_exists_alive
+    },
+    {
+        "make_alive_pair_nonzero_tgt",
+        Entity_make_alive_pair_nonzero_tgt
+    },
+    {
+        "make_alive_pair_nonzero_existing_tgt",
+        Entity_make_alive_pair_nonzero_existing_tgt
     },
     {
         "set_scope_w_entity_init_from_stage",
@@ -5162,6 +5188,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "fini_w_sparse_tgt_in_module",
         Sparse_fini_w_sparse_tgt_in_module
+    },
+    {
+        "add_not_alive_target",
+        Sparse_add_not_alive_target
     }
 };
 
@@ -13271,7 +13301,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        144,
+        149,
         Entity_testcases
     },
     {
@@ -13341,7 +13371,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        188,
+        189,
         Sparse_testcases,
         1,
         Sparse_params

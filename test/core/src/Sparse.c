@@ -6146,3 +6146,20 @@ void Sparse_fini_w_sparse_tgt_in_module(void) {
 
     test_assert(true); // no crash
 }
+
+void Sparse_add_not_alive_target(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity_t tgt = ecs_new(world);
+    ecs_delete(world, tgt);
+
+    test_expect_abort();
+    ecs_add_pair(world, e, Rel, tgt);
+}

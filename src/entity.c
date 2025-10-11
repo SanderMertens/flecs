@@ -476,6 +476,7 @@ void flecs_add_id(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
     ecs_table_t *src_table = r->table;
+
     ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, &component, &diff);
 
@@ -2989,6 +2990,7 @@ void ecs_make_alive_id(
     ecs_id_t component)
 {
     flecs_poly_assert(world, ecs_world_t);
+
     if (ECS_HAS_ID_FLAG(component, PAIR)) {
         ecs_entity_t r = ECS_PAIR_FIRST(component);
         ecs_entity_t t = ECS_PAIR_SECOND(component);
@@ -3004,7 +3006,7 @@ void ecs_make_alive_id(
         if (flecs_entities_get_alive(world, t) == 0) {
             ecs_assert(!ecs_exists(world, t), ECS_INVALID_PARAMETER,
                 "second element of pair is not alive");
-                ecs_make_alive(world, t);
+            ecs_make_alive(world, t);
         }
     } else {
         ecs_make_alive(world, component & ECS_COMPONENT_MASK);
