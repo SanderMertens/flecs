@@ -672,7 +672,9 @@
                 "entity_w_sparse_pair_to_recycled_child_delete_parent_exclusive",
                 "fini_w_sparse_tgt_in_module",
                 "add_not_alive_target",
-                "delete_w_symmetric"
+                "deferred_delete_w_symmetric",
+                "query_after_delete",
+                "query_after_delete_symmetric"
             ]
         }, {
             "id": "Hierarchies",
