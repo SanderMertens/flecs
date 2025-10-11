@@ -7,7 +7,7 @@
 #include "Collections/FlecsCollectionWorldSubsystem.h"
 #include "Tests/FlecsTestTypes.h"
 
-TEST_CLASS_WITH_FLAGS(B1_CollectionBasicTests, "UnrealFlecs.B1_CollectionsBasic",
+TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 			| EAutomationTestFlags::CriticalPriority)
 {
@@ -47,14 +47,15 @@ TEST_CLASS_WITH_FLAGS(B1_CollectionBasicTests, "UnrealFlecs.B1_CollectionsBasic"
 		
 		FFlecsCollectionDefinition Def;
 		{
-			FFlecsCollectionBuilder Builder = FFlecsCollectionBuilder::Create(Def);
-			Builder.Name("TestCollection_Def");
-			Builder.Add<FFlecsTestStruct_Tag>(); // just any simple component
+			FFlecsCollectionBuilder Builder = FFlecsCollectionBuilder::Create(Def)
+				.Name("TestCollection_Def")
+				.Add<FFlecsTestStruct_Tag>();
 		}
 		
 		const FFlecsEntityHandle Prefab = Collections->RegisterCollectionDefinition(TEXT("TestCollection_Def"), Def);
 		ASSERT_THAT(IsTrue(Prefab.IsValid()));
 		ASSERT_THAT(IsTrue(Prefab.Has(flecs::Prefab)));
+		
 		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsCollectionPrefabTag>()));
 	}
 };
