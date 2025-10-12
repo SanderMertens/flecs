@@ -279,32 +279,6 @@ A static source is a term that is always matched on an entity that is known at q
 TimeOfDay(Game)
 ```
 
-### Singleton source
-A singleton is a special case of a static source, where the source is the same as the component. The following expression shows an example of a singleton source:
-
-
-```c
-TimeOfDay($)
-```
-
-This query is equivalent to:
-
-```c
-TimeOfDay(TimeOfDay)
-```
-
-A singleton may also be used as the second element in a pair as shown in the next example:
-
-```c
-TimeOfDay($this, $)
-```
-
-This query is equivalent to:
-
-```c
-TimeOfDay($this, TimeOfDay)
-```
-
 ### Variable source
 A variable source is a variable that is used as term source. As mentioned already, when no source is specified, a term implicitly uses the builtin `$this` variable as source:
 

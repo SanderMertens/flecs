@@ -201,10 +201,11 @@ uint64_t flecs_entity_index_get_alive(
 {
     ecs_record_t *r = flecs_entity_index_try_get_any(index, entity);
     if (r) {
-        return ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0];
-    } else {
-        return 0;
+        if (r->dense < index->alive_count) {
+            return ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0];
+        }
     }
+    return 0;
 }
 
 bool flecs_entity_index_is_alive(

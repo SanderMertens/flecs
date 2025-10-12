@@ -485,6 +485,7 @@
                 "add_enum_constant",
                 "add_enum_constant_explicit",
                 "add_enum_class_constant",
+                "add_singleton_enum_constant",
                 "replace_enum_constants",
                 "has_enum",
                 "has_enum_wildcard",
@@ -494,6 +495,7 @@
                 "enum_as_component",
                 "query_enum_wildcard",
                 "query_enum_constant",
+                "query_singleton_enum_constant",
                 "enum_type_from_stage",
                 "add_enum_from_stage",
                 "enum_w_2_worlds",
@@ -1103,7 +1105,8 @@
                 "trigger_on_set_in_on_add_implicit_registration",
                 "trigger_on_set_in_on_add_implicit_registration_namespaced",
                 "fixed_src_w_each",
-                "fixed_src_w_run"
+                "fixed_src_w_run",
+                "untyped_field"
             ]
         }, {
             "id": "ComponentLifecycle",
@@ -1630,6 +1633,9 @@
                 "ser_deser_std_vector_int",
                 "ser_deser_std_vector_std_string",
                 "ser_deser_type_w_std_string_std_vector_std_string",
+                "ser_deser_std_optional_int",
+                "ser_deser_std_optional_std_vector_int",
+                "ser_deser_std_optional_std_string",
                 "std_vector_random_access",
                 "struct_random_access",
                 "ser_deser_flecs_entity",

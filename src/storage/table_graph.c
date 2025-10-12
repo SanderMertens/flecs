@@ -669,6 +669,24 @@ void flecs_diff_insert_removed(
 }
 
 static
+bool flecs_id_is_alive(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (ECS_IS_PAIR(id)) {
+        if (!flecs_entities_get_alive(world, ECS_PAIR_FIRST(id))) {
+            return false;
+        }
+        if (!flecs_entities_get_alive(world, ECS_PAIR_SECOND(id))) {
+            return false;
+        }
+        return true;
+    } else {
+        return flecs_entities_get_alive(world, id & ECS_COMPONENT_MASK) != 0;
+    }
+}
+
+static
 void flecs_compute_table_diff(
     ecs_world_t *world,
     ecs_table_t *node,
@@ -686,6 +704,10 @@ void flecs_compute_table_diff(
     }
 
     ecs_component_record_t *cr = NULL;
+
+    if (!flecs_id_is_alive(world, id)) {
+        return;
+    }
 
     bool dont_fragment = false;
     if (id < FLECS_HI_COMPONENT_ID) {

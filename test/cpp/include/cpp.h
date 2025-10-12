@@ -4,6 +4,7 @@
 /* This generated file contains includes for project dependencies */
 #include <cpp/bake_config.h>
 #include <string>
+#include <optional>
 #include <vector>
 #include <stddef.h>
 

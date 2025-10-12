@@ -893,7 +893,10 @@ void flecs_emit_forward_up(
     ecs_id_t id = cr->id;
     ecs_entity_t tgt = ECS_PAIR_SECOND(id);
     tgt = flecs_entities_get_alive(world, tgt);
-    ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+    if (!tgt) {
+        return;
+    }
+
     ecs_record_t *tgt_record = flecs_entities_try(world, tgt);
     ecs_table_t *tgt_table;
     if (!tgt_record || !(tgt_table = tgt_record->table)) {
@@ -1381,9 +1384,15 @@ repeat_event:
         }
 
         it.trs[0] = tr;
-        ECS_CONST_CAST(int32_t*, it.sizes)[0] = 0; /* safe, owned by observer */
         it.event_id = id;
         it.ids[0] = id;
+
+        const ecs_type_info_t *ti = cr->type_info;
+        if (ti) {
+             /* safe, owned by observer */
+            ECS_CONST_CAST(int32_t*, it.sizes)[0] = ti->size;
+        }
+
 
         /* Actually invoke observers for this event/id */
         for (ider_i = 0; ider_i < ider_count; ider_i ++) {
