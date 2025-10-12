@@ -7847,3 +7847,173 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_ins
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_this_written_up_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_add(world, p, Bar);
+    ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
+
+    ecs_add(world, c_1, Foo);
+    ecs_add(world, c_2, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Foo },
+            { .id = Bar, .src.id = EcsUp }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    printf("%s\n", ecs_query_plan(q));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(it.entities[0], c_1);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p, ecs_field_src(&it, 1));
+    test_uint(Bar, ecs_field_id(&it, 1));
+    
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(it.entities[0], c_2);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p, ecs_field_src(&it, 1));
+    test_uint(Bar, ecs_field_id(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_written_up_childof_w_component(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_w_component_inherited(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_w_component(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_w_component_inherited(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_w_owned(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_w_component(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_w_component_inherited(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_component(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_component_inherited(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_owned(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_on_instantiate_inherit(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component_on_instantiate_inherit(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_on_instantiate_dont_inherit(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_w_component(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_on_instantiate_inherit(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_on_instantiate_dont_inherit(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component_from_child(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child_on_instantiate_inherit(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_w_component_from_child(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_inherit(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit(void) {
+    // Implement testcase
+}
