@@ -165,6 +165,10 @@ void flecs_trav_entity_down_iter_children(
     bool self,
     bool empty)
 {
+    (void)cache;
+    (void)trav;
+    (void)empty;
+
     ecs_vec_t *children = &cr_trav->pair->ordered_children;
     int32_t i, count = ecs_vec_count(children);
     ecs_entity_t *elems = ecs_vec_first(children);
@@ -207,6 +211,8 @@ void flecs_trav_entity_down_iter_tables(
     bool self,
     bool empty)
 {
+    (void)cache;
+
     ecs_table_cache_iter_t it;
     bool result;
     if (empty) {
