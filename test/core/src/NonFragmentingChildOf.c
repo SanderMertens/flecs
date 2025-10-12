@@ -1474,20 +1474,53 @@ void NonFragmentingChildOf_defer_delete_parent_and_base(void) {
 
     ECS_TAG(world, Bar);
 
-    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsDontInherit);
-
     ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
     ecs_entity_t b = ecs_new(world);
-    ecs_add(world, b, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add_pair(world, c_1, EcsIsA, b);
-    ecs_add_id(world, c_1, EcsOrderedChildren);
-    ecs_entity_t gc_1 = ecs_insert(world, ecs_value(EcsParent, {c_1}));
 
     ecs_defer_begin(world);
     ecs_delete(world, p);
     ecs_delete(world, b);
+    test_assert(ecs_is_alive(world, p));
+    test_assert(ecs_is_alive(world, b));
+    test_assert(ecs_is_alive(world, c_1));
     ecs_defer_end(world);
+    test_assert(!ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, b));
+    test_assert(!ecs_is_alive(world, c_1));
 
     ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_delete_parent_and_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_add(world, c_1, Bar);
+
+    ecs_defer_begin(world);
+    ecs_delete(world, p);
+    ecs_delete(world, Bar);
+    test_assert(ecs_is_alive(world, p));
+    test_assert(ecs_is_alive(world, Bar));
+    test_assert(ecs_is_alive(world, c_1));
+
+    ecs_defer_end(world);
+    test_assert(!ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, Bar));
+    test_assert(!ecs_is_alive(world, c_1));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_observer_order_after_delete(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_observer_order_after_deferred_delete(void) {
+    // Implement testcase
 }

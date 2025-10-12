@@ -20,58 +20,65 @@ void flecs_marked_id_push(
     m->action = action;
     m->delete_id = delete_id;
 
+    cr->flags |= EcsIdMarkedForDelete;
+
     flecs_component_claim(world, cr);
 }
 
 static
-void flecs_id_mark_for_delete(
+void flecs_component_mark_for_delete(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t action,
     bool delete_id);
 
 static
+void flecs_target_mark_for_delete(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_component_record_t *cr;
+    ecs_record_t *r = flecs_entities_get(world, e);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* If entity is not used as id or as relationship target, there won't
+     * be any tables with a reference to it. */
+    ecs_flags32_t flags = r->row & ECS_ROW_FLAGS_MASK;
+    if (!(flags & (EcsEntityIsId|EcsEntityIsTarget))) {
+        return;
+    }
+
+    if (flags & EcsEntityIsId) {
+        if ((cr = flecs_components_get(world, e))) {
+            flecs_component_mark_for_delete(world, cr, 
+                ECS_ID_ON_DELETE(cr->flags), true);
+        }
+        if ((cr = flecs_components_get(world, ecs_pair(e, EcsWildcard)))) {
+            flecs_component_mark_for_delete(world, cr, 
+                ECS_ID_ON_DELETE(cr->flags), true);
+        }
+    }
+    if (flags & EcsEntityIsTarget) {
+        if ((cr = flecs_components_get(world, ecs_pair(EcsWildcard, e)))) {
+            flecs_component_mark_for_delete(world, cr, 
+                ECS_ID_ON_DELETE_TARGET(cr->flags), true);
+        }
+        if ((cr = flecs_components_get(world, ecs_pair(EcsFlag, e)))) {
+            flecs_component_mark_for_delete(world, cr, 
+                ECS_ID_ON_DELETE_TARGET(cr->flags), true);
+        }
+    }
+}
+
+static
 void flecs_targets_mark_for_delete(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_component_record_t *cr;
     const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t i, count = ecs_table_count(table);
     for (i = 0; i < count; i ++) {
-        ecs_record_t *r = flecs_entities_get(world, entities[i]);
-        if (!r) {
-            continue;
-        }
-
-        /* If entity is not used as id or as relationship target, there won't
-         * be any tables with a reference to it. */
-        ecs_flags32_t flags = r->row & ECS_ROW_FLAGS_MASK;
-        if (!(flags & (EcsEntityIsId|EcsEntityIsTarget))) {
-            continue;
-        }
-
-        ecs_entity_t e = entities[i];
-        if (flags & EcsEntityIsId) {
-            if ((cr = flecs_components_get(world, e))) {
-                flecs_id_mark_for_delete(world, cr, 
-                    ECS_ID_ON_DELETE(cr->flags), true);
-            }
-            if ((cr = flecs_components_get(world, ecs_pair(e, EcsWildcard)))) {
-                flecs_id_mark_for_delete(world, cr, 
-                    ECS_ID_ON_DELETE(cr->flags), true);
-            }
-        }
-        if (flags & EcsEntityIsTarget) {
-            if ((cr = flecs_components_get(world, ecs_pair(EcsWildcard, e)))) {
-                flecs_id_mark_for_delete(world, cr, 
-                    ECS_ID_ON_DELETE_TARGET(cr->flags), true);
-            }
-            if ((cr = flecs_components_get(world, ecs_pair(EcsFlag, e)))) {
-                flecs_id_mark_for_delete(world, cr, 
-                    ECS_ID_ON_DELETE_TARGET(cr->flags), true);
-            }
-        }
+        flecs_target_mark_for_delete(world, entities[i]);
     }
 }
 
@@ -133,7 +140,46 @@ ecs_entity_t flecs_get_delete_action(
 }
 
 static
-void flecs_id_mark_for_delete(
+void flecs_component_mark_non_fragmenting_childof(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_entity_t tgt = ECS_PAIR_SECOND(cr->id);
+    ecs_component_record_t *childof_cr = flecs_components_get(
+        world, ecs_childof(tgt));
+    if (!childof_cr) {
+        return;
+    }
+
+    ecs_flags32_t flags = childof_cr->flags;
+
+    if (flags & EcsIdMarkedForDelete) {
+        return;
+    }
+
+    if (!(childof_cr->flags & EcsIdOrderedChildren)) {
+        return;
+    }
+
+    flecs_marked_id_push(world, childof_cr, EcsDelete, true);
+
+    int32_t i, count = ecs_vec_count(&childof_cr->pair->ordered_children);
+    ecs_entity_t *children = ecs_vec_first(&childof_cr->pair->ordered_children);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = children[i];
+
+        ecs_component_record_t *tgt_cr = flecs_components_get(
+            world, ecs_pair(EcsWildcard, e));
+        if (!tgt_cr) {
+            continue;
+        }
+
+        flecs_component_mark_for_delete(world, tgt_cr, 0, true);
+    }
+}
+
+static
+void flecs_component_mark_for_delete(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t action,
@@ -143,12 +189,14 @@ void flecs_id_mark_for_delete(
         return;
     }
 
-    cr->flags |= EcsIdMarkedForDelete;
     flecs_marked_id_push(world, cr, action, delete_id);
 
     ecs_id_t id = cr->id;
 
     bool delete_target = flecs_id_is_delete_target(id, action);
+    if (delete_target) {
+        flecs_component_mark_non_fragmenting_childof(world, cr);
+    }
 
     /* Mark all tables with the id for delete */
     ecs_table_cache_iter_t it;
@@ -252,7 +300,7 @@ bool flecs_on_delete_mark(
         return false;
     }
 
-    flecs_id_mark_for_delete(world, cr, action, delete_id);
+    flecs_component_mark_for_delete(world, cr, action, delete_id);
 
     return true;
 }
@@ -320,12 +368,13 @@ void flecs_remove_from_table(
 }
 
 static
-bool flecs_on_delete_clear_tables(
+bool flecs_on_delete_clear_entities(
     ecs_world_t *world)
 {
     /* Iterate in reverse order so that DAGs get deleted bottom to top */
     int32_t i, last = ecs_vec_count(&world->store.marked_ids), first = 0;
     ecs_marked_id_t *ids = ecs_vec_first(&world->store.marked_ids);
+
     do {
         for (i = last - 1; i >= first; i --) {
             ecs_component_record_t *cr = ids[i].cr;
@@ -351,10 +400,19 @@ bool flecs_on_delete_clear_tables(
                 }
             }
 
-            /* Run commands so children get notified before parent is deleted */
-            if (world->stages[0]->defer) {
-                flecs_defer_end(world, world->stages[0]);
-                flecs_defer_begin(world, world->stages[0]);
+            /* If component record contains children with Parent components, 
+             * delete them. */
+            if (cr->flags & EcsIdOrderedChildren) {
+                if (ecs_map_count(&cr->pair->children_tables)) {
+                    int32_t c, count = ecs_vec_count(&cr->pair->ordered_children);
+                    ecs_entity_t *children = ecs_vec_first(&cr->pair->ordered_children);
+
+                    ecs_defer_suspend(world);
+                    for (c = 0; c < count; c ++) {
+                        ecs_delete(world, children[c]);
+                    }
+                    ecs_defer_resume(world);
+                }
             }
 
             /* User code (from triggers) could have enqueued more ids to delete,
@@ -498,8 +556,8 @@ void flecs_on_delete(
         ecs_dbg_2("#[red]delete#[reset]");
         ecs_log_push_2();
 
-        /* Empty tables with all the to be deleted ids */
-        flecs_on_delete_clear_tables(world);
+        /* Delete all the entities from the to be deleted tables/components */
+        flecs_on_delete_clear_entities(world);
 
         /* Release remaining references to the ids */
         flecs_on_delete_clear_ids(world);

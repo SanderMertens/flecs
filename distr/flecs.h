@@ -431,14 +431,14 @@ extern "C" {
 #define EcsIdWith                      (1u << 12)
 #define EcsIdCanToggle                 (1u << 13)
 #define EcsIdIsTransitive              (1u << 14)
-#define EcsIdInheritable             (1u << 15)
+#define EcsIdInheritable               (1u << 15)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 17) 
 #define EcsIdHasOnSet                  (1u << 18)
 #define EcsIdHasOnTableCreate          (1u << 19)
 #define EcsIdHasOnTableDelete          (1u << 20)
-#define EcsIdSparse                  (1u << 21)
+#define EcsIdSparse                    (1u << 21)
 #define EcsIdDontFragment              (1u << 22)
 #define EcsIdMatchDontFragment         (1u << 23) /* For (*, T) wildcards */
 #define EcsIdOrderedChildren           (1u << 24)

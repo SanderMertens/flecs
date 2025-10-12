@@ -182,9 +182,11 @@ const char* flecs_term_parse_arg(
                     case EcsTokIdentifier:
                         ref->name = Token(1);
                         break;
-                    case EcsTokNumber:
-                        ref->id = atoi(Token(1));
+                    case EcsTokNumber: {
+                        char *end;
+                        ref->id = strtoul(Token(1), &end, 10);
                         break;
+                    }
                 );
                 break;
             }
