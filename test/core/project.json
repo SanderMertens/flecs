@@ -783,7 +783,10 @@
                 "depth_after_parent_remove_parent_nested",
                 "depth_after_parent_reparent_nested",
                 "depth_after_parent_reparent_different_depth_nested",
-                "defer_delete_parent_and_base"
+                "defer_delete_parent_and_base",
+                "defer_delete_parent_and_tag",
+                "observer_order_after_delete",
+                "observer_order_after_deferred_delete"
             ]
         }, {
             "id": "Hierarchies",

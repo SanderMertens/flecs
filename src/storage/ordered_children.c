@@ -12,16 +12,6 @@ void flecs_ordered_children_fini(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
-    /* If parent has non-fragmenting children, make sure they're deleted */
-    if (ecs_map_count(&cr->pair->children_tables)) {
-        int32_t i, count = ecs_vec_count(&cr->pair->ordered_children);
-        ecs_entity_t *children = ecs_vec_first(&cr->pair->ordered_children);
-
-        for (i = 0; i < count; i ++) {
-            ecs_delete(world, children[i]);
-        }
-    }
-
     ecs_vec_fini_t(
         &world->allocator, &cr->pair->ordered_children, ecs_entity_t);
     ecs_map_fini(&cr->pair->children_tables);

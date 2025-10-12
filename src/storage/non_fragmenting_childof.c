@@ -224,6 +224,7 @@ void flecs_on_non_fragmenting_child_move_remove(
     int32_t row,
     int32_t count)
 {
+    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!(dst->flags & EcsTableHasParent)) {
         return;
     }
@@ -325,7 +326,7 @@ void flecs_non_fragmenting_childof_unparent(
         ecs_entity_t e = entities[i];
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));
-        if (!cr) {
+        if (!cr || (cr->flags & EcsIdMarkedForDelete)) {
             continue;
         } else {
             /* Entity is a parent */

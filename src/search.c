@@ -329,7 +329,7 @@ int32_t flecs_relation_depth(
             ecs_id_t depth_pair = table->type.array[tr_wc->index];
             ecs_assert(ECS_PAIR_FIRST(depth_pair) == EcsParentDepth, 
                 ECS_INTERNAL_ERROR, NULL);
-            return ECS_PAIR_SECOND(depth_pair);
+            return flecs_uto(int32_t, ECS_PAIR_SECOND(depth_pair));
         } else {
             return 0;
         }

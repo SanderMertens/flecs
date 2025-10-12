@@ -1069,6 +1069,8 @@ void flecs_query_set_op_kind(
     ecs_term_t *term,
     bool src_is_var)
 {
+    (void)query;
+
     /* Default instruction for And operators. If the source is fixed (like for
      * singletons or terms with an entity source), use With, which like And but
      * just matches against a source (vs. finding a source). */
