@@ -1818,6 +1818,14 @@ void Observer_2_terms_on_set_yield_existing_is_set(void);
 void Observer_2_singleton_terms_on_add(void);
 void Observer_2_singleton_terms_on_remove(void);
 void Observer_2_singleton_terms_on_set(void);
+void Observer_1_term_field_size(void);
+void Observer_2_terms_field_size(void);
+void Observer_1_up_term_field_size(void);
+void Observer_2_up_terms_field_size(void);
+void Observer_1_fixed_src_term_field_size(void);
+void Observer_2_fixed_src_terms_field_size(void);
+void Observer_1_singleton_term_field_size(void);
+void Observer_2_singleton_terms_field_size(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -9792,6 +9800,38 @@ bake_test_case Observer_testcases[] = {
         Observer_2_singleton_terms_on_set
     },
     {
+        "1_term_field_size",
+        Observer_1_term_field_size
+    },
+    {
+        "2_terms_field_size",
+        Observer_2_terms_field_size
+    },
+    {
+        "1_up_term_field_size",
+        Observer_1_up_term_field_size
+    },
+    {
+        "2_up_terms_field_size",
+        Observer_2_up_terms_field_size
+    },
+    {
+        "1_fixed_src_term_field_size",
+        Observer_1_fixed_src_term_field_size
+    },
+    {
+        "2_fixed_src_terms_field_size",
+        Observer_2_fixed_src_terms_field_size
+    },
+    {
+        "1_singleton_term_field_size",
+        Observer_1_singleton_term_field_size
+    },
+    {
+        "2_singleton_terms_field_size",
+        Observer_2_singleton_terms_field_size
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -13507,7 +13547,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        269,
+        277,
         Observer_testcases
     },
     {

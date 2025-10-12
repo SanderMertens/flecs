@@ -1068,6 +1068,7 @@ void Observer_trigger_on_set_in_on_add_implicit_registration(void);
 void Observer_trigger_on_set_in_on_add_implicit_registration_namespaced(void);
 void Observer_fixed_src_w_each(void);
 void Observer_fixed_src_w_run(void);
+void Observer_untyped_field(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -5820,6 +5821,10 @@ bake_test_case Observer_testcases[] = {
     {
         "fixed_src_w_run",
         Observer_fixed_src_w_run
+    },
+    {
+        "untyped_field",
+        Observer_untyped_field
     }
 };
 
@@ -8203,7 +8208,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        63,
+        64,
         Observer_testcases
     },
     {

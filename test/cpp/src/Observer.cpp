@@ -1608,3 +1608,28 @@ void Observer_fixed_src_w_run(void) {
     
     test_assert(matched == 0);
 }
+
+void Observer_untyped_field(void) {
+    flecs::world world;
+
+    int invoked = 0, count = 0;
+
+    world.observer<Position>()
+        .event(flecs::OnSet)
+        .run([&](flecs::iter& it) {
+            invoked ++;
+            while (it.next()) {
+                count ++;
+                test_uint(sizeof(Position), it.size(0));
+                auto f = it.field(0);
+                Position *p = static_cast<Position*>(f[0]);
+                test_int(p->x, 10);
+                test_int(p->y, 20);
+            }
+        });
+
+    world.entity().set(Position{10, 20});
+
+    test_int(invoked, 1);
+    test_int(count, 1);
+}

@@ -1384,9 +1384,15 @@ repeat_event:
         }
 
         it.trs[0] = tr;
-        ECS_CONST_CAST(int32_t*, it.sizes)[0] = 0; /* safe, owned by observer */
         it.event_id = id;
         it.ids[0] = id;
+
+        const ecs_type_info_t *ti = cr->type_info;
+        if (ti) {
+             /* safe, owned by observer */
+            ECS_CONST_CAST(int32_t*, it.sizes)[0] = ti->size;
+        }
+
 
         /* Actually invoke observers for this event/id */
         for (ider_i = 0; ider_i < ider_count; ider_i ++) {
