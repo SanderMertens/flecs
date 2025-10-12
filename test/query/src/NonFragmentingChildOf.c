@@ -7835,6 +7835,12 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_ins
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(it.entities[0], b);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Bar, ecs_field_id(&it, 0));
+
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
