@@ -2351,6 +2351,37 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child(void);
 void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_w_component_from_child(void);
 void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_instantiate_inherit(void);
 void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit(void);
+void NonFragmentingChildOf_this_written_up_childof(void);
+void NonFragmentingChildOf_this_written_up_childof_w_component(void);
+void NonFragmentingChildOf_this_written_up_childof_w_component_inherited(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_w_component(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_w_component_inherited(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_w_owned(void);
+void NonFragmentingChildOf_this_written_self_up_childof(void);
+void NonFragmentingChildOf_this_written_self_up_childof_w_component(void);
+void NonFragmentingChildOf_this_written_self_up_childof_w_component_inherited(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_component(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_component_inherited(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_owned(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_on_instantiate_inherit(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component_on_instantiate_inherit(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_on_instantiate_dont_inherit(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_w_component(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_on_instantiate_inherit(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_on_instantiate_dont_inherit(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component_from_child(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child_on_instantiate_inherit(void);
+void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_w_component_from_child(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_inherit(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -11686,6 +11717,130 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "this_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit",
         NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit
+    },
+    {
+        "this_written_up_childof",
+        NonFragmentingChildOf_this_written_up_childof
+    },
+    {
+        "this_written_up_childof_w_component",
+        NonFragmentingChildOf_this_written_up_childof_w_component
+    },
+    {
+        "this_written_up_childof_w_component_inherited",
+        NonFragmentingChildOf_this_written_up_childof_w_component_inherited
+    },
+    {
+        "this_written_up_childof_2_lvl",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl
+    },
+    {
+        "this_written_up_childof_2_lvl_w_component",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_w_component
+    },
+    {
+        "this_written_up_childof_2_lvl_w_component_inherited",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_w_component_inherited
+    },
+    {
+        "this_written_up_childof_2_lvl_w_owned",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_w_owned
+    },
+    {
+        "this_written_self_up_childof",
+        NonFragmentingChildOf_this_written_self_up_childof
+    },
+    {
+        "this_written_self_up_childof_w_component",
+        NonFragmentingChildOf_this_written_self_up_childof_w_component
+    },
+    {
+        "this_written_self_up_childof_w_component_inherited",
+        NonFragmentingChildOf_this_written_self_up_childof_w_component_inherited
+    },
+    {
+        "this_written_self_up_childof_2_lvl",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl
+    },
+    {
+        "this_written_self_up_childof_2_lvl_w_component",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_component
+    },
+    {
+        "this_written_self_up_childof_2_lvl_w_component_inherited",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_component_inherited
+    },
+    {
+        "this_written_self_up_childof_2_lvl_w_owned",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_owned
+    },
+    {
+        "this_written_up_childof_2_lvl_children",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_children
+    },
+    {
+        "this_written_up_childof_2_lvl_children_w_component",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component
+    },
+    {
+        "this_written_up_childof_2_lvl_children_on_instantiate_inherit",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_children_on_instantiate_inherit
+    },
+    {
+        "this_written_up_childof_2_lvl_children_w_component_on_instantiate_inherit",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component_on_instantiate_inherit
+    },
+    {
+        "this_written_up_childof_2_lvl_children_on_instantiate_dont_inherit",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_children_on_instantiate_dont_inherit
+    },
+    {
+        "this_written_self_up_childof_2_lvl_children",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children
+    },
+    {
+        "this_written_self_up_childof_2_lvl_children_w_component",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_w_component
+    },
+    {
+        "this_written_self_up_childof_2_lvl_children_on_instantiate_inherit",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_on_instantiate_inherit
+    },
+    {
+        "this_written_self_up_childof_2_lvl_children_on_instantiate_dont_inherit",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_on_instantiate_dont_inherit
+    },
+    {
+        "this_written_up_childof_2_lvl_children_from_child",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child
+    },
+    {
+        "this_written_up_childof_2_lvl_children_w_component_from_child",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component_from_child
+    },
+    {
+        "this_written_up_childof_2_lvl_children_from_child_on_instantiate_inherit",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child_on_instantiate_inherit
+    },
+    {
+        "this_written_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit",
+        NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit
+    },
+    {
+        "this_written_self_up_childof_2_lvl_children_from_child",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child
+    },
+    {
+        "this_written_self_up_childof_2_lvl_children_w_component_from_child",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_w_component_from_child
+    },
+    {
+        "this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_inherit",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_inherit
+    },
+    {
+        "this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit",
+        NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit
     }
 };
 
@@ -12491,7 +12646,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        111,
+        142,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params
