@@ -2,6 +2,7 @@
 
 #include "FlecsEntityRecord.h"
 
+#include "UObject/PropertyIterator.h"
 #include "Worlds/FlecsWorld.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityRecord)

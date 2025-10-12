@@ -264,7 +264,7 @@
  * that is not a power of two will degrade performance.
  */
 #ifndef FLECS_HI_COMPONENT_ID
-#define FLECS_HI_COMPONENT_ID 256
+#define FLECS_HI_COMPONENT_ID 1024
 #endif
 
 /** @def FLECS_HI_ID_RECORD_ID

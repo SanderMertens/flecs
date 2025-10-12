@@ -18,12 +18,12 @@ void UFlecsCollectionWorldSubsystem::Initialize(FSubsystemCollectionBase& Collec
 {
 	Super::Initialize(Collection);
 
+	const TSolidNotNull<const UFlecsWorldSubsystem*> WorldSubsystem = Collection.InitializeDependency<UFlecsWorldSubsystem>();
+
 	// Automation Testing specific initialization flow
 #if WITH_AUTOMATION_TESTS
 	if (GIsAutomationTesting)
 	{
-		const TSolidNotNull<const UFlecsWorldSubsystem*> WorldSubsystem = GetWorld()->GetSubsystemChecked<UFlecsWorldSubsystem>();
-		
 		if (WorldSubsystem->HasValidFlecsWorld())
 		{
 			const TSolidNotNull<UFlecsWorld*> FlecsWorld = GetFlecsWorld();
@@ -39,6 +39,7 @@ void UFlecsCollectionWorldSubsystem::Initialize(FSubsystemCollectionBase& Collec
 		}
 		else
 		{
+			// We need to do this because currently the test Flecs world is created much later and we have no function in Abstract World Subsystem for detection
 			Unreal::Flecs::GOnFlecsWorldInitialized.AddLambda([this](const TSolidNotNull<UFlecsWorld*> InWorld)
 			{
 				SetFlecsWorld(InWorld);

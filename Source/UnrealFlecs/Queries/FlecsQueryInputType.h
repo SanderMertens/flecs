@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsQueryScriptExpr.h"
+
 #include "Entities/FlecsEntityHandle.h"
+#include "FlecsQueryScriptExpr.h"
+
 #include "FlecsQueryInputType.generated.h"
 
 UENUM(BlueprintType)

@@ -296,7 +296,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		return SubEntities.Add(InSubEntity);
 	}
 
-	FORCEINLINE void RemoveSubEntity(const int32 InIndex)
+	FORCEINLINE void RemoveSubEntity(const uint32 InIndex)
 	{
 		solid_checkf(SubEntities.IsValidIndex(InIndex), TEXT("Index is out of bounds"));
 		SubEntities.RemoveAt(InIndex);
@@ -317,13 +317,13 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		return SubEntities.Num();
 	}
 
-	FORCEINLINE const FFlecsRecordSubEntity& GetSubEntity(const int32 InIndex) const
+	FORCEINLINE const FFlecsRecordSubEntity& GetSubEntity(const uint32 InIndex) const
 	{
 		solid_checkf(SubEntities.IsValidIndex(InIndex), TEXT("Index is out of bounds"));
 		return SubEntities[InIndex];
 	}
 
-	FORCEINLINE FFlecsRecordSubEntity& GetSubEntity(const int32 InIndex)
+	FORCEINLINE FFlecsRecordSubEntity& GetSubEntity(const uint32 InIndex)
 	{
 		solid_checkf(SubEntities.IsValidIndex(InIndex), TEXT("Index is out of bounds"));
 		return SubEntities[InIndex];

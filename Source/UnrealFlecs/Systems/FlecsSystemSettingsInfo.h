@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Entities/FlecsEntityRecord.h"
+
 #include "FlecsSystemSettingsInfo.generated.h"
 
 UENUM(BlueprintType)

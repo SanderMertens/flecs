@@ -319,7 +319,7 @@ public:
 
 		return *this;
 	}
-
+	
 	FORCEINLINE FFlecsCollectionBuilder& Name(const FName& InName)
 	{
 		IdName = InName;

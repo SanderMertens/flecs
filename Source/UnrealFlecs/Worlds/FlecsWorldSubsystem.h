@@ -54,6 +54,8 @@ public:
 	UFUNCTION()
 	UFlecsWorld* CreateWorld(const FString& Name, const FFlecsWorldSettingsInfo& Settings);
 
+	void SetWorld(UFlecsWorld* InWorld);
+
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	UFlecsWorld* GetDefaultWorld() const;
 

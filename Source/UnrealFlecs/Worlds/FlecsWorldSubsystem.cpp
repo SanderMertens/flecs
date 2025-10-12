@@ -236,6 +236,14 @@ UFlecsWorld* UFlecsWorldSubsystem::CreateWorld(const FString& Name, const FFlecs
 	return DefaultWorld;
 }
 
+void UFlecsWorldSubsystem::SetWorld(UFlecsWorld* InWorld)
+{
+	solid_checkf(IsValid(InWorld), TEXT("InWorld cannot be null"));
+	solid_checkf(!IsValid(DefaultWorld), TEXT("DefaultWorld is already set"));
+
+	DefaultWorld = InWorld;
+}
+
 UFlecsWorld* UFlecsWorldSubsystem::GetDefaultWorld() const
 {
 	return DefaultWorld;
