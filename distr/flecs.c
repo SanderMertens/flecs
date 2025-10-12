@@ -17134,58 +17134,65 @@ void flecs_marked_id_push(
     m->action = action;
     m->delete_id = delete_id;
 
+    cr->flags |= EcsIdMarkedForDelete;
+
     flecs_component_claim(world, cr);
 }
 
 static
-void flecs_id_mark_for_delete(
+void flecs_component_mark_for_delete(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t action,
     bool delete_id);
 
 static
+void flecs_target_mark_for_delete(
+    ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_component_record_t *cr;
+    ecs_record_t *r = flecs_entities_get(world, e);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* If entity is not used as id or as relationship target, there won't
+     * be any tables with a reference to it. */
+    ecs_flags32_t flags = r->row & ECS_ROW_FLAGS_MASK;
+    if (!(flags & (EcsEntityIsId|EcsEntityIsTarget))) {
+        return;
+    }
+
+    if (flags & EcsEntityIsId) {
+        if ((cr = flecs_components_get(world, e))) {
+            flecs_component_mark_for_delete(world, cr, 
+                ECS_ID_ON_DELETE(cr->flags), true);
+        }
+        if ((cr = flecs_components_get(world, ecs_pair(e, EcsWildcard)))) {
+            flecs_component_mark_for_delete(world, cr, 
+                ECS_ID_ON_DELETE(cr->flags), true);
+        }
+    }
+    if (flags & EcsEntityIsTarget) {
+        if ((cr = flecs_components_get(world, ecs_pair(EcsWildcard, e)))) {
+            flecs_component_mark_for_delete(world, cr, 
+                ECS_ID_ON_DELETE_TARGET(cr->flags), true);
+        }
+        if ((cr = flecs_components_get(world, ecs_pair(EcsFlag, e)))) {
+            flecs_component_mark_for_delete(world, cr, 
+                ECS_ID_ON_DELETE_TARGET(cr->flags), true);
+        }
+    }
+}
+
+static
 void flecs_targets_mark_for_delete(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    ecs_component_record_t *cr;
     const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t i, count = ecs_table_count(table);
     for (i = 0; i < count; i ++) {
-        ecs_record_t *r = flecs_entities_get(world, entities[i]);
-        if (!r) {
-            continue;
-        }
-
-        /* If entity is not used as id or as relationship target, there won't
-         * be any tables with a reference to it. */
-        ecs_flags32_t flags = r->row & ECS_ROW_FLAGS_MASK;
-        if (!(flags & (EcsEntityIsId|EcsEntityIsTarget))) {
-            continue;
-        }
-
-        ecs_entity_t e = entities[i];
-        if (flags & EcsEntityIsId) {
-            if ((cr = flecs_components_get(world, e))) {
-                flecs_id_mark_for_delete(world, cr, 
-                    ECS_ID_ON_DELETE(cr->flags), true);
-            }
-            if ((cr = flecs_components_get(world, ecs_pair(e, EcsWildcard)))) {
-                flecs_id_mark_for_delete(world, cr, 
-                    ECS_ID_ON_DELETE(cr->flags), true);
-            }
-        }
-        if (flags & EcsEntityIsTarget) {
-            if ((cr = flecs_components_get(world, ecs_pair(EcsWildcard, e)))) {
-                flecs_id_mark_for_delete(world, cr, 
-                    ECS_ID_ON_DELETE_TARGET(cr->flags), true);
-            }
-            if ((cr = flecs_components_get(world, ecs_pair(EcsFlag, e)))) {
-                flecs_id_mark_for_delete(world, cr, 
-                    ECS_ID_ON_DELETE_TARGET(cr->flags), true);
-            }
-        }
+        flecs_target_mark_for_delete(world, entities[i]);
     }
 }
 
@@ -17247,7 +17254,46 @@ ecs_entity_t flecs_get_delete_action(
 }
 
 static
-void flecs_id_mark_for_delete(
+void flecs_component_mark_non_fragmenting_childof(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_entity_t tgt = ECS_PAIR_SECOND(cr->id);
+    ecs_component_record_t *childof_cr = flecs_components_get(
+        world, ecs_childof(tgt));
+    if (!childof_cr) {
+        return;
+    }
+
+    ecs_flags32_t flags = childof_cr->flags;
+
+    if (flags & EcsIdMarkedForDelete) {
+        return;
+    }
+
+    if (!(childof_cr->flags & EcsIdOrderedChildren)) {
+        return;
+    }
+
+    flecs_marked_id_push(world, childof_cr, EcsDelete, true);
+
+    int32_t i, count = ecs_vec_count(&childof_cr->pair->ordered_children);
+    ecs_entity_t *children = ecs_vec_first(&childof_cr->pair->ordered_children);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = children[i];
+
+        ecs_component_record_t *tgt_cr = flecs_components_get(
+            world, ecs_pair(EcsWildcard, e));
+        if (!tgt_cr) {
+            continue;
+        }
+
+        flecs_component_mark_for_delete(world, tgt_cr, 0, true);
+    }
+}
+
+static
+void flecs_component_mark_for_delete(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t action,
@@ -17257,12 +17303,14 @@ void flecs_id_mark_for_delete(
         return;
     }
 
-    cr->flags |= EcsIdMarkedForDelete;
     flecs_marked_id_push(world, cr, action, delete_id);
 
     ecs_id_t id = cr->id;
 
     bool delete_target = flecs_id_is_delete_target(id, action);
+    if (delete_target) {
+        flecs_component_mark_non_fragmenting_childof(world, cr);
+    }
 
     /* Mark all tables with the id for delete */
     ecs_table_cache_iter_t it;
@@ -17366,7 +17414,7 @@ bool flecs_on_delete_mark(
         return false;
     }
 
-    flecs_id_mark_for_delete(world, cr, action, delete_id);
+    flecs_component_mark_for_delete(world, cr, action, delete_id);
 
     return true;
 }
@@ -17434,12 +17482,13 @@ void flecs_remove_from_table(
 }
 
 static
-bool flecs_on_delete_clear_tables(
+bool flecs_on_delete_clear_entities(
     ecs_world_t *world)
 {
     /* Iterate in reverse order so that DAGs get deleted bottom to top */
     int32_t i, last = ecs_vec_count(&world->store.marked_ids), first = 0;
     ecs_marked_id_t *ids = ecs_vec_first(&world->store.marked_ids);
+
     do {
         for (i = last - 1; i >= first; i --) {
             ecs_component_record_t *cr = ids[i].cr;
@@ -17465,10 +17514,19 @@ bool flecs_on_delete_clear_tables(
                 }
             }
 
-            /* Run commands so children get notified before parent is deleted */
-            if (world->stages[0]->defer) {
-                flecs_defer_end(world, world->stages[0]);
-                flecs_defer_begin(world, world->stages[0]);
+            /* If component record contains children with Parent components, 
+             * delete them. */
+            if (cr->flags & EcsIdOrderedChildren) {
+                if (ecs_map_count(&cr->pair->children_tables)) {
+                    int32_t c, count = ecs_vec_count(&cr->pair->ordered_children);
+                    ecs_entity_t *children = ecs_vec_first(&cr->pair->ordered_children);
+
+                    ecs_defer_suspend(world);
+                    for (c = 0; c < count; c ++) {
+                        ecs_delete(world, children[c]);
+                    }
+                    ecs_defer_resume(world);
+                }
             }
 
             /* User code (from triggers) could have enqueued more ids to delete,
@@ -17612,8 +17670,8 @@ void flecs_on_delete(
         ecs_dbg_2("#[red]delete#[reset]");
         ecs_log_push_2();
 
-        /* Empty tables with all the to be deleted ids */
-        flecs_on_delete_clear_tables(world);
+        /* Delete all the entities from the to be deleted tables/components */
+        flecs_on_delete_clear_entities(world);
 
         /* Release remaining references to the ids */
         flecs_on_delete_clear_ids(world);
@@ -19010,7 +19068,7 @@ int32_t flecs_relation_depth(
             ecs_id_t depth_pair = table->type.array[tr_wc->index];
             ecs_assert(ECS_PAIR_FIRST(depth_pair) == EcsParentDepth, 
                 ECS_INTERNAL_ERROR, NULL);
-            return ECS_PAIR_SECOND(depth_pair);
+            return flecs_uto(int32_t, ECS_PAIR_SECOND(depth_pair));
         } else {
             return 0;
         }
@@ -20474,7 +20532,7 @@ error:
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
 const ecs_id_t ECS_AUTO_OVERRIDE =                                 (1ull << 62);
 const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
-const ecs_id_t ECS_VALUE_PAIR =                                    ((1ull << 60) | ECS_PAIR);
+const ecs_id_t ECS_VALUE_PAIR =                                    ((1ull << 60) | (1ull << 63));
 
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =                                   1;
@@ -39449,6 +39507,7 @@ void flecs_on_non_fragmenting_child_move_remove(
     int32_t row,
     int32_t count)
 {
+    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!(dst->flags & EcsTableHasParent)) {
         return;
     }
@@ -39550,7 +39609,7 @@ void flecs_non_fragmenting_childof_unparent(
         ecs_entity_t e = entities[i];
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));
-        if (!cr) {
+        if (!cr || (cr->flags & EcsIdMarkedForDelete)) {
             continue;
         } else {
             /* Entity is a parent */
@@ -39574,16 +39633,6 @@ void flecs_ordered_children_fini(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
-    /* If parent has non-fragmenting children, make sure they're deleted */
-    if (ecs_map_count(&cr->pair->children_tables)) {
-        int32_t i, count = ecs_vec_count(&cr->pair->ordered_children);
-        ecs_entity_t *children = ecs_vec_first(&cr->pair->ordered_children);
-
-        for (i = 0; i < count; i ++) {
-            ecs_delete(world, children[i]);
-        }
-    }
-
     ecs_vec_fini_t(
         &world->allocator, &cr->pair->ordered_children, ecs_entity_t);
     ecs_map_fini(&cr->pair->children_tables);
@@ -41204,7 +41253,7 @@ void flecs_table_notify_on_remove(
         ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
         diff.removed = table->type;
         diff.removed_flags = table->flags & EcsTableRemoveEdgeFlags;
-        flecs_notify_on_remove(world, table, NULL, 0, count, &diff);
+        flecs_notify_on_remove(world, table, &world->store.root, 0, count, &diff);
     }
 }
 
@@ -61441,9 +61490,11 @@ const char* flecs_term_parse_arg(
                     case EcsTokIdentifier:
                         ref->name = Token(1);
                         break;
-                    case EcsTokNumber:
-                        ref->id = atoi(Token(1));
+                    case EcsTokNumber: {
+                        char *end;
+                        ref->id = strtoul(Token(1), &end, 10);
                         break;
+                    }
                 );
                 break;
             }
@@ -78207,6 +78258,8 @@ void flecs_query_set_op_kind(
     ecs_term_t *term,
     bool src_is_var)
 {
+    (void)query;
+
     /* Default instruction for And operators. If the source is fixed (like for
      * singletons or terms with an entity source), use With, which like And but
      * just matches against a source (vs. finding a source). */
@@ -84127,6 +84180,10 @@ void flecs_trav_entity_down_iter_children(
     bool self,
     bool empty)
 {
+    (void)cache;
+    (void)trav;
+    (void)empty;
+
     ecs_vec_t *children = &cr_trav->pair->ordered_children;
     int32_t i, count = ecs_vec_count(children);
     ecs_entity_t *elems = ecs_vec_first(children);
@@ -84169,6 +84226,8 @@ void flecs_trav_entity_down_iter_tables(
     bool self,
     bool empty)
 {
+    (void)cache;
+
     ecs_table_cache_iter_t it;
     bool result;
     if (empty) {

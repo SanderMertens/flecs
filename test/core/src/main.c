@@ -752,6 +752,9 @@ void NonFragmentingChildOf_depth_after_parent_remove_parent_nested(void);
 void NonFragmentingChildOf_depth_after_parent_reparent_nested(void);
 void NonFragmentingChildOf_depth_after_parent_reparent_different_depth_nested(void);
 void NonFragmentingChildOf_defer_delete_parent_and_base(void);
+void NonFragmentingChildOf_defer_delete_parent_and_tag(void);
+void NonFragmentingChildOf_observer_order_after_delete(void);
+void NonFragmentingChildOf_observer_order_after_deferred_delete(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5870,6 +5873,18 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "defer_delete_parent_and_base",
         NonFragmentingChildOf_defer_delete_parent_and_base
+    },
+    {
+        "defer_delete_parent_and_tag",
+        NonFragmentingChildOf_defer_delete_parent_and_tag
+    },
+    {
+        "observer_order_after_delete",
+        NonFragmentingChildOf_observer_order_after_delete
+    },
+    {
+        "observer_order_after_deferred_delete",
+        NonFragmentingChildOf_observer_order_after_deferred_delete
     }
 };
 
@@ -14590,7 +14605,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        51,
+        54,
         NonFragmentingChildOf_testcases
     },
     {
