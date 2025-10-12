@@ -1661,6 +1661,32 @@ void Observer_fixed_src_w_run(void) {
 	test_assert(matched == 0);
 }
 
+void Observer_untyped_field(void) {
+	flecs::world world;
+	world.component<Position>();
+
+	int invoked = 0, count = 0;
+
+	world.observer<Position>()
+		.event(flecs::OnSet)
+		.run([&](flecs::iter& it) {
+			invoked ++;
+			while (it.next()) {
+				count ++;
+				test_uint(sizeof(Position), it.size(0));
+				auto f = it.field(0);
+				Position *p = static_cast<Position*>(f[0]);
+				test_int(p->x, 10);
+				test_int(p->y, 20);
+			}
+		});
+
+	world.entity().set(Position{10, 20});
+
+	test_int(invoked, 1);
+	test_int(count, 1);
+}
+
 END_DEFINE_SPEC(FFlecsObserverTestsSpec);
 
 /*"id": "Observer",
@@ -1727,7 +1753,8 @@ END_DEFINE_SPEC(FFlecsObserverTestsSpec);
                 "trigger_on_set_in_on_add_implicit_registration",
                 "trigger_on_set_in_on_add_implicit_registration_namespaced",
                 "fixed_src_w_each",
-                "fixed_src_w_run"
+                "fixed_src_w_run",
+                "untyped_field"
             ]*/
 
 void FFlecsObserverTestsSpec::Define()
@@ -1795,6 +1822,7 @@ void FFlecsObserverTestsSpec::Define()
 	It("trigger_on_set_in_on_add_implicit_registration_namespaced", [&]() { Observer_trigger_on_set_in_on_add_implicit_registration_namespaced(); });
 	It("fixed_src_w_each", [&]() { Observer_fixed_src_w_each(); });
 	It("fixed_src_w_run", [&]() { Observer_fixed_src_w_run(); });
+	It("untyped_field", [&]() { Observer_untyped_field(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS
