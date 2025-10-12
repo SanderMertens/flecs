@@ -15219,9 +15219,15 @@ repeat_event:
         }
 
         it.trs[0] = tr;
-        ECS_CONST_CAST(int32_t*, it.sizes)[0] = 0; /* safe, owned by observer */
         it.event_id = id;
         it.ids[0] = id;
+
+        const ecs_type_info_t *ti = cr->type_info;
+        if (ti) {
+             /* safe, owned by observer */
+            ECS_CONST_CAST(int32_t*, it.sizes)[0] = ti->size;
+        }
+
 
         /* Actually invoke observers for this event/id */
         for (ider_i = 0; ider_i < ider_count; ider_i ++) {
@@ -15722,7 +15728,7 @@ void flecs_uni_observer_invoke(
     int32_t event_cur = it->event_cur;
     ecs_entity_t old_system = flecs_stage_set_system(
         world->stages[0], o->entity);
-    ecs_flags32_t cur_set_fields = it->set_fields;
+    ecs_flags32_t set_fields_cur = it->set_fields;
     it->set_fields = 1;
 
     ecs_query_t *query = o->query;
@@ -15754,7 +15760,7 @@ void flecs_uni_observer_invoke(
             ecs_os_inc(&query->eval_count);
         } else {
             /* Not a $this field, translate the iterator data from a $this field to
-            * a field with it->sources set. */
+             * a field with it->sources set. */
             ecs_entity_t observer_src = ECS_TERM_REF_ID(&term->src);
             ecs_assert(observer_src != 0, ECS_INTERNAL_ERROR, NULL);
             const ecs_entity_t *entities = it->entities;
@@ -15803,7 +15809,7 @@ void flecs_uni_observer_invoke(
 
     it->event = event;
     it->event_cur = event_cur;
-    it->set_fields = cur_set_fields;
+    it->set_fields = set_fields_cur;
 
     ecs_log_pop_3();
 
