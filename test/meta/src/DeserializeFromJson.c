@@ -6375,4 +6375,5 @@ void DeserializeFromJson_ser_deser_alias(void) {
     ecs_world_t *new_world = ecs_init();
     ecs_world_from_json(new_world, json, NULL);
     test_assert(ecs_lookup(new_world, name));
+    ecs_os_free(json);
 }

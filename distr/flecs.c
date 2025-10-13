@@ -45483,7 +45483,7 @@ const char* flecs_json_deser_components(
 
         bool skip = false;
         if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == ecs_id(EcsIdentifier)
-            && ECS_PAIR_SECOND(id) == EcsAlias) {
+            && ECS_PAIR_SECOND(id) != EcsAlias) {
             skip = true;
         }
 
