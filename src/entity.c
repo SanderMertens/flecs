@@ -44,10 +44,9 @@ flecs_component_ptr_t flecs_get_component_ptr(
     }
 
     if (cr->flags & (EcsIdSparse|EcsIdDontFragment)) {
-        ecs_entity_t entity = ecs_table_entities(table)[row];
         return (flecs_component_ptr_t){
             .ti = cr->type_info,
-            .ptr = flecs_component_sparse_get(world, cr, table, entity),
+            .ptr = flecs_component_sparse_get(world, cr, table, ecs_table_entities(table)[row]),
             FLECS_LOCK_TARGET_INIT(cr, NULL, -1)
         };
     }
