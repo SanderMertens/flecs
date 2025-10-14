@@ -674,7 +674,8 @@
                 "add_not_alive_target",
                 "deferred_delete_w_symmetric",
                 "query_after_delete",
-                "query_after_delete_symmetric"
+                "query_after_delete_symmetric",
+                "instantiate_prefab_w_component_w_with_sparse"
             ]
         }, {
             "id": "Hierarchies",

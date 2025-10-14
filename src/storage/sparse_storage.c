@@ -476,7 +476,8 @@ void* flecs_component_sparse_insert(
 
     ecs_entity_t entity = ecs_table_entities(table)[row];
 
-    void *ptr = flecs_sparse_insert(cr->sparse, 0, entity);
+    bool is_new = true;
+    void *ptr = flecs_sparse_ensure(cr->sparse, 0, entity, &is_new);
 
     ecs_id_t component_id = cr->id;
     if (ECS_IS_PAIR(component_id)) {
@@ -492,8 +493,8 @@ void* flecs_component_sparse_insert(
         }
     }
 
-    if (!ptr) {
-        return NULL;
+    if (!ptr || !is_new) {
+        return ptr;
     }
 
     const ecs_type_info_t *ti = cr->type_info;

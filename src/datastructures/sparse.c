@@ -342,6 +342,8 @@ void* flecs_sparse_ensure(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vec_count(&sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
+    /* Make sure is_new is initialized to true */
+    ecs_assert(!is_new || *is_new, ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
     uint64_t index = (uint32_t)id;
