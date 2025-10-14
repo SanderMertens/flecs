@@ -65,7 +65,8 @@ world.Entity().Set(new Position(10, 20)); // Invokes observer
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Create observer that is invoked whenever Position is set
 world
     .observer::<flecs::OnSet, &Position>()
@@ -176,14 +177,15 @@ e.Add<Position>();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e = world.entity();
 
 // OnAdd observer fires
-e.add::<Position>();
+e.add(Position::id());
 
 // OnAdd observer doesn't fire, entity already has component
-e.add::<Position>();
+e.add(Position::id());
 ```
 
 </li>
@@ -238,7 +240,8 @@ e.Set(new Position(10, 20));
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e = world.entity();
 
 // OnAdd observer fires first, then OnSet observer fires
@@ -293,11 +296,12 @@ Entity i = world.Entity().IsA(p);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let p = world.prefab().set(Position { x: 10.0, y: 20.0 });
 
 // Produces OnSet event for Position
-let i = world.entity().is_a_id(p);
+let i = world.entity().is_a(p);
 ```
 
 </li>
@@ -364,17 +368,18 @@ i.Remove<Position>();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let p = world.prefab().set(Position { x: 10.0, y: 20.0 });
 
 // Produces OnSet event for inherited Position component
-let i = world.entity().is_a_id(p);
+let i = world.entity().is_a(p);
 
 // Override component. Produces regular OnSet event.
 i.set(Position { x: 20.0, y: 30.0 });
 
 // Reexposes inherited component, produces OnSet event
-i.remove::<Position>();
+i.remove(Position::id());
 ```
 
 </li>
@@ -421,11 +426,12 @@ Entity i = world.Entity().IsA(p);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let p = world.prefab().set(Position { x: 10.0, y: 20.0 });
 
 // Produces OnSet event for Position
-let i = world.entity().is_a_id(p);
+let i = world.entity().is_a(p);
 ```
 
 </li>
@@ -478,14 +484,15 @@ e.Remove<Position>();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e = world.entity().set(Position { x: 10.0, y: 20.0 });
 
 // OnRemove observer fires
-e.remove::<Position>();
+e.remove(Position::id());
 
 // OnRemove observer doesn't fire, entity doesn't have the component
-e.remove::<Position>();
+e.remove(Position::id());
 ```
 
 </li>
@@ -538,12 +545,14 @@ world.Observer<Position>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Observer that listens for both OnAdd and OnRemove events
 world
-    .observer::<flecs::OnAdd, &Position>()
-    .add_event::<flecs::OnRemove>()
-    .each_entity(|e, p| {
+    .observer::<flecs::OnAdd, ()>()
+    .with(Position::id())
+    .add_event(flecs::OnRemove::id())
+    .each_entity(|e, _| {
 // ...
 });
 ```
@@ -604,11 +613,13 @@ world.Observer<Position>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 world
-    .observer::<flecs::OnAdd, &Position>()
-    .add_event::<flecs::OnRemove>()
-    .each_iter(|it, i, p| {
+    .observer::<flecs::OnAdd, ()>()
+    .with(Position::id())
+    .add_event(flecs::OnRemove::id())
+    .each_iter(|it, i, _| {
         if it.event() == flecs::OnAdd::ID {
         // ...
         } else if it.event() == flecs::OnRemove::ID {
@@ -664,7 +675,8 @@ world.Observer<Position>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Observer that listens for all events for Position
 world
     .observer::<flecs::Wildcard, &Position>()
@@ -730,11 +742,14 @@ world.Observer<Position, Velocity>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Observer that listens for entities with both Position and Velocity
 world
-    .observer::<flecs::OnAdd, (&Position, &Velocity)>()
-    .each_entity(|e, (p, v)| {
+    .observer::<flecs::OnAdd, ()>()
+    .with(Position::id())
+    .with(Velocity::id())
+    .each_entity(|e, _| {
         // ...
     });
 ```
@@ -788,14 +803,15 @@ e.Add<Velocity>();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e = world.entity();
 
 // Does not trigger "Position, Velocity" observer
-e.add::<Position>();
+e.add(Position::id());
 
 // Entity now matches "Position, Velocity" query, triggers observer
-e.add::<Velocity>();
+e.add(Velocity::id());
 ```
 
 </li>
@@ -886,13 +902,15 @@ e.Set(new Position(20, 30));
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Observer that only triggers on Position, not on Velocity
 world
-    .observer::<flecs::OnAdd, &Position>()
-    .with::<Velocity>()
+    .observer::<flecs::OnAdd, ()>()
+    .with(Position::id())
+    .with(Velocity::id())
     .filter()
-    .each_entity(|e, p| {
+    .each_entity(|e, _| {
         // ...
     });
 
@@ -986,7 +1004,8 @@ world.Observer()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Observer that listens for spaceships docked to planets. The observer triggers
 // only when the SpaceShip tag or DockedTo pair is added to an entity. It will
 // not trigger when Planet is added to the target of a DockedTo pair.
@@ -994,11 +1013,11 @@ world.Observer()
 // The DSL notation for this query is
 //   SpaceShip, (DockedTo, $object), Planet($object)
 world
-    .observer::<flecs::OnAdd>()
-    .with::<SpaceShip>()
-    .with_first_name::<DockedTo>("$object")
-    .with::<Planet>().set_src_name("$object")
-    .each_entity(|e| {
+    .observer::<flecs::OnAdd,()>()
+    .with(SpaceShip::id())
+    .with((DockedTo,"$object")).set_inout_none()
+    .with(Planet::id()).set_src("$object")
+    .each_entity(|e, _| {
         // ...
     });
 ```
@@ -1089,11 +1108,12 @@ e.Set(new Position(20, 30));
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // OnSet observer with both component and tag
 world
     .observer::<flecs::OnSet, &Position>()
-    .with::<Npc>() // Tag
+    .with(Npc::id()) // Tag
     .each_entity(|e, p| {
         // ...
     });
@@ -1104,7 +1124,7 @@ let e = world.entity();
 e.set(Position { x: 10.0, y: 20.0 });
 
 // Produces and OnAdd event & triggers observer
-e.add::<Npc>();
+e.add(Npc::id());
 
 // Produces an OnSet event & triggers observer
 e.set(Position { x: 20.0, y: 30.0 });
@@ -1196,12 +1216,14 @@ e.Remove<Velocity>();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Observer with a Not term
 world
-    .observer::<flecs::OnAdd, &Position>()
-    .without::<Velocity>()
-    .each_entity(|e, p| {
+    .observer::<flecs::OnAdd, ()>()
+    .with(Position::id())
+    .without(Velocity::id())
+    .each_entity(|e, _| {
         // ...
     });
 
@@ -1214,7 +1236,7 @@ e.set(Position { x: 10.0, y: 20.0 });
 e.set(Velocity { x: 1.0, y: 2.0 });
 
 // Triggers the observer, as the Velocity term was inverted to OnRemove
-e.remove::<Velocity>();
+e.remove(Velocity::id());
 ```
 
 </li>
@@ -1342,12 +1364,13 @@ e.Remove<Velocity>();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Monitor observer for Position, (ChildOf, *)
 world
-    .observer::<flecs::Monitor, (&Position)>()
-    .with::<flecs::ChildOf>(flecs::Wildcard)
-    .each_iter(|it, i, (p, v)| {
+    .observer::<flecs::Monitor, &Position>()
+    .with((flecs::ChildOf, flecs::Wildcard))
+    .each_iter(|it, i, p| {
         if it.event() == flecs::OnAdd::ID {
             // Entity started matching query
         } else if it.event() == flecs::OnRemove::ID {
@@ -1369,7 +1392,7 @@ e.child_of(p_a);
 e.child_of(p_b);
 
 // Entity no longer matches, triggers monitor with OnRemove event
-e.remove::<Position>();
+e.remove(Position::id());
 ```
 
 </li>
@@ -1460,15 +1483,18 @@ Entity e2 = world.Entity().Set(new Position(10, 20));
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Entity created before the observer
 let e1 = world.entity().set(Position { x: 10.0, y: 20.0 });
 
 // Yield existing observer
 world
-    .observer::<flecs::OnAdd, (&Position, &Velocity)>()
+    .observer::<flecs::OnAdd, ()>()
+    .with(Position::id())
+    .with(Velocity::id())
     .yield_existing()
-    .each_iter(|it, i, (p, v)| {
+    .each_iter(|it, i, _| {
         // ...
     });
 
@@ -1532,7 +1558,8 @@ world.observer<Position, Velocity>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // TODO
 ```
 
@@ -1615,24 +1642,22 @@ Entity e = world.Entity().Set(new TimeOfDay(0));
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Entity used for fixed source
-let game = world.entity().set(TimeOfDay { value: 0.0 });
+let game = world.entity().set(TimeOfDay(0.0));
 
 // Observer with fixed source
 world
     .observer::<flecs::OnSet, &TimeOfDay>()
     .term_at(0)
-    .set_src_id(game) // Match TimeOfDay on game
+    .set_src(game) // Match TimeOfDay on game
     .each_iter(|it, i, time| {
         // ...
     });
 
 // Triggers observer
-game.set(TimeOfDay { value: 1.0 });
-
-// Does not trigger observer
-let e = world.entity().set(TimeOfDay { value: 0.0 });
+game.set(TimeOfDay(1.0));
 ```
 
 </li>
@@ -1713,23 +1738,22 @@ Entity e = world.Entity().Set(new TimeOfDay(0));
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-world.set(TimeOfDay { value: 0.0 });
+```rust test
+HIDE: let world = World::new();
+
+world.component::<TimeOfDay>().add_trait::<flecs::Singleton>();
+
+world.set(TimeOfDay(0.0));
 
 // Observer with singleton source
 world
     .observer::<flecs::OnSet, &TimeOfDay>()
-    .term_at(0)
-    .singleton()
     .each_iter(|it, i, time| {
         // ...
     });
 
 // Triggers observer
-world.set(TimeOfDay { value: 1.0 });
-
-// Does not trigger observer
-let e = world.entity().set(TimeOfDay { value: 0.0 });
+world.set(TimeOfDay(1.0));
 ```
 
 </li>
@@ -1802,7 +1826,8 @@ parent.Set(new Position(10, 20));
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Create an observer that matches OnSet(Position) events on self and a parent
 world
     .observer::<flecs::OnSet, &Position>()
@@ -1814,7 +1839,7 @@ world
     });
 
 let parent = world.entity();
-let child = world.entity().child_of_id(parent);
+let child = world.entity().child_of(parent);
 
 // Invokes observer twice: once for the parent and once for the child
 parent.set(Position { x: 10.0, y: 20.0 });
@@ -1893,20 +1918,22 @@ Entity child = world.Entity().ChildOf(parent);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Create an observer that matches OnAdd(Position) events on a parent
 world
-    .observer::<flecs::OnAdd, &Position>()
+    .observer::<flecs::OnAdd, ()>()
+    .with(Position::id())
     .term_at(0)
     .up() // .trav(flecs::ChildOf) (default)
-    .each_entity(|e, p| {
+    .each_entity(|e, _| {
         // ...
     });
 
 let parent = world.entity().set(Position { x: 10.0, y: 20.0 });
 
 // Forwards OnAdd event for Position to child
-let child = world.entity().child_of_id(parent);
+let child = world.entity().child_of(parent);
 ```
 
 </li>
@@ -2020,7 +2047,8 @@ world.Emit<Synchronized>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Create a custom event
 #[derive(Component)]
 struct Synchronized;
@@ -2040,7 +2068,7 @@ let e = world.entity().set(Position { x: 10.0, y: 20.0 });
 // Emit custom event
 world
     .event()
-    .add::<Position>()
+    .add(Position::id())
     .entity(e)
     .emit(&Synchronized);
 ```
@@ -2121,7 +2149,8 @@ widget.Emit<Clicked>();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Create a custom event
 #[derive(Component)]
 struct Clicked;
@@ -2217,7 +2246,8 @@ widget.Emit<Resize>(new(100, 200));
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Create a custom event
 #[derive(Component)]
 struct Resize {
@@ -2316,7 +2346,9 @@ world.DeferEnd();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let e = world.entity();
 world
     .observer::<flecs::OnSet, &Position>()
     .each_entity(|e, p| {
