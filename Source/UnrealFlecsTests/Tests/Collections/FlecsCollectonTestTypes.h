@@ -11,3 +11,13 @@ struct UNREALFLECSTESTS_API FFlecsCollectionTestStruct
 {
 	GENERATED_BODY()
 }; // struct FFlecsCollectionTestStruct
+
+UCLASS()
+class UNREALFLECSTESTS_API UFlecsCollectionTestClassNoInterface : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UFlecsCollectionTestClassNoInterface();
+	
+}; // class UFlecsCollectionTestClassNoInterface

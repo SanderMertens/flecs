@@ -3,8 +3,11 @@
 
 #if WITH_AUTOMATION_TESTS
 
+#include "FlecsCollectonTestTypes.h"
+
 #include "Collections/FlecsCollectionDefinition.h"
 #include "Collections/FlecsCollectionWorldSubsystem.h"
+
 #include "Tests/FlecsTestTypes.h"
 
 /*
@@ -47,8 +50,6 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 
 	TEST_METHOD(B1_RegisterEmptyCollection_CreatesPrefab_DefinitionBuilderAPI)
 	{
-		ASSERT_THAT(IsTrue(IsValid(Collections)));
-
 		FFlecsCollectionDefinition Def;
 		{
 			FFlecsCollectionBuilder Builder = FFlecsCollectionBuilder::Create(Def)
@@ -63,8 +64,6 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 
 	TEST_METHOD(B2_RegisterEmptyCollection_CreatesPrefab_CPPBuilderAPI)
 	{
-		ASSERT_THAT(IsTrue(IsValid(Collections)));
-		
 		const FFlecsEntityHandle Prefab = Collections->RegisterCollectionBuilder([](FFlecsCollectionBuilder& Builder)
 		{
 			Builder
@@ -74,6 +73,16 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsTrue(Prefab.IsValid()));
 		ASSERT_THAT(IsTrue(Prefab.Has(flecs::Prefab)));
 		ASSERT_THAT(IsTrue(Prefab.GetName() == TEXT("TestCollection_CPP")));
+	}
+
+	TEST_METHOD(B3_RegisterEmptyCollection_UClassBuilderAPI)
+	{
+		const FFlecsEntityHandle Prefab = Collections->RegisterCollectionClass(UFlecsCollectionTestClassNoInterface::StaticClass(),
+			[](FFlecsCollectionBuilder& Builder)
+		{
+			Builder
+				.Name("TestCollection_Class");
+		});
 	}
 	
 	TEST_METHOD(C1_RegisterCollectionFromDefinition_CreatesPrefabWithTag_DefinitionBuilderAPI)
@@ -92,6 +101,44 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsTrue(Prefab.Has(flecs::Prefab)));
 		
 		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsCollectionPrefabTag>()));
+		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsTestStruct_Tag>()));
+	}
+
+	TEST_METHOD(C2_RegisterCollectionFromDefinition_CreatesPrefabWithTag_CPPBuilderAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
+		
+		const FFlecsEntityHandle Prefab = Collections->RegisterCollectionBuilder([](FFlecsCollectionBuilder& Builder)
+		{
+			Builder
+				.Name("TestCollection_CPP")
+				.Add<FFlecsTestStruct_Tag>();
+		});
+
+		ASSERT_THAT(IsTrue(Prefab.IsValid()));
+		ASSERT_THAT(IsTrue(Prefab.Has(flecs::Prefab)));
+		
+		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsCollectionPrefabTag>()));
+		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsTestStruct_Tag>()));
+	}
+
+	TEST_METHOD(C3_RegisterCollectionFromClass_CreatesPrefabWithTag_ClassBuilderAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
+		
+		const FFlecsEntityHandle Prefab = Collections->RegisterCollectionClass(UFlecsCollectionTestClassNoInterface::StaticClass(),
+			[](FFlecsCollectionBuilder& Builder)
+		{
+			Builder
+				.Name("TestCollection_Class")
+				.Add<FFlecsTestStruct_Tag>();
+		});
+		
+		ASSERT_THAT(IsTrue(Prefab.IsValid()));
+		ASSERT_THAT(IsTrue(Prefab.Has(flecs::Prefab)));
+		
+		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsCollectionPrefabTag>()));
+		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsTestStruct_Tag>()));
 	}
 };
 
