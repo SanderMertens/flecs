@@ -675,7 +675,10 @@
                 "deferred_delete_w_symmetric",
                 "query_after_delete",
                 "query_after_delete_symmetric",
-                "instantiate_prefab_w_component_w_with_sparse"
+                "instantiate_prefab_w_component_w_with_sparse",
+                "children_for_sparse",
+                "children_for_sparse_no_children",
+                "children_for_sparse_after_delete_children"
             ]
         }, {
             "id": "Hierarchies",

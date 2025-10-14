@@ -6398,3 +6398,87 @@ void Sparse_instantiate_prefab_w_component_w_with_sparse(void) {
 
     ecs_fini(world);
 }
+
+void Sparse_children_for_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t child_1 = ecs_new_w_pair(world, Rel, parent_a);
+    ecs_entity_t child_2 = ecs_new_w_pair(world, Rel, parent_a);
+    ecs_entity_t child_3 = ecs_new_w_pair(world, Rel, parent_a);
+
+    ecs_entity_t parent_b = ecs_new(world);
+    /* ecs_entity_t child_4 = */ ecs_new_w_pair(world, Rel, parent_b);
+
+    ecs_add(world, child_2, Foo);
+    ecs_add(world, child_3, Bar);
+
+    ecs_iter_t it = ecs_children_w_rel(world, Rel, parent_a);
+    test_bool(true, ecs_children_next(&it));
+    test_int(3, it.count);
+    test_uint(child_1, it.entities[0]);
+    test_uint(child_2, it.entities[1]);
+    test_uint(child_3, it.entities[2]);
+
+    test_bool(false, ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Sparse_children_for_sparse_no_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+    /* ecs_entity_t child_4 = */ ecs_new_w_pair(world, Rel, parent_b);
+
+    ecs_iter_t it = ecs_children_w_rel(world, Rel, parent_a);
+    test_bool(false, ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Sparse_children_for_sparse_after_delete_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsSparse);
+    if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t child_1 = ecs_new_w_pair(world, Rel, parent_a);
+    ecs_entity_t child_2 = ecs_new_w_pair(world, Rel, parent_a);
+    ecs_entity_t child_3 = ecs_new_w_pair(world, Rel, parent_a);
+
+    ecs_entity_t parent_b = ecs_new(world);
+    /* ecs_entity_t child_4 = */ ecs_new_w_pair(world, Rel, parent_b);
+
+    ecs_add(world, child_2, Foo);
+    ecs_add(world, child_3, Bar);
+
+    ecs_delete(world, child_1);
+    ecs_delete(world, child_2);
+    ecs_delete(world, child_3);
+
+    ecs_iter_t it = ecs_children_w_rel(world, Rel, parent_a);
+    test_bool(false, ecs_children_next(&it));
+
+    ecs_fini(world);
+}

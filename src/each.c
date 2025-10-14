@@ -98,8 +98,9 @@ bool flecs_children_next_ordered(
     return ecs_children_next(it);
 }
 
-ecs_iter_t ecs_children(
+ecs_iter_t ecs_children_w_rel(
     const ecs_world_t *stage,
+    ecs_entity_t relationship,
     ecs_entity_t parent)
 {
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -116,7 +117,7 @@ ecs_iter_t ecs_children(
     };
 
     ecs_component_record_t *cr = flecs_components_get(
-        world, ecs_childof(parent));
+        world, ecs_pair(relationship, parent));
     if (!cr) {
         return (ecs_iter_t){0};
     }
@@ -127,11 +128,23 @@ ecs_iter_t ecs_children(
         it.count = ecs_vec_count(v);
         it.next = flecs_children_next_ordered;
         return it;
+    } else if (cr->flags & EcsIdSparse) {
+        it.entities = flecs_sparse_ids(cr->sparse);
+        it.count = flecs_sparse_count(cr->sparse);
+        it.next = flecs_children_next_ordered;
+        return it;
     }
 
-    return ecs_each_id(stage, ecs_childof(parent));
+    return ecs_each_id(stage, ecs_pair(relationship, parent));
 error:
     return (ecs_iter_t){0};
+}
+
+ecs_iter_t ecs_children(
+    const ecs_world_t *stage,
+    ecs_entity_t parent)
+{
+    return ecs_children_w_rel(stage, EcsChildOf, parent);
 }
 
 bool ecs_children_next(
