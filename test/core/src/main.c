@@ -1826,6 +1826,22 @@ void Observer_1_fixed_src_term_field_size(void);
 void Observer_2_fixed_src_terms_field_size(void);
 void Observer_1_singleton_term_field_size(void);
 void Observer_2_singleton_terms_field_size(void);
+void Observer_1_on_set_overridden_term_field_size(void);
+void Observer_2_on_set_overridden_terms_field_size(void);
+void Observer_1_on_set_after_remove_overridden_term_field_size(void);
+void Observer_2_on_set_after_remove_overridden_terms_field_size(void);
+void Observer_1_on_set_after_remove_overridden_term_field_size_defer(void);
+void Observer_2_on_set_after_remove_overridden_terms_field_size_defer(void);
+void Observer_1_term_field_size_w_tag(void);
+void Observer_2_terms_field_size_w_tag(void);
+void Observer_1_up_term_field_size_w_tag(void);
+void Observer_2_up_terms_field_size_w_tag(void);
+void Observer_1_fixed_src_term_field_size_w_tag(void);
+void Observer_2_fixed_src_terms_field_size_w_tag(void);
+void Observer_1_singleton_term_field_size_w_tag(void);
+void Observer_2_singleton_terms_field_size_w_tag(void);
+void Observer_1_on_set_overridden_term_field_size_w_tag(void);
+void Observer_2_on_set_overridden_terms_field_size_w_tag(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -9832,6 +9848,70 @@ bake_test_case Observer_testcases[] = {
         Observer_2_singleton_terms_field_size
     },
     {
+        "1_on_set_overridden_term_field_size",
+        Observer_1_on_set_overridden_term_field_size
+    },
+    {
+        "2_on_set_overridden_terms_field_size",
+        Observer_2_on_set_overridden_terms_field_size
+    },
+    {
+        "1_on_set_after_remove_overridden_term_field_size",
+        Observer_1_on_set_after_remove_overridden_term_field_size
+    },
+    {
+        "2_on_set_after_remove_overridden_terms_field_size",
+        Observer_2_on_set_after_remove_overridden_terms_field_size
+    },
+    {
+        "1_on_set_after_remove_overridden_term_field_size_defer",
+        Observer_1_on_set_after_remove_overridden_term_field_size_defer
+    },
+    {
+        "2_on_set_after_remove_overridden_terms_field_size_defer",
+        Observer_2_on_set_after_remove_overridden_terms_field_size_defer
+    },
+    {
+        "1_term_field_size_w_tag",
+        Observer_1_term_field_size_w_tag
+    },
+    {
+        "2_terms_field_size_w_tag",
+        Observer_2_terms_field_size_w_tag
+    },
+    {
+        "1_up_term_field_size_w_tag",
+        Observer_1_up_term_field_size_w_tag
+    },
+    {
+        "2_up_terms_field_size_w_tag",
+        Observer_2_up_terms_field_size_w_tag
+    },
+    {
+        "1_fixed_src_term_field_size_w_tag",
+        Observer_1_fixed_src_term_field_size_w_tag
+    },
+    {
+        "2_fixed_src_terms_field_size_w_tag",
+        Observer_2_fixed_src_terms_field_size_w_tag
+    },
+    {
+        "1_singleton_term_field_size_w_tag",
+        Observer_1_singleton_term_field_size_w_tag
+    },
+    {
+        "2_singleton_terms_field_size_w_tag",
+        Observer_2_singleton_terms_field_size_w_tag
+    },
+    {
+        "1_on_set_overridden_term_field_size_w_tag",
+        Observer_1_on_set_overridden_term_field_size_w_tag
+    },
+    {
+        "2_on_set_overridden_terms_field_size_w_tag",
+        Observer_2_on_set_overridden_terms_field_size_w_tag
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -13547,7 +13627,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        277,
+        293,
         Observer_testcases
     },
     {
