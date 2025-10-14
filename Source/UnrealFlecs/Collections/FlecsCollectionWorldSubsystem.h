@@ -39,14 +39,14 @@ public:
 
 	FFlecsEntityHandle RegisterCollectionDefinition(const FName& InName, const FFlecsCollectionDefinition& InDefinition);
 	FFlecsEntityHandle RegisterCollectionClass(const TSolidNotNull<UClass*> InClass, const FFlecsCollectionBuilder& InBuilder);
-	FFlecsEntityHandle RegisterCollectionClass(const TSolidNotNull<TScriptInterface<IFlecsCollectionInterface>*> InInterfaceObject);
+	FFlecsEntityHandle RegisterCollectionInterfaceClass(const TSolidNotNull<UClass*> InInterfaceObject);
 
 	template <Solid::TStaticClassConcept T>
-	FORCEINLINE FFlecsEntityHandle RegisterTypedCollection()
+	FORCEINLINE FFlecsEntityHandle RegisterTypedInterfaceCollection()
 	{
 		static_assert(TIsDerivedFrom<T, IFlecsCollectionInterface>::Value,
 		              "T must implement IFlecsCollectionInterface");
-		return RegisterCollectionClass(T::StaticClass());
+		return RegisterCollectionInterfaceClass(T::StaticClass());
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")

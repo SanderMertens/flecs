@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Collections/FlecsCollectionInterface.h"
 
 #include "FlecsCollectonTestTypes.generated.h"
 
@@ -21,3 +22,12 @@ public:
 	UFlecsCollectionTestClassNoInterface();
 	
 }; // class UFlecsCollectionTestClassNoInterface
+
+UCLASS()
+class UNREALFLECSTESTS_API UFlecsCollectionTestClassWithInterface : public UObject, public IFlecsCollectionInterface
+{
+	GENERATED_BODY()
+	
+	virtual void BuildCollection(FFlecsCollectionBuilder& Builder) const override;
+	
+}; // class UFlecsCollectionTestClassWithInterface
