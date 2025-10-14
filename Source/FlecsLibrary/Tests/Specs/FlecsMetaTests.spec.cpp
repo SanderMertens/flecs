@@ -1563,6 +1563,22 @@ void Meta_ser_deser_std_optional_std_string(void) {
     test_str(world.to_json(&o).c_str(), "[\"foo bar\"]");
 }
 
+// disable error C4800
+#pragma warning(push)
+#pragma warning(disable: 4800)
+void Meta_ser_deser_alias(void) {
+    flecs::world world;
+    flecs::entity parent = world.entity();
+    world.entity().child_of(parent).set_alias("child");
+    auto str = world.to_json();
+    test_assert(world.lookup("child"));
+
+    flecs::world world2;
+    world2.from_json(str);
+    test_assert(world2.lookup("child"));
+}
+#pragma warning(pop)
+
 END_DEFINE_SPEC(FFlecsMetaTestsSpec);
 
 /*"id": "Meta",
@@ -1633,7 +1649,8 @@ END_DEFINE_SPEC(FFlecsMetaTestsSpec);
                 "parented_opaque_as_type_parent",
                 "ser_deser_std_optional_int",
                 "ser_deser_std_optional_std_vector_int",
-                "ser_deser_std_optional_std_string"
+                "ser_deser_std_optional_std_string",
+                "ser_deser_alias"
             ]*/
 
 void FFlecsMetaTestsSpec::Define()
@@ -1705,6 +1722,7 @@ void FFlecsMetaTestsSpec::Define()
     It("Meta_ser_deser_std_optional_int", [&]() { Meta_ser_deser_std_optional_int(); });
     It("Meta_ser_deser_std_optional_std_vector_int", [&]() { Meta_ser_deser_std_optional_std_vector_int(); });
     It("Meta_ser_deser_std_optional_std_string", [&]() { Meta_ser_deser_std_optional_std_string(); });
+    It("Meta_ser_deser_alias", [&]() { Meta_ser_deser_alias(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS
