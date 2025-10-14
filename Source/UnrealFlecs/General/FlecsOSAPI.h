@@ -109,13 +109,13 @@ struct FFlecsThreadWrapper
 	
 }; // struct FFlecsThreadWrapper
 
-struct FFlecsTask
+struct FFlecsThreadTask
 {
 	static constexpr ENamedThreads::Type TaskThread = ENamedThreads::Type::AnyHiPriThreadHiPriTask;
 	
 	FGraphEventRef TaskEvent;
 
-	FORCEINLINE FFlecsTask(const ecs_os_thread_callback_t Callback, void* Data)
+	FORCEINLINE FFlecsThreadTask(const ecs_os_thread_callback_t Callback, void* Data)
 	{
 		TaskEvent = FFunctionGraphTask::CreateAndDispatchWhenReady(
 			[Callback, Data]()
@@ -125,7 +125,7 @@ struct FFlecsTask
 			GET_STATID(STAT_FlecsOS), nullptr, TaskThread);
 	}
 
-	FORCEINLINE ~FFlecsTask()
+	FORCEINLINE ~FFlecsThreadTask()
 	{
 		if (TaskEvent.IsValid())
 		{
@@ -141,7 +141,7 @@ struct FFlecsTask
 		}
 	}
 	
-}; // struct FFlecsTask
+}; // struct FFlecsThreadTask
 
 struct FFlecsConditionWrapper
 {
@@ -261,13 +261,13 @@ struct FOSApiInitializer
 
 		os_api.task_new_ = [](ecs_os_thread_callback_t Callback, void* Data) -> ecs_os_thread_t
 		{
-			FFlecsTask* FlecsTask = new FFlecsTask(Callback, Data);
+			FFlecsThreadTask* FlecsTask = new FFlecsThreadTask(Callback, Data);
 			return reinterpret_cast<ecs_os_thread_t>(FlecsTask);
 		};
 
 		os_api.task_join_ = [](ecs_os_thread_t Thread) -> void*
 		{
-			FFlecsTask* FlecsTask = reinterpret_cast<FFlecsTask*>(Thread);
+			FFlecsThreadTask* FlecsTask = reinterpret_cast<FFlecsThreadTask*>(Thread);
 			solid_check(FlecsTask);
 			
 			FlecsTask->Wait();
