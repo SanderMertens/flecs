@@ -646,6 +646,9 @@ void Sparse_deferred_delete_w_symmetric(void);
 void Sparse_query_after_delete(void);
 void Sparse_query_after_delete_symmetric(void);
 void Sparse_instantiate_prefab_w_component_w_with_sparse(void);
+void Sparse_children_for_sparse(void);
+void Sparse_children_for_sparse_no_children(void);
+void Sparse_children_for_sparse_after_delete_children(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5236,6 +5239,18 @@ bake_test_case Sparse_testcases[] = {
     {
         "instantiate_prefab_w_component_w_with_sparse",
         Sparse_instantiate_prefab_w_component_w_with_sparse
+    },
+    {
+        "children_for_sparse",
+        Sparse_children_for_sparse
+    },
+    {
+        "children_for_sparse_no_children",
+        Sparse_children_for_sparse_no_children
+    },
+    {
+        "children_for_sparse_after_delete_children",
+        Sparse_children_for_sparse_after_delete_children
     }
 };
 
@@ -13511,7 +13526,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        193,
+        196,
         Sparse_testcases,
         1,
         Sparse_params
