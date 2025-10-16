@@ -276,6 +276,14 @@ ecs_flags32_t flecs_component_event_flags(
     return result;
 }
 
+void flecs_component_ordered_children_init(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    cr->flags |= EcsIdOrderedChildren;
+    flecs_ordered_children_init(world, cr);
+}
+
 static
 ecs_component_record_t* flecs_component_new(
     ecs_world_t *world,
@@ -330,7 +338,6 @@ ecs_component_record_t* flecs_component_new(
 
         rel = ECS_PAIR_FIRST(id);
         if (rel == EcsChildOf) {
-            flecs_ordered_children_init(world, cr);
             flecs_component_update_childof_depth(world, cr, tgt, tgt_record);
         } else {
             rel = flecs_entities_get_alive(world, rel);
@@ -500,7 +507,7 @@ ecs_component_record_t* flecs_component_new(
         /* Check if we should keep a list of ordered children for parent */
         if (rel == EcsChildOf) {
             if (ecs_table_has_id(world, tgt_table, EcsOrderedChildren)) {
-                cr->flags |= EcsIdOrderedChildren;
+                flecs_component_ordered_children_init(world, cr);
             }
         }
 
