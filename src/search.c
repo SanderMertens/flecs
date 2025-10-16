@@ -95,8 +95,7 @@ bool flecs_type_can_inherit_id(
     return true;
 }
 
-static
-int32_t flecs_type_search_childof_for_tgt(
+int32_t flecs_search_childof_for_tgt(
     const ecs_world_t *world,
     ecs_record_t *r,
     ecs_id_t id,
@@ -141,7 +140,7 @@ int32_t flecs_type_search_relation_for_tgt(
 
     if (rel == ecs_childof(EcsWildcard)) {
         if (tgt_table->flags & EcsTableHasParent) {
-            return flecs_type_search_childof_for_tgt(
+            return flecs_search_childof_for_tgt(
                 world, rec, id, cr, tgt_out, id_out, tr_out);
         }
     }
@@ -281,7 +280,7 @@ int32_t flecs_entity_search_relation(
 
     if (rel == EcsChildOf) {
         if (table->flags & EcsTableHasParent) {
-            return flecs_type_search_childof_for_tgt(
+            return flecs_search_childof_for_tgt(
                 world, r, id, cr, tgt_out, id_out, tr_out);
         }
     }

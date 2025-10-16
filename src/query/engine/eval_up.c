@@ -264,16 +264,35 @@ next_down_elem:
 bool flecs_query_up_with_parent(
     const ecs_query_op_t *op,
     ecs_query_up_ctx_t *op_ctx,
+    ecs_query_up_impl_t *impl,
     const ecs_query_run_ctx_t *ctx)
 {
     op_ctx->cur ++;
 
+    if (op_ctx->cur >= op_ctx->range.count) {
+        return false;
+    }
+
     const EcsParent *p = &op_ctx->parents[op_ctx->cur];
     ecs_entity_t parent = p->value;
 
+    ecs_iter_t *it = ctx->it;
+    ecs_id_t id_out;
+
+    if (flecs_entity_search_relation(
+        ctx->world, parent, impl->with, EcsChildOf, true, impl->cr_with, 
+        &it->sources[op->field_index], 
+        &id_out, 
+        ECS_CONST_CAST(ecs_table_record_t**, &it->trs[op->field_index])) != -1)
+    {
+        it->ids[op->field_index] = id_out;
+        flecs_query_set_vars(op, id_out, ctx);
+        flecs_set_source_set_flag(it, op->field_index);
+        flecs_query_src_set_single(op, op_ctx->cur, ctx);
+        return true;
+    }
+
     return false;
-
-
 }
 
 /* Check if a table can reach the target component through the traversal
@@ -326,6 +345,8 @@ bool flecs_query_up_with(
             return false;
         }
 
+        op_ctx->cur = -1;
+
         /* Handle tables with non-fragmenting ChildOf */
         if (impl->trav == EcsChildOf) {
             ecs_table_t *table = range.table;
@@ -335,8 +356,10 @@ bool flecs_query_up_with(
 
                 op_ctx->parents = table->data.columns[column - 1].data;
                 op_ctx->range = range;
-                op_ctx->cur = -1;
-                return flecs_query_up_with_parent(op, op_ctx, ctx);
+                if (!op_ctx->range.count) {
+                    op_ctx->range.count = ecs_table_count(op_ctx->range.table);
+                }
+                return flecs_query_up_with_parent(op, op_ctx, impl, ctx);
             }
         }
 
@@ -360,6 +383,11 @@ bool flecs_query_up_with(
         flecs_set_source_set_flag(it, op->field_index);
         return true;
     } else {
+        /* Current table requires per-entity evaluation */
+        if (op_ctx->cur != -1) {
+            return flecs_query_up_with_parent(op, op_ctx, impl, ctx);
+        }
+
         /* The table either can or can't reach the component, nothing to do for
          * a second evaluation of this operation.*/
         return false;
