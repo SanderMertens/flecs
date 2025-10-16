@@ -7872,22 +7872,20 @@ void NonFragmentingChildOf_this_written_up_childof(void) {
 
     test_assert(q != NULL);
 
-    printf("%s\n", ecs_query_plan(q));
-
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(it.entities[0], c_1);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(p, ecs_field_src(&it, 1));
     test_uint(Bar, ecs_field_id(&it, 1));
     
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(it.entities[0], c_2);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(p, ecs_field_src(&it, 1));
     test_uint(Bar, ecs_field_id(&it, 1));
 
