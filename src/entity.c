@@ -2806,11 +2806,16 @@ ecs_entity_t ecs_get_target_for_id(
     world = ecs_get_world(world);
 
     ecs_table_t *table = ecs_get_table(world, entity);
-    ecs_entity_t subject = 0;
+    ecs_entity_t src = 0;
 
     if (rel) {
-        int32_t column = ecs_search_relation(
-            world, table, 0, component, rel, 0, &subject, 0, 0);
+        ecs_component_record_t *cr = flecs_components_get(world, component);
+        if (!cr) {
+            return 0;
+        }
+
+        int32_t column = flecs_entity_search_relation(
+            world, entity, component, rel, true, cr, &src, 0, 0);
         if (column == -1) {
             return 0;
         }
@@ -2829,18 +2834,14 @@ ecs_entity_t ecs_get_target_for_id(
                 }
 
                 if (ecs_has_id(world, ent, component)) {
-                    subject = ent;
+                    src = ent;
                     break;
                 }
             }
         }
     }
 
-    if (subject == 0) {
-        return entity;
-    } else {
-        return subject;
-    }
+    return src;
 error:
     return 0;
 }
