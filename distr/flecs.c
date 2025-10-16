@@ -2963,6 +2963,15 @@ int32_t flecs_entity_search_relation(
     ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out);
 
+int32_t flecs_search_childof_for_tgt(
+    const ecs_world_t *world,
+    ecs_record_t *r,
+    ecs_id_t id,
+    ecs_component_record_t *cr,
+    ecs_entity_t *tgt_out,
+    ecs_id_t *id_out,
+    struct ecs_table_record_t **tr_out);
+
 /* Compute relationship depth for table */
 int32_t flecs_relation_depth(
     const ecs_world_t *world,
@@ -18856,8 +18865,7 @@ bool flecs_type_can_inherit_id(
     return true;
 }
 
-static
-int32_t flecs_type_search_childof_for_tgt(
+int32_t flecs_search_childof_for_tgt(
     const ecs_world_t *world,
     ecs_record_t *r,
     ecs_id_t id,
@@ -18902,7 +18910,7 @@ int32_t flecs_type_search_relation_for_tgt(
 
     if (rel == ecs_childof(EcsWildcard)) {
         if (tgt_table->flags & EcsTableHasParent) {
-            return flecs_type_search_childof_for_tgt(
+            return flecs_search_childof_for_tgt(
                 world, rec, id, cr, tgt_out, id_out, tr_out);
         }
     }
@@ -19042,7 +19050,7 @@ int32_t flecs_entity_search_relation(
 
     if (rel == EcsChildOf) {
         if (table->flags & EcsTableHasParent) {
-            return flecs_type_search_childof_for_tgt(
+            return flecs_search_childof_for_tgt(
                 world, r, id, cr, tgt_out, id_out, tr_out);
         }
     }
@@ -83431,16 +83439,35 @@ next_down_elem:
 bool flecs_query_up_with_parent(
     const ecs_query_op_t *op,
     ecs_query_up_ctx_t *op_ctx,
+    ecs_query_up_impl_t *impl,
     const ecs_query_run_ctx_t *ctx)
 {
     op_ctx->cur ++;
 
+    if (op_ctx->cur >= op_ctx->range.count) {
+        return false;
+    }
+
     const EcsParent *p = &op_ctx->parents[op_ctx->cur];
     ecs_entity_t parent = p->value;
 
+    ecs_iter_t *it = ctx->it;
+    ecs_id_t id_out;
+
+    if (flecs_entity_search_relation(
+        ctx->world, parent, impl->with, EcsChildOf, true, impl->cr_with, 
+        &it->sources[op->field_index], 
+        &id_out, 
+        ECS_CONST_CAST(ecs_table_record_t**, &it->trs[op->field_index])) != -1)
+    {
+        it->ids[op->field_index] = id_out;
+        flecs_query_set_vars(op, id_out, ctx);
+        flecs_set_source_set_flag(it, op->field_index);
+        flecs_query_src_set_single(op, op_ctx->cur, ctx);
+        return true;
+    }
+
     return false;
-
-
 }
 
 /* Check if a table can reach the target component through the traversal
@@ -83493,6 +83520,8 @@ bool flecs_query_up_with(
             return false;
         }
 
+        op_ctx->cur = -1;
+
         /* Handle tables with non-fragmenting ChildOf */
         if (impl->trav == EcsChildOf) {
             ecs_table_t *table = range.table;
@@ -83502,8 +83531,10 @@ bool flecs_query_up_with(
 
                 op_ctx->parents = table->data.columns[column - 1].data;
                 op_ctx->range = range;
-                op_ctx->cur = -1;
-                return flecs_query_up_with_parent(op, op_ctx, ctx);
+                if (!op_ctx->range.count) {
+                    op_ctx->range.count = ecs_table_count(op_ctx->range.table);
+                }
+                return flecs_query_up_with_parent(op, op_ctx, impl, ctx);
             }
         }
 
@@ -83527,6 +83558,11 @@ bool flecs_query_up_with(
         flecs_set_source_set_flag(it, op->field_index);
         return true;
     } else {
+        /* Current table requires per-entity evaluation */
+        if (op_ctx->cur != -1) {
+            return flecs_query_up_with_parent(op, op_ctx, impl, ctx);
+        }
+
         /* The table either can or can't reach the component, nothing to do for
          * a second evaluation of this operation.*/
         return false;
