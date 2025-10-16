@@ -98,15 +98,6 @@ int32_t flecs_entity_search_relation(
     ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out);
 
-int32_t flecs_search_childof_for_tgt(
-    const ecs_world_t *world,
-    ecs_record_t *r,
-    ecs_id_t id,
-    ecs_component_record_t *cr,
-    ecs_entity_t *tgt_out,
-    ecs_id_t *id_out,
-    struct ecs_table_record_t **tr_out);
-
 /* Compute relationship depth for table */
 int32_t flecs_relation_depth(
     const ecs_world_t *world,

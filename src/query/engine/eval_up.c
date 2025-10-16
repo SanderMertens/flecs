@@ -275,12 +275,12 @@ bool flecs_query_up_with_parent(
 
     const EcsParent *p = &op_ctx->parents[op_ctx->cur];
     ecs_entity_t parent = p->value;
-
     ecs_iter_t *it = ctx->it;
     ecs_id_t id_out;
 
     if (flecs_entity_search_relation(
-        ctx->world, parent, impl->with, EcsChildOf, true, impl->cr_with, 
+        ctx->world, parent, impl->with, ecs_pair(EcsChildOf, EcsWildcard), true, 
+        impl->cr_with, 
         &it->sources[op->field_index], 
         &id_out, 
         ECS_CONST_CAST(ecs_table_record_t**, &it->trs[op->field_index])) != -1)
@@ -426,6 +426,7 @@ bool flecs_query_self_up_with(
             /* Table has component, no need to traverse*/
             ecs_query_up_impl_t *impl = op_ctx->impl;
             ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
+            
             impl->trav = 0;
             if (flecs_query_ref_flags(op->flags, EcsQuerySrc) & EcsQueryIsVar) {
                 /* Matching self, so set sources to 0 */
@@ -440,6 +441,17 @@ bool flecs_query_self_up_with(
         ecs_query_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
         ecs_query_up_impl_t *impl = op_ctx->impl;
         ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        /* Current table requires per-entity evaluation */
+        if (op_ctx->cur != -1) {
+            bool result = flecs_query_up_with_parent(op, op_ctx, impl, ctx);
+            if (result) {
+                return true;
+            }
+
+            op_ctx->cur = -1;
+        }
+
         if (impl->trav == 0) {
             /* If matching components without traversing, make sure to still
              * match remaining components that match the id (wildcard). */
