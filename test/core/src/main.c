@@ -764,6 +764,15 @@ void NonFragmentingChildOf_target_for_3_lvls_childof_childof(void);
 void NonFragmentingChildOf_target_for_3_lvls_childof_parent(void);
 void NonFragmentingChildOf_target_for_3_lvls_parent_childof(void);
 void NonFragmentingChildOf_target_for_3_lvls_parent_parent(void);
+void NonFragmentingChildOf_target_for_2_lvls_parent_parent(void);
+void NonFragmentingChildOf_target_for_self_parent(void);
+void NonFragmentingChildOf_target_for_inherited(void);
+void NonFragmentingChildOf_target_for_2_lvls_parent_inherited(void);
+void NonFragmentingChildOf_target_for_2_lvls_childof_inherited(void);
+void NonFragmentingChildOf_target_for_3_lvls_childof_childof_inherited(void);
+void NonFragmentingChildOf_target_for_3_lvls_childof_parent_inherited(void);
+void NonFragmentingChildOf_target_for_3_lvls_parent_childof_inherited(void);
+void NonFragmentingChildOf_target_for_3_lvls_parent_parent_inherited(void);
 void NonFragmentingChildOf_target_for_wildcard(void);
 void NonFragmentingChildOf_target_for_wildcard_2_lvls_parent(void);
 void NonFragmentingChildOf_target_for_wildcard_2_lvls_childof(void);
@@ -5937,6 +5946,42 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "target_for_3_lvls_parent_parent",
         NonFragmentingChildOf_target_for_3_lvls_parent_parent
+    },
+    {
+        "target_for_2_lvls_parent_parent",
+        NonFragmentingChildOf_target_for_2_lvls_parent_parent
+    },
+    {
+        "target_for_self_parent",
+        NonFragmentingChildOf_target_for_self_parent
+    },
+    {
+        "target_for_inherited",
+        NonFragmentingChildOf_target_for_inherited
+    },
+    {
+        "target_for_2_lvls_parent_inherited",
+        NonFragmentingChildOf_target_for_2_lvls_parent_inherited
+    },
+    {
+        "target_for_2_lvls_childof_inherited",
+        NonFragmentingChildOf_target_for_2_lvls_childof_inherited
+    },
+    {
+        "target_for_3_lvls_childof_childof_inherited",
+        NonFragmentingChildOf_target_for_3_lvls_childof_childof_inherited
+    },
+    {
+        "target_for_3_lvls_childof_parent_inherited",
+        NonFragmentingChildOf_target_for_3_lvls_childof_parent_inherited
+    },
+    {
+        "target_for_3_lvls_parent_childof_inherited",
+        NonFragmentingChildOf_target_for_3_lvls_parent_childof_inherited
+    },
+    {
+        "target_for_3_lvls_parent_parent_inherited",
+        NonFragmentingChildOf_target_for_3_lvls_parent_parent_inherited
     },
     {
         "target_for_wildcard",
@@ -14685,7 +14730,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        70,
+        79,
         NonFragmentingChildOf_testcases
     },
     {
