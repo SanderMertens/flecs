@@ -1675,6 +1675,162 @@ void NonFragmentingChildOf_target_for_3_lvls_parent_parent(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_target_for_2_lvls_parent_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_insert(world, ecs_value(EcsParent, {parent_a}));
+    ecs_add(world, parent_b, Foo);
+    ecs_entity_t parent_c = ecs_insert(world, ecs_value(EcsParent, {parent_b}));
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent_c}));
+
+    ecs_entity_t src = ecs_get_target_for(world, child, EcsChildOf, Foo);
+    test_assert(src != 0);
+    test_assert(src == parent_b);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_target_for_self_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent_a}));
+    ecs_add(world, child, Foo);
+
+    ecs_entity_t src = ecs_get_target_for(world, child, EcsChildOf, Foo);
+    test_assert(src != 0);
+    test_assert(src == child);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_target_for_inherited(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+
+    ecs_entity_t base = ecs_new_w(world, Foo);
+    ecs_entity_t parent = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent}));
+
+    ecs_entity_t src = ecs_get_target_for(world, child, EcsChildOf, Foo);
+    test_assert(src != 0);
+    test_assert(src == base);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_target_for_2_lvls_parent_inherited(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+
+    ecs_entity_t base = ecs_new_w(world, Foo);
+    ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t parent_b = ecs_insert(world, ecs_value(EcsParent, {parent_a}));
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent_b}));
+
+    ecs_entity_t src = ecs_get_target_for(world, child, EcsChildOf, Foo);
+    test_assert(src != 0);
+    test_assert(src == base);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_target_for_2_lvls_childof_inherited(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+
+    ecs_entity_t base = ecs_new_w(world, Foo);
+    ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t parent_b = ecs_new_w_pair(world, EcsChildOf, parent_a);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent_b}));
+
+    ecs_entity_t src = ecs_get_target_for(world, child, EcsChildOf, Foo);
+    test_assert(src != 0);
+    test_assert(src == base);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_target_for_3_lvls_childof_childof_inherited(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+
+    ecs_entity_t base = ecs_new_w(world, Foo);
+    ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t parent_b = ecs_new_w_pair(world, EcsChildOf, parent_a);
+    ecs_entity_t parent_c = ecs_new_w_pair(world, EcsChildOf, parent_b);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent_c}));
+
+    ecs_entity_t src = ecs_get_target_for(world, child, EcsChildOf, Foo);
+    test_assert(src != 0);
+    test_assert(src == base);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_target_for_3_lvls_childof_parent_inherited(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+
+    ecs_entity_t base = ecs_new_w(world, Foo);
+    ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t parent_b = ecs_new_w_pair(world, EcsChildOf, parent_a);
+    ecs_entity_t parent_c = ecs_insert(world, ecs_value(EcsParent, {parent_b}));
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent_c}));
+
+    ecs_entity_t src = ecs_get_target_for(world, child, EcsChildOf, Foo);
+    test_assert(src != 0);
+    test_assert(src == base);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_target_for_3_lvls_parent_childof_inherited(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+
+    ecs_entity_t base = ecs_new_w(world, Foo);
+    ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t parent_b = ecs_insert(world, ecs_value(EcsParent, {parent_a}));
+    ecs_entity_t parent_c = ecs_new_w_pair(world, EcsChildOf, parent_b);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent_c}));
+
+    ecs_entity_t src = ecs_get_target_for(world, child, EcsChildOf, Foo);
+    test_assert(src != 0);
+    test_assert(src == base);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_target_for_3_lvls_parent_parent_inherited(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+
+    ecs_entity_t base = ecs_new_w(world, Foo);
+    ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t parent_b = ecs_insert(world, ecs_value(EcsParent, {parent_a}));
+    ecs_entity_t parent_c = ecs_insert(world, ecs_value(EcsParent, {parent_b}));
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent_c}));
+
+    ecs_entity_t src = ecs_get_target_for(world, child, EcsChildOf, Foo);
+    test_assert(src != 0);
+    test_assert(src == base);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_target_for_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
