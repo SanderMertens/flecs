@@ -261,6 +261,21 @@ next_down_elem:
     return true;
 }
 
+bool flecs_query_up_with_parent(
+    const ecs_query_op_t *op,
+    ecs_query_up_ctx_t *op_ctx,
+    const ecs_query_run_ctx_t *ctx)
+{
+    op_ctx->cur ++;
+
+    const EcsParent *p = &op_ctx->parents[op_ctx->cur];
+    ecs_entity_t parent = p->value;
+
+    return false;
+
+
+}
+
 /* Check if a table can reach the target component through the traversal
  * relationship. */
 bool flecs_query_up_with(
@@ -309,6 +324,20 @@ bool flecs_query_up_with(
             op, &op->src, EcsQuerySrc, ctx);
         if (!range.table) {
             return false;
+        }
+
+        /* Handle tables with non-fragmenting ChildOf */
+        if (impl->trav == EcsChildOf) {
+            ecs_table_t *table = range.table;
+            if (range.table->flags & EcsTableHasParent) {
+                int32_t column = table->component_map[ecs_id(EcsParent)];
+                ecs_assert(column > 0, ECS_INTERNAL_ERROR, NULL);
+
+                op_ctx->parents = table->data.columns[column - 1].data;
+                op_ctx->range = range;
+                op_ctx->cur = -1;
+                return flecs_query_up_with_parent(op, op_ctx, ctx);
+            }
         }
 
         /* Get entry from up traversal cache. The up traversal cache contains 
