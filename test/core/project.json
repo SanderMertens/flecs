@@ -734,6 +734,8 @@
             "id": "NonFragmentingChildOf",
             "testcases": [ 
                 "set_parent_no_ordered_children",
+                "add_ordered_children_before_set_parent",
+                "add_ordered_children_after_set_parent",
                 "set_0_parent",
                 "set_parent",
                 "insert_parent",
@@ -786,7 +788,21 @@
                 "defer_delete_parent_and_base",
                 "defer_delete_parent_and_tag",
                 "observer_order_after_delete",
-                "observer_order_after_deferred_delete"
+                "observer_order_after_deferred_delete",
+                "target_for",
+                "target_for_2_lvls_parent",
+                "target_for_2_lvls_childof",
+                "target_for_3_lvls_childof_childof",
+                "target_for_3_lvls_childof_parent",
+                "target_for_3_lvls_parent_childof",
+                "target_for_3_lvls_parent_parent",
+                "target_for_wildcard",
+                "target_for_wildcard_2_lvls_parent",
+                "target_for_wildcard_2_lvls_childof",
+                "target_for_wildcard_3_lvls_childof_childof",
+                "target_for_wildcard_3_lvls_childof_parent",
+                "target_for_wildcard_3_lvls_parent_childof",
+                "target_for_wildcard_3_lvls_parent_parent"
             ]
         }, {
             "id": "Hierarchies",

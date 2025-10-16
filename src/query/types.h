@@ -242,6 +242,11 @@ typedef struct {
 
     /* Indirection because otherwise the ctx struct gets too large */
     ecs_query_up_impl_t *impl;
+
+    /* Data for returning tables with non-fragmenting ChildOf */
+    const EcsParent *parents;
+    ecs_table_range_t range;
+    int32_t cur;
 } ecs_query_up_ctx_t;
 
 /* Cache for storing results of upward/downward "all" traversal. This type of 

@@ -6199,7 +6199,7 @@ int32_t ecs_search_offset(
  * @param component The component to search for.
  * @param rel The relationship to traverse (optional).
  * @param flags Whether to search EcsSelf and/or EcsUp.
- * @param subject_out If provided, it will be set to the matched entity.
+ * @param tgt_out If provided, it will be set to the matched entity.
  * @param component_out If provided, it will be set to the found component (optional).
  * @param tr_out Internal datatype.
  * @return The index of the component in the table type.
@@ -6215,7 +6215,7 @@ int32_t ecs_search_relation(
     ecs_id_t component,
     ecs_entity_t rel,
     ecs_flags64_t flags, /* EcsSelf and/or EcsUp */
-    ecs_entity_t *subject_out,
+    ecs_entity_t *tgt_out,
     ecs_id_t *component_out,
     struct ecs_table_record_t **tr_out);
 

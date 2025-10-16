@@ -86,6 +86,18 @@ ecs_entity_t flecs_get_oneof(
     const ecs_world_t *world,
     ecs_entity_t e);
 
+/* Up traversal from entity */
+int32_t flecs_entity_search_relation(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    bool self,
+    ecs_component_record_t *cr,
+    ecs_entity_t *tgt_out,
+    ecs_id_t *id_out,
+    struct ecs_table_record_t **tr_out);
+
 /* Compute relationship depth for table */
 int32_t flecs_relation_depth(
     const ecs_world_t *world,

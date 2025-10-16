@@ -70,13 +70,16 @@ ecs_component_record_t* flecs_add_non_fragmenting_child(
     ecs_entity_t parent,
     ecs_entity_t entity)
 {
-    ecs_component_record_t *cr = flecs_components_get(world, 
+    ecs_component_record_t *cr = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, parent));
 
-    ecs_check(cr != NULL, ECS_INVALID_OPERATION, 
-        "entity set in Parent component must have OrderedChildren trait");
-    ecs_check(cr->flags & EcsIdOrderedChildren, ECS_INVALID_OPERATION, 
-        "entity set in Parent component must have OrderedChildren trait");
+    ecs_check(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!(cr->flags & EcsIdOrderedChildren)) {
+        flecs_component_ordered_children_init(world, cr);
+        ecs_add_id(world, parent, EcsOrderedChildren);
+    }
+
     ecs_check(parent != 0, ECS_INVALID_OPERATION, 
         "cannot set Parent component with 0 entity");
     ecs_check(ecs_is_alive(world, parent), ECS_INVALID_OPERATION, 

@@ -702,6 +702,8 @@ void Sparse_child_of_component_w_sparse_exclusive(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
+void NonFragmentingChildOf_add_ordered_children_before_set_parent(void);
+void NonFragmentingChildOf_add_ordered_children_after_set_parent(void);
 void NonFragmentingChildOf_set_0_parent(void);
 void NonFragmentingChildOf_set_parent(void);
 void NonFragmentingChildOf_insert_parent(void);
@@ -755,6 +757,20 @@ void NonFragmentingChildOf_defer_delete_parent_and_base(void);
 void NonFragmentingChildOf_defer_delete_parent_and_tag(void);
 void NonFragmentingChildOf_observer_order_after_delete(void);
 void NonFragmentingChildOf_observer_order_after_deferred_delete(void);
+void NonFragmentingChildOf_target_for(void);
+void NonFragmentingChildOf_target_for_2_lvls_parent(void);
+void NonFragmentingChildOf_target_for_2_lvls_childof(void);
+void NonFragmentingChildOf_target_for_3_lvls_childof_childof(void);
+void NonFragmentingChildOf_target_for_3_lvls_childof_parent(void);
+void NonFragmentingChildOf_target_for_3_lvls_parent_childof(void);
+void NonFragmentingChildOf_target_for_3_lvls_parent_parent(void);
+void NonFragmentingChildOf_target_for_wildcard(void);
+void NonFragmentingChildOf_target_for_wildcard_2_lvls_parent(void);
+void NonFragmentingChildOf_target_for_wildcard_2_lvls_childof(void);
+void NonFragmentingChildOf_target_for_wildcard_3_lvls_childof_childof(void);
+void NonFragmentingChildOf_target_for_wildcard_3_lvls_childof_parent(void);
+void NonFragmentingChildOf_target_for_wildcard_3_lvls_parent_childof(void);
+void NonFragmentingChildOf_target_for_wildcard_3_lvls_parent_parent(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5675,6 +5691,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_set_parent_no_ordered_children
     },
     {
+        "add_ordered_children_before_set_parent",
+        NonFragmentingChildOf_add_ordered_children_before_set_parent
+    },
+    {
+        "add_ordered_children_after_set_parent",
+        NonFragmentingChildOf_add_ordered_children_after_set_parent
+    },
+    {
         "set_0_parent",
         NonFragmentingChildOf_set_0_parent
     },
@@ -5885,6 +5909,62 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "observer_order_after_deferred_delete",
         NonFragmentingChildOf_observer_order_after_deferred_delete
+    },
+    {
+        "target_for",
+        NonFragmentingChildOf_target_for
+    },
+    {
+        "target_for_2_lvls_parent",
+        NonFragmentingChildOf_target_for_2_lvls_parent
+    },
+    {
+        "target_for_2_lvls_childof",
+        NonFragmentingChildOf_target_for_2_lvls_childof
+    },
+    {
+        "target_for_3_lvls_childof_childof",
+        NonFragmentingChildOf_target_for_3_lvls_childof_childof
+    },
+    {
+        "target_for_3_lvls_childof_parent",
+        NonFragmentingChildOf_target_for_3_lvls_childof_parent
+    },
+    {
+        "target_for_3_lvls_parent_childof",
+        NonFragmentingChildOf_target_for_3_lvls_parent_childof
+    },
+    {
+        "target_for_3_lvls_parent_parent",
+        NonFragmentingChildOf_target_for_3_lvls_parent_parent
+    },
+    {
+        "target_for_wildcard",
+        NonFragmentingChildOf_target_for_wildcard
+    },
+    {
+        "target_for_wildcard_2_lvls_parent",
+        NonFragmentingChildOf_target_for_wildcard_2_lvls_parent
+    },
+    {
+        "target_for_wildcard_2_lvls_childof",
+        NonFragmentingChildOf_target_for_wildcard_2_lvls_childof
+    },
+    {
+        "target_for_wildcard_3_lvls_childof_childof",
+        NonFragmentingChildOf_target_for_wildcard_3_lvls_childof_childof
+    },
+    {
+        "target_for_wildcard_3_lvls_childof_parent",
+        NonFragmentingChildOf_target_for_wildcard_3_lvls_childof_parent
+    },
+    {
+        "target_for_wildcard_3_lvls_parent_childof",
+        NonFragmentingChildOf_target_for_wildcard_3_lvls_parent_childof
+    },
+    {
+        "target_for_wildcard_3_lvls_parent_parent",
+        NonFragmentingChildOf_target_for_wildcard_3_lvls_parent_parent
     }
 };
 
@@ -14605,7 +14685,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        54,
+        70,
         NonFragmentingChildOf_testcases
     },
     {

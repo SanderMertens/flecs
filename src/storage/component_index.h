@@ -187,4 +187,8 @@ void flecs_component_update_childof_w_depth(
     ecs_component_record_t *cr,
     int32_t depth);
 
+void flecs_component_ordered_children_init(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
 #endif
