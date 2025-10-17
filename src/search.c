@@ -261,7 +261,7 @@ int32_t flecs_table_search_relation(
         cr_r, tgt_out, id_out, tr_out);
 }
 
-int32_t flecs_entity_search_relation(
+int32_t ecs_search_relation_for_entity(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
@@ -274,6 +274,11 @@ int32_t flecs_entity_search_relation(
 {
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (tgt_out) tgt_out[0] = 0;
+    if (!cr) {
+        cr = flecs_components_get(world, id);
+    }
 
     int32_t result = flecs_table_search_relation(world, r, r->table, 0, id, cr, 
         rel, NULL, self, tgt_out, id_out, tr_out);

@@ -739,6 +739,9 @@ void NonFragmentingChildOf_defer_delete_parent_and_tag(void);
 void NonFragmentingChildOf_observer_order_after_delete(void);
 void NonFragmentingChildOf_observer_order_after_deferred_delete(void);
 void NonFragmentingChildOf_target_for(void);
+void NonFragmentingChildOf_target_for_twice(void);
+void NonFragmentingChildOf_search(void);
+void NonFragmentingChildOf_search_twice(void);
 void NonFragmentingChildOf_target_for_2_lvls_parent(void);
 void NonFragmentingChildOf_target_for_2_lvls_childof(void);
 void NonFragmentingChildOf_target_for_3_lvls_childof_childof(void);
@@ -5748,6 +5751,18 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "target_for",
         NonFragmentingChildOf_target_for
+    },
+    {
+        "target_for_twice",
+        NonFragmentingChildOf_target_for_twice
+    },
+    {
+        "search",
+        NonFragmentingChildOf_search
+    },
+    {
+        "search_twice",
+        NonFragmentingChildOf_search_twice
     },
     {
         "target_for_2_lvls_parent",
@@ -14240,7 +14255,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        79,
+        82,
         NonFragmentingChildOf_testcases
     },
     {
