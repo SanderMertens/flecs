@@ -141,8 +141,9 @@ UFlecsWorld* UFlecsWorldSubsystem::CreateWorld(const FString& Name, const FFlecs
 	const FName WorldNameWithWorldContext = FName(Name + " ("+ GetDebugStringForWorld(GetWorld())+")");
 		
 	DefaultWorld = NewObject<UFlecsWorld>(this, WorldNameWithWorldContext);
+	solid_checkf(IsValid(DefaultWorld), TEXT("Failed to create Flecs world"));
 
-	TSolidNotNull<UObject*> GameLoop = DuplicateObject<UObject>(Settings.GameLoop, DefaultWorld);
+	const TSolidNotNull<UObject*> GameLoop = DuplicateObject<UObject>(Settings.GameLoop, DefaultWorld);
 
 	DefaultWorld->GameLoopInterface = GameLoop;
 
