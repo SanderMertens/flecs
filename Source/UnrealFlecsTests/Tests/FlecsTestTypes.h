@@ -37,7 +37,8 @@ struct FFlecsTestStruct_Tag_Inherited
 REGISTER_FLECS_COMPONENT(FFlecsTestStruct_Tag_Inherited,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
 	{
-		InComponentHandle.AddPair(flecs::OnInstantiate, flecs::Inherit);
+		InComponentHandle
+			.AddPair(flecs::OnInstantiate, flecs::Inherit);
 	});
 
 USTRUCT(BlueprintType, BlueprintInternalUseOnly)
