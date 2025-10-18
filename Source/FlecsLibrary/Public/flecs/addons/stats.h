@@ -641,6 +641,16 @@ FLECS_API
 ecs_component_index_memory_t ecs_component_index_memory_get(
     const ecs_world_t *world);
 
+/** Get memory usage statistics for single query.
+ * 
+ * @param query The query.
+ * @param result Memory statistics for query (out).
+ */
+FLECS_API
+void ecs_query_memory_get(
+    const ecs_query_t *query,
+    ecs_query_memory_t *result);
+
 /** Get memory usage statistics for queries.
  * 
  * @param world The world.
