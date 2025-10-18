@@ -295,8 +295,7 @@ error:
     return result;
 }
 
-static
-void flecs_query_memory_get(
+void ecs_query_memory_get(
     const ecs_query_t *query,
     ecs_query_memory_t *result)
 {
@@ -389,7 +388,8 @@ void flecs_query_memory_get(
         result->bytes_cache += flecs_ballocator_memory_get(&cache->allocators.monitors);
         result->bytes_cache += flecs_ballocator_memory_get(&cache->allocators.pointers);
 
-        flecs_query_memory_get(cache->query, result);
+        ecs_query_memory_get(cache->query, result);
+        result->count --; /* Don't double count query */
     }
 }
 
@@ -398,7 +398,7 @@ ecs_size_t flecs_query_total_memory_get(
     const ecs_query_t *query)
 {
     ecs_query_memory_t memory = {0};
-    flecs_query_memory_get(query, &memory);
+    ecs_query_memory_get(query, &memory);
     
     ecs_size_t result = 0;
     result += memory.bytes_query;
@@ -418,18 +418,20 @@ ecs_query_memory_t ecs_queries_memory_get(
     
     ecs_query_memory_t result = (ecs_query_memory_t){0};
 
-    ecs_iter_t it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);
-    while (ecs_iter_next(&it)) {
-        EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
+    {
+        ecs_iter_t it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);
+        while (ecs_each_next(&it)) {
+            EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
 
-        for (int32_t i = 0; i < it.count; i++) {
-            ecs_query_t *query = queries[i].poly;
-            if (!query) {
-                continue;
+            for (int32_t i = 0; i < it.count; i++) {
+                ecs_query_t *query = queries[i].poly;
+                if (!query) {
+                    continue;
+                }
+
+                flecs_poly_assert(query, ecs_query_t);
+                ecs_query_memory_get(query, &result);
             }
-
-            flecs_poly_assert(query, ecs_query_t);
-            flecs_query_memory_get(query, &result);
         }
     }
 
