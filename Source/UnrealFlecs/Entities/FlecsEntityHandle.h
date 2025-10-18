@@ -35,9 +35,9 @@ class UFlecsWorld;
 
 namespace Unreal::Flecs
 {
-	/* @TODO: Documentation
+	/** @TODO: Documentation
 	 * Global NetSerialize function pointer(also there is an option for a local override using the FFlecs
-	 **/
+	 */
 	
 	using FEntityNetSerializeFunction
 		= std::function<bool(FFlecsEntityHandle&, TSolidNotNull<UFlecsWorld*>, FArchive&, UPackageMap*, bool&)>;
@@ -426,6 +426,13 @@ public:
 		return IsEnabled(InValue);
 	}
 
+	/**
+	 * @brief Delete an entity.
+	 * Entities have to be deleted explicitly, and are not deleted when the
+	 * entity object goes out of scope.
+	 *
+	 * @see ecs_delete()
+	 */
 	SOLID_INLINE void Destroy() const
 	{
 		GetEntity().destruct();
@@ -487,13 +494,13 @@ public:
 	NO_DISCARD SOLID_INLINE flecs::untyped_component GetUntypedComponent() const
 	{
 		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
-		return flecs::untyped_component(GetFlecsWorld_Internal(), GetEntity());
+		return flecs::untyped_component(GetNativeFlecsWorld(), GetEntity());
 	}
 
 	// Does not check if the entity is a component
 	NO_DISCARD SOLID_INLINE flecs::untyped_component GetUntypedComponent_Unsafe() const
 	{
-		return flecs::untyped_component(GetFlecsWorld_Internal(), GetEntity());
+		return flecs::untyped_component(GetNativeFlecsWorld(), GetEntity());
 	}
 
 	template <typename T>
@@ -886,17 +893,6 @@ public:
 		return *this;
 	}
 
-	NO_DISCARD SOLID_INLINE bool IsA(const FFlecsId InPrefab) const
-	{
-		return HasPair(flecs::IsA, InPrefab);
-	}
-
-	template <typename T>
-	NO_DISCARD SOLID_INLINE bool IsA() const
-	{
-		return HasPairSecond<T>(flecs::IsA);
-	}
-
 	SOLID_INLINE const FSelfType& MarkSlot() const
 	{
 		GetEntity().slot();
@@ -945,37 +941,22 @@ public:
 		return AddCollection(T::StaticClass());
 	}
 
-	NO_DISCARD SOLID_INLINE bool HasCollection(const FFlecsId InCollection) const
-	{
-		return IsA(InCollection);
-	}
-
-	NO_DISCARD SOLID_INLINE bool HasCollection(UClass* InCollection) const
-	{
-		return HasCollection(ObtainTypeClass(InCollection));
-	}
-
-	template <Solid::TStaticClassConcept T>
-	NO_DISCARD SOLID_INLINE bool HasCollection() const
-	{
-		return HasCollection(T::StaticClass());
-	}
-
-	SOLID_INLINE const FSelfType& RemoveCollection(const FFlecsId InCollection) const
+	SOLID_INLINE const FSelfType& RemoveCollection(const FFlecsId InCollection, const bool bRemoveOverriden = false) const
 	{
 		RemovePair(flecs::IsA, InCollection);
+		
 		return *this;
 	}
 
-	SOLID_INLINE const FSelfType& RemoveCollection(UClass* InCollection) const
+	SOLID_INLINE const FSelfType& RemoveCollection(UClass* InCollection, const bool bRemoveOverriden = false) const
 	{
-		return RemoveCollection(ObtainTypeClass(InCollection));
+		return RemoveCollection(ObtainTypeClass(InCollection), bRemoveOverriden);
 	}
 
 	template <Solid::TStaticClassConcept T>
-	SOLID_INLINE const FSelfType& RemoveCollection() const
+	SOLID_INLINE const FSelfType& RemoveCollection(const bool bRemoveOverriden = false) const
 	{
-		return RemoveCollection(T::StaticClass());
+		return RemoveCollection(T::StaticClass(), bRemoveOverriden);
 	}
 	
 protected:

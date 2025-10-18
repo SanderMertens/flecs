@@ -47,7 +47,7 @@ struct UNREALFLECS_API FFlecsModuleComponent
 		return !(*this == InComponent);
 	}
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = "Flecs | Module")
 	TSubclassOf<UObject> ModuleClass;
 
 }; // struct FFlecsModuleComponent

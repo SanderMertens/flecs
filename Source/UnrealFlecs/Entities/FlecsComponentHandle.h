@@ -212,7 +212,7 @@ public:
 	NO_DISCARD SOLID_INLINE FFlecsMemberHandle GetLastMember() const
 	{
 		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
-		return FFlecsMemberHandle(ecs_cpp_last_member(GetFlecsWorld_Internal(), GetEntity()));
+		return FFlecsMemberHandle(ecs_cpp_last_member(GetNativeFlecsWorld(), GetEntity()));
 	}
 	
 	SOLID_INLINE const FSelfType& AddMember(const FFlecsId InTypeId,
@@ -220,7 +220,7 @@ public:
 								const FString& InName,
 	                            const uint32 InCount = 0) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
 		GetUntypedComponent().member(InTypeId,
@@ -236,7 +236,7 @@ public:
 								const uint32 InCount,
 								const uint64 InSizeOffset) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
 		GetUntypedComponent().member(InTypeId,
@@ -249,7 +249,7 @@ public:
 
 	SOLID_INLINE const FSelfType& AddMember(const FFlecsId InTypeId, const FString& InName, const uint32 InCount = 0) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
 		GetUntypedComponent().member(InTypeId, Unreal::Flecs::ToCString(InName), InCount);
@@ -261,7 +261,7 @@ public:
 	                                          const uint32 InCount,
 	                                          const uint64 InSizeOffset) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 		             TEXT("Cannot add member to component while in deferred mode."));
 			
 		GetUntypedComponent().member(InTypeId,
@@ -274,7 +274,7 @@ public:
 	template <typename T>
 	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const uint32 InCount = 0) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
 		GetUntypedComponent().member<T>(Unreal::Flecs::ToCString(InName), InCount);
@@ -284,7 +284,7 @@ public:
 	template <typename T>
 	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const uint32 InCount, const uint64 InSizeOffset) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
 		GetUntypedComponent().member<T>(Unreal::Flecs::ToCString(InName), InCount, InSizeOffset);
@@ -294,7 +294,7 @@ public:
 	template <typename T>
 	SOLID_INLINE const FSelfType& AddMember(const FFlecsId InUnitId, const FString& InName, const uint32 InCount = 0) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
 		GetUntypedComponent().member<T>(InUnitId, Unreal::Flecs::ToCString(InName), InCount);
@@ -304,7 +304,7 @@ public:
 	template <typename TMember, typename TUnit>
 	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const uint32 InCount = 0) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
 		GetUntypedComponent().member<TMember, TUnit>(Unreal::Flecs::ToCString(InName), InCount);
@@ -314,7 +314,7 @@ public:
 	template <typename TMember, typename TUnit>
 	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const uint32 InCount, const uint64 InSizeOffset) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
 		GetUntypedComponent().member<TMember, TUnit>(Unreal::Flecs::ToCString(InName), InCount, InSizeOffset);
@@ -324,7 +324,7 @@ public:
 	template <typename TMember, typename TComponent>
 	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const TMember TComponent::*MemberPtr) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
 		GetUntypedComponent().member<TMember, TComponent>(Unreal::Flecs::ToCString(InName), MemberPtr);
@@ -334,7 +334,7 @@ public:
 	template <typename TUnit, typename TMember, typename TComponent>
 	SOLID_INLINE const FSelfType& AddMember(const FString& InName, const TMember TComponent::*MemberPtr) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
 		GetUntypedComponent().member<TUnit, TMember, TComponent>(Unreal::Flecs::ToCString(InName), MemberPtr);
@@ -344,7 +344,7 @@ public:
 	template <typename TConstant = uint32>
 	SOLID_INLINE const FSelfType& AddConstant(const FString& InName, const TConstant& InValue) const
 	{
-		solid_checkf(!GetFlecsWorld_Internal().is_deferred(),
+		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add constant to component while in deferred mode."));
 		
 		GetUntypedComponent().constant<TConstant>(Unreal::Flecs::ToCString(InName), InValue);
@@ -354,7 +354,7 @@ public:
 private:
 	NO_DISCARD SOLID_INLINE flecs::untyped_component GetUntypedComponent_Unsafe() const
 	{
-		return flecs::untyped_component(GetFlecsWorld_Internal(), GetEntity());
+		return flecs::untyped_component(GetNativeFlecsWorld(), GetEntity());
 	}
 	
 }; // struct FFlecsComponentHandle
@@ -421,5 +421,26 @@ public:
 	{
 		return GetTypedComponent();
 	}
+
+	SOLID_INLINE flecs::opaque<TComponent> Opaque(const FFlecsId InId) const
+	{
+		return GetTypedComponent().opaque(InId);
+	}
+
+	template <typename TElement>
+	SOLID_INLINE flecs::opaque<TComponent> Opaque(const FFlecsId InId) const
+	{
+		return GetTypedComponent().template opaque<TElement>(InId);
+	}
+
+	template <typename TFunction>
+	SOLID_INLINE const FSelfType& Opaque(TFunction&& Func) const
+	{
+		GetTypedComponent().template opaque<TComponent>(std::forward<TFunction>(Func));
+		return *this;
+	}
+
+	
+	
 	
 }; // struct TFlecsComponentHandle

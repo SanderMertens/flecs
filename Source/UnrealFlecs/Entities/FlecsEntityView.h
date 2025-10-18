@@ -580,6 +580,17 @@ public:
 		return GetEntityView().owns_second<Second>(FFlecsEntityView::GetInputId(*this, InFirstTypeValue));
 	}
 
+	NO_DISCARD SOLID_INLINE bool IsA(const FFlecsId InPrefab) const
+	{
+		return HasPair(flecs::IsA, InPrefab);
+	}
+
+	template <typename T>
+	NO_DISCARD SOLID_INLINE bool IsA() const
+	{
+		return HasPairSecond<T>(flecs::IsA);
+	}
+
 	// @TODO: Optimize this?
 	template <Unreal::Flecs::TFlecsEntityHandleTypeConcept THandle, typename TEnumUnderlying = uint64>
 	NO_DISCARD SOLID_INLINE THandle ObtainEnumConstant(const TSolidNotNull<const UEnum*> EnumType,
@@ -739,6 +750,22 @@ public:
 	NO_DISCARD SOLID_INLINE FFlecsArchetype GetType() const
 	{
 		return FFlecsArchetype(GetEntityView().type());
+	}
+
+	NO_DISCARD SOLID_INLINE bool HasCollection(const FFlecsId InCollection) const
+	{
+		return IsA(InCollection);
+	}
+
+	NO_DISCARD SOLID_INLINE bool HasCollection(UClass* InCollection) const
+	{
+		return HasCollection(ObtainTypeClass(InCollection));
+	}
+
+	template <Solid::TStaticClassConcept T>
+	NO_DISCARD SOLID_INLINE bool HasCollection() const
+	{
+		return HasCollection(T::StaticClass());
 	}
 
 #if defined(FLECS_DOC)

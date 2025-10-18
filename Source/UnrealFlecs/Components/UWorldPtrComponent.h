@@ -94,5 +94,6 @@ struct TStructOpsTypeTraits<FUWorldPtrComponent> : public TStructOpsTypeTraitsBa
 	enum
 	{
 		
-	};
+	}; // enum
+	
 }; // struct TStructOpsTypeTraits<FUWorldPtrComponent>

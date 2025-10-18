@@ -197,6 +197,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entity Record")
 	TArray<FFlecsComponentTypeInfo> Components;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entity Record")
+	TArray<TInstancedStruct<FFlecsRecordSubEntity>> SubEntities;
+
 	NO_DISCARD FORCEINLINE bool operator==(const FFlecsRecordSubEntity& Other) const
 	{
 		return Name == Other.Name && Components == Other.Components;

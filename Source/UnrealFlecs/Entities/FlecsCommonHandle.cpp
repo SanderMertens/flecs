@@ -20,18 +20,18 @@ FFlecsCommonHandle::FFlecsCommonHandle(const flecs::world_t* InWorld, const FFle
 
 flecs::world FFlecsCommonHandle::GetNativeFlecsWorld() const
 {
-	return GetEntity().world();
+	return Entity.world();
 }
 
 TSolidNotNull<UFlecsWorld*> FFlecsCommonHandle::GetFlecsWorld() const
 {
 	solid_checkf(IsUnrealFlecsWorld(), TEXT("Entity is not in an Unreal Flecs World"));
-	return Unreal::Flecs::ToFlecsWorld(GetEntity().world());
+	return Unreal::Flecs::ToUnrealFlecsWorld(GetEntity().world());
 }
 
 bool FFlecsCommonHandle::IsUnrealFlecsWorld() const
 {
-	return GetEntity().world().has<FUnrealFlecsWorldTag>();
+	return GetNativeFlecsWorld().has<FUnrealFlecsWorldTag>();
 }
 
 TSolidNotNull<UWorld*> FFlecsCommonHandle::GetOuterWorld() const

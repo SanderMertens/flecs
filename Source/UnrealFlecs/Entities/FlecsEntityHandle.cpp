@@ -14,8 +14,8 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityHandle)
 
-DEFINE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION(Unreal::Flecs::EmptyNetSerializeFunction, [](
-    FFlecsEntityHandle& InEntity, TSolidNotNull<UFlecsWorld*> FlecsWorld, FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
+DEFINE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION(Unreal::Flecs::EmptyNetSerializeFunction,
+    [](FFlecsEntityHandle& InEntity, TSolidNotNull<UFlecsWorld*> FlecsWorld, FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
     if UNLIKELY_IF(!InEntity.IsValid())
     {

@@ -153,14 +153,15 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionDefinition(
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionClass(const TSolidNotNull<UClass*> InClass,
 	const FFlecsCollectionBuilder& InBuilder)
 {
-	const FFlecsCollectionId Id = FFlecsCollectionId(InClass->GetFName());
+	const FString CPPClassName = InClass->GetPrefixCPP() + InClass->GetName();
+	const FFlecsCollectionId Id = FFlecsCollectionId(CPPClassName);
 	if (const FFlecsEntityHandle* Existing = RegisteredCollections.Find(Id))
 	{
 		return *Existing;
 	}
 	
 	const FFlecsEntityHandle Prefab
-		= CreatePrefabEntity(InClass->GetName(), InBuilder.GetCollectionDefinition().Record);
+		= CreatePrefabEntity(CPPClassName, InBuilder.GetCollectionDefinition().Record);
 	
 	RegisteredCollections.Add(Id, Prefab);
 	

@@ -281,6 +281,15 @@ public:
 		return *this;
 	}
 
+	FORCEINLINE FFlecsCollectionBuilder& AddPair(const FFlecsRecordPair& InPair)
+	{
+		solid_check(CollectionDefinition);
+		
+		GetCollectionDefinition().Record.AddComponent(InPair);
+		
+		return *this;
+	}
+
 	FORCEINLINE FFlecsSubEntityBuilder MakeSubEntity()
 	{
 		return FFlecsSubEntityBuilder(*this);

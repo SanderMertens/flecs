@@ -61,6 +61,7 @@ public:
 	
 }; // struct FFlecsComponentPropertiesRegistry
 
+// @TODO: Consider adding Auto-Registration
 // std::function<void(flecs::world, const FFlecsComponentHandle&)>
 #define REGISTER_FLECS_COMPONENT(Name, RegistrationFunction) \
 	namespace \

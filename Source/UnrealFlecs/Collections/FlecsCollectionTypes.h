@@ -95,6 +95,19 @@ REGISTER_FLECS_COMPONENT(FFlecsCollectionSlotTag,
 			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
 	});
 
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsCollectionRootTag
+{
+	GENERATED_BODY()
+}; // struct FFlecsCollectionRootTag
+
+REGISTER_FLECS_COMPONENT(FFlecsCollectionRootTag,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		InComponentHandle
+			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
+	});
+
 USTRUCT(BlueprintInternalUseOnly)
 struct UNREALFLECS_API FFlecsCollectionStructInterface
 {

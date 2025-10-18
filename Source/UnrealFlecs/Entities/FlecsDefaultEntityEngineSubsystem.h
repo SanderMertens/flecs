@@ -23,9 +23,9 @@ public:
 	FFlecsDefaultEntityEngine();
 	~FFlecsDefaultEntityEngine();
 
-	/*
+	/**
 	 * Called in FUnrealFlecsModule::StartupModule
-	 **/
+	 */
 	void Initialize();
 
 	flecs::entity CreateDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity, const flecs::world& World);

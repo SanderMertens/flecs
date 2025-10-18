@@ -109,7 +109,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1_World",
 
 	TEST_METHOD(B3_CanConvertFlecsWorldToUFlecsWorld)
 	{
-		const TSolidNotNull<UFlecsWorld*> ConvertedWorld = Unreal::Flecs::ToFlecsWorld(FlecsWorld->World);
+		const TSolidNotNull<UFlecsWorld*> ConvertedWorld = Unreal::Flecs::ToUnrealFlecsWorld(FlecsWorld->World);
 		ASSERT_THAT(IsTrue(IsValid(ConvertedWorld)));
 		
 		ASSERT_THAT(IsTrue(FlecsWorld == ConvertedWorld));
@@ -188,6 +188,6 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1_World",
 		ASSERT_THAT(IsFalse(FlecsWorld->LookupEntity(NewEntityName).IsValid()));
 	}
 	
-}; // End of A1_UnrealFlecsBasicTests*/
+}; // End of A1_UnrealFlecsBasicTests
 
 #endif // #if WITH_AUTOMATION_TESTS

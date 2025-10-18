@@ -9,7 +9,7 @@
 // @TODO: Maybe make this a Flecs Default Entity instead of a USTRUCT?
 
 
-USTRUCT(BlueprintType)
+USTRUCT()
 struct FFlecsGameplayTagManagerEntity
 {
 	GENERATED_BODY()

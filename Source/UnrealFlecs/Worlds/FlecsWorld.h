@@ -74,13 +74,15 @@ public:
 
 	void RegisterUnrealTypes() const;
 
-	/*
-	 * I hate this
-	 **/
-	template <typename FunctionType>
-	void UnlockIter_Internal(flecs::iter& Iter, FunctionType&& Function)
+	/**
+	 * @brief Progress the iterator while unlocking the table lock for the duration of the function call.
+	 * does not loop over the iterator, only progresses it after each function call.
+	 * @param Iter The Flecs iterator.
+	 * @param Function The function to execute.
+	 */
+	void UnlockIter_Internal(flecs::iter& Iter, TFunctionRef<void(flecs::iter&)> Function) const
 	{
-		DeferEndLambda([this, &Iter, Function = std::forward<FunctionType>(Function)]()
+		DeferEndLambda([this, &Iter, Function]()
 		{
 			if (IsReadOnly())
 			{
@@ -109,16 +111,16 @@ public:
 	 * @brief Asynchronously Register a module dependency,
 	 * if the dependency is already imported, the function is called immediately
 	 * if the dependency is not imported, the function is called when the dependency is imported (if it is)
-	 * @param InModuleObject The module object
-	 * @param InFunction The function to call when the dependency is imported
 	 * @tparam TModule The module class
+	 * @param InModuleObject The module object
+	 * @param InFunction The function to call when/if the dependency is imported
 	 */
-	template <Solid::TStaticClassConcept TModule, typename TFunction>
+	template <Solid::TStaticClassConcept TModule>
 	void RegisterModuleDependency(const TSolidNotNull<const UObject*> InModuleObject,
-	                                                     TFunction&& InFunction)
+		const FFlecsDependencyFunctionDefinition::FDependencyFunctionType& InFunction)
 	{
 		RegisterModuleDependency(InModuleObject, TModule::StaticClass(),
-			[InFunction = std::forward<TFunction>(InFunction)]
+			[InFunction]
 				(const TSolidNotNull<UObject*> InDependencyObject,
 				TSolidNotNull<UFlecsWorld*> InWorld,
 				FFlecsEntityHandle InDependencyEntity)
@@ -133,22 +135,41 @@ public:
 	 * if the dependency is not imported, the function is called when the dependency is imported (if it is)
 	 * @param InModuleObject The module object
 	 * @param InDependencyClass The dependency class
-	 * @param InFunction The function to call when the dependency is imported
+	 * @param InFunction The function to call when/if the dependency is imported
 	 */
 	void RegisterModuleDependency(
 		const TSolidNotNull<const UObject*> InModuleObject,
 		const TSubclassOf<UFlecsModuleInterface>& InDependencyClass,
 		const FFlecsDependencyFunctionDefinition::FDependencyFunctionType& InFunction);
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	/**
+	 * @brief Deletes and recreates the world, 
+	 */
+	UFUNCTION()
 	void Reset();
 
+	/**
+	 * @brief Reset simulation clock.
+	 * @see ecs_reset_clock
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	void ResetClock() const;
 
+	
+	/**
+	 * @brief Create a new entity in the world,
+	 * currently if an entity of the same name exists, it will return the already existing entity
+	 * @param Name Optional Name Parameter
+	 * @return The created entity handle
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FFlecsEntityHandle CreateEntity(const FString& Name = "") const;
 
+	/**
+	 * @brief Obtain a typed entity handle for the given Type
+	 * @tparam T The type to obtain the entity for
+	 * @return The entity obtained
+	 */
 	template <typename T>
 	FFlecsEntityHandle ObtainTypedEntity() const
 	{
@@ -156,13 +177,28 @@ public:
 		return EntityHandle;
 	}
 
+	/**
+	 * @brief 
+	 * @param InClass The class to obtain the entity for
+	 * @return The entity obtained
+	 */
 	FFlecsEntityHandle ObtainTypedEntity(const TSolidNotNull<UClass*> InClass) const;
 
+	/**
+	 * @brief Create a new entity in the world with the given Id, if the Id already exists, it will return the existing entity
+	 * @param InId The Id to create the entity with
+	 * @return The created entity handle
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FFlecsEntityHandle CreateEntityWithId(const FFlecsId InId) const;
 
+	/**
+	 * @brief Create a new entity in the world with the given prefab in an IsA relationship (IsA, InPrefab)
+	 * @param InPrefab The prefab to create the entity with
+	 * @return The created entity handle
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FFlecsEntityHandle CreateEntityWithPrefab(const FFlecsEntityHandle& InPrefab) const;
+	FFlecsEntityHandle CreateEntityWithPrefab(const FFlecsId InPrefab) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord,
@@ -170,7 +206,15 @@ public:
 
 	FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord,
 	                                                const FFlecsId InId) const;
-
+	
+	/**
+	 * @brief Lookup an entity by name, if it does not exist, it will return an invalid handle
+	 * @param Name The name of the entity to lookup
+	 * @param Separator The separator to use for nested scopes, defaults to "::"
+	 * @param RootSeparator The root separator, if the name starts with this, it will search from the root scope
+	 * @param bRecursive If true, will search recursively in the scopes(Up), otherwise only in the current scope
+	 * @return 
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World",
 		meta = (AdvancedDisplay = "Separator, RootSeparator, bRecursive"))
 	FFlecsEntityHandle LookupEntity(const FString& Name,
@@ -178,6 +222,10 @@ public:
 	                                const FString& RootSeparator = "::",
 	                                const bool bRecursive = true) const;
 
+	/**
+	 * @brief Destroy an entity by its handle, if the entity does not exist, nothing happens
+	 * @param Name The name of the entity to destroy
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	void DestroyEntityByName(const FString& Name) const;
 
@@ -199,6 +247,11 @@ public:
 		World.each(InTermId, Function);
 	}
 
+	/**
+	 * @brief Add a singleton component to the world
+	 * @tparam T The component type
+	 * @return The world object for chaining/builder pattern
+	 */
 	template <typename T>
 	UFlecsWorld* AddSingleton() const
 	{
@@ -206,6 +259,12 @@ public:
 		return GetSelf();
 	}
 
+	/**
+	 * @brief Set the value of a singleton component in the world, if the singleton does not exist, it will be created
+	 * @tparam T The component type
+	 * @param Value The value to set the singleton to
+	 * @return The world object for chaining/builder pattern
+	 */
 	template <typename T>
 	UFlecsWorld* SetSingleton(const T& Value) const
 	{
@@ -213,6 +272,11 @@ public:
 		return GetSelf();
 	}
 
+	/**
+	 * @brief Remove a singleton component from the world
+	 * @tparam T The component type
+	 * @return The world object for chaining/builder pattern
+	 */
 	template <typename T>
 	UFlecsWorld* RemoveSingleton() const
 	{
@@ -220,12 +284,22 @@ public:
 		return GetSelf();
 	}
 	
+	/**
+	 * @brief Check if the world has a singleton component of the given type
+	 * @tparam T The component type, this must be already registered in the world or it will assert
+	 * @return True if the singleton exists, false otherwise
+	 */
 	template <typename T>
 	NO_DISCARD bool HasSingleton() const
 	{
 		return World.has<T>();
 	}
 
+	/**
+	 * @brief Get a singleton component from the world, will assert if the singleton does not exist
+	 * @tparam T The component type
+	 * @return The singleton component
+	 */
 	template <typename T>
 	NO_DISCARD const T& GetSingleton() const
 	{
@@ -233,6 +307,11 @@ public:
 		return World.get<T>();
 	}
 
+	/**
+	 * @brief Get a mutable singleton component from the world, will assert if the singleton does not exist
+	 * @tparam T The component type
+	 * @return The singleton component
+	 */
 	template <typename T>
 	NO_DISCARD T& GetMutSingleton() const
 	{
@@ -240,18 +319,33 @@ public:
 		return World.get_mut<T>();
 	}
 	
+	/**
+	 * @brief Try to get a singleton component from the world, will return nullptr if the singleton does not exist
+	 * @tparam T The component type
+	 * @return The singleton component or nullptr if it does not exist
+	 */
 	template <typename T>
-	NO_DISCARD const T* GetSingletonPtr() const
+	NO_DISCARD const T* TryGetSingleton() const
 	{
 		return World.try_get<T>();
 	}
 
+	/**
+	 * @brief Try to get a mutable singleton component from the world, will return nullptr if the singleton does not exist
+	 * @tparam T The component type
+	 * @return The singleton component or nullptr if it does not exist
+	 */
 	template <typename T>
-	NO_DISCARD T* GetMutSingletonPtr() const
+	NO_DISCARD T* TryGetMutSingleton() const
 	{
 		return World.try_get_mut<T>();
 	}
 	
+	/**
+	 * @brief Obtain the entity handle of a singleton component, will assert if the singleton does not exist
+	 * @tparam T The singleton type, must be registered in the world
+	 * @return The entity handle of the singleton
+	 */
 	template <typename T>
 	NO_DISCARD FFlecsEntityHandle ObtainSingletonEntity() const
 	{
@@ -259,6 +353,10 @@ public:
 		return World.singleton<T>();
 	}
 
+	/**
+	 * @brief Notify the world that a singleton component has been modified
+	 * @tparam T The singleton type, must be registered in the world
+	 */
 	template <typename T>
 	void ModifiedSingleton() const
 	{
@@ -292,9 +390,8 @@ public:
 	void SetWorldName(const FString& InName) const;
 
 	/**
-	 * @brief Import a regular C++ Module to the world,
-	 * this MUST NOT be derived from IFlecsModuleInterface nor should it be a UObject
-	 * @tparam T The module type
+	 * @brief Import a regular C++/flecs Module to the world
+	 * @tparam T The module type, this MUST NOT be derived from IFlecsModuleInterface nor should it be a UObject
 	 * @return The entity handle of the imported module
 	 */
 	template <typename T>
@@ -305,9 +402,19 @@ public:
 		return World.import<T>();
 	}
 
+	/**
+	 * @brief Import a module to the world,
+	 * @param InModule The module to import, must implement IFlecsModuleInterface
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	void ImportModule(const TScriptInterface<IFlecsModuleInterface>& InModule);
 
+	/**
+	 * @brief Check if a module with the given class is imported in the world
+	 * @param InModule The module class to check
+	 * @param bAllowChildren If true, will also check for child classes of the given class
+	 * @return True if the module is imported, false otherwise
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	bool IsModuleImported(const TSubclassOf<UObject> InModule, const bool bAllowChildren = false) const;
 
@@ -336,6 +443,12 @@ public:
 		return GetModuleEntity(T::StaticClass(), bAllowChildren);
 	}
 
+	/**
+	 * @brief Get the module object with the given class
+	 * @param InModule The module class
+	 * @param bAllowChildren If true, will also check for child classes of the given class
+	 * @return 
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	UObject* GetModule(const TSubclassOf<UObject> InModule, const bool bAllowChildren = false) const;
 
@@ -891,6 +1004,11 @@ public:
 	FFlecsTypeMapComponent* TypeMapComponent;
 
 private:
+	
+	/**
+	 * @brief Get this world as a non-const pointer
+	 * @return This world as a non-const pointer
+	 */
 	NO_DISCARD FORCEINLINE UFlecsWorld* GetSelf() const
 	{
 		return const_cast<UFlecsWorld*>(this);

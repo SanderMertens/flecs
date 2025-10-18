@@ -94,6 +94,7 @@ public:
     }
     
     flecs::query<> Query;
+    
 }; // struct FFlecsQuery
 
 TYPENAME_OUTSIDE_TEMPLATE

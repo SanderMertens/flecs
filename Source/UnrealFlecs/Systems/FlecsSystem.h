@@ -7,8 +7,10 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
+
 #include "Entities/FlecsEntityHandle.h"
 #include "Queries/FlecsQuery.h"
+
 #include "FlecsSystem.generated.h"
 
 USTRUCT(BlueprintType)

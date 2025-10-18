@@ -134,7 +134,7 @@ FFlecsId FFlecsDefaultEntityEngine::AddDefaultEntity(FFlecsDefaultMetaEntity Def
 	{
 		for (const FFlecsDefaultMetaEntity& AddedDefaultEntity : AddedDefaultEntities)
 		{
-			if (AddedDefaultEntity.EntityName == EntityName && AddedDefaultEntity.SetId != 0)
+			if (AddedDefaultEntity.EntityName == EntityName && AddedDefaultEntity.SetId != FFlecsId::Null())
 			{
 				return true;
 			}

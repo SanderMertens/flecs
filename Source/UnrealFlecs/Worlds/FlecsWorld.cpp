@@ -227,6 +227,9 @@ void UFlecsWorld::InitializeDefaultComponents() const
 		     *Data = nullptr;
 	     });
 
+	/*World.component<FScriptArray>()
+	     .opaque<flecs::Vector>(flecs::meta::VectorType);*/
+
 	RegisterUnrealTypes();
 
 	RegisterComponentType<FFlecsAddReferencedObjectsTrait>()
@@ -566,7 +569,7 @@ FFlecsEntityHandle UFlecsWorld::CreateEntityWithId(const FFlecsId InId) const
 	return MakeAlive(InId);
 }
 
-FFlecsEntityHandle UFlecsWorld::CreateEntityWithPrefab(const FFlecsEntityHandle& InPrefab) const
+FFlecsEntityHandle UFlecsWorld::CreateEntityWithPrefab(const FFlecsId InPrefab) const
 {
 	return CreateEntity().SetIsA(InPrefab);
 }
@@ -1188,6 +1191,7 @@ FFlecsEntityHandle UFlecsWorld::RegisterScriptStruct(const UScriptStruct* Script
 			if (!flecs::_::g_type_to_impl_data.contains(StructNameStd))
 			{
 				flecs::_::type_impl_data NewData;  // NOLINT(cppcoreguidelines-pro-type-member-init)
+				NewData.s_set_values = true;
 				NewData.s_index = flecs_component_ids_index_get();
 				NewData.s_size = bIsTag ? 0 : ScriptStruct->GetStructureSize();
 				NewData.s_alignment = bIsTag ? 0 : ScriptStruct->GetMinAlignment();
@@ -1301,6 +1305,7 @@ FFlecsEntityHandle UFlecsWorld::RegisterComponentEnumType(TSolidNotNull<const UE
 			if (!flecs::_::g_type_to_impl_data.contains(std::string(EnumNameCStr)))
 			{
 				flecs::_::type_impl_data NewData;
+				NewData.s_set_values = true;
 				NewData.s_index = flecs_component_ids_index_get();
 				NewData.s_size = sizeof(uint8);
 				NewData.s_alignment = alignof(uint8);
@@ -1312,7 +1317,7 @@ FFlecsEntityHandle UFlecsWorld::RegisterComponentEnumType(TSolidNotNull<const UE
 
 			solid_check(flecs::_::g_type_to_impl_data.contains(std::string(EnumNameCStr)));
 			
-			auto& [s_index, s_size, s_alignment, s_allow_tag, s_enum_registered]
+			auto& [s_set_values, s_index, s_size, s_alignment, s_allow_tag, s_enum_registered]
 				= flecs::_::g_type_to_impl_data.at(std::string(EnumNameCStr));
 			
 			flecs_component_ids_set(World, s_index, ScriptEnumComponent);
@@ -1356,7 +1361,8 @@ FFlecsEntityHandle UFlecsWorld::RegisterScriptClassType(TSolidNotNull<UClass*> S
 
 		if (!flecs::_::g_type_to_impl_data.contains(std::string(ClassNameCStr)))
 		{
-			flecs::_::type_impl_data NewData;  // NOLINT(cppcoreguidelines-pro-type-member-init)
+			flecs::_::type_impl_data NewData;  // NOLINT(cppcoreguidelines-pro-type-member-init)]
+			NewData.s_set_values = true;
 			NewData.s_index = flecs_component_ids_index_get();
 			NewData.s_size = 0;
 			NewData.s_alignment = 0;
@@ -1473,7 +1479,7 @@ bool UFlecsWorld::HasEntityWithName(const FString& Name, FFlecsEntityHandle& Out
 	return false;
 }
 
-// @TODO: Optimize this
+// @TODO: Optimize this to not use lookup
 FFlecsEntityHandle UFlecsWorld::GetTagEntity(const FGameplayTag& Tag) const
 {
 	solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
@@ -1598,10 +1604,10 @@ void UFlecsWorld::AddReferencedObjects(UObject* InThis, FReferenceCollector& Col
 		return;
 	}
 		
-	This->World.query_builder<const FFlecsScriptStructComponent>()
-	    .with<FFlecsAddReferencedObjectsTrait>().src("$Component") // Term 1
-	    .term_at(0).src("$Component") // Term 0
-	    .with("$Component") // Term 2
+	This->World.query_builder<const FFlecsScriptStructComponent>() // 0
+	    .with<FFlecsAddReferencedObjectsTrait>().src("$Component") //  1
+	    .term_at(0).src("$Component") // 0
+	    .with("$Component") // 2
 	    .each([&Collector, InThis](flecs::iter& Iter, size_t Index,
 	                               const FFlecsScriptStructComponent& InScriptStructComponent)
 	    {

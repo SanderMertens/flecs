@@ -10,7 +10,7 @@
 #include "FlecsArchetype.generated.h"
 
 /**
- * @brief A wrapper for a flecs archetype, flecs::type in C++.
+ * @brief A wrapper for a flecs archetype (flecs::type)
  */
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsArchetype
@@ -76,6 +76,13 @@ public:
                 std::invoke(std::forward<FunctionType>(InFunction), Component);
             }
         }
+    }
+
+    NO_DISCARD FORCEINLINE FFlecsId GetAtIndex(const int32 InIndex) const
+    {
+        solid_checkf(InIndex >= 0 && InIndex < Type.count(),
+            TEXT("Index %d is out of bounds for archetype with %d components"), InIndex, Type.count());
+        return FFlecsId(Type.get(InIndex));
     }
     
     flecs::type Type;

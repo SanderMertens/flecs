@@ -22,16 +22,20 @@ public:
 	FFlecsScopedDeferWindow(const FFlecsScopedDeferWindow&) = delete;
 	FFlecsScopedDeferWindow& operator=(const FFlecsScopedDeferWindow&) = delete;
 
+	FFlecsScopedDeferWindow() = delete;
+
 	FORCEINLINE FFlecsScopedDeferWindow(FFlecsScopedDeferWindow&& Other) noexcept
-		: FlecsWorld(MoveTemp(Other.FlecsWorld))
 	{
+		FlecsWorld = MoveTemp(Other.FlecsWorld);
+		Other.FlecsWorld.Reset();
 	}
 
 	FORCEINLINE FFlecsScopedDeferWindow& operator=(FFlecsScopedDeferWindow&& Other) noexcept
 	{
 		if LIKELY_IF(this != &Other)
 		{
-			Swap(*this, Other);
+			FlecsWorld = MoveTemp(Other.FlecsWorld);
+			Other.FlecsWorld.Reset();
 		}
 
 		return *this;

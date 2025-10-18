@@ -25,6 +25,7 @@ void FFlecsRecordPair::AddToEntity(const FFlecsEntityHandle& InEntityHandle) con
 							}
 							else
 							{
+								// @TODO
 								if UNLIKELY_IF(!ensure(First.PairScriptStruct.GetScriptStruct()->GetStructureSize() <= 1))
 								{
 									return;
@@ -138,6 +139,15 @@ void FFlecsRecordSubEntity::ApplyRecordToEntity(const FFlecsEntityHandle& InEnti
 				}
 				break;
 		}
+	}
+
+	for (const TInstancedStruct<FFlecsRecordSubEntity>& SubEntity : SubEntities)
+	{
+		FFlecsEntityHandle NewEntityHandle = InEntityHandle.GetFlecsWorld()->CreateEntity()
+			.SetParent(InEntityHandle);
+		
+		SubEntity.Get<FFlecsRecordSubEntity>().ApplyRecordToEntity(NewEntityHandle);
+		InEntityHandle.Add(NewEntityHandle);
 	}
 }
 

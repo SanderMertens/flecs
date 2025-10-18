@@ -11,7 +11,7 @@ void IFlecsSystemInterface::InitializeSystem_Internal(const flecs::world& InWorl
 {
 	const FFlecsSystemSettingsInfo& Settings = GetSystemSettings();
 
-	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = Unreal::Flecs::ToFlecsWorld(InWorld);
+	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = Unreal::Flecs::ToUnrealFlecsWorld(InWorld);
 		
 	flecs::system_builder Builder(InWorld, StringCast<char>(*Settings.Name).Get());
 
@@ -38,6 +38,8 @@ void IFlecsSystemInterface::InitializeSystem_Internal(const flecs::world& InWorl
 	}
 
 	Builder.priority(Settings.Priority);
+
+	Builder.immediate(Settings.bImmediate);
 		
 	BuildSystem(Builder);
 

@@ -28,6 +28,18 @@ struct FFlecsTestStruct_Tag
 	GENERATED_BODY()
 }; // struct FFlecsTestStruct
 
+USTRUCT()
+struct FFlecsTestStruct_Tag_Inherited
+{
+	GENERATED_BODY()
+}; // struct FFlecsTestStruct
+
+REGISTER_FLECS_COMPONENT(FFlecsTestStruct_Tag_Inherited,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		InComponentHandle.AddPair(flecs::OnInstantiate, flecs::Inherit);
+	});
+
 USTRUCT(BlueprintType, BlueprintInternalUseOnly)
 struct FFlecsTestStruct_Value
 {
