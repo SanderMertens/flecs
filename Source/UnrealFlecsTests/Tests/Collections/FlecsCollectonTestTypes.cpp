@@ -15,5 +15,11 @@ UFlecsCollectionTestClassNoInterface::UFlecsCollectionTestClassNoInterface()
 void UFlecsCollectionTestClassWithInterface::BuildCollection(FFlecsCollectionBuilder& Builder) const
 {
 	Builder
+		.Add<FFlecsTestStruct_Tag>();
+}
+
+void UFlecsCollectionTestClassWithInterface_Inherited::BuildCollection(FFlecsCollectionBuilder& Builder) const
+{
+	Builder
 		.Add<FFlecsTestStruct_Tag_Inherited>();
 }

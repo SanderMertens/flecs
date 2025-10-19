@@ -27,7 +27,18 @@ UCLASS()
 class UNREALFLECSTESTS_API UFlecsCollectionTestClassWithInterface : public UObject, public IFlecsCollectionInterface
 {
 	GENERATED_BODY()
-	
+
+public:
 	virtual void BuildCollection(FFlecsCollectionBuilder& Builder) const override;
 	
 }; // class UFlecsCollectionTestClassWithInterface
+
+UCLASS()
+class UNREALFLECSTESTS_API UFlecsCollectionTestClassWithInterface_Inherited : public UObject, public IFlecsCollectionInterface
+{
+	GENERATED_BODY()
+
+public:
+	virtual void BuildCollection(FFlecsCollectionBuilder& Builder) const override;
+	
+}; // class UFlecsCollectionTestClassWithInterface_Inherited

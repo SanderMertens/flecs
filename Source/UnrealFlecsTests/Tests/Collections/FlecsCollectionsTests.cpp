@@ -189,11 +189,11 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 
 		// Uses the class name as the collection name
 		const FFlecsEntityHandle Prefab
-			= Collections->RegisterCollectionInterfaceClass(UFlecsCollectionTestClassWithInterface::StaticClass());
+			= Collections->RegisterCollectionInterfaceClass(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass());
 		
 		ASSERT_THAT(IsTrue(Prefab.IsValid()));
 		ASSERT_THAT(IsTrue(Prefab.Has(flecs::Prefab)));
-		ASSERT_THAT(IsTrue(Prefab.GetName() == TEXT("UFlecsCollectionTestClassWithInterface")));
+		ASSERT_THAT(IsTrue(Prefab.GetName() == TEXT("UFlecsCollectionTestClassWithInterface_Inherited")));
 		
 		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsCollectionPrefabTag>()));
 		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsTestStruct_Tag_Inherited>()));
@@ -206,11 +206,11 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 
 		// Uses the class name as the collection name
 		const FFlecsEntityHandle Prefab
-			= Collections->RegisterTypedInterfaceCollection<UFlecsCollectionTestClassWithInterface>();
+			= Collections->RegisterTypedInterfaceCollection<UFlecsCollectionTestClassWithInterface_Inherited>();
 		
 		ASSERT_THAT(IsTrue(Prefab.IsValid()));
 		ASSERT_THAT(IsTrue(Prefab.Has(flecs::Prefab)));
-		ASSERT_THAT(IsTrue(Prefab.GetName() == TEXT("UFlecsCollectionTestClassWithInterface")));
+		ASSERT_THAT(IsTrue(Prefab.GetName() == TEXT("UFlecsCollectionTestClassWithInterface_Inherited")));
 		
 		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsCollectionPrefabTag>()));
 		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsTestStruct_Tag_Inherited>()));
@@ -286,12 +286,12 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsFalse(TestEntity.HasCollection<UFlecsCollectionTestClassNoInterface>()));
 	}
 
-	TEST_METHOD(E1_InstantiateCollection_CreatesEntityFromPrefab_InterfaceClassAPI)
+	TEST_METHOD(E1_InstantiateCollection_Inherited_CreatesEntityFromPrefab_InterfaceClassAPI)
 	{
 		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag_Inherited>();
 		
 		const FFlecsEntityHandle CollectionPrefab
-			= Collections->RegisterCollectionInterfaceClass(UFlecsCollectionTestClassWithInterface::StaticClass());
+			= Collections->RegisterCollectionInterfaceClass(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass());
 
 		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
 		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
@@ -301,25 +301,25 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 
 		TestEntity.AddCollection(CollectionPrefab);
 		ASSERT_THAT(IsTrue(TestEntity.HasCollection(CollectionPrefab)));
-		ASSERT_THAT(IsTrue(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface::StaticClass())));
-		ASSERT_THAT(IsTrue(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface>()));
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass())));
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface_Inherited>()));
 		
 		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
 
 		TestEntity.RemoveCollection(CollectionPrefab);
 		ASSERT_THAT(IsFalse(TestEntity.HasCollection(CollectionPrefab)));
-		ASSERT_THAT(IsFalse(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface::StaticClass())));
-		ASSERT_THAT(IsFalse(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface>()));
+		ASSERT_THAT(IsFalse(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass())));
+		ASSERT_THAT(IsFalse(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface_Inherited>()));
 		
 		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
 	}
 
-	TEST_METHOD(E2_InstantiateCollection_CreatesEntityFromPrefab_TypedCPPInterfaceAPI)
+	TEST_METHOD(E2_InstantiateCollection_Inherited_CreatesEntityFromPrefab_TypedCPPInterfaceAPI)
 	{
 		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag_Inherited>();
 		
 		const FFlecsEntityHandle CollectionPrefab
-			= Collections->RegisterTypedInterfaceCollection<UFlecsCollectionTestClassWithInterface>();
+			= Collections->RegisterTypedInterfaceCollection<UFlecsCollectionTestClassWithInterface_Inherited>();
 
 		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
 		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
@@ -329,20 +329,20 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 
 		TestEntity.AddCollection(CollectionPrefab);
 		ASSERT_THAT(IsTrue(TestEntity.HasCollection(CollectionPrefab)));
-		ASSERT_THAT(IsTrue(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface::StaticClass())));
-		ASSERT_THAT(IsTrue(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface>()));
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass())));
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface_Inherited>()));
 		
 		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
 
 		TestEntity.RemoveCollection(CollectionPrefab);
 		ASSERT_THAT(IsFalse(TestEntity.HasCollection(CollectionPrefab)));
-		ASSERT_THAT(IsFalse(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface::StaticClass())));
-		ASSERT_THAT(IsFalse(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface>()));
+		ASSERT_THAT(IsFalse(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass())));
+		ASSERT_THAT(IsFalse(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface_Inherited>()));
 
 		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
 	}
 
-	TEST_METHOD(E3_InstantiateCollection_CreatesEntityFromPrefab_DefinitionAPI)
+	TEST_METHOD(E3_InstantiateCollection_Inherited_CreatesEntityFromPrefab_DefinitionAPI)
 	{
 		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag_Inherited>();
 		
@@ -371,7 +371,7 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
 	}
 
-	TEST_METHOD(E4_InstantiateCollection_CreatesEntityFromPrefab_BuilderAPI)
+	TEST_METHOD(E4_InstantiateCollection_Inherited_CreatesEntityFromPrefab_BuilderAPI)
 	{
 		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag_Inherited>();
 		
@@ -397,7 +397,7 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
 	}
 
-	TEST_METHOD(E5_InstantiateCollection_CreatesEntityFromPrefab_ClassBuilderAPI)
+	TEST_METHOD(E5_InstantiateCollection_Inherited_CreatesEntityFromPrefab_ClassBuilderAPI)
 	{
 		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag_Inherited>();
 		
