@@ -9,6 +9,9 @@
 
 #include "FlecsCollectionId.generated.h"
 
+/**
+ * @brief Struct representing a Flecs Collection Identifier.
+ */
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsCollectionId
 {

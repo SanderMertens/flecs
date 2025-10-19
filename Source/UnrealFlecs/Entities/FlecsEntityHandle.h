@@ -941,6 +941,7 @@ public:
 		return AddCollection(T::StaticClass());
 	}
 
+	// Note this doesnt remove overridden components
 	SOLID_INLINE const FSelfType& RemoveCollection(const FFlecsId InCollection, const bool bRemoveOverriden = false) const
 	{
 		RemovePair(flecs::IsA, InCollection);
@@ -948,11 +949,13 @@ public:
 		return *this;
 	}
 
+	// Note this doesnt remove overridden components
 	SOLID_INLINE const FSelfType& RemoveCollection(UClass* InCollection, const bool bRemoveOverriden = false) const
 	{
 		return RemoveCollection(ObtainTypeClass(InCollection), bRemoveOverriden);
 	}
 
+	// Note this doesnt remove overridden components
 	template <Solid::TStaticClassConcept T>
 	SOLID_INLINE const FSelfType& RemoveCollection(const bool bRemoveOverriden = false) const
 	{
