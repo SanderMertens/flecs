@@ -45,6 +45,12 @@ UFlecsWorld* UUnrealFlecsObject::GetFlecsWorld() const
 	return FlecsWorld.Get();
 }
 
+UFlecsWorld* UUnrealFlecsObject::GetFlecsWorldChecked() const
+{
+	solid_check(FlecsWorld.IsValid());
+	return FlecsWorld.Get();
+}
+
 UWorld* UUnrealFlecsObject::GetWorld() const
 {
 	if LIKELY_IF(FlecsWorld.IsValid())
