@@ -52,6 +52,6 @@ public:
 	bool bMultiThreaded = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System", AdvancedDisplay)
-	int32 Priority = FLECS_DEFAULT_SYSTEM_PRIORITY;
+	int32 Priority = 100; // FLECS_DEFAULT_SYSTEM_PRIORITY
 	
 }; // struct FFlecsSystemSettingsInfo

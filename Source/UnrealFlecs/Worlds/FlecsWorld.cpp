@@ -903,7 +903,7 @@ FFlecsEntityHandle UFlecsWorld::GetScriptStructEntity(const UScriptStruct* Scrip
 	const FFlecsId Component = TypeMapComponent->ScriptStructMap.at(ScriptStruct);
 	solid_checkf(IsAlive(Component), TEXT("Entity is not alive"));
 		
-	return FFlecsEntityHandle(World, Component);
+	return GetAlive(Component);
 }
 
 FFlecsEntityHandle UFlecsWorld::GetScriptEnumEntity(const UEnum* ScriptEnum) const
@@ -912,7 +912,7 @@ FFlecsEntityHandle UFlecsWorld::GetScriptEnumEntity(const UEnum* ScriptEnum) con
 		
 	const FFlecsId Component = TypeMapComponent->ScriptEnumMap.at(ScriptEnum);
 	solid_checkf(ecs_is_valid(World.c_ptr(), Component), TEXT("Entity is not alive"));
-	return FFlecsEntityHandle(World, Component);
+	return GetAlive(Component);
 }
 
 void UFlecsWorld::RegisterMemberProperties(const TSolidNotNull<const UStruct*> InStruct,
@@ -1155,6 +1155,7 @@ FFlecsEntityHandle UFlecsWorld::RegisterScriptStruct(const UScriptStruct* Script
 								solid_check(IsValid(ContextScriptStruct));
 
 								ContextScriptStruct->CopyScriptStruct(Dst, Src, Count);
+								ContextScriptStruct->DestroyStruct(Src, Count);
 							};
 
 							if (ScriptStruct->GetCppStructOps()->HasIdentical())

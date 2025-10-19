@@ -151,9 +151,9 @@ int32_t flecs_next_pow_of_2(
 
 /* Compare function for entity ids used for order_by */
 int flecs_entity_compare(
-    ecs_entity_t e1, 
-    const void *ptr1, 
-    ecs_entity_t e2, 
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
     const void *ptr2); 
 
 /* Compare function for component ids used for qsort */

@@ -395,14 +395,24 @@ ecs_entity_t ecs_system_init(
         }
 
         if (flecs_system_init_timer(world, entity, desc)) {
+            
+            #ifdef FLECS_ENABLE_SYSTEM_PRIORITY
+            
             ecs_set(world, entity, EcsSystemPriority,
                 { desc->priority <= 0 ? FLECS_DEFAULT_SYSTEM_PRIORITY : desc->priority });
+            
+            #endif
+            
             return 0;
         }
     }
+
+    #ifdef FLECS_ENABLE_SYSTEM_PRIORITY
     
     ecs_set(world, entity, EcsSystemPriority,
         { desc->priority <= 0 ? FLECS_DEFAULT_SYSTEM_PRIORITY : desc->priority });
+    
+    #endif // FLECS_ENABLE_SYSTEM_PRIORITY
 
     flecs_poly_modified(world, entity, ecs_system_t);
 
@@ -432,7 +442,12 @@ void FlecsSystemImport(
 
     flecs_bootstrap_tag(world, EcsSystem);
     flecs_bootstrap_component(world, EcsTickSource);
+    
+    #ifdef FLECS_ENABLE_SYSTEM_PRIORITY
+    
     flecs_bootstrap_component(world, EcsSystemPriority);
+    
+    #endif
 
     ecs_set_hooks(world, EcsTickSource, {
         .ctor = flecs_default_ctor

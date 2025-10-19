@@ -37,7 +37,11 @@ void IFlecsSystemInterface::InitializeSystem_Internal(const flecs::world& InWorl
 		Builder.tick_source(Settings.TickSource);
 	}
 
+	#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
+
 	Builder.priority(Settings.Priority);
+
+	#endif // FLECS_ENABLE_SYSTEM_PRIORITY
 
 	Builder.immediate(Settings.bImmediate);
 		

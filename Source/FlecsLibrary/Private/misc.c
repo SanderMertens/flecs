@@ -118,9 +118,9 @@ void* ecs_os_memdup(
 }
 
 int flecs_entity_compare(
-    ecs_entity_t e1, 
-    const void *ptr1, 
-    ecs_entity_t e2, 
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
     const void *ptr2) 
 {
     (void)ptr1;

@@ -216,7 +216,7 @@ public:
 	 */
 	NO_DISCARD SOLID_INLINE flecs::entity GetEntity() const
 	{
-		return flecs::entity(GetNativeFlecsWorld(), Entity);
+		return flecs::entity(Entity.world(), Entity);
 	}
 
 	/**
@@ -225,7 +225,7 @@ public:
 	 */
 	NO_DISCARD SOLID_INLINE flecs::entity_view GetEntityView() const
 	{
-		return flecs::entity_view(GetNativeFlecsWorld(), Entity);
+		return flecs::entity_view(Entity.world(), Entity);
 	}
 	
 	SOLID_INLINE operator flecs::entity() const

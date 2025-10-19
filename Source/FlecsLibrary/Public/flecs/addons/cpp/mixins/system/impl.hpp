@@ -124,7 +124,9 @@ namespace _ {
 
 inline void system_init(flecs::world& world) {
     world.component<TickSource>("flecs::system::TickSource");
+    #ifdef FLECS_ENABLE_SYSTEM_PRIORITY
     world.component<SystemPriority>("flecs::system::SystemPriority");
+    #endif // FLECS_ENABLE_SYSTEM_PRIORITY
 }
 
 } // namespace _

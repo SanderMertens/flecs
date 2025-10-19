@@ -34,9 +34,13 @@ typedef struct EcsTickSource {
     ecs_ftime_t time_elapsed;  /**< Time elapsed since last tick */
 } EcsTickSource;
 
+#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
+    
 typedef struct EcsSystemPriority {
 	int32_t value;  /**< Priority value, lower is higher priority, 1...N, Default is FLECS_DEFAULT_SYSTEM_PRIORITY */
 } EcsSystemPriority;
+    
+#endif // FLECS_ENABLE_SYSTEM_PRIORITY
 
 /** Use with ecs_system_init() to create or update a system. */
 typedef struct ecs_system_desc_t {
@@ -90,8 +94,10 @@ typedef struct ecs_system_desc_t {
     /** Rate at which the system should run */
     int32_t rate;
 
+    #ifdef FLECS_ENABLE_SYSTEM_PRIORITY
 	/** Priority of the system */
 	int32_t priority;
+    #endif // FLECS_ENABLE_SYSTEM_PRIORITY
 
     /** External tick source that determines when system ticks */
     ecs_entity_t tick_source;
@@ -192,6 +198,7 @@ const ecs_system_t* ecs_system_get(
  * ECS_SYSTEM_DEFINE(world, Move, EcsOnUpdate, Position, Velocity);
  * @endcode
  */
+#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
 #define ECS_SYSTEM_DEFINE(world, id_, phase, ...) \
     { \
         ecs_system_desc_t desc = {0}; \
@@ -211,6 +218,27 @@ const ecs_system_t* ecs_system_get(
         ecs_id(id_) = ecs_system_init(world, &desc); \
     } \
     ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create system %s", #id_)
+#else // FLECS_ENABLE_SYSTEM_PRIORITY
+#define ECS_SYSTEM_DEFINE(world, id_, phase, ...) \
+        { \
+        ecs_system_desc_t desc = {0}; \
+        ecs_entity_desc_t edesc = {0}; \
+        ecs_id_t add_ids[3] = {\
+        ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0), \
+        (phase), \
+        0 \
+        };\
+        edesc.id = ecs_id(id_);\
+        edesc.name = #id_;\
+        edesc.add = add_ids;\
+        desc.entity = ecs_entity_init(world, &edesc);\
+        desc.query.expr = #__VA_ARGS__; \
+        desc.callback = id_; \
+        ecs_id(id_) = ecs_system_init(world, &desc); \
+        } \
+        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create system %s", #id_)
+
+#endif // FLECS_ENABLE_SYSTEM_PRIORITY
 
 /** Declare & define a system.
  *

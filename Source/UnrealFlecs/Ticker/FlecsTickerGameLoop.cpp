@@ -19,10 +19,14 @@ DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("UFlecsTickerGameLoop::Progress::RunPipeline
 
 static NO_DISCARD FORCEINLINE int flecs_entity_compare(
 	const ecs_entity_t e1,
-	const ecs_entity_t e2) 
+	MAYBE_UNUSED const void* ptr1,
+	const ecs_entity_t e2,
+	MAYBE_UNUSED const void* ptr2)
 {
 	return (e1 > e2) - (e1 < e2);
 }
+
+#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
 
 static NO_DISCARD FORCEINLINE int flecs_priority_compare(
 	const flecs::entity_t InEntityA,
@@ -35,13 +39,15 @@ static NO_DISCARD FORCEINLINE int flecs_priority_compare(
 	
 	if (InPtrA->value == InPtrB->value)
 	{
-		return flecs_entity_compare(InEntityA, InEntityB);
+		return flecs_entity_compare(InEntityA, InPtrA, InEntityB, InPtrB);
 	}
 	else // lower value has higher priority
 	{
 		return InPtrA->value >= InPtrB->value ? 1 : -1;
 	}
 }
+
+#endif // FLECS_ENABLE_SYSTEM_PRIORITY
 
 void UFlecsTickerGameLoop::InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorld)
 {
@@ -56,9 +62,15 @@ void UFlecsTickerGameLoop::InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorl
 		.with(flecs::Phase).cascade(flecs::DependsOn)
 		.without(flecs::Disabled).up(flecs::DependsOn)
 		.without(flecs::Disabled).up(flecs::ChildOf)
+		#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
 		.with<flecs::SystemPriority>()
+		#endif // FLECS_ENABLE_SYSTEM_PRIORITY
 		.without(FlecsFixedTick)
+		#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
 		.order_by<flecs::SystemPriority>(flecs_priority_compare)
+		#else // FLECS_ENABLE_SYSTEM_PRIORITY
+		.order_by(flecs_entity_compare)
+		#endif // FLECS_ENABLE_SYSTEM_PRIORITY
 		.build()
 		.set_name("MainPipeline");
 
@@ -68,8 +80,14 @@ void UFlecsTickerGameLoop::InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorl
 		.with(FlecsFixedTick)
 		.without(flecs::Disabled).up(flecs::DependsOn)
 		.without(flecs::Disabled).up(flecs::ChildOf)
+	
+		#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
 		.with<flecs::SystemPriority>()
 		.order_by<flecs::SystemPriority>(flecs_priority_compare)
+		#else // FLECS_ENABLE_SYSTEM_PRIORITY
+		.order_by(flecs_entity_compare)
+		#endif // FLECS_ENABLE_SYSTEM_PRIORITY
+	
 		.build()
 		.set_name("TickerPipeline");
 

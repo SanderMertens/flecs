@@ -2450,6 +2450,7 @@ void System_run_w_0_src_query(void) {
 }
 
 void System_priority_test(void) {
+    #ifdef FLECS_ENABLE_SYSTEM_PRIORITY
     flecs::world ecs;
     RegisterTestTypeComponents(ecs);
 
@@ -2485,6 +2486,8 @@ void System_priority_test(void) {
 
     ecs.progress();
     test_int(count, 4);
+
+    #endif // FLECS_ENABLE_SYSTEM_PRIORITY
 }
 
 
