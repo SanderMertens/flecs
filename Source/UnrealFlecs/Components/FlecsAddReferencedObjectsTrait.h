@@ -6,6 +6,7 @@
 
 #include "FlecsAddReferencedObjectsTrait.generated.h"
 
+// flecs::Trait is added when this is registered
 USTRUCT()
 struct UNREALFLECS_API FFlecsAddReferencedObjectsTrait
 {
