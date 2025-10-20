@@ -33,7 +33,11 @@ struct alignas(8) UNREALFLECS_API FFlecsUObjectComponent
 
 public:
     FORCEINLINE FFlecsUObjectComponent() = default;
-    FORCEINLINE FFlecsUObjectComponent(UObject* InObject) : Object(InObject) {}
+    
+    FORCEINLINE FFlecsUObjectComponent(UObject* InObject)
+        : Object(InObject)
+    {
+    }
 
     NO_DISCARD FORCEINLINE UObject* GetObject() const
     {
