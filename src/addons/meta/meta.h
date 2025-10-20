@@ -10,13 +10,13 @@
 
 #ifdef FLECS_META
 
-void ecs_meta_type_serialized_init(
+void flecs_meta_type_serializer_init(
     ecs_iter_t *it);
 
-void ecs_meta_dtor_serialized(
+void flecs_type_serializer_dtor(
     EcsTypeSerializer *ptr);
 
-ecs_meta_type_op_kind_t flecs_meta_primitive_to_op_kind(
+ecs_meta_op_kind_t flecs_meta_primitive_to_op_kind(
     ecs_primitive_kind_t kind);
 
 bool flecs_unit_validate(
@@ -37,15 +37,8 @@ int flecs_expr_ser_primitive(
 void flecs_rtt_init_default_hooks(
     ecs_iter_t *it);
 
-int ecs_compare_string(
-    const void *str_a,
-    const void *str_b,
-    const ecs_type_info_t *ti);
-
-bool ecs_equals_string(
-    const void *str_a,
-    const void *str_b,
-    const ecs_type_info_t *ti);
+const char* flecs_meta_op_kind_str(
+    ecs_meta_op_kind_t kind);
 
 #endif
 

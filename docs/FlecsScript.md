@@ -8,7 +8,7 @@ Some of the features of Flecs Script are:
 - Native support for named entities, hierarchies and inheritance
 - Assign component values
 - Expressions and variables (`var + 10`)
-- Conditionals (`if var > 10`)
+- Conditionals and loops (`if var > 10`, `for i in [0..10]`)
 - Native integration with templates (procedural assets)
 
 To learn Flecs Script, check out the [Tutorial](FlecsScriptTutorial.md)!
@@ -278,13 +278,7 @@ prefab SpaceShip {
 my_spaceship : SpaceShip {}
 ```
 
-When specifying inheritance, the scope is optional:
-
-```cpp
-my_spaceship : SpaceShip // no {}
-```
-
-This is equivalent to doing:
+The `:` notation is short for adding an `IsA` relationship with the relationship syntax:
 
 ```cpp
 my_spaceship {
@@ -469,6 +463,118 @@ e {
 ```
 
 The type of a match expression is derived from the case values. When the case statements in a match contain values of multiple types, the most expressive type is selected. The algorithm for determining the most expressive type is the same as the one used to determine the type for binary expressions. When a match expression contains values with conflicting types, script execution will fail.
+
+### New expressions
+A new expression is the `new` keyword followed by an entity statement. New expressions can be used to create entities inside of expressions. The following are examples of valid new expressions:
+
+```cpp
+// Create a new anonymous entity, assign to variable x
+const x: new {}
+
+// Create a new anonymous entity with Position component, assign to variable x
+const x: new {
+  Position: {10, 20}
+}
+
+// Create a new entity with name Foo and Position component, assign to variable x
+const x: new Foo {
+  Position: {10, 20}
+}
+```
+
+New expressions can be used anywhere where an expression of an entity type is expected. The following example shows how to use a new expression inside of an initializer:
+
+```cpp
+// Create entity with TrafficLight component which has red, orange and green
+// members of type entity.
+e {
+  TrafficLight: {
+    red: new { Color: {255, 0, 0} }
+    orange: new { Color: {255, 128, 0} }
+    green: new { Color: {0, 255, 0} }
+  }
+}
+```
+
+The behavior of new expressions is exactly the same as entity statements in that they respect the context in which they are used, such as the current hierarchy scope and `with` statements:
+
+```cpp
+some_parent {
+  // Create new anonymous child of some_parent with Position component, assign 
+  // to variable x
+  const x: new { Position: {10, 20} }
+}
+
+with Position(10, 20) {
+  // Create new anonymous entity with Position: {10, 20}
+  const x: new { }
+}
+```
+
+All features that are supported by entity statements are also available for new expressions, such as the ability to have children:
+
+```cpp
+const x: new {
+  Positiion: {10, 20}
+
+  // Child of anonymous entity created by new expression
+  child {
+    Position: {20, 30}
+  }
+}
+```
+
+The primary use case for new expressions is to make it possible to create anonymous entities that can be referred to afterwards by a script. Without new expressions this is not possible, as illustrated here:
+
+```cpp
+// Create anonymous entities
+{
+  Color: {255, 0, 0}
+}
+{
+  Color: {255, 128, 0}
+}
+{
+  Color: {0, 255, 0}
+}
+
+e {
+  TrafficLight: {
+    // Can't refer to anonymous entities here
+    red: // ???
+    orange: // ???
+    green: // ???
+  }
+}
+```
+
+Without new expressions the only workaround is to use named entities, but this introduces overhead and increases memory footprint. With new expressions the example can be expressed with just anonymous entities:
+
+```cpp
+// Create anonymous entities, store in variables
+const red: new {
+  Color: {255, 0, 0}
+}
+
+const orange: new {
+  Color: {255, 128, 0}
+}
+
+const green: new {
+  Color: {0, 255, 0}
+}
+
+e {
+  TrafficLight: {
+    // Assign variables to members
+    red: red
+    orange: orange
+    green: green
+  }
+}
+```
+
+A new expression may only create a single entity, so comma operators are not supported.
 
 ### String interpolation
 Flecs script supports interpolated strings, which are strings that can contain expressions. String interpolation supports two forms, where one allows for easy embedding of variables, whereas the other allows for embedding any kind of expression. The following example shows an embedded variable:
@@ -1030,6 +1136,78 @@ with $color {
   pillar_2 {}
   pillar_3 {}
 }
+```
+
+#### Exported variables
+Variables can be exported by prefixing a variable declaration with the `export` keyword. Exported variables can be accessed by the application and from other scripts. The following example shows an exported variable:
+
+```cpp
+// Script 1
+export const pi: 3.1415926
+```
+
+This variable can now be accessed from another script:
+
+```cpp
+// Script 2
+const pi_2: pi * 2
+```
+
+Exported variables are created as children of the scope in which they are defined:
+
+```cpp
+math {
+  export const pi: 3.1415926
+}
+```
+
+This will make the variable available to other scripts as `math.pi`.
+
+The `ecs_const_var_init` function is used to create exported variables. The following example shows how the same variable can be created from C code:
+
+```cpp
+double pi_value = 3.1415926;
+
+ecs_const_var(world, {
+  .name = "pi",
+  .parent = ecs_lookup(world, "math"),
+  .type = ecs_id(ecs_f64_t),
+  .value = &pi_value
+});
+```
+
+Exported variables can be used as configuration that is loaded into an application from a script. The following example shows how to load an exported variable from C after it has been defined in a script or has been created with `ecs_const_var_init`:
+
+```cpp
+ecs_entity_t pi = ecs_lookup(world, "math.pi");
+ecs_value_t v = ecs_const_var_get(world, pi);
+double *value = v.ptr;
+if (value) {
+  // Use value
+}
+```
+
+The following example shows how exported variables can be used in combination with modules in C++:
+
+```cpp
+struct math {
+  inline static double pi;
+
+  math(flecs::world& world) {
+    world.script()
+      .filename("math.flecs")
+      .run();
+
+    world.const_var("pi", pi);
+  }
+}
+
+// Import module
+world.import<math>();
+
+
+// Use value
+double pi_2 = math::pi * 2;
 ```
 
 ### Component values

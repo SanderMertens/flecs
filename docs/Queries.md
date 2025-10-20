@@ -2589,104 +2589,6 @@ Color($this, Diffuse), Color(Game, Sky)
 </ul>
 </div>
 
-### Singletons
-Singletons are components that are added to themselves, which can be matched by providing the component id as [source](#source). 
-
-The following sections show how to use singletons in the different language bindings.
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">C</b>
-
-A singleton query is created by specifying the same id as component and source:
-
-```c
-ecs_query_t *q = ecs_query(world, {
-  .terms = {
-    { Player },
-    { ecs_id(Position) },
-    { ecs_id(Input), .src = ecs_id(Input) } // match Input on itself
-  }
-});
-```
-
-The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
-
-</li>
-<li><b class="tab-title">C++</b>
-
-A singleton query can be created by specifying the same id as component and source:
-
-```cpp
-flecs::query<Player, Position> q = world.query_builder<Player, Position>()
-  .with<Input>().src<Input>() // match Input on itself
-  .build();
-```
-
-The builder API provides a `singleton` convenience function:
-
-```cpp
-flecs::query<Player, Position> q = world.query_builder<Player, Position>()
-  .with<Input>().singleton() // match Input on itself
-  .build();
-```
-
-The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
-
-</li>
-<li><b class="tab-title">Rust</b>
-
-A singleton query can be created by specifying the same id as component and source:
-
-```rust
-let q = world
-    .query::<(&Player, &Position)>()
-    .with::<Input>()
-    .set_src::<Input>() // match Input on itself
-    .build();
-```
-
-The builder API provides a `singleton` convenience function:
-
-```rust
-let q = world
-    .query::<(&Player, &Position)>()
-    .with::<Input>()
-    .singleton() // match Input on itself
-    .build();
-```
-
-The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
-
-The builder API provides a `term_at` function which allows specifying characteristics of a term at a specific index in the generic terms.
-
-```rust
-let q = world
-    .query::<(&Player, &Position, &Input)>()
-    .term_at(2)
-    .singleton() // match Input on itself
-    .build();
-```
-
-</li>
-<li><b class="tab-title">Flecs Query Language</b>
-
-A singleton query can be created by specifying the same id as component and source:
-
-```
-Player, Position, Input(Input)
-```
-
-For convenience the `$` character may be used as source, which resolves to the component id:
-
-```
-Player, Position, Input($)
-```
-
-</li>
-</ul>
-</div>
-
 ### Relationship Traversal
 Relationship traversal enables a query to search for a component by traversing a relationship. One of the most common examples of where this is useful is a Transform system, which matches `Position` on an entity and the entity's parent. To find the `Position` component on a parent entity, a query traverses the `ChildOf` relationship upwards:
 
@@ -3468,7 +3370,7 @@ The following scenarios are not detected by change detection:
 
 A query with change detection enabled will only report a change for the components it matched with, or when an entity got added/removed to a matched table. A change to a component in a matched table that is not matched by the query will not be reported by the query.
 
-By default queries do not use change detection. Change detection is automatically enabled when a function that requires change detection is called on the query, for example if an application calls `changed()` on the query. Once change detection is enabled it will stay enabled for both the query and the tables the query is matched with.
+Change detection needs to be explicitly enabled on queries. See the examples below for how to do this in the different language bindings.
 
 When a change occurred in a table matching a query, the query state for that table will remain changed until the table is iterated by the query.
 
@@ -3485,10 +3387,10 @@ The following sections show how to use change detection in the different languag
 The following example shows how the change detection API is used in C:
 
 ```c
-// Query used for change detection. Note that change detection is not enabled on
-// the query itself, but by calling change detection functions for the query.
+// Query used for change detection.
 ecs_query_cache_t *q_read = ecs_query(world, {
-    .terms = {{ .id = ecs_id(Position), .inout = EcsIn }}
+    .terms = {{ .id = ecs_id(Position), .inout = EcsIn }},
+    .flags = EcsQueryDetectChanges
 });
 
 // Query used to create changes
@@ -3496,8 +3398,7 @@ ecs_query_cache_t *q_write = ecs_query(world, {
     .terms = {{ .id = ecs_id(Position) }} // defaults to inout
 });
 
-// Test if changes have occurred for anything matching the query. If this is the
-// first call to the function, it will enable change detection for the query.
+// Test if changes have occurred for anything matching the query. 
 bool changed = ecs_query_changed(q_read, NULL);
 
 // Setting a component will update the changed state
@@ -3535,15 +3436,15 @@ while (ecs_query_next(&it)) {
 The following example shows how the change detection API is used in C++:
 
 ```cpp
-// Query used for change detection. Note that change detection is not enabled on
-// the query itself, but by calling change detection functions for the query.
-flecs::query<const Position> q_read = world.query<const Position>();
+// Query used for change detection.
+flecs::query<const Position> q_read = world.query_builder<const Position>()
+  .detect_changes()
+  .build();
 
 // Query used to create changes
 flecs::query<Position> q_write = world.query<Position>(); // defaults to inout
 
-// Test if changes have occurred for anything matching the query. If this is the
-// first call to the function, it will enable change detection for the query.
+// Test if changes have occurred for anything matching the query.
 bool changed = q_read.changed();
 
 // Setting a component will update the changed state
@@ -3552,7 +3453,7 @@ flecs::entity e = world.entity()
 
 q_write.run([](flecs::iter& it) {
   if (it.next()) {
-    if !changed {
+    if (!changed) {
       // If no changes are made to the iterated table, the skip function can be
       // called to prevent marking the matched components as dirty.
       it.skip();
@@ -3581,15 +3482,15 @@ q_read.run([](flecs::iter& it) {
 The following example shows how the change detection API is used in C++:
 
 ```rust
-// Query used for change detection. Note that change detection is not enabled on
-// the query itself, but by calling change detection functions for the query.
-let q_read = world.new_query::<&Position>();
+// Query used for change detection.
+let q_read = world.query::<&Position>()
+  .detect_changes()
+  .build();
 
 // Query used to create changes
 let q_write = world.new_query::<&mut Position>(); // defaults to inout
 
-// Test if changes have occurred for anything matching the query. If this is the
-// first call to the function, it will enable change detection for the query.
+// Test if changes have occurred for anything matching the query.
 let changed = q_read.is_changed();
 
 // Setting a component will update the changed state
@@ -4006,7 +3907,7 @@ ecs_query_t *q = ecs_query(world, {
 The following example shows a query that uses component inheritance to match entities:
 
 ```cpp
-flecs::entity Unit = ecs_new(world);
+flecs::entity Unit = world.entity();
 flecs::entity MeleeUnit = world.entity().is_a(Unit);
 flecs::entity RangedUnit = world.entity().is_a(Unit);
 

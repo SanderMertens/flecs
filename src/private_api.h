@@ -135,6 +135,11 @@ uint64_t flecs_ito_(
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////
 
+/* Check if component is valid, return reason if it's not */
+const char* flecs_id_invalid_reason(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
 /* Generate 64bit hash from buffer. */
 uint64_t flecs_hash(
     const void *data,
@@ -190,5 +195,19 @@ bool flecs_type_can_inherit_id(
 /* Cleanup type info data. */
 void flecs_fini_type_info(
     ecs_world_t *world);
+
+/* Utility for using allocated strings in assert/error messages */
+const char* flecs_errstr(
+    char *str);
+const char* flecs_errstr_1(
+    char *str);
+const char* flecs_errstr_2(
+    char *str);
+const char* flecs_errstr_3(
+    char *str);
+const char* flecs_errstr_4(
+    char *str);
+const char* flecs_errstr_5(
+    char *str);
 
 #endif

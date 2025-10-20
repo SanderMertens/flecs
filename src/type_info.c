@@ -186,6 +186,7 @@ void ecs_set_hooks_id(
     const ecs_type_hooks_t *h)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
 
     /* TODO: Refactor to enforce flags consistency: */
     ecs_flags32_t flags = h->flags;
@@ -194,52 +195,72 @@ void ecs_set_hooks_id(
     ecs_check(!(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL && 
         h->ctor != NULL && 
         h->ctor != flecs_ctor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both ctor hook and illegal flag");
+        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
+            "cannot specify both ctor hook and illegal flag",
+                flecs_errstr(ecs_get_path(world, component)));
 
     ecs_check(!(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL && 
         h->dtor != NULL && 
         h->dtor != flecs_dtor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both dtor hook and illegal flag");
+        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
+            "cannot specify both dtor hook and illegal flag",
+                flecs_errstr(ecs_get_path(world, component)));
 
     ecs_check(!(flags & ECS_TYPE_HOOK_COPY_ILLEGAL && 
         h->copy != NULL && 
         h->copy != flecs_copy_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both copy hook and illegal flag");
+        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
+            "cannot specify both copy hook and illegal flag",
+                flecs_errstr(ecs_get_path(world, component)));
 
     ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL && 
         h->move != NULL && 
         h->move != flecs_move_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both move hook and illegal flag");
+        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
+            "cannot specify both move hook and illegal flag",
+                flecs_errstr(ecs_get_path(world, component)));
 
     ecs_check(!(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL && 
         h->copy_ctor != NULL && 
         h->copy_ctor != flecs_copy_ctor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both copy ctor hook and illegal flag");
+        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
+            "cannot specify both copy ctor hook and illegal flag",
+                flecs_errstr(ecs_get_path(world, component)));
 
     ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL && 
         h->move_ctor != NULL && 
         h->move_ctor != flecs_move_ctor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both move ctor hook and illegal flag");
+        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
+            "cannot specify both move ctor hook and illegal flag",
+                flecs_errstr(ecs_get_path(world, component)));
 
     ecs_check(!(flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL && 
         h->ctor_move_dtor != NULL && 
         h->ctor_move_dtor != flecs_move_ctor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both ctor move dtor hook and illegal flag");
+        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
+            "cannot specify both ctor move dtor hook and illegal flag",
+                flecs_errstr(ecs_get_path(world, component)));
 
     ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL && 
         h->move_dtor != NULL && 
         h->move_dtor != flecs_move_ctor_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both move dtor hook and illegal flag");
+        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
+            "cannot specify both move dtor hook and illegal flag",
+                flecs_errstr(ecs_get_path(world, component)));
 
     ecs_check(!(flags & ECS_TYPE_HOOK_CMP_ILLEGAL && 
         h->cmp != NULL && 
         h->cmp != flecs_comp_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both compare hook and illegal flag");
+        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
+            "cannot specify both compare hook and illegal flag",
+                flecs_errstr(ecs_get_path(world, component)));
 
     ecs_check(!(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL && 
         h->equals != NULL && 
         h->equals != flecs_equals_illegal),
-        ECS_INVALID_PARAMETER, "cannot specify both equals hook and illegal flag");
+        ECS_INVALID_PARAMETER, "illegal call to set_hooks() for component '%s': "
+            "cannot specify both equals hook and illegal flag",
+                flecs_errstr(ecs_get_path(world, component)));
 
 
     flecs_stage_from_world(&world);
@@ -262,9 +283,12 @@ void ecs_set_hooks_id(
 
         /* Cannot register lifecycle actions for things that aren't a component */
         ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, 
-            "provided entity is not a component");
+            "illegal call to set_hooks() for '%s': component cannot be a tag/zero sized",
+                flecs_errstr(ecs_get_path(world, component)));
         ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER,
-            "cannot register type hooks for type with size 0");
+            "illegal call to set_hooks() for '%s': cannot register "
+            " component cannot be a tag/zero sized",
+                flecs_errstr(ecs_get_path(world, component)));
 
         ti->size = component_ptr->size;
         ti->alignment = component_ptr->alignment;
@@ -284,6 +308,7 @@ void ecs_set_hooks_id(
     if (h->on_add) ti->hooks.on_add = h->on_add;
     if (h->on_remove) ti->hooks.on_remove = h->on_remove;
     if (h->on_set) ti->hooks.on_set = h->on_set;
+    if (h->on_replace) ti->hooks.on_replace = h->on_replace;
 
     if (h->ctx) ti->hooks.ctx = h->ctx;
     if (h->binding_ctx) ti->hooks.binding_ctx = h->binding_ctx;
@@ -423,6 +448,11 @@ void ecs_set_hooks_id(
         ti->hooks.move_dtor = flecs_move_ctor_illegal;
     }
 
+    if (component < FLECS_HI_COMPONENT_ID) {
+        if (ti->hooks.on_set || ti->hooks.copy || ti->hooks.move || ti->hooks.on_replace) {
+            world->non_trivial_set[component] = true;
+        }
+    }
 
 error:
     return;
@@ -540,7 +570,7 @@ bool flecs_type_info_init_id(
     /* Set type info for component record of component */
     ecs_component_record_t *cr = flecs_components_ensure(world, component);
     changed |= flecs_component_set_type_info(world, cr, ti);
-    bool is_tag = cr->flags & EcsIdTag;
+    bool is_tag = cr->flags & EcsIdPairIsTag;
 
     /* All id records with component as relationship inherit type info */
     cr = flecs_components_ensure(world, ecs_pair(component, EcsWildcard));
@@ -560,7 +590,7 @@ bool flecs_type_info_init_id(
      * if relationship doesn't have type info */
     cr = flecs_components_ensure(world, ecs_pair(EcsWildcard, component));
     do {
-        if (!(cr->flags & EcsIdTag) && !cr->type_info) {
+        if (!(cr->flags & EcsIdPairIsTag) && !cr->type_info) {
             changed |= flecs_component_set_type_info(world, cr, ti);
         }
     } while ((cr = flecs_component_first_next(cr)));

@@ -108,6 +108,8 @@ static const primitive_kind_t String = EcsString;
 static const primitive_kind_t Entity = EcsEntity;
 static const primitive_kind_t PrimitiveKindLast = EcsPrimitiveKindLast;
 
+using op_t = ecs_meta_op_t;
+
 /** @} */
 
 namespace _ {

@@ -4537,6 +4537,35 @@ void Commands_defer_emplace_after_remove(void) {
     ecs_fini(world);
 }
 
+void Commands_defer_emplace_2nd(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {30, 40}));
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e1, Position, &is_new);
+        test_bool(is_new, false);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e2, Position, &is_new);
+        test_bool(is_new, false);
+        test_int(p->x, 30); test_int(p->y, 40);
+    }
+
+    ecs_defer_end(world);
+
+    ecs_fini(world);
+}
+
 static
 void RemoveVelocity(ecs_iter_t *it) {
     test_int(it->count, 1);
@@ -4861,6 +4890,304 @@ void Commands_enable_component_from_stage(void) {
     ecs_defer_end(s);
 
     test_bool(false, ecs_is_enabled(world, e, Position));
+
+    ecs_fini(world);
+}
+
+static int replace_Position_invoked = 0;
+
+static
+void replace_Position(ecs_iter_t *it) {
+    Position *old = ecs_field(it, Position, 0);
+    Position *new = ecs_field(it, Position, 1);
+
+    test_int(it->count, 1);
+
+    switch(replace_Position_invoked) {
+    case 0:
+        test_int(old->x, 0); test_int(old->y, 0);
+        test_int(new->x, 10); test_int(new->y, 20);
+        break;
+    case 1:
+        test_int(old->x, 10); test_int(old->y, 20);
+        test_int(new->x, 11); test_int(new->y, 21);
+        break;
+    case 2:
+        test_int(old->x, 11); test_int(old->y, 21);
+        test_int(new->x, 12); test_int(new->y, 22);
+        break;
+    default:
+        test_assert(false);
+        break;
+    }
+
+    replace_Position_invoked ++;
+}
+
+void Commands_on_replace_w_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_int(replace_Position_invoked, 0);
+    ecs_defer_end(world);
+    test_int(replace_Position_invoked, 1);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Commands_on_replace_w_set_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Position, {11, 21});
+    test_int(replace_Position_invoked, 0);
+    ecs_defer_end(world);
+    test_int(replace_Position_invoked, 2);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 11); test_int(p->y, 21);
+    }
+
+    ecs_fini(world);
+}
+
+void Commands_on_replace_w_set_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {11, 21});
+    test_int(replace_Position_invoked, 2);
+    ecs_defer_end(world);
+    test_int(replace_Position_invoked, 2);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 11); test_int(p->y, 21);
+    }
+
+    ecs_fini(world);
+}
+
+void Commands_on_replace_w_set_existing_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {11, 21});
+    ecs_set(world, e, Position, {12, 22});
+    test_int(replace_Position_invoked, 3);
+    ecs_defer_end(world);
+    test_int(replace_Position_invoked, 3);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 12); test_int(p->y, 22);
+    }
+
+    ecs_fini(world);
+}
+
+void Commands_on_replace_w_set_batched(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(replace_Position_invoked, 0);
+    ecs_defer_end(world);
+    test_int(replace_Position_invoked, 1);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+    {
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1); test_int(v->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Commands_on_replace_w_set_batched_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Position, {11, 21});
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(replace_Position_invoked, 0);
+    ecs_defer_end(world);
+    test_int(replace_Position_invoked, 2);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 11); test_int(p->y, 21);
+    }
+    {
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1); test_int(v->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Commands_on_replace_w_set_batched_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {11, 21});
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(replace_Position_invoked, 2);
+    ecs_defer_end(world);
+    test_int(replace_Position_invoked, 2);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 11); test_int(p->y, 21);
+    }
+    {
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1); test_int(v->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Commands_on_replace_w_set_batched_existing_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_Position,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(replace_Position_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(replace_Position_invoked, 1);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {11, 21});
+    ecs_set(world, e, Position, {12, 22});
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(replace_Position_invoked, 3);
+    ecs_defer_end(world);
+    test_int(replace_Position_invoked, 3);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 12); test_int(p->y, 22);
+    }
+    {
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1); test_int(v->y, 2);
+    }
 
     ecs_fini(world);
 }

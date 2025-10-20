@@ -4,6 +4,7 @@
 /* This generated file contains includes for project dependencies */
 #include <cpp/bake_config.h>
 #include <string>
+#include <optional>
 #include <vector>
 #include <stddef.h>
 
@@ -85,6 +86,65 @@ public:
     static int move_invoked;
     static int copy_ctor_invoked;
     static int move_ctor_invoked;
+};
+
+/**
+ * A class that meticulously tracks all operations affecting its lifecycle,
+ * including construction, assignment, and destruction.
+ *
+ * Unlike with Pod, these statistics are tracked per object,
+ * which allows for more fine-grained tests.
+ */
+struct LifecycleTracker
+{
+    enum class Constructor
+    {
+        default_,
+        copy,
+        move,
+    };
+
+    Constructor constructed_via;
+    int         times_destructed{};
+
+    int         times_copy_assigned_into{};
+    mutable int times_copy_assigned_from{};
+    mutable int times_copy_constructed_from{};
+
+    int times_move_assigned_into{};
+    int times_move_assigned_from{};
+    int times_move_constructed_from{};
+
+    LifecycleTracker() : constructed_via{Constructor::default_} {}
+
+    LifecycleTracker(LifecycleTracker const& that) : constructed_via{Constructor::copy}
+    {
+        ++that.times_copy_constructed_from;
+    }
+    LifecycleTracker& operator=(LifecycleTracker const& that)
+    {
+        ++times_copy_assigned_into;
+        ++that.times_copy_assigned_from;
+        return *this;
+    }
+
+    LifecycleTracker(LifecycleTracker&& that) noexcept : constructed_via{Constructor::move}
+    {
+        ++that.times_move_constructed_from;
+    }
+    LifecycleTracker& operator=(LifecycleTracker&& that) noexcept
+    {
+        ++times_move_assigned_into;
+        ++that.times_move_assigned_from;
+        return *this;
+    }
+
+    ~LifecycleTracker() { ++times_destructed; }
+
+    bool moved_from() const { return times_move_assigned_from > 0 || times_move_constructed_from > 0; }
+    bool moved_into() const { return times_move_assigned_into > 0 || constructed_via == Constructor::move; }
+    bool copied_from() const { return times_copy_assigned_from > 0 || times_copy_constructed_from > 0; }
+    bool copied_into() const { return times_copy_assigned_into > 0 || constructed_via == Constructor::copy; }
 };
 
 struct Tag0 { };

@@ -1,3 +1,4 @@
+#include "flecs.h"
 #include <meta.h>
 #include <stdio.h>
 #include <limits.h>
@@ -1983,6 +1984,26 @@ void SerializeEntityToJson_serialize_sparse_w_type_info(void) {
     ecs_fini(world);
 }
 
+void SerializeEntityToJson_serialize_sparse_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, SparseTag, Sparse);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, SparseTag);
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_values = true,
+        .serialize_type_info = true
+    };
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_str(json, "{\"name\":\"e\", \"type_info\":{}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeEntityToJson_serialize_auto_override_w_inherited(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2166,3 +2187,139 @@ void SerializeEntityToJson_serialize_null_doc_name(void) {
 
     ecs_fini(world);
 }
+
+void SerializeEntityToJson_serialize_base_w_invalid_component(void) {
+    typedef enum {
+        Red, Green, Blue
+    } Color;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Color) = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_add_pair(world, ecs_id(Color), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+    ecs_set(world, base, Color, {100});
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, EcsIsA, base);
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_inherited = true,
+        .serialize_values = true
+    };
+
+    ecs_log_set_level(-4);
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json == NULL);
+
+    ecs_fini(world);
+}
+
+bool serialize_w_blacklist_blcb(const ecs_world_t *world, ecs_entity_t e) {
+    return false;
+}
+
+void SerializeEntityToJson_serialize_w_blacklist(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_add(world, e, Position);
+    ecs_set(world, e, Position, { 2, 3 });
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.component_filter = &serialize_w_blacklist_blcb;
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\"}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+bool serialize_w_allow_blacklist_blcb(const ecs_world_t *world, ecs_entity_t e) {
+    return true;
+}
+
+void SerializeEntityToJson_serialize_w_allow_blacklist(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_add(world, e, Position);
+    ecs_set(world, e, Position, { 2, 3 });
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.component_filter = &serialize_w_allow_blacklist_blcb;
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\", \"components\":{\"Position\":{\"x\":2, \"y\":3}}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+ECS_DECLARE(NoSerialize);
+
+bool serialize_w_partial_blacklist_blcb(const ecs_world_t *world, ecs_entity_t e) {
+    return !ecs_has_id(world, e, ecs_id(NoSerialize));
+}
+
+void SerializeEntityToJson_serialize_w_partial_blacklist(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Velocity"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ECS_TAG(world, NoSerialize);
+    ecs_add_id(world, NoSerialize, EcsTrait);
+    ecs_add_id(world, ecs_id(Velocity), NoSerialize);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+
+    ecs_add(world, e, Position);
+    ecs_set(world, e, Position, { 2, 3 });
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.component_filter = &serialize_w_allow_blacklist_blcb;
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\", \"components\":{\"Position\":{\"x\":2, \"y\":3}}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+

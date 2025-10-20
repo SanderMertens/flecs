@@ -90,7 +90,9 @@
                 "enum_w_underlying_u8",
                 "enum_w_underlying_u16",
                 "enum_w_underlying_u32",
-                "enum_w_underlying_u64"
+                "enum_w_underlying_u64",
+                "set_enum",
+                "set_enum_w_underlying_type"
             ]
         }, {
             "id": "BitmaskTypes",
@@ -453,6 +455,18 @@
                 "array_move_primitive",
                 "array_move_struct",
                 "array_move_out_of_range",
+                "vector_i32_0",
+                "vector_i32_1",
+                "vector_i32_1_next",
+                "vector_i32_3",
+                "vector_i32_empty_after_3",
+                "vector_struct_3",
+                "vector_move_primitive",
+                "vector_move_struct",
+                "struct_w_vector_i32_3",
+                "struct_w_vector_struct_3",
+                "struct_w_vector_move_primitive",
+                "struct_w_vector_move_struct",
                 "opaque_set_bool",
                 "opaque_set_char",
                 "opaque_set_int",
@@ -640,7 +654,12 @@
                 "deser_unknown_component_w_spaces",
                 "deser_unknown_component_no_spaces",
                 "deser_unknown_component_w_spaces_strict",
-                "deser_unknown_component_no_spaces_strict"
+                "deser_unknown_component_no_spaces_strict",
+                "deser_unknown_member",
+                "deser_valid_after_unknown_member",
+                "deser_unknown_member_w_strict",
+                "deser_pretty_printed_identifier_pair",
+                "ser_deser_alias"
             ]
         }, {
             "id": "SerializeToJson",
@@ -690,6 +709,16 @@
                 "vector_i32_3",
                 "vector_struct_i32_i32",
                 "vector_array_i32_3",
+                "enum_underlying_i8",
+                "enum_underlying_i16",
+                "enum_underlying_i32",
+                "enum_underlying_i64",
+                "enum_underlying_iptr",
+                "enum_underlying_u8",
+                "enum_underlying_u16",
+                "enum_underlying_u32",
+                "enum_underlying_u64",
+                "enum_underlying_uptr",
                 "serialize_from_stage"
             ]
         }, {
@@ -763,6 +792,7 @@
                 "serialize_sparse_inherited_pair",
                 "serialize_sparse_inherited_mixed",
                 "serialize_sparse_w_type_info",
+                "serialize_sparse_tag",
                 "serialize_auto_override_w_inherited",
                 "serialize_auto_override",
                 "serialize_auto_override_pair",
@@ -770,7 +800,11 @@
                 "serialize_auto_override_pair_fullpath",
                 "serialize_toggle",
                 "serialize_toggle_pair",
-                "serialize_null_doc_name"
+                "serialize_null_doc_name",
+                "serialize_base_w_invalid_component",
+                "serialize_w_blacklist",
+                "serialize_w_allow_blacklist",
+                "serialize_w_partial_blacklist"
             ]
         }, {
             "id": "SerializeIterToJson",
@@ -914,6 +948,7 @@
                 "serialize_w_field_info_pair_w_not_pair",
                 "serialize_w_field_info_pair_w_not_component",
                 "serialize_w_field_info_w_or",
+                "serialize_w_field_info_w_none",
                 "serialize_recycled_id",
                 "serialize_entity_w_flecs_core_parent"
             ]
@@ -1035,10 +1070,23 @@
                 "deser_float_from_json",
                 "deser_string_from_json",
                 "deser_entity_from_json",
+                "deser_struct_from_json",
+                "deser_struct_w_opaque_struct_from_json",
+                "deser_struct_w_opaque_array_from_json",
+                "deser_struct_w_opaque_vector_from_json",
+                "deser_array_from_json",
+                "deser_vector_from_json",
+                "deser_0_vector_from_json",
+                "deser_0_into_vector_from_json",
+                "deser_string_vector_from_json",
+                "deser_struct_vector_from_json",
                 "ser_deser_world_w_ser_opaque",
                 "ser_deser_entity",
                 "ser_deser_0_entity",
-                "const_string"
+                "const_string",
+                "anonymous_opaque_as_type_parent",
+                "named_opaque_as_type_parent",
+                "parented_opaque_as_type_parent"
             ]
         }, {
             "id": "Misc",

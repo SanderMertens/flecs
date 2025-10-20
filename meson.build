@@ -16,6 +16,7 @@ cc = meson.get_compiler('c')
 
 if host_machine.system() == 'windows'
     flecs_deps += cc.find_library('ws2_32') # Required for http addon
+    flecs_deps += cc.find_library('dbgHelp') # Required for backtraces
 endif
 
 flecs_src = files(
@@ -23,7 +24,7 @@ flecs_src = files(
     'src/addons/app.c',
     'src/addons/doc.c',
     'src/addons/flecs_cpp.c',
-    'src/addons/http.c',
+    'src/addons/http/http.c',
     'src/addons/journal.c',
     'src/addons/json/deserialize_value.c',
     'src/addons/json/deserialize.c',
@@ -38,6 +39,7 @@ flecs_src = files(
     'src/addons/json/serialize_type_info.c',
     'src/addons/json/serialize_value.c',
     'src/addons/json/serialize_world.c',
+    'src/addons/stats/memory.c',
     'src/addons/stats/monitor.c',
     'src/addons/stats/pipeline_monitor.c',
     'src/addons/stats/stats.c',
@@ -45,10 +47,15 @@ flecs_src = files(
     'src/addons/stats/world_monitor.c',
     'src/addons/stats/world_summary.c',
     'src/addons/log.c',
-    'src/addons/meta/api.c',
+    'src/addons/meta/type_support/array_ts.c',
+    'src/addons/meta/type_support/enum_ts.c',
+    'src/addons/meta/type_support/opaque_ts.c',
+    'src/addons/meta/type_support/primitive_ts.c',
+    'src/addons/meta/type_support/struct_ts.c',
+    'src/addons/meta/type_support/units_ts.c',
     'src/addons/meta/definitions.c',
     'src/addons/meta/meta.c',
-    'src/addons/meta/serialized.c',
+    'src/addons/meta/serializer.c',
     'src/addons/meta/cursor.c',
     'src/addons/meta/rtt_lifecycle.c',
     'src/addons/meta/c_utils.c',

@@ -4,7 +4,7 @@ static
 void fuzz(const char *expr) {
     ecs_world_t *world = ecs_init();
     ecs_log_set_level(-5);
-    ecs_script_run(world, "test", expr);
+    ecs_script_run(world, "test", expr, NULL);
     test_assert(true);
     ecs_fini(world);
 }
@@ -122,18 +122,18 @@ void Fuzzing_9(void) {
     HEAD "coc,a,#44464RN,X"
     LINE "RRRRRR\\.mconstella,C"
     LINE "struct Posi {JRla,Ct pf =C"
-    LINE "sts\\.RR.m :C"
-    LINE "ISRR\\const.vRRR\\.melRQRR.m :C"
-    LINE "ISRR\\.m :C"
+    LINE "sts\\.RR.m :C {}"
+    LINE "ISRR\\const.vRRR\\.melRQRR.m :C {}"
+    LINE "ISRR\\.m :C {}"
     LINE "RRRRRla,C"
-    LINE "ISRR\\.v :C"
+    LINE "ISRR\\.v :C {}"
     LINE "RRRRRela,CtRRRSVR"
-    LINE "sts\\.RR.m :C"
+    LINE "sts\\.RR.m :C {}"
     LINE "ISRRconst\\.vRca,#434lRRcoRV.melcon pf =C"
-    LINE "sts\\.RR.m :C"
+    LINE "sts\\.RR.m :C {}"
     LINE "ISRRconst\\.v =C"
-    LINE "sts\\.RR.m :C"
-    LINE "ISRR\\.v ;C:C"
+    LINE "sts\\.RR.m :C {}"
+    LINE "ISRR\\.v ;C:C {}"
     LINE "RRRR= f32"
     LINE "@ y  = 3.13*"
     LINE "my_t}"

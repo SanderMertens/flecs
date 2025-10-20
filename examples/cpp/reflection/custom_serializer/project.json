@@ -1,0 +1,10 @@
+{
+    "id": "custom_serializer",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++"
+    }
+}

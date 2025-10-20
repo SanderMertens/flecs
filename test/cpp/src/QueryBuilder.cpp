@@ -1030,10 +1030,12 @@ void QueryBuilder_string_term(void) {
 void QueryBuilder_singleton_term(void) {
     flecs::world ecs;
 
+    ecs.component<Other>().add(flecs::Singleton);
+
     ecs.set<Other>({10});
 
     auto q = ecs.query_builder<Self>()
-        .with<Other>().singleton().inout()
+        .with<Other>().inout()
         .cache_kind(cache_kind)
         .build();
 
@@ -1600,7 +1602,7 @@ void QueryBuilder_typed_term_at(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Rel, const Velocity>()
-        .term_at<Velocity>().singleton()
+        .term_at<Velocity>().src<Velocity>()
         .term_at<Rel>().second(flecs::Wildcard)
         .run([&](flecs::iter it){
             while (it.next()) {
@@ -1624,7 +1626,7 @@ void QueryBuilder_typed_term_at_indexed(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Rel, const Velocity>()
-        .term_at<Velocity>(1).singleton()
+        .term_at<Velocity>(1).src<Velocity>()
         .term_at<Rel>(0).second(flecs::Wildcard)
         .run([&](flecs::iter it){
             while (it.next()) {
@@ -1862,13 +1864,14 @@ void QueryBuilder_1_term_to_empty(void) {
 void QueryBuilder_2_subsequent_args(void) {
     flecs::world ecs;
 
+    ecs.component<Velocity>().add(flecs::Singleton);
+
     struct Rel { int foo; };
 
     int32_t count = 0;
 
     auto s = ecs.system<Rel, const Velocity>()
         .term_at(0).second(flecs::Wildcard)
-        .term_at(1).singleton()
         .run([&](flecs::iter it){
             while (it.next()) {
                 count += it.count();
@@ -5275,6 +5278,8 @@ void QueryBuilder_each_w_untyped_field_at_w_fixed_src(void) {
 void QueryBuilder_singleton_pair(void) {
     flecs::world ecs;
 
+    ecs.component<Position>().add(flecs::Singleton);
+
     flecs::entity rel = ecs.component<Position>();
     flecs::entity tgt = ecs.entity();
 
@@ -5283,7 +5288,7 @@ void QueryBuilder_singleton_pair(void) {
     int32_t count = 0;
 
     auto q = ecs.query_builder<const Position>()
-        .term_at(0).second(tgt).singleton()
+        .term_at(0).second(tgt)
         .cache_kind(cache_kind)
         .build();
 
@@ -5313,6 +5318,60 @@ void QueryBuilder_query_w_this_second(void) {
     int32_t count = 0;
     q.each([&](flecs::entity e) {
         test_assert(e == e1);
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void QueryBuilder_pred_eq(void) {
+    flecs::world ecs;
+
+    flecs::entity Foo = ecs.entity("Foo");
+
+    auto q = ecs.query_builder()
+        .with(flecs::PredEq, "Foo")
+        .build();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        test_assert(e == Foo);
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void QueryBuilder_pred_eq_name(void) {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder()
+        .with(flecs::PredEq).second("Foo").flags(flecs::IsName)
+        .build();
+
+    flecs::entity Foo = ecs.entity("Foo");
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        test_assert(e == Foo);
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void QueryBuilder_pred_match(void) {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder()
+        .with(flecs::PredMatch).second("Fo").flags(flecs::IsName)
+        .build();
+
+    flecs::entity Foo = ecs.entity("Foo");
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        test_assert(e == Foo);
         count ++;
     });
 

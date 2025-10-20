@@ -312,7 +312,7 @@ void QueryStr_one_term_w_singleton(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "Foo($)");
+    test_str(str, "Foo(Foo)");
     ecs_os_free(str);
 
     ecs_query_fini(q);

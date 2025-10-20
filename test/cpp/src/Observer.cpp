@@ -889,10 +889,11 @@ void Observer_on_set_w_set_sparse(void) {
 void Observer_on_add_singleton(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::Singleton);
+
     int32_t count = 0;
 
     world.observer<Position>()
-        .term_at(0).singleton()
         .event(flecs::OnSet)
         .each([&](Position& p) {
             test_int(p.x, 10);
@@ -908,12 +909,14 @@ void Observer_on_add_singleton(void) {
 void Observer_on_add_pair_singleton(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::Singleton);
+
     int32_t count = 0;
 
     flecs::entity tgt = world.entity();
 
     world.observer<Position>()
-        .term_at(0).second(tgt).singleton()
+        .term_at(0).second(tgt)
         .event(flecs::OnSet)
         .each([&](Position& p) {
             test_int(p.x, 10);
@@ -929,13 +932,15 @@ void Observer_on_add_pair_singleton(void) {
 void Observer_on_add_pair_wildcard_singleton(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::Singleton);
+
     int32_t count = 0;
 
     flecs::entity tgt_1 = world.entity();
     flecs::entity tgt_2 = world.entity();
 
     world.observer<Position>()
-        .term_at(0).second(flecs::Wildcard).singleton()
+        .term_at(0).second(flecs::Wildcard)
         .event(flecs::OnSet)
         .each([&](Position& p) {
             test_int(p.x, 10);
@@ -952,13 +957,15 @@ void Observer_on_add_pair_wildcard_singleton(void) {
 
 void Observer_on_add_with_pair_singleton(void) {
     flecs::world world;
+    
+    world.component<Position>().add(flecs::Singleton);
 
     int32_t count = 0;
 
     flecs::entity tgt = world.entity();
 
     world.observer()
-        .with<Position>(tgt).singleton()
+        .with<Position>(tgt)
         .event(flecs::OnSet)
         .each([&](flecs::iter&, size_t) {
             count ++;
@@ -1600,4 +1607,29 @@ void Observer_fixed_src_w_run(void) {
     world.entity().add<Tag>();
     
     test_assert(matched == 0);
+}
+
+void Observer_untyped_field(void) {
+    flecs::world world;
+
+    int invoked = 0, count = 0;
+
+    world.observer<Position>()
+        .event(flecs::OnSet)
+        .run([&](flecs::iter& it) {
+            invoked ++;
+            while (it.next()) {
+                count ++;
+                test_uint(sizeof(Position), it.size(0));
+                auto f = it.field(0);
+                Position *p = static_cast<Position*>(f[0]);
+                test_int(p->x, 10);
+                test_int(p->y, 20);
+            }
+        });
+
+    world.entity().set(Position{10, 20});
+
+    test_int(invoked, 1);
+    test_int(count, 1);
 }

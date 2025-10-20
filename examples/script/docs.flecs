@@ -6,6 +6,9 @@
 // Flecs script files can be used to annotate entities and components with 
 // documentation. These annotations use the flecs.doc addon.
 
+// Create tags
+Planet { }
+
 @brief A brief description of planet Earth
 @name The Earth
 Earth {
@@ -17,4 +20,4 @@ Earth {
 // prefabs, components and entities with documentation
 
 @brief The Position component
-Position
+Position { }

@@ -6247,3 +6247,133 @@ void DeserializeFromJson_deser_unknown_component_no_spaces_strict(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_deser_unknown_member(void) {
+    typedef struct {
+        ecs_i32_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"v\": 10, \"y\": 20}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.v, 10);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_valid_after_unknown_member(void) {
+    typedef struct {
+        ecs_i32_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"y\": 20, \"v\": 10}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.v, 10);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_unknown_member_w_strict(void) {
+    typedef struct {
+        ecs_i32_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+    
+    ecs_log_set_level(-4);
+
+    ecs_from_json_desc_t desc = { .strict = true };
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"v\": 10, \"y\": 20}", &desc);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_pretty_printed_identifier_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = 
+    HEAD ""
+    LINE "{"
+    LINE "    \"results\":"
+    LINE "    ["
+    LINE "        {"
+    LINE "            \"name\": \"e\","
+    LINE "            \"components\":"
+    LINE "            {"
+    LINE "                \"(flecs.core.Identifier,flecs.core.Symbol)\":"
+    LINE "                {"
+    LINE "                    \"value\": \"E\""
+    LINE "                }"
+    LINE "            }"
+    LINE "        }"
+    LINE "    ]"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_world_from_json(world, expr, NULL) != NULL);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_str(ecs_get_name(world, e), "e");
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_alias(void) {
+    const char *name = "child";
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+    ecs_set_alias(world, child, name);
+    test_assert(ecs_lookup(world, name));
+
+    char *json = ecs_world_to_json(world, NULL);
+    ecs_world_t *new_world = ecs_init();
+    ecs_world_from_json(new_world, json, NULL);
+    test_assert(ecs_lookup(new_world, name));
+    ecs_os_free(json);
+}

@@ -59,6 +59,10 @@ struct untyped_ref {
         return !!try_get();
     }
 
+    flecs::world world() const {
+        return flecs::world(world_);
+    }
+
     /** implicit conversion to bool.  return true if there is a valid 
      * component instance being referred to **/
     operator bool() {

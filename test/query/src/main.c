@@ -152,6 +152,24 @@ void Validator_validate_simple_w_reflexive(void);
 void Validator_validate_simple_w_reflexive_pair(void);
 void Validator_validate_simple_w_inherited_component(void);
 void Validator_validate_eq_this_not_a_var_w_wildcard(void);
+void Validator_validate_term_1_w_singleton_trait(void);
+void Validator_validate_term_2_w_singleton_trait(void);
+void Validator_validate_term_pair_w_singleton_trait(void);
+void Validator_validate_or_term_w_singleton_trait(void);
+void Validator_validate_term_w_singleton_trait_w_explicit_src(void);
+void Validator_validate_term_w_singleton_trait_w_explicit_self_src(void);
+void Validator_validate_term_w_singleton_trait_w_pair_w_explicit_self_src(void);
+void Validator_validator_1_singleton_terms_match_this(void);
+void Validator_validator_2_singleton_terms_match_this(void);
+void Validator_validator_2_singleton_terms_match_this_w_in(void);
+void Validator_validator_2_terms_1_singleton_match_this(void);
+void Validator_validator_1_fixed_src_terms_match_this(void);
+void Validator_validator_2_fixed_src_terms_match_this(void);
+void Validator_validator_2_terms_1_fixed_src_match_this(void);
+void Validator_validator_1_var_src_terms_match_this(void);
+void Validator_validator_2_var_src_terms_match_this(void);
+void Validator_validator_2_terms_1_var_src_match_this(void);
+void Validator_validator_1_tag_term_this_src_match_this(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -457,6 +475,9 @@ void Parser_n_tokens_test(void);
 void Parser_this_not_a_var(void);
 void Parser_eq_this_not_a_var(void);
 void Parser_eq_this_not_a_var_w_wildcard(void);
+void Parser_singleton_trait(void);
+void Parser_singleton_trait_w_explicit_this_var(void);
+void Parser_singleton_trait_w_explicit_src(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_setup(void);
@@ -590,6 +611,8 @@ void Basic_match_optional_disabled_prefab_this_tgt(void);
 void Basic_match_optional_self_disabled(void);
 void Basic_match_optional_self_prefab(void);
 void Basic_match_optional_self_disabled_prefab(void);
+void Basic_match_optional_disabled_prefab_w_flecs_core(void);
+void Basic_match_optional_disabled_prefab_w_not_queryable(void);
 void Basic_inout_none_first_term(void);
 void Basic_inout_none_first_term_self_up(void);
 void Basic_inout_none_second_term(void);
@@ -736,6 +759,7 @@ void Plan_3_trivial_plan_w_any(void);
 void Plan_3_trivial_plan_w_pair_component(void);
 void Plan_3_trivial_plan_w_wildcard_component(void);
 void Plan_3_trivial_plan_w_any_component(void);
+void Plan_3_trivial_plan_w_any_cached(void);
 void Plan_1_trivial_component_w_none(void);
 void Plan_2_trivial_component_w_none(void);
 void Plan_2_trivial_plan_w_wildcard(void);
@@ -1700,6 +1724,8 @@ void Cached_no_rematch_after_instantiate(void);
 void Cached_no_rematch_after_batched_instantiate(void);
 void Cached_rematch_after_delete_base_of_base(void);
 void Cached_rematch_after_delete_first_base_of_base(void);
+void Cached_rematch_after_remove_all(void);
+void Cached_no_rematch_after_delete_with(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -2179,6 +2205,14 @@ void DontFragment_this_written_tgt_var_w_component(void);
 void DontFragment_this_written_sparse_any(void);
 void DontFragment_this_written_sparse_exclusive_any(void);
 void DontFragment_add_to_self_while_iterate(void);
+void DontFragment_this_sparse_recycled(void);
+void DontFragment_this_sparse_pair_recycled(void);
+void DontFragment_this_sparse_wildcard_pair_recycled(void);
+void DontFragment_this_sparse_any_pair_recycled(void);
+void DontFragment_this_written_sparse_recycled(void);
+void DontFragment_this_written_sparse_pair_recycled(void);
+void DontFragment_this_written_sparse_wildcard_pair_recycled(void);
+void DontFragment_this_written_sparse_any_pair_recycled(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -2895,6 +2929,78 @@ bake_test_case Validator_testcases[] = {
     {
         "validate_eq_this_not_a_var_w_wildcard",
         Validator_validate_eq_this_not_a_var_w_wildcard
+    },
+    {
+        "validate_term_1_w_singleton_trait",
+        Validator_validate_term_1_w_singleton_trait
+    },
+    {
+        "validate_term_2_w_singleton_trait",
+        Validator_validate_term_2_w_singleton_trait
+    },
+    {
+        "validate_term_pair_w_singleton_trait",
+        Validator_validate_term_pair_w_singleton_trait
+    },
+    {
+        "validate_or_term_w_singleton_trait",
+        Validator_validate_or_term_w_singleton_trait
+    },
+    {
+        "validate_term_w_singleton_trait_w_explicit_src",
+        Validator_validate_term_w_singleton_trait_w_explicit_src
+    },
+    {
+        "validate_term_w_singleton_trait_w_explicit_self_src",
+        Validator_validate_term_w_singleton_trait_w_explicit_self_src
+    },
+    {
+        "validate_term_w_singleton_trait_w_pair_w_explicit_self_src",
+        Validator_validate_term_w_singleton_trait_w_pair_w_explicit_self_src
+    },
+    {
+        "validator_1_singleton_terms_match_this",
+        Validator_validator_1_singleton_terms_match_this
+    },
+    {
+        "validator_2_singleton_terms_match_this",
+        Validator_validator_2_singleton_terms_match_this
+    },
+    {
+        "validator_2_singleton_terms_match_this_w_in",
+        Validator_validator_2_singleton_terms_match_this_w_in
+    },
+    {
+        "validator_2_terms_1_singleton_match_this",
+        Validator_validator_2_terms_1_singleton_match_this
+    },
+    {
+        "validator_1_fixed_src_terms_match_this",
+        Validator_validator_1_fixed_src_terms_match_this
+    },
+    {
+        "validator_2_fixed_src_terms_match_this",
+        Validator_validator_2_fixed_src_terms_match_this
+    },
+    {
+        "validator_2_terms_1_fixed_src_match_this",
+        Validator_validator_2_terms_1_fixed_src_match_this
+    },
+    {
+        "validator_1_var_src_terms_match_this",
+        Validator_validator_1_var_src_terms_match_this
+    },
+    {
+        "validator_2_var_src_terms_match_this",
+        Validator_validator_2_var_src_terms_match_this
+    },
+    {
+        "validator_2_terms_1_var_src_match_this",
+        Validator_validator_2_terms_1_var_src_match_this
+    },
+    {
+        "validator_1_tag_term_this_src_match_this",
+        Validator_validator_1_tag_term_this_src_match_this
     }
 };
 
@@ -4110,6 +4216,18 @@ bake_test_case Parser_testcases[] = {
     {
         "eq_this_not_a_var_w_wildcard",
         Parser_eq_this_not_a_var_w_wildcard
+    },
+    {
+        "singleton_trait",
+        Parser_singleton_trait
+    },
+    {
+        "singleton_trait_w_explicit_this_var",
+        Parser_singleton_trait_w_explicit_this_var
+    },
+    {
+        "singleton_trait_w_explicit_src",
+        Parser_singleton_trait_w_explicit_src
     }
 };
 
@@ -4624,6 +4742,14 @@ bake_test_case Basic_testcases[] = {
     {
         "match_optional_self_disabled_prefab",
         Basic_match_optional_self_disabled_prefab
+    },
+    {
+        "match_optional_disabled_prefab_w_flecs_core",
+        Basic_match_optional_disabled_prefab_w_flecs_core
+    },
+    {
+        "match_optional_disabled_prefab_w_not_queryable",
+        Basic_match_optional_disabled_prefab_w_not_queryable
     },
     {
         "inout_none_first_term",
@@ -5194,6 +5320,10 @@ bake_test_case Plan_testcases[] = {
     {
         "3_trivial_plan_w_any_component",
         Plan_3_trivial_plan_w_any_component
+    },
+    {
+        "3_trivial_plan_w_any_cached",
+        Plan_3_trivial_plan_w_any_cached
     },
     {
         "1_trivial_component_w_none",
@@ -8976,6 +9106,14 @@ bake_test_case Cached_testcases[] = {
     {
         "rematch_after_delete_first_base_of_base",
         Cached_rematch_after_delete_first_base_of_base
+    },
+    {
+        "rematch_after_remove_all",
+        Cached_rematch_after_remove_all
+    },
+    {
+        "no_rematch_after_delete_with",
+        Cached_no_rematch_after_delete_with
     }
 };
 
@@ -10846,6 +10984,38 @@ bake_test_case DontFragment_testcases[] = {
     {
         "add_to_self_while_iterate",
         DontFragment_add_to_self_while_iterate
+    },
+    {
+        "this_sparse_recycled",
+        DontFragment_this_sparse_recycled
+    },
+    {
+        "this_sparse_pair_recycled",
+        DontFragment_this_sparse_pair_recycled
+    },
+    {
+        "this_sparse_wildcard_pair_recycled",
+        DontFragment_this_sparse_wildcard_pair_recycled
+    },
+    {
+        "this_sparse_any_pair_recycled",
+        DontFragment_this_sparse_any_pair_recycled
+    },
+    {
+        "this_written_sparse_recycled",
+        DontFragment_this_written_sparse_recycled
+    },
+    {
+        "this_written_sparse_pair_recycled",
+        DontFragment_this_written_sparse_pair_recycled
+    },
+    {
+        "this_written_sparse_wildcard_pair_recycled",
+        DontFragment_this_written_sparse_wildcard_pair_recycled
+    },
+    {
+        "this_written_sparse_any_pair_recycled",
+        DontFragment_this_written_sparse_any_pair_recycled
     }
 };
 
@@ -11463,14 +11633,14 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        143,
+        161,
         Validator_testcases
     },
     {
         "Parser",
         NULL,
         NULL,
-        303,
+        306,
         Parser_testcases
     },
     {
@@ -11486,7 +11656,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        236,
+        238,
         Basic_testcases,
         1,
         Basic_params
@@ -11504,7 +11674,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        85,
+        86,
         Plan_testcases
     },
     {
@@ -11586,7 +11756,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        106,
+        108,
         Cached_testcases
     },
     {
@@ -11634,7 +11804,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        119,
+        127,
         DontFragment_testcases,
         1,
         DontFragment_params

@@ -18,6 +18,16 @@ namespace flecs {
 
 struct script_builder;
 
+using Script = EcsScript;
+
+namespace script {
+namespace _ {
+
+void init(flecs::world& world);
+
+} // namespace _
+}
+
 /** @} */
 
 }

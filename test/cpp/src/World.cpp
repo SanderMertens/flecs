@@ -2160,3 +2160,142 @@ void World_exclusive_access_other_mutate(void) {
 
     test_assert(false); // should not get here
 }
+
+void World_id_if_registered(void) {
+    {
+        flecs::world world;
+
+        test_assert(world.id_if_registered<Position>() == 0);
+        test_assert(world.id_if_registered<Position>() == 0);
+
+        auto c = world.component<Position>();
+
+        test_assert(world.id_if_registered<Position>() == c);
+    }
+
+    {
+        flecs::world world;
+
+        test_assert(world.id_if_registered<Position>() == 0);
+        test_assert(world.id_if_registered<Position>() == 0);
+
+        auto c = world.component<Position>();
+
+        test_assert(world.id_if_registered<Position>() == c);
+    }
+}
+
+void World_get_type_info_t(void) {
+    flecs::world world;
+
+    flecs::entity c = world.component<Position>();
+
+    const flecs::type_info_t *ti = world.type_info(c);
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_T(void) {
+    flecs::world world;
+
+    const flecs::type_info_t *ti = world.type_info<Position>();
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == world.component<Position>());
+}
+
+void World_get_type_info_r_t(void) {
+    flecs::world world;
+
+    flecs::entity c = world.component<Position>();
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info(c, tgt);
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_R_t(void) {
+    flecs::world world;
+
+    flecs::entity c = world.component<Position>();
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info<Position>(tgt);
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_R_T(void) {
+    flecs::world world;
+
+    struct Tgt {};
+
+    flecs::entity c = world.component<Position>();
+
+    const flecs::type_info_t *ti = world.type_info<Position, Tgt>();
+    test_assert(ti != nullptr);
+    test_int(ti->size, sizeof(Position));
+    test_int(ti->alignment, alignof(Position));
+    test_assert(ti->component == c);
+}
+
+void World_get_type_info_t_tag(void) {
+    flecs::world world;
+
+    struct Tag {};
+
+    flecs::entity c = world.component<Tag>();
+
+    const flecs::type_info_t *ti = world.type_info(c);
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_T_tag(void) {
+    flecs::world world;
+
+    struct Tag {};
+
+    const flecs::type_info_t *ti = world.type_info<Tag>();
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_r_t_tag(void) {
+    flecs::world world;
+
+    struct Tag {};
+
+    flecs::entity c = world.component<Tag>();
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info(c, tgt);
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_R_t_tag(void) {
+    flecs::world world;
+
+    struct Tag {};
+
+    flecs::entity tgt = world.entity();
+
+    const flecs::type_info_t *ti = world.type_info<Tag>(tgt);
+    test_assert(ti == nullptr);
+}
+
+void World_get_type_info_R_T_tag(void) {
+    flecs::world world;
+
+    struct Tag {};
+    struct Tgt {};
+
+    const flecs::type_info_t *ti = world.type_info<Tag, Tgt>();
+    test_assert(ti == nullptr);
+}

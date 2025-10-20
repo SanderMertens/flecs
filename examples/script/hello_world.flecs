@@ -12,14 +12,19 @@
 //
 // To load this file yourself, call ecs_script_run_file("hello_world.flecs");
 
-// This creates an entity my_spaceship with the SpaceShip tag. Note how neither
-// the entity nor tag need to be defined in advance, if an entity did not yet
-// exist, it will be created on the spot.
+// Create tags
+Planet { }
+SpaceShip { }
+Freighter { }
+Faction { }
+FasterThanLight { }
+Engine { }
+
+// This creates an entity my_spaceship with the SpaceShip tag.
 my_spaceship { SpaceShip }
 
-// An entity can be declared in advance, which can be useful to ensure it is
-// placed in a specific scope. To do this just specify the name with a scope:
-Engine {}
+// Create Earth
+Earth { Planet }
 
 // By opening a scope multiple components/tags can be added to the same entity
 // without having to repeat the entity name.
@@ -41,5 +46,5 @@ my_spaceship {
 
 // The dot notation can be used to refer to nested entities
 my_spaceship.engine {
-  Ftl
+  FasterThanLight
 }

@@ -114,31 +114,41 @@ bool ecs_id_is_any(
     return (first == EcsAny) || (second == EcsAny);
 }
 
-bool ecs_id_is_valid(
+const char* flecs_id_invalid_reason(
     const ecs_world_t *world,
     ecs_id_t id)
 {
     if (!id) {
-        return false;
+        return "components cannot be 0 (is the component registered?)";
     }
     if (ecs_id_is_wildcard(id)) {
-        return false;
+        return "cannot add wildcards";
     }
 
     if (ECS_HAS_ID_FLAG(id, PAIR)) {
+        if (!ECS_PAIR_FIRST(id) && !ECS_PAIR_SECOND(id)) {
+            return "invalid pair: both elements are 0";
+        }
         if (!ECS_PAIR_FIRST(id)) {
-            return false;
+            return "invalid pair: first element is 0 (is the relationship registered?)";
         }
         if (!ECS_PAIR_SECOND(id)) {
-            return false;
+            return "invalid pair: second element is 0";
         }
     } else if (id & ECS_ID_FLAGS_MASK) {
         if (!ecs_is_valid(world, id & ECS_COMPONENT_MASK)) {
-            return false;
+            ecs_abort(ECS_INTERNAL_ERROR, NULL);
         }
     }
 
-    return true;
+    return NULL;
+}
+
+bool ecs_id_is_valid(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    return flecs_id_invalid_reason(world, id) == NULL;
 }
 
 ecs_flags32_t ecs_id_get_flags(

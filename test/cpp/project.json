@@ -11,6 +11,9 @@
             "flecs"
         ]
     },
+    "lang.cpp": {
+        "cpp-standard": "c++17"
+    },
     "test": {
         "testsuites": [{
             "id": "PrettyFunction",
@@ -355,7 +358,35 @@
                 "iter_type",
                 "iter_empty_type",
                 "untyped_component_use_low_id",
-                "add_remove_enum_component"
+                "add_remove_enum_component",
+                "on_replace_w_get_mut",
+                "on_replace_w_ensure",
+                "on_replace_w_emplace",
+                "on_replace_w_set",
+                "on_replace_w_set_existing",
+                "on_replace_w_assign",
+                "on_replace_w_assign_existing",
+                "defer_on_replace_w_set",
+                "defer_on_replace_w_set_twice",
+                "defer_on_replace_w_set_existing",
+                "defer_on_replace_w_set_existing_twice",
+                "defer_on_replace_w_set_batched",
+                "defer_on_replace_w_set_batched_twice",
+                "defer_on_replace_w_set_batched_existing",
+                "defer_on_replace_w_set_batched_existing_twice",
+                "defer_on_replace_w_assign",
+                "defer_on_replace_w_assign_existing",
+                "defer_on_replace_w_assign_existing_twice",
+                "defer_on_replace_w_assign_batched_existing",
+                "defer_on_replace_w_assign_batched_existing_twice",
+                "set_lvalue_to_mutable",
+                "set_lvalue_to_const",
+                "set_rvalue",
+                "assign_rvalue",
+                "set_non_copy_assignable",
+                "set_non_copy_assignable_w_move_assign",
+                "assign_non_copy_assignable",
+                "assign_non_copy_assignable_w_move_assign"
             ]
         }, {
             "id": "OrderedChildren",
@@ -454,6 +485,7 @@
                 "add_enum_constant",
                 "add_enum_constant_explicit",
                 "add_enum_class_constant",
+                "add_singleton_enum_constant",
                 "replace_enum_constants",
                 "has_enum",
                 "has_enum_wildcard",
@@ -463,6 +495,7 @@
                 "enum_as_component",
                 "query_enum_wildcard",
                 "query_enum_constant",
+                "query_singleton_enum_constant",
                 "enum_type_from_stage",
                 "add_enum_from_stage",
                 "enum_w_2_worlds",
@@ -976,7 +1009,10 @@
                 "each_w_untyped_field_w_fixed_src",
                 "each_w_untyped_field_at_w_fixed_src",
                 "singleton_pair",
-                "query_w_this_second"
+                "query_w_this_second",
+                "pred_eq",
+                "pred_eq_name",
+                "pred_match"
             ]
         }, {
             "id": "SystemBuilder",
@@ -1069,7 +1105,8 @@
                 "trigger_on_set_in_on_add_implicit_registration",
                 "trigger_on_set_in_on_add_implicit_registration_namespaced",
                 "fixed_src_w_each",
-                "fixed_src_w_run"
+                "fixed_src_w_run",
+                "untyped_field"
             ]
         }, {
             "id": "ComponentLifecycle",
@@ -1208,7 +1245,8 @@
                 "get_component",
                 "untyped_get_ref_by_method",
                 "untyped_pair_ref",
-                "untyped_runtime_component_ref"
+                "untyped_runtime_component_ref",
+                "ref_world"
             ]
         }, {
             "id": "Module",
@@ -1409,7 +1447,18 @@
                 "fini_copy_move_assign",
                 "world_init_fini_log_all",
                 "exclusive_access_self_mutate",
-                "exclusive_access_other_mutate"
+                "exclusive_access_other_mutate",
+                "id_if_registered",
+                "get_type_info_t",
+                "get_type_info_T",
+                "get_type_info_r_t",
+                "get_type_info_R_t",
+                "get_type_info_R_T",
+                "get_type_info_t_tag",
+                "get_type_info_T_tag",
+                "get_type_info_r_t_tag",
+                "get_type_info_R_t_tag",
+                "get_type_info_R_T_tag"
             ]
         }, {
             "id": "Singleton",
@@ -1519,7 +1568,25 @@
                 "alert_w_severity_filter_severity_type_enum_constant_w_var",
                 "alert_for_member_range",
                 "alert_w_member_range_from_var",
-                "map_api"
+                "map_api",
+                "get_const_var",
+                "get_const_var_struct",
+                "get_const_var_as_f32",
+                "get_const_var_as_i32",
+                "get_const_var_as_u32",
+                "get_const_var_w_out",
+                "get_const_var_struct_w_out",
+                "get_const_var_struct_w_out_not_found",
+                "get_const_var_as_f32_w_out",
+                "get_const_var_as_i32_w_out",
+                "get_const_var_as_u32_w_out",
+                "get_const_var_not_found",
+                "get_const_var_not_a_var",
+                "get_scoped_const_var",
+                "get_module_const_var",
+                "get_module_const_var_from_script_module",
+                "get_module_const_var_from_nested_script_module",
+                "get_module_const_var_from_nested_module_no_script_module"
             ]
         }, {
             "id": "Meta",
@@ -1566,6 +1633,9 @@
                 "ser_deser_std_vector_int",
                 "ser_deser_std_vector_std_string",
                 "ser_deser_type_w_std_string_std_vector_std_string",
+                "ser_deser_std_optional_int",
+                "ser_deser_std_optional_std_vector_int",
+                "ser_deser_std_optional_std_string",
                 "std_vector_random_access",
                 "struct_random_access",
                 "ser_deser_flecs_entity",
@@ -1586,7 +1656,10 @@
                 "iter_to_json",
                 "query_to_json",
                 "entity_to_json_w_default_desc",
-                "query_to_json_w_default_desc"
+                "query_to_json_w_default_desc",
+                "script_to_std_vector_int",
+                "script_to_std_vector_std_string",
+                "ser_deser_alias"
             ]
         }, {
             "id": "Table",

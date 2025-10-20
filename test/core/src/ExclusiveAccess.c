@@ -366,7 +366,7 @@ void* thread_exclusive_access_other_set(void *arg) {
     ecs_world_t *world = arg;
     test_expect_abort();
     Position p = {10, 20};
-    ecs_set_id(world, thr_entity, thr_component, 0, &p);
+    ecs_set_id(world, thr_entity, thr_component, sizeof(Position), &p);
     return NULL;
 }
 
@@ -416,7 +416,7 @@ static
 void* thread_exclusive_access_other_ensure(void *arg) {
     ecs_world_t *world = arg;
     test_expect_abort();
-    ecs_ensure_id(world, thr_entity, thr_component);
+    ecs_ensure_id(world, thr_entity, thr_component, sizeof(Position));
     return NULL;
 }
 
@@ -463,61 +463,11 @@ void ExclusiveAccess_other_ensure_existing(void) {
 }
 
 static
-void* thread_exclusive_access_other_ensure_modified(void *arg) {
-    ecs_world_t *world = arg;
-    test_expect_abort();
-    ecs_ensure_modified_id(world, thr_entity, thr_component);
-    return NULL;
-}
-
-void ExclusiveAccess_other_ensure_modified(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world, NULL);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_ensure_modified, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void ExclusiveAccess_other_ensure_modified_existing(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_exclusive_access_begin(world, NULL);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_add(world, thr_entity, Position);
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_ensure_modified, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-static
 void* thread_exclusive_access_other_emplace(void *arg) {
     ecs_world_t *world = arg;
     test_expect_abort();
     bool is_new;
-    ecs_emplace_id(world, thr_entity, thr_component, &is_new);
+    ecs_emplace_id(world, thr_entity, thr_component, sizeof(Position), &is_new);
     return NULL;
 }
 
@@ -1127,6 +1077,7 @@ void ExclusiveAccess_other_world_ref_get(void) {
     ECS_COMPONENT(world, Position);
 
     thr_ref = ecs_ref_init(world, ecs_new(world), Position);
+    thr_component = ecs_id(Position);
 
     ecs_exclusive_access_begin(world, NULL);
 
@@ -1796,50 +1747,6 @@ void ExclusiveAccess_locked_ensure_existing(void) {
     test_assert(false); // should not get here
 }
 
-void ExclusiveAccess_locked_ensure_modified(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_exclusive_access_begin(world, NULL);
-    ecs_exclusive_access_end(world, true); // lock world
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_ensure_modified, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
-void ExclusiveAccess_locked_ensure_modified_existing(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    thr_entity = ecs_new(world);
-    thr_component = ecs_id(Position);
-
-    ecs_add(world, thr_entity, Position);
-
-    ecs_exclusive_access_begin(world, NULL);
-    ecs_exclusive_access_end(world, true); // lock world
-
-    ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_ensure_modified, world);
-
-    ecs_os_thread_join(thr);
-
-    test_assert(false); // should not get here
-}
-
 void ExclusiveAccess_locked_emplace(void) {
     install_test_abort();
 
@@ -2408,6 +2315,13 @@ void ExclusiveAccess_locked_world_ref_init(void) {
     ecs_fini(world);
 }
 
+static
+void* thread_exclusive_access_other_ref_get_locked(void *arg) {
+    ecs_world_t *world = arg;
+    ecs_ref_get_id(world, &thr_ref, thr_component);
+    return NULL;
+}
+
 void ExclusiveAccess_locked_world_ref_get(void) {
     install_test_abort();
 
@@ -2416,16 +2330,21 @@ void ExclusiveAccess_locked_world_ref_get(void) {
     ECS_COMPONENT(world, Position);
 
     thr_ref = ecs_ref_init(world, ecs_new(world), Position);
+    thr_component = ecs_id(Position);
 
     ecs_exclusive_access_begin(world, NULL);
     ecs_exclusive_access_end(world, true); // lock world
 
     ecs_os_thread_t thr = 
-        ecs_os_thread_new(thread_exclusive_access_other_ref_get, world);
+        ecs_os_thread_new(thread_exclusive_access_other_ref_get_locked, world);
 
     ecs_os_thread_join(thr);
 
-    test_assert(false); // should not get here
+    test_assert(true);
+
+    ecs_exclusive_access_end(world, false); // unlock world
+
+    ecs_fini(world);
 }
 
 static

@@ -7,6 +7,10 @@
 // we first need to create a component type (see reflection example).
 using flecs.meta
 
+// Create tags
+Vertex { }
+Fragment { }
+
 struct Shader {
   filename = string
   code = string
@@ -20,7 +24,7 @@ my_pipeline {
 
     // Multiline string
     code: `
-      void main() {
+      void main() \{
         gl_Position = pos;
       }`
     }
@@ -28,7 +32,7 @@ my_pipeline {
   (Shader, Fragment): {
     filename: "frag.glsl",
     code: `
-      void main() {
+      void main() \{
         frag_color = color;
       }`
     }

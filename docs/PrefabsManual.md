@@ -105,7 +105,7 @@ println!("Defense value: {}", defense.value);
 The following sections go over the different aspects of the prefab feature.
 
 ## The Prefab tag
-Prefabs are regular entities with as only difference that prefabs by default are not matched by queries. This allows prefab entities to coexist with regular entities in the same world without impacting game logic. The mechanism used to exclude prefabs from queries is a builtin `Prefab` tag. The following example shows how to create a prefab:
+Prefabs are regular entities; the only difference is that queries don't match them by default. This allows prefab entities to coexist with regular entities in the same world without impacting game logic. The mechanism used to exclude prefabs from queries is a builtin `Prefab` tag. The following example shows how to create a prefab:
 
 <div class="flecs-snippet-tabs">
 <ul>
@@ -191,7 +191,9 @@ world.QueryBuilder<Position>()
 
 ```rust
 // Only match prefab entities
-world.query::<&Position>().with::<flecs::Prefab>().build();
+world.query::<&Position>()
+    .with::<flecs::Prefab>()
+    .build();
 ```
 
 </li>
@@ -241,11 +243,10 @@ world.QueryBuilder<Position>()
 
 ```rust
 // Only match prefab entities
-world
-.query::<&Position>()
-.with::<flecs::Prefab>()
-.optional()
-.build();
+world.query::<&Position>()
+    .with::<flecs::Prefab>()
+    .optional()
+    .build();
 ```
 
 </li>
@@ -292,10 +293,9 @@ world.QueryBuilder()
 
 ```rust
 // Only match prefab entities
-world
-.query::<&Position>()
-.query_flags(QueryFlags::MatchPrefab)
-.build();
+world.query::<&Position>()
+    .query_flags(QueryFlags::MatchPrefab)
+    .build();
 ```
 
 </li>

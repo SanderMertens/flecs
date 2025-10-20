@@ -933,13 +933,17 @@ void ChangeDetection_query_changed_w_singleton(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
     ecs_singleton_set(world, Velocity, {1, 2});
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "[in] Position, Velocity($)",
+        .expr = "[in] Position, Velocity",
         .cache_kind = EcsQueryCacheAuto,
         .flags = EcsQueryDetectChanges
     });
+
+    test_assert(q != NULL);
 
     test_bool(true, ecs_query_changed(q));
 
@@ -1000,13 +1004,17 @@ void ChangeDetection_query_changed_w_only_singleton(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
     ecs_singleton_set(world, Position, {1, 2});
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position($)",
+        .expr = "Position",
         .cache_kind = EcsQueryCacheAuto,
         .flags = EcsQueryDetectChanges
     });
+
+    test_assert(q != NULL);
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1040,13 +1048,17 @@ void ChangeDetection_query_changed_w_only_singleton_after_set(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
     ecs_singleton_set(world, Position, {1, 2});
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position($)",
+        .expr = "Position",
         .cache_kind = EcsQueryCacheAuto,
         .flags = EcsQueryDetectChanges
     });
+
+    test_assert(q != NULL);
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1093,17 +1105,23 @@ void ChangeDetection_query_changed_w_only_singleton_after_out_term(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
     ecs_singleton_set(world, Position, {1, 2});
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position($)",
+        .expr = "Position",
         .cache_kind = EcsQueryCacheAuto,
         .flags = EcsQueryDetectChanges
     });
 
+    test_assert(q != NULL);
+
     ecs_query_t *q_write = ecs_query(world, {
-        .expr = "[out] Position"
+        .expr = "[out] Position($this)"
     });
+
+    test_assert(q_write != NULL);
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1159,17 +1177,23 @@ void ChangeDetection_query_changed_w_only_singleton_after_singleton_out_term(voi
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
     ecs_singleton_set(world, Position, {1, 2});
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position($)",
+        .expr = "Position",
         .cache_kind = EcsQueryCacheAuto,
         .flags = EcsQueryDetectChanges
     });
 
+    test_assert(q != NULL);
+
     ecs_query_t *q_write = ecs_query(world, {
-        .expr = "[out] Position($)"
+        .expr = "[out] Position"
     });
+
+    test_assert(q_write != NULL);
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1234,6 +1258,8 @@ void ChangeDetection_query_changed_w_only_parent(void) {
         .flags = EcsQueryDetectChanges
     });
 
+    test_assert(q != NULL);
+
     {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
@@ -1276,6 +1302,8 @@ void ChangeDetection_query_changed_w_only_parent_after_set(void) {
         .cache_kind = EcsQueryCacheAuto,
         .flags = EcsQueryDetectChanges
     });
+    
+    test_assert(q != NULL);
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1334,9 +1362,13 @@ void ChangeDetection_query_changed_w_only_parent_after_out_term(void) {
         .flags = EcsQueryDetectChanges
     });
 
+    test_assert(q != NULL);
+
     ecs_query_t *q_write = ecs_query(world, {
         .expr = "[out] Position"
     });
+
+    test_assert(q_write != NULL);
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1405,9 +1437,13 @@ void ChangeDetection_query_changed_w_only_parent_after_parent_out_term(void) {
         .flags = EcsQueryDetectChanges
     });
 
+    test_assert(q != NULL);
+
     ecs_query_t *q_write = ecs_query(world, {
         .expr = "[out] Position(up)"
     });
+
+    test_assert(q_write != NULL);
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);

@@ -156,7 +156,25 @@
                 "validate_simple_w_reflexive",
                 "validate_simple_w_reflexive_pair",
                 "validate_simple_w_inherited_component",
-                "validate_eq_this_not_a_var_w_wildcard"
+                "validate_eq_this_not_a_var_w_wildcard",
+                "validate_term_1_w_singleton_trait",
+                "validate_term_2_w_singleton_trait",
+                "validate_term_pair_w_singleton_trait",
+                "validate_or_term_w_singleton_trait",
+                "validate_term_w_singleton_trait_w_explicit_src",
+                "validate_term_w_singleton_trait_w_explicit_self_src",
+                "validate_term_w_singleton_trait_w_pair_w_explicit_self_src",
+                "validator_1_singleton_terms_match_this",
+                "validator_2_singleton_terms_match_this",
+                "validator_2_singleton_terms_match_this_w_in",
+                "validator_2_terms_1_singleton_match_this",
+                "validator_1_fixed_src_terms_match_this",
+                "validator_2_fixed_src_terms_match_this",
+                "validator_2_terms_1_fixed_src_match_this",
+                "validator_1_var_src_terms_match_this",
+                "validator_2_var_src_terms_match_this",
+                "validator_2_terms_1_var_src_match_this",
+                "validator_1_tag_term_this_src_match_this"
             ]
         }, {
             "id": "Parser",
@@ -463,7 +481,10 @@
                 "n_tokens_test",
                 "this_not_a_var",
                 "eq_this_not_a_var",
-                "eq_this_not_a_var_w_wildcard"
+                "eq_this_not_a_var_w_wildcard",
+                "singleton_trait",
+                "singleton_trait_w_explicit_this_var",
+                "singleton_trait_w_explicit_src"
             ]
         }, {
             "id": "Fuzzing",
@@ -607,6 +628,8 @@
                 "match_optional_self_disabled",
                 "match_optional_self_prefab",
                 "match_optional_self_disabled_prefab",
+                "match_optional_disabled_prefab_w_flecs_core",
+                "match_optional_disabled_prefab_w_not_queryable",
                 "inout_none_first_term",
                 "inout_none_first_term_self_up",
                 "inout_none_second_term",
@@ -761,6 +784,7 @@
                 "3_trivial_plan_w_pair_component",
                 "3_trivial_plan_w_wildcard_component",
                 "3_trivial_plan_w_any_component",
+                "3_trivial_plan_w_any_cached",
                 "1_trivial_component_w_none",
                 "2_trivial_component_w_none",
                 "2_trivial_plan_w_wildcard",
@@ -1763,7 +1787,9 @@
                 "no_rematch_after_instantiate",
                 "no_rematch_after_batched_instantiate",
                 "rematch_after_delete_base_of_base",
-                "rematch_after_delete_first_base_of_base"
+                "rematch_after_delete_first_base_of_base",
+                "rematch_after_remove_all",
+                "no_rematch_after_delete_with"
             ]
         }, {
             "id": "ChangeDetection",
@@ -2266,7 +2292,15 @@
                 "this_written_tgt_var_w_component",
                 "this_written_sparse_any",
                 "this_written_sparse_exclusive_any",
-                "add_to_self_while_iterate"
+                "add_to_self_while_iterate",
+                "this_sparse_recycled",
+                "this_sparse_pair_recycled",
+                "this_sparse_wildcard_pair_recycled",
+                "this_sparse_any_pair_recycled",
+                "this_written_sparse_recycled",
+                "this_written_sparse_pair_recycled",
+                "this_written_sparse_wildcard_pair_recycled",
+                "this_written_sparse_any_pair_recycled"
             ]
         }, {
             "id": "OrderBy",

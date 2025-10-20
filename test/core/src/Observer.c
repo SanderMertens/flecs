@@ -1,5 +1,8 @@
 #include <core.h>
 
+static ECS_COMPONENT_DECLARE(Position);
+static ECS_COMPONENT_DECLARE(Velocity);
+
 static
 void Observer(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
@@ -99,6 +102,23 @@ void Observer_w_2_filter_terms(ecs_iter_t *it) {
     Mass *m = ecs_field(it, Mass, 2);
     test_int(m[0], 100);
 }
+
+static int is_size_observer_invoked = 0;
+static size_t size_observer_field_1 = 0;
+static size_t size_observer_field_2 = 0;
+
+static
+void Observer_w_size(ecs_iter_t *it) {
+    test_assert(it->field_count != 0);
+
+    size_observer_field_1 = ecs_field_size(it, 0);
+    if (it->field_count == 2) {
+        size_observer_field_2 = ecs_field_size(it, 1);
+    }
+
+    is_size_observer_invoked ++;
+}
+
 
 static bool dummy_called = false;
 
@@ -8866,8 +8886,6 @@ void Observer_notify_after_defer_batched_2_entities_in_table_w_tgt(void) {
     ecs_fini(world);
 }
 
-ECS_COMPONENT_DECLARE(Velocity);
-
 static
 void AddVelocity(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
@@ -10380,6 +10398,1322 @@ void Observer_create_multi_observer_after_in_use_w_delete_component(void) {
 
     test_assert(!ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+static int override_on_add = 0;
+static int override_on_set = 0;
+
+static void OverrideOnAdd(ecs_iter_t *it) {
+    test_assert(override_on_set == 0);
+    override_on_add ++;
+}
+
+static void OverrideOnSet(ecs_iter_t *it) {
+    test_assert(override_on_add == 1);
+    override_on_set ++;
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+static void OverrideOnSetTwo(ecs_iter_t *it) {
+    test_assert(override_on_add == 2);
+    override_on_set ++;
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    Velocity *v = ecs_field(it, Velocity, 1);
+    test_assert(p != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void Observer_on_set_override_after_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+        },
+        .events = { EcsOnAdd },
+        .callback = OverrideOnAdd
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+        },
+        .events = { EcsOnSet },
+        .callback = OverrideOnSet
+    });
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_owns(world, i, Position));
+    {
+        const Position *p = ecs_get(world, i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    test_int(override_on_add, 1);
+    test_int(override_on_set, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_two_overrides_after_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+        },
+        .events = { EcsOnAdd },
+        .callback = OverrideOnAdd
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Velocity) },
+        },
+        .events = { EcsOnAdd },
+        .callback = OverrideOnAdd
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity) },
+        },
+        .events = { EcsOnSet },
+        .callback = OverrideOnSetTwo
+    });
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+    ecs_set(world, p, Velocity, {1, 2});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_owns(world, i, Position));
+    {
+        const Position *p = ecs_get(world, i, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+
+    test_assert(ecs_owns(world, i, Velocity));
+    {
+        const Velocity *v = ecs_get(world, i, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1); test_int(v->y, 2);
+    }
+    
+    test_int(override_on_add, 2);
+    test_int(override_on_set, 1);
+
+    ecs_fini(world);
+}
+
+static int is_set_invoked = 0;
+
+void IsSetObserver(ecs_iter_t *it) {
+    test_assert(it->field_count > 0);
+    for (int i = 0; i < it->field_count; i ++) {
+        test_assert(ecs_field_is_set(it, i));
+        is_set_invoked ++;
+    }
+}
+
+void Observer_1_term_on_add_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver
+    });
+
+    ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_remove_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnRemove },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_remove(world, e, Foo);
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_set_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_add_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver
+    });
+
+    ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_remove_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_remove(world, e, Position);
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_add_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }, { Bar }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Bar);
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_remove_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }, { Bar }},
+        .events = { EcsOnRemove },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Bar);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_remove(world, e, Bar);
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_set_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Velocity);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_add_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Velocity);
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_remove_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnRemove },
+        .callback = IsSetObserver
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Velocity);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_remove(world, e, Velocity);
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_add_yield_existing_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_add_yield_existing_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_on_set_yield_existing_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnSet },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_add_yield_existing_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Bar);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Foo) }, { ecs_id(Bar) }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_add_yield_existing_is_set_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Velocity);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnAdd },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_on_set_yield_existing_is_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_add(world, e, Velocity);
+
+    test_int(is_set_invoked, 0);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = IsSetObserver,
+        .yield_existing = true
+    });
+
+    test_int(is_set_invoked, 2);
+
+    ecs_fini(world);
+}
+
+static int is_singleton_observer_invoked = 0;
+
+static void SingletonObserver(ecs_iter_t *it) {
+    test_uint(ecs_field_src(it, 0), ecs_id(Position));
+    test_uint(ecs_field_src(it, 1), ecs_id(Velocity));
+    test_int(it->count, 0);
+
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
+    test_assert(p != NULL);
+    test_assert(v != NULL);
+
+    is_singleton_observer_invoked ++;
+}
+
+static void SingletonObserver_w_value(ecs_iter_t *it) {
+    test_uint(ecs_field_src(it, 0), ecs_id(Position));
+    test_uint(ecs_field_src(it, 1), ecs_id(Velocity));
+    test_int(it->count, 0);
+
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
+    test_assert(p != NULL);
+    test_assert(v != NULL);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+    is_singleton_observer_invoked ++;
+}
+
+void Observer_2_singleton_terms_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnAdd },
+        .callback = SingletonObserver
+    });
+
+    test_int(is_singleton_observer_invoked, 0);
+
+    ecs_singleton_set(world, Position, {10, 20});
+
+    test_int(is_singleton_observer_invoked, 0);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+    test_int(is_singleton_observer_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_2_singleton_terms_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    ecs_singleton_set(world, Position, {10, 20});
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnRemove },
+        .callback = SingletonObserver_w_value
+    });
+
+    ecs_singleton_remove(world, Position);
+
+    test_int(is_singleton_observer_invoked, 1);
+
+    ecs_singleton_remove(world, Velocity);
+
+    test_int(is_singleton_observer_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_2_singleton_terms_on_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = SingletonObserver_w_value
+    });
+
+    test_int(is_singleton_observer_invoked, 0);
+
+    ecs_singleton_set(world, Position, {10, 20});
+
+    test_int(is_singleton_observer_invoked, 0);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+    test_int(is_singleton_observer_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, sizeof(Position));
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_set(world, e, Velocity, {10, 20});
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, sizeof(Position));
+    test_int(size_observer_field_2, sizeof(Velocity));
+
+    ecs_fini(world);
+}
+
+void Observer_1_up_term_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_new_w_pair(world, EcsChildOf, p);
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_set(world, p, Position, {10, 20});
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, sizeof(Position));
+
+    ecs_fini(world);
+}
+
+void Observer_2_up_terms_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp }, { ecs_id(Velocity), .src.id = EcsUp }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+    ecs_set(world, p, Velocity, {1, 2});
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_new_w_pair(world, EcsChildOf, p);
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_set(world, p, Position, {10, 20});
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, sizeof(Position));
+    test_int(size_observer_field_2, sizeof(Velocity));
+
+    ecs_fini(world);
+}
+
+void Observer_1_fixed_src_term_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    ecs_singleton_set(world, Position, {10, 20});
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, sizeof(Position));
+
+    ecs_fini(world);
+}
+
+void Observer_2_fixed_src_terms_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = ecs_id(Position) }, { ecs_id(Velocity), .src.id = ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_singleton_set(world, Position, {10, 20});
+    
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_singleton_set(world, Velocity, {10, 20});
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, sizeof(Position));
+    test_int(size_observer_field_2, sizeof(Velocity));
+
+    ecs_fini(world);
+}
+
+void Observer_1_singleton_term_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    ecs_singleton_set(world, Position, {10, 20});
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, sizeof(Position));
+
+    ecs_fini(world);
+}
+
+void Observer_2_singleton_terms_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_singleton_set(world, Position, {10, 20});
+    
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_singleton_set(world, Velocity, {10, 20});
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, sizeof(Position));
+    test_int(size_observer_field_1, sizeof(Velocity));
+
+    ecs_fini(world);
+}
+
+int is_on_set_position_invoked = 0;
+int is_on_set_mass_invoked = 0;
+int is_on_set_position_mass_invoked = 0;
+
+static
+void on_set_position(ecs_iter_t *it) {
+    test_int(sizeof(Position), ecs_field_size(it, 0));
+    is_on_set_position_invoked ++;
+}
+
+static
+void on_set_mass(ecs_iter_t *it) {
+    test_int(sizeof(Mass), ecs_field_size(it, 0));
+    is_on_set_mass_invoked ++;
+}
+
+void Observer_1_on_set_overridden_term_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+    ecs_set(world, p, Mass, {1});
+
+    ecs_observer(world, {
+        .query.terms =  {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = on_set_position
+    });
+
+    ecs_observer(world, {
+        .query.terms =  {{ ecs_id(Mass) }},
+        .events = { EcsOnSet },
+        .callback = on_set_mass
+    });
+
+    ecs_new_w_pair(world, EcsIsA, p);
+    test_int(is_on_set_position_invoked, 1);
+    test_int(is_on_set_mass_invoked, 1);
+
+    ecs_fini(world);
+}
+
+static
+void on_set_position_mass(ecs_iter_t *it) {
+    test_int(sizeof(Position), ecs_field_size(it, 0));
+    test_int(sizeof(Mass), ecs_field_size(it, 1));
+    is_on_set_position_mass_invoked ++;
+}
+
+void Observer_2_on_set_overridden_terms_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+    ecs_set(world, p, Mass, {1});
+
+    ecs_observer(world, {
+        .query.terms =  {{ ecs_id(Position) }, { ecs_id(Mass) }},
+        .events = { EcsOnSet },
+        .callback = on_set_position_mass
+    });
+
+    ecs_new_w_pair(world, EcsIsA, p);
+    test_int(is_on_set_position_mass_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_1_on_set_after_remove_overridden_term_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set_override(world, p, Position, {10, 20});
+    ecs_set_override(world, p, Mass, {1});
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, p);
+
+    ecs_observer(world, {
+        .query.terms =  {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = on_set_position
+    });
+
+    ecs_observer(world, {
+        .query.terms =  {{ ecs_id(Mass) }},
+        .events = { EcsOnSet },
+        .callback = on_set_mass
+    });
+
+    ecs_remove(world, e, Position);
+    test_int(is_on_set_position_invoked, 1);
+
+    ecs_remove(world, e, Mass);
+    test_int(is_on_set_mass_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_2_on_set_after_remove_overridden_terms_field_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set_override(world, p, Position, {10, 20});
+    ecs_set_override(world, p, Mass, {1});
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, p);
+
+    ecs_observer(world, {
+        .query.terms =  {{ ecs_id(Position) }, { ecs_id(Mass) }},
+        .events = { EcsOnSet },
+        .callback = on_set_position_mass
+    });
+
+    ecs_remove(world, e, Position);
+    test_int(is_on_set_position_mass_invoked, 1);
+
+    ecs_remove(world, e, Mass);
+    test_int(is_on_set_position_mass_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_1_on_set_after_remove_overridden_term_field_size_defer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set_override(world, p, Position, {10, 20});
+    ecs_set_override(world, p, Mass, {1});
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, p);
+
+    ecs_observer(world, {
+        .query.terms =  {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = on_set_position
+    });
+
+    ecs_observer(world, {
+        .query.terms =  {{ ecs_id(Mass) }},
+        .events = { EcsOnSet },
+        .callback = on_set_mass
+    });
+
+    ecs_defer_begin(world);
+    ecs_remove(world, e, Position);
+    ecs_remove(world, e, Mass);
+
+    test_int(is_on_set_position_invoked, 0);
+    test_int(is_on_set_mass_invoked, 0);
+    ecs_defer_end(world);
+
+    test_int(is_on_set_position_invoked, 1);
+    test_int(is_on_set_mass_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_2_on_set_after_remove_overridden_terms_field_size_defer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set_override(world, p, Position, {10, 20});
+    ecs_set_override(world, p, Mass, {1});
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, p);
+
+    ecs_observer(world, {
+        .query.terms =  {{ ecs_id(Position) }, { ecs_id(Mass) }},
+        .events = { EcsOnSet },
+        .callback = on_set_position_mass
+    });
+
+    ecs_defer_begin(world);
+    ecs_remove(world, e, Position);
+    ecs_remove(world, e, Mass);
+
+    test_int(is_on_set_position_mass_invoked, 0);
+    ecs_defer_end(world);
+
+    test_assert(is_on_set_position_mass_invoked >= 1);
+
+    ecs_fini(world);
+}
+
+int is_on_add_position_invoked = 0;
+int is_on_add_foo_invoked = 0;
+int is_on_add_position_foo_invoked = 0;
+
+static
+void on_add_position(ecs_iter_t *it) {
+    test_int(sizeof(Position), ecs_field_size(it, 0));
+    is_on_add_position_invoked ++;
+}
+
+static
+void on_add_foo(ecs_iter_t *it) {
+    test_int(0, ecs_field_size(it, 0));
+    is_on_add_foo_invoked ++;
+}
+
+void Observer_1_term_field_size_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnAdd },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_field_size_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { Foo }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_add(world, e, Foo);
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, sizeof(Position));
+    test_int(size_observer_field_2, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_1_up_term_field_size_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo, .src.id = EcsUp }},
+        .events = { EcsOnAdd },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_entity_t p = ecs_new(world);
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_new_w_pair(world, EcsChildOf, p);
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_add(world, p, Foo);
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_2_up_terms_field_size_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp }, { Foo, .src.id = EcsUp }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+    ecs_add(world, p, Foo);
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_new_w_pair(world, EcsChildOf, p);
+    test_int(is_size_observer_invoked, 1); // invoked because Foo term reacts to OnAdd
+    test_int(size_observer_field_1, sizeof(Position));
+    test_int(size_observer_field_2, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_1_fixed_src_term_field_size_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo, .src.id = Foo }},
+        .events = { EcsOnAdd },
+        .callback = Observer_w_size
+    });
+
+    ecs_singleton_add(world, Foo);
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_2_fixed_src_terms_field_size_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = ecs_id(Position) }, { Foo, .src.id = Foo }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_singleton_set(world, Position, {10, 20});
+    
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_singleton_add(world, Foo);
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, sizeof(Position));
+    test_int(size_observer_field_2, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_1_singleton_term_field_size_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnAdd },
+        .callback = Observer_w_size
+    });
+
+    ecs_singleton_add(world, Foo);
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_2_singleton_terms_field_size_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG(world, Foo);
+    
+    ecs_add_id(world, ecs_id(Position), EcsSingleton);
+    ecs_add_id(world, Foo, EcsSingleton);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { Foo }},
+        .events = { EcsOnSet },
+        .callback = Observer_w_size
+    });
+
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_singleton_set(world, Position, {10, 20});
+    
+    test_int(is_size_observer_invoked, 0);
+
+    ecs_singleton_add(world, Foo);
+
+    test_int(is_size_observer_invoked, 1);
+    test_int(size_observer_field_1, sizeof(Position));
+    test_int(size_observer_field_2, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_1_on_set_overridden_term_field_size_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+    ecs_add(world, p, Foo);
+
+    ecs_observer(world, {
+        .query.terms =  {{ ecs_id(Position) }},
+        .events = { EcsOnAdd },
+        .callback = on_add_position
+    });
+
+    ecs_observer(world, {
+        .query.terms =  {{ Foo }},
+        .events = { EcsOnAdd },
+        .callback = on_add_foo
+    });
+
+    ecs_new_w_pair(world, EcsIsA, p);
+    test_int(is_on_add_position_invoked, 1);
+    test_int(is_on_add_foo_invoked, 1);
+
+    ecs_fini(world);
+}
+
+static
+void on_add_position_foo(ecs_iter_t *it) {
+    test_int(sizeof(Position), ecs_field_size(it, 0));
+    test_int(0, ecs_field_size(it, 1));
+    is_on_add_position_foo_invoked ++;
+}
+
+void Observer_2_on_set_overridden_terms_field_size_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Position, {10, 20});
+    ecs_add(world, p, Foo);
+
+    ecs_observer(world, {
+        .query.terms =  {{ ecs_id(Position) }, { Foo }},
+        .events = { EcsOnAdd },
+        .callback = on_add_position_foo
+    });
+
+    ecs_new_w_pair(world, EcsIsA, p);
+    test_int(is_on_add_position_foo_invoked, 1);
 
     ecs_fini(world);
 }

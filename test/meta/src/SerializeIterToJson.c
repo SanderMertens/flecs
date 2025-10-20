@@ -1484,7 +1484,7 @@ void SerializeIterToJson_serialize_anonymous_component(void) {
     ecs_query_t *q = ecs_query(world, { .expr = "#10000" });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
-    int32_t *ptr = ecs_ensure_id(world, e, tag);
+    int32_t *ptr = ecs_ensure_id(world, e, tag, 4);
     *ptr = 10;
 
     ecs_iter_t it = ecs_query_iter(world, q);
