@@ -49,7 +49,7 @@ public:
 		return FlecsWorld.Get();
 	}
 
-	NO_DISCARD FORCEINLINE const UFlecsWorld* GetFlecsWorldChecked() const
+	NO_DISCARD FORCEINLINE TSolidNotNull<const UFlecsWorld*> GetFlecsWorldChecked() const
 	{
 		solid_checkf(FlecsWorld.IsValid(), TEXT("FlecsWorld is not valid!"));
 		return FlecsWorld.Get();
