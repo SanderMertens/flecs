@@ -21,10 +21,10 @@ void UFlecsAbstractWorldSubsystem::Initialize(FSubsystemCollectionBase& Collecti
 	}
 	else // Handles test worlds
 	{
-		Unreal::Flecs::GOnFlecsWorldInitialized.AddLambda([this](const TSolidNotNull<UFlecsWorld*> InWorld)
+		Unreal::Flecs::GOnFlecsWorldInitialized.AddWeakLambda(this, [this](const TSolidNotNull<UFlecsWorld*> InWorld)
 		{
 			FlecsWorldRef = InWorld;
-			OnFlecsWorldInitialized(GetFlecsWorldChecked());
+			OnFlecsWorldInitialized(FlecsWorldRef.Get());
 		});
 	}
 }

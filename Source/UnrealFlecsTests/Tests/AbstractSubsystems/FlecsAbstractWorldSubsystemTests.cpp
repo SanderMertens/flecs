@@ -39,6 +39,15 @@ TEST_CLASS_WITH_FLAGS(B3_FlecsWorldSubsystems, "UnrealFlecs.B3_FlecsWorldSubsyst
 		ASSERT_THAT(IsTrue(WorldSubsystem->bWasFlecsWorldInitialized));
 	}
 	
+	TEST_METHOD(A2_AbstractFlecsWorldSubsystem_FlecsWorldInitialization_Again)
+	{
+		const UTestFlecsWorldSubsystem_Initialization* WorldSubsystem
+			= FlecsWorld->GetWorld()->GetSubsystem<UTestFlecsWorldSubsystem_Initialization>();
+		ASSERT_THAT(IsTrue(IsValid(WorldSubsystem)));
+		
+		ASSERT_THAT(IsTrue(WorldSubsystem->bWasFlecsWorldInitialized));
+	}
+	
 }; // End of B3_FlecsWorldSubsystems
 
 #endif // WITH_AUTOMATION_TESTS

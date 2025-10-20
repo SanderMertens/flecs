@@ -8,7 +8,6 @@
 
 // @TODO: Maybe make this a Flecs Default Entity instead of a USTRUCT?
 
-
 USTRUCT()
 struct FFlecsGameplayTagManagerEntity
 {

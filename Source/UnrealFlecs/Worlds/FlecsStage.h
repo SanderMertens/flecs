@@ -8,13 +8,12 @@
 
 #include "FlecsStage.generated.h"
 
-// @TODO: Implement stages properly
+// @TODO: Implement tracking stages properly
 UCLASS()
 class UNREALFLECS_API UFlecsStage : public UFlecsWorld
 {
 	GENERATED_BODY()
 
 public:
-	
 	
 }; // class UFlecsStage
