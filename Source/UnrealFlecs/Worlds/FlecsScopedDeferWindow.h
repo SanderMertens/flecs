@@ -10,8 +10,6 @@
 
 class UFlecsWorld;
 
-// @TODO: Add Tests for this!
-
 // RAII helper to create a Flecs Defer Window on a given Flecs World.
 struct UNREALFLECS_API FFlecsScopedDeferWindow
 {
