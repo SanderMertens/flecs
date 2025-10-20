@@ -2199,6 +2199,18 @@ void World_register_alias_twice_different_entity(void);
 void World_redefine_component(void);
 void World_delete_empty_tables_after_mini(void);
 void World_delete_empty_tables_after_init(void);
+void World_delete_empty_tables_w_add_hook_clear(void);
+void World_delete_empty_tables_w_add_hook_delete(void);
+void World_delete_empty_tables_w_add_hook_clear_delete(void);
+void World_delete_empty_tables_w_add_hook_clear_before_delete(void);
+void World_delete_empty_tables_w_remove_hook_clear(void);
+void World_delete_empty_tables_w_remove_hook_delete(void);
+void World_delete_empty_tables_w_remove_hook_clear_delete(void);
+void World_delete_empty_tables_w_remove_hook_clear_before_delete(void);
+void World_delete_empty_tables_w_set_hook_clear(void);
+void World_delete_empty_tables_w_set_hook_delete(void);
+void World_delete_empty_tables_w_set_hook_clear_delete(void);
+void World_delete_empty_tables_w_set_hook_clear_before_delete(void);
 void World_delete_1000_empty_tables(void);
 void World_use_after_delete_empty(void);
 void World_use_after_clear_empty(void);
@@ -11297,6 +11309,54 @@ bake_test_case World_testcases[] = {
         World_delete_empty_tables_after_init
     },
     {
+        "delete_empty_tables_w_add_hook_clear",
+        World_delete_empty_tables_w_add_hook_clear
+    },
+    {
+        "delete_empty_tables_w_add_hook_delete",
+        World_delete_empty_tables_w_add_hook_delete
+    },
+    {
+        "delete_empty_tables_w_add_hook_clear_delete",
+        World_delete_empty_tables_w_add_hook_clear_delete
+    },
+    {
+        "delete_empty_tables_w_add_hook_clear_before_delete",
+        World_delete_empty_tables_w_add_hook_clear_before_delete
+    },
+    {
+        "delete_empty_tables_w_remove_hook_clear",
+        World_delete_empty_tables_w_remove_hook_clear
+    },
+    {
+        "delete_empty_tables_w_remove_hook_delete",
+        World_delete_empty_tables_w_remove_hook_delete
+    },
+    {
+        "delete_empty_tables_w_remove_hook_clear_delete",
+        World_delete_empty_tables_w_remove_hook_clear_delete
+    },
+    {
+        "delete_empty_tables_w_remove_hook_clear_before_delete",
+        World_delete_empty_tables_w_remove_hook_clear_before_delete
+    },
+    {
+        "delete_empty_tables_w_set_hook_clear",
+        World_delete_empty_tables_w_set_hook_clear
+    },
+    {
+        "delete_empty_tables_w_set_hook_delete",
+        World_delete_empty_tables_w_set_hook_delete
+    },
+    {
+        "delete_empty_tables_w_set_hook_clear_delete",
+        World_delete_empty_tables_w_set_hook_clear_delete
+    },
+    {
+        "delete_empty_tables_w_set_hook_clear_before_delete",
+        World_delete_empty_tables_w_set_hook_clear_before_delete
+    },
+    {
         "delete_1000_empty_tables",
         World_delete_1000_empty_tables
     },
@@ -13696,7 +13756,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        107,
+        119,
         World_testcases
     },
     {
