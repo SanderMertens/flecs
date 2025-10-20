@@ -26864,7 +26864,11 @@ bool flecs_rest_action(
     ecs_dbg_2("rest: run action '%s'", action);
 
     if (ecs_os_strcmp(action, "shrink_memory") == 0) {
-        ecs_run_post_frame(world, flecs_rest_shrink_memory, NULL);
+        if (ecs_world_get_flags(world) & EcsWorldFrameInProgress) {
+            ecs_run_post_frame(world, flecs_rest_shrink_memory, NULL);
+        } else {
+            flecs_rest_shrink_memory(world, NULL);
+        }
     } else {
         flecs_reply_error(reply, "unknown action '%s'", action);
         reply->code = 400;
