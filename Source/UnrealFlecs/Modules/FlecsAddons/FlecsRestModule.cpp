@@ -18,28 +18,31 @@ void UFlecsRestModule::InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, con
 	
 	const TSolidNotNull<const UWorld*> UnrealWorld = InWorld->GetWorld();
 
-#if WITH_EDITOR
+	#if WITH_EDITOR
 	
 	if (UnrealWorld->GetNetMode() == NM_Client)
 	{
 		ClientPieInstanceOffset = static_cast<uint16>(UE::GetPlayInEditorID());
 	}
 	
-#endif // WITH_EDITOR
+	#endif // WITH_EDITOR
 	
 	const uint16 RestPort = ECS_REST_DEFAULT_PORT + ClientPieInstanceOffset;
 
 	InWorld->SetSingleton<flecs::Rest>(flecs::Rest{ .port = RestPort });
+	
 	RestEntity = InWorld->ObtainSingletonEntity<flecs::Rest>();
+	solid_checkf(RestEntity.IsValid(),
+		TEXT("Flecs REST module failed to create REST singleton entity on port %d."), RestPort);
 
-#ifdef FLECS_STATS
+	#ifdef FLECS_STATS
 
 	if (bImportStats)
 	{
 		StatsEntity = InWorld->ImportFlecsModule<flecs::stats>();
 	}
 
-#endif // #ifdef FLECS_STATS
+	#endif // #ifdef FLECS_STATS
 
 #endif // #ifdef FLECS_REST
 }
