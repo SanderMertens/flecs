@@ -17,47 +17,11 @@
 void UFlecsCollectionWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+}
 
-	const TSolidNotNull<const UFlecsWorldSubsystem*> WorldSubsystem = Collection.InitializeDependency<UFlecsWorldSubsystem>();
-
-	// Automation Testing specific initialization flow
-#if WITH_AUTOMATION_TESTS
-	if (GIsAutomationTesting)
-	{
-		if (WorldSubsystem->HasValidFlecsWorld())
-		{
-			const TSolidNotNull<UFlecsWorld*> FlecsWorld = GetFlecsWorld();
-
-			FlecsWorld->RegisterComponentType<FFlecsCollectionPrefabTag>();
-			FlecsWorld->RegisterComponentType<FFlecsCollectionReferenceComponent>();
-			FlecsWorld->RegisterComponentType<FFlecsCollectionSlotTag>();
-
-			CollectionScopeEntity = FlecsWorld->CreateEntity("CollectionScope")
-				.Add(flecs::Module);
-	
-			UE_LOG(LogFlecsWorld, Verbose, TEXT("UCollectionsModule registered"));
-		}
-		else
-		{
-			// We need to do this because currently the test Flecs world is created much later and we have no function in Abstract World Subsystem for detection
-			Unreal::Flecs::GOnFlecsWorldInitialized.AddLambda([this](const TSolidNotNull<UFlecsWorld*> InWorld)
-			{
-				SetFlecsWorld(InWorld);
-				
-				InWorld->RegisterComponentType<FFlecsCollectionPrefabTag>();
-				InWorld->RegisterComponentType<FFlecsCollectionReferenceComponent>();
-				InWorld->RegisterComponentType<FFlecsCollectionSlotTag>();
-
-				CollectionScopeEntity = InWorld->CreateEntity("CollectionScope")
-					.Add(flecs::Module);
-	
-				UE_LOG(LogFlecsWorld, Verbose, TEXT("UCollectionsModule registered"));
-			});
-		}
-		
-		return;
-	}
-#endif // WITH_AUTOMATION_TESTS
+void UFlecsCollectionWorldSubsystem::OnFlecsWorldInitialized(const TSolidNotNull<UFlecsWorld*> InWorld)
+{
+	Super::OnFlecsWorldInitialized(InWorld);
 
 	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = GetFlecsWorldChecked();
 
@@ -228,6 +192,11 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByClass(const TSubcl
 	
 	const FFlecsCollectionId Id = FFlecsCollectionId(InClass->GetFName());
 	return GetPrefabById(Id);
+}
+
+FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetCollectionScope() const
+{
+	return CollectionScopeEntity;
 }
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::EnsurePrefabShell(const FFlecsCollectionId& Id)

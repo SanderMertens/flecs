@@ -126,7 +126,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1_World",
 
 	TEST_METHOD(C1_CanCreateEntity)
 	{
-		FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
 		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
 	}
 
@@ -135,6 +135,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1_World",
 		static constexpr FFlecsId TestId = FLECS_HI_COMPONENT_ID + 10012;
 		
 		const FFlecsEntityHandle EntityWithId = FlecsWorld->CreateEntityWithId(TestId);
+		ASSERT_THAT(IsTrue(EntityWithId.IsValid()));
 		ASSERT_THAT(AreEqual(TestId, EntityWithId.GetFlecsId()));
 		
 		ASSERT_THAT(IsTrue(FlecsWorld->IsAlive(EntityWithId)));
@@ -145,7 +146,10 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1_World",
 	TEST_METHOD(C3_CanAddRemoveTag)
 	{
 		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+		
 		const FFlecsEntityHandle Tag = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(Tag.IsValid()));
 		
 		TestEntity.Add(Tag);
 		ASSERT_THAT(IsTrue(TestEntity.Has(Tag)));
@@ -159,6 +163,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1_World",
 		static FString EntityName = TEXT("MyTestEntity");
 		
 		const FFlecsEntityHandle NamedEntity = FlecsWorld->CreateEntity(EntityName);
+		ASSERT_THAT(IsTrue(NamedEntity.IsValid()));
 		ASSERT_THAT(IsTrue(NamedEntity.HasName()));
 		ASSERT_THAT(AreEqual(EntityName, NamedEntity.GetName()));
 
@@ -173,6 +178,9 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A1_FlecsWorldTests, "UnrealFlecs.A1_World",
 		static FString NewEntityName = TEXT("MyRenamedTestEntity");
 
 		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+		ASSERT_THAT(IsFalse(TestEntity.HasName()));
+		ASSERT_THAT(IsFalse(FlecsWorld->LookupEntity(NewEntityName).IsValid()));
 		
 		TestEntity.SetName(NewEntityName);
 		ASSERT_THAT(AreEqual(NewEntityName, TestEntity.GetName()));

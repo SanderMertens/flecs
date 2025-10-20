@@ -12,6 +12,8 @@
 
 // @TODO:Add Tests for this class!
 
+class UFlecsWorldSubsystem;
+
 UCLASS(Abstract)
 class UNREALFLECS_API UFlecsAbstractWorldSubsystem : public UWorldSubsystem
 {
@@ -19,28 +21,24 @@ class UNREALFLECS_API UFlecsAbstractWorldSubsystem : public UWorldSubsystem
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void OnFlecsWorldInitialized(const TSolidNotNull<UFlecsWorld*> InWorld);
+	virtual void Deinitialize() override;
 
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override final;
 
+	NO_DISCARD UFlecsWorldSubsystem* GetFlecsWorldSubsystem() const;
+	NO_DISCARD TSolidNotNull<UFlecsWorldSubsystem*> GetFlecsWorldSubsystemChecked() const;
+
 	// Will return null if the world isn't valid or initialized yet.
-	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorld() const
-	{
-		return FlecsWorldRef.Get();
-	}
+	NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
+	NO_DISCARD TSolidNotNull<UFlecsWorld*> GetFlecsWorldChecked() const;
 
-	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorldChecked() const
-	{
-		solid_checkf(FlecsWorldRef.IsValid(), TEXT("FlecsWorld is not valid!"));
-		return FlecsWorldRef.Get();
-	}
-
-	void SetFlecsWorld(UFlecsWorld* InWorld)
-	{
-		FlecsWorldRef = InWorld;
-	}
-
+private:
 	UPROPERTY()
 	TWeakObjectPtr<UFlecsWorld> FlecsWorldRef;
+
+	UPROPERTY()
+	TWeakObjectPtr<UFlecsWorldSubsystem> FlecsWorldSubsystemRef;
 	
 }; // class UFlecsAbstractWorldSubsystem
 

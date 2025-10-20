@@ -30,7 +30,10 @@ TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9_World_Defer",
 		FlecsWorld = Fixture->Fixture.GetFlecsWorld();
 
 		TestEntity = FlecsWorld->CreateEntity("TestEntity");
+		solid_checkf(TestEntity.IsValid(), TEXT("Failed to create TestEntity!"));
+		
 		TestComponent = FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
+		solid_checkf(TestComponent.IsValid(), TEXT("Failed to register TestComponent!"));
 	}
 
 	AFTER_EACH()

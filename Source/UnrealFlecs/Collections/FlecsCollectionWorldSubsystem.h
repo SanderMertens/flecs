@@ -24,7 +24,6 @@ namespace Unreal::Flecs::Collections
 	
 } // namespace Unreal::Flecs::Collections
 
-// @TODO: fix this shit dont use rn
 UCLASS()
 class UNREALFLECS_API UFlecsCollectionWorldSubsystem final : public UFlecsAbstractWorldSubsystem
 {
@@ -32,6 +31,7 @@ class UNREALFLECS_API UFlecsCollectionWorldSubsystem final : public UFlecsAbstra
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void OnFlecsWorldInitialized(const TSolidNotNull<UFlecsWorld*> InWorld) override;
 	virtual void Deinitialize() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
@@ -59,10 +59,7 @@ public:
 	FFlecsEntityHandle GetPrefabByClass(const TSubclassOf<UObject> InClass) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
-	FORCEINLINE FFlecsEntityHandle GetCollectionScope() const
-	{
-		return CollectionScopeEntity;
-	}
+	FFlecsEntityHandle GetCollectionScope() const;
 
 	template <Unreal::Flecs::Collections::TCollectionBuilderFunc FuncType>
 	FFlecsEntityHandle RegisterCollectionBuilder(FuncType&& InBuildFunc)

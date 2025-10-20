@@ -12,8 +12,31 @@ void UFlecsAbstractWorldSubsystem::Initialize(FSubsystemCollectionBase& Collecti
 {
 	Super::Initialize(Collection);
 
-	Collection.InitializeDependency<UFlecsWorldSubsystem>();
+	FlecsWorldSubsystemRef = Collection.InitializeDependency<UFlecsWorldSubsystem>();
 	FlecsWorldRef = UFlecsWorldSubsystem::GetDefaultWorldStatic(this);
+
+	if (FlecsWorldRef.IsValid())
+	{
+		OnFlecsWorldInitialized(GetFlecsWorldChecked());
+	}
+	else // Handles test worlds
+	{
+		Unreal::Flecs::GOnFlecsWorldInitialized.AddLambda([this](const TSolidNotNull<UFlecsWorld*> InWorld)
+		{
+			FlecsWorldRef = InWorld;
+			OnFlecsWorldInitialized(GetFlecsWorldChecked());
+		});
+	}
+}
+
+void UFlecsAbstractWorldSubsystem::OnFlecsWorldInitialized(const TSolidNotNull<UFlecsWorld*> InWorld)
+{
+	// Empty implementation, meant to be overridden in subclasses
+}
+
+void UFlecsAbstractWorldSubsystem::Deinitialize()
+{
+	Super::Deinitialize();
 }
 
 bool UFlecsAbstractWorldSubsystem::DoesSupportWorldType(const EWorldType::Type WorldType) const
@@ -21,4 +44,26 @@ bool UFlecsAbstractWorldSubsystem::DoesSupportWorldType(const EWorldType::Type W
 	return WorldType == EWorldType::Game
 		|| WorldType == EWorldType::PIE
 		|| WorldType == EWorldType::GameRPC;
+}
+
+UFlecsWorldSubsystem* UFlecsAbstractWorldSubsystem::GetFlecsWorldSubsystem() const
+{
+	return FlecsWorldSubsystemRef.Get();
+}
+
+TSolidNotNull<UFlecsWorldSubsystem*> UFlecsAbstractWorldSubsystem::GetFlecsWorldSubsystemChecked() const
+{
+	solid_checkf(FlecsWorldRef.IsValid(), TEXT("FlecsWorldSubsystem is not valid!"));
+	return FlecsWorldSubsystemRef.Get();
+}
+
+UFlecsWorld* UFlecsAbstractWorldSubsystem::GetFlecsWorld() const
+{
+	return FlecsWorldRef.Get();
+}
+
+TSolidNotNull<UFlecsWorld*> UFlecsAbstractWorldSubsystem::GetFlecsWorldChecked() const
+{
+	solid_checkf(FlecsWorldRef.IsValid(), TEXT("FlecsWorld is not valid!"));
+	return FlecsWorldRef.Get();
 }
