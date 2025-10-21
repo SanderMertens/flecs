@@ -649,6 +649,14 @@ void Sparse_instantiate_prefab_w_component_w_with_sparse(void);
 void Sparse_children_for_sparse(void);
 void Sparse_children_for_sparse_no_children(void);
 void Sparse_children_for_sparse_after_delete_children(void);
+void Sparse_on_remove_before_hook_before_dtor(void);
+void Sparse_on_remove_before_hook_before_dtor_pair(void);
+void Sparse_check_sparse_in_regular_observer(void);
+void Sparse_check_sparse_target_in_regular_observer(void);
+void Sparse_check_sparse_exclusive_target_in_regular_observer(void);
+void Sparse_check_regular_in_sparse_observer(void);
+void Sparse_check_regular_target_in_sparse_observer(void);
+void Sparse_check_regular_exclusive_target_in_sparse_observer(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5269,6 +5277,38 @@ bake_test_case Sparse_testcases[] = {
     {
         "children_for_sparse_after_delete_children",
         Sparse_children_for_sparse_after_delete_children
+    },
+    {
+        "on_remove_before_hook_before_dtor",
+        Sparse_on_remove_before_hook_before_dtor
+    },
+    {
+        "on_remove_before_hook_before_dtor_pair",
+        Sparse_on_remove_before_hook_before_dtor_pair
+    },
+    {
+        "check_sparse_in_regular_observer",
+        Sparse_check_sparse_in_regular_observer
+    },
+    {
+        "check_sparse_target_in_regular_observer",
+        Sparse_check_sparse_target_in_regular_observer
+    },
+    {
+        "check_sparse_exclusive_target_in_regular_observer",
+        Sparse_check_sparse_exclusive_target_in_regular_observer
+    },
+    {
+        "check_regular_in_sparse_observer",
+        Sparse_check_regular_in_sparse_observer
+    },
+    {
+        "check_regular_target_in_sparse_observer",
+        Sparse_check_regular_target_in_sparse_observer
+    },
+    {
+        "check_regular_exclusive_target_in_sparse_observer",
+        Sparse_check_regular_exclusive_target_in_sparse_observer
     }
 };
 
@@ -13616,7 +13656,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        196,
+        204,
         Sparse_testcases,
         1,
         Sparse_params
