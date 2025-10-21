@@ -363,6 +363,7 @@ void Module_module_with_core_name(void) {
     test_assert(pos == world.id<Position>());
 }
 
+// Will crash if editor has played PIE in this editor session
 void Module_import_addons_two_worlds(void) {
     flecs::world a;
     auto m1 = a.import<flecs::stats>();
