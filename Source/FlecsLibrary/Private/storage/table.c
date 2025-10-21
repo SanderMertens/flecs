@@ -1001,6 +1001,10 @@ void flecs_table_invoke_add_hooks(
     ecs_type_info_t *ti = column->ti;
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (!count) {
+        return;
+    }
+
     if (construct) {
         flecs_table_invoke_ctor(world, table, column_index, row, count);
     }
