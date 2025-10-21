@@ -8980,8 +8980,6 @@ void ecs_delete(
                 flecs_table_traversable_add(r->table, -1);
             }
 
-            flecs_entity_remove_non_fragmenting(world, entity, r);
-
             /* Merge operations before deleting entity */
             flecs_defer_end(world, stage);
             flecs_defer_begin(world, stage);
@@ -8998,6 +8996,7 @@ void ecs_delete(
             int32_t row = ECS_RECORD_TO_ROW(r->row);
             flecs_notify_on_remove(
                 world, table, &world->store.root, row, 1, &diff);
+            flecs_entity_remove_non_fragmenting(world, entity, r);
             flecs_table_delete(world, table, row, true);
         }
         

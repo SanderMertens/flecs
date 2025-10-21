@@ -678,7 +678,15 @@
                 "instantiate_prefab_w_component_w_with_sparse",
                 "children_for_sparse",
                 "children_for_sparse_no_children",
-                "children_for_sparse_after_delete_children"
+                "children_for_sparse_after_delete_children",
+                "on_remove_before_hook_before_dtor",
+                "on_remove_before_hook_before_dtor_pair",
+                "check_sparse_in_regular_observer",
+                "check_sparse_target_in_regular_observer",
+                "check_sparse_exclusive_target_in_regular_observer",
+                "check_regular_in_sparse_observer",
+                "check_regular_target_in_sparse_observer",
+                "check_regular_exclusive_target_in_sparse_observer"
             ]
         }, {
             "id": "Hierarchies",
