@@ -2211,6 +2211,12 @@ void World_delete_empty_tables_w_set_hook_clear(void);
 void World_delete_empty_tables_w_set_hook_delete(void);
 void World_delete_empty_tables_w_set_hook_clear_delete(void);
 void World_delete_empty_tables_w_set_hook_clear_before_delete(void);
+void World_delete_empty_tables_w_add_hook_clear_empty_table(void);
+void World_delete_empty_tables_w_remove_hook_clear_empty_table(void);
+void World_delete_empty_tables_w_set_hook_clear_empty_table(void);
+void World_delete_empty_tables_w_add_hook_delete_empty_table(void);
+void World_delete_empty_tables_w_remove_hook_delete_empty_table(void);
+void World_delete_empty_tables_w_set_hook_delete_empty_table(void);
 void World_delete_1000_empty_tables(void);
 void World_use_after_delete_empty(void);
 void World_use_after_clear_empty(void);
@@ -11357,6 +11363,30 @@ bake_test_case World_testcases[] = {
         World_delete_empty_tables_w_set_hook_clear_before_delete
     },
     {
+        "delete_empty_tables_w_add_hook_clear_empty_table",
+        World_delete_empty_tables_w_add_hook_clear_empty_table
+    },
+    {
+        "delete_empty_tables_w_remove_hook_clear_empty_table",
+        World_delete_empty_tables_w_remove_hook_clear_empty_table
+    },
+    {
+        "delete_empty_tables_w_set_hook_clear_empty_table",
+        World_delete_empty_tables_w_set_hook_clear_empty_table
+    },
+    {
+        "delete_empty_tables_w_add_hook_delete_empty_table",
+        World_delete_empty_tables_w_add_hook_delete_empty_table
+    },
+    {
+        "delete_empty_tables_w_remove_hook_delete_empty_table",
+        World_delete_empty_tables_w_remove_hook_delete_empty_table
+    },
+    {
+        "delete_empty_tables_w_set_hook_delete_empty_table",
+        World_delete_empty_tables_w_set_hook_delete_empty_table
+    },
+    {
         "delete_1000_empty_tables",
         World_delete_1000_empty_tables
     },
@@ -13756,7 +13786,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        119,
+        125,
         World_testcases
     },
     {
