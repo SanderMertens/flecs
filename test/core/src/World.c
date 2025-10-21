@@ -1646,6 +1646,180 @@ void World_delete_empty_tables_w_set_hook_clear_before_delete(void) {
     test_int(1, dummy_hook_invoked);
 }
 
+void World_delete_empty_tables_w_add_hook_delete_empty_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = DummyHook
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_table_t *t = ecs_table_find(world, &ecs_id(Position), 1);
+    test_assert(t != NULL);
+    test_int(ecs_table_count(t), 0);
+    test_int(ecs_table_size(t), 0);
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .clear_generation = 1
+    });
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .clear_generation = 1
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_fini(world);
+}
+
+void World_delete_empty_tables_w_remove_hook_delete_empty_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = DummyHook
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_table_t *t = ecs_table_find(world, &ecs_id(Position), 1);
+    test_assert(t != NULL);
+    test_int(ecs_table_count(t), 0);
+    test_int(ecs_table_size(t), 0);
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .clear_generation = 1
+    });
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .clear_generation = 1
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_fini(world);
+}
+
+void World_delete_empty_tables_w_set_hook_delete_empty_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = DummyHook
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_table_t *t = ecs_table_find(world, &ecs_id(Position), 1);
+    test_assert(t != NULL);
+    test_int(ecs_table_count(t), 0);
+    test_int(ecs_table_size(t), 0);
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .clear_generation = 1
+    });
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .clear_generation = 1
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_fini(world);
+}
+
+void World_delete_empty_tables_w_add_hook_clear_empty_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = DummyHook
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_table_t *t = ecs_table_find(world, &ecs_id(Position), 1);
+    test_assert(t != NULL);
+    test_int(ecs_table_count(t), 0);
+    test_int(ecs_table_size(t), 0);
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .delete_generation = 1
+    });
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .delete_generation = 1
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_fini(world);
+}
+
+void World_delete_empty_tables_w_remove_hook_clear_empty_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = DummyHook
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_table_t *t = ecs_table_find(world, &ecs_id(Position), 1);
+    test_assert(t != NULL);
+    test_int(ecs_table_count(t), 0);
+    test_int(ecs_table_size(t), 0);
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .delete_generation = 1
+    });
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .delete_generation = 1
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_fini(world);
+}
+
+void World_delete_empty_tables_w_set_hook_clear_empty_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = DummyHook
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_table_t *t = ecs_table_find(world, &ecs_id(Position), 1);
+    test_assert(t != NULL);
+    test_int(ecs_table_count(t), 0);
+    test_int(ecs_table_size(t), 0);
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .delete_generation = 1
+    });
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+        .delete_generation = 1
+    });
+
+    test_int(0, dummy_hook_invoked);
+
+    ecs_fini(world);
+}
+
 void World_delete_1000_empty_tables(void) {
     ecs_world_t *world = ecs_mini();
 
