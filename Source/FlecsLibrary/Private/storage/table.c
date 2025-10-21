@@ -1001,10 +1001,6 @@ void flecs_table_invoke_add_hooks(
     ecs_type_info_t *ti = column->ti;
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (!count) {
-        return;
-    }
-
     if (construct) {
         flecs_table_invoke_ctor(world, table, column_index, row, count);
     }
@@ -1566,6 +1562,7 @@ int32_t flecs_table_grow_data(
     flecs_poly_assert(world, ecs_world_t);
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->data.count + to_add == size, ECS_INTERNAL_ERROR, NULL);
 
     ecs_os_perf_trace_push("flecs.table.grow_data");
     
@@ -1576,7 +1573,11 @@ int32_t flecs_table_grow_data(
     ecs_vec_t v_entities = ecs_vec_from_entities(table);
     ecs_vec_set_size_t(&world->allocator, &v_entities, ecs_entity_t, size);
 
-    ecs_entity_t *e = ecs_vec_last_t(&v_entities, ecs_entity_t) + 1;
+    ecs_entity_t *e = NULL;
+    if (size) {
+        e = ecs_vec_last_t(&v_entities, ecs_entity_t) + 1;
+    }
+
     v_entities.count += to_add;
     if (v_entities.size > size) {
         size = v_entities.size;
@@ -1590,10 +1591,12 @@ int32_t flecs_table_grow_data(
 
     /* Initialize entity ids and record ptrs */
     int32_t i;
-    if (ids) {
-        ecs_os_memcpy_n(e, ids, ecs_entity_t, to_add);
-    } else {
-        ecs_os_memset(e, 0, ECS_SIZEOF(ecs_entity_t) * to_add);
+    if (e) {
+        if (ids) {
+            ecs_os_memcpy_n(e, ids, ecs_entity_t, to_add);
+        } else {
+            ecs_os_memset(e, 0, ECS_SIZEOF(ecs_entity_t) * to_add);
+        }
     }
 
     flecs_table_update_overrides(world, table);
@@ -1609,8 +1612,11 @@ int32_t flecs_table_grow_data(
         ecs_assert(v_column.size == v_entities.size, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(v_column.count == v_entities.count, ECS_INTERNAL_ERROR, NULL);
         column->data = v_column.array;
-        flecs_table_invoke_add_hooks(world, table, i, e, 
-            count, to_add, false);
+
+        if (to_add) {
+            flecs_table_invoke_add_hooks(
+                world, table, i, e, count, to_add, false);
+        }
     }
 
     ecs_table__t *meta = table->_;
