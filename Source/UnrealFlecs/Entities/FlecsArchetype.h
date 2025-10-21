@@ -51,6 +51,21 @@ public:
         return Type != Other.Type;
     }
 
+    NO_DISCARD FORCEINLINE int32 GetComponentCount() const
+    {
+        return Type.count();
+    }
+
+    const FFlecsId* begin() const
+    {
+        return reinterpret_cast<const FFlecsId*>(Type.begin());
+    }
+
+    const FFlecsId* end() const
+    {
+        return reinterpret_cast<const FFlecsId*>(Type.end());
+    }
+
     /**
      * @brief Iterates over each component in the archetype.
      * @tparam FunctionType The type of the function to call for each component.
@@ -78,6 +93,11 @@ public:
         }
     }
 
+    /**
+     * @brief Get the id at the given index.
+     * @param InIndex The index of the id.
+     * @return The id at the given index.
+     */
     NO_DISCARD FORCEINLINE FFlecsId GetAtIndex(const int32 InIndex) const
     {
         solid_checkf(InIndex >= 0 && InIndex < Type.count(),

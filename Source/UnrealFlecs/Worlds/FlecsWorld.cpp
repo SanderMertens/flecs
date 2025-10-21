@@ -28,6 +28,7 @@
 #include "Components/ObjectTypes/FFlecsSceneComponentTag.h"
 #include "Components/ObjectTypes/FlecsActorTag.h"
 #include "Components/FlecsModuleComponent.h"
+#include "General/FlecsDeveloperSettings.h"
 
 #include "Modules/FlecsDependenciesComponent.h"
 #include "Modules/FlecsModuleInitEvent.h"
@@ -118,6 +119,53 @@ void UFlecsWorld::WorldStart()
 #endif // WITH_AUTOMATION_TESTS
 
 	InitializeFlecsRegistrationObjects();
+
+	const TSolidNotNull<const UFlecsDeveloperSettings*> FlecsDeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
+
+	if (FlecsDeveloperSettings->bShrinkMemoryOnGC)
+	{
+		ShrinkMemoryGCDelegateHandle = FCoreUObjectDelegates::GarbageCollectComplete
+			.AddWeakLambda(this, [this]()
+			{
+				if UNLIKELY_IF(!bIsInitialized)
+				{
+					return;
+				}
+
+				ShrinkWorld();
+				
+				UE_LOGFMT(LogFlecsWorld, Log,
+							  "Flecs World {WorldName} Shrinking world memory on GC",
+							  *GetName());
+			});
+	}
+
+	if (FlecsDeveloperSettings->bDeleteEmptyTablesOnGC)
+	{
+		DeleteEmptyTablesGCDelegateHandle = FCoreUObjectDelegates::GarbageCollectComplete
+			.AddWeakLambda(this, [this, FlecsDeveloperSettings]()
+			{
+				if UNLIKELY_IF(!bIsInitialized)
+				{
+					return;
+				}
+				
+				UE_LOGFMT(LogFlecsWorld, Verbose,
+							  "Flecs World {WorldName} Deleting empty tables on GC",
+							  *GetName());
+
+				const int32 DeletedTables = DeleteEmptyTables(
+					FlecsDeveloperSettings->TimeBudget,
+					FlecsDeveloperSettings->ClearGeneration,
+					FlecsDeveloperSettings->DeleteGeneration);
+				
+				UE_LOGFMT(LogFlecsWorld, Log,
+							  "Flecs World {WorldName} Deleted {DeletedTableCount} empty tables on GC",
+							  *GetName(),
+							  DeletedTables);
+			});
+	}
+	
 }
 
 void UFlecsWorld::WorldBeginPlay()
@@ -1588,6 +1636,23 @@ UFlecsWorldSubsystem* UFlecsWorld::GetContext() const
 	return static_cast<UFlecsWorldSubsystem*>(World.get_ctx());
 }
 
+void UFlecsWorld::ShrinkWorld() const
+{
+	World.shrink();
+}
+
+int32 UFlecsWorld::DeleteEmptyTables(const double TimeBudgetSeconds,
+	const uint16 ClearGeneration,
+	const uint16 DeleteGeneration) const
+{
+	ecs_delete_empty_tables_desc_t Desc;
+	Desc.clear_generation = ClearGeneration;
+	Desc.delete_generation = DeleteGeneration;
+	Desc.time_budget_seconds = TimeBudgetSeconds;
+	
+	return ecs_delete_empty_tables(World, &Desc);
+}
+
 FFlecsTypeMapComponent* UFlecsWorld::GetTypeMapComponent() const
 {
 	return static_cast<FFlecsTypeMapComponent*>(World.get_binding_ctx());
@@ -1599,11 +1664,13 @@ void UFlecsWorld::AddReferencedObjects(UObject* InThis, FReferenceCollector& Col
 
 	const TSolidNotNull<UFlecsWorld*> This = CastChecked<UFlecsWorld>(InThis);
 	solid_check(IsValid(This));
-
+	
 	if UNLIKELY_IF(!This->TypeMapComponent || !This->bIsInitialized)
 	{
 		return;
 	}
+
+	ecs_exclusive_access_begin(This->World, "Garbage Collection ARO");
 		
 	This->World.query_builder<const FFlecsScriptStructComponent>() // 0
 	    .with<FFlecsAddReferencedObjectsTrait>().src("$Component") //  1
@@ -1621,4 +1688,6 @@ void UFlecsWorld::AddReferencedObjects(UObject* InThis, FReferenceCollector& Col
 		    Collector.AddPropertyReferencesWithStructARO(InScriptStructComponent.ScriptStruct.Get(),
 		                                    ComponentPtr, InThis);
 	    });
+
+	ecs_exclusive_access_end(This->World, false);
 }

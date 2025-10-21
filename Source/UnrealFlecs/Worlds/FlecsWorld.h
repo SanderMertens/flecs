@@ -978,6 +978,43 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	UFlecsWorldSubsystem* GetContext() const;
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	void ShrinkWorld() const;
+
+	/**
+	 * @brief Cleanup empty tables.
+	 * This operation cleans up empty tables that meet certain conditions. Having
+	 * large amounts of empty tables does not negatively impact performance of the
+	 * ECS, but can take up considerable amounts of memory, especially in
+	 * applications with many components, and many components per entity.
+	 *
+	 * The generation specifies the minimum number of times this operation has
+	 * to be called before an empty table is cleaned up. If a table becomes non
+	 * empty, the generation is reset.
+	 *
+	 * The operation allows for both a "clear" generation and a "delete"
+	 * generation. When the clear generation is reached, the table's
+	 * resources are freed (like component arrays) but the table itself is not
+	 * deleted. When the delete generation is reached, the empty table is deleted.
+	 *
+	 * By specifying a non-zero id the cleanup logic can be limited to tables with
+	 * a specific (component) id. The operation will only increase the generation
+	 * count of matching tables.
+	 *
+	 * The min_id_count specifies a lower bound for the number of components a table
+	 * should have. Often the more components a table has, the more specific it is
+	 * and therefore less likely to be reused.
+	 *
+	 * The time budget specifies how long the operation should take at most.
+	 *
+	 * @param TimeBudgetSeconds The time budget in seconds.
+	 * @param ClearGeneration The generation after which to clear empty tables.
+	 * @param DeleteGeneration The generation after which to delete empty tables.
+	 */
+	UFUNCTION()
+	int32 DeleteEmptyTables(const double TimeBudgetSeconds, const uint16 ClearGeneration = 1,
+	                        const uint16 DeleteGeneration = 1) const;
+
 	NO_DISCARD FFlecsTypeMapComponent* GetTypeMapComponent() const;
 
 	static void AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector);
@@ -1002,6 +1039,9 @@ public:
 	flecs::query<FFlecsDependenciesComponent> DependenciesComponentQuery;
 
 	FFlecsTypeMapComponent* TypeMapComponent;
+
+	FDelegateHandle ShrinkMemoryGCDelegateHandle;
+	FDelegateHandle DeleteEmptyTablesGCDelegateHandle;
 
 private:
 	

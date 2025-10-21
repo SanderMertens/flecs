@@ -26,3 +26,11 @@ static FAutoConsoleVariableRef CVarTaskThreadCount(
 	TaskThreadCount,
 	TEXT("Number of threads to use for Flecs task processing.")
 );
+
+// @TODO: Re-enable once tested
+/*static bool bShrinkMemoryOnGC = true;
+static FAutoConsoleVariableRef CVarShrinkMemoryOnGC(
+	TEXT("Flecs.ShrinkMemoryOnGC"),
+	bShrinkMemoryOnGC,
+	TEXT("Enable shrinking Flecs memory usage during Unreal Garbage Collection.")
+);*/
