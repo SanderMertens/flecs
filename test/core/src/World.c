@@ -2986,8 +2986,6 @@ void World_add_exclusive_after_query(void) {
 }
 
 void World_add_with_after_query(void) {
-    install_test_abort();
-
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2999,9 +2997,55 @@ void World_add_with_after_query(void) {
 
     test_assert(q != NULL);
 
-    test_expect_abort();
-
     ecs_add_pair(world, ecs_id(Position), EcsWith, Foo);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+
+    test_assert(true); // Should not assert
+}
+
+void World_add_oneof_after_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_add_id(world, ecs_id(Position), EcsOneOf);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+
+    test_assert(true); // Should not assert
+}
+
+void World_add_oneof_pair_after_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOneOf, Foo);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+
+    test_assert(true); // Should not assert
 }
 
 void World_add_final_after_query(void) {

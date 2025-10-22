@@ -3410,12 +3410,9 @@ void ComponentInheritance_query_before_isa_relationship_1st_term(void) {
 
     test_assert(q != NULL);
 
-    ECS_ENTITY(world, Warrior, (IsA, Unit));
-    ECS_ENTITY(world, Wizard, (IsA, Unit));
-
     test_expect_abort();
 
-    ecs_query_iter(world, q);
+    ECS_ENTITY(world, Warrior, (IsA, Unit));
 }
 
 void ComponentInheritance_query_before_isa_relationship_2nd_term(void) {
@@ -3432,12 +3429,9 @@ void ComponentInheritance_query_before_isa_relationship_2nd_term(void) {
 
     test_assert(q != NULL);
 
-    ECS_ENTITY(world, Warrior, (IsA, Unit));
-    ECS_ENTITY(world, Wizard, (IsA, Unit));
-
     test_expect_abort();
 
-    ecs_query_iter(world, q);
+    ECS_ENTITY(world, Warrior, (IsA, Unit));
 }
 
 void ComponentInheritance_query_before_isa_relationship_subtype(void) {

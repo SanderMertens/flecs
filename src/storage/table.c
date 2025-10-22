@@ -2752,6 +2752,35 @@ bool ecs_table_has_id(
     return ecs_table_get_type_index(world, table, id) != -1;
 }
 
+ecs_entity_t ecs_table_get_target(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_entity_t relationship,
+    int32_t index)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_component_record_t *cr = flecs_components_get(world, 
+        ecs_pair(relationship, EcsWildcard));
+    if (!cr) {
+        return 0;
+    }
+
+    const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
+    if (!tr) {
+        return 0;
+    }
+
+    if (index > tr->count) {
+        return 0;
+    }
+
+    ecs_id_t id = table->type.array[tr->index + index];
+    ecs_assert(ECS_IS_PAIR(id), ECS_INTERNAL_ERROR, NULL);
+    ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+    return flecs_entities_get_alive(world, tgt);
+}
+
 int32_t ecs_table_get_depth(
     const ecs_world_t *world,
     const ecs_table_t *table,

@@ -75,14 +75,14 @@ extern "C" {
 #define EcsIdWith                      (1u << 12)
 #define EcsIdCanToggle                 (1u << 13)
 #define EcsIdIsTransitive              (1u << 14)
-#define EcsIdInheritable             (1u << 15)
+#define EcsIdInheritable               (1u << 15)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 17) 
 #define EcsIdHasOnSet                  (1u << 18)
 #define EcsIdHasOnTableCreate          (1u << 19)
 #define EcsIdHasOnTableDelete          (1u << 20)
-#define EcsIdSparse                  (1u << 21)
+#define EcsIdSparse                    (1u << 21)
 #define EcsIdDontFragment              (1u << 22)
 #define EcsIdMatchDontFragment         (1u << 23) /* For (*, T) wildcards */
 #define EcsIdOrderedChildren           (1u << 24)
@@ -176,6 +176,7 @@ extern "C" {
 #define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does query cache empty tables */
 #define EcsQueryTrivialCache          (1u << 28u) /* Trivial cache (no wildcards, traversal, order_by, group_by, change detection) */
 #define EcsQueryNested                (1u << 29u) /* Query created by a query (for observer, cache) */
+#define EcsQueryValid                 (1u << 30u)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -191,7 +192,6 @@ extern "C" {
 #define EcsTermIsScope                (1u << 8)
 #define EcsTermIsMember               (1u << 9)
 #define EcsTermIsToggle               (1u << 10)
-#define EcsTermKeepAlive              (1u << 11)
 #define EcsTermIsSparse               (1u << 12)
 #define EcsTermIsOr                   (1u << 13)
 #define EcsTermDontFragment           (1u << 14)

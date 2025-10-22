@@ -76,7 +76,7 @@ void flecs_observable_fini(
 
 /* Check if any observers exist for event/component. */
 bool flecs_observers_exist(
-    ecs_observable_t *observable,
+    const ecs_observable_t *observable,
     ecs_id_t id,
     ecs_entity_t event);
 
