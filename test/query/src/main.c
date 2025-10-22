@@ -1616,6 +1616,7 @@ void Cascade_cascade_w_cache_kind_default(void);
 void Cascade_cascade_w_optional(void);
 void Cascade_remove_all(void);
 void Cascade_recreate_after_remove_all(void);
+void Cascade_nested_target_deletion(void);
 
 // Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
@@ -8679,6 +8680,10 @@ bake_test_case Cascade_testcases[] = {
     {
         "recreate_after_remove_all",
         Cascade_recreate_after_remove_all
+    },
+    {
+        "nested_target_deletion",
+        Cascade_nested_target_deletion
     }
 };
 
@@ -11749,7 +11754,7 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-        27,
+        28,
         Cascade_testcases
     },
     {
