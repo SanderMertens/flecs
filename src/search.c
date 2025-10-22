@@ -276,7 +276,14 @@ int32_t flecs_relation_depth_walk(
     int32_t i = tr->index, end = i + tr->count;
     for (; i != end; i ++) {
         ecs_entity_t o = ecs_pair_second(world, table->type.array[i]);
-        ecs_assert(o != 0, ECS_INTERNAL_ERROR, NULL);
+        if (!o) {
+            /* Rare, but can happen during cleanup when an intermediate table is
+             * created that contains a pair that is about to be removed but 
+             * hasn't yet, where the target is not alive. 
+             * Would be better if this intermediate table wouldn't get created,
+             * but that requires a refactor of the cleanup logic. */
+            return 0;
+        }
 
         ecs_table_t *ot = ecs_get_table(world, o);
         if (!ot) {

@@ -1677,7 +1677,8 @@
                 "cascade_w_cache_kind_default",
                 "cascade_w_optional",
                 "remove_all",
-                "recreate_after_remove_all"
+                "recreate_after_remove_all",
+                "nested_target_deletion"
             ]
         }, {
             "id": "Cached",
