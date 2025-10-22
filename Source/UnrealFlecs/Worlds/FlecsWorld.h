@@ -219,7 +219,7 @@ public:
 		meta = (AdvancedDisplay = "Separator, RootSeparator, bRecursive"))
 	FFlecsEntityHandle LookupEntity(const FString& Name,
 	                                const FString& Separator = "::",
-	                                const FString& RootSeparator = "::",
+	                                const FString& RootSeparator = "",
 	                                const bool bRecursive = true) const;
 
 	/**

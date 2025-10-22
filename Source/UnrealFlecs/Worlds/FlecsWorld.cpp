@@ -643,7 +643,7 @@ FFlecsEntityHandle UFlecsWorld::LookupEntity(const FString& Name,
 {
 	return World.lookup(Unreal::Flecs::ToCString(Name),
 	                    Unreal::Flecs::ToCString(Separator),
-	                    Unreal::Flecs::ToCString(RootSeparator),
+	                    RootSeparator.IsEmpty() ? nullptr : Unreal::Flecs::ToCString(RootSeparator),
 	                    bRecursive);
 }
 
