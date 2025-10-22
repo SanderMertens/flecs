@@ -2288,6 +2288,8 @@ void World_rename_flecs_core(void);
 void World_user_entity_w_flecs_parent(void);
 void World_add_exclusive_after_query(void);
 void World_add_with_after_query(void);
+void World_add_oneof_after_query(void);
+void World_add_oneof_pair_after_query(void);
 void World_add_final_after_query(void);
 void World_add_isa_after_query(void);
 void World_add_isa_after_query_tgt(void);
@@ -2299,6 +2301,21 @@ void World_add_sparse_after_query(void);
 void World_add_dont_fragment_after_query(void);
 void World_add_can_toggle_after_query(void);
 void World_add_traversable_after_query(void);
+void World_add_exclusive_after_pair_query(void);
+void World_add_with_after_pair_query(void);
+void World_add_oneof_after_pair_query(void);
+void World_add_oneof_pair_after_pair_query(void);
+void World_add_final_after_pair_query(void);
+void World_add_isa_after_pair_query(void);
+void World_add_isa_after_pair_query_tgt(void);
+void World_add_inheritable_after_pair_query(void);
+void World_add_isa_after_pair_query_after_inheritable(void);
+void World_add_isa_after_pair_query_after_isa(void);
+void World_add_on_instantiate_inherit_after_pair_query(void);
+void World_add_sparse_after_pair_query(void);
+void World_add_dont_fragment_after_pair_query(void);
+void World_add_can_toggle_after_pair_query(void);
+void World_add_traversable_after_pair_query(void);
 
 // Testsuite 'ExclusiveAccess'
 void ExclusiveAccess_self(void);
@@ -2755,7 +2772,6 @@ void Internals_activate_deactivate_reactive(void);
 void Internals_activate_deactivate_activate_other(void);
 void Internals_no_double_system_table_after_merge(void);
 void Internals_recreate_deleted_table(void);
-void Internals_create_65k_tables(void);
 void Internals_no_duplicate_root_table_id(void);
 void Internals_override_os_api_w_addon(void);
 void Internals_records_resize_on_override(void);
@@ -2769,6 +2785,8 @@ void Internals_table_create_leak_check(void);
 void Internals_component_record_has_table(void);
 void Internals_component_record_iter_tables(void);
 void Internals_table_get_records(void);
+void Internals_childof_tgt_exists_after_query(void);
+void Internals_create_65k_tables(void);
 
 // Testsuite 'Error'
 void Error_setup(void);
@@ -11688,6 +11706,14 @@ bake_test_case World_testcases[] = {
         World_add_with_after_query
     },
     {
+        "add_oneof_after_query",
+        World_add_oneof_after_query
+    },
+    {
+        "add_oneof_pair_after_query",
+        World_add_oneof_pair_after_query
+    },
+    {
         "add_final_after_query",
         World_add_final_after_query
     },
@@ -11730,6 +11756,66 @@ bake_test_case World_testcases[] = {
     {
         "add_traversable_after_query",
         World_add_traversable_after_query
+    },
+    {
+        "add_exclusive_after_pair_query",
+        World_add_exclusive_after_pair_query
+    },
+    {
+        "add_with_after_pair_query",
+        World_add_with_after_pair_query
+    },
+    {
+        "add_oneof_after_pair_query",
+        World_add_oneof_after_pair_query
+    },
+    {
+        "add_oneof_pair_after_pair_query",
+        World_add_oneof_pair_after_pair_query
+    },
+    {
+        "add_final_after_pair_query",
+        World_add_final_after_pair_query
+    },
+    {
+        "add_isa_after_pair_query",
+        World_add_isa_after_pair_query
+    },
+    {
+        "add_isa_after_pair_query_tgt",
+        World_add_isa_after_pair_query_tgt
+    },
+    {
+        "add_inheritable_after_pair_query",
+        World_add_inheritable_after_pair_query
+    },
+    {
+        "add_isa_after_pair_query_after_inheritable",
+        World_add_isa_after_pair_query_after_inheritable
+    },
+    {
+        "add_isa_after_pair_query_after_isa",
+        World_add_isa_after_pair_query_after_isa
+    },
+    {
+        "add_on_instantiate_inherit_after_pair_query",
+        World_add_on_instantiate_inherit_after_pair_query
+    },
+    {
+        "add_sparse_after_pair_query",
+        World_add_sparse_after_pair_query
+    },
+    {
+        "add_dont_fragment_after_pair_query",
+        World_add_dont_fragment_after_pair_query
+    },
+    {
+        "add_can_toggle_after_pair_query",
+        World_add_can_toggle_after_pair_query
+    },
+    {
+        "add_traversable_after_pair_query",
+        World_add_traversable_after_pair_query
     }
 };
 
@@ -13495,10 +13581,6 @@ bake_test_case Internals_testcases[] = {
         Internals_recreate_deleted_table
     },
     {
-        "create_65k_tables",
-        Internals_create_65k_tables
-    },
-    {
         "no_duplicate_root_table_id",
         Internals_no_duplicate_root_table_id
     },
@@ -13549,6 +13631,14 @@ bake_test_case Internals_testcases[] = {
     {
         "table_get_records",
         Internals_table_get_records
+    },
+    {
+        "childof_tgt_exists_after_query",
+        Internals_childof_tgt_exists_after_query
+    },
+    {
+        "create_65k_tables",
+        Internals_create_65k_tables
     }
 };
 
@@ -13871,7 +13961,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        125,
+        142,
         World_testcases
     },
     {
@@ -13934,7 +14024,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-        21,
+        22,
         Internals_testcases
     },
     {

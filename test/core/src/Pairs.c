@@ -2645,8 +2645,8 @@ void Pairs_add_symmetric_exclusive_relation(void) {
     ECS_TAG(world, ObjB);
     ECS_TAG(world, ObjC);
 
-    ecs_add_id(world, Rel, EcsSymmetric);
     ecs_add_id(world, Rel, EcsExclusive);
+    ecs_add_id(world, Rel, EcsSymmetric);
 
     ecs_add_pair(world, ObjA, Rel, ObjB);
     test_assert(ecs_has_pair(world, ObjA, Rel, ObjB));

@@ -2986,8 +2986,6 @@ void World_add_exclusive_after_query(void) {
 }
 
 void World_add_with_after_query(void) {
-    install_test_abort();
-
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2999,9 +2997,55 @@ void World_add_with_after_query(void) {
 
     test_assert(q != NULL);
 
-    test_expect_abort();
-
     ecs_add_pair(world, ecs_id(Position), EcsWith, Foo);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+
+    test_assert(true); // Should not assert
+}
+
+void World_add_oneof_after_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_add_id(world, ecs_id(Position), EcsOneOf);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+
+    test_assert(true); // Should not assert
+}
+
+void World_add_oneof_pair_after_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOneOf, Foo);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+
+    test_assert(true); // Should not assert
 }
 
 void World_add_final_after_query(void) {
@@ -3202,6 +3246,294 @@ void World_add_traversable_after_query(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ ecs_id(Position) }}
+    });
+
+    test_assert(q != NULL);
+
+    test_expect_abort();
+
+    ecs_add_id(world, ecs_id(Position), EcsTraversable);
+}
+
+void World_add_exclusive_after_pair_query(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    test_expect_abort();
+
+    ecs_add_id(world, ecs_id(Position), EcsExclusive);
+}
+
+void World_add_with_after_pair_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_add_pair(world, ecs_id(Position), EcsWith, Foo);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+
+    test_assert(true); // Should not assert
+}
+
+void World_add_oneof_after_pair_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_add_id(world, ecs_id(Position), EcsOneOf);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+
+    test_assert(true); // Should not assert
+}
+
+void World_add_oneof_pair_after_pair_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOneOf, Foo);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+
+    test_assert(true); // Should not assert
+}
+
+void World_add_final_after_pair_query(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    test_expect_abort();
+
+    ecs_add_id(world, ecs_id(Position), EcsFinal);
+}
+
+void World_add_isa_after_pair_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_add_pair(world, ecs_id(Position), EcsIsA, Foo);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void World_add_isa_after_pair_query_tgt(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Velocity, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    test_expect_abort();
+
+    ecs_add_pair(world, ecs_id(Position), EcsIsA, ecs_id(Velocity));
+}
+
+void World_add_inheritable_after_pair_query(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    test_expect_abort();
+
+    ecs_add_id(world, ecs_id(Position), EcsInheritable);
+}
+
+void World_add_isa_after_pair_query_after_inheritable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, ecs_id(Position), EcsInheritable);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_add_pair(world, Foo, EcsIsA, ecs_id(Position));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void World_add_isa_after_pair_query_after_isa(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_add_pair(world, ecs_id(Position), EcsIsA, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_add_pair(world, ecs_id(Position), EcsIsA, Bar);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void World_add_on_instantiate_inherit_after_pair_query(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    test_expect_abort();
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+}
+
+void World_add_sparse_after_pair_query(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    test_expect_abort();
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+}
+
+void World_add_dont_fragment_after_pair_query(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    test_expect_abort();
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+}
+
+void World_add_can_toggle_after_pair_query(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
+    });
+
+    test_assert(q != NULL);
+
+    test_expect_abort();
+
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+}
+
+void World_add_traversable_after_pair_query(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair_t(Position, EcsWildcard) }}
     });
 
     test_assert(q != NULL);
