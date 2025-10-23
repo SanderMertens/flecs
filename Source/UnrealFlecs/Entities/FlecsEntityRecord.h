@@ -6,6 +6,7 @@
 
 #include "StructUtils/InstancedStruct.h"
 
+#include "Concepts/SolidConcepts.h"
 #include "Types/SolidEnumSelector.h"
 
 #include "Entities/FlecsEntityHandle.h"

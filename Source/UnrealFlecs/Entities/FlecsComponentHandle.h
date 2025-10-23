@@ -225,7 +225,7 @@ public:
 		
 		GetUntypedComponent().member(InTypeId,
 		                             InUnitId,
-		                             Unreal::Flecs::ToCString(InName),
+		                             StringCast<char>(*InName).Get(),
 		                             InCount);
 		return *this;
 	}
@@ -241,7 +241,7 @@ public:
 		
 		GetUntypedComponent().member(InTypeId,
 									 InUnitId,
-									 Unreal::Flecs::ToCString(InName),
+									 StringCast<char>(*InName).Get(),
 									 InCount,
 									 InSizeOffset);
 		return *this;
@@ -252,7 +252,7 @@ public:
 		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
-		GetUntypedComponent().member(InTypeId, Unreal::Flecs::ToCString(InName), InCount);
+		GetUntypedComponent().member(InTypeId, StringCast<char>(*InName).Get(), InCount);
 		return *this;
 	}
 
@@ -265,7 +265,7 @@ public:
 		             TEXT("Cannot add member to component while in deferred mode."));
 			
 		GetUntypedComponent().member(InTypeId,
-		                             Unreal::Flecs::ToCString(InName),
+		                             StringCast<char>(*InName).Get(),
 		                             InCount,
 		                             InSizeOffset);
 		return *this;
@@ -277,7 +277,7 @@ public:
 		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
-		GetUntypedComponent().member<T>(Unreal::Flecs::ToCString(InName), InCount);
+		GetUntypedComponent().member<T>(StringCast<char>(*InName).Get(), InCount);
 		return *this;
 	}
 
@@ -287,7 +287,7 @@ public:
 		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
-		GetUntypedComponent().member<T>(Unreal::Flecs::ToCString(InName), InCount, InSizeOffset);
+		GetUntypedComponent().member<T>(StringCast<char>(*InName).Get(), InCount, InSizeOffset);
 		return *this;
 	}
 
@@ -297,7 +297,7 @@ public:
 		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
-		GetUntypedComponent().member<T>(InUnitId, Unreal::Flecs::ToCString(InName), InCount);
+		GetUntypedComponent().member<T>(InUnitId, StringCast<char>(*InName).Get(), InCount);
 		return *this;
 	}
 
@@ -307,7 +307,7 @@ public:
 		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
-		GetUntypedComponent().member<TMember, TUnit>(Unreal::Flecs::ToCString(InName), InCount);
+		GetUntypedComponent().member<TMember, TUnit>(StringCast<char>(*InName).Get(), InCount);
 		return *this;
 	}
 
@@ -317,7 +317,7 @@ public:
 		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
-		GetUntypedComponent().member<TMember, TUnit>(Unreal::Flecs::ToCString(InName), InCount, InSizeOffset);
+		GetUntypedComponent().member<TMember, TUnit>(StringCast<char>(*InName), InCount, InSizeOffset);
 		return *this;
 	}
 
@@ -327,7 +327,7 @@ public:
 		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
-		GetUntypedComponent().member<TMember, TComponent>(Unreal::Flecs::ToCString(InName), MemberPtr);
+		GetUntypedComponent().member<TMember, TComponent>(StringCast<char>(*InName).Get(), MemberPtr);
 		return *this;
 	}
 
@@ -337,7 +337,7 @@ public:
 		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add member to component while in deferred mode."));
 		
-		GetUntypedComponent().member<TUnit, TMember, TComponent>(Unreal::Flecs::ToCString(InName), MemberPtr);
+		GetUntypedComponent().member<TUnit, TMember, TComponent>(StringCast<char>(*InName).Get(), MemberPtr);
 		return *this;
 	}
 
@@ -347,7 +347,7 @@ public:
 		solid_checkf(!GetNativeFlecsWorld().is_deferred(),
 					 TEXT("Cannot add constant to component while in deferred mode."));
 		
-		GetUntypedComponent().constant<TConstant>(Unreal::Flecs::ToCString(InName), InValue);
+		GetUntypedComponent().constant<TConstant>(StringCast<char>(*InName).Get(), InValue);
 		return *this;
 	}
 

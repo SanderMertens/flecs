@@ -13,10 +13,9 @@
 #include "StructUtils/InstancedStruct.h"
 
 #include "SolidMacros/Macros.h"
+#include "Concepts/SolidConcepts.h"
 #include "Types/SolidEnumSelector.h"
 #include "Types/SolidNotNull.h"
-
-#include "General/FlecsStringConverters.h"
 
 #include "FlecsEntityHandleTypes.h"
 #include "FlecsEntityView.h"
@@ -440,7 +439,7 @@ public:
 
 	SOLID_INLINE const FSelfType& SetName(const FString& InName) const
 	{
-		GetEntity().set_name(Unreal::Flecs::ToCString(InName));
+		GetEntity().set_name(StringCast<char>(*InName).Get());
 		return *this;
 	}
 
@@ -455,31 +454,31 @@ public:
 	
 	SOLID_INLINE const FSelfType& SetDocBrief(const FString& InDocBrief) const
 	{
-		GetEntity().set_doc_brief(Unreal::Flecs::ToCString(InDocBrief));
+		GetEntity().set_doc_brief(StringCast<char>(*InDocBrief).Get());
 		return *this;
 	}
 
 	SOLID_INLINE const FSelfType& SetDocColor(const FString& Link) const
 	{
-		GetEntity().set_doc_color(Unreal::Flecs::ToCString(Link));
+		GetEntity().set_doc_color(StringCast<char>(*Link).Get());
 		return *this;
 	}
 
 	SOLID_INLINE const FSelfType& SetDocName(const FString& InDocName) const
 	{
-		GetEntity().set_doc_name(Unreal::Flecs::ToCString(InDocName));
+		GetEntity().set_doc_name(StringCast<char>(*InDocName).Get());
 		return *this;
 	}
 
 	SOLID_INLINE const FSelfType& SetDocLink(const FString& InDocLink) const
 	{
-		GetEntity().set_doc_link(Unreal::Flecs::ToCString(InDocLink));
+		GetEntity().set_doc_link(StringCast<char>(*InDocLink).Get());
 		return *this;
 	}
 
 	SOLID_INLINE const FSelfType& SetDocDetails(const FString& InDocDetails) const
 	{
-		GetEntity().set_doc_detail(Unreal::Flecs::ToCString(InDocDetails));
+		GetEntity().set_doc_detail(StringCast<char>(*InDocDetails).Get());
 		return *this;
 	}
 
@@ -591,7 +590,7 @@ public:
 
 	SOLID_INLINE FString FromJson(const FString& InJson) const
 	{
-		return GetEntity().from_json(Unreal::Flecs::ToCString(InJson));
+		return GetEntity().from_json(StringCast<char>(*InJson).Get());
 	}
 	
 	bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess);

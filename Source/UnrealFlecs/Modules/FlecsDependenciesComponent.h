@@ -7,8 +7,10 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
-#include "Properties/FlecsComponentProperties.h"
+
 #include "Entities/FlecsEntityHandle.h"
+#include "Properties/FlecsComponentProperties.h"
+
 #include "FlecsDependenciesComponent.generated.h"
 
 class UFlecsWorld;

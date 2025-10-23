@@ -61,7 +61,8 @@ UFlecsWorld::UFlecsWorld(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	const FString ObjectName = GetName();
-	char* argv[] = { const_cast<char*>(Unreal::Flecs::ToCString(ObjectName)) }; // NOLINT(clang-diagnostic-dangling, cppcoreguidelines-pro-type-const-cast)
+	const char* ObjectNameCStr = StringCast<char>(*ObjectName).Get();
+	char* argv[] = { const_cast<char*>(ObjectNameCStr) };
 		
 	World = flecs::world(1, argv);
 		
@@ -223,7 +224,7 @@ void UFlecsWorld::InitializeDefaultComponents() const
 		     const FFlecsId TagEntity = ecs_lookup_path_w_sep(
 			     Serializer->world,
 			     flecs::component<FFlecsGameplayTagManagerEntity>(const_cast<flecs::world_t*>(Serializer->world)),
-			     Unreal::Flecs::ToCString(Data->ToString()),
+			     StringCast<char>(*Data->ToString()).Get(),
 			     ".",
 			     nullptr,
 			     true);
@@ -602,7 +603,7 @@ void UFlecsWorld::ResetClock() const
 
 FFlecsEntityHandle UFlecsWorld::CreateEntity(const FString& Name) const
 {
-	return World.entity(Unreal::Flecs::ToCString(Name));
+	return World.entity(StringCast<char>(*Name).Get());
 }
 
 FFlecsEntityHandle UFlecsWorld::ObtainTypedEntity(const TSolidNotNull<UClass*> InClass) const
@@ -641,9 +642,9 @@ FFlecsEntityHandle UFlecsWorld::LookupEntity(const FString& Name,
 	const FString& Separator, const FString& RootSeparator,
 	const bool bRecursive) const
 {
-	return World.lookup(Unreal::Flecs::ToCString(Name),
-	                    Unreal::Flecs::ToCString(Separator),
-	                    RootSeparator.IsEmpty() ? nullptr : Unreal::Flecs::ToCString(RootSeparator),
+	return World.lookup(StringCast<char>(*Name).Get(),
+						StringCast<char>(*Separator).Get(),
+	                    RootSeparator.IsEmpty() ? nullptr : StringCast<char>(*RootSeparator).Get(),
 	                    bRecursive);
 }
 
@@ -972,77 +973,75 @@ void UFlecsWorld::RegisterMemberProperties(const TSolidNotNull<const UStruct*> I
 	     PropertyIt; ++PropertyIt)
 	{
 		TSolidNotNull<FProperty*> Property = *PropertyIt;
-
-		const char* PropertyNameCStr = Unreal::Flecs::ToCString(Property->GetName());
-				
+		
 		if (Property->IsA<FBoolProperty>())
 		{
-			InComponent.AddMember<bool>(PropertyNameCStr,
+			InComponent.AddMember<bool>(Property->GetName(),
 			                            0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FByteProperty>())
 		{
-			InComponent.AddMember<uint8>(PropertyNameCStr,
+			InComponent.AddMember<uint8>(Property->GetName(),
 			                             0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FInt16Property>())
 		{
-			InComponent.AddMember<int16>(PropertyNameCStr,
+			InComponent.AddMember<int16>(Property->GetName(),
 			                             0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FUInt16Property>())
 		{
-			InComponent.AddMember<uint16>(PropertyNameCStr,
+			InComponent.AddMember<uint16>(Property->GetName(),
 			                              0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FIntProperty>())
 		{
-			InComponent.AddMember<int32>(PropertyNameCStr,
+			InComponent.AddMember<int32>(Property->GetName(),
 			                             0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FUInt32Property>())
 		{
-			InComponent.AddMember<uint32>(PropertyNameCStr,
+			InComponent.AddMember<uint32>(Property->GetName(),
 			                              0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FInt64Property>())
 		{
-			InComponent.AddMember<int64>(PropertyNameCStr,
+			InComponent.AddMember<int64>(Property->GetName(),
 			                             0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FUInt64Property>())
 		{
-			InComponent.AddMember<uint64>(PropertyNameCStr,
+			InComponent.AddMember<uint64>(Property->GetName(),
 			                              0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FFloatProperty>())
 		{
-			InComponent.AddMember<float>(PropertyNameCStr,
+			InComponent.AddMember<float>(Property->GetName(),
 			                             0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FDoubleProperty>())
 		{
-			InComponent.AddMember<double>(PropertyNameCStr,
+			InComponent.AddMember<double>(Property->GetName(),
 			                              0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FStrProperty>())
 		{
-			InComponent.AddMember<FString>(PropertyNameCStr,
+			InComponent.AddMember<FString>(Property->GetName(),
 			                               0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FNameProperty>())
 		{
-			InComponent.AddMember<FName>(PropertyNameCStr,
+			InComponent.AddMember<FName>(Property->GetName(),
 			                             0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FTextProperty>())
 		{
-			InComponent.AddMember<FText>(PropertyNameCStr,
+			InComponent.AddMember<FText>(Property->GetName(),
 			                             0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FObjectProperty>())
 		{
-			InComponent.AddMember<FObjectPtr>(PropertyNameCStr,
+			InComponent.AddMember<FObjectPtr>(Property->GetName(),
 			                                  0, Property->GetOffset_ForInternal());
 
 			if UNLIKELY_IF(ecs_id_in_use(World.c_ptr(), InComponent))
@@ -1052,17 +1051,17 @@ void UFlecsWorld::RegisterMemberProperties(const TSolidNotNull<const UStruct*> I
 		}
 		else if (Property->IsA<FWeakObjectProperty>())
 		{
-			InComponent.AddMember<FWeakObjectPtr>(PropertyNameCStr,
+			InComponent.AddMember<FWeakObjectPtr>(Property->GetName(),
 			                                      0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FSoftObjectProperty>())
 		{
-			InComponent.AddMember<FSoftObjectPtr>(PropertyNameCStr,
+			InComponent.AddMember<FSoftObjectPtr>(Property->GetName(),
 			                                      0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FClassProperty>())
 		{
-			InComponent.AddMember<TSubclassOf<UObject>>(PropertyNameCStr,
+			InComponent.AddMember<TSubclassOf<UObject>>(Property->GetName(),
 			                                            0, Property->GetOffset_ForInternal());
 		}
 		else if (Property->IsA<FStructProperty>())
@@ -1082,7 +1081,7 @@ void UFlecsWorld::RegisterMemberProperties(const TSolidNotNull<const UStruct*> I
 					= GetScriptStructEntity(CastFieldChecked<FStructProperty>(Property)->Struct);
 			}
 			 		
-			InComponent.AddMember(StructComponent, PropertyNameCStr,
+			InComponent.AddMember(StructComponent, Property->GetName(),
 			                      1, Property->GetOffset_ForInternal());
 		}
 		else UNLIKELY_ATTRIBUTE
@@ -1107,10 +1106,9 @@ FFlecsEntityHandle UFlecsWorld::RegisterScriptStruct(const UScriptStruct* Script
 		FFlecsComponentHandle ScriptStructComponent;
 
 		const FString StructName = ScriptStruct->GetStructCPPName();
-		const char* StructNameCStr = Unreal::Flecs::ToCString(StructName);
-		std::string StructNameStd = std::string(StructNameCStr);
+		const char* StructNameCStr = StringCast<char>(*StructName).Get();
 
-		DeferEndLambda([this, ScriptStruct, &ScriptStructComponent, StructNameCStr, &StructNameStd, bComponent]()
+		DeferEndLambda([this, ScriptStruct, &ScriptStructComponent, StructNameCStr, bComponent, &StructName]()
 		{
 			ScriptStructComponent = World.component(StructNameCStr);
 			solid_check(ScriptStructComponent.IsValid());
@@ -1236,7 +1234,9 @@ FFlecsEntityHandle UFlecsWorld::RegisterScriptStruct(const UScriptStruct* Script
 				}
 			}
 
-			if (!flecs::_::g_type_to_impl_data.contains(StructNameStd))
+			std::string StructNameStdString(StructNameCStr, StructName.Len());
+			
+			if (!flecs::_::g_type_to_impl_data.contains(StructNameStdString))
 			{
 				flecs::_::type_impl_data NewData;  // NOLINT(cppcoreguidelines-pro-type-member-init)
 				NewData.s_set_values = true;
@@ -1246,11 +1246,11 @@ FFlecsEntityHandle UFlecsWorld::RegisterScriptStruct(const UScriptStruct* Script
 				NewData.s_allow_tag = bIsTag;
 				NewData.s_enum_registered = false;
 				
-				flecs::_::g_type_to_impl_data.emplace(StructNameStd, NewData);
+				flecs::_::g_type_to_impl_data.emplace(StructNameStdString, NewData);
 			}
 
-			solid_check(flecs::_::g_type_to_impl_data.contains(StructNameStd));
-			flecs::_::type_impl_data& Data = flecs::_::g_type_to_impl_data.at(StructNameStd);
+			solid_check(flecs::_::g_type_to_impl_data.contains(StructNameStdString));
+			flecs::_::type_impl_data& Data = flecs::_::g_type_to_impl_data.at(StructNameStdString);
 
 			flecs_component_ids_set(World, Data.s_index, ScriptStructComponent);
 
@@ -1302,14 +1302,14 @@ FFlecsEntityHandle UFlecsWorld::RegisterComponentEnumType(TSolidNotNull<const UE
 		FFlecsComponentHandle ScriptEnumComponent;
 
 		const FString EnumName = ScriptEnum->GetName();
-		const char* EnumNameCStr = Unreal::Flecs::ToCString(EnumName);
+		const char* EnumNameCStr = StringCast<char>(*EnumName).Get();
 
-		DeferEndLambda([this, ScriptEnum, &ScriptEnumComponent, EnumNameCStr]()
+		DeferEndLambda([this, ScriptEnum, &ScriptEnumComponent, &EnumNameCStr, &EnumName]()
 		{
-			ScriptEnumComponent = World.component(Unreal::Flecs::ToCString(ScriptEnum->GetName()));
+			ScriptEnumComponent = World.component(EnumNameCStr);
 			solid_check(ScriptEnumComponent.IsValid());
 			
-			ScriptEnumComponent.GetEntity().set_symbol(Unreal::Flecs::ToCString(ScriptEnum->GetName()));
+			ScriptEnumComponent.GetEntity().set_symbol(EnumNameCStr);
 
 			ScriptEnumComponent.Set<flecs::Component>({
 				.size = sizeof(uint8),
@@ -1340,19 +1340,18 @@ FFlecsEntityHandle UFlecsWorld::RegisterComponentEnumType(TSolidNotNull<const UE
 
 				if (bUint8)
 				{
-					ScriptEnumComponent.AddConstant<uint8>(StringCast<char>(*EnumValueName).Get(),
-						static_cast<uint8>(EnumValue));
+					ScriptEnumComponent.AddConstant<uint8>(EnumValueName, static_cast<uint8>(EnumValue));
 				}
 				else
 				{
-					ScriptEnumComponent.AddConstant<uint64>(StringCast<char>(*EnumValueName).Get(),
-						static_cast<uint64>(EnumValue));
+					ScriptEnumComponent.AddConstant<uint64>(EnumValueName, static_cast<uint64>(EnumValue));
 				}
 			}
 
-			if (!flecs::_::g_type_to_impl_data.contains(std::string(EnumNameCStr)))
+			std::string EnumNameStdString(EnumNameCStr, EnumName.Len());
+			if (!flecs::_::g_type_to_impl_data.contains(EnumNameStdString))
 			{
-				flecs::_::type_impl_data NewData;
+				flecs::_::type_impl_data NewData{};
 				NewData.s_set_values = true;
 				NewData.s_index = flecs_component_ids_index_get();
 				NewData.s_size = sizeof(uint8);
@@ -1360,13 +1359,13 @@ FFlecsEntityHandle UFlecsWorld::RegisterComponentEnumType(TSolidNotNull<const UE
 				NewData.s_allow_tag = false;
 				NewData.s_enum_registered = false;
 				
-				flecs::_::g_type_to_impl_data.emplace(std::string(EnumNameCStr), NewData);
+				flecs::_::g_type_to_impl_data.emplace(EnumNameStdString, NewData);
 			}
 
-			solid_check(flecs::_::g_type_to_impl_data.contains(std::string(EnumNameCStr)));
+			solid_check(flecs::_::g_type_to_impl_data.contains(EnumNameStdString));
 			
 			auto& [s_set_values, s_index, s_size, s_alignment, s_allow_tag, s_enum_registered]
-				= flecs::_::g_type_to_impl_data.at(std::string(EnumNameCStr));
+				= flecs::_::g_type_to_impl_data.at(EnumNameStdString);
 			
 			flecs_component_ids_set(World, s_index, ScriptEnumComponent);
 			TypeMapComponent->ScriptEnumMap.emplace(ScriptEnum, ScriptEnumComponent);
@@ -1392,8 +1391,8 @@ FFlecsEntityHandle UFlecsWorld::RegisterScriptClassType(TSolidNotNull<UClass*> S
 	}
 
 	FFlecsEntityHandle ScriptClassEntity;
-		
-	const char* ClassNameCStr = Unreal::Flecs::ToCString(ClassName);
+
+	const char* ClassNameCStr = StringCast<char>(*ClassName).Get();
 
 	DeferEndLambda([this, ScriptClass, &ScriptClassEntity, ClassNameCStr, &ClassName]()
 	{
@@ -1407,7 +1406,9 @@ FFlecsEntityHandle UFlecsWorld::RegisterScriptClassType(TSolidNotNull<UClass*> S
 
 		//RegisterMemberProperties(ScriptClass, ScriptClassComponent);
 
-		if (!flecs::_::g_type_to_impl_data.contains(std::string(ClassNameCStr)))
+		std::string ClassNameStdString(ClassNameCStr, ClassName.Len());
+
+		if (!flecs::_::g_type_to_impl_data.contains(ClassNameStdString))
 		{
 			flecs::_::type_impl_data NewData;  // NOLINT(cppcoreguidelines-pro-type-member-init)]
 			NewData.s_set_values = true;
@@ -1417,12 +1418,12 @@ FFlecsEntityHandle UFlecsWorld::RegisterScriptClassType(TSolidNotNull<UClass*> S
 			NewData.s_allow_tag = true;
 			NewData.s_enum_registered = false;
 				
-			flecs::_::g_type_to_impl_data.emplace(std::string(ClassNameCStr), NewData);
+			flecs::_::g_type_to_impl_data.emplace(ClassNameStdString, NewData);
 		}
 
-		solid_check(flecs::_::g_type_to_impl_data.contains(std::string(ClassNameCStr)));
+		solid_check(flecs::_::g_type_to_impl_data.contains(ClassNameStdString));
 
-		flecs::_::type_impl_data& Data = flecs::_::g_type_to_impl_data.at(std::string(ClassNameCStr));
+		flecs::_::type_impl_data& Data = flecs::_::g_type_to_impl_data.at(ClassNameStdString);
 			
 		flecs_component_ids_set(World, Data.s_index, ScriptClassEntity);
 		TypeMapComponent->ScriptClassMap.emplace(ScriptClass, ScriptClassEntity);

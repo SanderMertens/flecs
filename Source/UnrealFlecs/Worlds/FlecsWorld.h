@@ -581,7 +581,7 @@ public:
 	template <typename ...TComponents>
 	NO_DISCARD flecs::system_builder<TComponents...> CreateSystemWithBuilder(const FString& InName) const
 	{
-		return World.system<TComponents...>(Unreal::Flecs::ToCString(InName));
+		return World.system<TComponents...>(StringCast<char>(*InName).Get());
 	}
 	
 	/**

@@ -324,7 +324,7 @@ void UFlecsWorldSubsystem::RegisterAllGameplayTags(const TSolidNotNull<const UFl
 		for (const FGameplayTag& Tag : AllTags)
 		{
 			const FFlecsEntityHandle TagEntity = flecs::entity(InFlecsWorld->World,
-			                                                   Unreal::Flecs::ToCString(Tag.ToString()),
+			                                                   StringCast<char>(*Tag.ToString()).Get(),
 			                                                   ".", ".");
 			TagEntity.Set<FGameplayTag>(Tag);
 		}

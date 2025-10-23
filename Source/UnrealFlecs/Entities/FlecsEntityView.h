@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 
+#include "SolidMacros/Macros.h"
+#include "Concepts/SolidConcepts.h"
 #include "Types/SolidNotNull.h"
-
-#include "General/FlecsStringConverters.h"
 
 #include "FlecsEntityHandleTypes.h"
 #include "FlecsCommonHandle.h"
@@ -606,7 +606,7 @@ public:
 	template <Unreal::Flecs::TFlecsEntityHandleTypeConcept THandle>
 	NO_DISCARD SOLID_INLINE THandle Lookup(const FString& InPath, const bool bSearchPath = false) const
 	{
-		return GetEntityView().lookup(Unreal::Flecs::ToCString(InPath), bSearchPath);
+		return GetEntityView().lookup(StringCast<char>(*InPath).Get(), bSearchPath);
 	}
 
 	template <typename FunctionType>
@@ -743,8 +743,8 @@ public:
 
 	NO_DISCARD SOLID_INLINE FString GetPath(const FString& InSeparator, const FString& InitialSeparator) const
 	{
-		return FString(GetEntityView().path(Unreal::Flecs::ToCString(InSeparator),
-								Unreal::Flecs::ToCString(InitialSeparator)));
+		return FString(GetEntityView().path(StringCast<char>(*InSeparator).Get(),
+			StringCast<char>(*InitialSeparator).Get()));
 	}
 
 	NO_DISCARD SOLID_INLINE FFlecsArchetype GetType() const

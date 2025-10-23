@@ -27,7 +27,7 @@ bool FFlecsComponentPropertiesRegistry::ContainsComponentProperties(const std::s
 
 bool FFlecsComponentPropertiesRegistry::ContainsComponentProperties(const FString& Name) const
 {
-	return ComponentProperties.contains(Unreal::Flecs::ToCString(Name));
+	return ComponentProperties.contains(StringCast<char>(*Name).Get());
 }
 
 const FFlecsComponentProperties& FFlecsComponentPropertiesRegistry::GetComponentProperties(
@@ -42,8 +42,8 @@ const FFlecsComponentProperties& FFlecsComponentPropertiesRegistry::GetComponent
 const FFlecsComponentProperties& FFlecsComponentPropertiesRegistry::GetComponentProperties(const FString& Name) const
 {
 	solid_checkf(!Name.IsEmpty(), TEXT("Component properties name is empty!"));
-	solid_checkf(ComponentProperties.contains(Unreal::Flecs::ToCString(Name)),
+	solid_checkf(ComponentProperties.contains(StringCast<char>(*Name).Get()),
 	             TEXT("Component properties not found!"));
 	
-	return ComponentProperties.at(Unreal::Flecs::ToCString(Name));
+	return ComponentProperties.at(StringCast<char>(*Name).Get());
 }
