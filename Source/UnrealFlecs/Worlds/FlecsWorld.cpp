@@ -1203,7 +1203,6 @@ FFlecsEntityHandle UFlecsWorld::RegisterScriptStruct(const UScriptStruct* Script
 								solid_check(IsValid(ContextScriptStruct));
 
 								ContextScriptStruct->CopyScriptStruct(Dst, Src, Count);
-								ContextScriptStruct->DestroyStruct(Src, Count);
 							};
 
 							if (ScriptStruct->GetCppStructOps()->HasIdentical())
