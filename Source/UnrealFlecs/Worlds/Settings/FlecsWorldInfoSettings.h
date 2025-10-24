@@ -41,27 +41,27 @@ public:
         return !(*this == Other);
     }
 
-    UPROPERTY(EditAnywhere, Category = "Flecs")
+    UPROPERTY(EditAnywhere, Category = "World")
     FString WorldName;
 
-    UPROPERTY(EditAnywhere, Instanced, Category = "Flecs",
+    UPROPERTY(EditAnywhere, Instanced, Category = "Game Loop",
         meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsGameLoopInterface"))
     TObjectPtr<UObject> GameLoop;
 
-    UPROPERTY(EditAnywhere, Instanced, Category = "Flecs | Modules",
+    UPROPERTY(EditAnywhere, Instanced, Category = "Modules",
         meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
     TArray<TObjectPtr<UObject>> Modules;
 
-    UPROPERTY(EditAnywhere, Category = "Flecs | Modules")
+    UPROPERTY(EditAnywhere, Category = "Modules")
     TArray<TObjectPtr<UFlecsModuleSetDataAsset>> ModuleSets;
 
 #if WITH_EDITORONLY_DATA
 
-    UPROPERTY(EditAnywhere, Instanced, Category = "Flecs | Editor Modules",
+    UPROPERTY(EditAnywhere, Instanced, Category = "Editor Modules",
          meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
     TArray<TObjectPtr<UObject>> EditorModules;
 
-    UPROPERTY(EditAnywhere, Category = "Flecs | Editor Modules")
+    UPROPERTY(EditAnywhere, Category = "Editor Modules")
     TArray<TObjectPtr<UFlecsModuleSetDataAsset>> EditorModuleSets;
 
 #endif // #if WITH_EDITORONLY_DATA

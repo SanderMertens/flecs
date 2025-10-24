@@ -644,7 +644,7 @@ FFlecsEntityHandle UFlecsWorld::LookupEntity(const FString& Name,
 {
 	return World.lookup(StringCast<char>(*Name).Get(),
 						StringCast<char>(*Separator).Get(),
-	                    RootSeparator.IsEmpty() ? nullptr : StringCast<char>(*RootSeparator).Get(),
+	                    StringCast<char>(*RootSeparator).Get(),
 	                    bRecursive);
 }
 
