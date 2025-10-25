@@ -1,4 +1,4 @@
-files.extend-exclude = ["distr/*", "test/script/src/Fuzzing.c"]
+files.extend-exclude = ["distr/*", "test/script/src/Fuzzing.c", "docs/cfg/*"]
 
 # typos can't handle "2nd" as a word (yet?)
 default.extend-ignore-identifiers-re = ["_2nd"]
