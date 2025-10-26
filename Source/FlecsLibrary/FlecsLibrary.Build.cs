@@ -8,7 +8,7 @@ public class FlecsLibrary : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        const bool bCompileWithLibraryTests = true;
+        const bool bCompileWithLibraryTests = false;
         const bool bCompileWithJournal = false;
         
         Type = ModuleType.CPlusPlus;
