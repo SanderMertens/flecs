@@ -80,14 +80,12 @@ void UFlecsTickerGameLoop::InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorl
 		.with(FlecsFixedTick)
 		.without(flecs::Disabled).up(flecs::DependsOn)
 		.without(flecs::Disabled).up(flecs::ChildOf)
-	
 		#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
 		.with<flecs::SystemPriority>()
 		.order_by<flecs::SystemPriority>(flecs_priority_compare)
 		#else // FLECS_ENABLE_SYSTEM_PRIORITY
 		.order_by(flecs_entity_compare)
 		#endif // FLECS_ENABLE_SYSTEM_PRIORITY
-	
 		.build()
 		.set_name("TickerPipeline");
 

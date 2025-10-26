@@ -164,6 +164,7 @@ void FFlecsEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWor
 			{
 				case EFlecsComponentNodeType::ScriptStruct:
 					{
+						// @TODO: this may be true in the case of a bool/byte member that isn't marked with UPROPERTY()
 						if (ScriptStruct.GetScriptStruct()->GetStructureSize() <= 1 &&
 							ScriptStruct.GetScriptStruct()->PropertyLink == nullptr)
 						{

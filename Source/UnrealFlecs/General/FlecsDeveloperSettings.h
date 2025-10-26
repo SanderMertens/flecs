@@ -56,7 +56,7 @@ public:
 	/**
 	 * @brief Enable shrinking Flecs memory usage during Unreal Garbage Collection.
 	 */
-	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-	bool bShrinkMemoryOnGC = false;
+	/*UPROPERTY(EditAnywhere, Config, Category = "Flecs")
+	bool bShrinkMemoryOnGC = false;*/
 
 }; // class UFlecsDeveloperSettings

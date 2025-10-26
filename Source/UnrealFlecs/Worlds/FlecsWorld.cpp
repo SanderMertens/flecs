@@ -123,6 +123,7 @@ void UFlecsWorld::WorldStart()
 
 	const TSolidNotNull<const UFlecsDeveloperSettings*> FlecsDeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
 
+	/*
 	if (FlecsDeveloperSettings->bShrinkMemoryOnGC)
 	{
 		ShrinkMemoryGCDelegateHandle = FCoreUObjectDelegates::GarbageCollectComplete
@@ -139,7 +140,7 @@ void UFlecsWorld::WorldStart()
 							  "Flecs World {WorldName} Shrinking world memory on GC",
 							  *GetName());
 			});
-	}
+	}*/
 
 	if (FlecsDeveloperSettings->bDeleteEmptyTablesOnGC)
 	{
@@ -157,8 +158,8 @@ void UFlecsWorld::WorldStart()
 
 				const int32 DeletedTables = DeleteEmptyTables(
 					FlecsDeveloperSettings->TimeBudget,
-					FlecsDeveloperSettings->ClearGeneration,
-					FlecsDeveloperSettings->DeleteGeneration);
+					FlecsDeveloperSettings->ClearGeneration,  // NOLINT(clang-diagnostic-implicit-int-conversion)
+					FlecsDeveloperSettings->DeleteGeneration); // NOLINT(clang-diagnostic-implicit-int-conversion)
 				
 				UE_LOGFMT(LogFlecsWorld, Log,
 							  "Flecs World {WorldName} Deleted {DeletedTableCount} empty tables on GC",
