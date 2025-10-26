@@ -76,6 +76,9 @@ public:
 	template <Unreal::Flecs::Collections::TCollectionBuilderFunc FuncType>
 	FFlecsEntityHandle RegisterCollectionClass(const TSolidNotNull<UClass*> InClass, FuncType&& InBuildFunc)
 	{
+		checkf(!ClassImplementsCollectionInterface(InClass),
+		       TEXT("Use RegisterCollectionInterfaceClass to register collection classes that implement IFlecsCollectionInterface"));
+		
 		FFlecsCollectionDefinition Definition;
 		
 		FFlecsCollectionBuilder Builder = FFlecsCollectionBuilder::Create(Definition);
