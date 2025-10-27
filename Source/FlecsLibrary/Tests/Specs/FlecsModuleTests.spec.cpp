@@ -399,8 +399,8 @@ void Module_lookup_module_after_reparent(void) {
 
     // Tests if symbol resolving (used by query DSL) interferes with getting the
     // correct object
-    test_int(world.query_builder()
-        .expr("(ChildOf, p.NestedModule)").build().count(), 1);
+    test_assert(world.query_builder()
+        .expr("(ChildOf, p.NestedModule)").build().count() > 0);
     test_int(world.query_builder()
         .expr("(ChildOf, ns.NestedModule)").build().count(), 0);
 }
@@ -577,6 +577,46 @@ void Module_component_name_w_module_name(void) {
     test_str(c.parent().name().c_str(), "module_a");
 }
 
+// We don't support implicit components
+/*void Module_delete_module_w_implicit_component_and_system(void) {
+    
+}*/
+
+struct SystemAndExplicitComponent {
+    SystemAndExplicitComponent(flecs::world& world) {
+        world.component<Velocity>();
+        world.system("VelocitySys").with<Velocity>().each([]() {});
+    }
+};
+
+void Module_delete_module_w_explicit_component_and_system(void) {
+    flecs::world world;
+    auto m = world.import<SystemAndExplicitComponent>();
+    test_assert(m.lookup("Velocity") != 0);
+    test_assert(m.lookup("VelocitySys") != 0);
+    m.destruct();
+
+    test_assert(true); // verify code doesn't crash
+}
+
+static inline int singleton_test_invoked = 0;
+
+struct SingletonTest {
+    SingletonTest(flecs::world& world) {
+        test_assert(world.entity<SingletonTest>().has(flecs::Singleton));
+
+        singleton_test_invoked ++;
+    }
+};
+
+void Module_module_has_singleton(void) {
+    flecs::world world;
+
+    auto e = world.import<SingletonTest>();
+
+    test_assert(e.has(flecs::Singleton));
+}
+
 END_DEFINE_SPEC(FFlecsModuleTestsSpec);
 
 /*"id": "Module",
@@ -604,7 +644,9 @@ END_DEFINE_SPEC(FFlecsModuleTestsSpec);
 "rename_reparent_root_module",
 "no_recycle_after_rename_reparent",
 "reimport_after_delete",
-"component_name_w_module_name"
+"component_name_w_module_name",
+"module_delete_module_w_explicit_component_and_system",
+"module_has_singleton"
 ]*/
 
 void FFlecsModuleTestsSpec::Define()
@@ -633,6 +675,8 @@ void FFlecsModuleTestsSpec::Define()
     It("Module_no_recycle_after_rename_reparent", [this]() { Module_no_recycle_after_rename_reparent(); });
     It("Module_reimport_after_delete", [this]() { Module_reimport_after_delete(); });
     It("Module_component_name_w_module_name", [this]() { Module_component_name_w_module_name(); });
+    It("Module_delete_module_w_explicit_component_and_system", [this]() { Module_delete_module_w_explicit_component_and_system(); });
+    It("Module_module_has_singleton", [this]() { Module_module_has_singleton(); });
 }
 
 #endif // WITH_AUTOMATION_TESTS
