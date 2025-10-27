@@ -484,6 +484,12 @@ void Sparse_emplace_no_is_new(void);
 void Sparse_set(void);
 void Sparse_clone(void);
 void Sparse_clone_w_value(void);
+void Sparse_clone_pair(void);
+void Sparse_clone_pair_w_value(void);
+void Sparse_clone_tag(void);
+void Sparse_clone_tag_w_value(void);
+void Sparse_clone_tag_pair(void);
+void Sparse_clone_tag_pair_w_value(void);
 void Sparse_modified_no_on_set(void);
 void Sparse_insert_1(void);
 void Sparse_insert_2(void);
@@ -4617,6 +4623,30 @@ bake_test_case Sparse_testcases[] = {
     {
         "clone_w_value",
         Sparse_clone_w_value
+    },
+    {
+        "clone_pair",
+        Sparse_clone_pair
+    },
+    {
+        "clone_pair_w_value",
+        Sparse_clone_pair_w_value
+    },
+    {
+        "clone_tag",
+        Sparse_clone_tag
+    },
+    {
+        "clone_tag_w_value",
+        Sparse_clone_tag_w_value
+    },
+    {
+        "clone_tag_pair",
+        Sparse_clone_tag_pair
+    },
+    {
+        "clone_tag_pair_w_value",
+        Sparse_clone_tag_pair_w_value
     },
     {
         "modified_no_on_set",
@@ -13656,7 +13686,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        204,
+        210,
         Sparse_testcases,
         1,
         Sparse_params
