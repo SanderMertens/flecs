@@ -6361,3 +6361,19 @@ void DeserializeFromJson_deser_pretty_printed_identifier_pair(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_ser_deser_alias(void) {
+    const char *name = "child";
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+    ecs_set_alias(world, child, name);
+    test_assert(ecs_lookup(world, name));
+
+    char *json = ecs_world_to_json(world, NULL);
+    ecs_world_t *new_world = ecs_init();
+    ecs_world_from_json(new_world, json, NULL);
+    test_assert(ecs_lookup(new_world, name));
+    ecs_os_free(json);
+}

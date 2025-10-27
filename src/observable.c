@@ -1075,6 +1075,10 @@ void flecs_emit_on_set_for_override_on_add(
     it->trs[0] = flecs_component_get_table(cr, table);
     it->sources[0] = 0;
 
+    /* Only valid for components, so type info must exist */
+    ecs_assert(cr && cr->type_info, ECS_INTERNAL_ERROR, NULL);
+    ECS_CONST_CAST(ecs_size_t*, it->sizes)[0] = cr->type_info->size;
+
     /* Invoke OnSet observers for new inherited component value. */
     for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
         ecs_event_id_record_t *ider = iders_set[ider_set_i];
@@ -1123,6 +1127,10 @@ void flecs_emit_on_set_for_override_on_remove(
     it->sources[0] = base;
     it->trs[0] = base_tr;
     it->up_fields = 1;
+
+    /* Only valid for components, so type info must exist */
+    ecs_assert(cr && cr->type_info, ECS_INTERNAL_ERROR, NULL);
+    ECS_CONST_CAST(ecs_size_t*, it->sizes)[0] = cr->type_info->size;
 
     /* Invoke OnSet observers for previous inherited component value. */
     for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
@@ -1391,8 +1399,9 @@ repeat_event:
         if (ti) {
              /* safe, owned by observer */
             ECS_CONST_CAST(int32_t*, it.sizes)[0] = ti->size;
+        } else {
+            ECS_CONST_CAST(int32_t*, it.sizes)[0] = 0;
         }
-
 
         /* Actually invoke observers for this event/id */
         for (ider_i = 0; ider_i < ider_count; ider_i ++) {

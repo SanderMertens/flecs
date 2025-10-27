@@ -1713,3 +1713,15 @@ void Meta_ser_deser_std_optional_std_string(void) {
     world.from_json(&o, "[\"foo bar\"]");
     test_str(world.to_json(&o).c_str(), "[\"foo bar\"]");
 }
+
+void Meta_ser_deser_alias(void) {
+    flecs::world world;
+    auto parent = world.entity();
+    world.entity().child_of(parent).set_alias("child");
+    auto str = world.to_json();
+    test_assert(world.lookup("child"));
+
+    flecs::world world2;
+    world2.from_json(str);
+    test_assert(world2.lookup("child"));
+}

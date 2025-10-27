@@ -1704,8 +1704,6 @@ void ecs_delete(
                 flecs_table_traversable_add(r->table, -1);
             }
 
-            flecs_entity_remove_non_fragmenting(world, entity, r);
-
             /* Merge operations before deleting entity */
             flecs_defer_end(world, stage);
             flecs_defer_begin(world, stage);
@@ -1722,6 +1720,7 @@ void ecs_delete(
             int32_t row = ECS_RECORD_TO_ROW(r->row);
             flecs_notify_on_remove(
                 world, table, &world->store.root, row, 1, &diff);
+            flecs_entity_remove_non_fragmenting(world, entity, r);
             flecs_table_delete(world, table, row, true);
         }
         
@@ -1869,12 +1868,20 @@ ecs_entity_t ecs_clone(
     if (src_r->row & EcsEntityHasDontFragment) {
         ecs_component_record_t *cur = world->cr_non_fragmenting_head;
         while (cur) {
-            ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
-            if (cur->sparse) {
-                void *src_ptr = flecs_sparse_get(cur->sparse, 0, src);
-                if (src_ptr) {
-                    ecs_set_id(world, dst, cur->id, 
-                        flecs_ito(size_t, cur->type_info->size), src_ptr);
+            if (!ecs_id_is_wildcard(cur->id)) {
+                ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
+                if (cur->sparse) {
+                    if (cur->type_info) {
+                        void *src_ptr = flecs_sparse_get(cur->sparse, 0, src);
+                        if (src_ptr) {
+                            ecs_set_id(world, dst, cur->id, 
+                                flecs_ito(size_t, cur->type_info->size), src_ptr);
+                        }
+                    } else {
+                        if (flecs_sparse_has(cur->sparse, src)) {
+                            ecs_add_id(world, dst, cur->id);
+                        }
+                    }
                 }
             }
     

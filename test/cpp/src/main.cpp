@@ -1233,6 +1233,7 @@ void Module_reimport_after_delete(void);
 void Module_component_name_w_module_name(void);
 void Module_delete_module_w_implicit_component_and_system(void);
 void Module_delete_module_w_explicit_component_and_system(void);
+void Module_module_has_singleton(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -1603,6 +1604,7 @@ void Meta_entity_to_json_w_default_desc(void);
 void Meta_query_to_json_w_default_desc(void);
 void Meta_script_to_std_vector_int(void);
 void Meta_script_to_std_vector_std_string(void);
+void Meta_ser_deser_alias(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -6466,6 +6468,10 @@ bake_test_case Module_testcases[] = {
     {
         "delete_module_w_explicit_component_and_system",
         Module_delete_module_w_explicit_component_and_system
+    },
+    {
+        "module_has_singleton",
+        Module_module_has_singleton
     }
 };
 
@@ -7912,6 +7918,10 @@ bake_test_case Meta_testcases[] = {
     {
         "script_to_std_vector_std_string",
         Meta_script_to_std_vector_std_string
+    },
+    {
+        "ser_deser_alias",
+        Meta_ser_deser_alias
     }
 };
 
@@ -8229,7 +8239,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        26,
+        27,
         Module_testcases
     },
     {
@@ -8271,7 +8281,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        68,
+        69,
         Meta_testcases
     },
     {

@@ -202,7 +202,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-13, macos-latest ]
+        os: [ ubuntu-latest, macos-14, macos-latest ]
 
     steps:
       - uses: actions/checkout@v4
@@ -663,7 +663,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-13, macos-latest ]
+        os: [ ubuntu-latest, macos-14, macos-latest ]
 
     steps:
       - uses: actions/checkout@v4
@@ -760,7 +760,6 @@ jobs:
       fail-fast: false
       matrix:
         os: 
-          - { version: macos-13, xcode: '14.3.1' }
           - { version: macos-14, xcode: '15.4' }
           - { version: macos-15, xcode: '16.0' }
 
@@ -1118,7 +1117,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-13, macos-latest ]
+        os: [ ubuntu-latest, macos-14, macos-latest ]
 
     steps:
       - uses: actions/checkout@v4

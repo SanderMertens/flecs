@@ -883,7 +883,7 @@ void flecs_cmd_batch_for_entity(
                 flecs_find_table_remove(world, table, id, diff);
             if ((table != next) && (table->flags & EcsTableHasIsA)) {
                 /* Abort batch. It's possible that we removed an override, and
-                 * if we're readding the component in the same batch we need to
+                 * if we're reading the component in the same batch we need to
                  * reapply the override. If we do nothing here, an add for the
                  * same component would cancel out the remove and we'd won't get
                  * the override for the component. */

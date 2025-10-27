@@ -8362,6 +8362,12 @@ bool ecs_each_next(
  * which case this operation will return a single result with the ordered 
  * child entity ids.
  * 
+ * This operation is equivalent to doing:
+ * 
+ * @code
+ * ecs_children_w_rel(world, EcsChildOf, parent);
+ * @endcode
+ * 
  * @param world The world.
  * @param parent The parent.
  * @return An iterator that iterates all children of the parent.
@@ -8369,8 +8375,21 @@ bool ecs_each_next(
  * @see ecs_each_id()
 */
 FLECS_API
-ecs_iter_t ecs_children(
+FLECS_ALWAYS_INLINE ecs_iter_t ecs_children(
     const ecs_world_t *world,
+    ecs_entity_t parent);
+
+/** Same as ecs_children() but with custom relationship argument. 
+ * 
+ * @param world The world.
+ * @param relationship The relationship.
+ * @param parent The parent.
+ * @return An iterator that iterates all children of the parent.
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_iter_t ecs_children_w_rel(
+    const ecs_world_t *world,
+    ecs_entity_t relationship,
     ecs_entity_t parent);
 
 /** Progress an iterator created with ecs_children().
@@ -13720,6 +13739,16 @@ void ecs_component_record_memory_get(
 FLECS_API
 ecs_component_index_memory_t ecs_component_index_memory_get(
     const ecs_world_t *world);
+
+/** Get memory usage statistics for single query.
+ * 
+ * @param query The query.
+ * @param result Memory statistics for query (out).
+ */
+FLECS_API
+void ecs_query_memory_get(
+    const ecs_query_t *query,
+    ecs_query_memory_t *result);
 
 /** Get memory usage statistics for queries.
  * 
@@ -25340,16 +25369,9 @@ struct entity_view : public id {
 
         flecs::world world(world_);
 
-        if (rel == flecs::ChildOf) {
-            ecs_iter_t it = ecs_children(world_, id_);
-            while (ecs_children_next(&it)) {
-                _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
-            }
-        } else {
-            ecs_iter_t it = ecs_each_id(world_, ecs_pair(rel, id_));
-            while (ecs_each_next(&it)) {
-                _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
-            }
+        ecs_iter_t it = ecs_children_w_rel(world_, rel, id_);
+        while (ecs_children_next(&it)) {
+            _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
         }
     }
 
@@ -33498,6 +33520,8 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     // guarantees that a module destructor can be reliably used to cleanup
     // module resources.
     c_.add(flecs::Sparse);
+
+    c_.add(flecs::Singleton);
 
     ecs_set_scope(world, c_);
     world.emplace<T>(world);

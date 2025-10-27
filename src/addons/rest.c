@@ -625,7 +625,11 @@ bool flecs_rest_action(
     ecs_dbg_2("rest: run action '%s'", action);
 
     if (ecs_os_strcmp(action, "shrink_memory") == 0) {
-        ecs_run_post_frame(world, flecs_rest_shrink_memory, NULL);
+        if (ecs_world_get_flags(world) & EcsWorldFrameInProgress) {
+            ecs_run_post_frame(world, flecs_rest_shrink_memory, NULL);
+        } else {
+            flecs_rest_shrink_memory(world, NULL);
+        }
     } else {
         flecs_reply_error(reply, "unknown action '%s'", action);
         reply->code = 400;
@@ -1414,6 +1418,192 @@ bool flecs_rest_get_components(
 }
 
 static
+void flecs_rest_append_query_memory(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_strbuf_t *reply)
+{
+    (void)world;
+    (void)query;
+    (void)reply;
+
+#ifdef FLECS_STATS
+    if (!ecs_id(ecs_query_memory_t)) {
+        return;
+    }
+
+    ecs_query_memory_t query_memory = {0};
+    ecs_query_memory_get(query, &query_memory);
+
+    ecs_strbuf_list_appendlit(reply, "\"memory\":");
+
+    ecs_ptr_to_json_buf(
+        world, ecs_id(ecs_query_memory_t), &query_memory, reply);
+#endif
+}
+
+static
+void flecs_rest_append_query(
+    ecs_world_t *world,
+    ecs_query_t *query,
+    ecs_entity_t entity,
+    ecs_strbuf_t *reply)
+{
+    ecs_strbuf_list_next(reply);
+    ecs_strbuf_appendlit(reply, "\n");
+    ecs_strbuf_list_push(reply, "{", ",");
+    
+    ecs_strbuf_list_appendlit(reply, "\"name\":");
+    char *str = ecs_get_path(world, entity);
+    flecs_json_string_escape(reply, str);
+    ecs_os_free(str);
+
+    ecs_strbuf_list_appendlit(reply, "\"kind\":");
+    if (ecs_has_id(world, entity, EcsSystem)) {
+        ecs_strbuf_appendlit(reply, "\"System\"");
+    } else if (ecs_has_id(world, entity, EcsObserver)) {
+        ecs_strbuf_appendlit(reply, "\"Observer\"");
+    } else {
+        ecs_strbuf_appendlit(reply, "\"Query\"");
+    }
+
+    ecs_strbuf_list_appendlit(reply, "\"batched\":");
+    bool batched = false;
+    if ((query->flags & EcsQueryHasTableThisVar) && (query->flags & EcsQueryMatchThis)) {
+        batched = true;
+        ecs_strbuf_appendlit(reply, "true");
+    } else {
+        ecs_strbuf_appendlit(reply, "false");
+    }
+
+    ecs_iter_t it = ecs_query_iter(world, query);
+    it.flags |= EcsIterMatchEmptyTables;
+
+    ecs_strbuf_list_appendlit(reply, "\"eval_mode\":");
+    if (it.flags & EcsIterTrivialCached) ecs_strbuf_appendlit(reply, "\"TrivialCached\"");
+    else if (it.flags & EcsIterCached) ecs_strbuf_appendlit(reply, "\"Cached\"");
+    else if (it.flags & EcsIterTrivialSearch) ecs_strbuf_appendlit(reply, "\"TrivialUncached\"");
+    else if (!query->term_count) ecs_strbuf_appendlit(reply, "\"Noop\"");
+    else ecs_strbuf_appendlit(reply, "\"Plan\"");
+
+    ecs_strbuf_list_appendlit(reply, "\"cache_kind\":");
+    switch(query->cache_kind) {
+    case EcsQueryCacheDefault: ecs_strbuf_appendlit(reply, "\"Default\""); break;
+    case EcsQueryCacheAuto: ecs_strbuf_appendlit(reply, "\"Auto\""); break;
+    case EcsQueryCacheAll: ecs_strbuf_appendlit(reply, "\"All\""); break;
+    case EcsQueryCacheNone: ecs_strbuf_appendlit(reply, "\"None\""); break;
+    default: ecs_strbuf_appendlit(reply, "\"!! Invalid !!\"");
+    }
+
+    int32_t results = 0, count = 0, empty_tables = 0;
+    ecs_time_t t = {0}; ecs_time_measure(&t);
+    while (ecs_query_next(&it)) {
+        results ++;
+        count += it.count;
+        if (!count && batched) {
+            empty_tables ++;
+        }
+    }
+
+    /* Don't count own iteration */
+    query->eval_count --;
+
+    double eval_time = ecs_time_measure(&t);
+
+    ecs_strbuf_list_appendlit(reply, "\"eval_time\":");
+    ecs_strbuf_appendflt(reply, eval_time, '"');
+
+    ecs_strbuf_list_appendlit(reply, "\"eval_count\":");
+    ecs_strbuf_appendint(reply, query->eval_count);
+
+    ecs_strbuf_list_appendlit(reply, "\"results\":");
+    ecs_strbuf_appendint(reply, results);
+    ecs_strbuf_list_appendlit(reply, "\"count\":");
+    ecs_strbuf_appendint(reply, count);
+    ecs_strbuf_list_appendlit(reply, "\"empty_tables\":");
+    ecs_strbuf_appendint(reply, empty_tables);
+
+    ecs_strbuf_list_appendlit(reply, "\"count\":");
+    ecs_strbuf_appendint(reply, count);
+
+    ecs_strbuf_list_appendlit(reply, "\"expr\":");
+    char *expr = ecs_query_str(query);
+    flecs_json_string_escape(reply, expr);
+    ecs_os_free(expr);
+
+    ecs_strbuf_list_appendlit(reply, "\"plan_size\":");
+    ecs_strbuf_appendint(reply, flecs_query_impl(query)->op_count);
+
+    char *plan = ecs_query_plan(query);
+    ecs_strbuf_list_appendlit(reply, "\"plan\":");
+    flecs_json_string_escape(reply, plan);
+    ecs_os_free(plan);
+
+    const ecs_query_t *cache_query = ecs_query_get_cache_query(query);
+    if (cache_query) {
+        ecs_strbuf_list_appendlit(reply, "\"cache_plan\":");
+        char *cache_plan = ecs_query_plan(cache_query);
+        flecs_json_string_escape(reply, cache_plan);
+        ecs_os_free(cache_plan);
+    }
+
+    flecs_rest_append_query_memory(world, query, reply);
+
+    ecs_strbuf_list_pop(reply, "}");
+}
+
+static
+bool flecs_rest_get_queries(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    (void)req;
+
+    ecs_strbuf_list_push(&reply->body, "[", ",");
+
+    {
+        ecs_iter_t it = ecs_each_pair_t(world, EcsPoly, EcsQuery);
+        while (ecs_each_next(&it)) {
+            EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
+
+            for (int32_t i = 0; i < it.count; i++) {
+                ecs_query_t *query = queries[i].poly;
+                if (!query) {
+                    continue;
+                }
+
+                flecs_poly_assert(query, ecs_query_t);
+                flecs_rest_append_query(
+                    world, query, it.entities[i], &reply->body);
+            }
+        }
+    }
+
+    {
+        ecs_iter_t it = ecs_each_pair_t(world, EcsPoly, EcsObserver);
+        while (ecs_each_next(&it)) {
+            EcsPoly *observers = ecs_field(&it, EcsPoly, 0);
+
+            for (int32_t i = 0; i < it.count; i++) {
+                ecs_observer_t *observer = observers[i].poly;
+                if (!observer || !observer->query) {
+                    continue;
+                }
+
+                flecs_poly_assert(observer, ecs_observer_t);
+                flecs_rest_append_query(
+                    world, observer->query, it.entities[i], &reply->body);
+            }
+        }
+    }
+
+    ecs_strbuf_list_pop(&reply->body, "]");
+
+    return true;
+}
+
+static
 void flecs_rest_reply_table_append_type(
     ecs_world_t *world,
     ecs_strbuf_t *reply,
@@ -1833,6 +2023,10 @@ bool flecs_rest_reply(
         /* Components endpoint */
         } else if (!ecs_os_strncmp(req->path, "components", 10)) {
             return flecs_rest_get_components(world, req, reply);
+
+        /* Tables endpoint */
+        } else if (!ecs_os_strncmp(req->path, "queries", 7)) {
+            return flecs_rest_get_queries(world, req, reply);
 
         /* Tables endpoint */
         } else if (!ecs_os_strncmp(req->path, "tables", 6)) {

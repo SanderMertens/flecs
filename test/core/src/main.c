@@ -484,6 +484,12 @@ void Sparse_emplace_no_is_new(void);
 void Sparse_set(void);
 void Sparse_clone(void);
 void Sparse_clone_w_value(void);
+void Sparse_clone_pair(void);
+void Sparse_clone_pair_w_value(void);
+void Sparse_clone_tag(void);
+void Sparse_clone_tag_w_value(void);
+void Sparse_clone_tag_pair(void);
+void Sparse_clone_tag_pair_w_value(void);
 void Sparse_modified_no_on_set(void);
 void Sparse_insert_1(void);
 void Sparse_insert_2(void);
@@ -645,6 +651,18 @@ void Sparse_add_not_alive_target(void);
 void Sparse_deferred_delete_w_symmetric(void);
 void Sparse_query_after_delete(void);
 void Sparse_query_after_delete_symmetric(void);
+void Sparse_instantiate_prefab_w_component_w_with_sparse(void);
+void Sparse_children_for_sparse(void);
+void Sparse_children_for_sparse_no_children(void);
+void Sparse_children_for_sparse_after_delete_children(void);
+void Sparse_on_remove_before_hook_before_dtor(void);
+void Sparse_on_remove_before_hook_before_dtor_pair(void);
+void Sparse_check_sparse_in_regular_observer(void);
+void Sparse_check_sparse_target_in_regular_observer(void);
+void Sparse_check_sparse_exclusive_target_in_regular_observer(void);
+void Sparse_check_regular_in_sparse_observer(void);
+void Sparse_check_regular_target_in_sparse_observer(void);
+void Sparse_check_regular_exclusive_target_in_sparse_observer(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -1826,6 +1844,22 @@ void Observer_1_fixed_src_term_field_size(void);
 void Observer_2_fixed_src_terms_field_size(void);
 void Observer_1_singleton_term_field_size(void);
 void Observer_2_singleton_terms_field_size(void);
+void Observer_1_on_set_overridden_term_field_size(void);
+void Observer_2_on_set_overridden_terms_field_size(void);
+void Observer_1_on_set_after_remove_overridden_term_field_size(void);
+void Observer_2_on_set_after_remove_overridden_terms_field_size(void);
+void Observer_1_on_set_after_remove_overridden_term_field_size_defer(void);
+void Observer_2_on_set_after_remove_overridden_terms_field_size_defer(void);
+void Observer_1_term_field_size_w_tag(void);
+void Observer_2_terms_field_size_w_tag(void);
+void Observer_1_up_term_field_size_w_tag(void);
+void Observer_2_up_terms_field_size_w_tag(void);
+void Observer_1_fixed_src_term_field_size_w_tag(void);
+void Observer_2_fixed_src_terms_field_size_w_tag(void);
+void Observer_1_singleton_term_field_size_w_tag(void);
+void Observer_2_singleton_terms_field_size_w_tag(void);
+void Observer_1_on_set_overridden_term_field_size_w_tag(void);
+void Observer_2_on_set_overridden_terms_field_size_w_tag(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -2179,6 +2213,24 @@ void World_register_alias_twice_different_entity(void);
 void World_redefine_component(void);
 void World_delete_empty_tables_after_mini(void);
 void World_delete_empty_tables_after_init(void);
+void World_delete_empty_tables_w_add_hook_clear(void);
+void World_delete_empty_tables_w_add_hook_delete(void);
+void World_delete_empty_tables_w_add_hook_clear_delete(void);
+void World_delete_empty_tables_w_add_hook_clear_before_delete(void);
+void World_delete_empty_tables_w_remove_hook_clear(void);
+void World_delete_empty_tables_w_remove_hook_delete(void);
+void World_delete_empty_tables_w_remove_hook_clear_delete(void);
+void World_delete_empty_tables_w_remove_hook_clear_before_delete(void);
+void World_delete_empty_tables_w_set_hook_clear(void);
+void World_delete_empty_tables_w_set_hook_delete(void);
+void World_delete_empty_tables_w_set_hook_clear_delete(void);
+void World_delete_empty_tables_w_set_hook_clear_before_delete(void);
+void World_delete_empty_tables_w_add_hook_clear_empty_table(void);
+void World_delete_empty_tables_w_remove_hook_clear_empty_table(void);
+void World_delete_empty_tables_w_set_hook_clear_empty_table(void);
+void World_delete_empty_tables_w_add_hook_delete_empty_table(void);
+void World_delete_empty_tables_w_remove_hook_delete_empty_table(void);
+void World_delete_empty_tables_w_set_hook_delete_empty_table(void);
 void World_delete_1000_empty_tables(void);
 void World_use_after_delete_empty(void);
 void World_use_after_clear_empty(void);
@@ -4573,6 +4625,30 @@ bake_test_case Sparse_testcases[] = {
         Sparse_clone_w_value
     },
     {
+        "clone_pair",
+        Sparse_clone_pair
+    },
+    {
+        "clone_pair_w_value",
+        Sparse_clone_pair_w_value
+    },
+    {
+        "clone_tag",
+        Sparse_clone_tag
+    },
+    {
+        "clone_tag_w_value",
+        Sparse_clone_tag_w_value
+    },
+    {
+        "clone_tag_pair",
+        Sparse_clone_tag_pair
+    },
+    {
+        "clone_tag_pair_w_value",
+        Sparse_clone_tag_pair_w_value
+    },
+    {
         "modified_no_on_set",
         Sparse_modified_no_on_set
     },
@@ -5215,6 +5291,54 @@ bake_test_case Sparse_testcases[] = {
     {
         "query_after_delete_symmetric",
         Sparse_query_after_delete_symmetric
+    },
+    {
+        "instantiate_prefab_w_component_w_with_sparse",
+        Sparse_instantiate_prefab_w_component_w_with_sparse
+    },
+    {
+        "children_for_sparse",
+        Sparse_children_for_sparse
+    },
+    {
+        "children_for_sparse_no_children",
+        Sparse_children_for_sparse_no_children
+    },
+    {
+        "children_for_sparse_after_delete_children",
+        Sparse_children_for_sparse_after_delete_children
+    },
+    {
+        "on_remove_before_hook_before_dtor",
+        Sparse_on_remove_before_hook_before_dtor
+    },
+    {
+        "on_remove_before_hook_before_dtor_pair",
+        Sparse_on_remove_before_hook_before_dtor_pair
+    },
+    {
+        "check_sparse_in_regular_observer",
+        Sparse_check_sparse_in_regular_observer
+    },
+    {
+        "check_sparse_target_in_regular_observer",
+        Sparse_check_sparse_target_in_regular_observer
+    },
+    {
+        "check_sparse_exclusive_target_in_regular_observer",
+        Sparse_check_sparse_exclusive_target_in_regular_observer
+    },
+    {
+        "check_regular_in_sparse_observer",
+        Sparse_check_regular_in_sparse_observer
+    },
+    {
+        "check_regular_target_in_sparse_observer",
+        Sparse_check_regular_target_in_sparse_observer
+    },
+    {
+        "check_regular_exclusive_target_in_sparse_observer",
+        Sparse_check_regular_exclusive_target_in_sparse_observer
     }
 };
 
@@ -9832,6 +9956,70 @@ bake_test_case Observer_testcases[] = {
         Observer_2_singleton_terms_field_size
     },
     {
+        "1_on_set_overridden_term_field_size",
+        Observer_1_on_set_overridden_term_field_size
+    },
+    {
+        "2_on_set_overridden_terms_field_size",
+        Observer_2_on_set_overridden_terms_field_size
+    },
+    {
+        "1_on_set_after_remove_overridden_term_field_size",
+        Observer_1_on_set_after_remove_overridden_term_field_size
+    },
+    {
+        "2_on_set_after_remove_overridden_terms_field_size",
+        Observer_2_on_set_after_remove_overridden_terms_field_size
+    },
+    {
+        "1_on_set_after_remove_overridden_term_field_size_defer",
+        Observer_1_on_set_after_remove_overridden_term_field_size_defer
+    },
+    {
+        "2_on_set_after_remove_overridden_terms_field_size_defer",
+        Observer_2_on_set_after_remove_overridden_terms_field_size_defer
+    },
+    {
+        "1_term_field_size_w_tag",
+        Observer_1_term_field_size_w_tag
+    },
+    {
+        "2_terms_field_size_w_tag",
+        Observer_2_terms_field_size_w_tag
+    },
+    {
+        "1_up_term_field_size_w_tag",
+        Observer_1_up_term_field_size_w_tag
+    },
+    {
+        "2_up_terms_field_size_w_tag",
+        Observer_2_up_terms_field_size_w_tag
+    },
+    {
+        "1_fixed_src_term_field_size_w_tag",
+        Observer_1_fixed_src_term_field_size_w_tag
+    },
+    {
+        "2_fixed_src_terms_field_size_w_tag",
+        Observer_2_fixed_src_terms_field_size_w_tag
+    },
+    {
+        "1_singleton_term_field_size_w_tag",
+        Observer_1_singleton_term_field_size_w_tag
+    },
+    {
+        "2_singleton_terms_field_size_w_tag",
+        Observer_2_singleton_terms_field_size_w_tag
+    },
+    {
+        "1_on_set_overridden_term_field_size_w_tag",
+        Observer_1_on_set_overridden_term_field_size_w_tag
+    },
+    {
+        "2_on_set_overridden_terms_field_size_w_tag",
+        Observer_2_on_set_overridden_terms_field_size_w_tag
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -11195,6 +11383,78 @@ bake_test_case World_testcases[] = {
     {
         "delete_empty_tables_after_init",
         World_delete_empty_tables_after_init
+    },
+    {
+        "delete_empty_tables_w_add_hook_clear",
+        World_delete_empty_tables_w_add_hook_clear
+    },
+    {
+        "delete_empty_tables_w_add_hook_delete",
+        World_delete_empty_tables_w_add_hook_delete
+    },
+    {
+        "delete_empty_tables_w_add_hook_clear_delete",
+        World_delete_empty_tables_w_add_hook_clear_delete
+    },
+    {
+        "delete_empty_tables_w_add_hook_clear_before_delete",
+        World_delete_empty_tables_w_add_hook_clear_before_delete
+    },
+    {
+        "delete_empty_tables_w_remove_hook_clear",
+        World_delete_empty_tables_w_remove_hook_clear
+    },
+    {
+        "delete_empty_tables_w_remove_hook_delete",
+        World_delete_empty_tables_w_remove_hook_delete
+    },
+    {
+        "delete_empty_tables_w_remove_hook_clear_delete",
+        World_delete_empty_tables_w_remove_hook_clear_delete
+    },
+    {
+        "delete_empty_tables_w_remove_hook_clear_before_delete",
+        World_delete_empty_tables_w_remove_hook_clear_before_delete
+    },
+    {
+        "delete_empty_tables_w_set_hook_clear",
+        World_delete_empty_tables_w_set_hook_clear
+    },
+    {
+        "delete_empty_tables_w_set_hook_delete",
+        World_delete_empty_tables_w_set_hook_delete
+    },
+    {
+        "delete_empty_tables_w_set_hook_clear_delete",
+        World_delete_empty_tables_w_set_hook_clear_delete
+    },
+    {
+        "delete_empty_tables_w_set_hook_clear_before_delete",
+        World_delete_empty_tables_w_set_hook_clear_before_delete
+    },
+    {
+        "delete_empty_tables_w_add_hook_clear_empty_table",
+        World_delete_empty_tables_w_add_hook_clear_empty_table
+    },
+    {
+        "delete_empty_tables_w_remove_hook_clear_empty_table",
+        World_delete_empty_tables_w_remove_hook_clear_empty_table
+    },
+    {
+        "delete_empty_tables_w_set_hook_clear_empty_table",
+        World_delete_empty_tables_w_set_hook_clear_empty_table
+    },
+    {
+        "delete_empty_tables_w_add_hook_delete_empty_table",
+        World_delete_empty_tables_w_add_hook_delete_empty_table
+    },
+    {
+        "delete_empty_tables_w_remove_hook_delete_empty_table",
+        World_delete_empty_tables_w_remove_hook_delete_empty_table
+    },
+    {
+        "delete_empty_tables_w_set_hook_delete_empty_table",
+        World_delete_empty_tables_w_set_hook_delete_empty_table
     },
     {
         "delete_1000_empty_tables",
@@ -13426,7 +13686,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        192,
+        210,
         Sparse_testcases,
         1,
         Sparse_params
@@ -13547,7 +13807,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        277,
+        293,
         Observer_testcases
     },
     {
@@ -13596,7 +13856,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        107,
+        125,
         World_testcases
     },
     {

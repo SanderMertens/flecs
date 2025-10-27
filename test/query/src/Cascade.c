@@ -1251,3 +1251,45 @@ void Cascade_recreate_after_remove_all(void) {
 
     ecs_fini(world);
 }
+
+void Cascade_nested_target_deletion(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Rel, Traversable);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{
+            Foo, .trav = Rel, .src.id = EcsSelf|EcsCascade
+        }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t left = ecs_new_w(world, Foo);
+    ecs_entity_t right = ecs_new_w(world, Foo);
+    ecs_entity_t mid = ecs_new_w(world, Foo);
+    ecs_entity_t root = ecs_new_w(world, Foo);
+
+    ecs_add_pair(world, root, Rel, left);
+    ecs_add_pair(world, root, Rel, mid);
+    ecs_add_pair(world, mid, Rel, right);
+
+    ecs_add_pair(world, left, EcsChildOf, root);
+    ecs_add_pair(world, mid, EcsChildOf, root);
+    ecs_add_pair(world, right, EcsChildOf, mid);
+
+    // Triggers cleanup logic which creates an intermediate table with one of
+    // the two pairs removed from root. The other pair contains a target that is
+    // no longer alive, which the cascade logic should be robust against.
+    // This is not a problem in practice, since the intermediate table will get
+    // cleaned immediately after and won't actually be used to store entities.
+    ecs_delete(world, root);
+
+    test_assert(!ecs_is_alive(world, left));
+    test_assert(!ecs_is_alive(world, mid));
+    test_assert(!ecs_is_alive(world, right));
+    test_assert(!ecs_is_alive(world, root));
+
+    ecs_fini(world);
+}
