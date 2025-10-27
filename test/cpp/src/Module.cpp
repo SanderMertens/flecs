@@ -373,8 +373,8 @@ void Module_lookup_module_after_reparent(void) {
 
     // Tests if symbol resolving (used by query DSL) interferes with getting the
     // correct object
-    test_int(world.query_builder()
-        .expr("(ChildOf, p.NestedModule)").build().count(), 1);
+    test_assert(world.query_builder()
+        .expr("(ChildOf, p.NestedModule)").build().count() > 0);
     test_int(world.query_builder()
         .expr("(ChildOf, ns.NestedModule)").build().count(), 0);
 }
@@ -604,4 +604,22 @@ void Module_delete_module_w_explicit_component_and_system(void) {
     m.destruct();
 
     test_assert(true); // verify code doesn't crash
+}
+
+static int singleton_test_invoked = 0;
+
+struct SingletonTest {
+    SingletonTest(flecs::world& world) {
+        test_assert(world.entity<SingletonTest>().has(flecs::Singleton));
+
+        singleton_test_invoked ++;
+    }
+};
+
+void Module_module_has_singleton(void) {
+    flecs::world world;
+
+    auto e = world.import<SingletonTest>();
+
+    test_assert(e.has(flecs::Singleton));
 }

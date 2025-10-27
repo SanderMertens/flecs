@@ -25,6 +25,8 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     // module resources.
     c_.add(flecs::Sparse);
 
+    c_.add(flecs::Singleton);
+
     ecs_set_scope(world, c_);
     world.emplace<T>(world);
     ecs_set_scope(world, scope);

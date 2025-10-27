@@ -4213,6 +4213,7 @@ void flecs_register_symmetric(ecs_iter_t *it) {
     } 
 }
 
+#ifdef FLECS_DEBUG
 static
 void flecs_on_singleton_add_remove(ecs_iter_t *it) {
     ecs_entity_t component = ecs_field_id(it, 0);
@@ -4246,10 +4247,13 @@ void flecs_on_singleton_add_remove(ecs_iter_t *it) {
         continue;
     }
 }
+#endif
 
 static
 void flecs_register_singleton(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
+
+    (void)world;
 
     flecs_register_id_flag_for_relation(it, EcsSingleton, EcsIdSingleton, 0, 0);
 
@@ -4257,9 +4261,13 @@ void flecs_register_singleton(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_entity_t component = it->entities[i];
 
-        ecs_assert(flecs_components_get(world, component) != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(flecs_components_get(world, component) != NULL, 
+            ECS_INTERNAL_ERROR, NULL);
+
+        (void)component;
 
         /* Create observer that enforces that singleton is only added to self */
+#ifdef FLECS_DEBUG
         ecs_observer(world, {
             .entity = ecs_entity(world, { .parent = component }),
             .query.terms[0] = { 
@@ -4277,6 +4285,7 @@ void flecs_register_singleton(ecs_iter_t *it) {
             .callback = flecs_on_singleton_add_remove,
             .events = {EcsOnAdd}
         });
+#endif
     }
 }
 
@@ -25841,6 +25850,7 @@ ecs_entity_t ecs_module_init(
     }
     
     ecs_add_id(world, e, EcsModule);
+    ecs_add_id(world, e, EcsSingleton);
 
     ecs_component_desc_t private_desc = *desc;
     private_desc.entity = e;
