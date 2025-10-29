@@ -63,7 +63,9 @@ while (world.Progress()) { }
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: return; //compile-only
+HIDE: let world = World::new();
 // Optional, gather statistics for explorer
 world.import::<stats::Stats>();
 
@@ -118,7 +120,9 @@ world.App()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: return; //compile-only
+HIDE: let world = World::new();
 world
     .app()
     // Optional, gather statistics for explorer
@@ -334,7 +338,9 @@ while (world.Progress()) { }
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: return; //compile-only
+HIDE: let world = World::new();
 // Optional, gather statistics for explorer
 world.import::<stats::Stats>();
 

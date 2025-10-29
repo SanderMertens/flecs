@@ -76,16 +76,17 @@ Bob.Remove(Likes, Alice);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let likes = world.entity();
 let bob = world.entity();
 let alice = world.entity();
 
 // bob likes alice
-bob.add_id((likes, alice));
+bob.add((likes, alice));
 
 // bob likes alice no more
-bob.remove_id((likes, alice));
+bob.remove((likes, alice));
 ```
 
 </li>
@@ -148,18 +149,20 @@ Bob.Has(Eats, Pears); // true
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+
 let bob = world.entity();
 
 let eats = world.entity();
 let apples = world.entity();
 let pears = world.entity();
 
-bob.add_id((eats, apples));
-bob.add_id((eats, pears));
+bob.add((eats, apples));
+bob.add((eats, pears));
 
-bob.has_id((eats, apples)); // true
-bob.has_id((eats, pears)); // true
+bob.has((eats, apples)); // true
+bob.has((eats, pears)); // true
 ```
 
 </li>
@@ -231,7 +234,12 @@ Query q = world.QueryBuilder()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let eats = world.entity();
+HIDE: let apples = world.entity();
+HIDE: world.component_named::<Eats>("Eats");
+HIDE: world.component_named::<Apples>("Apples");
 // Find all entities that eat apples
 let q = world.query::<()>().expr("(Eats, Apples)").build();
 
@@ -239,11 +247,11 @@ let q = world.query::<()>().expr("(Eats, Apples)").build();
 let q = world.query::<()>().expr("(Eats, *)").build();
 
 // With the query builder API:
-let q = world.query::<()>().with_id((eats, apples)).build();
+let q = world.query::<()>().with((eats, apples)).build();
 
 // Or when using pair types, when both relationship & target are compile time types, they can be represented as a tuple:
 
-let q = world.new_query::<&(Eats, Apples)>();
+let q = world.query::<()>().with((Eats::id(), Apples::id())).build();
 ```
 
 </li>
@@ -282,8 +290,12 @@ Bob.Has(Eats, Apples);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-bob.has_id((eats, apples));
+```rust test
+HIDE: let world = World::new();
+HIDE: let bob = world.entity();
+HIDE: let eats = world.entity();
+HIDE: let apples = world.entity();
+bob.has((eats, apples));
 ```
 
 </li>
@@ -317,8 +329,11 @@ Bob.Has(Eats, Ecs.Wildcard);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-bob.has_id((eats, flecs::Wildcard::ID));
+```rust test
+HIDE: let world = World::new();
+HIDE: let bob = world.entity();
+HIDE: let eats = world.entity();
+bob.has((eats, flecs::Wildcard));
 ```
 
 </li>
@@ -352,14 +367,18 @@ Entity parent = Bob.Parent();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let bob = world.entity();
 let parent = bob.parent();
 ```
 
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let bob = world.entity();
 let parent = bob.parent();
 ```
 
@@ -394,8 +413,11 @@ Entity food = Bob.Target(Eats);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-let food = bob.target_id(eats, 0); // first target
+```rust test
+HIDE: let world = World::new();
+HIDE: let bob = world.entity();
+HIDE: let eats = world.entity();
+let food = bob.target(eats, 0); // first target
 ```
 
 </li>
@@ -439,9 +461,12 @@ while ((food = Bob.Target(Eats, index++)) != 0)
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let bob = world.entity();
+HIDE: let eats = world.entity();
 let mut index = 0;
-while bob.target_id(eats, index).is_some() {
+while bob.target(eats, index).is_some() {
     index += 1;
 }
 ```
@@ -477,8 +502,10 @@ Entity parent = Bob.TargetFor<Position>(Ecs.ChildOf);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-let parent = bob.target_for::<Position>(flecs::ChildOf::ID);
+```rust test
+HIDE: let world = World::new();
+HIDE: let bob = world.entity();
+let parent = bob.target_for(flecs::ChildOf, Position::id());
 ```
 
 </li>
@@ -531,7 +558,9 @@ Bob.Each((Id id) =>
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let bob = world.entity();
 bob.each_component(|id| {
     if id.is_pair() {
         let first = id.first_id();
@@ -593,10 +622,13 @@ world.FilterBuilder()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let eats = world.entity();
+HIDE: let apples = world.entity();
 world
     .query::<()>()
-    .with_id((eats, apples))
+    .with((eats, apples))
     .build()
     .each_entity(|e, _| {
         // Iterate as usual
@@ -661,13 +693,15 @@ world.FilterBuilder()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let eats = world.entity();
 world
     .query::<()>()
-    .with_id((eats, flecs::Wildcard::ID))
+    .with((eats, flecs::Wildcard))
     .build()
     .each_iter(|it, i, _| {
-        let food = it.pair(0).unwrap().second_id(); // Apples, ...
+        let food = it.pair(0).second_id(); // Apples, ...
         let e = it.entity(i);
         // Iterate as usual
     });
@@ -716,7 +750,9 @@ parent.Children((Entity child) =>
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let parent = world.entity();
 parent.each_child(|child| {
     // ...
 });
@@ -850,7 +886,8 @@ e.Add(Ecs.ChildOf, world.Id<Position>());
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // Empty types (types without members) are letmatically interpreted as tags
 
 #[derive(Component)]
@@ -859,6 +896,11 @@ struct Begin;
 #[derive(Component)]
 struct End;
 
+#[derive(Component)]
+pub struct Eats {
+    amount: u32,
+}
+
 // Tags
 let likes = world.entity();
 let apples = world.entity();
@@ -866,7 +908,7 @@ let apples = world.entity();
 let e = world.entity();
 
 // Both likes and Apples are tags, so (likes, Apples) is a tag
-e.add_id((likes, apples));
+e.add((likes, apples));
 
 // Eats is a type and Apples is a tag, so (Eats, Apples) has type Eats
 e.set_pair::<Eats, Apples>(Eats { amount: 1 });
@@ -877,8 +919,8 @@ e.set_pair::<End, Position>(Position { x: 100.0, y: 20.0 }); // Same for End
 
 // ChildOf has the Tag property, so even though Position is a type, the pair
 // does not assume the Position type
-e.add_id((flecs::ChildOf::ID, world.component_id::<Position>()));
-e.add::<(flecs::ChildOf, Position)>();
+e.add((flecs::ChildOf, world.component_id::<Position>()));
+e.add((flecs::ChildOf, Position::id()));
 ```
 
 </li>
@@ -952,7 +994,8 @@ e.Set<Position>(third, new(5, 6));
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let e = world.entity();
 
 let first = world.entity();
@@ -1036,18 +1079,20 @@ q.Iter((Iter it) =>
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let likes = world.entity();
 let q = world
     .query::<()>()
-    .with_id((likes, flecs::Wildcard::ID))
+    .with((likes, flecs::Wildcard))
     .build();
 
 q.each_iter(|it, i, _| {
     println!(
         "entity {} has relationship {} {}",
         it.entity(i),
-        it.pair(0).unwrap().first_id().name(),
-        it.pair(0).unwrap().second_id().name()
+        it.pair(0).first_id().name(),
+        it.pair(0).second_id().name()
     );
 });
 ```
@@ -1085,7 +1130,9 @@ Query q = world.QueryBuilder().Expr("(Likes, *)").Build();
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: world.entity_named("likes");
 let q = world.query::<()>().expr("(likes, *)").build();
 ```
 
@@ -1178,7 +1225,8 @@ bob.Each(Eats, (Entity obj) =>
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 // bob eats apples and pears
 let bob = world.entity();
 
@@ -1186,16 +1234,16 @@ let eats = world.entity();
 let apples = world.entity();
 let pears = world.entity();
 
-bob.add_id((eats, apples));
-bob.add_id((eats, pears));
+bob.add((eats, apples));
+bob.add((eats, pears));
 
 // Find all (Eats, *) relationships in bob's type
-bob.each_pair(eats, flecs::Wildcard::ID, |id| {
+bob.each_pair(eats, flecs::Wildcard, |id| {
     println!("bob eats {}", id.second_id().name());
 });
 
 // For target wildcard pairs, each_target_id() can be used:
-bob.each_target_id(eats, |entity| {
+bob.each_target(eats, |entity| {
     println!("bob eats {}", entity.name());
 });
 ```
@@ -1241,11 +1289,12 @@ Apple.Add(Ecs.IsA, Fruit);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let apple = world.entity();
 let fruit = world.entity();
 
-apple.add_id((flecs::IsA::ID, fruit));
+apple.add((flecs::IsA::ID, fruit));
 ```
 
 </li>
@@ -1272,8 +1321,11 @@ Apple.IsA(Fruit);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-apple.is_a_id(fruit);
+```rust test
+HIDE: let world = World::new();
+HIDE: let apple = world.entity();
+HIDE: let fruit = world.entity();
+apple.is_a(fruit);
 ```
 
 </li>
@@ -1312,9 +1364,11 @@ GrannySmith.Add(Ecs.IsA, Apple);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: let apple = world.entity();
 let granny_smith = world.entity();
-granny_smith.add_id((flecs::IsA::ID, apple));
+granny_smith.add((flecs::IsA::ID, apple));
 ```
 
 </li>
@@ -1369,7 +1423,11 @@ Entity Frigate = world.Entity()
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+
+world.component::<MaxSpeed>().add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+
 let spaceship = world
     .entity()
     .set(MaxSpeed { value: 100 })
@@ -1377,7 +1435,7 @@ let spaceship = world
 
 let frigate = world
     .entity()
-    .is_a_id(spaceship) // shorthand for .add(flecs::IsA, Spaceship)
+    .is_a(spaceship) // shorthand for .add(flecs::IsA, Spaceship)
     .set(Defense { value: 75 });
 ```
 
@@ -1418,9 +1476,14 @@ v.Value == 100; // true
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: world.component::<MaxSpeed>().add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+HIDE: world.component::<Defense>().add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+HIDE: let spaceship = world.entity().set(MaxSpeed { value: 100 }).set(Defense { value: 50 });
+HIDE: let frigate = world.entity().is_a(spaceship).set(Defense { value: 75 });
 // Obtain the inherited component from Spaceship
-let is_100 = frigate.map::<&mut MaxSpeed, _>(|v| {
+let is_100 = frigate.get::<&MaxSpeed>(|v| {
     v.value == 100 // True
 });
 ```
@@ -1461,9 +1524,14 @@ v.Value == 75; // true
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
+HIDE: world.component::<MaxSpeed>().add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+HIDE: world.component::<Defense>().add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+HIDE: let spaceship = world.entity().set(MaxSpeed { value: 100 }).set(Defense { value: 50 });
+HIDE: let frigate = world.entity().is_a(spaceship).set(Defense { value: 75 });
 // Obtain the overridden component from Frigate
-let is_75 = frigate.map::<&mut Defense, _>(|v| {
+let is_75 = frigate.get::<&mut Defense>(|v| {
     v.value == 75 // True
 });
 ```
@@ -1529,16 +1597,21 @@ d.Value == 75; // true
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-let fast_frigate = world.entity().is_a_id(frigate).set(MaxSpeed { value: 200 });
+```rust test
+HIDE: let world = World::new();
+HIDE: world.component::<MaxSpeed>().add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+HIDE: world.component::<Defense>().add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+HIDE: let spaceship = world.entity().set(MaxSpeed { value: 100 }).set(Defense { value: 50 });
+HIDE: let frigate = world.entity().is_a(spaceship).set(Defense { value: 75 });
+let fast_frigate = world.entity().is_a(frigate).set(MaxSpeed { value: 200 });
 
 // Obtain the overridden component from FastFrigate
-let is_200 = fast_frigate.map::<&mut MaxSpeed, _>(|v| {
+let is_200 = fast_frigate.get::<&mut MaxSpeed>(|v| {
     v.value == 200 // True
 });
 
 // Obtain the inherited component from Frigate
-let is_75 = fast_frigate.map::<&mut Defense, _>(|v| {
+let is_75 = fast_frigate.get::<&Defense>(|v| {
     v.value == 75 // True
 });
 ```
@@ -1586,10 +1659,11 @@ Cockpit.Add(Ecs.ChildOf, Spaceship);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let spaceship = world.entity();
 let cockpit = world.entity();
-cockpit.add_id((flecs::ChildOf::ID, spaceship));
+cockpit.add((flecs::ChildOf, spaceship));
 ```
 
 </li>
@@ -1616,8 +1690,11 @@ Cockpit.ChildOf(Spaceship);
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
-cockpit.child_of_id(spaceship);
+```rust test
+HIDE: let world = World::new();
+HIDE: let cockpit = world.entity();
+HIDE: let spaceship = world.entity();
+cockpit.child_of(spaceship);
 ```
 
 </li>
@@ -1679,12 +1756,13 @@ child == parent.Lookup("Child"); // true
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let parent = world.entity_named("Parent");
-let child = world.entity_named("Child").child_of_id(parent);
+let child = world.entity_named("Child").child_of(parent);
 
-child == world.lookup("Parent::Child"); // true
-child == parent.lookup("Child"); // true
+assert!(child == world.lookup("Parent::Child")); // true
+assert!(child == parent.lookup("Child")); // true
 ```
 
 </li>
@@ -1751,19 +1829,20 @@ childB.Has(Ecs.ChildOf, parent); // true
 </li>
 <li><b class="tab-title">Rust</b>
 
-```rust
+```rust test
+HIDE: let world = World::new();
 let parent = world.entity();
 
-let prev = world.set_scope_id(parent);
+let prev = world.set_scope(parent);
 
 let child_a = world.entity();
 let child_b = world.entity();
 
 // Restore the previous scope
-world.set_scope_id(prev);
+world.set_scope(prev);
 
-child_a.has_id((flecs::ChildOf::ID, parent)); // true
-child_b.has_id((flecs::ChildOf::ID, parent)); // true
+child_a.has((flecs::ChildOf, parent)); // true
+child_b.has((flecs::ChildOf, parent)); // true
 ```
 
 </li>
@@ -1803,12 +1882,14 @@ Entity parent = world.Entity().Scope(() =>
 </li>
 <<li><b class="tab-title">Rust</b>
 
-```rust
-let parent = world.entity().run_in_scope(|| {
+```rust test
+HIDE: let world = World::new();
+let parent = world.entity();
+parent.run_in_scope(|| {
     let child_a = world.entity();
     let child_b = world.entity();
-    child_a.has_id((flecs::ChildOf::ID, parent)); // true
-    child_b.has_id((flecs::ChildOf::ID, parent)); // true
+    child_a.has((flecs::ChildOf, parent)); // true
+    child_b.has((flecs::ChildOf, parent)); // true
 });
 ```
 
