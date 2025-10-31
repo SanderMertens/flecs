@@ -846,7 +846,10 @@
                 "get_ordered_children_from_stage",
                 "get_ordered_children_from_prefab_instance_no_children",
                 "get_ordered_children_from_prefab_instance_3_children",
-                "get_ordered_children_from_prefab_instance_nested_children"
+                "get_ordered_children_from_prefab_instance_nested_children",
+                "recreate_named_child",
+                "lookup_after_move_to_root",
+                "lookup_after_clear"
             ]
         }, {
             "id": "Has",

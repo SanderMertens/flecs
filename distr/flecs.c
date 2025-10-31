@@ -2493,6 +2493,7 @@ void flecs_reparent_name_index(
 void flecs_unparent_name_index(
     ecs_world_t *world,
     ecs_table_t *src,
+    ecs_table_t *dst,
     int32_t offset,
     int32_t count);
 
@@ -6678,7 +6679,7 @@ void flecs_on_unparent(
     int32_t count)
 {
     if (other_table) {
-        flecs_unparent_name_index(world, table, row, count);
+        flecs_unparent_name_index(world, table, other_table, row, count);
     }
     flecs_ordered_children_unparent(world, table, row, count);
 }
@@ -10926,18 +10927,20 @@ void flecs_reparent_name_index_intern(
             flecs_name_index_remove(src_index, e, index_hash);
         }
     
-        const char *name_str = name->value;
-        if (name_str) {
-            if (name->hash == 0) {
-                name->length = ecs_os_strlen(name_str);
-                name->hash = flecs_hash(name_str, name->length);
-            }
+        if (dst_index) {
+            const char *name_str = name->value;
+            if (name_str) {
+                if (name->hash == 0) {
+                    name->length = ecs_os_strlen(name_str);
+                    name->hash = flecs_hash(name_str, name->length);
+                }
 
-            ecs_assert(name->hash != 0, ECS_INTERNAL_ERROR, NULL);
-    
-            flecs_name_index_ensure(
-                dst_index, e, name_str, name->length, name->hash);
-            name->index = dst_index;
+                ecs_assert(name->hash != 0, ECS_INTERNAL_ERROR, NULL);
+        
+                flecs_name_index_ensure(
+                    dst_index, e, name_str, name->length, name->hash);
+                name->index = dst_index;
+            }
         }
     }
 }
@@ -10989,6 +10992,7 @@ void flecs_reparent_name_index(
 void flecs_unparent_name_index(
     ecs_world_t *world,
     ecs_table_t *src,
+    ecs_table_t *dst,
     int32_t offset,
     int32_t count) 
 {
@@ -10996,13 +11000,16 @@ void flecs_unparent_name_index(
         return;
     }
 
+    if (!dst || !(dst->flags & EcsTableHasName)) {
+        /* If destination table doesn't have a name, we don't need to update the
+         * name index. Even if the src table had a name, the on_remove hook for
+         * EcsIdentifier will remove the entity from the index. */
+        return;
+    }
+
     ecs_assert(src->_->childof_r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_hashmap_t *src_index = src->_->childof_r->name_index;
-
-    ecs_component_record_t *cr = world->cr_childof_0;
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_hashmap_t *dst_index = cr->pair->name_index;
-    ecs_assert(dst_index != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_hashmap_t *dst_index = dst ? dst->_->childof_r->name_index : NULL;
 
     EcsIdentifier *names = ecs_table_get_pair(world, 
         src, EcsIdentifier, EcsName, offset);

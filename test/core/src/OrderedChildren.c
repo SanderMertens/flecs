@@ -1333,3 +1333,64 @@ void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(v
 
     ecs_fini(world);
 }
+
+void OrderedChildren_recreate_named_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_entity(world, { .name = "Parent" });
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t child = ecs_entity(world, { .name = "Foo", .parent = p });
+    test_assert(child != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Parent.Foo") == child);
+    ecs_delete(world, child);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Parent.Foo") == 0);
+
+    child = ecs_entity(world, { .name = "Foo", .parent = p });
+    test_assert(child != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Parent.Foo") == child);
+    ecs_delete(world, child);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Parent.Foo") == 0);
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_lookup_after_move_to_root(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_entity(world, { .name = "Parent" });
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t child = ecs_entity(world, { .name = "Foo", .parent = p });
+    test_assert(child != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Parent.Foo") == child);
+    
+    ecs_remove_pair(world, child, EcsChildOf, p);
+    test_assert(ecs_lookup(world, "Foo") == child);
+    test_assert(ecs_lookup(world, "Parent.Foo") == 0);
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_lookup_after_clear(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_entity(world, { .name = "Parent" });
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t child = ecs_entity(world, { .name = "Foo", .parent = p });
+    test_assert(child != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Parent.Foo") == child);
+    
+    ecs_clear(world, child);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Parent.Foo") == 0);
+
+    ecs_fini(world);
+}
