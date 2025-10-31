@@ -135,7 +135,7 @@ void flecs_on_unparent(
     int32_t count)
 {
     if (other_table) {
-        flecs_unparent_name_index(world, table, row, count);
+        flecs_unparent_name_index(world, table, other_table, row, count);
     }
     flecs_ordered_children_unparent(world, table, row, count);
 }
