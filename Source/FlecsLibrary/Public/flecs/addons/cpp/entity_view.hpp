@@ -1124,6 +1124,17 @@ struct entity_view : public id {
 
     /** Test if pair is enabled.
      *
+     * @tparam Second The second element of the pair.
+     * @param first The first element of the pair.
+     * @return True if enabled, false if not.
+     */
+    template <typename Second>
+    bool enabled_second(flecs::entity_t first) const {
+        return this->enabled(first, _::type<Second>::id(world_));
+    }
+
+    /** Test if pair is enabled.
+     *
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
      * @return True if enabled, false if not.
