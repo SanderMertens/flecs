@@ -279,6 +279,8 @@ void UFlecsWorld::InitializeDefaultComponents() const
 
 	/*World.component<FScriptArray>()
 	     .opaque<flecs::Vector>(flecs::meta::VectorType);*/
+	/* World.component<FScriptMap>()
+	     .opaque<flecs::Map>(flecs::meta::MapType); */
 
 	RegisterUnrealTypes();
 

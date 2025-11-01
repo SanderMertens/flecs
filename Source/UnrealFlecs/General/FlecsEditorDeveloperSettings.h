@@ -8,8 +8,8 @@
 
 #include "FlecsEditorDeveloperSettings.generated.h"
 
-UCLASS()
-class UNREALFLECS_API UFlecsEditorDeveloperSettings : public UDeveloperSettings
+UCLASS(MinimalAPI)
+class UFlecsEditorDeveloperSettings final : public UDeveloperSettings
 {
 	GENERATED_BODY()
 

@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 
+#include "Templates/SubclassOf.h"
+
 #include "SolidMacros/Macros.h"
 
 #include "FlecsModuleComponent.generated.h"
