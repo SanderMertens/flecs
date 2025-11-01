@@ -5542,7 +5542,6 @@ void Sparse_on_delete_target_sparse_panic(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
-    
 
     ecs_add_id(world, Rel, EcsSparse);
     if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);

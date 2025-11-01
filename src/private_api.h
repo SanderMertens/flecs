@@ -196,6 +196,10 @@ bool flecs_type_can_inherit_id(
 void flecs_fini_type_info(
     ecs_world_t *world);
 
+const ecs_type_info_t* flecs_determine_type_info_for_component(
+    const ecs_world_t *world,
+    ecs_id_t component);
+
 /* Utility for using allocated strings in assert/error messages */
 const char* flecs_errstr(
     char *str);

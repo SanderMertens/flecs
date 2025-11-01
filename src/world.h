@@ -90,6 +90,10 @@ struct ecs_world_t {
     ecs_map_t id_index_hi;           /* map<id, ecs_component_record_t*> */
     ecs_map_t type_info;             /* map<type_id, type_info_t> */
 
+    /* A refcount per queried for component that ensures that applications 
+     * cannot modify traits after a component has been queried for. */
+    ecs_map_t locked_components;     /* map<id_t, int64_t> */
+
     /* -- Cached handle to id records -- */
     ecs_component_record_t *cr_wildcard;
     ecs_component_record_t *cr_wildcard_wildcard;
@@ -286,6 +290,18 @@ uint32_t flecs_get_table_column_version(
 void flecs_throw_invalid_delete(
     ecs_world_t *world,
     ecs_id_t id);
+
+void flecs_component_lock(
+    ecs_world_t *world,
+    ecs_id_t component);
+
+void flecs_component_unlock(
+    ecs_world_t *world,
+    ecs_id_t component);
+
+bool flecs_component_is_locked(
+    ecs_world_t *world,
+    ecs_id_t component);
 
 /* Convenience macro's for world allocator */
 #define flecs_walloc(world, size)\

@@ -676,3 +676,22 @@ void Internals_table_get_records(void) {
 
     ecs_fini(world);
 }
+
+void Internals_childof_tgt_exists_after_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_childof(parent) }}
+    });
+
+    test_assert(q != NULL);
+
+    /* Make sure just querying for a pair doesn't create a component record */
+    test_assert(flecs_components_get(world, ecs_childof(parent)) == NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

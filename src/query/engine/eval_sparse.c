@@ -150,6 +150,9 @@ bool flecs_query_sparse_select_wildcard(
 
     if (!redo) {
         ecs_component_record_t *cr = flecs_components_get(ctx->world, id);
+        if (!cr) {
+            return false;
+        }
 
         if (ECS_PAIR_FIRST(id) == EcsWildcard) {
             op_ctx->cr = cr->pair->second.next;
@@ -365,6 +368,9 @@ bool flecs_query_sparse_with_wildcard(
 
     if (!redo) {
         ecs_component_record_t *cr = flecs_components_get(ctx->world, id);
+        if (!cr) {
+            return false;
+        }
 
         if (cr->flags & EcsIdExclusive) {
             op_ctx->cr = cr;
