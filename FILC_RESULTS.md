@@ -95,11 +95,26 @@ fil-C uses "invisible capabilities" (InvisiCaps) to track pointer bounds and val
    if ((uintptr_t)ptr & 0x7) { ... }  // May fail
    ```
 
+## Detailed Analysis
+
+For a comprehensive breakdown of **all fil-C compatibility issues** found in the flecs codebase, see:
+
+📄 **[FILC_ISSUES_ANALYSIS.md](./FILC_ISSUES_ANALYSIS.md)**
+
+This analysis document catalogs:
+- 5 major categories of problematic patterns
+- 100+ specific occurrences of pointer-integer casts
+- Root cause analysis
+- Recommended fixes with priority levels
+- Performance impact assessment
+- Testing strategy and next steps
+
 ## Conclusion
 
 ✅ **Successfully demonstrated fil-C integration with flecs**
 ✅ **Found a real memory safety concern** that needs investigation
 ✅ **Established reproducible test environment** via Docker
+✅ **Identified all potential compatibility issues** (see FILC_ISSUES_ANALYSIS.md)
 
 The fact that fil-C caught this during compilation (rather than runtime) shows its proactive approach to memory safety. This is exactly what we want - catching potential issues before they become exploitable vulnerabilities.
 
