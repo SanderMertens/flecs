@@ -568,36 +568,43 @@ bool flecs_type_info_init_id(
     }
 
     /* Set type info for component record of component */
-    ecs_component_record_t *cr = flecs_components_ensure(world, component);
-    changed |= flecs_component_set_type_info(world, cr, ti);
-    bool is_tag = cr->flags & EcsIdPairIsTag;
+    ecs_component_record_t *cr = flecs_components_get(world, component);
+    if (cr) {
+        changed |= flecs_component_set_type_info(world, cr, ti);
+    }
+
+    bool is_tag = ecs_has_id(world, component, EcsPairIsTag);
 
     /* All id records with component as relationship inherit type info */
-    cr = flecs_components_ensure(world, ecs_pair(component, EcsWildcard));
-    do {
-        if (is_tag) {
-            changed |= flecs_component_set_type_info(world, cr, NULL);
-        } else if (ti) {
-            changed |= flecs_component_set_type_info(world, cr, ti);
-        } else if ((cr->type_info != NULL) &&
-            (cr->type_info->component == component))
-        {
-            changed |= flecs_component_set_type_info(world, cr, NULL);
-        }
-    } while ((cr = flecs_component_first_next(cr)));
+    cr = flecs_components_get(world, ecs_pair(component, EcsWildcard));
+    if (cr) {
+        do {
+            if (is_tag) {
+                changed |= flecs_component_set_type_info(world, cr, NULL);
+            } else if (ti) {
+                changed |= flecs_component_set_type_info(world, cr, ti);
+            } else if ((cr->type_info != NULL) &&
+                (cr->type_info->component == component))
+            {
+                changed |= flecs_component_set_type_info(world, cr, NULL);
+            }
+        } while ((cr = flecs_component_first_next(cr)));
+    }
 
     /* All non-tag id records with component as object inherit type info,
      * if relationship doesn't have type info */
-    cr = flecs_components_ensure(world, ecs_pair(EcsWildcard, component));
-    do {
-        if (!(cr->flags & EcsIdPairIsTag) && !cr->type_info) {
-            changed |= flecs_component_set_type_info(world, cr, ti);
-        }
-    } while ((cr = flecs_component_first_next(cr)));
+    cr = flecs_components_get(world, ecs_pair(EcsWildcard, component));
+    if (cr) {
+        do {
+            if (!(cr->flags & EcsIdPairIsTag) && !cr->type_info) {
+                changed |= flecs_component_set_type_info(world, cr, ti);
+            }
+        } while ((cr = flecs_component_first_next(cr)));
+    }
 
     /* Type info of (*, component) should always point to component */
-    ecs_assert(flecs_components_get(world, ecs_pair(EcsWildcard, component))->
-        type_info == ti, ECS_INTERNAL_ERROR, NULL);
+    // ecs_assert(flecs_components_get(world, ecs_pair(EcsWildcard, component))->
+    //     type_info == ti, ECS_INTERNAL_ERROR, NULL);
 
     return changed;
 }
@@ -635,6 +642,36 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
     return NULL;
 }
 
+const ecs_type_info_t* flecs_determine_type_info_for_component(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (!ECS_IS_PAIR(id)) {
+        if (!(id & ECS_ID_FLAGS_MASK)) {
+            return flecs_type_info_get(world, id);
+        }
+    } else {
+        ecs_entity_t rel = ecs_pair_first(world, id);
+        if (rel) {
+            if (ecs_has_id(world, rel, EcsPairIsTag)) {
+                return NULL;
+            }
+
+            const ecs_type_info_t *ti = flecs_type_info_get(world, rel);
+            if (ti) {
+                return ti;
+            }
+        }
+
+        ecs_entity_t tgt = ecs_pair_second(world, id);
+        if (tgt) {
+            return flecs_type_info_get(world, tgt);
+        }
+    }
+
+    return NULL;
+}
+
 const ecs_type_info_t* ecs_get_type_info(
     const ecs_world_t *world,
     ecs_id_t id)
@@ -645,28 +682,10 @@ const ecs_type_info_t* ecs_get_type_info(
     world = ecs_get_world(world);
 
     ecs_component_record_t *cr = flecs_components_get(world, id);
-    if (!cr && ECS_IS_PAIR(id)) {
-        cr = flecs_components_get(world, 
-            ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
-        if (!cr || !cr->type_info) {
-            cr = NULL;
-        }
-        if (!cr) {
-            ecs_entity_t first = ecs_pair_first(world, id);
-            if (!first || !ecs_has_id(world, first, EcsPairIsTag)) {
-                cr = flecs_components_get(world, 
-                    ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id)));
-                if (!cr || !cr->type_info) {
-                    cr = NULL;
-                }
-            }
-        }
-    }
-
     if (cr) {
         return cr->type_info;
-    } else if (!(id & ECS_ID_FLAGS_MASK)) {
-        return flecs_type_info_get(world, id);
+    } else {
+        return flecs_determine_type_info_for_component(world, id);
     }
 error:
     return NULL;

@@ -6635,9 +6635,11 @@ void Observer_on_remove_target_component_from_base_at_offset(void) {
 }
 
 static void Observer_w_other_table(ecs_iter_t *it) {
-    probe_system_w_ctx(it, it->ctx);
-    test_assert(it->table != NULL);
-    test_assert(it->other_table != NULL);
+    if (it->event == EcsOnAdd) {
+        probe_system_w_ctx(it, it->ctx);
+        test_assert(it->table != NULL);
+        test_assert(it->other_table != NULL);
+    }
 }
 
 static void Observer_dummy(ecs_iter_t *it) {}

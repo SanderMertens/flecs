@@ -1989,6 +1989,7 @@ void Prefab_no_instantiate_on_2nd_add(void) {
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
     test_assert( ecs_has_pair(world, e, EcsIsA, Prefab));
+
     const Position *p = ecs_get(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 1);

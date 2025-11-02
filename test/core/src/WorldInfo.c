@@ -125,7 +125,7 @@ void WorldInfo_id_tag_component_count(void) {
 
     ecs_add(world, e, Position);
     test_delta(&prev_1, cur, tag_id_count, 0);
-    test_delta(&prev_2, cur, component_id_count, 0);
+    test_delta(&prev_2, cur, component_id_count, 1);
 
     ecs_delete(world, c_1);
     test_delta(&prev_1, cur, tag_id_count, -1);
@@ -137,7 +137,7 @@ void WorldInfo_id_tag_component_count(void) {
 
     ecs_delete(world, ecs_id(Position));
     test_delta(&prev_1, cur, tag_id_count, 0);
-    test_delta(&prev_2, cur, component_id_count, -3);
+    test_delta(&prev_2, cur, component_id_count, -1);
 
     ecs_fini(world);
 }
