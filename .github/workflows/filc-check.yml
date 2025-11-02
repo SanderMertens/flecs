@@ -1,0 +1,70 @@
+name: Fil-C Memory Safety Check
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+  workflow_dispatch:
+
+jobs:
+  filc-check:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget cmake build-essential xz-utils
+    
+    - name: Download and setup fil-C
+      run: |
+        wget https://github.com/pizlonator/fil-c/releases/download/v0.674/filc-0.674-linux-x86_64.tar.xz
+        tar -xf filc-0.674-linux-x86_64.tar.xz
+        cd filc-0.674-linux-x86_64
+        ./setup.sh
+        echo "FILC_DIR=$PWD" >> $GITHUB_ENV
+        echo "$PWD/build/bin" >> $GITHUB_PATH
+    
+    - name: Configure flecs with fil-C
+      run: |
+        mkdir build_filc
+        cd build_filc
+        cmake .. \
+          -DCMAKE_C_COMPILER="${FILC_DIR}/build/bin/clang" \
+          -DCMAKE_CXX_COMPILER="${FILC_DIR}/build/bin/clang++" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DFLECS_STATIC=ON \
+          -DFLECS_SHARED=ON \
+          -DFLECS_TESTS=OFF
+    
+    - name: Build flecs with fil-C
+      run: |
+        cd build_filc
+        cmake --build . -j$(nproc)
+    
+    - name: Compile test program
+      run: |
+        ${FILC_DIR}/build/bin/clang \
+          -I./include \
+          -L./build_filc \
+          -lflecs_static \
+          test_filc.c \
+          -o test_filc \
+          -lpthread
+    
+    - name: Run memory safety tests
+      run: |
+        ./test_filc
+    
+    - name: Upload build artifacts
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: filc-build-logs
+        path: |
+          build_filc/**/*.log
+          test_filc
