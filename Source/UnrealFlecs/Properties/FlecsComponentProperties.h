@@ -12,6 +12,7 @@
 
 #include "SolidMacros/Macros.h"
 #include "Standard/robin_hood.h"
+#include "Types/SolidCppStructOps.h"
 
 #include "Entities/FlecsComponentHandle.h"
 
@@ -76,6 +77,11 @@ public:
 					{ \
 						FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties( \
 						#Name, TBaseStructure<Name>::Get(), sizeof(Name), alignof(Name), RegistrationFunction); \
+						\
+						if constexpr (std::is_move_constructible<Name>::value || std::is_move_assignable<Name>::value) \
+						{ \
+							FSolidMoveableStructRegistry::Get().RegisterMovableScriptStruct<Name>(); \
+						} \
 					} \
 					else \
 					{ \

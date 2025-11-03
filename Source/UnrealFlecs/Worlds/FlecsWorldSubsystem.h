@@ -59,7 +59,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	UFlecsWorld* GetDefaultWorld() const;
 
-	NO_DISCARD UFlecsWorld* GetDefaultWorldChecked() const;
+	NO_DISCARD TSolidNotNull<UFlecsWorld*> GetDefaultWorldChecked() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	bool HasValidFlecsWorld() const;

@@ -248,6 +248,211 @@ struct alignas(64) FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes
 
 }; // struct FUStructTestComponent_CustomAlignedUSTRUCT_SixtyFourBytes
 
+USTRUCT()
+struct FUStructTestComponent_MovableUSTRUCT
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString Name;
+
+	UPROPERTY()
+	TArray<int32> Values;
+
+	FUStructTestComponent_MovableUSTRUCT() = default;
+	
+}; // struct FUStructTestComponent_MovableUSTRUCT
+
+USTRUCT()
+struct FUStructTestComponent_MovableNotRegisteredUSTRUCT
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FString Name;
+
+	UPROPERTY()
+	TArray<int32> Values;
+	
+	FUStructTestComponent_MovableNotRegisteredUSTRUCT() = default;
+	
+}; // struct FUStructTestComponent_MovableNotRegisteredUSTRUCT
+
+USTRUCT()
+struct FUStructTestComponent_LifecycleTracker
+{
+	GENERATED_BODY()
+	
+	enum class EConstructor : uint8
+	{
+		Default,
+		Copy,
+		Move
+	}; // enum class EConstructor
+	
+	EConstructor ConstructedVia = EConstructor::Default;
+
+	UPROPERTY()
+	int32 TimesDestructed = 0;
+
+	UPROPERTY()
+	int32 TimesCopyAssignedInto = 0;
+
+	mutable int32 TimesCopyAssignedFrom = 0;
+	mutable int32 TimesCopyConstructedFrom = 0;
+
+	UPROPERTY()
+	int32 TimesMoveAssignedInto = 0;
+
+	UPROPERTY()
+	int32 TimesMoveAssignedFrom = 0;
+
+	UPROPERTY()
+	int32 TimesMoveConstructedFrom = 0;
+
+	FUStructTestComponent_LifecycleTracker() = default;
+
+	FUStructTestComponent_LifecycleTracker(const FUStructTestComponent_LifecycleTracker& That)
+		: ConstructedVia(EConstructor::Copy)
+	{
+		++That.TimesCopyConstructedFrom;
+	}
+
+	FUStructTestComponent_LifecycleTracker& operator=(const FUStructTestComponent_LifecycleTracker& That)
+	{
+		++TimesCopyAssignedInto;
+		++That.TimesCopyAssignedFrom;
+		return *this;
+	}
+
+	FUStructTestComponent_LifecycleTracker(FUStructTestComponent_LifecycleTracker&& That) noexcept
+		: ConstructedVia(EConstructor::Move)
+	{
+		++That.TimesMoveConstructedFrom;
+	}
+
+	FUStructTestComponent_LifecycleTracker& operator=(FUStructTestComponent_LifecycleTracker&& That) noexcept
+	{
+		++TimesMoveAssignedInto;
+		++That.TimesMoveAssignedFrom;
+		return *this;
+	}
+
+	~FUStructTestComponent_LifecycleTracker()
+	{
+		++TimesDestructed;
+	}
+
+	// --- Convenience queries (match original semantics) ---
+	bool MovedFrom() const
+	{
+		return TimesMoveAssignedFrom > 0 || TimesMoveConstructedFrom > 0;
+	}
+
+	bool MovedInto() const
+	{
+		return TimesMoveAssignedInto > 0 || ConstructedVia == EConstructor::Move;
+	}
+
+	bool CopiedFrom() const
+	{
+		return TimesCopyAssignedFrom > 0 || TimesCopyConstructedFrom > 0;
+	}
+
+	bool CopiedInto() const
+	{
+		return TimesCopyAssignedInto > 0 || ConstructedVia == EConstructor::Copy;
+	}
+	
+}; // struct FUStructTestComponent_LifecycleTracker
+
+USTRUCT()
+struct FFlecsTestStruct_LifecycleTracker_NoMoveReg
+{
+	GENERATED_BODY()
+	
+	enum class EConstructor : uint8
+	{
+		Default,
+		Copy,
+		Move
+	}; // enum class EConstructor
+	
+	EConstructor ConstructedVia = EConstructor::Default;
+
+	UPROPERTY()
+	int32 TimesDestructed = 0;
+
+	UPROPERTY()
+	int32 TimesCopyAssignedInto = 0;
+
+	mutable int32 TimesCopyAssignedFrom = 0;
+	mutable int32 TimesCopyConstructedFrom = 0;
+
+	UPROPERTY()
+	int32 TimesMoveAssignedInto = 0;
+
+	UPROPERTY()
+	int32 TimesMoveAssignedFrom = 0;
+
+	UPROPERTY()
+	int32 TimesMoveConstructedFrom = 0;
+
+	FFlecsTestStruct_LifecycleTracker_NoMoveReg() = default;
+
+	FFlecsTestStruct_LifecycleTracker_NoMoveReg(const FFlecsTestStruct_LifecycleTracker_NoMoveReg& That)
+		: ConstructedVia(EConstructor::Copy)
+	{
+		++That.TimesCopyConstructedFrom;
+	}
+
+	FFlecsTestStruct_LifecycleTracker_NoMoveReg& operator=(const FFlecsTestStruct_LifecycleTracker_NoMoveReg& That)
+	{
+		++TimesCopyAssignedInto;
+		++That.TimesCopyAssignedFrom;
+		return *this;
+	}
+
+	FFlecsTestStruct_LifecycleTracker_NoMoveReg(FFlecsTestStruct_LifecycleTracker_NoMoveReg&& That) noexcept
+		: ConstructedVia(EConstructor::Move)
+	{
+		++That.TimesMoveConstructedFrom;
+	}
+
+	FFlecsTestStruct_LifecycleTracker_NoMoveReg& operator=(FFlecsTestStruct_LifecycleTracker_NoMoveReg&& That) noexcept
+	{
+		++TimesMoveAssignedInto;
+		++That.TimesMoveAssignedFrom;
+		return *this;
+	}
+
+	~FFlecsTestStruct_LifecycleTracker_NoMoveReg()
+	{
+		++TimesDestructed;
+	}
+
+	bool MovedFrom() const
+	{
+		return TimesMoveAssignedFrom > 0 || TimesMoveConstructedFrom > 0;
+	}
+
+	bool MovedInto() const
+	{
+		return TimesMoveAssignedInto > 0 || ConstructedVia == EConstructor::Move;
+	}
+
+	bool CopiedFrom() const
+	{
+		return TimesCopyAssignedFrom > 0 || TimesCopyConstructedFrom > 0;
+	}
+
+	bool CopiedInto() const
+	{
+		return TimesCopyAssignedInto > 0 || ConstructedVia == EConstructor::Copy;
+	}
+	
+}; // struct FFlecsTestStruct_LifecycleTracker_NoMoveReg
+
 struct FFlecsTestNativeGameplayTags : public FGameplayTagNativeAdder
 {
 	static FFlecsTestNativeGameplayTags StaticInstance;

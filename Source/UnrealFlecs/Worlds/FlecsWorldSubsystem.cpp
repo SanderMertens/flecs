@@ -250,7 +250,7 @@ UFlecsWorld* UFlecsWorldSubsystem::GetDefaultWorld() const
 	return DefaultWorld;
 }
 
-UFlecsWorld* UFlecsWorldSubsystem::GetDefaultWorldChecked() const
+TSolidNotNull<UFlecsWorld*> UFlecsWorldSubsystem::GetDefaultWorldChecked() const
 {
 	solid_checkf(IsValid(DefaultWorld), TEXT("Default Flecs world is not valid"));
 	return DefaultWorld;

@@ -33,6 +33,7 @@ public class UnrealFlecsEditor : ModuleRules
                 "BlueprintGraph",
                 "StructUtilsEditor",
                 "AssetRegistry",
+                "SolidMacros"
             }
         );
     }

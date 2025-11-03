@@ -20,7 +20,7 @@ public:
     static FFlecsId MakePairId(const FFlecsId First, const FFlecsId Second);
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static bool IsEntityFromObject(UObject* Object);
+    static bool HasEntityFromObject(UObject* Object);
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
     static FFlecsEntityHandle GetEntityFromObject(UObject* Object);

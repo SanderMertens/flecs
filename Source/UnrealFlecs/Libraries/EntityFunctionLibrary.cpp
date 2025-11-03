@@ -16,7 +16,7 @@ FFlecsId UEntityFunctionLibrary::MakePairId(const FFlecsId First, const FFlecsId
 	return FFlecsId::MakePair(First, Second);
 }
 
-bool UEntityFunctionLibrary::IsEntityFromObject(UObject* Object)
+bool UEntityFunctionLibrary::HasEntityFromObject(UObject* Object)
 {
 	if UNLIKELY_IF(!ensureMsgf(Object, TEXT("Object is not valid")))
 	{

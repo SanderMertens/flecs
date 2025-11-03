@@ -201,9 +201,10 @@ public:
 	}
 
 	template <typename T>
-	SOLID_INLINE const FSelfType& Set(T&& InValue) const
+	requires (std::is_move_constructible_v<T> && !std::is_lvalue_reference_v<T>)
+	SOLID_INLINE const FSelfType& Set(T&& InValue) const  // NOLINT(cppcoreguidelines-missing-std-forward)
 	{
-		GetEntity().set(MoveTempIfPossible(InValue));
+		GetEntity().set(FLECS_FWD(InValue));
 		return *this;
 	}
 	
@@ -255,6 +256,17 @@ public:
 			TEXT("Entity does not have component with type %hs"), nameof(T).data());
 
 		GetEntity().assign<T>(InValue);
+		return *this;
+	}
+
+	template <typename T>
+	requires (std::is_move_constructible_v<T> && !std::is_lvalue_reference_v<T>)
+	SOLID_INLINE const FSelfType& Assign(T&& InValue) const
+	{
+		solid_checkf(Has<T>(),
+			TEXT("Entity does not have component with type %hs"), nameof(T).data());
+
+		GetEntity().assign<T>(FLECS_FWD(InValue));
 		return *this;
 	}
 	
@@ -666,6 +678,8 @@ public:
 		GetEntity().remove_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirst));
 		return *this;
 	}
+
+	// @TODO: add r-value set apis for pairs
 	
 	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
 	requires (std::is_same_v<TFirst, TActual>)

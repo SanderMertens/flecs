@@ -50,7 +50,6 @@ REGISTER_FLECS_COMPONENT(FFlecsBeginPlaySingletonComponent,
 			.Add(flecs::Singleton);
 	});
 
-
 UCLASS(BlueprintType, NotBlueprintable)
 class UNREALFLECS_API UFlecsWorld : public UObject
 {

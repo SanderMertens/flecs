@@ -28,7 +28,8 @@ struct UNREALFLECS_API FFlecsDefaultMetaEntity
 
 	UPROPERTY(EditAnywhere, Category = "Default Entities", meta = (ClampMin = "7000"))
 	uint32 EntityId = 7001;
-	
+
+	UPROPERTY()
 	FFlecsId SetId = 0;
 
 	NO_DISCARD FORCEINLINE bool operator==(const FFlecsDefaultMetaEntity& Other) const

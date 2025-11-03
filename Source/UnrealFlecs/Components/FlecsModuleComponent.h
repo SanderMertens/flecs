@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Properties/FlecsComponentProperties.h"
 
 #include "Templates/SubclassOf.h"
 
@@ -53,3 +54,9 @@ struct UNREALFLECS_API FFlecsModuleComponent
 	TSubclassOf<UObject> ModuleClass;
 
 }; // struct FFlecsModuleComponent
+
+REGISTER_FLECS_COMPONENT(FFlecsModuleComponent,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		
+	});

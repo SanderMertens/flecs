@@ -21,7 +21,7 @@ UFlecsEntityActorComponent::UFlecsEntityActorComponent(const FObjectInitializer&
 	: Super(ObjectInitializer)
 {
 	PrimaryComponentTick.bCanEverTick = false;
-	SetIsReplicatedByDefault(true);
+	//SetIsReplicatedByDefault(true);
 }
 
 void UFlecsEntityActorComponent::BeginPlay()
@@ -106,11 +106,19 @@ void UFlecsEntityActorComponent::CreateActorEntity(const TSolidNotNull<const UFl
 
 	// @TODO: Should this be the Component or the Owner?
 	EntityHandle.SetPairFirst<FFlecsUObjectComponent, FFlecsActorTag>(FFlecsUObjectComponent(GetOwner()));
-	
-	UE_CLOGFMT(EntityHandle.HasName(), LogFlecsEntity, Log,
-		"Created Actor Entity: {EntityName}", EntityHandle.GetName());
 
-	MARK_PROPERTY_DIRTY_FROM_NAME(UFlecsEntityActorComponent, EntityHandle, this);
+	if (EntityHandle.HasName())
+	{
+		UE_LOGFMT(LogFlecsEntity, Log,
+			"Creating Actor Entity with name: {EntityName}", EntityHandle.GetName());
+	}
+	else
+	{
+		UE_LOGFMT(LogFlecsEntity, Log,
+			"Creating Actor Entity with id: {EntityId}", EntityHandle.GetFlecsId().ToString());
+	}
+
+	//MARK_PROPERTY_DIRTY_FROM_NAME(UFlecsEntityActorComponent, EntityHandle, this);
 
 	OnEntitySpawned(EntityHandle);
 }

@@ -30,7 +30,7 @@ struct FFlecsDependencyFunctionDefinition
 		std::invoke(Function, InDependencyObject, InWorld, InDependencyEntity);
 	}
 	
-}; // struct FFlecsDependencyFunctionDefiniton
+}; // struct FFlecsDependencyFunctionDefinition
 
 USTRUCT()
 struct UNREALFLECS_API FFlecsDependenciesComponent
@@ -40,9 +40,6 @@ struct UNREALFLECS_API FFlecsDependenciesComponent
 public:
 	TSortedMap<UClass*, FFlecsDependencyFunctionDefinition> DependencyFunctionPtrs;
 	
-	/*robin_hood::unordered_map<UClass*, std::function<void(TSolidNotNull<UObject*>,
-	                                                           TSolidNotNull<UFlecsWorld*>,
-	                                                           FFlecsEntityHandle)>> Dependencies;*/
 }; // struct FFlecsDependenciesComponent
 
 REGISTER_FLECS_COMPONENT(FFlecsDependenciesComponent,

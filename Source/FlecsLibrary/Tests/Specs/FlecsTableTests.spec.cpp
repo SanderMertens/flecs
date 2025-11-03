@@ -629,7 +629,6 @@ END_DEFINE_SPEC(FFlecsTableTestsSpec);
 "unlock",
 "has_flags",
 "clear_entities"
-
 ]*/
 
 void FFlecsTableTestsSpec::Define()
