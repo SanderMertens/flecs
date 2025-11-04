@@ -4348,7 +4348,7 @@ void ComponentLifecycle_shrink(void) {
     test_int(move_position, 1);
     test_int(copy_position, 0);
 
-    test_int(ecs_table_size(ecs_get_table(world, e1)), 2);
+    test_int(ecs_table_size(ecs_get_table(world, e1)), 1);
     test_int(ecs_table_count(ecs_get_table(world, e1)), 1);
 
     ecs_fini(world);

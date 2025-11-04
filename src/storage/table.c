@@ -2050,7 +2050,50 @@ bool flecs_table_shrink(
 
     bool has_payload = table->data.entities != NULL;
 
-    flecs_table_grow_data(world, table, 0, ecs_table_count(table), NULL);
+    int32_t old_size = table->data.size;
+    int32_t count = table->data.count;
+    if (count == table->data.size) {
+        return has_payload;
+    }
+
+    ecs_allocator_t *a = &world->allocator;
+    ecs_column_t *columns = table->data.columns;
+    ecs_entity_t *entities = table->data.entities;
+
+    if (count) {
+        ecs_assert(table->data.entities != NULL, ECS_INTERNAL_ERROR, NULL);
+        table->data.entities = flecs_alloc_n(a, ecs_entity_t, count);
+        ecs_os_memcpy_n(table->data.entities, entities, ecs_entity_t, count);
+    } else {
+        table->data.entities = NULL;
+    }
+    
+    flecs_free_n(a, ecs_entity_t, old_size, entities);
+
+    int32_t i, column_count = table->column_count;
+    for (i = 0; i < column_count; i ++) {
+        const ecs_type_info_t *ti = columns[i].ti;
+        ecs_size_t component_size = ti->size;
+        ecs_move_t move = ti->hooks.ctor_move_dtor;
+        void *data = columns[i].data;
+
+        if (count) {
+            columns[i].data = flecs_alloc(a, component_size * count);
+
+            if (move) {
+                move(columns[i].data, data, count, ti);
+            } else {
+                ecs_assert(columns[i].data != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_os_memcpy(columns[i].data, data, component_size * count);   
+            }
+        } else {
+            columns[i].data = NULL;
+        }
+
+        flecs_free(a, component_size * old_size, data);
+    }
+
+    table->data.size = count;
 
     flecs_increment_table_column_version(world, table);
 
