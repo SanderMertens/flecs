@@ -575,6 +575,7 @@ typedef struct {
     ecs_size_t bytes_pipelines;         /** Memory used by pipelines (excluding pipeline queries). */
     ecs_size_t bytes_table_lookup;      /** Bytes used for table lookup data structures. */
     ecs_size_t bytes_component_record_lookup; /** Bytes used for component record lookup data structures. */
+    ecs_size_t bytes_locked_components; /** Locked component map. */
     ecs_size_t bytes_type_info;         /** Bytes used for storing type information. */
     ecs_size_t bytes_commands;          /** Command queue */
     ecs_size_t bytes_rematch_monitor;   /** Memory used by monitor used to track rematches */

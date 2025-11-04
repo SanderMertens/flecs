@@ -1076,6 +1076,9 @@ ecs_misc_memory_t ecs_misc_memory_get(
         }
     }
 
+    result.bytes_locked_components += flecs_map_memory_get(
+        &world->locked_components, 0);
+
 error:
     return result;
 }
@@ -1283,6 +1286,7 @@ void flecs_stats_memory_register_reflection(
             { .name = "bytes_pipelines", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_table_lookup", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_component_record_lookup", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_locked_components", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_type_info", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_commands", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_rematch_monitor", .type = ecs_id(ecs_i32_t), .unit = unit },
