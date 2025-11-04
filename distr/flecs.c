@@ -3377,8 +3377,11 @@ struct ecs_world_t {
     ecs_map_t type_info;             /* map<type_id, type_info_t> */
 
     /* A refcount per queried for component that ensures that applications 
-     * cannot modify traits after a component has been queried for. */
+     * cannot modify traits after a component has been queried for. Check is
+     * only enabled in debug mode. */
+#ifdef FLECS_DEBUG
     ecs_map_t locked_components;     /* map<id_t, int64_t> */
+#endif
 
     /* -- Cached handle to id records -- */
     ecs_component_record_t *cr_wildcard;
@@ -3577,6 +3580,7 @@ void flecs_throw_invalid_delete(
     ecs_world_t *world,
     ecs_id_t id);
 
+#ifdef FLECS_DEBUG
 void flecs_component_lock(
     ecs_world_t *world,
     ecs_id_t component);
@@ -3588,6 +3592,11 @@ void flecs_component_unlock(
 bool flecs_component_is_locked(
     ecs_world_t *world,
     ecs_id_t component);
+#else
+#define flecs_component_lock(world, component) (void)world; (void)component
+#define flecs_component_unlock(world, component) (void)world; (void)component
+#define flecs_component_is_locked(world, component) (true)
+#endif
 
 /* Convenience macro's for world allocator */
 #define flecs_walloc(world, size)\
@@ -21094,7 +21103,9 @@ ecs_world_t *ecs_mini(void) {
     ecs_allocator_t *a = &world->allocator;
 
     ecs_map_init(&world->type_info, a);
+#ifdef FLECS_DEBUG
     ecs_map_init(&world->locked_components, a);
+#endif
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
     world->id_index_lo = ecs_os_calloc_n(
         ecs_component_record_t*, FLECS_HI_ID_RECORD_ID);
@@ -21402,7 +21413,9 @@ int ecs_fini(
     flecs_entities_fini(world);
     flecs_components_fini(world);
     flecs_fini_type_info(world);
+#ifdef FLECS_DEBUG
     ecs_map_fini(&world->locked_components);
+#endif
     flecs_observable_fini(&world->observable);
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
@@ -21991,6 +22004,7 @@ error:
     return 0;
 }
 
+#ifdef FLECS_DEBUG
 static
 void flecs_component_lock_inc(
     ecs_world_t *world,
@@ -22059,6 +22073,7 @@ bool flecs_component_is_locked(
 {
     return ecs_map_get(&world->locked_components, component) != NULL;
 }
+#endif
 
 /**
  * @file addons/alerts.c
@@ -69446,8 +69461,10 @@ ecs_misc_memory_t ecs_misc_memory_get(
         }
     }
 
+#ifdef FLECS_DEBUG
     result.bytes_locked_components += flecs_map_memory_get(
         &world->locked_components, 0);
+#endif
 
 error:
     return result;
