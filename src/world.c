@@ -1008,7 +1008,9 @@ ecs_world_t *ecs_mini(void) {
     ecs_allocator_t *a = &world->allocator;
 
     ecs_map_init(&world->type_info, a);
+#ifdef FLECS_DEBUG
     ecs_map_init(&world->locked_components, a);
+#endif
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
     world->id_index_lo = ecs_os_calloc_n(
         ecs_component_record_t*, FLECS_HI_ID_RECORD_ID);
@@ -1316,7 +1318,9 @@ int ecs_fini(
     flecs_entities_fini(world);
     flecs_components_fini(world);
     flecs_fini_type_info(world);
+#ifdef FLECS_DEBUG
     ecs_map_fini(&world->locked_components);
+#endif
     flecs_observable_fini(&world->observable);
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
@@ -1905,6 +1909,7 @@ error:
     return 0;
 }
 
+#ifdef FLECS_DEBUG
 static
 void flecs_component_lock_inc(
     ecs_world_t *world,
@@ -1973,3 +1978,4 @@ bool flecs_component_is_locked(
 {
     return ecs_map_get(&world->locked_components, component) != NULL;
 }
+#endif
