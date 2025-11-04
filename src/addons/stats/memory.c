@@ -423,7 +423,8 @@ ecs_query_memory_t ecs_queries_memory_get(
         while (ecs_each_next(&it)) {
             EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
 
-            for (int32_t i = 0; i < it.count; i++) {
+            int32_t i, count = it.count;
+            for (i = 0; i < count; i++) {
                 ecs_query_t *query = queries[i].poly;
                 if (!query) {
                     continue;
