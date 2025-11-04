@@ -167,4 +167,7 @@ void flecs_component_record_init_exclusive(
     ecs_world_t *world,
     ecs_component_record_t *cr);
 
+void flecs_component_shrink(
+    ecs_component_record_t *cr);
+
 #endif

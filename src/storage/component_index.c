@@ -1000,6 +1000,19 @@ ecs_flags32_t flecs_id_flags_get(
     return result;
 }
 
+void flecs_component_shrink(
+    ecs_component_record_t *cr)
+{
+    ecs_map_reclaim(&cr->cache.index);
+
+    ecs_pair_record_t *pr = cr->pair;
+    if (pr) {
+        if (pr->name_index) {
+            ecs_map_reclaim(&pr->name_index->impl);
+        }
+    }
+}
+
 void flecs_component_delete_sparse(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -1053,3 +1066,4 @@ ecs_id_t flecs_component_get_id(
     ecs_assert(cr != NULL, ECS_INVALID_PARAMETER, NULL);
     return cr->id;
 }
+

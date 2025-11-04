@@ -579,6 +579,9 @@ void flecs_component_record_init_exclusive(
     ecs_world_t *world,
     ecs_component_record_t *cr);
 
+void flecs_component_shrink(
+    ecs_component_record_t *cr);
+
 #endif
 
 /**
@@ -2385,6 +2388,10 @@ void flecs_query_iter_constrain(
 void flecs_query_rematch(
     ecs_world_t *world,
     ecs_query_t *q);
+
+/* Reclaim memory from queries */
+void flecs_query_reclaim(
+    ecs_query_t *query);
 
 
 /**
@@ -21920,7 +21927,45 @@ void ecs_shrink(
 
     flecs_table_shrink(world, &world->store.root);
 
+    ecs_map_reclaim(&world->store.table_map.impl);
+
     flecs_sparse_shrink(&world->store.tables);
+
+    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
+        ecs_component_record_t *cr = world->id_index_lo[i];
+        if (cr) {
+            flecs_component_shrink(cr);
+        }
+    }
+    
+    {
+        ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
+        while (ecs_map_next(&it)) {
+            ecs_component_record_t *cr = ecs_map_ptr(&it);
+            flecs_component_shrink(cr);
+        }
+    }
+
+    {
+        ecs_iter_t it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);
+        while (ecs_each_next(&it)) {
+            EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
+
+            for (i = 0; i < it.count; i++) {
+                ecs_query_t *query = queries[i].poly;
+                if (!query) {
+                    continue;
+                }
+
+                flecs_poly_assert(query, ecs_query_t);
+                flecs_query_reclaim(query);
+            }
+        }
+    }
+
+    ecs_map_reclaim(&world->id_index_hi);
+    
+    ecs_map_reclaim(&world->type_info);
 
     for (i = 0; i < world->stage_count; i ++) {
         ecs_stage_shrink(world->stages[i]);
@@ -31235,7 +31280,7 @@ void flecs_map_rehash(
     if (count < 2) {
         count = 2;
     }
-    ecs_assert(count > map->bucket_count, ECS_INTERNAL_ERROR, NULL);
+    // ecs_assert(count > map->bucket_count, ECS_INTERNAL_ERROR, NULL);
     
     int32_t old_count = map->bucket_count;
     ecs_bucket_t *buckets = map->buckets, *b, *end = ECS_BUCKET_END(buckets, old_count);
@@ -31414,6 +31459,19 @@ ecs_map_val_t ecs_map_remove(
     ecs_map_key_t key)
 {
     return flecs_map_bucket_remove(map, flecs_map_get_bucket(map, key), key);
+}
+
+void ecs_map_reclaim(
+    ecs_map_t *map)
+{
+    int32_t tgt_bucket_count = flecs_map_get_bucket_count(map->count - 1);
+    if (tgt_bucket_count != map->bucket_count) {
+        flecs_map_rehash(map, tgt_bucket_count);
+        // if ((map->bucket_count - tgt_bucket_count) > 16000) {
+        //     printf("[%p] MAP REMOVE: tgt_bucket_count = %d, bucket_count = %d\n", map, tgt_bucket_count, map->bucket_count);
+        //     flecs_dump_backtrace(stdout);
+        // }
+    }
 }
 
 void ecs_map_remove_free(
@@ -35142,6 +35200,18 @@ void flecs_query_apply_iter_flags(
     ECS_BIT_COND(it->flags, EcsIterNoData, query->data_fields == 0);
 }
 
+void flecs_query_reclaim(
+    ecs_query_t *query)
+{
+    ecs_query_impl_t *impl = flecs_query_impl(query);
+
+    ecs_query_cache_t *cache = impl->cache;
+    if (cache) {
+        ecs_map_reclaim(&cache->tables);
+        ecs_map_reclaim(&cache->groups);
+    }
+}
+
 /**
  * @file query/validator.c
  * @brief Validate and finalize queries.
@@ -38074,6 +38144,19 @@ ecs_flags32_t flecs_id_flags_get(
     return result;
 }
 
+void flecs_component_shrink(
+    ecs_component_record_t *cr)
+{
+    ecs_map_reclaim(&cr->cache.index);
+
+    ecs_pair_record_t *pr = cr->pair;
+    if (pr) {
+        if (pr->name_index) {
+            ecs_map_reclaim(&pr->name_index->impl);
+        }
+    }
+}
+
 void flecs_component_delete_sparse(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -38127,6 +38210,7 @@ ecs_id_t flecs_component_get_id(
     ecs_assert(cr != NULL, ECS_INVALID_PARAMETER, NULL);
     return cr->id;
 }
+
 
 #include <inttypes.h>
 
@@ -68808,7 +68892,8 @@ ecs_query_memory_t ecs_queries_memory_get(
         while (ecs_each_next(&it)) {
             EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
 
-            for (int32_t i = 0; i < it.count; i++) {
+            int32_t i, count = it.count;
+            for (i = 0; i < count; i++) {
                 ecs_query_t *query = queries[i].poly;
                 if (!query) {
                     continue;

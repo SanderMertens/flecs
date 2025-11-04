@@ -693,3 +693,15 @@ void flecs_query_apply_iter_flags(
         ECS_BIT_IS_SET(query->flags, EcsQueryHasCondSet));
     ECS_BIT_COND(it->flags, EcsIterNoData, query->data_fields == 0);
 }
+
+void flecs_query_reclaim(
+    ecs_query_t *query)
+{
+    ecs_query_impl_t *impl = flecs_query_impl(query);
+
+    ecs_query_cache_t *cache = impl->cache;
+    if (cache) {
+        ecs_map_reclaim(&cache->tables);
+        ecs_map_reclaim(&cache->groups);
+    }
+}

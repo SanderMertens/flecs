@@ -1825,7 +1825,45 @@ void ecs_shrink(
 
     flecs_table_shrink(world, &world->store.root);
 
+    ecs_map_reclaim(&world->store.table_map.impl);
+
     flecs_sparse_shrink(&world->store.tables);
+
+    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
+        ecs_component_record_t *cr = world->id_index_lo[i];
+        if (cr) {
+            flecs_component_shrink(cr);
+        }
+    }
+    
+    {
+        ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
+        while (ecs_map_next(&it)) {
+            ecs_component_record_t *cr = ecs_map_ptr(&it);
+            flecs_component_shrink(cr);
+        }
+    }
+
+    {
+        ecs_iter_t it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);
+        while (ecs_each_next(&it)) {
+            EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
+
+            for (i = 0; i < it.count; i++) {
+                ecs_query_t *query = queries[i].poly;
+                if (!query) {
+                    continue;
+                }
+
+                flecs_poly_assert(query, ecs_query_t);
+                flecs_query_reclaim(query);
+            }
+        }
+    }
+
+    ecs_map_reclaim(&world->id_index_hi);
+    
+    ecs_map_reclaim(&world->type_info);
 
     for (i = 0; i < world->stage_count; i ++) {
         ecs_stage_shrink(world->stages[i]);
