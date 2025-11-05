@@ -1737,8 +1737,8 @@ void UFlecsWorld::ShrinkWorld() const
 }
 
 int32 UFlecsWorld::DeleteEmptyTables(const double TimeBudgetSeconds,
-	const uint16 ClearGeneration,
-	const uint16 DeleteGeneration) const
+                                     const uint16 ClearGeneration,
+                                     const uint16 DeleteGeneration) const
 {
 	ecs_delete_empty_tables_desc_t Desc;
 	Desc.clear_generation = ClearGeneration;
@@ -1765,7 +1765,7 @@ void UFlecsWorld::AddReferencedObjects(UObject* InThis, FReferenceCollector& Col
 		return;
 	}
 
-	/*ecs_exclusive_access_begin(This->World, "Garbage Collection ARO");
+	ecs_exclusive_access_begin(This->World, "Garbage Collection ARO");
 		
 	This->World.query_builder<const FFlecsScriptStructComponent>() // 0
 	    .with<FFlecsAddReferencedObjectsTrait>().src("$Component") //  1
@@ -1775,7 +1775,7 @@ void UFlecsWorld::AddReferencedObjects(UObject* InThis, FReferenceCollector& Col
 	    .each([&Collector, InThis](flecs::iter& Iter, size_t Index,
 	                               const FFlecsScriptStructComponent& InScriptStructComponent)
 	    {
-		    const FFlecsEntityHandle Component = Iter.get_var("$Component");
+		    const FFlecsEntityHandle Component = Iter.get_var("Component");
 		    solid_check(Component.IsValid());
 
 		    void* ComponentPtr = Iter.field_at(1, Index);
@@ -1783,7 +1783,8 @@ void UFlecsWorld::AddReferencedObjects(UObject* InThis, FReferenceCollector& Col
 
 		    Collector.AddPropertyReferencesWithStructARO(InScriptStructComponent.ScriptStruct.Get(),
 		                                    ComponentPtr, InThis);
+	    	
 	    });
 
-	ecs_exclusive_access_end(This->World, false);*/
+	ecs_exclusive_access_end(This->World, false);
 }
