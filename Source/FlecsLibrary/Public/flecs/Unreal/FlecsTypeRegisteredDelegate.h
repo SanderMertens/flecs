@@ -8,6 +8,6 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FFlecsTypeRegisteredDelegate, size_t /*entit
 
 namespace FlecsLibrary
 {
-	// Get the delegate that is broadcast when a new type is registered in Flecs CPP API
+	// is broadcast when a new type is registered in Flecs CPP API (as well as runtime API in UnrealFlecs)
 	FLECSLIBRARY_API FFlecsTypeRegisteredDelegate& GetTypeRegisteredDelegate();
 }
