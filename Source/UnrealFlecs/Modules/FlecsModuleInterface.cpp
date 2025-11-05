@@ -12,7 +12,7 @@
 #include "Worlds/FlecsWorldSubsystem.h"
 
 #include "Components/FlecsModuleComponent.h"
-#include "Components/ObjectTypes/FFlecsModuleComponentTag.h"
+#include "Components/ObjectTypes/FFlecsModuleObject.h"
 #include "Components/FlecsUObjectComponent.h"
 
 #include "FlecsModuleInitEvent.h"
@@ -35,7 +35,7 @@ void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 		{
 			ModuleEntity = FlecsWorld->CreateEntity(Execute_GetModuleName(_getUObject()))
 				.Add(flecs::Module)
-				.SetPairFirst<FFlecsUObjectComponent, FFlecsModuleComponentTag>(FFlecsUObjectComponent
+				.SetPairFirst<FFlecsUObjectComponent, FFlecsModuleObjectTarget>(FFlecsUObjectComponent
 				{
 					_getUObject()
 				})
@@ -51,17 +51,29 @@ void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 		});
 	});
 
-	FlecsWorld->Event<FFlecsModuleInitEvent>()
-		.id<FFlecsModuleComponent>()
-		.entity(ModuleEntity)
-		.emit();
+	FlecsWorld->OnModuleImported.Broadcast(FlecsWorld, ModuleEntity);
 
 	const TSolidNotNull<UFlecsWorldSubsystem*> WorldSubsystem = GameWorld->GetSubsystemChecked<UFlecsWorldSubsystem>();
 
 	WorldSubsystem->ListenBeginPlay(
 		FFlecsOnWorldBeginPlay::FDelegate::CreateLambda(
-		[this, FlecsWorld](TSolidNotNull<UWorld*> InGameWorld)
+		[this, FlecsWorld](const TSolidNotNull<UWorld*> InGameWorld)
 		{
+			if UNLIKELY_IF(!IsValid(_getUObject()))
+			{
+				UE_LOG(LogFlecsCore, Warning,
+					TEXT("Module interface is no longer valid when calling WorldBeginPlay for module"));
+				return;
+			}
+			
+			if UNLIKELY_IF(!IsWorldValid())
+			{
+				UE_LOGFMT(LogFlecsCore, Warning,
+					"World is no longer valid when calling WorldBeginPlay for module: {ModuleName}",
+					IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
+				return;
+			}
+			
 			WorldBeginPlay(FlecsWorld, InGameWorld);
 			Execute_BP_WorldBeginPlay(_getUObject(), FlecsWorld, InGameWorld);
 		}));
@@ -86,16 +98,19 @@ void IFlecsModuleInterface::DeinitializeModule_Internal()
 		"Deinitialized module: {ModuleName}", IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }
 
-void IFlecsModuleInterface::InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
+void IFlecsModuleInterface::InitializeModule(const TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
+	 // do nothing
 }
 
 void IFlecsModuleInterface::WorldBeginPlay(TSolidNotNull<UFlecsWorld*> InWorld, TSolidNotNull<UWorld*> InGameWorld)
 {
+	// do nothing
 }
 
 void IFlecsModuleInterface::DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld)
 {
+	 // do nothing
 }
 
 FString IFlecsModuleInterface::GetModuleName_Implementation() const
@@ -105,4 +120,9 @@ FString IFlecsModuleInterface::GetModuleName_Implementation() const
 		"Will return the inherited class name instead. For Class: {ClassName}", _getUObject()->GetClass()->GetName());
 	
 	return _getUObject()->GetClass()->GetName();
+}
+
+TArray<TSubclassOf<UObject>> IFlecsModuleInterface::GetHardDependentModuleClasses() const
+{
+	return {};
 }

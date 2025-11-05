@@ -33,6 +33,10 @@ class IFlecsGameLoopInterface;
 class UFlecsWorldSubsystem;
 class UFlecsModuleInterface;
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FFlecsWorldModuleImportedDelegate,
+	TSolidNotNull<UFlecsWorld*> /*InWorld*/,
+	const FFlecsEntityHandle& /*InModuleEntity*/);
+
 /**
  * @brief Component type that represents if the World has begun play.
  * Can be found in the World entity.
@@ -407,6 +411,8 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	void ImportModule(const TScriptInterface<IFlecsModuleInterface>& InModule);
+
+	NO_DISCARD bool CanImportModule(const TScriptInterface<IFlecsModuleInterface>& InModule, FString& OutFailureReason) const;
 
 	/**
 	 * @brief Check if a module with the given class is imported in the world
@@ -1037,6 +1043,8 @@ public:
 
 	FDelegateHandle ShrinkMemoryGCDelegateHandle;
 	FDelegateHandle DeleteEmptyTablesGCDelegateHandle;
+
+	FFlecsWorldModuleImportedDelegate OnModuleImported;
 
 private:
 	
