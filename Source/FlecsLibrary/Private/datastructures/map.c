@@ -146,7 +146,6 @@ void flecs_map_rehash(
     if (count < 2) {
         count = 2;
     }
-    ecs_assert(count > map->bucket_count, ECS_INTERNAL_ERROR, NULL);
     
     int32_t old_count = map->bucket_count;
     ecs_bucket_t *buckets = map->buckets, *b, *end = ECS_BUCKET_END(buckets, old_count);
@@ -325,6 +324,15 @@ ecs_map_val_t ecs_map_remove(
     ecs_map_key_t key)
 {
     return flecs_map_bucket_remove(map, flecs_map_get_bucket(map, key), key);
+}
+
+void ecs_map_reclaim(
+    ecs_map_t *map)
+{
+    int32_t tgt_bucket_count = flecs_map_get_bucket_count(map->count - 1);
+    if (tgt_bucket_count != map->bucket_count) {
+        flecs_map_rehash(map, tgt_bucket_count);
+    }
 }
 
 void ecs_map_remove_free(

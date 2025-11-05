@@ -258,17 +258,270 @@ void flecs_component_fini_sparse(
 
 static
 ecs_flags32_t flecs_component_event_flags(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_observable_t *o = &world->observable;
+    const ecs_observable_t *o = &world->observable;
     ecs_flags32_t result = 0;
     result |= flecs_observers_exist(o, id, EcsOnAdd) * EcsIdHasOnAdd;
     result |= flecs_observers_exist(o, id, EcsOnRemove) * EcsIdHasOnRemove;
     result |= flecs_observers_exist(o, id, EcsOnSet) * EcsIdHasOnSet;
     result |= flecs_observers_exist(o, id, EcsOnTableCreate) * EcsIdHasOnTableCreate;
     result |= flecs_observers_exist(o, id, EcsOnTableDelete) * EcsIdHasOnTableDelete;
+    result |= flecs_observers_exist(o, id, EcsWildcard) * (
+         EcsIdHasOnAdd
+        |EcsIdHasOnRemove
+        |EcsIdHasOnSet
+        |EcsIdHasOnTableCreate
+        |EcsIdHasOnTableDelete);
     return result;
+}
+
+static
+ecs_flags32_t flecs_component_get_flags_intern(
+    const ecs_world_t *world,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    ecs_entity_t tgt,
+    const ecs_type_info_t *ti)
+{
+    ecs_flags32_t result = 0;
+
+    if (id & ECS_ID_FLAGS_MASK) {
+        if ((id & ECS_ID_FLAGS_MASK) != ECS_PAIR) {
+            return 0;
+        }
+    }
+
+    ecs_record_t *r = flecs_entities_get_any(world, rel);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *table = r->table;
+
+    if (ecs_table_has_id(world, table, ecs_pair(EcsWith, EcsWildcard))) {
+        result |= EcsIdWith;
+    }
+
+    if (ecs_table_has_id(world, table, EcsCanToggle)) {
+        result |= EcsIdCanToggle;
+    }
+
+    if (ecs_table_has_id(world, table, EcsInheritable)) {
+        result |= EcsIdInheritable;
+    }
+
+    if (ecs_table_has_id(world, table, EcsSingleton)) {
+        result |= EcsIdSingleton;
+    }
+
+    ecs_entity_t on_delete_kind = ecs_table_get_target(world, table, EcsOnDelete, 0);
+    if (on_delete_kind == EcsRemove) {
+        result |= EcsIdOnDeleteRemove;
+    } else if (on_delete_kind == EcsDelete) {
+        result |= EcsIdOnDeleteDelete;
+    } else if (on_delete_kind == EcsPanic) {
+        result |= EcsIdOnDeletePanic;
+    }
+
+    on_delete_kind = ecs_table_get_target(world, table, EcsOnDeleteTarget, 0);
+    if (on_delete_kind == EcsRemove) {
+        result |= EcsIdOnDeleteTargetRemove;
+    } else if (on_delete_kind == EcsDelete) {
+        result |= EcsIdOnDeleteTargetDelete;
+    } else if (on_delete_kind == EcsPanic) {
+        result |= EcsIdOnDeleteTargetPanic;
+    }
+
+    ecs_entity_t inherit_kind = ecs_table_get_target(world, table, EcsOnInstantiate, 0);
+    if (inherit_kind == EcsInherit) {
+        result |= EcsIdOnInstantiateInherit;
+    } else if (inherit_kind == EcsDontInherit) {
+        result |= EcsIdOnInstantiateDontInherit;
+    } else if (inherit_kind == EcsOverride) {
+        result |= EcsIdOnInstantiateOverride;
+    }
+
+    if (tgt) {
+        if (ecs_table_has_id(world, table, EcsExclusive)) {
+            result |= EcsIdExclusive;
+        }
+
+        if (ecs_table_has_id(world, table, EcsTraversable)) {
+            result |= EcsIdTraversable;
+        }
+
+        if (ecs_table_has_id(world, table, EcsPairIsTag)) {
+            result |= EcsIdPairIsTag;
+        }
+
+        if (ecs_table_has_id(world, table, EcsTransitive)) {
+            result |= EcsIdIsTransitive;
+        }
+
+        if (rel == EcsChildOf) {
+            if (ecs_has_id(world, tgt, EcsOrderedChildren)) {
+                result |= EcsIdOrderedChildren;
+            }
+        }
+    }
+
+    if (tgt && ti && (ti->component == tgt)) {
+        if (ecs_has_id(world, tgt, EcsSparse)) {
+            result |= EcsIdSparse;
+        }
+
+        if (ecs_has_id(world, tgt, EcsDontFragment)) {
+            result |= EcsIdDontFragment;
+        }
+    } else {
+        if (ecs_table_has_id(world, table, EcsSparse)) {
+            result |= EcsIdSparse;
+        }
+
+        if (ecs_table_has_id(world, table, EcsDontFragment)) {
+            result |= EcsIdDontFragment;
+        }
+    }
+
+    result |= flecs_component_event_flags(world, id);
+
+    return result;
+}
+
+ecs_flags32_t flecs_component_get_flags(
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    const ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (cr) {
+        return cr->flags;
+    }
+
+    const ecs_type_info_t *ti = flecs_determine_type_info_for_component(world, id);
+    ecs_entity_t rel = 0, tgt = 0;
+
+    if (ECS_IS_PAIR(id)) {
+        rel = ECS_PAIR_FIRST(id);
+        rel = flecs_entities_get_alive(world, rel);
+
+        tgt = ECS_PAIR_SECOND(id);
+        tgt = flecs_entities_get_alive(world, tgt);
+    } else {
+        rel = id & ECS_COMPONENT_MASK;
+        ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    return flecs_component_get_flags_intern(world, id, rel, tgt, ti);
+}
+
+static
+void flecs_component_record_check_constraints(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_entity_t rel,
+    ecs_entity_t tgt)
+{
+    (void)world;
+    (void)cr;
+    (void)rel;
+    (void)tgt;
+
+#ifdef FLECS_DEBUG
+    if (ECS_IS_PAIR(cr->id)) {
+        if (tgt) {
+            ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+
+            /* Can't use relationship as target */
+            if (ecs_has_id(world, tgt, EcsRelationship)) {
+                if (!ecs_id_is_wildcard(rel) && 
+                    !ecs_has_id(world, rel, EcsTrait)) 
+                {
+                    ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as target"
+                        " in pair '%s': '%s' has the Relationship trait",
+                            flecs_errstr(ecs_get_path(world, tgt)),
+                            flecs_errstr_1(ecs_id_str(world, cr->id)),
+                            flecs_errstr_2(ecs_get_path(world, tgt)));
+                }
+            }
+        }
+
+        if (ecs_has_id(world, rel, EcsTarget)) {
+            ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as relationship "
+                "in pair '%s': '%s' has the Target trait",
+                    flecs_errstr(ecs_get_path(world, rel)),
+                    flecs_errstr_1(ecs_id_str(world, cr->id)),
+                    flecs_errstr_2(ecs_get_path(world, rel)));
+        }
+
+        if (tgt && !ecs_id_is_wildcard(tgt)) {
+            /* Check if target of relationship satisfies OneOf property */
+            ecs_entity_t oneof = flecs_get_oneof(world, rel);
+            if (oneof) {
+                if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
+                    if (oneof == rel) {
+                        ecs_throw(ECS_CONSTRAINT_VIOLATED, 
+                            "cannot use '%s' as target in pair '%s': "
+                            "relationship '%s' has the OneOf trait and '%s' "
+                            "is not a child of '%s'",
+                                flecs_errstr(ecs_get_path(world, tgt)),
+                                flecs_errstr_1(ecs_id_str(world, cr->id)),
+                                flecs_errstr_2(ecs_get_path(world, rel)),
+                                flecs_errstr_3(ecs_get_path(world, tgt)),
+                                flecs_errstr_4(ecs_get_path(world, rel)));
+                        } else {
+                            ecs_throw(ECS_CONSTRAINT_VIOLATED, 
+                                "cannot use '%s' as target in pair '%s': "
+                                "relationship '%s' has (OneOf, %s) and '%s' "
+                                "is not a child of '%s'",
+                                    flecs_errstr(ecs_get_path(world, tgt)),
+                                    flecs_errstr_1(ecs_id_str(world, cr->id)),
+                                    flecs_errstr_2(ecs_get_path(world, rel)),
+                                    flecs_errstr_3(ecs_get_path(world, oneof)),
+                                    flecs_errstr_4(ecs_get_path(world, tgt)),
+                                    flecs_errstr_5(ecs_get_path(world, oneof)));
+                        }
+                }
+            }
+
+            /* Check if we're not trying to inherit from a final target */
+            if (rel == EcsIsA) {
+                if (ecs_has_id(world, tgt, EcsFinal)) {
+                    ecs_throw(ECS_CONSTRAINT_VIOLATED, 
+                        "cannot add '(IsA, %s)': '%s' has the Final trait",
+                            flecs_errstr(ecs_get_path(world, tgt)),
+                            flecs_errstr_1(ecs_get_path(world, tgt)));
+                }
+
+                if (flecs_component_is_locked(world, tgt)) {
+                    if (!ecs_has_id(world, tgt, EcsInheritable) && !ecs_has_pair(world, tgt, EcsIsA, EcsWildcard)) {
+                        ecs_throw(ECS_INVALID_OPERATION, 
+                            "cannot add '(IsA, %s)': '%s' is already queried for",
+                                    flecs_errstr(ecs_get_path(world, tgt)),
+                                    flecs_errstr_1(ecs_get_path(world, tgt)));
+                    }
+                }
+            }
+        }
+    } else {
+        bool is_tgt = false;
+        if (ecs_has_id(world, rel, EcsRelationship) ||
+            (is_tgt = ecs_has_id(world, rel, EcsTarget)))
+        {
+            if (is_tgt) {
+                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
+                    "cannot use '%s' by itself: it has the Target trait and "
+                    "must be used in pair with relationship",
+                        flecs_errstr(ecs_get_path(world, rel)));
+            } else {
+                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
+                    "cannot use '%s' by itself: it has the Relationship trait "
+                    "and must be used in pair with target",
+                        flecs_errstr(ecs_get_path(world, rel)));
+            }
+        }
+    }
+error:
+    return;
+#endif
 }
 
 static
@@ -280,6 +533,10 @@ ecs_component_record_t* flecs_component_new(
     ecs_id_t hash = flecs_component_hash(id);
     cr = flecs_bcalloc_w_dbg_info(
         &world->allocators.component_record, "ecs_component_record_t");
+
+    if (id == ecs_id(EcsPoly)) {
+        flecs_dump_backtrace(stdout);
+    }
 
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         ecs_map_insert_ptr(&world->id_index_hi, hash, cr);
@@ -295,7 +552,7 @@ ecs_component_record_t* flecs_component_new(
     bool is_wildcard = ecs_id_is_wildcard(id);
     bool is_pair = ECS_IS_PAIR(id);
 
-    ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
+    ecs_entity_t rel = 0, tgt = 0;
     if (is_pair) {
         cr->pair = flecs_bcalloc_w_dbg_info(
             &world->allocators.pair_record, "ecs_pair_record_t");
@@ -319,86 +576,7 @@ ecs_component_record_t* flecs_component_new(
             tgt = alive_tgt;
         }
 
-#ifdef FLECS_DEBUG
-        /* Check constraints */
-        if (tgt) {
-            ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
-
-            /* Can't use relationship as target */
-            if (ecs_has_id(world, tgt, EcsRelationship)) {
-                if (!ecs_id_is_wildcard(rel) && 
-                    !ecs_has_id(world, rel, EcsTrait)) 
-                {
-                    ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as target"
-                        " in pair '%s': '%s' has the Relationship trait",
-                            flecs_errstr(ecs_get_path(world, tgt)),
-                            flecs_errstr_1(ecs_id_str(world, id)),
-                            flecs_errstr_2(ecs_get_path(world, tgt)));
-                }
-            }
-        }
-
-        if (ecs_has_id(world, rel, EcsTarget)) {
-            ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as relationship "
-                "in pair '%s': '%s' has the Target trait",
-                    flecs_errstr(ecs_get_path(world, rel)),
-                    flecs_errstr_1(ecs_id_str(world, id)),
-                    flecs_errstr_2(ecs_get_path(world, rel)));
-        }
-
-        if (tgt && !ecs_id_is_wildcard(tgt)) {
-            /* Check if target of relationship satisfies OneOf property */
-            ecs_entity_t oneof = flecs_get_oneof(world, rel);
-            if (oneof) {
-                if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
-                    if (oneof == rel) {
-                        ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                            "cannot use '%s' as target in pair '%s': "
-                            "relationship '%s' has the OneOf trait and '%s' "
-                            "is not a child of '%s'",
-                                flecs_errstr(ecs_get_path(world, tgt)),
-                                flecs_errstr_1(ecs_id_str(world, id)),
-                                flecs_errstr_2(ecs_get_path(world, rel)),
-                                flecs_errstr_3(ecs_get_path(world, tgt)),
-                                flecs_errstr_4(ecs_get_path(world, rel)));
-                        } else {
-                            ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                                "cannot use '%s' as target in pair '%s': "
-                                "relationship '%s' has (OneOf, %s) and '%s' "
-                                "is not a child of '%s'",
-                                    flecs_errstr(ecs_get_path(world, tgt)),
-                                    flecs_errstr_1(ecs_id_str(world, id)),
-                                    flecs_errstr_2(ecs_get_path(world, rel)),
-                                    flecs_errstr_3(ecs_get_path(world, oneof)),
-                                    flecs_errstr_4(ecs_get_path(world, tgt)),
-                                    flecs_errstr_5(ecs_get_path(world, oneof)));
-                        }
-                }
-            }
-
-            /* Check if we're not trying to inherit from a final target */
-            if (rel == EcsIsA) {
-                if (ecs_has_id(world, tgt, EcsFinal)) {
-                    ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                        "cannot add '(IsA, %s)': '%s' has the Final trait",
-                            flecs_errstr(ecs_get_path(world, tgt)),
-                            flecs_errstr_1(ecs_get_path(world, tgt)));
-                }
-
-                ecs_component_record_t *cr_tgt = flecs_components_get(world, tgt);
-                if (cr_tgt && cr_tgt->keep_alive) {
-                    if (!ecs_has_id(world, tgt, EcsInheritable)) {
-                        ecs_throw(ECS_INVALID_OPERATION, 
-                            "cannot add '(IsA, %s)': '%s' is already queried for",
-                                    flecs_errstr(ecs_get_path(world, tgt)),
-                                    flecs_errstr_1(ecs_get_path(world, tgt)));
-                    }
-                }
-            }
-        }
-#endif
-
-        if (!is_wildcard && (rel != EcsFlag)) {
+        if (!is_wildcard && (rel != EcsFlag) && is_pair) {
             /* Inherit flags from (relationship, *) record */
             ecs_component_record_t *cr_r = flecs_components_ensure(
                 world, ecs_pair(rel, EcsWildcard));
@@ -416,37 +594,15 @@ ecs_component_record_t* flecs_component_new(
     } else {
         rel = id & ECS_COMPONENT_MASK;
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
-
-        /* Can't use relationship outside of a pair */
-#ifdef FLECS_DEBUG
         rel = flecs_entities_get_alive(world, rel);
-        bool is_tgt = false;
-        if (ecs_has_id(world, rel, EcsRelationship) ||
-            (is_tgt = ecs_has_id(world, rel, EcsTarget)))
-        {
-            if (is_tgt) {
-                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                    "cannot use '%s' by itself: it has the Target trait and must be used in pair with relationship",
-                        flecs_errstr(ecs_get_path(world, rel)));
-            } else {
-                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                    "cannot use '%s' by itself: it has the Relationhip trait and must be used in pair with target",
-                        flecs_errstr(ecs_get_path(world, rel)));
-            }
-        }
-#endif
     }
 
-    /* Initialize type info if id is not a tag */
-    if (!is_wildcard && (!role || is_pair)) {
-        if (!(cr->flags & EcsIdPairIsTag)) {
-            const ecs_type_info_t *ti = flecs_type_info_get(world, rel);
-            if (!ti && tgt) {
-                ti = flecs_type_info_get(world, tgt);
-            }
-            cr->type_info = ti;
-        }
-    }
+    cr->type_info = flecs_determine_type_info_for_component(world, id);
+
+    cr->flags |= flecs_component_get_flags_intern(
+        world, id, rel, tgt, cr->type_info);
+
+    flecs_component_record_check_constraints(world, cr, rel, tgt);
 
     /* Mark entities that are used as component/pair ids. When a tracked
      * entity is deleted, cleanup policies are applied so that the store
@@ -454,11 +610,12 @@ ecs_component_record_t* flecs_component_new(
 
     /* Flag for OnDelete policies */
     flecs_add_flag(world, rel, EcsEntityIsId);
-    if (tgt) {
+    if (tgt && tgt != EcsWildcard) {
         /* Flag for OnDeleteTarget policies */
         ecs_record_t *tgt_r = flecs_entities_get_any(world, tgt);
         ecs_assert(tgt_r != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_record_add_flag(tgt_r, EcsEntityIsTarget);
+
         if (cr->flags & EcsIdTraversable) {
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
@@ -468,35 +625,17 @@ ecs_component_record_t* flecs_component_new(
             tgt_r->cr = cr_t;
         }
 
-        /* If second element of pair determines the type, check if the pair 
-         * should be stored as a sparse component. */
-        if (cr->type_info && cr->type_info->component == tgt) {
-            if (ecs_has_id(world, tgt, EcsSparse)) {
-                cr->flags |= EcsIdSparse;
-            }
-            if (ecs_has_id(world, tgt, EcsDontFragment)) {
-                cr->flags |= EcsIdDontFragment;
-            }
-        }
-
-        /* Check if we should keep a list of ordered children for parent */
-        if (rel == EcsChildOf) {
-            if (ecs_has_id(world, tgt, EcsOrderedChildren)) {
-                cr->flags |= EcsIdOrderedChildren;
-            }
-        }
-
         /* Mark (*, tgt) record with HasDontFragment so that queries can quickly
          * detect if there are any non-fragmenting records to consider for a
          * (*, tgt) query. */
         if (cr->flags & EcsIdDontFragment && ECS_PAIR_FIRST(id) != EcsFlag) {
-            ecs_assert(cr_t != NULL, ECS_INTERNAL_ERROR, NULL);
-            cr_t->flags |= EcsIdMatchDontFragment;
+            if (cr_t) {
+                cr_t->flags |= EcsIdMatchDontFragment;
+            }
         }
     }
 
-    cr->flags |= flecs_component_event_flags(world, id);
-
+    /* Initialize storage */
     if (cr->flags & EcsIdSparse) {
         flecs_component_init_sparse(world, cr);
     }
@@ -522,10 +661,6 @@ ecs_component_record_t* flecs_component_new(
     world->info.pair_id_count += is_pair;
 
     return cr;
-#ifdef FLECS_DEBUG
-error:
-    return NULL;
-#endif
 }
 
 static
@@ -549,7 +684,8 @@ void flecs_component_free(
     flecs_component_assert_empty(cr);
 
     /* Id is still in use by a query */
-    ecs_assert((world->flags & EcsWorldQuit) || (cr->keep_alive == 0), 
+    ecs_assert((world->flags & EcsWorldQuit) || 
+            !flecs_component_is_locked(world, id), 
         ECS_INVALID_OPERATION, 
         "cannot delete component '%s' as it is still in use by queries",
             flecs_errstr(ecs_id_str(world, id)));
@@ -670,6 +806,19 @@ ecs_component_record_t* flecs_components_get(
         cr = world->id_index_lo[hash];
     }
 
+    return cr;
+}
+
+ecs_component_record_t* flecs_components_try_ensure(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (!cr) {
+        if (!(world->flags & EcsWorldMultiThreaded)) {
+            cr = flecs_component_new(world, id);
+        }
+    }
     return cr;
 }
 
@@ -809,15 +958,12 @@ ecs_flags32_t flecs_id_flags(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    const ecs_component_record_t *cr = flecs_components_get(world, id);
-    if (cr) {
-        ecs_flags32_t extra_flags = 0;
-        if (cr->flags & EcsIdOnInstantiateInherit) {
-            extra_flags |= EcsIdHasOnAdd|EcsIdHasOnRemove;
-        }
-        return cr->flags|extra_flags;
+    ecs_flags32_t cr_flags = flecs_component_get_flags(world, id);
+    ecs_flags32_t extra_flags = 0;
+    if (cr_flags & EcsIdOnInstantiateInherit) {
+        extra_flags |= EcsIdHasOnAdd|EcsIdHasOnRemove;
     }
-    return flecs_component_event_flags(world, id);
+    return cr_flags|extra_flags;
 }
 
 ecs_flags32_t flecs_id_flags_get(
@@ -852,6 +998,19 @@ ecs_flags32_t flecs_id_flags_get(
     }
 
     return result;
+}
+
+void flecs_component_shrink(
+    ecs_component_record_t *cr)
+{
+    ecs_map_reclaim(&cr->cache.index);
+
+    ecs_pair_record_t *pr = cr->pair;
+    if (pr) {
+        if (pr->name_index) {
+            ecs_map_reclaim(&pr->name_index->impl);
+        }
+    }
 }
 
 void flecs_component_delete_sparse(
@@ -907,3 +1066,4 @@ ecs_id_t flecs_component_get_id(
     ecs_assert(cr != NULL, ECS_INVALID_PARAMETER, NULL);
     return cr->id;
 }
+

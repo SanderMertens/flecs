@@ -423,7 +423,8 @@ ecs_query_memory_t ecs_queries_memory_get(
         while (ecs_each_next(&it)) {
             EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
 
-            for (int32_t i = 0; i < it.count; i++) {
+            int32_t i, count = it.count;
+            for (i = 0; i < count; i++) {
                 ecs_query_t *query = queries[i].poly;
                 if (!query) {
                     continue;
@@ -1076,6 +1077,11 @@ ecs_misc_memory_t ecs_misc_memory_get(
         }
     }
 
+#ifdef FLECS_DEBUG
+    result.bytes_locked_components += flecs_map_memory_get(
+        &world->locked_components, 0);
+#endif
+
 error:
     return result;
 }
@@ -1283,6 +1289,7 @@ void flecs_stats_memory_register_reflection(
             { .name = "bytes_pipelines", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_table_lookup", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_component_record_lookup", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_locked_components", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_type_info", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_commands", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_rematch_monitor", .type = ecs_id(ecs_i32_t), .unit = unit },

@@ -48,3 +48,7 @@ void flecs_query_rematch(
     ecs_world_t *world,
     ecs_query_t *q);
 
+/* Reclaim memory from queries */
+void flecs_query_reclaim(
+    ecs_query_t *query);
+

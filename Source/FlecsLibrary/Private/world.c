@@ -1010,6 +1010,9 @@ ecs_world_t *ecs_mini(void) {
     ecs_allocator_t *a = &world->allocator;
 
     ecs_map_init(&world->type_info, a);
+#ifdef FLECS_DEBUG
+    ecs_map_init(&world->locked_components, a);
+#endif
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
     world->id_index_lo = ecs_os_calloc_n(
         ecs_component_record_t*, FLECS_HI_ID_RECORD_ID);
@@ -1317,6 +1320,9 @@ int ecs_fini(
     flecs_entities_fini(world);
     flecs_components_fini(world);
     flecs_fini_type_info(world);
+#ifdef FLECS_DEBUG
+    ecs_map_fini(&world->locked_components);
+#endif
     flecs_observable_fini(&world->observable);
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
@@ -1820,7 +1826,45 @@ void ecs_shrink(
 
     flecs_table_shrink(world, &world->store.root);
 
+    ecs_map_reclaim(&world->store.table_map.impl);
+
     flecs_sparse_shrink(&world->store.tables);
+
+    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
+        ecs_component_record_t *cr = world->id_index_lo[i];
+        if (cr) {
+            flecs_component_shrink(cr);
+        }
+    }
+    
+    {
+        ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
+        while (ecs_map_next(&it)) {
+            ecs_component_record_t *cr = ecs_map_ptr(&it);
+            flecs_component_shrink(cr);
+        }
+    }
+
+    {
+        ecs_iter_t it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);
+        while (ecs_each_next(&it)) {
+            EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
+
+            for (i = 0; i < it.count; i++) {
+                ecs_query_t *query = queries[i].poly;
+                if (!query) {
+                    continue;
+                }
+
+                flecs_poly_assert(query, ecs_query_t);
+                flecs_query_reclaim(query);
+            }
+        }
+    }
+
+    ecs_map_reclaim(&world->id_index_hi);
+    
+    ecs_map_reclaim(&world->type_info);
 
     for (i = 0; i < world->stage_count; i ++) {
         ecs_stage_shrink(world->stages[i]);
@@ -1903,3 +1947,74 @@ ecs_id_t ecs_get_with(
 error:
     return 0;
 }
+
+#ifdef FLECS_DEBUG
+static
+void flecs_component_lock_inc(
+    ecs_world_t *world,
+    ecs_id_t component)
+{
+    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t *rc = (int32_t*)ecs_map_ensure(&world->locked_components, component);
+    if (ecs_os_has_threading()) {
+        ecs_os_ainc(rc);
+    } else {
+        rc[0] ++;
+    }
+}
+
+static
+void flecs_component_lock_dec(
+    ecs_world_t *world,
+    ecs_id_t component)
+{
+    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
+    int32_t *rc = (int32_t*)ecs_map_get(&world->locked_components, component);
+
+    ecs_assert(rc != NULL, ECS_INTERNAL_ERROR, 
+        "component '%s' is unlocked more times than it was locked",
+        flecs_errstr(ecs_id_str(world, component)));
+
+    if (ecs_os_has_threading()) {
+        ecs_os_adec(rc);
+    } else {
+        rc[0] --;
+    }
+
+    ecs_assert(rc[0] >= 0, ECS_INTERNAL_ERROR, 
+        "component '%s' is unlocked more times than it was locked",
+        flecs_errstr(ecs_id_str(world, component)));
+
+    if (!rc[0]) {
+        ecs_map_remove(&world->locked_components, component);
+    }
+}
+
+void flecs_component_lock(
+    ecs_world_t *world,
+    ecs_id_t component)
+{
+    flecs_component_lock_inc(world, component);
+    if (ECS_IS_PAIR(component)) {
+        flecs_component_lock_inc(world, ECS_PAIR_FIRST(component));
+    }
+}
+
+void flecs_component_unlock(
+    ecs_world_t *world,
+    ecs_id_t component)
+{
+    flecs_component_lock_dec(world, component);
+    if (ECS_IS_PAIR(component)) {
+        flecs_component_lock_dec(world, ECS_PAIR_FIRST(component));
+    }
+}
+
+bool flecs_component_is_locked(
+    ecs_world_t *world,
+    ecs_id_t component)
+{
+    return ecs_map_get(&world->locked_components, component) != NULL;
+}
+#endif

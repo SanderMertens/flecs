@@ -82,6 +82,11 @@ void ecs_map_init_w_params_if(
     ecs_map_t *result,
     ecs_map_params_t *params);
 
+/** Reclaim map memory.  */
+FLECS_API
+void ecs_map_reclaim(
+    ecs_map_t *map);
+
 /** Deinitialize map. */
 FLECS_API
 void ecs_map_fini(

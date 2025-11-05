@@ -232,7 +232,7 @@ int32_t flecs_event_observers_get(
 }
 
 bool flecs_observers_exist(
-    ecs_observable_t *observable,
+    const ecs_observable_t *observable,
     ecs_id_t id,
     ecs_entity_t event)
 {

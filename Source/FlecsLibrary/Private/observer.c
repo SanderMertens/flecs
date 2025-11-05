@@ -1041,25 +1041,13 @@ ecs_observer_t* flecs_observer_init(
             if (trivial_observer) {
                 dummy_query.flags |= desc->query.flags;
                 query = &dummy_query;
-                if (terms[0].flags_ & EcsTermKeepAlive) {
-                    impl->flags |= EcsObserverKeepAlive;
-                }
             } else {
                 /* We're going to create an actual query, so undo the keep_alive
                  * increment of the dummy_query. */
                 int32_t i, count = dummy_query.term_count;
                 for (i = 0; i < count; i ++) {
                     ecs_term_t *term = &terms[i];
-                    if (term->flags_ & EcsTermKeepAlive) {
-                        ecs_component_record_t *cr = flecs_components_get(
-                            world, term->id);
-
-                        /* If keep_alive was set, component record must exist */
-                        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-                        cr->keep_alive --;
-                        ecs_assert(cr->keep_alive >= 0, 
-                            ECS_INTERNAL_ERROR, NULL);
-                    }
+                    flecs_component_unlock(world, term->id);
                 }
             }
         }
@@ -1334,20 +1322,8 @@ void flecs_observer_fini(
     /* Cleanup queries */
     if (o->query) {
         ecs_query_fini(o->query);
-    } else if (impl->flags & EcsObserverKeepAlive) {
-        /* Observer is keeping a refcount on the observed component. */
-        ecs_component_record_t *cr = flecs_components_get(
-            world, impl->register_id);
-        
-        /* Component record should still exist since we had a refcount, except
-         * during the final stages of world fini where refcounts are no longer 
-         * checked. */
-        if (cr) {
-            cr->keep_alive --;
-            ecs_assert(cr->keep_alive >= 0, ECS_INTERNAL_ERROR, NULL);
-        } else {
-            ecs_assert(world->flags & EcsWorldQuit, ECS_INTERNAL_ERROR, NULL);
-        }
+    } else if (impl->register_id) {
+        flecs_component_unlock(world, impl->register_id);
     }
 
     if (impl->not_query) {
