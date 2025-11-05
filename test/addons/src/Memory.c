@@ -419,7 +419,7 @@ void Memory_sparse_component_memory(void) {
 
     {
         ecs_component_memory_t mem = ecs_component_memory_get(world);
-        test_assert(mem.bytes_sparse_components > 0);
+        test_assert(mem.bytes_sparse_components == 0);
     }
 
     ecs_new_w(world, Position);
@@ -446,7 +446,7 @@ void Memory_sparse_tag_memory(void) {
 
     {
         ecs_component_memory_t mem = ecs_component_memory_get(world);
-        test_assert(mem.bytes_sparse_components > 0);
+        test_assert(mem.bytes_sparse_components == 0);
     }
 
     ecs_add_id(world, Foo, EcsSparse);

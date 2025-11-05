@@ -513,7 +513,7 @@ void flecs_component_record_check_constraints(
                         flecs_errstr(ecs_get_path(world, rel)));
             } else {
                 ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                    "cannot use '%s' by itself: it has the Relationhip trait "
+                    "cannot use '%s' by itself: it has the Relationship trait "
                     "and must be used in pair with target",
                         flecs_errstr(ecs_get_path(world, rel)));
             }

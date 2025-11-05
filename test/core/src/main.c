@@ -1462,6 +1462,7 @@ void Pairs_force_relationship_on_relationship(void);
 void Pairs_force_target_on_component(void);
 void Pairs_force_target_on_relationship(void);
 void Pairs_force_target_on_target(void);
+void Pairs_relationship_with_exclusive(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -8457,6 +8458,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "force_target_on_target",
         Pairs_force_target_on_target
+    },
+    {
+        "relationship_with_exclusive",
+        Pairs_relationship_with_exclusive
     }
 };
 
@@ -13898,7 +13903,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        125,
+        126,
         Pairs_testcases
     },
     {
