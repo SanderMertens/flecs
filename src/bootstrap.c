@@ -672,16 +672,16 @@ ecs_table_t* flecs_bootstrap_component_table(
 {
     /* Before creating table, manually set flags for ChildOf/Identifier, as this
      * can no longer be done after they are in use. */
-    ecs_component_record_t *cr = flecs_components_ensure(world, EcsChildOf);
-    cr->flags |= EcsIdOnDeleteTargetDelete | EcsIdOnInstantiateDontInherit |
-        EcsIdTraversable | EcsIdPairIsTag;
 
     /* Initialize id records cached on world */
     world->cr_childof_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, EcsWildcard));
     world->cr_childof_wildcard->flags |= EcsIdOnDeleteTargetDelete | 
-        EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdPairIsTag | EcsIdExclusive;
-    cr = flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsWildcard));
+        EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdPairIsTag | 
+        EcsIdExclusive;
+
+    ecs_component_record_t *cr = flecs_components_ensure(
+        world, ecs_pair_t(EcsIdentifier, EcsWildcard));
     cr->flags |= EcsIdOnInstantiateDontInherit;
     world->cr_identifier_name = 
         flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsName));
