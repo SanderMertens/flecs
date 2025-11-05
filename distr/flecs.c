@@ -4079,7 +4079,7 @@ void flecs_register_flag_for_trait(
                             flecs_errstr_1(ecs_id_str(world, e)));
             }
 
-            ecs_component_record_t *cr = flecs_components_ensure(world, e);
+            ecs_component_record_t *cr = flecs_components_get(world, e);
             if (cr) {
                 changed |= flecs_set_id_flag(world, cr, flag, trait);
             }
@@ -37652,7 +37652,7 @@ void flecs_component_record_check_constraints(
                         flecs_errstr(ecs_get_path(world, rel)));
             } else {
                 ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                    "cannot use '%s' by itself: it has the Relationhip trait "
+                    "cannot use '%s' by itself: it has the Relationship trait "
                     "and must be used in pair with target",
                         flecs_errstr(ecs_get_path(world, rel)));
             }
@@ -43389,9 +43389,9 @@ void flecs_add_overrides_for_base(
             ecs_id_t to_add = 0;
             if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
                 to_add = id & ~ECS_AUTO_OVERRIDE;
-                ecs_component_record_t *cr = flecs_components_get(
-                    world, to_add);
-                if (cr && (cr->flags & EcsIdDontFragment)) {
+
+                ecs_flags32_t cr_flags = flecs_component_get_flags(world, to_add);
+                if (cr_flags & EcsIdDontFragment) {
                     to_add = 0;
 
                     /* Add flag to base table. Cheaper to do here vs adding an

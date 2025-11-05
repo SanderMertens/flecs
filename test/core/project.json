@@ -1522,7 +1522,8 @@
                 "force_relationship_on_relationship",
                 "force_target_on_component",
                 "force_target_on_relationship",
-                "force_target_on_target"
+                "force_target_on_target",
+                "relationship_with_exclusive"
             ]
         }, {
            "id": "Trigger",

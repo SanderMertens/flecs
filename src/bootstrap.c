@@ -209,7 +209,7 @@ void flecs_register_flag_for_trait(
                             flecs_errstr_1(ecs_id_str(world, e)));
             }
 
-            ecs_component_record_t *cr = flecs_components_ensure(world, e);
+            ecs_component_record_t *cr = flecs_components_get(world, e);
             if (cr) {
                 changed |= flecs_set_id_flag(world, cr, flag, trait);
             }
