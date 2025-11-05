@@ -48,12 +48,12 @@ FString FFlecsCommonHandle::GetWorldName() const
 
 FFlecsId FFlecsCommonHandle::ObtainComponentTypeStruct(const TSolidNotNull<const UScriptStruct*> StructType) const
 {
-	return GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
+	return GetFlecsWorld()->GetScriptStructEntity(StructType);
 }
 
 FFlecsId FFlecsCommonHandle::ObtainComponentTypeEnum(const TSolidNotNull<const UEnum*> EnumType) const
 {
-	return GetFlecsWorld()->ObtainComponentTypeEnum(EnumType);
+	return GetFlecsWorld()->GetScriptEnumEntity(EnumType);
 }
 
 FFlecsId FFlecsCommonHandle::ObtainTypeClass(const TSolidNotNull<UClass*> ClassType) const

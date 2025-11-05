@@ -104,6 +104,7 @@ public:
 		});
 	}
 
+	void InitializeComponentPropertyObserver() const;
 	void InitializeSystems();
 
 	/**
@@ -153,7 +154,6 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	void ResetClock() const;
-
 	
 	/**
 	 * @brief Create a new entity in the world,
@@ -820,6 +820,8 @@ public:
 	template <typename T>
 	FFlecsComponentHandle RegisterComponentType() const
 	{
+		solid_checkf(!IsDeferred(), TEXT("Cannot register component while deferred"));
+		
 		FFlecsComponentHandle Component = World.component<T>();
 		solid_check(Component.IsValid());
 		
@@ -842,12 +844,6 @@ public:
 			TEXT("Component %hs is not registered"), nameof(T).data());
 		return World.component<T>();
 	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FFlecsComponentHandle ObtainComponentTypeStruct(const UScriptStruct* ScriptStruct) const;
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FFlecsComponentHandle ObtainComponentTypeEnum(const UEnum* ScriptEnum) const;
 
 	template <typename ...TComponents>
 	flecs::observer_builder<TComponents...> CreateObserver(const FString& Name = "") const

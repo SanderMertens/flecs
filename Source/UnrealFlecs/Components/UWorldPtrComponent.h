@@ -47,12 +47,6 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FUWorldPtrComponent& operator=(const FUWorldPtrComponent& InComponent)
-	{
-		World = InComponent.World;
-		return *this;
-	}
-
 	FORCEINLINE bool operator==(const FUWorldPtrComponent& InComponent) const
 	{
 		return World == InComponent.World;

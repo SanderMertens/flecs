@@ -208,8 +208,6 @@ UFlecsWorld* UFlecsWorld::GetDefaultWorld(const UObject* WorldContextObject)
 void UFlecsWorld::WorldStart()
 {
 	UE_LOGFMT(LogFlecsWorld, Log, "Flecs World started: {WorldObjectName}", *GetName());
-
-	bIsInitialized = true;
 		
 #if WITH_AUTOMATION_TESTS
 	if (!GIsAutomationTesting)
@@ -223,26 +221,7 @@ void UFlecsWorld::WorldStart()
 	InitializeFlecsRegistrationObjects();
 
 	const TSolidNotNull<const UFlecsDeveloperSettings*> FlecsDeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
-
-	/*
-	if (FlecsDeveloperSettings->bShrinkMemoryOnGC)
-	{
-		ShrinkMemoryGCDelegateHandle = FCoreUObjectDelegates::GarbageCollectComplete
-			.AddWeakLambda(this, [this]()
-			{
-				if UNLIKELY_IF(!bIsInitialized)
-				{
-					return;
-				}
-
-				ShrinkWorld();
-				
-				UE_LOGFMT(LogFlecsWorld, Log,
-							  "Flecs World {WorldName} Shrinking world memory on GC",
-							  *GetName());
-			});
-	}*/
-
+	
 	if (FlecsDeveloperSettings->bDeleteEmptyTablesOnGC)
 	{
 		DeleteEmptyTablesGCDelegateHandle = FCoreUObjectDelegates::GarbageCollectComplete
@@ -502,18 +481,19 @@ void UFlecsWorld::RegisterUnrealTypes() const
 	RegisterComponentType<FIntRect>();
 }
 
-void UFlecsWorld::InitializeSystems()
+void UFlecsWorld::InitializeComponentPropertyObserver() const
 {
-	CreateObserver("AnyComponentObserver")
+	/*CreateObserver("AnyComponentObserver")
 			.event(flecs::OnSet)
 			.with<flecs::Component>() // 0
 			.with_symbol_component().filter() // 1
 			.yield_existing()
-			.run([this](flecs::iter& Iter)
+			.each([this](flecs::iter& Iter, size_t Index)
 			{
-				UnlockIter_Internal(Iter, [this](flecs::iter& Iter)
+				//while (Iter.next())
+					//UnlockIter_Internal(Iter, [this](flecs::iter& Iter)
 				{
-					for (const flecs::entity_t Index : Iter)
+					//for (const flecs::entity_t Index : Iter)
 					{
 						const FFlecsEntityHandle EntityHandle = Iter.entity(Index);
 					
@@ -539,9 +519,42 @@ void UFlecsWorld::InitializeSystems()
 						}
 						#endif // UNLOG_ENABLED
 					}
-				});
-			});
+				};
+			});*/
 
+	FlecsLibrary::GetTypeRegisteredDelegate().AddWeakLambda(this, [this](const flecs::id_t InEntityId)
+	{
+		solid_checkf(!IsDeferred(), TEXT("Cannot register component properties while world is deferred."));
+		
+		const FFlecsEntityHandle EntityHandle = FFlecsEntityHandle(World, InEntityId);
+					
+		const FString StructSymbol = EntityHandle.GetSymbol();
+						
+		if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(StructSymbol))
+		{
+			FFlecsComponentHandle InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
+							
+			const FFlecsComponentProperties& Properties = FFlecsComponentPropertiesRegistry::Get()
+				.GetComponentProperties(StructSymbol);
+
+			std::invoke(Properties.RegistrationFunction, World, InUntypedComponent);
+
+			UE_LOGFMT(LogFlecsComponent, Log,
+				"Component properties {StructName} registered", StructSymbol);
+		}
+		#if !NO_LOGGING
+		else
+		{
+			UE_LOGFMT(LogFlecsComponent, Log,
+				"Component properties {StructName} not found", StructSymbol);
+		}
+		#endif // UNLOG_ENABLED
+	});
+
+}
+
+void UFlecsWorld::InitializeSystems()
+{
 		ObjectComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectComponentQuery")
 			.term_at(0).second(flecs::Wildcard) // FFlecsUObjectComponent
 			.cached()
@@ -1354,6 +1367,7 @@ FFlecsEntityHandle UFlecsWorld::RegisterScriptStruct(const UScriptStruct* Script
 			TypeMapComponent->ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
 
 			RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
+			FlecsLibrary::GetTypeRegisteredDelegate().Broadcast(ScriptStructComponent);
 		});
 
 		ScriptStructComponent.Set<FFlecsScriptStructComponent>({ ScriptStruct });
@@ -1556,6 +1570,8 @@ FFlecsEntityHandle UFlecsWorld::GetScriptClassEntity(const TSubclassOf<UObject> 
 
 FFlecsEntityHandle UFlecsWorld::RegisterComponentType(const TSolidNotNull<const UScriptStruct*> ScriptStruct) const
 {
+	solid_checkf(!IsDeferred(), TEXT("Cannot register component while deferred"));
+	
 	if (HasScriptStruct(ScriptStruct))
 	{
 		return GetScriptStructEntity(ScriptStruct);
@@ -1566,32 +1582,14 @@ FFlecsEntityHandle UFlecsWorld::RegisterComponentType(const TSolidNotNull<const 
 
 FFlecsEntityHandle UFlecsWorld::RegisterComponentType(const TSolidNotNull<const UEnum*> ScriptEnum) const
 {
+	solid_checkf(!IsDeferred(), TEXT("Cannot register component while deferred"));
+	
 	if (HasScriptEnum(ScriptEnum))
 	{
 		return GetScriptEnumEntity(ScriptEnum);
 	}
 
 	return RegisterScriptEnum(ScriptEnum);
-}
-
-FFlecsComponentHandle UFlecsWorld::ObtainComponentTypeStruct(const UScriptStruct* ScriptStruct) const
-{
-	solid_check(ScriptStruct);
-		
-	solid_checkf(HasScriptStruct(ScriptStruct),
-		TEXT("Script struct %s is not registered"), *ScriptStruct->GetStructCPPName());
-		
-	return GetScriptStructEntity(ScriptStruct);
-}
-
-FFlecsComponentHandle UFlecsWorld::ObtainComponentTypeEnum(const UEnum* ScriptEnum) const
-{
-	solid_check(ScriptEnum);
-		
-	solid_checkf(HasScriptEnum(ScriptEnum),
-	             TEXT("Script enum %s is not registered"), *ScriptEnum->GetName());
-		
-	return GetScriptEnumEntity(ScriptEnum);
 }
 
 void UFlecsWorld::RunPipeline(const FFlecsId InPipeline, const double DeltaTime) const
@@ -1767,13 +1765,13 @@ void UFlecsWorld::AddReferencedObjects(UObject* InThis, FReferenceCollector& Col
 		return;
 	}
 
-	ecs_exclusive_access_begin(This->World, "Garbage Collection ARO");
+	/*ecs_exclusive_access_begin(This->World, "Garbage Collection ARO");
 		
 	This->World.query_builder<const FFlecsScriptStructComponent>() // 0
 	    .with<FFlecsAddReferencedObjectsTrait>().src("$Component") //  1
 	    .term_at(0).src("$Component") // 0
 	    .with("$Component") // 2
-		.cache_kind(flecs::QueryCacheNone)
+		//.cache_kind(flecs::QueryCacheNone)
 	    .each([&Collector, InThis](flecs::iter& Iter, size_t Index,
 	                               const FFlecsScriptStructComponent& InScriptStructComponent)
 	    {
@@ -1787,5 +1785,5 @@ void UFlecsWorld::AddReferencedObjects(UObject* InThis, FReferenceCollector& Col
 		                                    ComponentPtr, InThis);
 	    });
 
-	ecs_exclusive_access_end(This->World, false);
+	ecs_exclusive_access_end(This->World, false);*/
 }

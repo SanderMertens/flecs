@@ -19,7 +19,7 @@ void FFlecsQueryTermExpression::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs
 				solid_checkf(IsValid(Struct),
 					TEXT("Invalid ScriptStruct provided for query term expression"));
 				
-				const FFlecsEntityHandle ScriptStructEntity = InWorld->ObtainComponentTypeStruct(Struct);
+				const FFlecsEntityHandle ScriptStructEntity = InWorld->GetScriptStructEntity(Struct);
 				solid_check(ScriptStructEntity.IsValid());
 				
 				InQueryBuilder.with(ScriptStructEntity);
