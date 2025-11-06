@@ -107,7 +107,9 @@ void flecs_remove_id_elem(
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_component_elem_remove(cr, &pair->second);
+        if (pair->second.prev) {
+            flecs_component_elem_remove(cr, &pair->second);
+        }
 
         if (cr->flags & EcsIdTraversable) {
             flecs_component_elem_remove(cr, &pair->trav);
@@ -588,8 +590,10 @@ ecs_component_record_t* flecs_component_new(
              * or all objects for a relationship. */
             flecs_insert_id_elem(world, cr, ecs_pair(rel, EcsWildcard), cr_r);
 
-            cr_t = flecs_components_ensure(world, ecs_pair(EcsWildcard, tgt));
-            flecs_insert_id_elem(world, cr, ecs_pair(EcsWildcard, tgt), cr_t);
+            if (tgt) {
+                cr_t = flecs_components_ensure(world, ecs_pair(EcsWildcard, tgt));
+                flecs_insert_id_elem(world, cr, ecs_pair(EcsWildcard, tgt), cr_t);
+            }
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
