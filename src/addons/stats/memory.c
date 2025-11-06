@@ -1047,6 +1047,8 @@ ecs_misc_memory_t ecs_misc_memory_get(
 #ifdef FLECS_DEBUG
     result.bytes_locked_components += flecs_map_memory_get(
         &world->locked_components, 0);
+    result.bytes_locked_components += flecs_map_memory_get(
+        &world->locked_entities, 0);
 #endif
 
 error:
