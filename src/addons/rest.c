@@ -1398,19 +1398,9 @@ bool flecs_rest_get_components(
 
     ecs_strbuf_list_push(&reply->body, "[", ",");
 
-    int32_t i;
-    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
-        ecs_component_record_t *cr = world->id_index_lo[i];
-        if (cr) {
-            flecs_rest_append_component(world, cr, &reply->body);
-        }
-    }
-    
-    ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
-    while (ecs_map_next(&it)) {
-        ecs_component_record_t *cr = ecs_map_ptr(&it);
+    FLECS_EACH_COMPONENT_RECORD(cr, {
         flecs_rest_append_component(world, cr, &reply->body);
-    }
+    })
 
     ecs_strbuf_list_pop(&reply->body, "]");
 

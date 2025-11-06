@@ -3631,6 +3631,40 @@ bool flecs_component_is_locked(
 #define flecs_wdup_n(world, T, count, ptr)\
     flecs_dup_n(&world->allocator, T, count, ptr)
 
+/* Convenience macro that iterates over all component records in the world */
+#define FLECS_EACH_COMPONENT_RECORD(cr, ...)\
+    for (int32_t _i = 0; _i < FLECS_HI_ID_RECORD_ID; _i++) {\
+        ecs_component_record_t *cr = world->id_index_lo[_i];\
+        if (cr) {\
+            __VA_ARGS__\
+        }\
+    }\
+    {\
+        ecs_map_iter_t _it = ecs_map_iter(&world->id_index_hi);\
+        while (ecs_map_next(&_it)) {\
+            ecs_component_record_t *cr = ecs_map_ptr(&_it);\
+            __VA_ARGS__\
+        }\
+    }
+
+/* Convenience macro that iterates over all queries in the world */
+#define FLECS_EACH_QUERY(query, ...)\
+    {\
+        ecs_iter_t _it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);\
+        while (ecs_each_next(&_it)) {\
+            EcsPoly *queries = ecs_field(&_it, EcsPoly, 0);\
+            for (int32_t _i = 0; _i < _it.count; _i++) {\
+                ecs_query_t *query = queries[_i].poly;\
+                if (!query) {\
+                    continue;\
+                }\
+                flecs_poly_assert(query, ecs_query_t);\
+                ecs_assert(query->entity != 0, ECS_INTERNAL_ERROR, NULL);\
+                __VA_ARGS__\
+            }\
+        }\
+    }
+
 #endif
 
 /**
@@ -21772,33 +21806,15 @@ void flecs_process_empty_queries(
 {
     flecs_poly_assert(world, ecs_world_t); 
 
-    ecs_component_record_t *cr = flecs_components_get(world,
-        ecs_pair(ecs_id(EcsPoly), EcsQuery));
-    if (!cr) {
-        return;
-    }
-
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
     flecs_defer_begin(world, world->stages[0]);
 
-    ecs_table_cache_iter_t it;
-    const ecs_table_record_t *tr;
-    if (flecs_table_cache_iter(&cr->cache, &it)) {
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            ecs_table_t *table = tr->hdr.table;
-            EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
-            int32_t i, count = ecs_table_count(table);
-
-            for (i = 0; i < count; i ++) {
-                ecs_query_t *query = queries[i].poly;
-                const ecs_entity_t *entities = ecs_table_entities(table);
-                if (!ecs_query_is_true(query)) {
-                    ecs_add_id(world, entities[i], EcsEmpty);
-                }
-            }
+    FLECS_EACH_QUERY(query, {
+        if (!ecs_query_is_true(query)) {
+            ecs_add_id(world, query->entity, EcsEmpty);
         }
-    }
+    })
 
     flecs_defer_end(world, world->stages[0]);
 }
@@ -21929,53 +21945,21 @@ void ecs_shrink(
 
     flecs_sparse_shrink(&world->store.tables);
 
-    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
-        ecs_component_record_t *cr = world->id_index_lo[i];
-        if (cr) {
-            if (cr->cache.tables.count) {
-                flecs_component_shrink(cr);
-            } else {
-                if (cr->id != EcsAny && cr->id != ecs_isa(EcsWildcard)) {
-                    if (!flecs_component_is_locked(world, cr->id)) {
-                        flecs_component_release(world, cr);
-                    }
+    FLECS_EACH_COMPONENT_RECORD(cr, {
+        if (cr->cache.tables.count) {
+            flecs_component_shrink(cr);
+        } else {
+            if (cr->id != EcsAny && cr->id != ecs_isa(EcsWildcard)) {
+                if (!flecs_component_is_locked(world, cr->id)) {
+                    flecs_component_release(world, cr);
                 }
             }
         }
-    }
+    })
 
-    {
-        ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
-        while (ecs_map_next(&it)) {
-            ecs_component_record_t *cr = ecs_map_ptr(&it);
-            if (cr->cache.tables.count) {
-                flecs_component_shrink(cr);
-            } else {
-                if (cr->id != EcsAny && cr->id != ecs_isa(EcsWildcard)) {
-                    if (!flecs_component_is_locked(world, cr->id)) {
-                        flecs_component_release(world, cr);
-                    }
-                }
-            }
-        }
-    }
-
-    {
-        ecs_iter_t it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);
-        while (ecs_each_next(&it)) {
-            EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
-
-            for (i = 0; i < it.count; i++) {
-                ecs_query_t *query = queries[i].poly;
-                if (!query) {
-                    continue;
-                }
-
-                flecs_poly_assert(query, ecs_query_t);
-                flecs_query_reclaim(query);
-            }
-        }
-    }
+    FLECS_EACH_QUERY(query, {
+        flecs_query_reclaim(query);
+    })
 
     ecs_map_reclaim(&world->id_index_hi);
     
@@ -27834,19 +27818,9 @@ bool flecs_rest_get_components(
 
     ecs_strbuf_list_push(&reply->body, "[", ",");
 
-    int32_t i;
-    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
-        ecs_component_record_t *cr = world->id_index_lo[i];
-        if (cr) {
-            flecs_rest_append_component(world, cr, &reply->body);
-        }
-    }
-    
-    ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
-    while (ecs_map_next(&it)) {
-        ecs_component_record_t *cr = ecs_map_ptr(&it);
+    FLECS_EACH_COMPONENT_RECORD(cr, {
         flecs_rest_append_component(world, cr, &reply->body);
-    }
+    })
 
     ecs_strbuf_list_pop(&reply->body, "]");
 
@@ -68758,20 +68732,10 @@ ecs_component_index_memory_t ecs_component_index_memory_get(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     
     ecs_component_index_memory_t result = {0};
-    
-    int32_t i;
-    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
-        ecs_component_record_t *cr = world->id_index_lo[i];
-        if (cr) {
-            ecs_component_record_memory_get(cr, &result);
-        }
-    }
-    
-    ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
-    while (ecs_map_next(&it)) {
-        ecs_component_record_t *cr = ecs_map_ptr(&it);
+
+    FLECS_EACH_COMPONENT_RECORD(cr, {
         ecs_component_record_memory_get(cr, &result);
-    }
+    })
     
 error:
     return result;
@@ -68900,23 +68864,9 @@ ecs_query_memory_t ecs_queries_memory_get(
     
     ecs_query_memory_t result = (ecs_query_memory_t){0};
 
-    {
-        ecs_iter_t it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);
-        while (ecs_each_next(&it)) {
-            EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
-
-            int32_t i, count = it.count;
-            for (i = 0; i < count; i++) {
-                ecs_query_t *query = queries[i].poly;
-                if (!query) {
-                    continue;
-                }
-
-                flecs_poly_assert(query, ecs_query_t);
-                ecs_query_memory_get(query, &result);
-            }
-        }
-    }
+    FLECS_EACH_QUERY(query, {
+        ecs_query_memory_get(query, &result);
+    })
 
 error:
     return result;
@@ -68988,18 +68938,9 @@ ecs_component_memory_t ecs_component_memory_get(
     }
 
     /* Sparse components */
-    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
-        ecs_component_record_t *cr = world->id_index_lo[i];
-        if (cr) {
-            flecs_component_memory_get_sparse(cr, &result);
-        }
-    }
-    
-    ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
-    while (ecs_map_next(&it)) {
-        ecs_component_record_t *cr = ecs_map_ptr(&it);
+    FLECS_EACH_COMPONENT_RECORD(cr, {
         flecs_component_memory_get_sparse(cr, &result);
-    }
+    })
     
 error:
     return result;

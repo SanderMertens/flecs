@@ -2754,6 +2754,8 @@ void World_dont_delete_empty_queried_for_component_record_w_shrink(void) {
 
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 

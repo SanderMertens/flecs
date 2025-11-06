@@ -1672,33 +1672,15 @@ void flecs_process_empty_queries(
 {
     flecs_poly_assert(world, ecs_world_t); 
 
-    ecs_component_record_t *cr = flecs_components_get(world,
-        ecs_pair(ecs_id(EcsPoly), EcsQuery));
-    if (!cr) {
-        return;
-    }
-
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
     flecs_defer_begin(world, world->stages[0]);
 
-    ecs_table_cache_iter_t it;
-    const ecs_table_record_t *tr;
-    if (flecs_table_cache_iter(&cr->cache, &it)) {
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            ecs_table_t *table = tr->hdr.table;
-            EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
-            int32_t i, count = ecs_table_count(table);
-
-            for (i = 0; i < count; i ++) {
-                ecs_query_t *query = queries[i].poly;
-                const ecs_entity_t *entities = ecs_table_entities(table);
-                if (!ecs_query_is_true(query)) {
-                    ecs_add_id(world, entities[i], EcsEmpty);
-                }
-            }
+    FLECS_EACH_QUERY(query, {
+        if (!ecs_query_is_true(query)) {
+            ecs_add_id(world, query->entity, EcsEmpty);
         }
-    }
+    })
 
     flecs_defer_end(world, world->stages[0]);
 }
@@ -1829,53 +1811,21 @@ void ecs_shrink(
 
     flecs_sparse_shrink(&world->store.tables);
 
-    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
-        ecs_component_record_t *cr = world->id_index_lo[i];
-        if (cr) {
-            if (cr->cache.tables.count) {
-                flecs_component_shrink(cr);
-            } else {
-                if (cr->id != EcsAny && cr->id != ecs_isa(EcsWildcard)) {
-                    if (!flecs_component_is_locked(world, cr->id)) {
-                        flecs_component_release(world, cr);
-                    }
+    FLECS_EACH_COMPONENT_RECORD(cr, {
+        if (cr->cache.tables.count) {
+            flecs_component_shrink(cr);
+        } else {
+            if (cr->id != EcsAny && cr->id != ecs_isa(EcsWildcard)) {
+                if (!flecs_component_is_locked(world, cr->id)) {
+                    flecs_component_release(world, cr);
                 }
             }
         }
-    }
+    })
 
-    {
-        ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
-        while (ecs_map_next(&it)) {
-            ecs_component_record_t *cr = ecs_map_ptr(&it);
-            if (cr->cache.tables.count) {
-                flecs_component_shrink(cr);
-            } else {
-                if (cr->id != EcsAny && cr->id != ecs_isa(EcsWildcard)) {
-                    if (!flecs_component_is_locked(world, cr->id)) {
-                        flecs_component_release(world, cr);
-                    }
-                }
-            }
-        }
-    }
-
-    {
-        ecs_iter_t it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);
-        while (ecs_each_next(&it)) {
-            EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
-
-            for (i = 0; i < it.count; i++) {
-                ecs_query_t *query = queries[i].poly;
-                if (!query) {
-                    continue;
-                }
-
-                flecs_poly_assert(query, ecs_query_t);
-                flecs_query_reclaim(query);
-            }
-        }
-    }
+    FLECS_EACH_QUERY(query, {
+        flecs_query_reclaim(query);
+    })
 
     ecs_map_reclaim(&world->id_index_hi);
     
