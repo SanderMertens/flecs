@@ -1832,15 +1832,31 @@ void ecs_shrink(
     for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
         ecs_component_record_t *cr = world->id_index_lo[i];
         if (cr) {
-            flecs_component_shrink(cr);
+            if (cr->cache.tables.count) {
+                flecs_component_shrink(cr);
+            } else {
+                if (cr->id != EcsAny && cr->id != ecs_isa(EcsWildcard)) {
+                    if (!flecs_component_is_locked(world, cr->id)) {
+                        flecs_component_release(world, cr);
+                    }
+                }
+            }
         }
     }
-    
+
     {
         ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
         while (ecs_map_next(&it)) {
             ecs_component_record_t *cr = ecs_map_ptr(&it);
-            flecs_component_shrink(cr);
+            if (cr->cache.tables.count) {
+                flecs_component_shrink(cr);
+            } else {
+                if (cr->id != EcsAny && cr->id != ecs_isa(EcsWildcard)) {
+                    if (!flecs_component_is_locked(world, cr->id)) {
+                        flecs_component_release(world, cr);
+                    }
+                }
+            }
         }
     }
 
