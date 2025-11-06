@@ -2709,6 +2709,54 @@ void World_recreate_tables_after_shrink(void) {
     ecs_fini(world);
 }
 
+void World_delete_empty_component_record_w_shrink(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
+
+    ecs_delete(world, e);
+    
+    test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
+
+    ecs_shrink(world);
+
+    test_assert(flecs_components_get(world, ecs_id(Position)) == NULL);
+
+    ecs_fini(world);
+}
+
+void World_dont_delete_empty_queried_for_component_record_w_shrink(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    test_assert(q != NULL);
+
+    test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
+
+    ecs_delete(world, e);
+    
+    test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
+
+    ecs_shrink(world);
+
+    test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
+
+    ecs_fini(world);
+}
+
 void World_mini_all_tables_builtin(void) {
     ecs_world_t *world = ecs_mini();
 
