@@ -493,7 +493,7 @@ void flecs_component_record_check_constraints(
                             flecs_errstr_1(ecs_get_path(world, tgt)));
                 }
 
-                if (flecs_component_is_locked(world, tgt)) {
+                if (flecs_component_is_trait_locked(world, tgt)) {
                     if (!ecs_has_id(world, tgt, EcsInheritable) && !ecs_has_pair(world, tgt, EcsIsA, EcsWildcard)) {
                         ecs_throw(ECS_INVALID_OPERATION, 
                             "cannot add '(IsA, %s)': '%s' is already queried for",
@@ -686,13 +686,6 @@ void flecs_component_free(
     ecs_id_t id = cr->id;
 
     flecs_component_assert_empty(cr);
-
-    /* Id is still in use by a query */
-    ecs_assert((world->flags & EcsWorldQuit) || 
-            !flecs_component_is_locked(world, id), 
-        ECS_INVALID_OPERATION, 
-        "cannot delete component '%s' as it is still in use by queries",
-            flecs_errstr(ecs_id_str(world, id)));
 
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
