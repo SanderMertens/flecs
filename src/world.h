@@ -338,4 +338,38 @@ bool flecs_component_is_locked(
 #define flecs_wdup_n(world, T, count, ptr)\
     flecs_dup_n(&world->allocator, T, count, ptr)
 
+/* Convenience macro that iterates over all component records in the world */
+#define FLECS_EACH_COMPONENT_RECORD(cr, ...)\
+    for (int32_t _i = 0; _i < FLECS_HI_ID_RECORD_ID; _i++) {\
+        ecs_component_record_t *cr = world->id_index_lo[_i];\
+        if (cr) {\
+            __VA_ARGS__\
+        }\
+    }\
+    {\
+        ecs_map_iter_t _it = ecs_map_iter(&world->id_index_hi);\
+        while (ecs_map_next(&_it)) {\
+            ecs_component_record_t *cr = ecs_map_ptr(&_it);\
+            __VA_ARGS__\
+        }\
+    }
+
+/* Convenience macro that iterates over all queries in the world */
+#define FLECS_EACH_QUERY(query, ...)\
+    {\
+        ecs_iter_t _it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);\
+        while (ecs_each_next(&_it)) {\
+            EcsPoly *queries = ecs_field(&_it, EcsPoly, 0);\
+            for (int32_t _i = 0; _i < _it.count; _i++) {\
+                ecs_query_t *query = queries[_i].poly;\
+                if (!query) {\
+                    continue;\
+                }\
+                flecs_poly_assert(query, ecs_query_t);\
+                ecs_assert(query->entity != 0, ECS_INTERNAL_ERROR, NULL);\
+                __VA_ARGS__\
+            }\
+        }\
+    }
+
 #endif
