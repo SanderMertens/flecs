@@ -42431,10 +42431,8 @@ void* ecs_table_cache_get(
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (ecs_map_is_init(&cache->index)) {
-        return ecs_map_get_deref(&cache->index, void**, table->id);
-    }
-    return NULL;
+    ecs_assert(ecs_map_is_init(&cache->index), ECS_INTERNAL_ERROR, NULL);
+    return ecs_map_get_deref(&cache->index, void**, table->id);
 }
 
 void* ecs_table_cache_remove(
