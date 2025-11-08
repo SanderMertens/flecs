@@ -3307,8 +3307,6 @@ void ecs_stage_shrink(
 
 /* World level allocators are for operations that are not multithreaded */
 typedef struct ecs_world_allocators_t {
-    ecs_map_params_t ptr;
-    ecs_map_params_t query_table_list;
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
     ecs_block_allocator_t component_record;
@@ -14124,7 +14122,7 @@ ecs_event_id_record_t* flecs_event_id_record_ensure(
         return er->wildcard_pair = ider;
     }
 
-    ecs_map_init_w_params_if(&er->event_ids, &world->allocators.ptr);
+    ecs_map_init_if(&er->event_ids, &world->allocator);
     ecs_map_insert_ptr(&er->event_ids, id, ider);
     return ider;
 }
@@ -15665,7 +15663,7 @@ void flecs_register_observer_for_id(
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
-        ecs_map_init_w_params_if(observers, &world->allocators.ptr);
+        ecs_map_init_if(observers, &world->allocator);
         ecs_map_insert_ptr(observers, impl->id, o);
 
         flecs_inc_observer_count(world, event, er, term_id, 1);
@@ -20852,9 +20850,6 @@ void flecs_world_allocators_init(
 
     flecs_allocator_init(&world->allocator);
 
-    ecs_map_params_init(&a->ptr, &world->allocator);
-    ecs_map_params_init(&a->query_table_list, &world->allocator);
-
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
     flecs_ballocator_init_t(&a->component_record, ecs_component_record_t);
@@ -21164,7 +21159,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_map_init(&world->locked_components, a);
     ecs_map_init(&world->locked_entities, a);
 #endif
-    ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
+    ecs_map_init(&world->id_index_hi, &world->allocator);
     world->id_index_lo = ecs_os_calloc_n(
         ecs_component_record_t*, FLECS_HI_ID_RECORD_ID);
     flecs_observable_init(&world->observable);
@@ -31339,40 +31334,15 @@ void flecs_map_rehash(
     ECS_MAP_FREE_N(map->allocator, ecs_bucket_t, old_count, buckets);
 }
 
-void ecs_map_params_init(
-    ecs_map_params_t *params,
-    ecs_allocator_t *allocator)
-{
-    params->allocator = allocator;
-}
-
-void ecs_map_init_w_params(
-    ecs_map_t *result,
-    ecs_map_params_t *params)
-{
-    ecs_os_zeromem(result);
-
-    result->allocator = params->allocator;
-
-    flecs_map_rehash(result, 0);
-}
-
-void ecs_map_init_w_params_if(
-    ecs_map_t *result,
-    ecs_map_params_t *params)
-{
-    if (!ecs_map_is_init(result)) {
-        ecs_map_init_w_params(result, params);
-    }
-}
-
 void ecs_map_init(
     ecs_map_t *result,
     ecs_allocator_t *allocator)
 {
-    ecs_map_init_w_params(result, &(ecs_map_params_t) {
-        .allocator = allocator
-    });
+    ecs_os_zeromem(result);
+
+    result->allocator = allocator;
+
+    flecs_map_rehash(result, 0);
 }
 
 void ecs_map_init_if(
@@ -42390,7 +42360,7 @@ void ecs_table_cache_init(
     ecs_table_cache_t *cache)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_map_init_w_params(&cache->index, &world->allocators.ptr);
+    ecs_map_init(&cache->index, &world->allocator);
 }
 
 void ecs_table_cache_fini(
@@ -42979,7 +42949,7 @@ ecs_graph_edge_t* flecs_table_ensure_hi_edge(
 {
     if (!edges->hi) {
         edges->hi = flecs_alloc_t(&world->allocator, ecs_map_t);
-        ecs_map_init_w_params(edges->hi, &world->allocators.ptr);
+        ecs_map_init(edges->hi, &world->allocator);
     }
 
     ecs_graph_edge_t **r = ecs_map_ensure_ref(edges->hi, ecs_graph_edge_t, id);
@@ -72449,8 +72419,7 @@ void flecs_query_cache_group_by(
     cache->group_by = sort_component;
     cache->group_by_callback = group_by;
 
-    ecs_map_init_w_params(&cache->groups, 
-        &cache->query->world->allocators.query_table_list);
+    ecs_map_init(&cache->groups, &cache->query->world->allocator);
 error:
     return;
 }

@@ -700,9 +700,6 @@ void flecs_world_allocators_init(
 
     flecs_allocator_init(&world->allocator);
 
-    ecs_map_params_init(&a->ptr, &world->allocator);
-    ecs_map_params_init(&a->query_table_list, &world->allocator);
-
     flecs_ballocator_init_n(&a->graph_edge_lo, ecs_graph_edge_t, FLECS_HI_COMPONENT_ID);
     flecs_ballocator_init_t(&a->graph_edge, ecs_graph_edge_t);
     flecs_ballocator_init_t(&a->component_record, ecs_component_record_t);
@@ -1012,7 +1009,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_map_init(&world->locked_components, a);
     ecs_map_init(&world->locked_entities, a);
 #endif
-    ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
+    ecs_map_init(&world->id_index_hi, &world->allocator);
     world->id_index_lo = ecs_os_calloc_n(
         ecs_component_record_t*, FLECS_HI_ID_RECORD_ID);
     flecs_observable_init(&world->observable);

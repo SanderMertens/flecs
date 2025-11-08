@@ -14,8 +14,6 @@
 
 /* World level allocators are for operations that are not multithreaded */
 typedef struct ecs_world_allocators_t {
-    ecs_map_params_t ptr;
-    ecs_map_params_t query_table_list;
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
     ecs_block_allocator_t component_record;
