@@ -18378,7 +18378,9 @@ void ecs_ref_update(
 
     flecs_check_exclusive_world_access_read(world);
 
-    if (ref->table_version_fast == flecs_get_table_version_fast(world, ref->table_id)) {
+    if (ref->table_version_fast == flecs_get_table_version_fast(
+        world, ref->table_id)) 
+    {
         return;
     }
 
@@ -41494,6 +41496,8 @@ bool flecs_table_shrink(
     table->data.size = count;
 
     flecs_increment_table_column_version(world, table);
+
+    flecs_table_mark_table_dirty(world, table, 0);
 
     flecs_table_check_sanity(table);
 

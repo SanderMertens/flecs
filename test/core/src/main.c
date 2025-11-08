@@ -886,6 +886,7 @@ void Reference_aba_table(void);
 void Reference_recycled_table(void);
 void Reference_recycled_table_twice(void);
 void Reference_ref_after_shrink(void);
+void Reference_ref_after_shrink_2(void);
 void Reference_ref_after_shrink_w_freed_pages(void);
 
 // Testsuite 'Delete'
@@ -6219,6 +6220,10 @@ bake_test_case Reference_testcases[] = {
     {
         "ref_after_shrink",
         Reference_ref_after_shrink
+    },
+    {
+        "ref_after_shrink_2",
+        Reference_ref_after_shrink_2
     },
     {
         "ref_after_shrink_w_freed_pages",
@@ -13880,7 +13885,7 @@ static bake_test_suite suites[] = {
         "Reference",
         Reference_setup,
         NULL,
-        24,
+        25,
         Reference_testcases
     },
     {
