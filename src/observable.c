@@ -161,7 +161,7 @@ ecs_event_id_record_t* flecs_event_id_record_ensure(
         return er->wildcard_pair = ider;
     }
 
-    ecs_map_init_w_params_if(&er->event_ids, &world->allocators.ptr);
+    ecs_map_init_if(&er->event_ids, &world->allocator);
     ecs_map_insert_ptr(&er->event_ids, id, ider);
     return ider;
 }

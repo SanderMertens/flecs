@@ -398,8 +398,7 @@ void flecs_query_cache_group_by(
     cache->group_by = sort_component;
     cache->group_by_callback = group_by;
 
-    ecs_map_init_w_params(&cache->groups, 
-        &cache->query->world->allocators.query_table_list);
+    ecs_map_init(&cache->groups, &cache->query->world->allocator);
 error:
     return;
 }

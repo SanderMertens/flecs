@@ -171,40 +171,15 @@ void flecs_map_rehash(
     ECS_MAP_FREE_N(map->allocator, ecs_bucket_t, old_count, buckets);
 }
 
-void ecs_map_params_init(
-    ecs_map_params_t *params,
-    ecs_allocator_t *allocator)
-{
-    params->allocator = allocator;
-}
-
-void ecs_map_init_w_params(
-    ecs_map_t *result,
-    ecs_map_params_t *params)
-{
-    ecs_os_zeromem(result);
-
-    result->allocator = params->allocator;
-
-    flecs_map_rehash(result, 0);
-}
-
-void ecs_map_init_w_params_if(
-    ecs_map_t *result,
-    ecs_map_params_t *params)
-{
-    if (!ecs_map_is_init(result)) {
-        ecs_map_init_w_params(result, params);
-    }
-}
-
 void ecs_map_init(
     ecs_map_t *result,
     ecs_allocator_t *allocator)
 {
-    ecs_map_init_w_params(result, &(ecs_map_params_t) {
-        .allocator = allocator
-    });
+    ecs_os_zeromem(result);
+
+    result->allocator = allocator;
+
+    flecs_map_rehash(result, 0);
 }
 
 void ecs_map_init_if(
