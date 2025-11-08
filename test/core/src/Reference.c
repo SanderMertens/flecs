@@ -640,16 +640,9 @@ void Reference_ref_after_shrink(void) {
 
     test_int(ecs_table_size(ecs_get_table(world, e1)), 1);
     test_int(ecs_table_count(ecs_get_table(world, e1)), 1);
-    
-    printf("table.version = %d, table_version = %d\n",
-        r.table_version, table_version);
 
     {
         Position *p = ecs_ref_get(world, &r, Position);
-
-        printf("table.version = %d, table_version = %d\n",
-            r.table_version, table_version);
-
         test_assert(r.table_version != table_version);
         test_assert(r.table_version_fast != table_version_fast);
         test_assert(p != NULL);
