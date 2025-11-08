@@ -928,6 +928,7 @@
                 "recycled_table",
                 "recycled_table_twice",
                 "ref_after_shrink",
+                "ref_after_shrink_2",
                 "ref_after_shrink_w_freed_pages"
             ]
         }, {
