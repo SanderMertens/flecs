@@ -846,7 +846,10 @@
                 "get_ordered_children_from_stage",
                 "get_ordered_children_from_prefab_instance_no_children",
                 "get_ordered_children_from_prefab_instance_3_children",
-                "get_ordered_children_from_prefab_instance_nested_children"
+                "get_ordered_children_from_prefab_instance_nested_children",
+                "recreate_named_child",
+                "lookup_after_move_to_root",
+                "lookup_after_clear"
             ]
         }, {
             "id": "Has",
@@ -1519,7 +1522,8 @@
                 "force_relationship_on_relationship",
                 "force_target_on_component",
                 "force_target_on_relationship",
-                "force_target_on_target"
+                "force_target_on_target",
+                "relationship_with_exclusive"
             ]
         }, {
            "id": "Trigger",
@@ -2344,6 +2348,14 @@
                 "init_create_delete_random_1_entities_shrink_fini",
                 "init_create_delete_random_2_entities_shrink_fini",
                 "recreate_tables_after_shrink",
+                "delete_empty_component_record_w_shrink",
+                "delete_empty_queried_for_component_record_w_shrink",
+                "delete_empty_sparse_component_record_w_shrink",
+                "delete_empty_dont_fragment_component_record_w_shrink",
+                "dont_delete_non_empty_component_record_w_shrink",
+                "dont_delete_non_empty_queried_for_component_record_w_shrink",
+                "dont_delete_non_empty_sparse_component_record_w_shrink",
+                "dont_delete_non_empty_dont_fragment_component_record_w_shrink",
                 "mini_all_tables_builtin",
                 "mini_all_tables_builtin_after_add",
                 "user_component_not_builtin",
@@ -2364,6 +2376,8 @@
                 "user_entity_w_flecs_parent",
                 "add_exclusive_after_query",
                 "add_with_after_query",
+                "add_oneof_after_query",
+                "add_oneof_pair_after_query",
                 "add_final_after_query",
                 "add_isa_after_query",
                 "add_isa_after_query_tgt",
@@ -2374,7 +2388,22 @@
                 "add_sparse_after_query",
                 "add_dont_fragment_after_query",
                 "add_can_toggle_after_query",
-                "add_traversable_after_query"
+                "add_traversable_after_query",
+                "add_exclusive_after_pair_query",
+                "add_with_after_pair_query",
+                "add_oneof_after_pair_query",
+                "add_oneof_pair_after_pair_query",
+                "add_final_after_pair_query",
+                "add_isa_after_pair_query",
+                "add_isa_after_pair_query_tgt",
+                "add_inheritable_after_pair_query",
+                "add_isa_after_pair_query_after_inheritable",
+                "add_isa_after_pair_query_after_isa",
+                "add_on_instantiate_inherit_after_pair_query",
+                "add_sparse_after_pair_query",
+                "add_dont_fragment_after_pair_query",
+                "add_can_toggle_after_pair_query",
+                "add_traversable_after_pair_query"
             ]
         }, {
             "id": "ExclusiveAccess",
@@ -2849,7 +2878,6 @@
                 "activate_deactivate_activate_other",
                 "no_double_system_table_after_merge",
                 "recreate_deleted_table",
-                "create_65k_tables",
                 "no_duplicate_root_table_id",
                 "override_os_api_w_addon",
                 "records_resize_on_override",
@@ -2862,7 +2890,9 @@
                 "table_create_leak_check",
                 "component_record_has_table",
                 "component_record_iter_tables",
-                "table_get_records"
+                "table_get_records",
+                "childof_tgt_exists_after_query",
+                "create_65k_tables"
             ]
         }, {
             "id": "Error",

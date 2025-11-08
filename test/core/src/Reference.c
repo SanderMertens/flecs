@@ -638,7 +638,7 @@ void Reference_ref_after_shrink(void) {
 
     ecs_shrink(world);
 
-    test_int(ecs_table_size(ecs_get_table(world, e1)), 2);
+    test_int(ecs_table_size(ecs_get_table(world, e1)), 1);
     test_int(ecs_table_count(ecs_get_table(world, e1)), 1);
 
     {

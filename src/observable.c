@@ -232,7 +232,7 @@ int32_t flecs_event_observers_get(
 }
 
 bool flecs_observers_exist(
-    ecs_observable_t *observable,
+    const ecs_observable_t *observable,
     ecs_id_t id,
     ecs_entity_t event)
 {
@@ -1359,8 +1359,6 @@ repeat_event:
              * example, both observers for (ChildOf, p) and (ChildOf, *) would
              * match an event for (ChildOf, p). */
             ider_count = flecs_event_observers_get(er, id, iders);
-            cr = cr ? cr : flecs_components_get(world, id);
-            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
         if (!ider_count && !(can_override_on_add || can_override_on_remove)) {

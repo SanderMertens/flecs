@@ -2645,8 +2645,8 @@ void Pairs_add_symmetric_exclusive_relation(void) {
     ECS_TAG(world, ObjB);
     ECS_TAG(world, ObjC);
 
-    ecs_add_id(world, Rel, EcsSymmetric);
     ecs_add_id(world, Rel, EcsExclusive);
+    ecs_add_id(world, Rel, EcsSymmetric);
 
     ecs_add_pair(world, ObjA, Rel, ObjB);
     test_assert(ecs_has_pair(world, ObjA, Rel, ObjB));
@@ -3218,3 +3218,24 @@ void Pairs_force_target_on_target(void) {
     ecs_fini(world);
 }
 
+void Pairs_relationship_with_exclusive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Rel = ecs_new(world);
+    ecs_add_id(world, Rel, EcsRelationship);
+    ecs_add_id(world, Rel, EcsExclusive);
+
+    ecs_entity_t tgt_a = ecs_new(world);
+    ecs_entity_t tgt_b = ecs_new(world);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Rel, tgt_a);
+    test_assert(ecs_has_pair(world, e, Rel, tgt_a));
+    test_assert(!ecs_has_pair(world, e, Rel, tgt_b));
+
+    ecs_add_pair(world, e, Rel, tgt_b);
+    test_assert(!ecs_has_pair(world, e, Rel, tgt_a));
+    test_assert(ecs_has_pair(world, e, Rel, tgt_b));
+
+    ecs_fini(world);
+}

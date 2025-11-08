@@ -276,20 +276,10 @@ ecs_component_index_memory_t ecs_component_index_memory_get(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     
     ecs_component_index_memory_t result = {0};
-    
-    int32_t i;
-    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
-        ecs_component_record_t *cr = world->id_index_lo[i];
-        if (cr) {
-            ecs_component_record_memory_get(cr, &result);
-        }
-    }
-    
-    ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
-    while (ecs_map_next(&it)) {
-        ecs_component_record_t *cr = ecs_map_ptr(&it);
+
+    FLECS_EACH_COMPONENT_RECORD(cr, {
         ecs_component_record_memory_get(cr, &result);
-    }
+    })
     
 error:
     return result;
@@ -418,22 +408,9 @@ ecs_query_memory_t ecs_queries_memory_get(
     
     ecs_query_memory_t result = (ecs_query_memory_t){0};
 
-    {
-        ecs_iter_t it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);
-        while (ecs_each_next(&it)) {
-            EcsPoly *queries = ecs_field(&it, EcsPoly, 0);
-
-            for (int32_t i = 0; i < it.count; i++) {
-                ecs_query_t *query = queries[i].poly;
-                if (!query) {
-                    continue;
-                }
-
-                flecs_poly_assert(query, ecs_query_t);
-                ecs_query_memory_get(query, &result);
-            }
-        }
-    }
+    FLECS_EACH_QUERY(query, {
+        ecs_query_memory_get(query, &result);
+    })
 
 error:
     return result;
@@ -505,18 +482,9 @@ ecs_component_memory_t ecs_component_memory_get(
     }
 
     /* Sparse components */
-    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i++) {
-        ecs_component_record_t *cr = world->id_index_lo[i];
-        if (cr) {
-            flecs_component_memory_get_sparse(cr, &result);
-        }
-    }
-    
-    ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
-    while (ecs_map_next(&it)) {
-        ecs_component_record_t *cr = ecs_map_ptr(&it);
+    FLECS_EACH_COMPONENT_RECORD(cr, {
         flecs_component_memory_get_sparse(cr, &result);
-    }
+    })
     
 error:
     return result;
@@ -1076,6 +1044,13 @@ ecs_misc_memory_t ecs_misc_memory_get(
         }
     }
 
+#ifdef FLECS_DEBUG
+    result.bytes_locked_components += flecs_map_memory_get(
+        &world->locked_components, 0);
+    result.bytes_locked_components += flecs_map_memory_get(
+        &world->locked_entities, 0);
+#endif
+
 error:
     return result;
 }
@@ -1283,6 +1258,7 @@ void flecs_stats_memory_register_reflection(
             { .name = "bytes_pipelines", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_table_lookup", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_component_record_lookup", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_locked_components", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_type_info", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_commands", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_rematch_monitor", .type = ecs_id(ecs_i32_t), .unit = unit },

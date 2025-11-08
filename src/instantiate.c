@@ -382,8 +382,8 @@ void flecs_instantiate_override_dont_fragment(
 
         id &= ~ECS_AUTO_OVERRIDE;
 
-        ecs_component_record_t *cr = flecs_components_get(world, id);
-        if (!cr || !(cr->flags & EcsIdDontFragment)) {
+        ecs_flags32_t flags = flecs_component_get_flags(world, id);
+        if (!(flags & EcsIdDontFragment)) {
             continue;
         }
 

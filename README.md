@@ -112,6 +112,9 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### Resistance is Brutal
 [![image](docs/img/projects/resistance_is_brutal.jpg)](https://store.steampowered.com/app/3378140/Resistance_Is_Brutal/)
 
+### Rescue Ops: Wildfire
+[![image](docs/img/projects/rescue_ops_wildfire.png)](https://store.steampowered.com/app/2915770/Rescue_Ops_Wildfire/)
+
 ### Age of Respair
 [![image](docs/img/projects/age_of_respair.png)](https://store.steampowered.com/app/3164360/Age_of_Respair/)
 

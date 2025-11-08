@@ -33,7 +33,7 @@
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
 #define FLECS_VERSION_MINOR 1  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 1  /**< Flecs patch version. */
+#define FLECS_VERSION_PATCH 2  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
@@ -5875,6 +5875,23 @@ bool ecs_table_has_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t component);
+
+/** Get relationship target for table.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param relationship The relationship for which to obtain the target.
+ * @param index The index, in case the table has multiple instances of the relationship.
+ * @return The requested relationship target.
+ * 
+ * @see ecs_get_target()
+ */
+FLECS_API
+ecs_entity_t ecs_table_get_target(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_entity_t relationship,
+    int32_t index);
 
 /** Return depth for table in tree for relationship rel.
  * Depth is determined by counting the number of targets encountered while
