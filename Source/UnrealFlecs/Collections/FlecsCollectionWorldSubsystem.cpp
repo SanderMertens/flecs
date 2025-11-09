@@ -32,7 +32,7 @@ void UFlecsCollectionWorldSubsystem::OnFlecsWorldInitialized(const TSolidNotNull
 	CollectionScopeEntity = FlecsWorld->CreateEntity("CollectionScope")
 		.Add(flecs::Module);
 	
-	UE_LOG(LogFlecsWorld, Verbose, TEXT("UCollectionsModule registered"));
+	UE_LOG(LogFlecsCollections, Verbose, TEXT("UCollectionsModule registered"));
 }
 
 void UFlecsCollectionWorldSubsystem::Deinitialize()
@@ -67,7 +67,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionAsset(const
 		
 		if UNLIKELY_IF(!Resolved.IsValid())
 		{
-			UE_LOGFMT(LogFlecsWorld, Error,
+			UE_LOGFMT(LogFlecsCollections, Error,
 				"UFlecsCollectionWorldSubsystem::RegisterCollectionAsset: Failed to resolve collection reference on asset '{Asset}'",
 				InAsset->GetName());
 			continue;
@@ -100,7 +100,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionDefinition(
 		
 		if UNLIKELY_IF(!ResolvedEntityHandle.IsValid())
 		{
-			UE_LOGFMT(LogFlecsWorld, Error,
+			UE_LOGFMT(LogFlecsCollections, Error,
 				"UFlecsCollectionWorldSubsystem::RegisterCollectionDefinition: Failed to resolve collection reference on definition '{NameId}'",
 				Id.NameId.ToString());
 			continue;
@@ -135,7 +135,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionClass(const
 		
 		if UNLIKELY_IF(!ResolvedEntityHandle.IsValid())
 		{
-			UE_LOGFMT(LogFlecsWorld, Error,
+			UE_LOGFMT(LogFlecsCollections, Error,
 				"UFlecsCollectionWorldSubsystem::RegisterCollectionClass: Failed to resolve collection reference on class '{Class}'",
 				InClass->GetName());
 			continue;
@@ -240,7 +240,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::ResolveCollectionReference(co
 					return *Found;
 				}
 				
-				UE_LOGFMT(LogFlecsWorld, Error,
+				UE_LOGFMT(LogFlecsCollections, Error,
 					"UFlecsCollectionWorldSubsystem::ResolveReference: Id '{NameId}' not registered",
 					Reference.Id.NameId);
 				
@@ -290,7 +290,7 @@ void UFlecsCollectionWorldSubsystem::ExpandChildCollectionReferences(const FFlec
 					
 						if UNLIKELY_IF(!Resolved.IsValid())
 						{
-							UE_LOGFMT(LogFlecsWorld, Error,
+							UE_LOGFMT(LogFlecsCollections, Error,
 								"UFlecsCollectionWorldSubsystem::ExpandChildCollectionReferences: Failed to resolve collection reference on entity '{Entity}'",
 								ChildEntityHandle.GetPath());
 							return;
