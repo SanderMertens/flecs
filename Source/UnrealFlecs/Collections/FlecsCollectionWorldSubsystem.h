@@ -67,8 +67,8 @@ public:
 		FFlecsCollectionDefinition Definition;
 
 		FFlecsCollectionBuilder Builder = FFlecsCollectionBuilder::Create(Definition);
-		
-		InBuildFunc(Builder);
+
+		std::invoke(std::forward<FuncType>(InBuildFunc), Builder);
 
 		return RegisterCollectionDefinition(Builder.IdName, Definition);
 	}
@@ -82,7 +82,7 @@ public:
 		FFlecsCollectionDefinition Definition;
 		
 		FFlecsCollectionBuilder Builder = FFlecsCollectionBuilder::Create(Definition);
-		InBuildFunc(Builder);
+		std::invoke(std::forward<FuncType>(InBuildFunc), Builder);
 		
 		return RegisterCollectionClass(InClass, Builder);
 	}

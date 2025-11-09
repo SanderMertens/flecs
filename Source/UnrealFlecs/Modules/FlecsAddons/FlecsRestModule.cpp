@@ -58,6 +58,7 @@ void UFlecsRestModule::InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, con
 
 void UFlecsRestModule::DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld)
 {
+	// @TODO: Add Tests for destroying this module during runtime
 #ifdef FLECS_REST
 
 #ifdef FLECS_STATS

@@ -40,7 +40,7 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
             return std::invoke(
                 NetSerializeDefinition.NetSerializeFunction,
                 *this,
-                GetFlecsWorld(),
+                GetFlecsWorldChecked(),
                 Ar,
                 Map,
                 bOutSuccess);
@@ -58,7 +58,7 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
         return std::invoke(
             *Unreal::Flecs::GNetSerializeFunctionPtr,
             *this,
-            GetFlecsWorld(),
+            GetFlecsWorldChecked(),
             Ar,
             Map,
             bOutSuccess);

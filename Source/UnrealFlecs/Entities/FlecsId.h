@@ -14,6 +14,9 @@
 
 class UFlecsWorld;
 
+/**
+ * @brief A Flecs Id equivalent to flecs::entity_t / flecs::id_t
+ */
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsId
 {

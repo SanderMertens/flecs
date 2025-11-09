@@ -108,6 +108,7 @@ REGISTER_FLECS_COMPONENT(FFlecsCollectionRootTag,
 			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
 	});
 
+// @TODO: Unimplemented
 USTRUCT(BlueprintInternalUseOnly)
 struct UNREALFLECS_API FFlecsCollectionStructInterface
 {
@@ -116,8 +117,6 @@ struct UNREALFLECS_API FFlecsCollectionStructInterface
 public:
 	FORCEINLINE FFlecsCollectionStructInterface() = default;
 	virtual ~FFlecsCollectionStructInterface() = default;
-
-	
 	
 }; // struct FFlecsCollectionStructInterface
 

@@ -668,6 +668,32 @@ public:
 		return GetEntityView().enabled(FFlecsEntityView::GetInputId(*this, InValue));
 	}
 
+	template <typename TFirst, typename TSecond>
+	NO_DISCARD SOLID_INLINE bool IsEnabledPair() const
+	{
+		return GetEntityView().enabled<TFirst, TSecond>();
+	}
+
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	NO_DISCARD SOLID_INLINE bool IsEnabledPair(const TSecond& InSecond) const
+	{
+		return GetEntityView().enabled<TFirst>(FFlecsEntityView::GetInputId(*this, InSecond));
+	}
+
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst,
+		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	NO_DISCARD SOLID_INLINE bool IsEnabledPair(const TFirst& InFirst, const TSecond& InSecond) const
+	{
+		return GetEntityView().enabled(FFlecsEntityView::GetInputId(*this, InFirst),
+			FFlecsEntityView::GetInputId(*this, InSecond));
+	}
+
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
+	NO_DISCARD SOLID_INLINE bool IsEnabledPairSecond(const TFirst& InFirst) const
+	{
+		return GetEntityView().enabled_second<TSecond>(FFlecsEntityView::GetInputId(*this, InFirst));
+	}
+
 	NO_DISCARD SOLID_INLINE FString GetName() const
 	{
 		return FString(GetEntityView().name().c_str(), static_cast<int32>(GetEntity().name().length()));

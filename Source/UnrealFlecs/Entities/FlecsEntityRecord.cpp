@@ -143,7 +143,7 @@ void FFlecsRecordSubEntity::ApplyRecordToEntity(const FFlecsEntityHandle& InEnti
 
 	for (const TInstancedStruct<FFlecsRecordSubEntity>& SubEntity : SubEntities)
 	{
-		FFlecsEntityHandle NewEntityHandle = InEntityHandle.GetFlecsWorld()->CreateEntity()
+		FFlecsEntityHandle NewEntityHandle = InEntityHandle.GetFlecsWorldChecked()->CreateEntity()
 			.SetParent(InEntityHandle);
 		
 		SubEntity.Get<FFlecsRecordSubEntity>().ApplyRecordToEntity(NewEntityHandle);
