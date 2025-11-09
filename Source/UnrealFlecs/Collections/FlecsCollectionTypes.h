@@ -28,13 +28,38 @@ struct UNREALFLECS_API FFlecsCollectionReference
 
 public:
 	FORCEINLINE FFlecsCollectionReference() = default;
+
+	static NO_DISCARD FFlecsCollectionReference FromAsset(const TSolidNotNull<const UFlecsCollectionDataAsset*> InAsset)
+	{
+		FFlecsCollectionReference Ref;
+		Ref.Mode = EFlecsCollectionReferenceMode::Asset;
+		Ref.Asset = InAsset;
+		return Ref;
+	}
+
+	// @TODO: maybe validate param?
+	static NO_DISCARD FFlecsCollectionReference FromClass(const TSubclassOf<UObject> InClass)
+	{
+		FFlecsCollectionReference Ref;
+		Ref.Mode = EFlecsCollectionReferenceMode::UClass;
+		Ref.Class = InClass;
+		return Ref;
+	}
+
+	static NO_DISCARD FFlecsCollectionReference FromId(const FFlecsCollectionId& InId)
+	{
+		FFlecsCollectionReference Ref;
+		Ref.Mode = EFlecsCollectionReferenceMode::Id;
+		Ref.Id = InId;
+		return Ref;
+	}
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
 	EFlecsCollectionReferenceMode Mode = EFlecsCollectionReferenceMode::Asset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs",
 		meta = (EditCondition = "Mode == EFlecsCollectionReferenceMode::Asset", EditConditionHides))
-	TObjectPtr<UFlecsCollectionDataAsset> Asset;
+	TObjectPtr<const UFlecsCollectionDataAsset> Asset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs",
 		meta = (EditCondition = "Mode == EFlecsCollectionReferenceMode::UClass", EditConditionHides,

@@ -199,6 +199,119 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetCollectionScope() const
 	return CollectionScopeEntity;
 }
 
+void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHandle& InEntity,
+	const FFlecsCollectionId& InCollectionId)
+{
+	solid_checkf(InEntity.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: InEntity is invalid"));
+	
+	solid_checkf(IsCollectionRegistered(InCollectionId),
+		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: CollectionId '%s' is not registered"),
+		*InCollectionId.NameId.ToString());
+
+	const FFlecsEntityHandle CollectionPrefab = GetPrefabById(InCollectionId);
+	
+	solid_checkf(CollectionPrefab.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: CollectionId '%s' is not registered"),
+		*InCollectionId.NameId.ToString());
+
+	InEntity.AddPair(flecs::IsA, CollectionPrefab);
+}
+
+void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHandle& InEntity,
+	const FFlecsCollectionReference& InCollectionReference)
+{
+	solid_checkf(InEntity.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: InEntity is invalid"));
+
+	const FFlecsEntityHandle CollectionPrefab = ResolveCollectionReference(InCollectionReference);
+	solid_checkf(CollectionPrefab.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: Failed to resolve collection reference"));
+
+	InEntity.AddPair(flecs::IsA, CollectionPrefab);
+}
+
+void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHandle& InEntity,
+	const TSolidNotNull<const UFlecsCollectionDataAsset*> InAsset)
+{
+	AddCollectionToEntity(InEntity, FFlecsCollectionReference::FromAsset(InAsset));
+}
+
+void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHandle& InEntity,
+	const TSubclassOf<UObject> InClass)
+{
+	solid_cassume(InClass);
+
+	solid_checkf(InClass->ImplementsInterface(UFlecsCollectionInterface::StaticClass()),
+		TEXT("Class %s does not implement FlecsCollectionInterface"), *InClass->GetName());
+	
+	AddCollectionToEntity(InEntity, FFlecsCollectionReference::FromClass(InClass));
+}
+
+void UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity,
+                                                                const FFlecsCollectionId& InCollectionId)
+{
+	solid_checkf(InEntity.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: InEntity is invalid"));
+	solid_checkf(IsCollectionRegistered(InCollectionId),
+		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: CollectionId '%s' is not registered"),
+		*InCollectionId.NameId.ToString());
+
+	const FFlecsEntityHandle CollectionPrefab = GetPrefabById(InCollectionId);
+	solid_checkf(CollectionPrefab.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: CollectionId '%s' is not registered"),
+		*InCollectionId.NameId.ToString());
+
+	InEntity.RemovePair(flecs::IsA, CollectionPrefab);
+}
+
+void UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity,
+	const FFlecsCollectionReference& InCollectionReference)
+{
+	solid_checkf(InEntity.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: InEntity is invalid"));
+
+	const FFlecsEntityHandle CollectionPrefab = ResolveCollectionReference(InCollectionReference);
+	solid_checkf(CollectionPrefab.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: Failed to resolve collection reference"));
+
+	InEntity.RemovePair(flecs::IsA, CollectionPrefab);
+}
+
+void UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity,
+	const TSolidNotNull<const UFlecsCollectionDataAsset*> InAsset)
+{
+	RemoveCollectionFromEntity(InEntity, FFlecsCollectionReference::FromAsset(InAsset));
+}
+
+void UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity,
+	const TSubclassOf<UObject> InClass)
+{
+	solid_cassume(InClass);
+
+	solid_checkf(InClass->ImplementsInterface(UFlecsCollectionInterface::StaticClass()),
+		TEXT("Class %s does not implement FlecsCollectionInterface"), *InClass->GetName());
+
+	RemoveCollectionFromEntity(InEntity, FFlecsCollectionReference::FromClass(InClass));
+}
+
+bool UFlecsCollectionWorldSubsystem::HasCollection(const FFlecsEntityHandle& InEntity,
+                                                   const FFlecsCollectionId& InCollectionId) const
+{
+	const FFlecsEntityHandle CollectionPrefab = GetPrefabById(InCollectionId);
+	
+	solid_checkf(CollectionPrefab.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::HasCollection: CollectionId '%s' is not registered"),
+		*InCollectionId.NameId.ToString());
+
+	return InEntity.HasPair(flecs::IsA, CollectionPrefab);
+}
+
+bool UFlecsCollectionWorldSubsystem::IsCollectionRegistered(const FFlecsCollectionId& Id) const
+{
+	return RegisteredCollections.Contains(Id);
+}
+
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::EnsurePrefabShell(const FFlecsCollectionId& Id)
 {
 	if (const FFlecsEntityHandle* Existing = RegisteredCollections.Find(Id))

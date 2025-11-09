@@ -86,6 +86,37 @@ public:
 		
 		return RegisterCollectionClass(InClass, Builder);
 	}
+	
+	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const FFlecsCollectionId& InCollectionId);
+	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const FFlecsCollectionReference& InCollectionReference);
+	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const TSolidNotNull<const UFlecsCollectionDataAsset*> InAsset);
+	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const TSubclassOf<UObject> InClass);
+
+	template <Solid::TStaticClassConcept T>
+	FORCEINLINE void AddCollectionToEntity(const FFlecsEntityHandle& InEntity)
+	{
+		static_assert(TIsDerivedFrom<T, IFlecsCollectionInterface>::Value,
+		              "T must implement IFlecsCollectionInterface");
+		AddCollectionToEntity(InEntity, T::StaticClass());
+	}
+	
+	void RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity, const FFlecsCollectionId& InCollectionId);
+	void RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity, const FFlecsCollectionReference& InCollectionReference);
+	void RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity, const TSolidNotNull<const UFlecsCollectionDataAsset*> InAsset);
+	void RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity, const TSubclassOf<UObject> InClass);
+
+	template <Solid::TStaticClassConcept T>
+	FORCEINLINE void RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity)
+	{
+		static_assert(TIsDerivedFrom<T, IFlecsCollectionInterface>::Value,
+		              "T must implement IFlecsCollectionInterface");
+		RemoveCollectionFromEntity(InEntity, T::StaticClass());
+	}
+
+	
+	NO_DISCARD bool HasCollection(const FFlecsEntityHandle& InEntity, const FFlecsCollectionId& InCollectionId) const;
+
+	NO_DISCARD bool IsCollectionRegistered(const FFlecsCollectionId& Id) const;
 
 private:
 	// Ensure a shell entity exists for the collection (without any components, just the id)
@@ -106,6 +137,7 @@ private:
 	UPROPERTY()
 	TMap<FFlecsCollectionId, FFlecsEntityHandle> RegisteredCollections;
 
+	// @TODO: make use of this
 	// Recursion guard
 	TSet<FFlecsCollectionId> InProgressCollections;
 	
