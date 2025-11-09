@@ -57,6 +57,11 @@ TSolidNotNull<UFlecsWorldSubsystem*> UFlecsAbstractWorldSubsystem::GetFlecsWorld
 	return FlecsWorldSubsystemRef.Get();
 }
 
+bool UFlecsAbstractWorldSubsystem::IsFlecsWorldValid() const
+{
+	return FlecsWorldRef.IsValid();
+}
+
 UFlecsWorld* UFlecsAbstractWorldSubsystem::GetFlecsWorld() const
 {
 	return FlecsWorldRef.Get();

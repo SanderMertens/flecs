@@ -29,6 +29,8 @@ public:
 	NO_DISCARD UFlecsWorldSubsystem* GetFlecsWorldSubsystem() const;
 	NO_DISCARD TSolidNotNull<UFlecsWorldSubsystem*> GetFlecsWorldSubsystemChecked() const;
 
+	NO_DISCARD bool IsFlecsWorldValid() const;
+
 	// Will return null if the world isn't valid or initialized yet.
 	NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
 	NO_DISCARD TSolidNotNull<UFlecsWorld*> GetFlecsWorldChecked() const;
