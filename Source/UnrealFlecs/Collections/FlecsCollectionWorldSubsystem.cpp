@@ -50,7 +50,7 @@ void UFlecsCollectionWorldSubsystem::Deinitialize()
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionAsset(const UFlecsCollectionDataAsset* InAsset)
 {
-	solid_check(InAsset);
+	solid_cassume(InAsset);
 
 	const FFlecsCollectionId Id = FFlecsCollectionId(InAsset->GetFName());
 	if (const FFlecsEntityHandle* Existing = RegisteredCollections.Find(Id))
@@ -170,7 +170,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionInterfaceCl
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByAsset(const UFlecsCollectionDataAsset* Asset) const
 {
-	solid_check(Asset);
+	solid_cassume(Asset);
 	
 	const FFlecsCollectionId Id = FFlecsCollectionId(Asset->GetFName());
 	return GetPrefabById(Id);
@@ -188,7 +188,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabById(const FFlecsCol
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByClass(const TSubclassOf<UObject> InClass) const
 {
-	solid_check(InClass);
+	solid_cassume(InClass);
 	
 	const FFlecsCollectionId Id = FFlecsCollectionId(InClass->GetFName());
 	return GetPrefabById(Id);
