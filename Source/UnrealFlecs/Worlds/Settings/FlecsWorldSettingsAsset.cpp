@@ -17,6 +17,7 @@
 UFlecsWorldSettingsAsset::UFlecsWorldSettingsAsset()
 {
 	WorldSettings.WorldName = "DefaultFlecsWorld";
+	WorldSettings.GameLoops.Add(NewObject<UFlecsDefaultGameLoop>(this));
 }
 
 void UFlecsWorldSettingsAsset::PostLoad()
