@@ -93,6 +93,7 @@ bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) cons
 
 #endif // WITH_EDITOR
 
+// Currently unused, but may be useful in the future
 void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 {
 	CreateActorEntity(InWorld);

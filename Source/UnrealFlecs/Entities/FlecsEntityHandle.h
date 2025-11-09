@@ -26,27 +26,6 @@
 struct FFlecsEntityHandle;
 class UFlecsWorld;
 
-#define DECLARE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION(Name) \
-	extern Unreal::Flecs::FEntityNetSerializeFunction Name;
-
-#define DEFINE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION(Name, Lambda) \
-	Unreal::Flecs::FEntityNetSerializeFunction Name = Lambda;
-
-namespace Unreal::Flecs
-{
-	/** @TODO: Documentation
-	 * Global NetSerialize function pointer(also there is an option for a local override using the FFlecs
-	 */
-	
-	using FEntityNetSerializeFunction
-		= std::function<bool(FFlecsEntityHandle&, TSolidNotNull<UFlecsWorld*>, FArchive&, UPackageMap*, bool&)>;
-
-	UNREALFLECS_API DECLARE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION(EmptyNetSerializeFunction);
-
-	UNREALFLECS_API extern Unreal::Flecs::FEntityNetSerializeFunction* GNetSerializeFunctionPtr;
-	
-} // namespace Unreal::Flecs
-
 /**
  * @struct FFlecsEntityHandle
  *
