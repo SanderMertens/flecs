@@ -14,8 +14,6 @@
 
 /* World level allocators are for operations that are not multithreaded */
 typedef struct ecs_world_allocators_t {
-    ecs_map_params_t ptr;
-    ecs_map_params_t query_table_list;
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
     ecs_block_allocator_t component_record;
@@ -90,11 +88,14 @@ struct ecs_world_t {
     ecs_map_t id_index_hi;           /* map<id, ecs_component_record_t*> */
     ecs_map_t type_info;             /* map<type_id, type_info_t> */
 
-    /* A refcount per queried for component that ensures that applications 
-     * cannot modify traits after a component has been queried for. Check is
-     * only enabled in debug mode. */
 #ifdef FLECS_DEBUG
+    /* Locked components. When a component is queried for, it is no longer 
+     * possible to change traits and/or to delete the component. */
     ecs_map_t locked_components;     /* map<id_t, int64_t> */
+
+    /* Locked entities. This is used for queried for pair targets. It is 
+     * possible to add traits, but entities cannot be deleted. */
+    ecs_map_t locked_entities;     /* map<id_t, int64_t> */
 #endif
 
     /* -- Cached handle to id records -- */
@@ -303,13 +304,19 @@ void flecs_component_unlock(
     ecs_world_t *world,
     ecs_id_t component);
 
-bool flecs_component_is_locked(
+bool flecs_component_is_trait_locked(
     ecs_world_t *world,
     ecs_id_t component);
+
+bool flecs_component_is_delete_locked(
+    ecs_world_t *world,
+    ecs_id_t component);
+
 #else
 #define flecs_component_lock(world, component) (void)world; (void)component
 #define flecs_component_unlock(world, component) (void)world; (void)component
-#define flecs_component_is_locked(world, component) (true)
+#define flecs_component_is_trait_locked(world, component) (false)
+#define flecs_component_is_delete_locked(world, component) (false)
 #endif
 
 /* Convenience macro's for world allocator */
@@ -337,5 +344,39 @@ bool flecs_component_is_locked(
     flecs_dup(&world->allocator, size, ptr)
 #define flecs_wdup_n(world, T, count, ptr)\
     flecs_dup_n(&world->allocator, T, count, ptr)
+
+/* Convenience macro that iterates over all component records in the world */
+#define FLECS_EACH_COMPONENT_RECORD(cr, ...)\
+    for (int32_t _i = 0; _i < FLECS_HI_ID_RECORD_ID; _i++) {\
+        ecs_component_record_t *cr = world->id_index_lo[_i];\
+        if (cr) {\
+            __VA_ARGS__\
+        }\
+    }\
+    {\
+        ecs_map_iter_t _it = ecs_map_iter(&world->id_index_hi);\
+        while (ecs_map_next(&_it)) {\
+            ecs_component_record_t *cr = ecs_map_ptr(&_it);\
+            __VA_ARGS__\
+        }\
+    }
+
+/* Convenience macro that iterates over all queries in the world */
+#define FLECS_EACH_QUERY(query, ...)\
+    {\
+        ecs_iter_t _it = ecs_each_pair(world, ecs_id(EcsPoly), EcsQuery);\
+        while (ecs_each_next(&_it)) {\
+            EcsPoly *queries = ecs_field(&_it, EcsPoly, 0);\
+            for (int32_t _i = 0; _i < _it.count; _i++) {\
+                ecs_query_t *query = queries[_i].poly;\
+                if (!query) {\
+                    continue;\
+                }\
+                flecs_poly_assert(query, ecs_query_t);\
+                ecs_assert(query->entity != 0, ECS_INTERNAL_ERROR, NULL);\
+                __VA_ARGS__\
+            }\
+        }\
+    }
 
 #endif

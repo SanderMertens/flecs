@@ -1634,7 +1634,7 @@ int32_t flecs_table_grow_data(
 
     /* Mark columns as potentially reallocated */
     flecs_increment_table_column_version(world, table);
-    
+
     ecs_os_perf_trace_pop("flecs.table.grow_data");
 
     /* Return index of first added entity */
@@ -2120,6 +2120,8 @@ bool flecs_table_shrink(
 
     flecs_increment_table_column_version(world, table);
 
+    flecs_table_mark_table_dirty(world, table, 0);
+
     ecs_os_perf_trace_pop("flecs.table.shrink");
     
     flecs_table_check_sanity(table);
@@ -2464,7 +2466,7 @@ void flecs_table_merge(
         flecs_table_traversable_add(src_table, -src_table->_->traversable_count);
         ecs_assert(src_table->_->traversable_count == 0, ECS_INTERNAL_ERROR, NULL);
     }
-    
+
     ecs_os_perf_trace_pop("flecs.table.merge");
 
     flecs_table_check_sanity(src_table);

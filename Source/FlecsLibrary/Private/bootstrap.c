@@ -202,7 +202,7 @@ void flecs_register_flag_for_trait(
             }
 
             if (!(world->flags & EcsWorldInit) && !flecs_trait_can_add_after_query(trait)) {
-                ecs_check(!flecs_component_is_locked(world, e), ECS_INVALID_OPERATION, 
+                ecs_check(!flecs_component_is_trait_locked(world, e), ECS_INVALID_OPERATION, 
                     "cannot set '%s' trait for component '%s' because it is already"
                         " queried for (apply traits before creating queries)",
                             flecs_errstr(ecs_get_path(world, trait)),
@@ -254,7 +254,7 @@ void flecs_register_final(ecs_iter_t *it) {
                     flecs_errstr(ecs_get_path(world, e)));
         }
 
-        ecs_check(!flecs_component_is_locked(world, e), ECS_INVALID_OPERATION, "cannot change "
+        ecs_check(!flecs_component_is_trait_locked(world, e), ECS_INVALID_OPERATION, "cannot change "
             "trait 'Final' for '%s': already queried for (apply traits "
             "before creating queries)", 
                 flecs_errstr(ecs_get_path(world, e)));
@@ -672,16 +672,16 @@ ecs_table_t* flecs_bootstrap_component_table(
 {
     /* Before creating table, manually set flags for ChildOf/Identifier, as this
      * can no longer be done after they are in use. */
-    ecs_component_record_t *cr = flecs_components_ensure(world, EcsChildOf);
-    cr->flags |= EcsIdOnDeleteTargetDelete | EcsIdOnInstantiateDontInherit |
-        EcsIdTraversable | EcsIdPairIsTag;
 
     /* Initialize id records cached on world */
     world->cr_childof_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, EcsWildcard));
     world->cr_childof_wildcard->flags |= EcsIdOnDeleteTargetDelete | 
-        EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdPairIsTag | EcsIdExclusive;
-    cr = flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsWildcard));
+        EcsIdOnInstantiateDontInherit | EcsIdTraversable | EcsIdPairIsTag | 
+        EcsIdExclusive;
+
+    ecs_component_record_t *cr = flecs_components_ensure(
+        world, ecs_pair_t(EcsIdentifier, EcsWildcard));
     cr->flags |= EcsIdOnInstantiateDontInherit;
     world->cr_identifier_name = 
         flecs_components_ensure(world, ecs_pair_t(EcsIdentifier, EcsName));

@@ -429,7 +429,7 @@ ecs_graph_edge_t* flecs_table_ensure_hi_edge(
     
     if (!edges->hi) {
         edges->hi = flecs_alloc_t(&world->allocator, ecs_map_t);
-        ecs_map_init_w_params(edges->hi, &world->allocators.ptr);
+        ecs_map_init(edges->hi, &world->allocator);
     }
 
     ecs_graph_edge_t **r = ecs_map_ensure_ref(edges->hi, ecs_graph_edge_t, id);

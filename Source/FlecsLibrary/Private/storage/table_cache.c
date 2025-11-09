@@ -82,7 +82,7 @@ void ecs_table_cache_init(
     ecs_table_cache_t *cache)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_map_init_w_params(&cache->index, &world->allocators.ptr);
+    ecs_map_init(&cache->index, &world->allocator);
 }
 
 void ecs_table_cache_fini(

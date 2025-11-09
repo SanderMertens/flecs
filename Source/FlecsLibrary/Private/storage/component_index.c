@@ -107,7 +107,9 @@ void flecs_remove_id_elem(
     } else {
         ecs_assert(ECS_PAIR_FIRST(wildcard) == EcsWildcard, 
             ECS_INTERNAL_ERROR, NULL);
-        flecs_component_elem_remove(cr, &pair->second);
+        if (pair->second.prev) {
+            flecs_component_elem_remove(cr, &pair->second);
+        }
 
         if (cr->flags & EcsIdTraversable) {
             flecs_component_elem_remove(cr, &pair->trav);
@@ -491,7 +493,7 @@ void flecs_component_record_check_constraints(
                             flecs_errstr_1(ecs_get_path(world, tgt)));
                 }
 
-                if (flecs_component_is_locked(world, tgt)) {
+                if (flecs_component_is_trait_locked(world, tgt)) {
                     if (!ecs_has_id(world, tgt, EcsInheritable) && !ecs_has_pair(world, tgt, EcsIsA, EcsWildcard)) {
                         ecs_throw(ECS_INVALID_OPERATION, 
                             "cannot add '(IsA, %s)': '%s' is already queried for",
@@ -588,8 +590,10 @@ ecs_component_record_t* flecs_component_new(
              * or all objects for a relationship. */
             flecs_insert_id_elem(world, cr, ecs_pair(rel, EcsWildcard), cr_r);
 
-            cr_t = flecs_components_ensure(world, ecs_pair(EcsWildcard, tgt));
-            flecs_insert_id_elem(world, cr, ecs_pair(EcsWildcard, tgt), cr_t);
+            if (tgt) {
+                cr_t = flecs_components_ensure(world, ecs_pair(EcsWildcard, tgt));
+                flecs_insert_id_elem(world, cr, ecs_pair(EcsWildcard, tgt), cr_t);
+            }
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
@@ -682,13 +686,6 @@ void flecs_component_free(
     ecs_id_t id = cr->id;
 
     flecs_component_assert_empty(cr);
-
-    /* Id is still in use by a query */
-    ecs_assert((world->flags & EcsWorldQuit) || 
-            !flecs_component_is_locked(world, id), 
-        ECS_INVALID_OPERATION, 
-        "cannot delete component '%s' as it is still in use by queries",
-            flecs_errstr(ecs_id_str(world, id)));
 
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
