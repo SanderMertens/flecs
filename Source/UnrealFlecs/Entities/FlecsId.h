@@ -135,6 +135,12 @@ public:
         return Id;
     }
 
+    NO_DISCARD FORCEINLINE TTuple<FFlecsId, FFlecsId> GetPairElements() const
+    {
+        solid_checkf(IsPair(), TEXT("Id is not a pair."));
+        return TTuple<FFlecsId, FFlecsId>(GetFirst(), GetSecond());
+    }
+
     FORCEINLINE operator flecs::id_t() const
     {
         return GetId();
