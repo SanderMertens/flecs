@@ -18,6 +18,7 @@ class UNREALFLECS_API UFlecsWorldSettingsAsset : public UDataAsset
 
 public:
 	UFlecsWorldSettingsAsset();
+	UFlecsWorldSettingsAsset(const FObjectInitializer& ObjectInitializer);
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ShowOnlyInnerProperties))
 	FFlecsWorldSettingsInfo WorldSettings;

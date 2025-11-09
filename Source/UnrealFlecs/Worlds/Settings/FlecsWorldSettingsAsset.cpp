@@ -16,8 +16,12 @@
 
 UFlecsWorldSettingsAsset::UFlecsWorldSettingsAsset()
 {
+}
+
+UFlecsWorldSettingsAsset::UFlecsWorldSettingsAsset(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
 	WorldSettings.WorldName = "DefaultFlecsWorld";
-	WorldSettings.GameLoops.Add(NewObject<UFlecsDefaultGameLoop>(this));
 }
 
 void UFlecsWorldSettingsAsset::PostLoad()
