@@ -26,7 +26,7 @@ void UUnrealFlecsObject::InitializeFlecsObject(const TSolidNotNull<UFlecsWorld*>
 	FlecsWorld = InFlecsWorld;
 
 	ObjectEntityHandle = CreateObjectEntity();
-	ObjectEntityHandle.SetPairFirst<FFlecsUObjectComponent, FFlecsUObjectTag>(FFlecsUObjectComponent{ this });
+	ObjectEntityHandle.SetPair<FFlecsUObjectComponent, FFlecsUObjectTag>(FFlecsUObjectComponent{ this });
 
 	const TSolidNotNull<UFlecsWorldSubsystem*> FlecsWorldSubsystem = FlecsWorld->GetContext();
 

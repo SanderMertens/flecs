@@ -19,7 +19,7 @@ void FFlecsRecordPair::AddToEntity(const FFlecsEntityHandle& InEntityHandle) con
 						{
 							if (PairValueType == EFlecsValuePairType::First)
 							{
-								InEntityHandle.SetPairFirst(First.PairScriptStruct.GetScriptStruct(),
+								InEntityHandle.SetPair(First.PairScriptStruct.GetScriptStruct(),
 								                            First.PairScriptStruct.GetMemory(),
 								                            Second.PairScriptStruct.GetScriptStruct());
 							}
@@ -54,9 +54,9 @@ void FFlecsRecordPair::AddToEntity(const FFlecsEntityHandle& InEntityHandle) con
 				{
 					case EFlecsPairNodeType::ScriptStruct:
 						{
-							InEntityHandle.SetPairSecond(First.EntityHandle,
-							                             Second.PairScriptStruct.GetScriptStruct(),
-							                             Second.PairScriptStruct.GetMemory());
+							InEntityHandle.SetPair(First.EntityHandle,
+													Second.PairScriptStruct.GetMemory(),
+							                             Second.PairScriptStruct.GetScriptStruct());
 						}
 						break;
 					case EFlecsPairNodeType::EntityHandle:
@@ -78,9 +78,9 @@ void FFlecsRecordPair::AddToEntity(const FFlecsEntityHandle& InEntityHandle) con
 				{
 					case EFlecsPairNodeType::ScriptStruct:
 						{
-							InEntityHandle.SetPairSecond(First.GameplayTag,
-							                             Second.PairScriptStruct.GetScriptStruct(),
-							                             Second.PairScriptStruct.GetMemory());
+							InEntityHandle.SetPair(First.GameplayTag,
+													Second.PairScriptStruct.GetMemory(),
+							                             Second.PairScriptStruct.GetScriptStruct());
 						}
 						break;
 					case EFlecsPairNodeType::EntityHandle:

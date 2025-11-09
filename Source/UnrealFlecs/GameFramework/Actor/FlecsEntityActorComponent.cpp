@@ -107,7 +107,7 @@ void UFlecsEntityActorComponent::CreateActorEntity(const TSolidNotNull<const UFl
 	EntityHandle.SetName(GetOwner()->GetName());
 
 	// @TODO: Should this be the Component or the Owner?
-	EntityHandle.SetPairFirst<FFlecsUObjectComponent, FFlecsActorTag>(FFlecsUObjectComponent(GetOwner()));
+	EntityHandle.SetPair<FFlecsUObjectComponent, FFlecsActorTag>(FFlecsUObjectComponent(GetOwner()));
 
 	if (EntityHandle.HasName())
 	{

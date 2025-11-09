@@ -666,32 +666,23 @@ public:
 	// @TODO: add r-value set apis for pairs
 	
 	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TFirst, TActual>)
-	SOLID_INLINE const FSelfType& SetPairFirst(const TActual& InValue) const
+	SOLID_INLINE const FSelfType& SetPair(const TActual& InValue) const
 	{
 		GetEntity().set<TFirst, TSecond>(InValue);
 		return *this;
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TSecond, TActual>)
-	SOLID_INLINE const FSelfType& SetPairSecond(const TActual& InValue) const
-	{
-		GetEntity().set_second<TFirst, TSecond>(InValue);
-		return *this;
-	}
-
 	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
-	SOLID_INLINE const FSelfType& SetPairFirst(const TSecond& InSecondType, const TFirst& InValue) const
+	SOLID_INLINE const FSelfType& SetPair(const TSecond& InSecondType, const TFirst& InValue) const
 	{
 		GetEntity().set<TFirst>(FFlecsEntityHandle::GetInputId(*this, InSecondType), InValue);
 		return *this;
 	}
 
-	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First,
+	// @TODO: handle PairIsTag
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept First,
 		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
-	SOLID_INLINE const FSelfType& SetPairFirst(const First& InFirstTypeValue, const void* InValue,
-		const Second& InSecondTypeValue) const
+	SOLID_INLINE const FSelfType& SetPair(const First& InFirstTypeValue, const void* InValue, const Second& InSecondTypeValue) const
 	{
 		if (!HasPair(InFirstTypeValue, InSecondTypeValue))
 		{
@@ -706,63 +697,30 @@ public:
 		return *this;
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = TSecond>
-	SOLID_INLINE const FSelfType& SetPairSecond(const TActual& InSecond) const
-	{
-		GetEntity().set_second<TFirst, TSecond>(InSecond);
-		return *this;
-	}
-
-	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
-	SOLID_INLINE const FSelfType& SetPairSecond(const TFirst& InFirstType, const TSecond& InValue) const
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept First, typename TActual = TSecond>
+	SOLID_INLINE const FSelfType& SetPairSecond(const First& InFirstType, const TActual& InValue) const
 	{
 		GetEntity().set_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirstType), InValue);
 		return *this;
 	}
 
-	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst,
-		Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept TSecond>
-	SOLID_INLINE const FSelfType& SetPairSecond(const TFirst& InFirstTypeValue,
-		const TSecond& InSecondTypeValue, const void* InValue) const
-	{
-		if (!HasPair(InFirstTypeValue, InSecondTypeValue))
-		{
-			AddPair(InFirstTypeValue, InSecondTypeValue);
-		}
-
-		Set(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue), FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
-				InSecondTypeValue->GetStructureSize(),
-				InValue);
-		return *this;
-	}
-
 	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TFirst, TActual>)
-	SOLID_INLINE const FSelfType& AssignPairFirst(const TActual& InValue) const
+	SOLID_INLINE const FSelfType& AssignPair(const TActual& InValue) const
 	{
 		GetEntity().assign<TFirst, TSecond>(InValue);
 		return *this;
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TSecond, TActual>)
-	SOLID_INLINE const FSelfType& AssignPairSecond(const TActual& InValue) const
-	{
-		GetEntity().assign_second<TFirst, TSecond>(InValue);
-		return *this;
-	}
-
 	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
-	SOLID_INLINE const FSelfType& AssignPairFirst(const TSecond& InSecondType, const TFirst& InValue) const
+	SOLID_INLINE const FSelfType& AssignPair(const TSecond& InSecondType, const TFirst& InValue) const
 	{
 		GetEntity().assign<TFirst>(FFlecsEntityHandle::GetInputId(*this, InSecondType), InValue);
 		return *this;
 	}
 
-	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First,
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept First,
 		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
-	SOLID_INLINE const FSelfType& AssignPairFirst(const First& InFirstTypeValue, const void* InValue,
-		const Second& InSecondTypeValue) const
+	SOLID_INLINE const FSelfType& AssignPair(const First& InFirstTypeValue, const void* InValue, const Second& InSecondTypeValue) const
 	{
 		solid_checkf(HasPair(InFirstTypeValue, InSecondTypeValue), 
 			TEXT("Entity does not have pair"));
@@ -773,31 +731,10 @@ public:
 		return *this;
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = TSecond>
-	SOLID_INLINE const FSelfType& AssignPairSecond(const TActual& InSecond) const
-	{
-		GetEntity().assign_second<TFirst, TSecond>(InSecond);
-		return *this;
-	}
-
 	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
 	SOLID_INLINE const FSelfType& AssignPairSecond(const TFirst& InFirstType, const TSecond& InValue) const
 	{
 		GetEntity().assign_second<TSecond>(FFlecsEntityHandle::GetInputId(*this, InFirstType), InValue);
-		return *this;
-	}
-
-	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst,
-		Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept TSecond>
-	SOLID_INLINE const FSelfType& AssignPairSecond(const TFirst& InFirstTypeValue,
-		const TSecond& InSecondTypeValue, const void* InValue) const
-	{
-		solid_checkf(HasPair(InFirstTypeValue, InSecondTypeValue),
-			TEXT("Entity does not have pair"));
-
-		Assign(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue), FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
-				InSecondTypeValue->GetStructureSize(),
-				InValue);
 		return *this;
 	}
 	
