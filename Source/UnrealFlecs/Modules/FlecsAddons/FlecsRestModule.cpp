@@ -43,14 +43,14 @@ void UFlecsRestModule::InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, con
 		solid_checkf(RestEntity.IsValid(),
 			TEXT("Flecs REST module failed to create REST singleton entity on port %d."), RestPort);
 
-		#ifdef FLECS_STATS
+	#ifdef FLECS_STATS
 
 		if (bImportStats)
 		{
 			StatsEntity = InWorld->ImportFlecsModule<flecs::stats>();
 		}
 
-		#endif // #ifdef FLECS_STATS
+	#endif // #ifdef FLECS_STATS
 
 #endif // #ifdef FLECS_REST
 	});
