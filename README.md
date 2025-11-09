@@ -21,6 +21,8 @@ Only tested on Version: UE 5.7 MSVC/partially Clang
 Universalized Component Type Registration CPP <--> Meta Type, Works with USTRUCT, UENUM, and UCLASS \
 OS-API implementation for Unreal \
 Tracked ObjectPtr References in Components (needs testing)
+Module Implementation with Hard and Soft Dependencies
+Modular Game Loop Implementation to allow for any pipeline setup (also works with module dependencies)
 
 
 ## Modifications to Flecs:
