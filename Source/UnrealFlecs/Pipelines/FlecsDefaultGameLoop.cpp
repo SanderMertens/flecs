@@ -50,6 +50,8 @@ void UFlecsDefaultGameLoop::InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWor
 		.with<flecs::SystemPriority>()
 		#endif // FLECS_ENABLE_SYSTEM_PRIORITY
 		.without<FFlecsOutsideMainLoopTag>()
+		.without<FFlecsOutsideMainLoopTag>().up(flecs::DependsOn)
+		.without<FFlecsOutsideMainLoopTag>().up(flecs::ChildOf)
 		#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
 		.order_by<flecs::SystemPriority>(flecs_priority_compare)
 		#else // FLECS_ENABLE_SYSTEM_PRIORITY
