@@ -262,6 +262,7 @@ public:
 	SOLID_INLINE const FSelfType& Assign(const T& InTypeValue, const void* InValue) const
 	{
 		const FFlecsId InId = FFlecsEntityHandle::GetInputId(*this, InTypeValue);
+		
 		solid_checkf(Has(InId),
 			TEXT("Entity does not have component with id %llu"), InId.GetId());
 		
@@ -344,10 +345,6 @@ public:
 	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept T>
 	NO_DISCARD SOLID_INLINE flecs::untyped_ref GetFlecsRef(const T& InTypeValue) const
 	{
-		solid_checkf(Has(FFlecsEntityHandle::GetInputId(*this, InTypeValue)),
-			TEXT("Entity does not have component with id %llu"),
-			FFlecsEntityHandle::GetInputId(*this, InTypeValue).GetId());
-		
 		return GetEntity().get_ref(FFlecsEntityHandle::GetInputId(*this, InTypeValue));
 	}
 
@@ -434,6 +431,12 @@ public:
 		return *this;
 	}
 
+	SOLID_INLINE const FSelfType& SetName(const FAnsiStringView InName) const
+	{
+		GetEntity().set_name(InName.GetData());
+		return *this;
+	}
+
 	SOLID_INLINE const FSelfType& ClearName() const
 	{
 		GetEntity().set_name(nullptr);
@@ -449,6 +452,7 @@ public:
 		return *this;
 	}
 
+	// @TODO: make a variation for passing in an unreal color type?
 	SOLID_INLINE const FSelfType& SetDocColor(const FString& Link) const
 	{
 		GetEntity().set_doc_color(StringCast<char>(*Link).Get());
