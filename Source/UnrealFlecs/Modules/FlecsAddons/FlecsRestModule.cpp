@@ -5,10 +5,15 @@
 
 #include "Engine/EngineBaseTypes.h"
 #include "Engine/World.h"
+#include "Ticker/FlecsTickerGameLoop.h"
 
 #include "Worlds/FlecsWorld.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsRestModule)
+
+UFlecsRestModule::UFlecsRestModule()
+{
+}
 
 void UFlecsRestModule::InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity)
 {

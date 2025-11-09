@@ -10,6 +10,7 @@
 
 #include "EngineUtils.h"
 #include "UObject/Object.h"
+#include "UObject/WeakObjectPtrTemplates.h"
 #include "Tests/AutomationCommon.h"
 #include "Tests/AutomationEditorCommon.h"
 
@@ -32,6 +33,7 @@ public:
 	UFlecsWorldSubsystem* WorldSubsystem = nullptr;
 	UFlecsWorld* FlecsWorld = nullptr;
 
+	// @TODO: add test support for multiple game loops
 	void SetUp(TScriptInterface<IFlecsGameLoopInterface> InGameLoopInterface = nullptr,
 	           const TArray<UObject*>& InModules = {})
 	{
@@ -48,10 +50,12 @@ public:
 			InGameLoopInterface = NewObject<UFlecsDefaultGameLoop>(WorldSubsystem);
 		}
 
+		UObject* GameLoopObject = InGameLoopInterface.GetObject();
+
 		// Create world settings
 		FFlecsWorldSettingsInfo WorldSettings;
 		WorldSettings.WorldName = TEXT("TestWorld");
-		WorldSettings.GameLoop = InGameLoopInterface.GetObject();
+		WorldSettings.GameLoops.Add(GameLoopObject);
 		WorldSettings.Modules = InModules;
 
 		FlecsWorld = WorldSubsystem->CreateWorld(TEXT("TestWorld"), WorldSettings);

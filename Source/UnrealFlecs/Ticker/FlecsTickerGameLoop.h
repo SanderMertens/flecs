@@ -9,6 +9,7 @@
 #include "Systems/FlecsSystem.h"
 #include "FlecsTickerGameLoop.generated.h"
 
+// This should not be used as the main pipeline in a world
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsTickerGameLoop : public UFlecsGameLoopObject
 {
@@ -16,8 +17,10 @@ class UNREALFLECS_API UFlecsTickerGameLoop : public UFlecsGameLoopObject
 
 public:
 
-	virtual void InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorld) override;
+	virtual void InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InGameLoopEntity) override;
 	virtual bool Progress(double DeltaTime, TSolidNotNull<UFlecsWorld*> InWorld) override;
+
+	virtual bool IsMainLoop() const override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ticker",
 		meta = (Units = "Hz", ClampMin = "1", ClampMax = "240")) //EditCondition = "!bUsePhysicsTick"))
@@ -28,12 +31,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Ticker")
 	FORCEINLINE void SetTickerRate(const int64 InRate) { TickerRate = InRate; }
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | Ticker")
-	FORCEINLINE FFlecsSystem GetTickerSystem() const { return TickerSystem; }
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | Ticker")
-	FORCEINLINE FFlecsEntityHandle GetTickerSource() const { return TickerSystem.GetEntity(); }
 	
 	UPROPERTY()
 	double TickerAccumulator = 0.0;
@@ -43,12 +40,6 @@ public:
 
 	// This is a Sparse component, so the memory is stable
 	FFlecsTickerSingletonComponent* TickerComponentPtr = nullptr;
-
-	UPROPERTY()
-	FFlecsSystem TickerSystem;
-
-	UPROPERTY()
-	FFlecsEntityHandle MainPipeline;
 
 	UPROPERTY()
 	FFlecsEntityHandle TickerPipeline;

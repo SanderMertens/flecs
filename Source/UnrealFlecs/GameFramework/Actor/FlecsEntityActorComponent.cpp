@@ -104,6 +104,7 @@ void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 void UFlecsEntityActorComponent::CreateActorEntity(const TSolidNotNull<const UFlecsWorld*> InWorld)
 {
 	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord);
+	EntityHandle.SetName(GetOwner()->GetName());
 
 	// @TODO: Should this be the Component or the Owner?
 	EntityHandle.SetPairFirst<FFlecsUObjectComponent, FFlecsActorTag>(FFlecsUObjectComponent(GetOwner()));

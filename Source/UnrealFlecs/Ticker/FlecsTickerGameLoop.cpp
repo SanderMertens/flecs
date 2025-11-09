@@ -2,8 +2,8 @@
 
 #include "FlecsTickerGameLoop.h"
 
-#include "FlecsTickerDefaultEntities.h"
 #include "Worlds/FlecsWorld.h"
+#include "FlecsFixedTickSystemTag.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsTickerGameLoop)
 
@@ -49,35 +49,20 @@ static NO_DISCARD FORCEINLINE int flecs_priority_compare(
 
 #endif // FLECS_ENABLE_SYSTEM_PRIORITY
 
-void UFlecsTickerGameLoop::InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorld)
+void UFlecsTickerGameLoop::InitializeGameLoop(const TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InGameLoopEntity)
 {
 	InWorld->RegisterComponentType<FFlecsTickerSingletonComponent>();
+	InWorld->RegisterComponentType<FFlecsFixedTickSystemTag>();
+	
 	InWorld->AddSingleton<FFlecsTickerSingletonComponent>();
 
 	TickerComponentPtr = InWorld->TryGetMutSingleton<FFlecsTickerSingletonComponent>();
-	solid_check(TickerComponentPtr);
-
-	MainPipeline = InWorld->CreatePipeline()
-		.with(flecs::System)
-		.with(flecs::Phase).cascade(flecs::DependsOn)
-		.without(flecs::Disabled).up(flecs::DependsOn)
-		.without(flecs::Disabled).up(flecs::ChildOf)
-		#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
-		.with<flecs::SystemPriority>()
-		#endif // FLECS_ENABLE_SYSTEM_PRIORITY
-		.without(FlecsFixedTick)
-		#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
-		.order_by<flecs::SystemPriority>(flecs_priority_compare)
-		#else // FLECS_ENABLE_SYSTEM_PRIORITY
-		.order_by(flecs_entity_compare)
-		#endif // FLECS_ENABLE_SYSTEM_PRIORITY
-		.build()
-		.set_name("MainPipeline");
-
+	solid_cassume(TickerComponentPtr);
+	
 	TickerPipeline = InWorld->CreatePipeline()
 		.with(flecs::System)
 		.with(flecs::Phase).cascade(flecs::DependsOn)
-		.with(FlecsFixedTick)
+		.with<FFlecsFixedTickSystemTag>()
 		.without(flecs::Disabled).up(flecs::DependsOn)
 		.without(flecs::Disabled).up(flecs::ChildOf)
 		#ifdef FLECS_ENABLE_SYSTEM_PRIORITY
@@ -88,8 +73,6 @@ void UFlecsTickerGameLoop::InitializeGameLoop(TSolidNotNull<UFlecsWorld*> InWorl
 		#endif // FLECS_ENABLE_SYSTEM_PRIORITY
 		.build()
 		.set_name("TickerPipeline");
-
-	InWorld->SetPipeline(MainPipeline);
 
 	TickerInterval = 1.0 / static_cast<double>(TickerRate);
 }
@@ -104,7 +87,7 @@ bool UFlecsTickerGameLoop::Progress(double DeltaTime, TSolidNotNull<UFlecsWorld*
 	{
 		SCOPE_CYCLE_COUNTER(STAT_FlecsTickerGameLoop_Progress_RunPipeline);
 
-		solid_check(TickerComponentPtr);
+		solid_cassume(TickerComponentPtr);
 		
 		TickerAccumulator -= TickerInterval;
 		
@@ -115,5 +98,10 @@ bool UFlecsTickerGameLoop::Progress(double DeltaTime, TSolidNotNull<UFlecsWorld*
 		InWorld->RunPipeline(TickerPipeline, TickerInterval);
 	}
 	
-	return InWorld->Progress();
+	return true;
+}
+
+bool UFlecsTickerGameLoop::IsMainLoop() const
+{
+	return false;
 }

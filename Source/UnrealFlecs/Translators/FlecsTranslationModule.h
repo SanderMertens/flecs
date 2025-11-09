@@ -13,10 +13,6 @@ class UNREALFLECS_API UFlecsTranslationModule final : public UFlecsModuleObject
 	GENERATED_BODY()
 
 public:
-	virtual FString GetModuleName_Implementation() const override
-	{
-		return "Flecs Translation Module";
-	}
 	
 	virtual void InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(TSolidNotNull<UFlecsWorld*> InWorld) override;

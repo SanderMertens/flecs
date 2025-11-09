@@ -23,10 +23,10 @@ struct UNREALFLECS_API FFlecsWorldSettingsInfo
 public:
     FFlecsWorldSettingsInfo() = default;
     
-    FORCEINLINE FFlecsWorldSettingsInfo(const FString& InWorldName, const TSolidNotNull<UObject*> InGameLoop,
+    FORCEINLINE FFlecsWorldSettingsInfo(const FString& InWorldName, const TArray<TObjectPtr<UObject>>& InGameLoop,
         const TArray<TObjectPtr<UObject>>& InModules = {})
         : WorldName(InWorldName)
-        , GameLoop(InGameLoop)
+        , GameLoops(InGameLoop)
         , Modules(InModules)
     {
     }
@@ -45,23 +45,23 @@ public:
     FString WorldName;
 
     UPROPERTY(EditAnywhere, Instanced, Category = "Game Loop",
-        meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsGameLoopInterface"))
-    TObjectPtr<UObject> GameLoop;
+        meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsGameLoopInterface", NoElementDuplicate))
+    TArray<TObjectPtr<UObject>> GameLoops;
 
     UPROPERTY(EditAnywhere, Instanced, Category = "Modules",
-        meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
+        meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsModuleInterface", NoElementDuplicate))
     TArray<TObjectPtr<UObject>> Modules;
 
-    UPROPERTY(EditAnywhere, Category = "Modules")
+    UPROPERTY(EditAnywhere, Category = "Modules", meta = (NoElementDuplicate))
     TArray<TObjectPtr<UFlecsModuleSetDataAsset>> ModuleSets;
 
 #if WITH_EDITORONLY_DATA
 
     UPROPERTY(EditAnywhere, Instanced, Category = "Editor Modules",
-         meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
+         meta = (ObjectMustImplement = "/Script/UnrealFlecs.FlecsModuleInterface", NoElementDuplicate))
     TArray<TObjectPtr<UObject>> EditorModules;
 
-    UPROPERTY(EditAnywhere, Category = "Editor Modules")
+    UPROPERTY(EditAnywhere, Category = "Editor Modules", meta = (NoElementDuplicate))
     TArray<TObjectPtr<UFlecsModuleSetDataAsset>> EditorModuleSets;
 
 #endif // #if WITH_EDITORONLY_DATA

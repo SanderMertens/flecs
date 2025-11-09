@@ -145,9 +145,26 @@ UFlecsWorld* UFlecsWorldSubsystem::CreateWorld(const FString& Name, const FFlecs
 	// @TODO: Update this to either the FlecsWorldObject or the UWorld
 	DefaultWorld->SetContext(this);
 
-	const TSolidNotNull<UObject*> GameLoop = DuplicateObject<UObject>(Settings.GameLoop, DefaultWorld);
+	TConstArrayView<TObjectPtr<UObject>> InGameLoops = Settings.GameLoops;
 
-	DefaultWorld->GameLoopInterface = GameLoop;
+	TArray<TScriptInterface<IFlecsGameLoopInterface>>  DuplicatedGameLoops;
+	DuplicatedGameLoops.Reserve(InGameLoops.Num());
+
+	for (TObjectPtr<UObject> GameLoop : InGameLoops)
+	{
+		solid_checkf(GameLoop->GetClass()->ImplementsInterface(UFlecsGameLoopInterface::StaticClass()),
+		             TEXT("GameLoop %s does not implement UFlecsGameLoopInterface"), *GameLoop->GetName());
+			
+		UObject* DuplicatedGameLoop = DuplicateObject<UObject>(GameLoop, DefaultWorld);
+		
+		solid_cassumef(IsValid(DuplicatedGameLoop),
+		                TEXT("Failed to duplicate GameLoop %s for world %s"),
+		                *GameLoop->GetName(), *DefaultWorld->GetName());
+		
+		DuplicatedGameLoops.Add(DuplicatedGameLoop);
+	}
+	
+	DefaultWorld->GameLoopInterfaces = DuplicatedGameLoops;
 
 	DefaultWorld->InitializeComponentPropertyObserver();
 	DefaultWorld->InitializeDefaultComponents();
@@ -201,6 +218,11 @@ UFlecsWorld* UFlecsWorldSubsystem::CreateWorld(const FString& Name, const FFlecs
 
 	DefaultWorld->WorldStart();
 
+	for (const TScriptInterface<IFlecsGameLoopInterface>& GameLoopInterface : DefaultWorld->GameLoopInterfaces)
+	{
+		GameLoopInterface->ImportModule(DefaultWorld->World);
+	}
+
 	for (TSolidNotNull<UObject*> Module : Settings.Modules)
 	{
 		solid_check(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()));
@@ -229,8 +251,8 @@ UFlecsWorld* UFlecsWorldSubsystem::CreateWorld(const FString& Name, const FFlecs
 	}
 
 #endif // WITH_EDITOR
-
-	DefaultWorld->GameLoopInterface->InitializeGameLoop(DefaultWorld);
+	
+	
 	DefaultWorld->bIsInitialized = true;
 	OnWorldCreatedDelegate.Broadcast(DefaultWorld);
 	Unreal::Flecs::GOnFlecsWorldInitialized.Broadcast(DefaultWorld);
@@ -240,6 +262,8 @@ UFlecsWorld* UFlecsWorldSubsystem::CreateWorld(const FString& Name, const FFlecs
 
 void UFlecsWorldSubsystem::SetWorld(UFlecsWorld* InWorld)
 {
+	solid_cassumef(InWorld, TEXT("InWorld cannot be null"));
+	
 	solid_checkf(IsValid(InWorld), TEXT("InWorld cannot be null"));
 	solid_checkf(!IsValid(DefaultWorld), TEXT("DefaultWorld is already set"));
 
@@ -253,7 +277,9 @@ UFlecsWorld* UFlecsWorldSubsystem::GetDefaultWorld() const
 
 TSolidNotNull<UFlecsWorld*> UFlecsWorldSubsystem::GetDefaultWorldChecked() const
 {
+	solid_cassumef(DefaultWorld, TEXT("Default Flecs world is not set"));
 	solid_checkf(IsValid(DefaultWorld), TEXT("Default Flecs world is not valid"));
+	
 	return DefaultWorld;
 }
 

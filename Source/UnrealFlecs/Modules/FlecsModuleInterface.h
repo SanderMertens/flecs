@@ -32,7 +32,8 @@ public:
 	void ImportModule(const flecs::world& InWorld);
 	
 	void DeinitializeModule_Internal();
-
+	
+	// When a module is initialized the world is not guranteed to be in a playable state yet, use WorldBeginPlay for that.
 	virtual void InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, const FFlecsEntityHandle& InModuleEntity);
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Flecs | Modules", meta = (DisplayName = "Initialize Module"))
@@ -51,6 +52,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Flecs | Modules")
 	FString GetModuleName() const;
 	virtual FString GetModuleName_Implementation() const;
+
+	virtual TArray<TSubclassOf<UObject>> GetHardDependentModuleClasses() const;
 
 	FORCEINLINE virtual FFlecsEntityHandle GetEntityHandle() const override final
 	{

@@ -9,6 +9,9 @@
 
 class UFlecsWorld;
 
+/**
+ * @brief 
+ */
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsModuleSetDataAsset : public UDataAsset
 {
@@ -20,5 +23,11 @@ public:
 	TArray<TObjectPtr<UObject>> Modules;
 	
 	void ImportModules(const TSolidNotNull<UFlecsWorld*> InWorld);
+
+	NO_DISCARD TArray<TSubclassOf<UObject>> GetModuleHardDependencies() const;
+
+#if WITH_EDITOR
+	virtual EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
+#endif // WITH_EDITOR
 	
 }; // class UFlecsModuleSetDataAsset

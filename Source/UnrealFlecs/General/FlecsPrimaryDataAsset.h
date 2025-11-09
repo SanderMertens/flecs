@@ -10,6 +10,7 @@
 
 #include "FlecsPrimaryDataAsset.generated.h"
 
+// Unused for now
 UCLASS(Abstract, BlueprintType)
 class UNREALFLECS_API UFlecsPrimaryDataAsset : public UPrimaryDataAsset
 {

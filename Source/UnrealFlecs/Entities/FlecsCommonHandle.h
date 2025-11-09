@@ -248,7 +248,9 @@ public:
 	 * @brief Get the UnrealFlecs world, will assert if the world is not an UnrealFlecs world.
 	 * @return The UnrealFlecs world.
 	 */
-	NO_DISCARD TSolidNotNull<UFlecsWorld*> GetFlecsWorld() const;
+	NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
+
+	NO_DISCARD TSolidNotNull<UFlecsWorld*> GetFlecsWorldChecked() const;
 	
 	/**
 	 * @brief Check if the world is an UnrealFlecs world.

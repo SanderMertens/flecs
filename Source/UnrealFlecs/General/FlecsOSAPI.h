@@ -158,7 +158,8 @@ struct FOSApiInitializer
 		UE_LOG(LogFlecsCore, Log, TEXT("Initializing Flecs OS API"));
 		InitializeOSAPI();
 	}
-	
+
+	// @TODO: do these need the if statements are can they be changed to cassumes
 	void InitializeOSAPI()
 	{
         ecs_os_set_api_defaults();

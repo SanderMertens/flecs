@@ -5,9 +5,12 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
-#include "FlecsQueryDefinition.h"
-#include "Entities/FlecsEntityHandle.h"
+
 #include "SolidMacros/Macros.h"
+
+#include "Entities/FlecsEntityHandle.h"
+#include "FlecsQueryDefinition.h"
+
 #include "FlecsQuery.generated.h"
 
 class UFlecsWorld;
@@ -96,7 +99,5 @@ public:
     flecs::query<> Query;
     
 }; // struct FFlecsQuery
-
-TYPENAME_OUTSIDE_TEMPLATE
 
 

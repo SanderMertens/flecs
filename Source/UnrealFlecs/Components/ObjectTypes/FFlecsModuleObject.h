@@ -5,15 +5,15 @@
 #include "CoreMinimal.h"
 #include "FFlecsUObjectTag.h"
 #include "Properties/FlecsComponentProperties.h"
-#include "FFlecsModuleComponentTag.generated.h"
+#include "FFlecsModuleObject.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsModuleComponentTag : public FFlecsUObjectTag
+struct UNREALFLECS_API FFlecsModuleObjectTarget : public FFlecsUObjectTag
 {
 	GENERATED_BODY()
-}; // struct FFlecsModuleComponentTag
+}; // struct FFlecsModuleObject
 
-REGISTER_FLECS_COMPONENT(FFlecsModuleComponentTag,
+REGISTER_FLECS_COMPONENT(FFlecsModuleObjectTarget,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
 	{
 		InComponent

@@ -8,6 +8,7 @@ DEFINE_LOG_CATEGORY(LogFlecsWorld);
 DEFINE_LOG_CATEGORY(LogFlecsSystem);
 DEFINE_LOG_CATEGORY(LogFlecsComponent);
 DEFINE_LOG_CATEGORY(LogFlecsEntity);
+DEFINE_LOG_CATEGORY(LogFlecsModule);
 
 
 

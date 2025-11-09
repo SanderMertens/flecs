@@ -33,7 +33,7 @@ struct FFlecsDependencyFunctionDefinition
 }; // struct FFlecsDependencyFunctionDefinition
 
 USTRUCT()
-struct UNREALFLECS_API FFlecsDependenciesComponent
+struct UNREALFLECS_API FFlecsSoftDependenciesComponent
 {
 	GENERATED_BODY()
 
@@ -42,7 +42,7 @@ public:
 	
 }; // struct FFlecsDependenciesComponent
 
-REGISTER_FLECS_COMPONENT(FFlecsDependenciesComponent,
+REGISTER_FLECS_COMPONENT(FFlecsSoftDependenciesComponent,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
 	{
 		InComponent
