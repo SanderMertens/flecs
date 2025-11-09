@@ -26,14 +26,14 @@ void UFlecsRestModule::InitializeModule(TSolidNotNull<UFlecsWorld*> InWorld, con
 		
 		const TSolidNotNull<const UWorld*> UnrealWorld = InWorld->GetWorld();
 
-		#if WITH_EDITOR
+	#if WITH_EDITOR
 		
 		if (UnrealWorld->GetNetMode() == NM_Client)
 		{
 			ClientPieInstanceOffset = static_cast<uint16>(UE::GetPlayInEditorID());
 		}
 		
-		#endif // WITH_EDITOR
+	#endif // WITH_EDITOR
 		
 		const uint16 RestPort = ECS_REST_DEFAULT_PORT + ClientPieInstanceOffset;
 
