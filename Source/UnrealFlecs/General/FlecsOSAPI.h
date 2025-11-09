@@ -16,6 +16,8 @@
 #include "HAL/RunnableThread.h"
 
 #include "SolidMacros/Macros.h"
+#include "Types/SolidNotNull.h"
+
 #include "Logs/FlecsCategories.h"
 
 DECLARE_STATS_GROUP(TEXT("FlecsOS"), STATGROUP_FlecsOS, STATCAT_Advanced);
@@ -158,8 +160,7 @@ struct FOSApiInitializer
 		UE_LOG(LogFlecsCore, Log, TEXT("Initializing Flecs OS API"));
 		InitializeOSAPI();
 	}
-
-	// @TODO: do these need the if statements are can they be changed to cassumes
+	
 	void InitializeOSAPI()
 	{
         ecs_os_set_api_defaults();
@@ -180,14 +181,17 @@ struct FOSApiInitializer
 
 		os_api.mutex_lock_ = [](ecs_os_mutex_t Mutex)
 		{
-			solid_checkf(Mutex, TEXT("Mutex is nullptr"));
-			FCriticalSection* MutexPtr = reinterpret_cast<FCriticalSection*>(Mutex);
+			solid_cassumef(Mutex, TEXT("Mutex is nullptr"));
+			
+			const TSolidNotNull<FCriticalSection*> MutexPtr = reinterpret_cast<FCriticalSection*>(Mutex);
 			MutexPtr->Lock();
 		};
 
 		os_api.mutex_unlock_ = [](ecs_os_mutex_t Mutex)
 		{
-			FCriticalSection* MutexPtr = reinterpret_cast<FCriticalSection*>(Mutex);
+			solid_cassumef(Mutex, TEXT("Mutex is nullptr"));
+			
+			const TSolidNotNull<FCriticalSection*> MutexPtr = reinterpret_cast<FCriticalSection*>(Mutex);
 			MutexPtr->Unlock();
 		};
 
@@ -200,42 +204,40 @@ struct FOSApiInitializer
 
 		os_api.cond_free_ = [](ecs_os_cond_t Cond)
 		{
-			if LIKELY_IF(Cond)
-			{
-				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
-				delete Wrapper->Mutex;
-				Wrapper->Mutex = nullptr;
-				delete Wrapper;
-			}
+			solid_cassumef(Cond, TEXT("Condition variable is nullptr"));
+			FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
+			
+			delete Wrapper->Mutex;
+			Wrapper->Mutex = nullptr;
+			
+			delete Wrapper;
 		};
 
 		os_api.cond_signal_ = [](ecs_os_cond_t Cond)
 		{
-			if LIKELY_IF(Cond)
-			{
-				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
-				Wrapper->ConditionalVariable.NotifyOne();
-			}
+			solid_cassumef(Cond, TEXT("Condition variable is nullptr"));
+			
+			const TSolidNotNull<FFlecsConditionWrapper*> Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
+			Wrapper->ConditionalVariable.NotifyOne();
 		};
 
 		os_api.cond_broadcast_ = [](ecs_os_cond_t Cond)
 		{
-			if LIKELY_IF(Cond)
-			{
-				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
-				Wrapper->ConditionalVariable.NotifyAll();
-			}
+			solid_cassumef(Cond, TEXT("Condition variable is nullptr"));
+			
+			const TSolidNotNull<FFlecsConditionWrapper*> Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
+			Wrapper->ConditionalVariable.NotifyAll();
 		};
 
 		os_api.cond_wait_ = [](ecs_os_cond_t Cond, ecs_os_mutex_t Mutex)
 		{
-			if LIKELY_IF(Cond && Mutex)
-			{
-				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
-				FCriticalSection* CritSection = reinterpret_cast<FCriticalSection*>(Mutex);
+			solid_cassumef(Cond, TEXT("Condition variable is nullptr"));
+			solid_cassumef(Mutex, TEXT("Mutex is nullptr"));
+			
+			const TSolidNotNull<FFlecsConditionWrapper*> Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
+			const TSolidNotNull<FCriticalSection*> CritSection = reinterpret_cast<FCriticalSection*>(Mutex);
 
-				Wrapper->ConditionalVariable.Wait(*CritSection);
-			}
+			Wrapper->ConditionalVariable.Wait(*CritSection);
 		};
 
 		os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Data) -> ecs_os_thread_t
