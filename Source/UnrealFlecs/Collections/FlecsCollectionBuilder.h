@@ -317,7 +317,7 @@ public:
 		return *this;
 	}
 
-	template <Solid::TClassConcept T>
+	template <Solid::TStaticClassConcept T>
 	FORCEINLINE FFlecsCollectionBuilder& ReferenceCollection()
 	{
 		FFlecsCollectionReference Ref;
