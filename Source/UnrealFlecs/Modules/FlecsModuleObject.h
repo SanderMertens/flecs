@@ -34,7 +34,7 @@ public:
 		return HasModuleDependency(T::StaticClass());
 	}
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Flecs Module")
 	bool HasHardDependency(TSubclassOf<UObject> ModuleClass) const;
 
 	// Should be called in the constructor
