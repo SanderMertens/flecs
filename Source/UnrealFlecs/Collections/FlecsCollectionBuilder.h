@@ -237,7 +237,7 @@ public:
 	template <Solid::TScriptStructConcept T>
 	FORCEINLINE FFlecsCollectionBuilder& Add()
 	{
-		solid_check(CollectionDefinition);
+		solid_cassume(CollectionDefinition);
 		
 		GetCollectionDefinition().Record.AddComponent<T>();
 		
@@ -247,7 +247,7 @@ public:
 	template <Solid::TScriptStructConcept T>
 	FORCEINLINE FFlecsCollectionBuilder& Add(const T& InComponent)
 	{
-		solid_check(CollectionDefinition);
+		solid_cassume(CollectionDefinition);
 		
 		GetCollectionDefinition().Record.AddComponent<T>(InComponent);
 		
@@ -256,7 +256,7 @@ public:
 
 	FORCEINLINE FFlecsCollectionBuilder& Add(const FFlecsId InId)
 	{
-		solid_check(CollectionDefinition);
+		solid_cassume(CollectionDefinition);
 		
 		GetCollectionDefinition().Record.AddComponent(InId);
 		
@@ -265,7 +265,7 @@ public:
 
 	FORCEINLINE FFlecsCollectionBuilder& Add(const FGameplayTag& InGameplayTag)
 	{
-		solid_check(CollectionDefinition);
+		solid_cassume(CollectionDefinition);
 		
 		GetCollectionDefinition().Record.AddComponent(InGameplayTag);
 		
@@ -274,7 +274,7 @@ public:
 
 	FORCEINLINE FFlecsCollectionBuilder& Add(const FFlecsRecordPair& InPair)
 	{
-		solid_check(CollectionDefinition);
+		solid_cassume(CollectionDefinition);
 		
 		GetCollectionDefinition().Record.AddComponent(InPair);
 		
@@ -283,7 +283,7 @@ public:
 
 	FORCEINLINE FFlecsCollectionBuilder& AddPair(const FFlecsRecordPair& InPair)
 	{
-		solid_check(CollectionDefinition);
+		solid_cassume(CollectionDefinition);
 		
 		GetCollectionDefinition().Record.AddComponent(InPair);
 		
@@ -338,8 +338,7 @@ public:
 
 	NO_DISCARD FORCEINLINE FFlecsCollectionDefinition& GetCollectionDefinition() const
 	{
-		solid_check(CollectionDefinition);
-		UE_ASSUME(CollectionDefinition);
+		solid_cassume(CollectionDefinition);
 		
 		return *CollectionDefinition;
 	}
