@@ -5,8 +5,8 @@
 #include "Engine/AssetManagerSettings.h"
 #include "Engine/AssetManagerTypes.h"
 #include "Framework/Notifications/NotificationManager.h"
-#include "General/FlecsPrimaryDataAsset.h"
 #include "Logs/FlecsEditorCategory.h"
+#include "SolidMacros/Macros.h"
 #include "Widgets/EntityHandle/FlecsIdCustomization.h"
 #include "Widgets/EntityHandle/FlecsIdPinFactory.h"
 #include "Widgets/Notifications/SNotificationList.h"
@@ -113,14 +113,7 @@ void FUnrealFlecsEditorModule::AddPrimaryAssetTypes()
 	}
 
 	bool bModified = false;
-
-	FPrimaryAssetTypeInfo FlecsPrimaryDataAssetTypeInfo(
-		FName("FlecsPrimaryDataAsset"),
-		UFlecsPrimaryDataAsset::StaticClass(),
-		false,
-		false
-	);
-
+	
 	/*FlecsPrimaryDataAssetTypeInfo.Rules.Priority = 1;
 	FlecsPrimaryDataAssetTypeInfo.Rules.bApplyRecursively = true;
 	FlecsPrimaryDataAssetTypeInfo.Rules.CookRule = EPrimaryAssetCookRule::AlwaysCook;

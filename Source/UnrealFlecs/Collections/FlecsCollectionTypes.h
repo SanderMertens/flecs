@@ -32,7 +32,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
 	EFlecsCollectionReferenceMode Mode = EFlecsCollectionReferenceMode::Asset;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs", meta = (EditCondition = "Mode == EFlecsCollectionReferenceMode::Asset", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs",
+		meta = (EditCondition = "Mode == EFlecsCollectionReferenceMode::Asset", EditConditionHides))
 	TObjectPtr<UFlecsCollectionDataAsset> Asset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs",
@@ -89,19 +90,6 @@ struct UNREALFLECS_API FFlecsCollectionSlotTag
 }; // struct FFlecsCollectionSlotTag
 
 REGISTER_FLECS_COMPONENT(FFlecsCollectionSlotTag,
-	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
-	{
-		InComponentHandle
-			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
-	});
-
-USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsCollectionRootTag
-{
-	GENERATED_BODY()
-}; // struct FFlecsCollectionRootTag
-
-REGISTER_FLECS_COMPONENT(FFlecsCollectionRootTag,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
 	{
 		InComponentHandle
