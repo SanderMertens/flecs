@@ -489,45 +489,6 @@ void UFlecsWorld::RegisterUnrealTypes() const
 
 void UFlecsWorld::InitializeComponentPropertyObserver() const
 {
-	/*CreateObserver("AnyComponentObserver")
-			.event(flecs::OnSet)
-			.with<flecs::Component>() // 0
-			.with_symbol_component().filter() // 1
-			.yield_existing()
-			.each([this](flecs::iter& Iter, size_t Index)
-			{
-				//while (Iter.next())
-					//UnlockIter_Internal(Iter, [this](flecs::iter& Iter)
-				{
-					//for (const flecs::entity_t Index : Iter)
-					{
-						const FFlecsEntityHandle EntityHandle = Iter.entity(Index);
-					
-						const FString StructSymbol = EntityHandle.GetSymbol();
-						
-						if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(StructSymbol))
-						{
-							FFlecsComponentHandle InUntypedComponent = EntityHandle.GetUntypedComponent_Unsafe();
-							
-							const FFlecsComponentProperties& Properties = FFlecsComponentPropertiesRegistry::Get()
-								.GetComponentProperties(StructSymbol);
-
-							std::invoke(Properties.RegistrationFunction, Iter.world(), InUntypedComponent);
-
-							UE_LOGFMT(LogFlecsComponent, Log,
-								"Component properties {StructName} registered", StructSymbol);
-						}
-						#if !NO_LOGGING
-						else
-						{
-							UE_LOGFMT(LogFlecsComponent, Log,
-								"Component properties {StructName} not found", StructSymbol);
-						}
-						#endif // UNLOG_ENABLED
-					}
-				};
-			});*/
-
 	FlecsLibrary::GetTypeRegisteredDelegate().AddWeakLambda(this, [this](const flecs::id_t InEntityId)
 	{
 		solid_checkf(!IsDeferred(), TEXT("Cannot register component properties while world is deferred."));
@@ -589,51 +550,6 @@ void UFlecsWorld::InitializeSystems()
 		DependenciesComponentQuery = World.query_builder<FFlecsSoftDependenciesComponent>("DependenciesComponentQuery")
 			.cached()
 			.build();
-
-		/*CreateObserver<const FFlecsModuleComponent&>(TEXT("ModuleInitEventObserver"))
-			.event<FFlecsModuleInitEvent>()
-			.with<FFlecsUObjectComponent&, FFlecsModuleComponentTag>()
-			.run([this](flecs::iter& Iter)
-			{
-				// @TODO: Document these workarounds
-				UnlockIter_Internal(Iter, [this](flecs::iter& Iter)
-				{
-					for (const flecs::entity_t Index : Iter)
-					{
-						const FFlecsEntityHandle ModuleEntity = Iter.entity(Index);
-						
-						const FFlecsModuleComponent& InModuleComponent = Iter.field_at<FFlecsModuleComponent>(0, Index);
-						const FFlecsUObjectComponent& InUObjectComponent = Iter.field_at<FFlecsUObjectComponent>(1, Index);
-						
-						solid_check(InUObjectComponent.IsValid());
-						solid_check(InModuleComponent.ModuleClass);
-						
-						UE_LOGFMT(LogFlecsWorld, Log,
-							"Module initialized: {ModuleName}", *InUObjectComponent.GetObjectChecked()->GetName());
-
-						DependenciesComponentQuery.each([InModuleComponent, ModuleEntity, this, InUObjectComponent]
-							(flecs::iter& DependenciesIter, size_t DependenciesIndex)
-							{
-								const FFlecsEntityHandle InEntity = DependenciesIter.entity(DependenciesIndex);
-										
-								FFlecsDependenciesComponent& DependenciesComponent
-									= DependenciesIter.field_at<FFlecsDependenciesComponent>(0, DependenciesIndex);
-											
-								if (DependenciesComponent.DependencyFunctionPtrs.Contains(InModuleComponent.ModuleClass))
-								{
-									const FFlecsDependencyFunctionDefinition& FunctionDefinition
-										= DependenciesComponent.DependencyFunctionPtrs[InModuleComponent.ModuleClass];
-
-									InEntity.AddPair(flecs::DependsOn, ModuleEntity);
-
-									FunctionDefinition.Call(InUObjectComponent.GetObjectChecked(),
-										this,
-										ModuleEntity);
-								}
-							});
-					}
-				});
-			});*/
 
 		OnModuleImported.AddWeakLambda(this, [this](const FFlecsEntityHandle& InModule)
 		{
