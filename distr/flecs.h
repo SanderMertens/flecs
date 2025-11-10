@@ -26652,6 +26652,17 @@ struct entity_builder : entity_view {
         return this->auto_override<First>(_::type<Second>::id(this->world_));
     }
 
+    /** Mark pair for auto-overriding.
+     * @see auto_override(flecs::id_t) const
+     *
+     * @tparam Second The second element of the pair.
+     * @param first The first element of the pair.
+     */
+    template <typename Second>
+    const Self& auto_override_second(flecs::entity_t first) const  {
+        return this->auto_override(first, _::type<Second>::id(this->world_));
+    }
+
     /** Set component, mark component for auto-overriding.
      * @see auto_override(flecs::id_t) const
      *
