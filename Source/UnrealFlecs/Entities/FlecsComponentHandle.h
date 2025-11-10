@@ -197,6 +197,15 @@ public:
 		return *this;
 	}
 
+	SOLID_INLINE const FSelfType& SetOnReplace(const ecs_iter_action_t& InOnReplace) const
+	{
+		SetHooksLambda([InOnReplace](flecs::type_hooks_t& Hooks)
+		{
+			Hooks.on_replace = InOnReplace;
+		});
+		return *this;
+	}
+
 	NO_DISCARD SOLID_INLINE uint32 GetSize() const
 	{
 		solid_check(GetComponentData().size > 0);
