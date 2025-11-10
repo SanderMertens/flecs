@@ -124,7 +124,6 @@ EDataValidationResult UFlecsWorldSettingsAsset::IsDataValid(FDataValidationConte
 	
 	ImportedModules.Append(WorldSettings.Modules);
 	ImportedModules.Append(WorldSettings.EditorModules);
-	ImportedModules.Append(WorldSettings.GameLoops);
 	
 	for (const UFlecsModuleSetDataAsset* ModuleSet : WorldSettings.ModuleSets)
 	{
@@ -157,6 +156,30 @@ EDataValidationResult UFlecsWorldSettingsAsset::IsDataValid(FDataValidationConte
 
 		ImportedModules.Append(ModuleSet->Modules);
 	}
+
+	for (const UObject* ImportedModule : ImportedModules)
+	{
+		if UNLIKELY_IF(!IsValid(ImportedModule))
+		{
+			Context.AddError(FText::Format(
+				LOCTEXT("InvalidImportedModule",
+					"WorldSettings {0} has an invalid module reference in its imported modules."),
+				FText::FromString(GetPathName())));
+			
+			Result = EDataValidationResult::Invalid;
+			continue;
+		}
+
+		if (ImportedModule->Implements<UFlecsGameLoopInterface>())
+		{
+			Context.AddError(FText::Format(
+				LOCTEXT("NonModuleImportedModule",
+					"WorldSettings {0} has a module reference in its imported modules that implements GameLoopInterface, use GameLoops instead of Module Array."),
+				FText::FromString(GetPathName())));
+		}
+	}
+
+	ImportedModules.Append(WorldSettings.GameLoops);
 
 	const EDataValidationResult DuplicateModuleResult = CheckForDuplicateModules(Context, ImportedModules);
 	Result = CombineDataValidationResults(Result, DuplicateModuleResult);

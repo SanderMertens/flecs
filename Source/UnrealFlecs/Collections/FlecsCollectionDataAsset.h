@@ -11,6 +11,8 @@
 
 #include "FlecsCollectionDataAsset.generated.h"
 
+// @TODO: Support Parameters
+
 UCLASS(BlueprintType, Blueprintable)
 class UNREALFLECS_API UFlecsCollectionDataAsset : public UPrimaryDataAsset
 {

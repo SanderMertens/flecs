@@ -485,6 +485,25 @@ void UFlecsWorld::RegisterUnrealTypes() const
 	RegisterComponentType<FIntVector4>();
 	RegisterComponentType<FIntPoint>();
 	RegisterComponentType<FIntRect>();
+
+	RegisterComponentType<FGuid>();
+	RegisterComponentType<FTimespan>();
+	RegisterComponentType<FDateTime>();
+
+	RegisterComponentType<FFloatRangeBound>();
+	RegisterComponentType<FInt8RangeBound>();
+	RegisterComponentType<FInt16RangeBound>();
+	RegisterComponentType<FInt32RangeBound>();
+	RegisterComponentType<FInt64RangeBound>();
+	
+	RegisterComponentType<FFloatRange>();
+	RegisterComponentType<FInt32Range>();
+	RegisterComponentType<FInt64Range>();
+	
+	RegisterComponentType<FFrameNumber>();
+	RegisterComponentType<FFrameRate>();
+
+	RegisterComponentType<FInstancedStruct>();
 }
 
 void UFlecsWorld::InitializeComponentPropertyObserver() const
@@ -1292,7 +1311,7 @@ void UFlecsWorld::RegisterMemberProperties(const TSolidNotNull<const UStruct*> I
 			FFlecsEntityHandle StructComponent;
 			if (!HasScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct))
 			{
-				UE_LOGFMT(LogFlecsWorld, Error,
+				UE_LOGFMT(LogFlecsWorld, Warning,
 				          "Property Type Script struct {StructName} is not registered for entity {ComponentName}",
 				          CastFieldChecked<FStructProperty>(Property)->Struct->GetStructCPPName(),
 				          InComponent.GetName());
@@ -1303,9 +1322,18 @@ void UFlecsWorld::RegisterMemberProperties(const TSolidNotNull<const UStruct*> I
 				StructComponent
 					= GetScriptStructEntity(CastFieldChecked<FStructProperty>(Property)->Struct);
 			}
+
+			if (!StructComponent.Has<flecs::Type>())
+			{
+				UE_LOGFMT(LogFlecsWorld, Log,
+				          "Property Type Script struct {StructName} does not have flecs::Type for entity {ComponentName}",
+				          CastFieldChecked<FStructProperty>(Property)->Struct->GetStructCPPName(),
+				          InComponent.GetName());
+				continue;
+			}
 			 		
 			InComponent.AddMember(StructComponent, Property->GetName(),
-			                      1, Property->GetOffset_ForInternal());
+			                      0, Property->GetOffset_ForInternal());
 		}
 		else UNLIKELY_ATTRIBUTE
 		{

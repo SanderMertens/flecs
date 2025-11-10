@@ -17,6 +17,7 @@
  * C. Collection Registration Type Tests
  * D. Collection Emtpy Instantiation Tests
  * E. Collection Instantiation With Tag Tests
+ * F. Collection Parameterized Instantiation Tests
  */
 TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
@@ -427,6 +428,138 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsFalse(TestEntity.HasCollection<UFlecsCollectionTestClassNoInterface>()));
 		
 		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
+	}
+
+	TEST_METHOD(F1_InstantiateParameterizedCollection_CPPBuilderAPI_WithDefaultParameters_DefaultValue_InstancedStructAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
+
+		const FFlecsEntityHandle CollectionPrefab = Collections->RegisterCollectionBuilder([](FFlecsCollectionBuilder& Builder)
+		{
+			Builder
+				.Name("TestCollection_Parameterized")
+				.Add<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ 33 })
+				.Add<FFlecsTestStruct_Tag>()
+				.Parameters(FInstancedStruct::Make<FFlecsTestStruct_Value>({ 33 }),
+					[](const FFlecsEntityHandle& InCollectionEntity, const FInstancedStruct& InParams)
+				{
+					InCollectionEntity.Assign<FFlecsTestStruct_Value>(InParams.Get<FFlecsTestStruct_Value>());
+				});
+		});
+
+		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
+		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity("TestEntity_Parameterized_Default");
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddCollection(CollectionPrefab);
+
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>()));
+
+		// Verify the value was set from the default params
+		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value, EFlecsAccessorType::ConstRef>();
+		ASSERT_THAT(IsTrue(Applied.Value == 33));
+
+		// Cleanup
+		/*TestEntity.RemoveCollection(CollectionPrefab);
+		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>()));*/
+	}
+
+	TEST_METHOD(F2_InstantiateParameterizedCollection_CPPBuilderAPI_WithExplicitParameters_AppliesValue_InstancedStructAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
+
+		const FFlecsEntityHandle CollectionPrefab = Collections->RegisterCollectionBuilder([](FFlecsCollectionBuilder& Builder)
+		{
+			Builder
+				.Name("TestCollection_Parameterized")
+				.Add<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ 33 })
+				.Add<FFlecsTestStruct_Tag>()
+				.Parameters<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ 33 },
+					[](const FFlecsEntityHandle& InCollectionEntity, const FFlecsTestStruct_Value& InParams)
+				{
+					InCollectionEntity.Assign<FFlecsTestStruct_Value>(InParams);
+				});
+		});
+
+		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
+		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity("TestEntity_Parameterized_Explicit");
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddCollection(CollectionPrefab, FInstancedStruct::Make<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{99}));
+
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>()));
+
+		// Verify the value was set from the explicit params
+		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value, EFlecsAccessorType::ConstRef>();
+		ASSERT_THAT(IsTrue(Applied.Value == 99));
+
+		// Cleanup
+		/*TestEntity.RemoveCollection(CollectionPrefab);
+		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>()));*/
+	}
+
+	TEST_METHOD(F3_InstantiateParameterizedCollection_ClassBuilderAPI_WithExplicitParameters_DefaultValue_InstancedStructAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
+
+		const FFlecsEntityHandle CollectionPrefab
+			= Collections->RegisterCollectionInterfaceClass(UFlecsCollectionTestClassWithInterface_Parameterized::StaticClass());
+
+		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
+		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity("TestEntity_Parameterized_Explicit");
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddCollection(CollectionPrefab);
+
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>()));
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
+
+		// Verify the value was set from the explicit params
+		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value, EFlecsAccessorType::ConstRef>();
+		ASSERT_THAT(IsTrue(Applied.Value == 33));
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
+
+		// Cleanup
+		/*TestEntity.RemoveCollection(CollectionPrefab);
+		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>()));*/
+	}
+
+	TEST_METHOD(F4_InstantiateParameterizedCollection_ClassBuilderAPI_WithExplicitParameters_AppliesValue_InstancedStructAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
+
+		const FFlecsEntityHandle CollectionPrefab
+			= Collections->RegisterCollectionInterfaceClass(UFlecsCollectionTestClassWithInterface_Parameterized::StaticClass());
+
+		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
+		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity("TestEntity_Parameterized_Explicit");
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddCollection(CollectionPrefab, FInstancedStruct::Make<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{99}));
+
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>()));
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
+
+		// Verify the value was set from the explicit params
+		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value, EFlecsAccessorType::ConstRef>();
+		ASSERT_THAT(IsTrue(Applied.Value == 99));
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
+
+		// Cleanup
+		/*TestEntity.RemoveCollection(CollectionPrefab);
+		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>()));*/
 	}
 
 	

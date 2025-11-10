@@ -25,9 +25,14 @@ void UFlecsCollectionWorldSubsystem::OnFlecsWorldInitialized(const TSolidNotNull
 
 	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = GetFlecsWorldChecked();
 
+	InWorld->RegisterComponentType<FFlecsCollectionSubsystemSingleton>();
+
+	InWorld->SetSingleton<FFlecsCollectionSubsystemSingleton>({this});
+
 	FlecsWorld->RegisterComponentType<FFlecsCollectionPrefabTag>();
 	FlecsWorld->RegisterComponentType<FFlecsCollectionReferenceComponent>();
 	FlecsWorld->RegisterComponentType<FFlecsCollectionSlotTag>();
+	FlecsWorld->RegisterComponentType<FFlecsCollectionParametersComponent>();
 
 	CollectionScopeEntity = FlecsWorld->CreateEntity("CollectionScope")
 		.Add(flecs::Module);
@@ -173,10 +178,25 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByAsset(const UFlecs
 	solid_cassume(Asset);
 	
 	const FFlecsCollectionId Id = FFlecsCollectionId(Asset->GetFName());
-	return GetPrefabById(Id);
+	return GetPrefabByCollectionId(Id);
 }
 
-FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabById(const FFlecsCollectionId& Id) const
+FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByIdRaw(const FFlecsId& Id) const
+{
+	const FFlecsEntityHandle CollectionPrefabHandle = GetFlecsWorldChecked()->GetAlive(Id);
+	
+	if UNLIKELY_IF(!CollectionPrefabHandle.IsValid() || !CollectionPrefabHandle.Has<FFlecsCollectionPrefabTag>())
+	{
+		UE_LOGFMT(LogFlecsCollections, Warning,
+			"UFlecsCollectionWorldSubsystem::GetPrefabByIdRaw: Id '{EntityId}' is not a valid collection prefab",
+			Id.ToString());
+		return FFlecsEntityHandle();
+	}
+
+	return CollectionPrefabHandle;
+}
+
+FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByCollectionId(const FFlecsCollectionId& Id) const
 {
 	if LIKELY_IF(const FFlecsEntityHandle* Found = RegisteredCollections.Find(Id))
 	{
@@ -191,7 +211,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByClass(const TSubcl
 	solid_cassume(InClass);
 	
 	const FFlecsCollectionId Id = FFlecsCollectionId(InClass->GetFName());
-	return GetPrefabById(Id);
+	return GetPrefabByCollectionId(Id);
 }
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetCollectionScope() const
@@ -200,7 +220,29 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetCollectionScope() const
 }
 
 void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHandle& InEntity,
-	const FFlecsCollectionId& InCollectionId)
+	const FFlecsId InCollectionId, const FInstancedStruct& InParameters)
+{
+	solid_checkf(InEntity.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: InEntity is invalid"));
+
+	solid_checkf(InCollectionId.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: InCollectionId is invalid"));
+
+	const FFlecsEntityHandle CollectionPrefab = GetPrefabByIdRaw(InCollectionId);
+
+	solid_checkf(CollectionPrefab.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: CollectionId '%s' is not registered"),
+		*InCollectionId.ToString());
+	solid_checkf(CollectionPrefab.Has<FFlecsCollectionPrefabTag>(),
+		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: CollectionId '%s' is not a collection prefab"),
+		*InCollectionId.ToString());
+
+	InEntity.AddPair(flecs::IsA, CollectionPrefab);
+	ApplyCollectionParametersToEntity(InEntity, CollectionPrefab, InParameters);
+}
+
+void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHandle& InEntity,
+                                                           const FFlecsCollectionId& InCollectionId, const FInstancedStruct& InParameters)
 {
 	solid_checkf(InEntity.IsValid(),
 		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: InEntity is invalid"));
@@ -209,17 +251,19 @@ void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHan
 		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: CollectionId '%s' is not registered"),
 		*InCollectionId.NameId.ToString());
 
-	const FFlecsEntityHandle CollectionPrefab = GetPrefabById(InCollectionId);
+	const FFlecsEntityHandle CollectionPrefab = GetPrefabByCollectionId(InCollectionId);
 	
 	solid_checkf(CollectionPrefab.IsValid(),
 		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: CollectionId '%s' is not registered"),
 		*InCollectionId.NameId.ToString());
 
 	InEntity.AddPair(flecs::IsA, CollectionPrefab);
+
+	ApplyCollectionParametersToEntity(InEntity, CollectionPrefab, InParameters);
 }
 
 void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHandle& InEntity,
-	const FFlecsCollectionReference& InCollectionReference)
+	const FFlecsCollectionReference& InCollectionReference, const FInstancedStruct& InParameters)
 {
 	solid_checkf(InEntity.IsValid(),
 		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: InEntity is invalid"));
@@ -229,23 +273,25 @@ void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHan
 		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: Failed to resolve collection reference"));
 
 	InEntity.AddPair(flecs::IsA, CollectionPrefab);
+
+	ApplyCollectionParametersToEntity(InEntity, CollectionPrefab, InParameters);
 }
 
 void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHandle& InEntity,
-	const TSolidNotNull<const UFlecsCollectionDataAsset*> InAsset)
+	const TSolidNotNull<const UFlecsCollectionDataAsset*> InAsset, const FInstancedStruct& InParameters)
 {
-	AddCollectionToEntity(InEntity, FFlecsCollectionReference::FromAsset(InAsset));
+	AddCollectionToEntity(InEntity, FFlecsCollectionReference::FromAsset(InAsset), InParameters);
 }
 
 void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHandle& InEntity,
-	const TSubclassOf<UObject> InClass)
+	const TSubclassOf<UObject> InClass, const FInstancedStruct& InParameters)
 {
 	solid_cassume(InClass);
 
 	solid_checkf(InClass->ImplementsInterface(UFlecsCollectionInterface::StaticClass()),
 		TEXT("Class %s does not implement FlecsCollectionInterface"), *InClass->GetName());
 	
-	AddCollectionToEntity(InEntity, FFlecsCollectionReference::FromClass(InClass));
+	AddCollectionToEntity(InEntity, FFlecsCollectionReference::FromClass(InClass), InParameters);
 }
 
 void UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity,
@@ -257,7 +303,7 @@ void UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity(const FFlecsEnti
 		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: CollectionId '%s' is not registered"),
 		*InCollectionId.NameId.ToString());
 
-	const FFlecsEntityHandle CollectionPrefab = GetPrefabById(InCollectionId);
+	const FFlecsEntityHandle CollectionPrefab = GetPrefabByCollectionId(InCollectionId);
 	solid_checkf(CollectionPrefab.IsValid(),
 		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: CollectionId '%s' is not registered"),
 		*InCollectionId.NameId.ToString());
@@ -298,7 +344,7 @@ void UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity(const FFlecsEnti
 bool UFlecsCollectionWorldSubsystem::HasCollection(const FFlecsEntityHandle& InEntity,
                                                    const FFlecsCollectionId& InCollectionId) const
 {
-	const FFlecsEntityHandle CollectionPrefab = GetPrefabById(InCollectionId);
+	const FFlecsEntityHandle CollectionPrefab = GetPrefabByCollectionId(InCollectionId);
 	
 	solid_checkf(CollectionPrefab.IsValid(),
 		TEXT("UFlecsCollectionWorldSubsystem::HasCollection: CollectionId '%s' is not registered"),
@@ -443,6 +489,56 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::CreatePrefabEntity(const TSol
 		.Add<FFlecsCollectionPrefabTag>();
 
 	return Prefab;
+}
+
+void UFlecsCollectionWorldSubsystem::ApplyCollectionParametersToEntity(const FFlecsEntityHandle& InEntity,
+	const FFlecsEntityHandle& InCollectionEntity, const FInstancedStruct& InParameters) const
+{
+	solid_checkf(InEntity.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::ApplyCollectionParametersToEntity: InEntity is invalid"));
+	solid_checkf(InCollectionEntity.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::ApplyCollectionParametersToEntity: InCollectionEntity is invalid"));
+
+	if (!InCollectionEntity.Has<FFlecsCollectionParametersComponent>())
+	{
+		return;
+	}
+
+	const bool bHasInputParameters = InParameters.IsValid();
+
+	const FFlecsCollectionParametersComponent& ParametersComponent 
+		= InCollectionEntity.Get<FFlecsCollectionParametersComponent, EFlecsAccessorType::ConstRef>();
+
+	if UNLIKELY_IF(!ParametersComponent.ParameterType.IsValid())
+	{
+		UE_LOGFMT(LogFlecsCollections, Warning,
+			"UFlecsCollectionWorldSubsystem::ApplyCollectionParametersToEntity: Collection entity '{Entity}' has invalid ParametersType",
+			InCollectionEntity.GetFlecsId().ToString());
+		return;
+	}
+
+	FInstancedStruct UsedParameters;
+
+	if (bHasInputParameters)
+	{
+		if UNLIKELY_IF(InParameters.GetScriptStruct() != ParametersComponent.ParameterType.GetScriptStruct())
+		{
+			UE_LOGFMT(LogFlecsCollections, Error,
+				"UFlecsCollectionWorldSubsystem::ApplyCollectionParametersToEntity: Parameter type mismatch on entity '{Entity}'. Expected '{Expected}', got '{Got}'",
+				InCollectionEntity.GetFlecsId().ToString(),
+				*ParametersComponent.ParameterType.GetScriptStruct()->GetStructCPPName(),
+				*InParameters.GetScriptStruct()->GetStructCPPName());
+			return;
+		}
+
+		UsedParameters = InParameters;
+	}
+	else
+	{
+		UsedParameters = ParametersComponent.ParameterType;
+	}
+
+	ParametersComponent.ApplyParameters(InEntity, UsedParameters);
 }
 
 bool UFlecsCollectionWorldSubsystem::ClassImplementsCollectionInterface(const TSolidNotNull<const UClass*> InClass) const

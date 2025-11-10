@@ -265,6 +265,17 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		return *this;
 	}
 
+	template <Solid::TScriptStructConcept T>
+	FORCEINLINE FFlecsEntityRecord& AddComponent(T&& InComponent)
+	{
+		FFlecsComponentTypeInfo NewComponent;
+		NewComponent.NodeType = EFlecsComponentNodeType::ScriptStruct;
+		NewComponent.ScriptStruct = FInstancedStruct::Make<T>(MoveTemp(InComponent));
+		Components.Add(NewComponent);
+
+		return *this;
+	}
+
 	FORCEINLINE FFlecsEntityRecord& AddComponent(const FFlecsId InEntityHandle)
 	{
 		FFlecsComponentTypeInfo NewComponent;

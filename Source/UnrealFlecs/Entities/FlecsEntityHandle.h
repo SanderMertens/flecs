@@ -232,9 +232,6 @@ public:
 	template <typename T>
 	SOLID_INLINE const FSelfType& Assign(const T& InValue) const
 	{
-		solid_checkf(Has<T>(),
-			TEXT("Entity does not have component with type %hs"), nameof(T).data());
-
 		GetEntity().assign<T>(InValue);
 		return *this;
 	}
@@ -243,18 +240,12 @@ public:
 	requires (std::is_move_constructible_v<T> && !std::is_lvalue_reference_v<T>)
 	SOLID_INLINE const FSelfType& Assign(T&& InValue) const
 	{
-		solid_checkf(Has<T>(),
-			TEXT("Entity does not have component with type %hs"), nameof(T).data());
-
 		GetEntity().assign<T>(FLECS_FWD(InValue));
 		return *this;
 	}
 	
 	SOLID_INLINE const FSelfType& Assign(const FFlecsId InEntity, const uint32 InSize, const void* InValue) const
 	{
-		solid_checkf(Has(InEntity),
-			TEXT("Entity does not have component with id %llu"), InEntity.GetId());
-		
 		GetEntity().set_ptr(InEntity, InSize, InValue);
 		return *this;
 	}
@@ -263,9 +254,6 @@ public:
 	SOLID_INLINE const FSelfType& Assign(const T& InTypeValue, const void* InValue) const
 	{
 		const FFlecsId InId = FFlecsEntityHandle::GetInputId(*this, InTypeValue);
-		
-		solid_checkf(Has(InId),
-			TEXT("Entity does not have component with id %llu"), InId.GetId());
 		
 		if constexpr (std::is_convertible_v<T, const UScriptStruct*>)
 		{
@@ -281,10 +269,6 @@ public:
 
 	SOLID_INLINE const FSelfType& Assign(const FInstancedStruct& InValue) const
 	{
-		solid_checkf(Has(InValue.GetScriptStruct()),
-			TEXT("Entity does not have component with script struct %s"),
-			*InValue.GetScriptStruct()->GetStructCPPName());
-		
 		Assign(InValue.GetScriptStruct(), InValue.GetMemory());
 		return *this;
 	}
@@ -743,10 +727,9 @@ public:
 		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
 	SOLID_INLINE const FSelfType& AssignPair(const First& InFirstTypeValue, const void* InValue, const Second& InSecondTypeValue) const
 	{
-		solid_checkf(HasPair(InFirstTypeValue, InSecondTypeValue), 
-			TEXT("Entity does not have pair"));
-
-		Assign(FFlecsId::MakePair(FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue), FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
+		Assign(FFlecsId::MakePair(
+			FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
+			FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
 				InSecondTypeValue->GetStructureSize(),
 				InValue);
 		return *this;
@@ -893,30 +876,39 @@ public:
 		return FFlecsEntityView(GetEntity().view());
 	}
 
-	SOLID_INLINE const FSelfType& AddCollection(const FFlecsId InCollection) const
+	const FSelfType& AddCollection(const FFlecsId InCollection, const FInstancedStruct& InParams = FInstancedStruct()) const;
+
+	template <Solid::TScriptStructConcept TCollectionParams>
+	SOLID_INLINE const FSelfType& AddCollection(const FFlecsId InCollection, const TCollectionParams& InParams) const
 	{
-		AddPair(flecs::IsA, InCollection);
-		return *this;
+		return AddCollection(InCollection, FInstancedStruct::Make<TCollectionParams>(InParams));
 	}
 
-	SOLID_INLINE const FSelfType& AddCollection(UClass* InCollection) const
+	SOLID_INLINE const FSelfType& AddCollection(UClass* InCollection, const FInstancedStruct& InParams = FInstancedStruct()) const
 	{
-		return AddCollection(ObtainTypeClass(InCollection));
+		return AddCollection(ObtainTypeClass(InCollection), InParams);
+	}
+
+	template <Solid::TScriptStructConcept TCollectionParams>
+	SOLID_INLINE const FSelfType& AddCollection(UClass* InCollection, const TCollectionParams& InParams) const
+	{
+		return AddCollection(InCollection, FInstancedStruct::Make<TCollectionParams>(InParams));
 	}
 
 	template <Solid::TStaticClassConcept T>
-	SOLID_INLINE const FSelfType& AddCollection() const
+	SOLID_INLINE const FSelfType& AddCollection(const FInstancedStruct& InParams = FInstancedStruct()) const
 	{
-		return AddCollection(T::StaticClass());
+		return AddCollection(T::StaticClass(), InParams);
+	}
+
+	template <Solid::TStaticClassConcept T, Solid::TScriptStructConcept TCollectionParams>
+	SOLID_INLINE const FSelfType& AddCollection(const TCollectionParams& InParams) const
+	{
+		return AddCollection(T::StaticClass(), FInstancedStruct::Make<TCollectionParams>(InParams));
 	}
 
 	// Note this doesnt remove overridden components
-	SOLID_INLINE const FSelfType& RemoveCollection(const FFlecsId InCollection, const bool bRemoveOverriden = false) const
-	{
-		RemovePair(flecs::IsA, InCollection);
-		
-		return *this;
-	}
+	const FSelfType& RemoveCollection(const FFlecsId InCollection, const bool bRemoveOverriden = false) const;
 
 	// Note this doesnt remove overridden components
 	SOLID_INLINE const FSelfType& RemoveCollection(UClass* InCollection, const bool bRemoveOverriden = false) const

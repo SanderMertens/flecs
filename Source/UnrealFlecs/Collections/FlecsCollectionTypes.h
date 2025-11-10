@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 
+#include "StructUtils/PropertyBag.h"
+
 #include "Properties/FlecsComponentProperties.h"
 #include "FlecsCollectionId.h"
 
@@ -121,15 +123,39 @@ REGISTER_FLECS_COMPONENT(FFlecsCollectionSlotTag,
 			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
 	});
 
-// @TODO: Unimplemented
-USTRUCT(BlueprintInternalUseOnly)
-struct UNREALFLECS_API FFlecsCollectionStructInterface
+// @TODO: maybe add an OnSet Event like in templates
+
+USTRUCT()
+struct UNREALFLECS_API FFlecsCollectionParametersComponent
 {
 	GENERATED_BODY()
 
-public:
-	FORCEINLINE FFlecsCollectionStructInterface() = default;
-	virtual ~FFlecsCollectionStructInterface() = default;
-	
-}; // struct FFlecsCollectionStructInterface
+	using FApplyParametersFunction = std::function<void(const FFlecsEntityHandle&, const FInstancedStruct&)>;
 
+public:
+	UPROPERTY()
+	FInstancedStruct ParameterType;
+
+	FApplyParametersFunction ApplyParametersFunction;
+
+	template <Solid::TScriptStructConcept T, typename FuncType>
+	void SetApplyParametersFunction(FuncType&& InFunction)
+	{
+		ApplyParametersFunction = [InFunction = std::forward<FuncType>(InFunction)]
+			(const FFlecsEntityHandle& InEntityHandle, const FInstancedStruct& InParameters)
+		{
+			std::invoke(InFunction, InEntityHandle,
+				TInstancedStruct<T>::InitializeAsScriptStruct(InParameters.GetScriptStruct(), InParameters.GetMemory()));
+		};
+	}
+
+	void ApplyParameters(const FFlecsEntityHandle& InEntityHandle, const FInstancedStruct& InParameters) const;
+	
+}; // struct FFlecsCollectionParametersComponent
+
+REGISTER_FLECS_COMPONENT(FFlecsCollectionParametersComponent,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		InComponentHandle
+			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
+	});

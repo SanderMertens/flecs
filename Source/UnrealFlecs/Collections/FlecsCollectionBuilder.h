@@ -14,16 +14,16 @@ struct FFlecsCollectionBuilder;
 
 struct UNREALFLECS_API FFlecsPairBuilder
 {
-	FFlecsRecordPair Pair;
+	mutable FFlecsRecordPair Pair;
 	
-	FORCEINLINE FFlecsPairBuilder& ValueIs(const EFlecsValuePairType InType)
+	FORCEINLINE const FFlecsPairBuilder& ValueIs(const EFlecsValuePairType InType) const
 	{
 		Pair.PairValueType = InType;
 		return *this;
 	}
 
 	template <Solid::TScriptStructConcept T>
-	FORCEINLINE FFlecsPairBuilder& First()
+	FORCEINLINE const FFlecsPairBuilder& First() const
 	{
 		Pair.First.PairNodeType = EFlecsPairNodeType::ScriptStruct;
 		Pair.First.PairScriptStruct = FInstancedStruct::Make<T>();
@@ -32,7 +32,7 @@ struct UNREALFLECS_API FFlecsPairBuilder
 	}
 	
 	template <Solid::TScriptStructConcept T>
-	FORCEINLINE FFlecsPairBuilder& First(const T& ScriptStructValue)
+	FORCEINLINE const FFlecsPairBuilder& First(const T& ScriptStructValue) const
 	{
 		Pair.First.PairNodeType = EFlecsPairNodeType::ScriptStruct;
 		Pair.First.PairScriptStruct = FInstancedStruct::Make<T>(ScriptStructValue);
@@ -40,7 +40,7 @@ struct UNREALFLECS_API FFlecsPairBuilder
 		return *this;
 	}
 
-	FORCEINLINE FFlecsPairBuilder& First(const FFlecsId& InEntityId)
+	FORCEINLINE const FFlecsPairBuilder& First(const FFlecsId& InEntityId) const
 	{
 		Pair.First.PairNodeType = EFlecsPairNodeType::EntityHandle;
 		Pair.First.EntityHandle = InEntityId;
@@ -48,7 +48,7 @@ struct UNREALFLECS_API FFlecsPairBuilder
 		return *this;
 	}
 
-	FORCEINLINE FFlecsPairBuilder& Add(const FGameplayTag& InTag)
+	FORCEINLINE const FFlecsPairBuilder& Add(const FGameplayTag& InTag) const
 	{
 		Pair.First.PairNodeType = EFlecsPairNodeType::FGameplayTag;
 		Pair.First.GameplayTag = InTag;
@@ -57,14 +57,14 @@ struct UNREALFLECS_API FFlecsPairBuilder
 	}
 	
 	template <Solid::TScriptStructConcept T>
-	FORCEINLINE FFlecsPairBuilder& Second(const T& ScriptStructValue)
+	FORCEINLINE const FFlecsPairBuilder& Second(const T& ScriptStructValue) const
 	{
 		Pair.Second.PairNodeType = EFlecsPairNodeType::ScriptStruct;
 		Pair.Second.PairScriptStruct = FInstancedStruct::Make<T>(ScriptStructValue);
 		return *this;
 	}
 
-	FORCEINLINE FFlecsPairBuilder& Second(const FFlecsId& InEntityId)
+	FORCEINLINE const FFlecsPairBuilder& Second(const FFlecsId& InEntityId) const
 	{
 		Pair.Second.PairNodeType = EFlecsPairNodeType::EntityHandle;
 		Pair.Second.EntityHandle = InEntityId;
@@ -72,7 +72,7 @@ struct UNREALFLECS_API FFlecsPairBuilder
 		return *this;
 	}
 	
-	FORCEINLINE FFlecsPairBuilder& Second(const FGameplayTag& InTag)
+	FORCEINLINE const FFlecsPairBuilder& Second(const FGameplayTag& InTag) const
 	{
 		Pair.Second.PairNodeType = EFlecsPairNodeType::FGameplayTag;
 		Pair.Second.GameplayTag = InTag;
@@ -92,19 +92,19 @@ public:
 	{
 	}
 
-	FORCEINLINE explicit FFlecsSubEntityBuilder(FFlecsCollectionBuilder& InParentBuilder)
+	FORCEINLINE explicit FFlecsSubEntityBuilder(const FFlecsCollectionBuilder& InParentBuilder)
 		: ParentBuilder(&InParentBuilder)
 	{
 	}
 
-	FORCEINLINE FFlecsSubEntityBuilder& Name(const FString& InName)
+	FORCEINLINE const FFlecsSubEntityBuilder& Name(const FString& InName) const
 	{
 		SubEntity.Name = InName;
 		return *this;
 	}
 
 	template <Solid::TScriptStructConcept T>
-	FORCEINLINE FFlecsSubEntityBuilder& Add()
+	FORCEINLINE const FFlecsSubEntityBuilder& Add() const
 	{
 		FFlecsComponentTypeInfo NewComponent;
 		
@@ -117,7 +117,7 @@ public:
 	}
 
 	template <Solid::TScriptStructConcept T>
-	FORCEINLINE FFlecsSubEntityBuilder& Add(const T& InComponent)
+	FORCEINLINE const FFlecsSubEntityBuilder& Add(const T& InComponent) const
 	{
 		FFlecsComponentTypeInfo NewComponent;
 		
@@ -129,7 +129,7 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsSubEntityBuilder& Add(const FFlecsEntityHandle& InEntityHandle)
+	FORCEINLINE const FFlecsSubEntityBuilder& Add(const FFlecsEntityHandle& InEntityHandle) const
 	{
 		FFlecsComponentTypeInfo NewComponent;
 		
@@ -141,7 +141,7 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsSubEntityBuilder& Add(const FGameplayTag& InGameplayTag)
+	FORCEINLINE const FFlecsSubEntityBuilder& Add(const FGameplayTag& InGameplayTag) const
 	{
 		FFlecsComponentTypeInfo NewComponent;
 		
@@ -153,7 +153,7 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsSubEntityBuilder& Add(const FFlecsRecordPair& InPair)
+	FORCEINLINE const FFlecsSubEntityBuilder& Add(const FFlecsRecordPair& InPair) const
 	{
 		FFlecsComponentTypeInfo NewComponent;
 		
@@ -165,7 +165,7 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsSubEntityBuilder& Add(const FFlecsId& InId)
+	FORCEINLINE const FFlecsSubEntityBuilder& Add(const FFlecsId& InId) const
 	{
 		FFlecsComponentTypeInfo Info;
 		
@@ -194,7 +194,7 @@ public:
 		return *this;
 	}*/
 
-	FORCEINLINE FFlecsSubEntityBuilder& MarkSlot()
+	FORCEINLINE const FFlecsSubEntityBuilder& MarkSlot() const
 	{
 		FFlecsComponentTypeInfo Info;
 		
@@ -206,10 +206,10 @@ public:
 		return *this;
 	}
 
-	FFlecsCollectionBuilder& End() const;
+	const FFlecsCollectionBuilder& End() const;
 
-	FFlecsCollectionBuilder* ParentBuilder = nullptr;
-	FFlecsRecordSubEntity SubEntity;
+	const FFlecsCollectionBuilder* ParentBuilder = nullptr;
+	mutable FFlecsRecordSubEntity SubEntity;
 	
 }; // struct FFlecsSubEntityBuilder
 
@@ -235,7 +235,7 @@ public:
 	}
 
 	template <Solid::TScriptStructConcept T>
-	FORCEINLINE FFlecsCollectionBuilder& Add()
+	FORCEINLINE const FFlecsCollectionBuilder& Add() const
 	{
 		solid_cassume(CollectionDefinition);
 		
@@ -245,7 +245,7 @@ public:
 	}
 	
 	template <Solid::TScriptStructConcept T>
-	FORCEINLINE FFlecsCollectionBuilder& Add(const T& InComponent)
+	FORCEINLINE const FFlecsCollectionBuilder& Add(const T& InComponent) const
 	{
 		solid_cassume(CollectionDefinition);
 		
@@ -254,7 +254,7 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsCollectionBuilder& Add(const FFlecsId InId)
+	FORCEINLINE const FFlecsCollectionBuilder& Add(const FFlecsId InId) const
 	{
 		solid_cassume(CollectionDefinition);
 		
@@ -263,7 +263,7 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsCollectionBuilder& Add(const FGameplayTag& InGameplayTag)
+	FORCEINLINE const FFlecsCollectionBuilder& Add(const FGameplayTag& InGameplayTag) const
 	{
 		solid_cassume(CollectionDefinition);
 		
@@ -272,7 +272,7 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsCollectionBuilder& Add(const FFlecsRecordPair& InPair)
+	FORCEINLINE const FFlecsCollectionBuilder& Add(const FFlecsRecordPair& InPair) const
 	{
 		solid_cassume(CollectionDefinition);
 		
@@ -281,7 +281,7 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsCollectionBuilder& AddPair(const FFlecsRecordPair& InPair)
+	FORCEINLINE const FFlecsCollectionBuilder& AddPair(const FFlecsRecordPair& InPair) const
 	{
 		solid_cassume(CollectionDefinition);
 		
@@ -290,12 +290,12 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsSubEntityBuilder MakeSubEntity()
+	FORCEINLINE FFlecsSubEntityBuilder MakeSubEntity() const
 	{
 		return FFlecsSubEntityBuilder(*this);
 	}
 
-	FORCEINLINE FFlecsCollectionBuilder& ReferenceCollection(const TSolidNotNull<UFlecsCollectionDataAsset*> InAsset)
+	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection(const TSolidNotNull<UFlecsCollectionDataAsset*> InAsset) const
 	{
 		FFlecsCollectionReference Ref;
 		Ref.Mode = EFlecsCollectionReferenceMode::Asset;
@@ -306,7 +306,7 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsCollectionBuilder& ReferenceCollection(const FFlecsCollectionId& InId)
+	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection(const FFlecsCollectionId& InId) const
 	{
 		FFlecsCollectionReference Ref;
 		Ref.Mode = EFlecsCollectionReferenceMode::Id;
@@ -318,7 +318,7 @@ public:
 	}
 
 	template <Solid::TStaticClassConcept T>
-	FORCEINLINE FFlecsCollectionBuilder& ReferenceCollection()
+	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection() const
 	{
 		FFlecsCollectionReference Ref;
 		Ref.Mode = EFlecsCollectionReferenceMode::UClass;
@@ -329,9 +329,42 @@ public:
 		return *this;
 	}
 	
-	FORCEINLINE FFlecsCollectionBuilder& Name(const FName& InName)
+	FORCEINLINE const FFlecsCollectionBuilder& Name(const FName& InName) const
 	{
 		IdName = InName;
+		
+		return *this;
+	}
+
+	FORCEINLINE const FFlecsCollectionBuilder& Parameters(const FInstancedStruct& InParameters,
+		const FFlecsCollectionParametersComponent::FApplyParametersFunction& InApplyFunction) const
+	{
+		solid_cassume(CollectionDefinition);
+
+		FFlecsCollectionParametersComponent ParametersComponent;
+		ParametersComponent.ParameterType = InParameters;
+		ParametersComponent.ApplyParametersFunction = InApplyFunction;
+		
+		GetCollectionDefinition().Record.AddComponent<FFlecsCollectionParametersComponent>(MoveTemp(ParametersComponent));
+		
+		return *this;
+	}
+
+	template <Solid::TScriptStructConcept T, typename TApplyFunction>
+	requires (!std::is_same<T, FInstancedStruct>::value)
+	FORCEINLINE const FFlecsCollectionBuilder& Parameters(const T& InParameters, TApplyFunction&& InApplyFunction) const
+	{
+		solid_cassume(CollectionDefinition);
+
+		FFlecsCollectionParametersComponent ParametersComponent;
+		ParametersComponent.ParameterType = FInstancedStruct::Make<T>(InParameters);
+		ParametersComponent.ApplyParametersFunction = [InApplyFunction = std::forward<TApplyFunction>(InApplyFunction)]
+			(FFlecsEntityHandle TargetEntity, const FInstancedStruct& Parameters)
+		{
+			InApplyFunction(TargetEntity, Parameters.Get<T>());
+		};
+		
+		GetCollectionDefinition().Record.AddComponent<FFlecsCollectionParametersComponent>(MoveTemp(ParametersComponent));
 		
 		return *this;
 	}
@@ -344,8 +377,8 @@ public:
 	}
 
 	UPROPERTY()
-	FName IdName;
+	mutable FName IdName;
 	
-	FFlecsCollectionDefinition* CollectionDefinition;
+	mutable FFlecsCollectionDefinition* CollectionDefinition;
 	
 }; // struct FFlecsCollectionBuilder

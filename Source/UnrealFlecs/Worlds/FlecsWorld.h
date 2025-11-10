@@ -273,6 +273,13 @@ public:
 		return GetSelf();
 	}
 
+	template <typename T>
+	UFlecsWorld* SetSingleton(T&& Value) const
+	{
+		World.set<T>(FLECS_FWD(Value));
+		return GetSelf();
+	}
+
 	/**
 	 * @brief Remove a singleton component from the world
 	 * @tparam T The component type

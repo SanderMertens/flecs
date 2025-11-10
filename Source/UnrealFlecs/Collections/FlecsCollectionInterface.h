@@ -3,9 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "UObject/Interface.h"
+#include "StructUtils/InstancedStruct.h"
+
 #include "FlecsCollectionInterface.generated.h"
 
+struct FFlecsEntityHandle;
 struct FFlecsCollectionBuilder;
 
 // This class does not need to be modified.
@@ -21,8 +25,13 @@ class UNREALFLECS_API IFlecsCollectionInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-
 	virtual void BuildCollection(FFlecsCollectionBuilder& Builder) const PURE_VIRTUAL(IFlecsCollectionInterface::BuildCollection, );
-	
 
+	void CallInstantiateParameters(const FFlecsEntityHandle& InEntityHandle, const FInstancedStruct& InParameters) const;
+	
+	virtual void InstantiateParameters(const FFlecsEntityHandle& InEntityHandle, const FInstancedStruct& InParameters) const {}
+	
+	// Defaults to an invalid FInstancedStruct (this is optional)
+	virtual FInstancedStruct GetParametersType() const;
+	
 }; // class IFlecsCollectionInterface

@@ -11,6 +11,7 @@
 
 #include "FlecsCollectionWorldSubsystem.generated.h"
 
+class UFlecsCollectionWorldSubsystem;
 class IFlecsCollectionInterface;
 class UFlecsCollectionDataAsset;
 
@@ -23,6 +24,24 @@ namespace Unreal::Flecs::Collections
 	}; // concept TCollectionBuilderFunc
 	
 } // namespace Unreal::Flecs::Collections
+
+USTRUCT()
+struct UNREALFLECS_API FFlecsCollectionSubsystemSingleton
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	TObjectPtr<UFlecsCollectionWorldSubsystem> WorldSubsystem;
+	
+}; // struct FFlecsCollectionSubsystemSingleton
+
+REGISTER_FLECS_COMPONENT(FFlecsCollectionSubsystemSingleton,
+		[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+		{
+			InComponentHandle
+				.Add(flecs::Singleton);
+		});
 
 UCLASS()
 class UNREALFLECS_API UFlecsCollectionWorldSubsystem final : public UFlecsAbstractWorldSubsystem
@@ -53,7 +72,10 @@ public:
 	FFlecsEntityHandle GetPrefabByAsset(const UFlecsCollectionDataAsset* Asset) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
-	FFlecsEntityHandle GetPrefabById(const FFlecsCollectionId& Id) const;
+	FFlecsEntityHandle GetPrefabByIdRaw(const FFlecsId& Id) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
+	FFlecsEntityHandle GetPrefabByCollectionId(const FFlecsCollectionId& Id) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
 	FFlecsEntityHandle GetPrefabByClass(const TSubclassOf<UObject> InClass) const;
@@ -86,11 +108,21 @@ public:
 		
 		return RegisterCollectionClass(InClass, Builder);
 	}
+
+	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const FFlecsId InCollectionId,
+		const FInstancedStruct& InParameters = FInstancedStruct());
 	
-	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const FFlecsCollectionId& InCollectionId);
-	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const FFlecsCollectionReference& InCollectionReference);
-	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const TSolidNotNull<const UFlecsCollectionDataAsset*> InAsset);
-	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const TSubclassOf<UObject> InClass);
+	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const FFlecsCollectionId& InCollectionId,
+		const FInstancedStruct& InParameters = FInstancedStruct());
+	
+	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const FFlecsCollectionReference& InCollectionReference,
+		const FInstancedStruct& InParameters = FInstancedStruct());
+	
+	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const TSolidNotNull<const UFlecsCollectionDataAsset*> InAsset,
+		const FInstancedStruct& InParameters = FInstancedStruct());
+	
+	void AddCollectionToEntity(const FFlecsEntityHandle& InEntity, const TSubclassOf<UObject> InClass,
+		const FInstancedStruct& InParameters = FInstancedStruct());
 
 	template <Solid::TStaticClassConcept T>
 	FORCEINLINE void AddCollectionToEntity(const FFlecsEntityHandle& InEntity)
@@ -131,6 +163,10 @@ private:
 	NO_DISCARD FFlecsEntityHandle CreatePrefabEntity(const FString& Name, const FFlecsEntityRecord& Record) const;
 	NO_DISCARD FFlecsEntityHandle CreatePrefabEntity(const TSolidNotNull<UClass*> InClass,
 		const FFlecsEntityRecord& Record) const;
+
+	void ApplyCollectionParametersToEntity(const FFlecsEntityHandle& InEntity,
+		const FFlecsEntityHandle& InCollectionEntity,
+		const FInstancedStruct& InParameters) const;
 	
 	NO_DISCARD bool ClassImplementsCollectionInterface(const TSolidNotNull<const UClass*> InClass) const;
 

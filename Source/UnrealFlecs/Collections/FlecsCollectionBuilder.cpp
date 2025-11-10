@@ -4,7 +4,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsCollectionBuilder)
 
-FFlecsCollectionBuilder& FFlecsSubEntityBuilder::End() const
+const FFlecsCollectionBuilder& FFlecsSubEntityBuilder::End() const
 {
 	solid_checkf(ParentBuilder, TEXT("ParentBuilder is null"));
 	return *ParentBuilder;

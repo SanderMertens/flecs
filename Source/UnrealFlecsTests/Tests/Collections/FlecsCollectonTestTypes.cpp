@@ -23,3 +23,15 @@ void UFlecsCollectionTestClassWithInterface_Inherited::BuildCollection(FFlecsCol
 	Builder
 		.Add<FFlecsTestStruct_Tag_Inherited>();
 }
+
+void UFlecsCollectionTestClassWithInterface_Parameterized::BuildCollection(FFlecsCollectionBuilder& Builder) const
+{
+	Builder.Add<FFlecsTestStruct_Tag>()
+			.Add<FFlecsTestStruct_Value>()
+			.Parameters(FFlecsTestStruct_Value{ 33 },
+				[](const FFlecsEntityHandle& Target, const FFlecsTestStruct_Value& Params)
+					{
+						Target.Set<FFlecsTestStruct_Value>({ Params } );
+					}
+				);
+}
