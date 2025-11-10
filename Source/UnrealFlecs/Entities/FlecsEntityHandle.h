@@ -864,6 +864,20 @@ public:
 		return *this;
 	}
 
+	template <typename T>
+	SOLID_INLINE const FSelfType& AddWith() const
+	{
+		AddPairSecond<T>(flecs::With);
+		return *this;
+	}
+
+	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept T>
+	SOLID_INLINE const FSelfType& AddWith(const T& InValue) const
+	{
+		AddPair(flecs::With, FFlecsEntityHandle::GetInputId(*this, InValue));
+		return *this;
+	}
+
 	template <typename TFunction>
 	SOLID_INLINE const FSelfType& Scope(const TFunction& InFunction) const
 	{

@@ -19,6 +19,6 @@ REGISTER_FLECS_COMPONENT(FFlecsFixedTickSystemTag,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
 	{
 		InComponent
-			.AddPairSecond<FFlecsOutsideMainLoopTag>(flecs::With);
+			.AddWith<FFlecsOutsideMainLoopTag>();
 	});
 
