@@ -2332,6 +2332,27 @@ void Entity_override_pair_w_tgt_id(void) {
     test_assert(!e.owns<Position>(tgt_b));
 }
 
+void Entity_override_pair_w_rel_id(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+    auto tgt_a = world.entity();
+    auto tgt_b = world.entity();
+
+    auto base = world.entity()
+        .auto_override_second<Position>(tgt_a)
+        .add_second<Position>(tgt_b);
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert(e.has_second<Position>(tgt_a));
+    test_assert(e.owns_second<Position>(tgt_a));
+
+    test_assert(e.has_second<Position>(tgt_b));
+    test_assert(!e.owns_second<Position>(tgt_b));
+}
+
 void Entity_override_pair_w_ids(void) {
     flecs::world world;
 
