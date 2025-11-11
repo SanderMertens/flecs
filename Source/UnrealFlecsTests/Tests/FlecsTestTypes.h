@@ -19,8 +19,33 @@ struct FFlecsTest_CPPStruct
 
 struct FFlecsTest_CPPStructValue
 {
-	int32 Value;
+	int32 Value = 1;
 }; // struct FFlecsTest_CPPStructWithNameAndValue
+
+struct FFlecsTest_CPPStruct_Traits
+{
+}; // struct FFlecsTest_CppStruct_Traits
+
+REGISTER_FLECS_COMPONENT(FFlecsTest_CPPStruct_Traits,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		InComponentHandle
+			.Add(flecs::Trait)
+			.Add(flecs::PairIsTag);
+	});
+
+struct FFlecsTest_CPPStructValue_Traits
+{
+	uint32 Value = 0;
+}; // struct FFlecsTest_CPPStruct_Value
+
+REGISTER_FLECS_COMPONENT(FFlecsTest_CPPStructValue_Traits,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		InComponentHandle
+			.Add(flecs::Trait)
+			.Add(flecs::PairIsTag);
+	});
 
 USTRUCT()
 struct FFlecsTestStruct_Tag
@@ -47,9 +72,30 @@ struct FFlecsTestStruct_Value
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs|Test")
-	int32 Value = 0;
+	int32 Value = 1;
 	
 }; // struct FFlecsTestStructWithNameAndValue
+
+USTRUCT(BlueprintType, BlueprintInternalUseOnly)
+struct FFlecsTestStruct_Value_POD
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	int32 Value;
+	
+}; // struct FFlecsTestStructWithNameAndValue_POD
+
+template<>
+struct TIsPODType<FFlecsTestStruct_Value_POD>
+{
+	enum { Value = true };
+}; // struct TIsPODType<FFlecsTestStruct_Value_POD>
+
+REGISTER_FLECS_COMPONENT(FFlecsTestStruct_Value_POD,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+	});
 
 USTRUCT()
 struct FUSTRUCTPairTestComponent
@@ -108,7 +154,28 @@ public:
 REGISTER_FLECS_COMPONENT(FFlecsTestStruct_WithPropertyTraits,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
 	{
-		InComponentHandle.Add(flecs::Trait);
+		InComponentHandle
+			.Add(flecs::Trait)
+			.Add(flecs::PairIsTag);
+	});
+
+USTRUCT()
+struct FFlecsTestStructValue_WithPropertyTraits
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	uint32 Value = 0;
+	
+}; // struct FFlecsTestStruct_WithProperties
+
+REGISTER_FLECS_COMPONENT(FFlecsTestStructValue_WithPropertyTraits,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		InComponentHandle
+			.Add(flecs::Trait)
+			.Add(flecs::PairIsTag);
 	});
 
 USTRUCT()

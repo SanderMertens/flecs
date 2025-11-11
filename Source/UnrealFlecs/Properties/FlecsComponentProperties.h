@@ -19,6 +19,24 @@
 namespace Unreal::Flecs
 {
 	using FFlecsComponentFunction = std::function<void(flecs::world, const FFlecsComponentHandle&)>;
+
+	namespace internal
+	{
+		template <typename T>
+		FORCEINLINE UScriptStruct* GetScriptStructIf()
+		{
+			if constexpr (Solid::IsScriptStruct<T>())
+			{
+				return TBaseStructure<T>::Get();
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
+		
+	} // namespace internal
+	
 } // namespace Unreal::Flecs
 
 struct UNREALFLECS_API FFlecsComponentProperties
@@ -76,7 +94,8 @@ public:
 					if constexpr (Solid::IsScriptStruct<Name>()) \
 					{ \
 						FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties( \
-						#Name, TBaseStructure<Name>::Get(), sizeof(Name), alignof(Name), RegistrationFunction); \
+						#Name, Unreal::Flecs::internal::GetScriptStructIf<Name>(), \
+						sizeof(Name), alignof(Name), RegistrationFunction); \
 						\
 						if constexpr (std::is_move_constructible<Name>::value || std::is_move_assignable<Name>::value) \
 						{ \
