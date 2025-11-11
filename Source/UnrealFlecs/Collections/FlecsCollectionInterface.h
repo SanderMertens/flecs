@@ -28,9 +28,11 @@ public:
 	virtual void BuildCollection(FFlecsCollectionBuilder& Builder) const PURE_VIRTUAL(IFlecsCollectionInterface::BuildCollection, );
 
 	void CallInstantiateParameters(const FFlecsEntityHandle& InEntityHandle, const FInstancedStruct& InParameters) const;
-	
+
+	// currently unused
 	virtual void InstantiateParameters(const FFlecsEntityHandle& InEntityHandle, const FInstancedStruct& InParameters) const {}
-	
+
+	// currently unused
 	// Defaults to an invalid FInstancedStruct (this is optional)
 	virtual FInstancedStruct GetParametersType() const;
 	
