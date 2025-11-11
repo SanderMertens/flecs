@@ -382,6 +382,7 @@ void OrderedChildren_iter_no_children(void);
 void OrderedChildren_children_1_table(void);
 void OrderedChildren_children_2_tables(void);
 void OrderedChildren_set_child_order(void);
+void OrderedChildren_prefab_children_with_is_a(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -3139,6 +3140,10 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "set_child_order",
         OrderedChildren_set_child_order
+    },
+    {
+        "prefab_children_with_is_a",
+        OrderedChildren_prefab_children_with_is_a
     }
 };
 

@@ -431,7 +431,47 @@ void flecs_instantiate(
             ecs_component_record_t *icr = flecs_components_get(world, ecs_childof(instance));
             /* If base has children, instance must now have children */
             ecs_assert(icr != NULL, ECS_INTERNAL_ERROR, NULL);
-            flecs_ordered_children_populate(world, icr);
+
+            /* Use the base's ordered children to populate instance's children in correct order */
+            ecs_vec_t *base_children = &cr->pair->ordered_children;
+            int32_t child_count = ecs_vec_count(base_children);
+
+            if (child_count > 0) {
+                /* First, collect all instance children */
+                ecs_vec_t temp_children;
+                ecs_vec_init_t(&world->allocator, &temp_children, ecs_entity_t, child_count);
+
+                ecs_iter_t collect_it = ecs_each_id(world, ecs_pair(EcsChildOf, instance));
+                while (ecs_each_next(&collect_it)) {
+                    for (int32_t j = 0; j < collect_it.count; j++) {
+                        ecs_vec_append_t(&world->allocator, &temp_children, ecs_entity_t)[0] = collect_it.entities[j];
+                    }
+                }
+
+                /* Now iterate over base children in order and find corresponding instance children */
+                ecs_entity_t *base_child_ids = ecs_vec_first_t(base_children, ecs_entity_t);
+                ecs_entity_t *instance_child_ids = ecs_vec_first_t(&temp_children, ecs_entity_t);
+                int32_t instance_child_count = ecs_vec_count(&temp_children);
+                ecs_vec_t *instance_children = &icr->pair->ordered_children;
+
+                for (int32_t i = 0; i < child_count; i++) {
+                    ecs_entity_t base_child = base_child_ids[i];
+
+                    /* Find the instance child that has IsA relationship to this base child */
+                    for (int32_t j = 0; j < instance_child_count; j++) {
+                        ecs_entity_t instance_child = instance_child_ids[j];
+                        if (ecs_has_pair(world, instance_child, EcsIsA, base_child)) {
+                            ecs_vec_append_t(&world->allocator, instance_children, ecs_entity_t)[0] = instance_child;
+                            break;
+                        }
+                    }
+                }
+
+                ecs_vec_fini_t(&world->allocator, &temp_children, ecs_entity_t);
+            } else {
+                /* Fallback to default population if base has no ordered children */
+                flecs_ordered_children_populate(world, icr);
+            }
         }
     }
 }

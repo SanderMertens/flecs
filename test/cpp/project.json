@@ -394,7 +394,8 @@
                 "iter_no_children",
                 "children_1_table",
                 "children_2_tables",
-                "set_child_order"
+                "set_child_order",
+                "prefab_children_with_is_a"
             ]
         }, {
             "id": "Pairs",

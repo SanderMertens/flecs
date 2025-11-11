@@ -82,3 +82,46 @@ void OrderedChildren_set_child_order(void) {
         test_assert(v[2] == child_b);
     }
 }
+
+void OrderedChildren_prefab_children_with_is_a(void) {
+    flecs::world world;
+
+    struct Id { uint32_t value; };
+
+    flecs::entity child_type_a = world.prefab("TypeA");
+    flecs::entity child_type_b = world.prefab("TypeB");
+
+    flecs::entity parent_prefab = world.prefab("parent")
+        .add(flecs::OrderedChildren);
+
+    world.prefab()
+        .is_a(child_type_a)
+        .child_of(parent_prefab)
+        .set<Id>({0});
+
+    world.prefab()
+        .is_a(child_type_b)
+        .child_of(parent_prefab)
+        .set<Id>({1});
+
+    world.prefab()
+        .is_a(child_type_a)
+        .child_of(parent_prefab)
+        .set<Id>({2});
+
+    flecs::entity instance = world.entity("instance")
+        .is_a(parent_prefab)
+        .add(flecs::OrderedChildren);
+
+    std::vector<uint32_t> ids;
+    instance.children([&](flecs::entity child) {
+        const Id* id = child.get<Id>();
+        test_assert(id != nullptr);
+        ids.push_back(id->value);
+    });
+
+    test_int(ids.size(), 3);
+    test_int(ids[0], 0);
+    test_int(ids[1], 1);
+    test_int(ids[2], 2);
+}
