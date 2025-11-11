@@ -66,6 +66,9 @@ namespace Unreal::Flecs
 	concept TFlecsEntityFunctionValueEnumTypeConcept =
 		std::is_convertible_v<T, const FSolidEnumSelector&>;
 
+	/*
+	 * Data types that have associated UEnum types (without an Enum Value) or are input types
+	 */
 	template <typename T>
 	concept TFlecsEntityFunctionDataTypeWithEnumNoValueConcept =
 		TFlecsEntityFunctionUEnumTypeConcept<T> ||
