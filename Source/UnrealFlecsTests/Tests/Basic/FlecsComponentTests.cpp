@@ -110,6 +110,14 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 		ASSERT_THAT(IsTrue(StructEntity.Has(flecs::PairIsTag)));
 	}
 
+	TEST_METHOD(B4_GetComponentPropertyTraits_CPPOnlyType_CPPAPI)
+	{
+		const FFlecsEntityHandle StructEntity = FlecsWorld->RegisterComponentType<FFlecsTest_CPPStruct_Traits>();
+		ASSERT_THAT(IsTrue(StructEntity.IsValid()));
+
+		ASSERT_THAT(IsTrue(StructEntity.Has(flecs::Trait)));
+	}
+
 	TEST_METHOD(B4_GetComponentPropertyTraitsFromAnotherModule_StaticStructAPI)
 	{
 		const FFlecsEntityHandle StaticStructEntity = FlecsWorld->RegisterComponentType(FFlecsTranslationPropertyTrait::StaticStruct());
@@ -475,7 +483,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 
 	TEST_METHOD(B6_BasicComponentAddAssignRemove_Add_CPPAPI_Assign_CPPAPI_Remove_CPPAPI)
 	{
-		static constexpr int32 StartingValue = 0;
+		static constexpr int32 StartingValue = 1;
 		
 		TestEntity.Add<FFlecsTestStruct_Value>();
 		ASSERT_THAT(IsTrue(TestEntity.Has(ValuedComponentEntity)));
@@ -504,7 +512,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 
 	TEST_METHOD(B7_BasicComponentAddAssignRemove_Add_StaticStructAPI_Assign_StaticStructAPI_Remove_StaticStructAPI)
 	{
-		static constexpr int32 StartingValue = 0;
+		static constexpr int32 StartingValue = 1;
 
 		static constexpr FFlecsTestStruct_Value DefaultValue{ .Value = 42 };
 		
@@ -535,7 +543,7 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A3_UnrealFlecsBasicComponentTests,
 
 	TEST_METHOD(B8_BasicComponentAddAssignRemove_Add_EntityAPI_Assign_EntityAPI_Remove_EntityAPI)
 	{
-		static constexpr int32 StartingValue = 0;
+		static constexpr int32 StartingValue = 1;
 
 		static constexpr FFlecsTestStruct_Value DefaultValue{ .Value = 42 };
 		
