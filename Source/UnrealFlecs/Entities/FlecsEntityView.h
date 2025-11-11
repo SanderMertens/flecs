@@ -512,6 +512,12 @@ public:
 	{
 		return GetEntityView().to_constant<TEnum>();
 	}
+
+	template <typename TInt>
+	NO_DISCARD SOLID_INLINE TInt ToConstant(const FFlecsId InEnumType) const
+	{
+		return GetEntityView().to_constant<TInt>(InEnumType);
+	}
 	
 	NO_DISCARD SOLID_INLINE uint64 ToConstant(const TSolidNotNull<const UEnum*> InEnumType) const
 	{
@@ -523,11 +529,11 @@ public:
 		
 		if (MaxEnumValue <= std::numeric_limits<uint8>::max())
 		{
-			return GetEntityView().to_constant<uint8>(EnumEntity);
+			return ToConstant<uint8>(EnumEntity);
 		}
 		else
 		{
-			return GetEntityView().to_constant<uint64>(EnumEntity);
+			return ToConstant<uint64>(EnumEntity);
 		}
 	}
 
