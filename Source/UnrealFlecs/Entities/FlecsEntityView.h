@@ -117,6 +117,13 @@ public:
 		return GetEntityView().has<T>(InValue);
 	}
 
+	template <typename T>
+	requires (std::is_enum<T>::value)
+	NO_DISCARD SOLID_INLINE bool Has(const FFlecsId InValue) const
+	{
+		return GetEntityView().has<T>(FFlecsCommonHandle::GetInputId(*this, InValue));
+	}
+
 	NO_DISCARD SOLID_INLINE bool Has(const FSolidEnumSelector& EnumSelector) const
 	{
 		return Has(EnumSelector.Class, EnumSelector.Value);
@@ -132,6 +139,18 @@ public:
 	NO_DISCARD SOLID_INLINE bool HasPair(const TSecond& InSecond) const
 	{
 		return GetEntityView().has<TFirst>(FFlecsEntityView::GetInputId(*this, InSecond));
+	}
+
+	template <Unreal::Flecs::TFlecsEntityFunctionUEnumTypeConcept TFirst>
+	NO_DISCARD SOLID_INLINE bool HasPair(const TFirst& InFirst, const int64 InSecond) const
+	{
+		const FFlecsEntityView EnumEntity = ObtainComponentTypeEnum<FFlecsEntityView>(InFirst);
+		solid_check(EnumEntity.IsValid());
+		solid_check(EnumEntity.IsEnum());
+
+		const FFlecsId EnumConstant = ObtainEnumConstant<FFlecsId>(InFirst, InSecond);
+		
+		return GetEntityView().has(FFlecsEntityView::GetInputId(*this, InFirst), EnumConstant);
 	}
 	
 	template <Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst,
