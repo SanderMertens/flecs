@@ -986,6 +986,7 @@
                 "any_wildcard",
                 "cascade",
                 "cascade_w_relationship",
+                "cascade_w_set_var",
                 "up_w_type",
                 "cascade_w_type",
                 "cascade_desc",

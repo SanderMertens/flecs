@@ -952,6 +952,7 @@ void QueryBuilder_create_w_no_template_args(void);
 void QueryBuilder_any_wildcard(void);
 void QueryBuilder_cascade(void);
 void QueryBuilder_cascade_w_relationship(void);
+void QueryBuilder_cascade_w_set_var(void);
 void QueryBuilder_up_w_type(void);
 void QueryBuilder_cascade_w_type(void);
 void QueryBuilder_cascade_desc(void);
@@ -5371,6 +5372,10 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_cascade_w_relationship
     },
     {
+        "cascade_w_set_var",
+        QueryBuilder_cascade_w_set_var
+    },
+    {
         "up_w_type",
         QueryBuilder_up_w_type
     },
@@ -8202,7 +8207,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        179,
+        180,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params
