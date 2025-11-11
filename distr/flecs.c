@@ -6270,8 +6270,10 @@ void flecs_cmd_batch_for_entity(
              * count of r->cr would always be >0.
              * Since those tables are new, we don't have to invoke component 
              * monitors since queries will have correctly matched them. */
-            ecs_assert(r->cr != NULL, ECS_INTERNAL_ERROR, NULL);
-            if (ecs_map_count(&r->cr->cache.index)) {
+            ecs_component_record_t *cr = flecs_components_get(
+                world, ecs_pair(EcsWildcard, entity));
+            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (ecs_map_count(&cr->cache.index)) {
                 flecs_update_component_monitors(world, &added, NULL);
             }
         }
@@ -9061,7 +9063,6 @@ void ecs_delete(
             if (row_flags & EcsEntityIsTarget) {
                 flecs_on_delete(world, ecs_pair(EcsFlag, entity), 0, true);
                 flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0, true);
-                r->cr = NULL;
             }
 
             if (row_flags & EcsEntityIsId) {
@@ -14267,9 +14268,8 @@ void flecs_emit_propagate_id(
 
         const ecs_entity_t *entities = ecs_table_entities(table);
         for (e = 0; e < entity_count; e ++) {
-            ecs_record_t *r = flecs_entities_get(world, entities[e]);
-            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_component_record_t *cr_t = r->cr;
+            ecs_component_record_t *cr_t = flecs_components_get(
+                world, ecs_pair(EcsWildcard, entities[e]));
             if (cr_t) {
                 /* Only notify for entities that are used in pairs with
                  * traversable relationships */
@@ -14363,8 +14363,8 @@ void flecs_emit_propagate_invalidate_tables(
             const ecs_entity_t *entities = ecs_table_entities(table);
 
             for (e = 0; e < entity_count; e ++) {
-                ecs_record_t *r = flecs_entities_get(world, entities[e]);
-                ecs_component_record_t *cr_t = r->cr;
+                ecs_component_record_t *cr_t = flecs_components_get(
+                    world, ecs_pair(EcsWildcard, entities[e]));
                 if (cr_t) {
                     /* Only notify for entities that are used in pairs with
                      * traversable relationships */
@@ -14384,14 +14384,8 @@ void flecs_emit_propagate_invalidate(
     const ecs_entity_t *entities = &ecs_table_entities(table)[offset];
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_record_t *record = flecs_entities_get(world, entities[i]);
-        if (!record) {
-            /* If the event is emitted after a bulk operation, it's possible
-             * that it hasn't been populated with entities yet. */
-            continue;
-        }
-
-        ecs_component_record_t *cr_t = record->cr;
+        ecs_component_record_t *cr_t = flecs_components_get(
+            world, ecs_pair(EcsWildcard, entities[i]));
         if (cr_t) {
             /* Event is used as target in traversable relationship, propagate */
             flecs_emit_propagate_invalidate_tables(world, cr_t);
@@ -14423,14 +14417,8 @@ void flecs_propagate_entities(
 
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_record_t *record = flecs_entities_get(world, entities[i]);
-        if (!record) {
-            /* If the event is emitted after a bulk operation, it's possible
-             * that it hasn't been populated with entities yet. */
-            continue;
-        }
-
-        ecs_component_record_t *cr_t = record->cr;
+        ecs_component_record_t *cr_t = flecs_components_get(
+            world, ecs_pair(EcsWildcard, entities[i]));
         if (cr_t) {
             /* Entity is used as target in traversable pairs, propagate */
             ecs_entity_t e = src ? src : entities[i];
@@ -14951,7 +14939,7 @@ void flecs_emit_forward(
         entities = ECS_ELEM_T(entities, ecs_entity_t, it->offset);
         for (i = 0; i < it->count; i ++) {
             ecs_record_t *r = flecs_entities_get(world, entities[i]);
-            if (r->cr) {
+            if ((r->row & EcsEntityIsTraversable)) {
                 break;
             }
         }
@@ -37767,9 +37755,6 @@ ecs_component_record_t* flecs_component_new(
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
             flecs_record_add_flag(tgt_r, EcsEntityIsTraversable);
-
-            /* Add reference to (*, tgt) component record to entity record */
-            tgt_r->cr = cr_t;
         }
 
         /* Mark (*, tgt) record with HasDontFragment so that queries can quickly
@@ -38385,7 +38370,6 @@ void flecs_entity_index_remove(
 
     r_swap->dense = dense;
     r->table = NULL;
-    r->cr = NULL;
     r->row = 0;
     r->dense = i_swap;
     ecs_vec_get_t(&index->dense, uint64_t, dense)[0] = e_swap;

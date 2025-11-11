@@ -2357,6 +2357,7 @@
                 "dont_delete_non_empty_queried_for_component_record_w_shrink",
                 "dont_delete_non_empty_sparse_component_record_w_shrink",
                 "dont_delete_non_empty_dont_fragment_component_record_w_shrink",
+                "remove_from_traversable_after_shrink",
                 "mini_all_tables_builtin",
                 "mini_all_tables_builtin_after_add",
                 "user_component_not_builtin",

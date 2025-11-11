@@ -176,7 +176,6 @@ void flecs_entity_index_remove(
 
     r_swap->dense = dense;
     r->table = NULL;
-    r->cr = NULL;
     r->row = 0;
     r->dense = i_swap;
     ecs_vec_get_t(&index->dense, uint64_t, dense)[0] = e_swap;
