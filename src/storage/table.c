@@ -2097,6 +2097,8 @@ bool flecs_table_shrink(
 
     flecs_increment_table_column_version(world, table);
 
+    flecs_table_mark_table_dirty(world, table, 0);
+
     flecs_table_check_sanity(table);
 
     return has_payload;

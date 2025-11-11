@@ -74,7 +74,7 @@ void ecs_table_cache_init(
     ecs_table_cache_t *cache)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_map_init_w_params(&cache->index, &world->allocators.ptr);
+    ecs_map_init(&cache->index, &world->allocator);
 }
 
 void ecs_table_cache_fini(
@@ -99,9 +99,8 @@ void ecs_table_cache_insert(
 
     flecs_table_cache_list_insert(cache, result);
 
-    if (table) {
-        ecs_map_insert_ptr(&cache->index, table->id, result);
-    }
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_map_insert_ptr(&cache->index, table->id, result);
 
     ecs_assert(cache->tables.first != NULL, ECS_INTERNAL_ERROR, NULL);
 }
@@ -145,16 +144,9 @@ void* ecs_table_cache_get(
     const ecs_table_t *table)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (table) {
-        if (ecs_map_is_init(&cache->index)) {
-            return ecs_map_get_deref(&cache->index, void**, table->id);
-        }
-        return NULL;
-    } else {
-        ecs_table_cache_hdr_t *elem = cache->tables.first;
-        ecs_assert(!elem || elem->table == NULL, ECS_INTERNAL_ERROR, NULL);
-        return elem;
-    }
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_map_is_init(&cache->index), ECS_INTERNAL_ERROR, NULL);
+    return ecs_map_get_deref(&cache->index, void**, table->id);
 }
 
 void* ecs_table_cache_remove(

@@ -2035,10 +2035,6 @@ typedef struct ecs_map_iter_t {
     ecs_map_data_t *res;
 } ecs_map_iter_t;
 
-typedef struct ecs_map_params_t {
-    struct ecs_allocator_t *allocator;
-} ecs_map_params_t;
-
 /* Function/macro postfixes meaning:
  *   _ptr:    access ecs_map_val_t as void*
  *   _ref:    access ecs_map_val_t* as T**
@@ -2047,33 +2043,17 @@ typedef struct ecs_map_params_t {
  *   _free:   if _ptr is not NULL, free
  */
 
-FLECS_API
-void ecs_map_params_init(
-    ecs_map_params_t *params,
-    struct ecs_allocator_t *allocator);
-
 /** Initialize new map. */
 FLECS_API
 void ecs_map_init(
     ecs_map_t *map,
     struct ecs_allocator_t *allocator);
 
-/** Initialize new map. */
-FLECS_API
-void ecs_map_init_w_params(
-    ecs_map_t *map,
-    ecs_map_params_t *params);
-
 /** Initialize new map if uninitialized, leave as is otherwise */
 FLECS_API
 void ecs_map_init_if(
     ecs_map_t *map,
     struct ecs_allocator_t *allocator);
-
-FLECS_API
-void ecs_map_init_w_params_if(
-    ecs_map_t *result,
-    ecs_map_params_t *params);
 
 /** Reclaim map memory.  */
 FLECS_API

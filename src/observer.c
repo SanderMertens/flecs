@@ -163,7 +163,7 @@ void flecs_register_observer_for_id(
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
-        ecs_map_init_w_params_if(observers, &world->allocators.ptr);
+        ecs_map_init_if(observers, &world->allocator);
         ecs_map_insert_ptr(observers, impl->id, o);
 
         flecs_inc_observer_count(world, event, er, term_id, 1);
