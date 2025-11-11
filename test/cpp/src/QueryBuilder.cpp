@@ -2940,6 +2940,32 @@ void QueryBuilder_cascade_w_relationship(void) {
     test_int(count, 3);
 }
 
+void QueryBuilder_cascade_w_set_var(void) {
+    flecs::world ecs;
+
+    flecs::entity sun = ecs.entity()
+        .set<Position>({1, 2});
+
+    flecs::entity earth = ecs.entity()
+        .child_of(sun);
+
+    flecs::query q = ecs.query_builder<const Position*>()
+        .term_at(0)
+        .cascade()
+        .build();
+
+    int32_t count = 0;
+    q.set_var(0, earth).each([&](flecs::entity e, const Position* p) {
+        count ++;
+        test_assert(e == earth);
+        test_assert(p != nullptr);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    });
+
+    test_int(count, 1);
+}
+
 void QueryBuilder_up_w_type(void) {
     flecs::world ecs;
 
