@@ -29,6 +29,7 @@ TEST_CLASS_WITH_FLAGS(B1_FlecsEntityRecordTests, "UnrealFlecs.B1_EntityRecords",
 		FlecsWorld->RegisterComponentType<FUSTRUCTPairTestComponent>();
 		FlecsWorld->RegisterComponentType<FUSTRUCTPairTestComponent_Second>();
 		FlecsWorld->RegisterComponentType<FUSTRUCTPairTestComponent_Data>();
+		FlecsWorld->RegisterComponentType<EFlecsTestEnum_UENUM>();
 	}
 
 	AFTER_EACH()
@@ -62,16 +63,18 @@ TEST_CLASS_WITH_FLAGS(B1_FlecsEntityRecordTests, "UnrealFlecs.B1_EntityRecords",
 		ASSERT_THAT(IsTrue(ValueByUStruct->Value == 123));
 	}
 
-	TEST_METHOD(A2_ApplyRecord_AddsTagComponent)
+	TEST_METHOD(A2_ApplyRecord_AddsTagComponent_And_GameplayTag)
 	{
 		FFlecsEntityRecord Record;
 		Record.AddComponent<FFlecsTestStruct_Tag>();
+		Record.AddComponent(FFlecsTestNativeGameplayTags::Get().TestTag2);
 
 		const FFlecsEntityHandle Entity = FlecsWorld->CreateEntity();
 		Record.ApplyRecordToEntity(FlecsWorld, Entity);
 
 		ASSERT_THAT(IsTrue(Entity.Has<FFlecsTestStruct_Tag>()));
 		ASSERT_THAT(IsTrue(Entity.Has(FFlecsTestStruct_Tag::StaticStruct())));
+		ASSERT_THAT(IsTrue(Entity.Has(FFlecsTestNativeGameplayTags::Get().TestTag2)));
 	}
 
 	TEST_METHOD(A3_ApplyRecord_AddsPairComponents_Tags)
@@ -177,6 +180,22 @@ TEST_CLASS_WITH_FLAGS(B1_FlecsEntityRecordTests, "UnrealFlecs.B1_EntityRecords",
 		const auto& [Value] = Entity.Get<FFlecsTestStruct_Value>();
 		ASSERT_THAT(IsTrue(Value == 789));
 		ASSERT_THAT(IsTrue(Entity.HasPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>()));
+	}
+
+	TEST_METHOD(A8_ApplyRecord_MultipleTimes_AddScriptEnum)
+	{
+		FFlecsEntityRecord Record;
+		const FSolidEnumSelector EnumValue = FSolidEnumSelector::Make<EFlecsTestEnum_UENUM>(EFlecsTestEnum_UENUM::One);
+		Record.AddComponent(EnumValue);
+
+		const FFlecsEntityHandle Entity = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(Entity.IsValid()));
+		
+		Record.ApplyRecordToEntity(FlecsWorld, Entity);
+
+		ASSERT_THAT(IsTrue(Entity.HasPair<EFlecsTestEnum_UENUM>(flecs::Wildcard)));
+		ASSERT_THAT(IsTrue(Entity.Has<EFlecsTestEnum_UENUM>(EFlecsTestEnum_UENUM::One)));
+		ASSERT_THAT(IsTrue(Entity.Has(StaticEnum<EFlecsTestEnum_UENUM>(), static_cast<int64>(EFlecsTestEnum_UENUM::One))));
 	}
 
 	
