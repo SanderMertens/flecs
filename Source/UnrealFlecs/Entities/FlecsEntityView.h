@@ -582,7 +582,7 @@ public:
 
 	NO_DISCARD SOLID_INLINE FString GetName() const
 	{
-		return FString(GetEntityView().name().c_str(), static_cast<int32>(GetEntity().name().length()));
+		return FString(GetEntity().name().c_str(), static_cast<int32>(GetEntity().name().length()));
 	}
 	
 	NO_DISCARD SOLID_INLINE bool HasName() const
