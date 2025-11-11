@@ -202,10 +202,10 @@ public:
 	FFlecsEntityHandle CreateEntityWithPrefab(const FFlecsId InPrefab) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord,
+	FFlecsEntityHandle CreateEntityWithRecord(const TInstancedStruct<FFlecsEntityRecord>& InRecord,
 	                                          const FString& Name = "") const;
 
-	FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord,
+	FFlecsEntityHandle CreateEntityWithRecordWithId(const TInstancedStruct<FFlecsEntityRecord>& InRecord,
 	                                                const FFlecsId InId) const;
 	
 	/**
@@ -930,7 +930,7 @@ public:
 	FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle CreatePrefabWithRecord(const FFlecsEntityRecord& InRecord,
+	FFlecsEntityHandle CreatePrefabWithRecord(const TInstancedStruct<FFlecsEntityRecord>& InRecord,
 	                                          const FString& Name = "") const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
@@ -943,7 +943,7 @@ public:
 	}
 
 	FFlecsEntityHandle CreatePrefab(const TSolidNotNull<UClass*> InClass) const;
-	FFlecsEntityHandle CreatePrefabWithRecord(const FFlecsEntityRecord& InRecord,
+	FFlecsEntityHandle CreatePrefabWithRecord(const TInstancedStruct<FFlecsEntityRecord>& InRecord,
 	                                          const TSolidNotNull<UClass*> InClass) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")

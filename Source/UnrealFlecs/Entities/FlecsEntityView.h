@@ -14,76 +14,6 @@
 
 #include "FlecsEntityView.generated.h"
 
-enum class EFlecsAccessorType : uint8
-{
-	// Reference
-	Ref = 1 << 0,
-	// Pointer
-	Ptr = 1 << 1,
-
-	// Mutable
-	Mut = 1 << 2,
-	// Constant
-	Const = 1 << 3,
-
-	ConstRef = (Ref | Const),
-	ConstPtr = (Ptr | Const),
-	MutRef = (Ref | Mut),
-	MutPtr = (Ptr | Mut),
-	
-}; // enum class EFlecsAccessorType
-ENUM_CLASS_FLAGS(EFlecsAccessorType)
-
-namespace Unreal::Flecs::Accessors
-{
-	constexpr NO_DISCARD bool IsRef(const EFlecsAccessorType InType)
-	{
-		return EnumHasAnyFlags(InType, EFlecsAccessorType::Ref);
-	}
-
-	constexpr NO_DISCARD bool IsPtr(const EFlecsAccessorType InType)
-	{
-		return EnumHasAnyFlags(InType, EFlecsAccessorType::Ptr);
-	}
-
-	constexpr NO_DISCARD bool IsMut(const EFlecsAccessorType InType)
-	{
-		return EnumHasAnyFlags(InType, EFlecsAccessorType::Mut);
-	}
-
-	constexpr NO_DISCARD bool IsConst(const EFlecsAccessorType InType)
-	{
-		return EnumHasAnyFlags(InType, EFlecsAccessorType::Const);
-	}
-
-	constexpr NO_DISCARD bool IsConstRef(const EFlecsAccessorType InType)
-	{
-		return IsRef(InType) && IsConst(InType);
-	}
-
-	constexpr NO_DISCARD bool IsConstPtr(const EFlecsAccessorType InType)
-	{
-		return IsPtr(InType) && IsConst(InType);
-	}
-
-	constexpr NO_DISCARD bool IsMutRef(const EFlecsAccessorType InType)
-	{
-		return IsRef(InType) && IsMut(InType);
-	}
-
-	constexpr NO_DISCARD bool IsMutPtr(const EFlecsAccessorType InType)
-	{
-		return IsPtr(InType) && IsMut(InType);
-	}
-
-	template <typename TQualifier>
-	struct TAccessorHelper;
-
-	template <typename TFirst, typename TSecond, typename TQualifier>
-	struct TPairAccessorHelper;
-	
-} // namespace Unreal::Flecs::Accessors
-
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsEntityView : public FFlecsCommonHandle
 {
@@ -218,60 +148,38 @@ public:
 		return GetEntityView().has_second<TSecond>(FFlecsEntityView::GetInputId(*this, InFirst));
 	}
 
-	template <typename T, EFlecsAccessorType AccessorType = EFlecsAccessorType::ConstRef>
-	requires (Unreal::Flecs::Accessors::IsRef(AccessorType) && Unreal::Flecs::Accessors::IsConst(AccessorType))
+	template <typename T>
 	NO_DISCARD SOLID_INLINE const T& Get() const
 	{
-		solid_checkf(Has<T>(),
-			TEXT("Entity does not have component with type %hs"), nameof(T).data());
 		return GetEntityView().get<T>();
 	}
 
-	template <typename T, EFlecsAccessorType AccessorType>
-	requires (Unreal::Flecs::Accessors::IsRef(AccessorType) && Unreal::Flecs::Accessors::IsMut(AccessorType))
-	NO_DISCARD SOLID_INLINE T& Get()
+	template <typename T>
+	NO_DISCARD SOLID_INLINE T& GetMut() const
 	{
-		solid_checkf(Has<T>(),
-			TEXT("Entity does not have component with type %hs"), nameof(T).data());
 		return GetEntityView().get_mut<T>();
 	}
 
-	template <typename T, EFlecsAccessorType AccessorType>
-	requires (Unreal::Flecs::Accessors::IsPtr(AccessorType) && Unreal::Flecs::Accessors::IsConst(AccessorType))
-	NO_DISCARD SOLID_INLINE const T* Get() const
-	{
-		return GetEntityView().try_get<T>();
-	}
-
-	template <typename T, EFlecsAccessorType AccessorType>
-	requires (Unreal::Flecs::Accessors::IsPtr(AccessorType) && Unreal::Flecs::Accessors::IsMut(AccessorType))
-	NO_DISCARD SOLID_INLINE T* Get()
-	{
-		return GetEntityView().try_get_mut<T>();
-	}
-
-	template <typename T, EFlecsAccessorType AccessorType = EFlecsAccessorType::ConstPtr>
-	requires (Unreal::Flecs::Accessors::IsConst(AccessorType))
+	template <typename T>
 	NO_DISCARD SOLID_INLINE const T* TryGet() const
 	{
 		return GetEntityView().try_get<T>();
 	}
 
-	template <typename T, EFlecsAccessorType AccessorType>
-	requires (Unreal::Flecs::Accessors::IsMut(AccessorType))
-	NO_DISCARD SOLID_INLINE T* TryGet()
+	template <typename T>
+	NO_DISCARD SOLID_INLINE T* TryGetMut() const
 	{
 		return GetEntityView().try_get_mut<T>();
 	}
 
 	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept T>
-	NO_DISCARD SOLID_INLINE const void* GetPtr(const T& InTypeValue) const
+	NO_DISCARD SOLID_INLINE const void* TryGet(const T& InTypeValue) const
 	{
 		return GetEntityView().try_get(FFlecsEntityView::GetInputId(*this, InTypeValue));
 	}
 
 	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept T>
-	NO_DISCARD SOLID_INLINE void* GetMutPtr(const T& InTypeValue) const
+	NO_DISCARD SOLID_INLINE void* TryGetMut(const T& InTypeValue) const
 	{
 		return GetEntityView().try_get_mut(FFlecsEntityView::GetInputId(*this, InTypeValue));
 	}
@@ -293,88 +201,65 @@ public:
 	NO_DISCARD SOLID_INLINE uint64 GetEnumValue(const UEnum* EnumType) const
 	{
 		const FFlecsEntityView Target = GetPairTarget<FFlecsEntityView>(EnumType);
-		solid_check(Target.IsValid());
 		
 		return Target.ToConstant(EnumType);
 	}
 
-	template <typename TFirst, typename TSecond, EFlecsAccessorType AccessorType = EFlecsAccessorType::ConstRef,
-		typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TFirst, TActual> && Unreal::Flecs::Accessors::IsConstRef(AccessorType))
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TFirst, TActual>)
 	NO_DISCARD SOLID_INLINE const TActual& GetPairFirst() const
 	{
-		solid_check((HasPair<TFirst, TSecond>()));
-		
 		return GetEntityView().get<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, typename TSecond, EFlecsAccessorType AccessorType,
-		typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TFirst, TActual> && Unreal::Flecs::Accessors::IsMutRef(AccessorType))
-	NO_DISCARD SOLID_INLINE TActual& GetPairFirst() const
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TFirst, TActual>)
+	NO_DISCARD SOLID_INLINE TActual& GetPairFirstMut() const
 	{
-		solid_check((HasPair<TFirst, TSecond>()));
-		
 		return GetEntityView().get_mut<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, EFlecsAccessorType AccessorType = EFlecsAccessorType::ConstRef,
-		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
-	requires (Unreal::Flecs::Accessors::IsConstRef(AccessorType))
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
 	NO_DISCARD SOLID_INLINE const TFirst& GetPairFirst(const TSecond& InSecond) const
 	{
-		solid_check((HasPair<TFirst>(InSecond)));
-		
 		return GetEntityView().get<TFirst>(FFlecsEntityView::GetInputId(*this, InSecond));
 	}
 
-	template <typename TFirst, EFlecsAccessorType AccessorType,
-		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
-	requires (Unreal::Flecs::Accessors::IsMutRef(AccessorType))
-	NO_DISCARD SOLID_INLINE TFirst& GetPairFirst(const TSecond& InSecond) const
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	NO_DISCARD SOLID_INLINE TFirst& GetPairFirstMut(const TSecond& InSecond) const
 	{
-		solid_checkf(HasPair<TFirst>(InSecond),
-			TEXT("Entity does not have pair with %hs"),
-			nameof(TFirst).data());
-		
 		return GetEntityView().get_mut<TFirst>(FFlecsEntityView::GetInputId(*this, InSecond));
 	}
 
-	template <typename TFirst, typename TSecond, EFlecsAccessorType AccessorType,
-		typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TFirst, TActual> && Unreal::Flecs::Accessors::IsConstPtr(AccessorType))
-	NO_DISCARD SOLID_INLINE const TActual* GetPairFirst() const
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TFirst, TActual>)
+	NO_DISCARD SOLID_INLINE const TActual* TryGetPairFirst() const
 	{
 		return GetEntityView().try_get<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, typename TSecond, EFlecsAccessorType AccessorType,
-		typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TFirst, TActual> && Unreal::Flecs::Accessors::IsMutPtr(AccessorType))
-	NO_DISCARD SOLID_INLINE TActual* GetPairFirst() const
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TFirst, TActual>)
+	NO_DISCARD SOLID_INLINE TActual* TryGetPairFirstMut() const
 	{
 		return GetEntityView().try_get_mut<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, EFlecsAccessorType AccessorType,
-		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
-	requires (Unreal::Flecs::Accessors::IsConstPtr(AccessorType))
-	NO_DISCARD SOLID_INLINE const TFirst* GetPairFirst(const TSecond& InSecond) const
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	NO_DISCARD SOLID_INLINE const TFirst* TryGetPairFirst(const TSecond& InSecond) const
 	{
 		return GetEntityView().try_get<TFirst>(FFlecsEntityView::GetInputId(*this, InSecond));
 	}
 
-	template <typename TFirst, EFlecsAccessorType AccessorType,
-		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
-	requires (Unreal::Flecs::Accessors::IsMutPtr(AccessorType))
-	NO_DISCARD SOLID_INLINE TFirst* GetPairFirst(const TSecond& InSecond) const
+	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
+	NO_DISCARD SOLID_INLINE TFirst* TryGetPairFirstMut(const TSecond& InSecond) const
 	{
 		return GetEntityView().try_get_mut<TFirst>(FFlecsEntityView::GetInputId(*this, InSecond));
 	}
 
 	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First, 
 		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrFirst(const First& InFirstTypeValue, const Second& InSecondTypeValue) const
+	NO_DISCARD SOLID_INLINE const void* TryGetPairFirst(const First& InFirstTypeValue, const Second& InSecondTypeValue) const
 	{
 		return GetEntityView().try_get(FFlecsEntityView::GetInputId(*this, InFirstTypeValue),
 			FFlecsEntityView::GetInputId(*this, InSecondTypeValue));
@@ -382,87 +267,65 @@ public:
 
 	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First, 
 		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
-	NO_DISCARD SOLID_INLINE void* GetPairPtrMutFirst(const First& InFirstTypeValue, const Second& InSecondTypeValue) const
+	NO_DISCARD SOLID_INLINE void* TryGetPairFirstMut(const First& InFirstTypeValue, const Second& InSecondTypeValue) const
 	{
 		return GetEntityView().try_get_mut(FFlecsEntityView::GetInputId(*this, InFirstTypeValue),
 			FFlecsEntityView::GetInputId(*this, InSecondTypeValue));
 	}
 	
-	template <typename TFirst, typename TSecond, EFlecsAccessorType AccessorType = EFlecsAccessorType::ConstRef,
-		typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TSecond, TActual> && Unreal::Flecs::Accessors::IsConstRef(AccessorType))
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TSecond, TActual>)
 	NO_DISCARD SOLID_INLINE const TActual& GetPairSecond() const
 	{
-		solid_check((HasPairSecond<TFirst, TSecond>()));
-		
 		return GetEntityView().get_second<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, typename TSecond, EFlecsAccessorType AccessorType,
-		typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TSecond, TActual> && Unreal::Flecs::Accessors::IsMutRef(AccessorType))
-	NO_DISCARD SOLID_INLINE TActual& GetPairSecond() const
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	requires (std::is_same_v<TSecond, TActual>)
+	NO_DISCARD SOLID_INLINE TActual& GetPairSecondMut() const
 	{
-		solid_check((HasPairSecond<TFirst, TSecond>()));
-		
 		return GetEntityView().get_mut_second<TFirst, TSecond>();
 	}
 
-	template <typename TSecond, EFlecsAccessorType AccessorType = EFlecsAccessorType::ConstRef,
-		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
-	requires (Unreal::Flecs::Accessors::IsConstRef(AccessorType))
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
 	NO_DISCARD SOLID_INLINE const TSecond& GetPairSecond(const TFirst& InFirst) const
 	{
-		solid_check((HasPairSecond<TSecond>(InFirst)));
-		
 		return GetEntityView().get_second<TSecond>(FFlecsEntityView::GetInputId(*this, InFirst));
 	}
 
-	template <typename TSecond, EFlecsAccessorType AccessorType,
-		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
-	requires (Unreal::Flecs::Accessors::IsMutRef(AccessorType))
-	NO_DISCARD SOLID_INLINE TSecond& GetPairSecond(const TFirst& InFirst) const
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
+	NO_DISCARD SOLID_INLINE TSecond& GetPairSecondMut(const TFirst& InFirst) const
 	{
-		solid_check((HasPairSecond<TSecond>(InFirst)));
-		
 		return GetEntityView().get_mut_second<TSecond>(FFlecsEntityView::GetInputId(*this, InFirst));
 	}
 	
-	template <typename TFirst, typename TSecond, EFlecsAccessorType AccessorType,
-		typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TSecond, TActual> && Unreal::Flecs::Accessors::IsConstPtr(AccessorType))
-	NO_DISCARD SOLID_INLINE const TActual* GetPairSecond() const
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	NO_DISCARD SOLID_INLINE const TActual* TryGetPairSecond() const
 	{
 		return GetEntityView().try_get_second<TFirst, TSecond>();
 	}
 
-	template <typename TFirst, typename TSecond, EFlecsAccessorType AccessorType,
-		typename TActual = typename flecs::pair<TFirst, TSecond>::type>
-	requires (std::is_same_v<TSecond, TActual> && Unreal::Flecs::Accessors::IsMutPtr(AccessorType))
-	NO_DISCARD SOLID_INLINE TActual* GetPairSecond() const
+	template <typename TFirst, typename TSecond, typename TActual = typename flecs::pair<TFirst, TSecond>::type>
+	NO_DISCARD SOLID_INLINE TActual* TryGetPairSecondMut() const
 	{
 		return GetEntityView().try_get_mut_second<TFirst, TSecond>();
 	}
 
-	template <typename TSecond, EFlecsAccessorType AccessorType,
-		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
-	requires (Unreal::Flecs::Accessors::IsConstPtr(AccessorType))
-	NO_DISCARD SOLID_INLINE const TSecond* GetPairSecond(const TFirst& InFirst) const
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
+	NO_DISCARD SOLID_INLINE const TSecond* TryGetPairSecond(const TFirst& InFirst) const
 	{
 		return GetEntityView().try_get_second<TSecond>(FFlecsEntityView::GetInputId(*this, InFirst));
 	}
 
-	template <typename TSecond, EFlecsAccessorType AccessorType,
-		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
-	requires (Unreal::Flecs::Accessors::IsMutPtr(AccessorType))
-	NO_DISCARD SOLID_INLINE TSecond* GetPairSecond(const TFirst& InFirst) const
+	template <typename TSecond, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TFirst>
+	NO_DISCARD SOLID_INLINE TSecond* TryGetPairSecondMut(const TFirst& InFirst) const
 	{
 		return GetEntityView().try_get_mut_second<TSecond>(FFlecsEntityView::GetInputId(*this, InFirst));
 	}
 
 	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First, 
 		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
-	NO_DISCARD SOLID_INLINE const void* GetPairPtrSecond(const First& InFirstTypeValue, const Second& InSecondTypeValue) const
+	NO_DISCARD SOLID_INLINE const void* TryGetPairSecond(const First& InFirstTypeValue, const Second& InSecondTypeValue) const
 	{
 		return GetEntityView().try_get(FFlecsEntityView::GetInputId(*this, InFirstTypeValue),
 			FFlecsEntityView::GetInputId(*this, InSecondTypeValue));
@@ -470,7 +333,7 @@ public:
 
 	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First, 
 		Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept Second>
-	NO_DISCARD SOLID_INLINE void* GetPairPtrMutSecond(const First& InFirstTypeValue, const Second& InSecondTypeValue) const
+	NO_DISCARD SOLID_INLINE void* TryGetPairSecondMut(const First& InFirstTypeValue, const Second& InSecondTypeValue) const
 	{
 		return GetEntityView().try_get_mut(FFlecsEntityView::GetInputId(*this, InFirstTypeValue),
 			FFlecsEntityView::GetInputId(*this, InSecondTypeValue));
@@ -486,8 +349,6 @@ public:
 		Unreal::Flecs::TFlecsEntityFunctionDataTypeWithEnumNoValueConcept TFirst>
 	NO_DISCARD SOLID_INLINE THandle GetPairTarget(const TFirst& InFirstTypeValue, const int32 Index = 0) const
 	{
-		solid_check(HasPair(FFlecsEntityView::GetInputId(*this, InFirstTypeValue), flecs::Wildcard));
-		
 		return GetEntityView().target(FFlecsEntityView::GetInputId(*this, InFirstTypeValue), Index);
 	}
 
@@ -498,7 +359,7 @@ public:
 
 	NO_DISCARD SOLID_INLINE bool IsTag() const
 	{
-		return !IsComponent() || Get<flecs::Component, EFlecsAccessorType::ConstRef>().size == 0;
+		return !IsComponent() || Get<flecs::Component>().size == 0;
 	}
 
 	NO_DISCARD SOLID_INLINE bool IsEnum() const

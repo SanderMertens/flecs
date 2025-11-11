@@ -47,7 +47,7 @@ public:
 	//FString EntityName;
 
 	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
-	FFlecsEntityRecord EntityRecord;
+	TInstancedStruct<FFlecsEntityRecord> EntityRecord;
 
 #if WITH_EDITOR
 

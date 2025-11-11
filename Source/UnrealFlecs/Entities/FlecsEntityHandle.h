@@ -190,11 +190,6 @@ public:
 	
 	SOLID_INLINE const FSelfType& Set(const FFlecsId InId, const uint32 InSize, const void* InValue) const
 	{
-		if (!Has(InId))
-		{
-			Add(InId);
-		}
-		
 		GetEntity().set_ptr(InId, InSize, InValue);
 		return *this;
 	}
@@ -203,11 +198,6 @@ public:
 	SOLID_INLINE const FSelfType& Set(const T& InTypeValue, const void* InData) const
 	{
 		const FFlecsId InId = FFlecsEntityHandle::GetInputId(*this, InTypeValue);
-		
-		if (!Has(InId))
-		{
-			Add(InId);
-		}
 
 		if constexpr (std::is_convertible_v<T, const UScriptStruct*>)
 		{
@@ -666,9 +656,9 @@ public:
 	template <typename TFirst, Unreal::Flecs::TFlecsEntityFunctionInputTypeConcept TSecond>
 	SOLID_INLINE const FSelfType& SetPair(const TSecond& InSecondType, const void* InValue) const
 	{
-		Set(FFlecsId::MakePair(flecs::_::type<TFirst>::id(GetNativeFlecsWorld()),
-			FFlecsEntityHandle::GetInputId(*this, InSecondType)),
-				InSecondType->GetStructureSize(),
+		// @TODO: check for Type being registered
+		
+		Set(FFlecsId::MakePair(flecs::_::type<TFirst>::id(GetNativeFlecsWorld()), FFlecsEntityHandle::GetInputId(*this, InSecondType)),
 				InValue);
 			
 		return *this;
@@ -682,7 +672,6 @@ public:
 		Set(FFlecsId::MakePair(
 			FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
 			FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
-				InSecondTypeValue->GetStructureSize(),
 				InValue);
 		
 		return *this;
@@ -717,7 +706,6 @@ public:
 
 		Assign(FFlecsId::MakePair(flecs::_::type<TFirst>::id(GetNativeFlecsWorld()),
 			FFlecsEntityHandle::GetInputId(*this, InSecondType)),
-				InSecondType->GetStructureSize(),
 				InValue);
 		
 		return *this;
@@ -730,7 +718,6 @@ public:
 		Assign(FFlecsId::MakePair(
 			FFlecsEntityHandle::GetInputId(*this, InFirstTypeValue),
 			FFlecsEntityHandle::GetInputId(*this, InSecondTypeValue)),
-				InSecondTypeValue->GetStructureSize(),
 				InValue);
 		return *this;
 	}

@@ -18,6 +18,8 @@ namespace Unreal::Flecs
 	using EntityFunctionPtr = std::function<void(flecs::entity)>;
 } // namespace Unreal::Flecs
 
+// unused
+
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsDefaultMetaEntity
 {
@@ -43,12 +45,6 @@ struct UNREALFLECS_API FFlecsDefaultMetaEntity
 	}
 
 	FFlecsDefaultMetaEntity() = default;
-	FFlecsDefaultMetaEntity(const FString& EntityName,
-		const FFlecsEntityRecord& EntityRecord, const FFlecsId InEntityId)
-		: EntityName(EntityName)
-		, SetId(InEntityId)
-	{
-	}
 	
 }; // struct FFlecsEntityRecord
 

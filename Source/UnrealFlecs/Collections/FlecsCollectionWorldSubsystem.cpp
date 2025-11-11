@@ -474,7 +474,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::CreatePrefabEntity(const FStr
 {
 	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = GetFlecsWorldChecked();
 	
-	const FFlecsEntityHandle Prefab = FlecsWorld->CreatePrefabWithRecord(Record, Name)
+	const FFlecsEntityHandle Prefab = FlecsWorld->CreatePrefabWithRecord(TInstancedStruct<FFlecsEntityRecord>::Make(Record), Name)
 		.Add<FFlecsCollectionPrefabTag>();
 
 	return Prefab;
@@ -485,7 +485,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::CreatePrefabEntity(const TSol
 {
 	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = GetFlecsWorldChecked();
 	
-	const FFlecsEntityHandle Prefab = FlecsWorld->CreatePrefabWithRecord(Record, InClass)
+	const FFlecsEntityHandle Prefab = FlecsWorld->CreatePrefabWithRecord(TInstancedStruct<FFlecsEntityRecord>::Make(Record), InClass->GetName())
 		.Add<FFlecsCollectionPrefabTag>();
 
 	return Prefab;
@@ -507,7 +507,7 @@ void UFlecsCollectionWorldSubsystem::ApplyCollectionParametersToEntity(const FFl
 	const bool bHasInputParameters = InParameters.IsValid();
 
 	const FFlecsCollectionParametersComponent& ParametersComponent 
-		= InCollectionEntity.Get<FFlecsCollectionParametersComponent, EFlecsAccessorType::ConstRef>();
+		= InCollectionEntity.Get<FFlecsCollectionParametersComponent>();
 
 	if UNLIKELY_IF(!ParametersComponent.ParameterType.IsValid())
 	{

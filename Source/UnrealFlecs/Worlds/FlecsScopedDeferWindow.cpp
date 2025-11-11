@@ -6,8 +6,11 @@
 FFlecsScopedDeferWindow::FFlecsScopedDeferWindow(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld)
 	: FlecsWorld(InFlecsWorld)
 {
-	ensureMsgf(FlecsWorld->BeginDefer(),
-		TEXT("Failed to begin defer window in FlecsWorld"));
+	if (!ensureMsgf(FlecsWorld->BeginDefer(),
+		TEXT("Failed to begin defer window in FlecsWorld")))
+	{
+		FlecsWorld = nullptr;
+	}
 }
 
 FFlecsScopedDeferWindow::~FFlecsScopedDeferWindow()

@@ -459,7 +459,7 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>()));
 
 		// Verify the value was set from the default params
-		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value, EFlecsAccessorType::ConstRef>();
+		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value>();
 		ASSERT_THAT(IsTrue(Applied.Value == 33));
 
 		// Cleanup
@@ -496,7 +496,7 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>()));
 
 		// Verify the value was set from the explicit params
-		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value, EFlecsAccessorType::ConstRef>();
+		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value>();
 		ASSERT_THAT(IsTrue(Applied.Value == 99));
 
 		// Cleanup
@@ -524,7 +524,7 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
 
 		// Verify the value was set from the explicit params
-		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value, EFlecsAccessorType::ConstRef>();
+		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value>();
 		ASSERT_THAT(IsTrue(Applied.Value == 33));
 		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
 
@@ -553,7 +553,7 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
 
 		// Verify the value was set from the explicit params
-		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value, EFlecsAccessorType::ConstRef>();
+		const FFlecsTestStruct_Value& Applied = TestEntity.Get<FFlecsTestStruct_Value>();
 		ASSERT_THAT(IsTrue(Applied.Value == 99));
 		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
 
