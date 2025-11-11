@@ -10,7 +10,6 @@
  * Layout of the Tests:
  * A. Entity Record Application Tests
  * B. Entity Record Prefab Tests
- * C. Entity Record Sub-Entity Tests
  */
 TEST_CLASS_WITH_FLAGS(B1_FlecsEntityRecordTests, "UnrealFlecs.B1_EntityRecords",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
@@ -195,10 +194,175 @@ TEST_CLASS_WITH_FLAGS(B1_FlecsEntityRecordTests, "UnrealFlecs.B1_EntityRecords",
 
 		ASSERT_THAT(IsTrue(Entity.HasPair<EFlecsTestEnum_UENUM>(flecs::Wildcard)));
 		ASSERT_THAT(IsTrue(Entity.Has<EFlecsTestEnum_UENUM>(EFlecsTestEnum_UENUM::One)));
-		ASSERT_THAT(IsTrue(Entity.Has(StaticEnum<EFlecsTestEnum_UENUM>(), static_cast<int64>(EFlecsTestEnum_UENUM::One))));
+		ASSERT_THAT(IsTrue(Entity.Has(StaticEnum<EFlecsTestEnum_UENUM>(),
+			static_cast<int64>(EFlecsTestEnum_UENUM::One))));
 	}
 
-	
+	TEST_METHOD(A9_ApplyRecord_WithSubEntities_AddsComponents)
+	{
+		FFlecsEntityRecord SubRecord;
+		SubRecord.AddComponent<FFlecsTestStruct_Tag>();
+
+		FFlecsEntityRecord Record;
+		Record.AddSubEntity(MakeRecordInstance(SubRecord));
+
+		const FFlecsEntityHandle Entity = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(Entity.IsValid()));
+
+		Record.ApplyRecordToEntity(FlecsWorld, Entity);
+		// Should be in the sub-entity
+		ASSERT_THAT(IsFalse(Entity.Has<FFlecsTestStruct_Tag>()));
+
+		bool bFoundChild = false;
+		Entity.IterateChildren([&](const FFlecsEntityHandle& ChildEntity)
+		{
+			if (ChildEntity.Has<FFlecsTestStruct_Tag>())
+			{
+				bFoundChild = true;
+			}
+		});
+
+		ASSERT_THAT(IsTrue(bFoundChild));
+	}
+
+	TEST_METHOD(B1_CreatePrefabWithRecord_ApplyPrefabToEntity_AddsTagComponent)
+	{
+		FFlecsEntityRecord Record;
+		Record.AddComponent<FFlecsTestStruct_Tag>();
+
+		const FFlecsEntityHandle PrefabEntity = FlecsWorld->CreatePrefabWithRecord(MakeRecordInstance(Record));
+		ASSERT_THAT(IsTrue(PrefabEntity.IsValid()));
+		ASSERT_THAT(IsTrue(PrefabEntity.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddPrefab(PrefabEntity);
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
+		ASSERT_THAT(IsTrue(TestEntity.IsA(PrefabEntity)));
+	}
+
+	TEST_METHOD(B2_CreatePrefabWithRecord_ApplyPrefabToEntity_AddsScriptStructComponent)
+	{
+		FFlecsEntityRecord Record;
+		Record.AddComponent<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ .Value = 321 });
+
+		const FFlecsEntityHandle PrefabEntity = FlecsWorld->CreatePrefabWithRecord(MakeRecordInstance(Record));
+		ASSERT_THAT(IsTrue(PrefabEntity.IsValid()));
+		ASSERT_THAT(IsTrue(PrefabEntity.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddPrefab(PrefabEntity);
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>()));
+
+		const auto& [Value] = TestEntity.Get<FFlecsTestStruct_Value>();
+		ASSERT_THAT(IsTrue(Value == 321));
+	}
+
+	TEST_METHOD(B3_CreatePrefabWithRecord_ApplyPrefabToEntity_AddsPairComponents)
+	{
+		FFlecsEntityRecord Record;
+		
+		FFlecsRecordPair Pair;
+		Pair.First = FFlecsRecordPairSlot::Make<FUSTRUCTPairTestComponent>();
+		Pair.Second = FFlecsRecordPairSlot::Make<FUSTRUCTPairTestComponent_Second>();
+		Pair.PairValueType = EFlecsValuePairType::None;
+		Record.AddComponent(MoveTemp(Pair));
+
+		const FFlecsEntityHandle PrefabEntity = FlecsWorld->CreatePrefabWithRecord(MakeRecordInstance(Record));
+		ASSERT_THAT(IsTrue(PrefabEntity.IsValid()));
+		ASSERT_THAT(IsTrue(PrefabEntity.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddPrefab(PrefabEntity);
+		ASSERT_THAT(IsTrue(TestEntity.HasPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>()));
+	}
+
+	TEST_METHOD(B4_CreatePrefabWithRecord_ApplyPrefabToEntity_MultipleComponents)
+	{
+		FFlecsEntityRecord Record;
+		Record.AddComponent<FFlecsTestStruct_Tag>();
+		Record.AddComponent<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ .Value = 654 });
+		
+		FFlecsRecordPair Pair;
+		Pair.First = FFlecsRecordPairSlot::Make<FUSTRUCTPairTestComponent>();
+		Pair.Second = FFlecsRecordPairSlot::Make<FUSTRUCTPairTestComponent_Second>();
+		Pair.PairValueType = EFlecsValuePairType::None;
+		Record.AddComponent(MoveTemp(Pair));
+
+		const FFlecsEntityHandle PrefabEntity = FlecsWorld->CreatePrefabWithRecord(MakeRecordInstance(Record));
+		ASSERT_THAT(IsTrue(PrefabEntity.IsValid()));
+		ASSERT_THAT(IsTrue(PrefabEntity.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddPrefab(PrefabEntity);
+
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>()));
+		
+		const auto& [Value] = TestEntity.Get<FFlecsTestStruct_Value>();
+		ASSERT_THAT(IsTrue(Value == 654));
+		ASSERT_THAT(IsTrue(TestEntity.HasPair<FUSTRUCTPairTestComponent, FUSTRUCTPairTestComponent_Second>()));
+	}
+
+	TEST_METHOD(B5_CreatePrefabWithRecord_ApplyPrefabToEntity_AddsScriptEnum)
+	{
+		FFlecsEntityRecord Record;
+		const FSolidEnumSelector EnumValue = FSolidEnumSelector::Make<EFlecsTestEnum_UENUM>(EFlecsTestEnum_UENUM::Two);
+		Record.AddComponent(EnumValue);
+
+		const FFlecsEntityHandle PrefabEntity = FlecsWorld->CreatePrefabWithRecord(MakeRecordInstance(Record));
+		ASSERT_THAT(IsTrue(PrefabEntity.IsValid()));
+		ASSERT_THAT(IsTrue(PrefabEntity.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddPrefab(PrefabEntity);
+
+		ASSERT_THAT(IsTrue(TestEntity.HasPair<EFlecsTestEnum_UENUM>(flecs::Wildcard)));
+		ASSERT_THAT(IsTrue(TestEntity.Has<EFlecsTestEnum_UENUM>(EFlecsTestEnum_UENUM::Two)));
+		ASSERT_THAT(IsTrue(TestEntity.Has(StaticEnum<EFlecsTestEnum_UENUM>(),
+			static_cast<int64>(EFlecsTestEnum_UENUM::Two))));
+	}
+
+	TEST_METHOD(B6_CreatePrefabWithRecord_WithSubEntities_ApplyPrefabToEntity_AddsComponentsToSubEntities)
+	{
+		FFlecsEntityRecord SubRecord;
+		SubRecord.AddComponent<FFlecsTestStruct_Tag>();
+
+		FFlecsEntityRecord Record;
+		Record.AddSubEntity(MakeRecordInstance(SubRecord));
+
+		const FFlecsEntityHandle PrefabEntity = FlecsWorld->CreatePrefabWithRecord(MakeRecordInstance(Record));
+		ASSERT_THAT(IsTrue(PrefabEntity.IsValid()));
+		ASSERT_THAT(IsTrue(PrefabEntity.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddPrefab(PrefabEntity);
+
+		// Should be in the sub-entity
+		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Tag>()));
+
+		bool bFoundChild = false;
+		TestEntity.IterateChildren([&](const FFlecsEntityHandle& ChildEntity)
+		{
+			if (ChildEntity.Has<FFlecsTestStruct_Tag>())
+			{
+				bFoundChild = true;
+			}
+		});
+
+		ASSERT_THAT(IsTrue(bFoundChild));
+	}
 	
 }; // End of B1_FlecsEntityRecordTests
 
