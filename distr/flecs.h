@@ -27243,41 +27243,12 @@ struct entity_builder : entity_view {
 
     const Self& set_ptr(entity_t comp, const void *ptr) const  {
 
-        const flecs::Component *cptr = nullptr;
-        
-        if (ECS_IS_PAIR(comp)) {
-            const flecs::entity_t first = ECS_PAIR_FIRST(comp);
-            const flecs::entity_t second = ECS_PAIR_SECOND(comp);
-            
-            if (ecs_has(this->world_, first, EcsComponent)) {
-                cptr = ecs_get(
-                    this->world_, first, EcsComponent);
-
-                if (!cptr->size) {
-                    cptr = ecs_get(
-                        this->world_, second, EcsComponent);
-                    ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
-                }
-            }
-            else
-            {
-                cptr = ecs_get(
-                    this->world_, second, EcsComponent);
-            }
-        }
-        else
-        {
-            cptr = ecs_get(
-                this->world_, comp, EcsComponent);
-        }
+       const ecs_type_info_t *type_info = ecs_get_type_info(this->world_, comp);
 
         /* Can't set if it's not a component */
-        ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
-        
-        /* Can't set if component has no size */
-        ecs_assert(cptr->size != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(type_info != NULL, ECS_INVALID_PARAMETER, NULL);
 
-        return set_ptr(comp, cptr->size, ptr);
+        return set_ptr(comp, type_info->size, ptr);
     }
 
     /** Set a component for an entity.
