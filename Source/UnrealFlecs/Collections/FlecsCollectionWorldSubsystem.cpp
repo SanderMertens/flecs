@@ -341,6 +341,23 @@ void UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity(const FFlecsEnti
 	RemoveCollectionFromEntity(InEntity, FFlecsCollectionReference::FromClass(InClass));
 }
 
+void UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity,
+	const FFlecsId InCollectionId)
+{
+	solid_checkf(InEntity.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: InEntity is invalid"));
+	solid_checkf(InCollectionId.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: InCollectionId is invalid"));
+
+	const FFlecsEntityHandle CollectionPrefab = GetPrefabByIdRaw(InCollectionId);
+	
+	solid_checkf(CollectionPrefab.IsValid(),
+		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: CollectionId '%s' is not registered"),
+		*InCollectionId.ToString());
+
+	InEntity.RemovePair(flecs::IsA, CollectionPrefab);
+}
+
 bool UFlecsCollectionWorldSubsystem::HasCollection(const FFlecsEntityHandle& InEntity,
                                                    const FFlecsCollectionId& InCollectionId) const
 {

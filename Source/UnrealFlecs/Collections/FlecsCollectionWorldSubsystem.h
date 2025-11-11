@@ -136,6 +136,7 @@ public:
 	void RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity, const FFlecsCollectionReference& InCollectionReference);
 	void RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity, const TSolidNotNull<const UFlecsCollectionDataAsset*> InAsset);
 	void RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity, const TSubclassOf<UObject> InClass);
+	void RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity, const FFlecsId InCollectionId);
 
 	template <Solid::TStaticClassConcept T>
 	FORCEINLINE void RemoveCollectionFromEntity(const FFlecsEntityHandle& InEntity)

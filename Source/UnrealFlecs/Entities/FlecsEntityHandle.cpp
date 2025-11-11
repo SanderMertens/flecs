@@ -92,10 +92,19 @@ const FFlecsEntityHandle::FSelfType& FFlecsEntityHandle::AddCollection(const FFl
     return *this;
 }
 
-const FFlecsEntityHandle::FSelfType& FFlecsEntityHandle::RemoveCollection(const FFlecsId InCollection,
-    const bool bRemoveOverriden) const
+const FFlecsEntityHandle::FSelfType& FFlecsEntityHandle::RemoveCollection(const FFlecsId InCollection) const
 {
-    RemovePair(flecs::IsA, InCollection);
-		
+    solid_checkf(InCollection.IsValid(),
+      TEXT("Trying to add an invalid collection to an entity!"));
+    solid_checkf(GetNativeFlecsWorld().has<FFlecsCollectionSubsystemSingleton>(),
+        TEXT("Trying to add a collection to an entity, but the FlecsCollectionSubsystemSingleton is not registered in the world!"));
+
+    const FFlecsCollectionSubsystemSingleton& CollectionSubsystemSingleton
+       = GetNativeFlecsWorld().get<FFlecsCollectionSubsystemSingleton>();
+
+    solid_cassumef(CollectionSubsystemSingleton.WorldSubsystem,
+        TEXT("Trying to add a collection to an entity, but the FlecsCollectionWorldSubsystem is not initialized!"));
+
+    CollectionSubsystemSingleton.WorldSubsystem->RemoveCollectionFromEntity(*this, InCollection);
     return *this;
 }

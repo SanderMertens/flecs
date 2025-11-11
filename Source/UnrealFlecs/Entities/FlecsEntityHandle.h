@@ -909,19 +909,19 @@ public:
 	}
 
 	// Note this doesnt remove overridden components
-	const FSelfType& RemoveCollection(const FFlecsId InCollection, const bool bRemoveOverriden = false) const;
+	const FSelfType& RemoveCollection(const FFlecsId InCollection) const;
 
 	// Note this doesnt remove overridden components
-	SOLID_INLINE const FSelfType& RemoveCollection(UClass* InCollection, const bool bRemoveOverriden = false) const
+	SOLID_INLINE const FSelfType& RemoveCollection(UClass* InCollection) const
 	{
-		return RemoveCollection(ObtainTypeClass(InCollection), bRemoveOverriden);
+		return RemoveCollection(ObtainTypeClass(InCollection));
 	}
 
 	// Note this doesnt remove overridden components
 	template <Solid::TStaticClassConcept T>
-	SOLID_INLINE const FSelfType& RemoveCollection(const bool bRemoveOverriden = false) const
+	SOLID_INLINE const FSelfType& RemoveCollection() const
 	{
-		return RemoveCollection(T::StaticClass(), bRemoveOverriden);
+		return RemoveCollection(T::StaticClass());
 	}
 	
 protected:
