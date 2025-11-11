@@ -11,7 +11,7 @@
 
 #include "FlecsCollectionDataAsset.generated.h"
 
-// @TODO: Support Parameters
+// @TODO: add versioning
 
 UCLASS(BlueprintType, Blueprintable)
 class UNREALFLECS_API UFlecsCollectionDataAsset : public UPrimaryDataAsset
@@ -24,7 +24,7 @@ public:
 	virtual FPrimaryAssetId GetPrimaryAssetId() const override final;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
-	TArray<FFlecsCollectionReference> Collections;
+	TArray<FFlecsCollectionInstanceReference> Collections;
 
 	UPROPERTY(EditAnywhere, Category = "Collections")
 	FFlecsEntityRecord Record;

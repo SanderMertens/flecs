@@ -286,6 +286,8 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 	
 }; // struct FFlecsComponentTypeInfo
 
+// @TODO: maybe entity records should be made up of fragments?
+
 /**
  * @brief A record of a generic entity's components and sub-entities,
  * this can be applied to an actual entity to give it the same components/sub-entities.
@@ -458,6 +460,25 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	virtual void ApplyRecordToEntity(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld, const FFlecsEntityHandle& InEntityHandle) const;
 
 }; // struct FFlecsEntityRecord
+
+REGISTER_FLECS_COMPONENT(FFlecsEntityRecord,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		InComponentHandle
+			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
+	});
+
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsNamedEntityRecord : public FFlecsEntityRecord
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Entity Record")
+	FString Name;
+
+	virtual void ApplyRecordToEntity(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld, const FFlecsEntityHandle& InEntityHandle) const override;
+}; // struct FFlecsNamedEntityRecord
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsEntityRecordComponent

@@ -57,7 +57,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionAsset(const
 {
 	solid_cassume(InAsset);
 
-	const FFlecsCollectionId Id = FFlecsCollectionId(InAsset->GetFName());
+	const FFlecsCollectionId Id = FFlecsCollectionId(InAsset->GetName());
 	if (const FFlecsEntityHandle* Existing = RegisteredCollections.Find(Id))
 	{
 		return *Existing;
@@ -66,19 +66,9 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionAsset(const
 	const FFlecsEntityHandle Prefab = CreatePrefabEntity(InAsset->GetName(), InAsset->Record);
 	RegisteredCollections.Add(Id, Prefab);
 
-	for (const FFlecsCollectionReference& Reference : InAsset->Collections)
+	for (const FFlecsCollectionInstanceReference& Reference : InAsset->Collections)
 	{
-		const FFlecsEntityHandle Resolved = ResolveCollectionReference(Reference);
-		
-		if UNLIKELY_IF(!Resolved.IsValid())
-		{
-			UE_LOGFMT(LogFlecsCollections, Error,
-				"UFlecsCollectionWorldSubsystem::RegisterCollectionAsset: Failed to resolve collection reference on asset '{Asset}'",
-				InAsset->GetName());
-			continue;
-		}
-
-		Prefab.AddPair(flecs::IsA, Resolved);
+		AddCollectionToEntity(Prefab, Reference.Collection, Reference.Parameters);
 	}
 	
 	ExpandChildCollectionReferences(Prefab);
@@ -87,7 +77,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionAsset(const
 }
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionDefinition(
-	const FName& InName, 
+	const FString& InName, 
 	const FFlecsCollectionDefinition& InDefinition)
 {
 	const FFlecsCollectionId Id = FFlecsCollectionId(InName);
@@ -96,22 +86,12 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionDefinition(
 		return *Existing;
 	}
 	
-	const FFlecsEntityHandle Prefab = CreatePrefabEntity(Id.NameId.ToString(), InDefinition.Record);
+	const FFlecsEntityHandle Prefab = CreatePrefabEntity(Id.NameId, InDefinition.Record);
 	RegisteredCollections.Add(Id, Prefab);
 	
-	for (const FFlecsCollectionReference& Reference : InDefinition.Collections)
+	for (const FFlecsCollectionInstanceReference& Reference : InDefinition.Collections)
 	{
-		const FFlecsEntityHandle ResolvedEntityHandle = ResolveCollectionReference(Reference);
-		
-		if UNLIKELY_IF(!ResolvedEntityHandle.IsValid())
-		{
-			UE_LOGFMT(LogFlecsCollections, Error,
-				"UFlecsCollectionWorldSubsystem::RegisterCollectionDefinition: Failed to resolve collection reference on definition '{NameId}'",
-				Id.NameId.ToString());
-			continue;
-		}
-
-		Prefab.AddPair(flecs::IsA, ResolvedEntityHandle);
+		AddCollectionToEntity(Prefab, Reference.Collection, Reference.Parameters);
 	}
 	
 	ExpandChildCollectionReferences(Prefab);
@@ -134,19 +114,9 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionClass(const
 	
 	RegisteredCollections.Add(Id, Prefab);
 	
-	for (const FFlecsCollectionReference& Reference : InBuilder.GetCollectionDefinition().Collections)
+	for (const FFlecsCollectionInstanceReference& Reference : InBuilder.GetCollectionDefinition().Collections)
 	{
-		const FFlecsEntityHandle ResolvedEntityHandle = ResolveCollectionReference(Reference);
-		
-		if UNLIKELY_IF(!ResolvedEntityHandle.IsValid())
-		{
-			UE_LOGFMT(LogFlecsCollections, Error,
-				"UFlecsCollectionWorldSubsystem::RegisterCollectionClass: Failed to resolve collection reference on class '{Class}'",
-				InClass->GetName());
-			continue;
-		}
-
-		Prefab.AddPair(flecs::IsA, ResolvedEntityHandle);
+		AddCollectionToEntity(Prefab, Reference.Collection, Reference.Parameters);
 	}
 	
 	ExpandChildCollectionReferences(Prefab);
@@ -177,7 +147,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByAsset(const UFlecs
 {
 	solid_cassume(Asset);
 	
-	const FFlecsCollectionId Id = FFlecsCollectionId(Asset->GetFName());
+	const FFlecsCollectionId Id = FFlecsCollectionId(Asset->GetName());
 	return GetPrefabByCollectionId(Id);
 }
 
@@ -210,7 +180,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByClass(const TSubcl
 {
 	solid_cassume(InClass);
 	
-	const FFlecsCollectionId Id = FFlecsCollectionId(InClass->GetFName());
+	const FFlecsCollectionId Id = FFlecsCollectionId(InClass->GetFName().ToString());
 	return GetPrefabByCollectionId(Id);
 }
 
@@ -249,13 +219,13 @@ void UFlecsCollectionWorldSubsystem::AddCollectionToEntity(const FFlecsEntityHan
 	
 	solid_checkf(IsCollectionRegistered(InCollectionId),
 		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: CollectionId '%s' is not registered"),
-		*InCollectionId.NameId.ToString());
+		*InCollectionId.NameId);
 
 	const FFlecsEntityHandle CollectionPrefab = GetPrefabByCollectionId(InCollectionId);
 	
 	solid_checkf(CollectionPrefab.IsValid(),
 		TEXT("UFlecsCollectionWorldSubsystem::AddCollectionToEntity: CollectionId '%s' is not registered"),
-		*InCollectionId.NameId.ToString());
+		*InCollectionId.NameId);
 
 	InEntity.AddPair(flecs::IsA, CollectionPrefab);
 
@@ -301,12 +271,12 @@ void UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity(const FFlecsEnti
 		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: InEntity is invalid"));
 	solid_checkf(IsCollectionRegistered(InCollectionId),
 		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: CollectionId '%s' is not registered"),
-		*InCollectionId.NameId.ToString());
+		*InCollectionId.NameId);
 
 	const FFlecsEntityHandle CollectionPrefab = GetPrefabByCollectionId(InCollectionId);
 	solid_checkf(CollectionPrefab.IsValid(),
 		TEXT("UFlecsCollectionWorldSubsystem::RemoveCollectionFromEntity: CollectionId '%s' is not registered"),
-		*InCollectionId.NameId.ToString());
+		*InCollectionId.NameId);
 
 	InEntity.RemovePair(flecs::IsA, CollectionPrefab);
 }
@@ -365,7 +335,7 @@ bool UFlecsCollectionWorldSubsystem::HasCollection(const FFlecsEntityHandle& InE
 	
 	solid_checkf(CollectionPrefab.IsValid(),
 		TEXT("UFlecsCollectionWorldSubsystem::HasCollection: CollectionId '%s' is not registered"),
-		*InCollectionId.NameId.ToString());
+		*InCollectionId.NameId);
 
 	return InEntity.HasPair(flecs::IsA, CollectionPrefab);
 }
@@ -384,7 +354,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::EnsurePrefabShell(const FFlec
 	
 	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = GetFlecsWorldChecked();
 	
-	const FFlecsEntityHandle Prefab = FlecsWorld->CreateEntity(Id.NameId.ToString())
+	const FFlecsEntityHandle Prefab = FlecsWorld->CreateEntity(Id.NameId)
 		.SetParent(CollectionScopeEntity)
 		.Add(flecs::Prefab)
 		.Add<FFlecsCollectionPrefabTag>();
@@ -458,22 +428,10 @@ void UFlecsCollectionWorldSubsystem::ExpandChildCollectionReferences(const FFlec
 			{
 				const FFlecsEntityHandle ChildEntityHandle = Iter.entity(Index);
 
-				for (const FFlecsCollectionReference& CollectionReference : ReferenceComponent->Collections)
+				for (const FFlecsCollectionInstanceReference& CollectionReference : ReferenceComponent->Collections)
 				{
-					if (ReferenceComponent)
-					{
-						const FFlecsEntityHandle Resolved = ResolveCollectionReference(CollectionReference);
-					
-						if UNLIKELY_IF(!Resolved.IsValid())
-						{
-							UE_LOGFMT(LogFlecsCollections, Error,
-								"UFlecsCollectionWorldSubsystem::ExpandChildCollectionReferences: Failed to resolve collection reference on entity '{Entity}'",
-								ChildEntityHandle.GetPath());
-							return;
-						}
-
-						ChildEntityHandle.AddPair(flecs::IsA, Resolved);
-					}
+					AddCollectionToEntity(ChildEntityHandle,
+						CollectionReference.Collection, CollectionReference.Parameters);
 				}
 
 				if (Iter.is_set(2))

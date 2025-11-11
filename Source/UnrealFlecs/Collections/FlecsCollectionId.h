@@ -25,13 +25,8 @@ struct UNREALFLECS_API FFlecsCollectionId
 public:
 	FORCEINLINE FFlecsCollectionId() = default;
 
-	FORCEINLINE explicit FFlecsCollectionId(const FName& InNameId)
+	FORCEINLINE explicit FFlecsCollectionId(const FString& InNameId)
 		: NameId(InNameId)
-	{
-	}
-
-	FORCEINLINE explicit FFlecsCollectionId(const FString& InStringId)
-		: NameId(FName(InStringId))
 	{
 	}
 	
@@ -46,7 +41,7 @@ public:
 	}
 
 	UPROPERTY(EditAnywhere, Category = "Flecs")
-	FName NameId;
+	FString NameId;
 	
 }; // struct FFlecsCollectionId
 

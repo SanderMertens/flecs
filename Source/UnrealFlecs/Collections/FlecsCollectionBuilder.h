@@ -83,6 +83,29 @@ struct UNREALFLECS_API FFlecsCollectionPairBuilder
 }; // struct FFlecsPairBuilder
 
 USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsSubEntityCollectionBuilder
+{
+	GENERATED_BODY()
+
+public:
+	FFlecsSubEntityCollectionBuilder() = default;
+	FFlecsSubEntityCollectionBuilder(const FString& InIdName, const FFlecsEntityRecord& InRecord)
+		: IdName(InIdName), Record(InRecord)
+	{
+	}
+
+	
+	
+
+	UPROPERTY()
+	FString IdName;
+	
+	UPROPERTY()
+	FFlecsEntityRecord Record;
+	
+}; // struct FFlecsSubEntityCollectionBuilder
+
+USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsCollectionBuilder
 {
 	GENERATED_BODY()
@@ -159,27 +182,25 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE FFlecsCollectionBuilder MakeSubEntity() const
+	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection(const TSolidNotNull<UFlecsCollectionDataAsset*> InAsset,
+		const FInstancedStruct& InParameters = FInstancedStruct()) const
 	{
-		return FFlecsCollectionBuilder(*this);
-	}
-
-	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection(const TSolidNotNull<UFlecsCollectionDataAsset*> InAsset) const
-	{
-		FFlecsCollectionReference Ref;
-		Ref.Mode = EFlecsCollectionReferenceMode::Asset;
-		Ref.Asset = InAsset;
+		FFlecsCollectionInstanceReference Ref;
+		Ref.Collection.Asset = InAsset;
+		Ref.Collection.Mode = EFlecsCollectionReferenceMode::Asset;
+		Ref.Parameters = InParameters;
 		
 		GetCollectionDefinition().Collections.Add(Ref);
 		
 		return *this;
 	}
 
-	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection(const FFlecsCollectionId& InId) const
+	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection(const FFlecsCollectionId& InId, const FInstancedStruct& InParameters = FInstancedStruct()) const
 	{
-		FFlecsCollectionReference Ref;
-		Ref.Mode = EFlecsCollectionReferenceMode::Id;
-		Ref.Id = InId;
+		FFlecsCollectionInstanceReference Ref;
+		Ref.Collection.Id = InId;
+		Ref.Collection.Mode = EFlecsCollectionReferenceMode::Id;
+		Ref.Parameters = InParameters;
 		
 		GetCollectionDefinition().Collections.Add(Ref);
 		
@@ -187,18 +208,19 @@ public:
 	}
 
 	template <Solid::TStaticClassConcept T>
-	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection() const
+	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection(const FInstancedStruct& InParameters = FInstancedStruct()) const
 	{
-		FFlecsCollectionReference Ref;
-		Ref.Mode = EFlecsCollectionReferenceMode::UClass;
-		Ref.Class = T::StaticClass();
+		FFlecsCollectionInstanceReference Ref;
+		Ref.Collection.Mode = EFlecsCollectionReferenceMode::UClass;
+		Ref.Collection.Class = T::StaticClass();
+		Ref.Parameters = InParameters;
 
 		GetCollectionDefinition().Collections.Add(Ref);
 
 		return *this;
 	}
 	
-	FORCEINLINE const FFlecsCollectionBuilder& Name(const FName& InName) const
+	FORCEINLINE const FFlecsCollectionBuilder& Name(const FString& InName) const
 	{
 		IdName = InName;
 		
@@ -238,6 +260,15 @@ public:
 		return *this;
 	}
 
+	// @TODO: add other relationship overloads?
+	
+	void MarkSlot() const
+	{
+		solid_cassume(CollectionDefinition);
+		
+		GetCollectionDefinition().Record.AddComponent<FFlecsCollectionSlotTag>();
+	}
+
 	NO_DISCARD FORCEINLINE FFlecsCollectionDefinition& GetCollectionDefinition() const
 	{
 		solid_cassume(CollectionDefinition);
@@ -248,10 +279,8 @@ public:
 	FFlecsCollectionBuilder* ParentBuilder = nullptr;
 
 	UPROPERTY()
-	mutable FName IdName;
+	mutable FString IdName;
 	
 	mutable FFlecsCollectionDefinition* CollectionDefinition;
-
-	mutable bool bIsSubEntity = false;
 	
 }; // struct FFlecsCollectionBuilder

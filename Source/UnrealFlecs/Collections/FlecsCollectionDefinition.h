@@ -15,7 +15,7 @@ struct UNREALFLECS_API FFlecsSubEntityCollectionReferences
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Flecs")
-	TArray<FFlecsCollectionReference> CollectionReferences;
+	TArray<FFlecsCollectionInstanceReference> CollectionReferences;
 	
 }; // struct FFlecsSubEntityCollectionReferences
 
@@ -32,9 +32,6 @@ public:
 	FFlecsEntityRecord Record;
 
 	UPROPERTY(EditAnywhere, Category = "Flecs")
-	TArray<FFlecsCollectionReference> Collections;
-
-	UPROPERTY(EditAnywhere, Category = "Flecs")
-	TMap<int32 /* Index */, FFlecsSubEntityCollectionReferences> SubEntityCollections;
+	TArray<FFlecsCollectionInstanceReference> Collections;
 	
 }; // struct FFlecsCollectionDefinition

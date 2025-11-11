@@ -73,6 +73,19 @@ public:
 	FFlecsCollectionId Id;
 	
 }; // struct FFlecsCollectionReference
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsCollectionInstanceReference
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs", meta = (ShowOnlyInnerProperties))
+	FFlecsCollectionReference Collection;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
+	FInstancedStruct Parameters;
+	
+}; // struct FFlecsCollectionInstanceReference
 
 /** compose another Collection by reference (adds (IsA, @param Collection) in compile-time and then removes itself). */
 USTRUCT(BlueprintType)
@@ -84,7 +97,7 @@ public:
 	FORCEINLINE FFlecsCollectionReferenceComponent() = default;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
-	TArray<FFlecsCollectionReference> Collections;
+	TArray<FFlecsCollectionInstanceReference> Collections;
 	
 }; // struct FFlecsCollectionReferenceComponent
 
@@ -121,6 +134,22 @@ REGISTER_FLECS_COMPONENT(FFlecsCollectionSlotTag,
 	{
 		InComponentHandle
 			.AddPair(flecs::OnInstantiate, flecs::DontInherit);
+	});
+
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsSubEntityIndex
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
+	int32 Index = INDEX_NONE;
+};
+
+REGISTER_FLECS_COMPONENT(FFlecsSubEntityIndex,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		// Sparse is fine; we just need a storage component for lookup.
+		InComponentHandle.Add(flecs::Sparse);
 	});
 
 // @TODO: maybe add an OnSet Event like in templates

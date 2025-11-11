@@ -187,3 +187,11 @@ void FFlecsEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWor
 		}
 	});
 }
+
+void FFlecsNamedEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld,
+	const FFlecsEntityHandle& InEntityHandle) const
+{
+	InEntityHandle.SetName(Name);
+	
+	Super::ApplyRecordToEntity(InFlecsWorld, InEntityHandle);
+}
