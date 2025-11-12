@@ -133,7 +133,8 @@ void flecs_instantiate_children(
     ecs_entity_t base,
     ecs_entity_t instance,
     ecs_table_t *child_table,
-    const ecs_instantiate_ctx_t *ctx)
+    const ecs_instantiate_ctx_t *ctx,
+    ecs_map_t *ordered_map)
 {
     if (!ecs_table_count(child_table)) {
         return;
@@ -307,6 +308,12 @@ void flecs_instantiate_children(
     const ecs_entity_t *i_children = flecs_bulk_new(world, i_table, child_ids,
         &diff.added, child_count, component_data, false, &child_row, &diff);
 
+    if (ordered_map) {
+        for (j = 0; j < child_count; j ++) {
+            ecs_map_insert(ordered_map, children[j], i_children[j]);
+        }
+    }
+
     /* If children are slots, add slot relationships to parent */
     if (slot_of) {
         for (j = 0; j < child_count; j ++) {
@@ -421,17 +428,42 @@ void flecs_instantiate(
     if (cr && flecs_table_cache_all_iter((ecs_table_cache_t*)cr, &it)) {
         ecs_os_perf_trace_push("flecs.instantiate");
         const ecs_table_record_t *tr;
+
+        ecs_component_record_t *icr = NULL;
+        ecs_map_t ordered_lookup;
+        ecs_map_t *ordered_map = NULL;
+
+        if (cr->flags & EcsIdOrderedChildren) {
+            icr = flecs_components_get(world, ecs_childof(instance));
+            /* If base has children, instance must now have children */
+            ecs_assert(icr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_map_init(&ordered_lookup, &world->allocator);
+            ordered_map = &ordered_lookup;
+        }
+
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             flecs_instantiate_children(
-                world, base, instance, tr->hdr.table, ctx);
+                world, base, instance, tr->hdr.table, ctx, ordered_map);
         }
         ecs_os_perf_trace_pop("flecs.instantiate");
 
-        if (cr->flags & EcsIdOrderedChildren) {
-            ecs_component_record_t *icr = flecs_components_get(world, ecs_childof(instance));
-            /* If base has children, instance must now have children */
-            ecs_assert(icr != NULL, ECS_INTERNAL_ERROR, NULL);
-            flecs_ordered_children_populate(world, icr);
+        if (ordered_map) {
+            ecs_vec_t *dst_vec = &icr->pair->ordered_children;
+            ecs_vec_clear(dst_vec);
+
+            ecs_vec_t *src_vec = &cr->pair->ordered_children;
+            ecs_entity_t *base_children = ecs_vec_first_t(src_vec, ecs_entity_t);
+            int32_t child_count = ecs_vec_count(src_vec);
+
+            int32_t i;
+            for (i = 0; i < child_count; i ++) {
+                ecs_map_val_t *val = ecs_map_get(ordered_map, base_children[i]);
+                ecs_assert(val != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_vec_append_t(
+                    &world->allocator, dst_vec, ecs_entity_t)[0] = (ecs_entity_t)(*val);
+            }
+
+            ecs_map_fini(ordered_map);
         }
     }
 }

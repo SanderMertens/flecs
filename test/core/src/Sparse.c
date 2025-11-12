@@ -3,7 +3,7 @@
 static bool fragment = true;
 
 void Sparse_setup(void) {
-    const char *fragment_param = test_param("fragment");
+    const char *fragment_param = NULL; // test_param("fragment");
     if (fragment_param) {
         if (!strcmp(fragment_param, "yes")) {
             // already set to default

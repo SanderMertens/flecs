@@ -1416,12 +1416,17 @@ void OrderedChildren_inherited_children_w_isa(void) {
     
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, parent);
     
+    ecs_entity_t expected_types[3] = { type_a, type_b, type_a };
+
     int count = 0;
     ecs_iter_t it = ecs_children(world, inst);
     while (ecs_children_next(&it)) {
         for (int i = 0; i < it.count; i++) {
-            ecs_entity_t expected[3] = {c1, c2, c3};
-            test_uint(it.entities[i], expected[count++]);
+            test_assert(count < 3);
+            ecs_entity_t child = it.entities[i];
+            ecs_entity_t actual_type = ecs_get_target(world, child, EcsIsA, 0);
+            test_uint(actual_type, expected_types[count]);
+            count++;
         }
     }
     test_int(count, 3);
