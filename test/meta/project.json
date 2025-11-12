@@ -539,6 +539,7 @@
                 "struct_entity",
                 "struct_id",
                 "struct_enum",
+                "struct_enum_underlying_i8",
                 "struct_bitmask",
                 "struct_i32_i32",
                 "struct_nested_i32",
