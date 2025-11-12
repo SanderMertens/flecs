@@ -3734,3 +3734,28 @@ void World_add_traversable_after_pair_query(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsTraversable);
 }
+
+void World_remove_from_traversable_after_shrink(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = DummyHook
+    });
+
+    ecs_entity_t p = ecs_new_w(world, Position);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+
+    ecs_delete(world, c);
+
+    ecs_shrink(world);
+
+    ecs_remove(world, p, Position);
+
+    test_int(dummy_hook_invoked, 1);
+
+    ecs_fini(world);
+}
