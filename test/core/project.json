@@ -512,7 +512,7 @@
                 "emplace_twice_w_hooks",
                 "emplace_no_is_new",
                 "set",
-                "clone",                
+                "clone",
                 "clone_w_value",
                 "clone_pair",
                 "clone_pair_w_value",
@@ -849,7 +849,8 @@
                 "get_ordered_children_from_prefab_instance_nested_children",
                 "recreate_named_child",
                 "lookup_after_move_to_root",
-                "lookup_after_clear"
+                "lookup_after_clear",
+                "inherited_children_w_isa"
             ]
         }, {
             "id": "Has",
@@ -917,6 +918,8 @@
                 "get_ref_after_clear",
                 "get_ref_after_clear_other",
                 "get_ref_after_realloc",
+                "get_ref_after_shrink",
+                "shrink_during_iteration_should_fail",
                 "get_ref_after_realloc_w_lifecycle",
                 "get_ref_staged",
                 "get_ref_after_new_in_stage",
@@ -2358,6 +2361,7 @@
                 "dont_delete_non_empty_sparse_component_record_w_shrink",
                 "dont_delete_non_empty_dont_fragment_component_record_w_shrink",
                 "remove_from_traversable_after_shrink",
+                "delete_empty_tables_while_readonly",
                 "mini_all_tables_builtin",
                 "mini_all_tables_builtin_after_add",
                 "user_component_not_builtin",

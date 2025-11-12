@@ -816,6 +816,7 @@ void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(v
 void OrderedChildren_recreate_named_child(void);
 void OrderedChildren_lookup_after_move_to_root(void);
 void OrderedChildren_lookup_after_clear(void);
+void OrderedChildren_inherited_children_w_isa(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -875,6 +876,8 @@ void Reference_get_ref_after_delete_child(void);
 void Reference_get_ref_after_clear(void);
 void Reference_get_ref_after_clear_other(void);
 void Reference_get_ref_after_realloc(void);
+void Reference_get_ref_after_shrink(void);
+void Reference_shrink_during_iteration_should_fail(void);
 void Reference_get_ref_after_realloc_w_lifecycle(void);
 void Reference_get_ref_staged(void);
 void Reference_get_ref_after_new_in_stage(void);
@@ -2279,6 +2282,7 @@ void World_dont_delete_non_empty_queried_for_component_record_w_shrink(void);
 void World_dont_delete_non_empty_sparse_component_record_w_shrink(void);
 void World_dont_delete_non_empty_dont_fragment_component_record_w_shrink(void);
 void World_remove_from_traversable_after_shrink(void);
+void World_delete_empty_tables_while_readonly(void);
 void World_mini_all_tables_builtin(void);
 void World_mini_all_tables_builtin_after_add(void);
 void World_user_component_not_builtin(void);
@@ -5969,6 +5973,10 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "lookup_after_clear",
         OrderedChildren_lookup_after_clear
+    },
+    {
+        "inherited_children_w_isa",
+        OrderedChildren_inherited_children_w_isa
     }
 };
 
@@ -6177,6 +6185,14 @@ bake_test_case Reference_testcases[] = {
     {
         "get_ref_after_realloc",
         Reference_get_ref_after_realloc
+    },
+    {
+        "get_ref_after_shrink",
+        Reference_get_ref_after_shrink
+    },
+    {
+        "shrink_during_iteration_should_fail",
+        Reference_shrink_during_iteration_should_fail
     },
     {
         "get_ref_after_realloc_w_lifecycle",
@@ -11681,6 +11697,10 @@ bake_test_case World_testcases[] = {
         World_remove_from_traversable_after_shrink
     },
     {
+        "delete_empty_tables_while_readonly",
+        World_delete_empty_tables_while_readonly
+    },
+    {
         "mini_all_tables_builtin",
         World_mini_all_tables_builtin
     },
@@ -13759,11 +13779,6 @@ bake_test_case StackAlloc_testcases[] = {
     }
 };
 
-const char* Sparse_fragment_param[] = {"yes", "no"};
-bake_test_param Sparse_params[] = {
-    {"fragment", (char**)Sparse_fragment_param, 2}
-};
-
 static bake_test_suite suites[] = {
     {
         "Id",
@@ -13847,9 +13862,7 @@ static bake_test_suite suites[] = {
         Sparse_setup,
         NULL,
         210,
-        Sparse_testcases,
-        1,
-        Sparse_params
+        Sparse_testcases
     },
     {
         "Hierarchies",
@@ -13862,7 +13875,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        40,
+        41,
         OrderedChildren_testcases
     },
     {
@@ -13890,7 +13903,7 @@ static bake_test_suite suites[] = {
         "Reference",
         Reference_setup,
         NULL,
-        25,
+        27,
         Reference_testcases
     },
     {
@@ -14016,7 +14029,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        151,
+        152,
         World_testcases
     },
     {

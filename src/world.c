@@ -1704,6 +1704,9 @@ int32_t ecs_delete_empty_tables(
     const ecs_delete_empty_tables_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
+    
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot delete empty tables while world is in readonly mode");
 
     ecs_os_perf_trace_push("flecs.delete_empty_tables");
 
@@ -1760,6 +1763,8 @@ done:
     ecs_os_perf_trace_pop("flecs.delete_empty_tables");
 
     return delete_count;
+error:
+    return 0;
 }
 
 ecs_entities_t ecs_get_entities(
@@ -1798,6 +1803,9 @@ bool flecs_component_record_in_use(
 void ecs_shrink(
     ecs_world_t *world)
 {
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot shrink world while it is in readonly mode");
+
     /* This can invalidate ecs_record_t pointers for entities that are no longer
      * alive. If you're sure an application doesn't store any ecs_record_t ptrs
      * or ecs_ref_t's for not-alive entities, you can uncomment this line. */
@@ -1842,6 +1850,8 @@ void ecs_shrink(
     for (i = 0; i < world->stage_count; i ++) {
         ecs_stage_shrink(world->stages[i]);
     }
+error:
+    return;
 }
 
 void ecs_exclusive_access_begin(

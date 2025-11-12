@@ -159,7 +159,7 @@ void World_entity_range_out_of_range_check_disabled(void) {
     ecs_entity_t e2 = 4999;
     ecs_set(world, e2, Position, {10, 20});
     test_assert( ecs_has(world, e2, Position));
-    
+
     const Position *p = ecs_get(world, e2, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
@@ -715,7 +715,7 @@ void World_control_fps(void) {
 
     /* Run for one second */
     int count = 0;
-    do {    
+    do {
         ecs_progress(world, 0);
         if (!count) {
             start = stats->delta_time;
@@ -762,7 +762,7 @@ void World_control_fps_busy_system(void) {
 
     /* Run for one second */
     int count = 0;
-    do {    
+    do {
         ecs_progress(world, 0);
         if (!count) {
             start = stats->delta_time;
@@ -792,7 +792,7 @@ void World_control_fps_busy_app(void) {
 
     /* Run for one second */
     int count = 0;
-    do {    
+    do {
         ecs_progress(world, 0);
         if (!count) {
             start = stats->delta_time;
@@ -853,7 +853,7 @@ void World_measure_delta_time_vs_actual(void) {
 
     float elapsed = ecs_time_measure(&t);
     test_assert(delta_time - elapsed < 0.1);
-    test_assert(elapsed >= 0.9);    
+    test_assert(elapsed >= 0.9);
 
     ecs_fini(world);
 }
@@ -879,7 +879,7 @@ void World_control_fps_random_system(void) {
 
     /* Run for one second */
     int count = 0;
-    do {    
+    do {
         ecs_progress(world, 0);
         if (!count) {
             start = stats->delta_time;
@@ -899,7 +899,7 @@ void World_control_fps_random_system(void) {
 
 void World_control_fps_random_app(void) {
     test_is_flaky();
-    
+
     ecs_world_t *world = ecs_init();
 
     double start, now = 0;
@@ -909,7 +909,7 @@ void World_control_fps_random_app(void) {
 
     /* Run for one second */
     int count = 0;
-    do {    
+    do {
         ecs_progress(world, 0);
         if (!count) {
             start = stats->delta_time;
@@ -1108,7 +1108,7 @@ void World_register_alias_twice_different_entity(void) {
     ecs_entity_t f = ecs_new(world);
 
     ecs_set_alias(world, e, "Foo");
-    
+
     test_expect_abort();
     ecs_set_alias(world, f, "Foo");
 }
@@ -1155,11 +1155,11 @@ void World_delete_empty_tables_after_mini(void) {
     empty_table_count --; // correct for root table
 
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1}); /* Increase to 1 */
     test_int(deleted, 0);
 
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1}); /* Delete */
     test_assert(deleted == empty_table_count);
     test_int(info->table_count + deleted, old_table_count);
@@ -1189,11 +1189,11 @@ void World_delete_empty_tables_after_init(void) {
     empty_table_count --; // correct for root table
 
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 }); /* Increase to 1 */
     test_int(deleted, 0);
 
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 }); /* Delete */
     test_assert(deleted == empty_table_count);
 
@@ -1839,11 +1839,11 @@ void World_delete_1000_empty_tables(void) {
     ecs_delete(world, e);
 
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 }); /* Increase to 1 */
     test_int(deleted, 0);
 
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 }); /* Delete */
     test_assert(deleted != 0);
     test_assert(deleted >= 1000);
@@ -1865,10 +1865,10 @@ void World_use_after_delete_empty(void) {
 
     ecs_remove(world, e, TagA);
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 });
     test_assert(deleted == 0);
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 });
     test_assert(deleted != 0);
     ecs_add(world, e, TagA);
@@ -1891,10 +1891,10 @@ void World_use_after_clear_empty(void) {
 
     ecs_remove(world, e, TagA);
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
     test_assert(deleted == 0);
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
     test_assert(deleted == 0);
     ecs_add(world, e, TagA);
@@ -1922,20 +1922,20 @@ void World_use_after_delete_empty_w_component(void) {
     test_assert( !ecs_has(world, e, Velocity));
 
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 });
     test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
 
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 });
     test_assert(deleted != 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
-    
+
     ecs_add(world, e, Velocity);
 
     test_assert( ecs_has(world, e, Position));
@@ -1961,20 +1961,20 @@ void World_use_after_clear_empty_w_component(void) {
     test_assert( !ecs_has(world, e, Velocity));
 
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
     test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
 
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
     test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
-    
+
     ecs_add(world, e, Velocity);
 
     test_assert( ecs_has(world, e, Position));
@@ -1989,11 +1989,11 @@ void World_use_after_clear_empty_w_component_w_lifecycle(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_set_hooks(world, Position, { 
-        .ctor = flecs_default_ctor 
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor
     });
-    ecs_set_hooks(world, Velocity, { 
-        .ctor = flecs_default_ctor 
+    ecs_set_hooks(world, Velocity, {
+        .ctor = flecs_default_ctor
     });
 
     ecs_entity_t e = ecs_new(world);
@@ -2007,20 +2007,20 @@ void World_use_after_clear_empty_w_component_w_lifecycle(void) {
     test_assert( !ecs_has(world, e, Velocity));
 
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
     test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
 
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
     test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
-    
+
     ecs_add(world, e, Velocity);
 
     test_assert( ecs_has(world, e, Position));
@@ -2036,10 +2036,10 @@ void World_use_after_clear_unused(void) {
     ECS_TAG(world, TagB);
 
     int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
     test_assert(deleted == 0);
-    deleted = ecs_delete_empty_tables(world, 
+    deleted = ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
     test_assert(deleted == 0);
 
@@ -2061,10 +2061,10 @@ typedef struct Test {
 
 static int at_fini_test_invoked = 0;
 
-static 
+static
 void at_fini_test(
     ecs_world_t* world,
-    void* context) 
+    void* context)
 {
     test_assert(ecs_singleton_ensure(world, Test) != NULL);
     at_fini_test_invoked = 1;
@@ -2144,7 +2144,7 @@ void World_no_name_prefix_after_init(void) {
 
 void World_component_init_w_name_prefix(void) {
     ecs_world_t *world = ecs_mini();
-    
+
     ecs_set_name_prefix(world, "Nested");
 
     ecs_entity_t pos = ecs_component(world, {
@@ -2167,7 +2167,7 @@ typedef struct NestedPosition {
 
 void World_component_macro_w_name_prefix(void) {
     ecs_world_t *world = ecs_mini();
-    
+
     ecs_set_name_prefix(world, "Nested");
 
     ECS_COMPONENT(world, NestedPosition);
@@ -2292,8 +2292,8 @@ int post_frame_action_invoked = 0;
 
 static
 void post_frame_action(
-    ecs_world_t *world, 
-    void *ctx) 
+    ecs_world_t *world,
+    void *ctx)
 {
     test_int(*(int*)ctx, 10);
     post_frame_action_invoked ++;
@@ -2301,7 +2301,7 @@ void post_frame_action(
 
 void World_run_post_frame(void) {
     ecs_world_t *world = ecs_mini();
-    
+
     ecs_frame_begin(world, 0);
 
     int ctx = 10;
@@ -2318,7 +2318,7 @@ void World_run_post_frame_outside_of_frame(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
     int ctx = 10;
     ecs_run_post_frame(world, post_frame_action, &ctx);
@@ -2364,7 +2364,7 @@ void World_fini_queue_overflow(void) {
 
     /* on world fini, all entities must be destroyed in batches. */
     ecs_fini(world);
-    
+
     test_assert(true); /* if ecs_fini did not crash we're good */
 }
 
@@ -2410,8 +2410,8 @@ void World_exclusive_on_instantiate(void) {
 static
 void test_log(
     int32_t level,
-    const char *file, 
-    int32_t line,  
+    const char *file,
+    int32_t line,
     const char *msg)
 { }
 
@@ -2720,7 +2720,7 @@ void World_delete_empty_component_record_w_shrink(void) {
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_delete(world, e);
-    
+
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_shrink(world);
@@ -2747,7 +2747,7 @@ void World_delete_empty_queried_for_component_record_w_shrink(void) {
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_delete(world, e);
-    
+
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_shrink(world);
@@ -2772,7 +2772,7 @@ void World_delete_empty_sparse_component_record_w_shrink(void) {
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_delete(world, e);
-    
+
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_shrink(world);
@@ -2795,7 +2795,7 @@ void World_delete_empty_dont_fragment_component_record_w_shrink(void) {
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_delete(world, e);
-    
+
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_shrink(world);
@@ -2820,7 +2820,7 @@ void World_dont_delete_non_empty_component_record_w_shrink(void) {
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_delete(world, e);
-    
+
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_fini(world);
@@ -2847,7 +2847,7 @@ void World_dont_delete_non_empty_queried_for_component_record_w_shrink(void) {
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_delete(world, e);
-    
+
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_query_fini(q);
@@ -2872,7 +2872,7 @@ void World_dont_delete_non_empty_sparse_component_record_w_shrink(void) {
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_delete(world, e);
-    
+
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_fini(world);
@@ -2889,15 +2889,43 @@ void World_dont_delete_non_empty_dont_fragment_component_record_w_shrink(void) {
     ecs_set(world, e, Position, {10, 20});
 
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
-    
+
     ecs_shrink(world);
 
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
     ecs_delete(world, e);
-    
+
     test_assert(flecs_components_get(world, ecs_id(Position)) != NULL);
 
+    ecs_fini(world);
+}
+
+void World_delete_empty_tables_while_readonly(void) {
+    /* Test that ecs_delete_empty_tables fails when called during readonly mode */
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    /* Create and delete entities to make empty tables */
+    for (int i = 0; i < 10; i++) {
+        ecs_entity_t e = ecs_new_w_id(world, Tag);
+        ecs_delete(world, e);
+    }
+
+    /* Enter readonly mode (simulating system execution) */
+    ecs_readonly_begin(world, false);
+
+    /* This should fail with ECS_INVALID_OPERATION */
+    test_expect_abort();
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+            .delete_generation = 1
+        });
+
+    /* Should not reach here */
+    test_assert(false);
+
+    ecs_readonly_end(world);
     ecs_fini(world);
 }
 
@@ -3000,7 +3028,7 @@ void World_remove_from_builtin(void) {
     ecs_entity_t tag = ecs_new(world);
 
     ecs_add_id(world, ecs_id(EcsComponent), tag);
-    
+
     test_expect_abort();
 
     ecs_remove_id(world, ecs_id(EcsComponent), tag);
@@ -3008,9 +3036,9 @@ void World_remove_from_builtin(void) {
 
 void World_remove_builtin_from_builtin(void) {
     install_test_abort();
-    
+
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
 
     ecs_remove_id(world, ecs_id(EcsComponent), EcsFinal);
@@ -3020,7 +3048,7 @@ void World_reparent_builtin(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
 
     ecs_add_pair(world, ecs_id(EcsComponent), EcsChildOf, EcsFlecs);
@@ -3030,7 +3058,7 @@ void World_clear_builtin(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
 
     ecs_clear(world, ecs_id(EcsComponent));
@@ -3040,7 +3068,7 @@ void World_delete_builtin(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
 
     ecs_delete(world, ecs_id(EcsComponent));
@@ -3050,7 +3078,7 @@ void World_rename_builtin(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
 
     ecs_set_name(world, ecs_id(EcsComponent), "fuu");
@@ -3060,7 +3088,7 @@ void World_remove_name_builtin(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
 
     ecs_remove_pair(
@@ -3071,7 +3099,7 @@ void World_delete_flecs(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
 
     ecs_delete(world, EcsFlecs);
@@ -3083,7 +3111,7 @@ void World_reparent_flecs(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tgt = ecs_new(world);
-    
+
     test_expect_abort();
 
     ecs_add_pair(world, EcsFlecs, EcsChildOf, tgt);
@@ -3093,7 +3121,7 @@ void World_rename_flecs(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
 
     ecs_set_name(world, EcsFlecs, "fuu");
@@ -3103,7 +3131,7 @@ void World_remove_name_from_flecs(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
 
     ecs_remove_pair(world, EcsFlecs, ecs_id(EcsIdentifier), EcsName);
@@ -3113,7 +3141,7 @@ void World_delete_flecs_core(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
 
     ecs_delete(world, EcsFlecsCore);
@@ -3125,7 +3153,7 @@ void World_reparent_flecs_core(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tgt = ecs_new(world);
-    
+
     test_expect_abort();
 
     ecs_add_pair(world, EcsFlecsCore, EcsChildOf, tgt);
@@ -3135,7 +3163,7 @@ void World_rename_flecs_core(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
-    
+
     test_expect_abort();
 
     ecs_set_name(world, EcsFlecsCore, "fuu");

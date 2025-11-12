@@ -321,6 +321,68 @@ void Reference_get_ref_after_realloc(void) {
     ecs_fini(world);
 }
 
+void Reference_get_ref_after_shrink(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    /* Populate and shrink to ensure table storage reclaims memory */
+    ecs_entity_t bulk[128];
+    for (int i = 0; i < 128; i ++) {
+        bulk[i] = ecs_new_w(world, Position);
+    }
+
+    for (int i = 0; i < 128; i ++) {
+        ecs_delete(world, bulk[i]);
+    }
+
+    ecs_shrink(world);
+
+    const Position *p2 = ecs_ref_get(world, &ref, Position);
+    test_assert(p2 != NULL);
+    test_int(p2->x, 10);
+    test_int(p2->y, 20);
+
+    ecs_fini(world);
+}
+
+void Reference_shrink_during_iteration_should_fail(void) {
+    /* BUG: ecs_shrink() could be called while systems are running (world
+     * in readonly mode), which may cause tables to be reallocated while
+     * being accessed, leading to crashes or data corruption. 
+     * The fix adds a check to prevent shrinking in readonly mode. */
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    /* Create entities */
+    for (int i = 0; i < 10; i ++) {
+        ecs_entity_t e = ecs_new_w(world, Position);
+        ecs_set(world, e, Position, {i, i});
+    }
+
+    /* Manually enter readonly mode (simulating system execution) */
+    ecs_readonly_begin(world, false);
+
+    /* This should now fail with ECS_INVALID_OPERATION */
+    test_expect_abort();
+    ecs_shrink(world);  /* Should abort here */
+
+    /* Should not reach here */
+    test_assert(false);
+
+    ecs_readonly_end(world);
+    ecs_fini(world);
+}
+
 void Reference_get_ref_staged(void) {
     ecs_world_t *world = ecs_mini();
 
