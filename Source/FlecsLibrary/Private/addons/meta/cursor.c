@@ -846,7 +846,43 @@ case kind:\
     case_T_checked(EcsOpI32,  ecs_i32_t,  dst, src, bounds);\
     case_T_checked(EcsOpI64,  ecs_i64_t,  dst, src, bounds);\
     case_T_checked(EcsOpIPtr, ecs_iptr_t, dst, src, bounds);\
-    case_T_checked(EcsOpEnum, ecs_i32_t, dst, src, bounds)
+    case EcsOpEnum: {\
+        switch(op->underlying_kind) {\
+        case_T_checked(EcsOpI8,   ecs_i8_t,   dst, src, bounds);\
+        case_T_checked(EcsOpI16,  ecs_i16_t,  dst, src, bounds);\
+        case_T_checked(EcsOpI32,  ecs_i32_t,  dst, src, bounds);\
+        case_T_checked(EcsOpI64,  ecs_i64_t,  dst, src, bounds);\
+        case_T_checked(EcsOpIPtr, ecs_iptr_t, dst, src, bounds);\
+        case_T_checked(EcsOpU8,   ecs_u8_t,   dst, src, bounds);\
+        case_T_checked(EcsOpU16,  ecs_u16_t,  dst, src, bounds);\
+        case_T_checked(EcsOpU32,  ecs_u32_t,  dst, src, bounds);\
+        case_T_checked(EcsOpU64,  ecs_u64_t,  dst, src, bounds);\
+        case_T_checked(EcsOpUPtr, ecs_uptr_t, dst, src, bounds);\
+        case EcsOpPushStruct:\
+        case EcsOpPushArray:\
+        case EcsOpPushVector:\
+        case EcsOpPop:\
+        case EcsOpOpaqueStruct:\
+        case EcsOpOpaqueArray:\
+        case EcsOpOpaqueVector:\
+        case EcsOpForward:\
+        case EcsOpScope:\
+        case EcsOpOpaqueValue:\
+        case EcsOpEnum:\
+        case EcsOpBitmask:\
+        case EcsOpPrimitive:\
+        case EcsOpBool:\
+        case EcsOpChar:\
+        case EcsOpByte:\
+        case EcsOpF32:\
+        case EcsOpF64:\
+        case EcsOpString:\
+        case EcsOpEntity:\
+        case EcsOpId:\
+            break;\
+        }\
+        break;\
+    }\
 
 #define cases_T_unsigned(dst, src, bounds)\
     case_T_checked(EcsOpByte, ecs_byte_t, dst, src, bounds);\

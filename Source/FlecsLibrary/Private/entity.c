@@ -1691,7 +1691,6 @@ void ecs_delete(
             if (row_flags & EcsEntityIsTarget) {
                 flecs_on_delete(world, ecs_pair(EcsFlag, entity), 0, true);
                 flecs_on_delete(world, ecs_pair(EcsWildcard, entity), 0, true);
-                r->cr = NULL;
             }
 
             if (row_flags & EcsEntityIsId) {

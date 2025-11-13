@@ -306,9 +306,8 @@ void flecs_emit_propagate_id(
 
         const ecs_entity_t *entities = ecs_table_entities(table);
         for (e = 0; e < entity_count; e ++) {
-            ecs_record_t *r = flecs_entities_get(world, entities[e]);
-            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_component_record_t *cr_t = r->cr;
+            ecs_component_record_t *cr_t = flecs_components_get(
+                world, ecs_pair(EcsWildcard, entities[e]));
             if (cr_t) {
                 /* Only notify for entities that are used in pairs with
                  * traversable relationships */
@@ -402,8 +401,8 @@ void flecs_emit_propagate_invalidate_tables(
             const ecs_entity_t *entities = ecs_table_entities(table);
 
             for (e = 0; e < entity_count; e ++) {
-                ecs_record_t *r = flecs_entities_get(world, entities[e]);
-                ecs_component_record_t *cr_t = r->cr;
+                ecs_component_record_t *cr_t = flecs_components_get(
+                    world, ecs_pair(EcsWildcard, entities[e]));
                 if (cr_t) {
                     /* Only notify for entities that are used in pairs with
                      * traversable relationships */
@@ -423,14 +422,8 @@ void flecs_emit_propagate_invalidate(
     const ecs_entity_t *entities = &ecs_table_entities(table)[offset];
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_record_t *record = flecs_entities_get(world, entities[i]);
-        if (!record) {
-            /* If the event is emitted after a bulk operation, it's possible
-             * that it hasn't been populated with entities yet. */
-            continue;
-        }
-
-        ecs_component_record_t *cr_t = record->cr;
+        ecs_component_record_t *cr_t = flecs_components_get(
+            world, ecs_pair(EcsWildcard, entities[i]));
         if (cr_t) {
             /* Event is used as target in traversable relationship, propagate */
             flecs_emit_propagate_invalidate_tables(world, cr_t);
@@ -464,14 +457,8 @@ void flecs_propagate_entities(
 
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_record_t *record = flecs_entities_get(world, entities[i]);
-        if (!record) {
-            /* If the event is emitted after a bulk operation, it's possible
-             * that it hasn't been populated with entities yet. */
-            continue;
-        }
-
-        ecs_component_record_t *cr_t = record->cr;
+        ecs_component_record_t *cr_t = flecs_components_get(
+            world, ecs_pair(EcsWildcard, entities[i]));
         if (cr_t) {
             /* Entity is used as target in traversable pairs, propagate */
             ecs_entity_t e = src ? src : entities[i];
@@ -994,7 +981,7 @@ void flecs_emit_forward(
         entities = ECS_ELEM_T(entities, ecs_entity_t, it->offset);
         for (i = 0; i < it->count; i ++) {
             ecs_record_t *r = flecs_entities_get(world, entities[i]);
-            if (r->cr) {
+            if ((r->row & EcsEntityIsTraversable)) {
                 break;
             }
         }

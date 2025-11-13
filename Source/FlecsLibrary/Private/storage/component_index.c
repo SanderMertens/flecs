@@ -624,9 +624,6 @@ ecs_component_record_t* flecs_component_new(
             /* Flag used to determine if object should be traversed when
              * propagating events or with super/subset queries */
             flecs_record_add_flag(tgt_r, EcsEntityIsTraversable);
-
-            /* Add reference to (*, tgt) component record to entity record */
-            tgt_r->cr = cr_t;
         }
 
         /* Mark (*, tgt) record with HasDontFragment so that queries can quickly
