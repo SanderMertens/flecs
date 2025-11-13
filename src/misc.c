@@ -462,7 +462,7 @@ const char* flecs_parse_ws_eol(
     return ptr;
 }
 
-#define FLECS_ERRSTR_MAX (64)
+#define FLECS_ERRSTR_MAX (256)
 static char flecs_errstr_buf[FLECS_ERRSTR_MAX];
 static char flecs_errstr_buf_1[FLECS_ERRSTR_MAX];
 static char flecs_errstr_buf_2[FLECS_ERRSTR_MAX];
