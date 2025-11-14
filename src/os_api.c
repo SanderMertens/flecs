@@ -109,7 +109,7 @@ void flecs_dump_backtrace(
         fprintf(stream, "%s\n", symbol->Name);
     }
 
-    free(symbol);
+    ecs_os_free(symbol);
 }
 
 #elif HAVE_EXECINFO
