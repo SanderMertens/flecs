@@ -872,6 +872,21 @@ public:
 		return *this;
 	}
 
+	SOLID_INLINE const FSelfType& SetChildOrder(FFlecsId* InOrderArray, const int32 InOrderCount) const
+	{
+		solid_cassumef(InOrderArray != nullptr || InOrderCount == 0,
+			TEXT("InOrder cannot be null if InOrderCount is greater than zero"));
+		solid_cassumef(InOrderCount >= 0, TEXT("InOrderCount cannot be negative"));
+		
+		GetEntity().set_child_order(reinterpret_cast<flecs::id_t*>(InOrderArray), InOrderCount);
+		return *this;
+	}
+
+	SOLID_INLINE const FSelfType& SetChildOrder(const TArrayView<FFlecsId> InOrderArray) const
+	{
+		return SetChildOrder(InOrderArray.GetData(), InOrderArray.Num());
+	}
+
 	NO_DISCARD SOLID_INLINE FFlecsEntityView ToView() const
 	{
 		return FFlecsEntityView(GetEntity().view());
