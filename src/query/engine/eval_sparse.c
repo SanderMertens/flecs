@@ -124,7 +124,7 @@ next:
         ECS_INVALID_OPERATION, "sparse iterator invalidated while iterating");
 
     ecs_entity_t e = flecs_sparse_ids(op_ctx->sparse)[op_ctx->cur];
-    ecs_table_range_t range = flecs_range_from_entity(e, ctx);
+    ecs_table_range_t range = flecs_range_from_entity(ctx->world, e);
 
     if (flecs_query_table_filter(range.table, op->other, table_mask)) {
         goto next;

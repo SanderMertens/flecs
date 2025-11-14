@@ -25,10 +25,6 @@ void flecs_set_source_set_flag(
     ecs_iter_t *it,
     int32_t field_index);
 
-ecs_table_range_t flecs_range_from_entity(
-    ecs_entity_t e,
-    const ecs_query_run_ctx_t *ctx);
-
 ecs_table_range_t flecs_query_var_get_range(
     int32_t var_id,
     const ecs_query_run_ctx_t *ctx);

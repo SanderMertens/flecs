@@ -132,15 +132,15 @@ void flecs_instantiate_children(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_entity_t instance,
-    ecs_table_t *child_table,
+    ecs_table_range_t child_range,
     const ecs_instantiate_ctx_t *ctx)
 {
-    if (!ecs_table_count(child_table)) {
+    if (!child_range.count) {
         return;
     }
 
+    ecs_table_t *child_table = child_range.table;
     ecs_type_t type = child_table->type;
-    ecs_data_t *child_data = &child_table->data;
 
     ecs_entity_t slot_of = 0;
     ecs_entity_t *ids = type.array;
@@ -207,10 +207,10 @@ void flecs_instantiate_children(
             continue;
         }
 
-        int32_t storage_index = ecs_table_type_to_column_index(child_table, i);
-        if (storage_index != -1) {
-            component_data[diff.added.count] = 
-                child_data->columns[storage_index].data;
+        int32_t column = ecs_table_type_to_column_index(child_table, i);
+        if (column != -1) {
+            component_data[diff.added.count] = ecs_table_get_column(
+                child_table, column, child_range.offset);
         } else {
             component_data[diff.added.count] = NULL;
         }
@@ -233,9 +233,8 @@ void flecs_instantiate_children(
     }
 
     /* Instantiate the prefab child table for each new instance */
-    int32_t child_count = ecs_table_count(child_table);
-    ecs_entity_t *child_ids = flecs_walloc_n(world, ecs_entity_t, child_count);
-
+    ecs_entity_t *child_ids = flecs_walloc_n(
+        world, ecs_entity_t, child_range.count);
     ecs_table_t *i_table = NULL;
 
     /* Replace ChildOf element in the component array with instance id */
@@ -252,9 +251,10 @@ void flecs_instantiate_children(
      * its parent. This would cause the hierarchy to instantiate itself
      * which would cause infinite recursion. */
     const ecs_entity_t *children = ecs_table_entities(child_table);
+    int32_t start = child_range.offset, end = start + child_range.count;
 
 #ifdef FLECS_DEBUG
-    for (j = 0; j < child_count; j ++) {
+    for (j = start; j < end; j ++) {
         ecs_entity_t child = children[j];        
         ecs_check(child != instance, ECS_INVALID_PARAMETER, 
             "cycle detected in IsA relationship");
@@ -273,8 +273,9 @@ void flecs_instantiate_children(
         ctx_cur = *ctx;
     }
 
-    for (j = 0; j < child_count; j ++) {
-        if ((uint32_t)children[j] < (uint32_t)ctx_cur.root_prefab) {
+    for (j = 0; j < child_range.count; j ++) {
+        ecs_entity_t prefab_child = children[j + start];
+        if ((uint32_t)prefab_child < (uint32_t)ctx_cur.root_prefab) {
             /* Child id is smaller than root prefab id, can't use offset */
             child_ids[j] = flecs_new_id(world);
             continue;
@@ -282,7 +283,7 @@ void flecs_instantiate_children(
 
         /* Get prefab offset, ignore lifecycle generation count */
         ecs_entity_t prefab_offset =
-            (uint32_t)children[j] - (uint32_t)ctx_cur.root_prefab;
+            (uint32_t)prefab_child - (uint32_t)ctx_cur.root_prefab;
         ecs_assert(prefab_offset != 0, ECS_INTERNAL_ERROR, NULL);
 
         /* First check if any entity with the desired id exists */
@@ -299,17 +300,19 @@ void flecs_instantiate_children(
         flecs_entities_make_alive(world, instance_child);
         flecs_entities_ensure(world, instance_child);
         ecs_assert(ecs_is_alive(world, instance_child), ECS_INTERNAL_ERROR, NULL);
+
         child_ids[j] = instance_child;
     }
 
     /* Create children */
     int32_t child_row;
+    diff.added_flags |= EcsTableEdgeReparent;
     const ecs_entity_t *i_children = flecs_bulk_new(world, i_table, child_ids,
-        &diff.added, child_count, component_data, false, &child_row, &diff);
+        &diff.added, child_range.count, component_data, false, &child_row, &diff);
 
     /* If children are slots, add slot relationships to parent */
     if (slot_of) {
-        for (j = 0; j < child_count; j ++) {
+        for (j = start; j < end; j ++) {
             ecs_entity_t child = children[j];
             ecs_entity_t i_child = i_children[j];
             flecs_instantiate_slot(world, base, instance, slot_of,
@@ -318,12 +321,12 @@ void flecs_instantiate_children(
     }
 
     /* If prefab child table has children itself, recursively instantiate */
-    for (j = 0; j < child_count; j ++) {
+    for (j = 0; j < child_range.count; j ++) {
         ecs_entity_t child = children[j];
         flecs_instantiate(world, child, i_children[j], &ctx_cur);
     }
 
-    flecs_wfree_n(world, ecs_entity_t, child_count, child_ids);
+    flecs_wfree_n(world, ecs_entity_t, child_range.count, child_ids);
 error:
     return;    
 }
@@ -420,18 +423,29 @@ void flecs_instantiate(
     ecs_table_cache_iter_t it;
     if (cr && flecs_table_cache_all_iter((ecs_table_cache_t*)cr, &it)) {
         ecs_os_perf_trace_push("flecs.instantiate");
-        const ecs_table_record_t *tr;
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            flecs_instantiate_children(
-                world, base, instance, tr->hdr.table, ctx);
-        }
-        ecs_os_perf_trace_pop("flecs.instantiate");
-
         if (cr->flags & EcsIdOrderedChildren) {
-            ecs_component_record_t *icr = flecs_components_get(world, ecs_childof(instance));
-            /* If base has children, instance must now have children */
-            ecs_assert(icr != NULL, ECS_INTERNAL_ERROR, NULL);
-            flecs_ordered_children_populate(world, icr);
+            ecs_vec_t *children_vec = &cr->pair->ordered_children;
+            int32_t i, count = ecs_vec_count(children_vec);
+            ecs_entity_t *children = ecs_vec_first(children_vec);
+            for (i = 0; i < count; i ++) {
+                ecs_entity_t child = children[i];
+                ecs_table_range_t range = flecs_range_from_entity(world, child);
+                flecs_instantiate_children(
+                    world, base, instance, range, ctx);
+            }
+        } else {
+            const ecs_table_record_t *tr;
+            while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+                ecs_table_range_t range = {
+                    tr->hdr.table,
+                    0,
+                    ecs_table_count(tr->hdr.table)
+                };
+
+                flecs_instantiate_children(
+                    world, base, instance, range, ctx);
+            }
+            ecs_os_perf_trace_pop("flecs.instantiate");
         }
     }
 }
