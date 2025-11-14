@@ -850,7 +850,7 @@ bool flecs_rtt_vector_equals(
     {
         int c = count_a - count_b;
         if(c != 0) {
-            return c;
+            return false;
         }
     }
 
