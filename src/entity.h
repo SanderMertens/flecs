@@ -163,4 +163,8 @@ const char* flecs_entity_invalid_reason(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
+ecs_table_range_t flecs_range_from_entity(
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
 #endif

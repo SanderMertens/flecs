@@ -1965,10 +1965,6 @@ void flecs_set_source_set_flag(
     ecs_iter_t *it,
     int32_t field_index);
 
-ecs_table_range_t flecs_range_from_entity(
-    ecs_entity_t e,
-    const ecs_query_run_ctx_t *ctx);
-
 ecs_table_range_t flecs_query_var_get_range(
     int32_t var_id,
     const ecs_query_run_ctx_t *ctx);
@@ -2880,6 +2876,10 @@ void flecs_entity_remove_non_fragmenting(
 const char* flecs_entity_invalid_reason(
     const ecs_world_t *world,
     ecs_entity_t entity);
+
+ecs_table_range_t flecs_range_from_entity(
+    const ecs_world_t *world,
+    ecs_entity_t e);
 
 #endif
 
@@ -10568,6 +10568,20 @@ error:
     return NULL;
 }
 
+ecs_table_range_t flecs_range_from_entity(
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_record_t *r = flecs_entities_get(world, e);
+    if (!r) {
+        return (ecs_table_range_t){ 0 };
+    }
+    return (ecs_table_range_t){
+        .table = r->table,
+        .offset = ECS_RECORD_TO_ROW(r->row),
+        .count = 1
+    };
+}
 
 /**
  * @file entity_name.c
@@ -12127,15 +12141,15 @@ void flecs_instantiate_children(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_entity_t instance,
-    ecs_table_t *child_table,
+    ecs_table_range_t child_range,
     const ecs_instantiate_ctx_t *ctx)
 {
-    if (!ecs_table_count(child_table)) {
+    if (!child_range.count) {
         return;
     }
 
+    ecs_table_t *child_table = child_range.table;
     ecs_type_t type = child_table->type;
-    ecs_data_t *child_data = &child_table->data;
 
     ecs_entity_t slot_of = 0;
     ecs_entity_t *ids = type.array;
@@ -12202,10 +12216,10 @@ void flecs_instantiate_children(
             continue;
         }
 
-        int32_t storage_index = ecs_table_type_to_column_index(child_table, i);
-        if (storage_index != -1) {
-            component_data[diff.added.count] = 
-                child_data->columns[storage_index].data;
+        int32_t column = ecs_table_type_to_column_index(child_table, i);
+        if (column != -1) {
+            component_data[diff.added.count] = ecs_table_get_column(
+                child_table, column, child_range.offset);
         } else {
             component_data[diff.added.count] = NULL;
         }
@@ -12228,9 +12242,8 @@ void flecs_instantiate_children(
     }
 
     /* Instantiate the prefab child table for each new instance */
-    int32_t child_count = ecs_table_count(child_table);
-    ecs_entity_t *child_ids = flecs_walloc_n(world, ecs_entity_t, child_count);
-
+    ecs_entity_t *child_ids = flecs_walloc_n(
+        world, ecs_entity_t, child_range.count);
     ecs_table_t *i_table = NULL;
 
     /* Replace ChildOf element in the component array with instance id */
@@ -12247,9 +12260,10 @@ void flecs_instantiate_children(
      * its parent. This would cause the hierarchy to instantiate itself
      * which would cause infinite recursion. */
     const ecs_entity_t *children = ecs_table_entities(child_table);
+    int32_t start = child_range.offset, end = start + child_range.count;
 
 #ifdef FLECS_DEBUG
-    for (j = 0; j < child_count; j ++) {
+    for (j = start; j < end; j ++) {
         ecs_entity_t child = children[j];        
         ecs_check(child != instance, ECS_INVALID_PARAMETER, 
             "cycle detected in IsA relationship");
@@ -12268,8 +12282,9 @@ void flecs_instantiate_children(
         ctx_cur = *ctx;
     }
 
-    for (j = 0; j < child_count; j ++) {
-        if ((uint32_t)children[j] < (uint32_t)ctx_cur.root_prefab) {
+    for (j = 0; j < child_range.count; j ++) {
+        ecs_entity_t prefab_child = children[j + start];
+        if ((uint32_t)prefab_child < (uint32_t)ctx_cur.root_prefab) {
             /* Child id is smaller than root prefab id, can't use offset */
             child_ids[j] = flecs_new_id(world);
             continue;
@@ -12277,7 +12292,7 @@ void flecs_instantiate_children(
 
         /* Get prefab offset, ignore lifecycle generation count */
         ecs_entity_t prefab_offset =
-            (uint32_t)children[j] - (uint32_t)ctx_cur.root_prefab;
+            (uint32_t)prefab_child - (uint32_t)ctx_cur.root_prefab;
         ecs_assert(prefab_offset != 0, ECS_INTERNAL_ERROR, NULL);
 
         /* First check if any entity with the desired id exists */
@@ -12294,17 +12309,19 @@ void flecs_instantiate_children(
         flecs_entities_make_alive(world, instance_child);
         flecs_entities_ensure(world, instance_child);
         ecs_assert(ecs_is_alive(world, instance_child), ECS_INTERNAL_ERROR, NULL);
+
         child_ids[j] = instance_child;
     }
 
     /* Create children */
     int32_t child_row;
+    diff.added_flags |= EcsTableEdgeReparent;
     const ecs_entity_t *i_children = flecs_bulk_new(world, i_table, child_ids,
-        &diff.added, child_count, component_data, false, &child_row, &diff);
+        &diff.added, child_range.count, component_data, false, &child_row, &diff);
 
     /* If children are slots, add slot relationships to parent */
     if (slot_of) {
-        for (j = 0; j < child_count; j ++) {
+        for (j = start; j < end; j ++) {
             ecs_entity_t child = children[j];
             ecs_entity_t i_child = i_children[j];
             flecs_instantiate_slot(world, base, instance, slot_of,
@@ -12313,12 +12330,12 @@ void flecs_instantiate_children(
     }
 
     /* If prefab child table has children itself, recursively instantiate */
-    for (j = 0; j < child_count; j ++) {
+    for (j = 0; j < child_range.count; j ++) {
         ecs_entity_t child = children[j];
         flecs_instantiate(world, child, i_children[j], &ctx_cur);
     }
 
-    flecs_wfree_n(world, ecs_entity_t, child_count, child_ids);
+    flecs_wfree_n(world, ecs_entity_t, child_range.count, child_ids);
 error:
     return;    
 }
@@ -12415,18 +12432,29 @@ void flecs_instantiate(
     ecs_table_cache_iter_t it;
     if (cr && flecs_table_cache_all_iter((ecs_table_cache_t*)cr, &it)) {
         ecs_os_perf_trace_push("flecs.instantiate");
-        const ecs_table_record_t *tr;
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            flecs_instantiate_children(
-                world, base, instance, tr->hdr.table, ctx);
-        }
-        ecs_os_perf_trace_pop("flecs.instantiate");
-
         if (cr->flags & EcsIdOrderedChildren) {
-            ecs_component_record_t *icr = flecs_components_get(world, ecs_childof(instance));
-            /* If base has children, instance must now have children */
-            ecs_assert(icr != NULL, ECS_INTERNAL_ERROR, NULL);
-            flecs_ordered_children_populate(world, icr);
+            ecs_vec_t *children_vec = &cr->pair->ordered_children;
+            int32_t i, count = ecs_vec_count(children_vec);
+            ecs_entity_t *children = ecs_vec_first(children_vec);
+            for (i = 0; i < count; i ++) {
+                ecs_entity_t child = children[i];
+                ecs_table_range_t range = flecs_range_from_entity(world, child);
+                flecs_instantiate_children(
+                    world, base, instance, range, ctx);
+            }
+        } else {
+            const ecs_table_record_t *tr;
+            while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+                ecs_table_range_t range = {
+                    tr->hdr.table,
+                    0,
+                    ecs_table_count(tr->hdr.table)
+                };
+
+                flecs_instantiate_children(
+                    world, base, instance, range, ctx);
+            }
+            ecs_os_perf_trace_pop("flecs.instantiate");
         }
     }
 }
@@ -78563,7 +78591,7 @@ bool flecs_query_setthis(
         op_ctx->range = vars[0].range;
 
         /* Constrain This table variable to a single entity from the table */
-        vars[0].range = flecs_range_from_entity(this_var->entity, ctx);
+        vars[0].range = flecs_range_from_entity(ctx->world, this_var->entity);
         vars[0].entity = this_var->entity;
         return true;
     } else {
@@ -79228,7 +79256,7 @@ void flecs_query_iter_constrain(
 
             /* Initialize table variable with constrained entity variable */
             ecs_var_t *tvar = &vars[var->table_id];
-            tvar->range = flecs_range_from_entity(vars[var_id].entity, &ctx);
+            tvar->range = flecs_range_from_entity(ctx.world, vars[var_id].entity);
             ctx.written[0] |= (1ull << var->table_id); /* Mark as written */
         }
     }
@@ -79964,7 +79992,7 @@ bool flecs_query_pred_eq_name(
         return false;
     }
 
-    ecs_table_range_t r = flecs_range_from_entity(e, ctx);
+    ecs_table_range_t r = flecs_range_from_entity(ctx->world, e);
     return flecs_query_pred_eq_w_range(op, redo, ctx, r);
 }
 
@@ -80165,7 +80193,7 @@ bool flecs_query_pred_neq_name(
         return true && !redo;
     }
 
-    ecs_table_range_t r = flecs_range_from_entity(e, ctx);
+    ecs_table_range_t r = flecs_range_from_entity(ctx->world, e);
     return flecs_query_pred_neq_w_range(op, redo, ctx, r);
 }
 
@@ -80294,7 +80322,7 @@ next:
         ECS_INVALID_OPERATION, "sparse iterator invalidated while iterating");
 
     ecs_entity_t e = flecs_sparse_ids(op_ctx->sparse)[op_ctx->cur];
-    ecs_table_range_t range = flecs_range_from_entity(e, ctx);
+    ecs_table_range_t range = flecs_range_from_entity(ctx->world, e);
 
     if (flecs_query_table_filter(range.table, op->other, table_mask)) {
         goto next;
@@ -81365,7 +81393,7 @@ bool flecs_query_trav_yield_reflexive_src(
             ECS_INTERNAL_ERROR, NULL);
         (void)table;
         vars[src_var].entity = entity;
-        vars[src_var].range = flecs_range_from_entity(entity, ctx);
+        vars[src_var].range = flecs_range_from_entity(ctx->world, entity);
     }
 
     return true;
@@ -81887,21 +81915,6 @@ void flecs_set_source_set_flag(
     ECS_TERMSET_SET(it->up_fields, 1u << field_index);
 }
 
-ecs_table_range_t flecs_range_from_entity(
-    ecs_entity_t e,
-    const ecs_query_run_ctx_t *ctx)
-{
-    ecs_record_t *r = flecs_entities_get(ctx->world, e);
-    if (!r) {
-        return (ecs_table_range_t){ 0 };
-    }
-    return (ecs_table_range_t){
-        .table = r->table,
-        .offset = ECS_RECORD_TO_ROW(r->row),
-        .count = 1
-    };
-}
-
 ecs_table_range_t flecs_query_var_get_range(
     int32_t var_id,
     const ecs_query_run_ctx_t *ctx)
@@ -81915,7 +81928,7 @@ ecs_table_range_t flecs_query_var_get_range(
 
     ecs_entity_t entity = var->entity;
     if (entity && entity != EcsWildcard) {
-        var->range = flecs_range_from_entity(entity, ctx);
+        var->range = flecs_range_from_entity(ctx->world, entity);
         return var->range;
     }
 
@@ -81934,7 +81947,7 @@ ecs_table_t* flecs_query_var_get_table(
 
     ecs_entity_t entity = var->entity;
     if (entity && entity != EcsWildcard) {
-        var->range = flecs_range_from_entity(entity, ctx);
+        var->range = flecs_range_from_entity(ctx->world, entity);
         return var->range.table;
     }
 
@@ -81964,13 +81977,13 @@ ecs_table_range_t flecs_query_get_range(
     ecs_flags16_t flags = flecs_query_ref_flags(op->flags, ref_kind);
     if (flags & EcsQueryIsEntity) {
         ecs_assert(!(flags & EcsQueryIsVar), ECS_INTERNAL_ERROR, NULL);
-        return flecs_range_from_entity(ref->entity, ctx);
+        return flecs_range_from_entity(ctx->world, ref->entity);
     } else {
         ecs_var_t *var = &ctx->vars[ref->var];
         if (var->range.table) {
             return ctx->vars[ref->var].range;
         } else if (var->entity) {
-            return flecs_range_from_entity(var->entity, ctx);
+            return flecs_range_from_entity(ctx->world, var->entity);
         }
     }
     return (ecs_table_range_t){0};
@@ -82099,7 +82112,7 @@ ecs_table_range_t flecs_get_ref_range(
     const ecs_query_run_ctx_t *ctx)
 {
     if (flag & EcsQueryIsEntity) {
-        return flecs_range_from_entity(ref->entity, ctx);
+        return flecs_range_from_entity(ctx->world, ref->entity);
     } else if (flag & EcsQueryIsVar) {
         return flecs_query_var_get_range(ref->var, ctx);
     }

@@ -812,10 +812,12 @@ void OrderedChildren_get_ordered_children(void);
 void OrderedChildren_get_ordered_children_from_stage(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_no_children(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_3_children(void);
+void OrderedChildren_get_ordered_children_from_prefab_instance_3_children_different_table(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
 void OrderedChildren_recreate_named_child(void);
 void OrderedChildren_lookup_after_move_to_root(void);
 void OrderedChildren_lookup_after_clear(void);
+void OrderedChildren_bulk_create_ordered_children(void);
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -5955,6 +5957,10 @@ bake_test_case OrderedChildren_testcases[] = {
         OrderedChildren_get_ordered_children_from_prefab_instance_3_children
     },
     {
+        "get_ordered_children_from_prefab_instance_3_children_different_table",
+        OrderedChildren_get_ordered_children_from_prefab_instance_3_children_different_table
+    },
+    {
         "get_ordered_children_from_prefab_instance_nested_children",
         OrderedChildren_get_ordered_children_from_prefab_instance_nested_children
     },
@@ -5969,6 +5975,10 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "lookup_after_clear",
         OrderedChildren_lookup_after_clear
+    },
+    {
+        "bulk_create_ordered_children",
+        OrderedChildren_bulk_create_ordered_children
     }
 };
 
@@ -13862,7 +13872,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        40,
+        42,
         OrderedChildren_testcases
     },
     {

@@ -214,7 +214,7 @@ bool flecs_query_trav_yield_reflexive_src(
             ECS_INTERNAL_ERROR, NULL);
         (void)table;
         vars[src_var].entity = entity;
-        vars[src_var].range = flecs_range_from_entity(entity, ctx);
+        vars[src_var].range = flecs_range_from_entity(ctx->world, entity);
     }
 
     return true;
