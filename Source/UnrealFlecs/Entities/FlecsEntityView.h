@@ -451,7 +451,7 @@ public:
 		return HasPairSecond<T>(flecs::IsA);
 	}
 
-	// @TODO: Optimize this?
+	// @TODO: Optimize this to not require looking up the enum entity each time
 	template <Unreal::Flecs::TFlecsEntityHandleTypeConcept THandle, typename TEnumUnderlying = uint64>
 	NO_DISCARD SOLID_INLINE THandle ObtainEnumConstant(const TSolidNotNull<const UEnum*> EnumType,
 																  const TEnumUnderlying InValue) const
@@ -462,7 +462,8 @@ public:
 
 		return EnumEntity.Lookup<THandle>(EnumType->GetNameStringByValue(static_cast<int64>(InValue)));
 	}
-	
+
+	// @TODO: make this default to FFlecsEntityView or handle maybe?
 	template <Unreal::Flecs::TFlecsEntityHandleTypeConcept THandle>
 	NO_DISCARD SOLID_INLINE THandle Lookup(const FString& InPath, const bool bSearchPath = false) const
 	{
