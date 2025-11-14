@@ -1312,7 +1312,7 @@ void UFlecsWorld::RegisterMemberProperties(const TSolidNotNull<const UStruct*> I
 			FFlecsEntityHandle StructComponent;
 			if (!HasScriptStruct(CastFieldChecked<FStructProperty>(Property)->Struct))
 			{
-				UE_LOGFMT(LogFlecsWorld, Warning,
+				UE_LOGFMT(LogFlecsWorld, Log,
 				          "Property Type Script struct {StructName} is not registered for entity {ComponentName}",
 				          CastFieldChecked<FStructProperty>(Property)->Struct->GetStructCPPName(),
 				          InComponent.GetName());
