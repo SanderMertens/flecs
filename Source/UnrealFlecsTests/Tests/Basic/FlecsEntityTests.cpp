@@ -34,7 +34,8 @@ TEST_CLASS_WITH_FLAGS(A10_UnrealFlecsComponentRegistrationTests,
 	
 	TEST_METHOD(C1_SpawnEntityWithChildrenInOrder_SetChildOrder_C_API)
 	{
-		const FFlecsEntityHandle ParentEntity = FlecsWorld->CreateEntity("ParentEntity");
+		const FFlecsEntityHandle ParentEntity = FlecsWorld->CreateEntity("ParentEntity")
+			.Add(flecs::OrderedChildren);
 
 		const FFlecsEntityHandle ChildEntityA = FlecsWorld->CreateEntity("ChildEntityA").SetParent(ParentEntity);
 		const FFlecsEntityHandle ChildEntityB = FlecsWorld->CreateEntity("ChildEntityB").SetParent(ParentEntity);
@@ -73,7 +74,8 @@ TEST_CLASS_WITH_FLAGS(A10_UnrealFlecsComponentRegistrationTests,
 
 	TEST_METHOD(C2_SpawnEntityWithChildrenInOrder_SetChildOrder_TArrayView_API)
 	{
-		const FFlecsEntityHandle ParentEntity = FlecsWorld->CreateEntity("ParentEntity");
+		const FFlecsEntityHandle ParentEntity = FlecsWorld->CreateEntity("ParentEntity")
+			.Add(flecs::OrderedChildren);
 
 		const FFlecsEntityHandle ChildEntityA = FlecsWorld->CreateEntity("ChildEntityA").SetParent(ParentEntity);
 		const FFlecsEntityHandle ChildEntityB = FlecsWorld->CreateEntity("ChildEntityB").SetParent(ParentEntity);
