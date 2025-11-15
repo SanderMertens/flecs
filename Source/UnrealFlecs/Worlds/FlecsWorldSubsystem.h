@@ -82,6 +82,6 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UFlecsWorld> DefaultWorld;
 
-	void RegisterAllGameplayTags(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld);
+	void RegisterAllGameplayTags(const TSolidNotNull<UFlecsWorld*> InFlecsWorld);
 
 }; // class UFlecsWorldSubsystem

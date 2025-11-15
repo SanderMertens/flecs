@@ -338,11 +338,12 @@ void UFlecsWorldSubsystem::ListenBeginPlay(const FFlecsOnWorldBeginPlay::FDelega
 	}
 }
 
-void UFlecsWorldSubsystem::RegisterAllGameplayTags(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld)
+void UFlecsWorldSubsystem::RegisterAllGameplayTags(const TSolidNotNull<UFlecsWorld*> InFlecsWorld)
 {
 	InFlecsWorld->ObtainTypedEntity<FFlecsGameplayTagManagerEntity>()
 	            .Add(flecs::Module);
 
+	// @TODO: defer this
 	InFlecsWorld->Scope<FFlecsGameplayTagManagerEntity>([InFlecsWorld]()
 	{
 		FGameplayTagContainer AllTags;
@@ -354,6 +355,8 @@ void UFlecsWorldSubsystem::RegisterAllGameplayTags(const TSolidNotNull<const UFl
 			                                                   StringCast<char>(*Tag.ToString()).Get(),
 			                                                   ".", ".");
 			TagEntity.Set<FGameplayTag>(Tag);
+
+			InFlecsWorld->TagEntityMap.emplace(Tag, TagEntity.GetFlecsId());
 		}
 	});
 }

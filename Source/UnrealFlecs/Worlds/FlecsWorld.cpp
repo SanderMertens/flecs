@@ -1758,21 +1758,14 @@ bool UFlecsWorld::HasEntityWithName(const FString& Name, FFlecsEntityHandle& Out
 	return false;
 }
 
-// @TODO: Optimize this to not use lookup
 FFlecsEntityHandle UFlecsWorld::GetTagEntity(const FGameplayTag& Tag) const
 {
 	solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
-		
-	const FString TagName = Tag.GetTagName().ToString();
 
-	FFlecsEntityHandle TagEntity;
+	solid_checkf(TagEntityMap.contains(Tag), TEXT("Tag %s is not registered"), *Tag.ToString());
+	solid_checkf(IsAlive(TagEntityMap.at(Tag).GetId()), TEXT("Tag entity is not alive"));
 		
-	Scope<FFlecsGameplayTagManagerEntity>([&TagEntity, &TagName, this]()
-	{
-		TagEntity = LookupEntity(TagName, ".", ".");
-	});
-		
-	return TagEntity;
+	return GetAlive(TagEntityMap.at(Tag).GetId());
 }
 
 FFlecsEntityHandle UFlecsWorld::CreatePrefabWithRecord(const FFlecsEntityRecord& InRecord, const FString& Name) const

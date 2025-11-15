@@ -12,6 +12,7 @@
 #include "CoreMinimal.h"
 
 #include "SolidMacros/Macros.h"
+#include "Standard/Hashing.h"
 #include "Types/SolidNotNull.h"
 #include "Concepts/SolidConcepts.h"
 
@@ -1067,6 +1068,8 @@ public:
 	FDelegateHandle DeleteEmptyTablesGCDelegateHandle;
 
 	FFlecsWorldModuleImportedDelegate OnModuleImported;
+
+	robin_hood::unordered_flat_map<FGameplayTag, FFlecsId> TagEntityMap;
 
 private:
 	
