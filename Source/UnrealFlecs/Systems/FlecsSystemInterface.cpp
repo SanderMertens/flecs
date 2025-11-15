@@ -49,7 +49,7 @@ void IFlecsSystemInterface::InitializeSystem_Internal(const flecs::world& InWorl
 
 	System = FFlecsSystem(Builder); // Builder.build();
 		
-	Settings.SystemRecord.GetPtr()->ApplyRecordToEntity(FlecsWorld, System.GetEntity());
+	Settings.SystemRecord.ApplyRecordToEntity(FlecsWorld, System.GetEntity());
 	//@TODO: Add FlecsSystemObject Component Target Type
 	//System.GetEntity().Set<FFlecsUObjectComponent>({ _getUObject() });
 		

@@ -128,6 +128,11 @@ void FFlecsEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWor
 {
 	solid_checkf(InEntityHandle.IsValid(), TEXT("Entity Handle is not valid"));
 
+	for (const TInstancedStruct<FFlecsEntityRecordFragment>& Fragment : Fragments)
+	{
+		Fragment.Get<FFlecsEntityRecordFragment>().PreApplyRecordToEntity(InFlecsWorld, InEntityHandle);
+	}
+
 	InFlecsWorld->Defer([this, &InEntityHandle, InFlecsWorld]()
 	{
 		for (const auto& [NodeType, ScriptStruct, ScriptEnum,
@@ -171,7 +176,7 @@ void FFlecsEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWor
 					break;
 			}
 		}
-
+		
 		for (const TInstancedStruct<FFlecsEntityRecord>& SubEntityRecord : SubEntities)
 		{
 			if UNLIKELY_IF(!ensure(SubEntityRecord.IsValid()))
@@ -186,12 +191,15 @@ void FFlecsEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWor
 			InEntityHandle.Add(NewEntityHandle);
 		}
 	});
+
+	for (const TInstancedStruct<FFlecsEntityRecordFragment>& Fragment : Fragments)
+	{
+		Fragment.Get<FFlecsEntityRecordFragment>().PostApplyRecordToEntity(InFlecsWorld, InEntityHandle);
+	}
 }
 
-void FFlecsNamedEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld,
+void FFlecsNamedEntityRecordFragment::PreApplyRecordToEntity(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld,
 	const FFlecsEntityHandle& InEntityHandle) const
 {
 	InEntityHandle.SetName(Name);
-	
-	Super::ApplyRecordToEntity(InFlecsWorld, InEntityHandle);
 }

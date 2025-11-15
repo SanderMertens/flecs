@@ -74,7 +74,7 @@ public:
 	
 }; // struct FFlecsCollectionReference
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsCollectionInstanceReference
+struct UNREALFLECS_API FFlecsCollectionInstancedReference
 {
 	GENERATED_BODY()
 
@@ -85,7 +85,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
 	FInstancedStruct Parameters;
 	
-}; // struct FFlecsCollectionInstanceReference
+}; // struct FFlecsCollectionInstancedReference
 
 /** compose another Collection by reference (adds (IsA, @param Collection) in compile-time and then removes itself). */
 USTRUCT(BlueprintType)
@@ -97,7 +97,7 @@ public:
 	FORCEINLINE FFlecsCollectionReferenceComponent() = default;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
-	TArray<FFlecsCollectionInstanceReference> Collections;
+	TArray<FFlecsCollectionInstancedReference> Collections;
 	
 }; // struct FFlecsCollectionReferenceComponent
 

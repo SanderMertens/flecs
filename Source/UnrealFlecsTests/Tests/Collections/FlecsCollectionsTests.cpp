@@ -18,6 +18,7 @@
  * D. Collection Emtpy Instantiation Tests
  * E. Collection Instantiation With Tag Tests
  * F. Collection Parameterized Instantiation Tests
+ * G. Collection Instantiation With Sub-Entities Tests
  */
 TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
@@ -215,6 +216,73 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		
 		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsCollectionPrefabTag>()));
 		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsTestStruct_Tag_Inherited>()));
+	}
+
+	TEST_METHOD(C6_RegisterCollectionFromDefinition_CreatesPrefabWithSubEntity_DefinitionAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag_Inherited>();
+		
+		FFlecsCollectionDefinition Def;
+		{
+			FFlecsCollectionBuilder Builder = FFlecsCollectionBuilder::Create(Def)
+				.Name("TestCollectionWithSubEntities_Def")
+				.Add<FFlecsTestStruct_Tag_Inherited>();
+
+			Builder.BeginSubEntity()
+				.Add<FFlecsTestStruct_Tag_Inherited>()
+			.EndSubEntity();
+		}
+
+		const FFlecsEntityHandle Prefab
+			= Collections->RegisterCollectionDefinition(TEXT("TestCollectionWithSubEntities_Def"), Def);
+
+		ASSERT_THAT(IsTrue(Prefab.IsValid()));
+		ASSERT_THAT(IsTrue(Prefab.Has(flecs::Prefab)));
+		ASSERT_THAT(IsTrue(Prefab.GetName() == TEXT("TestCollectionWithSubEntities_Def")));
+		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsCollectionPrefabTag>()));
+		
+		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsTestStruct_Tag_Inherited>()));
+
+		bool bFoundSubEntity = false;
+		Prefab.IterateChildren([&](const FFlecsEntityHandle& ChildEntity)
+		{
+			if (ChildEntity.Has<FFlecsTestStruct_Tag_Inherited>())
+			{
+				bFoundSubEntity = true;
+			}
+		});
+
+		ASSERT_THAT(IsTrue(bFoundSubEntity));
+	}
+
+	TEST_METHOD(C7_RegisterCollectionFromDefinition_CreatesPrefabWithSubEntity_WithName_DefinitionAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag_Inherited>();
+		
+		FFlecsCollectionDefinition Def;
+		{
+			FFlecsCollectionBuilder Builder = FFlecsCollectionBuilder::Create(Def)
+				.Name("TestCollectionWithSubEntities_Def")
+				.Add<FFlecsTestStruct_Tag_Inherited>();
+
+			Builder.BeginSubEntity("SubEntity1")
+				.Add<FFlecsTestStruct_Tag_Inherited>()
+			.EndSubEntity();
+		}
+
+		const FFlecsEntityHandle Prefab
+			= Collections->RegisterCollectionDefinition(TEXT("TestCollectionWithSubEntities_Def"), Def);
+
+		ASSERT_THAT(IsTrue(Prefab.IsValid()));
+		ASSERT_THAT(IsTrue(Prefab.Has(flecs::Prefab)));
+		ASSERT_THAT(IsTrue(Prefab.GetName() == TEXT("TestCollectionWithSubEntities_Def")));
+		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsCollectionPrefabTag>()));
+		
+		ASSERT_THAT(IsTrue(Prefab.Has<FFlecsTestStruct_Tag_Inherited>()));
+
+		const FFlecsEntityView SubEntity1View = Prefab.Lookup<FFlecsEntityView>("SubEntity1");
+		ASSERT_THAT(IsTrue(SubEntity1View.IsValid()));
+		ASSERT_THAT(IsTrue(SubEntity1View.Has<FFlecsTestStruct_Tag_Inherited>()));
 	}
 
 	TEST_METHOD(D1_InstantiateEmptyCollection_CreatesEntityFromPrefab_BuilderAPI)
@@ -560,6 +628,32 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		// Cleanup
 		/*TestEntity.RemoveCollection(CollectionPrefab);
 		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>()));*/
+	}
+
+	TEST_METHOD(G1_InstantiateCollectionWithSubEntities_CreatesEntityWithSubEnitities_BuilderAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
+
+		const FFlecsEntityHandle CollectionPrefab = Collections->RegisterCollectionBuilder([](FFlecsCollectionBuilder& Builder)
+		{
+			Builder
+				.Name("TestCollection_WithSubEntities")
+				.BeginSubEntity("SubEntity1")
+					.Add<FFlecsTestStruct_Tag>()
+				.EndSubEntity();
+		});
+
+		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
+		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity("TestEntity_WithSubEntities");
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddCollection(CollectionPrefab);
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection(CollectionPrefab)));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").IsValid()));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").Has<FFlecsTestStruct_Tag>()));
 	}
 
 	

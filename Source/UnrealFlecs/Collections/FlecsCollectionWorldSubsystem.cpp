@@ -29,8 +29,14 @@ void UFlecsCollectionWorldSubsystem::OnFlecsWorldInitialized(const TSolidNotNull
 
 	InWorld->SetSingleton<FFlecsCollectionSubsystemSingleton>({this});
 
+	FlecsWorld->RegisterComponentType<FFlecsCollectionDefinition>();
+	FlecsWorld->RegisterComponentType<FFlecsCollectionDefinitionComponent>();
+	
 	FlecsWorld->RegisterComponentType<FFlecsCollectionPrefabTag>();
+
+	FlecsWorld->RegisterComponentType<FFlecsCollectionReference>();
 	FlecsWorld->RegisterComponentType<FFlecsCollectionReferenceComponent>();
+	
 	FlecsWorld->RegisterComponentType<FFlecsCollectionSlotTag>();
 	FlecsWorld->RegisterComponentType<FFlecsCollectionParametersComponent>();
 
@@ -63,10 +69,18 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionAsset(const
 		return *Existing;
 	}
 
-	const FFlecsEntityHandle Prefab = CreatePrefabEntity(InAsset->GetName(), InAsset->Record);
-	RegisteredCollections.Add(Id, Prefab);
+	FFlecsCollectionDefinition CollectionDefinition = InAsset->MakeCollectionDefinition();
+	ApplyNamesToSubEntities(CollectionDefinition);
 
-	for (const FFlecsCollectionInstanceReference& Reference : InAsset->Collections)
+	const FFlecsEntityHandle Prefab = CreatePrefabEntity(InAsset->GetName(), InAsset->Record);
+	
+	FFlecsCollectionDefinitionComponent& CollectionDefinitionComponent = Prefab.Obtain<FFlecsCollectionDefinitionComponent>();
+	CollectionDefinitionComponent.Definition = CollectionDefinition;
+	Prefab.Modified<FFlecsCollectionDefinitionComponent>();
+
+	RegisteredCollections.Add(Id, Prefab);
+	
+	for (const FFlecsCollectionInstancedReference& Reference : InAsset->Collections)
 	{
 		AddCollectionToEntity(Prefab, Reference.Collection, Reference.Parameters);
 	}
@@ -78,18 +92,25 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionAsset(const
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionDefinition(
 	const FString& InName, 
-	const FFlecsCollectionDefinition& InDefinition)
+	FFlecsCollectionDefinition& InDefinition)
 {
 	const FFlecsCollectionId Id = FFlecsCollectionId(InName);
 	if (const FFlecsEntityHandle* Existing = RegisteredCollections.Find(Id))
 	{
 		return *Existing;
 	}
+
+	ApplyNamesToSubEntities(InDefinition);
 	
 	const FFlecsEntityHandle Prefab = CreatePrefabEntity(Id.NameId, InDefinition.Record);
+	
+	FFlecsCollectionDefinitionComponent& DefinitionComponent = Prefab.Obtain<FFlecsCollectionDefinitionComponent>();
+	DefinitionComponent.Definition = InDefinition;
+	Prefab.Modified<FFlecsCollectionDefinitionComponent>();
+	
 	RegisteredCollections.Add(Id, Prefab);
 	
-	for (const FFlecsCollectionInstanceReference& Reference : InDefinition.Collections)
+	for (const FFlecsCollectionInstancedReference& Reference : InDefinition.Collections)
 	{
 		AddCollectionToEntity(Prefab, Reference.Collection, Reference.Parameters);
 	}
@@ -104,17 +125,28 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionClass(const
 {
 	const FString CPPClassName = InClass->GetPrefixCPP() + InClass->GetName();
 	const FFlecsCollectionId Id = FFlecsCollectionId(CPPClassName);
+	
 	if (const FFlecsEntityHandle* Existing = RegisteredCollections.Find(Id))
 	{
 		return *Existing;
 	}
+
+	FFlecsCollectionDefinition& CollectionDefinition = InBuilder.GetCollectionDefinition();
+
+	ApplyNamesToSubEntities(CollectionDefinition);
 	
 	const FFlecsEntityHandle Prefab
-		= CreatePrefabEntity(CPPClassName, InBuilder.GetCollectionDefinition().Record);
+		= CreatePrefabEntity(CPPClassName, CollectionDefinition.Record);
+	
+	FFlecsCollectionDefinitionComponent& DefinitionComponent = Prefab.Obtain<FFlecsCollectionDefinitionComponent>();
+	DefinitionComponent.Definition = CollectionDefinition;
+	Prefab.Modified<FFlecsCollectionDefinitionComponent>();
+
+	CollectionDefinition = DefinitionComponent.Definition;
 	
 	RegisteredCollections.Add(Id, Prefab);
 	
-	for (const FFlecsCollectionInstanceReference& Reference : InBuilder.GetCollectionDefinition().Collections)
+	for (const FFlecsCollectionInstancedReference& Reference : CollectionDefinition.Collections)
 	{
 		AddCollectionToEntity(Prefab, Reference.Collection, Reference.Parameters);
 	}
@@ -419,7 +451,7 @@ void UFlecsCollectionWorldSubsystem::ExpandChildCollectionReferences(const FFlec
 {
 	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = GetFlecsWorldChecked();
 
-	FlecsWorld->Defer([this, FlecsWorld, &InCollectionEntity]()
+	/*FlecsWorld->Defer([this, FlecsWorld, InCollectionEntity]()
 	{
 		FlecsWorld->World.query_builder<FFlecsCollectionReferenceComponent*>() // 0 (FFlecsCollectionReferenceComponent)
 			.with(flecs::ChildOf, InCollectionEntity) // 1
@@ -428,7 +460,7 @@ void UFlecsCollectionWorldSubsystem::ExpandChildCollectionReferences(const FFlec
 			{
 				const FFlecsEntityHandle ChildEntityHandle = Iter.entity(Index);
 
-				for (const FFlecsCollectionInstanceReference& CollectionReference : ReferenceComponent->Collections)
+				for (const FFlecsCollectionInstancedReference& CollectionReference : ReferenceComponent->Collections)
 				{
 					AddCollectionToEntity(ChildEntityHandle,
 						CollectionReference.Collection, CollectionReference.Parameters);
@@ -440,16 +472,39 @@ void UFlecsCollectionWorldSubsystem::ExpandChildCollectionReferences(const FFlec
 					ChildEntityHandle.Remove<FFlecsCollectionSlotTag>();
 				}
 
+				// we no longer do recursion and we only do one level of Parent-Child expansion per collection
+				//ExpandChildCollectionReferences(ChildEntityHandle);
+			});
+	});*/
+
+	FlecsWorld->World.query_builder<FFlecsCollectionReferenceComponent*>() // 0 (FFlecsCollectionReferenceComponent)
+			.with(flecs::ChildOf, InCollectionEntity) // 1
+			.with<FFlecsCollectionSlotTag>().optional() // 2
+			.each([&](flecs::iter& Iter, size_t Index, FFlecsCollectionReferenceComponent* ReferenceComponent) // 3
+			{
+				const FFlecsEntityHandle ChildEntityHandle = Iter.entity(Index);
+
+				for (const FFlecsCollectionInstancedReference& CollectionReference : ReferenceComponent->Collections)
+				{
+					AddCollectionToEntity(ChildEntityHandle,
+						CollectionReference.Collection, CollectionReference.Parameters);
+				}
+
+				if (Iter.is_set(2))
+				{
+					ChildEntityHandle.MarkSlot();
+					ChildEntityHandle.Remove<FFlecsCollectionSlotTag>();
+				}
+				
 				ExpandChildCollectionReferences(ChildEntityHandle);
 			});
-	});
 }
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::CreatePrefabEntity(const FString& Name, const FFlecsEntityRecord& Record) const
 {
 	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = GetFlecsWorldChecked();
 	
-	const FFlecsEntityHandle Prefab = FlecsWorld->CreatePrefabWithRecord(TInstancedStruct<FFlecsEntityRecord>::Make(Record), Name)
+	const FFlecsEntityHandle Prefab = FlecsWorld->CreatePrefabWithRecord(Record, Name)
 		.Add<FFlecsCollectionPrefabTag>();
 
 	return Prefab;
@@ -460,7 +515,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::CreatePrefabEntity(const TSol
 {
 	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = GetFlecsWorldChecked();
 	
-	const FFlecsEntityHandle Prefab = FlecsWorld->CreatePrefabWithRecord(TInstancedStruct<FFlecsEntityRecord>::Make(Record), InClass->GetName())
+	const FFlecsEntityHandle Prefab = FlecsWorld->CreatePrefabWithRecord(Record, InClass->GetName())
 		.Add<FFlecsCollectionPrefabTag>();
 
 	return Prefab;
@@ -514,6 +569,31 @@ void UFlecsCollectionWorldSubsystem::ApplyCollectionParametersToEntity(const FFl
 	}
 
 	ParametersComponent.ApplyParameters(InEntity, UsedParameters);
+}
+
+void UFlecsCollectionWorldSubsystem::ApplyNamesToSubEntities(FFlecsCollectionDefinition& InDefinition) const
+{
+	for (const TTuple<int32, FFlecsSubEntityCollectionReferences>& SubEntityDef : InDefinition.SubEntityCollections)
+	{
+		if (SubEntityDef.Value.SubEntityName.IsEmpty())
+		{
+			continue;
+		}
+		
+		TStructView<FFlecsEntityRecord> SubEntityRecord = InDefinition.Record.GetSubEntity(SubEntityDef.Key);
+		solid_check(SubEntityRecord.IsValid());
+
+		if (SubEntityRecord->HasFragment<FFlecsNamedEntityRecordFragment>())
+		{
+			UE_LOGFMT(LogFlecsCollections, Warning,
+				"UFlecsCollectionWorldSubsystem::ApplyNamesToSubEntities: Collection: {CollectionName} Sub-Entity at index {SubEntityIndex} already has a name defined in its record. Skipping name application.",
+				InDefinition.Name,
+				SubEntityDef.Key);
+			continue;
+		}
+
+		SubEntityRecord->AddFragment<FFlecsNamedEntityRecordFragment>(SubEntityDef.Value.SubEntityName);
+	}
 }
 
 bool UFlecsCollectionWorldSubsystem::ClassImplementsCollectionInterface(const TSolidNotNull<const UClass*> InClass) const

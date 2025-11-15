@@ -89,19 +89,100 @@ struct UNREALFLECS_API FFlecsSubEntityCollectionBuilder
 
 public:
 	FFlecsSubEntityCollectionBuilder() = default;
-	FFlecsSubEntityCollectionBuilder(const FString& InIdName, const FFlecsEntityRecord& InRecord)
-		: IdName(InIdName), Record(InRecord)
+	FFlecsSubEntityCollectionBuilder(const FString& InIdName, FFlecsEntityRecord& InRecord, FFlecsCollectionBuilder* InParentBuilder)
+		: IdName(InIdName)
+		, Record(&InRecord)
+		, ParentBuilder(InParentBuilder)
 	{
 	}
 
-	
-	
+	FORCEINLINE FFlecsSubEntityCollectionBuilder& Name(const FString& InName)
+	{
+		IdName = InName;
+		return *this;
+	}
+
+	template <Solid::TScriptStructConcept T>
+	FORCEINLINE FFlecsSubEntityCollectionBuilder& Add()
+	{
+		GetRecord().AddComponent<T>();
+		return *this;
+	}
+
+	template <Solid::TScriptStructConcept T>
+	FORCEINLINE FFlecsSubEntityCollectionBuilder& Add(const T& InComponent)
+	{
+		GetRecord().AddComponent<T>(InComponent);
+		return *this;
+	}
+
+	FORCEINLINE FFlecsSubEntityCollectionBuilder& Add(const FFlecsId InId)
+	{
+		GetRecord().AddComponent(InId);
+		return *this;
+	}
+
+	FORCEINLINE FFlecsSubEntityCollectionBuilder& Add(const FGameplayTag& InGameplayTag)
+	{
+		GetRecord().AddComponent(InGameplayTag);
+		return *this;
+	}
+
+	FORCEINLINE FFlecsSubEntityCollectionBuilder& Add(const FFlecsRecordPair& InPair)
+	{
+		GetRecord().AddComponent(InPair);
+		return *this;
+	}
+
+	FORCEINLINE FFlecsSubEntityCollectionBuilder& AddPair(const FFlecsRecordPair& InPair)
+	{
+		GetRecord().AddComponent(InPair);
+		return *this;
+	}
+
+	FFlecsSubEntityCollectionBuilder& ReferenceCollection(const TSolidNotNull<UFlecsCollectionDataAsset*> InAsset,
+	                                                      const FInstancedStruct& InParameters = FInstancedStruct());
+
+	FFlecsSubEntityCollectionBuilder& ReferenceCollection(const FFlecsCollectionId& InId,
+	                                                      const FInstancedStruct& InParameters = FInstancedStruct());
+
+	FFlecsSubEntityCollectionBuilder& ReferenceCollection(const UClass* InClass,
+	                                                      const FInstancedStruct& InParameters = FInstancedStruct());
+
+	template <Solid::TStaticClassConcept T>
+	FORCEINLINE FFlecsSubEntityCollectionBuilder& ReferenceCollection(const FInstancedStruct& InParameters = FInstancedStruct())
+	{
+		return ReferenceCollection(T::StaticClass(), InParameters);
+	}
+
+	FORCEINLINE FFlecsCollectionBuilder& MarkSlot() const
+	{
+		GetRecord().AddComponent<FFlecsCollectionSlotTag>();
+		return *ParentBuilder;
+	}
+
+	FORCEINLINE FFlecsCollectionBuilder& EndSubEntity() const;
+
+	NO_DISCARD FORCEINLINE const FString& GetName() const
+	{
+		return IdName;
+	}
+
+	NO_DISCARD FORCEINLINE FFlecsEntityRecord& GetRecord() const
+	{
+		solid_cassume(Record);
+		return *Record;
+	}
 
 	UPROPERTY()
 	FString IdName;
 	
+	FFlecsEntityRecord* Record = nullptr;
+
 	UPROPERTY()
-	FFlecsEntityRecord Record;
+	int32 SlotIndex = INDEX_NONE;
+
+	FFlecsCollectionBuilder* ParentBuilder = nullptr;
 	
 }; // struct FFlecsSubEntityCollectionBuilder
 
@@ -182,10 +263,30 @@ public:
 		return *this;
 	}
 
+	FORCEINLINE FFlecsSubEntityCollectionBuilder BeginSubEntity(const FString& InName = FString(),
+		const FFlecsEntityRecord& InTemplateRecord = FFlecsEntityRecord()) const
+	{
+		solid_cassume(CollectionDefinition);
+		
+		const int32 SubEntityIndex =
+			GetCollectionDefinition().Record.AddSubEntity(InTemplateRecord);
+
+		FFlecsEntityRecord& SubEntityRecordReference = 
+			GetCollectionDefinition().Record.GetSubEntity(SubEntityIndex).Get<FFlecsEntityRecord>();
+
+		FFlecsSubEntityCollectionBuilder SubEntityBuilder(InName,
+			SubEntityRecordReference, const_cast<FFlecsCollectionBuilder*>(this));  // NOLINT(cppcoreguidelines-pro-type-const-cast)
+
+		SubEntityBuilder.SlotIndex = SubEntityIndex;
+		
+		CollectionDefinition->SubEntityCollections.Add(SubEntityIndex, FFlecsSubEntityCollectionReferences{});
+		return SubEntityBuilder;
+	}
+
 	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection(const TSolidNotNull<UFlecsCollectionDataAsset*> InAsset,
 		const FInstancedStruct& InParameters = FInstancedStruct()) const
 	{
-		FFlecsCollectionInstanceReference Ref;
+		FFlecsCollectionInstancedReference Ref;
 		Ref.Collection.Asset = InAsset;
 		Ref.Collection.Mode = EFlecsCollectionReferenceMode::Asset;
 		Ref.Parameters = InParameters;
@@ -197,7 +298,7 @@ public:
 
 	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection(const FFlecsCollectionId& InId, const FInstancedStruct& InParameters = FInstancedStruct()) const
 	{
-		FFlecsCollectionInstanceReference Ref;
+		FFlecsCollectionInstancedReference Ref;
 		Ref.Collection.Id = InId;
 		Ref.Collection.Mode = EFlecsCollectionReferenceMode::Id;
 		Ref.Parameters = InParameters;
@@ -210,7 +311,7 @@ public:
 	template <Solid::TStaticClassConcept T>
 	FORCEINLINE const FFlecsCollectionBuilder& ReferenceCollection(const FInstancedStruct& InParameters = FInstancedStruct()) const
 	{
-		FFlecsCollectionInstanceReference Ref;
+		FFlecsCollectionInstancedReference Ref;
 		Ref.Collection.Mode = EFlecsCollectionReferenceMode::UClass;
 		Ref.Collection.Class = T::StaticClass();
 		Ref.Parameters = InParameters;

@@ -31,6 +31,33 @@ TEST_CLASS_WITH_FLAGS(A10_UnrealFlecsComponentRegistrationTests,
 		FlecsWorld = nullptr;
 		Fixture.Reset();
 	}
+
+	TEST_METHOD(A1_SpawnEmptyEntity)
+	{
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity();
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+	}
+
+	TEST_METHOD(A2_SpawnNamedEntity)
+	{
+		static const FString EntityName = TEXT("MyTestEntity");
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity(EntityName);
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+		ASSERT_THAT(IsTrue(TestEntity.HasName()));
+		ASSERT_THAT(AreEqual(EntityName, TestEntity.GetName()));
+	}
+
+	TEST_METHOD(A3_SpawnEntityWithParent_SetParent_API)
+	{
+		const FFlecsEntityHandle ParentEntity = FlecsWorld->CreateEntity("ParentEntity");
+		const FFlecsEntityHandle ChildEntity = FlecsWorld->CreateEntity("ChildEntity")
+			.SetParent(ParentEntity);
+
+		ASSERT_THAT(IsTrue(ChildEntity.IsValid()));
+		ASSERT_THAT(IsTrue(ChildEntity.HasParent()));
+		ASSERT_THAT(AreEqual(ParentEntity, ChildEntity.GetParent<FFlecsEntityHandle>()));
+	}
 	
 	TEST_METHOD(C1_SpawnEntityWithChildrenInOrder_SetChildOrder_C_API)
 	{
@@ -94,8 +121,8 @@ TEST_CLASS_WITH_FLAGS(A10_UnrealFlecsComponentRegistrationTests,
 			ASSERT_THAT(AreEqual(ChildrenArray[2], ChildEntityC));
 		}
 
-		TArray<FFlecsId> NewChildrenEntityOrder = { ChildEntityC.GetFlecsId(), ChildEntityA.GetFlecsId(), ChildEntityB.GetFlecsId() };
-		ParentEntity.SetChildOrder(TArrayView<FFlecsId>(NewChildrenEntityOrder));
+		TArray<FFlecsId> NewChildrenEntityOrder = TArray<FFlecsId>{ ChildEntityC.GetFlecsId(), ChildEntityA.GetFlecsId(), ChildEntityB.GetFlecsId() };
+		ParentEntity.SetChildOrder(NewChildrenEntityOrder);
 
 		{
 			TArray<FFlecsEntityHandle> ChildrenArray;

@@ -12,6 +12,7 @@
  * Layout of the tests:
  * A. Add/Remove/Set Component in Deferred Context Tests
  * B. Scoped Defer Window Tests
+ * C. End Defer Tests
  */
 TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9_World_Defer",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
@@ -47,7 +48,7 @@ TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9_World_Defer",
 		FlecsWorld->Defer([&]()
 		{
 			TestEntity.Add<FFlecsTestStruct_Value>();
-			// 
+			
 			ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>(),
 				"TestEntity should not have the component yet!"));
 		});
@@ -72,7 +73,7 @@ TEST_CLASS_WITH_FLAGS(A9_DeferWorldTests, "UnrealFlecs.A9_World_Defer",
 		FlecsWorld->Defer([&]()
 		{
 			TestEntity.Add(FFlecsTestStruct_Value::StaticStruct());
-			// 
+			 
 			ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Value>(),
 				"TestEntity should not have the component yet!"));
 		});

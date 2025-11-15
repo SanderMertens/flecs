@@ -15,6 +15,16 @@ FPrimaryAssetId UFlecsCollectionDataAsset::GetPrimaryAssetId() const
 	return FPrimaryAssetId("FlecsCollectionDataAsset", GetFName());
 }
 
+FFlecsCollectionDefinition UFlecsCollectionDataAsset::MakeCollectionDefinition() const
+{
+	FFlecsCollectionDefinition Definition;
+	Definition.Name = GetName();
+	Definition.Collections = Collections;
+	Definition.Record = Record;
+	Definition.SubEntityCollections = SubEntityCollections;
+	return Definition;
+}
+
 #if WITH_EDITOR
 
 EDataValidationResult UFlecsCollectionDataAsset::IsDataValid(FDataValidationContext& Context) const

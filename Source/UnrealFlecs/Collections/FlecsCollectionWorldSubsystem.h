@@ -56,7 +56,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs|Collections")
 	FFlecsEntityHandle RegisterCollectionAsset(const UFlecsCollectionDataAsset* InAsset);
 
-	FFlecsEntityHandle RegisterCollectionDefinition(const FString& InName, const FFlecsCollectionDefinition& InDefinition);
+	FFlecsEntityHandle RegisterCollectionDefinition(const FString& InName, FFlecsCollectionDefinition& InDefinition);
 	FFlecsEntityHandle RegisterCollectionClass(const TSolidNotNull<UClass*> InClass, const FFlecsCollectionBuilder& InBuilder);
 	FFlecsEntityHandle RegisterCollectionInterfaceClass(const TSolidNotNull<UClass*> InInterfaceObject);
 
@@ -168,6 +168,8 @@ private:
 	void ApplyCollectionParametersToEntity(const FFlecsEntityHandle& InEntity,
 		const FFlecsEntityHandle& InCollectionEntity,
 		const FInstancedStruct& InParameters) const;
+
+	void ApplyNamesToSubEntities(FFlecsCollectionDefinition& InDefinition) const;
 	
 	NO_DISCARD bool ClassImplementsCollectionInterface(const TSolidNotNull<const UClass*> InClass) const;
 

@@ -26,7 +26,7 @@ public:
 	FString Name;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
-	TInstancedStruct<FFlecsEntityRecord> SystemRecord;
+	FFlecsEntityRecord SystemRecord;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "System")
 	FFlecsEntityHandle Kind;
