@@ -2399,10 +2399,10 @@ void Entity_override_pair(void) {
 void Entity_override_pair_second(void) {
     flecs::world world;
 
-    flecs::entity TagA = world.entity();
-    flecs::entity TagB = world.entity();
+    flecs::entity TagA = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
+    flecs::entity TagB = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
 
-    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+    world.component<Position>();
 
     auto base = world.entity()
         .auto_override_second<Position>(TagA)
