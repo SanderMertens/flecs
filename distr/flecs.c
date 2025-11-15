@@ -37703,10 +37703,6 @@ ecs_component_record_t* flecs_component_new(
     cr = flecs_bcalloc_w_dbg_info(
         &world->allocators.component_record, "ecs_component_record_t");
 
-    if (id == ecs_id(EcsPoly)) {
-        flecs_dump_backtrace(stdout);
-    }
-
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         ecs_map_insert_ptr(&world->id_index_hi, hash, cr);
     } else {
