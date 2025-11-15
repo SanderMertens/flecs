@@ -2350,7 +2350,7 @@ void Entity_override_pair_w_rel_id(void) {
     test_assert(e.owns_second<Position>(rel_a));
 
     test_assert(e.has_second<Position>(rel_b));
-    test_assert(!e.owns_second<Position>(re;_b));
+    test_assert(!e.owns_second<Position>(rel_b));
 }
 
 void Entity_override_pair_w_ids(void) {
