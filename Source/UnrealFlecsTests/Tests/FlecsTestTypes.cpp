@@ -13,11 +13,27 @@ DEFINE_DEFAULT_ENTITY(TestEntityOption, 6000 + FLECS_HI_COMPONENT_ID, [](flecs::
 {
 });
 
+namespace Unreal::Flecs::test::internal
+{
+	DEFINE_DEFAULT_ENTITY(TestEntityOption3InNamespace,
+		6002 + FLECS_HI_COMPONENT_ID, [](flecs::entity InEntity)
+	{
+		
+	});
+	
+} // namespace Unreal::Flecs::test::internal
+
 DEFINE_DEFAULT_ENTITY(TestEntityOption2WithTrait,
 	6001 + FLECS_HI_COMPONENT_ID, [](flecs::entity InEntity)
 	{
 		InEntity
 			.add(flecs::Trait);
+	});
+
+DEFINE_DEFAULT_ENTITY(TestEntityOption4WithComponentValue,
+	6003 + FLECS_HI_COMPONENT_ID, [](flecs::entity InEntity)
+	{
+		
 	});
 
 FFlecsTestNativeGameplayTags FFlecsTestNativeGameplayTags::StaticInstance;

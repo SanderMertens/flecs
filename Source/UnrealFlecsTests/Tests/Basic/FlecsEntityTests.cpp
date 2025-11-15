@@ -155,6 +155,14 @@ TEST_CLASS_WITH_FLAGS(A10_UnrealFlecsEntityTests,
 		ASSERT_THAT(IsTrue(TestDefaultEntity.IsValid()));
 		ASSERT_THAT(IsTrue(TestDefaultEntity.Has(flecs::Trait)));
 	}
+
+	TEST_METHOD(D3_DefaultEntityAPI_GetDefaultEntityInNamespace)
+	{
+		ASSERT_THAT(IsTrue(FlecsWorld->IsAlive(Unreal::Flecs::test::internal::TestEntityOption3InNamespace)));
+		
+		const FFlecsEntityHandle TestDefaultEntity = FlecsWorld->GetAlive(Unreal::Flecs::test::internal::TestEntityOption3InNamespace);
+		ASSERT_THAT(IsTrue(TestDefaultEntity.IsValid()));
+	}
 	
 }; // End of A10_UnrealFlecsComponentRegistrationTests
 
