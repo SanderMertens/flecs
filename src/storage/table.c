@@ -1844,12 +1844,17 @@ void flecs_table_delete(
                 ecs_move_t move_dtor = ti->hooks.move_dtor;
                 
                 /* If neither move nor move_ctor are set, this indicates that 
-                 * non-destructive move semantics are not supported for this 
-                 * type. In such cases, we set the move_dtor as ctor_move_dtor, 
-                 * which indicates a destructive move operation. This adjustment 
-                 * ensures compatibility with different language bindings. */
-                if (!ti->hooks.move_ctor && ti->hooks.ctor_move_dtor) {
-                  move_dtor = ti->hooks.ctor_move_dtor;
+                * non-destructive move semantics are not supported for this 
+                * type. In such cases, we set the move_dtor as ctor_move_dtor, 
+                * which indicates a destructive move operation. This adjustment 
+                * ensures compatibility with different language bindings. */
+                if (!ti->hooks.move_ctor) {
+                    /* If this isn't a destructive operation, the value may already
+                     * have been moved out or destructed, so we do a ctor_move_dtor 
+                     * to move into the deconstructed/moved memory space */
+                    if(!destruct && ti->hooks.ctor_move_dtor) {
+                        move_dtor = ti->hooks.ctor_move_dtor;
+                    }
                 }
 
                 if (move_dtor) {
@@ -1986,8 +1991,14 @@ void flecs_table_move(
                 flecs_table_invoke_add_hooks(world, dst_table,
                     i_new, &dst_entity, dst_index, 1, construct);
             } else {
+                ecs_type_info_t *ti = dst_column->ti;
+
+                /* If the component doesn't have a move/move_ctor,
+                 * then it doesn't support non-destructive moves and must
+                 * be destructed during its removal.
+                 */
                 flecs_table_invoke_remove_hooks(world, src_table,
-                    src_column, &src_entity, src_index, 1, use_move_dtor);
+                    src_column, &src_entity, src_index, 1, use_move_dtor || !ti->hooks.move_ctor);
             }
         }
 
@@ -2001,8 +2012,11 @@ void flecs_table_move(
     }
 
     for (; (i_old < src_column_count); i_old ++) {
+        ecs_column_t *src_column = &src_columns[i_new];
+        ecs_type_info_t *ti = src_column->ti;
+
         flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old], 
-            &src_entity, src_index, 1, use_move_dtor);
+            &src_entity, src_index, 1, use_move_dtor || !ti->hooks.move_ctor);
     }
 
     flecs_table_check_sanity(dst_table);
