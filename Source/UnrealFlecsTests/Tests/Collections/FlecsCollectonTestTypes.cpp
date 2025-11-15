@@ -35,3 +35,12 @@ void UFlecsCollectionTestClassWithInterface_Parameterized::BuildCollection(FFlec
 					}
 				);
 }
+
+void UFlecsCollectionTestClassWithInterface_WithSubEntities::BuildCollection(FFlecsCollectionBuilder& Builder) const
+{
+	Builder
+		.BeginSubEntity("SubEntity1")
+			.Add<FFlecsTestStruct_Tag>()
+			.Add<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{1234})
+		.EndSubEntity();
+}

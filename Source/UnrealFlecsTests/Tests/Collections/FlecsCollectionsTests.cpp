@@ -641,6 +641,7 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 				.Name("TestCollection_WithSubEntities")
 				.BeginSubEntity("SubEntity1")
 					.Add<FFlecsTestStruct_Tag>()
+					.Add<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ 42 })
 				.EndSubEntity();
 		});
 
@@ -654,8 +655,63 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsTrue(TestEntity.HasCollection(CollectionPrefab)));
 		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").IsValid()));
 		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").Has<FFlecsTestStruct_Tag>()));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").Has<FFlecsTestStruct_Value>()));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").Get<FFlecsTestStruct_Value>().Value == 42));
 	}
 
+	TEST_METHOD(G2_InstantiateCollectionWithSubEntities_CreatesEntityWithSubEnitities_DefinitionAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
+
+		FFlecsCollectionDefinition Def;
+		{
+			FFlecsCollectionBuilder Builder = FFlecsCollectionBuilder::Create(Def)
+				.Name("TestCollection_WithSubEntities_Def")
+				.BeginSubEntity("SubEntity1")
+					.Add<FFlecsTestStruct_Tag>()
+					.Add<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ 123 })
+				.EndSubEntity();
+		}
+
+		const FFlecsEntityHandle CollectionPrefab
+			= Collections->RegisterCollectionDefinition(TEXT("TestCollection_WithSubEntities_Def"), Def);
+
+		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
+		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity("TestEntity_WithSubEntities_Def");
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddCollection(CollectionPrefab);
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection(CollectionPrefab)));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").IsValid()));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").Has<FFlecsTestStruct_Tag>()));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").Has<FFlecsTestStruct_Value>()));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").Get<FFlecsTestStruct_Value>().Value == 123));
+	}
+
+	TEST_METHOD(G3_InstantiateCollectionWithSubEntities_CreatesEntityWithSubEnitities_ClassAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
+
+		const FFlecsEntityHandle CollectionPrefab
+			= Collections->RegisterCollectionInterfaceClass(UFlecsCollectionTestClassWithInterface_WithSubEntities::StaticClass());
+
+		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
+		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
+		
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity("TestEntity_WithSubEntities_Class");
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		TestEntity.AddCollection(CollectionPrefab);
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection(CollectionPrefab)));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").IsValid()));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").Has<FFlecsTestStruct_Tag>()));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").Has<FFlecsTestStruct_Value>()));
+		ASSERT_THAT(IsTrue(TestEntity.Lookup<FFlecsEntityView>("SubEntity1").Get<FFlecsTestStruct_Value>().Value == 1234));
+	}
 	
 }; // End of B4_CollectionBasicTests
 

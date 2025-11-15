@@ -52,3 +52,12 @@ public:
 	virtual void BuildCollection(FFlecsCollectionBuilder& Builder) const override;
 	
 }; // class UFlecsCollectionTestClassWithInterface_Parameterized
+
+UCLASS()
+class UNREALFLECSTESTS_API UFlecsCollectionTestClassWithInterface_WithSubEntities : public UObject, public IFlecsCollectionInterface
+{
+	GENERATED_BODY()
+
+public:
+	virtual void BuildCollection(FFlecsCollectionBuilder& Builder) const override;
+};
