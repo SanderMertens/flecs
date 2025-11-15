@@ -377,8 +377,6 @@ public:
 		return *CollectionDefinition;
 	}
 
-	FFlecsCollectionBuilder* ParentBuilder = nullptr;
-
 	UPROPERTY()
 	mutable FString IdName;
 	
