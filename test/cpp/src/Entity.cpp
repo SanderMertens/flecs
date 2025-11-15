@@ -2335,22 +2335,22 @@ void Entity_override_pair_w_tgt_id(void) {
 void Entity_override_pair_w_rel_id(void) {
     flecs::world world;
 
-    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
-    auto tgt_a = world.entity();
-    auto tgt_b = world.entity();
+    world.component<Position>();
+    auto rel_a = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
+    auto rel_b = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = world.entity()
-        .auto_override_second<Position>(tgt_a)
-        .add_second<Position>(tgt_b);
+        .auto_override_second<Position>(rel_a)
+        .add_second<Position>(rel_b);
 
     auto e = world.entity()
         .add(flecs::IsA, base);
 
-    test_assert(e.has_second<Position>(tgt_a));
-    test_assert(e.owns_second<Position>(tgt_a));
+    test_assert(e.has_second<Position>(rel_a));
+    test_assert(e.owns_second<Position>(rel_a));
 
-    test_assert(e.has_second<Position>(tgt_b));
-    test_assert(!e.owns_second<Position>(tgt_b));
+    test_assert(e.has_second<Position>(rel_b));
+    test_assert(!e.owns_second<Position>(re;_b));
 }
 
 void Entity_override_pair_w_ids(void) {
