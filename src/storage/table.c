@@ -1844,17 +1844,13 @@ void flecs_table_delete(
                 ecs_move_t move_dtor = ti->hooks.move_dtor;
                 
                 /* If neither move nor move_ctor are set, this indicates that 
-                * non-destructive move semantics are not supported for this 
-                * type. In such cases, we set the move_dtor as ctor_move_dtor, 
-                * which indicates a destructive move operation. This adjustment 
-                * ensures compatibility with different language bindings. */
-                if (!ti->hooks.move_ctor) {
-                    /* If this isn't a destructive operation, the value may already
-                     * have been moved out or destructed, so we do a ctor_move_dtor 
-                     * to move into the deconstructed/moved memory space */
-                    if(!destruct && ti->hooks.ctor_move_dtor) {
-                        move_dtor = ti->hooks.ctor_move_dtor;
-                    }
+                 * non-destructive move semantics are not supported for this 
+                 * type. In such cases when we are performing a non-destructive deletion, 
+                 * we set the move_dtor as ctor_move_dtor, which indicates we are operating
+                 * on memory already cleaned up. This adjustment ensures compatibility
+                 * with different language bindings. */
+                if (!destruct && !ti->hooks.move_ctor) {
+                    move_dtor = ti->hooks.ctor_move_dtor;
                 }
 
                 if (move_dtor) {
