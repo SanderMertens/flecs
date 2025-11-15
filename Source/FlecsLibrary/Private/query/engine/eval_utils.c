@@ -58,21 +58,6 @@ void flecs_set_source_set_flag(
     ECS_TERMSET_SET(it->up_fields, 1u << field_index);
 }
 
-ecs_table_range_t flecs_range_from_entity(
-    ecs_entity_t e,
-    const ecs_query_run_ctx_t *ctx)
-{
-    ecs_record_t *r = flecs_entities_get(ctx->world, e);
-    if (!r) {
-        return (ecs_table_range_t){ 0 };
-    }
-    return (ecs_table_range_t){
-        .table = r->table,
-        .offset = ECS_RECORD_TO_ROW(r->row),
-        .count = 1
-    };
-}
-
 ecs_table_range_t flecs_query_var_get_range(
     int32_t var_id,
     const ecs_query_run_ctx_t *ctx)
@@ -86,7 +71,7 @@ ecs_table_range_t flecs_query_var_get_range(
 
     ecs_entity_t entity = var->entity;
     if (entity && entity != EcsWildcard) {
-        var->range = flecs_range_from_entity(entity, ctx);
+        var->range = flecs_range_from_entity(ctx->world, entity);
         return var->range;
     }
 
@@ -105,7 +90,7 @@ ecs_table_t* flecs_query_var_get_table(
 
     ecs_entity_t entity = var->entity;
     if (entity && entity != EcsWildcard) {
-        var->range = flecs_range_from_entity(entity, ctx);
+        var->range = flecs_range_from_entity(ctx->world, entity);
         return var->range.table;
     }
 
@@ -135,13 +120,13 @@ ecs_table_range_t flecs_query_get_range(
     ecs_flags16_t flags = flecs_query_ref_flags(op->flags, ref_kind);
     if (flags & EcsQueryIsEntity) {
         ecs_assert(!(flags & EcsQueryIsVar), ECS_INTERNAL_ERROR, NULL);
-        return flecs_range_from_entity(ref->entity, ctx);
+        return flecs_range_from_entity(ctx->world, ref->entity);
     } else {
         ecs_var_t *var = &ctx->vars[ref->var];
         if (var->range.table) {
             return ctx->vars[ref->var].range;
         } else if (var->entity) {
-            return flecs_range_from_entity(var->entity, ctx);
+            return flecs_range_from_entity(ctx->world, var->entity);
         }
     }
     return (ecs_table_range_t){0};
@@ -274,7 +259,7 @@ ecs_table_range_t flecs_get_ref_range(
     const ecs_query_run_ctx_t *ctx)
 {
     if (flag & EcsQueryIsEntity) {
-        return flecs_range_from_entity(ref->entity, ctx);
+        return flecs_range_from_entity(ctx->world, ref->entity);
     } else if (flag & EcsQueryIsVar) {
         return flecs_query_var_get_range(ref->var, ctx);
     }

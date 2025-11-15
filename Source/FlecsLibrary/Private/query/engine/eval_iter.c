@@ -50,7 +50,7 @@ void flecs_query_iter_constrain(
 
             /* Initialize table variable with constrained entity variable */
             ecs_var_t *tvar = &vars[var->table_id];
-            tvar->range = flecs_range_from_entity(vars[var_id].entity, &ctx);
+            tvar->range = flecs_range_from_entity(ctx.world, vars[var_id].entity);
             ctx.written[0] |= (1ull << var->table_id); /* Mark as written */
         }
     }
