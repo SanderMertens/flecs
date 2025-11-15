@@ -106,6 +106,7 @@
                 "set_R_t",
                 "set_R_T",
                 "set_r_T",
+                "set_r_t_generic_no_size",
                 "assign_T",
                 "assign_R_t",
                 "assign_R_T",
