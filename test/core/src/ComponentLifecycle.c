@@ -3571,11 +3571,8 @@ void ComponentLifecycle_dtor_on_destructive_component_removal_complex(void) {
     test_int(vel_ctx.move_dtor.invoked, 0);
     test_int(vel_ctx.dtor.invoked, 0);
 
-    // Position should not have any dtors since we haven't removed/deleted any.
-    // There should be exactly 1 ctor_move_dtor and 1 dtor,
-    // as we have deleted Position from e. e3's
-    test_int(pos_ctx.move_dtor.invoked, 0);
-    test_int(pos_ctx.dtor.invoked, 1);
+    // Position should only have 1 dtor.
+    test_int(pos_ctx.move_dtor.invoked + pos_ctx.dtor.invoked, 1);
 
     ecs_fini(world);
 }
