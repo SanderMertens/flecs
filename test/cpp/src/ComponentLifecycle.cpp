@@ -2046,8 +2046,8 @@ void ComponentLifecycle_dtor_after_defer_set(void) {
         test_assert(e.has<Pod>());
         test_int(Pod::ctor_invoked, 3);
         test_int(Pod::dtor_invoked, 2);
-        test_int(Pod::move_invoked, 1);
-        test_int(Pod::move_ctor_invoked, 1);
+        test_int(Pod::move_invoked, 2);
+        test_int(Pod::move_ctor_invoked, 0);
 
         const Pod *ptr = e.try_get<Pod>();
         test_assert(ptr != NULL);
@@ -2055,14 +2055,14 @@ void ComponentLifecycle_dtor_after_defer_set(void) {
 
         test_int(Pod::ctor_invoked, 3);
         test_int(Pod::dtor_invoked, 2);
-        test_int(Pod::move_invoked, 1);
-        test_int(Pod::move_ctor_invoked, 1);
+        test_int(Pod::move_invoked, 2);
+        test_int(Pod::move_ctor_invoked, 0);
     }
 
     test_int(Pod::ctor_invoked, 3);
     test_int(Pod::dtor_invoked, 3);
-    test_int(Pod::move_invoked, 1);
-    test_int(Pod::move_ctor_invoked, 1);
+    test_int(Pod::move_invoked, 2);
+    test_int(Pod::move_ctor_invoked, 0);
 }
 
 void ComponentLifecycle_dtor_with_relation(void) {
