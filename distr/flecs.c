@@ -583,6 +583,7 @@ void flecs_component_shrink(
     ecs_component_record_t *cr);
 
 #endif
+#endif
 
 /**
  * @file storage/table.h
