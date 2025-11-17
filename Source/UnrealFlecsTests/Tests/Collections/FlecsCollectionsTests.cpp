@@ -509,6 +509,57 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
 	}
 
+	TEST_METHOD(E6_InstantiateCollection_Inherited_CreatesEntityFromPrefab_Deferred_ClassInterfaceAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag_Inherited>();
+		
+		const FFlecsEntityHandle CollectionPrefab
+			= Collections->RegisterCollectionInterfaceClass(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass());
+
+		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
+		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
+
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntity("TestEntity");
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+
+		FlecsWorld->BeginDefer();
+
+			TestEntity.AddCollection(CollectionPrefab);
+
+			ASSERT_THAT(IsFalse(TestEntity.HasCollection(CollectionPrefab)));
+			ASSERT_THAT(IsFalse(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass())));
+			ASSERT_THAT(IsFalse(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface_Inherited>()));
+
+			ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
+
+		FlecsWorld->EndDefer();
+
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection(CollectionPrefab)));
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass())));
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface_Inherited>()));
+		
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
+
+		FlecsWorld->BeginDefer();
+
+			TestEntity.RemoveCollection(CollectionPrefab);
+
+			ASSERT_THAT(IsTrue(TestEntity.HasCollection(CollectionPrefab)));
+			ASSERT_THAT(IsTrue(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass())));
+			ASSERT_THAT(IsTrue(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface_Inherited>()));
+
+			ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
+
+		FlecsWorld->EndDefer();
+
+		
+		ASSERT_THAT(IsFalse(TestEntity.HasCollection(CollectionPrefab)));
+		ASSERT_THAT(IsFalse(TestEntity.HasCollection(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass())));
+		ASSERT_THAT(IsFalse(TestEntity.HasCollection<UFlecsCollectionTestClassWithInterface_Inherited>()));
+		
+		ASSERT_THAT(IsFalse(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
+	}
+
 	TEST_METHOD(F1_InstantiateParameterizedCollection_CPPBuilderAPI_WithDefaultParameters_DefaultValue_InstancedStructAPI)
 	{
 		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
