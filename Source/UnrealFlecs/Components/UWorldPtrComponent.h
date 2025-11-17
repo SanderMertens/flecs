@@ -13,6 +13,9 @@
 
 class UWorld;
 
+/**
+ * @brief A Singleton Component containing a pointer to the owning UWorld.
+ */
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FUWorldPtrComponent
 {
