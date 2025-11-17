@@ -102,7 +102,7 @@ bool flecs_query_pred_eq_name(
         return false;
     }
 
-    ecs_table_range_t r = flecs_range_from_entity(e, ctx);
+    ecs_table_range_t r = flecs_range_from_entity(ctx->world, e);
     return flecs_query_pred_eq_w_range(op, redo, ctx, r);
 }
 
@@ -303,6 +303,6 @@ bool flecs_query_pred_neq_name(
         return true && !redo;
     }
 
-    ecs_table_range_t r = flecs_range_from_entity(e, ctx);
+    ecs_table_range_t r = flecs_range_from_entity(ctx->world, e);
     return flecs_query_pred_neq_w_range(op, redo, ctx, r);
 }

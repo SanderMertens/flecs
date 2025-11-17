@@ -4423,7 +4423,6 @@ extern "C" {
 
 /** Record for entity index. */
 struct ecs_record_t {
-    ecs_component_record_t *cr;               /**< component record to (*, entity) for target entities */
     ecs_table_t *table;                        /**< Identifies a type (and table) in world */
     uint32_t row;                              /**< Table row of the entity */
     int32_t dense;                             /**< Index in dense array of entity index */    
@@ -28631,7 +28630,6 @@ private:
         fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
             static_cast<int8_t>(index));
         fields_[index].is_ref = false;
-        ecs_assert(iter->sources[index] == 0, ECS_INTERNAL_ERROR, NULL);
         populate_self(iter, index + 1, comps ...);
     }
 

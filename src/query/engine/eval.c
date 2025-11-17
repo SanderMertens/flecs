@@ -963,7 +963,7 @@ bool flecs_query_setthis(
         op_ctx->range = vars[0].range;
 
         /* Constrain This table variable to a single entity from the table */
-        vars[0].range = flecs_range_from_entity(this_var->entity, ctx);
+        vars[0].range = flecs_range_from_entity(ctx->world, this_var->entity);
         vars[0].entity = this_var->entity;
         return true;
     } else {

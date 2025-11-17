@@ -73,6 +73,14 @@ void ecs_os_fini(void) {
 #define ECS_BT_BUF_SIZE 100
 
 #ifdef ECS_TARGET_WINDOWS
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#endif
 #include <windows.h>
 #include <dbghelp.h>
 
@@ -101,7 +109,7 @@ void flecs_dump_backtrace(
         fprintf(stream, "%s\n", symbol->Name);
     }
 
-    free(symbol);
+    ecs_os_free(symbol);
 }
 
 #elif HAVE_EXECINFO

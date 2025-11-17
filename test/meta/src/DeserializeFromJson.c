@@ -654,6 +654,66 @@ void DeserializeFromJson_struct_enum(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_struct_enum_underlying_i8(void) {
+    typedef enum {
+        Red, Blue, Green
+    } E;
+
+    typedef struct {
+        int8_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .constants = {
+            {"Red"}, {"Blue"}, {"Green"}
+        },
+        .underlying_type = ecs_id(ecs_i8_t)
+    });
+
+    test_assert(e != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", e}
+        }
+    });
+
+    test_assert(t != 0);
+
+    {
+    T value = {0};
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": \"Red\"}", NULL);
+    test_assert(ptr != NULL);
+    test_int(value.v, Red);
+    }
+
+    {
+    T value = {0};
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": \"Blue\"}", NULL);
+    test_assert(ptr != NULL);
+    test_int(value.v, Blue);
+    }
+
+    {
+    T value = {0};
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": \"Green\"}", NULL);
+    test_assert(ptr != NULL);
+    test_int(value.v, Green);
+    }
+
+    {
+    ecs_log_set_level(-4);
+    T value = {0};
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": \"Black\"}", NULL);
+    test_assert(ptr == NULL);
+    }
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_struct_bitmask(void) {
     uint32_t Lettuce = 0x1;
     uint32_t Bacon =   0x1 << 1;

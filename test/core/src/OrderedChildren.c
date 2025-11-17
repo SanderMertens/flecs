@@ -1304,6 +1304,43 @@ void OrderedChildren_get_ordered_children_from_prefab_instance_3_children(void) 
     ecs_fini(world);
 }
 
+void OrderedChildren_get_ordered_children_from_prefab_instance_3_children_different_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t e1 = ecs_entity(world, { .parent = p, .name = "a" });
+    /* ecs_entity_t e2 = */ ecs_entity(world, { .parent = p, .name = "b" });
+    ecs_entity_t e3 = ecs_entity(world, { .parent = p, .name = "c" });
+
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e3, Foo);
+
+    {
+        ecs_entities_t children = ecs_get_ordered_children(world, p);
+        test_int(children.count, 3);
+        test_str(ecs_get_name(world, children.ids[0]), "a");
+        test_str(ecs_get_name(world, children.ids[1]), "b");
+        test_str(ecs_get_name(world, children.ids[2]), "c");
+    }
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(ecs_has_id(world, i, EcsOrderedChildren));
+
+    {
+        ecs_entities_t children = ecs_get_ordered_children(world, i);
+        test_int(children.count, 3);
+        test_str(ecs_get_name(world, children.ids[0]), "a");
+        test_str(ecs_get_name(world, children.ids[1]), "b");
+        test_str(ecs_get_name(world, children.ids[2]), "c");
+    }
+
+    ecs_fini(world);
+}
+
 void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -1391,6 +1428,59 @@ void OrderedChildren_lookup_after_clear(void) {
     ecs_clear(world, child);
     test_assert(ecs_lookup(world, "Foo") == 0);
     test_assert(ecs_lookup(world, "Parent.Foo") == 0);
+
+    ecs_fini(world);
+}
+
+void OrderedChildren_bulk_create_ordered_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entity_t e1, e2, e3;
+
+    const ecs_entity_t *
+    ids = ecs_bulk_init(world, &(ecs_bulk_desc_t) {
+        .count = 1,
+        .ids = { Foo, ecs_childof(parent) }
+    });
+
+    test_assert(ids != NULL);
+
+    e1 = ids[0];
+
+    ids = ecs_bulk_init(world, &(ecs_bulk_desc_t) {
+        .count = 1,
+        .ids = { Bar, ecs_childof(parent) }
+    });
+
+    test_assert(ids != NULL);
+
+    e2 = ids[0];
+
+    ids = ecs_bulk_init(world, &(ecs_bulk_desc_t) {
+        .count = 1,
+        .ids = { Foo, ecs_childof(parent) }
+    });
+
+    test_assert(ids != NULL);
+
+    e3 = ids[0];
+
+    {
+        ecs_iter_t it = ecs_children(world, parent);
+        test_bool(true, ecs_children_next(&it));
+        test_assert(it.table == NULL);
+        test_int(3, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
+        test_uint(e3, it.entities[2]);
+        test_bool(false, ecs_children_next(&it));
+    }
 
     ecs_fini(world);
 }

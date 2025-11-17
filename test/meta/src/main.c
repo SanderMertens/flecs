@@ -512,6 +512,7 @@ void DeserializeFromJson_struct_string(void);
 void DeserializeFromJson_struct_entity(void);
 void DeserializeFromJson_struct_id(void);
 void DeserializeFromJson_struct_enum(void);
+void DeserializeFromJson_struct_enum_underlying_i8(void);
 void DeserializeFromJson_struct_bitmask(void);
 void DeserializeFromJson_struct_i32_i32(void);
 void DeserializeFromJson_struct_nested_i32(void);
@@ -3095,6 +3096,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_struct_enum
     },
     {
+        "struct_enum_underlying_i8",
+        DeserializeFromJson_struct_enum_underlying_i8
+    },
+    {
         "struct_bitmask",
         DeserializeFromJson_struct_bitmask
     },
@@ -5616,7 +5621,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        143,
+        144,
         DeserializeFromJson_testcases
     },
     {
