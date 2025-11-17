@@ -216,7 +216,7 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByClass(const TSubcl
 {
 	solid_cassume(InClass);
 	
-	const FFlecsCollectionId Id = FFlecsCollectionId(InClass->GetFName().ToString());
+	const FFlecsCollectionId Id = FFlecsCollectionId(InClass->GetPrefixCPP() + InClass->GetName());
 	return GetPrefabByCollectionId(Id);
 }
 
