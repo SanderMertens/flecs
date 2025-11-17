@@ -6,7 +6,7 @@
 #include "DetailWidgetRow.h"
 #include "FlecsIdSelector.h"
 #include "IDetailChildrenBuilder.h"
-#include "Entities/FlecsDefaultEntityEngineSubsystem.h"
+#include "Entities/FlecsDefaultEntityEngine.h"
 
 #define LOCTEXT_NAMESPACE "FlecsIdCustomization"
 

@@ -3,7 +3,7 @@
 #include "SGraphPinFlecsId.h"
 #include "FlecsIdSelector.h"
 #include "EdGraph/EdGraphPin.h"
-#include "Entities/FlecsDefaultEntityEngineSubsystem.h"
+#include "Entities/FlecsDefaultEntityEngine.h"
 #include "Widgets/Text/STextBlock.h"
 
 #define LOCTEXT_NAMESPACE "SGraphPinFlecsId"

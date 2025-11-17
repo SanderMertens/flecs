@@ -10,12 +10,7 @@
 
 struct UNREALFLECS_API FFlecsDefaultEntityEngine final
 {
-	static FFlecsDefaultEntityEngine Instance;
-	
-	static FFlecsDefaultEntityEngine& Get()
-	{
-		return Instance;
-	}
+	static FFlecsDefaultEntityEngine& Get();
 
 	friend class FUnrealFlecsModule;
 	

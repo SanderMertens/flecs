@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagsManager.h"
-#include "Entities/FlecsDefaultEntityEngineSubsystem.h"
+#include "Entities/FlecsDefaultEntityEngine.h"
 #include "Fixtures/FlecsWorldFixture.h"
 #include "UObject/Object.h"
 #include "Developer/CQTest/Public/CQTest.h"

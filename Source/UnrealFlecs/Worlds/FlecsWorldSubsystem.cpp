@@ -14,7 +14,7 @@
 #include "UnrealFlecsWorldTag.h"
 
 #include "Entities/FlecsDefaultEntitiesDeveloperSettings.h"
-#include "Entities/FlecsDefaultEntityEngineSubsystem.h"
+#include "Entities/FlecsDefaultEntityEngine.h"
 
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Components/UWorldPtrComponent.h"

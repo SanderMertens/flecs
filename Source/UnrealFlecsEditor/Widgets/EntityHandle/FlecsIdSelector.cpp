@@ -9,7 +9,7 @@
 #include "Widgets/Views/SListView.h"
 #include "Widgets/Views/STableRow.h"
 #include "ScopedTransaction.h"
-#include "Entities/FlecsDefaultEntityEngineSubsystem.h"
+#include "Entities/FlecsDefaultEntityEngine.h"
 
 #define LOCTEXT_NAMESPACE "Flecs"
 
