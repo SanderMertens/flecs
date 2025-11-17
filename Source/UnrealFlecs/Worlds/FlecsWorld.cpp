@@ -25,7 +25,6 @@
 
 #include "Components/FlecsAddReferencedObjectsTrait.h"
 #include "Components/FlecsNetworkSerializeDefinitionComponent.h"
-#include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsUObjectComponent.h"
 #include "Components/ObjectTypes/FFlecsActorComponentTag.h"
 #include "Components/ObjectTypes/FFlecsModuleObject.h"
@@ -480,7 +479,6 @@ void UFlecsWorld::RegisterUnrealTypes() const
 
 	RegisterComponentType<FAssetData>();
 	RegisterComponentType<FAssetBundleData>();
-	RegisterComponentType<FFlecsPrimaryAssetComponent>();
 
 	RegisterComponentType<FIntVector>();
 	RegisterComponentType<FIntVector4>();
