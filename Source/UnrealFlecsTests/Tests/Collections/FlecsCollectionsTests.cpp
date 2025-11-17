@@ -807,6 +807,80 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
 		ASSERT_THAT(IsTrue(TestEntity.GetName() == TEXT("TestEntity_WithCollectionInRecord_Class")));
 	}
+
+	TEST_METHOD(H4_InstantiateCollectionWithinEntityRecord_CreatesEntityWithCollection_ClassInterfaceAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag_Inherited>();
+	
+		const FFlecsEntityHandle CollectionPrefab
+			= Collections->RegisterCollectionInterfaceClass(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass());
+
+		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
+		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
+
+		FFlecsCollectionInstancedReference CollectionRef(FFlecsCollectionReference::FromClass(UFlecsCollectionTestClassWithInterface_Inherited::StaticClass()));
+
+		FFlecsEntityRecord EntityRecord = FFlecsEntityRecord();
+		EntityRecord.AddFragment<FFlecsCollectionEntityRecordFragment>(FFlecsCollectionEntityRecordFragment(CollectionRef));
+		ASSERT_THAT(IsTrue(EntityRecord.HasFragment<FFlecsCollectionEntityRecordFragment>()));
+		
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntityWithRecord(EntityRecord, "TestEntity_WithCollectionInRecord_ClassInterface");
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection(CollectionPrefab)));
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag_Inherited>()));
+		ASSERT_THAT(IsTrue(TestEntity.GetName() == TEXT("TestEntity_WithCollectionInRecord_ClassInterface")));
+	}
+
+	TEST_METHOD(H5_InstantiateCollectionWithinEntityRecord_CreatesEntityWithCollectionWithValue_ClassInterfaceAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
+	
+		const FFlecsEntityHandle CollectionPrefab
+			= Collections->RegisterCollectionInterfaceClass(UFlecsCollectionTestClassWithInterface_Parameterized::StaticClass());
+
+		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
+		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
+
+		FFlecsCollectionInstancedReference CollectionRef(FFlecsCollectionReference::FromClass(UFlecsCollectionTestClassWithInterface_Parameterized::StaticClass()));
+
+		FFlecsEntityRecord EntityRecord = FFlecsEntityRecord();
+		EntityRecord.AddFragment<FFlecsCollectionEntityRecordFragment>(FFlecsCollectionEntityRecordFragment(CollectionRef));
+		ASSERT_THAT(IsTrue(EntityRecord.HasFragment<FFlecsCollectionEntityRecordFragment>()));
+		
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntityWithRecord(EntityRecord, "TestEntity_WithCollectionInRecord_ClassInterface_Parameterized");
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection(CollectionPrefab)));
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>()));
+		ASSERT_THAT(IsTrue(TestEntity.Get<FFlecsTestStruct_Value>().Value == 33));
+	}
+
+	TEST_METHOD(H6_InstantiateCollectionWithinEntityRecord_CreatesEntityWithCollectionWithValueAndExplicitParams_ClassInterfaceAPI)
+	{
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag>();
+		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Value>();
+	
+		const FFlecsEntityHandle CollectionPrefab
+			= Collections->RegisterCollectionInterfaceClass(UFlecsCollectionTestClassWithInterface_Parameterized::StaticClass());
+
+		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
+		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));
+
+		FFlecsCollectionInstancedReference CollectionRef(FFlecsCollectionReference::FromClass(UFlecsCollectionTestClassWithInterface_Parameterized::StaticClass()),
+			FInstancedStruct::Make<FFlecsTestStruct_Value>(FFlecsTestStruct_Value{ 42 }));
+
+		FFlecsEntityRecord EntityRecord = FFlecsEntityRecord();
+		EntityRecord.AddFragment<FFlecsCollectionEntityRecordFragment>(FFlecsCollectionEntityRecordFragment(CollectionRef));
+		ASSERT_THAT(IsTrue(EntityRecord.HasFragment<FFlecsCollectionEntityRecordFragment>()));
+		
+		const FFlecsEntityHandle TestEntity = FlecsWorld->CreateEntityWithRecord(EntityRecord, "TestEntity_WithCollectionInRecord_ClassInterface_Parameterized_Explicit");
+		ASSERT_THAT(IsTrue(TestEntity.IsValid()));
+		ASSERT_THAT(IsTrue(TestEntity.HasCollection(CollectionPrefab)));
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Tag>()));
+		ASSERT_THAT(IsTrue(TestEntity.Has<FFlecsTestStruct_Value>()));
+		ASSERT_THAT(IsTrue(TestEntity.Get<FFlecsTestStruct_Value>().Value == 42));
+	}
 	
 }; // End of B4_CollectionBasicTests
 
