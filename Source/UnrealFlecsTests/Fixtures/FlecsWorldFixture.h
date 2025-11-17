@@ -72,17 +72,16 @@ public:
 	{
 		if (FlecsWorld)
 		{
-			FlecsWorld->MarkAsGarbage();
 			FlecsWorld = nullptr;
 		}
 
 		if (WorldSubsystem)
 		{
-			WorldSubsystem->MarkAsGarbage();
 			WorldSubsystem = nullptr;
 		}
 
-		TestWorldWrapper.Reset();
+		TestWorldWrapper->DestroyTestWorld(true);
+		TestWorldWrapper = nullptr;
 	}
 
 	NO_DISCARD FORCEINLINE UFlecsWorld* GetFlecsWorld() const
