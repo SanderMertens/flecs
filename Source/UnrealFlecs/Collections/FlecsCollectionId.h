@@ -22,10 +22,15 @@ struct UNREALFLECS_API FFlecsCollectionId
     	return GetTypeHash(InId.NameId);
     }
 
+	static NO_DISCARD FORCEINLINE FFlecsCollectionId Make(const FString& InString)
+	{
+		return FFlecsCollectionId(InString);
+	}
+
 public:
 	FORCEINLINE FFlecsCollectionId() = default;
 
-	FORCEINLINE explicit FFlecsCollectionId(const FString& InNameId)
+	FORCEINLINE FFlecsCollectionId(const FString& InNameId)
 		: NameId(InNameId)
 	{
 	}

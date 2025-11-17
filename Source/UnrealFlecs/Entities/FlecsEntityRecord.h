@@ -295,7 +295,9 @@ struct UNREALFLECS_API FFlecsEntityRecordFragment
 
 public:
 	FFlecsEntityRecordFragment() = default;
-	virtual ~FFlecsEntityRecordFragment() = default;
+	virtual ~FFlecsEntityRecordFragment()
+	{
+	}
 
 	virtual void PreApplyRecordToEntity(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld, const FFlecsEntityHandle& InEntityHandle) const {}
 	virtual void PostApplyRecordToEntity(const TSolidNotNull<const UFlecsWorld*> InFlecsWorld, const FFlecsEntityHandle& InEntityHandle) const {}

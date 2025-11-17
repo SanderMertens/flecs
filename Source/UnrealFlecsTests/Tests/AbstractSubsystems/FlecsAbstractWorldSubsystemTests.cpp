@@ -38,6 +38,9 @@ TEST_CLASS_WITH_FLAGS(B3_FlecsWorldSubsystems, "UnrealFlecs.B3_FlecsWorldSubsyst
 		
 		ASSERT_THAT(IsTrue(WorldSubsystem->bWasFlecsWorldInitialized));
 		ASSERT_THAT(IsTrue(IsValid(WorldSubsystem->GetFlecsWorld())));
+
+		ASSERT_THAT(IsTrue(WorldSubsystem->TimesChecked == 0));
+		++WorldSubsystem->TimesChecked;
 	}
 	
 	TEST_METHOD(A2_AbstractFlecsWorldSubsystem_FlecsWorldInitialization_Again)
@@ -48,6 +51,9 @@ TEST_CLASS_WITH_FLAGS(B3_FlecsWorldSubsystems, "UnrealFlecs.B3_FlecsWorldSubsyst
 		
 		ASSERT_THAT(IsTrue(WorldSubsystem->bWasFlecsWorldInitialized));
 		ASSERT_THAT(IsTrue(IsValid(WorldSubsystem->GetFlecsWorld())));
+
+		ASSERT_THAT(IsTrue(WorldSubsystem->TimesChecked == 0));
+		++WorldSubsystem->TimesChecked;
 	}
 	
 }; // End of B3_FlecsWorldSubsystems

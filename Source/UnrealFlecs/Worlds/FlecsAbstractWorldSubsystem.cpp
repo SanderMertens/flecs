@@ -8,6 +8,10 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsAbstractWorldSubsystem)
 
+UFlecsAbstractWorldSubsystem::UFlecsAbstractWorldSubsystem()
+{
+}
+
 void UFlecsAbstractWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);

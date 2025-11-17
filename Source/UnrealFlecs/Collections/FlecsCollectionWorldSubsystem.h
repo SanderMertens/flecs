@@ -32,7 +32,7 @@ struct UNREALFLECS_API FFlecsCollectionSubsystemSingleton
 
 public:
 	UPROPERTY()
-	TObjectPtr<UFlecsCollectionWorldSubsystem> WorldSubsystem;
+	TWeakObjectPtr<UFlecsCollectionWorldSubsystem> WorldSubsystem;
 	
 }; // struct FFlecsCollectionSubsystemSingleton
 
@@ -49,6 +49,8 @@ class UNREALFLECS_API UFlecsCollectionWorldSubsystem final : public UFlecsAbstra
 	GENERATED_BODY()
 
 public:
+	UFlecsCollectionWorldSubsystem();
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void OnFlecsWorldInitialized(const TSolidNotNull<UFlecsWorld*> InWorld) override;
 	virtual void Deinitialize() override;
@@ -174,14 +176,11 @@ private:
 	NO_DISCARD bool ClassImplementsCollectionInterface(const TSolidNotNull<const UClass*> InClass) const;
 
 	UPROPERTY()
-	TMap<FFlecsCollectionId, FFlecsEntityHandle> RegisteredCollections;
+	TMap<FFlecsCollectionId, FFlecsEntityView> RegisteredCollections;
 
 	// @TODO: make use of this
 	// Recursion guard
 	TSet<FFlecsCollectionId> InProgressCollections;
-	
-	FDelegateHandle AssetAddedHandle;
-	FDelegateHandle AssetRemovedHandle;
 
 	UPROPERTY()
 	FFlecsEntityHandle CollectionScopeEntity;

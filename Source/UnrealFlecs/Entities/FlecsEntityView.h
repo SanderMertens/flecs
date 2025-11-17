@@ -14,6 +14,8 @@
 
 #include "FlecsEntityView.generated.h"
 
+class UFlecsWorld;
+
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsEntityView : public FFlecsCommonHandle
 {
@@ -694,5 +696,7 @@ public:
 	}
 
 #endif // #if defined(FLECS_DOC)
+
+private:
 	
 }; // struct FFlecsEntityView

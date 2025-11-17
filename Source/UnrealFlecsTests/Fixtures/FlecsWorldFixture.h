@@ -72,11 +72,13 @@ public:
 	{
 		if (FlecsWorld)
 		{
+			FlecsWorld->MarkAsGarbage();
 			FlecsWorld = nullptr;
 		}
 
 		if (WorldSubsystem)
 		{
+			WorldSubsystem->MarkAsGarbage();
 			WorldSubsystem = nullptr;
 		}
 

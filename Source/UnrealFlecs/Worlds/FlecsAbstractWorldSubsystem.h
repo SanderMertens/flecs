@@ -21,6 +21,8 @@ class UNREALFLECS_API UFlecsAbstractWorldSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
+	UFlecsAbstractWorldSubsystem();
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void OnFlecsWorldInitialized(const TSolidNotNull<UFlecsWorld*> InWorld);
 	virtual void Deinitialize() override;

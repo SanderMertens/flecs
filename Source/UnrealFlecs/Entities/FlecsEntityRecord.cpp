@@ -141,7 +141,7 @@ void FFlecsEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWor
 		Fragment.Get<FFlecsEntityRecordFragment>().PreApplyRecordToEntity(InFlecsWorld, InEntityHandle);
 	}
 
-	InFlecsWorld->Defer([this, &InEntityHandle, InFlecsWorld]()
+	//InFlecsWorld->Defer([this, &InEntityHandle, InFlecsWorld]()
 	{
 		for (const auto& [NodeType, ScriptStruct, ScriptEnum,
 			 EntityHandle, GameplayTag, Pair] : Components)
@@ -203,7 +203,7 @@ void FFlecsEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWor
 			SubEntityRecord.Get<FFlecsEntityRecord>().ApplyRecordToEntity(InFlecsWorld, NewEntityHandle);
 			InEntityHandle.Add(NewEntityHandle);
 		}
-	});
+	}//);
 
 	for (const TInstancedStruct<FFlecsEntityRecordFragment>& Fragment : Fragments)
 	{

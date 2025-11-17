@@ -14,6 +14,10 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsCollectionWorldSubsystem)
 
+UFlecsCollectionWorldSubsystem::UFlecsCollectionWorldSubsystem()
+{
+}
+
 void UFlecsCollectionWorldSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
@@ -27,7 +31,7 @@ void UFlecsCollectionWorldSubsystem::OnFlecsWorldInitialized(const TSolidNotNull
 
 	InWorld->RegisterComponentType<FFlecsCollectionSubsystemSingleton>();
 
-	InWorld->SetSingleton<FFlecsCollectionSubsystemSingleton>({this});
+	InWorld->SetSingleton<FFlecsCollectionSubsystemSingleton>({ .WorldSubsystem = this });
 
 	FlecsWorld->RegisterComponentType<FFlecsCollectionDefinition>();
 	FlecsWorld->RegisterComponentType<FFlecsCollectionDefinitionComponent>();
@@ -64,9 +68,9 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionAsset(const
 	solid_cassume(InAsset);
 
 	const FFlecsCollectionId Id = FFlecsCollectionId(InAsset->GetName());
-	if (const FFlecsEntityHandle* Existing = RegisteredCollections.Find(Id))
+	if (const FFlecsEntityView* Found = RegisteredCollections.Find(Id))
 	{
-		return *Existing;
+		return Found->ToMut<FFlecsEntityHandle>(GetFlecsWorldChecked()->World);
 	}
 
 	FFlecsCollectionDefinition CollectionDefinition = InAsset->MakeCollectionDefinition();
@@ -95,9 +99,9 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionDefinition(
 	FFlecsCollectionDefinition& InDefinition)
 {
 	const FFlecsCollectionId Id = FFlecsCollectionId(InName);
-	if (const FFlecsEntityHandle* Existing = RegisteredCollections.Find(Id))
+	if LIKELY_IF(const FFlecsEntityView* Found = RegisteredCollections.Find(Id))
 	{
-		return *Existing;
+		return Found->ToMut<FFlecsEntityHandle>(GetFlecsWorldChecked()->World);
 	}
 
 	ApplyNamesToSubEntities(InDefinition);
@@ -126,9 +130,9 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::RegisterCollectionClass(const
 	const FString CPPClassName = InClass->GetPrefixCPP() + InClass->GetName();
 	const FFlecsCollectionId Id = FFlecsCollectionId(CPPClassName);
 	
-	if (const FFlecsEntityHandle* Existing = RegisteredCollections.Find(Id))
+	if LIKELY_IF(const FFlecsEntityView* Found = RegisteredCollections.Find(Id))
 	{
-		return *Existing;
+		return Found->ToMut<FFlecsEntityHandle>(GetFlecsWorldChecked()->World);
 	}
 
 	FFlecsCollectionDefinition& CollectionDefinition = InBuilder.GetCollectionDefinition();
@@ -200,9 +204,9 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByIdRaw(const FFlecs
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::GetPrefabByCollectionId(const FFlecsCollectionId& Id) const
 {
-	if LIKELY_IF(const FFlecsEntityHandle* Found = RegisteredCollections.Find(Id))
+	if LIKELY_IF(const FFlecsEntityView* Found = RegisteredCollections.Find(Id))
 	{
-		return *Found;
+		return Found->ToMut<FFlecsEntityHandle>(GetFlecsWorldChecked()->World);
 	}
 	
 	return FFlecsEntityHandle();
@@ -379,9 +383,9 @@ bool UFlecsCollectionWorldSubsystem::IsCollectionRegistered(const FFlecsCollecti
 
 FFlecsEntityHandle UFlecsCollectionWorldSubsystem::EnsurePrefabShell(const FFlecsCollectionId& Id)
 {
-	if (const FFlecsEntityHandle* Existing = RegisteredCollections.Find(Id))
+	if LIKELY_IF(const FFlecsEntityView* Found = RegisteredCollections.Find(Id))
 	{
-		return *Existing;
+		return Found->ToMut<FFlecsEntityHandle>(GetFlecsWorldChecked()->World);
 	}
 	
 	const TSolidNotNull<const UFlecsWorld*> FlecsWorld = GetFlecsWorldChecked();
@@ -413,9 +417,9 @@ FFlecsEntityHandle UFlecsCollectionWorldSubsystem::ResolveCollectionReference(co
 		
 		case EFlecsCollectionReferenceMode::Id:
 			{
-				if LIKELY_IF(const FFlecsEntityHandle* Found = RegisteredCollections.Find(Reference.Id))
+				if LIKELY_IF(const FFlecsEntityView* Found = RegisteredCollections.Find(Reference.Id))
 				{
-					return *Found;
+					return Found->ToMut<FFlecsEntityHandle>(GetFlecsWorldChecked()->World);
 				}
 				
 				UE_LOGFMT(LogFlecsCollections, Error,

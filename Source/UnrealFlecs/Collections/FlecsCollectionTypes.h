@@ -55,6 +55,11 @@ public:
 		Ref.Id = InId;
 		return Ref;
 	}
+
+	static NO_DISCARD FFlecsCollectionReference FromId(const FString& InIdString)
+	{
+		return FromId(FFlecsCollectionId(InIdString));
+	}
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
 	EFlecsCollectionReferenceMode Mode = EFlecsCollectionReferenceMode::Asset;
@@ -79,6 +84,15 @@ struct UNREALFLECS_API FFlecsCollectionInstancedReference
 	GENERATED_BODY()
 
 public:
+	FORCEINLINE FFlecsCollectionInstancedReference() = default;
+
+	FORCEINLINE FFlecsCollectionInstancedReference(
+			const FFlecsCollectionReference& InCollection, const FInstancedStruct& InParameters = FInstancedStruct())
+		: Collection(InCollection)
+		, Parameters(InParameters)
+	{
+	}
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs", meta = (ShowOnlyInnerProperties))
 	FFlecsCollectionReference Collection;
 	

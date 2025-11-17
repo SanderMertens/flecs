@@ -15,6 +15,12 @@ struct UNREALFLECS_API FFlecsCollectionEntityRecordFragment : public FFlecsEntit
 	GENERATED_BODY()
 
 public:
+	FORCEINLINE FFlecsCollectionEntityRecordFragment() = default;
+
+	FORCEINLINE FFlecsCollectionEntityRecordFragment(const FFlecsCollectionInstancedReference& InCollectionInstancedReference)
+		: CollectionInstancedReference(InCollectionInstancedReference)
+	{
+	}
 	UPROPERTY(EditAnywhere, Category="Flecs|Entity")
 	FFlecsCollectionInstancedReference CollectionInstancedReference;
 
