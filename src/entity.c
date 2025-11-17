@@ -2339,7 +2339,7 @@ void flecs_set_id_move(
     }
 
     ecs_move_t move;
-    if (cmd_kind == EcsCmdEnsure) {
+    if (cmd_kind != EcsCmdEmplace) {
         /* ctor will have happened by ensure */
         move = ti->hooks.move_dtor;
     } else {
