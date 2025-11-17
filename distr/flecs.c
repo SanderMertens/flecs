@@ -633,6 +633,7 @@ FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec_multithreaded(
 #endif
 
 #endif
+#endif
 
 #ifndef FLECS_TABLE_H
 #define FLECS_TABLE_H
