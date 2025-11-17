@@ -410,39 +410,39 @@ public:
 	}
 
 	template <typename T>
-	NO_DISCARD SOLID_INLINE bool DoesOwn() const
+	NO_DISCARD SOLID_INLINE bool Owns() const
 	{
 		return GetEntityView().owns<T>();
 	}
 
 	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept T>
-	NO_DISCARD SOLID_INLINE bool DoesOwn(const T& InTypeValue) const
+	NO_DISCARD SOLID_INLINE bool Owns(const T& InTypeValue) const
 	{
 		return GetEntityView().owns(FFlecsEntityView::GetInputId(*this, InTypeValue));
 	}
 
 	template <typename First, typename Second>
-	NO_DISCARD SOLID_INLINE bool DoesOwnPair() const
+	NO_DISCARD SOLID_INLINE bool OwnsPair() const
 	{
 		return GetEntityView().owns<First, Second>();
 	}
 
 	template <typename First, Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept Second>
-	NO_DISCARD SOLID_INLINE bool DoesOwnPair(const Second& InSecondTypeValue) const
+	NO_DISCARD SOLID_INLINE bool OwnsPair(const Second& InSecondTypeValue) const
 	{
 		return GetEntityView().owns<First>(FFlecsEntityView::GetInputId(*this, InSecondTypeValue));
 	}
 
 	template <Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First,
 		Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept Second>
-	NO_DISCARD SOLID_INLINE bool DoesOwnPair(const First& InFirstTypeValue, const Second& InSecondTypeValue) const
+	NO_DISCARD SOLID_INLINE bool OwnsPair(const First& InFirstTypeValue, const Second& InSecondTypeValue) const
 	{
 		return GetEntityView().owns(FFlecsEntityView::GetInputId(*this, InFirstTypeValue),
 			FFlecsEntityView::GetInputId(*this, InSecondTypeValue));
 	}
 
 	template <typename Second, Unreal::Flecs::TFlecsEntityFunctionInputDataTypeConcept First>
-	NO_DISCARD SOLID_INLINE bool DoesOwnPairSecond(const First& InFirstTypeValue) const
+	NO_DISCARD SOLID_INLINE bool OwnsPairSecond(const First& InFirstTypeValue) const
 	{
 		return GetEntityView().owns_second<Second>(FFlecsEntityView::GetInputId(*this, InFirstTypeValue));
 	}
@@ -595,7 +595,7 @@ public:
 	
 	NO_DISCARD SOLID_INLINE bool HasName() const
 	{
-		return DoesOwnPair<flecs::Identifier>(flecs::Name);
+		return OwnsPair<flecs::Identifier>(flecs::Name);
 	}
 
 	NO_DISCARD SOLID_INLINE FString GetSymbol() const
@@ -605,7 +605,7 @@ public:
 	
 	NO_DISCARD SOLID_INLINE bool HasSymbol() const
 	{
-		return DoesOwnPair<flecs::Identifier>(flecs::Symbol);
+		return OwnsPair<flecs::Identifier>(flecs::Symbol);
 	}
 
 	template <Unreal::Flecs::TFlecsEntityHandleTypeConcept THandle>
