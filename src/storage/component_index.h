@@ -195,3 +195,4 @@ FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec_multithreaded(
     ecs_component_record_t *cr);
     
 #endif
+#endif
