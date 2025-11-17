@@ -1300,6 +1300,9 @@ void ComponentLifecycle_batched_set_new_component_w_lifecycle(void);
 void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void);
 void ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count(void);
 void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(void);
+void ComponentLifecycle_dtor_on_destructive_component_removal(void);
+void ComponentLifecycle_dtor_on_destructive_remove(void);
+void ComponentLifecycle_dtor_on_destructive_component_removal_complex(void);
 void ComponentLifecycle_new_w_table_ctor(void);
 void ComponentLifecycle_new_w_table_on_add_hook(void);
 void ComponentLifecycle_count_in_on_add(void);
@@ -7829,6 +7832,18 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor
     },
     {
+        "dtor_on_destructive_component_removal",
+        ComponentLifecycle_dtor_on_destructive_component_removal
+    },
+    {
+        "dtor_on_destructive_remove",
+        ComponentLifecycle_dtor_on_destructive_remove
+    },
+    {
+        "dtor_on_destructive_component_removal_complex",
+        ComponentLifecycle_dtor_on_destructive_component_removal_complex
+    },
+    {
         "new_w_table_ctor",
         ComponentLifecycle_new_w_table_ctor
     },
@@ -13956,7 +13971,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        132,
+        135,
         ComponentLifecycle_testcases
     },
     {
