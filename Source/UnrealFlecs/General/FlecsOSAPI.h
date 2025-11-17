@@ -320,29 +320,33 @@ struct FOSApiInitializer
                 		UE_LOGFMT(LogFlecsCore, Fatal,
                 			"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
 							File, Line, Message);
+
+                		break;
 	                }
-                    break;
                 case -3: // Error
 	                {
                 		UE_LOGFMT(LogFlecsCore, Error,
 							"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
 							File, Line, Message);
+
+                		break;
 	                }
-                    break;
                 case -2: // Warning
 	                {
                 		UE_LOGFMT(LogFlecsCore, Warning,
                 			"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
                 				File, Line, Message);
+
+                		break;
 	                }
-                    break;
             	case 0: // Verbose
             		{
             			UE_LOGFMT(LogFlecsCore, Verbose,
             				"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
 							File, Line, Message);
+
+                		break;
             		}
-                    break;
             	case 4: // Bookmark/Journal
             		{
             			TRACE_BOOKMARK(TEXT("Flecs - File: %s, Line: %d, Message: %s"),
@@ -350,15 +354,17 @@ struct FOSApiInitializer
             			UE_LOGFMT(LogFlecsJournal, VeryVerbose,
             				"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
             				File, Line, Message);
+
+                		break;
             		}
-					break;
                 default: // Info and Debug
             		{
             			UE_LOGFMT(LogFlecsCore, Log,
 							"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
 							File, Line, Message);
+
+                		break;
             		}
-                    break;
             }
 #endif // UNLOG_ENABLED
         };

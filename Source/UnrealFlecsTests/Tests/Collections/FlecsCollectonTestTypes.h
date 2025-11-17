@@ -7,13 +7,13 @@
 
 #include "FlecsCollectonTestTypes.generated.h"
 
-USTRUCT()
+USTRUCT(BlueprintInternalUseOnly)
 struct UNREALFLECSTESTS_API FFlecsCollectionTestStruct
 {
 	GENERATED_BODY()
 }; // struct FFlecsCollectionTestStruct
 
-UCLASS()
+UCLASS(BlueprintInternalUseOnlyHierarchical)
 class UNREALFLECSTESTS_API UFlecsCollectionTestClassNoInterface : public UObject
 {
 	GENERATED_BODY()
@@ -23,7 +23,7 @@ public:
 	
 }; // class UFlecsCollectionTestClassNoInterface
 
-UCLASS()
+UCLASS(BlueprintInternalUseOnly)
 class UNREALFLECSTESTS_API UFlecsCollectionTestClassWithInterface : public UObject, public IFlecsCollectionInterface
 {
 	GENERATED_BODY()
@@ -33,7 +33,7 @@ public:
 	
 }; // class UFlecsCollectionTestClassWithInterface
 
-UCLASS()
+UCLASS(BlueprintInternalUseOnlyHierarchical)
 class UNREALFLECSTESTS_API UFlecsCollectionTestClassWithInterface_Inherited : public UObject, public IFlecsCollectionInterface
 {
 	GENERATED_BODY()
@@ -43,7 +43,7 @@ public:
 	
 }; // class UFlecsCollectionTestClassWithInterface_Inherited
 
-UCLASS()
+UCLASS(BlueprintInternalUseOnlyHierarchical)
 class UNREALFLECSTESTS_API UFlecsCollectionTestClassWithInterface_Parameterized : public UObject, public IFlecsCollectionInterface
 {
 	GENERATED_BODY()
@@ -53,7 +53,7 @@ public:
 	
 }; // class UFlecsCollectionTestClassWithInterface_Parameterized
 
-UCLASS()
+UCLASS(BlueprintInternalUseOnlyHierarchical)
 class UNREALFLECSTESTS_API UFlecsCollectionTestClassWithInterface_WithSubEntities : public UObject, public IFlecsCollectionInterface
 {
 	GENERATED_BODY()

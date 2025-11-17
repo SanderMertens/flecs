@@ -208,7 +208,7 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 
 		// Uses the class name as the collection name
 		const FFlecsEntityHandle Prefab
-			= Collections->RegisterTypedInterfaceCollection<UFlecsCollectionTestClassWithInterface_Inherited>();
+			= Collections->RegisterCollectionInterfaceClass<UFlecsCollectionTestClassWithInterface_Inherited>();
 		
 		ASSERT_THAT(IsTrue(Prefab.IsValid()));
 		ASSERT_THAT(IsTrue(Prefab.Has(flecs::Prefab)));
@@ -388,7 +388,7 @@ TEST_CLASS_WITH_FLAGS(B4_CollectionBasicTests, "UnrealFlecs.B4_CollectionsBasic"
 		FlecsWorld->RegisterComponentType<FFlecsTestStruct_Tag_Inherited>();
 		
 		const FFlecsEntityHandle CollectionPrefab
-			= Collections->RegisterTypedInterfaceCollection<UFlecsCollectionTestClassWithInterface_Inherited>();
+			= Collections->RegisterCollectionInterfaceClass<UFlecsCollectionTestClassWithInterface_Inherited>();
 
 		ASSERT_THAT(IsTrue(CollectionPrefab.IsValid()));
 		ASSERT_THAT(IsTrue(CollectionPrefab.Has(flecs::Prefab)));

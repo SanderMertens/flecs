@@ -24,6 +24,10 @@
 #include "FlecsEntityHandle.generated.h"
 
 struct FFlecsEntityHandle;
+
+struct FFlecsCollectionReference;
+struct FFlecsCollectionInstancedReference;
+
 class UFlecsWorld;
 
 /**
@@ -44,6 +48,11 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle : public FFlecsEntityView
 public:
 
 	static NO_DISCARD SOLID_INLINE FFlecsEntityHandle GetNullHandle()
+	{
+		return FFlecsEntityHandle(flecs::entity::null());
+	}
+
+	static NO_DISCARD SOLID_INLINE FFlecsEntityHandle Invalid()
 	{
 		return FFlecsEntityHandle(flecs::entity::null());
 	}
@@ -922,6 +931,9 @@ public:
 	{
 		return AddCollection(T::StaticClass(), FInstancedStruct::Make<TCollectionParams>(InParams));
 	}
+
+	const FSelfType& AddCollection(const FFlecsCollectionReference& InCollectionRef, const FInstancedStruct& InParams = FInstancedStruct()) const;
+	const FSelfType& AddCollection(const FFlecsCollectionInstancedReference& InCollectionRef) const;
 
 	// Note this doesnt remove overridden components
 	const FSelfType& RemoveCollection(const FFlecsId InCollection) const;

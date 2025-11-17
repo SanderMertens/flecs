@@ -23,20 +23,23 @@ void FFlecsQueryTermExpression::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs
 				solid_check(ScriptStructEntity.IsValid());
 				
 				InQueryBuilder.with(ScriptStructEntity);
+
+				break;
 			}
-		break;
 		case EFlecsQueryInputType::Entity:
 			{
 				const FFlecsId Entity = InputType.Entity;
 				InQueryBuilder.with(Entity);
+
+				break;
 			}
-		break;
 		case EFlecsQueryInputType::String:
 			{
 				const FString Expr = InputType.Expr.Expr;
 				InQueryBuilder.with(StringCast<char>(*Expr).Get());
+				
+				break;
 			}
-		break;
 		case EFlecsQueryInputType::GameplayTag:
 			{
 				const FGameplayTag Tag = InputType.Tag;
@@ -47,8 +50,9 @@ void FFlecsQueryTermExpression::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs
 				solid_check(TagEntity.IsValid());
 				
 				InQueryBuilder.with(TagEntity);
+
+				break;
 			}
-		break;
 	}
 
 	if (bWithout)

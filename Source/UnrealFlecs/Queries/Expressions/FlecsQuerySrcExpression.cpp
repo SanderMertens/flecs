@@ -15,12 +15,14 @@ void FFlecsQuerySrcExpression::Apply(TSolidNotNull<UFlecsWorld*> InWorld, flecs:
 		case EFlecsQuerySrcType::Entity:
 			{
 				InQueryBuilder.src(Entity);
+
+				break;
 			}
-			break;
 		case EFlecsQuerySrcType::String:
 			{
 				InQueryBuilder.src(StringCast<char>(*Src).Get());
+
+				break;
 			}
-			break;
 	}
 }

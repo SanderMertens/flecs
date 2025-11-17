@@ -26,6 +26,11 @@ struct UNREALFLECS_API FFlecsEntityView : public FFlecsCommonHandle
 		return FFlecsEntityView(flecs::entity::null());
 	}
 
+	static NO_DISCARD SOLID_INLINE FFlecsEntityView Invalid()
+	{
+		return FFlecsEntityView(flecs::entity::null());
+	}
+
 	static NO_DISCARD FFlecsEntityView GetNullHandle(const TSolidNotNull<const UFlecsWorld*> InWorld);
 
 public:

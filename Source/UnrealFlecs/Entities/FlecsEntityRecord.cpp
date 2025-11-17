@@ -34,23 +34,23 @@ void FFlecsRecordPair::AddToEntity(const FFlecsEntityHandle& InEntityHandle) con
 													   Second.PairScriptStruct.GetMemory(),
 													   Second.PairScriptStruct.GetScriptStruct());
 							}
+							break;
 						}
-						break;
 					case EFlecsPairNodeType::EntityHandle:
 						{
 							InEntityHandle.AddPair(First.PairScriptStruct.GetScriptStruct(),
 							                       Second.EntityHandle);
+							break;
 						}
-						break;
 					case EFlecsPairNodeType::FGameplayTag:
 						{
 							InEntityHandle.AddPair(First.PairScriptStruct.GetScriptStruct(),
 							                       Second.GameplayTag);
+							break;
 						}
-						break;
 				}
+				break;
 			}
-			break;
 		case EFlecsPairNodeType::EntityHandle:
 			{
 				switch (Second.PairNodeType)
@@ -71,21 +71,25 @@ void FFlecsRecordPair::AddToEntity(const FFlecsEntityHandle& InEntityHandle) con
 													Second.PairScriptStruct.GetMemory(),
 														 Second.PairScriptStruct.GetScriptStruct());
 							}
+
+							break;
 						}
-						break;
 					case EFlecsPairNodeType::EntityHandle:
 						{
 							InEntityHandle.AddPair(First.EntityHandle, Second.EntityHandle);
+
+							break;
 						}
-						break;
 					case EFlecsPairNodeType::FGameplayTag:
 						{
 							InEntityHandle.AddPair(First.EntityHandle, Second.GameplayTag);
+
+							break;
 						}
-						break;
 				}
+
+				break;
 			}
-			break;
 		case EFlecsPairNodeType::FGameplayTag:
 			{
 				switch (Second.PairNodeType)
@@ -106,21 +110,25 @@ void FFlecsRecordPair::AddToEntity(const FFlecsEntityHandle& InEntityHandle) con
 													Second.PairScriptStruct.GetMemory(),
 														 Second.PairScriptStruct.GetScriptStruct());
 							}
+
+							break;
 						}
-						break;
 					case EFlecsPairNodeType::EntityHandle:
 						{
 							InEntityHandle.AddPair(First.GameplayTag, Second.EntityHandle);
+
+							break;
 						}
-						break;
 					case EFlecsPairNodeType::FGameplayTag:
 						{
 							InEntityHandle.AddPair(First.GameplayTag, Second.GameplayTag);
+
+							break;
 						}
-						break;
 				}
+
+				break;
 			}
-			break;
 	}
 }
 
@@ -152,28 +160,33 @@ void FFlecsEntityRecord::ApplyRecordToEntity(const TSolidNotNull<const UFlecsWor
 						}
 							
 						InEntityHandle.Set(ScriptStruct);
+
+						break;
 					}
-					break;
 				case EFlecsComponentNodeType::ScriptEnum:
 					{
 						InEntityHandle.Add(ScriptEnum.Class, ScriptEnum.Value);
+
+						break;
 					}
-					break;
 				case EFlecsComponentNodeType::EntityHandle:
 					{
 						InEntityHandle.Add(EntityHandle);
+
+						break;
 					}
-					break;
 				case EFlecsComponentNodeType::FGameplayTag:
 					{
-						InEntityHandle.Add(GameplayTag);	
+						InEntityHandle.Add(GameplayTag);
+
+						break;
 					}
-					break;
 				case EFlecsComponentNodeType::Pair:
 					{
 						Pair.AddToEntity(InEntityHandle);
+
+						break;
 					}
-					break;
 			}
 		}
 		

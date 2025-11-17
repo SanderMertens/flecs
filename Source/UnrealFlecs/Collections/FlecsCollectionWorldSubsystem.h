@@ -61,7 +61,7 @@ public:
 	FFlecsEntityHandle RegisterCollectionInterfaceClass(const TSolidNotNull<UClass*> InInterfaceObject);
 
 	template <Solid::TStaticClassConcept T>
-	FORCEINLINE FFlecsEntityHandle RegisterTypedInterfaceCollection()
+	FORCEINLINE FFlecsEntityHandle RegisterCollectionInterfaceClass()
 	{
 		static_assert(TIsDerivedFrom<T, IFlecsCollectionInterface>::Value,
 		              "T must implement IFlecsCollectionInterface");

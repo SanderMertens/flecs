@@ -7,10 +7,14 @@
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
 
+#include "Versioning/SolidVersioningTypes.h"
+
 #include "Logs/FlecsCategories.h"
 
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldSubsystem.h"
+
+#include "GameFramework/FlecsGameFrameworkVersioningTypes.h"
 
 #include "Components/FlecsUObjectComponent.h"
 #include "Components/ObjectTypes/FlecsActorTag.h"
@@ -27,17 +31,32 @@ UFlecsEntityActorComponent::UFlecsEntityActorComponent(const FObjectInitializer&
 void UFlecsEntityActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
-	InitializeEntity();
+void UFlecsEntityActorComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	DestroyEntity();
+	
+	Super::EndPlay(EndPlayReason);
+}
+
+void UFlecsEntityActorComponent::PostLoad()
+{
+	Super::PostLoad();
+
+	IMPLEMENT_ASSET_MIGRATION_POST_LOAD(UFlecsEntityActorComponent);
 }
 
 void UFlecsEntityActorComponent::OnRegister()
 {
 	Super::OnRegister();
+
+	InitializeEntity();
 }
 
 void UFlecsEntityActorComponent::OnUnregister()
 {
+		
 	Super::OnUnregister();
 }
 
@@ -57,6 +76,35 @@ void UFlecsEntityActorComponent::InitializeEntity()
 		TEXT("Flecs World Subsystem is not initialized.")))
 	{
 		CreateActorEntity(UFlecsWorldSubsystem::GetDefaultWorldStatic(this));
+	}
+}
+
+void UFlecsEntityActorComponent::DestroyEntity(const bool bDestroyOwningActor)
+{
+	AActor* OwnerActor = GetOwner();
+	
+	if UNLIKELY_IF(!OwnerActor)
+	{
+		UE_LOGFMT(LogFlecsEntity, Warning,
+			"Attempted to destroy Entity from Actor Component with no valid Owner Actor.");
+		return;
+	}
+		
+	if LIKELY_IF(EntityHandle.IsValid())
+	{
+		EntityHandle.Destroy();
+		EntityHandle = FFlecsEntityHandle::GetNullHandle();
+	}
+	else
+	{
+		UE_LOGFMT(LogFlecsEntity, Warning,
+			"Attempted to destroy invalid Entity from Actor Component on Actor: {ActorName}",
+			GetOwner()->GetName());
+	}
+
+	if (bDestroyOwningActor)
+	{
+		OwnerActor->Destroy();
 	}
 }
 
@@ -103,9 +151,9 @@ void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 
 void UFlecsEntityActorComponent::CreateActorEntity(const TSolidNotNull<const UFlecsWorld*> InWorld)
 {
-	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord);
+	EntityHandle = InitializeComponentEntity(InWorld);
 	EntityHandle.SetName(GetOwner()->GetName());
-
+	
 	// @TODO: Should this be the Component or the Owner?
 	EntityHandle.SetPair<FFlecsUObjectComponent, FFlecsActorTag>(FFlecsUObjectComponent(GetOwner()));
 
@@ -123,4 +171,49 @@ void UFlecsEntityActorComponent::CreateActorEntity(const TSolidNotNull<const UFl
 	//MARK_PROPERTY_DIRTY_FROM_NAME(UFlecsEntityActorComponent, EntityHandle, this);
 
 	OnEntitySpawned(EntityHandle);
+}
+
+FFlecsEntityHandle UFlecsEntityActorComponent::InitializeComponentEntity(
+	const TSolidNotNull<const UFlecsWorld*> InWorld) const
+{
+	FFlecsEntityHandle CreatedEntity;
+	switch (EntityInitializer.Type)
+	{
+		case EFlecsEntityInitializationType::Record:
+			{
+				CreatedEntity = InitializeUsingEntityRecord(InWorld, EntityInitializer.Record);
+				
+				break;
+			}
+		case EFlecsEntityInitializationType::InstancedCollection:
+			{
+				CreatedEntity = InitializeUsingCollection(InWorld, EntityInitializer.InstancedCollection);
+				
+				break;
+			}
+		default: UNLIKELY_ATTRIBUTE
+			{
+				solid_checkf(false, TEXT("UFlecsEntityActorComponent::InitializeComponentEntity: Unknown Entity Initialization Type"));
+				break;
+			}
+	}
+
+	solid_checkf(CreatedEntity.IsValid(),
+		TEXT("UFlecsEntityActorComponent::InitializeComponentEntity: Created Entity is not valid"));
+	return CreatedEntity;
+}
+
+FFlecsEntityHandle UFlecsEntityActorComponent::InitializeUsingEntityRecord(
+	const TSolidNotNull<const UFlecsWorld*> InWorld, const FFlecsEntityRecord& InRecord) const
+{
+	const FFlecsEntityHandle NewEntity = InWorld->CreateEntityWithRecord(InRecord);
+	return NewEntity;
+}
+
+FFlecsEntityHandle UFlecsEntityActorComponent::InitializeUsingCollection(const TSolidNotNull<const UFlecsWorld*> InWorld,
+	const FFlecsCollectionInstancedReference& InCollectionRef) const
+{
+	const FFlecsEntityHandle NewEntity = InWorld->CreateEntity();
+	NewEntity.AddCollection(InCollectionRef);
+	return NewEntity;
 }

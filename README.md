@@ -26,7 +26,9 @@ Tracked ObjectPtr References in Components (needs testing) \
 \
 Module Implementation with Hard and Soft Dependencies \
 \
-Modular Game Loop Implementation to allow for any pipeline setup (also works with module dependencies)
+Modular Game Loop Implementation to allow for any pipeline setup (also works with module dependencies) \
+\
+Partial Natvis support for different flecs types
 
 
 ## Modifications to Flecs:
