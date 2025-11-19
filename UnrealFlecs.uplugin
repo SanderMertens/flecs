@@ -38,6 +38,14 @@
 	],
 	"Plugins": [
 		{
+			"Name": "ModularGameplay",
+			"Enabled": true
+		},
+		{
+			"Name": "GameFeatures",
+			"Enabled": true
+		},
+		{
 			"Name": "SolidMacros",
 			"Enabled": true
 		}
