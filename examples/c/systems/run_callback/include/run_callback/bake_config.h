@@ -14,8 +14,8 @@
  * dependencies will automatically show up in this file. Include bake_config.h
  * in your main project file. Do not edit! */
 
-#ifndef CUSTOM_RUNNER_BAKE_CONFIG_H
-#define CUSTOM_RUNNER_BAKE_CONFIG_H
+#ifndef RUN_CALLBACK_BAKE_CONFIG_H
+#define RUN_CALLBACK_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
 #include <flecs.h>
