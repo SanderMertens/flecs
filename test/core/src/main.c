@@ -1867,6 +1867,7 @@ void Observer_1_singleton_term_field_size_w_tag(void);
 void Observer_2_singleton_terms_field_size_w_tag(void);
 void Observer_1_on_set_overridden_term_field_size_w_tag(void);
 void Observer_2_on_set_overridden_terms_field_size_w_tag(void);
+void Observer_create_observer_in_observer(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -10082,6 +10083,10 @@ bake_test_case Observer_testcases[] = {
         Observer_2_on_set_overridden_terms_field_size_w_tag
     },
     {
+        "create_observer_in_observer",
+        Observer_create_observer_in_observer
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -13977,7 +13982,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        293,
+        294,
         Observer_testcases
     },
     {
