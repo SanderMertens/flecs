@@ -26,28 +26,11 @@ DECLARE_CYCLE_STAT(TEXT("FlecsOS::TaskThread"), STAT_FlecsOS, STATGROUP_FlecsOS)
 class FFlecsRunnable final : public FRunnable
 {
 public:
-	FORCEINLINE FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InData)
-		: Callback(InCallback)
-		, Data(InData)
-		, bStopped(false)
-	{
-	}
+	FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InData);
 
-	FORCEINLINE virtual uint32 Run() override
-	{
-		while (!bStopped.load())
-		{
-			Callback(Data);
-			break;
-		}
-		
-		return 0;
-	}
+	virtual uint32 Run() override;
 
-	FORCEINLINE virtual void Stop() override
-	{
-		bStopped.store(true);
-	}
+	virtual void Stop() override;
 
 private:
 	ecs_os_thread_callback_t Callback;
@@ -63,52 +46,14 @@ struct FFlecsThreadWrapper
 	FRunnableThread* RunnableThread = nullptr;
 	std::atomic<bool> bJoined { false };
 
-	FORCEINLINE FFlecsThreadWrapper(ecs_os_thread_callback_t Callback, void* Data)
-	{
-		Runnable = new FFlecsRunnable(Callback, Data);
-		RunnableThread = FRunnableThread::Create(
-			Runnable, TEXT("FlecsThreadWrapper"), 0, TaskThread);
-	}
+	FFlecsThreadWrapper(ecs_os_thread_callback_t Callback, void* Data);
 
-	FORCEINLINE ~FFlecsThreadWrapper()
-	{
-		if (!bJoined.load() && RunnableThread)
-		{
-			Stop();
-			Join();
+	~FFlecsThreadWrapper();
 
-			delete RunnableThread;
-			RunnableThread = nullptr;
-		}
-	}
+	void Stop() const;
 
-	FORCEINLINE void Stop() const
-	{
-		if (Runnable)
-		{
-			Runnable->Stop();
-		}
-	}
+	void Join();
 
-	FORCEINLINE void Join()
-	{
-		if (!bJoined.exchange(true))
-		{
-			if (RunnableThread)
-			{
-				RunnableThread->WaitForCompletion();
-				delete RunnableThread;
-				RunnableThread = nullptr;
-			}
-			
-			if (Runnable)
-			{
-				delete Runnable;
-				Runnable = nullptr;
-			}
-		}
-	}
-	
 }; // struct FFlecsThreadWrapper
 
 struct FFlecsThreadTask
@@ -117,32 +62,12 @@ struct FFlecsThreadTask
 	
 	FGraphEventRef TaskEvent;
 
-	FORCEINLINE FFlecsThreadTask(const ecs_os_thread_callback_t Callback, void* Data)
-	{
-		TaskEvent = FFunctionGraphTask::CreateAndDispatchWhenReady(
-			[Callback, Data]()
-			{
-				Callback(Data);
-			},
-			GET_STATID(STAT_FlecsOS), nullptr, TaskThread);
-	}
+	FFlecsThreadTask(const ecs_os_thread_callback_t Callback, void* Data);
 
-	FORCEINLINE ~FFlecsThreadTask()
-	{
-		if (TaskEvent.IsValid())
-		{
-			TaskEvent->Wait();
-		}
-	}
+	~FFlecsThreadTask();
 
-	FORCEINLINE void Wait() const
-	{
-		if (TaskEvent.IsValid())
-		{
-			FTaskGraphInterface::Get().WaitUntilTaskCompletes(TaskEvent);
-		}
-	}
-	
+	void Wait() const;
+
 }; // struct FFlecsThreadTask
 
 struct FFlecsConditionWrapper

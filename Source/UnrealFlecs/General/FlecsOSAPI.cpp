@@ -1,3 +1,97 @@
 // Elie Wiese-Namir © 2025. All Rights Reserved.
 
 #include "FlecsOSAPI.h"
+
+FFlecsRunnable::FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InData): Callback(InCallback)
+	, Data(InData)
+	, bStopped(false)
+{
+}
+
+uint32 FFlecsRunnable::Run()
+{
+	while (!bStopped.load())
+	{
+		Callback(Data);
+		break;
+	}
+		
+	return 0;
+}
+
+void FFlecsRunnable::Stop()
+{
+	bStopped.store(true);
+}
+
+FFlecsThreadWrapper::FFlecsThreadWrapper(ecs_os_thread_callback_t Callback, void* Data)
+{
+	Runnable = new FFlecsRunnable(Callback, Data);
+	RunnableThread = FRunnableThread::Create(
+		Runnable, TEXT("FlecsThreadWrapper"), 0, TaskThread);
+}
+
+FFlecsThreadWrapper::~FFlecsThreadWrapper()
+{
+	if (!bJoined.load() && RunnableThread)
+	{
+		Stop();
+		Join();
+
+		delete RunnableThread;
+		RunnableThread = nullptr;
+	}
+}
+
+void FFlecsThreadWrapper::Stop() const
+{
+	if (Runnable)
+	{
+		Runnable->Stop();
+	}
+}
+
+void FFlecsThreadWrapper::Join()
+{
+	if (!bJoined.exchange(true))
+	{
+		if (RunnableThread)
+		{
+			RunnableThread->WaitForCompletion();
+			delete RunnableThread;
+			RunnableThread = nullptr;
+		}
+			
+		if (Runnable)
+		{
+			delete Runnable;
+			Runnable = nullptr;
+		}
+	}
+}
+
+FFlecsThreadTask::FFlecsThreadTask(const ecs_os_thread_callback_t Callback, void* Data)
+{
+	TaskEvent = FFunctionGraphTask::CreateAndDispatchWhenReady(
+		[Callback, Data]()
+		{
+			Callback(Data);
+		},
+		GET_STATID(STAT_FlecsOS), nullptr, TaskThread);
+}
+
+FFlecsThreadTask::~FFlecsThreadTask()
+{
+	if (TaskEvent.IsValid())
+	{
+		TaskEvent->Wait();
+	}
+}
+
+void FFlecsThreadTask::Wait() const
+{
+	if (TaskEvent.IsValid())
+	{
+		FTaskGraphInterface::Get().WaitUntilTaskCompletes(TaskEvent);
+	}
+}
