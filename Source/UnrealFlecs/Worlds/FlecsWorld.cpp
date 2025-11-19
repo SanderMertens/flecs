@@ -299,6 +299,18 @@ void UFlecsWorld::InitializeDefaultComponents() const
 		     *Data = FText::FromString(String);
 	     });
 
+	World.component<std::string>()
+		 .opaque(flecs::String)
+		 .serialize([](const flecs::serializer* Serializer, const std::string* Data)
+		 {
+			 const char* CharArray = Data->c_str();
+			 return Serializer->value(flecs::String, &CharArray);
+		 })
+		 .assign_string([](std::string* Data, const char* String)
+		 {
+			 *Data = String;
+		 });
+
 	World.component<FGameplayTag>()
 	     .opaque(flecs::Entity)
 	     .serialize([](const flecs::serializer* Serializer, const FGameplayTag* Data)
@@ -358,8 +370,16 @@ void UFlecsWorld::InitializeDefaultComponents() const
 		     *Data = nullptr;
 	     });
 
-	/*World.component<FScriptArray>()
-	     .opaque<flecs::Vector>(flecs::meta::VectorType);*/
+	/*World.component<FOptionalPropertyLayout>()
+	     .opaque(FScriptArray*/
+
+	/*
+	World.component<FScriptArray>()
+	     .opaque<flecs::Vector>(flecs::meta::VectorType)
+	     .serialize_element([](const flecs::serializer* Serializer, void* ElementPtr, size_t ElementSize) -> int
+	     {
+		     
+	     });*/
 	/* World.component<FScriptMap>()
 	     .opaque<flecs::Map>(flecs::meta::MapType); */
 
