@@ -1,4 +1,4 @@
-#include <custom_runner.h>
+#include <run_callback.h>
 #include <stdio.h>
 
 // Systems can be created with a custom run function that takes control over the
@@ -47,9 +47,6 @@ int main(int argc, char *argv[]) {
         },
         .run = Move // use .run instead of .callback
     });
-
-    // C applications can also use the ECS_SYSTEM convenience macro:
-    // ECS_SYSTEM(ecs, Move, 0, Position, [in] Velocity);
 
     // Create a few test entities for a Position, Velocity query
     ecs_entity_t e1 = ecs_entity(ecs, { .name = "e1" });

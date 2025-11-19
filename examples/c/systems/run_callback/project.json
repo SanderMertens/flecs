@@ -1,5 +1,5 @@
 {
-    "id": "custom_runner",
+    "id": "run_callback",
     "type": "application",
     "value": {
         "use": [
