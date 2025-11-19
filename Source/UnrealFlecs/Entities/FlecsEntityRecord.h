@@ -512,8 +512,8 @@ struct UNREALFLECS_API FFlecsEntityRecord final
 	FORCEINLINE int32 AddFragment()
 	{
 		if UNLIKELY_IF(!ensureAlwaysMsgf(!HasFragment<TFragmentType>(),
-		TEXT("Fragment of type %s already exists in Entity Record, adding duplicate fragment."),
-		*TBaseStructure<TFragmentType>::Get()->GetName()))
+			TEXT("Fragment of type %s already exists in Entity Record, adding duplicate fragment."),
+			*TBaseStructure<TFragmentType>::Get()->GetName()))
 		{
 			return INDEX_NONE;
 		}

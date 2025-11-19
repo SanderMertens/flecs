@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "SolidMacros/Macros.h"
 #include "Standard/Hashing.h"
 #include "Types/SolidNotNull.h"
+
 #include "FlecsWorldInfoSettings.generated.h"
 
 class UFlecsModuleSetDataAsset;

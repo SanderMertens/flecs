@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "GameFramework/WorldSettings.h"
+
 #include "FlecsWorldSettings.generated.h"
 
 class UFlecsWorldSettingsAsset;
