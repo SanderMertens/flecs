@@ -25,7 +25,7 @@ public:
 	 * @brief Enable task threads for Flecs.
 	 */
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs", meta = (ConsoleVariable = "Flecs.UseTaskThreads"))
-	bool bUseTaskThreads = true;
+	bool bUseTaskThreads = false;
 
 	/**
 	 * @brief Number of threads to use for Flecs task processing.
