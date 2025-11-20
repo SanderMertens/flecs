@@ -167,6 +167,12 @@ typedef struct {
     int32_t prev_cur;
 } ecs_query_sparse_ctx_t;
 
+typedef enum ecs_query_tree_iter_state_t {
+    EcsQueryTreeIterNext,
+    EcsQueryTreeIterTables,
+    EcsQueryTreeIterEntities
+} ecs_query_tree_iter_state_t;
+
 typedef struct {
     ecs_query_and_ctx_t and_; /* For mixed results */
     ecs_component_record_t *cr;
@@ -175,13 +181,8 @@ typedef struct {
     const EcsParent *parents;
     ecs_table_range_t range;
     int32_t cur;
+    ecs_query_tree_iter_state_t state;
 } ecs_query_tree_ctx_t;
-
-typedef enum ecs_query_tree_iter_state_t {
-    EcsQueryTreeIterNext,
-    EcsQueryTreeIterTables,
-    EcsQueryTreeIterEntities
-} ecs_query_tree_iter_state_t;
 
 typedef struct {
     ecs_component_record_t *cr;

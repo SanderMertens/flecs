@@ -544,13 +544,15 @@ extern "C" {
 #define EcsTermReflexive              (1u << 3)
 #define EcsTermIdInherited            (1u << 4)
 #define EcsTermIsTrivial              (1u << 5)
-#define EcsTermIsCacheable            (1u << 7)
-#define EcsTermIsScope                (1u << 8)
-#define EcsTermIsMember               (1u << 9)
-#define EcsTermIsToggle               (1u << 10)
-#define EcsTermIsSparse               (1u << 12)
-#define EcsTermIsOr                   (1u << 13)
-#define EcsTermDontFragment           (1u << 14)
+#define EcsTermIsCacheable            (1u << 6)
+#define EcsTermIsScope                (1u << 7)
+#define EcsTermIsMember               (1u << 8)
+#define EcsTermIsToggle               (1u << 9)
+#define EcsTermIsSparse               (1u << 10)
+#define EcsTermIsOr                   (1u << 11)
+#define EcsTermDontFragment           (1u << 12)
+#define EcsTermNonFragmentingChildOf  (1u << 13)
+#define EcsTermOrderedChildren        (1u << 14)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4234,6 +4236,12 @@ void flecs_check_exclusive_world_access_write(
 FLECS_API
 void flecs_check_exclusive_world_access_read(
     const ecs_world_t *world);
+
+/** End deferred mode (executes commands when stage->deref becomes 0). */
+FLECS_API
+bool flecs_defer_end(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
 
 #else
 #define flecs_check_exclusive_world_access_write(world)
@@ -18177,6 +18185,8 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     size_t value_size);
 
 typedef struct ecs_cpp_get_mut_t {
+    ecs_world_t *world;
+    ecs_stage_t *stage;
     void *ptr;
     bool call_modified;
 } ecs_cpp_get_mut_t;
@@ -18353,6 +18363,7 @@ static const flecs::entity_t System = EcsSystem;
 static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
 static const flecs::entity_t Phase = EcsPhase;
 static const flecs::entity_t Constant = EcsConstant;
+static const flecs::entity_t ParentDepth = EcsParentDepth;
 
 /* Builtin event tags */
 static const flecs::entity_t OnAdd = EcsOnAdd;
@@ -22215,6 +22226,10 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
         dst = FLECS_MOV(value);
     }
 
+    if (res.stage) {
+        flecs_defer_end(res.world, res.stage);
+    }
+
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);
     }
@@ -22230,6 +22245,10 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
 
     T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
     dst = value;
+
+    if (res.stage) {
+        flecs_defer_end(res.world, res.stage);
+    }
 
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);
@@ -22266,6 +22285,10 @@ inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_
         dst = FLECS_MOV(value);
     }
 
+    if (res.stage) {
+        flecs_defer_end(res.world, res.stage);
+    }
+
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);
     }
@@ -22282,6 +22305,10 @@ inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs
 
     T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
     dst = value;
+
+    if (res.stage) {
+        flecs_defer_end(res.world, res.stage);
+    }
 
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);

@@ -634,6 +634,7 @@ void flecs_query_insert_cache_search(
     }
 
     ecs_query_t *q = &query->pub;
+    int32_t childof_term = -1;
 
     if (q->cache_kind == EcsQueryCacheAll) {
         /* If all terms are cacheable, make sure no other terms are compiled */
@@ -653,6 +654,10 @@ void flecs_query_insert_cache_search(
                 continue;
             }
 
+            if (term->flags_ & EcsTermNonFragmentingChildOf) {
+                childof_term = i;
+            }
+
             *compiled |= (1ull << i);
         }
     }
@@ -669,6 +674,11 @@ void flecs_query_insert_cache_search(
     flecs_query_write(0, &op.written);
     flecs_query_write_ctx(0, ctx, false);
     flecs_query_op_insert(&op, ctx);
+
+    if (childof_term != -1) {
+        flecs_query_compile_term(
+            q->world, query, &q->terms[childof_term], ctx);
+    }
 }
 
 static
