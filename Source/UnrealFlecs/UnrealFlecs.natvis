@@ -16,8 +16,7 @@
 
         <!-- One-line display in the Watch/Locals windows -->
         <DisplayString>
-            {this->IsValid() ? "Valid" : "Invalid"}, Alive={this->IsAlive()},
-            Id={this->GetId().GetIndex()} Generation={this->GetId().GetGeneration()} RawId={this->GetId().GetId()}
+            {this->IsValid() ? "Valid" : "Invalid"}, Alive={this->IsAlive()}, Id={this->GetId().GetIndex()} Generation={this->GetId().GetGeneration()} RawId={this->GetId().GetId()}
         </DisplayString>
         
         <Expand>
