@@ -15,11 +15,19 @@
 class UFlecsWorld;
 struct FFlecsEntityHandle;
 
+#ifndef DECLARE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION
+
 #define DECLARE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION(Name) \
 	extern Unreal::Flecs::FEntityNetSerializeFunction Name;
 
+#endif // DECLARE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION
+
+#ifndef DEFINE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION
+
 #define DEFINE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION(Name, Lambda) \
 	Unreal::Flecs::FEntityNetSerializeFunction Name = Lambda;
+
+#endif // DEFINE_FLECS_ENTITY_NET_SERIALIZE_FUNCTION
 
 namespace Unreal::Flecs
 {

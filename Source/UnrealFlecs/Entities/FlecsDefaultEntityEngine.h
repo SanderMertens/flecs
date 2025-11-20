@@ -6,7 +6,7 @@
 
 #include "CoreMinimal.h"
 
-#include "FlecsDefaultEntitiesDeveloperSettings.h"
+#include "FlecsDefaultMetaEntityType.h"
 
 struct UNREALFLECS_API FFlecsDefaultEntityEngine final
 {
@@ -25,7 +25,7 @@ public:
 
 	flecs::entity CreateDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity, const flecs::world& World);
 	
-	FFlecsId AddDefaultEntity(FFlecsDefaultMetaEntity DefaultEntity);
+	FFlecsId AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity);
 	
 	TMap<FString, FFlecsId> DefaultEntityOptions;
 
@@ -42,8 +42,15 @@ public:
 }; // struct FFlecsDefaultEntityEngine
 
 // Should be put in your .h file
+#ifndef DECLARE_DEFAULT_ENTITY
+
 #define DECLARE_DEFAULT_ENTITY(DefaultEntityName) \
 	extern FFlecsId DefaultEntityName;
+
+#endif // DECLARE_DEFAULT_ENTITY
+
+
+#ifndef DEFINE_DEFAULT_ENTITY
 
 // Should be put in your .cpp file
 #define DEFINE_DEFAULT_ENTITY(DefaultEntityName, InEntityId, Lambda) \
@@ -72,4 +79,6 @@ public:
 		};                                                        \
 		inline FRegisterInvoker##DefaultEntityName Invoker##DefaultEntityName;  \
 	}
+
+#endif // DEFINE_DEFAULT_ENTITY
 

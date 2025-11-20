@@ -5,8 +5,6 @@
 
 #include "Logging/StructuredLog.h"
 
-#include "FlecsDefaultEntitiesDeveloperSettings.h"
-
 #include "Logs/FlecsCategories.h"
 
 #include "Worlds/FlecsWorldSubsystem.h"
@@ -132,7 +130,7 @@ void FFlecsDefaultEntityEngine::Initialize()
 	bIsInitialized = true;
 }
 
-FFlecsId FFlecsDefaultEntityEngine::AddDefaultEntity(FFlecsDefaultMetaEntity DefaultEntity)
+FFlecsId FFlecsDefaultEntityEngine::AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity)
 {
 	auto ContainsDefaultEntity = [this](const FString& EntityName) -> bool
 	{

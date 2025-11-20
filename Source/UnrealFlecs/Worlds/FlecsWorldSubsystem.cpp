@@ -13,7 +13,6 @@
 #include "Settings/FlecsWorldSettingsAsset.h"
 #include "UnrealFlecsWorldTag.h"
 
-#include "Entities/FlecsDefaultEntitiesDeveloperSettings.h"
 #include "Entities/FlecsDefaultEntityEngine.h"
 
 #include "Components/FlecsWorldPtrComponent.h"

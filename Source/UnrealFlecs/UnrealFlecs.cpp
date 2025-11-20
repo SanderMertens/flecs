@@ -2,6 +2,8 @@
 
 #include "UnrealFlecs.h"
 
+#include "Misc/CoreDelegates.h"
+
 #include "Versioning/UnrealFlecsVersion.h"
 
 #include "General/FlecsOSAPI.h"

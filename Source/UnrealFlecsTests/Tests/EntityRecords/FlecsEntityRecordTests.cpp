@@ -4,6 +4,8 @@
 
 #if WITH_AUTOMATION_TESTS
 
+#include "Entities/FlecsEntityRecord.h"
+
 #include "Tests/FlecsTestTypes.h"
 
 /*
