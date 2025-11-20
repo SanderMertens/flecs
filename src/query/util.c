@@ -53,6 +53,8 @@ const char* flecs_query_op_str(
     case EcsQuerySparseUp:       return "sparse_up   ";
     case EcsQueryTree:           return "tree        ";
     case EcsQueryTreeWildcard:   return "tree_wc     ";
+    case EcsQueryTreePre:        return "tree_pre    ";
+    case EcsQueryTreePost:       return "tree_post   ";
     case EcsQueryTreeUp:         return "tree_up     ";
     case EcsQueryTreeSelfUp:     return "tree_selfup ";
     case EcsQueryTreeWith:       return "tree_w      ";
