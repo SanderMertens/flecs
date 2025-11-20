@@ -464,6 +464,10 @@ void flecs_observers_invoke(
             ecs_observer_t *o = ecs_map_ptr(&oit);
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
             flecs_uni_observer_invoke(world, o, it, table, trav);
+
+            ecs_assert(ecs_map_iter_valid(&oit), ECS_INVALID_OPERATION, 
+                "observer list modified while notifying: "
+                "cannot create observer from observer");
         }
 
         ecs_table_unlock(it->world, table);

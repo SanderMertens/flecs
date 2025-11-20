@@ -1932,6 +1932,7 @@
                 "2_singleton_terms_field_size_w_tag",
                 "1_on_set_overridden_term_field_size_w_tag",
                 "2_on_set_overridden_terms_field_size_w_tag",
+                "create_observer_in_observer",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",

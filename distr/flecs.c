@@ -15980,6 +15980,10 @@ void flecs_observers_invoke(
             ecs_observer_t *o = ecs_map_ptr(&oit);
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
             flecs_uni_observer_invoke(world, o, it, table, trav);
+
+            ecs_assert(ecs_map_iter_valid(&oit), ECS_INVALID_OPERATION, 
+                "observer list modified while notifying: "
+                "cannot create observer from observer");
         }
 
         ecs_table_unlock(it->world, table);
@@ -31431,6 +31435,10 @@ void ecs_map_insert(
 
     ecs_bucket_t *bucket = flecs_map_get_bucket(map, key);
     flecs_map_bucket_add(map->allocator, bucket, key)[0] = value;
+
+#ifdef FLECS_DEBUG
+    ecs_os_linc(&map->change_count);
+#endif
 }
 
 void* ecs_map_insert_alloc(
@@ -31463,6 +31471,11 @@ ecs_map_val_t* ecs_map_ensure(
 
     ecs_map_val_t* v = flecs_map_bucket_add(map->allocator, bucket, key);
     *v = 0;
+
+#ifdef FLECS_DEBUG
+    ecs_os_linc(&map->change_count);
+#endif
+
     return v;
 }
 
@@ -31485,6 +31498,11 @@ ecs_map_val_t ecs_map_remove(
     ecs_map_t *map,
     ecs_map_key_t key)
 {
+#ifdef FLECS_DEBUG
+    if (map->last_iterated != key) {
+        ecs_os_linc(&map->change_count);
+    }
+#endif    
     return flecs_map_bucket_remove(map, flecs_map_get_bucket(map, key), key);
 }
 
@@ -31520,6 +31538,10 @@ void ecs_map_clear(
     map->bucket_count = 0;
     map->count = 0;
     flecs_map_rehash(map, 2);
+
+#ifdef FLECS_DEBUG
+    ecs_os_linc(&map->change_count);
+#endif
 }
 
 ecs_map_iter_t ecs_map_iter(
@@ -31529,19 +31551,46 @@ ecs_map_iter_t ecs_map_iter(
         return (ecs_map_iter_t){
             .map = map,
             .bucket = NULL,
-            .entry = NULL
+            .entry = NULL,
+#ifdef FLECS_DEBUG
+            .change_count = map->change_count
+#endif
         };
     } else {
         return (ecs_map_iter_t){ 0 };
     }
 }
 
+bool ecs_map_iter_valid(
+    ecs_map_iter_t *iter)
+{
+    const ecs_map_t *map = iter->map;
+    if (!map) {
+        return false;
+    }
+
+#ifdef FLECS_DEBUG
+    if (map->change_count != iter->change_count) {
+        return false;
+    }
+#endif
+
+    return true;
+}
+
 bool ecs_map_next(
     ecs_map_iter_t *iter)
 {
     const ecs_map_t *map = iter->map;
+    if (!map) {
+        return false;
+    }
+
+    ecs_dbg_assert(map->change_count == iter->change_count, ECS_INVALID_PARAMETER, 
+        "map cannot be modified while it is being iterated");
+
     ecs_bucket_t *end;
-    if (!map || (iter->bucket == (end = &map->buckets[map->bucket_count]))) {
+    if (iter->bucket == (end = &map->buckets[map->bucket_count])) {
         return false;
     }
 
@@ -31572,6 +31621,12 @@ bool ecs_map_next(
     ecs_assert(entry != NULL, ECS_INTERNAL_ERROR, NULL);
     iter->entry = entry->next;
     iter->res = &entry->key;
+
+#ifdef FLECS_DEBUG
+    /* Safe, only used for detecting if an element got removed that's not the
+     * currently iterated element. */
+    ECS_CONST_CAST(ecs_map_t*, map)->last_iterated = entry->key;
+#endif
 
     return true;
 }
