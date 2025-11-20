@@ -1626,12 +1626,9 @@ void Cascade_cascade_w_cache_kind_default(void);
 void Cascade_cascade_w_optional(void);
 void Cascade_remove_all(void);
 void Cascade_recreate_after_remove_all(void);
-<<<<<<< HEAD
 void Cascade_nested_target_deletion(void);
-=======
 void Cascade_parent_component(void);
 void Cascade_parent_component_w_childof(void);
->>>>>>> 344b60baa (Don't call unparent when entity is reparented)
 
 // Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
@@ -2347,6 +2344,8 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child(void);
 void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_w_component_from_child(void);
 void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_instantiate_inherit(void);
 void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit(void);
+void NonFragmentingChildOf_this_up_childof_1_table_3_parents(void);
+void NonFragmentingChildOf_this_self_up_childof_1_table_3_parents(void);
 void NonFragmentingChildOf_this_written_up_childof(void);
 void NonFragmentingChildOf_this_written_up_childof_w_component(void);
 void NonFragmentingChildOf_this_written_up_childof_w_component_inherited(void);
@@ -2378,6 +2377,10 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_chil
 void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_w_component_from_child(void);
 void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_inherit(void);
 void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit(void);
+void NonFragmentingChildOf_this_written_up_childof_1_table_3_parents(void);
+void NonFragmentingChildOf_this_written_up_childof_2_tables_3_parents(void);
+void NonFragmentingChildOf_this_written_self_up_childof_1_table_3_parents(void);
+void NonFragmentingChildOf_this_written_self_up_childof_2_tables_3_parents(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -8886,17 +8889,16 @@ bake_test_case Cascade_testcases[] = {
         Cascade_recreate_after_remove_all
     },
     {
-<<<<<<< HEAD
         "nested_target_deletion",
         Cascade_nested_target_deletion
-=======
+    },
+    {
         "parent_component",
         Cascade_parent_component
     },
     {
         "parent_component_w_childof",
         Cascade_parent_component_w_childof
->>>>>>> 344b60baa (Don't call unparent when entity is reparented)
     }
 };
 
@@ -11699,6 +11701,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit
     },
     {
+        "this_up_childof_1_table_3_parents",
+        NonFragmentingChildOf_this_up_childof_1_table_3_parents
+    },
+    {
+        "this_self_up_childof_1_table_3_parents",
+        NonFragmentingChildOf_this_self_up_childof_1_table_3_parents
+    },
+    {
         "this_written_up_childof",
         NonFragmentingChildOf_this_written_up_childof
     },
@@ -11821,6 +11831,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit",
         NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit
+    },
+    {
+        "this_written_up_childof_1_table_3_parents",
+        NonFragmentingChildOf_this_written_up_childof_1_table_3_parents
+    },
+    {
+        "this_written_up_childof_2_tables_3_parents",
+        NonFragmentingChildOf_this_written_up_childof_2_tables_3_parents
+    },
+    {
+        "this_written_self_up_childof_1_table_3_parents",
+        NonFragmentingChildOf_this_written_self_up_childof_1_table_3_parents
+    },
+    {
+        "this_written_self_up_childof_2_tables_3_parents",
+        NonFragmentingChildOf_this_written_self_up_childof_2_tables_3_parents
     }
 };
 
@@ -12558,11 +12584,7 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-<<<<<<< HEAD
-        28,
-=======
-        29,
->>>>>>> 344b60baa (Don't call unparent when entity is reparented)
+        30,
         Cascade_testcases
     },
     {
@@ -12626,7 +12648,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        142,
+        148,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params
