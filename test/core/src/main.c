@@ -729,6 +729,7 @@ void NonFragmentingChildOf_get_parent_3(void);
 void NonFragmentingChildOf_get_parent_4(void);
 void NonFragmentingChildOf_get_parent_5(void);
 void NonFragmentingChildOf_get_parent_6(void);
+void NonFragmentingChildOf_get_parent_7(void);
 void NonFragmentingChildOf_get_target(void);
 void NonFragmentingChildOf_table_child_count(void);
 void NonFragmentingChildOf_table_child_count_set_parent_after_tag(void);
@@ -5786,6 +5787,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "get_parent_6",
         NonFragmentingChildOf_get_parent_6
+    },
+    {
+        "get_parent_7",
+        NonFragmentingChildOf_get_parent_7
     },
     {
         "get_target",
@@ -14630,7 +14635,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        87,
+        88,
         NonFragmentingChildOf_testcases
     },
     {
