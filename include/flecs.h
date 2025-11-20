@@ -6219,6 +6219,19 @@ int32_t ecs_search_relation(
     ecs_id_t *component_out,
     struct ecs_table_record_t **tr_out);
 
+/* Up traversal from entity */
+FLECS_API
+int32_t ecs_search_relation_for_entity(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    bool self,
+    ecs_component_record_t *cr,
+    ecs_entity_t *tgt_out,
+    ecs_id_t *id_out,
+    struct ecs_table_record_t **tr_out);
+
 /** Remove all entities in a table. Does not deallocate table memory. 
  * Retaining table memory can be efficient when planning 
  * to refill the table with operations like ecs_bulk_init
