@@ -27,10 +27,30 @@ static FAutoConsoleVariableRef CVarTaskThreadCount(
 	TEXT("Number of threads to use for Flecs task processing.")
 );
 
-// @TODO: Re-enable once tested
-/*static bool bShrinkMemoryOnGC = true;
-static FAutoConsoleVariableRef CVarShrinkMemoryOnGC(
-	TEXT("Flecs.ShrinkMemoryOnGC"),
-	bShrinkMemoryOnGC,
-	TEXT("Enable shrinking Flecs memory usage during Unreal Garbage Collection.")
-);*/
+void UFlecsDeveloperSettings::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+#if WITH_EDITOR
+	
+	if (IsTemplate())
+	{
+		ImportConsoleVariableValues();
+	}
+
+#endif // WITH_EDITOR
+}
+
+#if WITH_EDITOR
+
+void UFlecsDeveloperSettings::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	if (PropertyChangedEvent.Property)
+	{
+		ExportValuesToConsoleVariables(PropertyChangedEvent.Property);
+	}
+}
+
+#endif // WITH_EDITOR

@@ -1,15 +1,22 @@
 ﻿// Elie Wiese-Namir © 2025. All Rights Reserved.
 
 #include "UnrealFlecsEditor.h"
-#include "UnrealFlecsEditorStyle.h"
+
+
 #include "Engine/AssetManagerSettings.h"
 #include "Engine/AssetManagerTypes.h"
 #include "Framework/Notifications/NotificationManager.h"
-#include "Logs/FlecsEditorCategory.h"
+#include "Widgets/Notifications/SNotificationList.h"
+
 #include "SolidMacros/Macros.h"
+#include "Types/SolidNotNull.h"
+
+#include "General/FlecsEditorDeveloperSettings.h"
+#include "Logs/FlecsEditorCategory.h"
+
+#include "UnrealFlecsEditorStyle.h"
 #include "Widgets/EntityHandle/FlecsIdCustomization.h"
 #include "Widgets/EntityHandle/FlecsIdPinFactory.h"
-#include "Widgets/Notifications/SNotificationList.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFlecsEditor, Log, All);
 
@@ -79,20 +86,31 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 				}
 				
 				TOptional<FPlayInEditorSessionInfo> PIEInfo = GEditor->GetPlayInEditorSessionInfo();
+
+				const UFlecsEditorDeveloperSettings* FlecsEditorDeveloperSettings = GetDefault<UFlecsEditorDeveloperSettings>();
+
+				if UNLIKELY_IF(!ensureMsgf(IsValid(FlecsEditorDeveloperSettings),
+					TEXT("Failed to get Flecs Editor Developer Settings.")))
+				{
+					return;
+				}
 				
 				if (!PIEInfo.IsSet())
 				{
 					UE_LOG(LogFlecsEditor, Log, TEXT("No PIE session info found"));
-					const FString TargetUrl = "https://www.flecs.dev/explorer/?host=localhost:27750&refresh=auto&remote=true";
+
+					const FString TargetUrl = FlecsEditorDeveloperSettings->FlecsExplorerURL.GetFlecsExplorerURL();
+					
+					// TEXT("Failed to launch Flecs Explorer URL. Explorer Instance 0")
+					
 					FPlatformProcess::LaunchURL(*TargetUrl, nullptr, nullptr);
 					return;
 				}
 				
 				for (int32 Index = 0; Index < PIEInfo->NumClientInstancesCreated; ++Index)
 				{
-					FString TargetUrl = "https://www.flecs.dev/explorer/?host=localhost:";
-					TargetUrl.Append(FString::FromInt(27750 + Index));
-					TargetUrl.Append("&refresh=auto&remote=true");
+					FString TargetUrl = FlecsEditorDeveloperSettings->FlecsExplorerURL.GetFlecsExplorerURL(Index);
+					
 					FPlatformProcess::LaunchURL(*TargetUrl, nullptr, nullptr);
 				}
 			})
