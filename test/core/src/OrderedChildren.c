@@ -1672,6 +1672,9 @@ void OrderedChildren_bulk_create_ordered_children(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
     ecs_entity_t e1, e2, e3;
 
     const ecs_entity_t *

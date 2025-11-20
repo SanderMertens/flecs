@@ -278,7 +278,7 @@ bool flecs_query_up_with_parent(
     ecs_iter_t *it = ctx->it;
     ecs_id_t id_out;
 
-    if (flecs_entity_search_relation(
+    if (ecs_search_relation_for_entity(
         ctx->world, parent, impl->with, ecs_pair(EcsChildOf, EcsWildcard), true, 
         impl->cr_with, 
         &it->sources[op->field_index], 

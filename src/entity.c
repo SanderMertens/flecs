@@ -2814,7 +2814,7 @@ ecs_entity_t ecs_get_target_for_id(
             return 0;
         }
 
-        int32_t column = flecs_entity_search_relation(
+        int32_t column = ecs_search_relation_for_entity(
             world, entity, component, ecs_pair(rel, EcsWildcard), true, cr, &src, 0, 0);
         if (column == -1) {
             return 0;

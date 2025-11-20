@@ -23,7 +23,7 @@ bool flecs_query_tree_select_tgt(
     ecs_entity_t child = op_ctx->entities[op_ctx->cur];
     ecs_assert(child != 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_table_range_t range = flecs_range_from_entity(child, ctx);
+    ecs_table_range_t range = flecs_range_from_entity(ctx->world, child);
     flecs_query_var_set_range(op, op->src.var, 
         range.table, range.offset, range.count, ctx);
 
@@ -256,7 +256,7 @@ next:
         } else {
             ecs_entity_t child = op_ctx->entities[op_ctx->cur];
             ecs_assert(child != 0, ECS_INTERNAL_ERROR, NULL);
-            ecs_table_range_t range = flecs_range_from_entity(child, ctx);
+            ecs_table_range_t range = flecs_range_from_entity(ctx->world, child);
             flecs_query_var_set_range(op, op->src.var, 
                 range.table, range.offset, range.count, ctx);
             goto done;

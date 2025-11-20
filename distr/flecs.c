@@ -2951,18 +2951,6 @@ ecs_entity_t flecs_get_oneof(
     const ecs_world_t *world,
     ecs_entity_t e);
 
-/* Up traversal from entity */
-int32_t flecs_entity_search_relation(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id,
-    ecs_entity_t rel,
-    bool self,
-    ecs_component_record_t *cr,
-    ecs_entity_t *tgt_out,
-    ecs_id_t *id_out,
-    struct ecs_table_record_t **tr_out);
-
 /* Compute relationship depth for table */
 int32_t flecs_relation_depth(
     const ecs_world_t *world,
@@ -10372,7 +10360,7 @@ ecs_entity_t ecs_get_target_for_id(
             return 0;
         }
 
-        int32_t column = flecs_entity_search_relation(
+        int32_t column = ecs_search_relation_for_entity(
             world, entity, component, ecs_pair(rel, EcsWildcard), true, cr, &src, 0, 0);
         if (column == -1) {
             return 0;
@@ -12228,7 +12216,6 @@ bool ecs_id_is_tag(
 
     return false;
 }
-
 
 ecs_entity_t ecs_get_typeid(
     const ecs_world_t *world,
@@ -19022,7 +19009,7 @@ int32_t flecs_table_search_relation(
         cr_r, tgt_out, id_out, tr_out);
 }
 
-int32_t flecs_entity_search_relation(
+int32_t ecs_search_relation_for_entity(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
@@ -19035,6 +19022,11 @@ int32_t flecs_entity_search_relation(
 {
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (tgt_out) tgt_out[0] = 0;
+    if (!cr) {
+        cr = flecs_components_get(world, id);
+    }
 
     int32_t result = flecs_table_search_relation(world, r, r->table, 0, id, cr, 
         rel, NULL, self, tgt_out, id_out, tr_out);
@@ -20350,9 +20342,11 @@ const ecs_type_info_t* flecs_determine_type_info_for_component(
             }
         }
 
-        ecs_entity_t tgt = ecs_pair_second(world, id);
-        if (tgt) {
-            return flecs_type_info_get(world, tgt);
+        if (!ECS_IS_VALUE_PAIR(id)) {
+            ecs_entity_t tgt = ecs_pair_second(world, id);
+            if (tgt) {
+                return flecs_type_info_get(world, tgt);
+            }
         }
     }
 
@@ -38300,7 +38294,7 @@ ecs_component_record_t* flecs_component_new(
     bool is_pair = ECS_IS_PAIR(id);
     bool is_value_pair = ECS_IS_VALUE_PAIR(id);
 
-    ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
+    ecs_entity_t rel = 0, tgt = 0;
     ecs_table_t *tgt_table = NULL;
     ecs_record_t *tgt_record = NULL;
     if (is_pair) {
@@ -38329,6 +38323,11 @@ ecs_component_record_t* flecs_component_new(
 
         rel = ECS_PAIR_FIRST(id);
         if (rel == EcsChildOf) {
+            /* Check if we should keep a list of ordered children for parent */
+            if (tgt && ecs_table_has_id(world, tgt_table, EcsOrderedChildren)) {
+                flecs_component_ordered_children_init(world, cr);
+            }
+
             flecs_component_update_childof_depth(world, cr, tgt, tgt_record);
         } else {
             rel = flecs_entities_get_alive(world, rel);
@@ -82701,7 +82700,7 @@ bool flecs_query_tree_select_tgt(
     ecs_entity_t child = op_ctx->entities[op_ctx->cur];
     ecs_assert(child != 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_table_range_t range = flecs_range_from_entity(child, ctx);
+    ecs_table_range_t range = flecs_range_from_entity(ctx->world, child);
     flecs_query_var_set_range(op, op->src.var, 
         range.table, range.offset, range.count, ctx);
 
@@ -82934,7 +82933,7 @@ next:
         } else {
             ecs_entity_t child = op_ctx->entities[op_ctx->cur];
             ecs_assert(child != 0, ECS_INTERNAL_ERROR, NULL);
-            ecs_table_range_t range = flecs_range_from_entity(child, ctx);
+            ecs_table_range_t range = flecs_range_from_entity(ctx->world, child);
             flecs_query_var_set_range(op, op->src.var, 
                 range.table, range.offset, range.count, ctx);
             goto done;
@@ -83435,7 +83434,7 @@ bool flecs_query_up_with_parent(
     ecs_iter_t *it = ctx->it;
     ecs_id_t id_out;
 
-    if (flecs_entity_search_relation(
+    if (ecs_search_relation_for_entity(
         ctx->world, parent, impl->with, ecs_pair(EcsChildOf, EcsWildcard), true, 
         impl->cr_with, 
         &it->sources[op->field_index], 
