@@ -1387,6 +1387,76 @@ void NonFragmentingChildOf_fixed_src_childof_set_var(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_this_src_childof_parent_only_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+       .terms = {{ ecs_childof(parent) }, { Foo }},
+       .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t child = ecs_new_w(world, Foo);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_childof(parent), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_written_childof_parent_only_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+       .terms = {{ Foo }, { ecs_childof(parent) }},
+       .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    printf("%s\n", ecs_query_plan(q));
+
+    ecs_entity_t child = ecs_new_w(world, Foo);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(ecs_childof(parent), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_any_src_childof_parent(void) {
     ecs_world_t *world = ecs_mini();
     
@@ -10265,3 +10335,4 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_tables_3_parents(void)
 
     ecs_fini(world);
 }
+

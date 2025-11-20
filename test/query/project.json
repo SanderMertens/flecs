@@ -2410,6 +2410,8 @@
                 "this_src_childof_any_w_component",
                 "this_src_childof_var",
                 "this_src_childof_set_var",
+                "this_src_childof_parent_only_childof",
+                "this_src_written_childof_parent_only_childof",
                 "this_up_childof",
                 "this_up_childof_w_component",
                 "this_up_childof_w_component_inherited",

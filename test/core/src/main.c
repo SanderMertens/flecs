@@ -727,6 +727,11 @@ void NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_child(void);
 void NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_children(void);
 void NonFragmentingChildOf_remove_ordered_children_trait_w_deleted_children_reverse(void);
 void NonFragmentingChildOf_get_parent(void);
+void NonFragmentingChildOf_get_parent_2(void);
+void NonFragmentingChildOf_get_parent_3(void);
+void NonFragmentingChildOf_get_parent_4(void);
+void NonFragmentingChildOf_get_parent_5(void);
+void NonFragmentingChildOf_get_parent_6(void);
 void NonFragmentingChildOf_get_target(void);
 void NonFragmentingChildOf_table_child_count(void);
 void NonFragmentingChildOf_table_child_count_set_parent_after_tag(void);
@@ -5801,6 +5806,26 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "get_parent",
         NonFragmentingChildOf_get_parent
+    },
+    {
+        "get_parent_2",
+        NonFragmentingChildOf_get_parent_2
+    },
+    {
+        "get_parent_3",
+        NonFragmentingChildOf_get_parent_3
+    },
+    {
+        "get_parent_4",
+        NonFragmentingChildOf_get_parent_4
+    },
+    {
+        "get_parent_5",
+        NonFragmentingChildOf_get_parent_5
+    },
+    {
+        "get_parent_6",
+        NonFragmentingChildOf_get_parent_6
     },
     {
         "get_target",
@@ -14745,7 +14770,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        82,
+        87,
         NonFragmentingChildOf_testcases
     },
     {

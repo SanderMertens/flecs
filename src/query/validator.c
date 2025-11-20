@@ -933,9 +933,9 @@ int flecs_term_finalize(
     }
 
     if (ECS_IS_PAIR(term->id) && (ECS_PAIR_FIRST(term->id) == EcsChildOf)) {
-        if (ECS_PAIR_SECOND(term->id) != EcsAny) {
-            cacheable_term = false;
-        }
+        // if (ECS_PAIR_SECOND(term->id) != EcsAny) {
+        //     cacheable_term = false;
+        // }
         if (ECS_PAIR_SECOND(term->id)) {
             trivial_term = false;
         }
@@ -1492,12 +1492,12 @@ int flecs_query_finalize_terms(
                 }
 
                 if (ECS_TERM_REF_ID(&term->first) == EcsChildOf) {
-                    if (ECS_TERM_REF_ID(&term->second) != EcsAny) {
-                        if (term->flags_ & EcsTermIsCacheable) {
-                            term->flags_ &= (ecs_flags16_t)~EcsTermIsCacheable;
-                            cacheable_terms --;
-                        }
-                    }
+                    // if (ECS_TERM_REF_ID(&term->second) != EcsAny) {
+                    //     if (term->flags_ & EcsTermIsCacheable) {
+                    //         term->flags_ &= (ecs_flags16_t)~EcsTermIsCacheable;
+                    //         cacheable_terms --;
+                    //     }
+                    // }
                     if (ECS_TERM_REF_ID(&term->second) != 0) {
                         is_trivial = false;
                         continue;

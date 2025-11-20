@@ -89,6 +89,8 @@ typedef enum {
     EcsQueryTreeWith,       /* Evaluate (ChildOf, tgt) against fixed or variable source */
     EcsQueryTreeUp,         /* Return union of up(ChildOf) and tables with Parent */
     EcsQueryTreeSelfUp,
+    EcsQueryTreePre,        /* Tree instruction that doesn't filter Parent component / returns entire tables. */
+    EcsQueryTreePost,       /* Tree instruction that applies filter to Parent component. */
     EcsQueryChildren,       /* Return children for parent, if possible in order */
     EcsQueryChildrenWc,     /* Return children for parents, if possible in order */
     EcsQueryLookup,         /* Lookup relative to variable */

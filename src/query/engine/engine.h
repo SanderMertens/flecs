@@ -235,6 +235,16 @@ bool flecs_query_tree_and_wildcard(
     const ecs_query_run_ctx_t *ctx,
     bool bulk_return);
 
+bool flecs_query_tree_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_tree_post(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
 bool flecs_query_tree_with(
     const ecs_query_op_t *op,
     bool redo,
