@@ -188,13 +188,15 @@ extern "C" {
 #define EcsTermReflexive              (1u << 3)
 #define EcsTermIdInherited            (1u << 4)
 #define EcsTermIsTrivial              (1u << 5)
-#define EcsTermIsCacheable            (1u << 7)
-#define EcsTermIsScope                (1u << 8)
-#define EcsTermIsMember               (1u << 9)
-#define EcsTermIsToggle               (1u << 10)
-#define EcsTermIsSparse               (1u << 12)
-#define EcsTermIsOr                   (1u << 13)
-#define EcsTermDontFragment           (1u << 14)
+#define EcsTermIsCacheable            (1u << 6)
+#define EcsTermIsScope                (1u << 7)
+#define EcsTermIsMember               (1u << 8)
+#define EcsTermIsToggle               (1u << 9)
+#define EcsTermIsSparse               (1u << 10)
+#define EcsTermIsOr                   (1u << 11)
+#define EcsTermDontFragment           (1u << 12)
+#define EcsTermNonFragmentingChildOf  (1u << 13)
+#define EcsTermOrderedChildren        (1u << 14)
 
 
 ////////////////////////////////////////////////////////////////////////////////

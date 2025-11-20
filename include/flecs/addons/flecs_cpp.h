@@ -97,6 +97,8 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     size_t value_size);
 
 typedef struct ecs_cpp_get_mut_t {
+    ecs_world_t *world;
+    ecs_stage_t *stage;
     void *ptr;
     bool call_modified;
 } ecs_cpp_get_mut_t;

@@ -1138,7 +1138,7 @@ void flecs_query_set_op_kind(
 
         /* ChildOf terms need to take into account both ChildOf pairs and the 
          * Parent component for non-fragmenting hierarchies. */
-        if (ECS_IS_PAIR(term->id) && ECS_PAIR_FIRST(term->id) == EcsChildOf) {
+        if (term->flags_ & EcsTermNonFragmentingChildOf) {
             if (query->pub.flags & EcsQueryNested) {
                 /* If this is a nested query (used to populate a cache), insert
                  * instruction that matches tables with ChildOf pairs and Parent
@@ -1154,6 +1154,12 @@ void flecs_query_set_op_kind(
                             op->kind = EcsQueryTreeWildcard;
                         } else {
                             op->kind = EcsQueryTree;
+                        }
+
+                        if (term->flags_ & EcsTermIsCacheable) {
+                            if (query->cache) {
+                                op->kind = EcsQueryTreePost;
+                            }
                         }
                     } else if (op->kind == EcsQueryAndAny) {
                         if (ECS_PAIR_SECOND(term->id)) {
