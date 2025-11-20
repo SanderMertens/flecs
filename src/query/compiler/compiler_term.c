@@ -1139,21 +1139,29 @@ void flecs_query_set_op_kind(
         /* ChildOf terms need to take into account both ChildOf pairs and the 
          * Parent component for non-fragmenting hierarchies. */
         if (ECS_IS_PAIR(term->id) && ECS_PAIR_FIRST(term->id) == EcsChildOf) {
-            if (!src_is_var) {
-                op->kind = EcsQueryTreeWith;
+            if (query->pub.flags & EcsQueryNested) {
+                /* If this is a nested query (used to populate a cache), insert
+                 * instruction that matches tables with ChildOf pairs and Parent
+                 * component, without filtering the non-fragmenting parents as
+                 * this cannot be cached. */
+                op->kind = EcsQueryTreePre;
             } else {
-                if (op->kind == EcsQueryAnd) {
-                    if (ECS_PAIR_SECOND(term->id) == EcsWildcard) {
-                        op->kind = EcsQueryTreeWildcard;
-                    } else {
-                        op->kind = EcsQueryTree;
-                    }
-                } else if (op->kind == EcsQueryAndAny) {
-                    if (ECS_PAIR_SECOND(term->id)) {
-                        op->kind = EcsQueryTreeWildcard;
-                    } else {
-                        /* If it's a (ChildOf, 0) query then we don't need to
-                         * evaluate it as a wildcard. */
+                if (!src_is_var) {
+                    op->kind = EcsQueryTreeWith;
+                } else {
+                    if (op->kind == EcsQueryAnd) {
+                        if (ECS_PAIR_SECOND(term->id) == EcsWildcard) {
+                            op->kind = EcsQueryTreeWildcard;
+                        } else {
+                            op->kind = EcsQueryTree;
+                        }
+                    } else if (op->kind == EcsQueryAndAny) {
+                        if (ECS_PAIR_SECOND(term->id)) {
+                            op->kind = EcsQueryTreeWildcard;
+                        } else {
+                            /* If it's a (ChildOf, 0) query then we don't need to
+                            * evaluate it as a wildcard. */
+                        }
                     }
                 }
             }
