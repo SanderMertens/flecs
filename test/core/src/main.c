@@ -755,6 +755,9 @@ void NonFragmentingChildOf_defer_delete_parent_and_tag(void);
 void NonFragmentingChildOf_observer_order_after_delete(void);
 void NonFragmentingChildOf_observer_order_after_deferred_delete(void);
 void NonFragmentingChildOf_target_for(void);
+void NonFragmentingChildOf_target_for_twice(void);
+void NonFragmentingChildOf_search(void);
+void NonFragmentingChildOf_search_twice(void);
 void NonFragmentingChildOf_target_for_2_lvls_parent(void);
 void NonFragmentingChildOf_target_for_2_lvls_childof(void);
 void NonFragmentingChildOf_target_for_3_lvls_childof_childof(void);
@@ -928,14 +931,12 @@ void OrderedChildren_get_ordered_children_from_prefab_instance_no_children(void)
 void OrderedChildren_get_ordered_children_from_prefab_instance_3_children(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_3_children_different_table(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
-<<<<<<< HEAD
 void OrderedChildren_recreate_named_child(void);
 void OrderedChildren_lookup_after_move_to_root(void);
 void OrderedChildren_lookup_after_clear(void);
 void OrderedChildren_bulk_create_ordered_children(void);
-=======
+void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
 void OrderedChildren_ordered_children_parent_is_traversable(void);
->>>>>>> d73d6f948 (Update cached depth for non-fragmenting parents)
 
 // Testsuite 'Has'
 void Has_zero(void);
@@ -1583,20 +1584,14 @@ void Pairs_force_relationship_on_relationship(void);
 void Pairs_force_target_on_component(void);
 void Pairs_force_target_on_relationship(void);
 void Pairs_force_target_on_target(void);
-<<<<<<< HEAD
 void Pairs_relationship_with_exclusive(void);
-=======
 void Pairs_add_value_pair(void);
 void Pairs_add_value_pairs(void);
 void Pairs_add_exclusive_value_pairs(void);
 void Pairs_remove_value_pairs_wildcard(void);
 void Pairs_value_pair_to_str(void);
-<<<<<<< HEAD
->>>>>>> 85e8fbe4e (Implement basic support for value pairs)
-=======
 void Pairs_has_value_pair_wildcard(void);
 void Pairs_has_value_pair_any(void);
->>>>>>> f6109cb20 (Improve support for value pairs)
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -2930,9 +2925,7 @@ void Internals_table_create_leak_check(void);
 void Internals_component_record_has_table(void);
 void Internals_component_record_iter_tables(void);
 void Internals_table_get_records(void);
-<<<<<<< HEAD
 void Internals_childof_tgt_exists_after_query(void);
-=======
 void Internals_component_record_depth_root(void);
 void Internals_component_record_depth_parent(void);
 void Internals_component_record_depth_nested_parent(void);
@@ -2944,9 +2937,6 @@ void Internals_component_record_depth_after_parent_remove(void);
 void Internals_component_record_depth_nested_after_parent_remove(void);
 void Internals_component_record_depth_after_parent_add(void);
 void Internals_component_record_depth_nested_after_parent_add(void);
-<<<<<<< HEAD
->>>>>>> 2311f74c2 (Cache hierarchy depth on ChildOf component records)
-=======
 void Internals_non_fragmenting_component_record_depth_parent(void);
 void Internals_non_fragmenting_component_record_depth_nested_parent(void);
 void Internals_non_fragmenting_component_record_depth_after_reparent(void);
@@ -2957,11 +2947,7 @@ void Internals_non_fragmenting_component_record_depth_after_parent_remove(void);
 void Internals_non_fragmenting_component_record_depth_nested_after_parent_remove(void);
 void Internals_non_fragmenting_component_record_depth_after_parent_add(void);
 void Internals_non_fragmenting_component_record_depth_nested_after_parent_add(void);
-<<<<<<< HEAD
->>>>>>> d73d6f948 (Update cached depth for non-fragmenting parents)
-=======
 void Internals_component_record_for_value_pair(void);
->>>>>>> f6109cb20 (Improve support for value pairs)
 void Internals_create_65k_tables(void);
 
 // Testsuite 'Error'
@@ -5901,6 +5887,18 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_target_for
     },
     {
+        "target_for_twice",
+        NonFragmentingChildOf_target_for_twice
+    },
+    {
+        "search",
+        NonFragmentingChildOf_search
+    },
+    {
+        "search_twice",
+        NonFragmentingChildOf_search_twice
+    },
+    {
         "target_for_2_lvls_parent",
         NonFragmentingChildOf_target_for_2_lvls_parent
     },
@@ -6579,7 +6577,6 @@ bake_test_case OrderedChildren_testcases[] = {
         OrderedChildren_get_ordered_children_from_prefab_instance_nested_children
     },
     {
-<<<<<<< HEAD
         "recreate_named_child",
         OrderedChildren_recreate_named_child
     },
@@ -6594,10 +6591,14 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "bulk_create_ordered_children",
         OrderedChildren_bulk_create_ordered_children
-=======
+    },
+    {
+        "get_ordered_children_from_prefab_instance_nested_children",
+        OrderedChildren_get_ordered_children_from_prefab_instance_nested_children
+    },
+    {
         "ordered_children_parent_is_traversable",
         OrderedChildren_ordered_children_parent_is_traversable
->>>>>>> d73d6f948 (Update cached depth for non-fragmenting parents)
     }
 };
 
@@ -9103,10 +9104,10 @@ bake_test_case Pairs_testcases[] = {
         Pairs_force_target_on_target
     },
     {
-<<<<<<< HEAD
         "relationship_with_exclusive",
         Pairs_relationship_with_exclusive
-=======
+    },
+    {
         "add_value_pair",
         Pairs_add_value_pair
     },
@@ -9125,9 +9126,6 @@ bake_test_case Pairs_testcases[] = {
     {
         "value_pair_to_str",
         Pairs_value_pair_to_str
-<<<<<<< HEAD
->>>>>>> 85e8fbe4e (Implement basic support for value pairs)
-=======
     },
     {
         "has_value_pair_wildcard",
@@ -9136,7 +9134,6 @@ bake_test_case Pairs_testcases[] = {
     {
         "has_value_pair_any",
         Pairs_has_value_pair_any
->>>>>>> f6109cb20 (Improve support for value pairs)
     }
 };
 
@@ -14353,10 +14350,10 @@ bake_test_case Internals_testcases[] = {
         Internals_table_get_records
     },
     {
-<<<<<<< HEAD
         "childof_tgt_exists_after_query",
         Internals_childof_tgt_exists_after_query
-=======
+    },
+    {
         "component_record_depth_root",
         Internals_component_record_depth_root
     },
@@ -14399,7 +14396,6 @@ bake_test_case Internals_testcases[] = {
     {
         "component_record_depth_nested_after_parent_add",
         Internals_component_record_depth_nested_after_parent_add
->>>>>>> 2311f74c2 (Cache hierarchy depth on ChildOf component records)
     },
     {
         "non_fragmenting_component_record_depth_parent",
@@ -14609,7 +14605,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        79,
+        82,
         NonFragmentingChildOf_testcases
     },
     {
@@ -14623,11 +14619,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-<<<<<<< HEAD
-        42,
-=======
-        38,
->>>>>>> d73d6f948 (Update cached depth for non-fragmenting parents)
+        44,
         OrderedChildren_testcases
     },
     {
@@ -14718,15 +14710,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-<<<<<<< HEAD
-<<<<<<< HEAD
-        126,
-=======
-        127,
->>>>>>> 85e8fbe4e (Implement basic support for value pairs)
-=======
-        132,
->>>>>>> f6109cb20 (Improve support for value pairs)
+        133,
         Pairs_testcases
     },
     {
@@ -14852,19 +14836,7 @@ static bake_test_suite suites[] = {
         "Internals",
         Internals_setup,
         NULL,
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-        22,
-=======
-        32,
->>>>>>> 2311f74c2 (Cache hierarchy depth on ChildOf component records)
-=======
-        42,
->>>>>>> d73d6f948 (Update cached depth for non-fragmenting parents)
-=======
-        43,
->>>>>>> f6109cb20 (Improve support for value pairs)
+        44,
         Internals_testcases
     },
     {
