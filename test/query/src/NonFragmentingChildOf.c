@@ -1435,8 +1435,6 @@ void NonFragmentingChildOf_this_src_written_childof_parent_only_childof(void) {
 
     test_assert(q != NULL);
 
-    printf("%s\n", ecs_query_plan(q));
-
     ecs_entity_t child = ecs_new_w(world, Foo);
     ecs_add_pair(world, child, EcsChildOf, parent);
 

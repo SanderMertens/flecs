@@ -557,6 +557,7 @@ ecs_cpp_get_mut_t ecs_cpp_set(
             flecs_utosize(size), new_ptr);
         /* Modified command is already inserted */
         result.call_modified = false;
+        result.stage = NULL;
         return result;
     }
 
@@ -565,6 +566,8 @@ ecs_cpp_get_mut_t ecs_cpp_set(
         flecs_uto(int32_t, size));
     
     result.ptr = dst.ptr;
+    result.world = world;
+    result.stage = stage;
 
     if (id < FLECS_HI_COMPONENT_ID) {
         if (!world->non_trivial_set[id]) {
@@ -581,9 +584,7 @@ ecs_cpp_get_mut_t ecs_cpp_set(
             world, r->table, entity, id, dst.ptr, new_ptr, dst.ti);
     }
 
-done:
-    flecs_defer_end(world, stage);
-    
+done:    
     return result;
 error:
     return (ecs_cpp_get_mut_t){0};
@@ -607,6 +608,7 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
             world, stage, entity, id, flecs_uto(int32_t, size), new_ptr);
         /* Modified command is already inserted */
         result.call_modified = false;
+        result.stage = NULL;
         return result;
     }
 
@@ -618,6 +620,8 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
         "entity does not have component, use set() instead");
         
     result.ptr = dst.ptr;
+    result.world = world;
+    result.stage = stage;
 
     if (id < FLECS_HI_COMPONENT_ID) {
         if (!world->non_trivial_set[id]) {
@@ -635,8 +639,6 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
     }
 
 done:
-    flecs_defer_end(world, stage);
-    
     return result;
 error:
     return (ecs_cpp_get_mut_t){0};
