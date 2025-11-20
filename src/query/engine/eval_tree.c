@@ -404,6 +404,25 @@ bool flecs_query_tree_with(
     return true;
 }
 
+bool flecs_query_tree_with_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    if (redo) {
+        return false;
+    }
+
+    ecs_table_range_t range = flecs_query_get_range(
+        op, &op->src, EcsQuerySrc, ctx);
+
+    if (range.table->flags & (EcsTableHasChildOf|EcsTableHasParent)) {
+        return true;
+    }
+
+    return false;
+}
+
 bool flecs_query_children(
     const ecs_query_op_t *op,
     bool redo,
@@ -451,7 +470,7 @@ bool flecs_query_tree_and(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
-{    
+{
     uint64_t written = ctx->written[ctx->op_index];
     if (written & (1ull << op->src.var)) {
         return flecs_query_tree_with(op, redo, ctx);
@@ -476,4 +495,25 @@ bool flecs_query_tree_and_wildcard(
             return flecs_query_tree_select_wildcard(op, redo, ctx, bulk_return);
         }
     }
+}
+
+bool flecs_query_tree_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (written & (1ull << op->src.var)) {
+        return flecs_query_tree_with_pre(op, redo, ctx);
+    } else {
+        return flecs_query_tree_select_any(op, redo, ctx);
+    }
+}
+
+bool flecs_query_tree_post(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    return false;
 }

@@ -1303,6 +1303,8 @@ typedef enum {
     EcsQueryTreeWith,       /* Evaluate (ChildOf, tgt) against fixed or variable source */
     EcsQueryTreeUp,         /* Return union of up(ChildOf) and tables with Parent */
     EcsQueryTreeSelfUp,
+    EcsQueryTreePre,        /* Tree instruction that doesn't filter Parent component / returns entire tables. */
+    EcsQueryTreePost,       /* Tree instruction that applies filter to Parent component. */
     EcsQueryChildren,       /* Return children for parent, if possible in order */
     EcsQueryChildrenWc,     /* Return children for parents, if possible in order */
     EcsQueryLookup,         /* Lookup relative to variable */
@@ -2286,6 +2288,16 @@ bool flecs_query_tree_and_wildcard(
     bool redo,
     const ecs_query_run_ctx_t *ctx,
     bool bulk_return);
+
+bool flecs_query_tree_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_tree_post(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
 
 bool flecs_query_tree_with(
     const ecs_query_op_t *op,
@@ -35091,6 +35103,8 @@ const char* flecs_query_op_str(
     case EcsQuerySparseUp:       return "sparse_up   ";
     case EcsQueryTree:           return "tree        ";
     case EcsQueryTreeWildcard:   return "tree_wc     ";
+    case EcsQueryTreePre:        return "tree_pre    ";
+    case EcsQueryTreePost:       return "tree_post   ";
     case EcsQueryTreeUp:         return "tree_up     ";
     case EcsQueryTreeSelfUp:     return "tree_selfup ";
     case EcsQueryTreeWith:       return "tree_w      ";
@@ -36684,9 +36698,9 @@ int flecs_term_finalize(
     }
 
     if (ECS_IS_PAIR(term->id) && (ECS_PAIR_FIRST(term->id) == EcsChildOf)) {
-        if (ECS_PAIR_SECOND(term->id) != EcsAny) {
-            cacheable_term = false;
-        }
+        // if (ECS_PAIR_SECOND(term->id) != EcsAny) {
+        //     cacheable_term = false;
+        // }
         if (ECS_PAIR_SECOND(term->id)) {
             trivial_term = false;
         }
@@ -37243,12 +37257,12 @@ int flecs_query_finalize_terms(
                 }
 
                 if (ECS_TERM_REF_ID(&term->first) == EcsChildOf) {
-                    if (ECS_TERM_REF_ID(&term->second) != EcsAny) {
-                        if (term->flags_ & EcsTermIsCacheable) {
-                            term->flags_ &= (ecs_flags16_t)~EcsTermIsCacheable;
-                            cacheable_terms --;
-                        }
-                    }
+                    // if (ECS_TERM_REF_ID(&term->second) != EcsAny) {
+                    //     if (term->flags_ & EcsTermIsCacheable) {
+                    //         term->flags_ &= (ecs_flags16_t)~EcsTermIsCacheable;
+                    //         cacheable_terms --;
+                    //     }
+                    // }
                     if (ECS_TERM_REF_ID(&term->second) != 0) {
                         is_trivial = false;
                         continue;
@@ -78413,21 +78427,29 @@ void flecs_query_set_op_kind(
         /* ChildOf terms need to take into account both ChildOf pairs and the 
          * Parent component for non-fragmenting hierarchies. */
         if (ECS_IS_PAIR(term->id) && ECS_PAIR_FIRST(term->id) == EcsChildOf) {
-            if (!src_is_var) {
-                op->kind = EcsQueryTreeWith;
+            if (query->pub.flags & EcsQueryNested) {
+                /* If this is a nested query (used to populate a cache), insert
+                 * instruction that matches tables with ChildOf pairs and Parent
+                 * component, without filtering the non-fragmenting parents as
+                 * this cannot be cached. */
+                op->kind = EcsQueryTreePre;
             } else {
-                if (op->kind == EcsQueryAnd) {
-                    if (ECS_PAIR_SECOND(term->id) == EcsWildcard) {
-                        op->kind = EcsQueryTreeWildcard;
-                    } else {
-                        op->kind = EcsQueryTree;
-                    }
-                } else if (op->kind == EcsQueryAndAny) {
-                    if (ECS_PAIR_SECOND(term->id)) {
-                        op->kind = EcsQueryTreeWildcard;
-                    } else {
-                        /* If it's a (ChildOf, 0) query then we don't need to
-                         * evaluate it as a wildcard. */
+                if (!src_is_var) {
+                    op->kind = EcsQueryTreeWith;
+                } else {
+                    if (op->kind == EcsQueryAnd) {
+                        if (ECS_PAIR_SECOND(term->id) == EcsWildcard) {
+                            op->kind = EcsQueryTreeWildcard;
+                        } else {
+                            op->kind = EcsQueryTree;
+                        }
+                    } else if (op->kind == EcsQueryAndAny) {
+                        if (ECS_PAIR_SECOND(term->id)) {
+                            op->kind = EcsQueryTreeWildcard;
+                        } else {
+                            /* If it's a (ChildOf, 0) query then we don't need to
+                            * evaluate it as a wildcard. */
+                        }
                     }
                 }
             }
@@ -80335,6 +80357,8 @@ bool flecs_query_dispatch(
     case EcsQuerySparseUp: return flecs_query_sparse_up(op, redo, ctx);
     case EcsQueryTree: return flecs_query_tree_and(op, redo, ctx);
     case EcsQueryTreeWildcard: return flecs_query_tree_and_wildcard(op, redo, ctx, false);
+    case EcsQueryTreePre: return flecs_query_tree_pre(op, redo, ctx);
+    case EcsQueryTreePost: return flecs_query_tree_post(op, redo, ctx);
     case EcsQueryChildrenWc: return flecs_query_tree_and_wildcard(op, redo, ctx, true);
     case EcsQueryTreeWith: return flecs_query_tree_with(op, redo, ctx);
     case EcsQueryChildren: return flecs_query_children(op, redo, ctx);
@@ -83070,6 +83094,25 @@ bool flecs_query_tree_with(
     return true;
 }
 
+bool flecs_query_tree_with_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    if (redo) {
+        return false;
+    }
+
+    ecs_table_range_t range = flecs_query_get_range(
+        op, &op->src, EcsQuerySrc, ctx);
+
+    if (range.table->flags & (EcsTableHasChildOf|EcsTableHasParent)) {
+        return true;
+    }
+
+    return false;
+}
+
 bool flecs_query_children(
     const ecs_query_op_t *op,
     bool redo,
@@ -83117,7 +83160,7 @@ bool flecs_query_tree_and(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
-{    
+{
     uint64_t written = ctx->written[ctx->op_index];
     if (written & (1ull << op->src.var)) {
         return flecs_query_tree_with(op, redo, ctx);
@@ -83142,6 +83185,27 @@ bool flecs_query_tree_and_wildcard(
             return flecs_query_tree_select_wildcard(op, redo, ctx, bulk_return);
         }
     }
+}
+
+bool flecs_query_tree_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (written & (1ull << op->src.var)) {
+        return flecs_query_tree_with_pre(op, redo, ctx);
+    } else {
+        return flecs_query_tree_select_any(op, redo, ctx);
+    }
+}
+
+bool flecs_query_tree_post(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    return false;
 }
 
 /**
