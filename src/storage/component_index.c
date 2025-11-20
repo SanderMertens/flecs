@@ -564,7 +564,7 @@ ecs_component_record_t* flecs_component_new(
     bool is_pair = ECS_IS_PAIR(id);
     bool is_value_pair = ECS_IS_VALUE_PAIR(id);
 
-    ecs_entity_t rel = 0, tgt = 0, role = id & ECS_ID_FLAGS_MASK;
+    ecs_entity_t rel = 0, tgt = 0;
     ecs_table_t *tgt_table = NULL;
     ecs_record_t *tgt_record = NULL;
     if (is_pair) {
@@ -593,6 +593,11 @@ ecs_component_record_t* flecs_component_new(
 
         rel = ECS_PAIR_FIRST(id);
         if (rel == EcsChildOf) {
+            /* Check if we should keep a list of ordered children for parent */
+            if (tgt && ecs_table_has_id(world, tgt_table, EcsOrderedChildren)) {
+                flecs_component_ordered_children_init(world, cr);
+            }
+
             flecs_component_update_childof_depth(world, cr, tgt, tgt_record);
         } else {
             rel = flecs_entities_get_alive(world, rel);

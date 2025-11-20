@@ -2441,6 +2441,8 @@
                 "this_self_up_childof_2_lvl_children_w_component_from_child",
                 "this_self_up_childof_2_lvl_children_from_child_on_instantiate_inherit",
                 "this_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit",
+                "this_up_childof_1_table_3_parents",
+                "this_self_up_childof_1_table_3_parents",
                 "this_written_up_childof",
                 "this_written_up_childof_w_component",
                 "this_written_up_childof_w_component_inherited",
@@ -2471,7 +2473,11 @@
                 "this_written_self_up_childof_2_lvl_children_from_child",
                 "this_written_self_up_childof_2_lvl_children_w_component_from_child",
                 "this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_inherit",
-                "this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit"
+                "this_written_self_up_childof_2_lvl_children_from_child_on_instantiate_dont_inherit",
+                "this_written_up_childof_1_table_3_parents",
+                "this_written_up_childof_2_tables_3_parents",
+                "this_written_self_up_childof_1_table_3_parents",
+                "this_written_self_up_childof_2_tables_3_parents"
             ]
         }, {
             "id": "OrderBy",

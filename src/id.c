@@ -335,7 +335,6 @@ bool ecs_id_is_tag(
     return false;
 }
 
-
 ecs_entity_t ecs_get_typeid(
     const ecs_world_t *world,
     ecs_id_t id)

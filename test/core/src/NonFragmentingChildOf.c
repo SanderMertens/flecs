@@ -1575,6 +1575,87 @@ void NonFragmentingChildOf_target_for(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_target_for_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t parent_1 = ecs_new_w(world, Foo);
+    ecs_entity_t parent_2 = ecs_new_w(world, Foo);
+    ecs_entity_t child_1 = ecs_insert(world, ecs_value(EcsParent, {parent_1}));
+    ecs_entity_t child_2 = ecs_insert(world, ecs_value(EcsParent, {parent_2}));
+
+    ecs_entity_t src = ecs_get_target_for(world, child_1, EcsChildOf, Foo);
+    test_assert(src != 0);
+    test_assert(src == parent_1);
+
+    src = ecs_get_target_for(world, child_2, EcsChildOf, Foo);
+    test_assert(src != 0);
+    test_assert(src == parent_2);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_search(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t parent = ecs_new_w(world, Foo);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent}));
+
+    ecs_entity_t src = 0;
+    ecs_id_t id = 0;
+    ecs_table_record_t *tr = NULL;
+    test_assert(
+        ecs_search_relation_for_entity(
+            world, child, Foo, ecs_pair(EcsChildOf, EcsWildcard), true, 
+                NULL, &src, &id, &tr) != -1);
+
+    test_assert(src != 0);
+    test_assert(src == parent);
+    test_assert(id == Foo);
+    test_assert(tr->hdr.table == ecs_get_table(world, parent));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_search_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t parent_1 = ecs_new_w(world, Foo);
+    ecs_entity_t parent_2 = ecs_new_w(world, Foo);
+    ecs_entity_t child_1 = ecs_insert(world, ecs_value(EcsParent, {parent_1}));
+    ecs_entity_t child_2 = ecs_insert(world, ecs_value(EcsParent, {parent_2}));
+
+    ecs_entity_t src = 0;
+    ecs_id_t id = 0;
+    ecs_table_record_t *tr = NULL;
+    test_assert(
+        ecs_search_relation_for_entity(
+            world, child_1, Foo, ecs_pair(EcsChildOf, EcsWildcard), true, 
+                NULL, &src, &id, &tr) != -1);
+
+    test_assert(src != 0);
+    test_assert(src == parent_1);
+    test_assert(id == Foo);
+    test_assert(tr->hdr.table == ecs_get_table(world, parent_1));
+
+    test_assert(
+        ecs_search_relation_for_entity(
+            world, child_2, Foo, ecs_pair(EcsChildOf, EcsWildcard), true, 
+                NULL, &src, &id, &tr) != -1);
+
+    test_assert(src != 0);
+    test_assert(src == parent_2);
+    test_assert(id == Foo);
+    test_assert(tr->hdr.table == ecs_get_table(world, parent_2));
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_target_for_2_lvls_parent(void) {
     ecs_world_t *world = ecs_mini();
 
