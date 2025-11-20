@@ -99,7 +99,7 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 				{
 					UE_LOG(LogFlecsEditor, Log, TEXT("No PIE session info found"));
 
-					const FString TargetUrl = FlecsEditorDeveloperSettings->FlecsExplorerURL.GetFlecsExplorerURL();
+					const FString TargetUrl = FlecsEditorDeveloperSettings->GetFlecsExplorerURL().ToURLString();
 					
 					// TEXT("Failed to launch Flecs Explorer URL. Explorer Instance 0")
 					
@@ -107,9 +107,9 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 					return;
 				}
 				
-				for (int32 Index = 0; Index < PIEInfo->NumClientInstancesCreated; ++Index)
+				for (int32 Index = 0; Index < PIEInfo->PIEInstanceCount; ++Index)
 				{
-					FString TargetUrl = FlecsEditorDeveloperSettings->FlecsExplorerURL.GetFlecsExplorerURL(Index);
+					FString TargetUrl = FlecsEditorDeveloperSettings->GetFlecsExplorerURL().ToURLString(Index);
 					
 					FPlatformProcess::LaunchURL(*TargetUrl, nullptr, nullptr);
 				}

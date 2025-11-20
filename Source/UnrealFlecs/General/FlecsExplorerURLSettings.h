@@ -55,7 +55,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	TArray<FString> AdditionalQueryParameters;
 
-	NO_DISCARD FORCEINLINE FString GetFlecsExplorerURL(const uint16 ClientInstanceIndex = 0) const
+	NO_DISCARD FORCEINLINE FString ToURLString(const uint16 ClientInstanceIndex = 0) const
 	{
 		FString URL = Address;
 
