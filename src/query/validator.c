@@ -933,9 +933,10 @@ int flecs_term_finalize(
     }
 
     if (ECS_IS_PAIR(term->id) && (ECS_PAIR_FIRST(term->id) == EcsChildOf)) {
-        // if (ECS_PAIR_SECOND(term->id) != EcsAny) {
-        //     cacheable_term = false;
-        // }
+        if (term->oper == EcsAnd) {
+            term->flags_ |= EcsTermNonFragmentingChildOf;
+        }
+
         if (ECS_PAIR_SECOND(term->id)) {
             trivial_term = false;
         }
@@ -1145,6 +1146,13 @@ int flecs_query_finalize_terms(
 
         if (flecs_term_finalize(world, term, &ctx)) {
             return -1;
+        }
+
+        if (!i) {
+            if (term->flags_ & EcsTermNonFragmentingChildOf) {
+                term->flags_ |= EcsTermOrderedChildren;
+                ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
+            }
         }
 
         if (term->src.id != EcsIsEntity) {
@@ -1474,6 +1482,12 @@ int flecs_query_finalize_terms(
 
     ECS_BIT_COND(q->flags, EcsQueryHasCondSet, cond_set);
 
+    /* If a query has ChildOf terms we need to prevent it from being marked as 
+     * IsCacheable (meaning the query can be evaluated by just iterating the
+     * cache). A ChildOf term must be marked as cacheable, but also needs an
+     * instruction to filter tables that use non-fragmenting relationships. */
+    bool has_childof = false;
+
     /* Check if this is a trivial query */
     if ((q->flags & EcsQueryMatchOnlyThis)) {
         if (!(q->flags & 
@@ -1492,12 +1506,17 @@ int flecs_query_finalize_terms(
                 }
 
                 if (ECS_TERM_REF_ID(&term->first) == EcsChildOf) {
+                    if (term->oper == EcsAnd) {
+                        has_childof = true;
+                    }
+
                     // if (ECS_TERM_REF_ID(&term->second) != EcsAny) {
                     //     if (term->flags_ & EcsTermIsCacheable) {
                     //         term->flags_ &= (ecs_flags16_t)~EcsTermIsCacheable;
                     //         cacheable_terms --;
                     //     }
                     // }
+
                     if (ECS_TERM_REF_ID(&term->second) != 0) {
                         is_trivial = false;
                         continue;
@@ -1533,7 +1552,7 @@ int flecs_query_finalize_terms(
      * optimized logic as it doesn't have to deal with order_by edge cases */
     ECS_BIT_COND(q->flags, EcsQueryIsCacheable, 
         cacheable && (cacheable_terms == term_count) &&
-            !desc->order_by_callback);
+            !desc->order_by_callback && !has_childof);
 
     /* If none of the terms match a source, the query matches nothing */
     ECS_BIT_COND(q->flags, EcsQueryMatchNothing, match_nothing);
@@ -1771,6 +1790,10 @@ bool flecs_query_finalize_simple(
 
         if (ECS_IS_PAIR(id)) {
             if (first == EcsChildOf) {
+                if (term->oper == EcsAnd) {
+                    term->flags_ |= EcsTermNonFragmentingChildOf;
+                }
+
                 ecs_entity_t second = ECS_PAIR_SECOND(id);
                 if (second) {
                     trivial = false;
