@@ -65,6 +65,9 @@ void query_flags_to_str(uint64_t value) {
     if (value & EcsQueryCacheYieldEmptyTables) {
         printf("EcsQueryCacheYieldEmptyTables|");
     }
+    if (value & EcsQueryCacheWithFilter) {
+        printf("EcsQueryCacheWithFilter|");
+    }
     printf("\n");
 }
 
@@ -2296,7 +2299,8 @@ void Validator_validate_not_childof_any(void) {
     test_uint(q->terms[0].second.id, EcsSelf|EcsIsEntity);
 
     test_query_flags(EcsQueryMatchThis|EcsQueryMatchOnlyThis|
-        EcsQueryMatchOnlySelf|EcsQueryIsTrivial|EcsQueryHasTableThisVar,
+        EcsQueryMatchOnlySelf|EcsQueryIsTrivial|EcsQueryHasTableThisVar|
+        EcsQueryCacheWithFilter,
         q->flags);
 
     ecs_query_fini(q);
@@ -2335,7 +2339,7 @@ void Validator_validate_not_childof_any_non_trivial(void) {
 
     test_query_flags(EcsQueryMatchThis|EcsQueryMatchOnlyThis|
         EcsQueryMatchOnlySelf|EcsQueryHasCondSet|EcsQueryHasCacheable|
-        EcsQueryHasTableThisVar,
+        EcsQueryHasTableThisVar|EcsQueryCacheWithFilter,
         q->flags);
 
     ecs_query_fini(q);
@@ -2363,7 +2367,8 @@ void Validator_validate_not_childof_any_expr(void) {
     test_uint(q->terms[0].second.id, EcsSelf|EcsIsEntity);
 
     test_query_flags(EcsQueryMatchThis|EcsQueryMatchOnlyThis|
-        EcsQueryMatchOnlySelf|EcsQueryIsTrivial|EcsQueryHasTableThisVar,
+        EcsQueryMatchOnlySelf|EcsQueryIsTrivial|EcsQueryHasTableThisVar|
+        EcsQueryCacheWithFilter,
         q->flags);
 
     ecs_query_fini(q);

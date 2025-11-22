@@ -235,7 +235,7 @@ int32_t flecs_table_search_relation(
         if (table->flags & EcsTableHasParent) {
             /* Can't resolve parent on */
             ecs_assert(record != NULL, ECS_INVALID_PARAMETER,
-                "cannnot traverse ChildOf on table with Parent component, "
+                "cannot traverse ChildOf on table with Parent component, "
                 "search on entity instead");
 
             int32_t column = table->component_map[ecs_id(EcsParent)];

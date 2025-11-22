@@ -1316,11 +1316,5 @@ void Cascade_parent_component(void) {
 
     test_assert(q != NULL);
 
-    printf("%s\n", ecs_query_plan(ecs_query_get_cache_query(q)));
-
     ecs_fini(world);
-}
-
-void Cascade_parent_component_w_childof(void) {
-    // Implement testcase
 }

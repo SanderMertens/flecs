@@ -91,6 +91,10 @@ typedef enum {
     EcsQueryTreeSelfUp,
     EcsQueryTreePre,        /* Tree instruction that doesn't filter Parent component / returns entire tables. */
     EcsQueryTreePost,       /* Tree instruction that applies filter to Parent component. */
+    EcsQueryTreeUpPre,      /* Up traversal for ChildOf that doesn't filter Parent component / returns entire tables */
+    EcsQueryTreeSelfUpPre,  /* Up traversal for ChildOf that doesn't filter Parent component / returns entire tables */
+    EcsQueryTreeUpPost,     /* Up traversal for ChildOf that filters cached tables w/Parent component. */
+    EcsQueryTreeSelfUpPost, /* Up traversal for ChildOf that filters cached tables w/Parent component. */
     EcsQueryChildren,       /* Return children for parent, if possible in order */
     EcsQueryChildrenWc,     /* Return children for parents, if possible in order */
     EcsQueryLookup,         /* Lookup relative to variable */
@@ -252,6 +256,14 @@ typedef struct {
     int32_t cur;
 } ecs_query_up_ctx_t;
 
+typedef struct {
+    union {
+        ecs_query_and_ctx_t and;
+        ecs_query_up_ctx_t up_;
+    } is;
+    ecs_query_tree_iter_state_t state;
+} ecs_query_tree_pre_ctx_t;
+
 /* Cache for storing results of upward/downward "all" traversal. This type of 
  * traversal iterates and caches the entire tree. */
 typedef struct {
@@ -358,6 +370,7 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_toggle_ctx_t toggle;
         ecs_query_sparse_ctx_t sparse;
         ecs_query_tree_ctx_t tree;
+        ecs_query_tree_pre_ctx_t tree_pre;
         ecs_query_tree_wildcard_ctx_t tree_wildcard;
     } is;
 } ecs_query_op_ctx_t;

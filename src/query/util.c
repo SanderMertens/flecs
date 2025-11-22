@@ -55,6 +55,10 @@ const char* flecs_query_op_str(
     case EcsQueryTreeWildcard:   return "tree_wc     ";
     case EcsQueryTreePre:        return "tree_pre    ";
     case EcsQueryTreePost:       return "tree_post   ";
+    case EcsQueryTreeUpPre:      return "treeup_pre  ";
+    case EcsQueryTreeSelfUpPre:  return "treesup_pre ";
+    case EcsQueryTreeUpPost:     return "treeup_post ";
+    case EcsQueryTreeSelfUpPost: return "treesup_post";
     case EcsQueryTreeUp:         return "tree_up     ";
     case EcsQueryTreeSelfUp:     return "tree_selfup ";
     case EcsQueryTreeWith:       return "tree_w      ";
@@ -461,6 +465,29 @@ char* ecs_query_plan(
     const ecs_query_t *q)
 {
     return ecs_query_plan_w_profile(q, NULL);
+}
+
+char* ecs_query_plans(
+    const ecs_query_t *q)
+{
+    flecs_poly_assert(q, ecs_query_t);
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    flecs_query_plan_w_profile(q, NULL, &buf);
+
+    ecs_query_impl_t *impl = flecs_query_impl(q);
+    if (impl->cache) {
+        ecs_strbuf_appendstr(&buf, "---\n");
+        flecs_query_plan_w_profile(impl->cache->query, NULL, &buf);
+    }
+
+#ifdef FLECS_LOG
+    char *str = ecs_strbuf_get(&buf);
+    flecs_colorize_buf(str, ecs_os_api.flags_ & EcsOsApiLogWithColors, &buf);
+    ecs_os_free(str);
+#endif
+
+    return ecs_strbuf_get(&buf);
 }
 
 static

@@ -635,6 +635,7 @@ void flecs_query_insert_cache_search(
 
     ecs_query_t *q = &query->pub;
     int32_t childof_term = -1;
+    bool has_childof_trav = false;
 
     if (q->cache_kind == EcsQueryCacheAll) {
         /* If all terms are cacheable, make sure no other terms are compiled */
@@ -655,7 +656,13 @@ void flecs_query_insert_cache_search(
             }
 
             if (term->flags_ & EcsTermNonFragmentingChildOf) {
-                childof_term = i;
+                if (!term->trav) {
+                    childof_term = i;
+                }
+            }
+
+            if (term->trav == EcsChildOf) {
+                has_childof_trav = true;
             }
 
             *compiled |= (1ull << i);
@@ -678,6 +685,27 @@ void flecs_query_insert_cache_search(
     if (childof_term != -1) {
         flecs_query_compile_term(
             q->world, query, &q->terms[childof_term], ctx);
+    }
+
+    if (has_childof_trav) {
+        ecs_term_t *terms = q->terms;
+        int32_t i, count = q->term_count;
+
+        for (i = 0; i < count; i ++) {
+            ecs_term_t *term = &terms[i];
+            if (!((*compiled) & (1ull << i))) {
+                continue;
+            }
+
+            if (!(term->flags_ & EcsTermIsCacheable)) {
+                continue;
+            }
+
+            if (term->trav == EcsChildOf && term->oper == EcsAnd) {
+                flecs_query_compile_term(
+                    q->world, query, &q->terms[i], ctx);
+            }
+        }
     }
 }
 
@@ -862,7 +890,9 @@ int flecs_query_compile(
     
     if (query->cache) {
         if (flags & EcsQueryIsCacheable) {
-            needs_plan = false;
+            if (!(flags & EcsQueryCacheWithFilter)) {
+                needs_plan = false;
+            }
         }
     } else {
         ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;

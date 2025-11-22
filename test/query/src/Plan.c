@@ -833,7 +833,7 @@ void Plan_3_trivial_plan_w_any_cached(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setids       " 
     LINE " 1. [ 0,  2]  triv         {0,1}"
-    LINE " 2. [ 1,  3]  tree_wc      $[this]          (ChildOf, $_'1)"
+    LINE " 2. [ 1,  3]  tree_pre     $[this]          (ChildOf, $_'1)"
     LINE " 3. [ 2,  4]  yield        "
     LINE "";
     
@@ -876,7 +876,7 @@ void Plan_3_trivial_plan_w_any_cached_no_expr(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setids       " 
     LINE " 1. [ 0,  2]  triv         {0,1}"
-    LINE " 2. [ 1,  3]  tree_wc      $[this]          (ChildOf, $_'1)"
+    LINE " 2. [ 1,  3]  tree_pre     $[this]          (ChildOf, $_'1)"
     LINE " 3. [ 2,  4]  yield        "
     LINE "";
     
@@ -1887,7 +1887,8 @@ void Plan_populate_1_fixed_1_this_up_cached(void) {
     LINE " 1. [ 0,  2]  setids       "
     LINE " 2. [ 1,  3]  selfup       e                (Position)"
     LINE " 3. [ 2,  4]  cache        "
-    LINE " 4. [ 3,  5]  yield        "
+    LINE " 4. [ 3,  5]  treeup_post  $[this]          (Velocity)"
+    LINE " 5. [ 4,  6]  yield        "
     LINE "";
     char *plan = ecs_query_plan(r);
 
@@ -1928,7 +1929,9 @@ void Plan_populate_2_fixed_2_this_up_cached(void) {
     LINE " 2. [ 1,  3]  selfup       e                (Position)"
     LINE " 3. [ 2,  4]  selfup       e                (Velocity)"
     LINE " 4. [ 3,  5]  cache        "
-    LINE " 5. [ 4,  6]  yield        "
+    LINE " 5. [ 4,  6]  treeup_post  $[this]          (Mass)"
+    LINE " 6. [ 5,  7]  treeup_post  $[this]          (Rotation)"
+    LINE " 7. [ 6,  8]  yield        "
     LINE "";
     char *plan = ecs_query_plan(r);
 
@@ -1969,7 +1972,9 @@ void Plan_populate_2_fixed_2_this_up_interleaved_cached(void) {
     LINE " 2. [ 1,  3]  selfup       e                (Position)"
     LINE " 3. [ 2,  4]  selfup       e                (Velocity)"
     LINE " 4. [ 3,  5]  cache        "
-    LINE " 5. [ 4,  6]  yield        "
+    LINE " 5. [ 4,  6]  treeup_post  $[this]          (Mass)"
+    LINE " 6. [ 5,  7]  treeup_post  $[this]          (Rotation)"
+    LINE " 7. [ 6,  8]  yield        "
     LINE "";
     char *plan = ecs_query_plan(r);
 
@@ -2010,7 +2015,9 @@ void Plan_populate_2_this_up_2_fixed_cached(void) {
     LINE " 2. [ 1,  3]  selfup       e                (Position)"
     LINE " 3. [ 2,  4]  selfup       e                (Velocity)"
     LINE " 4. [ 3,  5]  cache        "
-    LINE " 5. [ 4,  6]  yield        "
+    LINE " 5. [ 4,  6]  treeup_post  $[this]          (Mass)"
+    LINE " 6. [ 5,  7]  treeup_post  $[this]          (Rotation)"
+    LINE " 7. [ 6,  8]  yield        "
     LINE "";
     char *plan = ecs_query_plan(r);
 

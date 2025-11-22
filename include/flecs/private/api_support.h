@@ -327,17 +327,16 @@ FLECS_API
 void flecs_check_exclusive_world_access_read(
     const ecs_world_t *world);
 
-/** End deferred mode (executes commands when stage->deref becomes 0). */
-FLECS_API
-bool flecs_defer_end(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
 #else
 #define flecs_check_exclusive_world_access_write(world)
 #define flecs_check_exclusive_world_access_read(world)
 #endif
 
+/** End deferred mode (executes commands when stage->deref becomes 0). */
+FLECS_API
+bool flecs_defer_end(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
 
 /** Calculate offset from address */
 #ifdef __cplusplus
