@@ -295,36 +295,6 @@ bool flecs_query_with_id(
     return true;
 }
 
-static
-bool flecs_query_up(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    uint64_t written = ctx->written[ctx->op_index];
-    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        return flecs_query_up_with(op, redo, ctx);
-    } else {
-        return flecs_query_up_select(op, redo, ctx, 
-            FlecsQueryUpSelectUp, FlecsQueryUpSelectDefault);
-    }
-}
-
-static
-bool flecs_query_self_up(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    uint64_t written = ctx->written[ctx->op_index];
-    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        return flecs_query_self_up_with(op, redo, ctx, false);
-    } else {
-        return flecs_query_up_select(op, redo, ctx, 
-            FlecsQueryUpSelectSelfUp, FlecsQueryUpSelectDefault);
-    }
-}
-
 bool flecs_query_and_any(
     const ecs_query_op_t *op,
     bool redo,
@@ -1531,6 +1501,10 @@ bool flecs_query_dispatch(
     case EcsQueryTreeWildcard: return flecs_query_tree_and_wildcard(op, redo, ctx, false);
     case EcsQueryTreePre: return flecs_query_tree_pre(op, redo, ctx);
     case EcsQueryTreePost: return flecs_query_tree_post(op, redo, ctx);
+    case EcsQueryTreeUpPre: return flecs_query_tree_up_pre(op, redo, ctx);
+    case EcsQueryTreeSelfUpPre: return flecs_query_tree_selfup_pre(op, redo, ctx);
+    case EcsQueryTreeUpPost: return flecs_query_tree_up_post(op, redo, ctx, false);
+    case EcsQueryTreeSelfUpPost: return flecs_query_tree_up_post(op, redo, ctx, true);
     case EcsQueryChildrenWc: return flecs_query_tree_and_wildcard(op, redo, ctx, true);
     case EcsQueryTreeWith: return flecs_query_tree_with(op, redo, ctx);
     case EcsQueryChildren: return flecs_query_children(op, redo, ctx);
