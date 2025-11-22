@@ -405,6 +405,7 @@ bool flecs_query_tree_with(
     return true;
 }
 
+static
 bool flecs_query_tree_with_pre(
     const ecs_query_op_t *op,
     bool redo,
@@ -418,7 +419,11 @@ bool flecs_query_tree_with_pre(
         op, &op->src, EcsQuerySrc, ctx);
 
     if (range.table->flags & EcsTableHasChildOf) {
-        return flecs_query_with(op, redo, ctx);
+        bool result = flecs_query_with(op, redo, ctx);
+        if (op->match_flags & EcsTermMatchAny) {
+            ctx->it->ids[op->field_index] = ecs_childof(EcsWildcard);
+        }
+        return result;
     }
 
     if (range.table->flags & (EcsTableHasChildOf|EcsTableHasParent)) {
@@ -427,30 +432,6 @@ bool flecs_query_tree_with_pre(
     }
 
     return false;
-}
-
-bool flecs_query_tree_select_pre(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
-    if (!redo) {
-        op_ctx->state = EcsQueryTreeIterTables;
-    }
-
-    if (op_ctx->state == EcsQueryTreeIterTables) {
-        bool result = flecs_query_select(op, redo, ctx);
-        if (result) {
-            return true;
-        }
-
-        op_ctx->state = EcsQueryTreeIterEntities;
-        redo = false;
-    }
-
-    return flecs_query_select_w_id(op, redo, ctx, ecs_id(EcsParent), 
-        (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
 }
 
 bool flecs_query_children(
@@ -551,6 +532,7 @@ bool flecs_query_tree_post(
      * after a cache instruction has been evaluated. */
     uint64_t written = ctx->written[ctx->op_index];
     ecs_assert(written & (1ull << op->src.var), ECS_INTERNAL_ERROR, NULL);
+    (void)written;
 
     ecs_table_range_t range = flecs_query_get_range(
         op, &op->src, EcsQuerySrc, ctx);
@@ -563,4 +545,141 @@ bool flecs_query_tree_post(
     ecs_assert(range.table->flags & EcsTableHasParent, ECS_INTERNAL_ERROR, NULL);
     
     return flecs_query_tree_with(op, redo, ctx);
+}
+
+bool flecs_query_tree_up_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
+        return flecs_query_up(op, redo, ctx);
+    } else {
+        ecs_query_tree_pre_ctx_t *op_ctx = flecs_op_ctx(ctx, tree_pre);
+        if (!redo) {
+            op_ctx->state = EcsQueryTreeIterTables;
+        }
+
+        if (op_ctx->state == EcsQueryTreeIterTables) {
+            bool result;
+retry:
+            result = flecs_query_up(op, redo, ctx);
+
+            if (!result) {
+                op_ctx->state = EcsQueryTreeIterEntities;
+                redo = false;
+            } else {
+                ecs_table_range_t range = flecs_query_get_range(
+                    op, &op->src, EcsQuerySrc, ctx);
+                ecs_assert(range.table != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (range.table->flags & EcsTableHasParent) {
+                    /* Skip tables with Parent, since we'll yield all tables 
+                     * with Parent in the second phase. */
+                    redo = true;
+                    goto retry;
+                }
+
+                return true;
+            }
+        }
+
+        bool result = flecs_query_select_w_id(op, redo, ctx, ecs_id(EcsParent), 
+            (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
+        if (result) {
+            /* Signal this table needs post processing */
+            ctx->it->sources[op->field_index] = EcsWildcard;
+        }
+
+        return result;
+    }
+}
+
+bool flecs_query_tree_selfup_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
+        return flecs_query_self_up(op, redo, ctx);
+    } else {
+        ecs_query_tree_pre_ctx_t *op_ctx = flecs_op_ctx(ctx, tree_pre);
+        if (!redo) {
+            op_ctx->state = EcsQueryTreeIterTables;
+        }
+
+        if (op_ctx->state == EcsQueryTreeIterTables) {
+            bool result;
+retry:
+            result = flecs_query_self_up(op, redo, ctx);
+
+            if (!result) {
+                op_ctx->state = EcsQueryTreeIterEntities;
+                redo = false;
+            } else {
+                ecs_table_range_t range = flecs_query_get_range(
+                    op, &op->src, EcsQuerySrc, ctx);
+                ecs_assert(range.table != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (range.table->flags & EcsTableHasParent) {
+                    /* Skip tables with Parent, since we'll yield all tables 
+                     * with Parent in the second phase. */
+                    redo = true;
+                    goto retry;
+                }
+
+                return true;
+            }
+        }
+
+        bool result = flecs_query_select_w_id(op, redo, ctx, ecs_id(EcsParent), 
+            (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
+        if (result) {
+            /* Signal this table needs post processing */
+            ctx->it->sources[op->field_index] = EcsWildcard;
+        }
+
+        return result;
+    }
+}
+
+bool flecs_query_tree_up_post(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool self)
+{
+    ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
+
+    /* Source should have been written as this instruction can only be inserted
+     * after a cache instruction has been evaluated. */
+    uint64_t written = ctx->written[ctx->op_index];
+    ecs_assert(written & (1ull << op->src.var), ECS_INTERNAL_ERROR, NULL);
+    (void)written;
+
+    ecs_table_range_t range = flecs_query_get_range(
+        op, &op->src, EcsQuerySrc, ctx);
+
+    /* Passthrough tables with ChildOf pair */
+    if (range.table->flags & (EcsTableHasChildOf)) {
+        return !redo;
+    }
+
+    if (!redo) {
+        op_ctx->tgt = ctx->it->sources[op->field_index];
+    }
+
+    /* Passthrough tables that own the component */
+    if (op_ctx->tgt != EcsWildcard) {
+        return !redo;
+    }
+
+    /* Shouldn't have gotten here if the table has neither ChildOf or Parent */
+    ecs_assert(range.table->flags & EcsTableHasParent, ECS_INTERNAL_ERROR, NULL);
+
+    if (self) {
+        return flecs_query_self_up_with(op, redo, ctx, false);
+    } else {
+        return flecs_query_up_with(op, redo, ctx);
+    }
 }

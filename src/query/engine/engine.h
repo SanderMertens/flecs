@@ -245,6 +245,22 @@ bool flecs_query_tree_post(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
+bool flecs_query_tree_up_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_tree_selfup_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_tree_up_post(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool self);
+
 bool flecs_query_tree_with(
     const ecs_query_op_t *op,
     bool redo,
@@ -333,6 +349,16 @@ typedef enum ecs_query_up_select_kind_t {
     FlecsQueryUpSelectId,
     FlecsQueryUpSelectSparse
 } ecs_query_up_select_kind_t;
+
+bool flecs_query_up(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_self_up(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
 
 bool flecs_query_up_select(
     const ecs_query_op_t *op,

@@ -1137,6 +1137,12 @@ int flecs_query_finalize_terms(
     bool cacheable = true;
     bool match_nothing = true;
 
+    /* If a query has ChildOf terms we need to prevent it from being marked as 
+     * IsCacheable (meaning the query can be evaluated by just iterating the
+     * cache). A ChildOf term must be marked as cacheable, but also needs an
+     * instruction to filter tables that use non-fragmenting relationships. */
+    bool has_childof = false;
+
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         bool prev_is_or = i && term[-1].oper == EcsOr;
@@ -1148,11 +1154,22 @@ int flecs_query_finalize_terms(
             return -1;
         }
 
-        if (!i) {
-            if (term->flags_ & EcsTermNonFragmentingChildOf) {
+        if (term->flags_ & EcsTermNonFragmentingChildOf) {
+            if (!i) {
+                /* If the first term is a ChildOf pair, the query result should
+                 * respect the order of parents with the OrderedChildren trait.
+                 * This cannot be cached, so unset the IsCacheable bit. */
                 term->flags_ |= EcsTermOrderedChildren;
                 ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
             }
+
+            if (ECS_PAIR_SECOND(term->id) != EcsAny) {
+                has_childof = true;
+            }
+        }
+
+        if (term->trav == EcsChildOf && term->oper == EcsAnd) {
+            has_childof = true;
         }
 
         if (term->src.id != EcsIsEntity) {
@@ -1482,12 +1499,6 @@ int flecs_query_finalize_terms(
 
     ECS_BIT_COND(q->flags, EcsQueryHasCondSet, cond_set);
 
-    /* If a query has ChildOf terms we need to prevent it from being marked as 
-     * IsCacheable (meaning the query can be evaluated by just iterating the
-     * cache). A ChildOf term must be marked as cacheable, but also needs an
-     * instruction to filter tables that use non-fragmenting relationships. */
-    bool has_childof = false;
-
     /* Check if this is a trivial query */
     if ((q->flags & EcsQueryMatchOnlyThis)) {
         if (!(q->flags & 
@@ -1506,17 +1517,6 @@ int flecs_query_finalize_terms(
                 }
 
                 if (ECS_TERM_REF_ID(&term->first) == EcsChildOf) {
-                    if (term->oper == EcsAnd) {
-                        has_childof = true;
-                    }
-
-                    // if (ECS_TERM_REF_ID(&term->second) != EcsAny) {
-                    //     if (term->flags_ & EcsTermIsCacheable) {
-                    //         term->flags_ &= (ecs_flags16_t)~EcsTermIsCacheable;
-                    //         cacheable_terms --;
-                    //     }
-                    // }
-
                     if (ECS_TERM_REF_ID(&term->second) != 0) {
                         is_trivial = false;
                         continue;
@@ -1552,7 +1552,9 @@ int flecs_query_finalize_terms(
      * optimized logic as it doesn't have to deal with order_by edge cases */
     ECS_BIT_COND(q->flags, EcsQueryIsCacheable, 
         cacheable && (cacheable_terms == term_count) &&
-            !desc->order_by_callback && !has_childof);
+            !desc->order_by_callback);
+
+    ECS_BIT_COND(q->flags, EcsQueryCacheWithFilter, has_childof);
 
     /* If none of the terms match a source, the query matches nothing */
     ECS_BIT_COND(q->flags, EcsQueryMatchNothing, match_nothing);

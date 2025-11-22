@@ -1112,18 +1112,22 @@ void flecs_query_set_op_kind(
     } else {
         if ((term->src.id & trav_flags) == EcsUp) {
             op->kind = EcsQueryUp;
-            // if (query->pub.flags & EcsQueryNested) {
-            //     if (term->trav == EcsChildOf) {
-            //         op->kind = EcsQueryTreeUp;
-            //     }
-            // }
+            if (term->trav == EcsChildOf) { // TODO: TEST UP WITH NON-CHILDOF RELATIONSHIPS
+                if (term->flags_ & EcsTermIsCacheable && query->cache) {
+                    op->kind = EcsQueryTreeUpPost;
+                } else if (query->pub.flags & EcsQueryNested) {
+                    op->kind = EcsQueryTreeUpPre;
+                }
+            }
         } else if ((term->src.id & trav_flags) == (EcsSelf|EcsUp)) {
             op->kind = EcsQuerySelfUp;
-            // if (query->pub.flags & EcsQueryNested) {
-            //     if (term->trav == EcsChildOf) {
-            //         op->kind = EcsQueryTreeSelfUp;
-            //     }
-            // }
+            if (term->trav == EcsChildOf) { // TODO: TEST UP WITH NON-CHILDOF RELATIONSHIPS
+                if (term->flags_ & EcsTermIsCacheable && query->cache) {
+                    op->kind = EcsQueryTreeSelfUpPost;
+                } else if (query->pub.flags & EcsQueryNested) {
+                    op->kind = EcsQueryTreeSelfUpPre;
+                }
+            }
         } else if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op->kind = EcsQueryAndAny;
         } else if (ECS_IS_PAIR(term->id) && 
@@ -1138,7 +1142,7 @@ void flecs_query_set_op_kind(
 
         /* ChildOf terms need to take into account both ChildOf pairs and the 
          * Parent component for non-fragmenting hierarchies. */
-        if (term->flags_ & EcsTermNonFragmentingChildOf) {
+        if (term->flags_ & EcsTermNonFragmentingChildOf && !term->trav) {
             if (query->pub.flags & EcsQueryNested) {
                 /* If this is a nested query (used to populate a cache), insert
                  * instruction that matches tables with ChildOf pairs and Parent
