@@ -1587,6 +1587,10 @@ void Traversal_singleton_w_this_up_w_table_change_components(void);
 void Traversal_this_up_w_singleton_w_table_change_components(void);
 void Traversal_2_this_up_w_singleton_w_table_change_components(void);
 void Traversal_2_this_up_w_singleton_w_component_w_table_change_components(void);
+void Traversal_this_up_childof_any(void);
+void Traversal_this_self_up_childof_any(void);
+void Traversal_this_written_up_childof_any(void);
+void Traversal_this_written_self_up_childof_any(void);
 
 // Testsuite 'Cascade'
 void Cascade_parent_cascade(void);
@@ -8569,6 +8573,22 @@ bake_test_case Traversal_testcases[] = {
     {
         "2_this_up_w_singleton_w_component_w_table_change_components",
         Traversal_2_this_up_w_singleton_w_component_w_table_change_components
+    },
+    {
+        "this_up_childof_any",
+        Traversal_this_up_childof_any
+    },
+    {
+        "this_self_up_childof_any",
+        Traversal_this_self_up_childof_any
+    },
+    {
+        "this_written_up_childof_any",
+        Traversal_this_written_up_childof_any
+    },
+    {
+        "this_written_self_up_childof_any",
+        Traversal_this_written_self_up_childof_any
     }
 };
 
@@ -11745,7 +11765,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        163,
+        167,
         Traversal_testcases,
         1,
         Traversal_params
