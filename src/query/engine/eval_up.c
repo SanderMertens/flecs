@@ -261,6 +261,7 @@ next_down_elem:
     return true;
 }
 
+static
 bool flecs_query_up_with_parent(
     const ecs_query_op_t *op,
     ecs_query_up_ctx_t *op_ctx,
@@ -351,6 +352,20 @@ bool flecs_query_up_with(
         if (impl->trav == EcsChildOf) {
             ecs_table_t *table = range.table;
             if (range.table->flags & EcsTableHasParent) {
+                if (q->flags & EcsQueryNested) {
+                    /* If this is a nested query (used to populate a cache), 
+                     * don't store entries for individual entities in the cache.
+                     * Instead, match the entire table, and figure out from 
+                     * which parent the entity gets the component in an uncached
+                     * operation. */
+
+                    /* Signal that the uncached instruction needs to search. 
+                     * This helps distinguish between tables with a Parent 
+                     * component that own the component vs. those that don't. */
+                    it->sources[op->field_index] = EcsWildcard;
+                    return true;
+                }
+
                 int32_t column = table->component_map[ecs_id(EcsParent)];
                 ecs_assert(column > 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -359,6 +374,7 @@ bool flecs_query_up_with(
                 if (!op_ctx->range.count) {
                     op_ctx->range.count = ecs_table_count(op_ctx->range.table);
                 }
+
                 return flecs_query_up_with_parent(op, op_ctx, impl, ctx);
             }
         }
@@ -460,4 +476,32 @@ bool flecs_query_self_up_with(
     }
 
     return false;
+}
+
+bool flecs_query_up(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
+        return flecs_query_up_with(op, redo, ctx);
+    } else {
+        return flecs_query_up_select(op, redo, ctx, 
+            FlecsQueryUpSelectUp, FlecsQueryUpSelectDefault);
+    }
+}
+
+bool flecs_query_self_up(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
+        return flecs_query_self_up_with(op, redo, ctx, false);
+    } else {
+        return flecs_query_up_select(op, redo, ctx, 
+            FlecsQueryUpSelectSelfUp, FlecsQueryUpSelectDefault);
+    }
 }

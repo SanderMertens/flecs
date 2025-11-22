@@ -4938,6 +4938,15 @@ char* ecs_query_plan_w_profile(
     const ecs_query_t *query,
     const ecs_iter_t *it);
 
+/** Same as ecs_query_plan(), but includes plan for populating cache (if any). 
+ * 
+ * @param query The query.
+ * @return The query plan.
+ */
+FLECS_API
+char* ecs_query_plans(
+    const ecs_query_t *query);
+
 /** Populate variables from key-value string.
  * Convenience function to set query variables from a key-value string separated
  * by comma's. The string must have the following format:

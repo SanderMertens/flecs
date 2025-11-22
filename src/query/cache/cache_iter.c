@@ -30,7 +30,7 @@ void flecs_query_update_node_up_trs(
             }
 
             ecs_entity_t src = node->_sources[f];
-            if (src) {
+            if (src && src != EcsWildcard) {
                 ecs_record_t *r = flecs_entities_get(ctx->world, src);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -333,6 +333,9 @@ bool flecs_query_is_cache_search(
     if (!node) {
         return false;
     }
+
+    ctx->vars[0].range.count = node->_count;
+    ctx->vars[0].range.offset = node->_offset;
 
     ecs_iter_t *it = ctx->it;
     it->trs = node->base.trs;

@@ -1693,8 +1693,7 @@
                 "remove_all",
                 "recreate_after_remove_all",
                 "nested_target_deletion",
-                "parent_component",
-                "parent_component_w_childof"
+                "parent_component"
             ]
         }, {
             "id": "Cached",
@@ -1863,6 +1862,8 @@
                 "mark_dirty_w_cached_trivial_test",
                 "mark_dirty_w_cached_w_up_search",
                 "mark_dirty_w_cached_w_up_test",
+                "mark_dirty_w_cached_w_up_search_childof",
+                "mark_dirty_w_cached_w_up_test_childof",
                 "mark_dirty_w_cached_w_fixed_search",
                 "mark_dirty_w_cached_w_fixed_test",
                 "mark_dirty_w_cached_w_wildcard_search",
@@ -2387,6 +2388,12 @@
                 "this_src_written_1_table_2_children_w_any",
                 "this_src_written_1_table_2_children_mixed_parents_w_any",
                 "this_src_written_1_table_n_children_mixed_parents_w_any",
+                "this_src_2_tables_childof_w_any",
+                "this_src_2_tables_parent_w_any",
+                "this_src_2_tables_mixed_w_any",
+                "this_src_written_2_tables_childof_w_any",
+                "this_src_written_2_tables_parent_w_any",
+                "this_src_written_2_tables_mixed_w_any",
                 "this_src_not_childof_wildcard",
                 "this_src_not_childof_any",
                 "this_src_childof_parent",
@@ -2580,6 +2587,8 @@
                 "cached_trivial_test",
                 "cached_trivial_search_w_up",
                 "cached_trivial_test_w_up",
+                "cached_trivial_search_w_up_childof",
+                "cached_trivial_test_w_up_childof",
                 "cached_trivial_search_w_not_operator",
                 "cached_trivial_test_w_not_operator",
                 "cached_trivial_search_w_not_wildcard_operator",

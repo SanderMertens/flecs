@@ -1632,7 +1632,6 @@ void Cascade_remove_all(void);
 void Cascade_recreate_after_remove_all(void);
 void Cascade_nested_target_deletion(void);
 void Cascade_parent_component(void);
-void Cascade_parent_component_w_childof(void);
 
 // Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
@@ -1797,6 +1796,8 @@ void ChangeDetection_mark_dirty_w_cached_trivial_search(void);
 void ChangeDetection_mark_dirty_w_cached_trivial_test(void);
 void ChangeDetection_mark_dirty_w_cached_w_up_search(void);
 void ChangeDetection_mark_dirty_w_cached_w_up_test(void);
+void ChangeDetection_mark_dirty_w_cached_w_up_search_childof(void);
+void ChangeDetection_mark_dirty_w_cached_w_up_test_childof(void);
 void ChangeDetection_mark_dirty_w_cached_w_fixed_search(void);
 void ChangeDetection_mark_dirty_w_cached_w_fixed_test(void);
 void ChangeDetection_mark_dirty_w_cached_w_wildcard_search(void);
@@ -2294,6 +2295,12 @@ void NonFragmentingChildOf_this_src_written_1_table_1_child_w_any(void);
 void NonFragmentingChildOf_this_src_written_1_table_2_children_w_any(void);
 void NonFragmentingChildOf_this_src_written_1_table_2_children_mixed_parents_w_any(void);
 void NonFragmentingChildOf_this_src_written_1_table_n_children_mixed_parents_w_any(void);
+void NonFragmentingChildOf_this_src_2_tables_childof_w_any(void);
+void NonFragmentingChildOf_this_src_2_tables_parent_w_any(void);
+void NonFragmentingChildOf_this_src_2_tables_mixed_w_any(void);
+void NonFragmentingChildOf_this_src_written_2_tables_childof_w_any(void);
+void NonFragmentingChildOf_this_src_written_2_tables_parent_w_any(void);
+void NonFragmentingChildOf_this_src_written_2_tables_mixed_w_any(void);
 void NonFragmentingChildOf_this_src_not_childof_wildcard(void);
 void NonFragmentingChildOf_this_src_not_childof_any(void);
 void NonFragmentingChildOf_this_src_childof_parent(void);
@@ -2481,6 +2488,8 @@ void TrivialIter_cached_trivial_search(void);
 void TrivialIter_cached_trivial_test(void);
 void TrivialIter_cached_trivial_search_w_up(void);
 void TrivialIter_cached_trivial_test_w_up(void);
+void TrivialIter_cached_trivial_search_w_up_childof(void);
+void TrivialIter_cached_trivial_test_w_up_childof(void);
 void TrivialIter_cached_trivial_search_w_not_operator(void);
 void TrivialIter_cached_trivial_test_w_not_operator(void);
 void TrivialIter_cached_trivial_search_w_not_wildcard_operator(void);
@@ -8917,10 +8926,6 @@ bake_test_case Cascade_testcases[] = {
     {
         "parent_component",
         Cascade_parent_component
-    },
-    {
-        "parent_component_w_childof",
-        Cascade_parent_component_w_childof
     }
 };
 
@@ -9567,6 +9572,14 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "mark_dirty_w_cached_w_up_test",
         ChangeDetection_mark_dirty_w_cached_w_up_test
+    },
+    {
+        "mark_dirty_w_cached_w_up_search_childof",
+        ChangeDetection_mark_dirty_w_cached_w_up_search_childof
+    },
+    {
+        "mark_dirty_w_cached_w_up_test_childof",
+        ChangeDetection_mark_dirty_w_cached_w_up_test_childof
     },
     {
         "mark_dirty_w_cached_w_fixed_search",
@@ -11507,6 +11520,30 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_this_src_written_1_table_n_children_mixed_parents_w_any
     },
     {
+        "this_src_2_tables_childof_w_any",
+        NonFragmentingChildOf_this_src_2_tables_childof_w_any
+    },
+    {
+        "this_src_2_tables_parent_w_any",
+        NonFragmentingChildOf_this_src_2_tables_parent_w_any
+    },
+    {
+        "this_src_2_tables_mixed_w_any",
+        NonFragmentingChildOf_this_src_2_tables_mixed_w_any
+    },
+    {
+        "this_src_written_2_tables_childof_w_any",
+        NonFragmentingChildOf_this_src_written_2_tables_childof_w_any
+    },
+    {
+        "this_src_written_2_tables_parent_w_any",
+        NonFragmentingChildOf_this_src_written_2_tables_parent_w_any
+    },
+    {
+        "this_src_written_2_tables_mixed_w_any",
+        NonFragmentingChildOf_this_src_written_2_tables_mixed_w_any
+    },
+    {
         "this_src_not_childof_wildcard",
         NonFragmentingChildOf_this_src_not_childof_wildcard
     },
@@ -12240,6 +12277,14 @@ bake_test_case TrivialIter_testcases[] = {
         TrivialIter_cached_trivial_test_w_up
     },
     {
+        "cached_trivial_search_w_up_childof",
+        TrivialIter_cached_trivial_search_w_up_childof
+    },
+    {
+        "cached_trivial_test_w_up_childof",
+        TrivialIter_cached_trivial_test_w_up_childof
+    },
+    {
         "cached_trivial_search_w_not_operator",
         TrivialIter_cached_trivial_search_w_not_operator
     },
@@ -12614,7 +12659,7 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-        30,
+        29,
         Cascade_testcases
     },
     {
@@ -12628,7 +12673,7 @@ static bake_test_suite suites[] = {
         "ChangeDetection",
         NULL,
         NULL,
-        71,
+        73,
         ChangeDetection_testcases
     },
     {
@@ -12678,7 +12723,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        150,
+        156,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params
@@ -12701,7 +12746,7 @@ static bake_test_suite suites[] = {
         "TrivialIter",
         NULL,
         NULL,
-        18,
+        20,
         TrivialIter_testcases
     },
     {
