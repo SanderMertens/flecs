@@ -73,8 +73,8 @@ int flecs_query_set_caching_policy(
 {
     ecs_query_cache_kind_t kind = desc->cache_kind;
     bool require_caching = desc->group_by || desc->group_by_callback || 
-            desc->order_by || desc->order_by_callback || 
-            (desc->flags & EcsQueryDetectChanges);
+            desc->order_by || desc->order_by_callback;// || 
+            // (desc->flags & EcsQueryDetectChanges);
 
     /* If the query has a Cascade term it'll use group_by */
     int32_t i, term_count = impl->pub.term_count;
@@ -140,7 +140,11 @@ int flecs_query_set_caching_policy(
         if (impl->pub.flags & EcsQueryIsCacheable) {
             /* If all terms of the query are cacheable, just set the policy to 
              * All which simplifies work for the compiler. */
-            impl->pub.cache_kind = EcsQueryCacheAll;
+            if (!(impl->pub.flags & EcsQueryCacheWithFilter)) {
+                impl->pub.cache_kind = EcsQueryCacheAll;
+            } else {
+                impl->pub.cache_kind = EcsQueryCacheAuto;
+            }
         } else if (!(impl->pub.flags & EcsQueryHasCacheable)) {
             /* Same for when the query has no cacheable terms */
             impl->pub.cache_kind = EcsQueryCacheNone;

@@ -3401,10 +3401,12 @@ void ChangeDetection_detect_w_childof_up(void) {
             { ecs_id(Position) }, 
             { ecs_childof(EcsAny), .src.id = EcsUp }
         },
-        .flags = EcsQueryDetectChanges
+        .flags = EcsQueryDetectChanges,
     });
 
     test_assert(q != NULL);
+
+    printf("%s\n", ecs_query_plans(q));
 
     ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});

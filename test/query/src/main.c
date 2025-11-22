@@ -1597,6 +1597,10 @@ void Traversal_singleton_w_this_up_w_table_change_components(void);
 void Traversal_this_up_w_singleton_w_table_change_components(void);
 void Traversal_2_this_up_w_singleton_w_table_change_components(void);
 void Traversal_2_this_up_w_singleton_w_component_w_table_change_components(void);
+void Traversal_this_up_childof_any(void);
+void Traversal_this_self_up_childof_any(void);
+void Traversal_this_written_up_childof_any(void);
+void Traversal_this_written_self_up_childof_any(void);
 
 // Testsuite 'Cascade'
 void Cascade_parent_cascade(void);
@@ -2477,6 +2481,8 @@ void TrivialIter_cached_trivial_search(void);
 void TrivialIter_cached_trivial_test(void);
 void TrivialIter_cached_trivial_search_w_up(void);
 void TrivialIter_cached_trivial_test_w_up(void);
+void TrivialIter_cached_trivial_search_w_up_childof(void);
+void TrivialIter_cached_trivial_test_w_up_childof(void);
 void TrivialIter_cached_trivial_search_w_not_operator(void);
 void TrivialIter_cached_trivial_test_w_not_operator(void);
 void TrivialIter_cached_trivial_search_w_not_wildcard_operator(void);
@@ -8778,6 +8784,22 @@ bake_test_case Traversal_testcases[] = {
     {
         "2_this_up_w_singleton_w_component_w_table_change_components",
         Traversal_2_this_up_w_singleton_w_component_w_table_change_components
+    },
+    {
+        "this_up_childof_any",
+        Traversal_this_up_childof_any
+    },
+    {
+        "this_self_up_childof_any",
+        Traversal_this_self_up_childof_any
+    },
+    {
+        "this_written_up_childof_any",
+        Traversal_this_written_up_childof_any
+    },
+    {
+        "this_written_self_up_childof_any",
+        Traversal_this_written_self_up_childof_any
     }
 };
 
@@ -12220,6 +12242,14 @@ bake_test_case TrivialIter_testcases[] = {
         TrivialIter_cached_trivial_test_w_up
     },
     {
+        "cached_trivial_search_w_up_childof",
+        TrivialIter_cached_trivial_search_w_up_childof
+    },
+    {
+        "cached_trivial_test_w_up_childof",
+        TrivialIter_cached_trivial_test_w_up_childof
+    },
+    {
         "cached_trivial_search_w_not_operator",
         TrivialIter_cached_trivial_search_w_not_operator
     },
@@ -12585,7 +12615,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        163,
+        167,
         Traversal_testcases,
         1,
         Traversal_params
@@ -12681,7 +12711,7 @@ static bake_test_suite suites[] = {
         "TrivialIter",
         NULL,
         NULL,
-        18,
+        20,
         TrivialIter_testcases
     },
     {

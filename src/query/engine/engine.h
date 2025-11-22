@@ -245,6 +245,11 @@ bool flecs_query_tree_post(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
+bool flecs_query_tree_up_post(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
 bool flecs_query_tree_with(
     const ecs_query_op_t *op,
     bool redo,

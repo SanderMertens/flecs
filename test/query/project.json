@@ -1656,7 +1656,11 @@
                 "singleton_w_this_up_w_table_change_components",
                 "this_up_w_singleton_w_table_change_components",
                 "2_this_up_w_singleton_w_table_change_components",
-                "2_this_up_w_singleton_w_component_w_table_change_components"
+                "2_this_up_w_singleton_w_component_w_table_change_components",
+                "this_up_childof_any",
+                "this_self_up_childof_any",
+                "this_written_up_childof_any",
+                "this_written_self_up_childof_any"
             ]
         }, {
             "id": "Cascade",
@@ -2576,6 +2580,8 @@
                 "cached_trivial_test",
                 "cached_trivial_search_w_up",
                 "cached_trivial_test_w_up",
+                "cached_trivial_search_w_up_childof",
+                "cached_trivial_test_w_up_childof",
                 "cached_trivial_search_w_not_operator",
                 "cached_trivial_test_w_not_operator",
                 "cached_trivial_search_w_not_wildcard_operator",

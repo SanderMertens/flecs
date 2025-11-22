@@ -564,3 +564,38 @@ bool flecs_query_tree_post(
     
     return flecs_query_tree_with(op, redo, ctx);
 }
+
+bool flecs_query_tree_up_post(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
+
+    /* Source should have been written as this instruction can only be inserted
+     * after a cache instruction has been evaluated. */
+    uint64_t written = ctx->written[ctx->op_index];
+    ecs_assert(written & (1ull << op->src.var), ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_range_t range = flecs_query_get_range(
+        op, &op->src, EcsQuerySrc, ctx);
+
+    /* Passthrough tables with ChildOf pair */
+    if (range.table->flags & (EcsTableHasChildOf)) {
+        return !redo;
+    }
+
+    if (!redo) {
+        op_ctx->tgt = ctx->it->sources[op->field_index];
+    }
+
+    /* Passthrough tables that own the component */
+    if (op_ctx->tgt != EcsWildcard) {
+        return !redo;
+    }
+
+    /* Shouldn't have gotten here if the table has neither ChildOf or Parent */
+    ecs_assert(range.table->flags & EcsTableHasParent, ECS_INTERNAL_ERROR, NULL);
+
+    return flecs_query_self_up_with(op, redo, ctx, false);
+}

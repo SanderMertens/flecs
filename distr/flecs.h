@@ -532,7 +532,8 @@ extern "C" {
 #define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does query cache empty tables */
 #define EcsQueryTrivialCache          (1u << 28u) /* Trivial cache (no wildcards, traversal, order_by, group_by, change detection) */
 #define EcsQueryNested                (1u << 29u) /* Query created by a query (for observer, cache) */
-#define EcsQueryValid                 (1u << 30u)
+#define EcsQueryCacheWithFilter       (1u << 30u)
+#define EcsQueryValid                 (1u << 31u)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -8709,6 +8710,15 @@ FLECS_API
 char* ecs_query_plan_w_profile(
     const ecs_query_t *query,
     const ecs_iter_t *it);
+
+/** Same as ecs_query_plan(), but includes plan for populating cache (if any). 
+ * 
+ * @param query The query.
+ * @return The query plan.
+ */
+FLECS_API
+char* ecs_query_plans(
+    const ecs_query_t *q);
 
 /** Populate variables from key-value string.
  * Convenience function to set query variables from a key-value string separated

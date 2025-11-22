@@ -1112,18 +1112,14 @@ void flecs_query_set_op_kind(
     } else {
         if ((term->src.id & trav_flags) == EcsUp) {
             op->kind = EcsQueryUp;
-            // if (query->pub.flags & EcsQueryNested) {
-            //     if (term->trav == EcsChildOf) {
-            //         op->kind = EcsQueryTreeUp;
-            //     }
-            // }
+            if (term->flags_ & EcsTermIsCacheable && query->cache) {
+                op->kind = EcsQueryTreeUpPost;
+            }
         } else if ((term->src.id & trav_flags) == (EcsSelf|EcsUp)) {
             op->kind = EcsQuerySelfUp;
-            // if (query->pub.flags & EcsQueryNested) {
-            //     if (term->trav == EcsChildOf) {
-            //         op->kind = EcsQueryTreeSelfUp;
-            //     }
-            // }
+            if (term->flags_ & EcsTermIsCacheable && query->cache) {
+                op->kind = EcsQueryTreeUpPost;
+            }
         } else if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op->kind = EcsQueryAndAny;
         } else if (ECS_IS_PAIR(term->id) && 
