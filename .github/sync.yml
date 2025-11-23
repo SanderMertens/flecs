@@ -1,0 +1,7 @@
+﻿Reddy-dev/Solid-Macros@main:
+  - source: Source/SolidMacros/
+    dest: Source/SolidMacros/
+    deleteOrphaned: true
+  - source: Source/SolidMacrosEditor/
+    dest: Source/SolidMacrosEditor/
+    deleteOrphaned: true

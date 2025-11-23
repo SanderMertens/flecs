@@ -16,6 +16,16 @@
 	"Installed": false,
 	"Modules": [
 		{
+			"Name": "SolidMacros",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault"
+		},
+		{
+			"Name": "SolidMacrosEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PreDefault"
+		},
+		{
 			"Name": "FlecsLibrary",
 			"Type": "Runtime",
 			"LoadingPhase": "PreDefault"
@@ -43,10 +53,6 @@
 		},
 		{
 			"Name": "GameFeatures",
-			"Enabled": true
-		},
-		{
-			"Name": "SolidMacros",
 			"Enabled": true
 		}
 	],

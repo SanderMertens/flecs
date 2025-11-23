@@ -1,0 +1,24 @@
+﻿name: Solid Macros Sync
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Unreal-Flecs
+        uses: actions/checkout@v4
+
+      - name: Sync SolidMacros folders to Solid-Macros (direct push)
+        uses: BetaHuhn/repo-file-sync-action@v1
+        with:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          IS_FINE_GRAINED: true
+          SKIP_PR: true
+          COMMIT_PREFIX: "[UnrealFlecs-SolidMacros Sync]"
+          GIT_USERNAME: Reddy-dev
