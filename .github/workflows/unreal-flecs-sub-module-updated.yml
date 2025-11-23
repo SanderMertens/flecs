@@ -1,0 +1,18 @@
+﻿name: Unreal Flecs Submodule Updated
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  notify-parent:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger parent repo update workflow
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GH_PAT_FLECS_SYNC }}
+          repository: Reddy-dev/Unreal-Flecs
+          event-type: submodule-updated
