@@ -18,6 +18,8 @@ Only tested on Version: UE 5.7 MSVC/partially Clang
 
 ### For Full Performance benefits make sure to use LTO/PGO in shipping builds.
 
+## Wiki/Documentation coming soon
+
 ## Features:
 Universalized Component Type Registration CPP <--> Meta Type, Works with USTRUCT, UENUM, and UCLASS \
 \
