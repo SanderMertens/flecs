@@ -692,7 +692,9 @@
                 "check_sparse_exclusive_target_in_regular_observer",
                 "check_regular_in_sparse_observer",
                 "check_regular_target_in_sparse_observer",
-                "check_regular_exclusive_target_in_sparse_observer"
+                "check_regular_exclusive_target_in_sparse_observer",
+                "child_of_component_w_sparse",
+                "child_of_component_w_sparse_exclusive"
             ]
         }, {
             "id": "Hierarchies",

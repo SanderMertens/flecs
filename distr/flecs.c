@@ -4135,6 +4135,7 @@ void flecs_register_flag_for_trait(
             if (entity_flag) flecs_add_flag(world, e, entity_flag);
         } else if (event == EcsOnRemove) {
             ecs_component_record_t *cr = flecs_components_get(world, e);
+            
             if (cr) changed |= flecs_unset_id_flag(cr, not_flag);
             cr = flecs_components_get(world, ecs_pair(e, EcsWildcard));
             if (cr) {
@@ -5025,7 +5026,7 @@ void flecs_bootstrap(
         .ctx = &traversable_trait
     });
 
-    static ecs_on_trait_ctx_t exclusive_trait = { EcsIdExclusive, EcsIdExclusive };
+    static ecs_on_trait_ctx_t exclusive_trait = { EcsIdExclusive, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsExclusive  }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
@@ -39060,7 +39061,10 @@ void flecs_component_sparse_dont_fragment_pair_remove(
         /* It's possible that the target entity is cleaned up as part of the 
          * same entity that holds the relationship. If that's the case, the
          * relationship will get cleaned up later anyway so we can exit here. */
-        ecs_assert(cr->flags & EcsIdMarkedForDelete, ECS_INTERNAL_ERROR, NULL);
+        if (!(world->flags & EcsWorldFini)) {
+            ecs_assert(cr->flags & EcsIdMarkedForDelete, 
+                ECS_INTERNAL_ERROR, NULL);
+        }
         return;
     }
 
