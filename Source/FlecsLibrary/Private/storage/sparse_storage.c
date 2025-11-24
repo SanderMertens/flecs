@@ -176,7 +176,10 @@ void flecs_component_sparse_dont_fragment_pair_remove(
         /* It's possible that the target entity is cleaned up as part of the 
          * same entity that holds the relationship. If that's the case, the
          * relationship will get cleaned up later anyway so we can exit here. */
-        ecs_assert(cr->flags & EcsIdMarkedForDelete, ECS_INTERNAL_ERROR, NULL);
+        if (!(world->flags & EcsWorldFini)) {
+            ecs_assert(cr->flags & EcsIdMarkedForDelete, 
+                ECS_INTERNAL_ERROR, NULL);
+        }
         return;
     }
 
