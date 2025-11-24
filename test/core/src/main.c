@@ -663,6 +663,8 @@ void Sparse_check_sparse_exclusive_target_in_regular_observer(void);
 void Sparse_check_regular_in_sparse_observer(void);
 void Sparse_check_regular_target_in_sparse_observer(void);
 void Sparse_check_regular_exclusive_target_in_sparse_observer(void);
+void Sparse_child_of_component_w_sparse(void);
+void Sparse_child_of_component_w_sparse_exclusive(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -5374,6 +5376,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "check_regular_exclusive_target_in_sparse_observer",
         Sparse_check_regular_exclusive_target_in_sparse_observer
+    },
+    {
+        "child_of_component_w_sparse",
+        Sparse_child_of_component_w_sparse
+    },
+    {
+        "child_of_component_w_sparse_exclusive",
+        Sparse_child_of_component_w_sparse_exclusive
     }
 };
 
@@ -13861,7 +13871,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        210,
+        212,
         Sparse_testcases,
         1,
         Sparse_params
