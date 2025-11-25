@@ -142,6 +142,22 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 		ASSERT_THAT(IsFalse(StructEntity.Has(flecs::Trait)));
 	}
 
+	TEST_METHOD(B8_GetComponentWithNoRegistrationLambdaNoTraits_StaticStructAPI)
+	{
+		const FFlecsEntityHandle StaticStructEntity = FlecsWorld->RegisterComponentType(FFlecsTestStruct_NoRegistrationLambda::StaticStruct());
+		ASSERT_THAT(IsTrue(StaticStructEntity.IsValid()));
+
+		ASSERT_THAT(IsFalse(StaticStructEntity.Has(flecs::Trait)));
+	}
+
+	TEST_METHOD(B9_GetComponentWithNoRegistrationLambdaNoTraits_CPPAPI)
+	{
+		const FFlecsEntityHandle StructEntity = FlecsWorld->RegisterComponentType<FFlecsTestStruct_NoRegistrationLambda>();
+		ASSERT_THAT(IsTrue(StructEntity.IsValid()));
+
+		ASSERT_THAT(IsFalse(StructEntity.Has(flecs::Trait)));
+	}
+
 	TEST_METHOD(C1_EnumComponentRegistration_CPPAPI)
 	{
 		const FFlecsEntityHandle EnumEntity = FlecsWorld->RegisterComponentType<EFlecsTestEnum_UENUM>();

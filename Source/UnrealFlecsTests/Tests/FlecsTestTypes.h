@@ -204,6 +204,14 @@ REGISTER_FLECS_COMPONENT(FFlecsTestStruct_EmptyRegistrationFunction,
 		// Intentionally empty
 	});
 
+USTRUCT()
+struct FFlecsTestStruct_NoRegistrationLambda
+{
+	GENERATED_BODY()
+}; // struct FFlecsTestStruct_NoRegistrationLambda
+
+REGISTER_FLECS_COMPONENT(FFlecsTestStruct_NoRegistrationLambda);
+
 enum class ETestEnum : uint8
 {
 	None,
