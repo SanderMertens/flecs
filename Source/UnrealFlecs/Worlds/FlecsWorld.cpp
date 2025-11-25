@@ -542,6 +542,14 @@ void UFlecsWorld::InitializeComponentPropertyObserver() const
 			const FFlecsComponentProperties& Properties = FFlecsComponentPropertiesRegistry::Get()
 				.GetComponentProperties(StructSymbol);
 
+			if (!Properties.RegistrationFunction)
+			{
+				UE_LOGFMT(LogFlecsComponent, Log,
+					"Component properties {StructName} registration function is null",
+					StructSymbol);
+				return;
+			}
+
 			std::invoke(Properties.RegistrationFunction, World, InUntypedComponent);
 
 			UE_LOGFMT(LogFlecsComponent, Log,
