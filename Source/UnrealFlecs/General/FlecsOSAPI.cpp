@@ -70,28 +70,41 @@ void FFlecsThreadWrapper::Join()
 	}
 }
 
+#if WITH_EDITOR
+
+std::atomic<uint32> FFlecsThreadTask::TaskCounter = 0;
+
+#endif // WITH_EDITOR
+
 FFlecsThreadTask::FFlecsThreadTask(const ecs_os_thread_callback_t Callback, void* Data)
 {
-	TaskEvent = FFunctionGraphTask::CreateAndDispatchWhenReady(
+#if WITH_EDITOR
+
+	const FString TaskName = FString::Printf(TEXT("FlecsTask_%u"), GetNextTaskID());
+
+#else
+
+	FString TaskName;
+
+#endif // WITH_EDITOR
+	
+	TaskEvent = UE::Tasks::Launch(*TaskName,
 		[Callback, Data]()
 		{
 			Callback(Data);
-		},
-		GET_STATID(STAT_FlecsOS), nullptr, TaskThread);
+		}, TaskThreadPriority);
 }
 
 FFlecsThreadTask::~FFlecsThreadTask()
 {
-	if (TaskEvent.IsValid())
-	{
-		TaskEvent->Wait();
-	}
+	Wait();
+	ReleaseTaskID();
 }
 
 void FFlecsThreadTask::Wait() const
 {
 	if (TaskEvent.IsValid())
 	{
-		FTaskGraphInterface::Get().WaitUntilTaskCompletes(TaskEvent);
+		TaskEvent.Wait();
 	}
 }

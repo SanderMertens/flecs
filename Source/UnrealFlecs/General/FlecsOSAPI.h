@@ -19,6 +19,7 @@
 #include "Types/SolidNotNull.h"
 
 #include "Logs/FlecsCategories.h"
+#include "Tasks/Task.h"
 
 DECLARE_STATS_GROUP(TEXT("FlecsOS"), STATGROUP_FlecsOS, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("FlecsOS::TaskThread"), STAT_FlecsOS, STATGROUP_FlecsOS);
@@ -58,9 +59,46 @@ struct FFlecsThreadWrapper
 
 struct FFlecsThreadTask
 {
-	static constexpr ENamedThreads::Type TaskThread = ENamedThreads::Type::AnyHiPriThreadHiPriTask;
+	static constexpr UE::Tasks::ETaskPriority TaskThreadPriority = UE::Tasks::ETaskPriority::High;
 	
-	FGraphEventRef TaskEvent;
+	UE::Tasks::TTask<void> TaskEvent;
+
+#if WITH_EDITOR
+
+	static std::atomic<uint32> TaskCounter;
+
+	static NO_DISCARD uint32 GetNextTaskID()
+	{
+		return TaskCounter.fetch_add(1, std::memory_order_relaxed);
+	}
+
+	static uint32 ReleaseTaskID()
+	{
+		return TaskCounter.fetch_sub(1, std::memory_order_relaxed);
+	}
+
+	static NO_DISCARD uint32 GetActiveTaskCount()
+	{
+		return TaskCounter.load(std::memory_order_relaxed);
+	}
+
+#else
+	
+	static constexpr uint32 GetNextTaskID()
+	{
+		return 0;
+	}
+	static constexpr uint32 ReleaseTaskID()
+	{
+		return 0;
+	}
+	
+	static constexpr uint32 GetActiveTaskCount()
+	{
+		return 0;
+	}
+	
+#endif // WITH_EDITOR
 
 	FFlecsThreadTask(const ecs_os_thread_callback_t Callback, void* Data);
 
@@ -73,7 +111,6 @@ struct FFlecsThreadTask
 struct FFlecsConditionWrapper
 {
 	UE::FConditionVariable ConditionalVariable;
-	FCriticalSection* Mutex;
 }; // struct ConditionWrapper
 
 struct FOSApiInitializer
@@ -123,7 +160,6 @@ struct FOSApiInitializer
 		os_api.cond_new_ = []() -> ecs_os_cond_t
 		{
 			FFlecsConditionWrapper* Wrapper = new FFlecsConditionWrapper();
-			Wrapper->Mutex = new FCriticalSection();
 			return reinterpret_cast<ecs_os_cond_t>(Wrapper);
 		};
 
@@ -131,9 +167,6 @@ struct FOSApiInitializer
 		{
 			solid_cassumef(Cond, TEXT("Condition variable is nullptr"));
 			FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
-			
-			delete Wrapper->Mutex;
-			Wrapper->Mutex = nullptr;
 			
 			delete Wrapper;
 		};
