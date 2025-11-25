@@ -35,7 +35,7 @@ void UFlecsDeveloperSettings::PostInitProperties()
 	
 	if (IsTemplate())
 	{
-		ImportConsoleVariableValues();
+		//ImportConsoleVariableValues();
 	}
 
 #endif // WITH_EDITOR
