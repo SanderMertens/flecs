@@ -14,7 +14,4 @@ struct UNREALFLECS_API FFlecsOutsideMainLoopTag
 	GENERATED_BODY()
 }; // struct FFlecsOutsideMainLoopTag
 
-REGISTER_FLECS_COMPONENT(FFlecsOutsideMainLoopTag,
-	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
-	{
-	});
+REGISTER_FLECS_COMPONENT(FFlecsOutsideMainLoopTag);

@@ -14,8 +14,5 @@ struct UNREALFLECS_API FFlecsGameLoopTag
 	GENERATED_BODY()
 }; // struct FFlecsGameLoopTag
 
-REGISTER_FLECS_COMPONENT(FFlecsGameLoopTag,
-	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
-	{
-	});
+REGISTER_FLECS_COMPONENT(FFlecsGameLoopTag);
 

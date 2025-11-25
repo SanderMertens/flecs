@@ -99,10 +99,7 @@ struct TIsPODType<FFlecsTestStruct_Value_POD>
 	enum { Value = true };
 }; // struct TIsPODType<FFlecsTestStruct_Value_POD>
 
-REGISTER_FLECS_COMPONENT(FFlecsTestStruct_Value_POD,
-	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
-	{
-	});
+REGISTER_FLECS_COMPONENT(FFlecsTestStruct_Value_POD);
 
 USTRUCT()
 struct FUSTRUCTPairTestComponent

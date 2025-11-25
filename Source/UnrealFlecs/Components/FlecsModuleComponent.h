@@ -55,8 +55,4 @@ struct UNREALFLECS_API FFlecsModuleComponent
 
 }; // struct FFlecsModuleComponent
 
-REGISTER_FLECS_COMPONENT(FFlecsModuleComponent,
-	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
-	{
-		
-	});
+REGISTER_FLECS_COMPONENT(FFlecsModuleComponent);

@@ -22,8 +22,4 @@ public:
 	
 }; // struct FFlecsNetworkSerializeDefinitionComponent
 
-REGISTER_FLECS_COMPONENT(FFlecsNetworkSerializeDefinitionComponent,
-	[](flecs::world InWorld, const FFlecsComponentHandle& InComponent)
-	{
-		
-	});
+REGISTER_FLECS_COMPONENT(FFlecsNetworkSerializeDefinitionComponent);
