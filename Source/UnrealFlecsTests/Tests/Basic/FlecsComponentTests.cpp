@@ -118,12 +118,28 @@ TEST_CLASS_WITH_FLAGS_AND_TAGS(A2_UnrealFlecsComponentRegistrationTests,
 		ASSERT_THAT(IsTrue(StructEntity.Has(flecs::Trait)));
 	}
 
-	TEST_METHOD(B4_GetComponentPropertyTraitsFromAnotherModule_StaticStructAPI)
+	TEST_METHOD(B5_GetComponentPropertyTraitsFromAnotherModule_StaticStructAPI)
 	{
 		const FFlecsEntityHandle StaticStructEntity = FlecsWorld->RegisterComponentType(FFlecsTranslationPropertyTrait::StaticStruct());
 		ASSERT_THAT(IsTrue(StaticStructEntity.IsValid()));
 
 		ASSERT_THAT(IsTrue(StaticStructEntity.Has(flecs::PairIsTag)));
+	}
+
+	TEST_METHOD(B6_GetComponentWithEmptyRegistrationFunctionNoTraits_StaticStructAPI)
+	{
+		const FFlecsEntityHandle StaticStructEntity = FlecsWorld->RegisterComponentType(FFlecsTestStruct_EmptyRegistrationFunction::StaticStruct());
+		ASSERT_THAT(IsTrue(StaticStructEntity.IsValid()));
+
+		ASSERT_THAT(IsFalse(StaticStructEntity.Has(flecs::Trait)));
+	}
+
+	TEST_METHOD(B7_GetComponentWithEmptyRegistrationFunctionNoTraits_CPPAPI)
+	{
+		const FFlecsEntityHandle StructEntity = FlecsWorld->RegisterComponentType<FFlecsTestStruct_EmptyRegistrationFunction>();
+		ASSERT_THAT(IsTrue(StructEntity.IsValid()));
+
+		ASSERT_THAT(IsFalse(StructEntity.Has(flecs::Trait)));
 	}
 
 	TEST_METHOD(C1_EnumComponentRegistration_CPPAPI)

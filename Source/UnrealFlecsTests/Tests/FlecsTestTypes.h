@@ -83,24 +83,6 @@ struct FFlecsTestStruct_Value
 	
 }; // struct FFlecsTestStructWithNameAndValue
 
-USTRUCT(BlueprintType, BlueprintInternalUseOnly)
-struct FFlecsTestStruct_Value_POD
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	int32 Value;
-	
-}; // struct FFlecsTestStructWithNameAndValue_POD
-
-template<>
-struct TIsPODType<FFlecsTestStruct_Value_POD>
-{
-	enum { Value = true };
-}; // struct TIsPODType<FFlecsTestStruct_Value_POD>
-
-REGISTER_FLECS_COMPONENT(FFlecsTestStruct_Value_POD);
-
 USTRUCT()
 struct FUSTRUCTPairTestComponent
 {
@@ -208,6 +190,18 @@ REGISTER_FLECS_COMPONENT(FFlecsTestStruct_PairIsTag,
 	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
 	{
 		InComponentHandle.Add(flecs::PairIsTag);
+	});
+
+USTRUCT()
+struct FFlecsTestStruct_EmptyRegistrationFunction
+{
+	GENERATED_BODY()
+}; // struct FFlecsTestStruct_EmptyRegistrationFunction
+
+REGISTER_FLECS_COMPONENT(FFlecsTestStruct_EmptyRegistrationFunction,
+	[](flecs::world InWorld, const FFlecsComponentHandle& InComponentHandle)
+	{
+		// Intentionally empty
 	});
 
 enum class ETestEnum : uint8
