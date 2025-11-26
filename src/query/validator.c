@@ -1169,7 +1169,9 @@ int flecs_query_finalize_terms(
         }
 
         if (term->trav == EcsChildOf && term->oper == EcsAnd) {
-            has_childof = true;
+            if (!(term->flags_ & EcsTermIsOr)) {
+                has_childof = true;
+            }
         }
 
         if (term->src.id != EcsIsEntity) {

@@ -1270,7 +1270,7 @@ bool flecs_query_select_or(
                 ctx->written[prev] = ctx->written[last];
 
                 ecs_query_op_ctx_t *op_ctx_ptr = &ctx->op_ctx[first];
-                ecs_query_op_ctx_t op_ctx = *op_ctx_ptr;
+                ecs_query_op_ctx_t tmp_op_ctx = *op_ctx_ptr;
 
                 ecs_os_zeromem(op_ctx_ptr);
 
@@ -1279,7 +1279,7 @@ bool flecs_query_select_or(
 
                 flecs_query_op_ctx_fini(ctx->it, &ops[first], op_ctx_ptr);
 
-                ecs_os_memcpy_t(op_ctx_ptr, &op_ctx, ecs_query_op_ctx_t);
+                ecs_os_memcpy_t(op_ctx_ptr, &tmp_op_ctx, ecs_query_op_ctx_t);
 
                 if (ctx->op_index == last) {
                     /* Duplicate match was found, find next result */
