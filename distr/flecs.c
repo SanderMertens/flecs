@@ -4701,6 +4701,7 @@ void flecs_register_ordered_children(ecs_iter_t *it) {
             ecs_component_record_t *cr = flecs_components_ensure(
                 it->world, ecs_childof(parent));
             if (!(cr->flags & EcsIdOrderedChildren)) {
+                flecs_ordered_children_init(it->world, cr);
                 flecs_ordered_children_populate(it->world, cr);
                 cr->flags |= EcsIdOrderedChildren;
             }
@@ -37012,7 +37013,9 @@ int flecs_query_finalize_terms(
         }
 
         if (term->trav == EcsChildOf && term->oper == EcsAnd) {
-            has_childof = true;
+            if (!(term->flags_ & EcsTermIsOr)) {
+                has_childof = true;
+            }
         }
 
         if (term->src.id != EcsIsEntity) {
@@ -73934,13 +73937,15 @@ ecs_query_cache_t* flecs_query_cache_init(
         }
 
         if ((t == count) && (q->flags & EcsQueryMatchOnlySelf) &&
-           !(q->flags & EcsQueryMatchWildcards))
+           !(q->flags & EcsQueryMatchWildcards) &&
+           !(q->flags & EcsQueryCacheWithFilter))
         {
             if (!const_desc->order_by && !const_desc->group_by && 
                 !const_desc->order_by_callback && 
                 !const_desc->group_by_callback &&
                 !(const_desc->flags & EcsQueryDetectChanges))
             {
+                
                 q->flags |= EcsQueryTrivialCache;
             }
         }
@@ -80261,7 +80266,7 @@ bool flecs_query_select_or(
                 ctx->written[prev] = ctx->written[last];
 
                 ecs_query_op_ctx_t *op_ctx_ptr = &ctx->op_ctx[first];
-                ecs_query_op_ctx_t op_ctx = *op_ctx_ptr;
+                ecs_query_op_ctx_t tmp_op_ctx = *op_ctx_ptr;
 
                 ecs_os_zeromem(op_ctx_ptr);
 
@@ -80270,7 +80275,7 @@ bool flecs_query_select_or(
 
                 flecs_query_op_ctx_fini(ctx->it, &ops[first], op_ctx_ptr);
 
-                ecs_os_memcpy_t(op_ctx_ptr, &op_ctx, ecs_query_op_ctx_t);
+                ecs_os_memcpy_t(op_ctx_ptr, &tmp_op_ctx, ecs_query_op_ctx_t);
 
                 if (ctx->op_index == last) {
                     /* Duplicate match was found, find next result */
@@ -80910,6 +80915,12 @@ void flecs_query_op_ctx_fini(
     }
     case EcsQueryUp:
     case EcsQuerySelfUp:
+    case EcsQueryTreeUp:
+    case EcsQueryTreeSelfUp:
+    case EcsQueryTreeUpPre:
+    case EcsQueryTreeSelfUpPre:
+    case EcsQueryTreeUpPost:
+    case EcsQueryTreeSelfUpPost:
     case EcsQuerySparseUp:
     case EcsQuerySparseSelfUp: {
         ecs_allocator_t *a = flecs_query_get_allocator(it);

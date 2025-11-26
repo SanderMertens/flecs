@@ -741,7 +741,7 @@ void SerializeQueryInfoToJson_serialize_plan_nontrivial_query(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    char *expect = flecs_asprintf("{\"query_plan\":\"[[0;49m 0. [[[0;37m-1[[0;49m, [[0;32m 1[[0;49m]  setids      \\n[[0;49m 1. [[[0;37m 0[[0;49m, [[0;32m 2[[0;49m]  selfup      [[0;32m$[[0;49m[[[0;32mthis[[0;49m]           ([[0;34mPosition[[0;49m)\\n[[0;49m 2. [[[0;37m 1[[0;49m, [[0;32m 3[[0;49m]  yield       \\n\", \"results\":[]}");
+    char *expect = flecs_asprintf("{\"query_plan\":\"[[0;49m 0. [[[0;37m-1[[0;49m, [[0;32m 1[[0;49m]  setids       \\n[[0;49m 1. [[[0;37m 0[[0;49m, [[0;32m 2[[0;49m]  selfup       [[0;32m$[[0;49m[[[0;32mthis[[0;49m]          ([[0;34mPosition[[0;49m)\\n[[0;49m 2. [[[0;37m 1[[0;49m, [[0;32m 3[[0;49m]  yield        \\n\", \"results\":[]}");
     test_json(json, expect);
     ecs_os_free(json);
     ecs_os_free(expect);
