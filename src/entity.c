@@ -2820,8 +2820,6 @@ ecs_entity_t ecs_get_target_for_id(
             return 0;
         }
     } else {
-        entity = 0; /* Don't return entity if id was not found */
-
         if (table) {
             ecs_id_t *ids = table->type.array;
             int32_t i, count = table->type.count;
