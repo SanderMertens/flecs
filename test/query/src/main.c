@@ -1601,6 +1601,22 @@ void Traversal_this_up_childof_any(void);
 void Traversal_this_self_up_childof_any(void);
 void Traversal_this_written_up_childof_any(void);
 void Traversal_this_written_self_up_childof_any(void);
+void Traversal_this_or_w_up(void);
+void Traversal_this_or_w_up_2(void);
+void Traversal_this_or_w_up_w_tag(void);
+void Traversal_this_written_or_w_up(void);
+void Traversal_this_or_w_self_up(void);
+void Traversal_this_or_w_self_up_2(void);
+void Traversal_this_or_w_self_up_w_tag(void);
+void Traversal_this_written_or_w_self_up(void);
+void Traversal_this_or_w_up_childof(void);
+void Traversal_this_or_w_up_childof_2(void);
+void Traversal_this_or_w_up_childof_w_tag(void);
+void Traversal_this_written_or_w_up_childof(void);
+void Traversal_this_or_w_self_up_childof(void);
+void Traversal_this_or_w_self_up_childof_2(void);
+void Traversal_this_or_w_self_up_childof_w_tag(void);
+void Traversal_this_written_or_w_self_up_childof(void);
 
 // Testsuite 'Cascade'
 void Cascade_parent_cascade(void);
@@ -8807,6 +8823,70 @@ bake_test_case Traversal_testcases[] = {
     {
         "this_written_self_up_childof_any",
         Traversal_this_written_self_up_childof_any
+    },
+    {
+        "this_or_w_up",
+        Traversal_this_or_w_up
+    },
+    {
+        "this_or_w_up_2",
+        Traversal_this_or_w_up_2
+    },
+    {
+        "this_or_w_up_w_tag",
+        Traversal_this_or_w_up_w_tag
+    },
+    {
+        "this_written_or_w_up",
+        Traversal_this_written_or_w_up
+    },
+    {
+        "this_or_w_self_up",
+        Traversal_this_or_w_self_up
+    },
+    {
+        "this_or_w_self_up_2",
+        Traversal_this_or_w_self_up_2
+    },
+    {
+        "this_or_w_self_up_w_tag",
+        Traversal_this_or_w_self_up_w_tag
+    },
+    {
+        "this_written_or_w_self_up",
+        Traversal_this_written_or_w_self_up
+    },
+    {
+        "this_or_w_up_childof",
+        Traversal_this_or_w_up_childof
+    },
+    {
+        "this_or_w_up_childof_2",
+        Traversal_this_or_w_up_childof_2
+    },
+    {
+        "this_or_w_up_childof_w_tag",
+        Traversal_this_or_w_up_childof_w_tag
+    },
+    {
+        "this_written_or_w_up_childof",
+        Traversal_this_written_or_w_up_childof
+    },
+    {
+        "this_or_w_self_up_childof",
+        Traversal_this_or_w_self_up_childof
+    },
+    {
+        "this_or_w_self_up_childof_2",
+        Traversal_this_or_w_self_up_childof_2
+    },
+    {
+        "this_or_w_self_up_childof_w_tag",
+        Traversal_this_or_w_self_up_childof_w_tag
+    },
+    {
+        "this_written_or_w_self_up_childof",
+        Traversal_this_written_or_w_self_up_childof
     }
 };
 
@@ -12650,7 +12730,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        167,
+        183,
         Traversal_testcases,
         1,
         Traversal_params

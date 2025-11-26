@@ -2085,6 +2085,11 @@ ecs_query_op_ctx_t* flecs_op_ctx_(
 
 #define flecs_op_ctx(ctx, op_kind) (&flecs_op_ctx_(ctx)->is.op_kind)
 
+void flecs_query_op_ctx_fini(
+    ecs_iter_t *it,
+    const ecs_query_op_t *op,
+    ecs_query_op_ctx_t *ctx);
+
 void flecs_reset_source_set_flag(
     ecs_iter_t *it,
     int32_t field_index);
@@ -10413,8 +10418,6 @@ ecs_entity_t ecs_get_target_for_id(
             return 0;
         }
     } else {
-        entity = 0; /* Don't return entity if id was not found */
-
         if (table) {
             ecs_id_t *ids = table->type.array;
             int32_t i, count = table->type.count;
@@ -80257,8 +80260,17 @@ bool flecs_query_select_or(
             do {
                 ctx->written[prev] = ctx->written[last];
 
+                ecs_query_op_ctx_t *op_ctx_ptr = &ctx->op_ctx[first];
+                ecs_query_op_ctx_t op_ctx = *op_ctx_ptr;
+
+                ecs_os_zeromem(op_ctx_ptr);
+
                 flecs_query_run_until(false, ctx, ops, flecs_itolbl(first - 1), 
                     prev, cur);
+
+                flecs_query_op_ctx_fini(ctx->it, &ops[first], op_ctx_ptr);
+
+                ecs_os_memcpy_t(op_ctx_ptr, &op_ctx, ecs_query_op_ctx_t);
 
                 if (ctx->op_index == last) {
                     /* Duplicate match was found, find next result */
@@ -80885,6 +80897,40 @@ bool flecs_query_trivial_cached_next(
     return false;
 }
 
+void flecs_query_op_ctx_fini(
+    ecs_iter_t *it,
+    const ecs_query_op_t *op,
+    ecs_query_op_ctx_t *ctx)
+{
+    switch(op->kind) {
+    case EcsQueryTrav: {
+        ecs_allocator_t *a = flecs_query_get_allocator(it);
+        flecs_query_trav_cache_fini(a, &ctx->is.trav.cache);
+        break;
+    }
+    case EcsQueryUp:
+    case EcsQuerySelfUp:
+    case EcsQuerySparseUp:
+    case EcsQuerySparseSelfUp: {
+        ecs_allocator_t *a = flecs_query_get_allocator(it);
+        ecs_query_up_ctx_t *op_ctx = &ctx->is.up;
+        ecs_query_up_impl_t *impl = op_ctx->impl;
+        if (impl) {
+            ecs_trav_up_cache_t *cache = &impl->cache;
+            if (cache->dir == EcsTravDown) {
+                flecs_query_down_cache_fini(a, cache);
+            } else {
+                flecs_query_up_cache_fini(cache);
+            }
+            flecs_free_t(a, ecs_query_up_impl_t, impl);
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 static
 void flecs_query_iter_fini_ctx(
     ecs_iter_t *it,
@@ -80894,34 +80940,10 @@ void flecs_query_iter_fini_ctx(
     int32_t i, count = query->op_count;
     ecs_query_op_t *ops = query->ops;
     ecs_query_op_ctx_t *ctx = qit->op_ctx;
-    ecs_allocator_t *a = flecs_query_get_allocator(it);
 
     for (i = 0; i < count; i ++) {
         ecs_query_op_t *op = &ops[i];
-        switch(op->kind) {
-        case EcsQueryTrav:
-            flecs_query_trav_cache_fini(a, &ctx[i].is.trav.cache);
-            break;
-        case EcsQueryUp:
-        case EcsQuerySelfUp:
-        case EcsQuerySparseUp:
-        case EcsQuerySparseSelfUp: {
-            ecs_query_up_ctx_t *op_ctx = &ctx[i].is.up;
-            ecs_query_up_impl_t *impl = op_ctx->impl;
-            if (impl) {
-                ecs_trav_up_cache_t *cache = &impl->cache;
-                if (cache->dir == EcsTravDown) {
-                    flecs_query_down_cache_fini(a, cache);
-                } else {
-                    flecs_query_up_cache_fini(cache);
-                }
-                flecs_free_t(a, ecs_query_up_impl_t, impl);
-            }
-            break;
-        }
-        default:
-            break;
-        }
+        flecs_query_op_ctx_fini(it, op, &ctx[i]);
     }
 }
 

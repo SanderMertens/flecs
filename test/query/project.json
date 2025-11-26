@@ -1660,7 +1660,25 @@
                 "this_up_childof_any",
                 "this_self_up_childof_any",
                 "this_written_up_childof_any",
-                "this_written_self_up_childof_any"
+                "this_written_self_up_childof_any",
+
+                "this_or_w_up",
+                "this_or_w_up_2",
+                "this_or_w_up_w_tag",
+                "this_written_or_w_up",
+                "this_or_w_self_up",
+                "this_or_w_self_up_2",
+                "this_or_w_self_up_w_tag",
+                "this_written_or_w_self_up",
+
+                "this_or_w_up_childof",
+                "this_or_w_up_childof_2",
+                "this_or_w_up_childof_w_tag",
+                "this_written_or_w_up_childof",
+                "this_or_w_self_up_childof",
+                "this_or_w_self_up_childof_2",
+                "this_or_w_self_up_childof_w_tag",
+                "this_written_or_w_self_up_childof"
             ]
         }, {
             "id": "Cascade",
