@@ -49,10 +49,11 @@ repeat:
 
     ecs_entity_t tgt = op_ctx->tgt;
     ecs_entity_t parent = op_ctx->parents[op_ctx->cur].value;
-    if (tgt == EcsWildcard) {
-        ecs_iter_t *it = ctx->it;
-        it->ids[op->field_index] = ecs_childof(parent);
-    } else {
+
+    ecs_iter_t *it = ctx->it;
+    flecs_query_iter_set_id(it, op->field_index, ecs_childof(parent));
+
+    if (tgt != EcsWildcard) {
         if (parent != op_ctx->tgt) {
             goto repeat;
         }
@@ -317,7 +318,7 @@ bool flecs_query_tree_with(
         if (!tgt) {
             int8_t field_index = op->field_index;
             it->set_fields &= ~(1u << field_index);
-            it->ids[op->field_index] = ecs_childof(EcsWildcard);
+            flecs_query_iter_set_id(it, op->field_index, ecs_childof(EcsWildcard));
             return true;
         }
         return false;
@@ -336,10 +337,10 @@ bool flecs_query_tree_with(
         /* Wildcard query */
         if (tgt == EcsWildcard) {
             if (op->match_flags & EcsTermMatchAny) {
-                it->ids[op->field_index] = ecs_childof(EcsWildcard);
+                flecs_query_iter_set_id(it, op->field_index, ecs_childof(EcsWildcard));
             } else {
-                ecs_id_t actual_id = it->ids[op->field_index] = 
-                    ecs_childof(parent);
+                ecs_id_t actual_id = flecs_query_iter_set_id(it, op->field_index, 
+                    ecs_childof(parent));
                 flecs_query_set_vars(op, actual_id, ctx);
             }
 
@@ -349,8 +350,8 @@ bool flecs_query_tree_with(
                 return false;
             }
 
-            ecs_id_t actual_id = it->ids[op->field_index] = 
-                ecs_childof(parent);
+            ecs_id_t actual_id = flecs_query_iter_set_id(it, op->field_index,
+                ecs_childof(parent));
             flecs_query_set_vars(op, actual_id, ctx);
         }
 
@@ -359,7 +360,7 @@ bool flecs_query_tree_with(
         /* Wildcard query */
         if (tgt == EcsWildcard) {
             if (op->match_flags & EcsTermMatchAny) {
-                it->ids[op->field_index] = ecs_childof(EcsWildcard);
+                flecs_query_iter_set_id(it, op->field_index, ecs_childof(EcsWildcard));
             } else {
                 op_ctx->parents = parents;
                 op_ctx->tgt = tgt;
@@ -389,6 +390,8 @@ bool flecs_query_tree_with(
 
             if (pr->count == 1) {
                 /* Table contains a single entity for parent, return it */
+                ecs_entity_t parent = parents[cur].value;
+                flecs_query_iter_set_id(it, op->field_index, ecs_childof(parent));
                 flecs_query_src_set_single(op, cur, ctx);
                 return true;
             }
@@ -421,13 +424,15 @@ bool flecs_query_tree_with_pre(
     if (range.table->flags & EcsTableHasChildOf) {
         bool result = flecs_query_with(op, redo, ctx);
         if (op->match_flags & EcsTermMatchAny) {
-            ctx->it->ids[op->field_index] = ecs_childof(EcsWildcard);
+            flecs_query_iter_set_id(
+                ctx->it, op->field_index, ecs_childof(EcsWildcard));
         }
         return result;
     }
 
     if (range.table->flags & (EcsTableHasChildOf|EcsTableHasParent)) {
-        ctx->it->ids[op->field_index] = ecs_pair(EcsChildOf, EcsWildcard);
+        flecs_query_iter_set_id(
+            ctx->it, op->field_index, ecs_pair(EcsChildOf, EcsWildcard));
         return true;
     }
 

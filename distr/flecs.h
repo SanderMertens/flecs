@@ -494,6 +494,7 @@ extern "C" {
 #define EcsIterFixedInChanged          (1u << 17u) /* Fixed in terms changed */
 #define EcsIterSkip                    (1u << 18u) /* Result was skipped for change detection */
 #define EcsIterCppEach                 (1u << 19u) /* Uses C++ 'each' iterator */
+#define EcsIterImmutableCacheData      (1u << 21u) /* Internally used by engine to indicate immutable arrays from cache */
 
 
 /* Same as event flags */

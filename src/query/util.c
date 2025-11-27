@@ -741,3 +741,14 @@ void flecs_query_reclaim(
         ecs_map_reclaim(&cache->groups);
     }
 }
+
+ecs_id_t flecs_query_iter_set_id(
+    ecs_iter_t *it,
+    int8_t field,
+    ecs_id_t id)
+{
+    ecs_assert(!(it->flags & EcsIterImmutableCacheData), 
+        ECS_INTERNAL_ERROR, NULL);
+    it->ids[field] = id;
+    return id;
+}

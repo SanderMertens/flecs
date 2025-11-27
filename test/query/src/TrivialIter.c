@@ -152,7 +152,7 @@ void TrivialIter_cached_trivial_search_w_up_childof(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ Foo, .src.id = EcsUp }},
-        .cache_kind = EcsQueryCacheAll
+        .cache_kind = EcsQueryCacheAuto
     });
 
     test_assert(q != NULL);
@@ -175,7 +175,7 @@ void TrivialIter_cached_trivial_test_w_up_childof(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ Foo, .src.id = EcsUp }},
-        .cache_kind = EcsQueryCacheAll
+        .cache_kind = EcsQueryCacheAuto
     });
 
     test_assert(q != NULL);

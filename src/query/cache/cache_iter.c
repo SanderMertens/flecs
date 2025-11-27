@@ -344,6 +344,10 @@ bool flecs_query_is_cache_search(
     it->set_fields = node->base.set_fields;
     it->up_fields = node->_up_fields;
 
+#ifdef FLECS_DEBUG
+    it->flags |= EcsIterImmutableCacheData;
+#endif
+
     flecs_query_update_node_up_trs(ctx, node);
 
     flecs_query_cache_update_ptrs(it, &node->base, node->base.table);
@@ -392,6 +396,10 @@ bool flecs_query_is_cache_test(
     it->ids = node->_ids;
     it->sources = node->_sources;
     it->set_fields = node->base.set_fields;
+
+#ifdef FLECS_DEBUG
+    it->flags |= EcsIterImmutableCacheData;
+#endif
 
     flecs_query_update_node_up_trs(ctx, node);
 

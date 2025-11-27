@@ -862,7 +862,13 @@
                 "cached_w_optional",
                 "cached_w_optional_wildcard",
                 "cached_w_optional_simple",
-                "cached_w_optional_wildcard_simple"
+                "cached_w_optional_wildcard_simple",
+                "cache_plan_childof_parent",
+                "cache_plan_childof_parent_w_tag",
+                "cache_plan_childof_parent_written",
+                "cache_plan_childof_parent_simple",
+                "cache_plan_childof_parent_w_tag_simple",
+                "cache_plan_childof_parent_written_simple"
             ]
         }, {
             "id": "Variables",
@@ -1661,7 +1667,6 @@
                 "this_self_up_childof_any",
                 "this_written_up_childof_any",
                 "this_written_self_up_childof_any",
-
                 "this_or_w_up",
                 "this_or_w_up_2",
                 "this_or_w_up_w_tag",
@@ -1670,7 +1675,6 @@
                 "this_or_w_self_up_2",
                 "this_or_w_self_up_w_tag",
                 "this_written_or_w_self_up",
-
                 "this_or_w_up_childof",
                 "this_or_w_up_childof_2",
                 "this_or_w_up_childof_w_tag",
@@ -1811,6 +1815,7 @@
                 "it_ptrs_after_column_shrink",
                 "it_ptrs_w_wildcard",
                 "it_ptrs_w_up",
+                "it_ptrs_w_up_childof",
                 "test_it_ptrs",
                 "test_it_ptrs_w_wildcard",
                 "test_it_ptrs_w_up",

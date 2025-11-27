@@ -90,3 +90,9 @@ void flecs_term_to_buf(
 void flecs_query_apply_iter_flags(
     ecs_iter_t *it,
     const ecs_query_t *query);
+
+ecs_id_t flecs_query_iter_set_id(
+    ecs_iter_t *it,
+    int8_t field,
+    ecs_id_t id);
+
