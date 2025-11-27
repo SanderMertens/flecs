@@ -3217,3 +3217,225 @@ void Plan_cached_w_optional_wildcard_simple(void) {
 
     ecs_fini(world);
 }
+
+void Plan_cache_plan_childof_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(ChildOf, Tgt)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const ecs_query_t *cq = ecs_query_get_cache_query(q);
+    test_assert(cq == NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_cache_plan_childof_parent_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(ChildOf, Tgt), Foo",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    {
+        const char *expect = 
+        HEAD " 0. [-1,  1]  setids       "
+        LINE " 1. [ 0,  2]  cache        "
+        LINE " 2. [ 1,  3]  tree         $[this]          (ChildOf, Tgt)"
+        LINE " 3. [ 2,  4]  yield        "
+        LINE "";
+
+        char *plan = ecs_query_plan(q);
+        test_str(expect, plan);
+        ecs_os_free(plan);
+    }
+
+    {
+        const ecs_query_t *cq = ecs_query_get_cache_query(q);
+        test_assert(cq != NULL);
+        char *plan = ecs_query_plan(cq);
+        test_str(NULL, plan);
+        ecs_os_free(plan);
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_cache_plan_childof_parent_written(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo, (ChildOf, Tgt)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids       "
+    LINE " 1. [ 0,  2]  and          $[this]          (Foo)"
+    LINE " 2. [ 1,  3]  tree_pre     $[this]          (ChildOf, Tgt)"
+    LINE " 3. [ 2,  4]  yield        "
+    LINE "";
+
+    const ecs_query_t *cq = ecs_query_get_cache_query(q);
+    test_assert(cq != NULL);
+    char *plan = ecs_query_plan(cq);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_cache_plan_childof_parent_simple(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_childof(Tgt) }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    {
+        const char *expect = 
+        HEAD " 0. [-1,  1]  setids       "
+        LINE " 1. [ 0,  2]  children     $[this]          (ChildOf, Tgt)"
+        LINE " 2. [ 1,  3]  yield        "
+        LINE "";
+
+        char *plan = ecs_query_plan(q);
+        test_str(expect, plan);
+        ecs_os_free(plan);
+    }
+
+    {
+        const ecs_query_t *cq = ecs_query_get_cache_query(q);
+        test_assert(cq == NULL);
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_cache_plan_childof_parent_w_tag_simple(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_childof(Tgt) }, { Foo }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    {
+        const char *expect = 
+        HEAD " 0. [-1,  1]  setids       "
+        LINE " 1. [ 0,  2]  cache        "
+        LINE " 2. [ 1,  3]  tree         $[this]          (ChildOf, Tgt)"
+        LINE " 3. [ 2,  4]  yield        "
+        LINE "";
+
+        char *plan = ecs_query_plan(q);
+        test_str(expect, plan);
+        ecs_os_free(plan);
+    }
+
+    {
+        const ecs_query_t *cq = ecs_query_get_cache_query(q);
+        test_assert(cq != NULL);
+        char *plan = ecs_query_plan(cq);
+        test_str(NULL, plan);
+        ecs_os_free(plan);
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_cache_plan_childof_parent_written_simple(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo }, { ecs_childof(Tgt) }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    {
+        const char *expect = 
+        HEAD " 0. [-1,  1]  setids       "
+        LINE " 1. [ 0,  2]  cache        "
+        LINE " 2. [ 1,  3]  tree_post    $[this]          (ChildOf, Tgt)"
+        LINE " 3. [ 2,  4]  yield        "
+        LINE "";
+
+        char *plan = ecs_query_plan(q);
+        test_str(expect, plan);
+        ecs_os_free(plan);
+    }
+
+    {
+        const char *expect = 
+        HEAD " 0. [-1,  1]  setids       "
+        LINE " 1. [ 0,  2]  and          $[this]          (Foo)"
+        LINE " 2. [ 1,  3]  tree_pre     $[this]          (ChildOf, Tgt)"
+        LINE " 3. [ 2,  4]  yield        "
+        LINE "";
+
+        const ecs_query_t *cq = ecs_query_get_cache_query(q);
+        test_assert(cq != NULL);
+        char *plan = ecs_query_plan(cq);
+        test_str(expect, plan);
+        ecs_os_free(plan);
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
