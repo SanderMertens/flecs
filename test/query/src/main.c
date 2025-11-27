@@ -838,6 +838,12 @@ void Plan_cached_w_optional(void);
 void Plan_cached_w_optional_wildcard(void);
 void Plan_cached_w_optional_simple(void);
 void Plan_cached_w_optional_wildcard_simple(void);
+void Plan_cache_plan_childof_parent(void);
+void Plan_cache_plan_childof_parent_w_tag(void);
+void Plan_cache_plan_childof_parent_written(void);
+void Plan_cache_plan_childof_parent_simple(void);
+void Plan_cache_plan_childof_parent_w_tag_simple(void);
+void Plan_cache_plan_childof_parent_written_simple(void);
 
 // Testsuite 'Variables'
 void Variables_setup(void);
@@ -1745,6 +1751,7 @@ void Cached_it_ptrs_after_column_merge(void);
 void Cached_it_ptrs_after_column_shrink(void);
 void Cached_it_ptrs_w_wildcard(void);
 void Cached_it_ptrs_w_up(void);
+void Cached_it_ptrs_w_up_childof(void);
 void Cached_test_it_ptrs(void);
 void Cached_test_it_ptrs_w_wildcard(void);
 void Cached_test_it_ptrs_w_up(void);
@@ -5835,6 +5842,30 @@ bake_test_case Plan_testcases[] = {
     {
         "cached_w_optional_wildcard_simple",
         Plan_cached_w_optional_wildcard_simple
+    },
+    {
+        "cache_plan_childof_parent",
+        Plan_cache_plan_childof_parent
+    },
+    {
+        "cache_plan_childof_parent_w_tag",
+        Plan_cache_plan_childof_parent_w_tag
+    },
+    {
+        "cache_plan_childof_parent_written",
+        Plan_cache_plan_childof_parent_written
+    },
+    {
+        "cache_plan_childof_parent_simple",
+        Plan_cache_plan_childof_parent_simple
+    },
+    {
+        "cache_plan_childof_parent_w_tag_simple",
+        Plan_cache_plan_childof_parent_w_tag_simple
+    },
+    {
+        "cache_plan_childof_parent_written_simple",
+        Plan_cache_plan_childof_parent_written_simple
     }
 };
 
@@ -9391,6 +9422,10 @@ bake_test_case Cached_testcases[] = {
         Cached_it_ptrs_w_up
     },
     {
+        "it_ptrs_w_up_childof",
+        Cached_it_ptrs_w_up_childof
+    },
+    {
         "test_it_ptrs",
         Cached_test_it_ptrs
     },
@@ -12664,7 +12699,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        96,
+        102,
         Plan_testcases
     },
     {
@@ -12746,7 +12781,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        108,
+        109,
         Cached_testcases
     },
     {

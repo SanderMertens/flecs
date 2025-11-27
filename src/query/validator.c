@@ -1554,7 +1554,8 @@ int flecs_query_finalize_terms(
      * optimized logic as it doesn't have to deal with order_by edge cases */
     ECS_BIT_COND(q->flags, EcsQueryIsCacheable, 
         cacheable && (cacheable_terms == term_count) &&
-            !desc->order_by_callback);
+            !desc->order_by_callback &&
+            !has_childof);
 
     ECS_BIT_COND(q->flags, EcsQueryCacheWithFilter, has_childof);
 
@@ -1802,7 +1803,11 @@ bool flecs_query_finalize_simple(
                 if (second) {
                     trivial = false;
                     if (ECS_PAIR_SECOND(id) != EcsAny) {
-                        cacheable = false;
+                        if (!i) {
+                            /* If first query term is ChildOf, return children
+                             * in order if possible, which can't be cached. */
+                            cacheable = false;
+                        }
                     }
                 }
             }

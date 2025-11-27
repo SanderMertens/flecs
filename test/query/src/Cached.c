@@ -4128,6 +4128,90 @@ void Cached_it_ptrs_w_wildcard(void) {
 void Cached_it_ptrs_w_up(void) {
     ecs_world_t *world = ecs_mini();
 
+    ECS_ENTITY(world, Rel, Traversable);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }, { ecs_id(Mass), .src.id = EcsUp, .trav = Rel }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set(world, p, Mass, {100});
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, p);
+    ecs_set(world, e1, Position, {10, 20});
+
+    Position *ptr = NULL;
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p == ecs_get(world, e1, Position));
+        test_int(p->x, 10); test_int(p->y, 20);
+        test_assert(it.ptrs != NULL);
+        test_assert(it.ptrs[0] == p);
+        test_assert(it.ptrs[1] == NULL);
+        Mass *m = ecs_field(&it, Mass, 1);
+        test_assert(m != NULL);
+        test_int(*m, 100);
+        test_bool(false, ecs_query_next(&it));
+
+        ptr = p;
+    }
+
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, p);
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, p);
+    ecs_set(world, e3, Position, {50, 60});
+
+    /* Make sure realloc happens */
+    int i;
+    for (i = 0; i < 1000; i ++) {
+        ecs_entity_t x = ecs_new_w_pair(world, Rel, p);
+        ecs_set(world, x, Position, {1, 1});
+
+        if (ecs_get(world, e1, Position) != ptr) {
+            break;
+        }
+    }
+
+    test_assert(i != 1000);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p == ecs_get(world, e1, Position));
+        test_assert(&p[1] == ecs_get(world, e2, Position));
+        test_assert(&p[2] == ecs_get(world, e3, Position));
+        test_assert(p != ptr); // verify realloc happened
+        test_int(p[0].x, 10); test_int(p[0].y, 20);
+        test_int(p[1].x, 30); test_int(p[1].y, 40);
+        test_int(p[2].x, 50); test_int(p[2].y, 60);
+        test_assert(it.ptrs != NULL);
+        test_assert(it.ptrs[0] == p);
+        test_assert(it.ptrs[1] == NULL);
+        Mass *m = ecs_field(&it, Mass, 1);
+        test_assert(m != NULL);
+        test_int(*m, 100);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_it_ptrs_w_up_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
@@ -4153,9 +4237,7 @@ void Cached_it_ptrs_w_up(void) {
         Position *p = ecs_field(&it, Position, 0);
         test_assert(p == ecs_get(world, e1, Position));
         test_int(p->x, 10); test_int(p->y, 20);
-        test_assert(it.ptrs != NULL);
-        test_assert(it.ptrs[0] == p);
-        test_assert(it.ptrs[1] == NULL);
+        test_assert(it.ptrs == NULL);
         Mass *m = ecs_field(&it, Mass, 1);
         test_assert(m != NULL);
         test_int(*m, 100);
@@ -4194,9 +4276,7 @@ void Cached_it_ptrs_w_up(void) {
         test_int(p[0].x, 10); test_int(p[0].y, 20);
         test_int(p[1].x, 30); test_int(p[1].y, 40);
         test_int(p[2].x, 50); test_int(p[2].y, 60);
-        test_assert(it.ptrs != NULL);
-        test_assert(it.ptrs[0] == p);
-        test_assert(it.ptrs[1] == NULL);
+        test_assert(it.ptrs == NULL);
         Mass *m = ecs_field(&it, Mass, 1);
         test_assert(m != NULL);
         test_int(*m, 100);
