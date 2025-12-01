@@ -15291,45 +15291,42 @@ repeat_event:
 
         /* Check if this id is a pair of an traversable relationship. If so, we 
          * may have to forward ids from the pair's target. */
-        bool is_pair = ECS_IS_PAIR(id);
-        if (can_forward && is_pair) {
-            if (is_pair && (cr_flags & EcsIdTraversable)) {
-                const ecs_event_record_t *er_fwd = NULL;
-                if (ECS_PAIR_FIRST(id) == EcsIsA) {
-                    if (event == EcsOnAdd) {
-                        if (!world->stages[0]->base) {
-                            /* Adding an IsA relationship can trigger prefab
-                             * instantiation, which can instantiate prefab 
-                             * hierarchies for the entity to which the 
-                             * relationship was added. */
-                            ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+        if (can_forward && (cr_flags & EcsIdTraversable)) {
+            const ecs_event_record_t *er_fwd = NULL;
+            if (ECS_PAIR_FIRST(id) == EcsIsA) {
+                if (event == EcsOnAdd) {
+                    if (!world->stages[0]->base) {
+                        /* Adding an IsA relationship can trigger prefab
+                         * instantiation, which can instantiate prefab 
+                         * hierarchies for the entity to which the 
+                         * relationship was added. */
+                        ecs_entity_t tgt = ECS_PAIR_SECOND(id);
 
-                            /* Setting this value prevents flecs_instantiate 
-                             * from being called recursively, in case prefab
-                             * children also have IsA relationships. */
-                            world->stages[0]->base = tgt;
-                            const ecs_entity_t *instances = 
-                                ecs_table_entities(table);
-                            int32_t e;
+                        /* Setting this value prevents flecs_instantiate 
+                         * from being called recursively, in case prefab
+                         * children also have IsA relationships. */
+                        world->stages[0]->base = tgt;
+                        const ecs_entity_t *instances = 
+                            ecs_table_entities(table);
+                        int32_t e;
 
-                            for (e = 0; e < count; e ++) {
-                                flecs_instantiate(
-                                    world, tgt, instances[offset + e], NULL);
-                            }
-
-                            world->stages[0]->base = 0;
+                        for (e = 0; e < count; e ++) {
+                            flecs_instantiate(
+                                world, tgt, instances[offset + e], NULL);
                         }
 
-                        /* Adding an IsA relationship will emit OnSet events for
-                         * any new reachable components. */
-                        er_fwd = er_onset;
+                        world->stages[0]->base = 0;
                     }
-                }
 
-                /* Forward events for components from pair target */
-                flecs_emit_forward(world, er, er_fwd, ids, &it, table, cr);
-                ecs_assert(it.event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
+                    /* Adding an IsA relationship will emit OnSet events for
+                     * any new reachable components. */
+                    er_fwd = er_onset;
+                }
             }
+
+            /* Forward events for components from pair target */
+            flecs_emit_forward(world, er, er_fwd, ids, &it, table, cr);
+            ecs_assert(it.event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
         }
 
         if (er) {
