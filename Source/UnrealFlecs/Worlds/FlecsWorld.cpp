@@ -525,15 +525,17 @@ void UFlecsWorld::RegisterUnrealTypes() const
 	RegisterComponentType<FInstancedStruct>();
 }
 
-void UFlecsWorld::InitializeComponentPropertyObserver() const
+void UFlecsWorld::InitializeComponentPropertyObserver()
 {
-	FlecsLibrary::GetTypeRegisteredDelegate().AddWeakLambda(this, [this](const flecs::id_t InEntityId)
+	ComponentRegisteredDelegateHandle = FlecsLibrary::GetTypeRegisteredDelegate().AddWeakLambda(this,
+		[this](const flecs::id_t InEntityId)
 	{
 		solid_checkf(!IsDeferred(), TEXT("Cannot register component properties while world is deferred."));
 		
 		const FFlecsEntityHandle EntityHandle = FFlecsEntityHandle(World, InEntityId);
-					
+			
 		const FString StructSymbol = EntityHandle.GetSymbol();
+		solid_checkf(!StructSymbol.IsEmpty(),TEXT("Registered component has no symbol"));
 						
 		if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(StructSymbol))
 		{
@@ -590,11 +592,9 @@ void UFlecsWorld::InitializeSystems()
 		});
 		
 		ModuleComponentQuery = World.query_builder<FFlecsModuleComponent>("ModuleComponentQuery")
-			.cached()
 			.build();
 
 		DependenciesComponentQuery = World.query_builder<FFlecsSoftDependenciesComponent>("DependenciesComponentQuery")
-			.cached()
 			.build();
 
 		OnModuleImported.AddWeakLambda(this, [this](const FFlecsEntityHandle& InModule)
@@ -1948,4 +1948,9 @@ void UFlecsWorld::AddReferencedObjects(UObject* InThis, FReferenceCollector& Col
 	    });
 
 	ecs_exclusive_access_end(This->World, false);
+}
+
+void UFlecsWorld::GetResourceSizeEx(FResourceSizeEx& CumulativeResourceSize)
+{
+	Super::GetResourceSizeEx(CumulativeResourceSize);
 }

@@ -16,11 +16,10 @@ class UNREALFLECS_API AFlecsWorldSettings : public AWorldSettings
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs", meta = (ExposeOnSpawn = true))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true))
 	bool bUseFlecsWorld = true;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs",
-		meta = (ExposeOnSpawn = true, EditCondition = "bUseFlecsWorld"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = true, EditCondition = "bUseFlecsWorld"))
 	TObjectPtr<UFlecsWorldSettingsAsset> DefaultWorld;
 
 }; // class AFlecsWorldSettings

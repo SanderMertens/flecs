@@ -9,6 +9,7 @@
 #include "flecs.h"
 
 #include "CoreMinimal.h"
+
 #include "FlecsTestUtils.h"
 
 namespace test {

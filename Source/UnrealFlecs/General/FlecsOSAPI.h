@@ -252,11 +252,13 @@ struct FOSApiInitializer
 			return static_cast<uint64_t>(Cycles * NanoSecondsPerCycle);
 		};
 
-        os_api.get_time_ = [](ecs_time_t* TimeOut)
+        os_api.get_time_ = [](ecs_time_t* Timeout)
         {
+        	solid_cassume(Timeout != nullptr);
+        	
         	const uint64 NanoSeconds = ecs_os_now();
-        	TimeOut->sec = static_cast<uint32_t>(NanoSeconds / 1e9);
-        	TimeOut->nanosec = static_cast<uint32_t>(NanoSeconds % static_cast<uint64>(1e9));
+        	Timeout->sec = static_cast<uint32_t>(NanoSeconds / 1e9);
+        	Timeout->nanosec = static_cast<uint32_t>(NanoSeconds % static_cast<uint64>(1e9));
         };
 
         os_api.abort_ = []()
@@ -297,19 +299,49 @@ struct FOSApiInitializer
 
                 		break;
 	                }
-            	case 0: // Verbose
+				case -1: // Info
+					{
+						UE_LOGFMT(LogFlecsCore, Display,
+							"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
+							File, Line, Message);
+
+						break;
+					}
+            	case 0: // Journal
             		{
-            			UE_LOGFMT(LogFlecsCore, Verbose,
+            			UE_LOGFMT(LogFlecsJournal, Verbose,
             				"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
 							File, Line, Message);
 
                 		break;
             		}
-            	case 4: // Bookmark/Journal
+				case 1: // Trace Level 1
+					{
+						UE_LOGFMT(LogFlecsCore, Verbose,
+							"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
+							File, Line, Message);
+
+						break;
+					}
+            	case 2: // Trace Level 2
+					{
+						UE_LOGFMT(LogFlecsCore, VeryVerbose,
+							"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
+							File, Line, Message);
+
+						break;
+					}
+				case 3: // Trace Level 3
+					{
+						UE_LOGFMT(LogFlecsCore, VeryVerbose,
+							"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
+							File, Line, Message);
+
+						break;
+					}
+            	case 4: // Trace Level 4
             		{
-            			TRACE_BOOKMARK(TEXT("Flecs - File: %s, Line: %d, Message: %s"),
-            				StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
-            			UE_LOGFMT(LogFlecsJournal, VeryVerbose,
+            			UE_LOGFMT(LogFlecsCore, VeryVerbose,
             				"Flecs - File: {FileName}, Line: {LineNumber}, Message: {Message}",
             				File, Line, Message);
 
@@ -403,36 +435,43 @@ struct FOSApiInitializer
 
 		os_api.adec_ = [](int32_t* Value) -> int32
 		{
+			solid_cassume(Value != nullptr);
 			return FPlatformAtomics::InterlockedDecrement(Value);
 		};
 
 		os_api.ainc_ = [](int32_t* Value) -> int32
 		{
+			solid_cassume(Value != nullptr);
 			return FPlatformAtomics::InterlockedIncrement(Value);
 		};
 
 		os_api.lainc_ = [](int64_t* Value) -> int64
 		{
+			solid_cassume(Value != nullptr);
 			return FPlatformAtomics::InterlockedIncrement(Value);
 		};
 
 		os_api.ladec_ = [](int64_t* Value) -> int64
 		{
+			solid_cassume(Value != nullptr);
 			return FPlatformAtomics::InterlockedDecrement(Value);
 		};
 
 		os_api.malloc_ = [](int Size) -> void*
 		{
+			solid_cassume(Size > 0);
 			return FMemory::Malloc(Size, FlecsMemoryDefaultAlignment);
 		};
 
 		os_api.realloc_ = [](void* Ptr, int Size) -> void*
 		{
+			solid_cassume(Size > 0);
 			return FMemory::Realloc(Ptr, Size, FlecsMemoryDefaultAlignment);
 		};
 
 		os_api.calloc_ = [](int Size) -> void*
 		{
+			solid_cassume(Size > 0);
 			return FMemory::MallocZeroed(Size, FlecsMemoryDefaultAlignment);
 		};
 

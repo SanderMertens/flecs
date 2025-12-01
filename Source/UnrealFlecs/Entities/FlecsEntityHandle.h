@@ -20,6 +20,7 @@
 #include "FlecsEntityHandleTypes.h"
 #include "FlecsEntityView.h"
 #include "FlecsId.h"
+#include "Logging/StructuredLog.h"
 
 #include "FlecsEntityHandle.generated.h"
 

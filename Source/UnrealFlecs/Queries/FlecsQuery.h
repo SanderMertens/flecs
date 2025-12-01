@@ -100,4 +100,9 @@ public:
     
 }; // struct FFlecsQuery
 
+/*template <typename ...TArgs>
+struct TFlecsQuery
+{
+}; // struct TFlecsQuery*/
+
 

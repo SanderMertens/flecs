@@ -19,7 +19,6 @@ namespace Unreal::Flecs
 {
 	// ReSharper disable once CppDeclaratorNeverUsed
 	static FOSApiInitializer OSApiInitializer;
-	
 } // namespace Unreal::Flecs
 
 void FUnrealFlecsModule::StartupModule()
@@ -32,6 +31,7 @@ void FUnrealFlecsModule::StartupModule()
 
 void FUnrealFlecsModule::ShutdownModule()
 {
+	
 }
 
 #undef LOCTEXT_NAMESPACE // "FUnrealFlecsModule"

@@ -8,6 +8,8 @@
 #ifndef FLECS_H
 #define FLECS_H
 
+#include "FlecsLibraryConfigMacros.h"
+
 /**
  * @defgroup c C API
  *
@@ -142,14 +144,20 @@
  * Even though an application may still be able to continue running after a soft
  * assert, it should be treated as if in an undefined state.
  */
+// Elie - Overriden by FlecsLibraryConfigMacros.h
+#if FLECS_LIBRARY_WITH_SOFT_ASSERT
  #define FLECS_SOFT_ASSERT
+#endif // FLECS_LIBRARY_WITH_SOFT_ASSERT
 
 /** @def FLECS_KEEP_ASSERT
  * By default asserts are disabled in release mode, when either FLECS_NDEBUG or
  * NDEBUG is defined. Defining FLECS_KEEP_ASSERT ensures that asserts are not
  * disabled. This define can be combined with FLECS_SOFT_ASSERT.
  */
-// #define FLECS_KEEP_ASSERT
+// Elie - Overriden by FlecsLibraryConfigMacros.h
+#if FLECS_LIBRARY_KEEP_ASSERT
+#define FLECS_KEEP_ASSERT
+#endif // FLECS_LIBRARY_KEEP_ASSERT
 
 /** @def FLECS_DEFAULT_TO_UNCACHED_QUERIES 
  * When set, this will cause queries with the EcsQueryCacheDefault policy
@@ -188,7 +196,10 @@
  * When set, this will prevent functions from being annotated with always_inline
  * which can improve performance at the cost of increased binary footprint.
  */
-// #define FLECS_NO_ALWAYS_INLINE
+// Elie - Overriden by FlecsLibraryConfigMacros.h
+#if FLECS_LIBRARY_DISABLE_ALWAYS_INLINE
+ #define FLECS_NO_ALWAYS_INLINE
+#endif // FLECS_LIBRARY_DISABLE_ALWAYS_INLINE
 
 /** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
@@ -249,6 +260,13 @@
  #define FLECS_UNITS          /**< Builtin standard units */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
+// Elie - overriden by FlecsLibraryConfigMacros.h
+#if FLECS_LIBRARY_WITH_JOURNAL
+
+#define FLECS_JOURNAL
+
+#endif // FLECS_LIBRARY_WITH_JOURNAL
+
 /** @def FLECS_HI_COMPONENT_ID
  * This constant can be used to balance between performance and memory
  * utilization. The constant is used in two ways:
@@ -263,8 +281,9 @@
  * This value must be set to a value that is a power of 2. Setting it to a value
  * that is not a power of two will degrade performance.
  */
+// Elie - overriden by FlecsLibraryConfigMacros.h
 #ifndef FLECS_HI_COMPONENT_ID
-#define FLECS_HI_COMPONENT_ID 1024
+#define FLECS_HI_COMPONENT_ID FLECS_LIBRARY_HI_COMPONENT_ID
 #endif
 
 /** @def FLECS_HI_ID_RECORD_ID
@@ -273,8 +292,9 @@
  * lookup array. Id values that fall outside of this range use a regular map
  * lookup, which is slower but more memory efficient.
  */
+// Elie - overriden by FlecsLibraryConfigMacros.h
 #ifndef FLECS_HI_ID_RECORD_ID
-#define FLECS_HI_ID_RECORD_ID 1024
+#define FLECS_HI_ID_RECORD_ID FLECS_LIBRARY_HI_ID_RECORD_ID
 #endif
 
 /** @def FLECS_SPARSE_PAGE_BITS
@@ -282,14 +302,16 @@
  * to determine the page index when used with a sparse set. The number of bits
  * determines the page size, which is (1 << bits).
  * Lower values decrease memory utilization, at the cost of more allocations. */
+// Elie - overriden by FlecsLibraryConfigMacros.h
 #ifndef FLECS_SPARSE_PAGE_BITS
-#define FLECS_SPARSE_PAGE_BITS 6
+#define FLECS_SPARSE_PAGE_BITS FLECS_LIBRARY_SPARSE_PAGE_BITS
 #endif
 
 /** @def FLECS_ENTITY_PAGE_BITS
  * Same as FLECS_SPARSE_PAGE_BITS, but for the entity index. */
+// Elie - overriden by FlecsLibraryConfigMacros.h
 #ifndef FLECS_ENTITY_PAGE_BITS
-#define FLECS_ENTITY_PAGE_BITS 10
+#define FLECS_ENTITY_PAGE_BITS FLECS_LIBRARY_ENTITY_PAGE_BITS
 #endif
 
 /** @def FLECS_USE_OS_ALLOC
@@ -348,8 +370,9 @@
 
 #ifdef FLECS_ENABLE_SYSTEM_PRIORITY
 
+// Elie - overriden by FlecsLibraryConfigMacros.h
 #ifndef FLECS_DEFAULT_SYSTEM_PRIORITY
-#define FLECS_DEFAULT_SYSTEM_PRIORITY (100)
+#define FLECS_DEFAULT_SYSTEM_PRIORITY FLECS_LIBRARY_DEFAULT_SYSTEM_PRIORITY
 #endif // FLECS_DEFAULT_SYSTEM_PRIORITY
 
 #endif // FLECS_ENABLE_SYSTEM_PRIORITY

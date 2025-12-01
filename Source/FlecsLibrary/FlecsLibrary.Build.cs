@@ -7,9 +7,6 @@ public class FlecsLibrary : ModuleRules
     public FlecsLibrary(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-
-        const bool bCompileWithLibraryTests = false;
-        const bool bCompileWithJournal = false;
         
         Type = ModuleType.CPlusPlus;
         
@@ -31,10 +28,13 @@ public class FlecsLibrary : ModuleRules
             PrivateDefinitions.Add("flecs_EXPORTS");
         }
         
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-        if (bCompileWithLibraryTests && Target.WithAutomationTests)
+        if (Target.bBuildEditor)
         {
-            PublicDefinitions.Add("FLECS_TESTS");
+            PublicDefinitions.Add("FLECS_LIBRARY_WITH_EDITOR=1");
+        }
+        else
+        {
+            PublicDefinitions.Add("FLECS_LIBRARY_WITH_EDITOR=0");
         }
         
         PublicDefinitions.AddRange(
@@ -66,12 +66,11 @@ public class FlecsLibrary : ModuleRules
                     "FLECS_HTTP",
                     "FLECS_REST",
                     "FLECS_DOC",
-                    "FLECS_LOG",
+                    "FLECS_LOG", // @TODO: maybe shouldnt only be Test and below?
                     "FLECS_PERF_TRACE",
                     "FLECS_ACCURATE_COUNTERS",
-                    "FLECS_UNITS",
+                    "FLECS_UNITS", // @TODO: maybe shouldnt only be Test and below?
                     "FLECS_ALERTS",
-                    "FLECS_KEEP_ASSERT",
                 }
             );
         }
@@ -83,12 +82,6 @@ public class FlecsLibrary : ModuleRules
                     "FLECS_DISABLE_COUNTERS",
                 }
             );
-        }
-        
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-        if (Target.bBuildEditor && bCompileWithJournal)
-        {
-            PublicDefinitions.Add("FLECS_JOURNAL");
         }
 
         if (Target.bCompileAgainstEditor)
