@@ -339,3 +339,12 @@ void flecs_non_fragmenting_childof_unparent(
         flecs_component_update_childof_w_depth(world, cr, 1);
     }
 }
+
+bool flecs_component_has_non_fragmenting_childof(
+    ecs_component_record_t *cr)
+{
+    if (cr->flags & EcsIdOrderedChildren) {
+        return ecs_map_count(&cr->pair->children_tables) != 0;
+    }
+    return false;
+}
