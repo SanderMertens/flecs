@@ -496,8 +496,7 @@ void flecs_notify_on_set(
         ecs_iter_action_t on_set = ti->hooks.on_set;
         if (on_set) {
             ecs_table_record_t dummy_tr;
-            const ecs_table_record_t *tr = 
-            flecs_component_get_table(cr, table);
+            const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
             if (!tr) {
                 dummy_tr.hdr.cr = cr;
                 dummy_tr.hdr.table = table;
@@ -521,7 +520,6 @@ void flecs_notify_on_set(
         }
     }
 
-    /* Run OnSet notifications */
     if ((dont_fragment || table->flags & EcsTableHasOnSet)) {
         ecs_type_t ids = { .array = &id, .count = 1 };
         flecs_emit(world, world, &(ecs_event_desc_t) {

@@ -789,6 +789,7 @@ void NonFragmentingChildOf_target_for_wildcard_3_lvls_childof_childof(void);
 void NonFragmentingChildOf_target_for_wildcard_3_lvls_childof_parent(void);
 void NonFragmentingChildOf_target_for_wildcard_3_lvls_parent_childof(void);
 void NonFragmentingChildOf_target_for_wildcard_3_lvls_parent_parent(void);
+void NonFragmentingChildOf_parent_has_traversable_flag(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -2008,6 +2009,36 @@ void Observer_2_singleton_terms_field_size_w_tag(void);
 void Observer_1_on_set_overridden_term_field_size_w_tag(void);
 void Observer_2_on_set_overridden_terms_field_size_w_tag(void);
 void Observer_create_observer_in_observer(void);
+void Observer_on_add_childof_w_parent_component(void);
+void Observer_on_add_childof_wildcard_w_parent_component(void);
+void Observer_on_add_childof_any_w_parent_component(void);
+void Observer_on_remove_childof_w_parent_component(void);
+void Observer_on_add_childof_w_parent_component_multi_term(void);
+void Observer_on_add_childof_wildcard_w_parent_component_multi_term(void);
+void Observer_on_add_childof_any_w_parent_component_multi_term(void);
+void Observer_on_remove_childof_w_parent_component_multi_term(void);
+void Observer_up_forward_w_parent_component(void);
+void Observer_up_propagate_w_parent_component(void);
+void Observer_up_forward_w_parent_component_2_levels(void);
+void Observer_up_forward_w_parent_component_2_levels_reverse(void);
+void Observer_up_propagate_w_parent_component_2_levels(void);
+void Observer_up_forward_w_parent_component_2_levels_mixed_1(void);
+void Observer_up_forward_w_parent_component_2_levels_mixed_2(void);
+void Observer_up_propagate_w_parent_component_2_levels_mixed_1(void);
+void Observer_up_propagate_w_parent_component_2_levels_mixed_2(void);
+void Observer_self_up_forward_w_parent_component(void);
+void Observer_self_up_propagate_w_parent_component(void);
+void Observer_self_up_forward_w_parent_component_2_levels(void);
+void Observer_self_up_forward_w_parent_component_2_levels_reverse(void);
+void Observer_self_up_propagate_w_parent_component_2_levels(void);
+void Observer_self_up_forward_w_parent_component_2_levels_mixed_1(void);
+void Observer_self_up_forward_w_parent_component_2_levels_mixed_2(void);
+void Observer_self_up_propagate_w_parent_component_2_levels_mixed_1(void);
+void Observer_self_up_propagate_w_parent_component_2_levels_mixed_2(void);
+void Observer_up_forward_w_parent_component_reparent(void);
+void Observer_self_up_forward_w_parent_component_reparent(void);
+void Observer_up_propagate_w_parent_component_on_set(void);
+void Observer_self_up_propagate_w_parent_component_on_set(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -6055,6 +6086,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "target_for_wildcard_3_lvls_parent_parent",
         NonFragmentingChildOf_target_for_wildcard_3_lvls_parent_parent
+    },
+    {
+        "parent_has_traversable_flag",
+        NonFragmentingChildOf_parent_has_traversable_flag
     }
 };
 
@@ -10824,6 +10859,126 @@ bake_test_case Observer_testcases[] = {
         Observer_create_observer_in_observer
     },
     {
+        "on_add_childof_w_parent_component",
+        Observer_on_add_childof_w_parent_component
+    },
+    {
+        "on_add_childof_wildcard_w_parent_component",
+        Observer_on_add_childof_wildcard_w_parent_component
+    },
+    {
+        "on_add_childof_any_w_parent_component",
+        Observer_on_add_childof_any_w_parent_component
+    },
+    {
+        "on_remove_childof_w_parent_component",
+        Observer_on_remove_childof_w_parent_component
+    },
+    {
+        "on_add_childof_w_parent_component_multi_term",
+        Observer_on_add_childof_w_parent_component_multi_term
+    },
+    {
+        "on_add_childof_wildcard_w_parent_component_multi_term",
+        Observer_on_add_childof_wildcard_w_parent_component_multi_term
+    },
+    {
+        "on_add_childof_any_w_parent_component_multi_term",
+        Observer_on_add_childof_any_w_parent_component_multi_term
+    },
+    {
+        "on_remove_childof_w_parent_component_multi_term",
+        Observer_on_remove_childof_w_parent_component_multi_term
+    },
+    {
+        "up_forward_w_parent_component",
+        Observer_up_forward_w_parent_component
+    },
+    {
+        "up_propagate_w_parent_component",
+        Observer_up_propagate_w_parent_component
+    },
+    {
+        "up_forward_w_parent_component_2_levels",
+        Observer_up_forward_w_parent_component_2_levels
+    },
+    {
+        "up_forward_w_parent_component_2_levels_reverse",
+        Observer_up_forward_w_parent_component_2_levels_reverse
+    },
+    {
+        "up_propagate_w_parent_component_2_levels",
+        Observer_up_propagate_w_parent_component_2_levels
+    },
+    {
+        "up_forward_w_parent_component_2_levels_mixed_1",
+        Observer_up_forward_w_parent_component_2_levels_mixed_1
+    },
+    {
+        "up_forward_w_parent_component_2_levels_mixed_2",
+        Observer_up_forward_w_parent_component_2_levels_mixed_2
+    },
+    {
+        "up_propagate_w_parent_component_2_levels_mixed_1",
+        Observer_up_propagate_w_parent_component_2_levels_mixed_1
+    },
+    {
+        "up_propagate_w_parent_component_2_levels_mixed_2",
+        Observer_up_propagate_w_parent_component_2_levels_mixed_2
+    },
+    {
+        "self_up_forward_w_parent_component",
+        Observer_self_up_forward_w_parent_component
+    },
+    {
+        "self_up_propagate_w_parent_component",
+        Observer_self_up_propagate_w_parent_component
+    },
+    {
+        "self_up_forward_w_parent_component_2_levels",
+        Observer_self_up_forward_w_parent_component_2_levels
+    },
+    {
+        "self_up_forward_w_parent_component_2_levels_reverse",
+        Observer_self_up_forward_w_parent_component_2_levels_reverse
+    },
+    {
+        "self_up_propagate_w_parent_component_2_levels",
+        Observer_self_up_propagate_w_parent_component_2_levels
+    },
+    {
+        "self_up_forward_w_parent_component_2_levels_mixed_1",
+        Observer_self_up_forward_w_parent_component_2_levels_mixed_1
+    },
+    {
+        "self_up_forward_w_parent_component_2_levels_mixed_2",
+        Observer_self_up_forward_w_parent_component_2_levels_mixed_2
+    },
+    {
+        "self_up_propagate_w_parent_component_2_levels_mixed_1",
+        Observer_self_up_propagate_w_parent_component_2_levels_mixed_1
+    },
+    {
+        "self_up_propagate_w_parent_component_2_levels_mixed_2",
+        Observer_self_up_propagate_w_parent_component_2_levels_mixed_2
+    },
+    {
+        "up_forward_w_parent_component_reparent",
+        Observer_up_forward_w_parent_component_reparent
+    },
+    {
+        "self_up_forward_w_parent_component_reparent",
+        Observer_self_up_forward_w_parent_component_reparent
+    },
+    {
+        "up_propagate_w_parent_component_on_set",
+        Observer_up_propagate_w_parent_component_on_set
+    },
+    {
+        "self_up_propagate_w_parent_component_on_set",
+        Observer_self_up_propagate_w_parent_component_on_set
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -14775,7 +14930,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        88,
+        89,
         NonFragmentingChildOf_testcases
     },
     {
@@ -14894,7 +15049,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        294,
+        324,
         Observer_testcases
     },
     {

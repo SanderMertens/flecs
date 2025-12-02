@@ -1765,6 +1765,27 @@ void Cached_rematch_after_delete_base_of_base(void);
 void Cached_rematch_after_delete_first_base_of_base(void);
 void Cached_rematch_after_remove_all(void);
 void Cached_no_rematch_after_delete_with(void);
+void Cached_match_parent_component_before_query(void);
+void Cached_match_parent_component_after_query(void);
+void Cached_match_parent_component_before_query_w_tag(void);
+void Cached_match_parent_component_after_query_w_tag(void);
+void Cached_this_written_match_parent_component_before_query(void);
+void Cached_this_written_match_parent_component_after_query(void);
+void Cached_match_parent_component_before_query_w_tag_add_tag_first(void);
+void Cached_match_parent_component_after_query_w_tag_add_tag_first(void);
+void Cached_this_written_match_parent_component_before_query_add_tag_first(void);
+void Cached_this_written_match_parent_component_after_query_add_tag_first(void);
+void Cached_match_parent_component_before_query_w_not_tag(void);
+void Cached_match_parent_component_after_query_w_not_tag(void);
+void Cached_up_w_parent_component_create_before_query(void);
+void Cached_up_w_parent_component_create_after_query(void);
+void Cached_up_w_parent_component_create_after_query_add_comp_after_hierarchy(void);
+void Cached_self_up_w_parent_component_create_before_query(void);
+void Cached_self_up_w_parent_component_create_after_query(void);
+void Cached_rematch_after_reparent_parent(void);
+void Cached_no_rematch_after_reparent_child(void);
+void Cached_rematch_after_reparent_mixed_childof(void);
+void Cached_rematch_after_reparent_mixed_parent(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -9476,6 +9497,90 @@ bake_test_case Cached_testcases[] = {
     {
         "no_rematch_after_delete_with",
         Cached_no_rematch_after_delete_with
+    },
+    {
+        "match_parent_component_before_query",
+        Cached_match_parent_component_before_query
+    },
+    {
+        "match_parent_component_after_query",
+        Cached_match_parent_component_after_query
+    },
+    {
+        "match_parent_component_before_query_w_tag",
+        Cached_match_parent_component_before_query_w_tag
+    },
+    {
+        "match_parent_component_after_query_w_tag",
+        Cached_match_parent_component_after_query_w_tag
+    },
+    {
+        "this_written_match_parent_component_before_query",
+        Cached_this_written_match_parent_component_before_query
+    },
+    {
+        "this_written_match_parent_component_after_query",
+        Cached_this_written_match_parent_component_after_query
+    },
+    {
+        "match_parent_component_before_query_w_tag_add_tag_first",
+        Cached_match_parent_component_before_query_w_tag_add_tag_first
+    },
+    {
+        "match_parent_component_after_query_w_tag_add_tag_first",
+        Cached_match_parent_component_after_query_w_tag_add_tag_first
+    },
+    {
+        "this_written_match_parent_component_before_query_add_tag_first",
+        Cached_this_written_match_parent_component_before_query_add_tag_first
+    },
+    {
+        "this_written_match_parent_component_after_query_add_tag_first",
+        Cached_this_written_match_parent_component_after_query_add_tag_first
+    },
+    {
+        "match_parent_component_before_query_w_not_tag",
+        Cached_match_parent_component_before_query_w_not_tag
+    },
+    {
+        "match_parent_component_after_query_w_not_tag",
+        Cached_match_parent_component_after_query_w_not_tag
+    },
+    {
+        "up_w_parent_component_create_before_query",
+        Cached_up_w_parent_component_create_before_query
+    },
+    {
+        "up_w_parent_component_create_after_query",
+        Cached_up_w_parent_component_create_after_query
+    },
+    {
+        "up_w_parent_component_create_after_query_add_comp_after_hierarchy",
+        Cached_up_w_parent_component_create_after_query_add_comp_after_hierarchy
+    },
+    {
+        "self_up_w_parent_component_create_before_query",
+        Cached_self_up_w_parent_component_create_before_query
+    },
+    {
+        "self_up_w_parent_component_create_after_query",
+        Cached_self_up_w_parent_component_create_after_query
+    },
+    {
+        "rematch_after_reparent_parent",
+        Cached_rematch_after_reparent_parent
+    },
+    {
+        "no_rematch_after_reparent_child",
+        Cached_no_rematch_after_reparent_child
+    },
+    {
+        "rematch_after_reparent_mixed_childof",
+        Cached_rematch_after_reparent_mixed_childof
+    },
+    {
+        "rematch_after_reparent_mixed_parent",
+        Cached_rematch_after_reparent_mixed_parent
     }
 };
 
@@ -12781,7 +12886,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        109,
+        130,
         Cached_testcases
     },
     {
