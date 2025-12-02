@@ -328,6 +328,10 @@ ecs_flags32_t flecs_component_get_flags_intern(
         result |= EcsIdSingleton;
     }
 
+    if (id == ecs_id(EcsParent)) {
+        result |= EcsIdTraversable;
+    }
+
     ecs_entity_t on_delete_kind = ecs_table_get_target(world, table, EcsOnDelete, 0);
     if (on_delete_kind == EcsRemove) {
         result |= EcsIdOnDeleteRemove;

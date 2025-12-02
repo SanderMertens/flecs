@@ -2160,3 +2160,22 @@ void NonFragmentingChildOf_target_for_wildcard_3_lvls_parent_parent(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_parent_has_traversable_flag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_record_t *r = ecs_record_find(world, parent);
+    test_assert(r != NULL);
+    test_bool(false, r->row & EcsEntityIsTraversable);
+
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent}));
+    test_bool(true, r->row & EcsEntityIsTraversable);
+
+    ecs_record_t *child_r = ecs_record_find(world, child);
+    test_assert(child_r != NULL);
+    test_bool(false, child_r->row & EcsEntityIsTraversable);
+
+    ecs_fini(world);
+}
