@@ -37,4 +37,7 @@ void flecs_non_fragmenting_childof_unparent(
     int32_t row,
     int32_t count);
 
+bool flecs_component_has_non_fragmenting_childof(
+    ecs_component_record_t *cr);
+
 #endif
