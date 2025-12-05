@@ -5839,6 +5839,8 @@ void Cached_up_w_parent_component_create_after_query(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    
+    printf("\n\n\n---\n");
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ ecs_id(Position), .src.id = EcsUp }},
@@ -5847,21 +5849,67 @@ void Cached_up_w_parent_component_create_after_query(void) {
 
     test_assert(q != NULL);
 
+    printf("---\n");
+
     ecs_entity_t root_a = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t parent = ecs_insert(world, ecs_value(EcsParent, {root_a}));
+    // ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, root_a);
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    printf("root = %u, parent = %u, child = %u\n", root_a, parent, child);
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
-        test_uint(child, it.entities[0]);
+        test_uint(parent, it.entities[0]);
         test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         test_uint(root_a, ecs_field_src(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
+        test_uint(child, it.entities[0]);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(root_a, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    printf("---Done\n");
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_up_w_parent_component_create_after_query_reverse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    printf("---\n");
+
+    ecs_entity_t root_a = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, root_a);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent}));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
         test_uint(parent, it.entities[0]);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(root_a, ecs_field_src(&it, 0));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(child, it.entities[0]);
         test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         test_uint(root_a, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
@@ -5884,9 +5932,11 @@ void Cached_up_w_parent_component_create_after_query_add_comp_after_hierarchy(vo
 
     test_assert(q != NULL);
 
-    ecs_entity_t root_a = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t root_a = ecs_new(world);
     ecs_entity_t parent = ecs_insert(world, ecs_value(EcsParent, {root_a}));
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_set(world, root_a, Position, {10, 20});
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
