@@ -15644,7 +15644,7 @@ repeat_event:
         }
 
         /* Forward events for Parent component as ChildOf pairs. */
-        if (id == ecs_id(EcsParent)) {
+        if (id == ecs_id(EcsParent) && !table_event) {
             ecs_event_desc_t pdesc = *desc;
 
             pdesc.event = event;
@@ -16117,8 +16117,11 @@ void flecs_uni_observer_register(
     }
 
     if (term && (term->trav == EcsChildOf)) {
-        flecs_register_observer_for_id(world, observable, o,
-            offsetof(ecs_event_id_record_t, self), ecs_id(EcsParent));
+        ecs_assert(o->query != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (o->query->flags & EcsQueryTableOnly) {
+            flecs_register_observer_for_id(world, observable, o,
+                offsetof(ecs_event_id_record_t, self), ecs_id(EcsParent));
+        }
     }
 }
 
@@ -16200,8 +16203,10 @@ void flecs_unregister_observer(
     }
 
     if (term && (term->trav == EcsChildOf)) {
-        flecs_unregister_observer_for_id(world, observable, o,
-            offsetof(ecs_event_id_record_t, self), ecs_id(EcsParent));
+        if (o->query->flags & EcsQueryTableOnly) {
+            flecs_unregister_observer_for_id(world, observable, o,
+                offsetof(ecs_event_id_record_t, self), ecs_id(EcsParent));
+        }
     }
 }
 
@@ -16952,7 +16957,7 @@ ecs_observer_t* flecs_observer_init(
     /* Only do optimization when not in sanitized mode. This ensures that the
      * behavior is consistent between observers with and without queries, as
      * both paths will be exercised in unit tests. */
-// #ifndef FLECS_SANITIZE
+#ifndef FLECS_SANITIZE
     /* Temporary arrays for dummy query */
     ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
     ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};
@@ -16974,8 +16979,10 @@ ecs_observer_t* flecs_observer_init(
                 (dummy_query.flags & EcsQueryMatchOnlySelf) &&
                 !dummy_query.row_fields;
             if (trivial_observer) {
-                dummy_query.flags |= desc->query.flags;
-                query = &dummy_query;
+                if (ECS_PAIR_FIRST(dummy_query.terms[0].id) != EcsChildOf) {
+                    dummy_query.flags |= desc->query.flags;
+                    query = &dummy_query;
+                }
             } else {
                 /* We're going to create an actual query, so undo the keep_alive
                  * increment of the dummy_query. */
@@ -16987,7 +16994,7 @@ ecs_observer_t* flecs_observer_init(
             }
         }
     }
-// #endif
+#endif
 
     /* Create query */
     if (!query) {
@@ -74181,6 +74188,7 @@ ecs_query_cache_t* flecs_query_cache_init(
         ecs_os_memcpy_n(observer_desc.query.terms, q->terms, 
             ecs_term_t, q->term_count);
         observer_desc.query.expr = NULL; /* Already parsed */
+        observer_desc.query.flags |= EcsQueryTableOnly;
 
         result->observer = flecs_observer_init(world, entity, &observer_desc);
         if (!result->observer) {
@@ -83040,6 +83048,15 @@ bool flecs_query_trav(
 
 
 static
+const EcsParent* flecs_query_tree_get_parents(
+    ecs_table_range_t range)
+{
+    int32_t parent_column = range.table->component_map[ecs_id(EcsParent)];
+    ecs_assert(parent_column != -1, ECS_INTERNAL_ERROR, NULL);
+    return ecs_table_get_column(range.table, parent_column - 1, range.offset);
+}
+
+static
 bool flecs_query_tree_select_tgt(
     const ecs_query_op_t *op,
     bool redo,
@@ -83359,10 +83376,7 @@ bool flecs_query_tree_with(
     }
 
     /* Non-fragmenting childof */
-    int32_t parent_column = range.table->component_map[ecs_id(EcsParent)];
-    ecs_assert(parent_column != -1, ECS_INTERNAL_ERROR, NULL);
-    EcsParent *parents = ecs_table_get_column(
-        range.table, parent_column - 1, range.offset);
+    const EcsParent *parents = flecs_query_tree_get_parents(range);
 
     /* Evaluating a single entity */
     if (range.count == 1) {
@@ -83473,7 +83487,8 @@ bool flecs_query_tree_with_pre(
     return false;
 }
 
-bool flecs_query_children(
+static
+bool flecs_query_children_select(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -83514,6 +83529,72 @@ bool flecs_query_children(
     it->entities = ecs_vec_first_t(v_children, ecs_entity_t);
     it->count = ecs_vec_count(v_children);
     return true;
+}
+
+static
+bool flecs_query_children_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    if (redo) {
+        return false;
+    }
+
+    ecs_table_range_t range = flecs_query_get_range(
+        op, &op->src, EcsQuerySrc, ctx);
+    if (range.table->flags & EcsTableHasChildOf) {
+        return flecs_query_and(op, redo, ctx);
+    }
+
+    if (!(range.table->flags & EcsTableHasParent)) {
+        /* If table doesn't have ChildOf or Parent its entities don't have 
+         * parents. */
+        return false;
+    }
+
+    ecs_id_t id = flecs_query_op_get_id(op, ctx);
+    ecs_assert(ECS_PAIR_FIRST(id) == EcsChildOf, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+    if (tgt == EcsWildcard || tgt == EcsAny) {
+        /* Entities in table have parents, so wildcard will always match. */
+        return true;
+    }
+
+    /* TODO: if a ChildOf query is constrained to a table with Parent component,
+     * only some entities in the table may match the query. TBD on what the 
+     * behavior should be in this case. For now the query engine only supports
+     * constraining the query to a single entity or an entire table. */
+    ecs_assert(range.count < 2, ECS_UNSUPPORTED, 
+        "can only use set_var with single entity for ChildOf($this, parent) terms");
+
+    if (range.count == 0) {
+        /* If matching the entire table, return true. Even though not all 
+         * entities in the table may match, this lets us add tables with the
+         * Parent component to query caches. */
+        return true;
+    }
+
+    const EcsParent *parents = flecs_query_tree_get_parents(range);
+    if ((uint32_t)parents->value == tgt) {
+        return true;
+    }
+
+    return false;
+}
+
+bool flecs_query_children(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (written & (1ull << op->src.var)) {
+        return flecs_query_children_with(op, redo, ctx);
+    } else {
+        return flecs_query_children_select(op, redo, ctx);
+    }
 }
 
 bool flecs_query_tree_and(
@@ -85265,6 +85346,24 @@ ecs_trav_up_t* flecs_trav_table_up(
             if (!flecs_type_can_inherit_id(world, table, cr_with, with)) {
                 goto not_found;
             }
+        }
+
+        if ((rel == ecs_pair(EcsChildOf, EcsWildcard) && 
+            (flags & EcsTableHasParent))) 
+        {
+            const EcsParent *p = ecs_table_get_id(
+                world, table, ecs_id(EcsParent), 
+                ECS_RECORD_TO_ROW(src_record->row));
+            ecs_assert(p != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_trav_up_t *up_parent = flecs_trav_table_up(ctx, a, cache,
+                world, p->value, with, rel, cr_with, cr_trav);
+            if (up_parent->tr) {
+                up->src = up_parent->src;
+                up->tr = up_parent->tr;
+                up->id = up_parent->id;
+                goto found;
+            }   
         }
 
         ecs_trav_up_t up_pair = {0};

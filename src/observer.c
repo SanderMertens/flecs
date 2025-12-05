@@ -215,8 +215,11 @@ void flecs_uni_observer_register(
     }
 
     if (term && (term->trav == EcsChildOf)) {
-        flecs_register_observer_for_id(world, observable, o,
-            offsetof(ecs_event_id_record_t, self), ecs_id(EcsParent));
+        ecs_assert(o->query != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (o->query->flags & EcsQueryTableOnly) {
+            flecs_register_observer_for_id(world, observable, o,
+                offsetof(ecs_event_id_record_t, self), ecs_id(EcsParent));
+        }
     }
 }
 
@@ -298,8 +301,10 @@ void flecs_unregister_observer(
     }
 
     if (term && (term->trav == EcsChildOf)) {
-        flecs_unregister_observer_for_id(world, observable, o,
-            offsetof(ecs_event_id_record_t, self), ecs_id(EcsParent));
+        if (o->query->flags & EcsQueryTableOnly) {
+            flecs_unregister_observer_for_id(world, observable, o,
+                offsetof(ecs_event_id_record_t, self), ecs_id(EcsParent));
+        }
     }
 }
 
@@ -1050,7 +1055,7 @@ ecs_observer_t* flecs_observer_init(
     /* Only do optimization when not in sanitized mode. This ensures that the
      * behavior is consistent between observers with and without queries, as
      * both paths will be exercised in unit tests. */
-// #ifndef FLECS_SANITIZE
+#ifndef FLECS_SANITIZE
     /* Temporary arrays for dummy query */
     ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
     ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};
@@ -1072,8 +1077,10 @@ ecs_observer_t* flecs_observer_init(
                 (dummy_query.flags & EcsQueryMatchOnlySelf) &&
                 !dummy_query.row_fields;
             if (trivial_observer) {
-                dummy_query.flags |= desc->query.flags;
-                query = &dummy_query;
+                if (ECS_PAIR_FIRST(dummy_query.terms[0].id) != EcsChildOf) {
+                    dummy_query.flags |= desc->query.flags;
+                    query = &dummy_query;
+                }
             } else {
                 /* We're going to create an actual query, so undo the keep_alive
                  * increment of the dummy_query. */
@@ -1085,7 +1092,7 @@ ecs_observer_t* flecs_observer_init(
             }
         }
     }
-// #endif
+#endif
 
     /* Create query */
     if (!query) {
