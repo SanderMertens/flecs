@@ -111,6 +111,24 @@ ecs_trav_up_t* flecs_trav_table_up(
             }
         }
 
+        if ((rel == ecs_pair(EcsChildOf, EcsWildcard) && 
+            (flags & EcsTableHasParent))) 
+        {
+            const EcsParent *p = ecs_table_get_id(
+                world, table, ecs_id(EcsParent), 
+                ECS_RECORD_TO_ROW(src_record->row));
+            ecs_assert(p != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_trav_up_t *up_parent = flecs_trav_table_up(ctx, a, cache,
+                world, p->value, with, rel, cr_with, cr_trav);
+            if (up_parent->tr) {
+                up->src = up_parent->src;
+                up->tr = up_parent->tr;
+                up->id = up_parent->id;
+                goto found;
+            }   
+        }
+
         ecs_trav_up_t up_pair = {0};
         int32_t r_column = flecs_trav_type_search(
                 &up_pair, table, cr_trav, &type);
