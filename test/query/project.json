@@ -1843,6 +1843,7 @@
                 "match_parent_component_after_query_w_not_tag",
                 "up_w_parent_component_create_before_query",
                 "up_w_parent_component_create_after_query",
+                "up_w_parent_component_create_after_query_reverse",
                 "up_w_parent_component_create_after_query_add_comp_after_hierarchy",
                 "self_up_w_parent_component_create_before_query",
                 "self_up_w_parent_component_create_after_query",
