@@ -1779,6 +1779,7 @@ void Cached_match_parent_component_before_query_w_not_tag(void);
 void Cached_match_parent_component_after_query_w_not_tag(void);
 void Cached_up_w_parent_component_create_before_query(void);
 void Cached_up_w_parent_component_create_after_query(void);
+void Cached_up_w_parent_component_create_after_query_reverse(void);
 void Cached_up_w_parent_component_create_after_query_add_comp_after_hierarchy(void);
 void Cached_self_up_w_parent_component_create_before_query(void);
 void Cached_self_up_w_parent_component_create_after_query(void);
@@ -9555,6 +9556,10 @@ bake_test_case Cached_testcases[] = {
         Cached_up_w_parent_component_create_after_query
     },
     {
+        "up_w_parent_component_create_after_query_reverse",
+        Cached_up_w_parent_component_create_after_query_reverse
+    },
+    {
         "up_w_parent_component_create_after_query_add_comp_after_hierarchy",
         Cached_up_w_parent_component_create_after_query_add_comp_after_hierarchy
     },
@@ -12886,7 +12891,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        130,
+        131,
         Cached_testcases
     },
     {
