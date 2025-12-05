@@ -6,6 +6,15 @@
 #include "../../private_api.h"
 
 static
+const EcsParent* flecs_query_tree_get_parents(
+    ecs_table_range_t range)
+{
+    int32_t parent_column = range.table->component_map[ecs_id(EcsParent)];
+    ecs_assert(parent_column != -1, ECS_INTERNAL_ERROR, NULL);
+    return ecs_table_get_column(range.table, parent_column - 1, range.offset);
+}
+
+static
 bool flecs_query_tree_select_tgt(
     const ecs_query_op_t *op,
     bool redo,
@@ -325,10 +334,7 @@ bool flecs_query_tree_with(
     }
 
     /* Non-fragmenting childof */
-    int32_t parent_column = range.table->component_map[ecs_id(EcsParent)];
-    ecs_assert(parent_column != -1, ECS_INTERNAL_ERROR, NULL);
-    EcsParent *parents = ecs_table_get_column(
-        range.table, parent_column - 1, range.offset);
+    const EcsParent *parents = flecs_query_tree_get_parents(range);
 
     /* Evaluating a single entity */
     if (range.count == 1) {
@@ -439,7 +445,8 @@ bool flecs_query_tree_with_pre(
     return false;
 }
 
-bool flecs_query_children(
+static
+bool flecs_query_children_select(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
@@ -480,6 +487,72 @@ bool flecs_query_children(
     it->entities = ecs_vec_first_t(v_children, ecs_entity_t);
     it->count = ecs_vec_count(v_children);
     return true;
+}
+
+static
+bool flecs_query_children_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    if (redo) {
+        return false;
+    }
+
+    ecs_table_range_t range = flecs_query_get_range(
+        op, &op->src, EcsQuerySrc, ctx);
+    if (range.table->flags & EcsTableHasChildOf) {
+        return flecs_query_and(op, redo, ctx);
+    }
+
+    if (!(range.table->flags & EcsTableHasParent)) {
+        /* If table doesn't have ChildOf or Parent its entities don't have 
+         * parents. */
+        return false;
+    }
+
+    ecs_id_t id = flecs_query_op_get_id(op, ctx);
+    ecs_assert(ECS_PAIR_FIRST(id) == EcsChildOf, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+    if (tgt == EcsWildcard || tgt == EcsAny) {
+        /* Entities in table have parents, so wildcard will always match. */
+        return true;
+    }
+
+    /* TODO: if a ChildOf query is constrained to a table with Parent component,
+     * only some entities in the table may match the query. TBD on what the 
+     * behavior should be in this case. For now the query engine only supports
+     * constraining the query to a single entity or an entire table. */
+    ecs_assert(range.count < 2, ECS_UNSUPPORTED, 
+        "can only use set_var with single entity for ChildOf($this, parent) terms");
+
+    if (range.count == 0) {
+        /* If matching the entire table, return true. Even though not all 
+         * entities in the table may match, this lets us add tables with the
+         * Parent component to query caches. */
+        return true;
+    }
+
+    const EcsParent *parents = flecs_query_tree_get_parents(range);
+    if ((uint32_t)parents->value == tgt) {
+        return true;
+    }
+
+    return false;
+}
+
+bool flecs_query_children(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (written & (1ull << op->src.var)) {
+        return flecs_query_children_with(op, redo, ctx);
+    } else {
+        return flecs_query_children_select(op, redo, ctx);
+    }
 }
 
 bool flecs_query_tree_and(

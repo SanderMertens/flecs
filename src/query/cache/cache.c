@@ -697,6 +697,7 @@ ecs_query_cache_t* flecs_query_cache_init(
         ecs_os_memcpy_n(observer_desc.query.terms, q->terms, 
             ecs_term_t, q->term_count);
         observer_desc.query.expr = NULL; /* Already parsed */
+        observer_desc.query.flags |= EcsQueryTableOnly;
 
         result->observer = flecs_observer_init(world, entity, &observer_desc);
         if (!result->observer) {

@@ -5721,8 +5721,6 @@ void Cached_match_parent_component_after_query_w_not_tag(void) {
 
     test_assert(q_a != NULL);
 
-    printf("%s\n", ecs_query_plans(q_a));
-
     ecs_query_t *q_b = ecs_query(world, {
         .terms = {{ ecs_childof(parent_b) }, { Foo, .oper = EcsNot }},
         .cache_kind = EcsQueryCacheAuto
@@ -5839,8 +5837,6 @@ void Cached_up_w_parent_component_create_after_query(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    
-    printf("\n\n\n---\n");
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ ecs_id(Position), .src.id = EcsUp }},
@@ -5849,14 +5845,9 @@ void Cached_up_w_parent_component_create_after_query(void) {
 
     test_assert(q != NULL);
 
-    printf("---\n");
-
     ecs_entity_t root_a = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t parent = ecs_insert(world, ecs_value(EcsParent, {root_a}));
-    // ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, root_a);
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
-
-    printf("root = %u, parent = %u, child = %u\n", root_a, parent, child);
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -5874,8 +5865,6 @@ void Cached_up_w_parent_component_create_after_query(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    printf("---Done\n");
-
     ecs_query_fini(q);
 
     ecs_fini(world);
@@ -5892,8 +5881,6 @@ void Cached_up_w_parent_component_create_after_query_reverse(void) {
     });
 
     test_assert(q != NULL);
-
-    printf("---\n");
 
     ecs_entity_t root_a = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, root_a);
