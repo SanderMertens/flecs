@@ -25,7 +25,7 @@ The following libraries need to be linked when building Flecs:
 </li>
 <li><b class="tab-title">MacOS</b>
 
-N/A
+No dependencies required on MacOS.
 
 </li>
 </ul>
@@ -145,6 +145,17 @@ clang flecs.c -c -Dflecs_EXPORTS -o flecs.o
 clang flecs.o -lrt -lpthread -lm -shared -o libflecs.so
 ```
 
+## Updating the distr files
+If you've made a modification to the Flecs source code (in the `src` or `include` folders) and you want to update the flecs.c and flecs.h files in the `distr` folder, run bake once in the root of the repository:
+
+```
+bake
+```
+
+Make sure that the files in `distr` now have your modifications. If they have not been updated, it's possible that the date of the files is newer than your modifications. If this happens, remove the `distr` folder and run `bake` again. This will regenerate files with the latest modifications.
+
+It is not recommended to modify the flecs.c and flecs.h directly.
+
 ## Build from source
 This will build the files in `src` and `include` with one of the following build systems:
 
@@ -230,23 +241,14 @@ cd my_project
 bake run
 ```
 
-## Updating the distr files
-If you've made a modification to the Flecs source code (in the `src` or `include` folders) and you want to update the flecs.c and flecs.h files in the `distr` folder, run bake once in the root of the repository:
-
-```
-bake
-```
-
-Make sure that the files in `distr` now have your modifications. If they have not been updated, it's possible that the date of the files is newer than your modifications. If this happens, remove the `distr` folder and run `bake` again. This will regenerate files with the latest modifications.
-
-It is not recommended to modify the flecs.c and flecs.h directly.
-
 ## Building the documentation
 To generate the HTML version of the documentation, run the following command:
 
 ```
 doxygen docs/cfg/Doxyfile
 ```
+
+The generated HTML files will be written to docs/html.
 
 ## Running the test suite
 Flecs uses the test framework that ships with bake. While it is possible to run tests with other build systems, it is recommended to use bake.
