@@ -3407,6 +3407,176 @@ void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(
     ecs_fini(world);
 }
 
+// For types that don't support non-destructive moves, make sure they call dtor appropriately.
+void ComponentLifecycle_dtor_on_destructive_component_removal(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    cl_ctx pos_ctx = { { 0 } };
+
+    ecs_set_hooks(world, Position, {
+        .ctor = comp_ctor,
+        .move = NULL,
+        .move_ctor = NULL,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &pos_ctx
+    });
+
+    pos_ctx.ctor.invoked = 0;
+    pos_ctx.dtor.invoked = 0;
+    pos_ctx.move_dtor.invoked = 0;
+
+    ecs_defer_begin(world);
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position); 
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_defer_end(world);
+
+    test_int(pos_ctx.ctor.invoked, 3);
+    test_int(pos_ctx.move_dtor.invoked, 0);
+    test_int(pos_ctx.dtor.invoked, 0);
+
+    ecs_defer_begin(world);
+    ecs_remove(world, e, Position);
+    ecs_remove(world, e2, Position);
+    ecs_remove(world, e3, Position);
+    ecs_defer_end(world);
+
+    // Total deletes should be equal to 3
+    test_int(pos_ctx.move_dtor.invoked + pos_ctx.dtor.invoked, 3);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_dtor_on_destructive_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    cl_ctx pos_ctx = { { 0 } };
+
+    ecs_set_hooks(world, Position, {
+        .ctor = comp_ctor,
+        .move = NULL,
+        .move_ctor = NULL,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &pos_ctx
+    });
+
+    pos_ctx.ctor.invoked = 0;
+    pos_ctx.dtor.invoked = 0;
+    pos_ctx.move_dtor.invoked = 0;
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position); 
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+
+    test_int(pos_ctx.ctor.invoked, 3);
+    test_int(pos_ctx.move_dtor.invoked, 0);
+    test_int(pos_ctx.dtor.invoked, 0);
+
+    ecs_defer_begin(world);
+    ecs_delete(world, e);
+    ecs_delete(world, e2);
+    ecs_delete(world, e3);
+    ecs_defer_end(world);
+
+    // Total deletes should be equal to 3
+    test_int(pos_ctx.move_dtor.invoked + pos_ctx.dtor.invoked, 3);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_dtor_on_destructive_component_removal_complex(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    cl_ctx pos_ctx = { { 0 } };
+
+    ecs_set_hooks(world, Position, {
+        .ctor = comp_ctor,
+        .move = NULL,
+        .move_ctor = NULL,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &pos_ctx
+    });
+
+    cl_ctx vel_ctx = { { 0 } };
+
+    ecs_set_hooks(world, Velocity, {
+        .ctor = comp_ctor,
+        .move = NULL,
+        .move_ctor = NULL,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &vel_ctx
+    });
+
+    pos_ctx.ctor.invoked = 0;
+    pos_ctx.dtor.invoked = 0;
+    pos_ctx.move_dtor.invoked = 0;
+
+    vel_ctx.ctor.invoked = 0;
+    vel_ctx.dtor.invoked = 0;
+    vel_ctx.move_dtor.invoked = 0;
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position); 
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+
+    test_int(pos_ctx.ctor.invoked, 3);
+    test_int(pos_ctx.move_dtor.invoked, 0);
+    test_int(pos_ctx.dtor.invoked, 0);
+
+    ecs_add(world, e, Velocity);
+    // e3 is after e in the Position, Velocity archetype table.
+    ecs_add(world, e3, Velocity);
+
+    test_int(vel_ctx.ctor.invoked, 2);
+    test_int(vel_ctx.move_dtor.invoked, 0);
+    test_int(vel_ctx.dtor.invoked, 0);
+
+    test_int(pos_ctx.move_dtor.invoked, 0);
+    test_int(pos_ctx.dtor.invoked, 0);
+
+    ecs_remove(world, e, Position);
+
+    // e3 Velocity moves into e Velocity, e moves back to the old table.
+    // This should have no dtors because Velocity hasn't actually been deleted anywhere.
+    test_int(vel_ctx.move_dtor.invoked, 0);
+    test_int(vel_ctx.dtor.invoked, 0);
+
+    // Position should only have 1 dtor.
+    test_int(pos_ctx.move_dtor.invoked + pos_ctx.dtor.invoked, 1);
+
+    ecs_fini(world);
+}
+
 void ComponentLifecycle_new_w_table_ctor(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -4352,4 +4522,12 @@ void ComponentLifecycle_shrink(void) {
     test_int(ecs_table_count(ecs_get_table(world, e1)), 1);
 
     ecs_fini(world);
+}
+
+void ComponentLifecycle_move_dtor_on_set(void) {
+    // Implement testcase
+}
+
+void ComponentLifecycle_move_dtor_on_deferred_set(void) {
+    // Implement testcase
 }
