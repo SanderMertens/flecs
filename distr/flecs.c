@@ -19250,6 +19250,16 @@ error:
     return false;
 }
 
+bool ecs_is_defer_suspended(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
+    return stage->defer < 0;
+error:
+    return false;
+}
+
 /**
  * @file type_info.c
  * @brief Component metadata and lifecycle hooks.
@@ -81042,7 +81052,7 @@ bool flecs_query_toggle_cmp(
 
     /* Shared fields are evaluated, can be ignored from now on */
     // and_fields &= ~up_fields;
-    not_fields &= ~up_fields;
+    not_fields &= flecs_uto(uint64_t, ~up_fields);
 
     if (!(table->flags & EcsTableHasToggle)) {
         if (not_fields) {

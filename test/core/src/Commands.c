@@ -1,5 +1,53 @@
 #include <core.h>
 
+void Commands_is_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    test_bool(false, ecs_is_deferred(world));
+
+    ecs_defer_begin(world);
+
+    test_bool(true, ecs_is_deferred(world));
+
+    ecs_defer_suspend(world);
+
+    test_bool(false, ecs_is_deferred(world));
+
+    ecs_defer_resume(world);
+
+    test_bool(true, ecs_is_deferred(world));
+
+    ecs_defer_end(world);
+
+    test_bool(false, ecs_is_deferred(world));
+
+    ecs_fini(world);
+}
+
+void Commands_is_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    test_bool(false, ecs_is_defer_suspended(world));
+
+    ecs_defer_begin(world);
+
+    test_bool(false, ecs_is_defer_suspended(world));
+
+    ecs_defer_suspend(world);
+
+    test_bool(true, ecs_is_defer_suspended(world));
+
+    ecs_defer_resume(world);
+
+    test_bool(false, ecs_is_defer_suspended(world));
+
+    ecs_defer_end(world);
+
+    test_bool(false, ecs_is_defer_suspended(world));
+
+    ecs_fini(world);
+}
+
 void Commands_defer_new(void) {
     ecs_world_t *world = ecs_mini();
 

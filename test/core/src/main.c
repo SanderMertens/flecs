@@ -2485,6 +2485,8 @@ void Type_large_type_expr(void);
 void Type_large_type_expr_limit(void);
 
 // Testsuite 'Commands'
+void Commands_is_deferred(void);
+void Commands_is_defer_suspended(void);
 void Commands_defer_new(void);
 void Commands_defer_bulk_new(void);
 void Commands_defer_add(void);
@@ -12486,6 +12488,14 @@ bake_test_case Type_testcases[] = {
 
 bake_test_case Commands_testcases[] = {
     {
+        "is_deferred",
+        Commands_is_deferred
+    },
+    {
+        "is_defer_suspended",
+        Commands_is_defer_suspended
+    },
+    {
         "defer_new",
         Commands_defer_new
     },
@@ -14069,7 +14079,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        168,
+        170,
         Commands_testcases
     },
     {

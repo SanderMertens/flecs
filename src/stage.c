@@ -477,3 +477,13 @@ bool ecs_is_deferred(
 error:
     return false;
 }
+
+bool ecs_is_defer_suspended(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
+    return stage->defer < 0;
+error:
+    return false;
+}
