@@ -2349,6 +2349,27 @@ void Entity_override_pair_w_tgt_id(void) {
     test_assert(!e.owns<Position>(tgt_b));
 }
 
+void Entity_override_pair_w_rel_id(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    auto rel_a = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
+    auto rel_b = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
+
+    auto base = world.entity()
+        .auto_override_second<Position>(rel_a)
+        .add_second<Position>(rel_b);
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert(e.has_second<Position>(rel_a));
+    test_assert(e.owns_second<Position>(rel_a));
+
+    test_assert(e.has_second<Position>(rel_b));
+    test_assert(!e.owns_second<Position>(rel_b));
+}
+
 void Entity_override_pair_w_ids(void) {
     flecs::world world;
 
@@ -2390,6 +2411,28 @@ void Entity_override_pair(void) {
 
     test_assert((e.has<Position, TagB>()));
     test_assert((!e.owns<Position, TagB>()));
+}
+
+void Entity_override_pair_second(void) {
+    flecs::world world;
+
+    flecs::entity TagA = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
+    flecs::entity TagB = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
+
+    world.component<Position>();
+
+    auto base = world.entity()
+        .auto_override_second<Position>(TagA)
+        .add_second<Position>(TagB);
+
+    auto e = world.entity()
+        .add(flecs::IsA, base);
+
+    test_assert((e.has_second<Position>(TagA)));
+    test_assert((e.owns_second<Position>(TagA)));
+
+    test_assert((e.has_second<Position>(TagB)));
+    test_assert((!e.owns_second<Position>(TagB)));
 }
 
 void Entity_set_override(void) {

@@ -1067,6 +1067,17 @@ struct entity_view : public id {
             _::type<Second>::id(world_));
     }
 
+    /** Check if entity owns the provided pair.
+     *
+     * @param first The first element of the pair.
+     * @tparam Second The second element of the pair.
+     * @return True if the entity owns the provided component, false otherwise.
+     */
+    template <typename Second>
+    bool owns_second(flecs::entity_t first) const {
+        return owns(first, _::type<Second>::id(world_));
+    }
+
     /** Test if id is enabled.
      *
      * @param id The id to test.

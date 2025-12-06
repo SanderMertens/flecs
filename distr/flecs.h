@@ -26278,6 +26278,17 @@ struct entity_view : public id {
             _::type<Second>::id(world_));
     }
 
+    /** Check if entity owns the provided pair.
+     *
+     * @param first The first element of the pair.
+     * @tparam Second The second element of the pair.
+     * @return True if the entity owns the provided component, false otherwise.
+     */
+    template <typename Second>
+    bool owns_second(flecs::entity_t first) const {
+        return owns(first, _::type<Second>::id(world_));
+    }
+
     /** Test if id is enabled.
      *
      * @param id The id to test.
@@ -27037,6 +27048,17 @@ struct entity_builder : entity_view {
     template <typename First, typename Second>
     const Self& auto_override() const  {
         return this->auto_override<First>(_::type<Second>::id(this->world_));
+    }
+
+    /** Mark pair for auto-overriding.
+     * @see auto_override(flecs::id_t) const
+     *
+     * @tparam Second The second element of the pair.
+     * @param first The first element of the pair.
+     */
+    template <typename Second>
+    const Self& auto_override_second(flecs::entity_t first) const  {
+        return this->auto_override(first, _::type<Second>::id(this->world_));
     }
 
     /** Set component, mark component for auto-overriding.
