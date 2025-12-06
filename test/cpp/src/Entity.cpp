@@ -1283,6 +1283,23 @@ void Entity_set_r_T(void) {
     test_int(p.y, 20);
 }
 
+void Entity_set_r_t_generic_no_size(void) {
+    flecs::world world;
+
+    auto position = world.component<Position>();
+
+    Position position_data = {10, 20};
+
+    flecs::entity rel = world.entity();
+    
+    flecs::entity e = world.entity()
+        .set_ptr(ecs_pair(rel, position), &position_data);
+
+    const Position* p = e.try_get_second<Position>(rel);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
 void Entity_assign_T(void) {
     flecs::world world;
 
