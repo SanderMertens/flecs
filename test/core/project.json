@@ -2572,6 +2572,8 @@
         }, {
             "id": "Commands",
             "testcases": [
+                "is_deferred",
+                "is_defer_suspended",
                 "defer_new",
                 "defer_bulk_new",
                 "defer_add",
