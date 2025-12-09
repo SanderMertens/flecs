@@ -1398,7 +1398,9 @@
                 "copy_ctor_w_override",
                 "copy_ctor_w_override_w_emplace",
                 "copy_ctor_w_override_w_ensure",
-                "shrink"
+                "shrink",
+                "dtor_after_add_exclusive_component",
+                "dtor_after_add_exclusive_component_last"
             ]
         }, {
             "id": "Pairs",

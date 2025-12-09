@@ -1340,6 +1340,8 @@ void ComponentLifecycle_copy_ctor_w_override(void);
 void ComponentLifecycle_copy_ctor_w_override_w_emplace(void);
 void ComponentLifecycle_copy_ctor_w_override_w_ensure(void);
 void ComponentLifecycle_shrink(void);
+void ComponentLifecycle_dtor_after_add_exclusive_component(void);
+void ComponentLifecycle_dtor_after_add_exclusive_component_last(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -7992,6 +7994,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "shrink",
         ComponentLifecycle_shrink
+    },
+    {
+        "dtor_after_add_exclusive_component",
+        ComponentLifecycle_dtor_after_add_exclusive_component
+    },
+    {
+        "dtor_after_add_exclusive_component_last",
+        ComponentLifecycle_dtor_after_add_exclusive_component_last
     }
 };
 
@@ -13981,7 +13991,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        132,
+        134,
         ComponentLifecycle_testcases
     },
     {
