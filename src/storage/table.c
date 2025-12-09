@@ -1845,12 +1845,11 @@ void flecs_table_delete(
                 
                 /* If neither move nor move_ctor are set, this indicates that 
                  * non-destructive move semantics are not supported for this 
-                 * type. In such cases when we are performing a non-destructive deletion, 
-                 * we set the move_dtor as ctor_move_dtor, which indicates we are operating
-                 * on memory already cleaned up. This adjustment ensures compatibility
-                 * with different language bindings. */
-                if (!destruct && !ti->hooks.move_ctor) {
-                    move_dtor = ti->hooks.ctor_move_dtor;
+                 * type. In such cases, we set the move_dtor as ctor_move_dtor, 
+                 * which indicates a destructive move operation. This adjustment 
+                 * ensures compatibility with different language bindings. */
+                if (!ti->hooks.move_ctor && ti->hooks.ctor_move_dtor) {
+                  move_dtor = ti->hooks.ctor_move_dtor;
                 }
 
                 if (move_dtor) {
@@ -1987,14 +1986,8 @@ void flecs_table_move(
                 flecs_table_invoke_add_hooks(world, dst_table,
                     i_new, &dst_entity, dst_index, 1, construct);
             } else {
-                ecs_type_info_t *ti = dst_column->ti;
-
-                /* If the component doesn't have a move/move_ctor,
-                 * then it doesn't support non-destructive moves and must
-                 * be destructed during its removal.
-                 */
                 flecs_table_invoke_remove_hooks(world, src_table,
-                    src_column, &src_entity, src_index, 1, use_move_dtor || !ti->hooks.move_ctor);
+                    src_column, &src_entity, src_index, 1, use_move_dtor);
             }
         }
 
@@ -2008,11 +2001,8 @@ void flecs_table_move(
     }
 
     for (; (i_old < src_column_count); i_old ++) {
-        ecs_column_t *src_column = &src_columns[i_new];
-        ecs_type_info_t *ti = src_column->ti;
-
         flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old], 
-            &src_entity, src_index, 1, use_move_dtor || !ti->hooks.move_ctor);
+            &src_entity, src_index, 1, use_move_dtor);
     }
 
     flecs_table_check_sanity(dst_table);
