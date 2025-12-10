@@ -356,8 +356,6 @@ ctest -C Debug --verbose
 Run the following commands to run all the tests:
 
 ```bash
-bazel build //:flecs
-
 bazel test --test_output=all //test/...
 ```
 
