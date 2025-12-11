@@ -444,7 +444,7 @@ void flecs_instantiate(
                 flecs_instantiate_children(
                     world, base, instance, range, ctx);
             }
-            ecs_os_perf_trace_pop("flecs.instantiate");
         }
+        ecs_os_perf_trace_pop("flecs.instantiate");
     }
 }
