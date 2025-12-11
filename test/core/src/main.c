@@ -2278,6 +2278,7 @@ void World_init_create_delete_random_1_entities_shrink_fini(void);
 void World_init_create_delete_random_2_entities_shrink_fini(void);
 void World_recreate_tables_after_shrink(void);
 void World_delete_empty_component_record_w_shrink(void);
+void World_delete_empty_hi_component_record_w_shrink(void);
 void World_delete_empty_queried_for_component_record_w_shrink(void);
 void World_delete_empty_sparse_component_record_w_shrink(void);
 void World_delete_empty_dont_fragment_component_record_w_shrink(void);
@@ -11686,6 +11687,10 @@ bake_test_case World_testcases[] = {
         World_delete_empty_component_record_w_shrink
     },
     {
+        "delete_empty_hi_component_record_w_shrink",
+        World_delete_empty_hi_component_record_w_shrink
+    },
+    {
         "delete_empty_queried_for_component_record_w_shrink",
         World_delete_empty_queried_for_component_record_w_shrink
     },
@@ -14061,7 +14066,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        151,
+        152,
         World_testcases
     },
     {

@@ -2357,6 +2357,7 @@
                 "init_create_delete_random_2_entities_shrink_fini",
                 "recreate_tables_after_shrink",
                 "delete_empty_component_record_w_shrink",
+                "delete_empty_hi_component_record_w_shrink",
                 "delete_empty_queried_for_component_record_w_shrink",
                 "delete_empty_sparse_component_record_w_shrink",
                 "delete_empty_dont_fragment_component_record_w_shrink",
