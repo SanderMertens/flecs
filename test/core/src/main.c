@@ -816,6 +816,9 @@ void OrderedChildren_get_ordered_children_from_prefab_instance_no_children(void)
 void OrderedChildren_get_ordered_children_from_prefab_instance_3_children(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_3_children_different_table(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
+void OrderedChildren_prefab_w_nested_ordered_children(void);
+void OrderedChildren_prefab_w_nested_ordered_children_2(void);
+void OrderedChildren_prefab_w_slots(void);
 void OrderedChildren_recreate_named_child(void);
 void OrderedChildren_lookup_after_move_to_root(void);
 void OrderedChildren_lookup_after_clear(void);
@@ -2160,6 +2163,23 @@ void Prefab_prefab_recycled_children_recycled_offset_id_different_generation(voi
 void Prefab_prefab_1_child_offset_id_occupied(void);
 void Prefab_prefab_1_child_offset_id_recycled_occupied(void);
 void Prefab_prefab_child_offset_w_smaller_child_id(void);
+void Prefab_prefab_ordered_children_1_child_offset_id(void);
+void Prefab_prefab_ordered_children_2_children_offset_id(void);
+void Prefab_prefab_ordered_children_3_children_offset_id(void);
+void Prefab_prefab_ordered_children_2_children_2_types_offset_id(void);
+void Prefab_prefab_ordered_children_3_children_3_types_offset_id(void);
+void Prefab_prefab_ordered_children_2_children_2_types_reverse_offset_id(void);
+void Prefab_prefab_ordered_children_3_children_3_types_reverse_offset_id(void);
+void Prefab_prefab_ordered_children_2_lvl_nested_children_offset_id(void);
+void Prefab_prefab_ordered_children_3_lvl_nested_children_offset_id(void);
+void Prefab_prefab_ordered_children_recycled_children_offset_id(void);
+void Prefab_prefab_ordered_children_recycled_instance_offset_id(void);
+void Prefab_prefab_ordered_children_children_recycled_offset_id(void);
+void Prefab_prefab_ordered_children_recycled_children_recycled_offset_id(void);
+void Prefab_prefab_ordered_children_recycled_children_recycled_offset_id_different_generation(void);
+void Prefab_prefab_ordered_children_1_child_offset_id_occupied(void);
+void Prefab_prefab_ordered_children_1_child_offset_id_recycled_occupied(void);
+void Prefab_prefab_ordered_children_child_offset_w_smaller_child_id(void);
 void Prefab_prefab_w_union(void);
 void Prefab_prefab_child_w_union(void);
 void Prefab_prefab_w_union_and_component(void);
@@ -5978,6 +5998,18 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "get_ordered_children_from_prefab_instance_nested_children",
         OrderedChildren_get_ordered_children_from_prefab_instance_nested_children
+    },
+    {
+        "prefab_w_nested_ordered_children",
+        OrderedChildren_prefab_w_nested_ordered_children
+    },
+    {
+        "prefab_w_nested_ordered_children_2",
+        OrderedChildren_prefab_w_nested_ordered_children_2
+    },
+    {
+        "prefab_w_slots",
+        OrderedChildren_prefab_w_slots
     },
     {
         "recreate_named_child",
@@ -11223,6 +11255,74 @@ bake_test_case Prefab_testcases[] = {
         Prefab_prefab_child_offset_w_smaller_child_id
     },
     {
+        "prefab_ordered_children_1_child_offset_id",
+        Prefab_prefab_ordered_children_1_child_offset_id
+    },
+    {
+        "prefab_ordered_children_2_children_offset_id",
+        Prefab_prefab_ordered_children_2_children_offset_id
+    },
+    {
+        "prefab_ordered_children_3_children_offset_id",
+        Prefab_prefab_ordered_children_3_children_offset_id
+    },
+    {
+        "prefab_ordered_children_2_children_2_types_offset_id",
+        Prefab_prefab_ordered_children_2_children_2_types_offset_id
+    },
+    {
+        "prefab_ordered_children_3_children_3_types_offset_id",
+        Prefab_prefab_ordered_children_3_children_3_types_offset_id
+    },
+    {
+        "prefab_ordered_children_2_children_2_types_reverse_offset_id",
+        Prefab_prefab_ordered_children_2_children_2_types_reverse_offset_id
+    },
+    {
+        "prefab_ordered_children_3_children_3_types_reverse_offset_id",
+        Prefab_prefab_ordered_children_3_children_3_types_reverse_offset_id
+    },
+    {
+        "prefab_ordered_children_2_lvl_nested_children_offset_id",
+        Prefab_prefab_ordered_children_2_lvl_nested_children_offset_id
+    },
+    {
+        "prefab_ordered_children_3_lvl_nested_children_offset_id",
+        Prefab_prefab_ordered_children_3_lvl_nested_children_offset_id
+    },
+    {
+        "prefab_ordered_children_recycled_children_offset_id",
+        Prefab_prefab_ordered_children_recycled_children_offset_id
+    },
+    {
+        "prefab_ordered_children_recycled_instance_offset_id",
+        Prefab_prefab_ordered_children_recycled_instance_offset_id
+    },
+    {
+        "prefab_ordered_children_children_recycled_offset_id",
+        Prefab_prefab_ordered_children_children_recycled_offset_id
+    },
+    {
+        "prefab_ordered_children_recycled_children_recycled_offset_id",
+        Prefab_prefab_ordered_children_recycled_children_recycled_offset_id
+    },
+    {
+        "prefab_ordered_children_recycled_children_recycled_offset_id_different_generation",
+        Prefab_prefab_ordered_children_recycled_children_recycled_offset_id_different_generation
+    },
+    {
+        "prefab_ordered_children_1_child_offset_id_occupied",
+        Prefab_prefab_ordered_children_1_child_offset_id_occupied
+    },
+    {
+        "prefab_ordered_children_1_child_offset_id_recycled_occupied",
+        Prefab_prefab_ordered_children_1_child_offset_id_recycled_occupied
+    },
+    {
+        "prefab_ordered_children_child_offset_w_smaller_child_id",
+        Prefab_prefab_ordered_children_child_offset_w_smaller_child_id
+    },
+    {
         "prefab_w_union",
         Prefab_prefab_w_union
     },
@@ -13907,7 +14007,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        42,
+        45,
         OrderedChildren_testcases
     },
     {
@@ -14054,7 +14154,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        176,
+        193,
         Prefab_testcases
     },
     {
