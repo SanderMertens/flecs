@@ -22007,15 +22007,30 @@ void ecs_shrink(
 
     flecs_sparse_shrink(&world->store.tables);
 
+    ecs_vec_t cr_to_release;
+    ecs_vec_init_t(
+        &world->allocator, &cr_to_release, ecs_component_record_t*, 0);
+
     FLECS_EACH_COMPONENT_RECORD(cr, {
         if (flecs_component_record_in_use(cr)) {
             flecs_component_shrink(cr);
         } else {
-            if (cr->id != EcsAny && cr->id != ecs_isa(EcsWildcard)) {
-                flecs_component_release(world, cr);
+            if (!ecs_id_is_wildcard(cr->id)) {
+                ecs_vec_append_t(
+                    &world->allocator, &cr_to_release, ecs_component_record_t*)[0] = cr;
+                
             }
         }
     })
+
+    count = ecs_vec_count(&cr_to_release);
+    for (i = 0; i < count; i ++) {
+        ecs_component_record_t *cr = ecs_vec_get_t(
+            &cr_to_release, ecs_component_record_t*, i)[0];
+        flecs_component_release(world, cr);
+    }
+
+    ecs_vec_fini_t(&world->allocator, &cr_to_release, ecs_component_record_t*);
 
     FLECS_EACH_QUERY(query, {
         flecs_query_reclaim(query);
@@ -38062,7 +38077,8 @@ int32_t flecs_component_release(
     ecs_component_record_t *cr)
 {
     int32_t rc = -- cr->refcount;
-    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, 
+        flecs_errstr(ecs_id_str(world, cr->id)));
 
     if (!rc) {
         flecs_component_free(world, cr);
