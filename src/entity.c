@@ -3073,6 +3073,13 @@ void ecs_set_version(
     }
 }
 
+
+uint32_t ecs_get_version(
+    ecs_entity_t entity)
+{
+    return flecs_uto(uint32_t, ECS_GENERATION(entity));
+}
+
 ecs_table_t* ecs_get_table(
     const ecs_world_t *world,
     ecs_entity_t entity)

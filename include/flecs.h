@@ -3607,6 +3607,15 @@ void ecs_set_version(
     ecs_world_t *world,
     ecs_entity_t entity);
 
+/** Get generation of an entity.
+ *
+ * @param entity Entity for which to get the generation of.
+ * @return The generation of the entity.
+ */
+FLECS_API
+uint32_t ecs_get_version(
+    ecs_entity_t entity);
+
 /** @} */
 
 /**

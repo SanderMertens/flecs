@@ -1298,6 +1298,14 @@ struct world {
         ecs_set_version(world_, e);
     }
 
+    /** Get version of provided entity.
+     * 
+     * @see ecs_get_version()
+     */
+    uint32_t get_version(flecs::entity_t e) const {
+        return ecs_get_version(e);
+    }
+
     /* Run callback after completing frame */
     void run_post_frame(ecs_fini_action_t action, void *ctx) const {
         ecs_run_post_frame(world_, action, ctx);
