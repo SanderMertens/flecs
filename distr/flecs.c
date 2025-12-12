@@ -39838,6 +39838,18 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
         if (cr) {
             flecs_component_update_childof_w_depth(world, cr, depth + 1);
         }
+
+        ecs_record_t *r = flecs_entities_get(world, e);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (r->row & EcsEntityIsTraversable) {
+            ecs_id_t added = ecs_childof(new[i].value);
+            ecs_id_t removed = ecs_childof(old[i].value);
+
+            flecs_update_component_monitors(world, 
+                &(ecs_type_t){ .count = 1, .array = &added },
+                &(ecs_type_t) { .count = 1, .array = &removed });
+        }
     }
 }
 

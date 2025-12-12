@@ -8143,13 +8143,61 @@ void Cached_rematch_after_reparent_parent(void) {
 }
 
 void Cached_no_rematch_after_reparent_child(void) {
-    // Implement testcase
-}
+    ecs_world_t *world = ecs_mini();
 
-void Cached_rematch_after_reparent_mixed_childof(void) {
-    // Implement testcase
-}
+    ECS_COMPONENT(world, Position);
 
-void Cached_rematch_after_reparent_mixed_parent(void) {
-    // Implement testcase
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsUp }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t root_a = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t root_b = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t parent = ecs_insert(world, ecs_value(EcsParent, {root_a}));
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    test_assert(info != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(parent, it.entities[0]);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(root_a, ecs_field_src(&it, 0));
+        {
+            Position *p = ecs_field(&it, Position, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 10); test_int(p->y, 20);
+        }
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, parent, EcsParent, {root_b});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(parent, it.entities[0]);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(root_b, ecs_field_src(&it, 0));
+        {
+            Position *p = ecs_field(&it, Position, 0);
+            test_assert(p != NULL);
+            test_int(p->x, 30); test_int(p->y, 40);
+        }
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    test_int(info->rematch_count_total, 0);
+
+    ecs_fini(world);
 }
