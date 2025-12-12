@@ -179,6 +179,7 @@
                 "set_version_on_nonempty_entity",
                 "set_version_while_deferred",
                 "set_version_on_not_alive",
+                "get_version_after_reuse",
                 "commit_w_on_add",
                 "commit_w_on_remove",
                 "commit_w_cmd_in_observer",
