@@ -274,7 +274,8 @@ bool flecs_query_up_with_parent(
         return false;
     }
 
-    const EcsParent *p = &op_ctx->parents[op_ctx->cur];
+    ecs_table_range_t range = op_ctx->range;
+    const EcsParent *p = &op_ctx->parents[range.offset + op_ctx->cur];
     ecs_entity_t parent = p->value;
     ecs_iter_t *it = ctx->it;
     ecs_id_t id_out;
@@ -289,7 +290,7 @@ bool flecs_query_up_with_parent(
         it->ids[op->field_index] = id_out;
         flecs_query_set_vars(op, id_out, ctx);
         flecs_set_source_set_flag(it, op->field_index);
-        flecs_query_src_set_single(op, op_ctx->cur, ctx);
+        flecs_query_src_set_single(op, range.offset + op_ctx->cur, ctx);
         return true;
     }
 
