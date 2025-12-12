@@ -2676,7 +2676,11 @@
                 "this_2_up_different_parents",
                 "this_2_self_up_different_parents",
                 "this_written_2_up_different_parents",
-                "this_written_2_self_up_different_parents"
+                "this_written_2_self_up_different_parents",
+                "this_up_childof",
+                "this_self_up_childof",
+                "this_written_up_childof",
+                "this_written_self_up_childof"
             ]
         }, {
             "id": "OrderBy",
