@@ -23608,7 +23608,7 @@ struct world {
         ecs_set_version(world_, e);
     }
 
-    /** Get version of entity with generation provided.
+    /** Get version of provided entity.
      * 
      * @see ecs_get_version()
      */

@@ -10445,6 +10445,7 @@ void ecs_set_version(
     }
 }
 
+
 uint32_t ecs_get_version(
     ecs_entity_t entity)
 {

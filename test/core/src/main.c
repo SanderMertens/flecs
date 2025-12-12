@@ -13931,7 +13931,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        149,
+        150,
         Entity_testcases
     },
     {
