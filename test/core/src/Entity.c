@@ -2278,6 +2278,24 @@ void Entity_set_version_on_not_alive(void) {
     ecs_fini(world);
 }
 
+void Entity_get_version_after_reuse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+
+    uint32_t v0 = ecs_get_version(e);
+    test_assert(v0 == 0);
+
+    ecs_delete(world, e);
+
+    ecs_entity_t e_new = ecs_new(world);
+    uint32_t v1 = ecs_get_version(e_new);
+    test_assert((uint32_t)(e & 0xFFFFFFFF) == (uint32_t)(e_new & 0xFFFFFFFF));
+    test_assert(v1 == v0 + 1);
+
+    ecs_fini(world);
+}
+
 static
 void Observer(ecs_iter_t *it) {
     int *invoked = it->ctx;

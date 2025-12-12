@@ -172,6 +172,7 @@ void Entity_entity_from_conflicting_digit(void);
 void Entity_set_version_on_nonempty_entity(void);
 void Entity_set_version_while_deferred(void);
 void Entity_set_version_on_not_alive(void);
+void Entity_get_version_after_reuse(void);
 void Entity_commit_w_on_add(void);
 void Entity_commit_w_on_remove(void);
 void Entity_commit_w_cmd_in_observer(void);
@@ -3495,6 +3496,10 @@ bake_test_case Entity_testcases[] = {
     {
         "set_version_on_not_alive",
         Entity_set_version_on_not_alive
+    },
+    {
+        "get_version_after_reuse",
+        Entity_get_version_after_reuse
     },
     {
         "commit_w_on_add",
@@ -13926,7 +13931,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        149,
+        150,
         Entity_testcases
     },
     {
