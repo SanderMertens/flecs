@@ -2459,6 +2459,8 @@
                 "this_src_1_table_2_children_w_tag_w_any",
                 "this_src_1_table_2_children_mixed_parents_w_tag_w_any",
                 "this_src_1_table_n_children_mixed_parents_w_tag_w_any",
+                "this_src_2_tables_2_children",
+                "this_src_2_tables_n_children_mixed_parents",
                 "this_src_written_1_table_1_child_w_any",
                 "this_src_written_1_table_2_children_w_any",
                 "this_src_written_1_table_2_children_mixed_parents_w_any",
@@ -2665,8 +2667,16 @@
                 "this_set_self_up_w_tag_w_3_levels_cpp", 
                 "this_set_self_up_w_tag_w_3_levels_pcc", 
                 "this_set_self_up_w_tag_w_3_levels_pcp", 
-                "this_set_self_up_w_tag_w_3_levels_ppc", 
-                "this_set_self_up_w_tag_w_3_levels_ppp"
+                "this_set_self_up_w_tag_w_3_levels_ppc",
+                "this_set_self_up_w_tag_w_3_levels_ppp",
+                "this_2_up",
+                "this_2_self_up",
+                "this_written_2_up",
+                "this_written_2_self_up",
+                "this_2_up_different_parents",
+                "this_2_self_up_different_parents",
+                "this_written_2_up_different_parents",
+                "this_written_2_self_up_different_parents"
             ]
         }, {
             "id": "OrderBy",
