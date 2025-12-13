@@ -219,6 +219,30 @@ ecs_trav_up_t* flecs_query_get_up_cache(
 
     ecs_assert(cr_with != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cr_trav != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (trav == EcsChildOf) {
+        if (table->flags & EcsTableHasParent) {
+            ecs_assert(row != -1, ECS_INTERNAL_ERROR, NULL);
+
+            const EcsParent *p = flecs_query_tree_get_parents((ecs_table_range_t){
+                .table = table,
+                .offset = row,
+                .count = 1
+            });
+            ecs_assert(p != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_entity_t tgt = (uint32_t)p->value;
+            ecs_trav_up_t *result = flecs_trav_table_up(ctx, a, cache, world, tgt,
+                with, ecs_pair(trav, EcsWildcard), cr_with, cr_trav);
+            ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (result->src != 0) {
+                return result;
+            }
+
+            return NULL;
+        }
+    }
+
     ecs_table_record_t *tr = ecs_table_cache_get(&cr_trav->cache, table);
     if (!tr) {
         return NULL; /* Table doesn't have the relationship */
