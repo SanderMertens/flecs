@@ -21,9 +21,14 @@ bool flecs_query_up_select_table(
     bool self = trav_kind == FlecsQueryUpSelectSelfUp;
     ecs_table_range_t range;
 
+    ecs_component_record_t *cr_with = impl->cr_with;
+    ecs_assert(cr_with != NULL, ECS_INTERNAL_ERROR, NULL);
+
     do {
         bool result;
-        if (kind == FlecsQueryUpSelectId) {
+        if (ECS_PAIR_FIRST(impl->with) == EcsChildOf) {
+            result = flecs_query_tree_and(op, redo, ctx);
+        } else if (kind == FlecsQueryUpSelectId) {
             result = flecs_query_select_id(op, redo, ctx, 0);
         } else if (kind == FlecsQueryUpSelectDefault) {
             result = flecs_query_select_w_id(op, redo, ctx, 
@@ -45,7 +50,7 @@ bool flecs_query_up_select_table(
         ecs_assert(range.table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Keep searching until we find a table that has the requested component, 
-         * with traversable entities */
+        * with traversable entities */
     } while (!self && range.table->_->traversable_count == 0);
 
     if (!range.count) {
