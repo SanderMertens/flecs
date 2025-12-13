@@ -229,6 +229,9 @@ bool flecs_query_sparse_self_up(
 
 /* Hierarchy evaluation */
 
+const EcsParent* flecs_query_tree_get_parents(
+    ecs_table_range_t range);
+
 bool flecs_query_tree_and(
     const ecs_query_op_t *op,
     bool redo,
@@ -275,7 +278,6 @@ bool flecs_query_children(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx);
-
 
 /* Toggle evaluation*/
 
