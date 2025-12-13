@@ -790,6 +790,9 @@ void NonFragmentingChildOf_target_for_wildcard_3_lvls_childof_parent(void);
 void NonFragmentingChildOf_target_for_wildcard_3_lvls_parent_childof(void);
 void NonFragmentingChildOf_target_for_wildcard_3_lvls_parent_parent(void);
 void NonFragmentingChildOf_parent_has_traversable_flag(void);
+void NonFragmentingChildOf_get_2_ordered_children(void);
+void NonFragmentingChildOf_get_2_ordered_children_mixed(void);
+void NonFragmentingChildOf_get_2_ordered_children_mixed_2(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -6090,6 +6093,18 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "parent_has_traversable_flag",
         NonFragmentingChildOf_parent_has_traversable_flag
+    },
+    {
+        "get_2_ordered_children",
+        NonFragmentingChildOf_get_2_ordered_children
+    },
+    {
+        "get_2_ordered_children_mixed",
+        NonFragmentingChildOf_get_2_ordered_children_mixed
+    },
+    {
+        "get_2_ordered_children_mixed_2",
+        NonFragmentingChildOf_get_2_ordered_children_mixed_2
     }
 };
 
@@ -14930,7 +14945,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        89,
+        92,
         NonFragmentingChildOf_testcases
     },
     {

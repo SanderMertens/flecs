@@ -821,7 +821,10 @@
                 "target_for_wildcard_3_lvls_childof_parent",
                 "target_for_wildcard_3_lvls_parent_childof",
                 "target_for_wildcard_3_lvls_parent_parent",
-                "parent_has_traversable_flag"
+                "parent_has_traversable_flag",
+                "get_2_ordered_children",
+                "get_2_ordered_children_mixed",
+                "get_2_ordered_children_mixed_2"
             ]
         }, {
             "id": "Hierarchies",

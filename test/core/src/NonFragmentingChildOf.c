@@ -2179,3 +2179,51 @@ void NonFragmentingChildOf_parent_has_traversable_flag(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_get_2_ordered_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t root_a = ecs_new(world);
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {root_a}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {root_a}));
+
+    ecs_entities_t ent = ecs_get_ordered_children(world, root_a);
+    test_int(ent.count, 2);
+    test_uint(ent.ids[0], e1);
+    test_uint(ent.ids[1], e2);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_get_2_ordered_children_mixed(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t root_a = ecs_new(world);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, root_a);
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {root_a}));
+
+    ecs_entities_t ent = ecs_get_ordered_children(world, root_a);
+    test_int(ent.count, 2);
+    test_uint(ent.ids[0], e1);
+    test_uint(ent.ids[1], e2);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_get_2_ordered_children_mixed_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t root_a = ecs_new(world);
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {root_a}));
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, root_a);
+
+    ecs_entities_t ent = ecs_get_ordered_children(world, root_a);
+    test_int(ent.count, 2);
+    test_uint(ent.ids[0], e1);
+    test_uint(ent.ids[1], e2);
+
+    ecs_fini(world);
+}

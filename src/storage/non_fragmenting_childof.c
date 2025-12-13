@@ -78,6 +78,7 @@ ecs_component_record_t* flecs_add_non_fragmenting_child(
     if (!(cr->flags & EcsIdOrderedChildren)) {
         flecs_component_ordered_children_init(world, cr);
         ecs_add_id(world, parent, EcsOrderedChildren);
+        flecs_ordered_children_populate(world, cr);
     }
 
     ecs_check(parent != 0, ECS_INVALID_OPERATION, 

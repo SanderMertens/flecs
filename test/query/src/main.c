@@ -2584,10 +2584,10 @@ void NonFragmentingChildOf_this_2_up_different_parents(void);
 void NonFragmentingChildOf_this_2_self_up_different_parents(void);
 void NonFragmentingChildOf_this_written_2_up_different_parents(void);
 void NonFragmentingChildOf_this_written_2_self_up_different_parents(void);
-void NonFragmentingChildOf_this_up_childof(void);
-void NonFragmentingChildOf_this_self_up_childof(void);
-void NonFragmentingChildOf_this_written_up_childof(void);
-void NonFragmentingChildOf_this_written_self_up_childof(void);
+void NonFragmentingChildOf_this_up_childof_pair(void);
+void NonFragmentingChildOf_this_self_up_childof_pair(void);
+void NonFragmentingChildOf_this_written_up_childof_pair(void);
+void NonFragmentingChildOf_this_written_self_up_childof_pair(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -12870,20 +12870,20 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_this_written_2_self_up_different_parents
     },
     {
-        "this_up_childof",
-        NonFragmentingChildOf_this_up_childof
+        "this_up_childof_pair",
+        NonFragmentingChildOf_this_up_childof_pair
     },
     {
-        "this_self_up_childof",
-        NonFragmentingChildOf_this_self_up_childof
+        "this_self_up_childof_pair",
+        NonFragmentingChildOf_this_self_up_childof_pair
     },
     {
-        "this_written_up_childof",
-        NonFragmentingChildOf_this_written_up_childof
+        "this_written_up_childof_pair",
+        NonFragmentingChildOf_this_written_up_childof_pair
     },
     {
-        "this_written_self_up_childof",
-        NonFragmentingChildOf_this_written_self_up_childof
+        "this_written_self_up_childof_pair",
+        NonFragmentingChildOf_this_written_self_up_childof_pair
     }
 };
 
