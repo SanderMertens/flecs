@@ -2050,6 +2050,7 @@ ecs_trav_up_t* flecs_query_get_up_cache(
     const ecs_query_run_ctx_t *ctx,
     ecs_trav_up_cache_t *cache,
     ecs_table_t *table,
+    int32_t row,
     ecs_id_t with,
     ecs_entity_t trav,
     ecs_component_record_t *cr_with,
@@ -84216,7 +84217,7 @@ bool flecs_query_up_with(
          * the entity on which the component was found, with additional metadata
          * on where it is stored. */
         ecs_trav_up_t *up = flecs_query_get_up_cache(ctx, &impl->cache, 
-            range.table, impl->with, impl->trav, impl->cr_with,
+            range.table, -1, impl->with, impl->trav, impl->cr_with,
             impl->cr_trav);
 
         if (!up) {
@@ -85274,10 +85275,10 @@ static
 ecs_trav_up_t* flecs_trav_up_ensure(
     const ecs_query_run_ctx_t *ctx,
     ecs_trav_up_cache_t *cache,
-    uint64_t table_id)
+    ecs_entity_t tgt)
 {
     ecs_trav_up_t **trav = ecs_map_ensure_ref(
-        &cache->src, ecs_trav_up_t, table_id);
+        &cache->src, ecs_trav_up_t, tgt);
     if (!trav[0]) {
         trav[0] = flecs_iter_calloc_t(ctx->it, ecs_trav_up_t);
     }
@@ -85360,6 +85361,20 @@ ecs_trav_up_t* flecs_trav_table_up(
         if (flecs_trav_type_search(up, table, cr_with, &type) >= 0) {
             up->src = src;
             goto found;
+        } else if (ECS_PAIR_FIRST(with) == EcsChildOf) {
+            if (table->flags & EcsTableHasParent) {
+                const EcsParent *p = ecs_table_get_id(
+                    world, table, ecs_id(EcsParent), 
+                    ECS_RECORD_TO_ROW(src_record->row));
+                ecs_assert(p != NULL, ECS_INTERNAL_ERROR, NULL);
+                
+                if ((uint32_t)p->value == ECS_PAIR_SECOND(with)) {
+                    up->src = src;
+                    up->tr = NULL;
+                    up->id = cr_with->id;
+                    goto found;
+                }
+            }
         }
     }
 
@@ -85396,7 +85411,7 @@ ecs_trav_up_t* flecs_trav_table_up(
 
         ecs_trav_up_t up_pair = {0};
         int32_t r_column = flecs_trav_type_search(
-                &up_pair, table, cr_trav, &type);
+            &up_pair, table, cr_trav, &type);
 
         while (r_column != -1) {
             ecs_entity_t tgt = ECS_PAIR_SECOND(up_pair.id);
@@ -85450,6 +85465,7 @@ ecs_trav_up_t* flecs_query_get_up_cache(
     const ecs_query_run_ctx_t *ctx,
     ecs_trav_up_cache_t *cache,
     ecs_table_t *table,
+    int32_t row,
     ecs_id_t with,
     ecs_entity_t trav,
     ecs_component_record_t *cr_with,
