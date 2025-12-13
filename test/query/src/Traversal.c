@@ -11988,6 +11988,8 @@ void Traversal_this_up_childof_any(void) {
 
     test_assert(q != NULL);
 
+    // printf("%s\n", ecs_query_plans(q));
+
     ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
 
@@ -12000,7 +12002,7 @@ void Traversal_this_up_childof_any(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_uint(e3, it.entities[0]);
-    test_uint(ecs_childof(e1), ecs_field_id(&it, 0));
+    test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 0));
     test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     test_uint(e2, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
@@ -12047,7 +12049,7 @@ void Traversal_this_self_up_childof_any(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_uint(e2, it.entities[0]);
-    test_uint(ecs_childof(e1), ecs_field_id(&it, 0));
+    test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 0));
     test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
@@ -12062,7 +12064,7 @@ void Traversal_this_self_up_childof_any(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_uint(e3, it.entities[0]);
-    test_uint(ecs_childof(e2), ecs_field_id(&it, 0));
+    test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 0));
     test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
@@ -12110,7 +12112,7 @@ void Traversal_this_written_up_childof_any(void) {
     test_bool(true, ecs_query_next(&it));
     test_uint(e3, it.entities[0]);
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    test_uint(ecs_childof(e1), ecs_field_id(&it, 1));
+    test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
     test_uint(0, ecs_field_src(&it, 0));
     test_uint(e2, ecs_field_src(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 0));
@@ -12157,7 +12159,7 @@ void Traversal_this_written_self_up_childof_any(void) {
     test_bool(true, ecs_query_next(&it));
     test_uint(e2, it.entities[0]);
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    test_uint(ecs_childof(e1), ecs_field_id(&it, 1));
+    test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
     test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 0));
@@ -12172,7 +12174,7 @@ void Traversal_this_written_self_up_childof_any(void) {
     test_bool(true, ecs_query_next(&it));
     test_uint(e3, it.entities[0]);
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    test_uint(ecs_childof(e2), ecs_field_id(&it, 1));
+    test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
     test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 0));
