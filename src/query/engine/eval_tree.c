@@ -5,7 +5,6 @@
 
 #include "../../private_api.h"
 
-static
 const EcsParent* flecs_query_tree_get_parents(
     ecs_table_range_t range)
 {
