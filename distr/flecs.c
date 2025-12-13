@@ -1453,6 +1453,14 @@ typedef struct {
     ecs_id_t matched;
     ecs_component_record_t *cr_with;
     ecs_component_record_t *cr_trav;
+
+    /* If queried for component is a ChilOf pair that uses the non-fragmenting
+     * ChildOf storage, iterate ordered children vector instead of tables with
+     * ChildOf pairs as roots for down cache. */
+    ecs_entity_t *entities;
+    int32_t entities_cur;
+    int32_t entities_count;
+
     ecs_trav_down_t *down;
     int32_t cache_elem;
     ecs_trav_up_cache_t cache;
@@ -39732,6 +39740,7 @@ ecs_component_record_t* flecs_add_non_fragmenting_child(
     if (!(cr->flags & EcsIdOrderedChildren)) {
         flecs_component_ordered_children_init(world, cr);
         ecs_add_id(world, parent, EcsOrderedChildren);
+        flecs_ordered_children_populate(world, cr);
     }
 
     ecs_check(parent != 0, ECS_INVALID_OPERATION, 
@@ -83839,9 +83848,14 @@ bool flecs_query_up_select_table(
     bool self = trav_kind == FlecsQueryUpSelectSelfUp;
     ecs_table_range_t range;
 
+    ecs_component_record_t *cr_with = impl->cr_with;
+    ecs_assert(cr_with != NULL, ECS_INTERNAL_ERROR, NULL);
+
     do {
         bool result;
-        if (kind == FlecsQueryUpSelectId) {
+        if (ECS_PAIR_FIRST(impl->with) == EcsChildOf) {
+            result = flecs_query_tree_and(op, redo, ctx);
+        } else if (kind == FlecsQueryUpSelectId) {
             result = flecs_query_select_id(op, redo, ctx, 0);
         } else if (kind == FlecsQueryUpSelectDefault) {
             result = flecs_query_select_w_id(op, redo, ctx, 
@@ -83863,7 +83877,7 @@ bool flecs_query_up_select_table(
         ecs_assert(range.table != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Keep searching until we find a table that has the requested component, 
-         * with traversable entities */
+        * with traversable entities */
     } while (!self && range.table->_->traversable_count == 0);
 
     if (!range.count) {
