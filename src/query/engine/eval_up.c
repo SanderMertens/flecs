@@ -389,7 +389,7 @@ bool flecs_query_up_with(
          * the entity on which the component was found, with additional metadata
          * on where it is stored. */
         ecs_trav_up_t *up = flecs_query_get_up_cache(ctx, &impl->cache, 
-            range.table, impl->with, impl->trav, impl->cr_with,
+            range.table, -1, impl->with, impl->trav, impl->cr_with,
             impl->cr_trav);
 
         if (!up) {
