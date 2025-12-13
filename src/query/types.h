@@ -236,6 +236,14 @@ typedef struct {
     ecs_id_t matched;
     ecs_component_record_t *cr_with;
     ecs_component_record_t *cr_trav;
+
+    /* If queried for component is a ChilOf pair that uses the non-fragmenting
+     * ChildOf storage, iterate ordered children vector instead of tables with
+     * ChildOf pairs as roots for down cache. */
+    ecs_entity_t *entities;
+    int32_t entities_cur;
+    int32_t entities_count;
+
     ecs_trav_down_t *down;
     int32_t cache_elem;
     ecs_trav_up_cache_t cache;
