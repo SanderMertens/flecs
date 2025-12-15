@@ -399,6 +399,9 @@ void Eval_vector_string_export_var(void);
 void Eval_vector_struct_export_var(void);
 void Eval_opaque_vector_i32_component(void);
 void Eval_opaque_vector_i32_export_var(void);
+void Eval_pair_after_const_int(void);
+void Eval_pair_after_const_string(void);
+void Eval_pair_after_const_identifier(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -477,6 +480,7 @@ void Template_redefine_nested_template_w_prefab_2(void);
 void Template_redefine_nested_template_w_prefab_3(void);
 void Template_template_w_script_component(void);
 void Template_template_w_script_pair_component(void);
+void Template_template_w_prop_and_pair(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -2673,6 +2677,18 @@ bake_test_case Eval_testcases[] = {
     {
         "opaque_vector_i32_export_var",
         Eval_opaque_vector_i32_export_var
+    },
+    {
+        "pair_after_const_int",
+        Eval_pair_after_const_int
+    },
+    {
+        "pair_after_const_string",
+        Eval_pair_after_const_string
+    },
+    {
+        "pair_after_const_identifier",
+        Eval_pair_after_const_identifier
     }
 };
 
@@ -2980,6 +2996,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_script_pair_component",
         Template_template_w_script_pair_component
+    },
+    {
+        "template_w_prop_and_pair",
+        Template_template_w_prop_and_pair
     }
 };
 
@@ -5494,14 +5514,14 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        390,
+        393,
         Eval_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        76,
+        77,
         Template_testcases
     },
     {

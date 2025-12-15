@@ -20,6 +20,7 @@ typedef struct ecs_parser_t {
     char *token_keep;
     bool significant_newline;
     bool merge_variable_members;
+    bool function_token;
 
     ecs_world_t *world;
 
