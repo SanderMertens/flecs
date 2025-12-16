@@ -402,7 +402,10 @@
                 "vector_string_export_var",
                 "vector_struct_export_var",
                 "opaque_vector_i32_component",
-                "opaque_vector_i32_export_var"
+                "opaque_vector_i32_export_var",
+                "pair_after_const_int",
+                "pair_after_const_string",
+                "pair_after_const_identifier"
             ]
         }, {
             "id": "Template",
@@ -482,7 +485,8 @@
                 "redefine_nested_template_w_prefab_2",
                 "redefine_nested_template_w_prefab_3",
                 "template_w_script_component",
-                "template_w_script_pair_component"
+                "template_w_script_pair_component",
+                "template_w_prop_and_pair"
             ]
         }, {
             "id": "Error",

@@ -3490,3 +3490,33 @@ void Template_template_w_script_pair_component(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_w_prop_and_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Tag {}"
+    LINE ""
+    LINE "template Foo {"
+    LINE "  prop v: 10"
+    LINE "  (Position, Tag): {v, v}"
+    LINE "}"
+    LINE ""
+    LINE "Foo e(10)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}

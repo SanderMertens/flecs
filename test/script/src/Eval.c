@@ -12925,3 +12925,73 @@ void Eval_opaque_vector_i32_export_var(void) {
 
     ecs_fini(world);
 }
+
+void Eval_pair_after_const_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    const char *expr = 
+    HEAD "e {"
+    LINE "  const x: 10"
+    LINE "  (Rel, Tgt)"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+
+    ecs_fini(world);
+}
+
+void Eval_pair_after_const_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    const char *expr = 
+    HEAD "e {"
+    LINE "  const x: \"Hello\""
+    LINE "  (Rel, Tgt)"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+
+    ecs_fini(world);
+}
+
+void Eval_pair_after_const_identifier(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    const char *expr = 
+    HEAD "e {"
+    LINE "  const a: 10"
+    LINE "  const b: a"
+    LINE "  (Rel, Tgt)"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+
+    ecs_fini(world);
+}

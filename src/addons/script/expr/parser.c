@@ -280,6 +280,34 @@ const char* flecs_script_parse_collection_initializer(
 }
 
 static
+const char* flecs_script_parse_function(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_expr_node_t **out) 
+{
+    ecs_expr_function_t *result = flecs_expr_function(parser);
+    result->left = *out;
+
+    pos = flecs_script_parse_initializer(
+        parser, pos, ')', &result->args);
+    if (!pos) {
+        goto error;
+    }
+
+    *out = (ecs_expr_node_t*)result;
+
+    if (pos[0] != ')') {
+        Error("expected end of argument list");
+    }
+
+    pos ++;
+
+    return pos;
+error:
+    return NULL;
+}
+
+static
 const char* flecs_script_parse_rhs(
     ecs_parser_t *parser,
     const char *pos,
@@ -321,7 +349,6 @@ const char* flecs_script_parse_rhs(
             case EcsTokShiftRight: 
             case EcsTokBracketOpen:
             case EcsTokMember:
-            case EcsTokParenOpen:
             {
                 ecs_token_kind_t oper = lookahead_token.kind;
 
@@ -354,34 +381,25 @@ const char* flecs_script_parse_rhs(
                 }
 
                 case EcsTokMember: {
-                    Parse_1(EcsTokIdentifier, {
-                        ecs_expr_member_t *result = flecs_expr_member(parser);
-                        result->left = *out;
-                        result->member_name = Token(1);
-                        *out = (ecs_expr_node_t*)result;
-                        break;
-                    });
+                    Parse(
+                        case EcsTokFunction:
+                        case EcsTokIdentifier: {
+                            ecs_expr_member_t *result = flecs_expr_member(parser);
+                            result->left = *out;
+                            result->member_name = Token(1);
+                            *out = (ecs_expr_node_t*)result;
 
-                    break;
-                }
+                            if(t->kind == EcsTokFunction) {
+                                pos = flecs_script_parse_function(parser, pos, out);
+                                if (!pos) {
+                                    goto error;
+                                }
+                            }
 
-                case EcsTokParenOpen: {
-                    ecs_expr_function_t *result = flecs_expr_function(parser);
-                    result->left = *out;
+                            break;
+                        }
+                    );
 
-                    pos = flecs_script_parse_initializer(
-                        parser, pos, ')', &result->args);
-                    if (!pos) {
-                        goto error;
-                    }
-
-                    *out = (ecs_expr_node_t*)result;
-
-                    if (pos[0] != ')') {
-                        Error("expected end of argument list");
-                    }
-
-                    pos ++;
                     break;
                 }
 
@@ -470,7 +488,8 @@ const char* flecs_script_parse_lhs(
             break;
         }
 
-        case EcsTokIdentifier: {
+        case EcsTokIdentifier:
+        case EcsTokFunction: {
             const char *expr = Token(0);
             if (expr[0] == '$') {
                 *out = (ecs_expr_node_t*)flecs_expr_variable(parser, &expr[1]);
@@ -492,6 +511,14 @@ const char* flecs_script_parse_lhs(
                     *out = (ecs_expr_node_t*)flecs_expr_identifier(parser, expr);
                 }
             }
+
+            if(t->kind == EcsTokFunction) {
+                pos = flecs_script_parse_function(parser, pos, out);
+                if (!pos) {
+                    goto error;
+                }
+            }
+
             break;
         }
 
@@ -559,10 +586,13 @@ const char* flecs_script_parse_lhs(
 
             int32_t stmt_count = ecs_vec_count(&parser->scope->stmts);
 
+            bool old_function_token = parser->function_token;
+            parser->function_token = false;
             pos = flecs_script_stmt(parser, pos);
             if (!pos) {
                 goto error;
             }
+            parser->function_token = old_function_token;
 
             pos = flecs_parse_ws_eol(pos);
 
@@ -665,8 +695,10 @@ const char* flecs_script_parse_expr(
 {
     ParserBegin;
 
+    bool old_function_token = parser->function_token;
+    parser->function_token = true;
     pos = flecs_script_parse_lhs(parser, pos, tokenizer, left_oper, out);
-
+    parser->function_token = old_function_token;
     EndOfRule;
 
     ParserEnd;
@@ -694,7 +726,8 @@ ecs_script_t* ecs_expr_parse(
         .code = script->code,
         .script = impl,
         .scope = impl->root,
-        .significant_newline = false
+        .significant_newline = false,
+        .function_token = true
     };
 
     impl->token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
@@ -714,7 +747,7 @@ ecs_script_t* ecs_expr_parse(
         goto error;
     }
 
-    //printf("%s\n", ecs_script_ast_to_str(script, true));
+    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     if (!desc || !desc->disable_folding) {
         if (flecs_expr_visit_fold(script, &impl->expr, &priv_desc)) {
@@ -722,7 +755,7 @@ ecs_script_t* ecs_expr_parse(
         }
     }
 
-    //printf("%s\n", ecs_script_ast_to_str(script, true));
+    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     return script;
 error:
