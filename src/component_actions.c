@@ -367,7 +367,7 @@ void flecs_notify_on_remove(
         if (!diff_flags) {
             return;
         }
-
+        
         if (diff_flags & EcsTableHasParent) {
             flecs_on_non_fragmenting_child_move_remove(
                 world, other_table, table, row, count);

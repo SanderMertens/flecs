@@ -1672,14 +1672,6 @@ void NonFragmentingChildOf_defer_delete_parent_and_tag(void) {
     ecs_fini(world);
 }
 
-void NonFragmentingChildOf_observer_order_after_delete(void) {
-    // Implement testcase
-}
-
-void NonFragmentingChildOf_observer_order_after_deferred_delete(void) {
-    // Implement testcase
-}
-
 void NonFragmentingChildOf_target_for(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -2226,4 +2218,107 @@ void NonFragmentingChildOf_get_2_ordered_children_mixed_2(void) {
     test_uint(ent.ids[1], e2);
 
     ecs_fini(world);
+}
+
+void NonFragmentingChildOf_3_levels_2_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p0 = ecs_new(world);
+    ecs_entity_t p1_1 = ecs_insert(world, ecs_value(EcsParent, {p0}));
+    ecs_entity_t p1_2 = ecs_insert(world, ecs_value(EcsParent, {p0}));
+    ecs_entity_t p2_1 = ecs_insert(world, ecs_value(EcsParent, {p1_1}));
+    ecs_entity_t p2_2 = ecs_insert(world, ecs_value(EcsParent, {p1_2}));
+    ecs_entity_t p3_1 = ecs_insert(world, ecs_value(EcsParent, {p2_1}));
+    ecs_entity_t p3_2 = ecs_insert(world, ecs_value(EcsParent, {p2_2}));
+
+    test_uint(p0, ecs_get_target(world, p1_1, EcsChildOf, 0));
+    test_uint(p0, ecs_get_target(world, p1_2, EcsChildOf, 0));
+    test_uint(p1_1, ecs_get_target(world, p2_1, EcsChildOf, 0));
+    test_uint(p1_2, ecs_get_target(world, p2_2, EcsChildOf, 0));
+    test_uint(p2_1, ecs_get_target(world, p3_1, EcsChildOf, 0));
+    test_uint(p2_2, ecs_get_target(world, p3_2, EcsChildOf, 0));
+
+    ecs_fini(world);
+}
+
+static int delete_count = 0;
+
+static void CheckDeleteOrder(ecs_iter_t *it) {
+    test_int(1, it->count);
+
+    /* Make sure entity's parent is still alive */
+    ecs_entity_t e = it->entities[0];
+    ecs_entity_t parent = ecs_get_parent(it->world, e);
+    test_assert(parent != 0);
+    test_assert(ecs_is_alive(it->world, parent));
+
+    /* Make sure children are deleted before entity */
+    ecs_iter_t cit = ecs_children(it->world, e);
+    test_bool(ecs_children_next(&cit), false);
+
+    delete_count ++;
+}
+
+void NonFragmentingChildOf_3_levels_2_children_cleanup_order_after_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p0 = ecs_new(world);
+    ecs_entity_t p1_1 = ecs_insert(world, ecs_value(EcsParent, {p0}));
+    ecs_entity_t p1_2 = ecs_insert(world, ecs_value(EcsParent, {p0}));
+    ecs_entity_t p2_1 = ecs_insert(world, ecs_value(EcsParent, {p1_1}));
+    ecs_entity_t p2_2 = ecs_insert(world, ecs_value(EcsParent, {p1_2}));
+    ecs_entity_t p3_1 = ecs_insert(world, ecs_value(EcsParent, {p2_1}));
+    ecs_entity_t p3_2 = ecs_insert(world, ecs_value(EcsParent, {p2_2}));
+
+    ecs_add(world, p1_1, Foo);
+    ecs_add(world, p1_2, Foo);
+    ecs_add(world, p2_1, Foo);
+    ecs_add(world, p2_2, Foo);
+    ecs_add(world, p3_1, Foo);
+    ecs_add(world, p3_2, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = {EcsOnRemove},
+        .callback = CheckDeleteOrder
+    });
+
+    ecs_delete(world, p0);
+
+    test_int(delete_count, 6);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_3_levels_2_children_cleanup_order_after_fini(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p0 = ecs_new(world);
+    ecs_entity_t p1_1 = ecs_insert(world, ecs_value(EcsParent, {p0}));
+    ecs_entity_t p1_2 = ecs_insert(world, ecs_value(EcsParent, {p0}));
+    ecs_entity_t p2_1 = ecs_insert(world, ecs_value(EcsParent, {p1_1}));
+    ecs_entity_t p2_2 = ecs_insert(world, ecs_value(EcsParent, {p1_2}));
+    ecs_entity_t p3_1 = ecs_insert(world, ecs_value(EcsParent, {p2_1}));
+    ecs_entity_t p3_2 = ecs_insert(world, ecs_value(EcsParent, {p2_2}));
+
+    ecs_add(world, p1_1, Foo);
+    ecs_add(world, p1_2, Foo);
+    ecs_add(world, p2_1, Foo);
+    ecs_add(world, p2_2, Foo);
+    ecs_add(world, p3_1, Foo);
+    ecs_add(world, p3_2, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = {EcsOnRemove},
+        .callback = CheckDeleteOrder
+    });
+
+    ecs_fini(world);
+
+    test_int(delete_count, 6);
 }

@@ -1717,7 +1717,10 @@
                 "nested_target_deletion",
                 "parent_component",
                 "parent_component_n_children",
-                "parent_component_n_parents_for_depth"
+                "parent_component_n_parents_for_depth",
+                "parent_component_after_query",
+                "parent_component_n_children_after_query",
+                "parent_component_n_parents_for_depth_after_query"
             ]
         }, {
             "id": "Cached",

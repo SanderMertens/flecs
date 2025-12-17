@@ -402,17 +402,15 @@ bool flecs_on_delete_clear_entities(
 
             /* If component record contains children with Parent components, 
              * delete them. */
-            if (cr->flags & EcsIdOrderedChildren) {
-                if (ecs_map_count(&cr->pair->children_tables)) {
-                    int32_t c, count = ecs_vec_count(&cr->pair->ordered_children);
-                    ecs_entity_t *children = ecs_vec_first(&cr->pair->ordered_children);
+            if (flecs_component_has_non_fragmenting_childof(cr)) {
+                int32_t c, count = ecs_vec_count(&cr->pair->ordered_children);
+                ecs_entity_t *children = ecs_vec_first(&cr->pair->ordered_children);
 
-                    ecs_defer_suspend(world);
-                    for (c = 0; c < count; c ++) {
-                        ecs_delete(world, children[c]);
-                    }
-                    ecs_defer_resume(world);
+                ecs_defer_suspend(world);
+                for (c = 0; c < count; c ++) {
+                    ecs_delete(world, children[c]);
                 }
+                ecs_defer_resume(world);
             }
 
             /* User code (from triggers) could have enqueued more ids to delete,
