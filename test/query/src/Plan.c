@@ -3439,3 +3439,135 @@ void Plan_cache_plan_childof_parent_written_simple(void) {
 
     ecs_fini(world);
 }
+
+void Plan_up_w_custom_rel(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Rel, Traversable);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = EcsUp, .trav = Rel }},
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids       "
+    LINE " 1. [ 0,  2]  up           $[this]          (Foo)"
+    LINE " 2. [ 1,  3]  yield        "
+    LINE "";
+
+    char *plan = ecs_query_plan(q);
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_fini(world);
+}
+
+void Plan_up_w_custom_rel_cached(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Rel, Traversable);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = EcsUp, .trav = Rel }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    const ecs_query_t *cq = ecs_query_get_cache_query(q);
+    test_assert(cq != NULL);
+
+    ecs_log_enable_colors(false);
+
+    {
+        const char *expect = 
+        HEAD " 0. [-1,  1]  setids       "
+        LINE " 1. [ 0,  2]  up           $[this]          (Foo)"
+        LINE " 2. [ 1,  3]  yield        "
+        LINE "";
+
+        char *plan = ecs_query_plan(cq);
+        test_str(expect, plan);
+        ecs_os_free(plan);
+    }
+
+    {
+        char *plan = ecs_query_plan(q);
+        test_str(NULL, plan);
+        ecs_os_free(plan);
+    }
+
+    ecs_fini(world);
+}
+
+void Plan_self_up_w_custom_rel(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Rel, Traversable);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = EcsSelf | EcsUp, .trav = Rel }},
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids       "
+    LINE " 1. [ 0,  2]  selfup       $[this]          (Foo)"
+    LINE " 2. [ 1,  3]  yield        "
+    LINE "";
+
+    char *plan = ecs_query_plan(q);
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_fini(world);
+}
+
+void Plan_self_up_w_custom_rel_cached(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Rel, Traversable);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = EcsSelf | EcsUp, .trav = Rel }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    const ecs_query_t *cq = ecs_query_get_cache_query(q);
+    test_assert(cq != NULL);
+
+    ecs_log_enable_colors(false);
+
+    {
+        const char *expect = 
+        HEAD " 0. [-1,  1]  setids       "
+        LINE " 1. [ 0,  2]  selfup       $[this]          (Foo)"
+        LINE " 2. [ 1,  3]  yield        "
+        LINE "";
+
+        char *plan = ecs_query_plan(cq);
+        test_str(expect, plan);
+        ecs_os_free(plan);
+    }
+
+    {
+        char *plan = ecs_query_plan(q);
+        test_str(NULL, plan);
+        ecs_os_free(plan);
+    }
+
+    ecs_fini(world);
+}

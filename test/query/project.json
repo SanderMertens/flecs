@@ -868,7 +868,11 @@
                 "cache_plan_childof_parent_written",
                 "cache_plan_childof_parent_simple",
                 "cache_plan_childof_parent_w_tag_simple",
-                "cache_plan_childof_parent_written_simple"
+                "cache_plan_childof_parent_written_simple",
+                "up_w_custom_rel",
+                "up_w_custom_rel_cached",
+                "self_up_w_custom_rel",
+                "self_up_w_custom_rel_cached"
             ]
         }, {
             "id": "Variables",
