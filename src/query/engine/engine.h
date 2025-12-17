@@ -382,8 +382,7 @@ bool flecs_query_up_with(
 bool flecs_query_self_up_with(
     const ecs_query_op_t *op,
     bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    bool id_only);
+    const ecs_query_run_ctx_t *ctx);
 
 
 /* Transitive relationship traversal */
