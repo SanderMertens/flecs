@@ -78764,7 +78764,7 @@ void flecs_query_set_op_kind(
     } else {
         if ((term->src.id & trav_flags) == EcsUp) {
             op->kind = EcsQueryUp;
-            if (term->trav == EcsChildOf) { // TODO: TEST UP WITH NON-CHILDOF RELATIONSHIPS
+            if (term->trav == EcsChildOf) {
                 if (term->flags_ & EcsTermIsCacheable && query->cache) {
                     op->kind = EcsQueryTreeUpPost;
                 } else if (query->pub.flags & EcsQueryNested) {
@@ -78773,7 +78773,7 @@ void flecs_query_set_op_kind(
             }
         } else if ((term->src.id & trav_flags) == (EcsSelf|EcsUp)) {
             op->kind = EcsQuerySelfUp;
-            if (term->trav == EcsChildOf) { // TODO: TEST UP WITH NON-CHILDOF RELATIONSHIPS
+            if (term->trav == EcsChildOf) {
                 if (term->flags_ & EcsTermIsCacheable && query->cache) {
                     op->kind = EcsQueryTreeSelfUpPost;
                 } else if (query->pub.flags & EcsQueryNested) {
