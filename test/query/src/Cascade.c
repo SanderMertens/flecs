@@ -1523,126 +1523,126 @@ void Cascade_parent_component_n_parents_for_depth(void) {
     ecs_entity_t c2_1 = ecs_insert(world, ecs_value(EcsParent, {p2_1}));
     ecs_entity_t c2_2 = ecs_insert(world, ecs_value(EcsParent, {p2_2}));
 
-    // ecs_query_t *q = ecs_query(world, {
-    //     .terms = {{ ecs_id(Position), .src.id = EcsCascade }}
-    // });
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .src.id = EcsCascade }}
+    });
 
-    // test_assert(q != NULL);
+    test_assert(q != NULL);
 
-    // ecs_iter_t it = ecs_query_iter(world, q);
-    // test_bool(true, ecs_query_next(&it));
-    // test_int(1, it.count);
-    // test_uint(c0_1, it.entities[0]);
-    // test_uint(p0, ecs_field_src(&it, 0));
-    // test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    // {
-    //     Position *p = ecs_field(&it, Position, 0);
-    //     test_assert(p != NULL);
-    //     test_int(p->x, 10); test_int(p->y, 21);
-    // }
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c0_1, it.entities[0]);
+    test_uint(p0, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 21);
+    }
 
-    // test_bool(true, ecs_query_next(&it));
-    // test_int(1, it.count);
-    // test_uint(c0_2, it.entities[0]);
-    // test_uint(p0, ecs_field_src(&it, 0));
-    // test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    // {
-    //     Position *p = ecs_field(&it, Position, 0);
-    //     test_assert(p != NULL);
-    //     test_int(p->x, 10); test_int(p->y, 21);
-    // }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c0_2, it.entities[0]);
+    test_uint(p0, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 21);
+    }
 
-    // test_bool(true, ecs_query_next(&it));
-    // test_int(1, it.count);
-    // test_uint(p1_1, it.entities[0]);
-    // test_uint(p0, ecs_field_src(&it, 0));
-    // test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    // {
-    //     Position *p = ecs_field(&it, Position, 0);
-    //     test_assert(p != NULL);
-    //     test_int(p->x, 10); test_int(p->y, 21);
-    // }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(p1_1, it.entities[0]);
+    test_uint(p0, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 21);
+    }
 
-    // test_bool(true, ecs_query_next(&it));
-    // test_int(1, it.count);
-    // test_uint(p1_2, it.entities[0]);
-    // test_uint(p0, ecs_field_src(&it, 0));
-    // test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    // {
-    //     Position *p = ecs_field(&it, Position, 0);
-    //     test_assert(p != NULL);
-    //     test_int(p->x, 10); test_int(p->y, 21);
-    // }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(p1_2, it.entities[0]);
+    test_uint(p0, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 21);
+    }
 
-    // test_bool(true, ecs_query_next(&it));
-    // test_int(1, it.count);
-    // test_uint(c1_1, it.entities[0]);
-    // test_uint(p1_1, ecs_field_src(&it, 0));
-    // test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    // {
-    //     Position *p = ecs_field(&it, Position, 0);
-    //     test_assert(p != NULL);
-    //     test_int(p->x, 11); test_int(p->y, 21);
-    // }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c1_1, it.entities[0]);
+    test_uint(p1_1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 11); test_int(p->y, 21);
+    }
 
-    // test_bool(true, ecs_query_next(&it));
-    // test_int(1, it.count);
-    // test_uint(c1_2, it.entities[0]);
-    // test_uint(p1_2, ecs_field_src(&it, 0));
-    // test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    // {
-    //     Position *p = ecs_field(&it, Position, 0);
-    //     test_assert(p != NULL);
-    //     test_int(p->x, 11); test_int(p->y, 22);
-    // }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c1_2, it.entities[0]);
+    test_uint(p1_2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 11); test_int(p->y, 22);
+    }
 
-    // test_bool(true, ecs_query_next(&it));
-    // test_int(1, it.count);
-    // test_uint(p2_1, it.entities[0]);
-    // test_uint(p1_1, ecs_field_src(&it, 0));
-    // test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    // {
-    //     Position *p = ecs_field(&it, Position, 0);
-    //     test_assert(p != NULL);
-    //     test_int(p->x, 11); test_int(p->y, 21);
-    // }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(p2_1, it.entities[0]);
+    test_uint(p1_1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 11); test_int(p->y, 21);
+    }
 
-    // test_bool(true, ecs_query_next(&it));
-    // test_int(1, it.count);
-    // test_uint(p2_2, it.entities[0]);
-    // test_uint(p1_2, ecs_field_src(&it, 0));
-    // test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    // {
-    //     Position *p = ecs_field(&it, Position, 0);
-    //     test_assert(p != NULL);
-    //     test_int(p->x, 11); test_int(p->y, 22);
-    // }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(p2_2, it.entities[0]);
+    test_uint(p1_2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 11); test_int(p->y, 22);
+    }
 
-    // test_bool(true, ecs_query_next(&it));
-    // test_int(1, it.count);
-    // test_uint(c2_1, it.entities[0]);
-    // test_uint(p2_1, ecs_field_src(&it, 0));
-    // test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    // {
-    //     Position *p = ecs_field(&it, Position, 0);
-    //     test_assert(p != NULL);
-    //     test_int(p->x, 12); test_int(p->y, 21);
-    // }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c2_1, it.entities[0]);
+    test_uint(p2_1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 12); test_int(p->y, 21);
+    }
 
-    // test_bool(true, ecs_query_next(&it));
-    // test_int(1, it.count);
-    // test_uint(c2_2, it.entities[0]);
-    // test_uint(p2_2, ecs_field_src(&it, 0));
-    // test_uint(ecs_id(Position), ecs_field_id(&it, 0));
-    // {
-    //     Position *p = ecs_field(&it, Position, 0);
-    //     test_assert(p != NULL);
-    //     test_int(p->x, 12); test_int(p->y, 22);
-    // }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c2_2, it.entities[0]);
+    test_uint(p2_2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 12); test_int(p->y, 22);
+    }
 
-    // test_bool(false, ecs_query_next(&it));
+    test_bool(false, ecs_query_next(&it));
 
-    // ecs_query_fini(q);
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

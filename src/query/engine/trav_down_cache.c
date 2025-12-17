@@ -172,6 +172,7 @@ void flecs_trav_entity_down_iter_children(
     ecs_vec_t *children = &cr_trav->pair->ordered_children;
     int32_t i, count = ecs_vec_count(children);
     ecs_entity_t *elems = ecs_vec_first(children);
+
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = elems[i];
         ecs_record_t *r = flecs_entities_get(world, e);

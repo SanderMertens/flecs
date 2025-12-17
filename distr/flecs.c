@@ -1184,7 +1184,15 @@ void flecs_on_non_fragmenting_child_move_remove(
     const ecs_table_t *dst,
     const ecs_table_t *src,
     int32_t row,
-    int32_t count);
+    int32_t count,
+    bool update_parent_records);
+
+// void flecs_on_non_fragmenting_child_move(
+//     ecs_world_t *world,
+//     const ecs_table_t *dst,
+//     const ecs_table_t *src,
+//     int32_t row,
+//     int32_t count);
 
 void flecs_non_fragmenting_childof_reparent(
     ecs_world_t *world,
@@ -7239,8 +7247,13 @@ void flecs_notify_on_remove(
         }
         
         if (diff_flags & EcsTableHasParent) {
+            bool update_parent_records = true;
+            if (diff->added.count && (table->flags & EcsTableHasParent)) {
+                update_parent_records = false;
+            }
+
             flecs_on_non_fragmenting_child_move_remove(
-                world, other_table, table, row, count);
+                world, other_table, table, row, count, update_parent_records);
         }
 
         if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
@@ -39873,7 +39886,8 @@ void flecs_on_non_fragmenting_child_move_remove(
     const ecs_table_t *dst,
     const ecs_table_t *src,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    bool update_parent_records)
 {
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -39889,14 +39903,18 @@ void flecs_on_non_fragmenting_child_move_remove(
         ecs_component_record_t *cr = flecs_components_ensure(
             world, ecs_childof(p));
         
-        flecs_ordered_entities_remove(cr->pair, e);
-        
-        flecs_remove_non_fragmenting_child_from_table(
-            world, cr, p, e, src, 0);
+        if (update_parent_records) {
+            flecs_remove_non_fragmenting_child_from_table(
+                world, cr, p, e, src, 0);
+        }
 
         if (dst->flags & EcsTableHasParent) {
-            flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
+            if (update_parent_records) {
+                flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
+            }
         } else {
+            flecs_ordered_entities_remove(cr->pair, e);
+
             ecs_component_record_t *cr_e = flecs_components_get(
                 world, ecs_childof(e));
             if (cr_e) {
@@ -85031,6 +85049,7 @@ void flecs_trav_entity_down_iter_children(
     ecs_vec_t *children = &cr_trav->pair->ordered_children;
     int32_t i, count = ecs_vec_count(children);
     ecs_entity_t *elems = ecs_vec_first(children);
+
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = elems[i];
         ecs_record_t *r = flecs_entities_get(world, e);

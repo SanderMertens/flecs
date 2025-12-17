@@ -915,6 +915,67 @@ void NonFragmentingChildOf_table_child_count(void) {
     test_uint(pr->first_entity, c);
     test_int(pr->count, 1);
 
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 1);
+    test_uint(entities.ids[0], c);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_table_child_count_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
+
+    const ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(p));
+    test_assert(cr != NULL);
+
+    ecs_table_t *t1 = ecs_get_table(world, c_1);
+    test_assert(t1 == ecs_get_table(world, c_2));
+
+    const ecs_parent_record_t *pr1 = flecs_component_get_parent_record(cr, t1);
+    test_assert(pr1 != NULL);
+    test_int(pr1->count, 2);
+
+    ecs_add(world, c_1, Foo);
+    ecs_add(world, c_2, Foo);
+
+    ecs_table_t *t2 = ecs_get_table(world, c_1);
+    test_assert(t2 == ecs_get_table(world, c_2));
+    test_assert(t1 != t2);
+
+    const ecs_parent_record_t *pr2 = flecs_component_get_parent_record(cr, t2);
+    test_assert(pr2 != NULL);
+    test_assert(pr2 != pr1);
+    test_int(pr2->count, 2);
+    test_assert(flecs_component_get_parent_record(cr, t1) == NULL);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add(world, parent, Bar);
+
+    ecs_add_pair(world, p, EcsChildOf, parent);
+
+    ecs_table_t *t3 = ecs_get_table(world, c_1);
+    test_assert(t3 == ecs_get_table(world, c_2));
+    test_assert(t3 != t2);
+
+    const ecs_parent_record_t *pr3 = flecs_component_get_parent_record(cr, t3);
+    test_assert(pr3 != NULL);
+    test_assert(pr3 != pr1);
+    test_int(pr3->count, 2);
+    test_assert(flecs_component_get_parent_record(cr, t1) == NULL);
+    test_assert(flecs_component_get_parent_record(cr, t2) == NULL);
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 2);
+    test_uint(entities.ids[0], c_1);
+    test_uint(entities.ids[1], c_2);
+
     ecs_fini(world);
 }
 
@@ -949,6 +1010,10 @@ void NonFragmentingChildOf_table_child_count_set_parent_after_tag(void) {
         test_uint(pr->first_entity, c);
         test_int(pr->count, 1);
     }
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 1);
+    test_uint(entities.ids[0], c);
 
     ecs_fini(world);
 }
@@ -991,6 +1056,10 @@ void NonFragmentingChildOf_table_child_count_after_add(void) {
         test_uint(pr->first_entity, c);
         test_int(pr->count, 1);
     }
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 1);
+    test_uint(entities.ids[0], c);
 
     ecs_fini(world);
 }
@@ -1036,6 +1105,10 @@ void NonFragmentingChildOf_table_child_count_after_remove(void) {
         test_int(pr->count, 1);
     }
 
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 1);
+    test_uint(entities.ids[0], c);
+
     ecs_fini(world);
 }
 
@@ -1080,6 +1153,10 @@ void NonFragmentingChildOf_table_child_count_after_remove_all(void) {
         test_int(pr->count, 1);
     }
 
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 1);
+    test_uint(entities.ids[0], c);
+
     ecs_fini(world);
 }
 
@@ -1120,6 +1197,9 @@ void NonFragmentingChildOf_table_child_count_after_clear(void) {
         test_assert(pr == NULL);
     }
 
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 0);
+
     ecs_fini(world);
 }
 
@@ -1159,6 +1239,9 @@ void NonFragmentingChildOf_table_child_count_after_delete(void) {
         test_assert(pr == NULL);
     }
 
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 0);
+
     ecs_fini(world);
 }
 
@@ -1178,9 +1261,14 @@ void NonFragmentingChildOf_table_child_count_n_children(void) {
     test_uint(pr->first_entity, c1);
     test_int(pr->count, 1);
 
-    ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     test_uint(pr->first_entity, c1);
     test_int(pr->count, 2);
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 2);
+    test_uint(entities.ids[0], c1);
+    test_uint(entities.ids[1], c2);
 
     ecs_fini(world);
 }
@@ -1214,6 +1302,9 @@ void NonFragmentingChildOf_table_child_count_n_children_remove_parent(void) {
 
     test_assert(flecs_component_get_parent_record(cr, table) == NULL);
 
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 0);
+
     ecs_fini(world);
 }
 
@@ -1245,6 +1336,9 @@ void NonFragmentingChildOf_table_child_count_n_children_delete_children(void) {
     ecs_delete(world, c2);
 
     test_assert(flecs_component_get_parent_record(cr, table) == NULL);
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 0);
 
     ecs_fini(world);
 }
@@ -1278,6 +1372,9 @@ void NonFragmentingChildOf_table_child_count_n_children_remove_parent_reverse(vo
 
     test_assert(flecs_component_get_parent_record(cr, table) == NULL);
 
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 0);
+
     ecs_fini(world);
 }
 
@@ -1309,6 +1406,9 @@ void NonFragmentingChildOf_table_child_count_n_children_delete_children_reverse(
     ecs_delete(world, c1);
 
     test_assert(flecs_component_get_parent_record(cr, table) == NULL);
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, p);
+    test_int(entities.count, 0);
 
     ecs_fini(world);
 }

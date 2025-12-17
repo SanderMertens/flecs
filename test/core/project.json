@@ -767,6 +767,7 @@
                 "get_parent_7",
                 "get_target",
                 "table_child_count",
+                "table_child_count_2",
                 "table_child_count_set_parent_after_tag",
                 "table_child_count_after_add",
                 "table_child_count_after_remove",
