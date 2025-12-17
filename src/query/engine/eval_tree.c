@@ -755,7 +755,7 @@ bool flecs_query_tree_up_post(
     ecs_assert(range.table->flags & EcsTableHasParent, ECS_INTERNAL_ERROR, NULL);
 
     if (self) {
-        return flecs_query_self_up_with(op, redo, ctx, false);
+        return flecs_query_self_up_with(op, redo, ctx);
     } else {
         return flecs_query_up_with(op, redo, ctx);
     }
