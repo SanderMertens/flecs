@@ -369,8 +369,13 @@ void flecs_notify_on_remove(
         }
         
         if (diff_flags & EcsTableHasParent) {
+            bool update_parent_records = true;
+            if (diff->added.count && (table->flags & EcsTableHasParent)) {
+                update_parent_records = false;
+            }
+
             flecs_on_non_fragmenting_child_move_remove(
-                world, other_table, table, row, count);
+                world, other_table, table, row, count, update_parent_records);
         }
 
         if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
