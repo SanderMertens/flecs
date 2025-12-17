@@ -1656,6 +1656,9 @@ void Cascade_nested_target_deletion(void);
 void Cascade_parent_component(void);
 void Cascade_parent_component_n_children(void);
 void Cascade_parent_component_n_parents_for_depth(void);
+void Cascade_parent_component_after_query(void);
+void Cascade_parent_component_n_children_after_query(void);
+void Cascade_parent_component_n_parents_for_depth_after_query(void);
 
 // Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
@@ -9218,6 +9221,18 @@ bake_test_case Cascade_testcases[] = {
     {
         "parent_component_n_parents_for_depth",
         Cascade_parent_component_n_parents_for_depth
+    },
+    {
+        "parent_component_after_query",
+        Cascade_parent_component_after_query
+    },
+    {
+        "parent_component_n_children_after_query",
+        Cascade_parent_component_n_children_after_query
+    },
+    {
+        "parent_component_n_parents_for_depth_after_query",
+        Cascade_parent_component_n_parents_for_depth_after_query
     }
 };
 
@@ -13639,7 +13654,7 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-        31,
+        34,
         Cascade_testcases
     },
     {

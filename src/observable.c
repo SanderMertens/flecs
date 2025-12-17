@@ -321,6 +321,8 @@ void flecs_emit_propagate_id(
     ecs_table_cache_iter_t idt;
 
     if ((trav == EcsChildOf) && (flecs_component_has_non_fragmenting_childof(cur))) {
+        ecs_assert(ECS_PAIR_FIRST(cur->id) == EcsChildOf, ECS_INTERNAL_ERROR, NULL);
+
         int32_t i, count = ecs_vec_count(&cur->pair->ordered_children);
         ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
         for (i = 0; i < count; i ++) {
@@ -1372,7 +1374,7 @@ repeat_event:
 
             for (p = 0; p < parent_count; p ++) {
                 ecs_entity_t parent = parents[p].value;
-                if (parent) {
+                if (parent && ecs_is_alive(world, parent)) {
                     ecs_id_t pair = ecs_childof(parent);
                     ecs_type_t type = { .count = 1, .array = &pair };
                     pdesc.ids = &type;

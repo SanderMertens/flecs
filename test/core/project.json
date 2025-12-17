@@ -793,8 +793,6 @@
                 "depth_after_parent_reparent_different_depth_nested",
                 "defer_delete_parent_and_base",
                 "defer_delete_parent_and_tag",
-                "observer_order_after_delete",
-                "observer_order_after_deferred_delete",
                 "target_for",
                 "target_for_twice",
                 "search",
@@ -824,7 +822,10 @@
                 "parent_has_traversable_flag",
                 "get_2_ordered_children",
                 "get_2_ordered_children_mixed",
-                "get_2_ordered_children_mixed_2"
+                "get_2_ordered_children_mixed_2",
+                "3_levels_2_children",
+                "3_levels_2_children_cleanup_order_after_delete",
+                "3_levels_2_children_cleanup_order_after_fini"
             ]
         }, {
             "id": "Hierarchies",
