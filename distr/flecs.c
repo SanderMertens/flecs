@@ -2470,8 +2470,7 @@ bool flecs_query_up_with(
 bool flecs_query_self_up_with(
     const ecs_query_op_t *op,
     bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    bool id_only);
+    const ecs_query_run_ctx_t *ctx);
 
 
 /* Transitive relationship traversal */
@@ -83835,7 +83834,7 @@ bool flecs_query_tree_up_post(
     ecs_assert(range.table->flags & EcsTableHasParent, ECS_INTERNAL_ERROR, NULL);
 
     if (self) {
-        return flecs_query_self_up_with(op, redo, ctx, false);
+        return flecs_query_self_up_with(op, redo, ctx);
     } else {
         return flecs_query_up_with(op, redo, ctx);
     }
@@ -83862,9 +83861,6 @@ bool flecs_query_up_select_table(
     ecs_iter_t *it = ctx->it;
     bool self = trav_kind == FlecsQueryUpSelectSelfUp;
     ecs_table_range_t range;
-
-    ecs_component_record_t *cr_with = impl->cr_with;
-    ecs_assert(cr_with != NULL, ECS_INTERNAL_ERROR, NULL);
 
     do {
         bool result;
@@ -84240,8 +84236,7 @@ next_row:
 bool flecs_query_self_up_with(
     const ecs_query_op_t *op,
     bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    bool id_only)
+    const ecs_query_run_ctx_t *ctx)
 {
     ecs_query_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
     ecs_query_up_impl_t *impl = op_ctx->impl;
@@ -84308,7 +84303,7 @@ bool flecs_query_self_up(
 {
     uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        return flecs_query_self_up_with(op, redo, ctx, false);
+        return flecs_query_self_up_with(op, redo, ctx);
     } else {
         return flecs_query_up_select(op, redo, ctx, 
             FlecsQueryUpSelectSelfUp, FlecsQueryUpSelectDefault);
