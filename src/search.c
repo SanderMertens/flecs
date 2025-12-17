@@ -416,7 +416,10 @@ int32_t flecs_relation_depth(
         } else if (table->flags & EcsTableHasParent) {
             ecs_component_record_t *cr_wc = flecs_components_get(
                 world, ecs_pair(EcsParentDepth, EcsWildcard));
-            ecs_assert(cr_wc != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (!cr_wc) {
+                return 0;
+            }
+
             const ecs_table_record_t *tr_wc = flecs_component_get_table(
                 cr_wc, table);
             if (!tr_wc) {
