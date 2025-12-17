@@ -844,6 +844,10 @@ void Plan_cache_plan_childof_parent_written(void);
 void Plan_cache_plan_childof_parent_simple(void);
 void Plan_cache_plan_childof_parent_w_tag_simple(void);
 void Plan_cache_plan_childof_parent_written_simple(void);
+void Plan_up_w_custom_rel(void);
+void Plan_up_w_custom_rel_cached(void);
+void Plan_self_up_w_custom_rel(void);
+void Plan_self_up_w_custom_rel_cached(void);
 
 // Testsuite 'Variables'
 void Variables_setup(void);
@@ -6042,6 +6046,22 @@ bake_test_case Plan_testcases[] = {
     {
         "cache_plan_childof_parent_written_simple",
         Plan_cache_plan_childof_parent_written_simple
+    },
+    {
+        "up_w_custom_rel",
+        Plan_up_w_custom_rel
+    },
+    {
+        "up_w_custom_rel_cached",
+        Plan_up_w_custom_rel_cached
+    },
+    {
+        "self_up_w_custom_rel",
+        Plan_self_up_w_custom_rel
+    },
+    {
+        "self_up_w_custom_rel_cached",
+        Plan_self_up_w_custom_rel_cached
     }
 };
 
@@ -13579,7 +13599,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        102,
+        106,
         Plan_testcases
     },
     {
