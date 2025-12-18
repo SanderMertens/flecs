@@ -2422,3 +2422,201 @@ void NonFragmentingChildOf_3_levels_2_children_cleanup_order_after_fini(void) {
 
     test_int(delete_count, 6);
 }
+
+void NonFragmentingChildOf_named_children_same_table_w_same_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_entity(world, { .name = "parent_a" });
+    ecs_entity_t parent_b = ecs_entity(world, { .name = "parent_b" });
+
+    ecs_entity_t child_a = ecs_entity(world, { 
+        .name = "child", 
+        .set = ecs_values( ecs_value(EcsParent, { parent_a }) )
+    });
+
+    ecs_entity_t child_b = ecs_entity(world, { 
+        .name = "child", 
+        .set = ecs_values( ecs_value(EcsParent, { parent_b }) )
+    });
+
+    test_assert(child_a != child_b);
+
+    test_assert(ecs_lookup(world, "parent_a") == parent_a);
+    test_assert(ecs_lookup(world, "parent_b") == parent_b);
+    test_assert(ecs_lookup(world, "parent_a.child") == child_a);
+    test_assert(ecs_lookup(world, "parent_b.child") == child_b);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_named_child_w_same_name_as_root_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+
+    ecs_entity_t root = ecs_entity(world, { 
+        .name = "child"
+    });
+
+    ecs_entity_t child = ecs_entity(world, { 
+        .name = "child", 
+        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    });
+
+    test_assert(root != child);
+
+    test_assert(ecs_lookup(world, "parent") == parent);
+    test_assert(ecs_lookup(world, "parent.child") == child);
+    test_assert(ecs_lookup(world, "child") == root);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_lookup(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { 
+        .name = "child", 
+        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    });
+
+    test_assert(ecs_lookup(world, "parent") == parent);
+    test_assert(ecs_lookup(world, "parent.child") == child);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_lookup_2_lvls(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { 
+        .name = "child", 
+        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    });
+    ecs_entity_t grandchild = ecs_entity(world, { 
+        .name = "grandchild", 
+        .set = ecs_values( ecs_value(EcsParent, { child }) )
+    });
+
+    test_assert(ecs_lookup(world, "parent") == parent);
+    test_assert(ecs_lookup(world, "parent.child") == child);
+    test_assert(ecs_lookup(world, "parent.child.grandchild") == grandchild);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_lookup_from(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { 
+        .name = "child", 
+        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    });
+
+    test_assert(ecs_lookup(world, "parent") == parent);
+    test_assert(ecs_lookup_child(world, parent, "child") == child);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_lookup_from_2_lvls(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { 
+        .name = "child", 
+        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    });
+    ecs_entity_t grandchild = ecs_entity(world, { 
+        .name = "grandchild", 
+        .set = ecs_values( ecs_value(EcsParent, { child }) )
+    });
+
+    test_assert(ecs_lookup(world, "parent") == parent);
+    test_assert(ecs_lookup_child(world, parent, "child") == child);
+    test_assert(ecs_lookup_child(world, parent, "child.grandchild") == grandchild);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_lookup_after_reparent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_entity(world, { .name = "parent_a" });
+    ecs_entity_t parent_b = ecs_entity(world, { .name = "parent_a" });
+    ecs_entity_t child = ecs_entity(world, { 
+        .name = "child", 
+        .set = ecs_values( ecs_value(EcsParent, { parent_a }) )
+    });
+
+    test_assert(ecs_lookup(world, "parent_a") == parent_a);
+    test_assert(ecs_lookup(world, "parent_a.child") == child);
+    test_assert(ecs_lookup(world, "parent_b.child") == 0);
+
+    ecs_set(world, child, EcsParent, { parent_b });
+
+    test_assert(ecs_lookup(world, "parent_a.child") == 0);
+    test_assert(ecs_lookup(world, "parent_b.child") == child);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_lookup_after_remove_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { 
+        .name = "child", 
+        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    });
+
+    test_assert(ecs_lookup(world, "parent") == parent);
+    test_assert(ecs_lookup(world, "parent.child") == child);
+
+    ecs_remove(world, child, EcsParent);
+
+    test_assert(ecs_lookup(world, "parent.child") == 0);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_lookup_after_clear(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { 
+        .name = "child", 
+        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    });
+
+    test_assert(ecs_lookup(world, "parent") == parent);
+    test_assert(ecs_lookup(world, "parent.child") == child);
+
+    ecs_clear(world, child);
+
+    test_assert(ecs_lookup(world, "parent.child") == 0);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_lookup_after_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { 
+        .name = "child", 
+        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    });
+
+    test_assert(ecs_lookup(world, "parent") == parent);
+    test_assert(ecs_lookup(world, "parent.child") == child);
+
+    ecs_delete(world, child);
+
+    test_assert(ecs_lookup(world, "parent.child") == 0);
+
+    ecs_fini(world);
+}
