@@ -2689,7 +2689,11 @@
                 "this_up_childof_pair",
                 "this_self_up_childof_pair",
                 "this_written_up_childof_pair",
-                "this_written_self_up_childof_pair"
+                "this_written_self_up_childof_pair",
+                "this_childof_w_disabled",
+                "this_childof_w_disabled_match_disabled",
+                "this_set_childof_w_disabled",
+                "this_set_childof_w_disabled_match_disabled"
             ]
         }, {
             "id": "OrderBy",
