@@ -1510,8 +1510,8 @@ bool flecs_query_dispatch(
     case EcsQueryTreeWildcard: return flecs_query_tree_and_wildcard(op, redo, ctx, false);
     case EcsQueryTreePre: return flecs_query_tree_pre(op, redo, ctx);
     case EcsQueryTreePost: return flecs_query_tree_post(op, redo, ctx);
-    case EcsQueryTreeUpPre: return flecs_query_tree_up_pre(op, redo, ctx);
-    case EcsQueryTreeSelfUpPre: return flecs_query_tree_selfup_pre(op, redo, ctx);
+    case EcsQueryTreeUpPre: return flecs_query_tree_up_pre(op, redo, ctx, false);
+    case EcsQueryTreeSelfUpPre: return flecs_query_tree_up_pre(op, redo, ctx, true);
     case EcsQueryTreeUpPost: return flecs_query_tree_up_post(op, redo, ctx, false);
     case EcsQueryTreeSelfUpPost: return flecs_query_tree_up_post(op, redo, ctx, true);
     case EcsQueryChildrenWc: return flecs_query_tree_and_wildcard(op, redo, ctx, true);
