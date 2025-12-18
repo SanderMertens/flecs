@@ -795,6 +795,16 @@ void NonFragmentingChildOf_get_2_ordered_children_mixed_2(void);
 void NonFragmentingChildOf_3_levels_2_children(void);
 void NonFragmentingChildOf_3_levels_2_children_cleanup_order_after_delete(void);
 void NonFragmentingChildOf_3_levels_2_children_cleanup_order_after_fini(void);
+void NonFragmentingChildOf_named_child_w_same_name_as_root_entity(void);
+void NonFragmentingChildOf_named_children_same_table_w_same_name(void);
+void NonFragmentingChildOf_lookup(void);
+void NonFragmentingChildOf_lookup_2_lvls(void);
+void NonFragmentingChildOf_lookup_from(void);
+void NonFragmentingChildOf_lookup_from_2_lvls(void);
+void NonFragmentingChildOf_lookup_after_reparent(void);
+void NonFragmentingChildOf_lookup_after_remove_parent(void);
+void NonFragmentingChildOf_lookup_after_clear(void);
+void NonFragmentingChildOf_lookup_after_delete(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -6115,6 +6125,46 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "3_levels_2_children_cleanup_order_after_fini",
         NonFragmentingChildOf_3_levels_2_children_cleanup_order_after_fini
+    },
+    {
+        "named_child_w_same_name_as_root_entity",
+        NonFragmentingChildOf_named_child_w_same_name_as_root_entity
+    },
+    {
+        "named_children_same_table_w_same_name",
+        NonFragmentingChildOf_named_children_same_table_w_same_name
+    },
+    {
+        "lookup",
+        NonFragmentingChildOf_lookup
+    },
+    {
+        "lookup_2_lvls",
+        NonFragmentingChildOf_lookup_2_lvls
+    },
+    {
+        "lookup_from",
+        NonFragmentingChildOf_lookup_from
+    },
+    {
+        "lookup_from_2_lvls",
+        NonFragmentingChildOf_lookup_from_2_lvls
+    },
+    {
+        "lookup_after_reparent",
+        NonFragmentingChildOf_lookup_after_reparent
+    },
+    {
+        "lookup_after_remove_parent",
+        NonFragmentingChildOf_lookup_after_remove_parent
+    },
+    {
+        "lookup_after_clear",
+        NonFragmentingChildOf_lookup_after_clear
+    },
+    {
+        "lookup_after_delete",
+        NonFragmentingChildOf_lookup_after_delete
     }
 };
 
@@ -14955,7 +15005,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        94,
+        104,
         NonFragmentingChildOf_testcases
     },
     {

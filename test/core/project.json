@@ -826,7 +826,17 @@
                 "get_2_ordered_children_mixed_2",
                 "3_levels_2_children",
                 "3_levels_2_children_cleanup_order_after_delete",
-                "3_levels_2_children_cleanup_order_after_fini"
+                "3_levels_2_children_cleanup_order_after_fini",
+                "named_child_w_same_name_as_root_entity",
+                "named_children_same_table_w_same_name",
+                "lookup",
+                "lookup_2_lvls",
+                "lookup_from",
+                "lookup_from_2_lvls",
+                "lookup_after_reparent",
+                "lookup_after_remove_parent",
+                "lookup_after_clear",
+                "lookup_after_delete"
             ]
         }, {
             "id": "Hierarchies",
