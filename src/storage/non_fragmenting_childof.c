@@ -18,6 +18,10 @@ void flecs_add_non_fragmenting_child_to_table(
     if (!elem->first_entity) {
         elem->first_entity = (uint32_t)entity;
         elem->count = 1;
+
+        if (table->flags & EcsTableIsDisabled) {
+            cr->pair->disabled_tables ++;
+        }
     } else {
         elem->count ++;
     }
@@ -41,6 +45,11 @@ void flecs_remove_non_fragmenting_child_from_table(
 
     if (!elem->count) {
         ecs_map_remove(&cr->pair->children_tables, table->id);
+        if (table->flags & EcsTableIsDisabled) {
+            cr->pair->disabled_tables --;
+            ecs_assert(cr->pair->disabled_tables >= 0, 
+                ECS_INTERNAL_ERROR, NULL);
+        }
     } else {
         if (elem->first_entity == (uint32_t)entity) {
             EcsParent *parents = ecs_table_get(world, table, EcsParent, 0);

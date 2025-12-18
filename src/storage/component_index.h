@@ -38,6 +38,11 @@ typedef struct ecs_pair_record_t {
     /* Tables with non-fragmenting children */
     ecs_map_t children_tables; /* map<table_id, ecs_parent_record_t */
 
+    /* Track how many of the tables in children_tables are disabled. Used by
+     * queries to determine whether logic is needed to skip Disabled entities
+     * when iterating the ordered_children vector. */
+    int32_t disabled_tables;
+
     /* Hierarchy depth (set for ChildOf pair) */
     int32_t depth;
 
