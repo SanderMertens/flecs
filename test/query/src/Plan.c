@@ -3464,6 +3464,8 @@ void Plan_up_w_custom_rel(void) {
     test_str(expect, plan);
     ecs_os_free(plan);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -3503,6 +3505,8 @@ void Plan_up_w_custom_rel_cached(void) {
         ecs_os_free(plan);
     }
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -3529,6 +3533,8 @@ void Plan_self_up_w_custom_rel(void) {
     char *plan = ecs_query_plan(q);
     test_str(expect, plan);
     ecs_os_free(plan);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -3568,6 +3574,8 @@ void Plan_self_up_w_custom_rel_cached(void) {
         test_str(NULL, plan);
         ecs_os_free(plan);
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
