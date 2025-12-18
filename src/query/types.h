@@ -172,9 +172,9 @@ typedef struct {
 } ecs_query_sparse_ctx_t;
 
 typedef enum ecs_query_tree_iter_state_t {
-    EcsQueryTreeIterNext,
-    EcsQueryTreeIterTables,
-    EcsQueryTreeIterEntities
+    EcsQueryTreeIterNext = 1,
+    EcsQueryTreeIterTables = 2,
+    EcsQueryTreeIterEntities = 3
 } ecs_query_tree_iter_state_t;
 
 typedef struct {

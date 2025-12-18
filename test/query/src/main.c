@@ -2597,6 +2597,10 @@ void NonFragmentingChildOf_this_up_childof_pair(void);
 void NonFragmentingChildOf_this_self_up_childof_pair(void);
 void NonFragmentingChildOf_this_written_up_childof_pair(void);
 void NonFragmentingChildOf_this_written_self_up_childof_pair(void);
+void NonFragmentingChildOf_this_childof_w_disabled(void);
+void NonFragmentingChildOf_this_childof_w_disabled_match_disabled(void);
+void NonFragmentingChildOf_this_set_childof_w_disabled(void);
+void NonFragmentingChildOf_this_set_childof_w_disabled_match_disabled(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -12929,6 +12933,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "this_written_self_up_childof_pair",
         NonFragmentingChildOf_this_written_self_up_childof_pair
+    },
+    {
+        "this_childof_w_disabled",
+        NonFragmentingChildOf_this_childof_w_disabled
+    },
+    {
+        "this_childof_w_disabled_match_disabled",
+        NonFragmentingChildOf_this_childof_w_disabled_match_disabled
+    },
+    {
+        "this_set_childof_w_disabled",
+        NonFragmentingChildOf_this_set_childof_w_disabled
+    },
+    {
+        "this_set_childof_w_disabled_match_disabled",
+        NonFragmentingChildOf_this_set_childof_w_disabled_match_disabled
     }
 };
 
@@ -13738,7 +13758,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        275,
+        279,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params
