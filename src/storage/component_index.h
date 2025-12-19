@@ -43,6 +43,9 @@ typedef struct ecs_pair_record_t {
      * when iterating the ordered_children vector. */
     int32_t disabled_tables;
 
+    /* Same for prefab tables */
+    int32_t prefab_tables;
+
     /* Hierarchy depth (set for ChildOf pair) */
     int32_t depth;
 

@@ -481,7 +481,9 @@ bool flecs_query_children_select(
         ecs_vec_t *v_children = &pr->ordered_children;
         uint32_t filter = flecs_ito(uint32_t, op->other);
 
-        if (!pr->disabled_tables || !(filter & EcsTableIsDisabled)) {
+        if ((!pr->disabled_tables || !(filter & EcsTableIsDisabled)) &&
+            (!pr->prefab_tables || !(filter & EcsTableIsPrefab))) 
+        {
             it->entities = ecs_vec_first_t(v_children, ecs_entity_t);
             it->count = ecs_vec_count(v_children);
             return true;
@@ -512,8 +514,10 @@ next:
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (r->table->flags & EcsTableIsDisabled) {
-            /* Skip disabled entities */
+        if (flecs_query_table_filter(r->table, op->other, 
+            (EcsTableIsDisabled|EcsTableIsPrefab))) 
+        {
+            /* Skip disabled/prefab entities */
             goto next;
         }
 
@@ -572,7 +576,9 @@ bool flecs_query_children_with(
         return true;
     }
 
-    if (flecs_query_table_filter(range.table, op->other, EcsTableIsDisabled)) {
+    if (flecs_query_table_filter(range.table, op->other, 
+        EcsTableIsDisabled|EcsTableIsPrefab)) 
+    {
         return false;
     }
 

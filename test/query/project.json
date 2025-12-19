@@ -2693,7 +2693,11 @@
                 "this_childof_w_disabled",
                 "this_childof_w_disabled_match_disabled",
                 "this_set_childof_w_disabled",
-                "this_set_childof_w_disabled_match_disabled"
+                "this_set_childof_w_disabled_match_disabled",
+                "this_childof_w_prefab",
+                "this_childof_w_prefab_match_prefab",
+                "this_set_childof_w_prefab",
+                "this_set_childof_w_prefab_match_prefab"
             ]
         }, {
             "id": "OrderBy",
