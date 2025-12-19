@@ -2601,6 +2601,10 @@ void NonFragmentingChildOf_this_childof_w_disabled(void);
 void NonFragmentingChildOf_this_childof_w_disabled_match_disabled(void);
 void NonFragmentingChildOf_this_set_childof_w_disabled(void);
 void NonFragmentingChildOf_this_set_childof_w_disabled_match_disabled(void);
+void NonFragmentingChildOf_this_childof_w_prefab(void);
+void NonFragmentingChildOf_this_childof_w_prefab_match_prefab(void);
+void NonFragmentingChildOf_this_set_childof_w_prefab(void);
+void NonFragmentingChildOf_this_set_childof_w_prefab_match_prefab(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -12949,6 +12953,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "this_set_childof_w_disabled_match_disabled",
         NonFragmentingChildOf_this_set_childof_w_disabled_match_disabled
+    },
+    {
+        "this_childof_w_prefab",
+        NonFragmentingChildOf_this_childof_w_prefab
+    },
+    {
+        "this_childof_w_prefab_match_prefab",
+        NonFragmentingChildOf_this_childof_w_prefab_match_prefab
+    },
+    {
+        "this_set_childof_w_prefab",
+        NonFragmentingChildOf_this_set_childof_w_prefab
+    },
+    {
+        "this_set_childof_w_prefab_match_prefab",
+        NonFragmentingChildOf_this_set_childof_w_prefab_match_prefab
     }
 };
 
@@ -13758,7 +13778,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        279,
+        283,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

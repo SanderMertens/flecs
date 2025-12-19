@@ -828,6 +828,8 @@
                 "3_levels_2_children_cleanup_order_after_delete",
                 "3_levels_2_children_cleanup_order_after_fini",
                 "named_children_same_table_w_same_name",
+                "add_parent_to_entity_w_component",
+                "add_parent_to_prefab",
                 "lookup",
                 "lookup_2_lvls",
                 "lookup_from",
@@ -835,7 +837,10 @@
                 "lookup_after_reparent",
                 "lookup_after_remove_parent",
                 "lookup_after_clear",
-                "lookup_after_delete"
+                "lookup_after_delete",
+                "instantiate_tree_1_child",
+                "instantiate_tree_2_children",
+                "instantiate_tree_3_children"
             ]
         }, {
             "id": "Hierarchies",
