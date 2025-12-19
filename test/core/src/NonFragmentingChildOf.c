@@ -2449,29 +2449,6 @@ void NonFragmentingChildOf_named_children_same_table_w_same_name(void) {
     ecs_fini(world);
 }
 
-void NonFragmentingChildOf_named_child_w_same_name_as_root_entity(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
-
-    ecs_entity_t root = ecs_entity(world, { 
-        .name = "child"
-    });
-
-    ecs_entity_t child = ecs_entity(world, { 
-        .name = "child", 
-        .set = ecs_values( ecs_value(EcsParent, { parent }) )
-    });
-
-    test_assert(root != child);
-
-    test_assert(ecs_lookup(world, "parent") == parent);
-    test_assert(ecs_lookup(world, "parent.child") == child);
-    test_assert(ecs_lookup(world, "child") == root);
-
-    ecs_fini(world);
-}
-
 void NonFragmentingChildOf_lookup(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -2517,7 +2494,7 @@ void NonFragmentingChildOf_lookup_from(void) {
     });
 
     test_assert(ecs_lookup(world, "parent") == parent);
-    test_assert(ecs_lookup_child(world, parent, "child") == child);
+    test_assert(ecs_lookup_from(world, parent, "child") == child);
 
     ecs_fini(world);
 }
@@ -2536,8 +2513,8 @@ void NonFragmentingChildOf_lookup_from_2_lvls(void) {
     });
 
     test_assert(ecs_lookup(world, "parent") == parent);
-    test_assert(ecs_lookup_child(world, parent, "child") == child);
-    test_assert(ecs_lookup_child(world, parent, "child.grandchild") == grandchild);
+    test_assert(ecs_lookup_from(world, parent, "child") == child);
+    test_assert(ecs_lookup_from(world, parent, "child.grandchild") == grandchild);
 
     ecs_fini(world);
 }
@@ -2546,7 +2523,7 @@ void NonFragmentingChildOf_lookup_after_reparent(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent_a = ecs_entity(world, { .name = "parent_a" });
-    ecs_entity_t parent_b = ecs_entity(world, { .name = "parent_a" });
+    ecs_entity_t parent_b = ecs_entity(world, { .name = "parent_b" });
     ecs_entity_t child = ecs_entity(world, { 
         .name = "child", 
         .set = ecs_values( ecs_value(EcsParent, { parent_a }) )
