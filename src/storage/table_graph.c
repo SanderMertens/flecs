@@ -233,6 +233,9 @@ int flecs_type_new_without(
     ecs_id_t *dst_array = flecs_walloc_n(world, ecs_id_t, dst_count);
     dst->array = dst_array;
 
+    ecs_assert(dst_array != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(src_array != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (at) {
         ecs_os_memcpy_n(dst_array, src_array, ecs_id_t, at);
     }
