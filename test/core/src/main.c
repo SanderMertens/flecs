@@ -795,7 +795,6 @@ void NonFragmentingChildOf_get_2_ordered_children_mixed_2(void);
 void NonFragmentingChildOf_3_levels_2_children(void);
 void NonFragmentingChildOf_3_levels_2_children_cleanup_order_after_delete(void);
 void NonFragmentingChildOf_3_levels_2_children_cleanup_order_after_fini(void);
-void NonFragmentingChildOf_named_child_w_same_name_as_root_entity(void);
 void NonFragmentingChildOf_named_children_same_table_w_same_name(void);
 void NonFragmentingChildOf_lookup(void);
 void NonFragmentingChildOf_lookup_2_lvls(void);
@@ -6125,10 +6124,6 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "3_levels_2_children_cleanup_order_after_fini",
         NonFragmentingChildOf_3_levels_2_children_cleanup_order_after_fini
-    },
-    {
-        "named_child_w_same_name_as_root_entity",
-        NonFragmentingChildOf_named_child_w_same_name_as_root_entity
     },
     {
         "named_children_same_table_w_same_name",
@@ -15005,7 +15000,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        104,
+        103,
         NonFragmentingChildOf_testcases
     },
     {

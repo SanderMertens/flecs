@@ -95,6 +95,7 @@ ecs_component_record_t* flecs_add_non_fragmenting_child(
         "cannot set Parent component with 0 entity");
     ecs_check(ecs_is_alive(world, parent), ECS_INVALID_OPERATION, 
         "cannot set Parent component to entity that is not alive");
+    
     flecs_ordered_entities_append(world, cr->pair, entity);
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -148,6 +149,39 @@ void flecs_remove_non_fragmenting_child(
 }
 
 static
+void flecs_on_reparent_update_name(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    EcsIdentifier *name,
+    ecs_entity_t parent_old,
+    ecs_component_record_t *cr_parent_new) 
+{
+    if (name->value && name->index_hash) {
+        /* Remove entity from name index of old parent */
+        ecs_component_record_t *old_cr = flecs_components_get(
+            world, ecs_childof(parent_old));
+        if (old_cr) {
+            ecs_hashmap_t *old_index = 
+                flecs_component_name_index_get(world, old_cr);
+            if (old_index) {
+                flecs_name_index_remove(old_index, e, name->index_hash);
+            }
+        }
+
+        if (cr_parent_new) {
+            /* Add entity to name index of new parent */
+            ecs_hashmap_t *new_index = 
+                flecs_component_name_index_ensure(world, cr_parent_new);
+            flecs_name_index_ensure(
+                new_index, e, name->value, name->length, name->hash);
+            name->index = new_index;
+        } else {
+            name->index = NULL;
+        }
+    }
+}
+
+static
 void flecs_on_replace_parent(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsParent *old = ecs_field(it, EcsParent, 0);
@@ -156,18 +190,33 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
     ecs_assert(old != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(new != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    EcsIdentifier *names = NULL;
+    if (it->table->flags & EcsTableHasName) {
+        names = ecs_table_get_pair(
+            world, it->table, EcsIdentifier, EcsName, it->offset);
+        ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        flecs_remove_non_fragmenting_child(world, old[i].value, e);
+        ecs_entity_t old_parent = old[i].value;
+        ecs_entity_t new_parent = new[i].value;
+        
+        flecs_remove_non_fragmenting_child(world, old_parent, e);
+
         ecs_component_record_t *cr_parent = 
-            flecs_add_non_fragmenting_child(world, new[i].value, e);
+            flecs_add_non_fragmenting_child(world, new_parent, e);
+
+        if (names) {
+            flecs_on_reparent_update_name(
+                world, e, &names[i], old_parent, cr_parent);
+        }
 
         int32_t depth = cr_parent->pair->depth;
         ecs_add_id(world, e, ecs_value_pair(EcsParentDepth, depth));
 
-        ecs_component_record_t *cr = flecs_components_get(
-            world, ecs_childof(e));
+        ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(e));
         if (cr) {
             flecs_component_update_childof_w_depth(world, cr, depth + 1);
         }
@@ -176,8 +225,8 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (r->row & EcsEntityIsTraversable) {
-            ecs_id_t added = ecs_childof(new[i].value);
-            ecs_id_t removed = ecs_childof(old[i].value);
+            ecs_id_t added = ecs_childof(new_parent);
+            ecs_id_t removed = ecs_childof(old_parent);
 
             flecs_update_component_monitors(world, 
                 &(ecs_type_t){ .count = 1, .array = &added },
@@ -219,6 +268,11 @@ void flecs_on_non_fragmenting_child_move_remove(
 {
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    EcsIdentifier *names = NULL;
+    if (src->flags & EcsTableHasName) {
+        names = ecs_table_get_pair(world, src, EcsIdentifier, EcsName, 0);
+    }
+
     EcsParent *parents = ecs_table_get(world, src, EcsParent, 0);
     int32_t i = row, end = i + count;
     for (; i < end; i ++) {
@@ -242,6 +296,10 @@ void flecs_on_non_fragmenting_child_move_remove(
             }
         } else {
             flecs_ordered_entities_remove(cr->pair, e);
+
+            if (names) {
+                flecs_on_reparent_update_name(world, e, &names[i], p, NULL);
+            }
 
             ecs_component_record_t *cr_e = flecs_components_get(
                 world, ecs_childof(e));
