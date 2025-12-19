@@ -455,6 +455,9 @@ typedef struct ecs_pair_record_t {
      * when iterating the ordered_children vector. */
     int32_t disabled_tables;
 
+    /* Same for prefab tables */
+    int32_t prefab_tables;
+
     /* Hierarchy depth (set for ChildOf pair) */
     int32_t depth;
 
@@ -39713,6 +39716,9 @@ void flecs_add_non_fragmenting_child_to_table(
         if (table->flags & EcsTableIsDisabled) {
             cr->pair->disabled_tables ++;
         }
+        if (table->flags & EcsTableIsPrefab) {
+            cr->pair->prefab_tables ++;
+        }
     } else {
         elem->count ++;
     }
@@ -39739,6 +39745,11 @@ void flecs_remove_non_fragmenting_child_from_table(
         if (table->flags & EcsTableIsDisabled) {
             cr->pair->disabled_tables --;
             ecs_assert(cr->pair->disabled_tables >= 0, 
+                ECS_INTERNAL_ERROR, NULL);
+        }
+        if (table->flags & EcsTableIsPrefab) {
+            cr->pair->prefab_tables --;
+            ecs_assert(cr->pair->prefab_tables >= 0, 
                 ECS_INTERNAL_ERROR, NULL);
         }
     } else {
@@ -39793,21 +39804,7 @@ ecs_component_record_t* flecs_add_non_fragmenting_child(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_map_init_if(&cr->pair->children_tables, &world->allocator);
-    ecs_parent_record_t *elem = (ecs_parent_record_t*)
-        ecs_map_ensure(&cr->pair->children_tables, r->table->id);
-    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* Encode id of first entity in table + the total number of entities in the
-     * table for this parent in a single uint64 so everything fits in a map
-     * element without having to allocate. */
-    if (!elem->first_entity) {
-        elem->first_entity = (uint32_t)entity;
-        elem->count = 1;
-    } else {
-        elem->count ++;
-    }
-
+    flecs_add_non_fragmenting_child_to_table(world, cr, entity, r->table);
 error:
     return cr;
 }
@@ -39940,6 +39937,8 @@ void flecs_on_non_fragmenting_child_move_add(
     for (; i < end; i ++) {
         ecs_entity_t e = ecs_table_entities(dst)[i];
         ecs_entity_t p = parents[i].value;
+        // ecs_assert(p != 0, ECS_INTERNAL_ERROR, NULL);
+
         ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(p));
         if (src->flags & EcsTableHasParent) {
             flecs_remove_non_fragmenting_child_from_table(
@@ -83635,7 +83634,9 @@ bool flecs_query_children_select(
         ecs_vec_t *v_children = &pr->ordered_children;
         uint32_t filter = flecs_ito(uint32_t, op->other);
 
-        if (!pr->disabled_tables || !(filter & EcsTableIsDisabled)) {
+        if ((!pr->disabled_tables || !(filter & EcsTableIsDisabled)) &&
+            (!pr->prefab_tables || !(filter & EcsTableIsPrefab))) 
+        {
             it->entities = ecs_vec_first_t(v_children, ecs_entity_t);
             it->count = ecs_vec_count(v_children);
             return true;
@@ -83666,8 +83667,10 @@ next:
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (r->table->flags & EcsTableIsDisabled) {
-            /* Skip disabled entities */
+        if (flecs_query_table_filter(r->table, op->other, 
+            (EcsTableIsDisabled|EcsTableIsPrefab))) 
+        {
+            /* Skip disabled/prefab entities */
             goto next;
         }
 
@@ -83726,7 +83729,9 @@ bool flecs_query_children_with(
         return true;
     }
 
-    if (flecs_query_table_filter(range.table, op->other, EcsTableIsDisabled)) {
+    if (flecs_query_table_filter(range.table, op->other, 
+        EcsTableIsDisabled|EcsTableIsPrefab)) 
+    {
         return false;
     }
 
