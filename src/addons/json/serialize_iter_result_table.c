@@ -187,9 +187,6 @@ bool flecs_json_serialize_table_pairs(
             flecs_json_object_push(buf);            
         }
 
-        ecs_entity_t second = flecs_entities_get_alive(
-            world, ECS_PAIR_SECOND(id));
-
         bool is_last = f == (type_count - 1);
         bool is_same = !is_last && 
             (ECS_PAIR_FIRST(ids[f + 1]) == ECS_PAIR_FIRST(id));
@@ -217,8 +214,18 @@ bool flecs_json_serialize_table_pairs(
             flecs_json_next(buf);
         }
 
-        flecs_json_path_or_label(buf, world, second, 
-            desc ? desc->serialize_full_paths : true);
+        if (ECS_IS_VALUE_PAIR(id)) {
+            ecs_strbuf_appendch(buf, '\"');
+            ecs_strbuf_appendch(buf, '@');
+            ecs_strbuf_appendint(buf, ECS_PAIR_SECOND(id));
+            ecs_strbuf_appendch(buf, '\"');
+        } else {
+            ecs_entity_t second = flecs_entities_get_alive(
+                world, ECS_PAIR_SECOND(id));
+
+            flecs_json_path_or_label(buf, world, second, 
+                desc ? desc->serialize_full_paths : true);
+        }
 
         pair_count ++;
     }
