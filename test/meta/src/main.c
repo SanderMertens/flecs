@@ -775,6 +775,8 @@ void SerializeEntityToJson_serialize_base_w_invalid_component(void);
 void SerializeEntityToJson_serialize_w_blacklist(void);
 void SerializeEntityToJson_serialize_w_allow_blacklist(void);
 void SerializeEntityToJson_serialize_w_partial_blacklist(void);
+void SerializeEntityToJson_serialize_value_pair(void);
+void SerializeEntityToJson_serialize_parent_component(void);
 
 // Testsuite 'SerializeIterToJson'
 void SerializeIterToJson_serialize_1_comps_empty(void);
@@ -4136,6 +4138,14 @@ bake_test_case SerializeEntityToJson_testcases[] = {
     {
         "serialize_w_partial_blacklist",
         SerializeEntityToJson_serialize_w_partial_blacklist
+    },
+    {
+        "serialize_value_pair",
+        SerializeEntityToJson_serialize_value_pair
+    },
+    {
+        "serialize_parent_component",
+        SerializeEntityToJson_serialize_parent_component
     }
 };
 
@@ -5635,7 +5645,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        81,
+        83,
         SerializeEntityToJson_testcases
     },
     {
