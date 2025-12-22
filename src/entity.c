@@ -2419,7 +2419,7 @@ bool flecs_can_toggle(
 {
     ecs_component_record_t *cr = flecs_components_get(world, component);
     if (!cr) {
-        return false;
+        return ecs_has_id(world, component, EcsCanToggle);
     }
 
     return (cr->flags & EcsIdCanToggle) != 0;

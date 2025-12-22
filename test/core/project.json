@@ -214,7 +214,9 @@
                 "entity_w_parent_w_set_w_parent",
                 "entity_w_new_id_and_double_dot",
                 "entity_w_existing_id_and_double_dot",
-                "entity_w_large_id_name"
+                "entity_w_large_id_name",
+                "toggle_component",
+                "toggle_component_before_add"
             ]
         }, {
             "id": "Each",

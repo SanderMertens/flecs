@@ -208,6 +208,8 @@ void Entity_entity_w_parent_w_set_w_parent(void);
 void Entity_entity_w_new_id_and_double_dot(void);
 void Entity_entity_w_existing_id_and_double_dot(void);
 void Entity_entity_w_large_id_name(void);
+void Entity_toggle_component(void);
+void Entity_toggle_component_before_add(void);
 
 // Testsuite 'Each'
 void Each_each_tag(void);
@@ -3640,6 +3642,14 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_w_large_id_name",
         Entity_entity_w_large_id_name
+    },
+    {
+        "toggle_component",
+        Entity_toggle_component
+    },
+    {
+        "toggle_component_before_add",
+        Entity_toggle_component_before_add
     }
 };
 
@@ -13931,7 +13941,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        150,
+        152,
         Entity_testcases
     },
     {
