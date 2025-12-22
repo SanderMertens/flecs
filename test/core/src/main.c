@@ -798,6 +798,8 @@ void NonFragmentingChildOf_3_levels_2_children_cleanup_order_after_fini(void);
 void NonFragmentingChildOf_named_children_same_table_w_same_name(void);
 void NonFragmentingChildOf_add_parent_to_entity_w_component(void);
 void NonFragmentingChildOf_add_parent_to_prefab(void);
+void NonFragmentingChildOf_add_parent_to_prefab_after_add_parent(void);
+void NonFragmentingChildOf_reparent_to_prefab(void);
 void NonFragmentingChildOf_lookup(void);
 void NonFragmentingChildOf_lookup_2_lvls(void);
 void NonFragmentingChildOf_lookup_from(void);
@@ -6141,6 +6143,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "add_parent_to_prefab",
         NonFragmentingChildOf_add_parent_to_prefab
+    },
+    {
+        "add_parent_to_prefab_after_add_parent",
+        NonFragmentingChildOf_add_parent_to_prefab_after_add_parent
+    },
+    {
+        "reparent_to_prefab",
+        NonFragmentingChildOf_reparent_to_prefab
     },
     {
         "lookup",
@@ -15025,7 +15035,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        108,
+        110,
         NonFragmentingChildOf_testcases
     },
     {
