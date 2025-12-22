@@ -2501,6 +2501,82 @@ void NonFragmentingChildOf_add_parent_to_prefab(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_reparent_to_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t c = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_add_id(world, c, EcsPrefab);
+
+    ecs_table_t *table = ecs_get_table(world, c);
+
+    ecs_component_record_t *root_cr = flecs_components_get(world, ecs_childof(0));
+    test_assert(root_cr != NULL);
+
+    ecs_component_record_t *cr_1 = flecs_components_get(world, ecs_childof(p_1));
+    test_assert(cr_1 != NULL);
+
+    test_assert(flecs_component_get_parent_record(root_cr, table) == NULL);
+
+    ecs_parent_record_t *pr_1 = flecs_component_get_parent_record(cr_1, table);
+    test_assert(pr_1 != NULL);
+    test_int(pr_1->count, 1);
+    test_uint(pr_1->first_entity, c);
+
+    ecs_set(world, c, EcsParent, {p_2});
+
+    ecs_component_record_t *cr_2 = flecs_components_get(world, ecs_childof(p_2));
+    test_assert(cr_2 != NULL);
+
+    ecs_parent_record_t *pr_2 = flecs_component_get_parent_record(cr_2, table);
+    test_assert(pr_2 != NULL);
+    test_int(pr_2->count, 1);
+    test_uint(pr_2->first_entity, c);
+
+    test_assert(flecs_component_get_parent_record(cr_1, table) == NULL);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_add_parent_to_prefab_after_add_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t c = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, c, EcsParent, {p_1});
+
+    ecs_table_t *table = ecs_get_table(world, c);
+
+    ecs_component_record_t *root_cr = flecs_components_get(world, ecs_childof(0));
+    test_assert(root_cr != NULL);
+
+    ecs_component_record_t *cr_1 = flecs_components_get(world, ecs_childof(p_1));
+    test_assert(cr_1 != NULL);
+
+    test_assert(flecs_component_get_parent_record(root_cr, table) == NULL);
+
+    ecs_parent_record_t *pr_1 = flecs_component_get_parent_record(cr_1, table);
+    test_assert(pr_1 != NULL);
+    test_int(pr_1->count, 1);
+    test_uint(pr_1->first_entity, c);
+
+    ecs_set(world, c, EcsParent, {p_2});
+
+    ecs_component_record_t *cr_2 = flecs_components_get(world, ecs_childof(p_2));
+    test_assert(cr_2 != NULL);
+
+    ecs_parent_record_t *pr_2 = flecs_component_get_parent_record(cr_2, table);
+    test_assert(pr_2 != NULL);
+    test_int(pr_2->count, 1);
+    test_uint(pr_2->first_entity, c);
+
+    test_assert(flecs_component_get_parent_record(cr_1, table) == NULL);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_lookup(void) {
     ecs_world_t *world = ecs_mini();
 
