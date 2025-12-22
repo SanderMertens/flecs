@@ -3221,3 +3221,62 @@ void Entity_entity_w_large_id_name(void) {
 
     ecs_fini(world);
 }
+
+void Entity_toggle_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, CanToggle);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_owns(world, e, Foo));
+    test_bool(true, ecs_is_enabled_id(world, e, Foo));
+
+    ecs_enable_id(world, e, Foo, false);
+
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_owns(world, e, Foo));
+    test_bool(false, ecs_is_enabled_id(world, e, Foo));
+
+    ecs_enable_id(world, e, Foo, true);
+
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_owns(world, e, Foo));
+    test_bool(true, ecs_is_enabled_id(world, e, Foo));
+
+    ecs_fini(world);
+}
+
+void Entity_toggle_component_before_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, CanToggle);
+
+    ecs_entity_t e = ecs_new(world);
+
+    test_assert(!ecs_has(world, e, Foo));
+    test_assert(!ecs_owns(world, e, Foo));
+    test_bool(false, ecs_is_enabled_id(world, e, Foo));
+
+    ecs_enable_id(world, e, Foo, false);
+
+    test_assert(!ecs_has(world, e, Foo));
+    test_assert(!ecs_owns(world, e, Foo));
+    test_bool(false, ecs_is_enabled_id(world, e, Foo));
+
+    ecs_add(world, e, Foo);
+
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_owns(world, e, Foo));
+    test_bool(false, ecs_is_enabled_id(world, e, Foo));
+
+    ecs_enable_id(world, e, Foo, true);
+
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_owns(world, e, Foo));
+    test_bool(true, ecs_is_enabled_id(world, e, Foo));
+
+    ecs_fini(world);
+}
