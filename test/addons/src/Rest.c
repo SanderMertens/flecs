@@ -709,3 +709,99 @@ void Rest_request_small_buffer_plus_one(void) {
 
     ecs_fini(world);
 }
+
+void Rest_request_ending_in_pct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "foo/bar" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    ecs_log_set_level(-4);
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/entity/foo%", NULL, &reply));
+    test_int(reply.code, 404);
+    
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "{\"error\":\"entity 'foo%' not found\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_request_ending_in_2_pct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "foo/bar" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    ecs_log_set_level(-4);
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/entity/foo%%", NULL, &reply));
+    test_int(reply.code, 404);
+    
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "{\"error\":\"entity 'foo' not found\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_request_ending_in_pct_single_digit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "foo/bar" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    ecs_log_set_level(-4);
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/entity/foo%9", NULL, &reply));
+    test_int(reply.code, 404);
+    
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "{\"error\":\"entity 'foo`' not found\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_request_ending_in_pct_invalid_code(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "foo/bar" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    ecs_log_set_level(-4);
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/entity/foo%--", NULL, &reply));
+    test_int(reply.code, 404);
+    
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "{\"error\":\"entity 'foo' not found\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}

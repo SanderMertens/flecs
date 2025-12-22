@@ -478,6 +478,10 @@ void Rest_get_pipeline_stats_after_delete_system(void);
 void Rest_request_world_summary_before_monitor_sys_run(void);
 void Rest_escape_backslash(void);
 void Rest_request_small_buffer_plus_one(void);
+void Rest_request_ending_in_pct(void);
+void Rest_request_ending_in_2_pct(void);
+void Rest_request_ending_in_pct_single_digit(void);
+void Rest_request_ending_in_pct_invalid_code(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2308,6 +2312,22 @@ bake_test_case Rest_testcases[] = {
     {
         "request_small_buffer_plus_one",
         Rest_request_small_buffer_plus_one
+    },
+    {
+        "request_ending_in_pct",
+        Rest_request_ending_in_pct
+    },
+    {
+        "request_ending_in_2_pct",
+        Rest_request_ending_in_2_pct
+    },
+    {
+        "request_ending_in_pct_single_digit",
+        Rest_request_ending_in_pct_single_digit
+    },
+    {
+        "request_ending_in_pct_invalid_code",
+        Rest_request_ending_in_pct_invalid_code
     }
 };
 
@@ -2767,7 +2787,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        22,
+        26,
         Rest_testcases
     },
     {

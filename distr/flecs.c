@@ -33288,8 +33288,13 @@ char* ecs_strbuf_get(
     ecs_strbuf_appendch(b, '\0');
     result = b->content;
 
+#ifdef FLECS_SANITIZE
+    ecs_assert(ecs_os_strlen(result) <= (b->length - 1), 
+        ECS_INTERNAL_ERROR, NULL);
+#endif
+
     if (result == b->small_string) {
-        result = ecs_os_memdup_n(result, char, b->length + 1);
+        result = ecs_os_memdup_n(result, char, b->length);
     }
 
     b->length = 0;
@@ -44380,8 +44385,8 @@ void http_sock_set_timeout(
     int r;
 #ifdef ECS_TARGET_POSIX
     struct timeval tv;
-    tv.tv_sec = timeout_ms * 1000;
-    tv.tv_usec = 0;
+    tv.tv_sec = timeout_ms / 1000;
+    tv.tv_usec = (timeout_ms % 1000) * 1000;
     r = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 #else
     DWORD t = (DWORD)timeout_ms;
@@ -44548,6 +44553,9 @@ static
 char http_hex_2_int(char a, char b){
     a = (a <= '9') ? (char)(a - '0') : (char)((a & 0x7) + 9);
     b = (b <= '9') ? (char)(b - '0') : (char)((b & 0x7) + 9);
+    if (a < 0) {
+        return 0;
+    }
     return (char)((a << 4) + b);
 }
 
@@ -44557,7 +44565,7 @@ void http_decode_url_str(
 {
     char ch, *ptr, *dst = str;
     for (ptr = str; (ch = *ptr); ptr++) {
-        if (ch == '%') {
+        if (ch == '%' && ptr[1]) {
             dst[0] = http_hex_2_int(ptr[1], ptr[2]);
             dst ++;
             ptr += 2;
@@ -44607,7 +44615,7 @@ void http_header_buf_append(
     char ch)
 {
     if ((frag->header_buf_ptr - frag->header_buf) < 
-        ECS_SIZEOF(frag->header_buf)) 
+        (ECS_SIZEOF(frag->header_buf) - 1))
     {
         frag->header_buf_ptr[0] = ch;
         frag->header_buf_ptr ++;

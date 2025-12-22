@@ -527,7 +527,11 @@
                 "get_pipeline_stats_after_delete_system",
                 "request_world_summary_before_monitor_sys_run",
                 "escape_backslash",
-                "request_small_buffer_plus_one"
+                "request_small_buffer_plus_one",
+                "request_ending_in_pct",
+                "request_ending_in_2_pct",
+                "request_ending_in_pct_single_digit",
+                "request_ending_in_pct_invalid_code"
             ]
         }, {
             "id": "Metrics",
